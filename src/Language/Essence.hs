@@ -10,7 +10,7 @@
 module Language.Essence ( Spec(..), Expr(..) ) where
 
 import Data.Binary
-import Data.Generics.Uniplate.Direct
+import Data.Generics
 
 
 -- let's just use strings for now.
@@ -26,12 +26,12 @@ data Spec
            , objective        :: Maybe Expr
            , constraints      :: [Expr]
            }
-    deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
+    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
 
 type Binding = (BindingEnum,Expr,Expr)
 
 data BindingEnum = Find | Given | Letting
-    deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
+    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
 
 type Where = Expr
 
@@ -125,7 +125,7 @@ data Expr
 
     | GenericNode Op [Expr]
 
-    deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
+    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
 
 type Representation = String
 
