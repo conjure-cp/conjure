@@ -1,20 +1,36 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module ZippyUtils ( bottomUpApply, replaceHoleL ) where
+module ZippyUtils ( callBottomUpApply, returnValues ) where
 
 
 import Prelude hiding ( log )
-import Data.Generics.Uniplate.Data ( Uniplate )
-import Data.Generics.Uniplate.Zipper ( Zipper, right, up, down, hole, replaceHole )
+import Data.Generics.Uniplate.Data ( Uniplate, Biplate )
+import Data.Generics.Uniplate.Zipper ( Zipper, right, up, down, hole, replaceHole, fromZipper, zipperBi )
 import Data.Maybe ( fromJust, fromMaybe )
 
 import MonadInterleave
 
 
+-- calls bottomUpApply. users should call bottomUpApply themselves, it is
+-- designed to be called from the top level only.
+callBottomUpApply :: 
+    forall from to m . ( Biplate from to, Show to, MonadInterleave m )
+    => (Zipper from to -> m [Zipper from to])
+    -> from
+    -> m [from]
+callBottomUpApply f x = case zipperBi x of Nothing -> error "callBottomUpApply: zipperBi returns Nothing!"
+                                           Just z  -> return . map fromZipper =<< bottomUpApply f z
+
+
+-- to be used while returning values in a transformation function.
+returnValues :: (Uniplate to, MonadInterleave m) => Zipper from to -> [to] -> m [Zipper from to]
+returnValues z xs = mapM yield $ replaceHoleL xs z
+
+
 -- bottomUpApply applies a given transformation to a zipper in a bottom up manner.
 -- the transformation should never produce an empty list, in which case the overall result will be the empty list.
 bottomUpApply ::
-    forall from to m . ( Uniplate to , Show to , MonadInterleave m )
+    forall from to m . ( Uniplate to, Show to, MonadInterleave m )
     => (Zipper from to -> m [Zipper from to])
     -> Zipper from to
     -> m [Zipper from to]
