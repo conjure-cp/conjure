@@ -52,9 +52,81 @@ data Expr
     | ValueRelation  [Expr]         -- has to be a list of tuples of uniform type.
     | ValuePartition [[Expr]]       -- has to be a list of lists of uniform type.
 
+    -- Domains
+    | DomainBoolean
+    | DomainIntegerFromTo (Maybe Expr) (Maybe Expr)
+    | DomainIntegerList [Expr]
+    | DomainUnnamed
+        { theSize        :: Expr
+        , representation :: Maybe Representation
+        }
+    | DomainEnum
+        { enums          :: [String]
+        , representation :: Maybe Representation
+        }
+    | DomainMatrix
+        { index          :: Expr
+        , element        :: Expr
+        }
+    | DomainTuple
+        { components     :: [Expr]
+        , representation :: Maybe Representation
+        }
+    | DomainSet
+        { size           :: Maybe Expr
+        , minSize        :: Maybe Expr
+        , maxSize        :: Maybe Expr
+        , attrDontCare   :: Bool
+        , element        :: Expr
+        , representation :: Maybe Representation
+        }
+    | DomainMSet
+        { size           :: Maybe Expr
+        , minSize        :: Maybe Expr
+        , maxSize        :: Maybe Expr
+        , occr           :: Maybe Expr
+        , minOccr        :: Maybe Expr
+        , maxOccr        :: Maybe Expr
+        , attrDontCare   :: Bool
+        , element        :: Expr
+        , representation :: Maybe Representation
+        }
+    | DomainFunction
+        { functionFrom   :: Expr
+        , functionTo     :: Expr
+        , isTotal        :: Bool
+        , isPartial      :: Bool
+        , isInjective    :: Bool
+        , isBijective    :: Bool
+        , isSurjective   :: Bool
+        , attrDontCare   :: Bool
+        , representation :: Maybe Representation
+        }
+    | DomainRelation
+        { components     :: [Expr]
+        , representation :: Maybe Representation
+        }
+    | DomainPartition
+        { element        :: Expr
+        , isRegular      :: Bool
+        , isComplete     :: Bool
+        , size           :: Maybe Expr
+        , minSize        :: Maybe Expr
+        , maxSize        :: Maybe Expr
+        , partSize       :: Maybe Expr
+        , minPartSize    :: Maybe Expr
+        , maxPartSize    :: Maybe Expr
+        , numParts       :: Maybe Expr
+        , minNumParts    :: Maybe Expr
+        , maxNumParts    :: Maybe Expr
+        , attrDontCare   :: Bool
+        , representation :: Maybe Representation
+        }
+
     | GenericNode Op [Expr]
 
     deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
 
+type Representation = String
 
 #include "EssenceDerivations.hs"
