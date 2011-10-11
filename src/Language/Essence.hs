@@ -13,10 +13,6 @@ import Data.Binary
 import Data.Generics
 
 
--- let's just use strings for now.
-type Op = String
-
-
 -- the data type for an Essence specification
 data Spec
     = Spec { language         :: String
@@ -127,6 +123,31 @@ data Expr
 
     deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
 
+
 type Representation = String
+
+
+-- the data type for operators in Essence
+data Op
+    = Plus | Minus | Times | Div | Mod | Pow | Abs | Negate
+    | Lt | Leq | Gt | Geq | Neq | Eq
+    | Not | Or | And | Imply | Iff
+    | Union | Intersect | Subset | SubsetEq | Supset | SupsetEq
+    | Card | Elem | Max | Min
+    | ToSet | ToMSet | ToRel | Defined | Range
+    | Image | PreImage | Inverse
+    | Together | Apart
+    | Party | Participants | Parts
+    | Freq | Hist
+
+    | Index | Project
+
+    | Bubble
+    
+    | AllDiff
+
+    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
+
+
 
 #include "EssenceDerivations.hs"
