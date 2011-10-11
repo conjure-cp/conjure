@@ -7,7 +7,7 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
 
-module Language.Essence ( Expr(..) ) where
+module Language.Essence ( Spec(..), Expr(..) ) where
 
 import Data.Binary
 import Data.Generics.Uniplate.Direct
@@ -17,7 +17,26 @@ import Data.Generics.Uniplate.Direct
 type Op = String
 
 
--- a type for any kind of expression in Essence
+-- the data type for an Essence specification
+data Spec
+    = Spec { language         :: String
+           , version          :: [Int] 
+           , topLevelBindings :: [Binding]
+           , topLevelWheres   :: [Where]
+           , objective        :: Maybe Expr
+           , constraints      :: [Expr]
+           }
+    deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
+
+type Binding = (BindingEnum,Expr,Expr)
+
+data BindingEnum = Find | Given | Letting
+    deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
+
+type Where = Expr
+
+
+-- the data type for any kind of expression in Essence
 -- this will end up being a giant type, but decidedly so.
 data Expr
     = Identifier String
