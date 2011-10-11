@@ -40,6 +40,18 @@ type Where = Expr
 -- this will end up being a giant type, but decidedly so.
 data Expr
     = Identifier String
+
+    -- Inline values
+    | ValueBoolean   Bool
+    | ValueInteger   Integer
+    | ValueMatrix    [Expr]         -- the list has to be of uniform type.
+    | ValueTuple     [Expr]
+    | ValueSet       [Expr]         -- the list has to be unique.
+    | ValueMSet      [Expr]
+    | ValueFunction  [(Expr,Expr)]  -- the list (both fsts and snds) has to be of uniform type.
+    | ValueRelation  [Expr]         -- has to be a list of tuples of uniform type.
+    | ValuePartition [[Expr]]       -- has to be a list of lists of uniform type.
+
     | GenericNode Op [Expr]
 
     deriving ({-! Eq, Ord, Read, Show, Binary, UniplateDirect !-})
