@@ -33,10 +33,6 @@ s ~~ x = do
                   ]
 
 
-main :: IO ()
-main = runTest allTests
-
-
 allTests :: IO Test
 allTests = test <$> sequence
     [ "false"

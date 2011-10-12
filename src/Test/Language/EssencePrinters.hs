@@ -2,13 +2,12 @@ module Test.Language.EssencePrinters ( allTests ) where
 
 
 import Control.Applicative
-import Data.List ( intercalate, intersperse )
+import Data.List ( intercalate )
 import Test.HUnit ( Test, (~:), (~=?), test )
 
 import Language.Essence
 import Language.EssencePrinters
 import PrintUtils ( render )
-import TestUtils ( runTest, quickTest )
 
 
 (~~) :: String -> Expr -> IO Test
@@ -16,8 +15,6 @@ s ~~ x = return $   "printing: " ++ show x
                 ~:  render <$> prExpr x
                 ~=? Just s
 
-main :: IO ()
-main = runTest allTests
 
 allTests :: IO Test
 allTests = test <$> sequence
@@ -29,8 +26,6 @@ allTests = test <$> sequence
 
     , "1"
     ~~ ValueInteger 1
-
-    -- , quickTest "integer literals" $ \ i -> let j = abs i in Just (ValueInteger j) == parseMaybe pValue (show j)
 
     , "[1, 2, 3]"
     ~~ ValueMatrix [ ValueInteger 1
@@ -78,8 +73,9 @@ allTests = test <$> sequence
                   , ValueTuple [ValueBoolean False, ValueInteger 2]
                   ]
 
-    , ("[" ++ intercalate ",\n " (map show [1..90]) ++ "]")
-    ~~ ValueMatrix (map ValueInteger [1..90])
+    , let range = [1..90]
+      in  ("[" ++ intercalate ",\n " (map show range) ++ "]")
+          ~~ ValueMatrix (map ValueInteger range)
 
     , "set {}"
     ~~ ValueSet []
