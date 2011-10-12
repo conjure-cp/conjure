@@ -7,7 +7,7 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
 
-module Language.Essence ( Spec(..), Expr(..), OpDescriptor(..), opDescriptor ) where
+module Language.Essence ( Spec(..), Expr(..), Op(..), OpDescriptor(..), opDescriptor ) where
 
 --------------------------------------------------------------------------------
 -- imports ---------------------------------------------------------------------
