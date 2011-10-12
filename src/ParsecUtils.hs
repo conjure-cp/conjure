@@ -115,8 +115,8 @@ unsafeParse p s = case parse p "" s of
 
 -- reservedNames are loaded from `reservedNames.txt` at compile time
 reservedNames_txt :: String
-reservedNames_txt = unpack $(embedFile "reservedNames.txt")
+reservedNames_txt = unpack $(embedFile "src/reservedNames.txt")
 
 -- reservedOpNames are loaded from `reservedOpNames.txt` at compile time
 reservedOpNames_txt :: String
-reservedOpNames_txt = unpack $(embedFile "reservedOpNames.txt")
+reservedOpNames_txt = unpack $(embedFile "src/reservedOpNames.txt")
