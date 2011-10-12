@@ -1,38 +1,76 @@
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes     #-}
+
 module Language.EssencePrinters where
 
 
 import Control.Applicative
 import Control.Monad
+
 import Language.Essence
-import Text.PrettyPrint
+import PrintUtils
 
 
 prExpr :: Expr -> Maybe Doc
-prExpr x = msum $ map ($x) [prIdentifier, prValue]
+prExpr = prExprPrec 0
+-- prExpr x = msum $ map ($x) [prIdentifier, prValue]
+
+type Prec = Int
+
+prExprPrec :: Prec -> Expr -> Maybe Doc
+prExprPrec prec x = msum $ map (\ pr -> pr prec x) [prIdentifier, prValue, prGenericNode]
 
 
-prIdentifier :: Expr -> Maybe Doc
-prIdentifier (Identifier i) = return $ text i
-prIdentifier _ = Nothing
+prIdentifier :: Prec -> Expr -> Maybe Doc
+prIdentifier _ (Identifier i) = return $ text i
+prIdentifier _ _ = Nothing
 
 
 --------------------------------------------------------------------------------
 -- Printers for inline values --------------------------------------------------
 --------------------------------------------------------------------------------
 
-prValue :: Expr -> Maybe Doc
-prValue (ValueBoolean False) = return $ text "false"
-prValue (ValueBoolean True ) = return $ text "true"
-prValue (ValueInteger i    ) = return $ integer i
-prValue (ValueMatrix    xs ) = brackets . hsep . punctuate comma <$> mapM prExpr xs
-prValue (ValueTuple     xs ) = parens   . hsep . punctuate comma <$> mapM prExpr xs
-prValue (ValueSet       xs ) = (text "set"       <+>) . braces . hsep . punctuate comma <$> mapM prExpr xs
-prValue (ValueMSet      xs ) = (text "mset"      <+>) . braces . hsep . punctuate comma <$> mapM prExpr xs
-prValue (ValueFunction  xs ) = (text "function"  <+>) . braces . hsep . punctuate comma <$> elements
+prValue :: Prec -> Expr -> Maybe Doc
+prValue _ (ValueBoolean False) = return $ text "false"
+prValue _ (ValueBoolean True ) = return $ text "true"
+prValue _ (ValueInteger i    ) = return $ integer i
+prValue _ (ValueMatrix    xs ) = brackets . sep . punctuate comma <$> mapM prExpr xs
+prValue _ (ValueTuple     xs ) = parens   . sep . punctuate comma <$> mapM prExpr xs
+prValue _ (ValueSet       xs ) = (text "set"       <+>) . braces . sep . punctuate comma <$> mapM prExpr xs
+prValue _ (ValueMSet      xs ) = (text "mset"      <+>) . braces . sep . punctuate comma <$> mapM prExpr xs
+prValue _ (ValueFunction  xs ) = (text "function"  <+>) . braces . sep . punctuate comma <$> elements
     where elements = forM xs $ \ (i,j) -> do i' <- prExpr i
                                              j' <- prExpr j
                                              return (i' <+> text "->" <+> j')
-prValue (ValueRelation  xs ) = (text "relation"  <+>) . braces . hsep . punctuate comma <$> mapM prExpr xs
-prValue (ValuePartition xss) = (text "partition" <+>) . braces . hsep . punctuate comma <$> mapM elements xss
-    where elements xs = braces . hsep . punctuate comma <$> mapM prExpr xs
-prValue _ = Nothing
+prValue _ (ValueRelation  xs ) = (text "relation"  <+>) . braces . sep . punctuate comma <$> mapM prExpr xs
+prValue _ (ValuePartition xss) = (text "partition" <+>) . braces . sep . punctuate comma <$> mapM elements xss
+    where elements xs = braces . sep . punctuate comma <$> mapM prExpr xs
+prValue _ _ = Nothing
+
+
+prGenericNode :: Prec -> Expr -> Maybe Doc
+prGenericNode prec (GenericNode op xs) = prOpExpr prec (opDescriptor op) xs
+prGenericNode _ _ = Nothing
+
+
+prOpExpr :: Int -> OpDescriptor -> [Expr] -> Maybe Doc
+prOpExpr _ OpSpecial _ = error "OpSpecial"
+prOpExpr _ (OpLispy {face}) xs = do
+    elements <- mapM prExpr xs
+    return $ text face <+> parens (sep elements)
+prOpExpr p (OpInfixL {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
+    a' <- prExprPrec precedence a
+    b' <- prExprPrec (precedence+1) b
+    return $ sep [a', text face, b']
+prOpExpr p (OpInfixN {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
+    a' <- prExprPrec precedence a
+    b' <- prExprPrec precedence b
+    return $ sep [a', text face, b']
+prOpExpr p (OpInfixR {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
+    a' <- prExprPrec (precedence+1) a
+    b' <- prExprPrec precedence b
+    return $ sep [a', text face, b']
+prOpExpr p (OpPrefix {face,precedence}) [a]   = parensIf (p > precedence) <$> do
+    a' <- prExprPrec precedence a
+    return $ sep [text face, a']
+prOpExpr _ _ _ = error "prOpExpr"
