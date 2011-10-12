@@ -7,15 +7,19 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
 
-module Language.Essence ( Spec(..), Expr(..) ) where
+module Language.Essence ( Spec(..), Expr(..), Op(..), OpDescriptor(..), opDescriptor ) where
+
+--------------------------------------------------------------------------------
+-- imports ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 import Data.Binary
 import Data.Generics
 
 
--- let's just use strings for now.
-type Op = String
-
+--------------------------------------------------------------------------------
+-- Spec ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- the data type for an Essence specification
 data Spec
@@ -26,15 +30,19 @@ data Spec
            , objective        :: Maybe Expr
            , constraints      :: [Expr]
            }
-    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
+    deriving ({-! Eq, Ord, Show, Binary, Data, Typeable !-})
 
 type Binding = (BindingEnum,Expr,Expr)
 
 data BindingEnum = Find | Given | Letting
-    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
+    deriving ({-! Eq, Ord, Show, Binary, Data, Typeable !-})
 
 type Where = Expr
 
+
+--------------------------------------------------------------------------------
+-- Expr ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- the data type for any kind of expression in Essence
 -- this will end up being a giant type, but decidedly so.
@@ -125,8 +133,100 @@ data Expr
 
     | GenericNode Op [Expr]
 
-    deriving ({-! Eq, Ord, Read, Show, Binary, Data, Typeable !-})
+    deriving ({-! Eq, Ord, Show, Binary, Data, Typeable !-})
+
 
 type Representation = String
+
+
+--------------------------------------------------------------------------------
+-- Op --------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- the data type for operators in Essence
+data Op
+    = Plus | Minus | Times | Div | Mod | Pow | Abs | Negate
+    | Lt | Leq | Gt | Geq | Neq | Eq
+    | Not | Or | And | Imply | Iff
+    | Union | Intersect | Subset | SubsetEq | Supset | SupsetEq
+    | Card | Elem | Max | Min
+    | ToSet | ToMSet | ToRel | Defined | Range
+    | Image | PreImage | Inverse
+    | Together | Apart
+    | Party | Participants | Parts
+    | Freq | Hist
+
+    | Index | Project
+
+    | Bubble
+    
+    | AllDiff
+
+    deriving ({-! Eq, Ord, Show, Enum, Bounded, Binary, Data, Typeable !-})
+
+
+-- will be used while parsing and pretty-printing operators
+data OpDescriptor
+    = OpLispy  { face :: String, cardinality :: Int }
+    | OpInfixL { face :: String, precedence  :: Int }
+    | OpInfixN { face :: String, precedence  :: Int }
+    | OpInfixR { face :: String, precedence  :: Int }
+    | OpPrefix { face :: String, precedence  :: Int }
+    | OpSpecial
+
+opDescriptor :: Op -> OpDescriptor
+opDescriptor Plus         = OpInfixL "+"            3
+opDescriptor Minus        = OpInfixL "-"            3
+opDescriptor Times        = OpInfixL "*"            4
+opDescriptor Div          = OpInfixL "/"            4
+opDescriptor Mod          = OpInfixL "%"            4
+opDescriptor Pow          = OpInfixR "^"            5
+opDescriptor Abs          = OpLispy  "abs"          1
+opDescriptor Negate       = OpPrefix "-"            10
+opDescriptor Lt           = OpInfixN "<"            2
+opDescriptor Leq          = OpInfixN "<="           2
+opDescriptor Gt           = OpInfixN ">"            2
+opDescriptor Geq          = OpInfixN ">="           2
+opDescriptor Neq          = OpInfixN "!="           2
+opDescriptor Eq           = OpInfixN "="            2
+opDescriptor Not          = OpPrefix "!"            10
+opDescriptor Or           = OpInfixL "\\/"          1
+opDescriptor And          = OpInfixL "/\\"          1
+opDescriptor Imply        = OpInfixN "=>"           1
+opDescriptor Iff          = OpInfixN "<=>"          1
+opDescriptor Union        = OpInfixL "union"        3
+opDescriptor Intersect    = OpInfixL "intersect"    3
+opDescriptor Subset       = OpInfixN "subset"       2
+opDescriptor SubsetEq     = OpInfixN "subseteq"     2
+opDescriptor Supset       = OpInfixN "supset"       2
+opDescriptor SupsetEq     = OpInfixN "supseteq"     2
+opDescriptor Card         = OpLispy  "card"         1
+opDescriptor Elem         = OpInfixN "elem"         2
+opDescriptor Max          = OpLispy  "max"          1
+opDescriptor Min          = OpLispy  "min"          1
+opDescriptor ToSet        = OpLispy  "toSet"        1
+opDescriptor ToMSet       = OpLispy  "toMSet"       1
+opDescriptor ToRel        = OpLispy  "toRel"        1
+opDescriptor Defined      = OpLispy  "defined"      1
+opDescriptor Range        = OpLispy  "range"        1
+opDescriptor Image        = OpLispy  "image"        2
+opDescriptor PreImage     = OpLispy  "preimage"     2
+opDescriptor Inverse      = OpLispy  "inverse"      2
+opDescriptor Together     = OpLispy  "together"     3
+opDescriptor Apart        = OpLispy  "apart"        3
+opDescriptor Party        = OpLispy  "party"        2
+opDescriptor Participants = OpLispy  "participants" 1
+opDescriptor Parts        = OpLispy  "parts"        1
+opDescriptor Freq         = OpLispy  "freq"         2
+opDescriptor Hist         = OpLispy  "hist"         2
+opDescriptor Project      = OpSpecial
+opDescriptor Index        = OpSpecial
+opDescriptor Bubble       = OpInfixN "@"            2
+opDescriptor AllDiff      = OpLispy  "alldifferent" 1
+
+
+--------------------------------------------------------------------------------
+-- type class instance ---------------------------------------------------------
+--------------------------------------------------------------------------------
 
 #include "EssenceDerivations.hs"
