@@ -6,8 +6,8 @@ import Data.List ( intercalate )
 import Test.HUnit ( Test, (~:), (~=?), test )
 
 import Language.Essence
-import Language.EssenceParsers
-import Language.EssencePrinters
+import Language.EssenceParsers ( pExpr )
+import Language.EssencePrinters ( prExpr )
 import ParsecUtils ( parseMaybe )
 import PrintUtils ( render )
 

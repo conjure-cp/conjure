@@ -5,7 +5,7 @@ import Control.Applicative
 import Test.HUnit ( Test, (~:), (~=?), test )
 
 import Language.Essence
-import Language.EssenceParsers
+import Language.EssenceParsers ( pExpr )
 import ParsecUtils
 import TestUtils ( quickTest )
 
@@ -27,7 +27,7 @@ allTests = test <$> sequence
     , "1"
     ~~ ValueInteger 1
 
-    , quickTest "integer literals" $ \ i -> let j = abs i in Just (ValueInteger j) == parseMaybe pValue (show j)
+    , quickTest "integer literals" $ \ i -> let j = abs i in Just (ValueInteger j) == parseMaybe pExpr (show j)
 
     , "[1,2,3]"
     ~~ ValueMatrix [ ValueInteger 1

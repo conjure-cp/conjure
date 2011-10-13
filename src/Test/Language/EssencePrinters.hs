@@ -6,7 +6,7 @@ import Data.List ( intercalate )
 import Test.HUnit ( Test, (~:), (~=?), test )
 
 import Language.Essence
-import Language.EssencePrinters
+import Language.EssencePrinters ( prExpr )
 import PrintUtils ( render )
 
 
