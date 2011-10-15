@@ -1,6 +1,8 @@
 module Language.EssenceParsers ( pExpr ) where
 
+
 import Control.Applicative
+
 import Language.Essence
 import ParsecUtils
 
@@ -9,7 +11,7 @@ pExpr :: Parser Expr
 pExpr = pExprCore <?> "expression"
 
 pExprCore :: Parser Expr
-pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue
+pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue ++ pDomain
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
@@ -56,3 +58,54 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
             where
                 aPart :: Parser [Expr]
                 aPart = braces (sepBy pExpr comma)
+
+
+--------------------------------------------------------------------------------
+-- Parsers for domains ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pDomain :: [Parser Expr]
+pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, pMatrix, pTuple ]
+    where
+        pBool :: Parser Expr
+        pBool = DomainBoolean <$ reserved "bool"
+
+        pIntegerOnly :: Parser Expr
+        pIntegerOnly = DomainIntegerList [] <$ reserved "int"
+
+        pIntegerFromTo :: Parser Expr
+        pIntegerFromTo = do
+            reserved "int"
+            (i,j) <- parens ( do
+                i <- optionMaybe pExpr
+                dot
+                dot
+                j <- optionMaybe pExpr
+                return (i,j) )
+            return (DomainIntegerFromTo i j)
+
+        pIntegerList :: Parser Expr
+        pIntegerList = DomainIntegerList <$> (reserved "int" *> parens (sepBy pExpr comma))
+
+        pUnnamed :: Parser Expr
+        pUnnamed = DomainUnnamed <$> (reserved "new" *> reserved "type" *> reserved "of" *> reserved "size" *> pExpr) <*> pure Nothing
+
+        pEnum :: Parser Expr
+        pEnum = DomainEnum <$> (reserved "enum" *> braces (sepBy1 identifier comma)) <*> pure Nothing
+
+        pMatrix :: Parser Expr
+        pMatrix = helper <$>
+                (reserved "matrix"  *> 
+                 reserved "indexed" *> 
+                 reserved "by"      *> 
+                 brackets (sepBy1 pExpr comma)
+                ) <*>
+                (reserved "of" *> pExpr)
+            where
+                helper :: [Expr] -> Expr -> Expr
+                helper is e = foldr DomainMatrix e is
+
+        pTuple :: Parser Expr
+        pTuple = do
+            reserved "tuple"
+            DomainTuple <$> parens (countSepAtLeast 2 pExpr comma) <*> pure Nothing

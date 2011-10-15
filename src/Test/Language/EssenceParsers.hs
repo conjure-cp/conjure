@@ -12,12 +12,22 @@ import TestUtils ( quickTest )
 
 (~~) :: String -> Expr -> IO Test
 s ~~ x = return $   "parsing: " ++ s
-                ~:  parseMaybe pExpr s
-                ~=? Just x
+                ~:  Just x
+                ~=? parseMaybe (pExpr <* eof) s
+
+noParse :: String -> IO Test
+noParse s = return $   "no parse: " ++ s
+                   ~:  Nothing
+                   ~=? parseMaybe (pExpr <* eof) s
 
 
 allTests :: IO Test
 allTests = test <$> sequence
+
+--------------------------------------------------------------------------------
+-- Tests for value parsing -----------------------------------------------------
+--------------------------------------------------------------------------------
+
     [ "false"
     ~~ ValueBoolean False
 
@@ -184,5 +194,71 @@ allTests = test <$> sequence
     ~~ ValuePartition [ [ ValueInteger 1, ValueInteger 2, ValueInteger 3 ]
                       , [ ValueInteger 4, ValueInteger 5, ValueInteger 6 ]
                       ]
+
+--------------------------------------------------------------------------------
+-- Tests for parsing domains ---------------------------------------------------
+--------------------------------------------------------------------------------
+
+    , "bool" ~~ DomainBoolean
+
+    , "int"        ~~ DomainIntegerList []
+    , "int()"      ~~ DomainIntegerList []
+    , "int( )"     ~~ DomainIntegerList []
+    , "int ( )"    ~~ DomainIntegerList []
+    , "int(1)"     ~~ DomainIntegerList [ValueInteger 1]
+    , "int(1 )"    ~~ DomainIntegerList [ValueInteger 1]
+    , "int( 1)"    ~~ DomainIntegerList [ValueInteger 1]
+    , "int( 1 )"   ~~ DomainIntegerList [ValueInteger 1]
+    , "int(1,2)"   ~~ DomainIntegerList [ValueInteger 1, ValueInteger 2]
+    , "int(1,2,a)" ~~ DomainIntegerList [ValueInteger 1, ValueInteger 2, Identifier "a"]
+    , "int(1..)"   ~~ DomainIntegerFromTo (Just (ValueInteger 1)) Nothing
+    , "int(1..20)" ~~ DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 20))
+    , "int(..20)"  ~~ DomainIntegerFromTo Nothing (Just (ValueInteger 20))
+    , noParse "int(1...3)"
+    , noParse "int(1,,2,3)"
+
+    , "new type of size 4"     ~~ DomainUnnamed (ValueInteger 4) Nothing
+    , "new type of size a"     ~~ DomainUnnamed (Identifier "a") Nothing
+    -- , "new type of size a + b" ~~ DomainUnnamed (GenericNode Plus [Identifier "a", Identifier "b"]) Nothing
+
+    , "enum {foo, bar}"      ~~ DomainEnum ["foo", "bar"] Nothing
+    , "enum {foo, bar, baz}" ~~ DomainEnum ["foo", "bar", "baz"] Nothing
+    , noParse "enum {foo, int}"
+
+    , "matrix indexed by [int(1..9)] of bool"
+    ~~ DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) DomainBoolean
+
+    , "matrix indexed by [int(1..9)] of matrix indexed by [int(a..b)] of enum {foo, bar}"
+    ~~  DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) (
+            DomainMatrix (DomainIntegerFromTo (Just (Identifier "a")) (Just (Identifier "b"))) (
+                DomainEnum ["foo", "bar"] Nothing
+            )
+        )
+
+    , "matrix indexed by [int(1..9),int(a..b)] of enum {foo, bar}"
+    ~~  DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) (
+            DomainMatrix (DomainIntegerFromTo (Just (Identifier "a")) (Just (Identifier "b"))) (
+                DomainEnum ["foo", "bar"] Nothing
+            )
+        )
+
+    , "matrix indexed by [int(1..9), int(a..), int(..b)] of bool"
+    ~~  DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) (
+            DomainMatrix (DomainIntegerFromTo (Just (Identifier "a")) Nothing) (
+                DomainMatrix (DomainIntegerFromTo Nothing (Just (Identifier "b"))) (
+                    DomainBoolean
+                )
+            )
+        )
+
+    , "tuple (int,bool)"
+    ~~ DomainTuple [DomainIntegerList [], DomainBoolean] Nothing
+
+    , "tuple (int,fool,tuple(enum{foo,bar},int(1..9)))"
+    ~~ DomainTuple [ DomainIntegerList [], Identifier "fool"
+                   , DomainTuple [ DomainEnum ["foo", "bar"] Nothing
+                                 , DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
+                                 ] Nothing
+                   ] Nothing
 
     ]
