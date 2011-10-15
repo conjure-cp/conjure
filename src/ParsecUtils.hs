@@ -7,7 +7,7 @@ module ParsecUtils (
 
     buildExpressionParser,
 
-    choice, try, optionMaybe,
+    choice, choiceTry, try, optionMaybe,
     angles, braces, brackets,
     count, countSep, countSepAtLeast,
     sepBy, sepBy1, sepEndBy, sepEndBy1,
@@ -60,6 +60,13 @@ parens     :: Parser a -> Parser a;  parens     = T.parens     lexer
 reserved   :: String -> Parser ();   reserved   = T.reserved   lexer
 reservedOp :: String -> Parser ();   reservedOp = T.reservedOp lexer
 whiteSpace :: Parser ();             whiteSpace = T.whiteSpace lexer
+
+
+-- choice with try applied to every parser in the list but not the last
+choiceTry :: [Parser a] -> Parser a
+choiceTry []     = error "choiceTry []"
+choiceTry [x]    = x
+choiceTry (x:xs) = try x <|> choiceTry xs
 
 
 -- parses a specified number of elements
