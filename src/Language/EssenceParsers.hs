@@ -66,8 +66,11 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
 --------------------------------------------------------------------------------
 
 pDomain :: [Parser Expr]
-pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, pMatrix, pTuple
-          , pSet False, pSet True, pMSet False, pMSet True
+pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
+          , pTuple   False, pTuple   True
+          , pUnnamed False, pUnnamed True
+          , pSet     False, pSet     True
+          , pMSet    False, pMSet    True
           ]
     where
         pBool :: Parser Expr
@@ -90,8 +93,14 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, 
         pIntegerList :: Parser Expr
         pIntegerList = DomainIntegerList <$> (reserved "int" *> parens (sepBy pExpr comma))
 
-        pUnnamed :: Parser Expr
-        pUnnamed = DomainUnnamed <$> (reserved "new" *> reserved "type" *> reserved "of" *> reserved "size" *> pExpr) <*> pure Nothing
+        pUnnamed :: Bool -> Parser Expr
+        pUnnamed b = case b of
+            False -> helper <$> pure [] <*> (reserved "new" *> reserved "type" *> reserved "of" *> reserved "size" *> pExpr)
+            True  -> helper <$> (reserved "new" *> reserved "type" *> parens (keyValuePairOrAttibuteList [] []))
+                            <*> (reserved "of"  *> reserved "size" *> pExpr)
+            where
+                helper :: [Either String (String,Expr)] -> Expr -> Expr
+                helper attrs e = DomainUnnamed e (lookupRepresentation attrs)
 
         pEnum :: Parser Expr
         pEnum = DomainEnum <$> (reserved "enum" *> braces (sepBy1 identifier comma)) <*> pure Nothing
@@ -108,10 +117,15 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, 
                 helper :: [Expr] -> Expr -> Expr
                 helper is e = foldr DomainMatrix e is
 
-        pTuple :: Parser Expr
-        pTuple = do
-            reserved "tuple"
-            DomainTuple <$> parens (countSepAtLeast 2 pExpr comma) <*> pure Nothing
+        pTuple :: Bool -> Parser Expr
+        pTuple b = case b of
+            False -> helper <$> (reserved "tuple" *> reserved "of" *> pure [])
+                            <*> (parens (countSepAtLeast 2 pExpr comma))
+            True  -> helper <$> (reserved "tuple" *> parens (keyValuePairOrAttibuteList [] []) <* reserved "of")
+                            <*> (parens (countSepAtLeast 2 pExpr comma))
+            where
+                helper :: [Either String (String,Expr)] -> [Expr] -> Expr
+                helper attrs xs = DomainTuple xs (lookupRepresentation attrs)
 
         pSet :: Bool -> Parser Expr
         pSet b = case b of
