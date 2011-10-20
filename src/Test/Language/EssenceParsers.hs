@@ -251,10 +251,10 @@ allTests = test <$> sequence
             )
         )
 
-    , "tuple (int,bool)"
+    , "tuple of (int,bool)"
     ~~ DomainTuple [DomainIntegerList [], DomainBoolean] Nothing
 
-    , "tuple (int,fool,tuple(enum{foo,bar},int(1..9)))"
+    , "tuple of (int,fool,tuple of(enum{foo,bar},int(1..9)))"
     ~~ DomainTuple [ DomainIntegerList [], Identifier "fool"
                    , DomainTuple [ DomainEnum ["foo", "bar"] Nothing
                                  , DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
@@ -271,7 +271,7 @@ allTests = test <$> sequence
     ,  "set (size n) of a"
     ~~ DomainSet (Just (Identifier "n")) Nothing Nothing False (Identifier "a") Nothing
 
-    ,  "set (size n) of tuple (a,b)"
+    ,  "set (size n) of tuple of (a,b)"
     ~~ DomainSet (Just (Identifier "n")) Nothing Nothing False (DomainTuple [Identifier "a",Identifier "b"] Nothing) Nothing
 
     ,  "set (minSize n) of a"
@@ -311,7 +311,7 @@ allTests = test <$> sequence
     ,  "mset (size n) of a"
     ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
 
-    ,  "mset (size n) of tuple (a,b)"
+    ,  "mset (size n) of tuple of (a,b)"
     ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing False (DomainTuple [Identifier "a",Identifier "b"] Nothing) Nothing
 
     ,  "mset (minSize n) of a"

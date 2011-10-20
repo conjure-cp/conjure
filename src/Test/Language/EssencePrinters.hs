@@ -103,7 +103,7 @@ allTests = test <$> sequence
                 , ValueSet [ValueInteger 2, ValueInteger 4, ValueInteger 6]
                 ]
 
-    , "set {set {1, 2, 3},\n     set {1, 3, 5},\n     set {2, 4, 6},\n     set {true, false}}"
+    , "set {set {1, 2, 3}, set {1, 3, 5}, set {2, 4, 6}, set {true, false}}"
     ~~ ValueSet [ ValueSet [ValueInteger 1, ValueInteger 2, ValueInteger 3]
                 , ValueSet [ValueInteger 1, ValueInteger 3, ValueInteger 5]
                 , ValueSet [ValueInteger 2, ValueInteger 4, ValueInteger 6]
@@ -182,14 +182,14 @@ allTests = test <$> sequence
     , "partition {}"
     ~~ ValuePartition []
 
-    , concat [ "partition {{},"
-             , "\n           {1},"
-             , "\n           {2},"
-             , "\n           {3},"
-             , "\n           {1, 2},"
-             , "\n           {1, 3},"
-             , "\n           {2, 3},"
-             , "\n           {1, 2, 3}}" ]
+    , concat [ "partition {{}"
+             , ", {1}"
+             , ", {2}"
+             , ", {3}"
+             , ", {1, 2}"
+             , ", {1, 3}"
+             , ", {2, 3}"
+             , ", {1, 2, 3}}" ]
     ~~ ValuePartition [ [ ]
                       , [ ValueInteger 1 ]
                       , [ ValueInteger 2 ]

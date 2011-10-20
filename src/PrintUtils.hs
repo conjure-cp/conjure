@@ -9,7 +9,7 @@ import Text.PrettyPrint hiding (render)
 
 
 render :: Doc -> String
-render = renderStyle style { lineLength = 80 }
+render = renderStyle style { lineLength = 120 }
 
 
 wrapIf :: (Doc -> Doc) -> Bool -> Doc -> Doc
