@@ -125,7 +125,7 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, 
                     , minSize        = "minSize"      `lookup` rights attrs
                     , maxSize        = "maxSize"      `lookup` rights attrs
                     , attrDontCare   = "attrDontCare" `elem`   lefts  attrs
-                    , representation = lookupRepresentation (rights attrs)
+                    , representation = lookupRepresentation attrs
                     , element        = e
                     }
 
@@ -144,7 +144,7 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, 
                     , minOccr        = "minOccr"      `lookup` rights attrs
                     , maxOccr        = "maxOccr"      `lookup` rights attrs
                     , attrDontCare   = "attrDontCare" `elem`   lefts  attrs
-                    , representation = lookupRepresentation (rights attrs)
+                    , representation = lookupRepresentation attrs
                     , element        = e
                     }
 
@@ -168,7 +168,7 @@ keyValuePairOrAttibuteList kws ats = sepBy1 (try (Left <$> anyAttr) <|> (Right <
         anyAttr = choiceTry $ attrDontCareP : [ s <$ reserved s | s <- ats ]
 
 
-lookupRepresentation :: [(String,Expr)] -> Maybe String
-lookupRepresentation lu = case lookup "representation" lu of
+lookupRepresentation :: [Either String (String,Expr)] -> Maybe String
+lookupRepresentation lu = case lookup "representation" (rights lu) of
     Just (Identifier nm) -> Just nm
     _                    -> Nothing
