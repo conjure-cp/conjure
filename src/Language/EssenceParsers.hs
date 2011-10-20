@@ -67,7 +67,7 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
 
 pDomain :: [Parser Expr]
 pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, pMatrix, pTuple
-          , pSet False, pSet True
+          , pSet False, pSet True, pMSet False, pMSet True
           ]
     where
         pBool :: Parser Expr
@@ -124,6 +124,25 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, 
                     {    size        = "size"         `lookup` rights attrs
                     , minSize        = "minSize"      `lookup` rights attrs
                     , maxSize        = "maxSize"      `lookup` rights attrs
+                    , attrDontCare   = "attrDontCare" `elem`   lefts  attrs
+                    , representation = lookupRepresentation (rights attrs)
+                    , element        = e
+                    }
+
+        pMSet :: Bool -> Parser Expr
+        pMSet b = case b of
+            False -> helper <$> pure [] <*> (reserved "mset" *> reserved "of" *> pExpr)
+            True  -> helper <$> (reserved "mset" *> parens (keyValuePairOrAttibuteList [ "size", "minSize", "maxSize", "occr", "minOccr", "maxOccr" ] []))
+                            <*> (reserved "of"   *> pExpr)
+            where
+                helper :: [Either String (String,Expr)] -> Expr -> Expr
+                helper attrs e = DomainMSet
+                    {    size        = "size"         `lookup` rights attrs
+                    , minSize        = "minSize"      `lookup` rights attrs
+                    , maxSize        = "maxSize"      `lookup` rights attrs
+                    ,    occr        = "occr"         `lookup` rights attrs
+                    , minOccr        = "minOccr"      `lookup` rights attrs
+                    , maxOccr        = "maxOccr"      `lookup` rights attrs
                     , attrDontCare   = "attrDontCare" `elem`   lefts  attrs
                     , representation = lookupRepresentation (rights attrs)
                     , element        = e
