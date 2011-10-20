@@ -2,6 +2,7 @@ module Language.EssenceParsers ( pExpr ) where
 
 
 import Control.Applicative
+import Data.Either ( lefts, rights )
 
 import Language.Essence
 import ParsecUtils
@@ -65,7 +66,9 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
 --------------------------------------------------------------------------------
 
 pDomain :: [Parser Expr]
-pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, pMatrix, pTuple ]
+pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, pMatrix, pTuple
+          , pSet False, pSet True
+          ]
     where
         pBool :: Parser Expr
         pBool = DomainBoolean <$ reserved "bool"
@@ -109,3 +112,44 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pUnnamed, pEnum, 
         pTuple = do
             reserved "tuple"
             DomainTuple <$> parens (countSepAtLeast 2 pExpr comma) <*> pure Nothing
+
+        pSet :: Bool -> Parser Expr
+        pSet b = case b of
+            False -> helper <$> pure [] <*> (reserved "set" *> reserved "of" *> pExpr)
+            True  -> helper <$> (reserved "set" *> parens (keyValuePairOrAttibuteList ["size","minSize","maxSize"] []))
+                            <*> (reserved "of"  *> pExpr)
+            where
+                helper :: [Either String (String,Expr)] -> Expr -> Expr
+                helper attrs e = DomainSet
+                    {    size        = "size"         `lookup` rights attrs
+                    , minSize        = "minSize"      `lookup` rights attrs
+                    , maxSize        = "maxSize"      `lookup` rights attrs
+                    , attrDontCare   = "attrDontCare" `elem`   lefts  attrs
+                    , representation = lookupRepresentation (rights attrs)
+                    , element        = e
+                    }
+
+
+-- | Parser for a comma separated attribute of key-value pair list. First
+-- parameter is possible key (in a key value pair), and the second parameter
+-- is possible attributes.
+keyValuePairOrAttibuteList :: [String] -> [String] -> Parser [Either String (String,Expr)]
+keyValuePairOrAttibuteList kws ats = sepBy1 (try (Left <$> anyAttr) <|> (Right <$> anyKV)) comma
+    where
+        reprP :: Parser (String, Expr)
+        reprP = (,) "representation" <$> (reserved "representation" *> (Identifier <$> identifier))
+
+        attrDontCareP :: Parser String
+        attrDontCareP = "attrDontCare" <$ reserved "_"
+
+        anyKV :: Parser (String, Expr)
+        anyKV = choiceTry $ reprP : [ (,) kw <$> (reserved kw *> pExpr) | kw <- kws ]
+
+        anyAttr :: Parser String
+        anyAttr = choiceTry $ attrDontCareP : [ s <$ reserved s | s <- ats ]
+
+
+lookupRepresentation :: [(String,Expr)] -> Maybe String
+lookupRepresentation lu = case lookup "representation" lu of
+    Just (Identifier nm) -> Just nm
+    _                    -> Nothing
