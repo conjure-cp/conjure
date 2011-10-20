@@ -4,8 +4,8 @@
 module Language.EssencePrinters where
 
 
-import Control.Applicative
-import Control.Monad
+import Control.Applicative hiding ( empty )
+import Control.Monad ( forM, msum )
 
 import Language.Essence
 import PrintUtils
@@ -13,12 +13,11 @@ import PrintUtils
 
 prExpr :: Expr -> Maybe Doc
 prExpr = prExprPrec 0
--- prExpr x = msum $ map ($x) [prIdentifier, prValue]
 
 type Prec = Int
 
 prExprPrec :: Prec -> Expr -> Maybe Doc
-prExprPrec prec x = msum $ map (\ pr -> pr prec x) [prIdentifier, prValue, prGenericNode]
+prExprPrec prec x = msum $ map (\ pr -> pr prec x) [prIdentifier, prValue, prGenericNode, prDomain]
 
 
 prIdentifier :: Prec -> Expr -> Maybe Doc
@@ -46,6 +45,10 @@ prValue _ (ValueRelation  xs ) = (text "relation"  <+>) . braces . sep . punctua
 prValue _ (ValuePartition xss) = (text "partition" <+>) . braces . sep . punctuate comma <$> mapM elements xss
     where elements xs = braces . sep . punctuate comma <$> mapM prExpr xs
 prValue _ _ = Nothing
+
+
+prDomain :: Prec -> Expr -> Maybe Doc
+prDomain _ _ = Nothing
 
 
 prGenericNode :: Prec -> Expr -> Maybe Doc
