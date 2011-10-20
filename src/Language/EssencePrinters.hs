@@ -48,6 +48,46 @@ prValue _ _ = Nothing
 
 
 prDomain :: Prec -> Expr -> Maybe Doc
+prDomain _ DomainBoolean = return $ text "bool"
+prDomain _ (DomainIntegerFromTo fr to) = do
+    frDom <- maybe (return empty) prExpr fr
+    toDom <- maybe (return empty) prExpr to
+    return $ text "int" <> parens (frDom <> text ".." <> toDom)
+prDomain _ (DomainIntegerList []) = return $ text "int"
+prDomain _ (DomainIntegerList xs) = do
+    xs' <- mapM prExpr xs
+    return $ text "int" <> parens (sep (punctuate comma xs'))
+prDomain _ (DomainUnnamed {theSize,representation}) = do
+    s <- prExpr theSize
+    return $ text "new"
+         <+> text "type"
+         <+> maybe empty (\ r -> parens (text "representation" <+> text r) ) representation
+         <+> text "of"
+         <+> text "size"
+         <+> s
+prDomain _ (DomainEnum {enums,representation}) =
+    return $ text "enum"
+         <+> maybe empty (\ r -> parens (text "representation" <+> text r) ) representation
+         <+> braces (sep (punctuate comma (map text enums)))
+prDomain _ (DomainMatrix i j) = do
+    is' <- mapM prExpr is
+    k'  <- prExpr k
+    return $ text "matrix"
+         <+> text "indexed"
+         <+> text "by"
+         <+> brackets (sep (punctuate comma is'))
+         <+> text "of"
+         <+> k'
+    where
+        (is,k) = helper i j
+        helper a (DomainMatrix b c) = let (d,e) = helper b c in (a:d,e)
+        helper a b = ([a],b)
+prDomain _ (DomainTuple {components,representation}) = do
+    cs <- mapM prExpr components
+    return $ text "tuple"
+         <+> maybe empty (\ r -> parens (text "representation" <+> text r) ) representation
+         <+> text "of"
+         <+> parens (sep (punctuate comma cs))
 prDomain _ _ = Nothing
 
 
