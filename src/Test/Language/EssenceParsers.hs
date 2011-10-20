@@ -261,4 +261,93 @@ allTests = test <$> sequence
                                  ] Nothing
                    ] Nothing
 
+
+    ,  "set of int"
+    ~~ DomainSet Nothing Nothing Nothing False (DomainIntegerList []) Nothing
+
+    ,  "set of a"
+    ~~ DomainSet Nothing Nothing Nothing False (Identifier "a") Nothing
+
+    ,  "set (size n) of a"
+    ~~ DomainSet (Just (Identifier "n")) Nothing Nothing False (Identifier "a") Nothing
+
+    ,  "set (size n) of tuple (a,b)"
+    ~~ DomainSet (Just (Identifier "n")) Nothing Nothing False (DomainTuple [Identifier "a",Identifier "b"] Nothing) Nothing
+
+    ,  "set (minSize n) of a"
+    ~~ DomainSet Nothing (Just (Identifier "n")) Nothing False (Identifier "a") Nothing
+
+    ,  "set (maxSize n) of a"
+    ~~ DomainSet Nothing Nothing (Just (Identifier "n")) False (Identifier "a") Nothing
+
+    ,  "set (representation foo) of a"
+    ~~ DomainSet Nothing Nothing Nothing False (Identifier "a") (Just "foo")
+
+    ,  "set (size n, minSize m, representation foo) of a"
+    ~~ DomainSet (Just (Identifier "n")) (Just (Identifier "m")) Nothing False (Identifier "a") (Just "foo")
+
+    ,  "set (representation foo) of set of a"
+    ~~ DomainSet Nothing Nothing Nothing False (DomainSet Nothing Nothing Nothing False (Identifier "a") Nothing) (Just "foo")
+
+    ,  "set (size n, _) of int"
+    ~~ DomainSet (Just (Identifier "n")) Nothing Nothing True (DomainIntegerList []) Nothing
+
+    ,  "set (_, maxSize n) of int"
+    ~~ DomainSet Nothing Nothing (Just (Identifier "n")) True (DomainIntegerList []) Nothing
+
+    ,  "set (_, maxSize n, _) of int"
+    ~~ DomainSet Nothing Nothing (Just (Identifier "n")) True (DomainIntegerList []) Nothing
+
+    ,  "set (_, maxSize n, _, _) of int"
+    ~~ DomainSet Nothing Nothing (Just (Identifier "n")) True (DomainIntegerList []) Nothing
+
+
+    ,  "mset of int"
+    ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (DomainIntegerList []) Nothing
+
+    ,  "mset of a"
+    ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
+
+    ,  "mset (size n) of a"
+    ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
+
+    ,  "mset (size n) of tuple (a,b)"
+    ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing False (DomainTuple [Identifier "a",Identifier "b"] Nothing) Nothing
+
+    ,  "mset (minSize n) of a"
+    ~~ DomainMSet Nothing (Just (Identifier "n")) Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
+
+    ,  "mset (maxSize n) of a"
+    ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing False (Identifier "a") Nothing
+
+    ,  "mset (representation foo) of a"
+    ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (Identifier "a") (Just "foo")
+
+    ,  "mset (size n, minSize m, representation foo) of a"
+    ~~ DomainMSet (Just (Identifier "n")) (Just (Identifier "m")) Nothing Nothing Nothing Nothing False (Identifier "a") (Just "foo")
+
+    ,  "mset (representation foo) of mset of a"
+    ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing) (Just "foo")
+
+    ,  "mset (size n, _) of int"
+    ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing True (DomainIntegerList []) Nothing
+
+    ,  "mset (_, maxSize n) of int"
+    ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
+
+    ,  "mset (_, maxSize n, _) of int"
+    ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
+
+    ,  "mset (_, maxSize n, _, _) of int"
+    ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
+
+    ,  "mset (maxSize n, occr o, _) of int"
+    ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) (Just (Identifier "o")) Nothing Nothing True (DomainIntegerList []) Nothing
+
+    ,  "mset (occr o, minOccr m) of int"
+    ~~ DomainMSet Nothing Nothing Nothing (Just (Identifier "o")) (Just (Identifier "m")) Nothing False (DomainIntegerList []) Nothing
+
+    ,  "mset (maxOccr m) of int"
+    ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing (Just (Identifier "m")) False (DomainIntegerList []) Nothing
+
     ]
