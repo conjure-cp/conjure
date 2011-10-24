@@ -52,22 +52,22 @@ allTests file = test $ map toTest ls
             _ -> error "never here: Test.Language.EssenceParsePrint.allTests.toTest"
 
         shouldParse :: String -> Test
-        shouldParse s = test [ TestCase $ assertBool "ShouldParse" $ isJust $ sParsed
+        shouldParse s = test [ TestCase $ assertBool "ShouldParse" $ isJust sParsed
                              ]
             where
                 sParsed :: Maybe Expr
                 sParsed = parseMaybe pExprEof s
 
         noParse :: String -> Test
-        noParse s = test [ TestCase $ assertBool "NoParse" $ isNothing $ sParsed
+        noParse s = test [ TestCase $ assertBool "NoParse" $ isNothing sParsed
                          ]
             where
                 sParsed :: Maybe Expr
                 sParsed = parseMaybe pExprEof s
 
         shouldParseTo :: String -> String -> Test
-        shouldParseTo s x = test [ TestCase $ assertBool "ShouldParseTo.parse" $ isJust $ sParsed
-                                 , TestCase $ assertBool "ShouldParseTo.read"  $ isJust $ xRead
+        shouldParseTo s x = test [ TestCase $ assertBool "ShouldParseTo.parse" $ isJust sParsed
+                                 , TestCase $ assertBool "ShouldParseTo.read"  $ isJust xRead
                                  , "ShouldParseTo.(s.parsed=x.read)" ~: sParsed ~=? xRead
                                  ]
             where
@@ -78,8 +78,8 @@ allTests file = test $ map toTest ls
                 xRead = maybeRead x
 
         parsePrint :: String -> String -> Test
-        parsePrint s x = test [ TestCase $ assertBool "ParsePrint.parse" $ isJust $ sParsed
-                              , TestCase $ assertBool "ParsePrint.read"  $ isJust $ xRead
+        parsePrint s x = test [ TestCase $ assertBool "ParsePrint.parse" $ isJust sParsed
+                              , TestCase $ assertBool "ParsePrint.read"  $ isJust xRead
                               , "ParsePrint.(parsed=read)" ~: sParsed ~=? xRead
                               , "ParsePrint.(s=x.printed)" ~: Just s  ~=? xPrinted
                               , "ParsePrint.(s=s.printed)" ~: Just s  ~=? sParsedPrinted
