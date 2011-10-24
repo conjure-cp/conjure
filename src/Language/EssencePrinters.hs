@@ -6,6 +6,7 @@ module Language.EssencePrinters where
 
 import Control.Applicative hiding ( empty )
 import Control.Monad ( forM, msum )
+import Data.Maybe ( mapMaybe )
 
 import Language.Essence
 import PrintUtils
@@ -88,7 +89,50 @@ prDomain _ (DomainTuple {components,representation}) = do
          <+> maybe empty (\ r -> parens (text "representation" <+> text r) ) representation
          <+> text "of"
          <+> parens (sep (punctuate comma cs))
+prDomain _ p@(DomainSet {element}) = do
+    let
+        attrs :: [Doc]
+        attrs = mapMaybe (attrToDoc p) [ "size", "minSize", "maxSize"
+                                       , "representation", "attrDontCare"
+                                       ]
+    element' <- prExpr element
+    return $  text "set"
+          <+> parensIf (not (null attrs)) (sep (punctuate comma attrs))
+          <+> text "of"
+          <+> element'
+prDomain _ p@(DomainMSet {element}) = do
+    let
+        attrs :: [Doc]
+        attrs = mapMaybe (attrToDoc p) [ "size", "minSize", "maxSize"
+                                       , "occr", "minOccr", "maxOccr"
+                                       , "representation", "attrDontCare"
+                                       ]
+    element' <- prExpr element
+    return $  text "mset"
+          <+> parensIf (not (null attrs)) (sep (punctuate comma attrs))
+          <+> text "of"
+          <+> element'
 prDomain _ _ = Nothing
+
+
+attrToDoc :: Expr -> String -> Maybe Doc
+
+attrToDoc (DomainSet{          size=Just i})           "size" = (text           "size" <+>) <$> prExpr i
+attrToDoc (DomainSet{       minSize=Just i})        "minSize" = (text        "minSize" <+>) <$> prExpr i
+attrToDoc (DomainSet{       maxSize=Just i})        "maxSize" = (text        "maxSize" <+>) <$> prExpr i
+attrToDoc (DomainSet{representation=Just i}) "representation" = (text "representation" <+>) <$> return (text i)
+attrToDoc (DomainSet{  attrDontCare=True  })   "attrDontCare" = return $ text "_"
+
+attrToDoc (DomainMSet{          size=Just i})           "size" = (text           "size" <+>) <$> prExpr i
+attrToDoc (DomainMSet{       minSize=Just i})        "minSize" = (text        "minSize" <+>) <$> prExpr i
+attrToDoc (DomainMSet{       maxSize=Just i})        "maxSize" = (text        "maxSize" <+>) <$> prExpr i
+attrToDoc (DomainMSet{          occr=Just i})           "occr" = (text           "occr" <+>) <$> prExpr i
+attrToDoc (DomainMSet{       minOccr=Just i})        "minOccr" = (text        "minOccr" <+>) <$> prExpr i
+attrToDoc (DomainMSet{       maxOccr=Just i})        "maxOccr" = (text        "maxOccr" <+>) <$> prExpr i
+attrToDoc (DomainMSet{representation=Just i}) "representation" = (text "representation" <+>) <$> return (text i)
+attrToDoc (DomainMSet{  attrDontCare=True  })   "attrDontCare" = return $ text "_"
+
+attrToDoc _ _ = Nothing
 
 
 prGenericNode :: Prec -> Expr -> Maybe Doc
