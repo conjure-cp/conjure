@@ -5,6 +5,7 @@
 -- See target `derivations` in the Makefile
 
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
 
 module Language.Essence ( Spec(..), Expr(..), Op(..), OpDescriptor(..), opDescriptor ) where
@@ -30,12 +31,12 @@ data Spec
            , objective        :: Maybe Expr
            , constraints      :: [Expr]
            }
-    deriving ({-! Eq, Ord, Show, Binary, Data, Typeable !-})
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Binding = (BindingEnum,Expr,Expr)
 
 data BindingEnum = Find | Given | Letting
-    deriving ({-! Eq, Ord, Show, Binary, Data, Typeable !-})
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Where = Expr
 
@@ -133,7 +134,7 @@ data Expr
 
     | GenericNode Op [Expr]
 
-    deriving ({-! Eq, Ord, Show, Binary, Data, Typeable !-})
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 
 type Representation = String
@@ -162,7 +163,7 @@ data Op
     
     | AllDiff
 
-    deriving ({-! Eq, Ord, Show, Enum, Bounded, Binary, Data, Typeable !-})
+    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable)
 
 
 -- will be used while parsing and pretty-printing operators
@@ -226,7 +227,14 @@ opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 
 
 --------------------------------------------------------------------------------
--- type class instance ---------------------------------------------------------
+-- type class instances --------------------------------------------------------
 --------------------------------------------------------------------------------
+
+{-!
+deriving instance Binary Spec
+deriving instance Binary Expr
+deriving instance Binary Op
+deriving instance Binary BindingEnum
+!-}
 
 #include "EssenceDerivations.hs"
