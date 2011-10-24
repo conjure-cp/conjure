@@ -11,9 +11,13 @@ import Test.HUnit ( Test(..), (~:), (~=?), assertBool, test )
 import Language.Essence ( Expr(..) )
 import Language.EssenceParsers ( pExpr )
 import Language.EssencePrinters ( prExpr )
-import ParsecUtils ( eof, parseMaybe )
+import ParsecUtils ( Parser, eof, parseMaybe )
 import PrintUtils ( render )
 import Utils ( maybeRead, strip )
+
+
+pExprEof :: Parser Expr
+pExprEof = pExpr <* eof
 
 
 -- parses tests from a given String (possibly containing contents of a file)
@@ -24,6 +28,7 @@ allTests file = test $ map toTest ls
     where
         isComment :: String -> Bool
         isComment ('#':_) = True
+        isComment (' ':cs) = isComment cs
         isComment _ = False
 
         ls :: [String]
@@ -36,36 +41,65 @@ allTests file = test $ map toTest ls
 
         toTest :: String -> Test
         toTest line = case firstWord line of
-            ("ShouldParse"  , rest) -> TestCase $ assertBool "ShouldParse" $ isJust $ parseMaybe (pExpr <* eof) (strip rest)
-            ("NoParse"      , rest) -> "NoParse" ~: Nothing ~=? parseMaybe (pExpr <* eof) (strip rest)
+            ("ShouldParse"  , rest) -> shouldParse (strip rest)
+            ("NoParse"      , rest) -> noParse (strip rest)
             ("ShouldParseTo", rest) -> case splitOn "~~" rest of
-                [a,b] -> "ShouldParseTo" ~: maybeRead (strip b) ~=? parseMaybe (pExpr <* eof) (strip a)
+                [a,b] -> shouldParseTo (strip a) (strip b)
                 _     -> error ("cannot parse line: " ++ line)
             ("ParsePrint"   , rest) -> case splitOn "~~" rest of
                 [a,b] -> parsePrint (strip a) (strip b)
-                _     -> error ("cannot parse line: ParsePrint " ++ rest)
-            _ -> error ("unknown line format: " ++ line)
+                _     -> error ("cannot parse line: " ++ line)
+            _ -> error "never here: Test.Language.EssenceParsePrint.allTests.toTest"
 
-        parsePrint :: String -> String -> Test
-        parsePrint s x = test [ TestCase $ assertBool "[parse]" $ isJust $ sParsed
-                                  , "[parse & print]" ~: sParsedPrinted ~=? Just s
-                                  , "[print & parse]" ~: maybeRead x ~=? xPrintedParsed
-                                  ]
+        shouldParse :: String -> Test
+        shouldParse s = test [ TestCase $ assertBool "ShouldParse" $ isJust $ sParsed
+                             ]
             where
                 sParsed :: Maybe Expr
-                sParsed = parseMaybe pExpr s
+                sParsed = parseMaybe pExprEof s
+
+        noParse :: String -> Test
+        noParse s = test [ TestCase $ assertBool "NoParse" $ isNothing $ sParsed
+                         ]
+            where
+                sParsed :: Maybe Expr
+                sParsed = parseMaybe pExprEof s
+
+        shouldParseTo :: String -> String -> Test
+        shouldParseTo s x = test [ TestCase $ assertBool "ShouldParseTo.parse" $ isJust $ sParsed
+                                 , TestCase $ assertBool "ShouldParseTo.read"  $ isJust $ xRead
+                                 , "ShouldParseTo.(s.parsed=x.read)" ~: sParsed ~=? xRead
+                                 ]
+            where
+                sParsed :: Maybe Expr
+                sParsed = parseMaybe pExprEof s
+
+                xRead :: Maybe Expr
+                xRead = maybeRead x
+
+        parsePrint :: String -> String -> Test
+        parsePrint s x = test [ TestCase $ assertBool "ParsePrint.parse" $ isJust $ sParsed
+                              , TestCase $ assertBool "ParsePrint.read"  $ isJust $ xRead
+                              , "ParsePrint.(parsed=read)" ~: sParsed ~=? xRead
+                              , "ParsePrint.(s=x.printed)" ~: Just s  ~=? xPrinted
+                              , "ParsePrint.(s=s.printed)" ~: Just s  ~=? sParsedPrinted
+                              ]
+            where
+                sParsed :: Maybe Expr
+                sParsed = parseMaybe pExprEof s
+
+                xRead :: Maybe Expr
+                xRead = maybeRead x
 
                 sParsedPrinted :: Maybe String
                 sParsedPrinted = render <$> (prExpr =<< sParsed)
 
                 xPrinted :: Maybe String
-                xPrinted = render <$> (prExpr =<< maybeRead x)
-
-                xPrintedParsed :: Maybe Expr
-                xPrintedParsed = parseMaybe pExpr =<< xPrinted
+                xPrinted = render <$> (prExpr =<< xRead)
 
 
 firstWord :: String -> (String,String)
+firstWord "" = error "empty test file"
 firstWord s = case words s of
     (a:_) -> (a, strip (drop (length a) s))
-    _     -> error "firstWord"
+    _     -> error $ "unknown line format: " ++ s

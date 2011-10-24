@@ -68,6 +68,7 @@
                   , ValueInteger 3
                   , ValueMatrix [ValueInteger 1, ValueInteger 2, ValueInteger 3]
                   ]
+
 *** ParsePrint
     (true, 1, (false, 2))
     ~~ ValueTuple [ ValueBoolean True
@@ -85,7 +86,7 @@
 
 *** ParsePrint
     set {a}
-    ~~ ValueSet [Identifier a]
+    ~~ ValueSet [Identifier "a"]
 
 *** ParsePrint
     set {1, 2, true, false, (1, 2, 3)}
@@ -124,7 +125,7 @@
 
 *** ParsePrint
     mset {a}
-    ~~ ValueMSet [Identifier a]
+    ~~ ValueMSet [Identifier "a"]
 
 *** ParsePrint
     mset {mset {}}
@@ -182,18 +183,18 @@ function {1 -> set {2},
 
 *** ParsePrint
     relation {(1, a)}
-    ~~ ValueRelation [ValueTuple [ValueInteger 1, Identifier a]]
+    ~~ ValueRelation [ValueTuple [ValueInteger 1, Identifier "a"]]
 
 *** ParsePrint
     relation {(1, a), (2, b)}
-    ~~ ValueRelation [ ValueTuple [ValueInteger 1, Identifier a]
-                     , ValueTuple [ValueInteger 2, Identifier b]
+    ~~ ValueRelation [ ValueTuple [ValueInteger 1, Identifier "a"]
+                     , ValueTuple [ValueInteger 2, Identifier "b"]
                      ]
 
 *** ParsePrint
     relation {(1, set {a}), (mset {2, 3, 4}, b)}
-    ~~ ValueRelation [ ValueTuple [ValueInteger 1, ValueSet [Identifier a]]
-                     , ValueTuple [ValueMSet [ValueInteger 2, ValueInteger 3, ValueInteger 4], Identifier b]
+    ~~ ValueRelation [ ValueTuple [ValueInteger 1, ValueSet [Identifier "a"]]
+                     , ValueTuple [ValueMSet [ValueInteger 2, ValueInteger 3, ValueInteger 4], Identifier "b"]
                      ]
 
 *** ParsePrint
@@ -240,7 +241,7 @@ function {1 -> set {2},
 
 *** ParsePrint
     int(1, 2, a)
-    ~~ DomainIntegerList [ValueInteger 1, ValueInteger 2, Identifier a]
+    ~~ DomainIntegerList [ValueInteger 1, ValueInteger 2, Identifier "a"]
 
 *** ParsePrint
     int(1..)
@@ -260,15 +261,15 @@ function {1 -> set {2},
 
 *** ParsePrint
     new type of size 4
-    ~~ DomainUnnamed (ValueInteger 4) Nothing
+    ~~ DomainUnnamed {theSize = ValueInteger 4, representation = Nothing}
 
 *** ParsePrint
     new type of size a
-    ~~ DomainUnnamed (Identifier a) Nothing
+    ~~ DomainUnnamed {theSize = Identifier "a", representation = Nothing}
 
 *** ParsePrint
     new type (representation foo) of size a
-    ~~ DomainUnnamed (Identifier a) (Just foo)
+    ~~ DomainUnnamed {theSize = Identifier "a", representation = Just "foo"}
 
 # *** ParsePrint
 #     new type of size a + b
@@ -276,124 +277,352 @@ function {1 -> set {2},
 
 *** ParsePrint
     enum {foo, bar}
-    ~~ DomainEnum [foo, bar] Nothing
+    ~~ DomainEnum {enums = ["foo","bar"], representation = Nothing}
 
 *** ParsePrint
     enum {foo, bar, baz}
-    ~~ DomainEnum [foo, bar, baz] Nothing
+    ~~ DomainEnum {enums = ["foo","bar","baz"], representation = Nothing}
 
-*** NoParse enum {foo, int}
+*** NoParse
+    enum {foo, int}
 
 *** ParsePrint
     matrix indexed by [int(1..9)] of bool
-    ~~ DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) DomainBoolean
+    ~~ DomainMatrix { index = DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
+                    , element = DomainBoolean
+                    }
 
 *** ParsePrint
     matrix indexed by [int(1..9), int(a..b)] of enum {foo, bar}
-    ~~  DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) (
-            DomainMatrix (DomainIntegerFromTo (Just (Identifier a)) (Just (Identifier b))) (
-                DomainEnum [foo, bar] Nothing
-            )
-        )
+    ~~ DomainMatrix { index = DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
+                    , element = DomainMatrix { index = DomainIntegerFromTo (Just (Identifier "a")) (Just (Identifier "b"))
+                                             , element = DomainEnum {enums = ["foo","bar"], representation = Nothing}
+                                             }
+                    }
 
 *** ParsePrint
     matrix indexed by [int(1..9), int(a..), int(..b)] of bool
-    ~~  DomainMatrix (DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))) (
-            DomainMatrix (DomainIntegerFromTo (Just (Identifier a)) Nothing) (
-                DomainMatrix (DomainIntegerFromTo Nothing (Just (Identifier b))) (
-                    DomainBoolean
-                )
-            )
-        )
+    ~~ DomainMatrix { index = DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
+                    , element = DomainMatrix { index = DomainIntegerFromTo (Just (Identifier "a")) Nothing
+                                             , element = DomainMatrix { index = DomainIntegerFromTo Nothing (Just (Identifier "b"))
+                                                                      , element = DomainBoolean
+                                                                      }
+                                             }
+                    }
 
 *** ParsePrint
     tuple of (int, bool)
-    ~~ DomainTuple [DomainIntegerList [], DomainBoolean] Nothing
+    ~~ DomainTuple { components = [DomainIntegerList [],DomainBoolean]
+                   , representation = Nothing
+                   }
 
 *** ParsePrint
     tuple (representation foo) of (int, bool)
-    ~~ DomainTuple [DomainIntegerList [], DomainBoolean] (Just foo)
+    ~~ DomainTuple { components = [DomainIntegerList [],DomainBoolean]
+                   , representation = Just "foo"
+                   }
 
 *** ParsePrint
     tuple of (int, fool, tuple of (enum {foo, bar}, int(1..9)))
-    ~~ DomainTuple [ DomainIntegerList [], Identifier fool
-                   , DomainTuple [ DomainEnum [foo, bar] Nothing
-                                 , DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
-                                 ] Nothing
-                   ] Nothing
+    ~~ DomainTuple { components = [ DomainIntegerList []
+                                  , Identifier "fool"
+                                  , DomainTuple { components = [ DomainEnum {enums = ["foo","bar"], representation = Nothing}
+                                                               , DomainIntegerFromTo (Just (ValueInteger 1)) (Just (ValueInteger 9))
+                                                               ]
+                                                , representation = Nothing
+                                                }
+                                  ]
+                   , representation = Nothing
+                   }
+
+*** ParsePrint
+    set of int
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = DomainIntegerList []
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    set of a
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = Identifier "a"
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    set (size n) of a
+    ~~ DomainSet { size = Just (Identifier "n")
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = Identifier "a"
+                 , representation = Nothing
+                 }
+
+*** ShouldParseTo
+    set (size n) of tuple of (a,b)
+    ~~ DomainSet { size = Just (Identifier "n")
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = DomainTuple {components = [Identifier "a",Identifier "b"], representation = Nothing}
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    set (size n) of tuple of (a, b)
+    ~~ DomainSet { size = Just (Identifier "n")
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = DomainTuple {components = [Identifier "a",Identifier "b"], representation = Nothing}
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    set (minSize n) of a
+    ~~ DomainSet { size = Nothing
+                 , minSize = Just (Identifier "n")
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = Identifier "a"
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    set (maxSize n) of a
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Just (Identifier "n")
+                 , attrDontCare = False
+                 , element = Identifier "a"
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    set (representation foo) of a
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = Identifier "a"
+                 , representation = Just "foo"
+                 }
+
+*** ParsePrint
+    set (size n, minSize m, representation foo) of a
+    ~~ DomainSet { size = Just (Identifier "n")
+                 , minSize = Just (Identifier "m")
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = Identifier "a"
+                 , representation = Just "foo"
+                 }
+
+*** ParsePrint
+    set (representation foo) of set of a
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = False
+                 , element = DomainSet { size = Nothing
+                                       , minSize = Nothing
+                                       , maxSize = Nothing
+                                       , attrDontCare = False
+                                       , element = Identifier "a"
+                                       , representation = Nothing
+                                       }
+                 , representation = Just "foo"
+                 }
+
+*** ParsePrint
+    set (size n, _) of int
+    ~~ DomainSet { size = Just (Identifier "n")
+                 , minSize = Nothing
+                 , maxSize = Nothing
+                 , attrDontCare = True
+                 , element = DomainIntegerList []
+                 , representation = Nothing
+                 }
+
+*** ShouldParseTo
+    set (_, maxSize n) of int
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Just (Identifier "n")
+                 , attrDontCare = True
+                 , element = DomainIntegerList []
+                 , representation = Nothing
+                 }
+
+*** ShouldParseTo
+    set (_, maxSize n, _) of int
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Just (Identifier "n")
+                 , attrDontCare = True
+                 , element = DomainIntegerList []
+                 , representation = Nothing
+                 }
+
+*** ShouldParseTo
+    set (_, maxSize n, _, _) of int
+    ~~ DomainSet { size = Nothing
+                 , minSize = Nothing
+                 , maxSize = Just (Identifier "n")
+                 , attrDontCare = True
+                 , element = DomainIntegerList []
+                 , representation = Nothing
+                 }
+
+*** ParsePrint
+    mset of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset of a
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = Identifier "a"
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (size n) of a
+    ~~ DomainMSet { size = Just (Identifier "n")
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = Identifier "a"
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (size n) of tuple of (a, b)
+    ~~ DomainMSet { size = Just (Identifier "n")
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = DomainTuple { components = [Identifier "a",Identifier "b"]
+                                          , representation = Nothing
+                                          } 
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (minSize n) of a
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Just (Identifier "n")
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = Identifier "a"
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (maxSize n) of a
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Just (Identifier "n")
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = Identifier "a"
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (representation foo) of a
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = Identifier "a"
+                  , representation = Just "foo"
+                  }
+
+*** ParsePrint
+    mset (size n, minSize m, representation foo) of a
+    ~~ DomainMSet { size = Just (Identifier "n")
+                  , minSize = Just (Identifier "m")
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = Identifier "a"
+                  , representation = Just "foo"
+                  }
+
+*** ParsePrint
+    mset (representation foo) of mset of a
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = DomainMSet { size = Nothing
+                                         , minSize = Nothing
+                                         , maxSize = Nothing
+                                         , occr = Nothing
+                                         , minOccr = Nothing
+                                         , maxOccr = Nothing
+                                         , attrDontCare = False
+                                         , element = Identifier "a"
+                                         , representation = Nothing
+                                         }
+                  , representation = Just "foo"
+                  }
+
+*** ParsePrint
+    mset (size n, _) of a
+    ~~ DomainMSet { size = Just (Identifier "n")
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = True
+                  , element = Identifier "a"
+                  , representation = Nothing
+                  }
 
 
-
-# -- ,  "set of int"
-# -- ~~ DomainSet Nothing Nothing Nothing False (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "set of a"
-# -- ~~ DomainSet Nothing Nothing Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "set (size n) of a"
-# -- ~~ DomainSet (Just (Identifier "n")) Nothing Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "set (size n) of tuple (a,b)"
-# -- ~~ DomainSet (Just (Identifier "n")) Nothing Nothing False (DomainTuple [Identifier "a",Identifier "b"] Nothing) Nothing
-# -- 
-# -- ,  "set (minSize n) of a"
-# -- ~~ DomainSet Nothing (Just (Identifier "n")) Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "set (maxSize n) of a"
-# -- ~~ DomainSet Nothing Nothing (Just (Identifier "n")) False (Identifier "a") Nothing
-# -- 
-# -- ,  "set (representation foo) of a"
-# -- ~~ DomainSet Nothing Nothing Nothing False (Identifier "a") (Just "foo")
-# -- 
-# -- ,  "set (size n, minSize m, representation foo) of a"
-# -- ~~ DomainSet (Just (Identifier "n")) (Just (Identifier "m")) Nothing False (Identifier "a") (Just "foo")
-# -- 
-# -- ,  "set (representation foo) of set of a"
-# -- ~~ DomainSet Nothing Nothing Nothing False (DomainSet Nothing Nothing Nothing False (Identifier "a") Nothing) (Just "foo")
-# -- 
-# -- ,  "set (size n, _) of int"
-# -- ~~ DomainSet (Just (Identifier "n")) Nothing Nothing True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "set (_, maxSize n) of int"
-# -- ~~ DomainSet Nothing Nothing (Just (Identifier "n")) True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "set (_, maxSize n, _) of int"
-# -- ~~ DomainSet Nothing Nothing (Just (Identifier "n")) True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "set (_, maxSize n, _, _) of int"
-# -- ~~ DomainSet Nothing Nothing (Just (Identifier "n")) True (DomainIntegerList []) Nothing
-# -- 
-# -- 
-# -- ,  "mset of int"
-# -- ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "mset of a"
-# -- ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "mset (size n) of a"
-# -- ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "mset (size n) of tuple (a,b)"
-# -- ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing False (DomainTuple [Identifier "a",Identifier "b"] Nothing) Nothing
-# -- 
-# -- ,  "mset (minSize n) of a"
-# -- ~~ DomainMSet Nothing (Just (Identifier "n")) Nothing Nothing Nothing Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "mset (maxSize n) of a"
-# -- ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing False (Identifier "a") Nothing
-# -- 
-# -- ,  "mset (representation foo) of a"
-# -- ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (Identifier "a") (Just "foo")
-# -- 
-# -- ,  "mset (size n, minSize m, representation foo) of a"
-# -- ~~ DomainMSet (Just (Identifier "n")) (Just (Identifier "m")) Nothing Nothing Nothing Nothing False (Identifier "a") (Just "foo")
-# -- 
-# -- ,  "mset (representation foo) of mset of a"
-# -- ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (DomainMSet Nothing Nothing Nothing Nothing Nothing Nothing False (Identifier "a") Nothing) (Just "foo")
-# -- 
-# -- ,  "mset (size n, _) of int"
-# -- ~~ DomainMSet (Just (Identifier "n")) Nothing Nothing Nothing Nothing Nothing True (DomainIntegerList []) Nothing
-# -- 
 # -- ,  "mset (_, maxSize n) of int"
 # -- ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
 # -- 
