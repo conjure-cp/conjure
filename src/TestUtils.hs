@@ -1,10 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module TestUtils ( quickTest, runTest ) where
+module TestUtils ( quickTest, runTest, runTestNTimes ) where
 
 
-import Test.HUnit ( Test, (~:), (~=?), runTestTT )
+import Test.HUnit ( Test, (~:), (~=?), runTestTT, test )
 import qualified Test.QuickCheck.Arbitrary as QC ( Arbitrary, arbitrary )
 import qualified Test.QuickCheck.Gen as QC ( sample' )
 
@@ -20,3 +20,7 @@ quickTest str f = do
 
 runTest :: Test -> IO ()
 runTest t = print =<< runTestTT t
+
+
+runTestNTimes :: Int -> Test -> IO ()
+runTestNTimes i t = print =<< runTestTT (test (replicate i t))
