@@ -18,5 +18,5 @@ quickTest str f = do
            , let msg = "quickTest: " ++ str ++ "[" ++ show i ++ "]"
            ]
 
-runTest :: IO Test -> IO ()
-runTest t = print =<< runTestTT =<< t
+runTest :: Test -> IO ()
+runTest t = print =<< runTestTT t

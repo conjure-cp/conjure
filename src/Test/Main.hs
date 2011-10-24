@@ -1,17 +1,13 @@
 module Main where
 
-
-import Control.Applicative
-import Test.HUnit ( test )
+import System.Environment ( getArgs )
 
 import TestUtils ( runTest )
-import Test.Language.EssenceParsers       as Pa  ( allTests )
-import Test.Language.EssencePrinters      as Pr  ( allTests )
-import Test.Language.EssenceParsePrintIso as Iso ( allTests )
-
+import Test.Language.EssenceParsePrint as FromFile ( allTests )
 
 main :: IO ()
-main = runTest $ test <$> sequence [ Pa.allTests
-                                   , Pr.allTests
-                                   , Iso.allTests
-                                   ]
+main = do
+    args <- getArgs
+    case args of
+        [fp] -> runTest . FromFile.allTests =<< readFile fp
+        _    -> error "you need to give a file path."
