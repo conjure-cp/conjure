@@ -37,6 +37,7 @@ allTests file = test $ map toTest ls
             $ splitOn "***"
             $ unlines
             $ filter (not . isComment)
+            $ filter (not . null)
             $ lines file
 
         toTest :: String -> Test
@@ -66,8 +67,8 @@ allTests file = test $ map toTest ls
                 sParsed = parseMaybe pExprEof s
 
         shouldParseTo :: String -> String -> Test
-        shouldParseTo s x = test [ TestCase $ assertBool "ShouldParseTo.parse" $ isJust sParsed
-                                 , TestCase $ assertBool "ShouldParseTo.read"  $ isJust xRead
+        shouldParseTo s x = test [ TestCase $ assertBool ("ShouldParseTo.parse: " ++ s) $ isJust sParsed
+                                 , TestCase $ assertBool ("ShouldParseTo.read: "  ++ x) $ isJust xRead
                                  , "ShouldParseTo.(s.parsed=x.read)" ~: sParsed ~=? xRead
                                  ]
             where
@@ -78,8 +79,8 @@ allTests file = test $ map toTest ls
                 xRead = maybeRead x
 
         parsePrint :: String -> String -> Test
-        parsePrint s x = test [ TestCase $ assertBool "ParsePrint.parse" $ isJust sParsed
-                              , TestCase $ assertBool "ParsePrint.read"  $ isJust xRead
+        parsePrint s x = test [ TestCase $ assertBool ("ParsePrint.parse: " ++ s) $ isJust sParsed
+                              , TestCase $ assertBool ("ParsePrint.read: "  ++ x) $ isJust xRead
                               , "ParsePrint.(parsed=read)" ~: sParsed ~=? xRead
                               , "ParsePrint.(s=x.printed)" ~: Just s  ~=? xPrinted
                               , "ParsePrint.(s=s.printed)" ~: Just s  ~=? sParsedPrinted

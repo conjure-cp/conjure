@@ -12,7 +12,7 @@ pExpr :: Parser Expr
 pExpr = pExprCore <?> "expression"
 
 pExprCore :: Parser Expr
-pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue ++ pDomain
+pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue ++ pDomains
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
@@ -65,12 +65,18 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
 -- Parsers for domains ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-pDomain :: [Parser Expr]
-pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
-          , pTuple   False, pTuple   True
-          , pUnnamed False, pUnnamed True
-          , pSet     False, pSet     True
-          , pMSet    False, pMSet    True
+pDomain :: Parser Expr
+pDomain = choiceTry $ (pIdentifier <?> "identifier") : pDomains
+
+pDomains :: [Parser Expr]
+pDomains = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
+          , pTuple     False, pTuple     True
+          , pUnnamed   False, pUnnamed   True
+          , pSet       False, pSet       True
+          , pMSet      False, pMSet      True
+          , pFunction  False, pFunction  True
+          , pRelation  False, pRelation  True
+          , pPartition False, pPartition True
           ]
     where
         pBool :: Parser Expr
@@ -110,9 +116,9 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
                 (reserved "matrix"  *> 
                  reserved "indexed" *> 
                  reserved "by"      *> 
-                 brackets (sepBy1 pExpr comma)
+                 brackets (sepBy1 pDomain comma)
                 ) <*>
-                (reserved "of" *> pExpr)
+                (reserved "of" *> pDomain)
             where
                 helper :: [Expr] -> Expr -> Expr
                 helper is e = foldr DomainMatrix e is
@@ -120,18 +126,19 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
         pTuple :: Bool -> Parser Expr
         pTuple b = case b of
             False -> helper <$> (reserved "tuple" *> reserved "of" *> pure [])
-                            <*> (parens (countSepAtLeast 2 pExpr comma))
+                            <*> (parens (countSepAtLeast 2 pDomain comma))
             True  -> helper <$> (reserved "tuple" *> parens (keyValuePairOrAttibuteList [] []) <* reserved "of")
-                            <*> (parens (countSepAtLeast 2 pExpr comma))
+                            <*> (parens (countSepAtLeast 2 pDomain comma))
             where
                 helper :: [Either String (String,Expr)] -> [Expr] -> Expr
                 helper attrs xs = DomainTuple xs (lookupRepresentation attrs)
 
         pSet :: Bool -> Parser Expr
         pSet b = case b of
-            False -> helper <$> pure [] <*> (reserved "set" *> reserved "of" *> pExpr)
+            False -> helper <$> (reserved "set" *> pure [])
+                            <*> (reserved "of"  *> pDomain)
             True  -> helper <$> (reserved "set" *> parens (keyValuePairOrAttibuteList ["size","minSize","maxSize"] []))
-                            <*> (reserved "of"  *> pExpr)
+                            <*> (reserved "of"  *> pDomain)
             where
                 helper :: [Either String (String,Expr)] -> Expr -> Expr
                 helper attrs e = DomainSet
@@ -145,9 +152,10 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
 
         pMSet :: Bool -> Parser Expr
         pMSet b = case b of
-            False -> helper <$> pure [] <*> (reserved "mset" *> reserved "of" *> pExpr)
+            False -> helper <$> (reserved "mset" *> pure [])
+                            <*> (reserved "of"   *> pDomain)
             True  -> helper <$> (reserved "mset" *> parens (keyValuePairOrAttibuteList [ "size", "minSize", "maxSize", "occr", "minOccr", "maxOccr" ] []))
-                            <*> (reserved "of"   *> pExpr)
+                            <*> (reserved "of"   *> pDomain)
             where
                 helper :: [Either String (String,Expr)] -> Expr -> Expr
                 helper attrs e = DomainMSet
@@ -160,6 +168,68 @@ pDomain = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
                     , attrDontCare   = "attrDontCare" `elem`   lefts  attrs
                     , representation = lookupRepresentation attrs
                     , element        = e
+                    }
+
+        pFunction :: Bool -> Parser Expr
+        pFunction b = case b of
+            False -> helper <$> (reserved "function" *> pure [])
+                            <*> pDomain <*> (reservedOp "->" *> pDomain)
+            True  -> helper <$> (reserved "function" *> parens (keyValuePairOrAttibuteList [] [ "total", "partial", "injective", "bijective", "surjective" ]))
+                            <*> pDomain <*> (reservedOp "->" *> pDomain)
+            where
+                helper :: [Either String (String,Expr)] -> Expr -> Expr -> Expr
+                helper attrs fr to = DomainFunction
+                    { functionFrom   = fr
+                    , functionTo     = to
+                    , isTotal        = "total"        `elem` lefts attrs
+                    , isPartial      = "partial"      `elem` lefts attrs
+                    , isInjective    = "injective"    `elem` lefts attrs
+                    , isBijective    = "bijective"    `elem` lefts attrs
+                    , isSurjective   = "surjective"   `elem` lefts attrs
+                    , attrDontCare   = "attrDontCare" `elem` lefts attrs
+                    , representation = lookupRepresentation attrs
+                    }
+
+        pRelation :: Bool -> Parser Expr
+        pRelation b = case b of
+            False -> helper <$> (reserved "relation" *> pure [])
+                            <*> (reserved "of" *> parens (sepBy pDomain (reservedOp "*")))
+            True  -> helper <$> (reserved "relation" *> parens (keyValuePairOrAttibuteList [] []))
+                            <*> (reserved "of" *> parens (sepBy pDomain (reservedOp "*")))
+            where
+                helper :: [Either String (String,Expr)] -> [Expr] -> Expr
+                helper attrs ds = DomainRelation
+                    { components     = ds
+                    , attrDontCare   = "attrDontCare" `elem` lefts attrs
+                    , representation = lookupRepresentation attrs
+                    }
+
+        pPartition :: Bool -> Parser Expr
+        pPartition b = case b of
+            False -> helper <$> (reserved "partition" *> pure [])
+                            <*> (reserved "from"      *> pDomain)
+            True  -> helper <$> (reserved "partition" *> parens (keyValuePairOrAttibuteList [ "size", "minSize", "maxSize"
+                                                                                            , "partSize", "minPartSize", "maxPartSize"
+                                                                                            , "numParts", "minNumParts", "maxNumParts" ]
+                                                                                            [ "regular", "complete" ]) )
+                            <*> (reserved "from"      *> pDomain)
+            where
+                helper :: [Either String (String,Expr)] -> Expr -> Expr
+                helper attrs e = DomainPartition
+                    { element        = e
+                    , isRegular      = "regular"      `elem`   lefts attrs
+                    , isComplete     = "complete"     `elem`   lefts attrs
+                    , size           = "size"         `lookup` rights attrs
+                    , minSize        = "minSize"      `lookup` rights attrs
+                    , maxSize        = "maxSize"      `lookup` rights attrs
+                    , partSize       = "partSize"     `lookup` rights attrs
+                    , minPartSize    = "minPartSize"  `lookup` rights attrs
+                    , maxPartSize    = "maxPartSize"  `lookup` rights attrs
+                    , numParts       = "numParts"     `lookup` rights attrs
+                    , minNumParts    = "minNumParts"  `lookup` rights attrs
+                    , maxNumParts    = "maxNumParts"  `lookup` rights attrs
+                    , attrDontCare   = "attrDontCare" `elem`   lefts attrs
+                    , representation = lookupRepresentation attrs
                     }
 
 

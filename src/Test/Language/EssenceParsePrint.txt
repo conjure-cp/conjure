@@ -1,3 +1,8 @@
+
+################################################################################
+## Tests for parsing inline values##############################################
+################################################################################
+
 *** NoParse
     [1,,]
 
@@ -219,6 +224,7 @@ function {1 -> set {2},
                       , [ ValueInteger 4, ValueInteger 5, ValueInteger 6 ]
                       ]
 
+
 ################################################################################
 ## Tests for parsing domains ###################################################
 ################################################################################
@@ -261,19 +267,27 @@ function {1 -> set {2},
 
 *** ParsePrint
     new type of size 4
-    ~~ DomainUnnamed {theSize = ValueInteger 4, representation = Nothing}
+    ~~ DomainUnnamed { theSize = ValueInteger 4
+                     , representation = Nothing
+                     }
 
 *** ParsePrint
     new type of size a
-    ~~ DomainUnnamed {theSize = Identifier "a", representation = Nothing}
+    ~~ DomainUnnamed { theSize = Identifier "a"
+                     , representation = Nothing
+                     }
 
 *** ParsePrint
     new type (representation foo) of size a
-    ~~ DomainUnnamed {theSize = Identifier "a", representation = Just "foo"}
+    ~~ DomainUnnamed { theSize = Identifier "a"
+                     , representation = Just "foo"
+                     }
 
 # *** ParsePrint
 #     new type of size a + b
-#     ~~ DomainUnnamed (GenericNode Plus [Identifier a, Identifier b]) Nothing
+#     ~~ DomainUnnamed { theSize = GenericNode Plus [Identifier "a", Identifier "b"]
+#                      , representation = Just "foo"
+#                      }
 
 *** ParsePrint
     enum {foo, bar}
@@ -623,20 +637,321 @@ function {1 -> set {2},
                   }
 
 
-# -- ,  "mset (_, maxSize n) of int"
-# -- ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "mset (_, maxSize n, _) of int"
-# -- ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "mset (_, maxSize n, _, _) of int"
-# -- ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) Nothing Nothing Nothing True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "mset (maxSize n, occr o, _) of int"
-# -- ~~ DomainMSet Nothing Nothing (Just (Identifier "n")) (Just (Identifier "o")) Nothing Nothing True (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "mset (occr o, minOccr m) of int"
-# -- ~~ DomainMSet Nothing Nothing Nothing (Just (Identifier "o")) (Just (Identifier "m")) Nothing False (DomainIntegerList []) Nothing
-# -- 
-# -- ,  "mset (maxOccr m) of int"
-# -- ~~ DomainMSet Nothing Nothing Nothing Nothing Nothing (Just (Identifier "m")) False (DomainIntegerList []) Nothing
+*** ShouldParseTo
+    mset (_, maxSize n) of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Just (Identifier "n")
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = True
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ShouldParseTo
+    mset (_, maxSize n, _) of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Just (Identifier "n")
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = True
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ShouldParseTo
+    mset (_, maxSize n, _,_) of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Just (Identifier "n")
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = True
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (maxSize n, occr o, _) of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Just (Identifier "n")
+                  , occr = Just (Identifier "o")
+                  , minOccr = Nothing
+                  , maxOccr = Nothing
+                  , attrDontCare = True
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (occr o, minOccr m) of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Just (Identifier "o")
+                  , minOccr = Just (Identifier "m")
+                  , maxOccr = Nothing
+                  , attrDontCare = False
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    mset (maxOccr m) of int
+    ~~ DomainMSet { size = Nothing
+                  , minSize = Nothing
+                  , maxSize = Nothing
+                  , occr = Nothing
+                  , minOccr = Nothing
+                  , maxOccr = Just (Identifier "m")
+                  , attrDontCare = False
+                  , element = DomainIntegerList []
+                  , representation = Nothing
+                  }
+
+*** ParsePrint
+    function a -> b
+    ~~ DomainFunction { functionFrom = Identifier "a"
+                      , functionTo = Identifier "b"
+                      , isTotal = False
+                      , isPartial = False
+                      , isInjective = False
+                      , isBijective = False
+                      , isSurjective = False
+                      , attrDontCare = False
+                      , representation = Nothing
+                      }
+
+*** ParsePrint
+    function (total) a -> b
+    ~~ DomainFunction { functionFrom = Identifier "a"
+                      , functionTo = Identifier "b"
+                      , isTotal = True
+                      , isPartial = False
+                      , isInjective = False
+                      , isBijective = False
+                      , isSurjective = False
+                      , attrDontCare = False
+                      , representation = Nothing
+                      }
+
+*** ParsePrint
+    function (total, representation foo, _) a -> b
+    ~~ DomainFunction { functionFrom = Identifier "a"
+                      , functionTo = Identifier "b"
+                      , isTotal = True
+                      , isPartial = False
+                      , isInjective = False
+                      , isBijective = False
+                      , isSurjective = False
+                      , attrDontCare = True
+                      , representation = Just "foo"
+                      }
+
+*** ParsePrint
+    function (total, injective) a -> b
+    ~~ DomainFunction { functionFrom = Identifier "a"
+                      , functionTo = Identifier "b"
+                      , isTotal = True
+                      , isPartial = False
+                      , isInjective = True
+                      , isBijective = False
+                      , isSurjective = False
+                      , attrDontCare = False
+                      , representation = Nothing
+                      }
+
+*** ParsePrint
+    function a -> function b -> c
+    ~~ DomainFunction { functionFrom = Identifier "a"
+                      , functionTo = DomainFunction { functionFrom = Identifier "b"
+                                                    , functionTo = Identifier "c"
+                                                    , isTotal = False
+                                                    , isPartial = False
+                                                    , isInjective = False
+                                                    , isBijective = False
+                                                    , isSurjective = False
+                                                    , attrDontCare = False
+                                                    , representation = Nothing
+                                                    }
+                      , isTotal = False
+                      , isPartial = False
+                      , isInjective = False
+                      , isBijective = False
+                      , isSurjective = False
+                      , attrDontCare = False
+                      , representation = Nothing
+                      }
+
+*** ParsePrint
+    function function a -> b -> c
+    ~~ DomainFunction { functionFrom = DomainFunction { functionFrom = Identifier "a"
+                                                      , functionTo = Identifier "b"
+                                                      , isTotal = False
+                                                      , isPartial = False
+                                                      , isInjective = False
+                                                      , isBijective = False
+                                                      , isSurjective = False
+                                                      , attrDontCare = False
+                                                      , representation = Nothing
+                                                      }
+                      , functionTo = Identifier "c"
+                      , isTotal = False
+                      , isPartial = False
+                      , isInjective = False
+                      , isBijective = False
+                      , isSurjective = False
+                      , attrDontCare = False
+                      , representation = Nothing
+                      }
+
+*** ParsePrint
+    relation of ()
+    ~~ DomainRelation { components     = []
+                      , attrDontCare   = False
+                      , representation = Nothing
+                      }
+
+
+*** ParsePrint
+    relation of (a * b)
+    ~~ DomainRelation { components     = [Identifier "a", Identifier "b"]
+                      , attrDontCare   = False
+                      , representation = Nothing
+                      }
+
+*** ParsePrint
+    relation (representation foo) of (a * b * c)
+    ~~ DomainRelation { components     = [Identifier "a", Identifier "b", Identifier "c"]
+                      , attrDontCare   = False
+                      , representation = Just "foo"
+                      }
+
+*** ParsePrint
+    relation (representation foo, _) of (a * b * c)
+    ~~ DomainRelation { components     = [Identifier "a", Identifier "b", Identifier "c"]
+                      , attrDontCare   = True
+                      , representation = Just "foo"
+                      }
+
+*** ParsePrint
+    relation (representation foo, _) of (int(0..9) * set of a * function c -> d)
+    ~~ DomainRelation { components     = [ DomainIntegerFromTo (Just (ValueInteger 0)) (Just (ValueInteger 9))
+                                         , DomainSet { size = Nothing
+                                                     , minSize = Nothing
+                                                     , maxSize = Nothing
+                                                     , attrDontCare = False
+                                                     , element = Identifier "a"
+                                                     , representation = Nothing
+                                                     }
+                                         , DomainFunction { functionFrom = Identifier "c"
+                                                          , functionTo = Identifier "d"
+                                                          , isTotal = False
+                                                          , isPartial = False
+                                                          , isInjective = False
+                                                          , isBijective = False
+                                                          , isSurjective = False
+                                                          , attrDontCare = False
+                                                          , representation = Nothing
+                                                          }
+                                         ]
+                      , attrDontCare   = True
+                      , representation = Just "foo"
+                      }
+
+
+*** ParsePrint
+    partition from int(0..9)
+    ~~ DomainPartition { element = DomainIntegerFromTo (Just (ValueInteger 0)) (Just (ValueInteger 9))
+                       , isRegular = False
+                       , isComplete = False
+                       , size = Nothing
+                       , minSize = Nothing
+                       , maxSize = Nothing
+                       , partSize = Nothing
+                       , minPartSize = Nothing
+                       , maxPartSize = Nothing
+                       , numParts = Nothing
+                       , minNumParts = Nothing
+                       , maxNumParts = Nothing
+                       , attrDontCare = False
+                       , representation = Nothing
+                       }
+
+*** ParsePrint
+    partition (regular) from int(0..9)
+    ~~ DomainPartition { element = DomainIntegerFromTo (Just (ValueInteger 0)) (Just (ValueInteger 9))
+                       , isRegular = True
+                       , isComplete = False
+                       , size = Nothing
+                       , minSize = Nothing
+                       , maxSize = Nothing
+                       , partSize = Nothing
+                       , minPartSize = Nothing
+                       , maxPartSize = Nothing
+                       , numParts = Nothing
+                       , minNumParts = Nothing
+                       , maxNumParts = Nothing
+                       , attrDontCare = False
+                       , representation = Nothing
+                       }
+
+*** ParsePrint
+    partition (regular, numParts 5) from int(0..9)
+    ~~ DomainPartition { element = DomainIntegerFromTo (Just (ValueInteger 0)) (Just (ValueInteger 9))
+                       , isRegular = True
+                       , isComplete = False
+                       , size = Nothing
+                       , minSize = Nothing
+                       , maxSize = Nothing
+                       , partSize = Nothing
+                       , minPartSize = Nothing
+                       , maxPartSize = Nothing
+                       , numParts = Just (ValueInteger 5)
+                       , minNumParts = Nothing
+                       , maxNumParts = Nothing
+                       , attrDontCare = False
+                       , representation = Nothing
+                       }
+
+*** ParsePrint
+    partition (regular, numParts 5, _) from int(0..9)
+    ~~ DomainPartition { element = DomainIntegerFromTo (Just (ValueInteger 0)) (Just (ValueInteger 9))
+                       , isRegular = True
+                       , isComplete = False
+                       , size = Nothing
+                       , minSize = Nothing
+                       , maxSize = Nothing
+                       , partSize = Nothing
+                       , minPartSize = Nothing
+                       , maxPartSize = Nothing
+                       , numParts = Just (ValueInteger 5)
+                       , minNumParts = Nothing
+                       , maxNumParts = Nothing
+                       , attrDontCare = True
+                       , representation = Nothing
+                       }
+
+*** ParsePrint
+    partition (regular, maxNumParts 5, representation foo, _) from int(0..9)
+    ~~ DomainPartition { element = DomainIntegerFromTo (Just (ValueInteger 0)) (Just (ValueInteger 9))
+                       , isRegular = True
+                       , isComplete = False
+                       , size = Nothing
+                       , minSize = Nothing
+                       , maxSize = Nothing
+                       , partSize = Nothing
+                       , minPartSize = Nothing
+                       , maxPartSize = Nothing
+                       , numParts = Nothing
+                       , minNumParts = Nothing
+                       , maxNumParts = Just (ValueInteger 5)
+                       , attrDontCare = True
+                       , representation = Just "foo"
+                       }
