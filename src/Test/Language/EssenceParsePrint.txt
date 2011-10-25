@@ -1021,3 +1021,19 @@ function {1 -> set {2},
 
 *** NoParse
     1 = (2 <=> 2) = 3
+
+*** ParsePrint
+    -1 + 3 = a
+    ~~ GenericNode Eq [ GenericNode Plus [ GenericNode Negate [ValueInteger 1]
+                                         , ValueInteger 3
+                                         ]
+                      , Identifier "a"
+                      ]
+
+*** ParsePrint
+    -a = -b + 1
+    ~~ GenericNode Eq [ GenericNode Negate [Identifier "a"]
+                      , GenericNode Plus [ GenericNode Negate [Identifier "b"]
+                                         , ValueInteger 1
+                                         ]
+                      ]
