@@ -114,6 +114,7 @@ data Expr
         }
     | DomainRelation
         { components     :: [Expr]
+        , attrDontCare   :: Bool
         , representation :: Maybe Representation
         }
     | DomainPartition
