@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Test.Language.EssenceParsePrint where
+module Test.Language.EssenceParsePrintFromFile where
 
 
 import Control.Applicative
