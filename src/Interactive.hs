@@ -22,6 +22,7 @@ data Command = Eval String
              | RmObjective
              | Undo
              | Redo
+             | Quit
     deriving (Eq, Ord, Read, Show)
 
 
@@ -30,6 +31,8 @@ parseCommand s = do
     firstWord <- case words s of [] -> Nothing; (i:_) -> Just i
     case firstWord of
         ":eval" -> return . Eval . strip . drop (length firstWord) $ s
+        ":quit" -> return Quit
+        ":q"    -> return Quit
         _       -> Nothing
 
 
@@ -38,6 +41,7 @@ data REPLState = REPLState { currentSpec :: Spec
                            , commandHist :: [Command]
                            }
     deriving (Eq, Ord, Read, Show)
+
 
 initREPLState :: REPLState
 initREPLState = REPLState { currentSpec = sp
@@ -55,14 +59,18 @@ initREPLState = REPLState { currentSpec = sp
                   }
 
 
-step :: Command -> StateT REPLState IO ()
+step :: Command -> StateT REPLState IO Bool
 step (Eval s) = do
     x <- liftIO $ parseIO pExpr s
     x' <- return x
     case prExpr x' of
         Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x'
         Just doc -> liftIO $ putStrLn $ render doc
-step _ = liftIO $ putStrLn "what?"
+    return True
+step Quit = return False
+step _ = do
+    liftIO $ putStrLn "what?"
+    return True
 
 
 main :: IO ()
@@ -77,5 +85,5 @@ main = evalStateT repl initREPLState
                                                 liftIO $ putStrLn "Cannot parse command."
                                                 repl
                 (Just line, Just command) -> do liftIO $ addHistory line
-                                                step command
-                                                repl
+                                                c <- step command
+                                                if c then repl else return ()
