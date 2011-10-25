@@ -218,5 +218,5 @@ prOpExpr p (OpInfixR {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
     return $ sep [a', text face, b']
 prOpExpr p (OpPrefix {face,precedence}) [a]   = parensIf (p > precedence) <$> do
     a' <- prExprPrec precedence a
-    return $ sep [text face, a']
+    return $ text face <> a'
 prOpExpr _ _ _ = error "prOpExpr"
