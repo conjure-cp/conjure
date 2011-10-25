@@ -3,7 +3,7 @@ module Main where
 import System.Environment ( getArgs )
 
 import TestUtils ( runTest )
-import Test.Language.EssenceParsePrint as FromFile ( allTests )
+import Test.Language.EssenceParsePrintFromFile as FromFile ( allTests )
 
 main :: IO ()
 main = do
