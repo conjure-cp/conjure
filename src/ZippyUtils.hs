@@ -1,14 +1,28 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module ZippyUtils ( callBottomUpApply, returnValues ) where
+module ZippyUtils ( callBottomUpApply, returnValues, depth ) where
 
 
 import Prelude hiding ( log )
-import Data.Generics.Uniplate.Data ( Uniplate, Biplate )
-import Data.Generics.Uniplate.Zipper ( Zipper, right, up, down, hole, replaceHole, fromZipper, zipperBi )
+import Data.Generics.Uniplate.Direct ( Uniplate, Biplate )
+import Data.Generics.Uniplate.Zipper ( Zipper, right, up, down, hole, replaceHole, fromZipper, zipperBi, zipper )
 import Data.Maybe ( fromJust, fromMaybe )
 
 import MonadInterleave
+import DeepSeqUtils ( deepid )
+
+
+-- turn a Uniplate type into a tree, and calculate the max-depth of the tree
+depth :: forall a . Uniplate a => a -> Int
+depth = zipperDepth . zipper
+    where
+        zipperDepth :: forall a . Uniplate a => Zipper a a -> Int
+        zipperDepth z = case down z of Nothing -> 0
+                                       Just i  -> deepid $ 1 + maximum (map zipperDepth (siblings i))
+            where
+                siblings :: Zipper a a -> [Zipper a a]
+                siblings j = j : case right j of Nothing -> []
+                                             Just k  -> siblings k
 
 
 -- calls bottomUpApply. users should call bottomUpApply themselves, it is
