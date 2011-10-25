@@ -1,11 +1,12 @@
 
--- This module defines type core data types for Essence.
+-- This module defines core data types for Essence.
 
 -- Uses the tool derive, to `derive` instance of type classes.
 -- See target `derivations` in the Makefile
 
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
 
 module Language.Essence ( Spec(..), Expr(..), Op(..), OpDescriptor(..), opDescriptor ) where
@@ -15,7 +16,7 @@ module Language.Essence ( Spec(..), Expr(..), Op(..), OpDescriptor(..), opDescri
 --------------------------------------------------------------------------------
 
 import Data.Binary
-import Data.Generics
+import Data.Generics.Uniplate.Direct
 
 
 --------------------------------------------------------------------------------
@@ -31,12 +32,12 @@ data Spec
            , objective        :: Maybe Expr
            , constraints      :: [Expr]
            }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Read, Show)
 
 type Binding = (BindingEnum,Expr,Expr)
 
 data BindingEnum = Find | Given | Letting
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Read, Show)
 
 type Where = Expr
 
@@ -134,7 +135,7 @@ data Expr
 
     | GenericNode Op [Expr]
 
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Read, Show)
 
 
 type Representation = String
@@ -163,7 +164,7 @@ data Op
     
     | AllDiff
 
-    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable)
+    deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 
 -- will be used while parsing and pretty-printing operators
@@ -231,10 +232,19 @@ opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 --------------------------------------------------------------------------------
 
 {-!
+
 deriving instance Binary Spec
 deriving instance Binary Expr
 deriving instance Binary Op
 deriving instance Binary BindingEnum
+
+deriving instance UniplateDirect Spec Expr
+deriving instance UniplateDirect Expr
+deriving instance UniplateDirect [Expr] Expr
+deriving instance UniplateDirect (Maybe Expr) Expr
+deriving instance UniplateDirect (Expr, Expr) Expr
+deriving instance UniplateDirect (BindingEnum,Expr,Expr) Expr
+
 !-}
 
 #include "EssenceDerivations.hs"
