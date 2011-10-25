@@ -12,12 +12,13 @@ maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
 
 
+allValues :: (Bounded a, Enum a) => [a]
+allValues = [minBound..maxBound]
+
+
 -- arbitraryIdentifier :: Gen String
 -- arbitraryIdentifier = do
 --     let ch = elements $ ['a'..'z'] ++ ['A'..'Z']
 --     s <- choose (2, 8 :: Int)
 --     replicateM s ch
 
-
--- allValues :: (Bounded a, Enum a) => [a]
--- allValues = [minBound..maxBound]

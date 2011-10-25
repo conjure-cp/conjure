@@ -2,17 +2,21 @@ module Language.EssenceParsers ( pExpr ) where
 
 
 import Control.Applicative
+import Control.Monad.Identity
+import Data.Char ( isLetter, isNumber )
 import Data.Either ( lefts, rights )
+import Data.Function ( on )
+import Data.List ( groupBy, sortBy )
+import Data.Maybe ( mapMaybe )
+import Data.Ord ( comparing )
 
 import Language.Essence
 import ParsecUtils
+import Utils ( allValues )
 
-
-pExpr :: Parser Expr
-pExpr = pExprCore <?> "expression"
 
 pExprCore :: Parser Expr
-pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue ++ pDomains
+pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue ++ pDomains ++ [parens pExpr]
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
@@ -256,3 +260,46 @@ lookupRepresentation :: [Either String (String,Expr)] -> Maybe String
 lookupRepresentation lu = case lookup "representation" (rights lu) of
     Just (Identifier nm) -> Just nm
     _                    -> Nothing
+
+
+--------------------------------------------------------------------------------
+-- The expression parser -------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pExpr :: Parser Expr
+pExpr = buildExpressionParser table pExprCore
+    where
+        f :: Op -> Maybe (Either (Parser Expr) (Int, Operator String () Identity Expr))
+        f op = case opDescriptor op of
+            OpLispy opFace card -> Just . Left $ do
+                reserved opFace
+                is <- parens (countSep card pExpr comma)
+                return $ GenericNode op is
+            OpInfixL opFace prec -> return $ Right (prec, Infix  (pFace opFace >> return (toBinOp op)) AssocLeft )
+            OpInfixN opFace prec -> return $ Right (prec, Infix  (pFace opFace >> return (toBinOp op)) AssocNone )
+            OpInfixR opFace prec -> return $ Right (prec, Infix  (pFace opFace >> return (toBinOp op)) AssocRight)
+            OpPrefix opFace prec -> return $ Right (prec, Prefix (pFace opFace >> return (toUnOp  op))           )
+            OpSpecial          -> Nothing
+        
+        toBinOp :: Op -> Expr -> Expr -> Expr
+        toBinOp op i j = GenericNode op [i,j]
+
+        toUnOp :: Op -> Expr -> Expr
+        toUnOp op i = GenericNode op [i]
+
+        pFace :: String -> Parser ()
+        pFace s 
+            | all (\ i -> isLetter i || isNumber i || i == '_' ) s = reserved s <?> "operator"
+            | otherwise = reservedOp s <?> "operator"
+
+        pOps :: [(Int, Operator String () Identity Expr)]
+        pOps = rights (mapMaybe f (allValues :: [Op]))
+
+        table :: OperatorTable String () Identity Expr
+        table = 
+            ( reverse
+            . map (map snd)
+            . groupBy ((==) `on` fst)
+            . sortBy (comparing fst)
+            ) pOps
+

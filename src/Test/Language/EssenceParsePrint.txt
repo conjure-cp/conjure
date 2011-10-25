@@ -283,11 +283,17 @@ function {1 -> set {2},
                      , representation = Just "foo"
                      }
 
-# *** ParsePrint
-#     new type of size a + b
-#     ~~ DomainUnnamed { theSize = GenericNode Plus [Identifier "a", Identifier "b"]
-#                      , representation = Just "foo"
-#                      }
+*** ParsePrint
+    new type of size a + b
+    ~~ DomainUnnamed { theSize = GenericNode Plus [Identifier "a", Identifier "b"]
+                     , representation = Nothing
+                     }
+
+*** ParsePrint
+    new type (representation foo) of size a + b
+    ~~ DomainUnnamed { theSize = GenericNode Plus [Identifier "a", Identifier "b"]
+                     , representation = Just "foo"
+                     }
 
 *** ParsePrint
     enum {foo, bar}
@@ -955,3 +961,63 @@ function {1 -> set {2},
                        , attrDontCare = True
                        , representation = Just "foo"
                        }
+
+*** ParsePrint
+    1 + 2
+    ~~ GenericNode Plus [ValueInteger 1, ValueInteger 2]
+
+*** ParsePrint
+    1 + 2 + 3
+    ~~ GenericNode Plus [ GenericNode Plus [ ValueInteger 1
+                                           , ValueInteger 2
+                                           ]
+                        , ValueInteger 3
+                        ]
+
+*** ParsePrint
+    1 * 2 + 3 * 4
+    ~~ GenericNode Plus [ GenericNode Times [ ValueInteger 1
+                                            , ValueInteger 2
+                                            ]
+                        , GenericNode Times [ ValueInteger 3
+                                            , ValueInteger 4
+                                            ]
+                        ]
+
+*** ParsePrint
+    1 * (2 + 3) * 4
+    ~~ GenericNode Times [ GenericNode Times [ ValueInteger 1
+                                             , GenericNode Plus [ ValueInteger 2
+                                                                , ValueInteger 3
+                                                                ]
+                                             ]
+                         , ValueInteger 4
+                         ]
+
+*** ParsePrint
+    1 * (2 + 3) * 4 = 5
+    ~~ GenericNode Eq [ GenericNode Times [ GenericNode Times [ ValueInteger 1
+                                                              , GenericNode Plus [ ValueInteger 2
+                                                                                 , ValueInteger 3
+                                                                                 ]
+                                                              ]
+                                          , ValueInteger 4
+                                          ]
+                      , ValueInteger 5
+                      ]
+
+*** NoParse
+    1 = 2 = 3
+
+*** ParsePrint
+    1 = 2 <=> 2 = 3
+    ~~ GenericNode Iff [ GenericNode Eq [ ValueInteger 1
+                                        , ValueInteger 2
+                                        ]
+                       , GenericNode Eq [ ValueInteger 2
+                                        , ValueInteger 3
+                                        ]
+                       ]
+
+*** NoParse
+    1 = (2 <=> 2) = 3
