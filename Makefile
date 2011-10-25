@@ -6,6 +6,7 @@ install: derivations
 derivations: src/Language/EssenceDerivations.hs
 
 src/Language/EssenceDerivations.hs: src/Language/Essence.hs
+	@echo "Deriving instances for src/Language/EssenceDerivations.hs"
 	@cd src/Language; derive Essence.hs
 
 clean:
