@@ -17,26 +17,19 @@ Executable conjure-tests
     hs-source-dirs   : src
     main-is          : Test/Main.hs
     build-depends    : base
-                     , binary       == 0.5.*
-                     , bytestring   == 0.9.*
-                     , file-embed   == 0.0.4.*
-                     , HUnit        == 1.2.*
-                     , mtl          == 2.0.*
-                     , parsec       == 3.1.*
-                     , pretty       == 1.1.*
-                     , QuickCheck   == 2.4.*
-                     , syb          == 0.3.*
-                     -- , containers   == 0.4.*
-                     -- , data-default == 0.3.*
-                     -- , deepseq      == 1.2.*
-                     -- , derive       == 2.5.*
-                     -- , directory    == 1.1.*
-                     -- , dlist        == 0.5.*
-                     -- , pretty-show  == 1.1.*
-                     -- , random       == 1.0.*
-                     -- , split        == 0.1.*
-                     -- , transformers == 0.2.*
-                     -- , uniplate     == 1.6.*
+                     , binary           == 0.5.*
+                     , bytestring       == 0.9.*
+                     , file-embed       == 0.0.4.*
+                     , HUnit            == 1.2.*
+                     , mtl              == 2.0.*
+                     , parsec           == 3.1.*
+                     , pretty           == 1.1.*
+                     , QuickCheck       == 2.4.*
+                     , split            == 0.1.*
+                     , syb              == 0.3.*
+                     , template-haskell == 2.6.*
+                     , uniplate         == 1.6.*
+
     ghc-options:
         -fno-spec-constr-count
         -fwarn-incomplete-patterns
