@@ -32,7 +32,6 @@ Executable conjure-tests
                      , uniplate         == 1.6.*
 
     ghc-options:
-        -fno-spec-constr-count
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
         -fwarn-name-shadowing
@@ -41,14 +40,9 @@ Executable conjure-tests
         -fwarn-tabs
         -fwarn-unused-do-bind
         -fwarn-unused-matches
+        -Wall
         -O2
         -rtsopts
-        -Wall
+        -fno-spec-constr-count
         -funfolding-use-threshold=256
--- random values really. just trying to increase them here.
-        -with-rtsopts=-K128m
-        -with-rtsopts=-M1G
--- this is magic for -An and -Hn; which actually require specific values. test using ghc-gc-tune if need be, for now use -H.
         -with-rtsopts=-H
-        -- -with-rtsopts=-A1048576
-        -- -with-rtsopts=-H2097152
