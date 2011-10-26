@@ -22,7 +22,7 @@ depth = zipperDepth . zipper
             where
                 siblings :: Zipper a a -> [Zipper a a]
                 siblings j = j : case right j of Nothing -> []
-                                             Just k  -> siblings k
+                                                 Just k  -> siblings k
 
 
 -- calls bottomUpApply. users should call bottomUpApply themselves, it is
