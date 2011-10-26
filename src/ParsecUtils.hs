@@ -40,8 +40,8 @@ ldef :: LanguageDef st
 ldef  = emptyDef { commentLine     = "$"
                  , identStart      = char '_' <|> letter
                  , identLetter     = char '_' <|> char '#' <|> alphaNum
-                 , reservedNames   = lines reservedNames_txt
-                 , reservedOpNames = lines reservedOpNames_txt
+                 , reservedNames   = lines reservedNamesTxt
+                 , reservedOpNames = lines reservedOpNamesTxt
                  , caseSensitive   = True
                  }
 
@@ -121,9 +121,9 @@ unsafeParse p s = case parse p "" s of
 
 
 -- reservedNames are loaded from `reservedNames.txt` at compile time
-reservedNames_txt :: String
-reservedNames_txt = unpack $(embedFile "src/reservedNames.txt")
+reservedNamesTxt :: String
+reservedNamesTxt = unpack $(embedFile "src/reservedNames.txt")
 
 -- reservedOpNames are loaded from `reservedOpNames.txt` at compile time
-reservedOpNames_txt :: String
-reservedOpNames_txt = unpack $(embedFile "src/reservedOpNames.txt")
+reservedOpNamesTxt :: String
+reservedOpNamesTxt = unpack $(embedFile "src/reservedOpNames.txt")
