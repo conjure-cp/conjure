@@ -1,9 +1,10 @@
 module Main where
 
-import Control.Monad.IO.Class ( liftIO )
-import System.Console.Readline ( addHistory, readline )
-import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
 
+import Control.Monad ( when )
+import Control.Monad.IO.Class ( liftIO )
+import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
+import System.Console.Readline ( addHistory, readline )
 
 import Language.Essence ( Spec(..) )
 import Language.EssenceParsers ( pExpr )
@@ -86,4 +87,4 @@ main = evalStateT repl initREPLState
                                                 repl
                 (Just line, Just command) -> do liftIO $ addHistory line
                                                 c <- step command
-                                                if c then repl else return ()
+                                                when c repl
