@@ -11,8 +11,8 @@ import Utils ( strip )
 -- parses tests from a given String (possibly containing contents of a file)
 -- a single test looks like: "*** Keyword Arg1 [~~ Arg2]"
 -- possible keywords are: ShouldParse/1, NoParse/1, ShouldParseTo/2, ParsePrint/2
-allTests :: String -> Test
-allTests file = test $ map toTest ls
+allTests :: String -> (Test, Int)
+allTests file = (test (map toTest ls), length ls)
     where
         isComment :: String -> Bool
         isComment ('#':_) = True
