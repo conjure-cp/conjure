@@ -16,10 +16,12 @@ import Utils ( allValues )
 
 
 pExprCore :: Parser Expr
-pExprCore = choiceTry $ (pIdentifier <?> "identifier") : pValue ++ pDomains ++ [parens pExpr]
+pExprCore = choiceTry (pIdentifier : pValue ++ pDomains ++ [parens pExpr])
+    <?> "expression"
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
+    <?> "identifier"
 
 
 --------------------------------------------------------------------------------
