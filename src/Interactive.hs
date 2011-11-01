@@ -1,15 +1,17 @@
 module Main where
 
 
+import Control.Applicative
 import Control.Monad ( when )
 import Control.Monad.IO.Class ( liftIO )
-import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
+import Control.Monad.Trans.State.Lazy ( StateT, evalStateT, gets )
 import System.Console.Readline ( addHistory, readline )
 
+import Language.EssenceEvaluator ( evaluateExprInSpec )
 import Language.Essence ( Spec(..) )
 import Language.EssenceParsers ( pExpr )
 import Language.EssencePrinters ( prExpr )
-import ParsecUtils ( parseIO )
+import ParsecUtils ( parseEither, eof )
 import PrintUtils ( render )
 import Utils ( strip )
 
@@ -62,11 +64,17 @@ initREPLState = REPLState { currentSpec = sp
 
 step :: Command -> StateT REPLState IO Bool
 step (Eval s) = do
-    x <- liftIO $ parseIO pExpr s
-    x' <- return x
-    case prExpr x' of
-        Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x'
-        Just doc -> liftIO $ putStrLn $ render doc
+    case parseEither (pExpr <* eof) s of
+        Left msg -> liftIO $ putStrLn msg
+        Right x  -> do
+            sp <- gets currentSpec
+            let x' = evaluateExprInSpec sp x
+            case prExpr x' of
+                Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x'
+                Just doc -> do
+                    liftIO $ print x
+                    liftIO $ print x'
+                    liftIO $ putStrLn $ render doc
     return True
 step Quit = return False
 step _ = do
@@ -82,6 +90,7 @@ main = evalStateT repl initREPLState
             maybeLine <- liftIO $ readline "# "
             case (maybeLine, parseCommand =<< maybeLine) of
                 (Nothing  , _           ) -> return () -- EOF / control-d
+                (Just ""  , _           ) -> repl
                 (Just line, Nothing     ) -> do liftIO $ addHistory line
                                                 liftIO $ putStrLn "Cannot parse command."
                                                 repl
