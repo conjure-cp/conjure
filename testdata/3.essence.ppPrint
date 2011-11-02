@@ -1,0 +1,19 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Given
+                         , "x"
+                         , DomainIntegerList []
+                         )
+                       ]
+  , topLevelWheres = [ GenericNode
+                         Lt
+                         [ Identifier "x"
+                         , Identifier "y"
+                         ]
+                     ]
+  , objective = Just ( Identifier "y" )
+  , constraints = []
+  }

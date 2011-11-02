@@ -1,0 +1,20 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = []
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ GenericNode
+                      Lt
+                      [ ValueInteger 1
+                      , ValueInteger 2
+                      ]
+                  , GenericNode
+                      Lt
+                      [ ValueInteger 2
+                      , ValueInteger 3
+                      ]
+                  ]
+  }

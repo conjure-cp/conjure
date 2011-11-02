@@ -1,0 +1,24 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Given
+                         , "x"
+                         , DomainIntegerList []
+                         )
+                       ]
+  , topLevelWheres = [ GenericNode
+                         Eq
+                         [ ValueInteger 1
+                         , ValueInteger 2
+                         ]
+                     ]
+  , objective = Just ( Identifier "x" )
+  , constraints = [ GenericNode
+                      Eq
+                      [ Identifier "x"
+                      , ValueInteger 3
+                      ]
+                  ]
+  }
