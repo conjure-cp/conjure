@@ -43,10 +43,8 @@ sampler :: QC.Gen a -> IO [a]
 sampler (QC.MkGen m) = do
     rs <- randoms
     return [ m r n
-           -- | (r, n) <- zip rs [0,2..20]
-           | (r, n) <- zip rs [0,5..1000]
+           | (r, n) <- zip rs [0,5..100]
            ]
-
     where
         randoms :: IO [StdGen]
         randoms = go <$> newStdGen
