@@ -13,6 +13,7 @@ module Language.Essence
     ( Log
     , Spec(..), Binding, BindingEnum(..)
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
+    , associativeOps, commutativeOps
     ) where
 
 
@@ -241,6 +242,13 @@ opDescriptor Project      = OpSpecial
 opDescriptor Index        = OpSpecial
 opDescriptor Bubble       = OpInfixN "@"            2
 opDescriptor AllDiff      = OpLispy  "alldifferent" 1
+
+
+associativeOps :: [Op]
+associativeOps = [Plus,Times]
+
+commutativeOps :: [Op]
+commutativeOps = [Plus,Times]
 
 
 --------------------------------------------------------------------------------
