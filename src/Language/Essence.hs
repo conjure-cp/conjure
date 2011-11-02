@@ -11,7 +11,7 @@
 
 module Language.Essence
     ( Log
-    , Spec(..), Binding, BindingEnum(..)
+    , Spec(..), Binding, BindingEnum(..), Where
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
     , associativeOps, commutativeOps
     ) where
