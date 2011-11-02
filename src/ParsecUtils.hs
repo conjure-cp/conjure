@@ -3,7 +3,7 @@
 module ParsecUtils (
     Assoc(..), Operator(..), OperatorTable, Parser, (<?>),
 
-    parseFromFile, parseIO, parseMaybe, unsafeParse,
+    parseFromFile, parseIO, parseMaybe, parseEither, unsafeParse,
 
     buildExpressionParser,
 
@@ -99,6 +99,12 @@ parseMaybe :: Parser a -> String -> Maybe a
 parseMaybe p s = case parse p "" s of
     Left  _ -> Nothing
     Right a -> return a
+
+
+parseEither :: Parser a -> String -> Either String a
+parseEither p s = case parse p "" s of
+    Left msg -> Left (show msg)
+    Right a  -> Right a
 
 
 -- reads the file,
