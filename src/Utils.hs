@@ -1,6 +1,13 @@
-module Utils where
+module Utils
+    ( allValues
+    , maybeRead
+    , ppPrint
+    , ppShow
+    , strip
+    ) where
 
 import Data.Maybe ( listToMaybe )
+import Text.Show.Pretty ( ppShow)
 
 strip :: String -> String
 strip = reverse . go . reverse . go
@@ -14,6 +21,10 @@ maybeRead = fmap fst . listToMaybe . reads
 
 allValues :: (Bounded a, Enum a) => [a]
 allValues = [minBound..maxBound]
+
+
+ppPrint :: Show a => a -> IO ()
+ppPrint = putStrLn . ppShow
 
 
 -- arbitraryIdentifier :: Gen String
