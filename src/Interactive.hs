@@ -7,7 +7,7 @@ import Control.Monad.IO.Class ( liftIO )
 import Control.Monad.Trans.State.Lazy ( StateT, evalStateT, gets )
 import System.Console.Readline ( addHistory, readline )
 
-import Language.EssenceEvaluator ( evaluateExprInSpec )
+import Language.EssenceEvaluator ( runEvaluateExpr )
 import Language.Essence ( Spec(..) )
 import Language.EssenceParsers ( pExpr )
 import Language.EssencePrinters ( prExpr )
@@ -68,7 +68,8 @@ step (Eval s) = do
         Left msg -> liftIO $ putStrLn msg
         Right x  -> do
             sp <- gets currentSpec
-            let x' = evaluateExprInSpec sp x
+            let (x', logs) = runEvaluateExpr (topLevelBindings sp) x
+            liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
             case prExpr x' of
                 Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x'
                 Just doc -> do
