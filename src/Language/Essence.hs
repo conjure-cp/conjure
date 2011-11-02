@@ -47,7 +47,7 @@ data Spec
            }
     deriving (Eq, Ord, Read, Show)
 
-type Binding = (BindingEnum,Expr,Expr)
+type Binding = (BindingEnum,String,Expr)
 
 data BindingEnum = Find | Given | Letting
     deriving (Eq, Ord, Read, Show)
@@ -253,11 +253,12 @@ deriving instance Binary Op
 deriving instance Binary BindingEnum
 
 deriving instance UniplateDirect Spec Expr
+deriving instance UniplateDirect Expr Expr
 deriving instance UniplateDirect Expr
 deriving instance UniplateDirect [Expr] Expr
 deriving instance UniplateDirect (Maybe Expr) Expr
 deriving instance UniplateDirect (Expr, Expr) Expr
-deriving instance UniplateDirect (BindingEnum,Expr,Expr) Expr
+deriving instance UniplateDirect (BindingEnum,String,Expr) Expr
 
 !-}
 
