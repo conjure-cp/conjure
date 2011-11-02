@@ -62,7 +62,9 @@ type Where = Expr
 -- the data type for any kind of expression in Essence
 -- this will end up being a giant type, but decidedly so.
 data Expr
-    = Identifier String
+    = Underscore
+
+    | GenericNode Op [Expr]
 
     -- Inline values
     | ValueBoolean   Bool
@@ -147,7 +149,7 @@ data Expr
         , representation :: Maybe Representation
         }
 
-    | GenericNode Op [Expr]
+    | Identifier String
 
     deriving (Eq, Ord, Read, Show)
 
