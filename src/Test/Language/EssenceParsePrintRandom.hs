@@ -6,7 +6,7 @@ import Test.HUnit ( Test )
 import Test.QuickCheck ( Positive(..) )
 
 import Language.Essence ( Expr(..), Op(..) )
-import Test.Language.EssenceParsePrintCommon ( parsePrint )
+import Test.Language.EssenceParsePrintCommon
 import TestUtils ( quickTest )
 
 
@@ -19,12 +19,12 @@ allTests = concat <$> sequence
 
 propInteger :: Positive Integer -> Test
 propInteger (Positive i) =
-    parsePrint
+    cmdParsePrint
         (show i)
         (show (ValueInteger i))
 
 propIntegerNegative :: Positive Integer -> Test
 propIntegerNegative (Positive j) = let i = -j in
-    parsePrint
+    cmdParsePrint
         (show i)
         $ show (GenericNode Negate [ValueInteger (abs i)])

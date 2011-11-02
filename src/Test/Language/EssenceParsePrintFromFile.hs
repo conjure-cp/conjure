@@ -4,7 +4,7 @@ module Test.Language.EssenceParsePrintFromFile where
 import Data.List.Split
 import Test.HUnit ( Test(..), test )
 
-import Test.Language.EssenceParsePrintCommon ( shouldParse, noParse, shouldParseTo, parsePrint)
+import Test.Language.EssenceParsePrintCommon
 import Utils ( strip )
 
 
@@ -29,19 +29,15 @@ allTests file = (test (map toTest ls), length ls)
             $ lines file
 
         toTest :: String -> Test
-        toTest line = case firstWord line of
-            ("ShouldParse"  , rest) -> shouldParse (strip rest)
-            ("NoParse"      , rest) -> noParse (strip rest)
-            ("ShouldParseTo", rest) -> case splitOn "~~" rest of
-                [a,b] -> shouldParseTo (strip a) (strip b)
-                _     -> error ("cannot parse line: " ++ line)
-            ("ParsePrint"   , rest) -> case splitOn "~~" rest of
-                [a,b] -> parsePrint (strip a) (strip b)
-                _     -> error ("cannot parse line: " ++ line)
-            _ -> error "never here: Test.Language.EssenceParsePrint.allTests.toTest"
+        toTest line = case parseLine line of
+            ("ShouldParse"  , [i]  ) -> cmdShouldParse i
+            ("NoParse"      , [i]  ) -> cmdNoParse i
+            ("ShouldParseTo", [i,j]) -> cmdShouldParseTo i j
+            ("ParsePrint"   , [i,j]) -> cmdParsePrint i j
+            ("Eval"         , [i,j]) -> cmdEval i j
+            _     -> error $ "unknown line format: " ++ line
 
-firstWord :: String -> (String,String)
-firstWord "" = error "empty test file"
-firstWord s = case words s of
-    (a:_) -> (a, strip (drop (length a) s))
+parseLine :: String -> (String,[String])
+parseLine s = case words s of
+    (a:_) -> (a, map strip $ splitOn "~~" $ drop (length a) s )
     _     -> error $ "unknown line format: " ++ s

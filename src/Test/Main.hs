@@ -13,12 +13,12 @@ main = do
         run :: String -> IO ()
         run s = do
             let (a,n) = FromFile.allTests s
-            putStrLn $ "Running user supplied tests (" ++ show n ++ ")"
+            putStrLn $ " -- Running user supplied tests (" ++ show n ++ " testing statements parsed)."
             runTest a
             b <- Random.allTests
-            putStrLn "Running randomly generated test cases"
+            putStrLn " -- Running randomly generated test cases."
             runTest (test b)
-            putStrLn "Finished"
+            putStrLn " -- Finished."
 
     args <- getArgs
     case args of
