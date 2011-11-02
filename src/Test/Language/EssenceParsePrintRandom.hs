@@ -2,7 +2,7 @@ module Test.Language.EssenceParsePrintRandom where
 
 
 import Control.Applicative
-import Test.HUnit ( Test )
+import Test.HUnit ( Test, test )
 import Test.QuickCheck ( Positive(..) )
 
 import Language.Essence ( Expr(..), Op(..) )
@@ -10,8 +10,8 @@ import Test.Language.EssenceParsePrintCommon
 import TestUtils ( quickTest )
 
 
-allTests :: IO [Test]
-allTests = concat <$> sequence
+allTests :: IO Test
+allTests = test . concat <$> sequence
                 [ quickTest propInteger
                 , quickTest propIntegerNegative
                 ]
