@@ -34,6 +34,7 @@ allTests file = (test (map toTest ls), length ls)
             ("NoParse"      , [i]  ) -> cmdNoParse i
             ("ShouldParseTo", [i,j]) -> cmdShouldParseTo i j
             ("ParsePrint"   , [i,j]) -> cmdParsePrint i j
+            ("ParsePrintIso", [i]  ) -> cmdParsePrintIso i
             ("Eval"         , [i,j]) -> cmdEval i j
             _     -> error $ "unknown line format: " ++ line
 

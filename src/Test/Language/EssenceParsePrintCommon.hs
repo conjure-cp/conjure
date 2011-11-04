@@ -70,6 +70,19 @@ cmdParsePrint s x = test [ TestCase $ assertBool ("ParsePrint.parse: " ++ s) $ i
         xPrinted = render <$> (prExpr =<< xRead)
 
 
+cmdParsePrintIso :: String -> Test
+cmdParsePrintIso s = test [ TestCase $ assertBool ("ParsePrintIso.parse: " ++ s) $ isJust sParsed
+                          , TestCase $ assertBool ("ParsePrint.parsePrint" ++ s) $ isJust sParsedPrinted
+                          , "ParsePrintIso" ~: Just s ~=? sParsedPrinted
+                          ]
+    where
+        sParsed :: Maybe Expr
+        sParsed = parseMaybe pExprEof s
+
+        sParsedPrinted :: Maybe String
+        sParsedPrinted = render <$> (prExpr =<< sParsed)
+
+
 cmdEval :: String -> String -> Test
 cmdEval i j = test [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParsed
                    , TestCase $ assertBool ("Eval.parse: " ++ j) $ isJust jParsed
