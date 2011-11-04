@@ -1,4 +1,4 @@
-module Language.EssenceParsers ( pExpr ) where
+module Language.EssenceParsers ( pSpec, pExpr ) where
 
 
 import Control.Applicative
@@ -305,3 +305,96 @@ pExpr = buildExpressionParser table pExprCore
             . sortBy (comparing fst)
             ) pOps
 
+
+--------------------------------------------------------------------------------
+-- The Spec parser -------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pSpec :: Parser Spec
+pSpec = do
+    (lang,ver)        <- pLanguage
+    (bindings,wheres) <- pTopLevels
+    obj               <- optionMaybe pObjective
+    cons              <- pConstraints
+    eof
+    return $ Spec lang ver bindings wheres obj cons
+
+
+pLanguage :: Parser (String,[Int])
+pLanguage = do
+    l  <- reserved "language" *> identifier
+    is <- sepBy1 integer dot
+    return (l, map fromInteger is)
+
+
+pTopLevels :: Parser ([Binding],[Where])
+pTopLevels = do
+    let
+        pOne :: Parser ([Binding],[Where])
+        pOne = choiceTry [ do i <- pBinding; return (i,[])
+                         , do i <- pWhere  ; return ([],i)
+                         ]
+    is <- many pOne
+    return (concatMap fst is, concatMap snd is)
+
+
+pBinding :: Parser [Binding]
+pBinding = choiceTry [ do reserved "given"
+                          idens <- sepBy1 identifier comma
+                          colon
+                          rhs <- pDomain
+                          return [ (Given, i, rhs) | i <- idens ]
+                     , do reserved "find"
+                          idens <- sepBy1 identifier comma
+                          colon
+                          rhs <- pDomain
+                          return [ (Find, i, rhs) | i <- idens ]
+                     , do reserved "letting"
+                          idens <- sepBy1 identifier comma
+                          reserved "be"
+                          rhs <- pExpr
+                          return [ (Letting, i, rhs) | i <- idens ]
+                     , do reserved "letting"
+                          idens <- sepBy1 identifier comma
+                          reserved "be"
+                          reserved "domain"
+                          rhs <- pDomain
+                          return [ (Letting, i, rhs) | i <- idens ]
+                     , do reserved "letting"
+                          idens <- sepBy1 identifier comma
+                          reserved "be"
+                          reserved "lambda"
+                          rhs <- pLambda
+                          return [ (Letting, i, rhs) | i <- idens ]
+                     , do reserved "letting"
+                          idens <- sepBy1 identifier comma
+                          reserved "be"
+                          reserved "quantifier"
+                          rhs <- pQuanDecl
+                          return [ (Letting, i, rhs) | i <- idens ]
+                     ]
+
+pLambda :: Parser Expr
+pLambda = pExpr
+
+pQuanDecl :: Parser Expr
+pQuanDecl = pExpr
+
+
+
+pWhere :: Parser [Where]
+pWhere = reserved "where" *> sepBy1 pExpr comma
+
+
+pObjective :: Parser Expr
+pObjective = choiceTry [ reserved "minimising" *> pExpr
+                       , reserved "minimizing" *> pExpr
+                       , reserved "maximising" *> pExpr
+                       , reserved "maximizing" *> pExpr
+                       ]
+
+
+pConstraints :: Parser [Expr]
+pConstraints = choiceTry [ reserved "such" *> reserved "that" *> sepEndBy pExpr comma
+                         , return []
+                         ]
