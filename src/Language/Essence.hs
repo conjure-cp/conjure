@@ -245,10 +245,10 @@ opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 
 
 associativeOps :: [Op]
-associativeOps = [Plus,Times]
+associativeOps = [Plus,Times,And,Or]
 
 commutativeOps :: [Op]
-commutativeOps = [Plus,Times]
+commutativeOps = [Plus,Times,And,Or,Eq,Neq,Iff]
 
 
 --------------------------------------------------------------------------------
