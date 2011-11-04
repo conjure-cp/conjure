@@ -4,7 +4,7 @@ module Main where
 import Control.Applicative
 import Control.Monad ( when )
 import Control.Monad.IO.Class ( liftIO )
-import Control.Monad.Trans.State.Lazy ( StateT, evalStateT, gets )
+import Control.Monad.Trans.State.Lazy ( StateT, evalStateT, get, gets, put )
 import Data.Char ( toLower )
 import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
@@ -29,6 +29,7 @@ data Command = Eval String
              | Undo
              | Redo
              | Quit
+             | Flag String
     deriving (Eq, Ord, Read, Show)
 
 
@@ -49,6 +50,7 @@ parseCommand s = do
                           , ( "undo"          , Undo                     )
                           , ( "redo"          , Redo                     )
                           , ( "quit"          , Quit                     )
+                          , ( "flag"          , Flag restOfLine          )
                           ]
             case filter (\ (i,_) -> isPrefixOf firstWord i ) actions of
                 []        -> Left "no such action"
@@ -60,6 +62,7 @@ parseCommand s = do
 data REPLState = REPLState { currentSpec :: Spec
                            , oldSpecs    :: [Spec]
                            , commandHist :: [Command]
+                           , flagppPrint :: Bool
                            }
     deriving (Eq, Ord, Read, Show)
 
@@ -68,6 +71,7 @@ initREPLState :: REPLState
 initREPLState = REPLState { currentSpec = sp
                           , oldSpecs    = []
                           , commandHist = []
+                          , flagppPrint = False
                           }
     where
         sp :: Spec
@@ -91,9 +95,19 @@ step (Eval s) = do
             case prExpr x' of
                 Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x'
                 Just doc -> do
-                    -- liftIO $ ppPrint x
-                    liftIO $ ppPrint x'
+                    flag <- gets flagppPrint
+                    when flag $ do
+                        liftIO $ ppPrint x
+                        liftIO $ ppPrint x'
                     liftIO $ putStrLn $ render doc
+    return True
+step (Flag "ppPrint") = do
+    st  <- get
+    val <- gets flagppPrint
+    put $ st { flagppPrint = not val }
+    return True
+step (Flag flag) = do
+    liftIO $ putStrLn $ "no such flag: " ++ flag
     return True
 step Quit = return False
 step c = do
