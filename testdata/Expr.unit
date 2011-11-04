@@ -1150,3 +1150,54 @@ function {1 -> set {2},
 *** Eval
     12 + 3 < 11
     ~~ false
+
+*** Eval
+    1 elem set {1,2,3}
+    ~~ true
+
+*** Eval
+    set {1,3,5} intersect set {2,4,6}
+    ~~ set {1,2,3,4,5,6}
+
+*** Eval
+    1+a+2+b*0
+    ~~ 3+a
+
+*** Eval
+    true /\ false
+    ~~ false
+
+*** Eval
+    (true /\ false) => false
+    ~~ true
+
+*** Eval
+    ((2^4 >= 2^3) /\ (2^4 <= 2^5)) => (2^3 <= 2^5)
+    ~~ true
+
+*** ParsePrint
+    ((2 ^ 4 >= 2 ^ 3) /\ (2 ^ 4 <= 2 ^ 5)) => (2 ^ 3 <= 2 ^ 5)
+    ~~ GenericNode Imply [ GenericNode And [ GenericNode Geq [ GenericNode Pow [ ValueInteger 2
+                                                                               , ValueInteger 4
+                                                                               ]
+                                                             , GenericNode Pow [ ValueInteger 2
+                                                                               , ValueInteger 3
+                                                                               ]
+                                                             ]
+                                           , GenericNode Leq [ GenericNode Pow [ ValueInteger 2
+                                                                               , ValueInteger 4
+                                                                               ]
+                                                             , GenericNode Pow [ ValueInteger 2
+                                                                               ,ValueInteger 5
+                                                                               ]
+                                                             ]
+                                           ]
+                         , GenericNode Leq [ GenericNode Pow [ ValueInteger 2
+                                                             , ValueInteger 3
+                                                             ]
+                                           , GenericNode Pow [ ValueInteger 2
+                                                             , ValueInteger 5
+                                                             ]
+                                           ]
+                         ]
+
