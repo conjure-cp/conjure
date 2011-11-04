@@ -2,7 +2,7 @@
 
 module Language.EssenceEvaluator where
 
-import Control.Applicative
+
 import Control.Monad.RWS ( RWS, evalRWS
                          , MonadReader
                          , MonadWriter, tell
@@ -22,104 +22,129 @@ runEvaluateExpr topLevels x = evalRWS (comp x) topLevels ()
         comp :: Expr -> RWS [Binding] [Log] () Expr
         comp = rewriteBiM combined
 
+        withLog ::
+            ( MonadReader [Binding] m
+            , MonadWriter [Log] m
+            ) => String
+              -> (Expr -> m (Maybe Expr))
+              -> Expr
+              -> m (Maybe Expr)
+        withLog msg f i = do
+            let p = render . fromJust . prExpr
+            mr <- f i
+            case mr of
+                Nothing -> return Nothing
+                Just r  -> do
+                    tell [msg ++ ": " ++ p i ++ " ~~> " ++ p r]
+                    return mr
+
         combined ::
-            ( Applicative m
-            , MonadReader [Binding] m
+            ( MonadReader [Binding] m
             , MonadWriter [Log] m
             ) => Expr -> m (Maybe Expr)
         combined i = do
-            j <- evaluateExpr i
+            j <- withLog "Evaluator " evaluateExpr i
             case j of
-                Nothing -> normaliseExpr i
+                Nothing -> withLog "Normaliser" normaliseExpr i
                 Just _  -> return j
 
 
-evaluateExpr ::
-    ( MonadReader [Binding] m
-    , MonadWriter [Log] m
-    ) => Expr -> m (Maybe Expr)
+evaluateExpr :: MonadReader [Binding] m => Expr -> m (Maybe Expr)
 
 -- full evaluators
 
-evaluateExpr inp@(GenericNode Plus   [ValueInteger i,ValueInteger j])          = inp ~~$ ValueInteger $ i + j
-evaluateExpr inp@(GenericNode Minus  [ValueInteger i,ValueInteger j])          = inp ~~$ ValueInteger $ i - j
-evaluateExpr inp@(GenericNode Times  [ValueInteger i,ValueInteger j])          = inp ~~$ ValueInteger $ i * j
-evaluateExpr inp@(GenericNode Div    [ValueInteger i,ValueInteger j]) | j /= 0 = inp ~~$ ValueInteger $ div i j
-evaluateExpr inp@(GenericNode Mod    [ValueInteger i,ValueInteger j]) | j >  0 = inp ~~$ ValueInteger $ mod i j
-evaluateExpr inp@(GenericNode Pow    [ValueInteger i,ValueInteger j]) | j >  0 = inp ~~$ ValueInteger $ i ^ j
+evaluateExpr (GenericNode Plus   [ValueInteger i,ValueInteger j])          = rJust $ ValueInteger $ i + j
+evaluateExpr (GenericNode Minus  [ValueInteger i,ValueInteger j])          = rJust $ ValueInteger $ i - j
+evaluateExpr (GenericNode Times  [ValueInteger i,ValueInteger j])          = rJust $ ValueInteger $ i * j
+evaluateExpr (GenericNode Div    [ValueInteger i,ValueInteger j]) | j /= 0 = rJust $ ValueInteger $ div i j
+evaluateExpr (GenericNode Mod    [ValueInteger i,ValueInteger j]) | j >  0 = rJust $ ValueInteger $ mod i j
+evaluateExpr (GenericNode Pow    [ValueInteger i,ValueInteger j]) | j >  0 = rJust $ ValueInteger $ i ^ j
 
-evaluateExpr inp@(GenericNode Abs    [ValueInteger i]) = inp ~~$ ValueInteger $ abs i
-evaluateExpr inp@(GenericNode Negate [ValueInteger i]) = inp ~~$ ValueInteger $ negate i
+evaluateExpr (GenericNode Abs    [ValueInteger i]) = rJust $ ValueInteger $ abs i
+evaluateExpr (GenericNode Negate [ValueInteger i]) = rJust $ ValueInteger $ negate i
 
-evaluateExpr inp@(GenericNode Lt  [ValueInteger i, ValueInteger j]) = inp ~~$ ValueBoolean $ i <  j
-evaluateExpr inp@(GenericNode Leq [ValueInteger i, ValueInteger j]) = inp ~~$ ValueBoolean $ i <= j
-evaluateExpr inp@(GenericNode Gt  [ValueInteger i, ValueInteger j]) = inp ~~$ ValueBoolean $ i >  j
-evaluateExpr inp@(GenericNode Geq [ValueInteger i, ValueInteger j]) = inp ~~$ ValueBoolean $ i >= j
-evaluateExpr inp@(GenericNode Neq [ValueInteger i, ValueInteger j]) = inp ~~$ ValueBoolean $ i /= j
-evaluateExpr inp@(GenericNode Eq  [ValueInteger i, ValueInteger j]) = inp ~~$ ValueBoolean $ i == j
+evaluateExpr (GenericNode Lt  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i <  j
+evaluateExpr (GenericNode Leq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i <= j
+evaluateExpr (GenericNode Gt  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i >  j
+evaluateExpr (GenericNode Geq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i >= j
+evaluateExpr (GenericNode Neq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i /= j
+evaluateExpr (GenericNode Eq  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i == j
+
+evaluateExpr (GenericNode Elem [i,ValueSet  is]) | i `elem` is = rJust $ ValueBoolean True
+evaluateExpr (GenericNode Elem [i,ValueMSet is]) | i `elem` is = rJust $ ValueBoolean True
+
+evaluateExpr (GenericNode Intersect [ValueSet is,ValueSet js]) = rJust $ ValueSet $ sort $ is ++ js
 
 -- partial evaluators
 
-evaluateExpr inp@(GenericNode Plus   [x,ValueInteger 0]) = inp ~~$ x
-evaluateExpr inp@(GenericNode Minus  [ValueInteger 0,x]) = inp ~~$ GenericNode Negate [x]
-evaluateExpr inp@(GenericNode Times  [_,ValueInteger 0]) = inp ~~$ ValueInteger 0
-evaluateExpr inp@(GenericNode Times  [x,ValueInteger 1]) = inp ~~$ x
-evaluateExpr inp@(GenericNode Div    [x,ValueInteger 1]) = inp ~~$ x
-evaluateExpr inp@(GenericNode Mod    [x,y])     | x == y = inp ~~$ ValueInteger 0
-evaluateExpr inp@(GenericNode Pow    [_,ValueInteger 0]) = inp ~~$ ValueInteger 1
-evaluateExpr inp@(GenericNode Pow    [x,ValueInteger 1]) = inp ~~$ x
+evaluateExpr (GenericNode Plus   [x,ValueInteger 0]) = rJust $ x
+evaluateExpr (GenericNode Minus  [ValueInteger 0,x]) = rJust $ GenericNode Negate [x]
+evaluateExpr (GenericNode Times  [_,ValueInteger 0]) = rJust $ ValueInteger 0
+evaluateExpr (GenericNode Times  [x,ValueInteger 1]) = rJust $ x
+evaluateExpr (GenericNode Div    [x,ValueInteger 1]) = rJust $ x
+evaluateExpr (GenericNode Mod    [x,y])     | x == y = rJust $ ValueInteger 0
+evaluateExpr (GenericNode Pow    [_,ValueInteger 0]) = rJust $ ValueInteger 1
+evaluateExpr (GenericNode Pow    [x,ValueInteger 1]) = rJust $ x
+
+evaluateExpr (GenericNode And [ValueBoolean True ,x]) = rJust x
+evaluateExpr (GenericNode And [ValueBoolean False,_]) = rJust $ ValueBoolean False
+
+evaluateExpr (GenericNode Or  [ValueBoolean False,x]) = rJust x
+evaluateExpr (GenericNode Or  [ValueBoolean True ,_]) = rJust $ ValueBoolean True
+
+evaluateExpr (GenericNode Imply [ValueBoolean True ,x]) = rJust x
+evaluateExpr (GenericNode Imply [ValueBoolean False,_]) = rJust $ ValueBoolean True
+evaluateExpr (GenericNode Imply [a,b]) | unifyExpr (GenericNode Not [a]) b = rJust b -- is this too clever?
+
+evaluateExpr (GenericNode Iff [ValueBoolean True ,x]) = rJust x
+evaluateExpr (GenericNode Iff [ValueBoolean False,x]) = rJust $ GenericNode Not [x]
 
 -- symbolic full evaluators
 
-evaluateExpr inp@(GenericNode Minus [a,b]) | a == b = inp ~~$ ValueInteger 0
-evaluateExpr inp@(GenericNode Negate [GenericNode Negate [x]]) = inp ~~$ x
-evaluateExpr inp@(GenericNode Eq [a,b]) | a == b = inp ~~$ ValueBoolean True
+evaluateExpr (GenericNode Minus [a,b]) | a == b = rJust $ ValueInteger 0
+evaluateExpr (GenericNode Negate [GenericNode Negate [x]]) = rJust $ x
+evaluateExpr (GenericNode Eq [a,b]) | a == b = rJust $ ValueBoolean True
 
 -- some special cases
 
-evaluateExpr inp@(GenericNode Minus [GenericNode Plus [x,y],z])
-    | y == z = inp ~~$ x
-    | x == z = inp ~~$ y
-evaluateExpr inp@(GenericNode Plus [GenericNode Minus [x,y],z])
-    | y == z = inp ~~$ x
-    | x == z = inp ~~$ y
+evaluateExpr (GenericNode Minus [GenericNode Plus [x,y],z])
+    | y == z = rJust $ x
+    | x == z = rJust $ y
+evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
+    | y == z = rJust $ x
+    | x == z = rJust $ y
 
 -- no eval
 
-evaluateExpr _ = noRewrite
+evaluateExpr _ = rNothing
 
 
-normaliseExpr :: MonadWriter [Log] m => Expr -> m (Maybe Expr)
-normaliseExpr inp@(GenericNode op [GenericNode op2 [a,b],c])
+normaliseExpr :: Monad m => Expr -> m (Maybe Expr)
+normaliseExpr (GenericNode op [GenericNode op2 [a,b],c])
     | op == op2
     , op `elem` associativeOps
     = let [x,y,z] = sort [a,b,c]
       in  if [x,y,z] == [a,b,c]
-              then noRewrite
-              else rewriteTo "Normaliser" inp $ GenericNode op [GenericNode op [x,y],z]
-normaliseExpr inp@(GenericNode op [a,b])
+              then rNothing
+              else rJust $ GenericNode op [GenericNode op [x,y],z]
+normaliseExpr (GenericNode op [a,b])
     | op `elem` commutativeOps
     , b < a
-    = rewriteTo "Normaliser" inp $ GenericNode op [b,a]
-normaliseExpr _ = noRewrite
+    = rJust $ GenericNode op [b,a]
+normaliseExpr _ = rNothing
 
 
---------------------------------------------------------------------------------
---  helper functions to return results from evaluator and normaliser -----------
---------------------------------------------------------------------------------
+-- return Nothing in a given monad
+rNothing :: Monad m => m (Maybe a)
+rNothing = return Nothing
 
-infixr 0 ~~$
-(~~$) :: MonadWriter [Log] m => Expr -> Expr -> m (Maybe Expr)
-(~~$) = rewriteTo "Evaluator "
-
-
-rewriteTo :: MonadWriter [Log] m => String -> Expr -> Expr -> m (Maybe Expr)
-rewriteTo msg old new = do
-    let p = render . fromJust . prExpr
-    tell [msg ++ ": " ++ p old ++ " ~~> " ++ p new]
-    return $ Just new
+-- return Just value in a given monad
+rJust :: Monad m => a -> m (Maybe a)
+rJust = return . Just
 
 
-noRewrite :: Monad m => m (Maybe a)
-noRewrite = return Nothing
-
+-- do these two expressions unify to the same thing?
+unifyExpr :: Expr -> Expr -> Bool
+unifyExpr (GenericNode Not [GenericNode Eq [a,b]]) (GenericNode Neq [c,d])
+    = unifyExpr a c && unifyExpr b d
+unifyExpr x y = x == y
