@@ -1,13 +1,13 @@
 module Utils
     ( allValues
     , maybeRead
-    , ppPrint
-    , ppShow
+    , ppShow, ppPrint
     , strip
     ) where
 
 import Data.Maybe ( listToMaybe )
-import Text.Show.Pretty ( ppShow)
+import Text.PrettyPrint ( lineLength, renderStyle, style )
+import Text.Show.Pretty ( ppDoc )
 
 strip :: String -> String
 strip = reverse . go . reverse . go
@@ -22,6 +22,9 @@ maybeRead = fmap fst . listToMaybe . reads
 allValues :: (Bounded a, Enum a) => [a]
 allValues = [minBound..maxBound]
 
+
+ppShow :: Show a => a -> String
+ppShow = renderStyle style { lineLength = 200 } . ppDoc
 
 ppPrint :: Show a => a -> IO ()
 ppPrint = putStrLn . ppShow
