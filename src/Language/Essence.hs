@@ -194,33 +194,33 @@ data OpDescriptor
     | OpSpecial
 
 opDescriptor :: Op -> OpDescriptor
-opDescriptor Plus         = OpInfixL "+"            3
-opDescriptor Minus        = OpInfixL "-"            3
-opDescriptor Times        = OpInfixL "*"            4
-opDescriptor Div          = OpInfixL "/"            4
-opDescriptor Mod          = OpInfixL "%"            4
-opDescriptor Pow          = OpInfixR "^"            5
+opDescriptor Plus         = OpInfixL "+"            $ 10000 - 400
+opDescriptor Minus        = OpInfixL "-"            $ 10000 - 400
+opDescriptor Times        = OpInfixL "*"            $ 10000 - 300
+opDescriptor Div          = OpInfixL "/"            $ 10000 - 300
+opDescriptor Mod          = OpInfixL "%"            $ 10000 - 300
+opDescriptor Pow          = OpInfixR "^"            $ 10000 - 200
 opDescriptor Abs          = OpLispy  "abs"          1
-opDescriptor Negate       = OpPrefix "-"            10
-opDescriptor Lt           = OpInfixN "<"            2
-opDescriptor Leq          = OpInfixN "<="           2
-opDescriptor Gt           = OpInfixN ">"            2
-opDescriptor Geq          = OpInfixN ">="           2
-opDescriptor Neq          = OpInfixN "!="           2
-opDescriptor Eq           = OpInfixN "="            2
-opDescriptor Not          = OpPrefix "!"            10
-opDescriptor Or           = OpInfixL "\\/"          1
-opDescriptor And          = OpInfixL "/\\"          1
-opDescriptor Imply        = OpInfixN "=>"           1
-opDescriptor Iff          = OpInfixN "<=>"          1
-opDescriptor Union        = OpInfixL "union"        3
-opDescriptor Intersect    = OpInfixL "intersect"    3
-opDescriptor Subset       = OpInfixN "subset"       2
-opDescriptor SubsetEq     = OpInfixN "subseteq"     2
-opDescriptor Supset       = OpInfixN "supset"       2
-opDescriptor SupsetEq     = OpInfixN "supseteq"     2
+opDescriptor Negate       = OpPrefix "-"            $ 10000 - 100
+opDescriptor Lt           = OpInfixN "<"            $ 10000 - 800
+opDescriptor Leq          = OpInfixN "<="           $ 10000 - 800
+opDescriptor Gt           = OpInfixN ">"            $ 10000 - 800
+opDescriptor Geq          = OpInfixN ">="           $ 10000 - 800
+opDescriptor Neq          = OpInfixN "!="           $ 10000 - 800
+opDescriptor Eq           = OpInfixN "="            $ 10000 - 800
+opDescriptor Not          = OpPrefix "!"            $ 10000 - 1300
+opDescriptor Or           = OpInfixL "\\/"          $ 10000 - 1000
+opDescriptor And          = OpInfixL "/\\"          $ 10000 - 900
+opDescriptor Imply        = OpInfixN "=>"           $ 10000 - 1100
+opDescriptor Iff          = OpInfixN "<=>"          $ 10000 - 1200
+opDescriptor Union        = OpInfixL "union"        $ 10000 - 300
+opDescriptor Intersect    = OpInfixL "intersect"    $ 10000 - 300
+opDescriptor Subset       = OpInfixN "subset"       $ 10000 - 700
+opDescriptor SubsetEq     = OpInfixN "subseteq"     $ 10000 - 700
+opDescriptor Supset       = OpInfixN "supset"       $ 10000 - 700
+opDescriptor SupsetEq     = OpInfixN "supseteq"     $ 10000 - 700
 opDescriptor Card         = OpLispy  "card"         1
-opDescriptor Elem         = OpInfixN "elem"         2
+opDescriptor Elem         = OpInfixN "elem"         $ 10000 - 700
 opDescriptor Max          = OpLispy  "max"          1
 opDescriptor Min          = OpLispy  "min"          1
 opDescriptor ToSet        = OpLispy  "toSet"        1
@@ -240,7 +240,7 @@ opDescriptor Freq         = OpLispy  "freq"         2
 opDescriptor Hist         = OpLispy  "hist"         2
 opDescriptor Project      = OpSpecial
 opDescriptor Index        = OpSpecial
-opDescriptor Bubble       = OpInfixN "@"            2
+opDescriptor Bubble       = OpInfixN "@"            $ 10000 - 0
 opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 
 
