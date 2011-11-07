@@ -1,5 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RankNTypes     #-}
+{-# LANGUAGE ViewPatterns   #-}
 
 module Language.EssencePrinters where
 
@@ -154,13 +155,8 @@ prDomain _ _ = Nothing
 
 attrToDoc :: Expr -> String -> Maybe Doc
 
-attrToDoc d "representation"
-    | Just i <- representation d
-    = (text "representation" <+>) <$> return (text i)
-
-attrToDoc d "attrDontCare"
-    | attrDontCare d
-    = return $ text "_"
+attrToDoc (representation -> Just i) "representation" = (text "representation" <+>) <$> return (text i)
+attrToDoc (attrDontCare   -> True  ) "attrDontCare"   = return $ text "_"
 
 attrToDoc (DomainSet{          size=Just i})           "size" = (text           "size" <+>) <$> prExpr i
 attrToDoc (DomainSet{       minSize=Just i})        "minSize" = (text        "minSize" <+>) <$> prExpr i
