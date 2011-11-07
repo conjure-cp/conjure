@@ -1212,3 +1212,14 @@ function {1 -> set {2},
 
 *** ParsePrintIso
     (1 + 2) * 3 = 10 - 2 + 1
+
+*** Eval
+    (1 + 2) * 3 = 10 - 2 + 1
+    ~~ true
+
+*** ParsePrintIso
+    1 + 2 * 3 = 10 - 2 + 1
+
+*** Eval
+    1 + 2 * 3 = 10 - 2 + 1
+    ~~ false
