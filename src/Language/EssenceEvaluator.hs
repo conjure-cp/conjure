@@ -77,9 +77,12 @@ evaluateExpr (GenericNode Intersect [ValueSet is,ValueSet js]) = rJust $ ValueSe
 
 -- partial evaluators
 
+evaluateExpr (GenericNode Plus   [ValueInteger 0,x]) = rJust $ x
 evaluateExpr (GenericNode Plus   [x,ValueInteger 0]) = rJust $ x
 evaluateExpr (GenericNode Minus  [ValueInteger 0,x]) = rJust $ GenericNode Negate [x]
+evaluateExpr (GenericNode Times  [ValueInteger 0,_]) = rJust $ ValueInteger 0
 evaluateExpr (GenericNode Times  [_,ValueInteger 0]) = rJust $ ValueInteger 0
+evaluateExpr (GenericNode Times  [ValueInteger 1,x]) = rJust $ x
 evaluateExpr (GenericNode Times  [x,ValueInteger 1]) = rJust $ x
 evaluateExpr (GenericNode Div    [x,ValueInteger 1]) = rJust $ x
 evaluateExpr (GenericNode Mod    [x,y])     | x == y = rJust $ ValueInteger 0
