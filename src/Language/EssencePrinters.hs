@@ -158,22 +158,22 @@ attrToDoc :: Expr -> String -> Maybe Doc
 attrToDoc (representation -> Just i) "representation" = (text "representation" <+>) <$> return (text i)
 attrToDoc (attrDontCare   -> True  ) "attrDontCare"   = return $ text "_"
 
-attrToDoc (DomainSet{          size=Just i})           "size" = (text           "size" <+>) <$> prExpr i
-attrToDoc (DomainSet{       minSize=Just i})        "minSize" = (text        "minSize" <+>) <$> prExpr i
-attrToDoc (DomainSet{       maxSize=Just i})        "maxSize" = (text        "maxSize" <+>) <$> prExpr i
+attrToDoc (DomainSet {    size = Just i })    "size" = (text    "size" <+>) <$> prExpr i
+attrToDoc (DomainSet { minSize = Just i }) "minSize" = (text "minSize" <+>) <$> prExpr i
+attrToDoc (DomainSet { maxSize = Just i }) "maxSize" = (text "maxSize" <+>) <$> prExpr i
 
-attrToDoc (DomainMSet{          size=Just i})           "size" = (text           "size" <+>) <$> prExpr i
-attrToDoc (DomainMSet{       minSize=Just i})        "minSize" = (text        "minSize" <+>) <$> prExpr i
-attrToDoc (DomainMSet{       maxSize=Just i})        "maxSize" = (text        "maxSize" <+>) <$> prExpr i
-attrToDoc (DomainMSet{          occr=Just i})           "occr" = (text           "occr" <+>) <$> prExpr i
-attrToDoc (DomainMSet{       minOccr=Just i})        "minOccr" = (text        "minOccr" <+>) <$> prExpr i
-attrToDoc (DomainMSet{       maxOccr=Just i})        "maxOccr" = (text        "maxOccr" <+>) <$> prExpr i
+attrToDoc (DomainMSet {    size = Just i })    "size" = (text    "size" <+>) <$> prExpr i
+attrToDoc (DomainMSet { minSize = Just i }) "minSize" = (text "minSize" <+>) <$> prExpr i
+attrToDoc (DomainMSet { maxSize = Just i }) "maxSize" = (text "maxSize" <+>) <$> prExpr i
+attrToDoc (DomainMSet {    occr = Just i })    "occr" = (text    "occr" <+>) <$> prExpr i
+attrToDoc (DomainMSet { minOccr = Just i }) "minOccr" = (text "minOccr" <+>) <$> prExpr i
+attrToDoc (DomainMSet { maxOccr = Just i }) "maxOccr" = (text "maxOccr" <+>) <$> prExpr i
 
-attrToDoc (DomainFunction{       isTotal=True  }) "total"          = return $ text "total"
-attrToDoc (DomainFunction{     isPartial=True  }) "partial"        = return $ text "partial"
-attrToDoc (DomainFunction{   isInjective=True  }) "injective"      = return $ text "injective"
-attrToDoc (DomainFunction{   isBijective=True  }) "bijective"      = return $ text "bijective"
-attrToDoc (DomainFunction{  isSurjective=True  }) "surjective"     = return $ text "surjective"
+attrToDoc (DomainFunction { isTotal      = True }) "total"      = return $ text "total"
+attrToDoc (DomainFunction { isPartial    = True }) "partial"    = return $ text "partial"
+attrToDoc (DomainFunction { isInjective  = True }) "injective"  = return $ text "injective"
+attrToDoc (DomainFunction { isBijective  = True }) "bijective"  = return $ text "bijective"
+attrToDoc (DomainFunction { isSurjective = True }) "surjective" = return $ text "surjective"
 
 attrToDoc (DomainPartition { isRegular   = True   }) "regular"     = return $ text "regular"
 attrToDoc (DomainPartition { isComplete  = True   }) "complete"    = return $ text "complete"
