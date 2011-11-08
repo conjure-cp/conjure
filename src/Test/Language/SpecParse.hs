@@ -3,10 +3,12 @@ module Test.Language.SpecParse where
 
 import System.Directory ( doesFileExist )
 import System.IO.Unsafe ( unsafeInterleaveIO )
-import Test.HUnit -- ( Test(..), (~:), (~=?), test )
+import Test.HUnit ( Test(..), Assertion, assertFailure, test )
 
 import Language.EssenceParsers ( pSpec )
+import Language.EssencePrinters ( prSpec )
 import ParsecUtils ( parseFromFile )
+import PrintUtils ( render )
 import Utils ( ppShow )
 
 
@@ -19,16 +21,36 @@ allTests files = return . test $ map (TestLabel "testParseSpec" . TestCase . tes
 -- the input as an Essence Spec.
 testParseSpec :: String -> Assertion
 testParseSpec filename = do
+
+    let failed msg = assertFailure $ filename ++ ": " ++ msg
+
     sp <- parseFromFile pSpec id filename id
 
-    let out = ppShow sp
 
-    let expectedfile = filename ++ ".ppPrint"
-    expectedfileExists <- doesFileExist expectedfile
-    expected <- unsafeInterleaveIO $ readFile expectedfile
+    let spRawOut = ppShow sp
+    let rawPrintFileName = filename ++ ".raw"
+    rawPrintFileExists <- doesFileExist rawPrintFileName
+    rawPrintFile <- unsafeInterleaveIO $ readFile rawPrintFileName
 
-    case (expectedfileExists, expected == out) of
+    case (rawPrintFileExists, rawPrintFile == spRawOut) of
         (True , True ) -> return ()
-        (False, _    ) -> do writeFile (filename++".generated") out
-                             assertFailure $ expectedfile ++ " doesn't exist."
-        (_    , False) -> assertFailure "expected /= generated"
+        (False, _    ) -> do writeFile (rawPrintFileName++"?") spRawOut
+                             failed $ rawPrintFileName ++ " doesn't exist.\n"
+                                   ++ "Generating: '" ++ rawPrintFileName ++ "?'"
+        (_    , False) -> failed "raw from file /= generated raw"
+
+
+    case prSpec sp of
+        Nothing    -> failed "Cannot render spec."
+        Just spOut -> do
+            let spOutRendered = render spOut
+            let expectedFileName = filename ++ ".expected"
+            expectedFileExists <- doesFileExist expectedFileName
+            expectedFile <- unsafeInterleaveIO $ readFile expectedFileName
+
+            case (expectedFileExists, expectedFile == spOutRendered) of
+                (True , True ) -> return ()
+                (False, _    ) -> do writeFile (expectedFileName++"?") spOutRendered
+                                     failed $ expectedFileName ++ " doesn't exist.\n"
+                                                  ++ "Generating: '" ++ expectedFileName ++ "?'"
+                (_    , False) -> failed "expected rendering from file /= generated rendering"
