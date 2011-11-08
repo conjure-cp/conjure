@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Language.EssenceParsers ( pSpec, pExpr ) where
 
 
@@ -386,11 +388,11 @@ pWhere :: Parser [Where]
 pWhere = reserved "where" *> sepBy1 pExpr comma
 
 
-pObjective :: Parser Expr
-pObjective = choiceTry [ reserved "minimising" *> pExpr
-                       , reserved "minimizing" *> pExpr
-                       , reserved "maximising" *> pExpr
-                       , reserved "maximizing" *> pExpr
+pObjective :: Parser Objective
+pObjective = choiceTry [ reserved "minimising" *> ((Minimising,) <$> pExpr)
+                       , reserved "minimizing" *> ((Minimising,) <$> pExpr)
+                       , reserved "maximising" *> ((Maximising,) <$> pExpr)
+                       , reserved "maximizing" *> ((Maximising,) <$> pExpr)
                        ]
 
 

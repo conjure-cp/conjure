@@ -12,6 +12,7 @@
 module Language.Essence
     ( Log
     , Spec(..), Binding, BindingEnum(..), Where
+    , Objective, ObjectiveEnum(..)
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
     , associativeOps, commutativeOps
     ) where
@@ -43,7 +44,7 @@ data Spec
            , version          :: [Int] 
            , topLevelBindings :: [Binding]
            , topLevelWheres   :: [Where]
-           , objective        :: Maybe Expr
+           , objective        :: Maybe Objective
            , constraints      :: [Expr]
            }
     deriving (Eq, Ord, Read, Show)
@@ -51,6 +52,11 @@ data Spec
 type Binding = (BindingEnum,String,Expr)
 
 data BindingEnum = Find | Given | Letting
+    deriving (Eq, Ord, Read, Show)
+
+type Objective = (ObjectiveEnum,Expr)
+
+data ObjectiveEnum = Minimising | Maximising
     deriving (Eq, Ord, Read, Show)
 
 type Where = Expr
@@ -261,6 +267,7 @@ deriving instance Binary Spec
 deriving instance Binary Expr
 deriving instance Binary Op
 deriving instance Binary BindingEnum
+deriving instance Binary ObjectiveEnum
 
 deriving instance UniplateDirect Spec Expr
 deriving instance UniplateDirect Expr Expr
@@ -269,6 +276,8 @@ deriving instance UniplateDirect [Expr] Expr
 deriving instance UniplateDirect (Maybe Expr) Expr
 deriving instance UniplateDirect (Expr, Expr) Expr
 deriving instance UniplateDirect (BindingEnum,String,Expr) Expr
+deriving instance UniplateDirect (ObjectiveEnum,Expr) Expr
+deriving instance UniplateDirect (Maybe Objective) Expr
 
 !-}
 
