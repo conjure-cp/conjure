@@ -7,7 +7,8 @@ module Language.EssencePrinters where
 
 import Control.Applicative hiding ( empty )
 import Control.Monad ( forM, msum )
-import Data.Maybe ( mapMaybe )
+import Data.Maybe ( isNothing, maybeToList, mapMaybe )
+import Data.List ( intersperse )
 
 import Language.Essence
 import PrintUtils
@@ -216,3 +217,46 @@ prOpExpr p (OpPrefix {face,precedence}) [a]   = parensIf (p > precedence) <$> do
     a' <- prExprPrec precedence a
     return $ text face <> a'
 prOpExpr _ _ _ = error "prOpExpr"
+
+
+prSpec :: Spec -> Maybe Doc
+prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constraints} = do
+    let langline = text "language" <+> text language <+> hcat (intersperse (text ".") (map int version))
+    bindings <- mapM prBinding   topLevelBindings
+    wheres   <- mapM prWhere     topLevelWheres
+    obj      <- mapM prObjective (maybeToList objective)
+    cons     <- mapM (fmap (nest 4) . prExpr) constraints
+
+    return . vcat . concat $
+        [ [langline]
+        , if null topLevelBindings then [] else text "" : bindings
+        , if null topLevelWheres   then [] else text "" : wheres
+        , if isNothing objective   then [] else text "" : obj
+        , if null constraints      then [] else text "" : text "such" <+> text "that" : punctuate comma cons
+        , [text ""]
+        ]
+
+    where
+        prBinding :: Binding -> Maybe Doc
+        prBinding (Find,nm,x) = do
+            x' <- prExpr x
+            return $ text "find" <+> text nm <+> colon <+> x'
+        prBinding (Given,nm,x) = do
+            x' <- prExpr x
+            return $ text "given" <+> text nm <+> colon <+> x'
+        prBinding (Letting,nm,x) = do
+            x' <- prExpr x
+            return $ text "letting" <+> text nm <+> text "be" <+> x'
+
+        prWhere :: Where -> Maybe Doc
+        prWhere w = do
+            w' <- prExpr w
+            return $ text "where" <+> w'
+
+        prObjective :: Objective -> Maybe Doc
+        prObjective (Minimising,x) = do
+            x' <- prExpr x
+            return $ text "minimising" <+> x'
+        prObjective (Maximising,x) = do
+            x' <- prExpr x
+            return $ text "maximising" <+> x'
