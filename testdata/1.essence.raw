@@ -5,7 +5,10 @@ Spec
               ]
   , topLevelBindings = []
   , topLevelWheres = []
-  , objective = Just ( Identifier "x" )
+  , objective = Just
+                  ( Minimising
+                  , Identifier "x"
+                  )
   , constraints = [ GenericNode
                       Eq
                       [ Identifier "x"

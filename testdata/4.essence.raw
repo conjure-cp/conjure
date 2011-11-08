@@ -7,6 +7,10 @@ Spec
                          , "x"
                          , DomainIntegerList []
                          )
+                       , ( Given
+                         , "y"
+                         , DomainIntegerList []
+                         )
                        ]
   , topLevelWheres = [ GenericNode
                          Lt
@@ -14,6 +18,9 @@ Spec
                          , Identifier "y"
                          ]
                      ]
-  , objective = Just ( Identifier "y" )
+  , objective = Just
+                  ( Minimising
+                  , Identifier "y"
+                  )
   , constraints = []
   }

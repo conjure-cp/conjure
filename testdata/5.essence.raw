@@ -27,7 +27,10 @@ Spec
                          , Identifier "y"
                          ]
                      ]
-  , objective = Just ( Identifier "y" )
+  , objective = Just
+                  ( Minimising
+                  , Identifier "y"
+                  )
   , constraints = [ GenericNode
                       Eq
                       [ Identifier "z"

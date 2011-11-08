@@ -1,0 +1,46 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Letting
+                         , "digit"
+                         , DomainIntegerFromTo (
+                             Just ( ValueInteger 0 ) ) (
+                             Just ( ValueInteger 9 ) )
+                         )
+                       , ( Find
+                         , "x"
+                         , Identifier "digit"
+                         )
+                       , ( Find
+                         , "y"
+                         , Identifier "digit"
+                         )
+                       , ( Letting
+                         , "xy"
+                         , GenericNode
+                             Times
+                             [ Identifier "x"
+                             , Identifier "y"
+                             ]
+                         )
+                       ]
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ GenericNode
+                      Eq
+                      [ Identifier "x"
+                      , GenericNode
+                          Times
+                          [ ValueInteger 3
+                          , Identifier "y"
+                          ]
+                      ]
+                  , GenericNode
+                      Gt
+                      [ Identifier "xy"
+                      , ValueInteger 0
+                      ]
+                  ]
+  }
