@@ -77,17 +77,17 @@ evaluateExpr (GenericNode Intersect [ValueSet is,ValueSet js]) = rJust $ ValueSe
 
 -- partial evaluators
 
-evaluateExpr (GenericNode Plus   [ValueInteger 0,x]) = rJust $ x
-evaluateExpr (GenericNode Plus   [x,ValueInteger 0]) = rJust $ x
+evaluateExpr (GenericNode Plus   [ValueInteger 0,x]) = rJust x
+evaluateExpr (GenericNode Plus   [x,ValueInteger 0]) = rJust x
 evaluateExpr (GenericNode Minus  [ValueInteger 0,x]) = rJust $ GenericNode Negate [x]
 evaluateExpr (GenericNode Times  [ValueInteger 0,_]) = rJust $ ValueInteger 0
 evaluateExpr (GenericNode Times  [_,ValueInteger 0]) = rJust $ ValueInteger 0
-evaluateExpr (GenericNode Times  [ValueInteger 1,x]) = rJust $ x
-evaluateExpr (GenericNode Times  [x,ValueInteger 1]) = rJust $ x
-evaluateExpr (GenericNode Div    [x,ValueInteger 1]) = rJust $ x
+evaluateExpr (GenericNode Times  [ValueInteger 1,x]) = rJust x
+evaluateExpr (GenericNode Times  [x,ValueInteger 1]) = rJust x
+evaluateExpr (GenericNode Div    [x,ValueInteger 1]) = rJust x
 evaluateExpr (GenericNode Mod    [x,y])     | x == y = rJust $ ValueInteger 0
 evaluateExpr (GenericNode Pow    [_,ValueInteger 0]) = rJust $ ValueInteger 1
-evaluateExpr (GenericNode Pow    [x,ValueInteger 1]) = rJust $ x
+evaluateExpr (GenericNode Pow    [x,ValueInteger 1]) = rJust x
 
 evaluateExpr (GenericNode And [ValueBoolean True ,x]) = rJust x
 evaluateExpr (GenericNode And [ValueBoolean False,_]) = rJust $ ValueBoolean False
@@ -105,17 +105,17 @@ evaluateExpr (GenericNode Iff [ValueBoolean False,x]) = rJust $ GenericNode Not 
 -- symbolic full evaluators
 
 evaluateExpr (GenericNode Minus [a,b]) | a == b = rJust $ ValueInteger 0
-evaluateExpr (GenericNode Negate [GenericNode Negate [x]]) = rJust $ x
+evaluateExpr (GenericNode Negate [GenericNode Negate [x]]) = rJust x
 evaluateExpr (GenericNode Eq [a,b]) | a == b = rJust $ ValueBoolean True
 
 -- some special cases
 
 evaluateExpr (GenericNode Minus [GenericNode Plus [x,y],z])
-    | y == z = rJust $ x
-    | x == z = rJust $ y
+    | y == z = rJust x
+    | x == z = rJust y
 evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
-    | y == z = rJust $ x
-    | x == z = rJust $ y
+    | y == z = rJust x
+    | x == z = rJust y
 
 -- no eval
 
