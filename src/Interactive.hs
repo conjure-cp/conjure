@@ -10,16 +10,18 @@ import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
 import System.Console.Readline ( addHistory, readline )
 
+import Language.Essence ( Spec(..), Expr(..) )
 import Language.EssenceEvaluator ( runEvaluateExpr )
-import Language.Essence ( Spec(..) )
 import Language.EssenceParsers ( pExpr )
 import Language.EssencePrinters ( prExpr )
+import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( parseEither, eof )
 import PrintUtils ( render )
 import Utils ( ppPrint, strip )
 
 
 data Command = Eval String
+             | TypeOf String
              | Load FilePath
              | Save FilePath
              | Record String        -- might record a declaration, where clause, objective, or constraint
@@ -41,6 +43,7 @@ parseCommand s = do
                                           (i:_) -> Right $ map toLower i
             let restOfLine = strip $ drop (length firstWord) ss
             let actions = [ ( "evaluate"      , Eval restOfLine          )
+                          , ( "typeof"        , TypeOf restOfLine        )
                           , ( "load"          , Load restOfLine          )
                           , ( "save"          , Save restOfLine          )
                           , ( "record"        , Record restOfLine        )
@@ -100,6 +103,22 @@ step (Eval s) = do
                         liftIO $ ppPrint x
                         liftIO $ ppPrint x'
                     liftIO $ putStrLn $ render doc
+    return True
+step (TypeOf s) = do
+    case parseEither (pExpr <* eof) s of
+        Left msg -> liftIO $ putStrLn msg
+        Right x  -> do
+            sp <- gets currentSpec
+            let (et, logs) = runTypeOf (topLevelBindings sp) x
+            liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
+            case et of
+                Left err -> liftIO $ putStrLn $ "Error while typechecking: " ++ err
+                Right t  -> do
+                    flag <- gets flagppPrint
+                    when flag $ do
+                        liftIO $ ppPrint x
+                        liftIO $ ppPrint t
+                    liftIO $ putStrLn $ show t
     return True
 step (Flag "ppPrint") = do
     st  <- get
