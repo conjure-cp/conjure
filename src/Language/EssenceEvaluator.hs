@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Language.EssenceEvaluator where
+module Language.EssenceEvaluator ( runEvaluateExpr ) where
 
 
 import Control.Monad.RWS ( RWS, evalRWS
