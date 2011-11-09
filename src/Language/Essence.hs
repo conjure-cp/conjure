@@ -14,7 +14,8 @@ module Language.Essence
     , Spec(..), Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
-    , associativeOps, commutativeOps
+    , Kind(..), Type(..)
+    , associativeOps, commutativeOps, validOpTypes
     ) where
 
 
@@ -255,6 +256,148 @@ associativeOps = [Plus,Times,And,Or]
 
 commutativeOps :: [Op]
 commutativeOps = [Plus,Times,And,Or,Eq,Neq,Iff]
+
+
+--------------------------------------------------------------------------------
+-- Kinds and Types -------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data Kind = KindDomain | KindValue | KindExpr
+    deriving (Eq, Ord, Read, Show, Enum, Bounded)
+
+data Type = TypeUnknown
+    | TypeIdentifier String
+    | TypeBoolean
+    | TypeInteger
+    | TypeUnnamed
+    | TypeEnum
+    | TypeMatrix Type
+    | TypeTuple [Type]
+    | TypeSet Type
+    | TypeMSet Type
+    | TypeFunction Type Type
+    | TypeRelation [Type]
+    | TypePartition Type
+    deriving (Eq, Ord, Read, Show)
+
+
+-- All the ops in Essence, with their overloadings if they are polymorphic
+validOpTypes :: Op -> [Type] -> Maybe Type
+validOpTypes Plus  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
+validOpTypes Minus ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
+validOpTypes Times ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
+validOpTypes Div   ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
+validOpTypes Mod   ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
+validOpTypes Pow   ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
+validOpTypes Abs    [TypeBoolean] = return TypeInteger
+validOpTypes Abs    [TypeInteger] = return TypeInteger
+validOpTypes Negate [TypeInteger] = return TypeInteger
+
+validOpTypes Lt  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
+validOpTypes Leq ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
+validOpTypes Gt  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
+validOpTypes Geq ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
+validOpTypes Neq ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
+validOpTypes Eq  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
+validOpTypes Neq [a,b] | a == b = return TypeBoolean
+validOpTypes Eq  [a,b] | a == b = return TypeBoolean
+
+validOpTypes Not   [TypeBoolean]             = return TypeBoolean
+validOpTypes Or    [TypeBoolean,TypeBoolean] = return TypeBoolean
+validOpTypes And   [TypeBoolean,TypeBoolean] = return TypeBoolean
+validOpTypes Imply [TypeBoolean,TypeBoolean] = return TypeBoolean
+validOpTypes Iff   [TypeBoolean,TypeBoolean] = return TypeBoolean
+
+validOpTypes Union     [TypeSet        a, TypeSet        b] | a  == b  = return (TypeSet a)
+validOpTypes Union     [TypeMSet       a, TypeMSet       b] | a  == b  = return (TypeMSet a)
+validOpTypes Union     [TypeRelation  as, TypeRelation  bs] | as == bs = return (TypeRelation as)
+
+validOpTypes Intersect [TypeSet        a, TypeSet        b] | a  == b  = return (TypeSet a)
+validOpTypes Intersect [TypeMSet       a, TypeMSet       b] | a  == b  = return (TypeMSet a)
+validOpTypes Intersect [TypeRelation  as, TypeRelation  bs] | as == bs = return (TypeRelation as)
+validOpTypes Intersect [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return (TypeFunction a b)
+
+validOpTypes Minus     [TypeSet        a, TypeSet        b] | a  == b  = return (TypeSet a)
+validOpTypes Minus     [TypeMSet       a, TypeMSet       b] | a  == b  = return (TypeMSet a)
+validOpTypes Minus     [TypeRelation  as, TypeRelation  bs] | as == bs = return (TypeRelation as)
+validOpTypes Minus     [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return (TypeFunction a b)
+
+-- even though there is a trivial code duplication here (which can be avoided
+-- using pattern guards), I am happy to have it because it helps the
+-- completeness checker. This function needs to be total, on the set of
+-- defined operators.
+validOpTypes Subset    [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
+validOpTypes Subset    [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
+validOpTypes Subset    [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
+validOpTypes Subset    [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+
+validOpTypes SubsetEq  [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
+validOpTypes SubsetEq  [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
+validOpTypes SubsetEq  [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
+validOpTypes SubsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+
+validOpTypes Supset    [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
+validOpTypes Supset    [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
+validOpTypes Supset    [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
+validOpTypes Supset    [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+
+validOpTypes SupsetEq  [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
+validOpTypes SupsetEq  [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
+validOpTypes SupsetEq  [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
+validOpTypes SupsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+
+validOpTypes Card      [TypeSet       {}] = return TypeInteger
+validOpTypes Card      [TypeMSet      {}] = return TypeInteger
+validOpTypes Card      [TypeRelation  {}] = return TypeInteger
+validOpTypes Card      [TypeFunction  {}] = return TypeInteger
+validOpTypes Card      [TypePartition {}] = return TypeInteger
+
+validOpTypes Elem      [a, TypeSet  b] | a == b = return TypeBoolean
+validOpTypes Elem      [a, TypeMSet b] | a == b = return TypeBoolean
+validOpTypes Elem      [TypeTuple as, TypeRelation bs] | as == bs = return TypeBoolean
+
+validOpTypes Max       [TypeSet TypeBoolean   ] = return TypeBoolean
+validOpTypes Max       [TypeSet TypeInteger] = return TypeInteger
+validOpTypes Min       [TypeSet TypeBoolean   ] = return TypeBoolean
+validOpTypes Min       [TypeSet TypeInteger] = return TypeInteger
+
+validOpTypes ToSet     [TypeMSet       a] = return (TypeSet a)
+validOpTypes ToSet     [TypeRelation  as] = return (TypeSet (TypeTuple as))
+validOpTypes ToSet     [TypeFunction a b] = return (TypeSet (TypeTuple [a,b]))
+
+validOpTypes ToMSet    [TypeSet        a] = return (TypeMSet a)
+validOpTypes ToMSet    [TypeRelation  as] = return (TypeMSet (TypeTuple as))
+validOpTypes ToMSet    [TypeFunction a b] = return (TypeMSet (TypeTuple [a,b]))
+
+validOpTypes ToRel     [TypeFunction a b] = return (TypeRelation [a,b])
+
+validOpTypes Defined   [TypeFunction a _] = return (TypeSet a)
+validOpTypes Range     [TypeFunction _ b] = return (TypeSet b)
+
+validOpTypes Image     [TypeFunction a b,c] | a == c = return b
+validOpTypes PreImage  [TypeFunction a b,c] | b == c = return (TypeSet a)
+
+validOpTypes Image     [TypeRelation as,TypeTuple bs] | as == bs = return TypeBoolean
+
+validOpTypes Inverse   [TypeFunction a b, TypeFunction c d] | (a,b) == (d,c) = return TypeBoolean
+
+validOpTypes Together  [a,b,TypePartition c] | a == b && a == c = return TypeBoolean
+validOpTypes Apart     [a,b,TypePartition c] | a == b && a == c = return TypeBoolean
+
+validOpTypes Party     [a,TypePartition b] | a == b = return (TypeSet a)
+validOpTypes Participants [TypePartition a] = return (TypeSet a)
+
+validOpTypes Parts     [TypePartition a] = return (TypeSet (TypeSet a))
+
+validOpTypes Freq      [TypeMSet a, b] | a == b = return TypeInteger
+validOpTypes Hist      [TypeMSet a,TypeMatrix b] | a == b = return (TypeMatrix TypeInteger)
+
+validOpTypes Bubble    [a, TypeBoolean] = return a
+
+validOpTypes AllDiff   [TypeMatrix {}] = return TypeBoolean
+
+validOpTypes _ _ = Nothing
+
 
 
 --------------------------------------------------------------------------------
