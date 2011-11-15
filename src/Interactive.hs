@@ -130,50 +130,70 @@ displayRaws x y = do
 
 
 step :: Command -> StateT REPLState IO Bool
-step (Eval s) = do
-    case parseEither (pExpr <* eof) s of
-        Left msg -> liftIO $ putStrLn msg
-        Right x  -> do
-            sp <- gets currentSpec
-            let (x', logs) = runEvaluateExpr (topLevelBindings sp) x
-            liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
-            case prExpr x' of
-                Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x'
-                Just doc -> do
-                    flag <- gets flagppPrint
-                    when flag $ do
-                        liftIO $ ppPrint x
-                        liftIO $ ppPrint x'
-                    liftIO $ putStrLn $ render doc
-    return True
-step (TypeOf s) = do
-    case parseEither (pExpr <* eof) s of
-        Left msg -> liftIO $ putStrLn msg
-        Right x  -> do
-            sp <- gets currentSpec
-            let (et, logs) = runTypeOf (topLevelBindings sp) x
-            liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
-            case et of
-                Left err -> liftIO $ putStrLn $ "Error while typechecking: " ++ err
-                Right t  -> do
-                    flag <- gets flagppPrint
-                    when flag $ do
-                        liftIO $ ppPrint x
-                        liftIO $ ppPrint t
-                    liftIO $ putStrLn $ show t
-    return True
-step (Flag "ppPrint") = do
-    st  <- get
-    val <- gets flagppPrint
-    put $ st { flagppPrint = not val }
-    return True
-step (Flag flag) = do
-    liftIO $ putStrLn $ "no such flag: " ++ flag
-    return True
+step (EvalTypeKind s) = step (KindOf s) >> step (TypeOf s) >> step (Eval s)
+step (Eval s) = withParsed pExpr s $ \ x -> do
+    bs <- gets $ topLevelBindings . currentSpec
+    let (x', logs) = runEvaluateExpr bs x
+    displayLogs logs
+    displayRaws x x'
+    prettyPrint prExpr x'
+step (TypeOf s) = withParsed pExpr s $ \ x -> do
+    bs <- gets $ topLevelBindings . currentSpec
+    let (et, logs) = runTypeOf bs x
+    displayRaws x et
+    case et of
+        Left err -> liftIO $ putStrLn $ "Error while type-checking: " ++ err
+        Right t  -> do
+            displayLogs logs
+            prettyPrint prType t
+step (KindOf s) = withParsed pExpr s $ \ x -> do
+    bs <- gets $ topLevelBindings . currentSpec
+    let (ek, logs) = runKindOf bs x
+    displayRaws x ek
+    case ek of
+        Left err -> liftIO $ putStrLn $ "Error while kind-checking: " ++ err
+        Right k  -> do
+            displayLogs logs
+            prettyPrint prKind k
+step (Load fp) = returningTrue $ do
+    esp <- liftIO readIt
+    case esp of
+        Left e   -> liftIO $ putStrLn $ "IO Error: " ++ show e
+        Right sp -> modifySpec $ \ _ -> sp
+    where
+        readIt :: IO (Either SomeException Spec)
+        readIt = try $ parseFromFile pSpec id fp id
+step (Save fp) = returningTrue $ do
+    sp <- gets currentSpec
+    case prSpec sp of
+        Nothing  -> liftIO $ putStrLn "Error while rendering the current specification."
+        Just doc -> liftIO $ writeFile fp $ render doc
+
+step (Record s) = withParsed (choiceTry [ Left . Right <$> pObjective
+                                        , Right        <$> pExpr
+                                        , Left . Left  <$> pTopLevels
+                                        ]) s $ \ res -> case res of
+    Left (Left (bs,ws)) -> modifySpec $ \ sp -> sp { topLevelBindings = topLevelBindings sp ++ bs
+                                                   , topLevelWheres   = topLevelWheres   sp ++ ws
+                                                   }
+    Left (Right o)      -> modifySpec $ \ sp -> sp { objective = Just o }
+    Right x             -> modifySpec $ \ sp -> sp { constraints = constraints sp ++ [x] }
+
+step (RmDeclaration _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
+step (RmConstraint  _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
+step RmObjective       = returningTrue $ modifySpec $ \ sp -> sp { objective = Nothing }
+
+step Rollback = returningTrue $ do
+    st <- get
+    let olds = oldSpecs st
+    case olds of
+        []     -> return ()
+        (s:ss) -> put st { currentSpec = s, oldSpecs = ss }
+step DisplaySpec = returningTrue $ do
+    sp <- gets currentSpec
+    prettyPrint prSpec sp
+step (Flag nm) = returningTrue $ stepFlag nm
 step Quit = return False
-step c = do
-    liftIO $ putStrLn $ "feature not implemented yet: " ++ show c
-    return True
 
 
 stepFlag :: (MonadIO m, MonadState REPLState m) => String -> m ()
