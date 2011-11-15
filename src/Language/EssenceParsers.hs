@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 
-module Language.EssenceParsers ( pSpec, pExpr ) where
-
+module Language.EssenceParsers ( pSpec, pExpr
+                               , pTopLevels, pObjective
+                               ) where
 
 import Control.Applicative
 import Control.Monad.Identity
