@@ -1,22 +1,27 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Main where
 
 
 import Control.Applicative
+import Control.Exception ( SomeException, try )
 import Control.Monad ( when )
-import Control.Monad.IO.Class ( liftIO )
-import Control.Monad.Trans.State.Lazy ( StateT, evalStateT, get, gets, put )
+import Control.Monad.IO.Class ( MonadIO, liftIO )
+import Control.Monad.State ( MonadState, get, gets, put )
+import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
 import Data.Char ( toLower )
 import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
 import System.Console.Readline ( addHistory, readline )
 
-import Language.Essence ( Spec(..), Expr(..) )
+import Language.Essence ( Spec(..), Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
-import Language.EssenceParsers ( pExpr )
-import Language.EssencePrinters ( prExpr )
+import Language.EssenceKinds ( runKindOf )
+import Language.EssenceParsers ( pSpec, pExpr, pTopLevels, pObjective )
+import Language.EssencePrinters ( prSpec, prExpr, prType, prKind )
 import Language.EssenceTypes ( runTypeOf )
-import ParsecUtils ( parseEither, eof )
-import PrintUtils ( render )
+import ParsecUtils ( Parser, parseEither, parseFromFile, eof, choiceTry )
+import PrintUtils ( Doc, render )
 import Utils ( ppPrint, strip )
 
 
