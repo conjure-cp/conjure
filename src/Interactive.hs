@@ -13,6 +13,7 @@ import Data.Char ( toLower )
 import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
 import System.Console.Readline ( addHistory, readline )
+import System.Environment ( getArgs )
 
 import Language.Essence ( Spec(..), Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
@@ -214,7 +215,19 @@ stepFlag flag = liftIO $ putStrLn $ "no such flag: " ++ flag
 
 
 main :: IO ()
-main = evalStateT repl initREPLState
+main = do
+    args <- getArgs
+    case args of
+        []   -> evalStateT repl initREPLState
+        [fp] -> do
+            putStrLn ("Loading from: " ++ fp)
+            evalStateT (step (Load fp) >> repl) initREPLState
+        _    -> do
+            putStrLn $ unlines [ "This program accepts 1 optional argument,"
+                               , "which must be a file path pointing to an Essence specification."
+                               , ""
+                               , "You've given several arguments."
+                               ]
     where
         repl :: StateT REPLState IO ()
         repl = do
