@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes     #-}
 {-# LANGUAGE ViewPatterns   #-}
 
-module Language.EssencePrinters ( prSpec, prExpr ) where
+module Language.EssencePrinters ( prSpec, prExpr, prType, prKind ) where
 
 
 import Control.Applicative hiding ( empty )
@@ -275,3 +275,57 @@ prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constrain
         prObjective (Maximising,x) = do
             x' <- prExpr x
             return $ text "maximising" <+> x'
+
+
+--------------------------------------------------------------------------------
+-- Type ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+prType :: Type -> Maybe Doc
+prType TypeUnknown        = return $ text "?"
+prType (TypeIdentifier i) = return $ text i
+prType TypeBoolean        = return $ text "bool"
+prType TypeInteger        = return $ text "int"
+prType TypeUnnamed        = return $ text "unnamed"
+prType TypeEnum           = return $ text "enum"
+prType (TypeMatrix t)     = do t' <- prType t
+                               return $ text "matrix"
+                                    <+> text "of"
+                                    <+> t'
+prType (TypeTuple ts)     = do ts' <- mapM prType ts
+                               return $ text "tuple"
+                                    <+> text "of"
+                                    <+> parens (sep (punctuate comma ts'))
+prType (TypeSet t)        = do t' <- prType t
+                               return $ text "set"
+                                    <+> text "of"
+                                    <+> t'
+prType (TypeMSet t)       = do t' <- prType t
+                               return $ text "mset"
+                                    <+> text "of"
+                                    <+> t'
+prType (TypeFunction a b) = do a' <- prType a
+                               b' <- prType b
+                               return $ text "function"
+                                    <+> a'
+                                    <+> text "->"
+                                    <+> b'
+prType (TypeRelation ts)  = do ts' <- mapM prType ts
+                               return $ text "relation"
+                                    <+> text "of"
+                                    <+> parens (sep (punctuate comma ts'))
+prType (TypePartition t)  = do t' <- prType t
+                               return $ text "partition"
+                                    <+> text "from"
+                                    <+> t'
+
+
+--------------------------------------------------------------------------------
+-- Type ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+prKind :: Kind -> Maybe Doc
+prKind KindUnknown = return $ text "?"
+prKind KindDomain  = return $ text "domain"
+prKind KindValue   = return $ text "value"
+prKind KindExpr    = return $ text "expression"
