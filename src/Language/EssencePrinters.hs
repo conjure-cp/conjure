@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes     #-}
 {-# LANGUAGE ViewPatterns   #-}
 
-module Language.EssencePrinters where
+module Language.EssencePrinters ( prSpec, prExpr ) where
 
 
 import Control.Applicative hiding ( empty )
@@ -14,6 +14,10 @@ import Language.Essence
 import PrintUtils
 
 
+--------------------------------------------------------------------------------
+-- Expr ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 prExpr :: Expr -> Maybe Doc
 prExpr = prExprPrec 0
 
@@ -22,14 +26,13 @@ type Prec = Int
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [prIdentifier, prValue, prGenericNode, prDomain]
 
-
 prIdentifier :: Prec -> Expr -> Maybe Doc
 prIdentifier _ (Identifier i) = return $ text i
 prIdentifier _ _ = Nothing
 
 
 --------------------------------------------------------------------------------
--- Printers for inline values --------------------------------------------------
+-- Value* ----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 prValue :: Prec -> Expr -> Maybe Doc
@@ -49,6 +52,10 @@ prValue _ (ValuePartition xss) = (text "partition" <+>) . braces . sep . punctua
     where elements xs = braces . sep . punctuate comma <$> mapM prExpr xs
 prValue _ _ = Nothing
 
+
+--------------------------------------------------------------------------------
+-- Domain* ---------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 prDomain :: Prec -> Expr -> Maybe Doc
 prDomain _ DomainBoolean = return $ text "bool"
@@ -191,6 +198,10 @@ attrToDoc (DomainPartition { maxNumParts = Just i }) "maxNumParts" = (text "maxN
 attrToDoc _ _ = Nothing
 
 
+--------------------------------------------------------------------------------
+-- GenericNode -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
 prGenericNode :: Prec -> Expr -> Maybe Doc
 prGenericNode prec (GenericNode op xs) = prOpExpr prec (opDescriptor op) xs
 prGenericNode _ _ = Nothing
@@ -218,6 +229,10 @@ prOpExpr p (OpPrefix {face,precedence}) [a]   = parensIf (p > precedence) <$> do
     return $ text face <> a'
 prOpExpr _ _ _ = error "prOpExpr"
 
+
+--------------------------------------------------------------------------------
+-- Spec ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 prSpec :: Spec -> Maybe Doc
 prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constraints} = do
