@@ -176,6 +176,18 @@ step c = do
     return True
 
 
+stepFlag :: (MonadIO m, MonadState REPLState m) => String -> m ()
+stepFlag "rawOutput" = do
+    st  <- get
+    val <- gets flagRawOutput
+    put $ st { flagRawOutput = not val }
+stepFlag "logging" = do
+    st  <- get
+    val <- gets flagLogs
+    put $ st { flagLogs = not val }
+stepFlag flag = liftIO $ putStrLn $ "no such flag: " ++ flag
+
+
 main :: IO ()
 main = evalStateT repl initREPLState
     where
