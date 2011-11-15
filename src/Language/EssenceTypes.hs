@@ -7,6 +7,7 @@ module Language.EssenceTypes ( runTypeOf ) where
 import Control.Monad.RWS ( evalRWS
                          , MonadReader, ask
                          , MonadWriter, tell
+                         , MonadState, get, modify
                          )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Maybe ( fromJust )
@@ -17,7 +18,7 @@ import PrintUtils ( render )
 
 
 runTypeOf :: [Binding] -> Expr -> (Either String Type, [Log])
-runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs ()
+runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs []
 
 
 infixr 0 ~~$
@@ -34,9 +35,10 @@ x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ 
 
 
 typeOf ::
-    ( MonadReader [Binding] m
+    ( MonadError String m
+    , MonadReader [Binding] m
     , MonadWriter [Log] m
-    , MonadError String m
+    , MonadState [String] m -- started lookup of identifier.
     ) => Expr -> m Type
 
 typeOf p@Underscore       = p ~~$ TypeUnknown
@@ -121,10 +123,13 @@ typeOf p@(DomainPartition {element}) = do
     p ~~$ TypePartition t
 
 typeOf p@(Identifier nm) = do
-    bs <- ask
-    case [ x | (_,nm',x) <- bs, nm == nm' ] of
-        []  -> p ~$$ "identifier not found"
-        [x] -> do t <- typeOf x; p ~~$ t
-        _   -> p ~$$ "identifier bound to several things"
-
--- typeOf p = p ~$$ "not implemented yet"
+    nms <- get
+    if nm `elem` nms
+        then throwError $ "cyclic definition: " ++ nm ++ " defined in terms of itself."
+        else do
+            modify (nm:)
+            bs <- ask
+            case [ x | (_,nm',x) <- bs, nm == nm' ] of
+                []  -> p ~$$ "identifier not found"
+                [x] -> do t <- typeOf x; p ~~$ t
+                _   -> p ~$$ "identifier bound to several things"
