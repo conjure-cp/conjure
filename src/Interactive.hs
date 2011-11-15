@@ -102,6 +102,33 @@ modifySpec f = do
            , oldSpecs    = sp : oldSpecs st
            }
 
+
+returningTrue :: Applicative f => f () -> f Bool
+returningTrue f = pure True <* f
+
+withParsed :: (Applicative m, MonadIO m) => Parser a -> String -> (a -> m ()) -> m Bool
+withParsed p s comp = returningTrue $ case parseEither (p <* eof) s of
+    Left msg -> liftIO $ putStrLn msg
+    Right x  -> comp x
+
+prettyPrint :: (MonadIO m, Show a) => (a -> Maybe Doc) -> a -> m ()
+prettyPrint f x = case f x of
+    Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x
+    Just doc -> liftIO $ putStrLn $ render doc
+
+displayLogs :: (MonadIO m, MonadState REPLState m) => [Log] -> m ()
+displayLogs logs = do
+    flag <- gets flagLogs
+    when flag $ liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
+
+displayRaws :: (MonadIO m, MonadState REPLState m, Show a, Show b) => a -> b -> m ()
+displayRaws x y = do
+    flag <- gets flagRawOutput
+    when flag $ do
+        liftIO $ ppPrint x
+        liftIO $ ppPrint y
+
+
 step :: Command -> StateT REPLState IO Bool
 step (Eval s) = do
     case parseEither (pExpr <* eof) s of
