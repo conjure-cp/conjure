@@ -72,3 +72,6 @@ kindOf p@(Identifier nm) = do
         []  -> p ~$$ "identifier not found"
         [x] -> do t <- kindOf x; p ~~$ t
         _   -> p ~$$ "identifier bound to several things"
+
+kindOf p@(Lambda {}) = p ~~$ KindLambda
+

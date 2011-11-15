@@ -310,6 +310,57 @@ pExpr = buildExpressionParser table pExprCore
 
 
 --------------------------------------------------------------------------------
+-- Lambda parser ---------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pLambda :: Parser Expr
+pLambda = do
+    reserved "lambda"
+    braces $ do
+        args <- sepBy1 nameType comma
+        reservedOp "->"
+        x <- pExpr
+        return $ Lambda args x
+    where
+        nameType :: Parser (String, Type)
+        nameType = (,) <$> identifier <*> (colon *> pType)
+
+
+--------------------------------------------------------------------------------
+-- Type parser -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pType :: Parser Type
+pType = choiceTry [ pTypeUnknown, pTypeBool, pTypeInteger, pTypeUnnamed, pTypeEnum
+                  , pTypeMatrix, pTypeTuple, pTypeSet, pTypeMSet
+                  , pTypeFunction, pTypeRelation, pTypePartition
+                  , pTypeLambda
+                  , pTypeIdentifier
+                  ]
+    where
+        pTypeUnknown = TypeUnknown <$ reservedOp "?"
+        pTypeIdentifier = TypeIdentifier <$> identifier
+        pTypeBool = TypeBoolean <$ reserved "bool"
+        pTypeInteger = TypeInteger <$ reserved "int"
+        pTypeUnnamed = TypeUnnamed <$ reserved "unnamed"
+        pTypeEnum = TypeEnum <$ reserved "enum"
+        pTypeMatrix = TypeMatrix <$> (reserved "matrix" *> reserved "of" *> pType)
+        pTypeTuple = TypeTuple <$> (reserved "tuple" *> reserved "of" *> parens (sepBy1 pType comma))
+        pTypeSet = TypeSet <$> (reserved "set" *> reserved "of" *> pType)
+        pTypeMSet = TypeMSet <$> (reserved "mset" *> reserved "of" *> pType)
+        pTypeFunction = TypeFunction <$> pType <*> (reservedOp "->" *> pType)
+        pTypeRelation = TypeRelation <$> (reserved "relation" *> reserved "of" *> parens (sepBy1 pType comma))
+        pTypePartition = TypePartition <$> (reserved "partition" *> reserved "from" *> pType)
+        pTypeLambda = do
+            reserved "lambda"
+            braces $ do
+                args <- sepBy1 pType comma
+                reservedOp "->"
+                x <- pType
+                return $ TypeLambda args x
+
+
+--------------------------------------------------------------------------------
 -- The Spec parser -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -366,7 +417,6 @@ pBinding = choiceTry [ do reserved "given"
                      , do reserved "letting"
                           idens <- sepBy1 identifier comma
                           reserved "be"
-                          reserved "lambda"
                           rhs <- pLambda
                           return [ (Letting, i, rhs) | i <- idens ]
                      , do reserved "letting"
@@ -376,9 +426,6 @@ pBinding = choiceTry [ do reserved "given"
                           rhs <- pQuanDecl
                           return [ (Letting, i, rhs) | i <- idens ]
                      ]
-
-pLambda :: Parser Expr
-pLambda = pExpr
 
 pQuanDecl :: Parser Expr
 pQuanDecl = pExpr

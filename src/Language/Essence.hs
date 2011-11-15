@@ -159,6 +159,8 @@ data Expr
 
     | Identifier String
 
+    | Lambda [(String,Type)] Expr
+
     deriving (Eq, Ord, Read, Show)
 
 
@@ -262,11 +264,12 @@ commutativeOps = [Plus,Times,And,Or,Eq,Neq,Iff]
 -- Kinds and Types -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data Kind = KindUnknown | KindDomain | KindValue | KindExpr
+data Kind = KindUnknown | KindDomain | KindValue | KindExpr | KindLambda
     deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 data Type = TypeUnknown
     | TypeIdentifier String
+
     | TypeBoolean
     | TypeInteger
     | TypeUnnamed
@@ -278,6 +281,9 @@ data Type = TypeUnknown
     | TypeFunction Type Type
     | TypeRelation [Type]
     | TypePartition Type
+
+    | TypeLambda [Type] Type
+
     deriving (Eq, Ord, Read, Show)
 
 class TypeUnify t where
@@ -436,6 +442,8 @@ deriving instance Binary Expr
 deriving instance Binary Op
 deriving instance Binary BindingEnum
 deriving instance Binary ObjectiveEnum
+deriving instance Binary Type
+deriving instance Binary Kind
 
 deriving instance UniplateDirect Spec Expr
 deriving instance UniplateDirect Expr Expr

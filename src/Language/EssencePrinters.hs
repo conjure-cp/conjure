@@ -24,7 +24,9 @@ prExpr = prExprPrec 0
 type Prec = Int
 
 prExprPrec :: Prec -> Expr -> Maybe Doc
-prExprPrec prec x = msum $ map (\ pr -> pr prec x) [prIdentifier, prValue, prGenericNode, prDomain]
+prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
+                                                   , prDomain, prLambdaExpr
+                                                   ]
 
 prIdentifier :: Prec -> Expr -> Maybe Doc
 prIdentifier _ (Identifier i) = return $ text i
@@ -231,6 +233,22 @@ prOpExpr _ _ _ = error "prOpExpr"
 
 
 --------------------------------------------------------------------------------
+-- Lambda ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+prLambdaExpr :: Prec -> Expr -> Maybe Doc
+prLambdaExpr _ (Lambda args x) = do
+    args' <- forM args $ \ (nm,t) -> do t' <- prType t
+                                        return (text nm <+> colon <+> t')
+    x' <- prExpr x
+    return $ text "lambda"
+         <+> braces ( sep (punctuate comma args')
+                  <+> text "->"
+                  <+> x' )
+prLambdaExpr _ _ = Nothing
+
+
+--------------------------------------------------------------------------------
 -- Spec ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -318,6 +336,12 @@ prType (TypePartition t)  = do t' <- prType t
                                return $ text "partition"
                                     <+> text "from"
                                     <+> t'
+prType (TypeLambda args x) = do args' <- mapM prType args
+                                x'    <- prType x
+                                return $ text "lambda"
+                                     <+> braces (sep (punctuate comma args'))
+                                     <+> text "->"
+                                     <+> x'
 
 
 --------------------------------------------------------------------------------
@@ -329,3 +353,4 @@ prKind KindUnknown = return $ text "?"
 prKind KindDomain  = return $ text "domain"
 prKind KindValue   = return $ text "value"
 prKind KindExpr    = return $ text "expression"
+prKind KindLambda  = return $ text "lambda"

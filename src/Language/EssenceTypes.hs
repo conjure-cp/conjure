@@ -4,10 +4,11 @@
 module Language.EssenceTypes ( runTypeOf ) where
 
 
+import Control.Arrow ( second )
 import Control.Monad.RWS ( evalRWS
                          , MonadReader, ask
                          , MonadWriter, tell
-                         , MonadState, get, modify
+                         , MonadState, get, gets, put, modify
                          )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Maybe ( fromJust )
@@ -18,7 +19,7 @@ import PrintUtils ( render )
 
 
 runTypeOf :: [Binding] -> Expr -> (Either String Type, [Log])
-runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs []
+runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs ([],[])
 
 
 infixr 0 ~~$
@@ -38,7 +39,8 @@ typeOf ::
     ( MonadError String m
     , MonadReader [Binding] m
     , MonadWriter [Log] m
-    , MonadState [String] m -- started lookup of identifier.
+    , MonadState ([String],[(String,Type)]) m -- fst component tracks those identifiers already seen, for detecting cyclic definitions
+                                              -- snd component tracks already known types
     ) => Expr -> m Type
 
 typeOf p@Underscore       = p ~~$ TypeUnknown
@@ -123,13 +125,24 @@ typeOf p@(DomainPartition {element}) = do
     p ~~$ TypePartition t
 
 typeOf p@(Identifier nm) = do
-    nms <- get
-    if nm `elem` nms
-        then throwError $ "cyclic definition: " ++ nm ++ " defined in terms of itself."
-        else do
-            modify (nm:)
-            bs <- ask
-            case [ x | (_,nm',x) <- bs, nm == nm' ] of
-                []  -> p ~$$ "identifier not found"
-                [x] -> do t <- typeOf x; p ~~$ t
-                _   -> p ~$$ "identifier bound to several things"
+    knowns <- gets snd
+    case nm `lookup` knowns of
+        Just t  -> p ~~$ t
+        Nothing -> do
+            seens <- gets fst
+            if nm `elem` seens
+                then throwError $ "cyclic definition: " ++ nm ++ " defined in terms of itself."
+                else do
+                    put (nm:seens, knowns)
+                    bs <- ask
+                    case [ x | (_,nm',x) <- bs, nm == nm' ] of
+                        []  -> p ~$$ "identifier not found"
+                        [x] -> do t <- typeOf x; p ~~$ t
+                        _   -> p ~$$ "identifier bound to several things"
+
+typeOf p@(Lambda args x) = do
+    st <- get
+    modify $ second (args ++)
+    x' <- typeOf x
+    put st
+    p ~~$ TypeLambda (map snd args) x'
