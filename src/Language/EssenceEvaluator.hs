@@ -8,7 +8,7 @@ import Control.Monad.RWS ( RWS, evalRWS
                          , MonadWriter, tell
                          )
 import Data.Generics.Uniplate.Direct ( rewriteBiM )
-import Data.List ( sort )
+import Data.List ( sort, intersect, union )
 import Data.Maybe ( fromJust )
 
 import Language.Essence
@@ -73,7 +73,8 @@ evaluateExpr (GenericNode Eq  [ValueInteger i, ValueInteger j]) = rJust $ ValueB
 evaluateExpr (GenericNode Elem [i,ValueSet  is]) | i `elem` is = rJust $ ValueBoolean True
 evaluateExpr (GenericNode Elem [i,ValueMSet is]) | i `elem` is = rJust $ ValueBoolean True
 
-evaluateExpr (GenericNode Intersect [ValueSet is,ValueSet js]) = rJust $ ValueSet $ sort $ is ++ js
+evaluateExpr (GenericNode Intersect [ValueSet is,ValueSet js]) = rJust $ ValueSet $ sort $ is `intersect` js
+evaluateExpr (GenericNode Union     [ValueSet is,ValueSet js]) = rJust $ ValueSet $ sort $ is `union`     js
 
 -- partial evaluators
 
