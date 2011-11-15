@@ -20,38 +20,43 @@ import PrintUtils ( render )
 import Utils ( ppPrint, strip )
 
 
-data Command = Eval String
+data Command = EvalTypeKind String
+             | Eval String
              | TypeOf String
+             | KindOf String
              | Load FilePath
              | Save FilePath
              | Record String        -- might record a declaration, where clause, objective, or constraint
              | RmDeclaration String
              | RmConstraint String
              | RmObjective
-             | Undo
-             | Redo
+             | Rollback
+             | DisplaySpec
              | Quit
              | Flag String
     deriving (Eq, Ord, Read, Show)
 
 
+-- given the input line, returns either an error message or Command to be
+-- excuted.
 parseCommand :: String -> Either String Command
 parseCommand s = do
     case strip s of
         (':':ss) -> do
-            firstWord <- case words ss of []    -> Left "Cannot parse command."
+            firstWord <- case words ss of []    -> Right ""
                                           (i:_) -> Right $ map toLower i
             let restOfLine = strip $ drop (length firstWord) ss
             let actions = [ ( "evaluate"      , Eval restOfLine          )
                           , ( "typeof"        , TypeOf restOfLine        )
+                          , ( "kindof"        , KindOf restOfLine        )
                           , ( "load"          , Load restOfLine          )
                           , ( "save"          , Save restOfLine          )
                           , ( "record"        , Record restOfLine        )
                           , ( "rmdeclaration" , RmDeclaration restOfLine )
                           , ( "rmconstraint"  , RmConstraint restOfLine  )
                           , ( "rmobjective"   , RmObjective              )
-                          , ( "undo"          , Undo                     )
-                          , ( "redo"          , Redo                     )
+                          , ( "rollback"      , Rollback                 )
+                          , ( "displayspec"   , DisplaySpec              )
                           , ( "quit"          , Quit                     )
                           , ( "flag"          , Flag restOfLine          )
                           ]
@@ -59,7 +64,7 @@ parseCommand s = do
                 []        -> Left "no such action"
                 [(_,act)] -> Right act
                 xs        -> Left $ "ambigious: " ++ intercalate ", " (map fst xs) ++ "?"
-        line -> Right $ Eval line
+        line -> Right $ EvalTypeKind line
 
 
 data REPLState = REPLState { currentSpec :: Spec
