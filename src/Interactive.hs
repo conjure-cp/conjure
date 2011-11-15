@@ -67,19 +67,21 @@ parseCommand s = do
         line -> Right $ EvalTypeKind line
 
 
-data REPLState = REPLState { currentSpec :: Spec
-                           , oldSpecs    :: [Spec]
-                           , commandHist :: [Command]
-                           , flagppPrint :: Bool
+data REPLState = REPLState { currentSpec   :: Spec
+                           , oldSpecs      :: [Spec]
+                           , commandHist   :: [Command]
+                           , flagLogs      :: Bool
+                           , flagRawOutput :: Bool
                            }
     deriving (Eq, Ord, Read, Show)
 
 
 initREPLState :: REPLState
-initREPLState = REPLState { currentSpec = sp
-                          , oldSpecs    = []
-                          , commandHist = []
-                          , flagppPrint = False
+initREPLState = REPLState { currentSpec   = sp
+                          , oldSpecs      = []
+                          , commandHist   = []
+                          , flagLogs      = False
+                          , flagRawOutput = False
                           }
     where
         sp :: Spec
@@ -91,6 +93,14 @@ initREPLState = REPLState { currentSpec = sp
                   , constraints      = []
                   }
 
+modifySpec :: MonadState REPLState m => (Spec -> Spec) -> m ()
+modifySpec f = do
+    st <- get
+    let sp  = currentSpec st
+    let sp' = f sp
+    put st { currentSpec = sp'
+           , oldSpecs    = sp : oldSpecs st
+           }
 
 step :: Command -> StateT REPLState IO Bool
 step (Eval s) = do
