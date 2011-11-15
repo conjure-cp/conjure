@@ -11,7 +11,7 @@ import Control.Monad.RWS ( evalRWS
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Maybe ( fromJust )
 
-import Language.Essence
+import Language.Essence ( Expr(..), Binding, Log, Type(..), validOpTypes )
 import Language.EssencePrinters ( prExpr )
 import PrintUtils ( render )
 
