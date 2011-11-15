@@ -262,7 +262,7 @@ commutativeOps = [Plus,Times,And,Or,Eq,Neq,Iff]
 -- Kinds and Types -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data Kind = KindDomain | KindValue | KindExpr
+data Kind = KindUnknown | KindDomain | KindValue | KindExpr
     deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 data Type = TypeUnknown
@@ -279,6 +279,29 @@ data Type = TypeUnknown
     | TypeRelation [Type]
     | TypePartition Type
     deriving (Eq, Ord, Read, Show)
+
+class TypeUnify t where
+    typeUnify :: t -> t -> Bool
+    chooseType :: t -> t -> t
+
+instance TypeUnify Type where
+    typeUnify TypeUnknown _ = True
+    typeUnify _ TypeUnknown = True
+    typeUnify a b = a == b
+    chooseType t TypeUnknown = t
+    chooseType TypeUnknown t = t
+    chooseType t _ = t
+
+instance TypeUnify t => TypeUnify [t] where
+    typeUnify as bs = and $ zipWith typeUnify as bs
+    chooseType as bs = zipWith chooseType as bs
+
+instance (TypeUnify t1, TypeUnify t2) => TypeUnify (t1,t2) where
+    typeUnify (a,b) (c,d) = typeUnify a c && typeUnify b d
+    chooseType (a,b) (c,d) = (chooseType a c, chooseType b d)
+
+(~~) :: TypeUnify t => t -> t -> Bool
+(~~) = typeUnify
 
 
 -- All the ops in Essence, with their overloadings if they are polymorphic
@@ -308,43 +331,43 @@ validOpTypes And   [TypeBoolean,TypeBoolean] = return TypeBoolean
 validOpTypes Imply [TypeBoolean,TypeBoolean] = return TypeBoolean
 validOpTypes Iff   [TypeBoolean,TypeBoolean] = return TypeBoolean
 
-validOpTypes Union     [TypeSet        a, TypeSet        b] | a  == b  = return (TypeSet a)
-validOpTypes Union     [TypeMSet       a, TypeMSet       b] | a  == b  = return (TypeMSet a)
-validOpTypes Union     [TypeRelation  as, TypeRelation  bs] | as == bs = return (TypeRelation as)
+validOpTypes Union     [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
+validOpTypes Union     [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
+validOpTypes Union     [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return $ TypeRelation $ chooseType as bs
 
-validOpTypes Intersect [TypeSet        a, TypeSet        b] | a  == b  = return (TypeSet a)
-validOpTypes Intersect [TypeMSet       a, TypeMSet       b] | a  == b  = return (TypeMSet a)
-validOpTypes Intersect [TypeRelation  as, TypeRelation  bs] | as == bs = return (TypeRelation as)
-validOpTypes Intersect [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return (TypeFunction a b)
+validOpTypes Intersect [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
+validOpTypes Intersect [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
+validOpTypes Intersect [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return $ TypeRelation $ chooseType as bs
+validOpTypes Intersect [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return $ TypeFunction (chooseType a c) (chooseType c d)
 
-validOpTypes Minus     [TypeSet        a, TypeSet        b] | a  == b  = return (TypeSet a)
-validOpTypes Minus     [TypeMSet       a, TypeMSet       b] | a  == b  = return (TypeMSet a)
-validOpTypes Minus     [TypeRelation  as, TypeRelation  bs] | as == bs = return (TypeRelation as)
-validOpTypes Minus     [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return (TypeFunction a b)
+validOpTypes Minus     [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
+validOpTypes Minus     [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
+validOpTypes Minus     [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return $ TypeRelation $ chooseType as bs
+validOpTypes Minus     [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return $ TypeFunction (chooseType a c) (chooseType c d)
 
 -- even though there is a trivial code duplication here (which can be avoided
 -- using pattern guards), I am happy to have it because it helps the
 -- completeness checker. This function needs to be total, on the set of
 -- defined operators.
-validOpTypes Subset    [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
-validOpTypes Subset    [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
-validOpTypes Subset    [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
-validOpTypes Subset    [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+validOpTypes Subset    [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
+validOpTypes Subset    [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
+validOpTypes Subset    [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
+validOpTypes Subset    [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
 
-validOpTypes SubsetEq  [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
-validOpTypes SubsetEq  [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
-validOpTypes SubsetEq  [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
-validOpTypes SubsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+validOpTypes SubsetEq  [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
+validOpTypes SubsetEq  [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
+validOpTypes SubsetEq  [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
+validOpTypes SubsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
 
-validOpTypes Supset    [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
-validOpTypes Supset    [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
-validOpTypes Supset    [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
-validOpTypes Supset    [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+validOpTypes Supset    [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
+validOpTypes Supset    [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
+validOpTypes Supset    [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
+validOpTypes Supset    [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
 
-validOpTypes SupsetEq  [TypeSet        a, TypeSet        b] | a  == b  = return TypeBoolean
-validOpTypes SupsetEq  [TypeMSet       a, TypeMSet       b] | a  == b  = return TypeBoolean
-validOpTypes SupsetEq  [TypeRelation  as, TypeRelation  bs] | as == bs = return TypeBoolean
-validOpTypes SupsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) == (c,d) = return TypeBoolean
+validOpTypes SupsetEq  [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
+validOpTypes SupsetEq  [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
+validOpTypes SupsetEq  [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
+validOpTypes SupsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
 
 validOpTypes Card      [TypeSet       {}] = return TypeInteger
 validOpTypes Card      [TypeMSet      {}] = return TypeInteger
@@ -352,8 +375,10 @@ validOpTypes Card      [TypeRelation  {}] = return TypeInteger
 validOpTypes Card      [TypeFunction  {}] = return TypeInteger
 validOpTypes Card      [TypePartition {}] = return TypeInteger
 
-validOpTypes Elem      [a, TypeSet  b] | a == b = return TypeBoolean
-validOpTypes Elem      [a, TypeMSet b] | a == b = return TypeBoolean
+validOpTypes Elem      [_, TypeSet TypeUnknown] = return TypeBoolean
+validOpTypes Elem      [a, TypeSet b ] | a == b = return TypeBoolean
+validOpTypes Elem      [_, TypeMSet TypeUnknown] = return TypeBoolean
+validOpTypes Elem      [a, TypeMSet b ] | a == b = return TypeBoolean
 validOpTypes Elem      [TypeTuple as, TypeRelation bs] | as == bs = return TypeBoolean
 
 validOpTypes Max       [TypeSet TypeBoolean   ] = return TypeBoolean
