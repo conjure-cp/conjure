@@ -216,7 +216,7 @@ prOpExpr :: Int -> OpDescriptor -> [Expr] -> Maybe Doc
 prOpExpr _ OpSpecial _ = error "OpSpecial"
 prOpExpr _ (OpLispy {face}) xs = do
     elements <- mapM prExpr xs
-    return $ text face <+> parens (sep elements)
+    return $ text face <> parens (sep elements)
 prOpExpr p (OpInfixL {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
     a' <- prExprPrec precedence a
     b' <- prExprPrec (precedence+1) b
