@@ -272,11 +272,11 @@ lookupRepresentation lu = case lookup "representation" (rights lu) of
 --------------------------------------------------------------------------------
 
 pExpr :: Parser Expr
-pExpr = buildExpressionParser table pExprCore
+pExpr = buildExpressionParser table core
     where
         f :: Op -> Maybe (Either (Parser Expr) (Int, Operator String () Identity Expr))
         f op = case opDescriptor op of
-            OpLispy opFace card -> Just . Left $ do
+            OpLispy opFace card -> return $ Left $ do
                 reserved opFace
                 is <- parens (countSep card pExpr comma)
                 return $ GenericNode op is
@@ -307,6 +307,10 @@ pExpr = buildExpressionParser table pExprCore
             . groupBy ((==) `on` fst)
             . sortBy (comparing fst)
             ) pOps
+
+        core :: Parser Expr
+        core = choiceTry $ pExprCore
+                         : lefts (mapMaybe f (allValues :: [Op]))
 
 
 --------------------------------------------------------------------------------
