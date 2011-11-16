@@ -1038,6 +1038,13 @@ function {1 -> set {2},
                                          ]
                       ]
 
+*** ParsePrint
+    abs(a)
+    ~~ GenericNode Abs [ Identifier "a" ]
+
+*** Eval
+    abs ( -2 + 1 )
+    ~~ 1
 
 *** Eval
     1 + 1
