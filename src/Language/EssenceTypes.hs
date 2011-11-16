@@ -135,10 +135,12 @@ typeOf p@(Identifier nm) = do
                 else do
                     put (nm:seens, knowns)
                     bs <- ask
-                    case [ x | (_,nm',x) <- bs, nm == nm' ] of
+                    result <- case [ x | (_,nm',x) <- bs, nm == nm' ] of
                         []  -> p ~$$ "identifier not found"
                         [x] -> do t <- typeOf x; p ~~$ t
                         _   -> p ~$$ "identifier bound to several things"
+                    put (seens, knowns) -- restore state
+                    return result
 
 typeOf p@(Lambda args x) = do
     st <- get
