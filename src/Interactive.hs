@@ -19,10 +19,10 @@ import Language.Essence ( Spec(..), Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
 import Language.EssenceKinds ( runKindOf )
 import Language.EssenceParsers ( pSpec, pExpr, pTopLevels, pObjective )
-import Language.EssencePrinters ( prSpec, prExpr, prType, prKind )
+import Language.EssencePrinters ( prSpec, prExpr, prType, prKind, prKindInteractive )
 import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( Parser, parseEither, parseFromFile, eof, choiceTry )
-import PrintUtils ( Doc, render )
+import PrintUtils ( Doc, text, render, sep, vcat )
 import Utils ( ppPrint, strip )
 
 
@@ -127,26 +127,44 @@ displayLogs logs = do
     flag <- gets flagLogs
     when flag $ liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
 
-displayRaws :: (MonadIO m, MonadState REPLState m, Show a, Show b) => a -> b -> m ()
-displayRaws x y = do
+displayRaw :: (MonadIO m, MonadState REPLState m, Show a) => a -> m ()
+displayRaw x = do
     flag <- gets flagRawOutput
-    when flag $ do
-        liftIO $ ppPrint x
-        liftIO $ ppPrint y
+    when flag $ liftIO $ ppPrint x
 
 
 step :: Command -> StateT REPLState IO Bool
-step (EvalTypeKind s) = step (KindOf s) >> step (TypeOf s) >> step (Eval s)
+step (EvalTypeKind s) = withParsed pExpr s $ \ x -> do
+    let err = liftIO $ putStrLn "Error. Try :e, :t, :k individually to see what it was."
+    bs <- gets $ topLevelBindings . currentSpec
+    let (xEval,  logsEval) = runEvaluateExpr bs x
+    let (exType, logsType) = runTypeOf bs x
+    let (exKind, logsKind) = runKindOf bs x
+    displayLogs (logsEval ++ logsType ++ logsKind)
+    case (exType, exKind) of
+        (Right xType, Right xKind) ->
+            case (prExpr x, prExpr xEval, prType xType, prKindInteractive xKind) of
+                (Just inp, Just outp, Just t, k) -> do
+                    let firstLine  = sep [inp, text "is", k, text "of type", t]
+                    let secondLine = sep [text "Can be evaluated to:", outp]
+                    liftIO . putStrLn . render $
+                        if x == xEval
+                            then firstLine
+                            else vcat [firstLine, secondLine]
+                _ -> err
+        _ -> err
 step (Eval s) = withParsed pExpr s $ \ x -> do
     bs <- gets $ topLevelBindings . currentSpec
     let (x', logs) = runEvaluateExpr bs x
     displayLogs logs
-    displayRaws x x'
+    displayRaw x
+    displayRaw x'
     prettyPrint prExpr x'
 step (TypeOf s) = withParsed pExpr s $ \ x -> do
     bs <- gets $ topLevelBindings . currentSpec
     let (et, logs) = runTypeOf bs x
-    displayRaws x et
+    displayRaw x
+    displayRaw et
     case et of
         Left err -> liftIO $ putStrLn $ "Error while type-checking: " ++ err
         Right t  -> do
@@ -155,7 +173,8 @@ step (TypeOf s) = withParsed pExpr s $ \ x -> do
 step (KindOf s) = withParsed pExpr s $ \ x -> do
     bs <- gets $ topLevelBindings . currentSpec
     let (ek, logs) = runKindOf bs x
-    displayRaws x ek
+    displayRaw x
+    displayRaw ek
     case ek of
         Left err -> liftIO $ putStrLn $ "Error while kind-checking: " ++ err
         Right k  -> do

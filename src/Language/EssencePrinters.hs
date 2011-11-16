@@ -2,7 +2,9 @@
 {-# LANGUAGE RankNTypes     #-}
 {-# LANGUAGE ViewPatterns   #-}
 
-module Language.EssencePrinters ( prSpec, prExpr, prType, prKind ) where
+module Language.EssencePrinters ( prSpec, prExpr
+                                , prType, prKind, prKindInteractive
+                                ) where
 
 
 import Control.Applicative hiding ( empty )
@@ -354,3 +356,10 @@ prKind KindDomain  = return $ text "domain"
 prKind KindValue   = return $ text "value"
 prKind KindExpr    = return $ text "expression"
 prKind KindLambda  = return $ text "lambda"
+
+prKindInteractive :: Kind -> Doc
+prKindInteractive KindUnknown = text "of unknown kind"
+prKindInteractive KindDomain  = text "a domain"
+prKindInteractive KindValue   = text "a value"
+prKindInteractive KindExpr    = text "an expression"
+prKindInteractive KindLambda  = text "a lambda"
