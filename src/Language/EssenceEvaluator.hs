@@ -4,7 +4,7 @@ module Language.EssenceEvaluator ( runEvaluateExpr ) where
 
 
 import Control.Monad.RWS ( RWS, evalRWS
-                         , MonadReader
+                         , MonadReader, ask
                          , MonadWriter, tell
                          )
 import Data.Generics.Uniplate.Direct ( rewriteBiM )
@@ -119,6 +119,12 @@ evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
     | x == z = rJust y
 
 -- no eval
+
+evaluateExpr (Identifier nm) = do
+    bs <- ask
+    case [ x | (Letting,nm',x) <- bs, nm == nm' ] of
+        [x] -> rJust x
+        _   -> rNothing
 
 evaluateExpr _ = rNothing
 
