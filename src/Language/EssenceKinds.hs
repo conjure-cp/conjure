@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns   #-}
 
-module Language.EssenceKinds ( runKindOf ) where
+module Language.EssenceKinds ( runKindOf, textAfterBe ) where
 
 
 import Control.Monad.RWS ( evalRWS
@@ -13,7 +13,7 @@ import Data.Maybe ( fromJust )
 
 import Language.Essence ( Expr(..), Binding, Log, Kind(..) )
 import Language.EssencePrinters ( prExpr )
-import PrintUtils ( render )
+import PrintUtils ( Doc, empty, render, text )
 
 
 runKindOf :: [Binding] -> Expr -> (Either String Kind, [Log])
@@ -31,6 +31,14 @@ infixr 0 ~$$
 (~$$) :: MonadError String m => Expr -> [Char] -> m a
 x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ show x
                              Just d  -> throwError $ msg ++ ": " ++ render d
+
+
+-- the kind of the expression defines how it is pretty-printed when occurs
+-- in a let-binding
+textAfterBe :: [Binding] -> Expr -> Doc
+textAfterBe bs x = case runKindOf bs x of
+    (Right KindDomain,_) -> text "domain"
+    _                    -> empty
 
 
 kindOf ::

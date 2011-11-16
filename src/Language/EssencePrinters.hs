@@ -13,6 +13,7 @@ import Data.Maybe ( isNothing, maybeToList, mapMaybe )
 import Data.List ( intersperse )
 
 import Language.Essence
+import {-# SOURCE #-} Language.EssenceKinds ( textAfterBe )
 import PrintUtils
 
 
@@ -281,7 +282,11 @@ prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constrain
             return $ text "given" <+> text nm <+> colon <+> x'
         prBinding (Letting,nm,x) = do
             x' <- prExpr x
-            return $ text "letting" <+> text nm <+> text "be" <+> x'
+            return $ text "letting"
+                 <+> text nm
+                 <+> text "be"
+                 <+> textAfterBe topLevelBindings x
+                 <+> x'
 
         prWhere :: Where -> Maybe Doc
         prWhere w = do
