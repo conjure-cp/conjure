@@ -90,6 +90,11 @@ evaluateExpr (GenericNode Mod    [x,y])     | x == y = rJust $ ValueInteger 0
 evaluateExpr (GenericNode Pow    [_,ValueInteger 0]) = rJust $ ValueInteger 1
 evaluateExpr (GenericNode Pow    [x,ValueInteger 1]) = rJust x
 
+evaluateExpr (GenericNode Times [x,y]) | x == y
+    = rJust $ GenericNode Pow [x,ValueInteger 2]
+evaluateExpr (GenericNode Times [GenericNode Pow [x,y],z]) | x == z
+    = rJust $ GenericNode Pow [x,GenericNode Plus [y,ValueInteger 1]]
+
 evaluateExpr (GenericNode And [ValueBoolean True ,x]) = rJust x
 evaluateExpr (GenericNode And [ValueBoolean False,_]) = rJust $ ValueBoolean False
 
