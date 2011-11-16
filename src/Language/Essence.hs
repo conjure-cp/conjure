@@ -264,7 +264,13 @@ commutativeOps = [Plus,Times,And,Or,Eq,Neq,Iff]
 -- Kinds and Types -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data Kind = KindUnknown | KindDomain | KindValue | KindExpr | KindLambda
+data Kind = KindUnknown
+          | KindDomain
+          | KindValue
+          | KindExpr
+          | KindLambda
+          | KindFind
+          | KindGiven
     deriving (Eq, Ord, Read, Show, Enum, Bounded)
 
 data Type = TypeUnknown

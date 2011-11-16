@@ -11,7 +11,7 @@ import Control.Monad.RWS ( evalRWS
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Maybe ( fromJust )
 
-import Language.Essence ( Expr(..), Binding, Log, Kind(..) )
+import Language.Essence ( Expr(..), Binding, BindingEnum(..), Log, Kind(..) )
 import Language.EssencePrinters ( prExpr )
 import PrintUtils ( Doc, empty, render, text )
 
@@ -76,10 +76,12 @@ kindOf p@(DomainPartition     {}) = p ~~$ KindDomain
 
 kindOf p@(Identifier nm) = do
     bs <- ask
-    case [ x | (_,nm',x) <- bs, nm == nm' ] of
-        []  -> p ~$$ "identifier not found"
-        [x] -> do t <- kindOf x; p ~~$ t
-        _   -> p ~$$ "identifier bound to several things"
+    case [ (e,x) | (e,nm',x) <- bs, nm == nm' ] of
+        []            -> p ~$$ "identifier not found"
+        [(Find   ,_)] -> p ~~$ KindFind
+        [(Given  ,_)] -> p ~~$ KindGiven
+        [(Letting,x)] -> do t <- kindOf x; p ~~$ t
+        _             -> p ~$$ "identifier bound to several things"
 
 kindOf p@(Lambda {}) = p ~~$ KindLambda
 
