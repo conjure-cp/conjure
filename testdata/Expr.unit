@@ -1242,3 +1242,23 @@ function {1 -> set {2},
 *** Eval
     1 + 2 * 3 = 10 - 2 + 1
     ~~ false
+
+*** Eval
+    a+a+2*a+b*a
+    ~~ (4 + b) * a
+
+*** Eval
+    (a+b)*(a+b)+(a+b)^2
+    ~~ (a+b)^2 * 2
+
+*** Eval
+    !true => x
+    ~~ !x
+
+*** Eval
+    false => x
+    ~~ true
+
+*** Eval
+    (!true) => x
+    ~~ true
