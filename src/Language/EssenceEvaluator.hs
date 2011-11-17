@@ -112,9 +112,12 @@ evaluateExpr (GenericNode Iff [ValueBoolean False,x]) = rJust $ GenericNode Not 
 
 -- symbolic full evaluators
 
-evaluateExpr (GenericNode Minus [a,b]) | a == b = rJust $ ValueInteger 0
+evaluateExpr (GenericNode Minus [a,b]) | unifyExpr a b = rJust $ ValueInteger 0
 evaluateExpr (GenericNode Negate [GenericNode Negate [x]]) = rJust x
-evaluateExpr (GenericNode Eq [a,b]) | a == b = rJust $ ValueBoolean True
+evaluateExpr (GenericNode Eq [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
+
+evaluateExpr (GenericNode Imply [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
+evaluateExpr (GenericNode Iff [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
 
 -- some special cases
 
@@ -125,13 +128,15 @@ evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
     | y == z = rJust x
     | x == z = rJust y
 
--- no eval
+-- let binding
 
 evaluateExpr (Identifier nm) = do
     bs <- ask
     case [ x | (Letting,nm',x) <- bs, nm == nm' ] of
         [x] -> rJust x
         _   -> rNothing
+
+-- no eval
 
 evaluateExpr _ = rNothing
 
