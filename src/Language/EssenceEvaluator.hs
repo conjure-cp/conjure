@@ -92,7 +92,18 @@ evaluateExpr (GenericNode Mod    [x,y])     | x == y = rJust $ ValueInteger 0
 evaluateExpr (GenericNode Pow    [_,ValueInteger 0]) = rJust $ ValueInteger 1
 evaluateExpr (GenericNode Pow    [x,ValueInteger 1]) = rJust x
 
-evaluateExpr (GenericNode Times [x,y]) | x == y
+evaluateExpr (GenericNode Plus [x,y]) | unifyExpr x y
+    = rJust $ GenericNode Times [ValueInteger 2,x]
+evaluateExpr (GenericNode Plus [GenericNode Times [x,y],z]) | unifyExpr x z
+    = rJust $ GenericNode Times [x,GenericNode Plus [y,ValueInteger 1]]
+evaluateExpr (GenericNode Plus [GenericNode Times [y,x],z]) | unifyExpr x z
+    = rJust $ GenericNode Times [x,GenericNode Plus [y,ValueInteger 1]]
+evaluateExpr (GenericNode Plus [GenericNode Times [a,b],GenericNode Times [c,d]]) | unifyExpr b d
+    = rJust $ GenericNode Times [GenericNode Plus [a,c],b]
+evaluateExpr (GenericNode Plus [GenericNode Times [a,b],GenericNode Times [d,c]]) | unifyExpr b d
+    = rJust $ GenericNode Times [GenericNode Plus [a,c],b]
+
+evaluateExpr (GenericNode Times [x,y]) | unifyExpr x y
     = rJust $ GenericNode Pow [x,ValueInteger 2]
 evaluateExpr (GenericNode Times [GenericNode Pow [x,y],z]) | x == z
     = rJust $ GenericNode Pow [x,GenericNode Plus [y,ValueInteger 1]]
