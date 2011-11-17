@@ -70,6 +70,8 @@ evaluateExpr (GenericNode Geq [ValueInteger i, ValueInteger j]) = rJust $ ValueB
 evaluateExpr (GenericNode Neq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i /= j
 evaluateExpr (GenericNode Eq  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i == j
 
+evaluateExpr (GenericNode Not    [ValueBoolean b]) = rJust $ ValueBoolean $ not b
+
 evaluateExpr (GenericNode Elem [i,ValueSet  is]) | i `elem` is = rJust $ ValueBoolean True
 evaluateExpr (GenericNode Elem [i,ValueMSet is]) | i `elem` is = rJust $ ValueBoolean True
 
