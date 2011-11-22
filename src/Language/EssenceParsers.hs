@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Language.EssenceParsers ( pSpec, pExpr
+module Language.EssenceParsers ( pSpec, pExpr, pType
                                , pTopLevels, pObjective
                                ) where
 
