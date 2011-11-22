@@ -5,10 +5,11 @@ import Control.Applicative
 import Data.Maybe
 import Test.HUnit ( Test(..), (~:), (~=?), assertBool, test )
 
-import Language.Essence ( Expr(..), Log )
-import Language.EssenceParsers ( pExpr )
-import Language.EssencePrinters ( prExpr )
+import Language.Essence ( Expr(..), Type(..), Binding, Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
+import Language.EssenceParsers ( pExpr, pType )
+import Language.EssencePrinters ( prExpr )
+import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( Parser, eof, parseMaybe )
 import PrintUtils ( render )
 import Utils ( maybeRead )
@@ -16,6 +17,9 @@ import Utils ( maybeRead )
 
 pExprEof :: Parser Expr
 pExprEof = pExpr <* eof
+
+pTypeEof :: Parser Type
+pTypeEof = pType <* eof
 
 
 cmdShouldParse :: String -> Test
@@ -113,3 +117,20 @@ cmdEval i j = test [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParse
 
         jParsedPrinted :: Maybe String
         jParsedPrinted = render <$> (prExpr =<< jParsed)
+
+
+cmdTypeOf :: [Binding] -> String -> String -> Test
+cmdTypeOf bindings i j = test [ TestCase $ assertBool ("TypeOf.parse: " ++ i) $ isJust iParsed
+                     , TestCase $ assertBool ("TypeOf.parse: " ++ j) $ isJust jParsed
+                     , TestCase $ assertBool ("TypeOf.typecheck-success: ") $ case iTypeOf of Just (Right _,_) -> True; _ -> False
+                     , TestCase $ assertBool ("TypeOf.types-eq: " ++ i ++ " " ++ j) $ case iTypeOf of Just (Right t,_) -> Just t == jParsed; _ -> False
+                     ]
+    where
+        iParsed :: Maybe Expr
+        iParsed = parseMaybe pExprEof i
+
+        jParsed :: Maybe Type
+        jParsed = parseMaybe pTypeEof j
+
+        iTypeOf :: Maybe (Either String Type, [Log])
+        iTypeOf = runTypeOf bindings <$> iParsed
