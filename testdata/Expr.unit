@@ -1282,7 +1282,11 @@ function {1 -> set {2},
     ~~ bool
 
 *** TypeOf { given a,b : int
-             find s : set of int
-           }
+             find s : set of int }
     set {a,b} subseteq s
     ~~ bool
+
+*** Eval { letting a be 5
+           given b : bool }
+    b => a + 8 > 10
+    ~~ b => true
