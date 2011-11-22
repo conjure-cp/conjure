@@ -1262,3 +1262,27 @@ function {1 -> set {2},
 *** Eval
     (!true) => x
     ~~ true
+
+*** TypeOf
+    1 + 2
+    ~~ int
+
+*** TypeOf
+    2 ^ 4 >= 2 ^ 3 /\ 2 ^ 4 <= 2 ^ 5 => 2 ^ 3 <= 2 ^ 5
+    ~~ bool
+
+*** TypeOf { given a : int }
+    a ~~ int
+
+
+*** TypeOf { given a : int
+             find b : int
+           }
+    a = b
+    ~~ bool
+
+*** TypeOf { given a,b : int
+             find s : set of int
+           }
+    set {a,b} subseteq s
+    ~~ bool
