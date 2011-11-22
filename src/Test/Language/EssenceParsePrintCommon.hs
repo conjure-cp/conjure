@@ -87,13 +87,14 @@ cmdParsePrintIso s = test [ TestCase $ assertBool ("ParsePrintIso.parse: " ++ s)
         sParsedPrinted = render <$> (prExpr =<< sParsed)
 
 
-cmdEval :: String -> String -> Test
-cmdEval i j = test [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParsed
-                   , TestCase $ assertBool ("Eval.parse: " ++ j) $ isJust jParsed
-                   , TestCase $ assertBool ("Eval.parsePrint: " ++ i) $ isJust iEvalPrinted
-                   , TestCase $ assertBool ("Eval.parsePrint: " ++ j) $ isJust jParsedPrinted
-                   , ("Eval" ++ unlines logs) ~: jParsedPrinted ~=? iEvalPrinted
-                   ]
+cmdEval :: [Binding] -> String -> String -> Test
+cmdEval bindings i j = test
+    [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParsed
+    , TestCase $ assertBool ("Eval.parse: " ++ j) $ isJust jParsed
+    , TestCase $ assertBool ("Eval.parsePrint: " ++ i) $ isJust iEvalPrinted
+    , TestCase $ assertBool ("Eval.parsePrint: " ++ j) $ isJust jParsedPrinted
+    , ("Eval" ++ unlines logs) ~: jParsedPrinted ~=? iEvalPrinted
+    ]
     where
         iParsed :: Maybe Expr
         iParsed = parseMaybe pExprEof i
@@ -120,11 +121,12 @@ cmdEval i j = test [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParse
 
 
 cmdTypeOf :: [Binding] -> String -> String -> Test
-cmdTypeOf bindings i j = test [ TestCase $ assertBool ("TypeOf.parse: " ++ i) $ isJust iParsed
-                     , TestCase $ assertBool ("TypeOf.parse: " ++ j) $ isJust jParsed
-                     , TestCase $ assertBool ("TypeOf.typecheck-success: ") $ case iTypeOf of Just (Right _,_) -> True; _ -> False
-                     , TestCase $ assertBool ("TypeOf.types-eq: " ++ i ++ " " ++ j) $ case iTypeOf of Just (Right t,_) -> Just t == jParsed; _ -> False
-                     ]
+cmdTypeOf bindings i j = test
+    [ TestCase $ assertBool ("TypeOf.parse: " ++ i) $ isJust iParsed
+    , TestCase $ assertBool ("TypeOf.parse: " ++ j) $ isJust jParsed
+    , TestCase $ assertBool ("TypeOf.typecheck-success: ") $ case iTypeOf of Just (Right _,_) -> True; _ -> False
+    , TestCase $ assertBool ("TypeOf.types-eq: " ++ i ++ " " ++ j) $ case iTypeOf of Just (Right t,_) -> Just t == jParsed; _ -> False
+    ]
     where
         iParsed :: Maybe Expr
         iParsed = parseMaybe pExprEof i
