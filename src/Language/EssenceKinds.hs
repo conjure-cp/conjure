@@ -36,6 +36,7 @@ x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ 
 -- the kind of the expression defines how it is pretty-printed when occurs
 -- in a let-binding
 textAfterBe :: [Binding] -> Expr -> Doc
+textAfterBe _ (DeclQuantifier {}) = text "quantifier"
 textAfterBe bs x = case runKindOf bs x of
     (Right KindDomain,_) -> text "domain"
     _                    -> empty
@@ -83,5 +84,5 @@ kindOf p@(Identifier nm) = do
         [(Letting,x)] -> do t <- kindOf x; p ~~$ t
         _             -> p ~$$ "identifier bound to several things"
 
-kindOf p@(Lambda {}) = p ~~$ KindLambda
-
+kindOf p@(DeclLambda     {}) = p ~~$ KindLambda
+kindOf p@(DeclQuantifier {}) = p ~~$ KindExpr

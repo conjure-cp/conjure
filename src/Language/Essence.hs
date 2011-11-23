@@ -159,7 +159,8 @@ data Expr
 
     | Identifier String
 
-    | Lambda [(String,Type)] Expr
+    | DeclLambda [(String,Type)] Expr
+    | DeclQuantifier Expr Expr Expr
 
     deriving (Eq, Ord, Read, Show)
 

@@ -28,7 +28,7 @@ type Prec = Int
 
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
-                                                   , prDomain, prLambdaExpr
+                                                   , prDomain, prDeclLambda, prDeclQuantifier
                                                    ]
 
 prIdentifier :: Prec -> Expr -> Maybe Doc
@@ -236,11 +236,11 @@ prOpExpr _ _ _ = error "prOpExpr"
 
 
 --------------------------------------------------------------------------------
--- Lambda ----------------------------------------------------------------------
+-- DeclLambda ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-prLambdaExpr :: Prec -> Expr -> Maybe Doc
-prLambdaExpr _ (Lambda args x) = do
+prDeclLambda :: Prec -> Expr -> Maybe Doc
+prDeclLambda _ (DeclLambda args x) = do
     args' <- forM args $ \ (nm,t) -> do t' <- prType t
                                         return (text nm <+> colon <+> t')
     x' <- prExpr x
@@ -248,7 +248,23 @@ prLambdaExpr _ (Lambda args x) = do
          <+> braces ( sep (punctuate comma args')
                   <+> text "->"
                   <+> x' )
-prLambdaExpr _ _ = Nothing
+prDeclLambda _ _ = Nothing
+
+
+--------------------------------------------------------------------------------
+-- DeclQuantifier --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+prDeclQuantifier :: Prec -> Expr -> Maybe Doc
+prDeclQuantifier _ (DeclQuantifier l1 l2 iden) = do
+    l1'   <- prDeclLambda undefined l1
+    l2'   <- prDeclLambda undefined l2
+    iden' <- prExpr iden
+    return $ vcat [ lbrace
+                  , nest 2 $ vcat [l1',l2',iden']
+                  , rbrace
+                  ]
+prDeclQuantifier _ _ = Nothing
 
 
 --------------------------------------------------------------------------------

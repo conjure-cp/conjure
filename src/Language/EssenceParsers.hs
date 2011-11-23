@@ -314,17 +314,17 @@ pExpr = buildExpressionParser table core
 
 
 --------------------------------------------------------------------------------
--- Lambda parser ---------------------------------------------------------------
+-- DeclLambda parser -----------------------------------------------------------
 --------------------------------------------------------------------------------
 
-pLambda :: Parser Expr
-pLambda = do
+pDeclLambda :: Parser Expr
+pDeclLambda = do
     reserved "lambda"
     braces $ do
         args <- sepBy1 nameType comma
         reservedOp "->"
         x <- pExpr
-        return $ Lambda args x
+        return $ DeclLambda args x
     where
         nameType :: Parser (String, Type)
         nameType = (,) <$> identifier <*> (colon *> pType)
@@ -421,7 +421,7 @@ pBinding = choiceTry [ do reserved "given"
                      , do reserved "letting"
                           idens <- sepBy1 identifier comma
                           reserved "be"
-                          rhs <- pLambda
+                          rhs <- pDeclLambda
                           return [ (Letting, i, rhs) | i <- idens ]
                      , do reserved "letting"
                           idens <- sepBy1 identifier comma
@@ -431,9 +431,9 @@ pBinding = choiceTry [ do reserved "given"
                           return [ (Letting, i, rhs) | i <- idens ]
                      ]
 
-pQuanDecl :: Parser Expr
-pQuanDecl = pExpr
 
+pQuanDecl :: Parser Expr
+pQuanDecl = braces $ DeclQuantifier <$> pDeclLambda <*> pDeclLambda <*> pExpr
 
 
 pWhere :: Parser [Where]

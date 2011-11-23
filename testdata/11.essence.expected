@@ -1,0 +1,14 @@
+language Essence 2.0
+
+letting digit be domain int(0..9)
+find x : digit
+find y : digit
+letting xy be x * y
+letting forall be quantifier { lambda {x : bool, y : bool -> x /\ y}
+                               lambda {x : bool, y : bool -> x => y}
+                               true
+                             }
+
+such that
+    x = 3 * y,
+    xy > 0

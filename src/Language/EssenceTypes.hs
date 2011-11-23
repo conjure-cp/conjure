@@ -142,9 +142,13 @@ typeOf p@(Identifier nm) = do
                     put (seens, knowns) -- restore state
                     return result
 
-typeOf p@(Lambda args x) = do
+typeOf p@(DeclLambda args x) = do
     st <- get
     modify $ second (args ++)
     x' <- typeOf x
     put st
     p ~~$ TypeLambda (map snd args) x'
+
+typeOf p@(DeclQuantifier _ _ identity) = do
+    t <- typeOf identity
+    p ~~$ t
