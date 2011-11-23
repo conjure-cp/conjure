@@ -116,6 +116,7 @@ evaluateExpr (GenericNode Or  [ValueBoolean True ,_]) = rJust $ ValueBoolean Tru
 
 evaluateExpr (GenericNode Imply [ValueBoolean True ,x]) = rJust x
 evaluateExpr (GenericNode Imply [ValueBoolean False,_]) = rJust $ ValueBoolean True
+evaluateExpr (GenericNode Imply [_ ,ValueBoolean True]) = rJust $ ValueBoolean True
 evaluateExpr (GenericNode Imply [a,b]) | unifyExpr (GenericNode Not [a]) b = rJust b -- is this too clever?
 
 evaluateExpr (GenericNode Iff [ValueBoolean True ,x]) = rJust x
