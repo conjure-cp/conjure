@@ -102,7 +102,7 @@ cmdEval bindings i j = test
         iEvalWithLogs :: Maybe (Expr,[Log])
         iEvalWithLogs = do
             t <- iParsed
-            return $ runEvaluateExpr [] t
+            return $ runEvaluateExpr bindings t
 
         iEval :: Maybe Expr
         iEval = fmap fst iEvalWithLogs
