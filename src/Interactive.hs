@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
-
 
 import Control.Applicative
 import Control.Exception ( SomeException, try )
@@ -9,7 +9,9 @@ import Control.Monad ( when )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put )
 import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
+import Data.ByteString.Char8 ( unpack)
 import Data.Char ( toLower )
+import Data.FileEmbed ( embedFile )
 import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
 import System.Console.Readline ( addHistory, readline )
@@ -235,6 +237,7 @@ stepFlag flag = liftIO $ putStrLn $ "no such flag: " ++ flag
 
 main :: IO ()
 main = do
+    putStrLn figlet
     args <- getArgs
     case args of
         []   -> evalStateT repl initREPLState
@@ -260,3 +263,7 @@ main = do
                 (Just line, Right command) -> do liftIO $ addHistory line
                                                  c <- step command
                                                  when c repl
+
+
+figlet :: String
+figlet = unpack $(embedFile "src/conjure.figlet")
