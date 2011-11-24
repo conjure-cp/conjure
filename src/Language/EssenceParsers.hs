@@ -20,7 +20,6 @@ import Utils ( allValues )
 
 pExprCore :: Parser Expr
 pExprCore = choiceTry (pIdentifier : pValue ++ pDomains ++ [parens pExpr])
-    <?> "expression"
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
@@ -309,8 +308,10 @@ pExpr = buildExpressionParser table core
             ) pOps
 
         core :: Parser Expr
-        core = choiceTry $ pExprCore
+        core = choiceTry ( pExprCore
                          : lefts (mapMaybe f (allValues :: [Op]))
+                         )
+            <?> "expression"
 
 
 --------------------------------------------------------------------------------
