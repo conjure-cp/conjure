@@ -1290,3 +1290,28 @@ function {1 -> set {2},
            given b : bool }
     b => a + 8 > 10
     ~~ true
+
+*** ParsePrintIso forall i : s , g . k
+
+*** ParsePrintIso forall i : s . k
+
+*** ParsePrintIso (a = b) > c
+
+*** ParsePrintIso a = (b > c)
+
+*** ShouldParseTo
+    -a > x
+    ~~ GenericNode Gt [GenericNode Negate [Identifier "a"],Identifier "x"]
+
+*** ShouldParseTo
+    (-a) > x
+    ~~ GenericNode Gt [GenericNode Negate [Identifier "a"],Identifier "x"]
+
+*** ShouldParseTo
+    !a > x
+    ~~ GenericNode Not [GenericNode Gt [Identifier "a",Identifier "x"]]
+
+*** ShouldParseTo
+    !(a > x)
+    ~~ GenericNode Not [GenericNode Gt [Identifier "a",Identifier "x"]]
+
