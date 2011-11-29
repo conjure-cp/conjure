@@ -1,0 +1,22 @@
+language Essence 2.0
+
+letting digit be domain int(0..9)
+
+find x : digit
+find y : digit
+
+letting xy be x * y
+
+letting forall_glueOp be lambda { x:bool, y:bool -> x /\ y }
+letting forall_skipOp be lambda { x:bool, y:bool -> x => y }
+
+letting forall be quantifier { forall_glueOp forall_skipOp true }
+
+letting sum_glueOp be lambda { x:int , y:int -> x + y }
+letting sum_skipOp be lambda { x:bool, y:int -> x * y }
+
+letting sum be quantifier { sum_glueOp sum_skipOp 0 }
+
+such that
+    forall i : int(1..9) . xy > i,
+    (sum i : int(1..9) . i) > xy
