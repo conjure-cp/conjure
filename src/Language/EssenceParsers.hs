@@ -434,7 +434,9 @@ pBinding = choiceTry [ do reserved "given"
 
 
 pQuanDecl :: Parser Expr
-pQuanDecl = braces $ DeclQuantifier <$> pDeclLambda <*> pDeclLambda <*> pExpr
+pQuanDecl = braces $ DeclQuantifier <$> (try pDeclLambda <|> pIdentifier)
+                                    <*> (try pDeclLambda <|> pIdentifier)
+                                    <*> pExpr
 
 
 pWhere :: Parser [Where]

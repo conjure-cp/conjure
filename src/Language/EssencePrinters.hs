@@ -257,8 +257,8 @@ prDeclLambda _ _ = Nothing
 
 prDeclQuantifier :: Prec -> Expr -> Maybe Doc
 prDeclQuantifier _ (DeclQuantifier l1 l2 iden) = do
-    l1'   <- prDeclLambda undefined l1
-    l2'   <- prDeclLambda undefined l2
+    l1'   <- prDeclLambda undefined l1 <|> prIdentifier undefined l1
+    l2'   <- prDeclLambda undefined l2 <|> prIdentifier undefined l1
     iden' <- prExpr iden
     return $ vcat [ lbrace
                   , nest 2 $ vcat [l1',l2',iden']
