@@ -29,6 +29,7 @@ type Prec = Int
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
                                                    , prDomain, prDeclLambda, prDeclQuantifier
+                                                   , prExprQuantifier
                                                    ]
 
 prIdentifier :: Prec -> Expr -> Maybe Doc
@@ -233,6 +234,20 @@ prOpExpr p (OpPrefix {face,precedence}) [a]   = parensIf (p > precedence) <$> do
     a' <- prExprPrec precedence a
     return $ text face <> a'
 prOpExpr _ _ _ = error "prOpExpr"
+
+
+prExprQuantifier :: Prec -> Expr -> Maybe Doc
+prExprQuantifier p (ExprQuantifier qName (Identifier qVar) qOver qGuard qBody) = parensIf (p > 0) <$> do
+    qOver'  <- (colon <+>) <$> prExpr qOver
+    qGuard' <- case qGuard of Nothing -> return empty
+                              Just g  -> (comma <+>) <$> prExpr g
+    qBody'  <- (char '.' <+>) <$> prExpr qBody
+    return $ text qName
+         <+> text qVar
+         <+> qOver'
+         <+> qGuard'
+         <+> qBody'
+prExprQuantifier _ _ = Nothing
 
 
 --------------------------------------------------------------------------------

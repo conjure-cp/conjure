@@ -19,7 +19,7 @@ import Utils ( allValues )
 
 
 pExprCore :: Parser Expr
-pExprCore = choiceTry (pIdentifier : pValue ++ pDomains ++ [parens pExpr])
+pExprCore = choiceTry (pExprQuantifier : pIdentifier : pValue ++ pDomains ++ [parens pExpr])
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
@@ -314,22 +314,13 @@ pExpr = buildExpressionParser table core
             <?> "expression"
 
 
---------------------------------------------------------------------------------
--- DeclLambda parser -----------------------------------------------------------
---------------------------------------------------------------------------------
-
-pDeclLambda :: Parser Expr
-pDeclLambda = do
-    reserved "lambda"
-    braces $ do
-        args <- sepBy1 nameType comma
-        reservedOp "->"
-        x <- pExpr
-        return $ DeclLambda args x
-    where
-        nameType :: Parser (String, Type)
-        nameType = (,) <$> identifier <*> (colon *> pType)
-
+pExprQuantifier :: Parser Expr
+pExprQuantifier =
+    ExprQuantifier <$> identifier
+                   <*> pIdentifier
+                   <*> (colon *> pExpr)
+                   <*> optionMaybe (comma *> pExpr)
+                   <*> (dot *> pExpr)
 
 --------------------------------------------------------------------------------
 -- Type parser -----------------------------------------------------------------
@@ -428,16 +419,41 @@ pBinding = choiceTry [ do reserved "given"
                           idens <- sepBy1 identifier comma
                           reserved "be"
                           reserved "quantifier"
-                          rhs <- pQuanDecl
+                          rhs <- pDeclQuantifier
                           return [ (Letting, i, rhs) | i <- idens ]
                      ]
 
 
-pQuanDecl :: Parser Expr
-pQuanDecl = braces $ DeclQuantifier <$> (try pDeclLambda <|> pIdentifier)
+--------------------------------------------------------------------------------
+-- DeclLambda parser -----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pDeclLambda :: Parser Expr
+pDeclLambda = do
+    reserved "lambda"
+    braces $ do
+        args <- sepBy1 nameType comma
+        reservedOp "->"
+        x <- pExpr
+        return $ DeclLambda args x
+    where
+        nameType :: Parser (String, Type)
+        nameType = (,) <$> identifier <*> (colon *> pType)
+
+
+--------------------------------------------------------------------------------
+-- DeclQuantifier parser -------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pDeclQuantifier :: Parser Expr
+pDeclQuantifier = braces $ DeclQuantifier <$> (try pDeclLambda <|> pIdentifier)
                                     <*> (try pDeclLambda <|> pIdentifier)
                                     <*> pExpr
 
+
+--------------------------------------------------------------------------------
+-- other top-level statements --------------------------------------------------
+--------------------------------------------------------------------------------
 
 pWhere :: Parser [Where]
 pWhere = reserved "where" *> sepBy1 pExpr comma

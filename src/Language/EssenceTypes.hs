@@ -1,25 +1,50 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns   #-}
 
-module Language.EssenceTypes ( runTypeOf ) where
+module Language.EssenceTypes ( typeCheckSpec, runTypeOf ) where
 
 
-import Control.Arrow ( second )
+import Control.Applicative
+import Control.Arrow ( first, second )
 import Control.Monad.RWS ( evalRWS
                          , MonadReader, ask
                          , MonadWriter, tell
                          , MonadState, get, gets, put, modify
                          )
+import Control.Monad ( forM_, unless )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Maybe ( fromJust )
+import Data.Default ( def )
 
-import Language.Essence ( Expr(..), Binding, Log, Type(..), validOpTypes )
-import Language.EssencePrinters ( prExpr )
+import Language.Essence ( Spec(..), Expr(..), Binding, BindingEnum(..)
+                        , Log, Type(..), typeUnify, validOpTypes, elementType )
+import Language.EssenceKinds ( kindOf )
+import Language.EssencePrinters ( prExpr, prType )
 import PrintUtils ( render )
 
 
+typeCheckSpec :: Spec -> (Maybe String, [Log])
+typeCheckSpec sp = first (either Just (const Nothing)) $ evalRWS (runErrorT core) (topLevelBindings sp) def
+    where
+        -- core :: m ()
+        core = do
+            case objective sp of
+                Nothing -> return ()
+                Just (_,o)  -> do
+                    ot <- typeOf o
+                    unless (typeUnify ot TypeInteger) $ throwError "objective must be of type int, it isn't."
+            forM_ (topLevelWheres sp) $ \ x -> do
+                t <- typeOf x
+                unless (typeUnify TypeBoolean t)
+                       (x ~$$ "Where statements must be of type boolean")
+            forM_ (constraints sp) $ \ x -> do
+                t <- typeOf x
+                unless (typeUnify TypeBoolean t)
+                       (x ~$$ "Constraints must be of type boolean")            
+
+
 runTypeOf :: [Binding] -> Expr -> (Either String Type, [Log])
-runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs ([],[])
+runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs def
 
 
 infixr 0 ~~$
@@ -134,8 +159,8 @@ typeOf p@(Identifier nm) = do
                 then throwError $ "cyclic definition: " ++ nm ++ " defined in terms of itself."
                 else do
                     put (nm:seens, knowns)
-                    bs <- ask
-                    result <- case [ x | (_,nm',x) <- bs, nm == nm' ] of
+                    bindings <- ask
+                    result <- case [ x | (_,nm',x) <- bindings, nm == nm' ] of
                         []  -> p ~$$ "identifier not found"
                         [x] -> do t <- typeOf x; p ~~$ t
                         _   -> p ~$$ "identifier bound to several things"
@@ -149,6 +174,65 @@ typeOf p@(DeclLambda args x) = do
     put st
     p ~~$ TypeLambda (map snd args) x'
 
-typeOf p@(DeclQuantifier _ _ identity) = do
-    t <- typeOf identity
-    p ~~$ t
+typeOf p@(DeclQuantifier glueOp skipOp identity) = do
+    tGlueOp   <- typeOf glueOp
+    tSkipOp   <- typeOf skipOp
+    tIdentity <- typeOf identity
+
+    let fail_tGlueOp = case render <$> prType tIdentity of
+            Nothing  -> throwError $ "Cannot pretty-print: " ++ show tIdentity
+            Just prt -> p ~$$ "glue op must be of type " ++ prt ++ ", " ++ prt ++ " -> " ++ prt
+
+    case tGlueOp of
+        (TypeLambda [a,b] c) ->
+            unless (typeUnify a b && typeUnify b c) fail_tGlueOp
+        _ -> fail_tGlueOp
+
+    let fail_tSkipOp = case render <$> prType tIdentity of
+            Nothing  -> throwError $ "Cannot pretty-print: " ++ show tIdentity
+            Just prt -> p ~$$ "skip op must be of type bool, " ++ prt ++ " -> " ++ prt
+
+    case tSkipOp of
+        (TypeLambda [TypeBoolean,a] b) ->
+            unless (typeUnify a b && typeUnify a tIdentity) fail_tSkipOp
+        _ -> fail_tSkipOp
+
+    p ~~$ tIdentity
+
+typeOf p@(ExprQuantifier {quanName, quanVar=Identifier quanVar, quanOver, quanGuard, quanBody}) = do
+    bindings <- ask
+    case [ x | (Letting,nm,x) <- bindings, nm == quanName ] of
+        [] -> p ~$$ "unknown quantifier: " ++ quanName
+        [q@(DeclQuantifier {})] -> do
+
+            -- is the same as identity of thw quan,
+            -- and must be the same as the body of the quantified expression
+            tq <- typeOf q
+
+            -- get the expected type of the quantifier variable
+            kQuanOver <- kindOf quanOver
+            tQuanOver <- typeOf quanOver
+            tQuanVar  <- case elementType kQuanOver tQuanOver of
+                Nothing -> quanOver ~$$ "Cannot quantify over " ++ show tQuanOver
+                Just t  -> return t
+            modify $ second $ ((quanVar,tQuanVar):) -- add it to the list of known types
+
+            -- type of "body"
+            tQuanBody <- typeOf quanBody
+
+            -- check the guard type == TypeBoolean
+            case quanGuard of
+                Nothing -> return ()
+                Just g  -> do
+                    tg <- typeOf g
+                    unless (typeUnify TypeBoolean tg) $
+                        p ~$$ "Type-error in the guard. Guards must be of type boolean."
+
+            -- check the body type == quantifier.identity
+            unless (typeUnify tq tQuanBody) $
+                p ~$$ "Type-error in the body of quantified expression"
+
+            return tq
+        _  -> p ~$$ "multiple definitons of quantifier: " ++ quanName
+
+typeOf p@(ExprQuantifier {}) = p ~$$ "quantifier has a non-identifier in the quanVar field."

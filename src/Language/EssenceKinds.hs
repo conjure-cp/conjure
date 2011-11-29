@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns   #-}
 
-module Language.EssenceKinds ( runKindOf, textAfterBe ) where
+module Language.EssenceKinds ( runKindOf, kindOf, textAfterBe ) where
 
 
 import Control.Monad.RWS ( evalRWS
@@ -86,3 +86,5 @@ kindOf p@(Identifier nm) = do
 
 kindOf p@(DeclLambda     {}) = p ~~$ KindLambda
 kindOf p@(DeclQuantifier {}) = p ~~$ KindExpr
+
+kindOf p@(ExprQuantifier {}) = p ~~$ KindExpr

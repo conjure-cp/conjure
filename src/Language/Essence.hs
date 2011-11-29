@@ -14,8 +14,8 @@ module Language.Essence
     , Spec(..), Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
-    , Kind(..), Type(..)
-    , associativeOps, commutativeOps, validOpTypes
+    , Kind(..), Type(..), typeUnify
+    , associativeOps, commutativeOps, validOpTypes, elementType
     ) where
 
 
@@ -161,6 +161,14 @@ data Expr
 
     | DeclLambda [(String,Type)] Expr
     | DeclQuantifier Expr Expr Expr
+    
+    | ExprQuantifier
+        { quanName  :: String
+        , quanVar   :: Expr
+        , quanOver  :: Expr
+        , quanGuard :: Maybe Expr
+        , quanBody  :: Expr
+        }
 
     deriving (Eq, Ord, Read, Show)
 
@@ -321,32 +329,37 @@ instance (TypeUnify t1, TypeUnify t2) => TypeUnify (t1,t2) where
 (~~) = typeUnify
 
 
+intLike :: Type -> Bool
+intLike TypeBoolean = True
+intLike TypeInteger = True
+intLike _ = False
+
+
 -- All the ops in Essence, with their overloadings if they are polymorphic
 validOpTypes :: Op -> [Type] -> Maybe Type
-validOpTypes Plus  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
-validOpTypes Minus ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
-validOpTypes Times ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
-validOpTypes Div   ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
-validOpTypes Mod   ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
-validOpTypes Pow   ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeInteger
-validOpTypes Abs    [TypeBoolean] = return TypeInteger
-validOpTypes Abs    [TypeInteger] = return TypeInteger
-validOpTypes Negate [TypeInteger] = return TypeInteger
+validOpTypes Plus   ps@[_,_] | all intLike ps = return TypeInteger
+validOpTypes Minus  ps@[_,_] | all intLike ps = return TypeInteger
+validOpTypes Times  ps@[_,_] | all intLike ps = return TypeInteger
+validOpTypes Div    ps@[_,_] | all intLike ps = return TypeInteger
+validOpTypes Mod    ps@[_,_] | all intLike ps = return TypeInteger
+validOpTypes Pow    ps@[_,_] | all intLike ps = return TypeInteger
+validOpTypes Abs    ps@[_]   | all intLike ps = return TypeInteger
+validOpTypes Negate ps@[_]   | all intLike ps = return TypeInteger
 
-validOpTypes Lt  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
-validOpTypes Leq ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
-validOpTypes Gt  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
-validOpTypes Geq ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
-validOpTypes Neq ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
-validOpTypes Eq  ps@[_,_] | all (`elem` [TypeBoolean,TypeInteger]) ps = return TypeBoolean
-validOpTypes Neq [a,b] | a == b = return TypeBoolean
-validOpTypes Eq  [a,b] | a == b = return TypeBoolean
+validOpTypes Lt  ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Leq ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Gt  ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Geq ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Neq ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Eq  ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Neq    [a,b] | a ~~ b = return TypeBoolean
+validOpTypes Eq     [a,b] | a ~~ b = return TypeBoolean
 
-validOpTypes Not   [TypeBoolean]             = return TypeBoolean
-validOpTypes Or    [TypeBoolean,TypeBoolean] = return TypeBoolean
-validOpTypes And   [TypeBoolean,TypeBoolean] = return TypeBoolean
-validOpTypes Imply [TypeBoolean,TypeBoolean] = return TypeBoolean
-validOpTypes Iff   [TypeBoolean,TypeBoolean] = return TypeBoolean
+validOpTypes Not   ps@[_]   | all intLike ps = return TypeBoolean
+validOpTypes Or    ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes And   ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Imply ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Iff   ps@[_,_] | all intLike ps = return TypeBoolean
 
 validOpTypes Union     [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
 validOpTypes Union     [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
@@ -440,6 +453,23 @@ validOpTypes AllDiff   [TypeMatrix {}] = return TypeBoolean
 
 validOpTypes _ _ = Nothing
 
+
+elementType :: Kind -> Type -> Maybe Type
+elementType _          (TypeUnknown    {}) = Nothing
+elementType _          (TypeIdentifier {}) = Nothing
+elementType _          (TypeBoolean    {}) = Nothing
+elementType KindDomain (TypeInteger    {}) = Just TypeInteger
+elementType _          (TypeInteger    {}) = Nothing
+elementType _          (TypeUnnamed    {}) = Nothing
+elementType _          (TypeEnum       {}) = Nothing
+elementType _          (TypeMatrix     {}) = Nothing
+elementType _          (TypeTuple      {}) = Nothing
+elementType _          (TypeSet         t) = Just t
+elementType _          (TypeMSet        t) = Just t
+elementType _          (TypeFunction   {}) = Nothing
+elementType _          (TypeRelation   {}) = Nothing
+elementType _          (TypePartition  {}) = Nothing
+elementType _          (TypeLambda     {}) = Nothing
 
 
 --------------------------------------------------------------------------------
