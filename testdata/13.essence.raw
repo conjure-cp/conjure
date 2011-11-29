@@ -1,0 +1,84 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Letting
+                         , "digit"
+                         , DomainIntegerFromTo (
+                             Just ( ValueInteger 0 ) ) (
+                             Just ( ValueInteger 9 ) )
+                         )
+                       , ( Find
+                         , "x"
+                         , Identifier "digit"
+                         )
+                       , ( Find
+                         , "y"
+                         , Identifier "digit"
+                         )
+                       , ( Letting
+                         , "xy"
+                         , GenericNode
+                             Times
+                             [ Identifier "x"
+                             , Identifier "y"
+                             ]
+                         )
+                       , ( Letting
+                         , "forall_glueOp"
+                         , DeclLambda
+                             [ ( "x"
+                               , TypeBoolean
+                               )
+                             , ( "y"
+                               , TypeBoolean
+                               )
+                             ] (
+                             GenericNode
+                               And
+                               [ Identifier "x"
+                               , Identifier "y"
+                               ] )
+                         )
+                       , ( Letting
+                         , "forall_skipOp"
+                         , DeclLambda
+                             [ ( "x"
+                               , TypeBoolean
+                               )
+                             , ( "y"
+                               , TypeBoolean
+                               )
+                             ] (
+                             GenericNode
+                               Imply
+                               [ Identifier "x"
+                               , Identifier "y"
+                               ] )
+                         )
+                       , ( Letting
+                         , "forall"
+                         , DeclQuantifier (
+                             Identifier "forall_glueOp" ) (
+                             Identifier "forall_skipOp" ) (
+                             ValueBoolean True )
+                         )
+                       ]
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ ExprQuantifier
+                      { quanName = "forall"
+                      , quanVar = Identifier "i"
+                      , quanOver = DomainIntegerFromTo (
+                                     Just ( ValueInteger 1 ) ) (
+                                     Just ( ValueInteger 9 ) )
+                      , quanGuard = Nothing
+                      , quanBody = GenericNode
+                                     Gt
+                                     [ Identifier "xy"
+                                     , Identifier "i"
+                                     ]
+                      }
+                  ]
+  }

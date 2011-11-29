@@ -222,8 +222,8 @@ prOpExpr p (OpInfixL {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
     b' <- prExprPrec (precedence+1) b
     return $ sep [a', text face, b']
 prOpExpr p (OpInfixN {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
-    a' <- prExprPrec precedence a
-    b' <- prExprPrec precedence b
+    a' <- prExprPrec (precedence+1) a
+    b' <- prExprPrec (precedence+1) b
     return $ sep [a', text face, b']
 prOpExpr p (OpInfixR {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
     a' <- prExprPrec (precedence+1) a
@@ -241,13 +241,12 @@ prOpExpr _ _ _ = error "prOpExpr"
 
 prDeclLambda :: Prec -> Expr -> Maybe Doc
 prDeclLambda _ (DeclLambda args x) = do
+    let braces' i = char '{' <+> i <+> char '}'
     args' <- forM args $ \ (nm,t) -> do t' <- prType t
                                         return (text nm <+> colon <+> t')
     x' <- prExpr x
     return $ text "lambda"
-         <+> braces ( sep (punctuate comma args')
-                  <+> text "->"
-                  <+> x' )
+         <+> braces' (sep (punctuate comma args') <+> text "->" <+> x')
 prDeclLambda _ _ = Nothing
 
 
