@@ -7,6 +7,7 @@ import Test.HUnit ( Test(..), Assertion, assertFailure, test )
 
 import Language.EssenceParsers ( pSpec )
 import Language.EssencePrinters ( prSpec )
+import Language.EssenceTypes ( typeCheckSpec )
 import ParsecUtils ( parseFromFile )
 import PrintUtils ( render )
 import Utils ( ppShow )
@@ -25,7 +26,10 @@ testParseSpec filename = do
     let failed msg = assertFailure $ filename ++ ": " ++ msg
 
     sp <- parseFromFile pSpec id filename id
-
+    
+    case fst (typeCheckSpec sp) of
+        Nothing  -> return ()
+        Just err -> failed $ "type-error: " ++ err
 
     let spRawOut = ppShow sp
     let rawPrintFileName = filename ++ ".raw"
