@@ -16,6 +16,7 @@ module Language.Essence
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
     , Kind(..), Type(..), typeUnify
     , associativeOps, commutativeOps, validOpTypes, elementType
+    , RuleRepr(..), DomainAttribute(..)
     ) where
 
 
@@ -473,6 +474,28 @@ elementType _          (TypeLambda     {}) = Nothing
 
 
 --------------------------------------------------------------------------------
+-- RuleRepr --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data RuleRepr = RuleRepr
+    { reprPattern    :: Expr
+    , reprName       :: String
+    , reprRemplate   :: Expr
+    , reprStructural :: [([DomainAttribute],Expr)]
+    , reprWheres     :: [Where]
+    , reprBindings   :: [Binding]
+    }
+    deriving (Eq, Ord, Read, Show)
+
+data DomainAttribute
+    = OnlyName String
+    | NameValue String Expr
+    | NoAttr
+    | Default
+    deriving (Eq, Ord, Read, Show)
+
+
+--------------------------------------------------------------------------------
 -- type class instances --------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -485,6 +508,8 @@ deriving instance Binary BindingEnum
 deriving instance Binary ObjectiveEnum
 deriving instance Binary Type
 deriving instance Binary Kind
+deriving instance Binary RuleRepr
+deriving instance Binary DomainAttribute
 
 deriving instance UniplateDirect Spec Expr
 deriving instance UniplateDirect Expr Expr
@@ -495,6 +520,9 @@ deriving instance UniplateDirect (Expr, Expr) Expr
 deriving instance UniplateDirect (BindingEnum,String,Expr) Expr
 deriving instance UniplateDirect (ObjectiveEnum,Expr) Expr
 deriving instance UniplateDirect (Maybe Objective) Expr
+deriving instance UniplateDirect RuleRepr Expr
+deriving instance UniplateDirect ([DomainAttribute],Expr) Expr
+deriving instance UniplateDirect DomainAttribute Expr
 
 !-}
 
