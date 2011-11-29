@@ -1,6 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module ZippyUtils ( callBottomUpApply, returnValues, depth ) where
+module ZippyUtils ( callBottomUpApply, returnValues, depth
+                  , transformHole, transformHoleMaybe
+                  ) where
 
 
 import Prelude hiding ( log )
@@ -105,3 +107,13 @@ concatMapM f as = do
 -- | a version of `replaceHole` which works on lists.
 replaceHoleL :: Uniplate to => [to] -> Zipper from to -> [Zipper from to]
 replaceHoleL xs z = [ replaceHole x z | x <- xs ]
+
+
+transformHoleMaybe :: Uniplate to => (to -> Maybe to) -> Zipper from to -> Zipper from to
+transformHoleMaybe f z = case f (hole z) of
+    Nothing -> z
+    Just h  -> replaceHole h z
+
+
+transformHole :: Uniplate to => (to -> to) -> Zipper from to -> Zipper from to
+transformHole f z = replaceHole (f (hole z)) z
