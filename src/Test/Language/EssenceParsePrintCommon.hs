@@ -5,9 +5,10 @@ import Control.Applicative
 import Data.Maybe
 import Test.HUnit ( Test(..), (~:), (~=?), assertBool, test )
 
-import Language.Essence ( Expr(..), Type(..), Binding, Log )
+import Language.Essence ( Expr(..), Type(..), Kind(..), Binding, Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
-import Language.EssenceParsers ( pExpr, pType )
+import Language.EssenceKinds ( runKindOf )
+import Language.EssenceParsers ( pExpr, pType, pKind )
 import Language.EssencePrinters ( prExpr )
 import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( Parser, eof, parseMaybe )
@@ -20,6 +21,9 @@ pExprEof = pExpr <* eof
 
 pTypeEof :: Parser Type
 pTypeEof = pType <* eof
+
+pKindEof :: Parser Kind
+pKindEof = pKind <* eof
 
 
 cmdShouldParse :: String -> Test
@@ -120,12 +124,14 @@ cmdEval bindings i j = test
         jParsedPrinted = render <$> (prExpr =<< jParsed)
 
 
-cmdTypeOf :: [Binding] -> String -> String -> Test
-cmdTypeOf bindings i j = test
+cmdTypeOf :: [Binding] -> String -> String -> String -> Test
+cmdTypeOf bindings i j k = test
     [ TestCase $ assertBool ("TypeOf.parse: " ++ i) $ isJust iParsed
     , TestCase $ assertBool ("TypeOf.parse: " ++ j) $ isJust jParsed
     , TestCase $ assertBool ("TypeOf.typecheck-success: ") $ case iTypeOf of Just (Right _,_) -> True; _ -> False
     , TestCase $ assertBool ("TypeOf.types-eq: " ++ i ++ " " ++ j) $ case iTypeOf of Just (Right t,_) -> Just t == jParsed; _ -> False
+    , TestCase $ assertBool ("TypeOf.kindcheck-success: ") $ case iKindOf of Just (Right _,_) -> True; _ -> False
+    , TestCase $ assertBool ("TypeOf.kinds-eq: " ++ i ++ " " ++ k) $ case iKindOf of Just (Right t,_) -> Just t == kParsed; _ -> False
     ]
     where
         iParsed :: Maybe Expr
@@ -134,5 +140,11 @@ cmdTypeOf bindings i j = test
         jParsed :: Maybe Type
         jParsed = parseMaybe pTypeEof j
 
+        kParsed :: Maybe Kind
+        kParsed = parseMaybe pKindEof k
+
         iTypeOf :: Maybe (Either String Type, [Log])
         iTypeOf = runTypeOf bindings <$> iParsed
+
+        iKindOf :: Maybe (Either String Kind, [Log])
+        iKindOf = runKindOf bindings <$> iParsed

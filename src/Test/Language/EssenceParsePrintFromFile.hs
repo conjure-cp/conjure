@@ -44,7 +44,7 @@ allTests file = (test (map toTest ls), length ls)
             ("ParsePrint"   , _bindings, [i,j]) -> cmdParsePrint i j
             ("ParsePrintIso", _bindings, [i]  ) -> cmdParsePrintIso i
             ("Eval"         ,  bindings, [i,j]) -> cmdEval bindings i j
-            ("TypeOf"       ,  bindings, [i,j]) -> cmdTypeOf bindings i j
+            ("TypeOf"       ,  bindings, [i,j,k]) -> cmdTypeOf bindings i j k
             _     -> error $ "unknown line format: " ++ line
 
 
