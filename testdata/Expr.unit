@@ -1315,3 +1315,17 @@ function {1 -> set {2},
     !(a > x)
     ~~ GenericNode Not [GenericNode Gt [Identifier "a",Identifier "x"]]
 
+*** Eval |12+3| ~~ 15
+
+*** Eval |-12*3| ~~ 36
+
+*** Eval a /\ true /\ b ~~ a /\ b
+*** Eval (a /\ true) /\ b ~~ a /\ b
+*** Eval a /\ (true /\ b) ~~ a /\ b
+
+*** Eval a / 0 ~~ a / 0
+*** Eval {letting a be 4} a / 2 ~~ 2
+
+*** Eval a % 0 ~~ a % 0
+*** Eval {letting a be 4} a % 2 ~~ 0
+*** Eval {letting a be 5} a % 2 ~~ 1
