@@ -143,6 +143,8 @@ step (EvalTypeKind s) = withParsed pExpr s $ \ x -> do
     let (exType, logsType) = runTypeOf bs x
     let (exKind, logsKind) = runKindOf bs x
     displayLogs (logsEval ++ logsType ++ logsKind)
+    displayRaw x
+    displayRaw xEval
     case (exType, exKind) of
         (Right xType, Right xKind) ->
             case (prExpr x, prExpr xEval, prType xType, prKindInteractive xKind) of
