@@ -396,8 +396,8 @@ prKind KindDomain  = return $ text "domain"
 prKind KindValue   = return $ text "value"
 prKind KindExpr    = return $ text "expression"
 prKind KindLambda  = return $ text "lambda"
-prKind KindFind    = return $ text "decision variable"
-prKind KindGiven   = return $ text "parameter"
+prKind KindFind    = return $ text "find"
+prKind KindGiven   = return $ text "given"
 
 prKindInteractive :: Kind -> Doc
 prKindInteractive KindUnknown = text "of unknown kind"

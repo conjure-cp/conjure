@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Language.EssenceParsers ( pSpec, pExpr, pType
+module Language.EssenceParsers ( pSpec, pExpr, pType, pKind
                                , pTopLevels, pObjective
                                ) where
 
@@ -366,6 +366,21 @@ pType = choiceTry [ pTypeUnknown, pTypeBool, pTypeInteger, pTypeUnnamed, pTypeEn
                 reservedOp "->"
                 x <- pType
                 return $ TypeLambda args x
+
+
+--------------------------------------------------------------------------------
+-- Kind parser -----------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pKind :: Parser Kind
+pKind = choiceTry [ KindUnknown <$ reservedOp "?"
+                  , KindDomain  <$ reserved "domain"
+                  , KindValue   <$ reserved "value"
+                  , KindExpr    <$ reserved "expression"
+                  , KindLambda  <$ reserved "lambda"
+                  , KindFind    <$ reserved "find"
+                  , KindGiven   <$ reserved "given"
+                  ]
 
 
 --------------------------------------------------------------------------------
