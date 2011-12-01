@@ -1,0 +1,80 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Find
+                         , "x"
+                         , DomainIntegerFromTo (
+                             Just (
+                               GenericNode
+                                 Negate
+                                 [ ValueInteger 9
+                                 ] ) ) (
+                             Just ( ValueInteger 9 ) )
+                         )
+                       , ( Find
+                         , "y"
+                         , DomainIntegerFromTo (
+                             Just (
+                               GenericNode
+                                 Negate
+                                 [ ValueInteger 9
+                                 ] ) ) (
+                             Just ( ValueInteger 9 ) )
+                         )
+                       , ( Find
+                         , "s1"
+                         , DomainSet
+                             { size = Nothing
+                             , minSize = Nothing
+                             , maxSize = Nothing
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       , ( Find
+                         , "s2"
+                         , DomainSet
+                             { size = Nothing
+                             , minSize = Nothing
+                             , maxSize = Nothing
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       ]
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ GenericNode
+                      Eq
+                      [ GenericNode
+                          Abs
+                          [ Identifier "x"
+                          ]
+                      , Identifier "y"
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Card
+                          [ GenericNode
+                              Intersect
+                              [ Identifier "s1"
+                              , Identifier "s2"
+                              ]
+                          ]
+                      , GenericNode
+                          Minus
+                          [ Identifier "y"
+                          , Identifier "x"
+                          ]
+                      ]
+                  ]
+  }
