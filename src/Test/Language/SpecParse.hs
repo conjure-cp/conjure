@@ -9,6 +9,7 @@ import Language.EssenceParsers ( pSpec )
 import Language.EssencePrinters ( prSpec )
 import Language.EssenceTypes ( typeCheckSpec )
 import ParsecUtils ( parseFromFile )
+import Phases.ResolveTwoBars ( resolveTwoBars )
 import PrintUtils ( render )
 import Utils ( ppShow )
 
@@ -25,8 +26,14 @@ testParseSpec filename = do
 
     let failed msg = assertFailure $ filename ++ ": " ++ msg
 
-    sp <- parseFromFile pSpec id filename id
-    
+    sp' <- parseFromFile pSpec id filename id
+
+    sp <- case fst (resolveTwoBars sp') of
+        Left err -> do
+            failed $ "ambigious two-bar operator: " ++ err
+            return undefined
+        Right i  -> return i
+
     case fst (typeCheckSpec sp) of
         Nothing  -> return ()
         Just err -> failed $ "type-error: " ++ err
