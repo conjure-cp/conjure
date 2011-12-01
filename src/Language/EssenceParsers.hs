@@ -19,7 +19,13 @@ import Utils ( allValues )
 
 
 pExprCore :: Parser Expr
-pExprCore = choiceTry (pExprQuantifier : pIdentifier : pValue ++ pDomains ++ [parens pExpr])
+pExprCore = choiceTry $  pExprQuantifier
+                      :  pIdentifier
+                      :  pValue
+                      ++ pDomains
+                      ++ [ pExprTwoBars
+                         , parens pExpr
+                         ]
 
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
@@ -321,6 +327,12 @@ pExprQuantifier =
                    <*> (colon *> pExpr)
                    <*> optionMaybe (comma *> pExpr)
                    <*> (dot *> pExpr)
+
+pExprTwoBars :: Parser Expr
+pExprTwoBars = do
+    x <- between (symbol "|") (symbol "|") pExpr
+    return $ GenericNode Abs [x]
+
 
 --------------------------------------------------------------------------------
 -- Type parser -----------------------------------------------------------------

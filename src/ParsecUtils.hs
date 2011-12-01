@@ -13,9 +13,10 @@ module ParsecUtils (
     sepBy, sepBy1, sepEndBy, sepEndBy1,
     many, many1,
 
-    colon, comma, dot, parens,
+    colon, comma, dot, parens, between,
 
-    identifier, integer, reserved, reservedOp, eof, whiteSpace,
+    identifier, integer, reserved, reservedOp,
+    eof, whiteSpace, symbol
     ) where
 
 
@@ -26,12 +27,12 @@ import Data.Maybe
 import Data.ByteString.Char8 ( unpack)
 
 import Text.Parsec ( ParsecT, alphaNum, char, letter, parse )
-import Text.Parsec.Combinator ( choice, eof, many1, optionMaybe, sepBy, sepBy1, sepEndBy, sepEndBy1 )
+import Text.Parsec.Combinator ( between, choice, eof, many1, optionMaybe, sepBy, sepBy1, sepEndBy, sepEndBy1 )
 import Text.Parsec.Expr ( Assoc(..), Operator(..), OperatorTable, buildExpressionParser )
 import Text.Parsec.Language ( emptyDef )
 import Text.Parsec.Prim ( (<?>), try )
 import Text.Parsec.Token ( GenTokenParser, LanguageDef, caseSensitive, commentLine, identLetter, identStart, makeTokenParser, natural, reservedNames, reservedOpNames )
-import qualified Text.Parsec.Token as T ( angles, braces, brackets, colon, comma, dot, identifier, parens, reserved, reservedOp, whiteSpace )
+import qualified Text.Parsec.Token as T ( angles, braces, brackets, colon, comma, dot, identifier, parens, reserved, reservedOp, symbol, whiteSpace )
 
 
 type Parser a = ParsecT String () Identity a
@@ -59,6 +60,7 @@ integer    :: Parser Integer;        integer    = natural      lexer
 parens     :: Parser a -> Parser a;  parens     = T.parens     lexer
 reserved   :: String -> Parser ();   reserved   = T.reserved   lexer
 reservedOp :: String -> Parser ();   reservedOp = T.reservedOp lexer
+symbol     :: String -> Parser ();   symbol s   = T.symbol     lexer s >> return ()
 whiteSpace :: Parser ();             whiteSpace = T.whiteSpace lexer
 
 

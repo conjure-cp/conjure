@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns   #-}
 
-module Language.EssenceTypes ( typeCheckSpec, runTypeOf ) where
+module Language.EssenceTypes ( typeCheckSpec, runTypeOf, typeOf ) where
 
 
 import Control.Applicative

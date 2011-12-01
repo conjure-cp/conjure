@@ -209,6 +209,11 @@ attrToDoc _ _ = Nothing
 --------------------------------------------------------------------------------
 
 prGenericNode :: Prec -> Expr -> Maybe Doc
+-- uncomment the following, if you want to use TwoBars in the output.
+-- I don't, hence commented out.
+-- prGenericNode _ (GenericNode op [x]) | op `elem` [Abs,Card] = do
+--     x' <- prExpr x
+--     return $ char '|' <> x' <> char '|'
 prGenericNode prec (GenericNode op xs) = prOpExpr prec (opDescriptor op) xs
 prGenericNode _ _ = Nothing
 
