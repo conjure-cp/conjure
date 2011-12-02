@@ -1332,8 +1332,69 @@ function {1 -> set {2},
 *** Eval a /\ (true /\ b) ~~ a /\ b
 
 *** Eval a / 0 ~~ a / 0
+*** Eval 3 / 0 ~~ 3 / 0
 *** Eval {letting a be 4} a / 2 ~~ 2
 
 *** Eval a % 0 ~~ a % 0
+*** Eval 3 % 0 ~~ 3 % 0
 *** Eval {letting a be 4} a % 2 ~~ 0
 *** Eval {letting a be 5} a % 2 ~~ 1
+
+*** Eval 5 ^ 0 ~~ 1
+*** Eval {letting a be 5} a ^ 0 ~~ 1
+*** Eval a ^ 0 ~~ 1
+*** Eval 5 ^ 2 ~~ 25
+*** Eval {letting a be 5} a ^ 2 ~~ 25
+*** Eval 4 ^ 3 ^ 2 ~~ 262144
+*** Eval x ^ 1 ~~ x
+*** Eval (x ^ y * x) ~~ x ^ (1 + y)
+
+*** Eval 2 != 3 ~~ true
+*** Eval 2 != 2 ~~ false
+
+*** Eval 1 elem set {1,2,3} ~~ true
+*** Eval 4 elem set {1,2,3} ~~ 4 elem set {1,2,3}
+
+*** Eval 1 elem mset {1,2,3} ~~ true
+*** Eval 4 elem mset {1,2,3} ~~ 4 elem mset {1,2,3}
+
+*** Eval 5 % 5 ~~ 0
+*** Eval a % a ~~ 0
+
+*** Eval (x * y) + x ~~ (1 + y) * x
+*** Eval (x * y) + y ~~ (1 + x) * y
+*** Eval (x * z) + (y * z) ~~ (x + y) * z
+
+*** Eval 0 + x ~~ x
+*** Eval 0 - x ~~ -x
+*** Eval 0 * x ~~ 0
+*** Eval 1 * x ~~ x
+*** Eval 1 * (a+b) ~~ a+b
+*** Eval x / 1 ~~ x
+
+*** Eval false /\ x ~~ false
+*** Eval false \/ x ~~ x
+*** Eval true \/ x ~~ true
+*** Eval x => (!x) ~~ (!x)
+*** Eval (x = y) => (x != y) ~~ x != y
+*** Eval x => y ~~ x => y
+*** Eval x => x ~~ true
+
+*** Eval x <=> y ~~ x <=> y
+*** Eval x <=> x ~~ true
+*** Eval true <=> x ~~ x
+*** Eval false <=> x ~~ !x
+
+*** Eval (x+y)-x ~~ y
+*** Eval (x+y)-y ~~ x
+*** Eval (x+y)-z ~~ (x+y)-z
+
+*** Eval (y-x)+x ~~ y
+*** Eval (x-y)+y ~~ x
+*** Eval (x-y)+x ~~ -y
+*** Eval (x-y)+z ~~ (x-y)+z
+
+*** Eval -(-x) ~~ x
+
+*** Eval (z+y)+x ~~ x+y+z
+*** Eval (z=y)=x ~~ (y=z)=x
