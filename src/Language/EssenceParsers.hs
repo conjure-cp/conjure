@@ -80,7 +80,7 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
 --------------------------------------------------------------------------------
 
 pDomain :: Parser Expr
-pDomain = choiceTry $ (pIdentifier <?> "identifier") : pDomains
+pDomain = choiceTry $ pIdentifier : pDomains
 
 pDomains :: [Parser Expr]
 pDomains = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
