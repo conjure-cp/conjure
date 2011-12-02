@@ -138,7 +138,7 @@ evaluateExpr (GenericNode Minus [GenericNode Plus [x,y],z])
     | x == z = rJust y
 evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
     | y == z = rJust x
-    | x == z = rJust y
+    | x == z = rJust $ GenericNode Negate [y]
 
 -- let binding
 
@@ -179,6 +179,8 @@ rJust = return . Just
 
 -- do these two expressions unify to the same thing?
 unifyExpr :: Expr -> Expr -> Bool
+unifyExpr (GenericNode Not [GenericNode Not [x]]) y
+    = unifyExpr x y
 unifyExpr (GenericNode Not [GenericNode Eq [a,b]]) (GenericNode Neq [c,d])
     = unifyExpr a c && unifyExpr b d
 unifyExpr x y = x == y
