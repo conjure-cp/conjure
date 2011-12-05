@@ -18,15 +18,6 @@ import ParsecUtils
 import Utils ( allValues )
 
 
-pExprCore :: Parser Expr
-pExprCore = choiceTry $  pExprQuantifier
-                      :  pIdentifier
-                      :  pValue
-                      ++ pDomains
-                      ++ [ pExprTwoBars
-                         , parens pExpr
-                         ]
-
 pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
     <?> "identifier"
@@ -80,18 +71,19 @@ pValue = [ pBool, pInteger, pMatrix, pTuple, pSet, pMSet, pFunction, pRelation, 
 --------------------------------------------------------------------------------
 
 pDomain :: Parser Expr
-pDomain = choiceTry $ pIdentifier : pDomains
+pDomain = choiceTry (pIdentifier : pDomains) <?> "domain"
 
 pDomains :: [Parser Expr]
-pDomains = [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
-          , pTuple     False, pTuple     True
-          , pUnnamed   False, pUnnamed   True
-          , pSet       False, pSet       True
-          , pMSet      False, pMSet      True
-          , pFunction  False, pFunction  True
-          , pRelation  False, pRelation  True
-          , pPartition False, pPartition True
-          ]
+pDomains = map (<?> "domain")
+            [ pBool, pIntegerList, pIntegerFromTo, pIntegerOnly, pEnum, pMatrix
+            , pTuple     False, pTuple     True
+            , pUnnamed   False, pUnnamed   True
+            , pSet       False, pSet       True
+            , pMSet      False, pMSet      True
+            , pFunction  False, pFunction  True
+            , pRelation  False, pRelation  True
+            , pPartition False, pPartition True
+            ]
     where
         pBool :: Parser Expr
         pBool = DomainBoolean <$ reserved "bool"
@@ -315,18 +307,29 @@ pExpr = buildExpressionParser table core
 
         core :: Parser Expr
         core = choiceTry ( pExprCore
-                         : lefts (mapMaybe f (allValues :: [Op]))
+                        ++ lefts (mapMaybe f (allValues :: [Op]))
                          )
             <?> "expression"
 
+pExprCore :: [Parser Expr]
+pExprCore =  pExprQuantifier
+          :  pIdentifier
+          :  pValue
+          ++ pDomains
+          ++ [ pExprTwoBars, parens pExpr ]
 
 pExprQuantifier :: Parser Expr
-pExprQuantifier =
-    ExprQuantifier <$> identifier
-                   <*> pIdentifier
-                   <*> (colon *> pExpr)
-                   <*> optionMaybe (comma *> pExpr)
-                   <*> (dot *> pExpr)
+pExprQuantifier = do
+    qName  <- identifier
+    qVars  <- pIdentifier `sepBy1` comma
+    qOver  <- colon *> pExpr
+    qGuard <- optionMaybe (comma *> pExpr)
+    qBody  <- dot *> pExpr
+    let
+        helper []     = error "impossible has happenned: pExprQuantifier.helper []"
+        helper [i]    = ExprQuantifier qName i qOver qGuard qBody
+        helper (i:is) = ExprQuantifier qName i qOver Nothing (helper is)
+    return $ helper qVars
 
 pExprTwoBars :: Parser Expr
 pExprTwoBars = do
@@ -389,6 +392,7 @@ pKind = choiceTry [ KindUnknown <$ reservedOp "?"
 
 pSpec :: Parser Spec
 pSpec = do
+    whiteSpace
     (lang,ver)        <- pLanguage
     (bindings,wheres) <- pTopLevels
     obj               <- optionMaybe pObjective
