@@ -196,6 +196,8 @@ data Op
 
     | Index | Project
 
+    | HasType | HasDomain
+
     | Bubble
     
     | AllDiff
@@ -259,6 +261,8 @@ opDescriptor Freq         = OpLispy  "freq"         2
 opDescriptor Hist         = OpLispy  "hist"         2
 opDescriptor Project      = OpSpecial
 opDescriptor Index        = OpSpecial
+opDescriptor HasType      = OpInfixN "::"           ~~$ 1500
+opDescriptor HasDomain    = OpInfixN ":"            ~~$ 1500
 opDescriptor Bubble       = OpInfixN "@"            ~~$ 0
 opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 
