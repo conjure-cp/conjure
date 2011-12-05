@@ -16,7 +16,7 @@ module ParsecUtils (
     colon, comma, dot, parens, between,
 
     identifier, integer, reserved, reservedOp,
-    eof, whiteSpace, symbol
+    eof, whiteSpace, symbol, char
     ) where
 
 
