@@ -1,4 +1,4 @@
-module Test.Language.EssenceParsePrintRandom where
+module Test.Language.Unit.Random where
 
 
 import Control.Applicative
@@ -6,7 +6,7 @@ import Test.HUnit ( Test, test )
 import Test.QuickCheck ( Positive(..) )
 
 import Language.Essence ( Expr(..), Op(..) )
-import Test.Language.EssenceParsePrintCommon
+import Test.Language.Unit.Common
 import TestUtils ( quickTest )
 
 

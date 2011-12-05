@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Test.Language.EssenceParsePrintFromFile where
+module Test.Language.Unit.FromFile where
 
 import Control.Monad ( join )
 import Data.List.Split ( splitOn )
@@ -11,7 +11,7 @@ import Text.Parsec.Char ( noneOf, string, spaces )
 import Language.Essence
 import Language.EssenceParsers
 import ParsecUtils
-import Test.Language.EssenceParsePrintCommon
+import Test.Language.Unit.Common
 import Utils ( strip )
 
 

@@ -1,67 +1,69 @@
-module Test.Language.SpecParse where
+{-# LANGUAGE FlexibleContexts #-}
 
+module Test.Language.OnFile.Common where
 
 import System.Directory ( doesFileExist )
 import System.IO.Unsafe ( unsafeInterleaveIO )
 import Test.HUnit ( Test(..), Assertion, assertFailure, test )
 
-import Language.EssenceParsers ( pSpec )
-import Language.EssencePrinters ( prSpec )
-import Language.EssenceTypes ( typeCheckSpec )
-import ParsecUtils ( parseFromFile )
+import Language.Essence ( Expr, Binding, Log )
+import ParsecUtils ( Parser, parseFromFile )
 import Phases.ResolveTwoBars ( resolveTwoBars )
-import PrintUtils ( render )
+import PrintUtils ( Doc, render )
 import Utils ( ppShow )
+import Data.Generics.Uniplate.Direct ( Biplate )
 
 
-allTests :: [String] -> IO Test
--- allTests files = test <$> mapM testParseSpec files
-allTests files = return . test $ map (TestLabel "testParseSpec" . TestCase . testParseSpec) files
+mkAllTests :: String -> (String -> Assertion) -> [String] -> Test
+mkAllTests label tester files = test $ map (TestLabel label . TestCase . tester) files
 
 
--- given a filename and its contents as a pair of strings, attempts to parse
--- the input as an Essence Spec.
-testParseSpec :: String -> Assertion
-testParseSpec filename = do
-
+testOne
+    :: (Biplate a Expr, Show a)
+    => (Parser a)
+    -> (a -> Maybe Doc)
+    -> (a -> (Maybe String, [Log]))
+    -> (a -> [Binding])
+    -> String
+    -> Assertion
+testOne parser printer typechecker bindingsOf filename = do
     let failed msg = assertFailure $ filename ++ ": " ++ msg
 
-    sp' <- parseFromFile pSpec id filename id
+    inp' <- parseFromFile parser id filename id
 
-    sp <- case fst (resolveTwoBars sp') of
+    inp <- case fst (resolveTwoBars bindingsOf inp') of
         Left err -> do
             failed $ "ambigious two-bar operator: " ++ err
             return undefined
         Right i  -> return i
 
-    case fst (typeCheckSpec sp) of
+    case fst (typechecker inp) of
         Nothing  -> return ()
         Just err -> failed $ "type-error: " ++ err
 
-    let spRawOut = ppShow sp
+    let inpRawOut = ppShow inp
     let rawPrintFileName = filename ++ ".raw"
     rawPrintFileExists <- doesFileExist rawPrintFileName
     rawPrintFile <- unsafeInterleaveIO $ readFile rawPrintFileName
 
-    case (rawPrintFileExists, rawPrintFile == spRawOut) of
+    case (rawPrintFileExists, rawPrintFile == inpRawOut) of
         (True , True ) -> return ()
-        (False, _    ) -> do writeFile (rawPrintFileName++"?") spRawOut
+        (False, _    ) -> do writeFile (rawPrintFileName++"?") inpRawOut
                              failed $ rawPrintFileName ++ " doesn't exist.\n"
                                    ++ "Generating: '" ++ rawPrintFileName ++ "?'"
         (_    , False) -> failed "raw from file /= generated raw"
 
-
-    case prSpec sp of
-        Nothing    -> failed "Cannot render spec."
-        Just spOut -> do
-            let spOutRendered = render spOut
+    case printer inp of
+        Nothing    -> failed "Cannot render."
+        Just inpOut -> do
+            let inpOutRendered = render inpOut
             let expectedFileName = filename ++ ".expected"
             expectedFileExists <- doesFileExist expectedFileName
             expectedFile <- unsafeInterleaveIO $ readFile expectedFileName
 
-            case (expectedFileExists, expectedFile == spOutRendered) of
+            case (expectedFileExists, expectedFile == inpOutRendered) of
                 (True , True ) -> return ()
-                (False, _    ) -> do writeFile (expectedFileName++"?") spOutRendered
+                (False, _    ) -> do writeFile (expectedFileName++"?") inpOutRendered
                                      failed $ expectedFileName ++ " doesn't exist.\n"
                                                   ++ "Generating: '" ++ expectedFileName ++ "?'"
                 (_    , False) -> failed "expected rendering from file /= generated rendering"

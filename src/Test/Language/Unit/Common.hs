@@ -1,4 +1,4 @@
-module Test.Language.EssenceParsePrintCommon where
+module Test.Language.Unit.Common where
 
 
 import Control.Applicative
