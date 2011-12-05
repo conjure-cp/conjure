@@ -480,7 +480,7 @@ elementType _          (TypeLambda     {}) = Nothing
 data RuleRepr = RuleRepr
     { reprPattern    :: Expr
     , reprName       :: String
-    , reprRemplate   :: Expr
+    , reprTemplate   :: Expr
     , reprStructural :: [([DomainAttribute],Expr)]
     , reprWheres     :: [Where]
     , reprBindings   :: [Binding]
