@@ -13,19 +13,19 @@ import Control.Monad.RWS ( MonadReader, MonadWriter, MonadState, evalRWS )
 import Language.Essence
 import Language.EssenceTypes ( typeOf )
 
-
-resolveTwoBars :: Spec -> (Either String Spec, [Log])
-resolveTwoBars sp = evalRWS (runErrorT (core sp)) (topLevelBindings sp) def
+-- a can be Spec or RuleRepr or RuleTrans
+resolveTwoBars :: Biplate a Expr => (a -> [Binding]) -> a -> (Either String a, [Log])
+resolveTwoBars f sp = evalRWS (runErrorT (core sp)) (f sp) def
 
 
 -- for the type of core, see Language.EssenceTypes.typeOf
 core ::
-    ( Biplate Spec Expr
+    ( Biplate a Expr
     , MonadWriter [Log] m
     , MonadReader [Binding] m
     , MonadError String m
     , MonadState ([String],[(String,Type)]) m
-    ) => Spec -> m Spec
+    ) => a -> m a
 core = transformBiM' f -- needs to be top-down, since state is passed from top to down.
     where
         f (GenericNode Abs [x]) = do
