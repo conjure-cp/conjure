@@ -1,8 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns   #-}
 
-module Language.EssenceTypes ( typeCheckSpec, runTypeOf, typeOf ) where
-
+module Language.EssenceTypes ( typeCheckSpec, typeCheckRuleRepr
+                             , runTypeOf, typeOf
+                             ) where
 
 import Control.Applicative
 import Control.Arrow ( first, second )
@@ -16,8 +17,7 @@ import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Maybe ( fromJust )
 import Data.Default ( def )
 
-import Language.Essence ( Spec(..), Expr(..), Binding, BindingEnum(..)
-                        , Log, Type(..), typeUnify, validOpTypes, elementType )
+import Language.Essence
 import Language.EssenceKinds ( kindOf )
 import Language.EssencePrinters ( prExpr, prType )
 import PrintUtils ( render )
@@ -42,6 +42,9 @@ typeCheckSpec sp = first (either Just (const Nothing)) $ evalRWS (runErrorT core
                 unless (typeUnify TypeBoolean t)
                        (x ~$$ "Constraints must be of type boolean")            
 
+-- not implemented yet.
+typeCheckRuleRepr :: RuleRepr -> (Maybe String, [Log])
+typeCheckRuleRepr _rp = (Nothing, [])
 
 runTypeOf :: [Binding] -> Expr -> (Either String Type, [Log])
 runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs def
