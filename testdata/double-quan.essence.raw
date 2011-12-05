@@ -1,0 +1,79 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Letting
+                         , "forall"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "x"
+                                 , TypeBoolean
+                                 )
+                               , ( "y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 And
+                                 [ Identifier "x"
+                                 , Identifier "y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "x"
+                                 , TypeBoolean
+                                 )
+                               , ( "y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 Imply
+                                 [ Identifier "x"
+                                 , Identifier "y"
+                                 ] ) ) (
+                             ValueBoolean True )
+                         )
+                       , ( Find
+                         , "s"
+                         , DomainSet
+                             { size = Nothing
+                             , minSize = Nothing
+                             , maxSize = Nothing
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 1 ) ) (
+                                           Just ( ValueInteger 90 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       ]
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ ExprQuantifier
+                      { quanName = "forall"
+                      , quanVar = Identifier "i"
+                      , quanOver = DomainIntegerFromTo (
+                                     Just ( ValueInteger 1 ) ) (
+                                     Just ( ValueInteger 9 ) )
+                      , quanGuard = Nothing
+                      , quanBody = ExprQuantifier
+                                     { quanName = "forall"
+                                     , quanVar = Identifier "j"
+                                     , quanOver = DomainIntegerFromTo (
+                                                    Just ( ValueInteger 1 ) ) (
+                                                    Just ( ValueInteger 9 ) )
+                                     , quanGuard = Nothing
+                                     , quanBody = GenericNode
+                                                    Elem
+                                                    [ GenericNode
+                                                        Plus
+                                                        [ Identifier "i"
+                                                        , Identifier "j"
+                                                        ]
+                                                    , Identifier "s"
+                                                    ]
+                                     }
+                      }
+                  ]
+  }
