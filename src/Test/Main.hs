@@ -38,6 +38,7 @@ main = do
     let specs = filter (".essence" `isSuffixOf`) args
     let reprs = filter (".repr"    `isSuffixOf`) args
     case unit of
+        []   -> run specs reprs ""
         [fp] -> run specs reprs =<< readFile fp
         _    -> error $ "you need to give exactly one file path which contains the unit tests."
                      ++ "\ngiven arguments:"
