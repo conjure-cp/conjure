@@ -268,4 +268,4 @@ main = do
 
 
 figlet :: String
-figlet = unpack $(embedFile "src/conjure.figlet")
+figlet = unpack $(embedFile "datafiles/conjure.figlet")

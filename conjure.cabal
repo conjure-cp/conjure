@@ -1,6 +1,6 @@
 
 Name:           conjure
-Version:        0.2
+Version:        1.0
 Synopsis:       Extensible Automated Constraint Modelling
 Description:    .
 Homepage:       http://www.cs.st-andrews.ac.uk/~ozgur
@@ -9,32 +9,70 @@ Author:         Ozgur Akgun
 Maintainer:     ozgur.akgun@st-andrews.ac.uk
 Category:       Constraint Programming
 Build-type:     Simple
-Extra-source-files: reservedNames.txt, reservedOpNames.txt
+Extra-source-files: datafiles/reservedNames.txt, datafiles/reservedOpNames.txt, datafiles/conjure.figlet
 Cabal-version:  >= 1.12
+
+Library
+    default-language : Haskell2010
+    hs-source-dirs   : src
+    exposed-modules  : Utils
+                     , DeepSeqUtils
+                     , ParsecUtils
+                     , PrintUtils
+                     , TestUtils
+                     , ZippyUtils
+                     , MonadInterleave
+                     , Language.Essence
+                     , Language.EssenceEvaluator
+                     , Language.EssenceKinds
+                     , Language.EssenceParsers
+                     , Language.EssencePrinters
+                     , Language.EssenceTypes
+                     , Phases.ResolveTwoBars
+                     , Test.Language.OnFile.Common
+                     , Test.Language.OnFile.RuleRepr
+                     , Test.Language.OnFile.Spec
+                     , Test.Language.Unit.Common
+                     , Test.Language.Unit.FromFile
+                     , Test.Language.Unit.Random
+    build-depends    : base
+                     , binary       == 0.5.*
+                     , bytestring   == 0.9.*
+                     , data-default == 0.3.*
+                     , deepseq      == 1.2.*
+                     , directory    == 1.1.*
+                     , file-embed   == 0.0.4.*
+                     , HUnit        == 1.2.*
+                     , mtl          == 2.0.*
+                     , parsec       == 3.1.*
+                     , pretty       == 1.1.*
+                     , pretty-show  == 1.1.*
+                     , QuickCheck   == 2.4.*
+                     , random       == 1.0.*
+                     , split        == 0.1.*
+                     , uniplate     == 1.6.*
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -O2
+        -rtsopts
+        -fno-spec-constr-count
+        -funfolding-use-threshold=256
+        -with-rtsopts=-H
+
 
 Executable conjure-tests
     default-language : Haskell2010
-    hs-source-dirs   : src
-    main-is          : Test/Main.hs
-    build-depends    : base
-                     , binary           == 0.5.*
-                     , bytestring       == 0.9.*
-                     , data-default     == 0.3.*
-                     , deepseq          == 1.2.*
-                     , directory        == 1.1.*
-                     , file-embed       == 0.0.4.*
-                     , HUnit            == 1.2.*
-                     , mtl              == 2.0.*
-                     , parsec           == 3.1.*
-                     , pretty           == 1.1.*
-                     , pretty-show      == 1.1.*
-                     , QuickCheck       == 2.4.*
-                     , random           == 1.0.*
-                     , split            == 0.1.*
-                     , syb              == 0.3.*
-                     , template-haskell == 2.6.*
-                     , uniplate         == 1.6.*
-
+    hs-source-dirs   : src-exec
+    main-is          : TestMain.hs
+    build-depends    : base, conjure
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -54,27 +92,14 @@ Executable conjure-tests
 
 Executable iconjure
     default-language : Haskell2010
-    hs-source-dirs   : src
+    hs-source-dirs   : src-exec
     main-is          : Interactive.hs
-    build-depends    : base
-                     , binary           == 0.5.*
-                     , bytestring       == 0.9.*
-                     , data-default     == 0.3.*
-                     , deepseq          == 1.2.*
-                     , file-embed       == 0.0.4.*
-                     , HUnit            == 1.2.*
-                     , mtl              == 2.0.*
-                     , parsec           == 3.1.*
-                     , pretty           == 1.1.*
-                     , QuickCheck       == 2.4.*
-                     , readline         == 1.0.*
-                     , pretty-show      == 1.1.*
-                     , split            == 0.1.*
-                     , syb              == 0.3.*
-                     , template-haskell == 2.6.*
-                     , transformers     == 0.2.2.*
-                     , uniplate         == 1.6.*
-
+    build-depends    : base, conjure
+                     , bytestring   == 0.9.*
+                     , file-embed   == 0.0.4.*
+                     , mtl          == 2.0.*
+                     , readline     == 1.0.*
+                     , transformers == 0.2.2.*
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
