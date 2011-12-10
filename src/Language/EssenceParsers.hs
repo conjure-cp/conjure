@@ -351,7 +351,7 @@ pIndexed = do
     return (`helper` is)
     where
         helper :: Expr -> [Expr] -> Expr
-        helper m = foldl (\ m i -> GenericNode Index [m, i]) m
+        helper m = foldl (\ m' i -> GenericNode Index [m', i]) m
         -- helper m []     = m
         -- helper m (i:is) = helper (GenericNode Index [m,i]) is
 
