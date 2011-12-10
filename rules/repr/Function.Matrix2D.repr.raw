@@ -1,0 +1,1124 @@
+RuleRepr
+  { reprName = "Matrix2D"
+  , reprTemplate = DomainMatrix
+                     { index = Identifier "fr"
+                     , element = DomainMatrix
+                                   { index = Identifier "to"
+                                   , element = DomainBoolean
+                                   }
+                     }
+  , reprPrologueStructural = Just
+                               ExprQuantifier
+                                 { quanName = "sum"
+                                 , quanVar = Identifier "i"
+                                 , quanOver = Identifier "fr"
+                                 , quanGuard = Nothing
+                                 , quanBody = GenericNode
+                                                Leq
+                                                [ ExprQuantifier
+                                                    { quanName = "sum"
+                                                    , quanVar = Identifier "j"
+                                                    , quanOver = Identifier "to"
+                                                    , quanGuard = Nothing
+                                                    , quanBody = GenericNode
+                                                                   Index
+                                                                   [ GenericNode
+                                                                       Index
+                                                                       [ Identifier "refn"
+                                                                       , Identifier "i"
+                                                                       ]
+                                                                   , Identifier "j"
+                                                                   ]
+                                                    }
+                                                , ValueInteger 1
+                                                ]
+                                 }
+  , reprPrologueWheres = [ GenericNode
+                             HasType
+                             [ Identifier "fr"
+                             , DomainIntegerList []
+                             ]
+                         , GenericNode
+                             HasType
+                             [ Identifier "to"
+                             , DomainIntegerList []
+                             ]
+                         ]
+  , reprPrologueBindings = []
+  , reprCases = [ RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = False
+                                          , isInjective = False
+                                          , isBijective = False
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = False
+                                          , isBijective = False
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just
+                                             ExprQuantifier
+                                               { quanName = "sum"
+                                               , quanVar = Identifier "i"
+                                               , quanOver = Identifier "fr"
+                                               , quanGuard = Nothing
+                                               , quanBody = GenericNode
+                                                              Eq
+                                                              [ ExprQuantifier
+                                                                  { quanName = "sum"
+                                                                  , quanVar = Identifier "j"
+                                                                  , quanOver = Identifier "to"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                              , ValueInteger 1
+                                                              ]
+                                               }
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = True
+                                          , isBijective = False
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "fr"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Eq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "j"
+                                                                      , quanOver = Identifier "to"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Leq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "i"
+                                                                      , quanOver = Identifier "fr"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = False
+                                          , isBijective = False
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "fr"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Eq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "j"
+                                                                      , quanOver = Identifier "to"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = False
+                                          , isBijective = True
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ GenericNode
+                                                   And
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "fr"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Eq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "j"
+                                                                          , quanOver = Identifier "to"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   , ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "j"
+                                                       , quanOver = Identifier "to"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Leq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "i"
+                                                                          , quanOver = Identifier "fr"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   ]
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = True
+                                          , isBijective = False
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ GenericNode
+                                                   And
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "fr"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Eq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "j"
+                                                                          , quanOver = Identifier "to"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   , ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "j"
+                                                       , quanOver = Identifier "to"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Leq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "i"
+                                                                          , quanOver = Identifier "fr"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   ]
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = True
+                                          , isBijective = True
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ GenericNode
+                                                   And
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "fr"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Eq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "j"
+                                                                          , quanOver = Identifier "to"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   , ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "j"
+                                                       , quanOver = Identifier "to"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Leq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "i"
+                                                                          , quanOver = Identifier "fr"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   ]
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = False
+                                          , isBijective = True
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ GenericNode
+                                                   And
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "fr"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Eq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "j"
+                                                                          , quanOver = Identifier "to"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   , ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "j"
+                                                       , quanOver = Identifier "to"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Leq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "i"
+                                                                          , quanOver = Identifier "fr"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   ]
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = True
+                                          , isPartial = False
+                                          , isInjective = True
+                                          , isBijective = True
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ GenericNode
+                                                   And
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "fr"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Eq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "j"
+                                                                          , quanOver = Identifier "to"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   , ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "j"
+                                                       , quanOver = Identifier "to"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Leq
+                                                                      [ ExprQuantifier
+                                                                          { quanName = "sum"
+                                                                          , quanVar = Identifier "i"
+                                                                          , quanOver = Identifier "fr"
+                                                                          , quanGuard = Nothing
+                                                                          , quanBody = GenericNode
+                                                                                         Index
+                                                                                         [ GenericNode
+                                                                                             Index
+                                                                                             [ Identifier "refn"
+                                                                                             , Identifier "i"
+                                                                                             ]
+                                                                                         , Identifier "j"
+                                                                                         ]
+                                                                          }
+                                                                      , ValueInteger 1
+                                                                      ]
+                                                       }
+                                                   ]
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = False
+                                          , isBijective = False
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = True
+                                          , isBijective = False
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just
+                                             ExprQuantifier
+                                               { quanName = "sum"
+                                               , quanVar = Identifier "j"
+                                               , quanOver = Identifier "to"
+                                               , quanGuard = Nothing
+                                               , quanBody = GenericNode
+                                                              Leq
+                                                              [ ExprQuantifier
+                                                                  { quanName = "sum"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                              , ValueInteger 1
+                                                              ]
+                                               }
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = False
+                                          , isBijective = False
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just
+                                             ExprQuantifier
+                                               { quanName = "forall"
+                                               , quanVar = Identifier "j"
+                                               , quanOver = Identifier "to"
+                                               , quanGuard = Nothing
+                                               , quanBody = ExprQuantifier
+                                                              { quanName = "exists"
+                                                              , quanVar = Identifier "i"
+                                                              , quanOver = Identifier "fr"
+                                                              , quanGuard = Nothing
+                                                              , quanBody = GenericNode
+                                                                             Index
+                                                                             [ GenericNode
+                                                                                 Index
+                                                                                 [ Identifier "refn"
+                                                                                 , Identifier "i"
+                                                                                 ]
+                                                                             , Identifier "j"
+                                                                             ]
+                                                              }
+                                               }
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = False
+                                          , isBijective = True
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Leq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "i"
+                                                                      , quanOver = Identifier "fr"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = True
+                                          , isBijective = False
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Leq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "i"
+                                                                      , quanOver = Identifier "fr"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = True
+                                          , isBijective = True
+                                          , isSurjective = False
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Leq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "i"
+                                                                      , quanOver = Identifier "fr"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = False
+                                          , isBijective = True
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Leq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "i"
+                                                                      , quanOver = Identifier "fr"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainFunction
+                                          { functionFrom = Identifier "fr"
+                                          , functionTo = Identifier "to"
+                                          , isTotal = False
+                                          , isPartial = True
+                                          , isInjective = True
+                                          , isBijective = True
+                                          , isSurjective = True
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Leq
+                                                                  [ ExprQuantifier
+                                                                      { quanName = "sum"
+                                                                      , quanVar = Identifier "i"
+                                                                      , quanOver = Identifier "fr"
+                                                                      , quanGuard = Nothing
+                                                                      , quanBody = GenericNode
+                                                                                     Index
+                                                                                     [ GenericNode
+                                                                                         Index
+                                                                                         [ Identifier "refn"
+                                                                                         , Identifier "i"
+                                                                                         ]
+                                                                                     , Identifier "j"
+                                                                                     ]
+                                                                      }
+                                                                  , ValueInteger 1
+                                                                  ]
+                                                   }
+                                               , ExprQuantifier
+                                                   { quanName = "forall"
+                                                   , quanVar = Identifier "j"
+                                                   , quanOver = Identifier "to"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = ExprQuantifier
+                                                                  { quanName = "exists"
+                                                                  , quanVar = Identifier "i"
+                                                                  , quanOver = Identifier "fr"
+                                                                  , quanGuard = Nothing
+                                                                  , quanBody = GenericNode
+                                                                                 Index
+                                                                                 [ GenericNode
+                                                                                     Index
+                                                                                     [ Identifier "refn"
+                                                                                     , Identifier "i"
+                                                                                     ]
+                                                                                 , Identifier "j"
+                                                                                 ]
+                                                                  }
+                                                   }
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                ]
+  }

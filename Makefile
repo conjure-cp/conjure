@@ -10,7 +10,7 @@ install: derivations
 	@cabal install
 
 runtests:
-	@dist/build/conjure-tests/conjure-tests testdata/*
+	@dist/build/conjure-tests/conjure-tests testdata/* rules/repr/*
 
 clean:
 	@rm -rf src/Language/EssenceDerivations.hs dist

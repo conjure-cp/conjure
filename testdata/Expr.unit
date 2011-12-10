@@ -1398,3 +1398,51 @@ function {1 -> set {2},
 
 *** Eval (z+y)+x ~~ x+y+z
 *** Eval (z=y)=x ~~ (y=z)=x
+
+*** ShouldParseTo
+    f(i)
+    ~~ GenericNode Image [Identifier "f", Identifier "i"]
+
+*** ShouldParseTo
+    f(i,j)
+    ~~ GenericNode Image [Identifier "f", ValueTuple [Identifier "i", Identifier "j"]]
+
+*** ShouldParseTo
+    f'(i)
+    ~~ GenericNode PreImage [Identifier "f", Identifier "i"]
+
+*** ShouldParseTo
+    a {b -> c}
+    ~~ GenericNode Replace [Identifier "a",Identifier "b",Identifier "c"]
+
+*** ParsePrintIso a {b -> c}
+
+*** ShouldParseTo
+    m[i]
+    ~~ GenericNode Index [Identifier "m",Identifier "i"]
+
+*** ShouldParseTo
+    m[i,j]
+    ~~ GenericNode Index [ GenericNode Index [ Identifier "m"
+                                             , Identifier "i"
+                                             ]
+                         , Identifier "j"
+                         ]
+
+*** ShouldParseTo
+    m[i,j,k]
+    ~~ GenericNode Index [ GenericNode Index [ GenericNode Index [ Identifier "m"
+                                                                 , Identifier "i"
+                                                                 ]
+                                             , Identifier "j"
+                                             ]
+                         , Identifier "k"
+                         ]
+
+*** ParsePrintIso m[i]
+*** ParsePrintIso m[i, j]
+*** ParsePrintIso m[i, j, k]
+
+*** Eval
+    m[1+2,3+i,i+3]
+    ~~ m[3, 3+i, 3+i]

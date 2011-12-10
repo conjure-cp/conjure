@@ -1,0 +1,65 @@
+RuleRepr
+  { reprName = "Explicit"
+  , reprTemplate = DomainMatrix
+                     { index = DomainIntegerFromTo (
+                                 Just ( ValueInteger 1 ) ) (
+                                 Just ( Identifier "n" ) )
+                     , element = Identifier "t"
+                     }
+  , reprPrologueStructural = Nothing
+  , reprPrologueWheres = []
+  , reprPrologueBindings = []
+  , reprCases = [ RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Nothing
+                                          , maxSize = Nothing
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Just ( Identifier "_" )
+                                          , maxSize = Nothing
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Nothing
+                                          , maxSize = Just ( Identifier "_" )
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Just ( Identifier "_" )
+                                          , maxSize = Just ( Identifier "_" )
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                ]
+  }

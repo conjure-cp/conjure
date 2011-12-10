@@ -1,0 +1,365 @@
+RuleRepr
+  { reprName = "Gent"
+  , reprTemplate = DomainMatrix
+                     { index = Identifier "t"
+                     , element = DomainIntegerFromTo (
+                                   Just ( ValueInteger 0 ) ) (
+                                   Just ( Identifier "mx" ) )
+                     }
+  , reprPrologueStructural = Just
+                               ExprQuantifier
+                                 { quanName = "forall"
+                                 , quanVar = Identifier "i"
+                                 , quanOver = Identifier "t"
+                                 , quanGuard = Nothing
+                                 , quanBody = GenericNode
+                                                Or
+                                                [ GenericNode
+                                                    Eq
+                                                    [ GenericNode
+                                                        Index
+                                                        [ Identifier "refn"
+                                                        , Identifier "i"
+                                                        ]
+                                                    , ValueInteger 0
+                                                    ]
+                                                , GenericNode
+                                                    Eq
+                                                    [ GenericNode
+                                                        Index
+                                                        [ Identifier "refn"
+                                                        , Identifier "i"
+                                                        ]
+                                                    , GenericNode
+                                                        Plus
+                                                        [ ValueInteger 1
+                                                        , ExprQuantifier
+                                                            { quanName = "sum"
+                                                            , quanVar = Identifier "j"
+                                                            , quanOver = GenericNode
+                                                                           Intersect
+                                                                           [ DomainIntegerFromTo
+                                                                               Nothing (
+                                                                               Just (
+                                                                                 GenericNode
+                                                                                   Minus
+                                                                                   [ Identifier "i"
+                                                                                   , ValueInteger 1
+                                                                                   ] ) )
+                                                                           , Identifier "t"
+                                                                           ]
+                                                            , quanGuard = Nothing
+                                                            , quanBody = GenericNode
+                                                                           Gt
+                                                                           [ GenericNode
+                                                                               Index
+                                                                               [ Identifier "refn"
+                                                                               , Identifier "j"
+                                                                               ]
+                                                                           , ValueInteger 0
+                                                                           ]
+                                                            }
+                                                        ]
+                                                    ]
+                                                ]
+                                 }
+  , reprPrologueWheres = [ GenericNode
+                             HasType
+                             [ Identifier "t"
+                             , DomainIntegerList []
+                             ]
+                         ]
+  , reprPrologueBindings = []
+  , reprCases = [ RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Nothing
+                                          , minSize = Nothing
+                                          , maxSize = Nothing
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = [ ( Letting
+                                           , "mx"
+                                           , GenericNode
+                                               Image
+                                               [ Identifier "domSize"
+                                               , Identifier "t"
+                                               ]
+                                           )
+                                         ]
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Nothing
+                                          , maxSize = Nothing
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               Eq
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "r"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Gt
+                                                                  [ GenericNode
+                                                                      Index
+                                                                      [ Identifier "refn"
+                                                                      , Identifier "i"
+                                                                      ]
+                                                                  , ValueInteger 0
+                                                                  ]
+                                                   }
+                                               , Identifier "n"
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = [ ( Letting
+                                           , "mx"
+                                           , GenericNode
+                                               Image
+                                               [ Identifier "domSize"
+                                               , Identifier "t"
+                                               ]
+                                           )
+                                         ]
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Nothing
+                                          , minSize = Just ( Identifier "mn" )
+                                          , maxSize = Nothing
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               Geq
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "r"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Gt
+                                                                  [ GenericNode
+                                                                      Index
+                                                                      [ Identifier "refn"
+                                                                      , Identifier "i"
+                                                                      ]
+                                                                  , ValueInteger 0
+                                                                  ]
+                                                   }
+                                               , Identifier "mn"
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = [ ( Letting
+                                           , "mx"
+                                           , GenericNode
+                                               Image
+                                               [ Identifier "domSize"
+                                               , Identifier "t"
+                                               ]
+                                           )
+                                         ]
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Nothing
+                                          , minSize = Nothing
+                                          , maxSize = Just ( Identifier "mx" )
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               Leq
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "r"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Gt
+                                                                  [ GenericNode
+                                                                      Index
+                                                                      [ Identifier "refn"
+                                                                      , Identifier "i"
+                                                                      ]
+                                                                  , ValueInteger 0
+                                                                  ]
+                                                   }
+                                               , Identifier "mx"
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Just ( Identifier "mn" )
+                                          , maxSize = Nothing
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               Eq
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "r"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Gt
+                                                                  [ GenericNode
+                                                                      Index
+                                                                      [ Identifier "refn"
+                                                                      , Identifier "i"
+                                                                      ]
+                                                                  , ValueInteger 0
+                                                                  ]
+                                                   }
+                                               , Identifier "n"
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = [ ( Letting
+                                           , "mx"
+                                           , GenericNode
+                                               Image
+                                               [ Identifier "domSize"
+                                               , Identifier "t"
+                                               ]
+                                           )
+                                         ]
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Nothing
+                                          , maxSize = Just ( Identifier "mx" )
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               Eq
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "r"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Gt
+                                                                  [ GenericNode
+                                                                      Index
+                                                                      [ Identifier "refn"
+                                                                      , Identifier "i"
+                                                                      ]
+                                                                  , ValueInteger 0
+                                                                  ]
+                                                   }
+                                               , Identifier "n"
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Nothing
+                                          , minSize = Just ( Identifier "mn" )
+                                          , maxSize = Just ( Identifier "mx" )
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               And
+                                               [ GenericNode
+                                                   Geq
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "r"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Gt
+                                                                      [ GenericNode
+                                                                          Index
+                                                                          [ Identifier "refn"
+                                                                          , Identifier "i"
+                                                                          ]
+                                                                      , ValueInteger 0
+                                                                      ]
+                                                       }
+                                                   , Identifier "mn"
+                                                   ]
+                                               , GenericNode
+                                                   Leq
+                                                   [ ExprQuantifier
+                                                       { quanName = "sum"
+                                                       , quanVar = Identifier "i"
+                                                       , quanOver = Identifier "r"
+                                                       , quanGuard = Nothing
+                                                       , quanBody = GenericNode
+                                                                      Gt
+                                                                      [ GenericNode
+                                                                          Index
+                                                                          [ Identifier "refn"
+                                                                          , Identifier "i"
+                                                                          ]
+                                                                      , ValueInteger 0
+                                                                      ]
+                                                       }
+                                                   , Identifier "mx"
+                                                   ]
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                , RuleReprCase
+                    { reprCasePattern = DomainSet
+                                          { size = Just ( Identifier "n" )
+                                          , minSize = Just ( Identifier "mn" )
+                                          , maxSize = Just ( Identifier "mx" )
+                                          , attrDontCare = False
+                                          , element = Identifier "t"
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Just (
+                                             GenericNode
+                                               Eq
+                                               [ ExprQuantifier
+                                                   { quanName = "sum"
+                                                   , quanVar = Identifier "i"
+                                                   , quanOver = Identifier "r"
+                                                   , quanGuard = Nothing
+                                                   , quanBody = GenericNode
+                                                                  Gt
+                                                                  [ GenericNode
+                                                                      Index
+                                                                      [ Identifier "refn"
+                                                                      , Identifier "i"
+                                                                      ]
+                                                                  , ValueInteger 0
+                                                                  ]
+                                                   }
+                                               , Identifier "n"
+                                               ] )
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                ]
+  }
