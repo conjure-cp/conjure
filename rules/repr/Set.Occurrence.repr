@@ -1,0 +1,28 @@
+
+~~> Occurrence
+~~> matrix indexed by [t] of bool
+    where t :: int
+
+*** set of t
+
+*** set (size n) of t
+    ~~> (sum i : t . refn[i]) = n
+
+*** set (minSize mn) of t
+    ~~> (sum i : t . refn[i]) >= mn
+
+*** set (maxSize mx) of t
+    ~~> (sum i : t . refn[i]) <= mx
+
+*** set (size n, minSize mn) of t
+    ~~> (sum i : t . refn[i])  = n
+
+*** set (size n, maxSize mx) of t
+    ~~> (sum i : t . refn[i])  = n
+
+*** set (minSize mn, maxSize mx) of t
+    ~~> (sum i : t . refn[i]) >= mn
+    /\  (sum i : t . refn[i]) <= mx
+
+*** set (size n, minSize mn, maxSize mx) of t
+    ~~> (sum i : t . refn[i])  = n

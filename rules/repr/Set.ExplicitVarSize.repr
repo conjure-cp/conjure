@@ -1,0 +1,29 @@
+
+~~> ExplicitVarSize
+~~> matrix indexed by [int(1..mx)] of tuple of (bool,t)
+
+*** set of t
+    letting mx be domSize(t)
+
+*** set (size n) of t
+    ~~> (sum i : int(1..mx) . refn[i][0]) = n
+    letting mx be domSize(t)
+
+*** set (minSize mn) of t
+    ~~> (sum i : int(1..mx) . refn[i][0]) >= mn
+    letting mx be domSize(t)
+
+*** set (maxSize mx) of t
+
+*** set (size n, minSize b) of t
+    ~~> (sum i : int(1..mx) . refn[i][0]) = n
+    letting mx be domSize(t)
+
+*** set (size n, maxSize mx) of t
+    ~~> (sum i : int(1..mx) . refn[i][0]) = n
+
+*** set (minSize mn, maxSize mx) of t
+    ~~> (sum i : int(1..mx) . refn[i][0]) >= mn
+
+*** set (size n, minSize mn, maxSize mx) of t
+    ~~> (sum i : int(1..mx) . refn[i][0]) = n

@@ -1,0 +1,32 @@
+
+~~> Matrix1D
+~~> matrix indexed by [fr] of to
+    where fr :: int
+
+*** function (total) fr -> to
+
+*** function (total, injective) fr -> to
+    ~~> alldifferent(refn)
+
+*** function (total, surjective) fr -> to
+    ~~> forall i : to . exists j : fr . refn[j] = i
+
+*** function (total, bijective) fr -> to
+    ~~> alldifferent(refn)
+    /\  forall i : to . exists j : fr . refn[j] = i
+
+*** function (total, injective, surjective) fr -> to
+    ~~> alldifferent(refn)
+    /\  forall i : to . exists j : fr . refn[j] = i
+
+*** function (total, injective, bijective) fr -> to
+    ~~> alldifferent(refn)
+    /\  forall i : to . exists j : fr . refn[j] = i
+
+*** function (total, surjective, bijective) fr -> to
+    ~~> alldifferent(refn)
+    /\  forall i : to . exists j : fr . refn[j] = i
+
+*** function (total, injective, surjective, bijective) fr -> to
+    ~~> alldifferent(refn)
+    /\  forall i : to . exists j : fr . refn[j] = i
