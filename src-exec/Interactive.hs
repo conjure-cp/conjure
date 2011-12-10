@@ -8,13 +8,14 @@ import Control.Exception ( SomeException, try )
 import Control.Monad ( when )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put )
+import Control.Monad.Trans.Class ( lift )
 import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
 import Data.ByteString.Char8 ( unpack)
 import Data.Char ( toLower )
 import Data.FileEmbed ( embedFile )
 import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
-import System.Console.Readline ( addHistory, readline )
+import System.Console.Haskeline ( InputT, defaultSettings, getInputLine, runInputT )
 import System.Environment ( getArgs )
 
 import Language.Essence ( Spec(..), Log )
@@ -239,13 +240,14 @@ stepFlag flag = liftIO $ putStrLn $ "no such flag: " ++ flag
 
 main :: IO ()
 main = do
+    let run k = evalStateT (runInputT defaultSettings k) initREPLState
     putStrLn figlet
     args <- getArgs
     case args of
-        []   -> evalStateT repl initREPLState
+        []   -> run repl
         [fp] -> do
             putStrLn ("Loading from: " ++ fp)
-            evalStateT (step (Load fp) >> repl) initREPLState
+            run $ lift (step (Load fp)) >> repl
         _    -> do
             putStrLn $ unlines [ "This program accepts 1 optional argument,"
                                , "which must be a file path pointing to an Essence specification."
@@ -253,18 +255,16 @@ main = do
                                , "You've given several arguments."
                                ]
     where
-        repl :: StateT REPLState IO ()
+        repl :: InputT (StateT REPLState IO) ()
         repl = do
-            maybeLine <- liftIO $ readline "# "
+            maybeLine <- getInputLine "# "
             case (maybeLine, parseCommand (fromJust maybeLine)) of
-                (Nothing  , _            ) -> return () -- EOF / control-d
-                (Just ""  , _            ) -> repl
-                (Just line, Left msg     ) -> do liftIO $ addHistory line
-                                                 liftIO $ putStrLn msg
-                                                 repl
-                (Just line, Right command) -> do liftIO $ addHistory line
-                                                 c <- step command
-                                                 when c repl
+                (Nothing, _            ) -> return () -- EOF / control-d
+                (Just "", _            ) -> repl
+                (Just _ , Left msg     ) -> do liftIO $ putStrLn msg
+                                               repl
+                (Just _ , Right command) -> do c <- lift $ step command
+                                               when c repl
 
 
 figlet :: String
