@@ -128,9 +128,9 @@ cmdTypeOf :: [Binding] -> String -> String -> String -> Test
 cmdTypeOf bindings i j k = test
     [ TestCase $ assertBool ("TypeOf.parse: " ++ i) $ isJust iParsed
     , TestCase $ assertBool ("TypeOf.parse: " ++ j) $ isJust jParsed
-    , TestCase $ assertBool ("TypeOf.typecheck-success: ") $ case iTypeOf of Just (Right _,_) -> True; _ -> False
+    , TestCase $ assertBool "TypeOf.typecheck-success: " $ case iTypeOf of Just (Right _,_) -> True; _ -> False
     , TestCase $ assertBool ("TypeOf.types-eq: " ++ i ++ " " ++ j) $ case iTypeOf of Just (Right t,_) -> Just t == jParsed; _ -> False
-    , TestCase $ assertBool ("TypeOf.kindcheck-success: ") $ case iKindOf of Just (Right _,_) -> True; _ -> False
+    , TestCase $ assertBool "TypeOf.kindcheck-success: " $ case iKindOf of Just (Right _,_) -> True; _ -> False
     , TestCase $ assertBool ("TypeOf.kinds-eq: " ++ i ++ " " ++ k) $ case iKindOf of Just (Right t,_) -> Just t == kParsed; _ -> False
     ]
     where

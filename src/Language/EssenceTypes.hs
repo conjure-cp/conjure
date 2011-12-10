@@ -58,7 +58,7 @@ a ~~$ b = do
     return b
 
 infixr 0 ~$$
-(~$$) :: MonadError String m => Expr -> [Char] -> m a
+(~$$) :: MonadError String m => Expr -> String -> m a
 x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ show x
                              Just d  -> throwError $ msg ++ ": " ++ render d
 
@@ -220,7 +220,7 @@ typeOf p@(ExprQuantifier {quanName, quanVar=Identifier quanVar, quanOver, quanGu
             tQuanVar  <- case elementType kQuanOver tQuanOver of
                 Nothing -> quanOver ~$$ "Cannot quantify over " ++ show tQuanOver
                 Just t  -> return t
-            modify $ second $ ((quanVar,tQuanVar):) -- add it to the list of known types
+            modify $ second ((quanVar,tQuanVar):) -- add it to the list of known types
 
             -- type of "body"
             tQuanBody <- typeOf quanBody

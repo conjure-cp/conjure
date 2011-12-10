@@ -57,7 +57,7 @@ parseLine (strip -> s) = case parseEither pLine s of
         pLine = do
             cmd      <- pStrings $ words "ShouldParseTo ShouldParse NoParse ParsePrintIso ParsePrint Eval TypeOf"
             spaces
-            bindings <- optionMaybe $ braces $ fmap fst $ pTopLevels
+            bindings <- optionMaybe . braces . fmap fst $ pTopLevels
             spaces
             args     <- pArg `sepBy1` reservedOp "~~"
             eof

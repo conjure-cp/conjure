@@ -20,7 +20,7 @@ mkAllTests label tester files = test $ map (TestLabel label . TestCase . tester)
 
 testOne
     :: (Biplate a Expr, Show a)
-    => (Parser a)
+    => Parser a
     -> (a -> Maybe Doc)
     -> (a -> (Maybe String, [Log]))
     -> (a -> [Binding])

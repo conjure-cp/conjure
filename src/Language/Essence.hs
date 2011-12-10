@@ -326,7 +326,7 @@ instance TypeUnify Type where
 
 instance TypeUnify t => TypeUnify [t] where
     typeUnify as bs = and $ zipWith typeUnify as bs
-    chooseType as bs = zipWith chooseType as bs
+    chooseType = zipWith chooseType
 
 instance (TypeUnify t1, TypeUnify t2) => TypeUnify (t1,t2) where
     typeUnify (a,b) (c,d) = typeUnify a c && typeUnify b d

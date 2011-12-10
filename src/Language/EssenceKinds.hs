@@ -28,7 +28,7 @@ a ~~$ b = do
     return b
 
 infixr 0 ~$$
-(~$$) :: MonadError String m => Expr -> [Char] -> m a
+(~$$) :: MonadError String m => Expr -> String -> m a
 x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ show x
                              Just d  -> throwError $ msg ++ ": " ++ render d
 

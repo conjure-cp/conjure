@@ -49,7 +49,7 @@ data Command = EvalTypeKind String
 -- given the input line, returns either an error message or Command to be
 -- excuted.
 parseCommand :: String -> Either String Command
-parseCommand s = do
+parseCommand s =
     case strip s of
         (':':ss) -> do
             firstWord <- case words ss of []    -> Right ""
@@ -248,7 +248,7 @@ main = do
         [fp] -> do
             putStrLn ("Loading from: " ++ fp)
             run $ lift (step (Load fp)) >> repl
-        _    -> do
+        _    ->
             putStrLn $ unlines [ "This program accepts 1 optional argument,"
                                , "which must be a file path pointing to an Essence specification."
                                , ""

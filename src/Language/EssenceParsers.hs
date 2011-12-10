@@ -136,9 +136,9 @@ pDomains = map (<?> "domain")
         pTuple :: Bool -> Parser Expr
         pTuple b = case b of
             False -> helper <$> (reserved "tuple" *> reserved "of" *> pure [])
-                            <*> (parens (countSepAtLeast 2 pDomain comma))
+                            <*> parens (countSepAtLeast 2 pDomain comma)
             True  -> helper <$> (reserved "tuple" *> parens (keyValuePairOrAttibuteList [] []) <* reserved "of")
-                            <*> (parens (countSepAtLeast 2 pDomain comma))
+                            <*> parens (countSepAtLeast 2 pDomain comma)
             where
                 helper :: [Either String (String,Expr)] -> [Expr] -> Expr
                 helper attrs xs = DomainTuple xs (lookupRepresentation attrs)
@@ -348,11 +348,12 @@ pPostfix = do
 pIndexed :: Parser (Expr -> Expr)
 pIndexed = do
     is <- brackets $ pIndexer `sepBy1` comma
-    return (\ x -> helper x is)
+    return (`helper` is)
     where
         helper :: Expr -> [Expr] -> Expr
-        helper m []     = m
-        helper m (i:is) = helper (GenericNode Index [m,i]) is
+        helper m = foldl (\ m i -> GenericNode Index [m, i]) m
+        -- helper m []     = m
+        -- helper m (i:is) = helper (GenericNode Index [m,i]) is
 
         pIndexer :: Parser Expr
         pIndexer = try pSlice <|> pExpr
