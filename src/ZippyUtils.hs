@@ -7,20 +7,23 @@ module ZippyUtils ( callBottomUpApply, returnValues, depth
 
 import Prelude hiding ( log )
 import Data.Generics.Uniplate.Direct ( Uniplate, Biplate )
-import Data.Generics.Uniplate.Zipper ( Zipper, right, up, down, hole, replaceHole, fromZipper, zipperBi, zipper )
+import Data.Generics.Uniplate.Zipper ( Zipper, right, up, down
+                                     , hole, replaceHole
+                                     , fromZipper, zipperBi, zipper
+                                     )
 import Data.Maybe ( fromJust, fromMaybe )
 
 import MonadInterleave
-import DeepSeqUtils ( deepid )
 
 
 -- turn a Uniplate type into a tree, and calculate the max-depth of the tree
-depth :: forall a . Uniplate a => a -> Int
+depth :: forall a n . (Uniplate a, Num n, Ord n) => a -> n
 depth = zipperDepth . zipper
     where
-        zipperDepth :: forall a . Uniplate a => Zipper a a -> Int
+        zipperDepth :: Zipper a a -> n
         zipperDepth z = case down z of Nothing -> 0
-                                       Just i  -> deepid $ 1 + maximum (map zipperDepth (siblings i))
+                                       Just i  -> let d = maximum (map zipperDepth (siblings i))
+                                                  in  d `seq` d + 1
             where
                 siblings :: Zipper a a -> [Zipper a a]
                 siblings j = j : case right j of Nothing -> []
