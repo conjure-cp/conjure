@@ -4,6 +4,7 @@
 
 module Language.EssencePrinters ( prSpec, prExpr
                                 , prType, prKind, prKindInteractive
+                                , prRuleRepr
                                 ) where
 
 
@@ -29,7 +30,7 @@ type Prec = Int
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
                                                    , prDomain, prDeclLambda, prDeclQuantifier
-                                                   , prExprQuantifier
+                                                   , prExprQuantifier, const prReplace
                                                    ]
 
 prIdentifier :: Prec -> Expr -> Maybe Doc
@@ -214,15 +215,28 @@ prGenericNode :: Prec -> Expr -> Maybe Doc
 -- prGenericNode _ (GenericNode op [x]) | op `elem` [Abs,Card] = do
 --     x' <- prExpr x
 --     return $ char '|' <> x' <> char '|'
+prGenericNode _ (GenericNode Index [m,i]) = do
+    a'  <- prExpr a
+    bs' <- mapM (\ t -> prMatrixSlice t <|> prExpr t ) (reverse (i:bs))
+    return $ a' <> brackets (sep (punctuate comma bs'))
+    where
+        (a,bs) = helper m
+        helper (GenericNode Index [x,y]) = let (z,js) = helper x in (z,y:js)
+        helper x = (x,[])
+prGenericNode _ (GenericNode Replace [x,fr,to]) = do
+    x'  <- prExpr x
+    fr' <- prExpr fr
+    to' <- prExpr to
+    return $ x' <+> braces (fr' <+> text "->" <+> to')
 prGenericNode prec (GenericNode op xs) = prOpExpr prec (opDescriptor op) xs
 prGenericNode _ _ = Nothing
 
 
 prOpExpr :: Int -> OpDescriptor -> [Expr] -> Maybe Doc
-prOpExpr _ OpSpecial _ = error "OpSpecial"
+prOpExpr _ OpSpecial _ = error "prOpExpr: OpSpecial"
 prOpExpr _ (OpLispy {face}) xs = do
     elements <- mapM prExpr xs
-    return $ text face <> parens (sep elements)
+    return $ text face <> parens (sep (punctuate comma elements))
 prOpExpr p (OpInfixL {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
     a' <- prExprPrec precedence a
     b' <- prExprPrec (precedence+1) b
@@ -238,7 +252,7 @@ prOpExpr p (OpInfixR {face,precedence}) [a,b] = parensIf (p > precedence) <$> do
 prOpExpr p (OpPrefix {face,precedence}) [a]   = parensIf (p > precedence) <$> do
     a' <- prExprPrec precedence a
     return $ text face <> a'
-prOpExpr _ _ _ = error "prOpExpr"
+prOpExpr _ _ _ = error "prOpExpr: unknown case"
 
 
 prExprQuantifier :: Prec -> Expr -> Maybe Doc
@@ -253,6 +267,21 @@ prExprQuantifier p (ExprQuantifier qName (Identifier qVar) qOver qGuard qBody) =
          <+> qGuard'
          <+> qBody'
 prExprQuantifier _ _ = Nothing
+
+prReplace :: Expr -> Maybe Doc
+prReplace (GenericNode Replace [x,i,j]) = do
+    x' <- prExpr x
+    i' <- prExpr i
+    j' <- prExpr j
+    return $ x' <+> braces (i' <+> text "->" <+> j')
+prReplace _ = Nothing
+
+prMatrixSlice :: Expr -> Maybe Doc
+prMatrixSlice (MatrixSlice Nothing   Nothing) = return $ text ".."
+prMatrixSlice (MatrixSlice (Just a)  Nothing) = (<> text "..") <$> prExpr a
+prMatrixSlice (MatrixSlice Nothing  (Just b)) = (text ".." <>) <$> prExpr b
+prMatrixSlice (MatrixSlice (Just a) (Just b)) = (\ i j -> i <> text ".." <> j) <$> prExpr a <*> prExpr b
+prMatrixSlice _ = Nothing
 
 
 --------------------------------------------------------------------------------
@@ -293,48 +322,47 @@ prDeclQuantifier _ _ = Nothing
 prSpec :: Spec -> Maybe Doc
 prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constraints} = do
     let langline = text "language" <+> text language <+> hcat (intersperse (text ".") (map int version))
-    bindings <- mapM prBinding   topLevelBindings
+    bindings <- mapM (prBinding topLevelBindings) topLevelBindings
     wheres   <- mapM prWhere     topLevelWheres
     obj      <- mapM prObjective (maybeToList objective)
     cons     <- mapM (fmap (nest 4) . prExpr) constraints
 
     return . vcat . concat $
-        [ [langline]
-        , if null topLevelBindings then [] else text "" : bindings
-        , if null topLevelWheres   then [] else text "" : wheres
-        , if isNothing objective   then [] else text "" : obj
-        , if null constraints      then [] else text "" : text "such" <+> text "that" : punctuate comma cons
-        , [text ""]
+        [ [ langline ]
+        , if null topLevelBindings then [] else emptyLine : bindings
+        , if null topLevelWheres   then [] else emptyLine : wheres
+        , if isNothing objective   then [] else emptyLine : obj
+        , if null constraints      then [] else emptyLine : text "such" <+> text "that" : punctuate comma cons
+        , [ emptyLine ]
         ]
 
-    where
-        prBinding :: Binding -> Maybe Doc
-        prBinding (Find,nm,x) = do
-            x' <- prExpr x
-            return $ text "find" <+> text nm <+> colon <+> x'
-        prBinding (Given,nm,x) = do
-            x' <- prExpr x
-            return $ text "given" <+> text nm <+> colon <+> x'
-        prBinding (Letting,nm,x) = do
-            x' <- prExpr x
-            return $ text "letting"
-                 <+> text nm
-                 <+> text "be"
-                 <+> textAfterBe topLevelBindings x
-                 <+> x'
+prBinding :: [Binding] -> Binding -> Maybe Doc
+prBinding _  (Find,nm,x) = do
+    x' <- prExpr x
+    return $ text "find" <+> text nm <+> colon <+> x'
+prBinding _  (Given,nm,x) = do
+    x' <- prExpr x
+    return $ text "given" <+> text nm <+> colon <+> x'
+prBinding bs (Letting,nm,x) = do
+    x' <- prExpr x
+    return $ text "letting"
+         <+> text nm
+         <+> text "be"
+         <+> textAfterBe bs x
+         <+> x'
 
-        prWhere :: Where -> Maybe Doc
-        prWhere w = do
-            w' <- prExpr w
-            return $ text "where" <+> w'
+prWhere :: Where -> Maybe Doc
+prWhere w = do
+    w' <- prExpr w
+    return $ text "where" <+> w'
 
-        prObjective :: Objective -> Maybe Doc
-        prObjective (Minimising,x) = do
-            x' <- prExpr x
-            return $ text "minimising" <+> x'
-        prObjective (Maximising,x) = do
-            x' <- prExpr x
-            return $ text "maximising" <+> x'
+prObjective :: Objective -> Maybe Doc
+prObjective (Minimising,x) = do
+    x' <- prExpr x
+    return $ text "minimising" <+> x'
+prObjective (Maximising,x) = do
+    x' <- prExpr x
+    return $ text "maximising" <+> x'
 
 
 --------------------------------------------------------------------------------
@@ -407,3 +435,56 @@ prKindInteractive KindExpr    = text "an expression"
 prKindInteractive KindLambda  = text "a lambda"
 prKindInteractive KindFind    = text "a decision variable"
 prKindInteractive KindGiven   = text "a parameter"
+
+
+--------------------------------------------------------------------------------
+-- RuleRepr --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+prRuleRepr :: RuleRepr -> Maybe Doc
+prRuleRepr repr = do
+    let name   =   leadsto <+>        text (reprName repr)
+    template   <- (leadsto <+>) <$> prExpr (reprTemplate repr)
+    structural <- case reprPrologueStructural repr of
+        Nothing -> return empty
+        Just t  -> do t' <- prExpr t
+                      return $ leadsto <+> t'
+    wheres      <- let ws = reprPrologueWheres   repr in mapM (fmap indent . prWhere) ws
+    bindings    <- let bs = reprPrologueBindings repr in mapM (fmap indent . prBinding bs) bs
+    cases       <- mapM prRuleReprCase (reprCases repr)
+    return . vcat . concat $
+        [ [ emptyLine  ]
+        , [ name       ]
+        , [ template   ]
+        , [ structural ]
+        ,   bindings
+        ,   wheres
+        , [ emptyLine  ]
+        , cases
+        ]
+
+prRuleReprCase :: RuleReprCase -> Maybe Doc
+prRuleReprCase reprcase = do
+    pattern <- (text "***" <+>) <$> prExpr (reprCasePattern reprcase)
+    structural <- case reprCaseStructural reprcase of
+        Nothing -> return empty
+        Just t  -> do t' <- prExpr t
+                      return . indent $ leadsto <+> t'
+    wheres      <- let ws = reprCaseWheres   reprcase in mapM (fmap indent . prWhere) ws
+    bindings    <- let bs = reprCaseBindings reprcase in mapM (fmap indent . prBinding bs) bs
+    return . vcat . concat $
+        [ [ pattern    ]
+        , [ structural ]
+        ,   bindings
+        ,   wheres
+        , [ emptyLine  ]
+        ]
+
+emptyLine :: Doc
+emptyLine = text ""
+
+indent :: Doc -> Doc
+indent = nest 4
+
+leadsto :: Doc
+leadsto = text "~~>"

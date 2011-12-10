@@ -52,6 +52,8 @@ kindOf p@Underscore       = p ~~$ KindUnknown
 
 kindOf p@(GenericNode {}) = p ~~$ KindExpr
 
+kindOf p@(MatrixSlice {}) = p ~$$ "this shouldn't happen."
+
 kindOf p@(ValueBoolean   {}) = p ~~$ KindValue
 kindOf p@(ValueInteger   {}) = p ~~$ KindValue
 kindOf p@(ValueMatrix    {}) = p ~~$ KindValue

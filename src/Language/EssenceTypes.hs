@@ -79,6 +79,8 @@ typeOf p@(GenericNode op xs) = do
         Just t  -> p ~~$ t
         Nothing -> p ~$$ "Type mismatch"
 
+typeOf p@(MatrixSlice {}) = p ~$$ "this shouldn't happen."
+
 typeOf p@(ValueBoolean _) = p ~~$ TypeBoolean
 typeOf p@(ValueInteger _) = p ~~$ TypeInteger
 typeOf p@(ValueMatrix []) = p ~~$ TypeMatrix TypeUnknown

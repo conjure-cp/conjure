@@ -16,7 +16,7 @@ module Language.Essence
     , Expr(..), Op(..), OpDescriptor(..), opDescriptor
     , Kind(..), Type(..), typeUnify
     , associativeOps, commutativeOps, validOpTypes, elementType
-    , RuleRepr(..), DomainAttribute(..)
+    , RuleRepr(..), RuleReprCase(..)
     ) where
 
 
@@ -159,6 +159,7 @@ data Expr
         }
 
     | Identifier String
+    | MatrixSlice (Maybe Expr) (Maybe Expr)
 
     | DeclLambda [(String,Type)] Expr
     | DeclQuantifier Expr Expr Expr
@@ -198,7 +199,7 @@ data Op
 
     | HasType | HasDomain
 
-    | Bubble
+    | Replace | Bubble
     
     | AllDiff
 
@@ -263,6 +264,7 @@ opDescriptor Project      = OpSpecial
 opDescriptor Index        = OpSpecial
 opDescriptor HasType      = OpInfixN "::"           ~~$ 1500
 opDescriptor HasDomain    = OpInfixN ":"            ~~$ 1500
+opDescriptor Replace      = OpSpecial
 opDescriptor Bubble       = OpInfixN "@"            ~~$ 0
 opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 
@@ -482,20 +484,21 @@ elementType _          (TypeLambda     {}) = Nothing
 --------------------------------------------------------------------------------
 
 data RuleRepr = RuleRepr
-    { reprPattern    :: Expr
-    , reprName       :: String
-    , reprTemplate   :: Expr
-    , reprStructural :: [([DomainAttribute],Expr)]
-    , reprWheres     :: [Where]
-    , reprBindings   :: [Binding]
+    { reprName               :: String
+    , reprTemplate           :: Expr
+    , reprPrologueStructural :: Maybe Expr
+    , reprPrologueWheres     :: [Where]
+    , reprPrologueBindings   :: [Binding]
+    , reprCases              :: [RuleReprCase]
     }
     deriving (Eq, Ord, Read, Show)
 
-data DomainAttribute
-    = OnlyName String
-    | NameValue String Expr
-    | NoAttr
-    | Default
+data RuleReprCase = RuleReprCase
+    { reprCasePattern    :: Expr
+    , reprCaseStructural :: Maybe Expr
+    , reprCaseWheres     :: [Where]
+    , reprCaseBindings   :: [Binding]
+    }
     deriving (Eq, Ord, Read, Show)
 
 
@@ -513,7 +516,7 @@ deriving instance Binary ObjectiveEnum
 deriving instance Binary Type
 deriving instance Binary Kind
 deriving instance Binary RuleRepr
-deriving instance Binary DomainAttribute
+deriving instance Binary RuleReprCase
 
 deriving instance UniplateDirect Spec Expr
 deriving instance UniplateDirect Expr Expr
@@ -525,8 +528,7 @@ deriving instance UniplateDirect (BindingEnum,String,Expr) Expr
 deriving instance UniplateDirect (ObjectiveEnum,Expr) Expr
 deriving instance UniplateDirect (Maybe Objective) Expr
 deriving instance UniplateDirect RuleRepr Expr
-deriving instance UniplateDirect ([DomainAttribute],Expr) Expr
-deriving instance UniplateDirect DomainAttribute Expr
+deriving instance UniplateDirect RuleReprCase Expr
 
 !-}
 

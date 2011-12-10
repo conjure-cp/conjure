@@ -2,6 +2,7 @@
 
 module Language.EssenceParsers ( pSpec, pExpr, pType, pKind
                                , pTopLevels, pObjective
+                               , pRuleRepr
                                ) where
 
 import Control.Applicative
@@ -22,6 +23,9 @@ pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
     <?> "identifier"
 
+pUnderscore :: Parser Expr
+pUnderscore = Underscore <$ symbol "_"
+    <?> "underscore"
 
 --------------------------------------------------------------------------------
 -- Parsers for inline values ---------------------------------------------------
@@ -298,7 +302,7 @@ pExpr = buildExpressionParser table core
         pOps = rights (mapMaybe f (allValues :: [Op]))
 
         table :: OperatorTable String () Identity Expr
-        table = 
+        table = [Postfix pPostfix] :
             ( reverse
             . map (map snd)
             . groupBy ((==) `on` fst)
@@ -336,17 +340,65 @@ pExprTwoBars = do
     x <- between (symbol "|") (symbol "|") pExpr
     return $ GenericNode Abs [x]
 
+pPostfix :: Parser (Expr -> Expr)
+pPostfix = do
+   fs <- many1 $ choiceTry [pIndexed, pFuncApp, pInvFuncApp, pReplace]
+   return $ \ i -> foldr1 (.) (reverse fs) i
+
+pIndexed :: Parser (Expr -> Expr)
+pIndexed = do
+    is <- brackets $ pIndexer `sepBy1` comma
+    return (\ x -> helper x is)
+    where
+        helper :: Expr -> [Expr] -> Expr
+        helper m []     = m
+        helper m (i:is) = helper (GenericNode Index [m,i]) is
+
+        pIndexer :: Parser Expr
+        pIndexer = try pSlice <|> pExpr
+
+        pSlice :: Parser Expr
+        pSlice = do
+            i <- optionMaybe pExpr
+            dot
+            dot
+            j <- optionMaybe pExpr
+            return $ MatrixSlice i j
+
+pFuncApp :: Parser (Expr -> Expr)
+pFuncApp = do
+    is <- parens (pExpr `sepBy1` comma)
+    let i = case is of [t] -> t
+                       _   -> ValueTuple is
+    return $ \ x -> GenericNode Image [x,i]
+
+pInvFuncApp :: Parser (Expr -> Expr)
+pInvFuncApp = do
+    reservedOp "'"
+    i <- parens pExpr
+    return $ \ x -> GenericNode PreImage [x,i]
+
+pReplace :: Parser (Expr -> Expr)
+pReplace = braces $ do
+    fr <- pExpr
+    reservedOp "->"
+    to <- pExpr
+    return $ \ x -> GenericNode Replace [x,fr,to]
+
+-- pExprTypeExpr :: Parser Expr
+-- pExprTypeExpr = TypeExpr <$> pType
+
 
 --------------------------------------------------------------------------------
 -- Type parser -----------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 pType :: Parser Type
-pType = choiceTry [ pTypeUnknown, pTypeBool, pTypeInteger, pTypeUnnamed, pTypeEnum
+pType = choiceTry [ pTypeUnknown, pTypeIdentifier
+                  , pTypeBool, pTypeInteger, pTypeUnnamed, pTypeEnum
                   , pTypeMatrix, pTypeTuple, pTypeSet, pTypeMSet
                   , pTypeFunction, pTypeRelation, pTypePartition
                   , pTypeLambda
-                  , pTypeIdentifier
                   ]
     where
         pTypeUnknown = TypeUnknown <$ reservedOp "?"
@@ -502,3 +554,30 @@ pConstraints :: Parser [Expr]
 pConstraints = choiceTry [ reserved "such" *> reserved "that" *> sepEndBy pExpr comma
                          , return []
                          ]
+
+
+--------------------------------------------------------------------------------
+-- parser for RuleRepr ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pRuleRepr :: Parser RuleRepr
+pRuleRepr = do
+    whiteSpace
+    name       <- leadsto *> identifier
+    template   <- leadsto *> pExpr
+    structural <- optionMaybe (leadsto *> pExpr)
+    (bs, ws)   <- pTopLevels
+    cases      <- many1 pRuleReprCase
+    eof
+    return $ RuleRepr name template structural ws bs cases
+
+pRuleReprCase :: Parser RuleReprCase
+pRuleReprCase = do
+    reservedOp "***"
+    pattern    <- pExpr
+    structural <- optionMaybe (leadsto *> pExpr)
+    (bs, ws)   <- pTopLevels
+    return $ RuleReprCase pattern structural ws bs
+
+leadsto :: Parser ()
+leadsto = reservedOp "~~>"
