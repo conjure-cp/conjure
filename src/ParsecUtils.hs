@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module ParsecUtils (
     Assoc(..), Operator(..), OperatorTable, Parser, (<?>),
 
@@ -22,9 +20,7 @@ module ParsecUtils (
 
 import Control.Applicative
 import Control.Monad.Identity
-import Data.FileEmbed ( embedFile )
 import Data.Maybe
-import Data.ByteString.Char8 ( unpack)
 
 import Text.Parsec ( ParsecT, alphaNum, char, letter, parse )
 import Text.Parsec.Combinator ( between, choice, eof, many1, optionMaybe, sepBy, sepBy1, sepEndBy, sepEndBy1 )
@@ -33,6 +29,8 @@ import Text.Parsec.Language ( emptyDef )
 import Text.Parsec.Prim ( (<?>), try )
 import Text.Parsec.Token ( GenTokenParser, LanguageDef, caseSensitive, commentLine, identLetter, identStart, makeTokenParser, natural, reservedNames, reservedOpNames )
 import qualified Text.Parsec.Token as T ( angles, braces, brackets, colon, comma, dot, identifier, parens, reserved, reservedOp, symbol, whiteSpace )
+
+import Constants ( reservedNamesTxt, reservedOpNamesTxt )
 
 
 type Parser a = ParsecT String () Identity a
@@ -126,12 +124,3 @@ unsafeParse :: Parser a -> String -> a
 unsafeParse p s = case parse p "" s of
     Left err -> error $ "parser error: " ++ show err
     Right a  -> a
-
-
--- reservedNames are loaded from `reservedNames.txt` at compile time
-reservedNamesTxt :: String
-reservedNamesTxt = unpack $(embedFile "datafiles/reservedNames.txt")
-
--- reservedOpNames are loaded from `reservedOpNames.txt` at compile time
-reservedOpNamesTxt :: String
-reservedOpNamesTxt = unpack $(embedFile "datafiles/reservedOpNames.txt")

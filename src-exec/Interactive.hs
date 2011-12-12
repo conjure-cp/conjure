@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -10,14 +9,13 @@ import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put )
 import Control.Monad.Trans.Class ( lift )
 import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
-import Data.ByteString.Char8 ( unpack)
 import Data.Char ( toLower )
-import Data.FileEmbed ( embedFile )
 import Data.List ( intercalate, isPrefixOf )
 import Data.Maybe ( fromJust )
 import System.Console.Haskeline ( InputT, defaultSettings, getInputLine, runInputT )
 import System.Environment ( getArgs )
 
+import Constants ( figlet )
 import Language.Essence ( Spec(..), Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
 import Language.EssenceKinds ( runKindOf )
@@ -265,7 +263,3 @@ main = do
                                                repl
                 (Just _ , Right command) -> do c <- lift $ step command
                                                when c repl
-
-
-figlet :: String
-figlet = unpack $(embedFile "datafiles/conjure.figlet")
