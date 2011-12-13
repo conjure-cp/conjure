@@ -13,7 +13,8 @@ module Language.Essence
     ( Log
     , Spec(..), Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
-    , Expr(..), Op(..), OpDescriptor(..), opDescriptor
+    , Expr(..), needsRepresentation
+    , Op(..), OpDescriptor(..), opDescriptor
     , Kind(..), Type(..), typeUnify
     , associativeOps, commutativeOps, validOpTypes, elementType
     , RuleRepr(..), RuleReprCase(..)
@@ -176,6 +177,18 @@ data Expr
 
 
 type Representation = String
+
+
+needsRepresentation :: Expr -> Bool
+-- needsRepresentation (DomainUnnamed   {}) = True
+-- needsRepresentation (DomainEnum      {}) = True
+-- needsRepresentation (DomainTuple     {}) = True
+needsRepresentation (DomainSet       {}) = True
+needsRepresentation (DomainMSet      {}) = True
+needsRepresentation (DomainFunction  {}) = True
+needsRepresentation (DomainRelation  {}) = True
+needsRepresentation (DomainPartition {}) = True
+needsRepresentation _ = False
 
 
 --------------------------------------------------------------------------------
