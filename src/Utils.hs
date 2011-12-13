@@ -3,11 +3,15 @@ module Utils
     , maybeRead
     , ppShow, ppPrint
     , strip
+    , runRWSE
     ) where
 
+import Control.Monad.Error -- ( MonadError, runErrorT )
+import Control.Monad.RWS -- ( MonadReader, MonadWriter, MonadState, evalRWS )
 import Data.Maybe ( listToMaybe )
 import Text.PrettyPrint ( lineLength, renderStyle, style )
 import Text.Show.Pretty ( ppDoc )
+
 
 strip :: String -> String
 strip = reverse . go . reverse . go
@@ -30,9 +34,5 @@ ppPrint :: Show a => a -> IO ()
 ppPrint = putStrLn . ppShow
 
 
--- arbitraryIdentifier :: Gen String
--- arbitraryIdentifier = do
---     let ch = elements $ ['a'..'z'] ++ ['A'..'Z']
---     s <- choose (2, 8 :: Int)
---     replicateM s ch
-
+runRWSE :: r -> s -> ErrorT e (RWS r w s) a -> (Either e a, w)
+runRWSE r s comp = evalRWS (runErrorT comp) r s

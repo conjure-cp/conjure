@@ -7,15 +7,17 @@ import Data.Generics.Uniplate.Direct
 import Control.Monad ( liftM )
 import Data.Traversable ( mapM )
 import Data.Default ( def )
-import Control.Monad.Error ( MonadError, runErrorT )
-import Control.Monad.RWS ( MonadReader, MonadWriter, MonadState, evalRWS )
+import Control.Monad.Error ( MonadError )
+import Control.Monad.RWS ( MonadReader, MonadWriter, MonadState )
 
+import Utils ( runRWSE )
 import Language.Essence
 import Language.EssenceTypes ( typeOf )
 
+
 -- a can be Spec or RuleRepr or RuleTrans
 resolveTwoBars :: Biplate a Expr => (a -> [Binding]) -> a -> (Either String a, [Log])
-resolveTwoBars f sp = evalRWS (runErrorT (core sp)) (f sp) def
+resolveTwoBars f sp = runRWSE (f sp) def (core sp)
 
 
 -- for the type of core, see Language.EssenceTypes.typeOf
