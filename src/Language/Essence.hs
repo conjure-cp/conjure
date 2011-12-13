@@ -53,7 +53,7 @@ data Spec
 
 type Binding = (BindingEnum,String,Expr)
 
-data BindingEnum = Find | Given | Letting
+data BindingEnum = Find | Given | Letting | InRule
     deriving (Eq, Ord, Read, Show)
 
 type Objective = (ObjectiveEnum,Expr)

@@ -144,7 +144,7 @@ evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
 
 evaluateExpr (Identifier nm) = do
     bs <- ask
-    case [ x | (Letting,nm',x) <- bs, nm == nm' ] of
+    case [ x | (ty,nm',x) <- bs, nm == nm', ty `elem` [Letting,InRule] ] of
         [x] -> rJust x
         _   -> rNothing
 
