@@ -12,6 +12,7 @@ import Data.List ( sort, intersect, union )
 import Data.Maybe ( fromJust )
 
 import Language.Essence
+import Language.EssenceTypes ( runTypeOf )
 import Language.EssencePrinters ( prExpr )
 import PrintUtils ( render )
 
@@ -147,6 +148,12 @@ evaluateExpr (Identifier nm) = do
     case [ x | (ty,nm',x) <- bs, nm == nm', ty `elem` [Letting,InRule] ] of
         [x] -> rJust x
         _   -> rNothing
+
+evaluateExpr (GenericNode HasType [i,j]) = do
+    bs <- ask
+    case (runTypeOf bs i, runTypeOf bs j) of
+        ((Right it, _), (Right jt, _)) -> rJust $ ValueBoolean $ typeUnify it jt
+        _ -> rNothing
 
 -- no eval
 
