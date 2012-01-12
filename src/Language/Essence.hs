@@ -467,6 +467,9 @@ validOpTypes Parts     [TypePartition a] = return (TypeSet (TypeSet a))
 validOpTypes Freq      [TypeMSet a, b] | a == b = return TypeInteger
 validOpTypes Hist      [TypeMSet a,TypeMatrix b] | a == b = return (TypeMatrix TypeInteger)
 
+validOpTypes HasType   _ = return TypeBoolean
+validOpTypes HasDomain _ = return TypeBoolean
+
 validOpTypes Bubble    [a, TypeBoolean] = return a
 
 validOpTypes AllDiff   [TypeMatrix {}] = return TypeBoolean
