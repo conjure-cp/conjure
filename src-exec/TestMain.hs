@@ -1,6 +1,5 @@
 module Main where
 
-
 import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
@@ -28,7 +27,7 @@ main = do
             putStrLn " -- Running OnFileSpec tests."
             runTest $ OnFileSpec.allTests specs
 
-            putStrLn " -- Running ReprParse tests."
+            putStrLn " -- Running OnFileRuleRepr tests."
             runTest $ OnFileRuleRepr.allTests reprs
 
             putStrLn " -- Finished."
