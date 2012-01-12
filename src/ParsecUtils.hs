@@ -19,8 +19,7 @@ module ParsecUtils (
 
 
 import Control.Applicative
-import Control.Monad.Identity
-import Data.Maybe
+import Control.Monad.Identity ( Identity )
 
 import Text.Parsec ( ParsecT, alphaNum, char, letter, parse )
 import Text.Parsec.Combinator ( between, choice, eof, many1, optionMaybe, sepBy, sepBy1, sepEndBy, sepEndBy1 )

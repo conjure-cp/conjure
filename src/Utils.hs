@@ -3,7 +3,8 @@ module Utils
     , maybeRead
     , ppShow, ppPrint
     , strip
-    , runRWSE
+    , runRWSE, runRWSET
+    , fst3, snd3, thd3
     ) where
 
 import Control.Monad.Error -- ( MonadError, runErrorT )
@@ -36,3 +37,16 @@ ppPrint = putStrLn . ppShow
 
 runRWSE :: r -> s -> ErrorT e (RWS r w s) a -> (Either e a, w)
 runRWSE r s comp = evalRWS (runErrorT comp) r s
+
+runRWSET :: Monad m => r -> s -> ErrorT e (RWST r w s m) a -> m (Either e a, w)
+runRWSET r s comp = evalRWST (runErrorT comp) r s
+
+
+fst3 :: (a,b,c) -> a
+fst3 (a,_,_) = a
+
+snd3 :: (a,b,c) -> b
+snd3 (_,b,_) = b
+
+thd3 :: (a,b,c) -> c
+thd3 (_,_,c) = c
