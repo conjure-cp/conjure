@@ -11,7 +11,8 @@
 
 module Language.Essence
     ( Log
-    , Spec(..), Binding, BindingEnum(..), Where
+    , Spec(..), addDeclaration
+    , Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
     , Expr(..), needsRepresentation
     , Op(..), OpDescriptor(..), opDescriptor
@@ -49,6 +50,7 @@ data Spec
            , topLevelWheres   :: [Where]
            , objective        :: Maybe Objective
            , constraints      :: [Expr]
+           , metadata         :: [Metadata]
            }
     deriving (Eq, Ord, Read, Show)
 
@@ -64,6 +66,17 @@ data ObjectiveEnum = Minimising | Maximising
 
 type Where = Expr
 
+addDeclaration :: Binding -> Spec -> Spec
+addDeclaration b sp = sp { topLevelBindings = b : topLevelBindings sp }
+
+
+--------------------------------------------------------------------------------
+-- Metadata --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data Metadata = Represented Binding Binding
+              | ChannelAdded [Binding]
+    deriving (Eq, Ord, Read, Show)
 
 --------------------------------------------------------------------------------
 -- Expr ------------------------------------------------------------------------
@@ -525,6 +538,7 @@ data RuleReprCase = RuleReprCase
 {-!
 
 deriving instance Binary Spec
+deriving instance Binary Metadata
 deriving instance Binary Expr
 deriving instance Binary Op
 deriving instance Binary BindingEnum
@@ -535,6 +549,7 @@ deriving instance Binary RuleRepr
 deriving instance Binary RuleReprCase
 
 deriving instance UniplateDirect Spec Expr
+deriving instance UniplateDirect Metadata Expr
 deriving instance UniplateDirect Expr Expr
 deriving instance UniplateDirect Expr
 deriving instance UniplateDirect [Expr] Expr
