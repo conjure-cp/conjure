@@ -23,7 +23,7 @@ import Language.EssenceParsers ( pSpec, pExpr, pTopLevels, pObjective )
 import Language.EssencePrinters ( prSpec, prExpr, prType, prKind, prKindInteractive )
 import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( Parser, parseEither, parseFromFile, eof, choiceTry )
-import PrintUtils ( Doc, text, render, sep, vcat )
+import PrintUtils ( Doc, text, render, renderDoc, sep, vcat )
 import Utils ( ppPrint, strip )
 
 
@@ -98,6 +98,7 @@ initREPLState = REPLState { currentSpec   = sp
                   , topLevelWheres   = []
                   , objective        = Nothing
                   , constraints      = []
+                  , metadata         = []
                   }
 
 modifySpec :: MonadState REPLState m => (Spec -> Spec) -> m ()
@@ -119,9 +120,7 @@ withParsed p s comp = returningTrue $ case parseEither (p <* eof) s of
     Right x  -> comp x
 
 prettyPrint :: (MonadIO m, Show a) => (a -> Maybe Doc) -> a -> m ()
-prettyPrint f x = case f x of
-    Nothing  -> liftIO $ putStrLn $ "Error while printing this: " ++ show x
-    Just doc -> liftIO $ putStrLn $ render doc
+prettyPrint f x = liftIO . putStrLn $ render f x
 
 displayLogs :: (MonadIO m, MonadState REPLState m) => [Log] -> m ()
 displayLogs logs = do
@@ -150,7 +149,7 @@ step (EvalTypeKind s) = withParsed pExpr s $ \ x -> do
                 (Just inp, Just outp, Just t, k) -> do
                     let firstLine  = sep [inp, text "is", k, text "of type", t]
                     let secondLine = sep [text "Can be evaluated to:", outp]
-                    liftIO . putStrLn . render $
+                    liftIO . putStrLn . renderDoc $
                         if x == xEval
                             then firstLine
                             else vcat [firstLine, secondLine]
@@ -195,7 +194,7 @@ step (Save fp) = returningTrue $ do
     sp <- gets currentSpec
     case prSpec sp of
         Nothing  -> liftIO $ putStrLn "Error while rendering the current specification."
-        Just doc -> liftIO $ writeFile fp $ render doc
+        Just doc -> liftIO $ writeFile fp $ renderDoc doc
 
 step (Record s) = withParsed (choiceTry [ Left . Right <$> pObjective
                                         , Right        <$> pExpr
