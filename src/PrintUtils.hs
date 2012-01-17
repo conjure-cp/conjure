@@ -1,16 +1,19 @@
 {-# LANGUAGE NamedFieldPuns  #-}
 
 module PrintUtils (
-    render, parensIf,
+    render, renderDoc, parensIf,
     module Text.PrettyPrint
     ) where
 
 import Text.PrettyPrint hiding (render)
 
 
-render :: Doc -> String
-render = renderStyle style { lineLength = 120 }
+render :: Show a => (a -> Maybe Doc) -> a -> String
+render f x = case f x of Nothing -> error ("Cannot render: " ++ show x)
+                         Just o  -> renderDoc o
 
+renderDoc :: Doc -> String
+renderDoc = renderStyle style { lineLength = 120 }
 
 wrapIf :: (Doc -> Doc) -> Bool -> Doc -> Doc
 wrapIf wrap c = if c then wrap else id
