@@ -7,7 +7,7 @@ ALL_HS := $(shell find src -name '*.hs')
 
 
 install: derivations
-	@cabal install
+	@cabal install --disable-executable-profiling --disable-library-profiling
 
 runtests:
 	@dist/build/conjure-tests/conjure-tests testdata/* rules/repr/*
@@ -35,7 +35,7 @@ runtests-hpc:
 	@hpc markup conjure-tests
 
 clean-hpc:
-	@rm -rf *.tix *.hs.html hpc_index* .hpc
+	@rm -rf *.tix *.hs.html hpc_index* .hpc conjure-1.0
 
 
 clean-all: clean clean-prof clean-hpc
