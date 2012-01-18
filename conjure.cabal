@@ -124,6 +124,8 @@ Executable conjure-repr
     hs-source-dirs   : src-exec
     main-is          : ReprMain.hs
     build-depends    : base, conjure
+                     , directory    == 1.1.*
+                     , filepath     == 1.2.*
                      , mtl          == 2.0.*
                      , transformers == 0.2.2.*
     ghc-options:
