@@ -172,10 +172,7 @@
                      ]
 
 *** ParsePrint
-function {1 -> set {2},
-          3 -> mset {4},
-          5 -> function {6 -> 6},
-          7 -> (false, true, 4)}
+function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true, 4)}
     ~~ ValueFunction [ (ValueInteger 1, ValueSet [ValueInteger 2])
                      , (ValueInteger 3, ValueMSet [ValueInteger 4])
                      , (ValueInteger 5, ValueFunction [(ValueInteger 6, ValueInteger 6)])
