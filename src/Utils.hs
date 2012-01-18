@@ -1,17 +1,28 @@
 module Utils
     ( allValues
     , maybeRead
-    , ppShow, ppPrint
+    , ppShow, ppPrint, getCh
     , strip
     , runRWSE, runRWSET
     , fst3, snd3, thd3
+    , fromJust, padLeft
+    , applyAll
     ) where
 
-import Control.Monad.Error -- ( MonadError, runErrorT )
-import Control.Monad.RWS -- ( MonadReader, MonadWriter, MonadState, evalRWS )
+import Control.Monad.Error ( ErrorT, runErrorT )
+import Control.Monad.RWS ( RWS, evalRWS, RWST, evalRWST )
 import Data.Maybe ( listToMaybe )
+import System.IO ( hSetEcho, stdin )
 import Text.PrettyPrint ( lineLength, renderStyle, style )
 import Text.Show.Pretty ( ppDoc )
+
+
+fromJust :: String -> Maybe a -> a
+fromJust msg Nothing  = error msg
+fromJust _   (Just a) = a
+
+padLeft :: a -> Int -> [a] -> [a]
+padLeft pre n xs = replicate (n - length xs) pre ++ xs
 
 
 strip :: String -> String
@@ -35,6 +46,14 @@ ppPrint :: Show a => a -> IO ()
 ppPrint = putStrLn . ppShow
 
 
+getCh :: IO Char
+getCh  = do
+    hSetEcho stdin False
+    c <- getChar
+    hSetEcho stdin True
+    return c
+
+
 runRWSE :: r -> s -> ErrorT e (RWS r w s) a -> (Either e a, w)
 runRWSE r s comp = evalRWS (runErrorT comp) r s
 
@@ -50,3 +69,10 @@ snd3 (_,b,_) = b
 
 thd3 :: (a,b,c) -> c
 thd3 (_,_,c) = c
+
+
+-- apply all those functions successively.
+applyAll :: a -> [a -> a] -> a
+applyAll x = foldl (\ t f -> f t) x
+-- applyAll x []     = x
+-- applyAll x (f:fs) = applyAll (f x) fs

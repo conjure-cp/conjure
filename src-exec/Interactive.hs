@@ -11,7 +11,6 @@ import Control.Monad.Trans.Class ( lift )
 import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
 import Data.Char ( toLower )
 import Data.List ( intercalate, isPrefixOf )
-import Data.Maybe ( fromJust )
 import System.Console.Haskeline ( InputT, defaultSettings, getInputLine, runInputT )
 import System.Environment ( getArgs )
 
@@ -24,7 +23,7 @@ import Language.EssencePrinters ( prSpec, prExpr, prType, prKind, prKindInteract
 import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( Parser, parseEither, parseFromFile, eof, choiceTry )
 import PrintUtils ( Doc, text, render, renderDoc, sep, vcat )
-import Utils ( ppPrint, strip )
+import Utils ( fromJust, ppPrint, strip )
 
 
 data Command = EvalTypeKind String
@@ -255,7 +254,7 @@ main = do
         repl :: InputT (StateT REPLState IO) ()
         repl = do
             maybeLine <- getInputLine "# "
-            case (maybeLine, parseCommand (fromJust maybeLine)) of
+            case (maybeLine, parseCommand (fromJust "fromJust repl.maybeLine" maybeLine)) of
                 (Nothing, _            ) -> return () -- EOF / control-d
                 (Just "", _            ) -> repl
                 (Just _ , Left msg     ) -> do liftIO $ putStrLn msg
