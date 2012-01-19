@@ -14,7 +14,7 @@ import Language.Essence ( RuleRefn(..) )
 import Language.EssenceParsers ( pSpec, pRuleRefn )
 import Language.EssencePrinters ( prSpec )
 import ParsecUtils ( parseFromFile )
-import Phases.Refn ( applyRefnToSpec )
+import Phases.Refn ( applyRefnsToSpec )
 import PrintUtils ( render )
 import Utils -- ( padLeft )
 
@@ -27,12 +27,10 @@ main = do
                         _   -> error "Only 1 *.essence file."
     spec  <- parseFromFile pSpec id specFilename id
     refns <- mapM (\ r -> parseFromFile (pRuleRefn r) id r id ) $ filter (".rule" `isSuffixOf`) args
-    
-    ppPrint refns
 
     when (null refns) $ putStrLn "Warning: no *.rule file is given."
 
-    specs <- runErrorT $ applyRefnToSpec (groupRefns refns) spec
+    specs <- runErrorT $ applyRefnsToSpec refns spec
 
     let dirName = dropExtension specFilename ++ "-refn"
     createDirectoryIfMissing True dirName

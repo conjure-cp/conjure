@@ -136,7 +136,7 @@ step :: Command -> StateT REPLState IO Bool
 step (EvalTypeKind s) = withParsed pExpr s $ \ x -> do
     let err = liftIO $ putStrLn "Error. Try :e, :t, :k individually to see what it was."
     bs <- gets $ topLevelBindings . currentSpec
-    let (xEval,  logsEval) = runEvaluateExpr bs x
+    (xEval,logsEval) <- runEvaluateExpr bs x
     let (exType, logsType) = runTypeOf bs x
     let (exKind, logsKind) = runKindOf bs x
     displayLogs (logsEval ++ logsType ++ logsKind)
@@ -156,7 +156,7 @@ step (EvalTypeKind s) = withParsed pExpr s $ \ x -> do
         _ -> err
 step (Eval s) = withParsed pExpr s $ \ x -> do
     bs <- gets $ topLevelBindings . currentSpec
-    let (x', logs) = runEvaluateExpr bs x
+    (x', logs) <- runEvaluateExpr bs x
     displayLogs logs
     displayRaw x
     displayRaw x'

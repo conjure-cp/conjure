@@ -3,23 +3,25 @@
 module Language.EssenceEvaluator ( runEvaluateExpr ) where
 
 
-import Control.Monad.RWS ( RWS, evalRWS
-                         , MonadReader, ask
-                         , MonadWriter, tell
-                         )
+import Control.Monad.RWS -- ( RWS, evalRWS
+ --                         , MonadReader, ask
+ --                         , MonadWriter, tell
+ --                         )
+import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Data.Generics.Uniplate.Direct ( rewriteBiM )
 import Data.List ( sort, intersect, union )
 
 import Language.Essence
-import Language.EssenceTypes ( runTypeOf )
 import Language.EssencePrinters ( prExpr )
+import Language.EssenceTypes ( runTypeOf )
 import PrintUtils ( render )
+import Utils ( ppPrint )
 
 
-runEvaluateExpr :: [Binding] -> Expr -> (Expr,[Log])
-runEvaluateExpr topLevels x = evalRWS (comp x) topLevels ()
+runEvaluateExpr :: MonadIO m => [Binding] -> Expr -> m (Expr,[Log])
+runEvaluateExpr topLevels x = liftIO $ evalRWST (comp x) topLevels ()
     where
-        comp :: Expr -> RWS [Binding] [Log] () Expr
+        comp :: Expr -> RWST [Binding] [Log] () IO Expr
         comp = rewriteBiM combined
 
         withLog ::
@@ -40,6 +42,7 @@ runEvaluateExpr topLevels x = evalRWS (comp x) topLevels ()
         combined ::
             ( MonadReader [Binding] m
             , MonadWriter [Log] m
+            , MonadIO m
             ) => Expr -> m (Maybe Expr)
         combined i = do
             j <- withLog "Evaluator " evaluateExpr i
@@ -48,7 +51,10 @@ runEvaluateExpr topLevels x = evalRWS (comp x) topLevels ()
                 Just _  -> return j
 
 
-evaluateExpr :: MonadReader [Binding] m => Expr -> m (Maybe Expr)
+evaluateExpr ::
+    ( MonadIO m
+    , MonadReader [Binding] m
+    ) => Expr -> m (Maybe Expr)
 
 -- full evaluators
 
@@ -149,7 +155,10 @@ evaluateExpr (Identifier nm) = do
 
 evaluateExpr (GenericNode HasType [i,j]) = do
     bs <- ask
-    case (runTypeOf bs i, runTypeOf bs j) of
+    let typeofI = runTypeOf bs i
+    let typeofJ = runTypeOf bs j
+    liftIO $ ppPrint (typeofI, typeofJ)
+    case (typeofI, typeofJ) of
         ((Right it, _), (Right jt, _)) -> rJust $ ValueBoolean $ typeUnify it jt
         _ -> rNothing
 

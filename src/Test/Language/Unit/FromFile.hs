@@ -19,8 +19,10 @@ import Utils ( strip )
 -- a single test looks like: "*** Keyword Arg1 [~~ Arg2]"
 -- possible keywords are: ShouldParse/1, NoParse/1, ShouldParseTo/2,
 --                        ParsePrint/2, ParsePrintIso/1, Eval/2, TypeOf/2
-allTests :: String -> (Test, Int)
-allTests file = (test (map toTest ls), length ls)
+allTests :: String -> IO (Test, Int)
+allTests file = do
+    t <- mapM toTest ls
+    return (test t, length ls)
     where
         isComment :: String -> Bool
         isComment ('#':_) = True
@@ -36,15 +38,15 @@ allTests file = (test (map toTest ls), length ls)
             $ filter (not . null)
             $ lines file
 
-        toTest :: String -> Test
+        toTest :: String -> IO Test
         toTest line = case parseLine line of
-            ("ShouldParse"  , _bindings, [i]  ) -> cmdShouldParse i
-            ("NoParse"      , _bindings, [i]  ) -> cmdNoParse i
-            ("ShouldParseTo", _bindings, [i,j]) -> cmdShouldParseTo i j
-            ("ParsePrint"   , _bindings, [i,j]) -> cmdParsePrint i j
-            ("ParsePrintIso", _bindings, [i]  ) -> cmdParsePrintIso i
+            ("ShouldParse"  , _bindings, [i]  ) -> return $ cmdShouldParse i
+            ("NoParse"      , _bindings, [i]  ) -> return $ cmdNoParse i
+            ("ShouldParseTo", _bindings, [i,j]) -> return $ cmdShouldParseTo i j
+            ("ParsePrint"   , _bindings, [i,j]) -> return $ cmdParsePrint i j
+            ("ParsePrintIso", _bindings, [i]  ) -> return $ cmdParsePrintIso i
             ("Eval"         ,  bindings, [i,j]) -> cmdEval bindings i j
-            ("TypeOf"       ,  bindings, [i,j,k]) -> cmdTypeOf bindings i j k
+            ("TypeOf"       ,  bindings, [i,j,k]) -> return $ cmdTypeOf bindings i j k
             _     -> error $ "unknown line format: " ++ line
 
 

@@ -17,7 +17,7 @@ main = do
         run :: [String] -> [String] -> String -> IO ()
         run specs reprs s = do
 
-            let (a,n) = UnitFromFile.allTests s
+            (a,n) <- UnitFromFile.allTests s
             putStrLn $ " -- Running user supplied tests (" ++ show n ++ " testing statements parsed)."
             runTest a
 

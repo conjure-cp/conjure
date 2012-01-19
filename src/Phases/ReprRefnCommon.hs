@@ -3,6 +3,7 @@
 module Phases.ReprRefnCommon where
 
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
+import Control.Monad.IO.Class ( MonadIO )
 import Control.Monad.State ( MonadState, get )
 import Data.Generics.Uniplate.Direct ( Biplate, transformBi )
 
@@ -36,10 +37,11 @@ instantiateName nm x = transformBi f
 checkWheres ::
     ( MonadError ErrMsg m
     , MonadState [Binding] m
+    , MonadIO m
     ) => Where -> m ()
 checkWheres x = do
-    bindings <- get
-    let (x',logs) = runEvaluateExpr bindings x
+    bindings  <- get
+    (x',logs) <- runEvaluateExpr bindings x
     case x' of
         ValueBoolean True  -> return ()
         ValueBoolean False -> do

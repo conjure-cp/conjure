@@ -91,31 +91,34 @@ cmdParsePrintIso s = test [ TestCase $ assertBool ("ParsePrintIso.parse: " ++ s)
         sParsedPrinted = render prExpr <$> sParsed
 
 
-cmdEval :: [Binding] -> String -> String -> Test
-cmdEval bindings i j = test
-    [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParsed
-    , TestCase $ assertBool ("Eval.parse: " ++ j) $ isJust jParsed
-    , TestCase $ assertBool ("Eval.parsePrint: " ++ i) $ isJust iEvalPrinted
-    , TestCase $ assertBool ("Eval.parsePrint: " ++ j) $ isJust jParsedPrinted
-    , ("Eval" ++ unlines logs) ~: jParsedPrinted ~=? iEvalPrinted
-    ]
+cmdEval :: [Binding] -> String -> String -> IO Test
+cmdEval bindings i j = do
+    iEvalPrinted'   <- iEvalPrinted
+    logs'           <- logs
+    return $ test
+            [ TestCase $ assertBool ("Eval.parse: " ++ i) $ isJust iParsed
+            , TestCase $ assertBool ("Eval.parse: " ++ j) $ isJust jParsed
+            , TestCase $ assertBool ("Eval.parsePrint: " ++ i) $ isJust iEvalPrinted'
+            , TestCase $ assertBool ("Eval.parsePrint: " ++ j) $ isJust jParsedPrinted
+            , ("Eval" ++ unlines logs') ~: jParsedPrinted ~=? iEvalPrinted'
+            ]
     where
         iParsed :: Maybe Expr
         iParsed = parseMaybe pExprEof i
 
-        iEvalWithLogs :: Maybe (Expr,[Log])
-        iEvalWithLogs = do
-            t <- iParsed
-            return $ runEvaluateExpr bindings t
+        iEvalWithLogs :: IO (Maybe (Expr,[Log]))
+        iEvalWithLogs = case iParsed of
+            Nothing -> return Nothing
+            Just t  -> Just <$> runEvaluateExpr bindings t
 
-        iEval :: Maybe Expr
-        iEval = fmap fst iEvalWithLogs
+        iEval :: IO (Maybe Expr)
+        iEval = (fmap . fmap) fst iEvalWithLogs
 
-        logs :: [Log]
-        logs = fromMaybe [] $ fmap snd iEvalWithLogs
+        logs :: IO [Log]
+        logs = fromMaybe [] <$> (fmap . fmap) snd iEvalWithLogs
 
-        iEvalPrinted :: Maybe String
-        iEvalPrinted = render prExpr <$> iEval
+        iEvalPrinted :: IO (Maybe String)
+        iEvalPrinted = fmap (render prExpr) <$> iEval
 
         jParsed :: Maybe Expr
         jParsed = parseMaybe pExprEof j
