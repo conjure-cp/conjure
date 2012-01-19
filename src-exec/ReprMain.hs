@@ -13,7 +13,7 @@ import System.Directory ( createDirectoryIfMissing )
 import Language.EssenceParsers ( pSpec, pRuleRepr )
 import Language.EssencePrinters ( prSpec )
 import ParsecUtils ( parseFromFile )
-import Phases.Repr
+import Phases.Repr ( applyToSpec )
 import PrintUtils ( render )
 import Utils ( padLeft )
 
@@ -31,13 +31,12 @@ main = do
 
     specs <- runErrorT $ applyToSpec reprs spec
 
-    let specBaseFilename = dropExtension specFilename
-
-    createDirectoryIfMissing True specBaseFilename
+    let dirName = dropExtension specFilename ++ "-repr"
+    createDirectoryIfMissing True dirName
 
     case specs of
         Left err -> error err
         Right ss -> flip mapM_ (zip [(1::Int)..] ss) $ \ (i,s) -> do
-            let outFilename = specBaseFilename ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
+            let outFilename = dirName ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
             putStrLn $ "Outputting: " ++ outFilename
             writeFile outFilename $ render prSpec s
