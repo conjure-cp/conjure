@@ -350,6 +350,7 @@ prBinding bs (Letting,nm,x) = do
          <+> text "be"
          <+> textAfterBe bs x
          <+> x'
+prBinding _ (InRule,_,_) = error "EssencePrinters.prBinding InRule"
 
 prWhere :: Where -> Maybe Doc
 prWhere w = do

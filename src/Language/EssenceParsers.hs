@@ -2,7 +2,7 @@
 
 module Language.EssenceParsers ( pSpec, pExpr, pType, pKind
                                , pTopLevels, pObjective
-                               , pRuleRepr
+                               , pRuleRepr, pRuleRefn
                                ) where
 
 import Control.Applicative
@@ -23,9 +23,9 @@ pIdentifier :: Parser Expr
 pIdentifier = Identifier <$> identifier
     <?> "identifier"
 
-pUnderscore :: Parser Expr
-pUnderscore = Underscore <$ symbol "_"
-    <?> "underscore"
+-- pUnderscore :: Parser Expr
+-- pUnderscore = Underscore <$ symbol "_"
+--     <?> "underscore"
 
 --------------------------------------------------------------------------------
 -- Parsers for inline values ---------------------------------------------------
@@ -451,7 +451,7 @@ pSpec = do
     obj               <- optionMaybe pObjective
     cons              <- pConstraints
     eof
-    return $ Spec lang ver bindings wheres obj cons
+    return $ Spec lang ver bindings wheres obj cons []
 
 
 pLanguage :: Parser (String,[Int])
@@ -580,5 +580,20 @@ pRuleReprCase = do
     (bs, ws)   <- pTopLevels
     return $ RuleReprCase pattern structural ws bs
 
+
+--------------------------------------------------------------------------------
+-- parser for RuleRefn ---------------------------------------------------------
+--------------------------------------------------------------------------------
+
+pRuleRefn :: String -> Parser RuleRefn
+pRuleRefn nm = do
+    whiteSpace
+    i        <- optionMaybe (brackets (fromInteger <$> integer))
+    pattern  <- pExpr
+    template <- leadsto *> pExpr
+    (bs, ws)   <- pTopLevels
+    return $ RuleRefn i nm pattern [template] ws bs
+
 leadsto :: Parser ()
 leadsto = reservedOp "~~>"
+
