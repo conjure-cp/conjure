@@ -195,7 +195,10 @@ data Expr
 
 exprTag :: Expr -> String
 exprTag (GenericNode op _) = "GenericNode#" ++ show (toConstr op)
-exprTag x = show (toConstr x)
+exprTag x = constrName x
+
+constrName :: Data a => a -> String
+constrName = show . toConstr
 
 
 type Representation = String
@@ -354,7 +357,9 @@ class TypeUnify t where
 instance TypeUnify Type where
     typeUnify TypeUnknown _ = True
     typeUnify _ TypeUnknown = True
-    typeUnify a b = a == b
+    typeUnify a b
+        | constrName a == constrName b = and $ zipWith typeUnify (children a) (children b)
+        | otherwise = False
     chooseType t TypeUnknown = t
     chooseType TypeUnknown t = t
     chooseType t _ = t
@@ -585,6 +590,7 @@ deriving instance UniplateDirect (Maybe Objective) Expr
 deriving instance UniplateDirect RuleRepr Expr
 deriving instance UniplateDirect RuleReprCase Expr
 deriving instance UniplateDirect RuleRefn Expr
+deriving instance UniplateDirect Type
 
 !-}
 
