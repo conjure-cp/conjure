@@ -5,7 +5,6 @@ module Language.EssenceTypes ( typeCheckSpec, typeCheckRuleRepr
                              , runTypeOf, typeOf
                              ) where
 
-import Control.Applicative
 import Control.Arrow ( first, second )
 import Control.Monad.RWS ( evalRWS
                          , MonadReader, ask
@@ -14,7 +13,6 @@ import Control.Monad.RWS ( evalRWS
                          )
 import Control.Monad ( forM_, unless )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
-import Data.Maybe ( fromJust )
 import Data.Default ( def )
 
 import Language.Essence
@@ -53,14 +51,12 @@ runTypeOf bs x = evalRWS (runErrorT (typeOf x)) bs def
 infixr 0 ~~$
 (~~$) :: MonadWriter [Log] m => Expr -> Type -> m Type
 a ~~$ b = do
-    let p = render . fromJust . prExpr
-    tell ["typeOf " ++ p a ++ " is " ++ show b ]
+    tell ["typeOf " ++ render prExpr a ++ " is " ++ show b ]
     return b
 
 infixr 0 ~$$
 (~$$) :: MonadError String m => Expr -> String -> m a
-x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ show x
-                             Just d  -> throwError $ msg ++ ": " ++ render d
+x ~$$ msg = throwError $ msg ++ ": " ++ render prExpr x
 
 
 typeOf ::
@@ -184,19 +180,17 @@ typeOf p@(DeclQuantifier glueOp skipOp identity) = do
     tSkipOp   <- typeOf skipOp
     tIdentity <- typeOf identity
 
-    let fail_tGlueOp = case render <$> prType tIdentity of
-            Nothing  -> throwError $ "Cannot pretty-print: " ++ show tIdentity
-            Just prt -> p ~$$ "glue op must be of type " ++ prt ++ ", " ++ prt ++ " -> " ++ prt
-
+    let fail_tGlueOp = p ~$$ "glue op must be of type " ++ render prType tIdentity ++ ", "
+                                                        ++ render prType tIdentity ++ " -> "
+                                                        ++ render prType tIdentity
     case tGlueOp of
         (TypeLambda [a,b] c) ->
             unless (typeUnify a b && typeUnify b c) fail_tGlueOp
         _ -> fail_tGlueOp
 
-    let fail_tSkipOp = case render <$> prType tIdentity of
-            Nothing  -> throwError $ "Cannot pretty-print: " ++ show tIdentity
-            Just prt -> p ~$$ "skip op must be of type bool, " ++ prt ++ " -> " ++ prt
-
+    let fail_tSkipOp = p ~$$ "skip op must be of type " ++ "bool , "
+                                                        ++ render prType tIdentity ++ " -> "
+                                                        ++ render prType tIdentity
     case tSkipOp of
         (TypeLambda [TypeBoolean,a] b) ->
             unless (typeUnify a b && typeUnify a tIdentity) fail_tSkipOp

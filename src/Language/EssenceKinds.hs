@@ -9,7 +9,6 @@ import Control.Monad.RWS ( evalRWS
                          , MonadWriter, tell
                          )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
-import Data.Maybe ( fromJust )
 
 import Language.Essence ( Expr(..), Binding, BindingEnum(..), Log, Kind(..) )
 import Language.EssencePrinters ( prExpr )
@@ -23,14 +22,12 @@ runKindOf bs x = evalRWS (runErrorT (kindOf x)) bs ()
 infixr 0 ~~$
 (~~$) :: MonadWriter [Log] m => Expr -> Kind -> m Kind
 a ~~$ b = do
-    let p = render . fromJust . prExpr
-    tell ["kindOf " ++ p a ++ " is " ++ show b ]
+    tell ["kindOf " ++ render prExpr a ++ " is " ++ show b ]
     return b
 
 infixr 0 ~$$
 (~$$) :: MonadError String m => Expr -> String -> m a
-x ~$$ msg = case prExpr x of Nothing -> throwError $ "Cannot pretty-print: " ++ show x
-                             Just d  -> throwError $ msg ++ ": " ++ render d
+x ~$$ msg = throwError $ msg ++ ": " ++ render prExpr x
 
 
 -- the kind of the expression defines how it is pretty-printed when occurs

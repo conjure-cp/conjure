@@ -9,7 +9,6 @@ import Control.Monad.RWS ( RWS, evalRWS
                          )
 import Data.Generics.Uniplate.Direct ( rewriteBiM )
 import Data.List ( sort, intersect, union )
-import Data.Maybe ( fromJust )
 
 import Language.Essence
 import Language.EssenceTypes ( runTypeOf )
@@ -31,12 +30,11 @@ runEvaluateExpr topLevels x = evalRWS (comp x) topLevels ()
               -> Expr
               -> m (Maybe Expr)
         withLog msg f i = do
-            let p = render . fromJust . prExpr
             mr <- f i
             case mr of
                 Nothing -> return Nothing
                 Just r  -> do
-                    tell [msg ++ ": " ++ p i ++ " ~~> " ++ p r]
+                    tell [msg ++ ": " ++ render prExpr i ++ " ~~> " ++ render prExpr r]
                     return mr
 
         combined ::
