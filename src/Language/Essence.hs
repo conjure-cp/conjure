@@ -5,6 +5,7 @@
 -- See target `derivations` in the Makefile
 
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
@@ -12,13 +13,15 @@
 module Language.Essence
     ( Log
     , Spec(..), addDeclaration
+    , Metadata(..)
     , Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
-    , Expr(..), needsRepresentation
+    , Expr(..), exprTag, needsRepresentation
     , Op(..), OpDescriptor(..), opDescriptor
     , Kind(..), Type(..), typeUnify
     , associativeOps, commutativeOps, validOpTypes, elementType
     , RuleRepr(..), RuleReprCase(..)
+    , RuleRefn(..)
     ) where
 
 
@@ -27,6 +30,7 @@ module Language.Essence
 --------------------------------------------------------------------------------
 
 import Data.Binary
+import Data.Generics ( Data, Typeable, toConstr )
 import Data.Generics.Uniplate.Direct
 
 
@@ -52,17 +56,17 @@ data Spec
            , constraints      :: [Expr]
            , metadata         :: [Metadata]
            }
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Binding = (BindingEnum,String,Expr)
 
 data BindingEnum = Find | Given | Letting | InRule
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Objective = (ObjectiveEnum,Expr)
 
 data ObjectiveEnum = Minimising | Maximising
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Where = Expr
 
@@ -76,7 +80,7 @@ addDeclaration b sp = sp { topLevelBindings = b : topLevelBindings sp }
 
 data Metadata = Represented Binding Binding
               | ChannelAdded [Binding]
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 --------------------------------------------------------------------------------
 -- Expr ------------------------------------------------------------------------
@@ -186,7 +190,12 @@ data Expr
         , quanBody  :: Expr
         }
 
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
+
+
+exprTag :: Expr -> String
+exprTag (GenericNode op _) = "GenericNode#" ++ show (toConstr op)
+exprTag x = show (toConstr x)
 
 
 type Representation = String
@@ -229,7 +238,7 @@ data Op
     
     | AllDiff
 
-    deriving (Eq, Ord, Read, Show, Enum, Bounded)
+    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable)
 
 
 -- will be used while parsing and pretty-printing operators
@@ -317,7 +326,7 @@ data Kind = KindUnknown
           | KindLambda
           | KindFind
           | KindGiven
-    deriving (Eq, Ord, Read, Show, Enum, Bounded)
+    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable)
 
 data Type = TypeUnknown
     | TypeIdentifier String
@@ -336,7 +345,7 @@ data Type = TypeUnknown
 
     | TypeLambda [Type] Type
 
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 class TypeUnify t where
     typeUnify :: t -> t -> Bool
@@ -520,7 +529,7 @@ data RuleRepr = RuleRepr
     , reprPrologueBindings   :: [Binding]
     , reprCases              :: [RuleReprCase]
     }
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 data RuleReprCase = RuleReprCase
     { reprCasePattern    :: Expr
@@ -528,8 +537,22 @@ data RuleReprCase = RuleReprCase
     , reprCaseWheres     :: [Where]
     , reprCaseBindings   :: [Binding]
     }
-    deriving (Eq, Ord, Read, Show)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
+
+--------------------------------------------------------------------------------
+-- RuleRefn --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data RuleRefn = RuleRefn
+    { refnLevel     :: Maybe Int
+    , refnFilename  :: String
+    , refnPattern   :: Expr
+    , refnTemplates :: [Expr]
+    , refnWheres    :: [Where]
+    , refnBindings  :: [Binding]
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 --------------------------------------------------------------------------------
 -- type class instances --------------------------------------------------------
@@ -547,6 +570,7 @@ deriving instance Binary Type
 deriving instance Binary Kind
 deriving instance Binary RuleRepr
 deriving instance Binary RuleReprCase
+deriving instance Binary RuleRefn
 
 deriving instance UniplateDirect Spec Expr
 deriving instance UniplateDirect Metadata Expr
@@ -560,6 +584,7 @@ deriving instance UniplateDirect (ObjectiveEnum,Expr) Expr
 deriving instance UniplateDirect (Maybe Objective) Expr
 deriving instance UniplateDirect RuleRepr Expr
 deriving instance UniplateDirect RuleReprCase Expr
+deriving instance UniplateDirect RuleRefn Expr
 
 !-}
 
