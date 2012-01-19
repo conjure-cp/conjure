@@ -53,17 +53,14 @@ testOne parser printer typechecker bindingsOf filename = do
                                    ++ "Generating: '" ++ rawPrintFileName ++ "?'"
         (_    , False) -> failed "raw from file /= generated raw"
 
-    case printer inp of
-        Nothing    -> failed "Cannot render."
-        Just inpOut -> do
-            let inpOutRendered = render inpOut
-            let expectedFileName = filename ++ ".expected"
-            expectedFileExists <- doesFileExist expectedFileName
-            expectedFile <- unsafeInterleaveIO $ readFile expectedFileName
+    let inpOutRendered = render printer inp
+    let expectedFileName = filename ++ ".expected"
+    expectedFileExists <- doesFileExist expectedFileName
+    expectedFile <- unsafeInterleaveIO $ readFile expectedFileName
 
-            case (expectedFileExists, expectedFile == inpOutRendered) of
-                (True , True ) -> return ()
-                (False, _    ) -> do writeFile (expectedFileName++"?") inpOutRendered
-                                     failed $ expectedFileName ++ " doesn't exist.\n"
-                                                  ++ "Generating: '" ++ expectedFileName ++ "?'"
-                (_    , False) -> failed "expected rendering from file /= generated rendering"
+    case (expectedFileExists, expectedFile == inpOutRendered) of
+        (True , True ) -> return ()
+        (False, _    ) -> do writeFile (expectedFileName++"?") inpOutRendered
+                             failed $ expectedFileName ++ " doesn't exist.\n"
+                                          ++ "Generating: '" ++ expectedFileName ++ "?'"
+        (_    , False) -> failed "expected rendering from file /= generated rendering"

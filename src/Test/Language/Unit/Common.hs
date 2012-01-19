@@ -72,10 +72,10 @@ cmdParsePrint s x = test [ TestCase $ assertBool ("ParsePrint.parse: " ++ s) $ i
         xRead = maybeRead x
 
         sParsedPrinted :: Maybe String
-        sParsedPrinted = render <$> (prExpr =<< sParsed)
+        sParsedPrinted = render prExpr <$> sParsed
 
         xPrinted :: Maybe String
-        xPrinted = render <$> (prExpr =<< xRead)
+        xPrinted = render prExpr <$> xRead
 
 
 cmdParsePrintIso :: String -> Test
@@ -88,7 +88,7 @@ cmdParsePrintIso s = test [ TestCase $ assertBool ("ParsePrintIso.parse: " ++ s)
         sParsed = parseMaybe pExprEof s
 
         sParsedPrinted :: Maybe String
-        sParsedPrinted = render <$> (prExpr =<< sParsed)
+        sParsedPrinted = render prExpr <$> sParsed
 
 
 cmdEval :: [Binding] -> String -> String -> Test
@@ -115,13 +115,13 @@ cmdEval bindings i j = test
         logs = fromMaybe [] $ fmap snd iEvalWithLogs
 
         iEvalPrinted :: Maybe String
-        iEvalPrinted = render <$> (prExpr =<< iEval)
+        iEvalPrinted = render prExpr <$> iEval
 
         jParsed :: Maybe Expr
         jParsed = parseMaybe pExprEof j
 
         jParsedPrinted :: Maybe String
-        jParsedPrinted = render <$> (prExpr =<< jParsed)
+        jParsedPrinted = render prExpr <$> jParsed
 
 
 cmdTypeOf :: [Binding] -> String -> String -> String -> Test
