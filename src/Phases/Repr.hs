@@ -1,69 +1,226 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Phases.Repr where
 
 import Control.Applicative
-import Control.Monad.Error
-import Control.Monad.RWS
-import Data.Default ( def )
+import Control.Arrow ( second )
+import Control.Monad ( forM, forM_, zipWithM_ )
+import Control.Monad.Error ( MonadError, throwError, runErrorT )
+import Control.Monad.IO.Class ( MonadIO, liftIO )
+import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, modify, evalRWST )
+import Data.Either ( rights )
+import Data.Generics.Uniplate.Direct ( Biplate, transformBi, transformBiM, universeBi )
+import Data.List ( (\\), group, nub, sort )
+import Data.Maybe ( catMaybes, maybeToList )
+import qualified Data.Map as M
 
 import Language.Essence
-import Language.EssencePrinters ( prExpr )
-import Language.EssenceParsers
-import Language.EssenceEvaluator
+import Language.EssenceEvaluator ( runEvaluateExpr )
+import Language.EssenceParsers ( pSpec, pRuleRepr )
+import Language.EssencePrinters ( prSpec, prExpr )
+import MonadInterleave ( MonadInterleave )
+import ParsecUtils ( parseIO )
+import Phases.ReprRefnCommon
 import PrintUtils
-import ParsecUtils
-import Utils -- ( runRWSE )
+import Utils ( applyAll, runRWSET )
+
+
+test :: IO ()
+test = do
+    s <- parseIO pSpec =<< readFile "../testdata/has-sets.essence"
+    r1 <- parseIO pRuleRepr =<< readFile "../rules/repr/Set.Explicit.repr"
+    r2 <- parseIO pRuleRepr =<< readFile "../rules/repr/Set.ExplicitVarSize.repr"
+    r3 <- parseIO pRuleRepr =<< readFile "../rules/repr/Set.Occurrence.repr"
+    putStrLn $ render prSpec s
+    print =<< appl s [r1,r2,r3]
+
+appl :: Spec -> [RuleRepr] -> IO (Either ErrMsg [Spec])
+appl s rs = runErrorT $ applyToSpec rs s
 
 
 type Domain = Expr
 type Structural = Maybe Expr
-type ErrMsg = String
+type ReprName = String
+type ReprResult = (ReprName, Domain, Structural)
 
-runApplyToDom :: Domain -> RuleRepr -> (Either String (Domain, Structural), [Log])
-runApplyToDom dom repr = runRWSE () [] $ applyToDom dom repr
+
+cross :: [a] -> Int -> [[a]]
+cross xs n = sequence $ replicate n xs
+
+
+applyToSpec ::
+    ( Applicative m
+    , MonadIO m
+    , MonadInterleave m
+    , MonadError ErrMsg m
+    ) => [RuleRepr] -> Spec -> m [Spec]
+applyToSpec reprs spec = do
+    let
+        -- all top level bindings
+        bindings :: [Binding]
+        bindings  = topLevelBindings spec
+
+        -- those bindings which need a representation
+        bindingsNeedsRepr :: [Binding]
+        bindingsNeedsRepr = [ b
+                            | b@(ty,_,x) <- bindings
+                            , ty `elem` [Find, Given]
+                            , needsRepresentation x
+                            , representation x == Nothing
+                            ]
+
+        -- number of occurrences of those bindings in "bindingsNeedsRepr" in the rest of the spec
+        counts :: [(String, Int)]
+        counts = map (\ xs -> (head xs, length xs) )
+               . group
+               . sort
+               $ [ nm1
+                 | Identifier nm1 <- universeBi spec { topLevelBindings = [] }
+                 , (_,nm2,_)      <- bindingsNeedsRepr
+                 , nm1 == nm2
+                 ]
+
+        -- rest of bindings
+        bindingsRest :: [Binding]
+        bindingsRest = bindings \\ bindingsNeedsRepr
+
+    -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
+    applied' :: [(Binding, (Either ErrMsg [ReprResult], [Log]))]
+        <- zip bindingsNeedsRepr <$> sequence [ liftIO (applyAllToDom d reprs) | (_,_,d) <- bindingsNeedsRepr ]
+
+    -- calls error if repr application fails for any binding.
+    applied :: [(Binding, [ReprResult])]
+        <- forM applied' $ \ t -> case t of (_, (Left err,  logs)) -> {- liftIO (ppPrint logs) >> -} throwError err
+                                            (b, (Right r , _logs)) -> return (b,r)
+
+    let
+        foo :: [(a,[b])] -> [[(a,b)]]
+        foo [] = [[]]
+        foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
+
+        -- a lookup table contains a list of repr rule application results for each identifier in the model.
+        -- there are as many lookup tables as the number of alternative models.
+        lookupTables :: [ M.Map String [( Binding           -- the old binding
+                                        , ReprName          -- the new representation name
+                                        , Domain            -- the new representation domain
+                                        , Structural        -- the structural constraint to be posted
+                                        )]
+                        ]
+        lookupTables = map M.fromList $ foo [ (nm, cross [ (b,x,y,z) | (x,y,z) <- rrs ] cnt)
+                                            | (b@(_,nm,dom), rrs) <- applied
+                                            , let cnt = case lookup nm counts of
+                                                            Nothing -> 0 -- error ("in applyToSpec.lookupTables: " ++ nm)
+                                                            Just c  -> c
+                                            , cnt > 0
+                                            ]
+
+    -- liftIO $ ppPrint lookupTables
+    -- return []
+
+    results <- forM lookupTables $ \ table -> applyConfigToSpec table spec
+    return results
+
+
+applyConfigToSpec ::
+    ( MonadIO m
+    , MonadError ErrMsg m
+    ) => M.Map String [(Binding,ReprName,Domain,Structural)]
+      -> Spec
+      -> m Spec
+applyConfigToSpec mp sp = do
+    (resultSp,(md,bs,ss)) <- evalRWST (transformBiM f sp) () mp
+    return resultSp { topLevelBindings = nub $ bs ++ topLevelBindings resultSp
+                    , constraints      = nub $ catMaybes ss ++ constraints resultSp
+                    , metadata         = nub $ md ++ metadata resultSp
+                    }
+    where
+        f :: ( MonadIO m
+             , MonadError ErrMsg m
+             , MonadState (M.Map String [(Binding,ReprName,Domain,Structural)]) m
+             , MonadWriter ([Metadata],[Binding],[Structural]) m
+             ) => Expr -> m Expr
+        f p@(Identifier nm) = do
+            luMap <- get
+            case M.lookup nm luMap of
+                Nothing -> return p
+                Just [] -> throwError $ "applyConfigToSpec: empty list in state for " ++ nm
+                Just ((oldB@(bEnum,_,_),rn,rd,rs):rest) -> do
+                    put (M.insert nm rest luMap)
+                    let newNm = nm ++ "#" ++ rn
+                    let
+                        -- replace "refn" with newNm
+                        rs' = transformBi (\ t -> case t of Identifier "refn" -> Identifier newNm; _ -> t ) rs
+                    tell ( [ Represented oldB (bEnum,newNm,rd) ]
+                         , [ (bEnum,newNm,rd)                  ]
+                         , [ rs'                               ]
+                         )
+                    return $ Identifier newNm
+        f p = return p
+
+
+applyAllToDom :: Domain -> [RuleRepr] -> IO (Either ErrMsg [ReprResult], [Log])
+applyAllToDom dom reprs = do
+    -- results :: [Either ErrMsg (String, Domain, Structural)]
+    -- logs    :: [Log]
+    (results, logs) <- second concat . unzip <$> sequence [ runApplyToDom dom r | r <- reprs ]
+    
+    return $ case rights results of
+        [] -> (Left ("No repr rule matches this domain: " ++ render prExpr dom), logs)
+        rs -> (Right rs, logs)
+
+
+runApplyToDom :: Domain -> RuleRepr -> IO (Either ErrMsg (String, Domain, Structural), [Log])
+runApplyToDom dom repr = runRWSET () [] $ applyToDom dom repr
+
 
 applyToDom ::
-    ( MonadError String m
+    ( MonadError ErrMsg m
     , MonadWriter [Log] m
     , MonadState [Binding] m
+    , MonadIO m
     ) => Domain
       -> RuleRepr
-      -> m (Domain, Structural)
+      -> m (String, Domain, Structural)
 applyToDom dom repr = do
     results <- mapM (applyCaseToDom dom) cases
-    result  <- firstRight results
+    result :: Maybe Structural <- firstRight results
     case result of
         Nothing -> throwError "Cannot apply repr rule to domain."
-        Just r  -> return r
+        Just r  -> do
+            b <- instantiateNames $ reprTemplate repr
+            c <- instantiateNames r
+            return (reprName repr, b, c)
     where
         cases :: [RuleReprCase]
-        cases = flip map (reprCases repr) $ \ c -> c { reprCaseStructural = conjunct <$> reprCaseStructural c <*> reprPrologueStructural repr
+        cases = flip map (reprCases repr) $ \ c -> c { reprCaseStructural = case maybeToList (reprCaseStructural c) ++ maybeToList (reprPrologueStructural repr) of
+                                                                                [] -> Nothing
+                                                                                t  -> Just (conjunct t)
                                                      , reprCaseWheres     = reprCaseWheres   c ++ reprPrologueWheres   repr
                                                      , reprCaseBindings   = reprCaseBindings c ++ reprPrologueBindings repr
                                                      }
 
 
-applyCaseToDom ::
+applyCaseToDom :: forall m .
     ( MonadWriter [Log] m
     , MonadState [Binding] m
-    ) => Domain -> RuleReprCase -> m (Either String (Domain, Structural))
+    , MonadIO m
+    ) => Domain -> RuleReprCase -> m (Either ErrMsg Structural)
 applyCaseToDom dom reprcase = runErrorT $ do
-    initBindings <- get
     matchPattern (reprCasePattern reprcase) dom
+    forM_ (reprCaseBindings reprcase) $ \ (_,nm,x) -> addBinding InRule nm x
     mapM_ checkWheres $ reprCaseWheres reprcase
-    b <- get
-    tell $ map show b
-    put initBindings
-    return (dom, Nothing)
+    return $ reprCaseStructural reprcase
 
 
 matchPattern ::
-    ( MonadError String m
+    ( MonadError ErrMsg m
     , MonadState [Binding] m
-    ) => Domain
-      -> Domain
+    ) => Domain -- the pattern
+      -> Domain -- domain to match
       -> m ()
+
+matchPattern (Identifier "_") _ = return ()
 
 matchPattern (Identifier nm) dom = addBinding InRule nm dom
 
@@ -117,13 +274,13 @@ matchPattern pattern value = matchPatternError pattern value
 
 
 matchPatternError ::
-    ( MonadError String m
+    ( MonadError ErrMsg m
     , MonadState [Binding] m
     ) => Domain -> Domain -> m ()
 matchPatternError pattern value = do
     pattern' <- maybe (throwError ("cannot render: " ++ show pattern)) return $ prExpr pattern
     value'   <- maybe (throwError ("cannot render: " ++ show value  )) return $ prExpr value
-    throwError . render $ text "matchPattern:" <+> pattern'
+    throwError . renderDoc $ text "matchPattern:" <+> pattern'
                                                <+> text "~~"
                                                <+> value'
 
@@ -146,30 +303,14 @@ addBinding :: MonadState [Binding] m => BindingEnum -> String -> Expr -> m ()
 addBinding e nm x = modify ((e,nm,x) :)
 
 
-checkWheres ::
-    ( MonadError String m
-    , MonadState [Binding] m
-    ) => Where -> m ()
-checkWheres x = do
-    bindings <- get
-    let (x',logs) = runEvaluateExpr bindings x
-    case x' of
-        ValueBoolean True  -> return ()
-        ValueBoolean False -> do
-            xOut <- maybe (throwError ("cannot render: " ++ show x)) return $ prExpr x
-            throwError . render $ text "where statement evaluated to false:" <+> xOut
-        _                  -> do
-            xOut <- maybe (throwError ("cannot render: " ++ show x)) return $ prExpr x
-            throwError . render $ text "where statement cannot be fully evaluated:" <+> xOut
-                              $+$ vcat (map text logs)
-
-
 ------------------------------------------------------------
 -- helper functions ----------------------------------------
 ------------------------------------------------------------
 
-conjunct :: Expr -> Expr -> Expr
-conjunct x y = GenericNode And [x,y]
+conjunct :: [Expr] -> Expr
+conjunct [] = ValueBoolean True
+conjunct [x] = x
+conjunct (x:xs) = GenericNode And [x,conjunct xs]
 
 firstRight :: MonadWriter [Log] m => [Either Log r] -> m (Maybe r)
 firstRight []            = return Nothing
