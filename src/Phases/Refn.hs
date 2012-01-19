@@ -4,7 +4,7 @@
 module Phases.Refn where
 
 import Control.Applicative
-import Control.Monad ( forM_, zipWithM_ )
+import Control.Monad ( (<=<), forM_, zipWithM_ )
 import Control.Monad.Error ( MonadError, runErrorT, throwError )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, modify, runStateT )
@@ -13,13 +13,14 @@ import Control.Monad.RWS ( evalRWST )
 import Data.Data ( dataTypeName, dataTypeOf, toConstr )
 import Data.Either ( lefts, rights )
 import Data.Generics ( Data )
-import Data.Generics.Uniplate.Direct ( children )
+import Data.Generics.Uniplate.Direct ( children, transformBiM )
 import Data.Maybe ( fromMaybe )
 import Data.Typeable ( cast )
 
 import Language.Essence
 import Language.EssenceParsers ( pRuleRefn, pExpr )
 import Language.EssencePrinters ( prExpr )
+import MonadList
 import ParsecUtils
 import Phases.ReprRefnCommon
 import PrintUtils
@@ -29,51 +30,66 @@ import Utils
 test :: IO ()
 test = do
     r1 <- parseIO (pRuleRefn "Set.Eq.rule") =<< readFile "../rules/refn/Set.Eq.rule"
-    -- x  <- parseIO (pExpr <* eof) =<< getLine
-    x  <- parseIO (pExpr <* eof) =<< return "12=13"
+    r2 <- parseIO (pRuleRefn "MSet.Eq.rule") =<< readFile "../rules/refn/MSet.Eq.rule"
+    x  <- parseIO (pExpr <* eof) =<< getLine
+    -- x  <- parseIO (pExpr <* eof) =<< return "12=13"
     ppPrint x
-    xs <- applyRefnsToExpr [r1] x
+    xs <- runListT $ applyRefnsToExpr [] [r1,r2] x
     mapM_ (putStrLn . render prExpr) xs
 
 
-applyRefnToSpec ::
+applyRefnsToSpec :: 
     ( Applicative m
     , MonadIO m
-    ) => [[RuleRefn]] -> Spec -> m [Spec]
-applyRefnToSpec _refns spec = do
-    return [spec]
+    ) => [RuleRefn] -> Spec -> m [Spec]
+applyRefnsToSpec refns spec = do
+    let
+        f :: (Applicative m, MonadList m, MonadIO m) => Expr -> m Expr
+        f = applyRefnsToExpr (topLevelBindings spec) refns
+    runListT $ transformBiM f spec
 
 
 applyRefnsToExpr ::
-    ( Functor m
+    ( Applicative m
     , MonadIO m
-    ) => [RuleRefn]
+    , MonadList m
+    ) => [Binding]
+      -> [RuleRefn]
       -> Expr
-      -> m [Expr]
-applyRefnsToExpr rules x = do
-    results :: [Either ErrMsg [Expr]]
-        <- mapM (`runApplyRefnToExpr` x) rules
-    forM_ (lefts results) $ (liftIO . putStrLn)
-    return $ concat $ rights results
+      -> m Expr
+applyRefnsToExpr bs rules x = do
+    candidates :: [Either ErrMsg [Expr]]
+        <- mapM (\ r -> runApplyRefnToExpr bs r x ) rules
+    -- forM_ (lefts candidates) $ (liftIO . putStrLn)
+    let results = rights candidates
+    option $ case results of [] -> [x]
+                             _  -> concat results
 
 runApplyRefnToExpr ::
     ( Functor m
     , MonadIO m
-    ) => RuleRefn
+    ) => [Binding]
+      -> RuleRefn
       -> Expr
       -> m (Either ErrMsg [Expr])
-runApplyRefnToExpr r x = fst <$> evalRWST (applyRefnToExpr r x) () []
+runApplyRefnToExpr bs r x = fst <$> evalRWST (applyRefnToExpr r x) () bs
 
 applyRefnToExpr ::
     ( MonadState [Binding] m
     , MonadWriter [Log] m
     , MonadIO m
     ) => RuleRefn -> Expr -> m (Either ErrMsg [Expr])
-applyRefnToExpr rule x = runErrorT $ do
-    matchPattern (refnPattern rule) x
-    forM_ (refnBindings rule) $ \ (_,nm,x) -> addBinding InRule nm x
-    mapM_ checkWheres $ refnWheres rule
-    mapM instantiateNames (refnTemplates rule)
+applyRefnToExpr rule x = do
+    result <- runErrorT $ do
+        matchPattern (refnPattern rule) x
+        forM_ (refnBindings rule) $ \ (_,nm,x) -> addBinding InRule nm x
+        mapM_ (checkWheres <=< instantiateNames) $ refnWheres rule
+        mapM instantiateNames (refnTemplates rule)
+    liftIO . putStrLn $ "applying " ++ refnFilename rule ++ " to: " ++ render prExpr x
+    liftIO . putStrLn $ case result of
+        Left msg -> "[NOAPPLY] " ++ msg
+        Right xs -> "[ APPLY ] " ++ unlines (map (render prExpr) xs)
+    return result
 
 
 matchPattern ::
