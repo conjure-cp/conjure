@@ -1,9 +1,7 @@
 
 ~~> Gent
 ~~> matrix indexed by [t] of int(0..mx)
-~~> forall i : t . refn[i] = 0
-                   \/
-                   refn[i] = 1 + (sum j : int(..i - 1) intersect t . refn[j] > 0)
+~~> forall i : t . refn[i] = 0 \/ refn[i] = 1 + (sum j : int(..i - 1) intersect t . refn[j] > 0)
     where t :: int
 
 *** set of t
