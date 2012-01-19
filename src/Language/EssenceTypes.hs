@@ -150,6 +150,8 @@ typeOf p@(DomainPartition {element}) = do
     t <- typeOf element
     p ~~$ TypePartition t
 
+typeOf p@(Identifier "_") = p ~~$ TypeUnknown
+
 typeOf p@(Identifier nm) = do
     knowns <- gets snd
     case nm `lookup` knowns of
