@@ -12,7 +12,7 @@
 
 module Language.Essence
     ( Log
-    , Spec(..), addDeclaration
+    , Spec(..), addDeclarations
     , Metadata(..)
     , Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
@@ -70,8 +70,8 @@ data ObjectiveEnum = Minimising | Maximising
 
 type Where = Expr
 
-addDeclaration :: Binding -> Spec -> Spec
-addDeclaration b sp = sp { topLevelBindings = b : topLevelBindings sp }
+addDeclarations :: [Binding] -> Spec -> Spec
+addDeclarations bs sp = sp { topLevelBindings = topLevelBindings sp ++ bs }
 
 
 --------------------------------------------------------------------------------
@@ -183,8 +183,8 @@ data Expr
     | DeclQuantifier Expr Expr Expr
     
     | ExprQuantifier
-        { quanName  :: String
-        , quanVar   :: Expr
+        { quanName  :: Expr         -- must always be an (Identifier str)
+        , quanVar   :: Expr         -- must always be an (Identifier str)
         , quanOver  :: Expr
         , quanGuard :: Maybe Expr
         , quanBody  :: Expr
@@ -527,7 +527,8 @@ elementType _          (TypeLambda     {}) = Nothing
 --------------------------------------------------------------------------------
 
 data RuleRepr = RuleRepr
-    { reprName               :: String
+    { reprFilename           :: String
+    , reprName               :: String
     , reprTemplate           :: Expr
     , reprPrologueStructural :: Maybe Expr
     , reprPrologueWheres     :: [Where]
@@ -591,6 +592,16 @@ deriving instance UniplateDirect RuleRepr Expr
 deriving instance UniplateDirect RuleReprCase Expr
 deriving instance UniplateDirect RuleRefn Expr
 deriving instance UniplateDirect Type
+
+deriving instance UniplateDirect RuleRepr     (BindingEnum,String,Expr)
+deriving instance UniplateDirect RuleReprCase (BindingEnum,String,Expr)
+deriving instance UniplateDirect RuleRefn     (BindingEnum,String,Expr)
+deriving instance UniplateDirect (BindingEnum,String,Expr)
+deriving instance UniplateDirect Expr (String,Type)
+deriving instance UniplateDirect (Expr,Expr) (String,Type)
+deriving instance UniplateDirect (Maybe Expr) (String,Type)
+deriving instance UniplateDirect [Expr] (String,Type)
+deriving instance UniplateDirect (String,Type)
 
 !-}
 
