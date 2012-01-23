@@ -2,24 +2,28 @@
 
 module Language.EssenceEvaluator ( runEvaluateExpr ) where
 
-
-import Control.Monad.RWS -- ( RWS, evalRWS
- --                         , MonadReader, ask
- --                         , MonadWriter, tell
- --                         )
+import Control.Applicative ( Applicative )
+import Control.Monad ( void )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
-import Data.Generics.Uniplate.Direct ( rewriteBiM )
-import Data.List ( sort, intersect, union )
+import Control.Monad.Reader ( MonadReader, ask )
+import Control.Monad.RWS ( RWST, evalRWST )
+import Control.Monad.Writer ( MonadWriter, tell )
+import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
+import Data.List ( genericLength, genericIndex, isSuffixOf, sort, intersect, union )
+import Data.List.Split( splitOn )
 
 import Language.Essence
 import Language.EssencePrinters ( prExpr )
 import Language.EssenceTypes ( runTypeOf )
 import PrintUtils ( render )
-import Utils ( ppPrint )
 
 
-runEvaluateExpr :: MonadIO m => [Binding] -> Expr -> m (Expr,[Log])
-runEvaluateExpr topLevels x = liftIO $ evalRWST (comp x) topLevels ()
+runEvaluateExpr :: (Applicative m, MonadIO m) => [Binding] -> Expr -> m (Expr,[Log])
+runEvaluateExpr topLevels x = do
+    (y,logs) <- liftIO $ evalRWST (comp x) topLevels ()
+    -- liftIO $ mapM_ (\ l -> putStrLn ("evaluator: " ++ l)) logs
+    -- liftIO $ mapM_ putStrLn logs
+    return (y,logs)
     where
         comp :: Expr -> RWST [Binding] [Log] () IO Expr
         comp = rewriteBiM combined
@@ -40,7 +44,8 @@ runEvaluateExpr topLevels x = liftIO $ evalRWST (comp x) topLevels ()
                     return mr
 
         combined ::
-            ( MonadReader [Binding] m
+            ( Applicative m
+            , MonadReader [Binding] m
             , MonadWriter [Log] m
             , MonadIO m
             ) => Expr -> m (Maybe Expr)
@@ -52,7 +57,8 @@ runEvaluateExpr topLevels x = liftIO $ evalRWST (comp x) topLevels ()
 
 
 evaluateExpr ::
-    ( MonadIO m
+    ( Applicative m
+    , MonadIO m
     , MonadReader [Binding] m
     ) => Expr -> m (Maybe Expr)
 
