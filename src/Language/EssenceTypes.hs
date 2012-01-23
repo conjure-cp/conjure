@@ -166,7 +166,8 @@ typeOf p@(DomainPartition {element}) = do
 
 typeOf p@(Identifier "_") = p ~~$ TypeUnknown
 
-typeOf p@(Identifier nm) = do
+typeOf p@(Identifier nmParam) = do
+    let nm = takeWhile ('#'/=) nmParam
     knowns <- gets snd
     case nm `lookup` knowns of
         Just t  -> p ~~$ t
@@ -214,7 +215,7 @@ typeOf p@(DeclQuantifier glueOp skipOp identity) = do
 
     p ~~$ tIdentity
 
-typeOf p@(ExprQuantifier {quanName, quanVar=Identifier quanVar, quanOver, quanGuard, quanBody}) = do
+typeOf p@(ExprQuantifier {quanName=Identifier quanName, quanVar=Identifier quanVar, quanOver, quanGuard, quanBody}) = do
     bindings <- ask
     case [ x | (Letting,nm,x) <- bindings, nm == quanName ] of
         [] -> p ~$$ "unknown quantifier: " ++ quanName
