@@ -1,32 +1,32 @@
 
 ~~> Gent
 ~~> matrix indexed by [t] of int(0..mx)
-~~> forall i : t . refn[i] = 0 \/ refn[i] = 1 + (sum j : int(..i - 1) intersect t . refn[j] > 0)
+~~> forall i : t . refn[i] = 0 \/ refn[i] = 1 + (sum j : t , j < i - 1 . refn[j] > 0)
     where t :: int
 
 *** set of t
     letting mx be image(domSize, t)
 
 *** set (size n) of t
-    ~~> (sum i : r . refn[i] > 0) = n
+    ~~> (sum i : t . refn[i] > 0) = n
     letting mx be image(domSize, t)
 
 *** set (minSize mn) of t
-    ~~> (sum i : r . refn[i] > 0) >= mn
+    ~~> (sum i : t . refn[i] > 0) >= mn
     letting mx be image(domSize, t)
 
 *** set (maxSize mx) of t
-    ~~> (sum i : r . refn[i] > 0) <= mx
+    ~~> (sum i : t . refn[i] > 0) <= mx
 
 *** set (size n, minSize mn) of t
-    ~~> (sum i : r . refn[i] > 0) = n
+    ~~> (sum i : t . refn[i] > 0) = n
     letting mx be image(domSize, t)
 
 *** set (size n, maxSize mx) of t
-    ~~> (sum i : r . refn[i] > 0) = n
+    ~~> (sum i : t . refn[i] > 0) = n
 
 *** set (minSize mn, maxSize mx) of t
-    ~~> (sum i : r . refn[i] > 0) >= mn /\ (sum i : r . refn[i] > 0) <= mx
+    ~~> (sum i : t . refn[i] > 0) >= mn /\ (sum i : t . refn[i] > 0) <= mx
 
 *** set (size n, minSize mn, maxSize mx) of t
-    ~~> (sum i : r . refn[i] > 0) = n
+    ~~> (sum i : t . refn[i] > 0) = n

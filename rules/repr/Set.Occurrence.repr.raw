@@ -1,13 +1,14 @@
 RuleRepr
-  { reprName = "Occurrence"
+  { reprFilename = "rules/repr/Set.Occurrence.repr"
+  , reprName = "Occurrence"
   , reprTemplate = DomainMatrix
-                     { index = Identifier "t"
+                     { index = Identifier "__rules_repr_Set_Occurrence_repr_t"
                      , element = DomainBoolean
                      }
   , reprPrologueStructural = Nothing
   , reprPrologueWheres = [ GenericNode
                              HasType
-                             [ Identifier "t"
+                             [ Identifier "__rules_repr_Set_Occurrence_repr_t"
                              , DomainIntegerList []
                              ]
                          ]
@@ -18,7 +19,7 @@ RuleRepr
                                           , minSize = Nothing
                                           , maxSize = Nothing
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Nothing
@@ -27,28 +28,28 @@ RuleRepr
                     }
                 , RuleReprCase
                     { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "n" )
+                                          { size = Just ( Identifier "__rules_repr_Set_Occurrence_repr_n" )
                                           , minSize = Nothing
                                           , maxSize = Nothing
                                           , attrDontCare = True
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Eq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "t"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Occurrence_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Index
                                                                   [ Identifier "refn"
-                                                                  , Identifier "i"
+                                                                  , Identifier "__rules_repr_Set_Occurrence_repr_i"
                                                                   ]
                                                    }
-                                               , Identifier "n"
+                                               , Identifier "__rules_repr_Set_Occurrence_repr_n"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = []
@@ -56,27 +57,27 @@ RuleRepr
                 , RuleReprCase
                     { reprCasePattern = DomainSet
                                           { size = Nothing
-                                          , minSize = Just ( Identifier "mn" )
+                                          , minSize = Just ( Identifier "__rules_repr_Set_Occurrence_repr_mn" )
                                           , maxSize = Nothing
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Geq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "t"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Occurrence_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Index
                                                                   [ Identifier "refn"
-                                                                  , Identifier "i"
+                                                                  , Identifier "__rules_repr_Set_Occurrence_repr_i"
                                                                   ]
                                                    }
-                                               , Identifier "mn"
+                                               , Identifier "__rules_repr_Set_Occurrence_repr_mn"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = []
@@ -85,26 +86,26 @@ RuleRepr
                     { reprCasePattern = DomainSet
                                           { size = Nothing
                                           , minSize = Nothing
-                                          , maxSize = Just ( Identifier "mx" )
+                                          , maxSize = Just ( Identifier "__rules_repr_Set_Occurrence_repr_mx" )
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Leq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "t"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Occurrence_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Index
                                                                   [ Identifier "refn"
-                                                                  , Identifier "i"
+                                                                  , Identifier "__rules_repr_Set_Occurrence_repr_i"
                                                                   ]
                                                    }
-                                               , Identifier "mx"
+                                               , Identifier "__rules_repr_Set_Occurrence_repr_mx"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = []
@@ -112,10 +113,10 @@ RuleRepr
                 , RuleReprCase
                     { reprCasePattern = DomainSet
                                           { size = Nothing
-                                          , minSize = Just ( Identifier "mn" )
-                                          , maxSize = Just ( Identifier "mx" )
+                                          , minSize = Just ( Identifier "__rules_repr_Set_Occurrence_repr_mn" )
+                                          , maxSize = Just ( Identifier "__rules_repr_Set_Occurrence_repr_mx" )
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
@@ -124,32 +125,32 @@ RuleRepr
                                                [ GenericNode
                                                    Geq
                                                    [ ExprQuantifier
-                                                       { quanName = "sum"
-                                                       , quanVar = Identifier "i"
-                                                       , quanOver = Identifier "t"
+                                                       { quanName = Identifier "sum"
+                                                       , quanVar = Identifier "__rules_repr_Set_Occurrence_repr_i"
+                                                       , quanOver = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                                        , quanGuard = Nothing
                                                        , quanBody = GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Occurrence_repr_i"
                                                                       ]
                                                        }
-                                                   , Identifier "mn"
+                                                   , Identifier "__rules_repr_Set_Occurrence_repr_mn"
                                                    ]
                                                , GenericNode
                                                    Leq
                                                    [ ExprQuantifier
-                                                       { quanName = "sum"
-                                                       , quanVar = Identifier "i"
-                                                       , quanOver = Identifier "t"
+                                                       { quanName = Identifier "sum"
+                                                       , quanVar = Identifier "__rules_repr_Set_Occurrence_repr_i"
+                                                       , quanOver = Identifier "__rules_repr_Set_Occurrence_repr_t"
                                                        , quanGuard = Nothing
                                                        , quanBody = GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Occurrence_repr_i"
                                                                       ]
                                                        }
-                                                   , Identifier "mx"
+                                                   , Identifier "__rules_repr_Set_Occurrence_repr_mx"
                                                    ]
                                                ] )
                     , reprCaseWheres = []

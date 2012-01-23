@@ -1,16 +1,17 @@
 RuleRepr
-  { reprName = "Gent"
+  { reprFilename = "rules/repr/Set.Gent.repr"
+  , reprName = "Gent"
   , reprTemplate = DomainMatrix
-                     { index = Identifier "t"
+                     { index = Identifier "__rules_repr_Set_Gent_repr_t"
                      , element = DomainIntegerFromTo (
                                    Just ( ValueInteger 0 ) ) (
-                                   Just ( Identifier "mx" ) )
+                                   Just ( Identifier "__rules_repr_Set_Gent_repr_mx" ) )
                      }
   , reprPrologueStructural = Just
                                ExprQuantifier
-                                 { quanName = "forall"
-                                 , quanVar = Identifier "i"
-                                 , quanOver = Identifier "t"
+                                 { quanName = Identifier "forall"
+                                 , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                 , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                  , quanGuard = Nothing
                                  , quanBody = GenericNode
                                                 Or
@@ -19,7 +20,7 @@ RuleRepr
                                                     [ GenericNode
                                                         Index
                                                         [ Identifier "refn"
-                                                        , Identifier "i"
+                                                        , Identifier "__rules_repr_Set_Gent_repr_i"
                                                         ]
                                                     , ValueInteger 0
                                                     ]
@@ -28,33 +29,31 @@ RuleRepr
                                                     [ GenericNode
                                                         Index
                                                         [ Identifier "refn"
-                                                        , Identifier "i"
+                                                        , Identifier "__rules_repr_Set_Gent_repr_i"
                                                         ]
                                                     , GenericNode
                                                         Plus
                                                         [ ValueInteger 1
                                                         , ExprQuantifier
-                                                            { quanName = "sum"
-                                                            , quanVar = Identifier "j"
-                                                            , quanOver = GenericNode
-                                                                           Intersect
-                                                                           [ DomainIntegerFromTo
-                                                                               Nothing (
-                                                                               Just (
-                                                                                 GenericNode
-                                                                                   Minus
-                                                                                   [ Identifier "i"
-                                                                                   , ValueInteger 1
-                                                                                   ] ) )
-                                                                           , Identifier "t"
-                                                                           ]
-                                                            , quanGuard = Nothing
+                                                            { quanName = Identifier "sum"
+                                                            , quanVar = Identifier "__rules_repr_Set_Gent_repr_j"
+                                                            , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
+                                                            , quanGuard = Just (
+                                                                            GenericNode
+                                                                              Lt
+                                                                              [ Identifier "__rules_repr_Set_Gent_repr_j"
+                                                                              , GenericNode
+                                                                                  Minus
+                                                                                  [ Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                                  , ValueInteger 1
+                                                                                  ]
+                                                                              ] )
                                                             , quanBody = GenericNode
                                                                            Gt
                                                                            [ GenericNode
                                                                                Index
                                                                                [ Identifier "refn"
-                                                                               , Identifier "j"
+                                                                               , Identifier "__rules_repr_Set_Gent_repr_j"
                                                                                ]
                                                                            , ValueInteger 0
                                                                            ]
@@ -65,7 +64,7 @@ RuleRepr
                                  }
   , reprPrologueWheres = [ GenericNode
                              HasType
-                             [ Identifier "t"
+                             [ Identifier "__rules_repr_Set_Gent_repr_t"
                              , DomainIntegerList []
                              ]
                          ]
@@ -76,57 +75,57 @@ RuleRepr
                                           , minSize = Nothing
                                           , maxSize = Nothing
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Nothing
                     , reprCaseWheres = []
                     , reprCaseBindings = [ ( Letting
-                                           , "mx"
+                                           , "__rules_repr_Set_Gent_repr_mx"
                                            , GenericNode
                                                Image
                                                [ Identifier "domSize"
-                                               , Identifier "t"
+                                               , Identifier "__rules_repr_Set_Gent_repr_t"
                                                ]
                                            )
                                          ]
                     }
                 , RuleReprCase
                     { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "n" )
+                                          { size = Just ( Identifier "__rules_repr_Set_Gent_repr_n" )
                                           , minSize = Nothing
                                           , maxSize = Nothing
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Eq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "r"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Gt
                                                                   [ GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                       ]
                                                                   , ValueInteger 0
                                                                   ]
                                                    }
-                                               , Identifier "n"
+                                               , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = [ ( Letting
-                                           , "mx"
+                                           , "__rules_repr_Set_Gent_repr_mx"
                                            , GenericNode
                                                Image
                                                [ Identifier "domSize"
-                                               , Identifier "t"
+                                               , Identifier "__rules_repr_Set_Gent_repr_t"
                                                ]
                                            )
                                          ]
@@ -134,39 +133,39 @@ RuleRepr
                 , RuleReprCase
                     { reprCasePattern = DomainSet
                                           { size = Nothing
-                                          , minSize = Just ( Identifier "mn" )
+                                          , minSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mn" )
                                           , maxSize = Nothing
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Geq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "r"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Gt
                                                                   [ GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                       ]
                                                                   , ValueInteger 0
                                                                   ]
                                                    }
-                                               , Identifier "mn"
+                                               , Identifier "__rules_repr_Set_Gent_repr_mn"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = [ ( Letting
-                                           , "mx"
+                                           , "__rules_repr_Set_Gent_repr_mx"
                                            , GenericNode
                                                Image
                                                [ Identifier "domSize"
-                                               , Identifier "t"
+                                               , Identifier "__rules_repr_Set_Gent_repr_t"
                                                ]
                                            )
                                          ]
@@ -175,102 +174,102 @@ RuleRepr
                     { reprCasePattern = DomainSet
                                           { size = Nothing
                                           , minSize = Nothing
-                                          , maxSize = Just ( Identifier "mx" )
+                                          , maxSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mx" )
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Leq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "r"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Gt
                                                                   [ GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                       ]
                                                                   , ValueInteger 0
                                                                   ]
                                                    }
-                                               , Identifier "mx"
+                                               , Identifier "__rules_repr_Set_Gent_repr_mx"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = []
                     }
                 , RuleReprCase
                     { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "n" )
-                                          , minSize = Just ( Identifier "mn" )
+                                          { size = Just ( Identifier "__rules_repr_Set_Gent_repr_n" )
+                                          , minSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mn" )
                                           , maxSize = Nothing
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Eq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "r"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Gt
                                                                   [ GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                       ]
                                                                   , ValueInteger 0
                                                                   ]
                                                    }
-                                               , Identifier "n"
+                                               , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = [ ( Letting
-                                           , "mx"
+                                           , "__rules_repr_Set_Gent_repr_mx"
                                            , GenericNode
                                                Image
                                                [ Identifier "domSize"
-                                               , Identifier "t"
+                                               , Identifier "__rules_repr_Set_Gent_repr_t"
                                                ]
                                            )
                                          ]
                     }
                 , RuleReprCase
                     { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "n" )
+                                          { size = Just ( Identifier "__rules_repr_Set_Gent_repr_n" )
                                           , minSize = Nothing
-                                          , maxSize = Just ( Identifier "mx" )
+                                          , maxSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mx" )
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Eq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "r"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Gt
                                                                   [ GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                       ]
                                                                   , ValueInteger 0
                                                                   ]
                                                    }
-                                               , Identifier "n"
+                                               , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = []
@@ -278,10 +277,10 @@ RuleRepr
                 , RuleReprCase
                     { reprCasePattern = DomainSet
                                           { size = Nothing
-                                          , minSize = Just ( Identifier "mn" )
-                                          , maxSize = Just ( Identifier "mx" )
+                                          , minSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mn" )
+                                          , maxSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mx" )
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
@@ -290,40 +289,40 @@ RuleRepr
                                                [ GenericNode
                                                    Geq
                                                    [ ExprQuantifier
-                                                       { quanName = "sum"
-                                                       , quanVar = Identifier "i"
-                                                       , quanOver = Identifier "r"
+                                                       { quanName = Identifier "sum"
+                                                       , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                       , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                        , quanGuard = Nothing
                                                        , quanBody = GenericNode
                                                                       Gt
                                                                       [ GenericNode
                                                                           Index
                                                                           [ Identifier "refn"
-                                                                          , Identifier "i"
+                                                                          , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                           ]
                                                                       , ValueInteger 0
                                                                       ]
                                                        }
-                                                   , Identifier "mn"
+                                                   , Identifier "__rules_repr_Set_Gent_repr_mn"
                                                    ]
                                                , GenericNode
                                                    Leq
                                                    [ ExprQuantifier
-                                                       { quanName = "sum"
-                                                       , quanVar = Identifier "i"
-                                                       , quanOver = Identifier "r"
+                                                       { quanName = Identifier "sum"
+                                                       , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                       , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                        , quanGuard = Nothing
                                                        , quanBody = GenericNode
                                                                       Gt
                                                                       [ GenericNode
                                                                           Index
                                                                           [ Identifier "refn"
-                                                                          , Identifier "i"
+                                                                          , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                           ]
                                                                       , ValueInteger 0
                                                                       ]
                                                        }
-                                                   , Identifier "mx"
+                                                   , Identifier "__rules_repr_Set_Gent_repr_mx"
                                                    ]
                                                ] )
                     , reprCaseWheres = []
@@ -331,32 +330,32 @@ RuleRepr
                     }
                 , RuleReprCase
                     { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "n" )
-                                          , minSize = Just ( Identifier "mn" )
-                                          , maxSize = Just ( Identifier "mx" )
+                                          { size = Just ( Identifier "__rules_repr_Set_Gent_repr_n" )
+                                          , minSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mn" )
+                                          , maxSize = Just ( Identifier "__rules_repr_Set_Gent_repr_mx" )
                                           , attrDontCare = False
-                                          , element = Identifier "t"
+                                          , element = Identifier "__rules_repr_Set_Gent_repr_t"
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
                                              GenericNode
                                                Eq
                                                [ ExprQuantifier
-                                                   { quanName = "sum"
-                                                   , quanVar = Identifier "i"
-                                                   , quanOver = Identifier "r"
+                                                   { quanName = Identifier "sum"
+                                                   , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
+                                                   , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                    , quanGuard = Nothing
                                                    , quanBody = GenericNode
                                                                   Gt
                                                                   [ GenericNode
                                                                       Index
                                                                       [ Identifier "refn"
-                                                                      , Identifier "i"
+                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
                                                                       ]
                                                                   , ValueInteger 0
                                                                   ]
                                                    }
-                                               , Identifier "n"
+                                               , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
                     , reprCaseWheres = []
                     , reprCaseBindings = []
