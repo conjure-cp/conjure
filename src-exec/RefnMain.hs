@@ -3,20 +3,19 @@
 
 module Main where
 
-import Control.Monad ( when )
-import Control.Monad.Error ( runErrorT )
+import Control.Monad ( forM_, when )
 import Data.List ( groupBy, sortBy, isSuffixOf )
+import System.Directory ( createDirectoryIfMissing )
 import System.Environment ( getArgs )
 import System.FilePath ( dropExtension )
-import System.Directory ( createDirectoryIfMissing )
 
 import Language.Essence ( RuleRefn(..) )
 import Language.EssenceParsers ( pSpec, pRuleRefn )
 import Language.EssencePrinters ( prSpec )
 import ParsecUtils ( parseFromFile )
-import Phases.Refn ( applyRefnsToSpec )
+import Phases.Refn ( callRefn )
 import PrintUtils ( render )
-import Utils -- ( padLeft )
+import Utils ( padLeft )
 
 
 main :: IO ()
@@ -25,22 +24,20 @@ main = do
     specFilename <- case filter (".essence" `isSuffixOf`) args of
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
-    spec  <- parseFromFile pSpec id specFilename id
+    spec  <- parseFromFile pSpec langlinePre specFilename id
     refns <- mapM (\ r -> parseFromFile (pRuleRefn r) id r id ) $ filter (".rule" `isSuffixOf`) args
 
     when (null refns) $ putStrLn "Warning: no *.rule file is given."
 
-    specs <- runErrorT $ applyRefnsToSpec refns spec
+    specs <- callRefn refns spec
 
     let dirName = dropExtension specFilename ++ "-refn"
     createDirectoryIfMissing True dirName
 
-    case specs of
-        Left err -> error err
-        Right ss -> flip mapM_ (zip [(1::Int)..] ss) $ \ (i,s) -> do
-            let outFilename = dirName ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
-            putStrLn $ "Outputting: " ++ outFilename
-            writeFile outFilename $ render prSpec s
+    forM_ (zip [(1::Int)..] specs) $ \ (i,s) -> do
+        let outFilename = dirName ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
+        putStrLn outFilename
+        writeFile outFilename $ render prSpec s
 
 groupRefns :: [RuleRefn] -> [[RuleRefn]]
 groupRefns rs = groupBy (\ r1 r2 -> refnLevel r1 ==  refnLevel r2 )
@@ -49,3 +46,6 @@ groupRefns rs = groupBy (\ r1 r2 -> refnLevel r1 ==  refnLevel r2 )
         o :: Ord a => Maybe a -> Maybe a -> Ordering
         o (Just i) (Just j) = compare i j
         o i j = compare j i
+
+langlinePre :: String -> String
+langlinePre s = unlines $ "language Essence 2.0" : drop 1 (lines s)
