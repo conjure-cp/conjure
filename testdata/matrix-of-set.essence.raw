@@ -96,25 +96,35 @@ Spec
                                  ] ) ) (
                              ValueInteger 0 )
                          )
-                       , ( Given
+                       , ( Find
                          , "x"
-                         , DomainIntegerList []
+                         , DomainMatrix
+                             { index = DomainIntegerFromTo (
+                                         Just ( ValueInteger 0 ) ) (
+                                         Just ( ValueInteger 4 ) )
+                             , element = DomainSet
+                                           { size = Nothing
+                                           , minSize = Nothing
+                                           , maxSize = Nothing
+                                           , attrDontCare = False
+                                           , element = DomainIntegerFromTo (
+                                                         Just ( ValueInteger 3 ) ) (
+                                                         Just ( ValueInteger 8 ) )
+                                           , representation = Nothing
+                                           }
+                             }
                          )
                        ]
-  , topLevelWheres = [ GenericNode
-                         Eq
-                         [ ValueInteger 1
-                         , ValueInteger 2
-                         ]
-                     ]
-  , objective = Just
-                  ( Minimising
-                  , Identifier "x"
-                  )
+  , topLevelWheres = []
+  , objective = Nothing
   , constraints = [ GenericNode
-                      Eq
-                      [ Identifier "x"
-                      , ValueInteger 3
+                      Elem
+                      [ ValueInteger 3
+                      , GenericNode
+                          Index
+                          [ Identifier "x"
+                          , ValueInteger 3
+                          ]
                       ]
                   ]
   , metadata = []

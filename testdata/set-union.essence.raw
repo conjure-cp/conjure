@@ -96,25 +96,60 @@ Spec
                                  ] ) ) (
                              ValueInteger 0 )
                          )
-                       , ( Given
+                       , ( Find
                          , "x"
-                         , DomainIntegerList []
+                         , DomainSet
+                             { size = Just ( ValueInteger 4 )
+                             , minSize = Nothing
+                             , maxSize = Nothing
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       , ( Find
+                         , "y"
+                         , DomainSet
+                             { size = Just ( ValueInteger 4 )
+                             , minSize = Nothing
+                             , maxSize = Nothing
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       , ( Find
+                         , "z"
+                         , DomainSet
+                             { size = Just ( ValueInteger 4 )
+                             , minSize = Nothing
+                             , maxSize = Nothing
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
                          )
                        ]
-  , topLevelWheres = [ GenericNode
-                         Eq
-                         [ ValueInteger 1
-                         , ValueInteger 2
-                         ]
-                     ]
-  , objective = Just
-                  ( Minimising
-                  , Identifier "x"
-                  )
+  , topLevelWheres = []
+  , objective = Nothing
   , constraints = [ GenericNode
-                      Eq
-                      [ Identifier "x"
-                      , ValueInteger 3
+                      Elem
+                      [ ValueInteger 3
+                      , GenericNode
+                          Intersect
+                          [ GenericNode
+                              Union
+                              [ Identifier "x"
+                              , Identifier "y"
+                              ]
+                          , Identifier "z"
+                          ]
                       ]
                   ]
   , metadata = []

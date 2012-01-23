@@ -7,30 +7,123 @@ Spec
                          , "forall"
                          , DeclQuantifier (
                              DeclLambda
-                               [ ( "x"
+                               [ ( "__forall_x"
                                  , TypeBoolean
                                  )
-                               , ( "y"
+                               , ( "__forall_y"
                                  , TypeBoolean
                                  )
                                ] (
                                GenericNode
                                  And
-                                 [ Identifier "x"
-                                 , Identifier "y"
+                                 [ Identifier "__forall_x"
+                                 , Identifier "__forall_y"
                                  ] ) ) (
                              DeclLambda
-                               [ ( "x"
+                               [ ( "__forall_x"
                                  , TypeBoolean
                                  )
-                               , ( "y"
+                               , ( "__forall_y"
                                  , TypeBoolean
                                  )
                                ] (
                                GenericNode
                                  Imply
-                                 [ Identifier "x"
-                                 , Identifier "y"
+                                 [ Identifier "__forall_x"
+                                 , Identifier "__forall_y"
+                                 ] ) ) (
+                             ValueBoolean True )
+                         )
+                       , ( Letting
+                         , "exists"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "__exists_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__exists_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 Or
+                                 [ Identifier "__exists_x"
+                                 , Identifier "__exists_y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "__exists_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__exists_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 And
+                                 [ Identifier "__exists_x"
+                                 , Identifier "__exists_y"
+                                 ] ) ) (
+                             ValueBoolean False )
+                         )
+                       , ( Letting
+                         , "sum"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "__sum_x"
+                                 , TypeInteger
+                                 )
+                               , ( "__sum_y"
+                                 , TypeInteger
+                                 )
+                               ] (
+                               GenericNode
+                                 Plus
+                                 [ Identifier "__sum_x"
+                                 , Identifier "__sum_y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "__sum_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__sum_y"
+                                 , TypeInteger
+                                 )
+                               ] (
+                               GenericNode
+                                 Times
+                                 [ Identifier "__sum_x"
+                                 , Identifier "__sum_y"
+                                 ] ) ) (
+                             ValueInteger 0 )
+                         )
+                       , ( Letting
+                         , "myForall"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "__myForall_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__myForall_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 And
+                                 [ Identifier "__myForall_x"
+                                 , Identifier "__myForall_y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "__myForall_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__myForall_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 Imply
+                                 [ Identifier "__myForall_x"
+                                 , Identifier "__myForall_y"
                                  ] ) ) (
                              ValueBoolean True )
                          )
@@ -51,14 +144,14 @@ Spec
   , topLevelWheres = []
   , objective = Nothing
   , constraints = [ ExprQuantifier
-                      { quanName = "forall"
+                      { quanName = Identifier "myForall"
                       , quanVar = Identifier "i"
                       , quanOver = DomainIntegerFromTo (
                                      Just ( ValueInteger 1 ) ) (
                                      Just ( ValueInteger 9 ) )
                       , quanGuard = Nothing
                       , quanBody = ExprQuantifier
-                                     { quanName = "forall"
+                                     { quanName = Identifier "myForall"
                                      , quanVar = Identifier "j"
                                      , quanOver = DomainIntegerFromTo (
                                                     Just ( ValueInteger 1 ) ) (

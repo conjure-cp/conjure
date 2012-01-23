@@ -7,10 +7,11 @@ find y : digit
 
 letting xy be x * y
 
-letting forall_glueOp be lambda { x:bool, y:bool -> x /\ y }
-letting forall_skipOp be lambda { x:bool, y:bool -> x => y }
-
-letting forall be quantifier { forall_glueOp forall_skipOp true }
+letting myForall be quantifier {
+    lambda { x:bool, y:bool -> x /\ y }
+    lambda { x:bool, y:bool -> x => y }
+    true
+    }
 
 such that
-    forall i : int(1..9) . xy > i
+    myForall i : int(1..9) . xy > i

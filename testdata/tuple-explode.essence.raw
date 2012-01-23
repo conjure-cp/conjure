@@ -1,0 +1,297 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Letting
+                         , "forall"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "__forall_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__forall_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 And
+                                 [ Identifier "__forall_x"
+                                 , Identifier "__forall_y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "__forall_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__forall_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 Imply
+                                 [ Identifier "__forall_x"
+                                 , Identifier "__forall_y"
+                                 ] ) ) (
+                             ValueBoolean True )
+                         )
+                       , ( Letting
+                         , "exists"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "__exists_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__exists_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 Or
+                                 [ Identifier "__exists_x"
+                                 , Identifier "__exists_y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "__exists_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__exists_y"
+                                 , TypeBoolean
+                                 )
+                               ] (
+                               GenericNode
+                                 And
+                                 [ Identifier "__exists_x"
+                                 , Identifier "__exists_y"
+                                 ] ) ) (
+                             ValueBoolean False )
+                         )
+                       , ( Letting
+                         , "sum"
+                         , DeclQuantifier (
+                             DeclLambda
+                               [ ( "__sum_x"
+                                 , TypeInteger
+                                 )
+                               , ( "__sum_y"
+                                 , TypeInteger
+                                 )
+                               ] (
+                               GenericNode
+                                 Plus
+                                 [ Identifier "__sum_x"
+                                 , Identifier "__sum_y"
+                                 ] ) ) (
+                             DeclLambda
+                               [ ( "__sum_x"
+                                 , TypeBoolean
+                                 )
+                               , ( "__sum_y"
+                                 , TypeInteger
+                                 )
+                               ] (
+                               GenericNode
+                                 Times
+                                 [ Identifier "__sum_x"
+                                 , Identifier "__sum_y"
+                                 ] ) ) (
+                             ValueInteger 0 )
+                         )
+                       , ( Find
+                         , "a"
+                         , DomainTuple
+                             { components = [ DomainIntegerFromTo (
+                                                Just ( ValueInteger 0 ) ) (
+                                                Just ( ValueInteger 9 ) )
+                                            ]
+                             , representation = Nothing
+                             }
+                         )
+                       , ( Find
+                         , "b"
+                         , DomainTuple
+                             { components = [ DomainIntegerFromTo (
+                                                Just ( ValueInteger 0 ) ) (
+                                                Just ( ValueInteger 9 ) )
+                                            , DomainIntegerFromTo (
+                                                Just ( ValueInteger 3 ) ) (
+                                                Just ( ValueInteger 8 ) )
+                                            ]
+                             , representation = Nothing
+                             }
+                         )
+                       , ( Find
+                         , "c"
+                         , DomainMatrix
+                             { index = DomainIntegerFromTo (
+                                         Just ( ValueInteger 0 ) ) (
+                                         Just ( ValueInteger 9 ) )
+                             , element = DomainTuple
+                                           { components = [ DomainIntegerFromTo (
+                                                              Just ( ValueInteger 2 ) ) (
+                                                              Just ( ValueInteger 6 ) )
+                                                          ]
+                                           , representation = Nothing
+                                           }
+                             }
+                         )
+                       , ( Find
+                         , "d"
+                         , DomainMatrix
+                             { index = DomainIntegerFromTo (
+                                         Just ( ValueInteger 0 ) ) (
+                                         Just ( ValueInteger 9 ) )
+                             , element = DomainTuple
+                                           { components = [ DomainBoolean
+                                                          , DomainIntegerFromTo (
+                                                              Just ( ValueInteger 2 ) ) (
+                                                              Just ( ValueInteger 6 ) )
+                                                          ]
+                                           , representation = Nothing
+                                           }
+                             }
+                         )
+                       , ( Find
+                         , "e"
+                         , DomainMatrix
+                             { index = DomainIntegerFromTo (
+                                         Just ( ValueInteger 0 ) ) (
+                                         Just ( ValueInteger 9 ) )
+                             , element = DomainTuple
+                                           { components = [ DomainIntegerFromTo (
+                                                              Just ( ValueInteger 10 ) ) (
+                                                              Just ( ValueInteger 20 ) )
+                                                          , DomainIntegerFromTo (
+                                                              Just ( ValueInteger 20 ) ) (
+                                                              Just ( ValueInteger 30 ) )
+                                                          , DomainIntegerFromTo (
+                                                              Just ( ValueInteger 30 ) ) (
+                                                              Just ( ValueInteger 40 ) )
+                                                          ]
+                                           , representation = Nothing
+                                           }
+                             }
+                         )
+                       ]
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ Identifier "a"
+                          , ValueInteger 0
+                          ]
+                      , ValueInteger 1
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ Identifier "b"
+                          , ValueInteger 0
+                          ]
+                      , ValueInteger 2
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ Identifier "b"
+                          , ValueInteger 1
+                          ]
+                      , ValueInteger 3
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "c"
+                              , ValueInteger 3
+                              ]
+                          , ValueInteger 0
+                          ]
+                      , ValueInteger 4
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "c"
+                              , ValueInteger 3
+                              ]
+                          , ValueInteger 0
+                          ]
+                      , ValueInteger 4
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "d"
+                              , ValueInteger 4
+                              ]
+                          , ValueInteger 0
+                          ]
+                      , ValueBoolean True
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "d"
+                              , ValueInteger 2
+                              ]
+                          , ValueInteger 1
+                          ]
+                      , ValueInteger 4
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "e"
+                              , ValueInteger 5
+                              ]
+                          , ValueInteger 0
+                          ]
+                      , ValueInteger 15
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "e"
+                              , ValueInteger 5
+                              ]
+                          , ValueInteger 1
+                          ]
+                      , ValueInteger 25
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Index
+                          [ GenericNode
+                              Index
+                              [ Identifier "e"
+                              , ValueInteger 5
+                              ]
+                          , ValueInteger 2
+                          ]
+                      , ValueInteger 35
+                      ]
+                  ]
+  , metadata = []
+  }

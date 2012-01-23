@@ -1,10 +1,10 @@
 language Essence 2.0
 
-letting forall be quantifier { lambda { x : bool, y : bool -> x /\ y }
-                               lambda { x : bool, y : bool -> x => y }
-                               true
-                             }
+letting myForall be quantifier { lambda { x : bool, y : bool -> x /\ y }
+                                 lambda { x : bool, y : bool -> x => y }
+                                 true
+                               }
 find s : set of int(1..90)
 
 such that
-    forall i : int(1..9) . forall j : int(1..9) , i = 2 * j . i + j elem s
+    myForall i : int(1..9) . myForall j : int(1..9) , i = 2 * j . i + j elem s
