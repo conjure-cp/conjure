@@ -32,11 +32,16 @@ Library
                      , Language.EssencePrinters
                      , Language.EssenceTypes
 
+                     , Phases.Eval
+                     , Phases.InlineQuanGuards
+                     , Phases.QuanRename
                      , Phases.Refn
+                     , Phases.RemoveUnusedDecls
                      , Phases.Repr
                      , Phases.ReprRefnCommon
                      , Phases.ResolveTwoBars
-                     , Phases.QuanRename
+                     , Phases.TopLevelAnds
+                     , Phases.TupleExplode
 
                      , Test.Language.OnFile.Common
                      , Test.Language.OnFile.RuleRepr
@@ -59,6 +64,7 @@ Library
                      , pretty-show  == 1.1.*
                      , QuickCheck   == 2.4.*
                      , random       == 1.0.*
+                     , value-supply == 0.6
                      , split        == 0.1.*
                      , syb          == 0.3.6
                      , transformers == 0.2.2.*
