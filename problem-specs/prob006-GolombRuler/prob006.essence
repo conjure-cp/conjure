@@ -1,0 +1,19 @@
+language ESSENCE 1.2.0
+$ prob005.essence: Low Autocorellation Binary Sequences
+$ Problem details available at http://www.csplib.org/prob/prob005/
+
+$ given n : int(0..)
+letting n be 5
+
+letting bound be 2^n
+
+find ticks : set (size n) of int(0..bound)
+
+$ minimising max(ticks)
+
+such that
+    $ forall (i,j,k,l): ticks . (
+    $     (i < j /\ k < l /\ (i,j) != (k,l)) => (j-i != k-l)
+    $ )
+
+    forall i,j,k,l: ticks, i < j /\ k < l /\ (i,j) != (k,l) . (j-i != k-l)
