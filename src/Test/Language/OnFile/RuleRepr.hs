@@ -10,5 +10,10 @@ import Test.Language.OnFile.Common
 
 
 allTests :: [String] -> Test
-allTests = mkAllTests "RuleRepr"
-    $ testOne pRuleRepr prRuleRepr typeCheckRuleRepr reprPrologueBindings
+allTests = mkAllTests "RuleRepr" f
+    where
+        f filename = testOne (pRuleRepr filename)
+                             prRuleRepr
+                             typeCheckRuleRepr
+                             reprPrologueBindings
+                             filename
