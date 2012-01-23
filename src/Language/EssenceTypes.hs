@@ -14,6 +14,7 @@ import Control.Monad.RWS ( evalRWS
 import Control.Monad ( forM_, unless )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Data.Default ( def )
+import Data.List ( genericIndex, genericLength )
 
 import Language.Essence
 import Language.EssenceKinds ( kindOf )
@@ -68,6 +69,19 @@ typeOf ::
     ) => Expr -> m Type
 
 typeOf p@Underscore       = p ~~$ TypeUnknown
+
+typeOf p@(GenericNode Index [a,b]) = do
+    ta <- typeOf a
+    case ta of
+        TypeTuple ts ->
+            case b of
+                ValueInteger i ->
+                    if i >= 0 && i < genericLength ts
+                        then p ~~$ genericIndex ts i
+                        else p ~$$ "Tuple index out of range, " ++ show i ++ " not in " ++ show (0 :: Int, length ts)
+                _ -> p ~$$ "Don't know how to type-check this."
+        TypeMatrix t -> p ~~$ t
+        _ -> p ~$$ "Don't know how to type-check this."
 
 typeOf p@(GenericNode op xs) = do
     ts <- mapM typeOf xs
