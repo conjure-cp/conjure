@@ -120,10 +120,14 @@ evaluateExpr (GenericNode Times [GenericNode Pow [x,y],z]) | x == z
     = rJust $ GenericNode Pow [x,GenericNode Plus [y,ValueInteger 1]]
 
 evaluateExpr (GenericNode And [ValueBoolean True ,x]) = rJust x
+evaluateExpr (GenericNode And [x, ValueBoolean True]) = rJust x
 evaluateExpr (GenericNode And [ValueBoolean False,_]) = rJust $ ValueBoolean False
+evaluateExpr (GenericNode And [_,ValueBoolean False]) = rJust $ ValueBoolean False
 
 evaluateExpr (GenericNode Or  [ValueBoolean False,x]) = rJust x
+evaluateExpr (GenericNode Or  [x,ValueBoolean False]) = rJust x
 evaluateExpr (GenericNode Or  [ValueBoolean True ,_]) = rJust $ ValueBoolean True
+evaluateExpr (GenericNode Or  [_,ValueBoolean True ]) = rJust $ ValueBoolean True
 
 evaluateExpr (GenericNode Imply [ValueBoolean True ,x]) = rJust x
 evaluateExpr (GenericNode Imply [ValueBoolean False,_]) = rJust $ ValueBoolean True
@@ -142,6 +146,11 @@ evaluateExpr (GenericNode Eq [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
 evaluateExpr (GenericNode Imply [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
 evaluateExpr (GenericNode Iff [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
 
+-- unroll set of int to int range
+
+evaluateExpr p@(ExprQuantifier {quanOver=ValueSet xs@(ValueInteger _:_)})
+    = rJust p { quanOver = DomainIntegerList xs }
+
 -- some special cases
 
 evaluateExpr (GenericNode Minus [GenericNode Plus [x,y],z])
@@ -151,11 +160,85 @@ evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
     | y == z = rJust x
     | x == z = rJust $ GenericNode Negate [y]
 
+evaluateExpr (GenericNode Image [Identifier "domSize",DomainIntegerFromTo (Just a) (Just b)])
+    = rJust $ GenericNode Plus [ GenericNode Minus [b,a]
+                               , ValueInteger 1
+                               ]
+
+evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
+                                                               , Identifier b
+                                                               ]
+                                ])
+    = case splitOn "#" a of
+        [_,c] | isSuffixOf c b -> rJust $ ValueBoolean True
+        _                      -> rNothing
+
+evaluateExpr (GenericNode Image [Identifier "refn", Identifier a])
+    = case splitOn "#" a of
+        [b,c] -> rJust $ Identifier $ b ++ "_" ++ c
+        _     -> rNothing
+
+evaluateExpr (GenericNode Replace [x,old,new]) =
+    let
+        f i | i == old  = new
+            | otherwise = i
+    in rJust $ transformBi f x
+
+evaluateExpr (GenericNode Image [Identifier "tau", Identifier nmParam]) = do
+    let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
+    bs <- ask
+    case [ e | (ty,nm',DomainSet{element=e}) <- bs, nm == nm', ty `elem` [Find,Given] ] of
+        [x] -> rJust x
+        _   -> rNothing
+
+evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [Identifier nm, ValueInteger i]]) = do
+    bs <- ask
+    case [ ind | (_,nm',DomainMatrix{index=ind}) <- bs, nm == nm' ] of
+        [ind] -> case ind of
+            ValueTuple inds | i >= 0 && i < genericLength inds -> rJust $ inds `genericIndex` i
+            _ -> if i == 0 then rJust ind else rNothing
+        _ -> rNothing
+
+evaluateExpr (GenericNode Image [Identifier opParam, Identifier nm]) = do
+    let op = reverse $ take 6 $ reverse opParam
+    if op `elem` ["glueOp", "skipOp", "quanID"]
+        then do
+            bs <- ask
+            case [ (glueOp,skipOp,quanID)
+                 | (Letting,nm',DeclQuantifier glueOp skipOp quanID) <- bs
+                 , nm == nm' ] of
+                     [(glueOp,skipOp,quanID)] -> case op of "glueOp" -> rJust glueOp
+                                                            "skipOp" -> rJust skipOp
+                                                            "quanID" -> rJust quanID
+                                                            _        -> error "this should never happen."
+                     _ -> do
+                         let msg = "quantifier " ++ nm ++ " is not defined."
+                         liftIO $ putStrLn msg
+                         void $ error msg
+                         rNothing
+        else rNothing
+
+
+evaluateExpr (GenericNode Image [DeclLambda params body, ValueTuple arguments]) =
+    if length params /= length arguments
+        then rNothing
+        else do
+            let
+                lu = zip (map fst params) arguments
+                f (Identifier nm) = case lookup nm lu of Nothing -> Identifier nm
+                                                         Just x  -> x
+                f x = x
+            rJust $ transform f body
+
+evaluateExpr (GenericNode Image [DeclLambda [param] body, x])
+    = evaluateExpr $ GenericNode Image [DeclLambda [param] body, ValueTuple [x]]
+
 -- let binding
 
 evaluateExpr (Identifier nm) = do
     bs <- ask
     case [ x | (ty,nm',x) <- bs, nm == nm', ty `elem` [Letting,InRule] ] of
+        [DeclQuantifier {}] -> rNothing
         [x] -> rJust x
         _   -> rNothing
 
@@ -163,10 +246,12 @@ evaluateExpr (GenericNode HasType [i,j]) = do
     bs <- ask
     let typeofI = runTypeOf bs i
     let typeofJ = runTypeOf bs j
-    liftIO $ ppPrint (typeofI, typeofJ)
+    -- liftIO $ ppPrint (typeofI, typeofJ)
     case (typeofI, typeofJ) of
         ((Right it, _), (Right jt, _)) -> rJust $ ValueBoolean $ typeUnify it jt
         _ -> rNothing
+
+evaluateExpr p@(ExprQuantifier {quanGuard=Just (ValueBoolean True)}) = rJust p {quanGuard = Nothing}
 
 -- no eval
 
