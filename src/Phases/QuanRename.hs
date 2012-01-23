@@ -1,17 +1,25 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Phases.QuanRename where
+module Phases.QuanRename ( quanRename, quanRenameUsing ) where
 
 import Control.Applicative
 import Control.Monad.IO.Class ( MonadIO )
 import Control.Monad.State ( MonadState, get, put, evalStateT )
 import Data.Generics.Uniplate.Direct ( Uniplate, Biplate, transformBi, descendM, descendBiM )
+import Data.List ( (\\) )
 
 import Language.Essence
+import Utils ( snd3 )
 
 quanRename :: (Applicative m, MonadIO m) => Spec -> m Spec
-quanRename s = evalStateT (descendBiM quanVarNaming s)
-             $ words "i j k l" ++ map (('q':) . show) [(0::Int)..]
+quanRename spec = quanRenameUsing names spec
+    where
+        names    = allNames \\ map snd3 (topLevelBindings spec)
+        allNames = words "i j k l" ++ map (("q_"++) . show) [(0::Int)..]
+
+quanRenameUsing :: (Applicative m, MonadIO m, Biplate a Expr) => [String] -> a -> m a
+quanRenameUsing names s = evalStateT (descendBiM quanVarNaming s) names
+
 
 getNextName :: MonadState [String] m => m String
 getNextName = do
@@ -37,7 +45,7 @@ quanVarNaming (ExprQuantifier qnName (Identifier qnVar) qnOver qnGuard qnBody) =
                             qnOver'
                             qnGuard'
                             qnBody'
-quanVarNaming x = descendM (encapsulated .quanVarNaming) x
+quanVarNaming x = descendM (encapsulated . quanVarNaming) x
 
 encapsulated :: MonadState s m => m b -> m b
 encapsulated comp = do
