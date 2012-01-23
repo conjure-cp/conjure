@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Utils
     ( allValues
     , maybeRead
@@ -5,8 +7,9 @@ module Utils
     , strip
     , runRWSE, runRWSET
     , fst3, snd3, thd3
-    , fromJust, padLeft
+    , fromJust, padLeft, padRight
     , applyAll
+    , allPairs
     ) where
 
 import Control.Monad.Error ( ErrorT, runErrorT )
@@ -23,6 +26,9 @@ fromJust _   (Just a) = a
 
 padLeft :: a -> Int -> [a] -> [a]
 padLeft pre n xs = replicate (n - length xs) pre ++ xs
+
+padRight :: a -> Int -> [a] -> [a]
+padRight pre n xs = xs ++ replicate (n - length xs) pre
 
 
 strip :: String -> String
@@ -76,3 +82,7 @@ applyAll :: a -> [a -> a] -> a
 applyAll x = foldl (\ t f -> f t) x
 -- applyAll x []     = x
 -- applyAll x (f:fs) = applyAll (f x) fs
+
+allPairs :: [a] -> [(a,a)]
+allPairs [] = []
+allPairs (x:xs) = map (x,) xs ++ allPairs xs
