@@ -6,7 +6,10 @@
 module MonadInterleave ( MonadInterleave, interleave, yield ) where
 
 
+import Control.Monad.Trans.List ( ListT(..) )
 import Control.Monad.Identity ( Identity )
+import Control.Monad.RWS
+import Control.Monad.Error ( Error, ErrorT )
 import System.IO.Unsafe ( unsafeInterleaveIO )
 
 
@@ -15,6 +18,7 @@ class Monad m => MonadInterleave m where
 
     -- defer the evaluation of the argument computation
     interleave :: m a -> m a
+    interleave = id
 
 
 -- replacement for `return`
@@ -27,5 +31,10 @@ instance MonadInterleave IO where
     interleave = unsafeInterleaveIO
 
 -- Identity doesn't need any special care
-instance MonadInterleave Identity where
-    interleave = id
+instance MonadInterleave Identity
+
+instance (MonadInterleave m, Error e) => MonadInterleave (ErrorT e m)
+
+instance  (MonadInterleave m) => MonadInterleave (ListT m)
+
+instance (MonadInterleave m, Monoid w) => MonadInterleave (RWST r w s m)
