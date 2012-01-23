@@ -1,37 +1,39 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Phases.Repr where
+module Phases.Repr ( callRepr ) where
 
 import Control.Applicative
 import Control.Arrow ( second )
-import Control.Monad ( forM, forM_, zipWithM_ )
+import Control.Monad ( (<=<), forM, forM_, zipWithM_ )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, modify, evalRWST )
 import Data.Either ( rights )
-import Data.Generics.Uniplate.Direct ( Biplate, transformBi, transformBiM, universeBi )
+import Data.Generics.Uniplate.Direct ( transformBi, transformBiM, universeBi )
 import Data.List ( (\\), group, nub, sort )
 import Data.Maybe ( catMaybes, maybeToList )
 import qualified Data.Map as M
 
 import Language.Essence
-import Language.EssenceEvaluator ( runEvaluateExpr )
 import Language.EssenceParsers ( pSpec, pRuleRepr )
 import Language.EssencePrinters ( prSpec, prExpr )
 import MonadInterleave ( MonadInterleave )
 import ParsecUtils ( parseIO )
+import Phases.Eval ( evalSpec )
+import Phases.QuanRename ( quanRename )
 import Phases.ReprRefnCommon
+import Phases.TopLevelAnds ( topLevelAnds )
 import PrintUtils
-import Utils ( applyAll, runRWSET )
+import Utils ( allPairs, runRWSET )
 
 
 test :: IO ()
 test = do
     s <- parseIO pSpec =<< readFile "../testdata/has-sets.essence"
-    r1 <- parseIO pRuleRepr =<< readFile "../rules/repr/Set.Explicit.repr"
-    r2 <- parseIO pRuleRepr =<< readFile "../rules/repr/Set.ExplicitVarSize.repr"
-    r3 <- parseIO pRuleRepr =<< readFile "../rules/repr/Set.Occurrence.repr"
+    r1 <- parseIO (pRuleRepr "r1") =<< readFile "../rules/repr/Set.Explicit.repr"
+    r2 <- parseIO (pRuleRepr "r2") =<< readFile "../rules/repr/Set.ExplicitVarSize.repr"
+    r3 <- parseIO (pRuleRepr "r3") =<< readFile "../rules/repr/Set.Occurrence.repr"
     putStrLn $ render prSpec s
     print =<< appl s [r1,r2,r3]
 
@@ -47,6 +49,14 @@ type ReprResult = (ReprName, Domain, Structural)
 
 cross :: [a] -> Int -> [[a]]
 cross xs n = sequence $ replicate n xs
+
+
+callRepr :: [RuleRepr] -> Spec -> IO [Spec]
+callRepr reprs spec = do
+    temp <- runErrorT (applyToSpec reprs spec)
+    case temp of
+        Left err -> error err
+        Right ss -> return ss
 
 
 applyToSpec ::
@@ -65,6 +75,12 @@ applyToSpec reprs spec = do
         bindingsNeedsRepr :: [Binding]
         bindingsNeedsRepr = [ b
                             | b@(ty,_,x) <- bindings
+                            , ty `elem` [Find, Given]
+                            , needsRepresentation x
+                            , representation x == Nothing
+                            ]
+                         ++ [ b
+                            | b@(ty,_,DomainMatrix {element=x}) <- bindings
                             , ty `elem` [Find, Given]
                             , needsRepresentation x
                             , representation x == Nothing
@@ -119,7 +135,7 @@ applyToSpec reprs spec = do
     -- return []
 
     results <- forM lookupTables $ \ table -> applyConfigToSpec table spec
-    return results
+    mapM (quanRename <=< evalSpec) results
 
 
 applyConfigToSpec ::
@@ -129,9 +145,20 @@ applyConfigToSpec ::
       -> Spec
       -> m Spec
 applyConfigToSpec mp sp = do
+    let
+        forChannels :: [(String,String)]
+        forChannels = concat $ [ allPairs [ nm ++ "#" ++ r | r <- rs ]
+                               | ( nm, ls ) <- M.toList mp
+                               , let rs = nub [ a | (_,a,_,_) <- ls ]
+                               , length rs > 1
+                               ]
+        channels :: [Expr]
+        channels = [ GenericNode Eq [Identifier i, Identifier j]
+                   | (i,j) <- forChannels
+                   ]
     (resultSp,(md,bs,ss)) <- evalRWST (transformBiM f sp) () mp
     return resultSp { topLevelBindings = nub $ bs ++ topLevelBindings resultSp
-                    , constraints      = nub $ catMaybes ss ++ constraints resultSp
+                    , constraints      = nub $ catMaybes ss ++ constraints resultSp ++ channels
                     , metadata         = nub $ md ++ metadata resultSp
                     }
     where
@@ -147,15 +174,16 @@ applyConfigToSpec mp sp = do
                 Just [] -> throwError $ "applyConfigToSpec: empty list in state for " ++ nm
                 Just ((oldB@(bEnum,_,_),rn,rd,rs):rest) -> do
                     put (M.insert nm rest luMap)
-                    let newNm = nm ++ "#" ++ rn
+                    let newNmHash = nm ++ "#" ++ rn
+                    let newNmUnderscore = nm ++ "_" ++ rn
                     let
                         -- replace "refn" with newNm
-                        rs' = transformBi (\ t -> case t of Identifier "refn" -> Identifier newNm; _ -> t ) rs
-                    tell ( [ Represented oldB (bEnum,newNm,rd) ]
-                         , [ (bEnum,newNm,rd)                  ]
-                         , [ rs'                               ]
+                        rs' = transformBi (\ t -> case t of Identifier "refn" -> Identifier newNmUnderscore; _ -> t ) rs
+                    tell ( [ Represented oldB (bEnum,newNmUnderscore,rd) ]
+                         , [ (bEnum,newNmUnderscore,rd)                  ]
+                         , [ rs'                                         ]
                          )
-                    return $ Identifier newNm
+                    return $ Identifier newNmHash
         f p = return p
 
 
@@ -175,7 +203,8 @@ runApplyToDom dom repr = runRWSET () [] $ applyToDom dom repr
 
 
 applyToDom ::
-    ( MonadError ErrMsg m
+    ( Applicative m
+    , MonadError ErrMsg m
     , MonadWriter [Log] m
     , MonadState [Binding] m
     , MonadIO m
@@ -202,7 +231,8 @@ applyToDom dom repr = do
 
 
 applyCaseToDom :: forall m .
-    ( MonadWriter [Log] m
+    ( Applicative m
+    , MonadWriter [Log] m
     , MonadState [Binding] m
     , MonadIO m
     ) => Domain -> RuleReprCase -> m (Either ErrMsg Structural)

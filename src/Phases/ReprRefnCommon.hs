@@ -2,8 +2,9 @@
 
 module Phases.ReprRefnCommon where
 
-import Control.Monad.Error ( MonadError, throwError, runErrorT )
-import Control.Monad.IO.Class ( MonadIO )
+import Control.Applicative ( Applicative )
+import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.IO.Class ( MonadIO(..) )
 import Control.Monad.State ( MonadState, get )
 import Data.Generics.Uniplate.Direct ( Biplate, transformBi )
 
@@ -18,10 +19,15 @@ type ErrMsg = String
 
 instantiateNames ::
     ( MonadState [Binding] m
+    , MonadIO m
     , Biplate a Expr
+    , Show a
     ) => a -> m a
 instantiateNames x = do
     st <- get
+    -- liftIO $ putStrLn "instantiateNames"
+    -- liftIO $ print x
+    -- liftIO $ print $ map snd3 st
     let
         -- funcs :: [a -> a]
         funcs = flip map st $ \ t -> case t of (InRule, nm, val) -> instantiateName nm val
@@ -35,7 +41,8 @@ instantiateName nm x = transformBi f
         f y = y
 
 checkWheres ::
-    ( MonadError ErrMsg m
+    ( Applicative m
+    , MonadError ErrMsg m
     , MonadState [Binding] m
     , MonadIO m
     ) => Where -> m ()

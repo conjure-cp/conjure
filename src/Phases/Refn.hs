@@ -1,95 +1,136 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Phases.Refn where
+module Phases.Refn ( callRefn ) where
 
 import Control.Applicative
-import Control.Monad ( (<=<), forM_, zipWithM_ )
+import Control.Monad ( (<=<), forM, forM_, void, zipWithM_ )
 import Control.Monad.Error ( MonadError, runErrorT, throwError )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
-import Control.Monad.State ( MonadState, get, modify, runStateT )
-import Control.Monad.Writer ( MonadWriter )
 import Control.Monad.RWS ( evalRWST )
+import Control.Monad.State ( MonadState, get, modify )
+import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
+import Control.Monad.List ( ListT, runListT )
 import Data.Data ( dataTypeName, dataTypeOf, toConstr )
-import Data.Either ( lefts, rights )
+import Data.Either ( rights )
 import Data.Generics ( Data )
 import Data.Generics.Uniplate.Direct ( children, transformBiM )
 import Data.Maybe ( fromMaybe )
+import Data.Monoid ( Any(..) )
 import Data.Typeable ( cast )
+import Data.Supply ( Supply, newSupply, split, supplyValue )
 
 import Language.Essence
-import Language.EssenceParsers ( pRuleRefn, pExpr )
 import Language.EssencePrinters ( prExpr )
-import MonadList
-import ParsecUtils
-import Phases.ReprRefnCommon
-import PrintUtils
-import Utils
+import MonadList ( MonadList, option )
+import Phases.Eval ( evalSpec )
+import Phases.InlineQuanGuards ( inlineQuanGuards )
+import Phases.QuanRename ( quanRename, quanRenameUsing )
+import Phases.RemoveUnusedDecls ( removeUnusedDecls )
+import Phases.ReprRefnCommon ( ErrMsg, checkWheres, instantiateNames )
+import Phases.TopLevelAnds ( topLevelAnds )
+import Phases.TupleExplode ( tupleExplode )
+import PrintUtils ( render )
+import Utils ( ppShow )
 
 
-test :: IO ()
-test = do
-    r1 <- parseIO (pRuleRefn "Set.Eq.rule") =<< readFile "../rules/refn/Set.Eq.rule"
-    r2 <- parseIO (pRuleRefn "MSet.Eq.rule") =<< readFile "../rules/refn/MSet.Eq.rule"
-    x  <- parseIO (pExpr <* eof) =<< getLine
-    -- x  <- parseIO (pExpr <* eof) =<< return "12=13"
-    ppPrint x
-    xs <- runListT $ applyRefnsToExpr [] [r1,r2] x
-    mapM_ (putStrLn . render prExpr) xs
+-- test :: IO ()
+-- test = do
+--     r1 <- parseIO (pRuleRefn "Set.Eq.rule") =<< readFile "../rules/refn/Set.Eq.rule"
+--     r2 <- parseIO (pRuleRefn "MSet.Eq.rule") =<< readFile "../rules/refn/MSet.Eq.rule"
+--     x  <- parseIO (pExpr <* eof) =<< getLine
+--     -- x  <- parseIO (pExpr <* eof) =<< return "12=13"
+--     ppPrint x
+--     xs <- runListT $ applyRefnsToExpr [] [r1,r2] x
+--     mapM_ (putStrLn . render prExpr) xs
 
+callRefn :: [RuleRefn] -> Spec -> IO [Spec]
+callRefn refns spec = mapM ( evalSpec
+                         <=< inlineQuanGuards
+                         <=< removeUnusedDecls
+                         <=< tupleExplode
+                         <=< topLevelAnds
+                         <=< quanRename
+                         )
+                         =<< applyRefnsToSpec refns spec
 
-applyRefnsToSpec :: 
+applyRefnsToSpec :: forall m .
     ( Applicative m
     , MonadIO m
     ) => [RuleRefn] -> Spec -> m [Spec]
 applyRefnsToSpec refns spec = do
+    supp <- liftIO $ newSupply 0 succ
     let
-        f :: (Applicative m, MonadList m, MonadIO m) => Expr -> m Expr
-        f = applyRefnsToExpr (topLevelBindings spec) refns
-    runListT $ transformBiM f spec
+        f :: Expr -> WriterT Any (ListT m) Expr
+        f = applyRefnsToExpr supp (topLevelBindings spec) refns
+    results :: [(Spec,Any)]
+        <- (runListT . runWriterT) (transformBiM f spec)
+    t :: [[Spec]]
+        <- forM results $ \ (sp,a) -> do
+            sp' <- evalSpec sp
+            if getAny a
+                then applyRefnsToSpec refns sp'
+                else return [sp']
+    return $ concat t
 
 
 applyRefnsToExpr ::
     ( Applicative m
     , MonadIO m
     , MonadList m
-    ) => [Binding]
+    , MonadWriter Any m
+    ) => Supply Int
+      -> [Binding]
       -> [RuleRefn]
       -> Expr
       -> m Expr
-applyRefnsToExpr bs rules x = do
+applyRefnsToExpr supp bs rules x = do
     candidates :: [Either ErrMsg [Expr]]
-        <- mapM (\ r -> runApplyRefnToExpr bs r x ) rules
+        <- mapM (\ r -> runApplyRefnToExpr supp bs r x ) rules
     -- forM_ (lefts candidates) $ (liftIO . putStrLn)
     let results = rights candidates
-    option $ case results of [] -> [x]
-                             _  -> concat results
+    case results of [] -> tell (Any False) >> option [x]
+                    _  -> tell (Any True ) >> option (concat results)
 
 runApplyRefnToExpr ::
-    ( Functor m
+    ( Applicative m
     , MonadIO m
-    ) => [Binding]
+    ) => Supply Int
+      -> [Binding]
       -> RuleRefn
       -> Expr
       -> m (Either ErrMsg [Expr])
-runApplyRefnToExpr bs r x = fst <$> evalRWST (applyRefnToExpr r x) () bs
+runApplyRefnToExpr supp bs r x = fst <$> evalRWST (applyRefnToExpr supp r x) () bs
 
 applyRefnToExpr ::
-    ( MonadState [Binding] m
+    ( Applicative m
+    , MonadState [Binding] m
     , MonadWriter [Log] m
     , MonadIO m
-    ) => RuleRefn -> Expr -> m (Either ErrMsg [Expr])
-applyRefnToExpr rule x = do
+    ) => Supply Int -> RuleRefn -> Expr -> m (Either ErrMsg [Expr])
+applyRefnToExpr supp rule x = do
+    -- liftIO $ putStrLn $ padRight ' ' 60 (refnFilename rule) ++ render prExpr x
     result <- runErrorT $ do
         matchPattern (refnPattern rule) x
-        forM_ (refnBindings rule) $ \ (_,nm,x) -> addBinding InRule nm x
+        forM_ (refnBindings rule) $ \ (_,nm,t) -> addBinding InRule nm t
         mapM_ (checkWheres <=< instantiateNames) $ refnWheres rule
         mapM instantiateNames (refnTemplates rule)
-    liftIO . putStrLn $ "applying " ++ refnFilename rule ++ " to: " ++ render prExpr x
-    liftIO . putStrLn $ case result of
-        Left msg -> "[NOAPPLY] " ++ msg
-        Right xs -> "[ APPLY ] " ++ unlines (map (render prExpr) xs)
-    return result
+    let
+        -- pr = liftIO . putStrLn
+        pr = void . return
+    pr $ "applying " ++ refnFilename rule ++ "\n" ++ ppShow x
+    case result of
+        Left msg -> pr $ "[NOAPPLY] " ++ msg ++ "\n"
+        Right xs -> pr . unlines
+                        $ ("[APPLIED] " ++ refnFilename rule)
+                        : ("\t" ++ render prExpr x)
+                        -- : ("\t" ++ show x)
+                        : map (("\t"++) . render prExpr) xs
+    case result of
+        Left msg -> return $ Left msg
+        Right xs -> do
+            xs' <- quanRenameUsing (map (\ i -> "UQ_" ++ show i) $ map supplyValue (split supp)) xs
+            return $ Right xs'
 
 
 matchPattern ::
@@ -102,16 +143,29 @@ matchPattern ::
       -> m ()
 matchPattern (Identifier "_") _ = return ()
 matchPattern (Identifier nm ) x = addBinding InRule nm x
-matchPattern p x =
+matchPattern p@(ExprQuantifier {quanGuard=Just _ })
+             x@(ExprQuantifier {quanGuard=Nothing}) = matchPattern p x { quanGuard = Just (ValueBoolean True) }
+matchPattern p x = do
+    -- liftIO $ putStrLn $ "matchPattern: " ++ render prExpr x
     let
         ctrP = exprTag p
         ctrX = exprTag x
-    in
-        if ctrP == ctrX
-            then zipWithM_ matchPattern (children p) (children x)
-            else do
-                let msg = "Constructor names do not match: " ++ ctrP ++ " ~ " ++ ctrX
-                throwError msg
+    if ctrP == ctrX
+        then do
+            let
+                chP = children p
+                nmP = length chP
+                chX = children x
+                nmX = length chX
+            if nmP == nmX
+                then zipWithM_ matchPattern chP chX
+                else throwError $ "Different number of children: " ++ ctrP ++ "/" ++ show nmP
+                                                          ++ " ~ " ++ ctrX ++ "/" ++ show nmX
+        else do
+            let msg = "Constructor names do not match: " ++ ctrP ++ " ~ " ++ ctrX
+            throwError msg
+    -- st <- get
+    -- liftIO $ ppPrint st
 
 addBinding :: MonadState [Binding] m => BindingEnum -> String -> Expr -> m ()
 addBinding e nm x = modify ((e,nm,x) :)
