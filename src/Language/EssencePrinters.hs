@@ -11,11 +11,13 @@ module Language.EssencePrinters ( prSpec, prExpr
 import Control.Applicative hiding ( empty )
 import Control.Monad ( forM, msum )
 import Data.Maybe ( isNothing, maybeToList, mapMaybe )
-import Data.List ( intersperse )
+import Data.List ( isPrefixOf, intersperse )
+import Data.Generics.Uniplate.Direct ( transformBi )
 
 import Language.Essence
-import {-# SOURCE #-} Language.EssenceKinds ( textAfterBe )
 import PrintUtils
+import Utils ( ppShow )
+import {-# SOURCE #-} Language.EssenceKinds ( textAfterBe )
 
 
 --------------------------------------------------------------------------------
@@ -29,7 +31,7 @@ type Prec = Int
 
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
-                                                   , prDomain, prDeclLambda, prDeclQuantifier
+                                                   , prDomain, prDeclLambda -- , \ _ -> prDeclQuantifier ""
                                                    , prExprQuantifier, const prReplace
                                                    ]
 
@@ -256,7 +258,7 @@ prOpExpr _ _ _ = error "prOpExpr: unknown case"
 
 
 prExprQuantifier :: Prec -> Expr -> Maybe Doc
-prExprQuantifier p (ExprQuantifier qName (Identifier qVar) qOver qGuard qBody) = parensIf (p > 0) <$> do
+prExprQuantifier p (ExprQuantifier (Identifier qName) (Identifier qVar) qOver qGuard qBody) = parensIf (p > 0) <$> do
     qOver'  <- (colon <+>) <$> prExpr qOver
     qGuard' <- case qGuard of Nothing -> return empty
                               Just g  -> (comma <+>) <$> prExpr g
@@ -303,10 +305,31 @@ prDeclLambda _ _ = Nothing
 -- DeclQuantifier --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-prDeclQuantifier :: Prec -> Expr -> Maybe Doc
-prDeclQuantifier _ (DeclQuantifier l1 l2 iden) = do
-    l1'   <- prDeclLambda undefined l1 <|> prIdentifier undefined l1
-    l2'   <- prDeclLambda undefined l2 <|> prIdentifier undefined l1
+prDeclQuantifier :: String -> Expr -> Maybe Doc
+prDeclQuantifier name (DeclQuantifier l1 l2 iden) = do
+    let
+        pre :: String
+        pre = "__" ++ name ++ "_"
+
+        renaming1 :: Expr -> Expr
+        renaming1 (Identifier i)
+            | isPrefixOf pre i = Identifier $ drop (length pre) i
+            | otherwise        = Identifier i
+        renaming1 x = x
+
+        renaming2 :: (String,Type) -> (String,Type)
+        renaming2 (i,t)
+            | isPrefixOf pre i = ( drop (length pre) i, t )
+            | otherwise        = ( i                  , t )
+
+        doRenamings :: Expr -> Expr
+        doRenamings = transformBi renaming1 . transformBi renaming2
+
+    let l1_ = doRenamings l1
+    let l2_ = doRenamings l2
+
+    l1'   <- prDeclLambda undefined l1_ <|> prIdentifier undefined l1_
+    l2'   <- prDeclLambda undefined l2_ <|> prIdentifier undefined l2_
     iden' <- prExpr iden
     return $ vcat [ lbrace
                   , nest 2 $ vcat [l1',l2',iden']
@@ -321,18 +344,27 @@ prDeclQuantifier _ _ = Nothing
 
 prSpec :: Spec -> Maybe Doc
 prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constraints} = do
+    let
+        removeKnownQuans :: Binding -> Maybe Binding
+        removeKnownQuans (Letting, op, _) | op `elem` words "forall exists sum" = Nothing
+        removeKnownQuans x = Just x
+    let topLevelBindings' = mapMaybe removeKnownQuans topLevelBindings
     let langline = text "language" <+> text language <+> hcat (intersperse (text ".") (map int version))
-    bindings <- mapM (prBinding topLevelBindings) topLevelBindings
-    wheres   <- mapM prWhere     topLevelWheres
-    obj      <- mapM prObjective (maybeToList objective)
-    cons     <- mapM (fmap (nest 4) . prExpr) constraints
+    -- let langline = text "language ESSENCE' 2.0"
+    let reportError msg mx = case mx of
+                                Nothing -> error ("error while rendering: " ++ msg)
+                                _       -> mx
+    bindings <- reportError "bindings"    $ mapM (prBinding topLevelBindings) topLevelBindings'
+    wheres   <- reportError "wheres"      $ mapM prWhere     topLevelWheres
+    obj      <- reportError "objective"   $ mapM prObjective (maybeToList objective)
+    cons     <- reportError "constraints" $ mapM (\ c -> fmap (nest 4) $ reportError ("constraint: " ++ ppShow c) $ prExpr c) constraints
 
     return . vcat . concat $
         [ [ langline ]
-        , if null topLevelBindings then [] else emptyLine : bindings
-        , if null topLevelWheres   then [] else emptyLine : wheres
-        , if isNothing objective   then [] else emptyLine : obj
-        , if null constraints      then [] else emptyLine : text "such" <+> text "that" : punctuate comma cons
+        , if null topLevelBindings' then [] else emptyLine : bindings
+        , if null topLevelWheres    then [] else emptyLine : wheres
+        , if isNothing objective    then [] else emptyLine : obj
+        , if null constraints       then [] else emptyLine : text "such" <+> text "that" : punctuate comma cons
         , [ emptyLine ]
         ]
 
@@ -344,7 +376,7 @@ prBinding _  (Given,nm,x) = do
     x' <- prExpr x
     return $ text "given" <+> text nm <+> colon <+> x'
 prBinding bs (Letting,nm,x) = do
-    x' <- prExpr x
+    x' <- prDeclQuantifier nm x <|> prExpr x
     return $ text "letting"
          <+> text nm
          <+> text "be"
