@@ -1,0 +1,9 @@
+
+quan i : s, g . k ~~> quan j : r, m[j][0] /\ g {i->m[j][1]} . k { i -> m[j][1] }
+
+    where
+        s :: set of _,
+        repr(s,ExplicitVarSize)
+
+    letting m be refn(s)
+    letting r be indices(m,0)

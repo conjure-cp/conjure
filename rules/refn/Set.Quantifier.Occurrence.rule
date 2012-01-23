@@ -1,0 +1,10 @@
+[10]
+
+quan i : s, g . k ~~> quan j : r, m[j] /\ g {i->j} . k {i->j}
+
+    where
+        s :: set of _,
+        repr(s,Occurrence)
+
+    letting m be refn(s)
+    letting r be tau(s)

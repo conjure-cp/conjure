@@ -1,0 +1,7 @@
+
+quan i : a intersect b, g . k
+    ~~> quan j : a, j elem b /\ g {i->j} . k {i->j}
+
+    where
+        a :: set of _,
+        b :: set of _
