@@ -20,7 +20,7 @@ import Data.Ord ( comparing )
 
 import Language.Essence
 import ParsecUtils
-import Utils ( allValues )
+import Utils ( allValues, safeStr )
 
 
 pIdentifier :: Parser Expr
@@ -659,9 +659,6 @@ reprBindingsNaming pre (e,i,x) = (e,renameIdentifier pre i,x)
 
 reprOneMoreRenaming :: String -> (String,Type) -> (String,Type)
 reprOneMoreRenaming pre (i,t) = (renameIdentifier pre i,t)
-
-safeStr :: String -> String
-safeStr = map (\ ch -> if ch `elem` "/." then '_' else ch)
 
 leadsto :: Parser ()
 leadsto = reservedOp "~~>"

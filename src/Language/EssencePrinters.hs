@@ -1,6 +1,7 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RankNTypes     #-}
-{-# LANGUAGE ViewPatterns   #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NamedFieldPuns   #-}
+{-# LANGUAGE RankNTypes       #-}
+{-# LANGUAGE ViewPatterns     #-}
 
 module Language.EssencePrinters ( prSpec, prExpr
                                 , prType, prKind, prKindInteractive
@@ -12,11 +13,11 @@ import Control.Applicative hiding ( empty )
 import Control.Monad ( forM, msum )
 import Data.Maybe ( isNothing, maybeToList, mapMaybe )
 import Data.List ( isPrefixOf, intersperse )
-import Data.Generics.Uniplate.Direct ( transformBi )
+import Data.Generics.Uniplate.Direct ( Biplate, transformBi )
 
 import Language.Essence
 import PrintUtils
-import Utils ( ppShow )
+import Utils ( safeStr, ppShow )
 import {-# SOURCE #-} Language.EssenceKinds ( textAfterBe )
 
 
@@ -311,22 +312,8 @@ prDeclQuantifier name (DeclQuantifier l1 l2 iden) = do
         pre :: String
         pre = "__" ++ name ++ "_"
 
-        renaming1 :: Expr -> Expr
-        renaming1 (Identifier i)
-            | isPrefixOf pre i = Identifier $ drop (length pre) i
-            | otherwise        = Identifier i
-        renaming1 x = x
-
-        renaming2 :: (String,Type) -> (String,Type)
-        renaming2 (i,t)
-            | isPrefixOf pre i = ( drop (length pre) i, t )
-            | otherwise        = ( i                  , t )
-
-        doRenamings :: Expr -> Expr
-        doRenamings = transformBi renaming1 . transformBi renaming2
-
-    let l1_ = doRenamings l1
-    let l2_ = doRenamings l2
+    let l1_ = doRenamings pre l1
+    let l2_ = doRenamings pre l2
 
     l1'   <- prDeclLambda undefined l1_ <|> prIdentifier undefined l1_
     l2'   <- prDeclLambda undefined l2_ <|> prIdentifier undefined l2_
@@ -474,8 +461,11 @@ prKindInteractive KindGiven   = text "a parameter"
 -- RuleRepr --------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-prRuleRepr :: RuleRepr -> Maybe Doc
-prRuleRepr repr = do
+prRuleRepr :: String -> RuleRepr -> Maybe Doc
+prRuleRepr filename repr' = do
+
+    let repr = doRenamings ("__" ++ safeStr filename ++ "_") repr'
+
     let name   =   leadsto <+>        text (reprName repr)
     template   <- (leadsto <+>) <$> prExpr (reprTemplate repr)
     structural <- case reprPrologueStructural repr of
@@ -512,6 +502,29 @@ prRuleReprCase reprcase = do
         ,   wheres
         , [ emptyLine  ]
         ]
+
+
+doRenamings ::
+    ( Biplate a Expr
+    , Biplate a (String, Type)
+    , Biplate a Binding
+    ) => String -> a -> a
+doRenamings pre = transformBi renaming1 . transformBi renaming2 . transformBi renaming3
+    where
+        renameStr :: String -> String
+        renameStr s | isPrefixOf pre s = drop (length pre) s
+                    | otherwise        = s
+
+        renaming1 :: Expr -> Expr
+        renaming1 (Identifier i) = Identifier $ renameStr i
+        renaming1 x = x
+
+        renaming2 :: (String,Type) -> (String,Type)
+        renaming2 (i,t) = ( renameStr i, t )
+
+        renaming3 :: Binding -> Binding
+        renaming3 (bEnum,nm,x) = (bEnum,renameStr nm,x)
+
 
 emptyLine :: Doc
 emptyLine = text ""

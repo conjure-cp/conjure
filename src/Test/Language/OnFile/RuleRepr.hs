@@ -13,7 +13,7 @@ allTests :: [String] -> Test
 allTests = mkAllTests "RuleRepr" f
     where
         f filename = testOne (pRuleRepr filename)
-                             prRuleRepr
+                             (prRuleRepr filename)
                              typeCheckRuleRepr
                              reprPrologueBindings
                              filename

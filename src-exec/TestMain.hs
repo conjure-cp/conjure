@@ -4,6 +4,7 @@ import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
 import TestUtils ( runTest )
+import Test.Utils                    as UtilsUnitTests ( allTests )
 import Test.Language.Unit.FromFile   as UnitFromFile   ( allTests )
 import Test.Language.Unit.Random     as UnitRandom     ( allTests )
 import Test.Language.OnFile.Spec     as OnFileSpec     ( allTests )
@@ -23,6 +24,7 @@ main = do
 
             putStrLn " -- Running randomly generated test cases."
             runTest =<< UnitRandom.allTests
+            runTest =<< UtilsUnitTests.allTests
 
             putStrLn " -- Running OnFileSpec tests."
             runTest $ OnFileSpec.allTests specs

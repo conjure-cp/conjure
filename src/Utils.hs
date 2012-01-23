@@ -10,6 +10,7 @@ module Utils
     , fromJust, padLeft, padRight
     , applyAll
     , allPairs
+    , safeStr
     ) where
 
 import Control.Monad.Error ( ErrorT, runErrorT )
@@ -86,3 +87,6 @@ applyAll x = foldl (\ t f -> f t) x
 allPairs :: [a] -> [(a,a)]
 allPairs [] = []
 allPairs (x:xs) = map (x,) xs ++ allPairs xs
+
+safeStr :: String -> String
+safeStr = map (\ ch -> if ch `elem` "/." then '_' else ch)
