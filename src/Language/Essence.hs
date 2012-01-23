@@ -578,30 +578,38 @@ deriving instance Binary RuleRepr
 deriving instance Binary RuleReprCase
 deriving instance Binary RuleRefn
 
-deriving instance UniplateDirect Spec Expr
-deriving instance UniplateDirect Metadata Expr
-deriving instance UniplateDirect Expr Expr
+
 deriving instance UniplateDirect Expr
-deriving instance UniplateDirect [Expr] Expr
-deriving instance UniplateDirect (Maybe Expr) Expr
-deriving instance UniplateDirect (Expr, Expr) Expr
-deriving instance UniplateDirect (BindingEnum,String,Expr) Expr
-deriving instance UniplateDirect (ObjectiveEnum,Expr) Expr
-deriving instance UniplateDirect (Maybe Objective) Expr
-deriving instance UniplateDirect RuleRepr Expr
-deriving instance UniplateDirect RuleReprCase Expr
-deriving instance UniplateDirect RuleRefn Expr
 deriving instance UniplateDirect Type
 
-deriving instance UniplateDirect RuleRepr     (BindingEnum,String,Expr)
-deriving instance UniplateDirect RuleReprCase (BindingEnum,String,Expr)
-deriving instance UniplateDirect RuleRefn     (BindingEnum,String,Expr)
-deriving instance UniplateDirect (BindingEnum,String,Expr)
-deriving instance UniplateDirect Expr (String,Type)
-deriving instance UniplateDirect (Expr,Expr) (String,Type)
-deriving instance UniplateDirect (Maybe Expr) (String,Type)
-deriving instance UniplateDirect [Expr] (String,Type)
+deriving instance UniplateDirect Spec                       Expr
+deriving instance UniplateDirect Metadata                   Expr
+deriving instance UniplateDirect RuleRefn                   Expr
+deriving instance UniplateDirect RuleRepr                   Expr
+deriving instance UniplateDirect RuleReprCase               Expr
+
+deriving instance UniplateDirect (BindingEnum,String,Expr)  Expr
+deriving instance UniplateDirect (Expr, Expr)               Expr
+deriving instance UniplateDirect (Maybe Expr)               Expr
+deriving instance UniplateDirect (Maybe Objective)          Expr
+deriving instance UniplateDirect (ObjectiveEnum,Expr)       Expr
+deriving instance UniplateDirect Expr                       Expr
+deriving instance UniplateDirect [Expr]                     Expr
+
 deriving instance UniplateDirect (String,Type)
+deriving instance UniplateDirect (BindingEnum,String,Expr)  (String,Type)
+deriving instance UniplateDirect (Expr,Expr)                (String,Type)
+deriving instance UniplateDirect (Maybe Expr)               (String,Type)
+deriving instance UniplateDirect Expr                       (String,Type)
+deriving instance UniplateDirect RuleRepr                   (String,Type)
+deriving instance UniplateDirect RuleReprCase               (String,Type)
+deriving instance UniplateDirect [Expr]                     (String,Type)
+
+deriving instance UniplateDirect (BindingEnum,String,Expr)
+deriving instance UniplateDirect Expr                       (BindingEnum,String,Expr)
+deriving instance UniplateDirect RuleRefn                   (BindingEnum,String,Expr)
+deriving instance UniplateDirect RuleRepr                   (BindingEnum,String,Expr)
+deriving instance UniplateDirect RuleReprCase               (BindingEnum,String,Expr)
 
 !-}
 
