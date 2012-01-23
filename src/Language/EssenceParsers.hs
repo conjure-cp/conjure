@@ -1,17 +1,21 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections #-}
 
 module Language.EssenceParsers ( pSpec, pExpr, pType, pKind
                                , pTopLevels, pObjective
                                , pRuleRepr, pRuleRefn
+                               , pExprPattern
                                ) where
 
 import Control.Applicative
-import Control.Monad.Identity
+import Control.Monad.Identity ( Identity )
 import Data.Char ( isLetter, isNumber )
 import Data.Either ( lefts, rights )
 import Data.Function ( on )
+import Data.Generics.Uniplate.Direct ( transform, transformBi )
 import Data.List ( groupBy, sortBy )
 import Data.Maybe ( mapMaybe )
+import Data.Monoid ( mappend )
 import Data.Ord ( comparing )
 
 import Language.Essence
@@ -136,9 +140,9 @@ pDomains = map (<?> "domain")
         pTuple :: Bool -> Parser Expr
         pTuple b = case b of
             False -> helper <$> (reserved "tuple" *> reserved "of" *> pure [])
-                            <*> parens (countSepAtLeast 2 pDomain comma)
+                            <*> parens (countSepAtLeast 1 pDomain comma)
             True  -> helper <$> (reserved "tuple" *> parens (keyValuePairOrAttibuteList [] []) <* reserved "of")
-                            <*> parens (countSepAtLeast 2 pDomain comma)
+                            <*> parens (countSepAtLeast 1 pDomain comma)
             where
                 helper :: [Either String (String,Expr)] -> [Expr] -> Expr
                 helper attrs xs = DomainTuple xs (lookupRepresentation attrs)
@@ -324,7 +328,7 @@ pExprCore =  pExprQuantifier
 
 pExprQuantifier :: Parser Expr
 pExprQuantifier = do
-    qName  <- identifier
+    qName  <- pIdentifier
     qVars  <- pIdentifier `sepBy1` comma
     qOver  <- colon *> pExpr
     qGuard <- optionMaybe (comma *> pExpr)
@@ -443,11 +447,35 @@ pKind = choiceTry [ KindUnknown <$ reservedOp "?"
 -- The Spec parser -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+knownQuans :: String
+knownQuans = "letting forall be quantifier                "
+          ++ "    {                                       "
+          ++ "        lambda { x:bool, y:bool -> x /\\ y } "
+          ++ "        lambda { x:bool, y:bool -> x => y } "
+          ++ "        true                                "
+          ++ "    }                                       "
+          ++ "                                            "
+          ++ "letting exists be quantifier                "
+          ++ "    {                                       "
+          ++ "        lambda { x:bool, y:bool -> x \\/ y } "
+          ++ "        lambda { x:bool, y:bool -> x /\\ y } "
+          ++ "        false                               "
+          ++ "    }                                       "
+          ++ "                                            "
+          ++ "letting sum be quantifier                   "
+          ++ "    {                                       "
+          ++ "        lambda { x:int , y:int -> x + y }   "
+          ++ "        lambda { x:bool, y:int -> x * y }   "
+          ++ "        0                                   "
+          ++ "    }                                       "
+
+
 pSpec :: Parser Spec
 pSpec = do
+    let knowns = unsafeParse pTopLevels knownQuans
     whiteSpace
     (lang,ver)        <- pLanguage
-    (bindings,wheres) <- pTopLevels
+    (bindings,wheres) <- mappend knowns <$> pTopLevels
     obj               <- optionMaybe pObjective
     cons              <- pConstraints
     eof
@@ -500,11 +528,11 @@ pBinding = choiceTry [ do reserved "given"
                           rhs <- pDeclLambda
                           return [ (Letting, i, rhs) | i <- idens ]
                      , do reserved "letting"
-                          idens <- sepBy1 identifier comma
+                          iden <- identifier
                           reserved "be"
                           reserved "quantifier"
-                          rhs <- pDeclQuantifier
-                          return [ (Letting, i, rhs) | i <- idens ]
+                          rhs <- pDeclQuantifier iden
+                          return [ (Letting, iden, rhs) ]
                      ]
 
 
@@ -529,10 +557,15 @@ pDeclLambda = do
 -- DeclQuantifier parser -------------------------------------------------------
 --------------------------------------------------------------------------------
 
-pDeclQuantifier :: Parser Expr
-pDeclQuantifier = braces $ DeclQuantifier <$> (try pDeclLambda <|> pIdentifier)
-                                    <*> (try pDeclLambda <|> pIdentifier)
-                                    <*> pExpr
+pDeclQuantifier :: String -> Parser Expr
+pDeclQuantifier qnName = do
+    result <- braces $ DeclQuantifier <$> pDeclLambda
+                                      <*> pDeclLambda
+                                      <*> pExpr
+    let pre = "__" ++ qnName ++ "_"
+    return $ transformBi (reprVarsNaming pre)
+           $ transformBi (reprOneMoreRenaming pre)
+           $ result
 
 
 --------------------------------------------------------------------------------
@@ -557,12 +590,20 @@ pConstraints = choiceTry [ reserved "such" *> reserved "that" *> sepEndBy pExpr 
                          ]
 
 
+-- forall i : s . k ~~> forall i : s, _ . k
+quantifiedPatternGuards :: Expr -> Expr
+quantifiedPatternGuards p@(ExprQuantifier {quanGuard=Nothing}) = p {quanGuard=Just (Identifier "_")}
+quantifiedPatternGuards p = p
+
+pExprPattern :: Parser Expr
+pExprPattern = transform quantifiedPatternGuards <$> pExpr
+
 --------------------------------------------------------------------------------
 -- parser for RuleRepr ---------------------------------------------------------
 --------------------------------------------------------------------------------
 
-pRuleRepr :: Parser RuleRepr
-pRuleRepr = do
+pRuleRepr :: String -> Parser RuleRepr
+pRuleRepr filename = do
     whiteSpace
     name       <- leadsto *> identifier
     template   <- leadsto *> pExpr
@@ -570,12 +611,15 @@ pRuleRepr = do
     (bs, ws)   <- pTopLevels
     cases      <- many1 pRuleReprCase
     eof
-    return $ RuleRepr name template structural ws bs cases
+    let pre = "__" ++ safeStr filename ++ "_"
+    return $ transformBi (reprVarsNaming     pre)
+           $ transformBi (reprBindingsNaming pre)
+           $ RuleRepr filename name template structural ws bs cases
 
 pRuleReprCase :: Parser RuleReprCase
 pRuleReprCase = do
     reservedOp "***"
-    pattern    <- pExpr
+    pattern    <- pExprPattern
     structural <- optionMaybe (leadsto *> pExpr)
     (bs, ws)   <- pTopLevels
     return $ RuleReprCase pattern structural ws bs
@@ -586,13 +630,38 @@ pRuleReprCase = do
 --------------------------------------------------------------------------------
 
 pRuleRefn :: String -> Parser RuleRefn
-pRuleRefn nm = do
+pRuleRefn filename = do
     whiteSpace
     i        <- optionMaybe (brackets (fromInteger <$> integer))
-    pattern  <- pExpr
+    pattern  <- pExprPattern
     template <- leadsto *> pExpr
-    (bs, ws)   <- pTopLevels
-    return $ RuleRefn i nm pattern [template] ws bs
+    (bs, ws) <- pTopLevels
+    eof
+    let pre = "__" ++ safeStr filename ++ "_"
+    return $ transformBi (reprVarsNaming     pre)
+           $ transformBi (reprBindingsNaming pre)
+           $ RuleRefn i filename pattern [template] ws bs
+
+
+renameIdentifier :: String -> String -> String
+renameIdentifier pre i | i `elem` ruleLangOps = i
+                       | otherwise            = pre ++ i
+    where
+        ruleLangOps :: [String]
+        ruleLangOps = words "_ tau refn repr indices domSize forall sum exists glueOp skipOp quanID"
+
+reprVarsNaming :: String -> Expr -> Expr
+reprVarsNaming pre (Identifier i) = Identifier $ renameIdentifier pre i
+reprVarsNaming _ x = x
+
+reprBindingsNaming :: String -> Binding -> Binding
+reprBindingsNaming pre (e,i,x) = (e,renameIdentifier pre i,x)
+
+reprOneMoreRenaming :: String -> (String,Type) -> (String,Type)
+reprOneMoreRenaming pre (i,t) = (renameIdentifier pre i,t)
+
+safeStr :: String -> String
+safeStr = map (\ ch -> if ch `elem` "/." then '_' else ch)
 
 leadsto :: Parser ()
 leadsto = reservedOp "~~>"
