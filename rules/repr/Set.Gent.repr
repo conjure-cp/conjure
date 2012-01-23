@@ -8,26 +8,26 @@
     letting mx be domSize(t)
 
 *** set (size n) of t
-    ~~> ((sum i : r . refn[i] > 0) = n)
+    ~~> ((sum i : t . refn[i] > 0) = n)
     letting mx be domSize(t)
 
 *** set (minSize mn) of t
-    ~~> ((sum i : r . refn[i] > 0) >= mn)
+    ~~> ((sum i : t . refn[i] > 0) >= mn)
     letting mx be domSize(t)
 
 *** set (maxSize mx) of t
-    ~~> ((sum i : r . refn[i] > 0) <= mx)
+    ~~> ((sum i : t . refn[i] > 0) <= mx)
 
 *** set (size n, minSize mn) of t
-    ~~> ((sum i : r . refn[i] > 0) = n)
+    ~~> ((sum i : t . refn[i] > 0) = n)
     letting mx be domSize(t)
 
 *** set (size n, maxSize mx) of t
-    ~~> ((sum i : r . refn[i] > 0) = n)
+    ~~> ((sum i : t . refn[i] > 0) = n)
 
 *** set (minSize mn, maxSize mx) of t
-    ~~> ((sum i : r . refn[i] > 0) >= mn)
-    /\  ((sum i : r . refn[i] > 0) <= mx)
+    ~~> ((sum i : t . refn[i] > 0) >= mn)
+    /\  ((sum i : t . refn[i] > 0) <= mx)
 
 *** set (size n, minSize mn, maxSize mx) of t
-    ~~> ((sum i : r . refn[i] > 0) = n)
+    ~~> ((sum i : t . refn[i] > 0) = n)
