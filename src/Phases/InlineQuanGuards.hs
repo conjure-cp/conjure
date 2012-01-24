@@ -3,7 +3,7 @@
 module Phases.InlineQuanGuards where
 
 import Control.Applicative
-import Control.Monad.IO.Class ( MonadIO, liftIO )
+import Control.Monad.IO.Class ( MonadIO )
 import Data.Generics.Uniplate.Direct ( transformBiM )
 
 import Language.Essence

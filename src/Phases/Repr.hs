@@ -11,34 +11,31 @@ import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, modify, evalRWST )
 import Data.Either ( rights )
 import Data.Generics.Uniplate.Direct ( transformBi, transformBiM, universeBi )
-import Data.List ( (\\), group, nub, sort )
+import Data.List ( group, nub, sort )
 import Data.Maybe ( catMaybes, maybeToList )
 import qualified Data.Map as M
 
 import Language.Essence
-import Language.EssenceParsers ( pSpec, pRuleRepr )
-import Language.EssencePrinters ( prSpec, prExpr )
+import Language.EssencePrinters ( prExpr )
 import MonadInterleave ( MonadInterleave )
-import ParsecUtils ( parseIO )
 import Phases.Eval ( evalSpec )
 import Phases.QuanRename ( quanRename )
 import Phases.ReprRefnCommon
-import Phases.TopLevelAnds ( topLevelAnds )
 import PrintUtils
 import Utils ( allPairs, runRWSET )
 
 
-test :: IO ()
-test = do
-    s <- parseIO pSpec =<< readFile "../testdata/has-sets.essence"
-    r1 <- parseIO (pRuleRepr "r1") =<< readFile "../rules/repr/Set.Explicit.repr"
-    r2 <- parseIO (pRuleRepr "r2") =<< readFile "../rules/repr/Set.ExplicitVarSize.repr"
-    r3 <- parseIO (pRuleRepr "r3") =<< readFile "../rules/repr/Set.Occurrence.repr"
-    putStrLn $ render prSpec s
-    print =<< appl s [r1,r2,r3]
-
-appl :: Spec -> [RuleRepr] -> IO (Either ErrMsg [Spec])
-appl s rs = runErrorT $ applyToSpec rs s
+-- test :: IO ()
+-- test = do
+--     s <- parseIO pSpec =<< readFile "../testdata/has-sets.essence"
+--     r1 <- parseIO (pRuleRepr "r1") =<< readFile "../rules/repr/Set.Explicit.repr"
+--     r2 <- parseIO (pRuleRepr "r2") =<< readFile "../rules/repr/Set.ExplicitVarSize.repr"
+--     r3 <- parseIO (pRuleRepr "r3") =<< readFile "../rules/repr/Set.Occurrence.repr"
+--     putStrLn $ render prSpec s
+--     print =<< appl s [r1,r2,r3]
+-- 
+-- appl :: Spec -> [RuleRepr] -> IO (Either ErrMsg [Spec])
+-- appl s rs = runErrorT $ applyToSpec rs s
 
 
 type Domain = Expr
@@ -98,8 +95,8 @@ applyToSpec reprs spec = do
                  ]
 
         -- rest of bindings
-        bindingsRest :: [Binding]
-        bindingsRest = bindings \\ bindingsNeedsRepr
+        -- bindingsRest :: [Binding]
+        -- bindingsRest = bindings \\ bindingsNeedsRepr
 
     -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
     applied' :: [(Binding, (Either ErrMsg [ReprResult], [Log]))]
@@ -107,7 +104,7 @@ applyToSpec reprs spec = do
 
     -- calls error if repr application fails for any binding.
     applied :: [(Binding, [ReprResult])]
-        <- forM applied' $ \ t -> case t of (_, (Left err,  logs)) -> {- liftIO (ppPrint logs) >> -} throwError err
+        <- forM applied' $ \ t -> case t of (_, (Left err, _logs)) -> {- liftIO (ppPrint logs) >> -} throwError err
                                             (b, (Right r , _logs)) -> return (b,r)
 
     let
@@ -124,7 +121,7 @@ applyToSpec reprs spec = do
                                         )]
                         ]
         lookupTables = map M.fromList $ foo [ (nm, cross [ (b,x,y,z) | (x,y,z) <- rrs ] cnt)
-                                            | (b@(_,nm,dom), rrs) <- applied
+                                            | (b@(_,nm,_), rrs) <- applied
                                             , let cnt = case lookup nm counts of
                                                             Nothing -> 0 -- error ("in applyToSpec.lookupTables: " ++ nm)
                                                             Just c  -> c

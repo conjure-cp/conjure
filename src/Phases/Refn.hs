@@ -7,17 +7,13 @@ import Control.Applicative
 import Control.Monad ( (<=<), forM, forM_, void, zipWithM_ )
 import Control.Monad.Error ( MonadError, runErrorT, throwError )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
-import Control.Monad.RWS ( evalRWST )
-import Control.Monad.State ( MonadState, get, modify )
-import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
 import Control.Monad.List ( ListT, runListT )
-import Data.Data ( dataTypeName, dataTypeOf, toConstr )
+import Control.Monad.RWS ( evalRWST )
+import Control.Monad.State ( MonadState, modify )
+import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
 import Data.Either ( rights )
-import Data.Generics ( Data )
 import Data.Generics.Uniplate.Direct ( children, transformBiM )
-import Data.Maybe ( fromMaybe )
 import Data.Monoid ( Any(..) )
-import Data.Typeable ( cast )
 import Data.Supply ( Supply, newSupply, split, supplyValue )
 
 import Language.Essence
@@ -170,17 +166,3 @@ matchPattern p x = do
 addBinding :: MonadState [Binding] m => BindingEnum -> String -> Expr -> m ()
 addBinding e nm x = modify ((e,nm,x) :)
 
-
-----------------------------------------
--- helper functions here ---------------
-----------------------------------------
-
-typeName :: Data a => a -> String
-typeName = dataTypeName . dataTypeOf
-
-constrName :: Data a => a -> String
-constrName x = typeName x ++ "#" ++ show (toConstr x)
-
-asTypeOf :: (Data a, Data to) => a -> to -> to
-asTypeOf x to = flip fromMaybe (cast x)
-              $ error $ "asTypeOf: cannot cast " ++ typeName x ++ " to " ++ typeName to
