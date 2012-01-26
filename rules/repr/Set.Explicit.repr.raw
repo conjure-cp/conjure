@@ -7,7 +7,11 @@ RuleRepr
                                  Just ( Identifier "__rules_repr_Set_Explicit_repr_n" ) )
                      , element = Identifier "__rules_repr_Set_Explicit_repr_t"
                      }
-  , reprPrologueStructural = Nothing
+  , reprPrologueStructural = Just (
+                               GenericNode
+                                 AllDiff
+                                 [ Identifier "refn"
+                                 ] )
   , reprPrologueWheres = []
   , reprPrologueBindings = []
   , reprCases = [ RuleReprCase
@@ -15,46 +19,7 @@ RuleRepr
                                           { size = Just ( Identifier "__rules_repr_Set_Explicit_repr_n" )
                                           , minSize = Nothing
                                           , maxSize = Nothing
-                                          , attrDontCare = False
-                                          , element = Identifier "__rules_repr_Set_Explicit_repr_t"
-                                          , representation = Nothing
-                                          }
-                    , reprCaseStructural = Nothing
-                    , reprCaseWheres = []
-                    , reprCaseBindings = []
-                    }
-                , RuleReprCase
-                    { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "__rules_repr_Set_Explicit_repr_n" )
-                                          , minSize = Just ( Identifier "_" )
-                                          , maxSize = Nothing
-                                          , attrDontCare = False
-                                          , element = Identifier "__rules_repr_Set_Explicit_repr_t"
-                                          , representation = Nothing
-                                          }
-                    , reprCaseStructural = Nothing
-                    , reprCaseWheres = []
-                    , reprCaseBindings = []
-                    }
-                , RuleReprCase
-                    { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "__rules_repr_Set_Explicit_repr_n" )
-                                          , minSize = Nothing
-                                          , maxSize = Just ( Identifier "_" )
-                                          , attrDontCare = False
-                                          , element = Identifier "__rules_repr_Set_Explicit_repr_t"
-                                          , representation = Nothing
-                                          }
-                    , reprCaseStructural = Nothing
-                    , reprCaseWheres = []
-                    , reprCaseBindings = []
-                    }
-                , RuleReprCase
-                    { reprCasePattern = DomainSet
-                                          { size = Just ( Identifier "__rules_repr_Set_Explicit_repr_n" )
-                                          , minSize = Just ( Identifier "_" )
-                                          , maxSize = Just ( Identifier "_" )
-                                          , attrDontCare = False
+                                          , attrDontCare = True
                                           , element = Identifier "__rules_repr_Set_Explicit_repr_t"
                                           , representation = Nothing
                                           }
