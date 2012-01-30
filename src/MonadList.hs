@@ -2,11 +2,11 @@
 
 module MonadList ( MonadList, option, runListT ) where
 
-import Control.Monad.Trans.List ( ListT(..) )
-import Data.Monoid ( Monoid )
-import Control.Monad.Writer ( WriterT )
-
 import Control.Monad.Trans.Class ( lift )
+import Control.Monad.Trans.List ( ListT(..) )
+import Control.Monad.Writer ( WriterT )
+import Control.Monad.RWS ( RWST )
+import Data.Monoid ( Monoid )
 
 
 class Monad m => MonadList m where
@@ -19,4 +19,7 @@ instance (Monad m) => MonadList (ListT m) where
     option = ListT . return
 
 instance (Monoid w, Monad m) => MonadList (WriterT w (ListT m)) where
+    option = lift . option
+
+instance (Monoid w, Monad m) => MonadList (RWST r w s (ListT m)) where
     option = lift . option
