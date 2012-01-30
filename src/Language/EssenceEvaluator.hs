@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NamedFieldPuns   #-}
 
 module Language.EssenceEvaluator ( runEvaluateExpr ) where
 
@@ -9,7 +10,7 @@ import Control.Monad.Reader ( MonadReader, ask )
 import Control.Monad.RWS ( RWST, evalRWST )
 import Control.Monad.Writer ( MonadWriter, tell )
 import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
-import Data.List ( genericLength, genericIndex, isSuffixOf, sort, intersect, union )
+import Data.List ( isSuffixOf, sort, intersect, union )
 import Data.List.Split( splitOn )
 
 import Language.Essence
@@ -61,6 +62,13 @@ evaluateExpr ::
     , MonadIO m
     , MonadReader [Binding] m
     ) => Expr -> m (Maybe Expr)
+
+-- set ops for int ranges
+
+evaluateExpr p@(ExprQuantifier {quanOver=GenericNode Intersect [a@DomainIntegerFromTo{}, b@DomainIntegerFromTo{}]})
+    | unifyExpr a b = rJust p {quanOver = a}
+evaluateExpr (ExprQuantifier {quanName=qnName, quanOver=ValueInteger 0})
+    = rJust $ GenericNode Image [Identifier "quanID", qnName]
 
 -- full evaluators
 
@@ -191,13 +199,28 @@ evaluateExpr (GenericNode Image [Identifier "tau", Identifier nmParam]) = do
         [x] -> rJust x
         _   -> rNothing
 
-evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [Identifier nm, ValueInteger i]]) = do
+
+
+evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [Identifier nm, i]]) = do
+    -- liftIO $ putStrLn "indices 1."
     bs <- ask
-    case [ ind | (_,nm',DomainMatrix{index=ind}) <- bs, nm == nm' ] of
-        [ind] -> case ind of
-            ValueTuple inds | i >= 0 && i < genericLength inds -> rJust $ inds `genericIndex` i
-            _ -> if i == 0 then rJust ind else rNothing
-        _ -> rNothing
+    case [ dom | (_,nm',dom@DomainMatrix{}) <- bs, nm == nm' ] of
+        [dom] -> do
+                    -- liftIO . ppPrint $ dom
+                    evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [dom, i]]
+        _     -> rNothing
+
+evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [DomainMatrix{index},ValueInteger 0]])
+    = do
+        -- liftIO $ putStrLn "indices 2."
+        rJust index
+
+evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [DomainMatrix{element},ValueInteger i]])
+    = do
+        -- liftIO $ putStrLn "indices 3."
+        evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [element,ValueInteger (i-1)]]
+
+
 
 evaluateExpr (GenericNode Image [Identifier opParam, Identifier nm]) = do
     let op = reverse $ take 6 $ reverse opParam
