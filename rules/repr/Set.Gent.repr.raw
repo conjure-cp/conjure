@@ -40,23 +40,23 @@ RuleRepr
                                                             , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
                                                             , quanGuard = Just (
                                                                             GenericNode
-                                                                              Lt
-                                                                              [ Identifier "__rules_repr_Set_Gent_repr_j"
+                                                                              And
+                                                                              [ GenericNode
+                                                                                  Lt
+                                                                                  [ Identifier "__rules_repr_Set_Gent_repr_j"
+                                                                                  , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                                  ]
                                                                               , GenericNode
-                                                                                  Minus
-                                                                                  [ Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                                  , ValueInteger 1
+                                                                                  Gt
+                                                                                  [ GenericNode
+                                                                                      Index
+                                                                                      [ Identifier "refn"
+                                                                                      , Identifier "__rules_repr_Set_Gent_repr_j"
+                                                                                      ]
+                                                                                  , ValueInteger 0
                                                                                   ]
                                                                               ] )
-                                                            , quanBody = GenericNode
-                                                                           Gt
-                                                                           [ GenericNode
-                                                                               Index
-                                                                               [ Identifier "refn"
-                                                                               , Identifier "__rules_repr_Set_Gent_repr_j"
-                                                                               ]
-                                                                           , ValueInteger 0
-                                                                           ]
+                                                            , quanBody = ValueInteger 1
                                                             }
                                                         ]
                                                     ]
@@ -106,16 +106,17 @@ RuleRepr
                                                    { quanName = Identifier "sum"
                                                    , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                    , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = GenericNode
-                                                                  Gt
-                                                                  [ GenericNode
-                                                                      Index
-                                                                      [ Identifier "refn"
-                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                      ]
-                                                                  , ValueInteger 0
-                                                                  ]
+                                                   , quanGuard = Just (
+                                                                   GenericNode
+                                                                     Gt
+                                                                     [ GenericNode
+                                                                         Index
+                                                                         [ Identifier "refn"
+                                                                         , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                         ]
+                                                                     , ValueInteger 0
+                                                                     ] )
+                                                   , quanBody = ValueInteger 1
                                                    }
                                                , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
@@ -146,16 +147,17 @@ RuleRepr
                                                    { quanName = Identifier "sum"
                                                    , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                    , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = GenericNode
-                                                                  Gt
-                                                                  [ GenericNode
-                                                                      Index
-                                                                      [ Identifier "refn"
-                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                      ]
-                                                                  , ValueInteger 0
-                                                                  ]
+                                                   , quanGuard = Just (
+                                                                   GenericNode
+                                                                     Gt
+                                                                     [ GenericNode
+                                                                         Index
+                                                                         [ Identifier "refn"
+                                                                         , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                         ]
+                                                                     , ValueInteger 0
+                                                                     ] )
+                                                   , quanBody = ValueInteger 1
                                                    }
                                                , Identifier "__rules_repr_Set_Gent_repr_mn"
                                                ] )
@@ -186,16 +188,17 @@ RuleRepr
                                                    { quanName = Identifier "sum"
                                                    , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                    , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = GenericNode
-                                                                  Gt
-                                                                  [ GenericNode
-                                                                      Index
-                                                                      [ Identifier "refn"
-                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                      ]
-                                                                  , ValueInteger 0
-                                                                  ]
+                                                   , quanGuard = Just (
+                                                                   GenericNode
+                                                                     Gt
+                                                                     [ GenericNode
+                                                                         Index
+                                                                         [ Identifier "refn"
+                                                                         , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                         ]
+                                                                     , ValueInteger 0
+                                                                     ] )
+                                                   , quanBody = ValueInteger 1
                                                    }
                                                , Identifier "__rules_repr_Set_Gent_repr_mx"
                                                ] )
@@ -218,16 +221,17 @@ RuleRepr
                                                    { quanName = Identifier "sum"
                                                    , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                    , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = GenericNode
-                                                                  Gt
-                                                                  [ GenericNode
-                                                                      Index
-                                                                      [ Identifier "refn"
-                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                      ]
-                                                                  , ValueInteger 0
-                                                                  ]
+                                                   , quanGuard = Just (
+                                                                   GenericNode
+                                                                     Gt
+                                                                     [ GenericNode
+                                                                         Index
+                                                                         [ Identifier "refn"
+                                                                         , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                         ]
+                                                                     , ValueInteger 0
+                                                                     ] )
+                                                   , quanBody = ValueInteger 1
                                                    }
                                                , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
@@ -258,16 +262,17 @@ RuleRepr
                                                    { quanName = Identifier "sum"
                                                    , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                    , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = GenericNode
-                                                                  Gt
-                                                                  [ GenericNode
-                                                                      Index
-                                                                      [ Identifier "refn"
-                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                      ]
-                                                                  , ValueInteger 0
-                                                                  ]
+                                                   , quanGuard = Just (
+                                                                   GenericNode
+                                                                     Gt
+                                                                     [ GenericNode
+                                                                         Index
+                                                                         [ Identifier "refn"
+                                                                         , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                         ]
+                                                                     , ValueInteger 0
+                                                                     ] )
+                                                   , quanBody = ValueInteger 1
                                                    }
                                                , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
@@ -292,16 +297,17 @@ RuleRepr
                                                        { quanName = Identifier "sum"
                                                        , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                        , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                       , quanGuard = Nothing
-                                                       , quanBody = GenericNode
-                                                                      Gt
-                                                                      [ GenericNode
-                                                                          Index
-                                                                          [ Identifier "refn"
-                                                                          , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                          ]
-                                                                      , ValueInteger 0
-                                                                      ]
+                                                       , quanGuard = Just (
+                                                                       GenericNode
+                                                                         Gt
+                                                                         [ GenericNode
+                                                                             Index
+                                                                             [ Identifier "refn"
+                                                                             , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                             ]
+                                                                         , ValueInteger 0
+                                                                         ] )
+                                                       , quanBody = ValueInteger 1
                                                        }
                                                    , Identifier "__rules_repr_Set_Gent_repr_mn"
                                                    ]
@@ -311,16 +317,17 @@ RuleRepr
                                                        { quanName = Identifier "sum"
                                                        , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                        , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                       , quanGuard = Nothing
-                                                       , quanBody = GenericNode
-                                                                      Gt
-                                                                      [ GenericNode
-                                                                          Index
-                                                                          [ Identifier "refn"
-                                                                          , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                          ]
-                                                                      , ValueInteger 0
-                                                                      ]
+                                                       , quanGuard = Just (
+                                                                       GenericNode
+                                                                         Gt
+                                                                         [ GenericNode
+                                                                             Index
+                                                                             [ Identifier "refn"
+                                                                             , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                             ]
+                                                                         , ValueInteger 0
+                                                                         ] )
+                                                       , quanBody = ValueInteger 1
                                                        }
                                                    , Identifier "__rules_repr_Set_Gent_repr_mx"
                                                    ]
@@ -344,16 +351,17 @@ RuleRepr
                                                    { quanName = Identifier "sum"
                                                    , quanVar = Identifier "__rules_repr_Set_Gent_repr_i"
                                                    , quanOver = Identifier "__rules_repr_Set_Gent_repr_t"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = GenericNode
-                                                                  Gt
-                                                                  [ GenericNode
-                                                                      Index
-                                                                      [ Identifier "refn"
-                                                                      , Identifier "__rules_repr_Set_Gent_repr_i"
-                                                                      ]
-                                                                  , ValueInteger 0
-                                                                  ]
+                                                   , quanGuard = Just (
+                                                                   GenericNode
+                                                                     Gt
+                                                                     [ GenericNode
+                                                                         Index
+                                                                         [ Identifier "refn"
+                                                                         , Identifier "__rules_repr_Set_Gent_repr_i"
+                                                                         ]
+                                                                     , ValueInteger 0
+                                                                     ] )
+                                                   , quanBody = ValueInteger 1
                                                    }
                                                , Identifier "__rules_repr_Set_Gent_repr_n"
                                                ] )
