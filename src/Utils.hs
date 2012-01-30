@@ -5,7 +5,7 @@ module Utils
     , maybeRead
     , ppShow, ppPrint, getCh
     , strip
-    , runRWSE, runRWSET
+    , runRWSE, runRWSET, rwst
     , fst3, snd3, thd3
     , fromJust, padLeft, padRight
     , applyAll
@@ -14,7 +14,7 @@ module Utils
     ) where
 
 import Control.Monad.Error ( ErrorT, runErrorT )
-import Control.Monad.RWS ( RWS, evalRWS, RWST, evalRWST )
+import Control.Monad.RWS ( RWS, evalRWS, RWST(..), evalRWST )
 import Data.Maybe ( listToMaybe )
 import System.IO ( hSetEcho, stdin )
 import Text.PrettyPrint ( lineLength, renderStyle, style )
@@ -89,4 +89,8 @@ allPairs [] = []
 allPairs (x:xs) = map (x,) xs ++ allPairs xs
 
 safeStr :: String -> String
-safeStr = map (\ ch -> if ch `elem` "/." then '_' else ch)
+safeStr = map (\ ch -> if ch `elem` "/.()" then '_' else ch)
+
+
+rwst :: (r -> s -> m (a, s, w)) -> RWST r w s m a
+rwst f = RWST (\ r s -> f r s)
