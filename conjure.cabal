@@ -17,11 +17,13 @@ Library
     hs-source-dirs   : src
     exposed-modules  : Constants
                      , DeepSeqUtils
+                     , Has
                      , MonadInterleave
                      , MonadList
                      , ParsecUtils
                      , PrintUtils
                      , TestUtils
+                     , UniqueSupply
                      , Utils
                      , ZippyUtils
 
@@ -51,25 +53,26 @@ Library
                      , Test.Language.Unit.Random
                      , Test.Utils
     build-depends    : base
-                     , binary       == 0.5.*
-                     , bytestring   == 0.9.*
-                     , containers   == 0.4.*
-                     , data-default == 0.3.*
-                     , deepseq      == 1.2.*
-                     , directory    == 1.1.*
-                     , file-embed   == 0.0.4.*
-                     , HUnit        == 1.2.*
-                     , mtl          == 2.0.*
-                     , parsec       == 3.1.*
-                     , pretty       == 1.1.*
-                     , pretty-show  == 1.1.*
-                     , QuickCheck   == 2.4.*
-                     , random       == 1.0.*
-                     , value-supply == 0.6
-                     , split        == 0.1.*
-                     , syb          == 0.3.6
-                     , transformers == 0.2.2.*
-                     , uniplate     == 1.6.*
+                     , binary                   == 0.5.*
+                     , bytestring               == 0.9.*
+                     , containers               == 0.4.*
+                     , data-default             == 0.3.*
+                     , deepseq                  == 1.2.*
+                     , directory                == 1.1.*
+                     , file-embed               == 0.0.4.*
+                     , global-variables         == 1.0.1.*
+                     , HUnit                    == 1.2.*
+                     , mtl                      == 2.0.*
+                     , parsec                   == 3.1.*
+                     , pretty                   == 1.1.*
+                     , pretty-show              == 1.1.*
+                     , QuickCheck               == 2.4.*
+                     , random                   == 1.0.*
+                     , split                    == 0.1.*
+                     , syb                      == 0.3.6
+                     , transformers             == 0.2.2.*
+                     , uniplate                 == 1.6.*
+                     , value-supply             == 0.6
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
