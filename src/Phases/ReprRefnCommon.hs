@@ -5,9 +5,10 @@ module Phases.ReprRefnCommon where
 import Control.Applicative ( Applicative )
 import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.IO.Class ( MonadIO(..) )
-import Control.Monad.State ( MonadState, get )
+import Control.Monad.State ( MonadState(..) )
 import Data.Generics.Uniplate.Direct ( Biplate, transformBi )
 
+import Has
 import Language.Essence
 import Language.EssenceEvaluator ( runEvaluateExpr )
 import Language.EssencePrinters ( prExpr )
@@ -18,13 +19,14 @@ import Utils
 type ErrMsg = String
 
 instantiateNames ::
-    ( MonadState [Binding] m
+    ( MonadState st m
     , MonadIO m
     , Biplate a Expr
     , Show a
+    , Has st [Binding]
     ) => a -> m a
 instantiateNames x = do
-    st <- get
+    st <- getM
     -- liftIO $ putStrLn "instantiateNames"
     -- liftIO $ print x
     -- liftIO $ print $ map snd3 st
@@ -43,11 +45,12 @@ instantiateName nm x = transformBi f
 checkWheres ::
     ( Applicative m
     , MonadError ErrMsg m
-    , MonadState [Binding] m
+    , MonadState st m
     , MonadIO m
+    , Has st [Binding]
     ) => Where -> m ()
 checkWheres x = do
-    bindings  <- get
+    bindings  <- getM
     (x',logs) <- runEvaluateExpr bindings x
     case x' of
         ValueBoolean True  -> return ()

@@ -9,25 +9,25 @@ import Control.Monad.Error ( MonadError, runErrorT, throwError )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.List ( ListT, runListT )
 import Control.Monad.RWS ( evalRWST )
-import Control.Monad.State ( MonadState, modify )
+import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
 import Data.Either ( rights )
 import Data.Generics.Uniplate.Direct ( children, transformBiM )
 import Data.Monoid ( Any(..) )
-import Data.Supply ( Supply, newSupply, split, supplyValue )
 
 import Language.Essence
 import Language.EssencePrinters ( prExpr )
 import MonadList ( MonadList, option )
 import Phases.Eval ( evalSpec )
 import Phases.InlineQuanGuards ( inlineQuanGuards )
-import Phases.QuanRename ( quanRename, quanRenameUsing )
+import Phases.QuanRename ( quanRenameSt, quanRenameIO )
 import Phases.RemoveUnusedDecls ( removeUnusedDecls )
 import Phases.ReprRefnCommon ( ErrMsg, checkWheres, instantiateNames )
 import Phases.TopLevelAnds ( topLevelAnds )
 import Phases.TupleExplode ( tupleExplode )
 import PrintUtils ( render )
 import Utils ( ppShow )
+import Has
 
 
 -- test :: IO ()
@@ -43,10 +43,10 @@ import Utils ( ppShow )
 callRefn :: [RuleRefn] -> Spec -> IO [Spec]
 callRefn refns spec = mapM ( evalSpec
                          <=< inlineQuanGuards
+                         <=< quanRenameSt
                          <=< removeUnusedDecls
                          <=< tupleExplode
                          <=< topLevelAnds
-                         <=< quanRename
                          )
                          =<< applyRefnsToSpec refns spec
 
@@ -55,10 +55,9 @@ applyRefnsToSpec :: forall m .
     , MonadIO m
     ) => [RuleRefn] -> Spec -> m [Spec]
 applyRefnsToSpec refns spec = do
-    supp <- liftIO $ newSupply 0 succ
     let
         f :: Expr -> WriterT Any (ListT m) Expr
-        f = applyRefnsToExpr supp (topLevelBindings spec) refns
+        f = applyRefnsToExpr (topLevelBindings spec) refns
     results :: [(Spec,Any)]
         <- (runListT . runWriterT) (transformBiM f spec)
     t :: [[Spec]]
@@ -75,14 +74,13 @@ applyRefnsToExpr ::
     , MonadIO m
     , MonadList m
     , MonadWriter Any m
-    ) => Supply Int
-      -> [Binding]
+    ) => [Binding]
       -> [RuleRefn]
       -> Expr
       -> m Expr
-applyRefnsToExpr supp bs rules x = do
+applyRefnsToExpr bs rules x = do
     candidates :: [Either ErrMsg [Expr]]
-        <- mapM (\ r -> runApplyRefnToExpr supp bs r x ) rules
+        <- mapM (\ r -> runApplyRefnToExpr bs r x ) rules
     -- forM_ (lefts candidates) $ (liftIO . putStrLn)
     let results = rights candidates
     case results of [] -> tell (Any False) >> option [x]
@@ -91,20 +89,21 @@ applyRefnsToExpr supp bs rules x = do
 runApplyRefnToExpr ::
     ( Applicative m
     , MonadIO m
-    ) => Supply Int
-      -> [Binding]
+    ) => [Binding]
       -> RuleRefn
       -> Expr
       -> m (Either ErrMsg [Expr])
-runApplyRefnToExpr supp bs r x = fst <$> evalRWST (applyRefnToExpr supp r x) () bs
+runApplyRefnToExpr bs r x = fst <$> evalRWST (applyRefnToExpr r x) () bs
+
 
 applyRefnToExpr ::
     ( Applicative m
-    , MonadState [Binding] m
+    , MonadState st m
     , MonadWriter [Log] m
     , MonadIO m
-    ) => Supply Int -> RuleRefn -> Expr -> m (Either ErrMsg [Expr])
-applyRefnToExpr supp rule x = do
+    , Has st ([Binding])
+    ) => RuleRefn -> Expr -> m (Either ErrMsg [Expr])
+applyRefnToExpr rule x = do
     -- liftIO $ putStrLn $ padRight ' ' 60 (refnFilename rule) ++ render prExpr x
     result <- runErrorT $ do
         matchPattern (refnPattern rule) x
@@ -114,26 +113,31 @@ applyRefnToExpr supp rule x = do
     let
         -- pr = liftIO . putStrLn
         pr = void . return
-    pr $ "applying " ++ refnFilename rule ++ "\n" ++ ppShow x
+    -- pr $ "applying " ++ refnFilename rule ++ "\n" ++ ppShow x
     case result of
-        Left msg -> pr $ "[NOAPPLY] " ++ msg ++ "\n"
-        Right xs -> pr . unlines
-                        $ ("[APPLIED] " ++ refnFilename rule)
-                        : ("\t" ++ render prExpr x)
-                        -- : ("\t" ++ show x)
-                        : map (("\t"++) . render prExpr) xs
+        Left msg -> do
+            -- pr $ "[NOAPPLY] " ++ msg ++ "\n"
+            return ()
+        Right xs -> do
+            pr $ "[APPLIED] " ++ refnFilename rule
+            pr $ "\t" ++ render prExpr x
+            -- mapM_ (pr . ("\t"++) . render prExpr) xs
+            return ()
     case result of
         Left msg -> return $ Left msg
         Right xs -> do
-            xs' <- quanRenameUsing (map (\ i -> "UQ_" ++ show i) $ map supplyValue (split supp)) xs
+            xs' <- liftIO $ quanRenameIO xs
+            mapM_ (pr . ("\t"++) . render prExpr) xs'
             return $ Right xs'
 
 
 matchPattern ::
-    ( MonadError ErrMsg m
-    , MonadState [Binding] m
+    ( Applicative m
+    , MonadError ErrMsg m
+    , MonadState st m
     , MonadWriter [Log] m
     , MonadIO m
+    , Has st [Binding]
     ) => Expr -- the pattern
       -> Expr -- domain to match
       -> m ()
@@ -163,6 +167,10 @@ matchPattern p x = do
     -- st <- get
     -- liftIO $ ppPrint st
 
-addBinding :: MonadState [Binding] m => BindingEnum -> String -> Expr -> m ()
-addBinding e nm x = modify ((e,nm,x) :)
+addBinding ::
+    ( Applicative m
+    , MonadState st m
+    , Has st [Binding]
+    ) => BindingEnum -> String -> Expr -> m ()
+addBinding e nm x = modifyM $ ((e,nm,x) :)
 

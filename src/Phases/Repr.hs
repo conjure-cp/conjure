@@ -19,7 +19,7 @@ import Language.Essence
 import Language.EssencePrinters ( prExpr )
 import MonadInterleave ( MonadInterleave )
 import Phases.Eval ( evalSpec )
-import Phases.QuanRename ( quanRename )
+import Phases.QuanRename ( quanRenameSt )
 import Phases.ReprRefnCommon
 import PrintUtils
 import Utils ( allPairs, runRWSET )
@@ -132,7 +132,7 @@ applyToSpec reprs spec = do
     -- return []
 
     results <- forM lookupTables $ \ table -> applyConfigToSpec table spec
-    mapM (quanRename <=< evalSpec) results
+    mapM (quanRenameSt <=< evalSpec) results
 
 
 applyConfigToSpec ::
