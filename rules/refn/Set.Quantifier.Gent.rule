@@ -1,0 +1,9 @@
+
+quan i : s, g . k ~~> quan j : r , g {i->j} /\ (m[j] > 0) . k {i->j}
+
+    where
+        s :: set of _,
+        repr(s,Gent)
+
+    letting m be refn(s)
+    letting r be indices(m,0)

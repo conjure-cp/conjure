@@ -1,0 +1,16 @@
+
+a = b ~~> (forall i : ind_a intersect ind_b . m_a[i] = m_b[i])
+       /\ (forall i : ind_a - ind_b . m_a[i] = 0)
+       /\ (forall i : ind_b - ind_a . m_b[i] = 0)
+
+    where
+        a :: set of _,
+        b :: set of _,
+        repr(a,Gent),
+        repr(b,Gent)
+
+    letting m_a be refn(a)
+    letting ind_a be indices(m_a,0)
+
+    letting m_b be refn(b)
+    letting ind_b be indices(m_b,0)
