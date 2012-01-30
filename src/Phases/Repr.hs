@@ -233,11 +233,18 @@ applyCaseToDom :: forall m .
     , MonadState [Binding] m
     , MonadIO m
     ) => Domain -> RuleReprCase -> m (Either ErrMsg Structural)
-applyCaseToDom dom reprcase = runErrorT $ do
-    matchPattern (reprCasePattern reprcase) dom
-    forM_ (reprCaseBindings reprcase) $ \ (_,nm,x) -> addBinding InRule nm x
-    mapM_ checkWheres $ reprCaseWheres reprcase
-    return $ reprCaseStructural reprcase
+applyCaseToDom dom reprcase = do
+    -- liftIO $ do
+    --     putStrLn $ "applyCaseToDom"
+    --     putStrLn $ "\t" ++ render prExpr dom
+    --     putStrLn $ "\t" ++ render prExpr (reprCasePattern reprcase)
+    --     putStrLn $ ""
+    res <- runErrorT $ do
+        matchPattern (reprCasePattern reprcase) dom
+        forM_ (reprCaseBindings reprcase) $ \ (_,nm,x) -> addBinding InRule nm x
+        mapM_ checkWheres $ reprCaseWheres reprcase
+        return $ reprCaseStructural reprcase
+    return res
 
 
 matchPattern ::
@@ -295,6 +302,26 @@ matchPattern (DomainSet s1 mns1 mxs1 dontcare e1 _)
                matchIfJust dontcare mxs1 mxs2 >>
                matchPattern e1 e2
 
+matchPattern (DomainMSet s1 mns1 mxs1 o1 mno1 mxo1 dontcare e1 _)
+             (DomainMSet s2 mns2 mxs2 o2 mno2 mxo2 _        e2 _)
+             = matchIfJust dontcare s1   s2   >>
+               matchIfJust dontcare mns1 mns2 >>
+               matchIfJust dontcare mxs1 mxs2 >>
+               matchIfJust dontcare o1   o2   >>
+               matchIfJust dontcare mno1 mno2 >>
+               matchIfJust dontcare mxo1 mxo2 >>
+               matchPattern e1 e2
+
+matchPattern (DomainFunction fr1 to1 total1 partial1 injective1 bijective1 surjective1 dontcare _)
+             (DomainFunction fr2 to2 total2 partial2 injective2 bijective2 surjective2 _        _)
+             = matchBooleanAttr dontcare total1      total2      >>
+               matchBooleanAttr dontcare partial1    partial2    >>
+               matchBooleanAttr dontcare injective1  injective2  >>
+               matchBooleanAttr dontcare bijective1  bijective2  >>
+               matchBooleanAttr dontcare surjective1 surjective2 >>
+               matchPattern fr1 fr2 >>
+               matchPattern to1 to2
+
 -- TODO: add rest of the domains here!
 
 matchPattern pattern value = matchPatternError pattern value
@@ -313,10 +340,10 @@ matchPatternError pattern value = do
 
 
 matchIfJust ::
-    ( MonadError [Char] m
+    ( MonadError String m
     , MonadState [Binding] m
-    ) => Bool
-      -> Maybe Domain
+    ) => Bool         -- shall I not care?
+      -> Maybe Domain -- attr from the pattern
       -> Maybe Domain
       -> m ()
 matchIfJust _     Nothing  Nothing   = return ()
@@ -324,6 +351,19 @@ matchIfJust _     (Just i) (Just j)  = matchPattern i j
 matchIfJust True  Nothing  _         = return ()
 matchIfJust False Nothing  (Just {}) = throwError "missing attribute in pattern."
 matchIfJust _     (Just {}) _        = throwError "extra attribute in pattern."
+
+matchBooleanAttr ::
+    ( MonadError String m
+    , MonadState [Binding] m
+    ) => Bool -- shall I not care?
+      -> Bool -- attr from the pattern
+      -> Bool
+      -> m ()
+matchBooleanAttr _     False False = return ()
+matchBooleanAttr _     True  True  = return ()
+matchBooleanAttr True  False _     = return ()
+matchBooleanAttr False False True  = throwError "missing attribute in pattern."
+matchBooleanAttr _     True  _     = throwError "extra attribute in pattern."
 
 
 addBinding :: MonadState [Binding] m => BindingEnum -> String -> Expr -> m ()
