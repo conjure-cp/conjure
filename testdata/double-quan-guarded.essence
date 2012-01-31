@@ -1,9 +1,9 @@
 language Essence 2.0
 
 letting myForall be quantifier {
-                                lambda { x:bool, y:bool -> x /\ y }
-                                lambda { x:bool, y:bool -> x => y }
-                                true
+                                append   { x:bool, y:bool -> x /\ y }
+                                guard    { x:bool, y:bool -> x => y }
+                                identity true
                              }
 
 find s : set of int(1..90)

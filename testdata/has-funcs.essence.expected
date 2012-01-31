@@ -1,6 +1,8 @@
 language Essence 2.0
 
-find x : function int(3..7) -> int(1..6)
+find x : set (size 6) of int(0..9)
+find y : set (size 7) of int(0..9)
 
 such that
-    image(x, 4) != image(x, 6)
+    1 elem x,
+    x subseteq y
