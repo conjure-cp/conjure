@@ -448,26 +448,26 @@ pKind = choiceTry [ KindUnknown <$ reservedOp "?"
 --------------------------------------------------------------------------------
 
 knownQuans :: String
-knownQuans = "letting forall be quantifier                "
-          ++ "    {                                       "
-          ++ "        lambda { x:bool, y:bool -> x /\\ y } "
-          ++ "        lambda { x:bool, y:bool -> x => y } "
-          ++ "        true                                "
-          ++ "    }                                       "
-          ++ "                                            "
-          ++ "letting exists be quantifier                "
-          ++ "    {                                       "
-          ++ "        lambda { x:bool, y:bool -> x \\/ y } "
-          ++ "        lambda { x:bool, y:bool -> x /\\ y } "
-          ++ "        false                               "
-          ++ "    }                                       "
-          ++ "                                            "
-          ++ "letting sum be quantifier                   "
-          ++ "    {                                       "
-          ++ "        lambda { x:int , y:int -> x + y }   "
-          ++ "        lambda { x:bool, y:int -> x * y }   "
-          ++ "        0                                   "
-          ++ "    }                                       "
+knownQuans = "letting forall be quantifier                      "
+          ++ "    {                                             "
+          ++ "        append   { x:bool, y:bool -> x /\\ y }    "
+          ++ "        guard    { x:bool, y:bool -> x => y }     "
+          ++ "        identity true                             "
+          ++ "    }                                             "
+          ++ "                                                  "
+          ++ "letting exists be quantifier                      "
+          ++ "    {                                             "
+          ++ "        append   { x:bool, y:bool -> x \\/ y }    "
+          ++ "        guard    { x:bool, y:bool -> x /\\ y }    "
+          ++ "        identity false                            "
+          ++ "    }                                             "
+          ++ "                                                  "
+          ++ "letting sum be quantifier                         "
+          ++ "    {                                             "
+          ++ "        append   { x:int , y:int -> x + y }       "
+          ++ "        guard    { x:bool, y:int -> x * y }       "
+          ++ "        identity 0                                "
+          ++ "    }                                             "
 
 
 pSpec :: Parser Spec
@@ -525,7 +525,7 @@ pBinding = choiceTry [ do reserved "given"
                      , do reserved "letting"
                           idens <- sepBy1 identifier comma
                           reserved "be"
-                          rhs <- pDeclLambda
+                          rhs <- pDeclLambda "lambda"
                           return [ (Letting, i, rhs) | i <- idens ]
                      , do reserved "letting"
                           iden <- identifier
@@ -540,9 +540,9 @@ pBinding = choiceTry [ do reserved "given"
 -- DeclLambda parser -----------------------------------------------------------
 --------------------------------------------------------------------------------
 
-pDeclLambda :: Parser Expr
-pDeclLambda = do
-    reserved "lambda"
+pDeclLambda :: String -> Parser Expr
+pDeclLambda keyword = do
+    reserved keyword
     braces $ do
         args <- sepBy1 nameType comma
         reservedOp "->"
@@ -559,9 +559,9 @@ pDeclLambda = do
 
 pDeclQuantifier :: String -> Parser Expr
 pDeclQuantifier qnName = do
-    result <- braces $ DeclQuantifier <$> pDeclLambda
-                                      <*> pDeclLambda
-                                      <*> pExpr
+    result <- braces $ DeclQuantifier <$> pDeclLambda "append"
+                                      <*> pDeclLambda "guard"
+                                      <*> (reserved "identity" *> pExpr)
     let pre = "__" ++ qnName ++ "_"
     return $ transformBi (reprVarsNaming pre)
            $ transformBi (reprOneMoreRenaming pre)

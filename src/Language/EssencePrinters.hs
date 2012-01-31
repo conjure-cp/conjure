@@ -32,7 +32,7 @@ type Prec = Int
 
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
-                                                   , prDomain, prDeclLambda -- , \ _ -> prDeclQuantifier ""
+                                                   , prDomain, prDeclLambda "lambda" -- , \ _ -> prDeclQuantifier ""
                                                    , prExprQuantifier, const prReplace
                                                    ]
 
@@ -291,15 +291,15 @@ prMatrixSlice _ = Nothing
 -- DeclLambda ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-prDeclLambda :: Prec -> Expr -> Maybe Doc
-prDeclLambda _ (DeclLambda args x) = do
+prDeclLambda :: String -> Prec -> Expr -> Maybe Doc
+prDeclLambda keyword _ (DeclLambda args x) = do
     let braces' i = char '{' <+> i <+> char '}'
     args' <- forM args $ \ (nm,t) -> do t' <- prType t
                                         return (text nm <+> colon <+> t')
     x' <- prExpr x
-    return $ text "lambda"
+    return $ text keyword
          <+> braces' (sep (punctuate comma args') <+> text "->" <+> x')
-prDeclLambda _ _ = Nothing
+prDeclLambda _ _ _ = Nothing
 
 
 --------------------------------------------------------------------------------
@@ -315,9 +315,9 @@ prDeclQuantifier name (DeclQuantifier l1 l2 iden) = do
     let l1_ = doRenamings pre l1
     let l2_ = doRenamings pre l2
 
-    l1'   <- prDeclLambda undefined l1_ <|> prIdentifier undefined l1_
-    l2'   <- prDeclLambda undefined l2_ <|> prIdentifier undefined l2_
-    iden' <- prExpr iden
+    l1'   <- prDeclLambda "append" undefined l1_ <|> prIdentifier undefined l1_
+    l2'   <- prDeclLambda "guard"  undefined l2_ <|> prIdentifier undefined l2_
+    iden' <- (text "identity" <+>) <$> prExpr iden
     return $ vcat [ lbrace
                   , nest 2 $ vcat [l1',l2',iden']
                   , rbrace
