@@ -10,7 +10,6 @@ import Language.Essence ( Expr, Binding, Log )
 import ParsecUtils ( Parser, parseFromFile )
 import Phases.ResolveTwoBars ( resolveTwoBars )
 import PrintUtils ( Doc, render )
-import Utils ( ppShow )
 import Data.Generics.Uniplate.Direct ( Biplate )
 
 
@@ -22,11 +21,12 @@ testOne
     :: (Biplate a Expr, Show a)
     => Parser a
     -> (a -> Maybe Doc)
+    -> (a -> String)
     -> (a -> (Maybe String, [Log]))
     -> (a -> [Binding])
     -> String
     -> Assertion
-testOne parser printer typechecker bindingsOf filename = do
+testOne parser printer rawShow typechecker bindingsOf filename = do
     let failed msg = assertFailure $ filename ++ ": " ++ msg
 
     inp' <- parseFromFile parser id filename id
@@ -41,7 +41,7 @@ testOne parser printer typechecker bindingsOf filename = do
         Nothing  -> return ()
         Just err -> failed $ "type-error: " ++ err
 
-    let inpRawOut = ppShow inp
+    let inpRawOut = rawShow inp
     let rawPrintFileName = filename ++ ".raw"
     rawPrintFileExists <- doesFileExist rawPrintFileName
     rawPrintFile <- unsafeInterleaveIO $ readFile rawPrintFileName
