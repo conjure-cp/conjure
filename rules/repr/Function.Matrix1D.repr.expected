@@ -11,17 +11,8 @@
 *** function (total, surjective) fr -> to
     ~~> forall i : to . exists j : fr . refn[j] = i
 
-*** function (total, bijective) fr -> to
-    ~~> alldifferent(refn) /\ (forall i : to . exists j : fr . refn[j] = i)
-
 *** function (total, injective, surjective) fr -> to
     ~~> alldifferent(refn) /\ (forall i : to . exists j : fr . refn[j] = i)
 
-*** function (total, injective, bijective) fr -> to
-    ~~> alldifferent(refn) /\ (forall i : to . exists j : fr . refn[j] = i)
-
-*** function (total, bijective, surjective) fr -> to
-    ~~> alldifferent(refn) /\ (forall i : to . exists j : fr . refn[j] = i)
-
-*** function (total, injective, bijective, surjective) fr -> to
+*** function (total, bijective, _) fr -> to
     ~~> alldifferent(refn) /\ (forall i : to . exists j : fr . refn[j] = i)

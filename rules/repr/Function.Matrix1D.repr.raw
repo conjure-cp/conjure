@@ -92,50 +92,6 @@ RuleRepr
                                           , functionTo = Identifier "__rules_repr_Function_Matrix1D_repr_to"
                                           , isTotal = True
                                           , isPartial = False
-                                          , isInjective = False
-                                          , isBijective = True
-                                          , isSurjective = False
-                                          , attrDontCare = False
-                                          , representation = Nothing
-                                          }
-                    , reprCaseStructural = Just (
-                                             GenericNode
-                                               And
-                                               [ GenericNode
-                                                   AllDiff
-                                                   [ Identifier "refn"
-                                                   ]
-                                               , ExprQuantifier
-                                                   { quanName = Identifier "forall"
-                                                   , quanVar = Identifier "__rules_repr_Function_Matrix1D_repr_i"
-                                                   , quanOver = Identifier "__rules_repr_Function_Matrix1D_repr_to"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = ExprQuantifier
-                                                                  { quanName = Identifier "exists"
-                                                                  , quanVar = Identifier "__rules_repr_Function_Matrix1D_repr_j"
-                                                                  , quanOver = Identifier "__rules_repr_Function_Matrix1D_repr_fr"
-                                                                  , quanGuard = Nothing
-                                                                  , quanBody = GenericNode
-                                                                                 Eq
-                                                                                 [ GenericNode
-                                                                                     Index
-                                                                                     [ Identifier "refn"
-                                                                                     , Identifier "__rules_repr_Function_Matrix1D_repr_j"
-                                                                                     ]
-                                                                                 , Identifier "__rules_repr_Function_Matrix1D_repr_i"
-                                                                                 ]
-                                                                  }
-                                                   }
-                                               ] )
-                    , reprCaseWheres = []
-                    , reprCaseBindings = []
-                    }
-                , RuleReprCase
-                    { reprCasePattern = DomainFunction
-                                          { functionFrom = Identifier "__rules_repr_Function_Matrix1D_repr_fr"
-                                          , functionTo = Identifier "__rules_repr_Function_Matrix1D_repr_to"
-                                          , isTotal = True
-                                          , isPartial = False
                                           , isInjective = True
                                           , isBijective = False
                                           , isSurjective = True
@@ -180,98 +136,10 @@ RuleRepr
                                           , functionTo = Identifier "__rules_repr_Function_Matrix1D_repr_to"
                                           , isTotal = True
                                           , isPartial = False
-                                          , isInjective = True
-                                          , isBijective = True
-                                          , isSurjective = False
-                                          , attrDontCare = False
-                                          , representation = Nothing
-                                          }
-                    , reprCaseStructural = Just (
-                                             GenericNode
-                                               And
-                                               [ GenericNode
-                                                   AllDiff
-                                                   [ Identifier "refn"
-                                                   ]
-                                               , ExprQuantifier
-                                                   { quanName = Identifier "forall"
-                                                   , quanVar = Identifier "__rules_repr_Function_Matrix1D_repr_i"
-                                                   , quanOver = Identifier "__rules_repr_Function_Matrix1D_repr_to"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = ExprQuantifier
-                                                                  { quanName = Identifier "exists"
-                                                                  , quanVar = Identifier "__rules_repr_Function_Matrix1D_repr_j"
-                                                                  , quanOver = Identifier "__rules_repr_Function_Matrix1D_repr_fr"
-                                                                  , quanGuard = Nothing
-                                                                  , quanBody = GenericNode
-                                                                                 Eq
-                                                                                 [ GenericNode
-                                                                                     Index
-                                                                                     [ Identifier "refn"
-                                                                                     , Identifier "__rules_repr_Function_Matrix1D_repr_j"
-                                                                                     ]
-                                                                                 , Identifier "__rules_repr_Function_Matrix1D_repr_i"
-                                                                                 ]
-                                                                  }
-                                                   }
-                                               ] )
-                    , reprCaseWheres = []
-                    , reprCaseBindings = []
-                    }
-                , RuleReprCase
-                    { reprCasePattern = DomainFunction
-                                          { functionFrom = Identifier "__rules_repr_Function_Matrix1D_repr_fr"
-                                          , functionTo = Identifier "__rules_repr_Function_Matrix1D_repr_to"
-                                          , isTotal = True
-                                          , isPartial = False
                                           , isInjective = False
                                           , isBijective = True
-                                          , isSurjective = True
-                                          , attrDontCare = False
-                                          , representation = Nothing
-                                          }
-                    , reprCaseStructural = Just (
-                                             GenericNode
-                                               And
-                                               [ GenericNode
-                                                   AllDiff
-                                                   [ Identifier "refn"
-                                                   ]
-                                               , ExprQuantifier
-                                                   { quanName = Identifier "forall"
-                                                   , quanVar = Identifier "__rules_repr_Function_Matrix1D_repr_i"
-                                                   , quanOver = Identifier "__rules_repr_Function_Matrix1D_repr_to"
-                                                   , quanGuard = Nothing
-                                                   , quanBody = ExprQuantifier
-                                                                  { quanName = Identifier "exists"
-                                                                  , quanVar = Identifier "__rules_repr_Function_Matrix1D_repr_j"
-                                                                  , quanOver = Identifier "__rules_repr_Function_Matrix1D_repr_fr"
-                                                                  , quanGuard = Nothing
-                                                                  , quanBody = GenericNode
-                                                                                 Eq
-                                                                                 [ GenericNode
-                                                                                     Index
-                                                                                     [ Identifier "refn"
-                                                                                     , Identifier "__rules_repr_Function_Matrix1D_repr_j"
-                                                                                     ]
-                                                                                 , Identifier "__rules_repr_Function_Matrix1D_repr_i"
-                                                                                 ]
-                                                                  }
-                                                   }
-                                               ] )
-                    , reprCaseWheres = []
-                    , reprCaseBindings = []
-                    }
-                , RuleReprCase
-                    { reprCasePattern = DomainFunction
-                                          { functionFrom = Identifier "__rules_repr_Function_Matrix1D_repr_fr"
-                                          , functionTo = Identifier "__rules_repr_Function_Matrix1D_repr_to"
-                                          , isTotal = True
-                                          , isPartial = False
-                                          , isInjective = True
-                                          , isBijective = True
-                                          , isSurjective = True
-                                          , attrDontCare = False
+                                          , isSurjective = False
+                                          , attrDontCare = True
                                           , representation = Nothing
                                           }
                     , reprCaseStructural = Just (
