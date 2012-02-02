@@ -8,7 +8,7 @@ module Utils
     , runRWSE, runRWSET, rwst
     , fst3, snd3, thd3
     , fromJust, padLeft, padRight
-    , applyAll
+    , applyAll, applyAllM
     , allPairs
     , safeStr
     ) where
@@ -83,6 +83,12 @@ applyAll :: a -> [a -> a] -> a
 applyAll x = foldl (\ t f -> f t) x
 -- applyAll x []     = x
 -- applyAll x (f:fs) = applyAll (f x) fs
+
+-- apply all those functions successively. in an M
+applyAllM :: (Monad m) => a -> [a -> m a] -> m a
+applyAllM x []     = return x
+applyAllM x (f:fs) = do y <- f x; applyAllM y fs
+
 
 allPairs :: [a] -> [(a,a)]
 allPairs [] = []
