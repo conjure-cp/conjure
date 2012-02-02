@@ -55,53 +55,12 @@ instance Has (Either a b) (Maybe b) where
     put (Just x) _ = Right x
 
 
+-- the following aren't easy to add, I wish instance resolution were clever enough..
+
 -- instance (Has a c) => Has (a,b) c where
 --     get (a,_) = get a
 --     put c (a,b) = (put c a, b)
--- 
-instance (Has b c) => Has (a,b) c where
-    get (_,b) = get b
-    put c (a,b) = (a,put c b)
 
-
--- test' :: S.State ([(Int,Bool)],(Int,Maybe Bool)) ()
--- test' = test
--- 
--- test ::
---     ( S.MonadState st m
---     , Has st [(Int,Bool)]
---     , Has st Int
---     , Has st (Maybe Bool)
---     ) => m ()
--- test = do
---     list :: [(Int,Bool)]
---          <- getM
---     k    :: Int
---          <- getM
---     putM $ lookup k list
-
--- getInState ::
---     ( Applicative m
---     , MonadState container m
---     , Has container field
---     ) => m field
--- getInState = get <$> get
--- 
--- setInState ::
---     ( Applicative m
---     , MonadState container m
---     , Has container field
---     ) => field -> m ()
--- setInState newVal = do
---     container <- get
---     put $ set newVal container
--- 
--- modifyInState ::
---     ( Applicative m
---     , MonadState container m
---     , Has container field
---     ) => (field -> field) -> m ()
--- modifyInState f = do
---     container <- get
---     put $ modify f container
--- 
+-- instance (Has b c) => Has (a,b) c where
+--     get (_,b) = get b
+--     put c (a,b) = (a,put c b)
