@@ -6,7 +6,7 @@ Spec
   , topLevelBindings = [ ( Find
                          , "x"
                          , DomainSet
-                             { size = Just ( ValueInteger 6 )
+                             { size = Just ( ValueInteger 3 )
                              , minSize = Nothing
                              , maxSize = Nothing
                              , attrDontCare = False
@@ -18,10 +18,16 @@ Spec
                          )
                        ]
   , topLevelWheres = []
-  , objective = Nothing
+  , objective = Just
+                  ( Maximising
+                  , GenericNode
+                      Min
+                      [ Identifier "x"
+                      ]
+                  )
   , constraints = [ GenericNode
                       Gt
-                      [ ValueInteger 3
+                      [ ValueInteger 4
                       , GenericNode
                           Max
                           [ Identifier "x"
