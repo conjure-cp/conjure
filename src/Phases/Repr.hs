@@ -95,7 +95,9 @@ applyToSpec reprs spec = do
 
     -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
     applied' :: [(Binding, (Either ErrMsg [ReprResult], [Log]))]
-        <- zip bindingsNeedsRepr <$> sequence [ liftIO (applyAllToDom d reprs) | (_,_,d) <- bindingsNeedsRepr ]
+        <- zip bindingsNeedsRepr <$> sequence [ liftIO (applyAllToDom (topLevelBindings spec) d reprs)
+                                              | (_,_,d) <- bindingsNeedsRepr
+                                              ]
 
     -- calls error if repr application fails for any binding.
     applied :: [(Binding, [ReprResult])]
@@ -149,9 +151,9 @@ applyConfigToSpec mp sp = do
                    | (i,j) <- forChannels
                    ]
     (resultSp,(md,bs,ss)) <- evalRWST (transformBiM f sp) () mp
-    return resultSp { topLevelBindings = nub $ bs ++ topLevelBindings resultSp
-                    , constraints      = nub $ catMaybes ss ++ constraints resultSp ++ channels
-                    , metadata         = nub $ md ++ metadata resultSp
+    return resultSp { topLevelBindings = nub $ topLevelBindings resultSp ++ bs
+                    , constraints      = nub $ constraints resultSp ++ channels ++ catMaybes ss
+                    , metadata         = nub $ metadata resultSp ++ md
                     }
     where
         f :: ( MonadIO m
@@ -179,19 +181,19 @@ applyConfigToSpec mp sp = do
         f p = return p
 
 
-applyAllToDom :: Domain -> [RuleRepr] -> IO (Either ErrMsg [ReprResult], [Log])
-applyAllToDom dom reprs = do
+applyAllToDom :: [Binding] -> Domain -> [RuleRepr] -> IO (Either ErrMsg [ReprResult], [Log])
+applyAllToDom binds dom reprs = do
     -- results :: [Either ErrMsg (String, Domain, Structural)]
     -- logs    :: [Log]
-    (results, logs) <- second concat . unzip <$> sequence [ runApplyToDom dom r | r <- reprs ]
+    (results, logs) <- second concat . unzip <$> sequence [ runApplyToDom binds dom r | r <- reprs ]
     
     return $ case rights results of
         [] -> (Left ("No repr rule matches this domain: " ++ render prExpr dom), logs)
         rs -> (Right rs, logs)
 
 
-runApplyToDom :: Domain -> RuleRepr -> IO (Either ErrMsg (String, Domain, Structural), [Log])
-runApplyToDom dom repr = runRWSET () [] $ applyToDom dom repr
+runApplyToDom :: [Binding] -> Domain -> RuleRepr -> IO (Either ErrMsg (String, Domain, Structural), [Log])
+runApplyToDom binds dom repr = runRWSET () binds $ applyToDom dom repr
 
 
 applyToDom ::
@@ -234,11 +236,18 @@ applyCaseToDom dom reprcase = do
     --     putStrLn $ "\t" ++ render prExpr dom
     --     putStrLn $ "\t" ++ render prExpr (reprCasePattern reprcase)
     --     putStrLn $ ""
+    -- st <- get; liftIO $ print $ map snd3 st
     res <- runErrorT $ do
         matchDomainPattern (reprCasePattern reprcase) dom
         introduceLocalBindings $ reprCaseBindings reprcase
         mapM_ checkWheres $ reprCaseWheres reprcase
         return $ reprCaseStructural reprcase
+    -- liftIO $ do
+    --     case res of
+    --         Left msg -> do
+    --             putStrLn $ "Repr no match reason: "
+    --             putStrLn $ msg
+    --         Right _  -> return ()
     return res
 
 
