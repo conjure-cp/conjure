@@ -1,25 +1,26 @@
 
 ~~> Matrix2D
 ~~> matrix indexed by [fr,to] of bool
-~~> forall i : fr . (sum j : to . refn[i,j]) <= 1                      $ at most 1 true on every line
     where fr :: int, to :: int
+
 
 *** function fr -> to
 
+
 *** function (total) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)                 $ exactly 1 true on every line
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)              $ exactly 1 true on every line
 
 *** function (total, injective) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)                 $ exactly 1 true on every line
-    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)                $ at most 1 true on every column, to preserve distinctness
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)              $ exactly 1 true on every line
+    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)             $ at most 1 true on every column, to preserve distinctness
 
 *** function (total, surjective) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)                 $ exactly 1 true on every line
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)              $ exactly 1 true on every line
     /\  (forall j : to . exists i : fr . refn[i,j])                 $ every value in "to" is mapped to by at least one in "fr"
 
-*** function (total, bijective) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)                 $ exactly 1 true on every line
-    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)                $ at most 1 true on every column, to preserve distinctness
+*** function (total, bijective, _) fr -> to
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)              $ exactly 1 true on every line
+    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)             $ at most 1 true on every column, to preserve distinctness
     /\  (forall j : to . exists i : fr . refn[i,j])                 $ every value in "to" is mapped to by at least one in "fr"
 
 *** function (total, injective, surjective) fr -> to                $ same as (total, bijective)
@@ -27,40 +28,29 @@
     /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)
     /\  (forall j : to . exists i : fr . refn[i,j])
 
-*** function (total, injective, bijective) fr -> to                 $ same as (total, bijective)
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)
-    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)
-    /\  (forall j : to . exists i : fr . refn[i,j])
-
-*** function (total, surjective, bijective) fr -> to                $ same as (total, bijective)
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)
-    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)
-    /\  (forall j : to . exists i : fr . refn[i,j])
-
-*** function (total, injective, surjective, bijective) fr -> to     $ same as (total, bijective)
-    ~~> (forall i : fr . (sum j : to . refn[i,j]) = 1)
-    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)
-    /\  (forall j : to . exists i : fr . refn[i,j])
-
 
 *** function (partial) fr -> to
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) <= 1)             $ at most 1 true on every line
 
 *** function (partial, injective) fr -> to
-    ~~> forall j : to . (sum i : fr . refn[i,j]) <= 1                  $ at most 1 true on every column, to preserve distinctness
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) <= 1)             $ at most 1 true on every line
+    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)             $ at most 1 true on every column, to preserve distinctness
 $ example: 
 $           fr = {1,2,3}
 $           to = {1,2,3}
 $           f = {1 -> 1, 2 -> 2}
 
 *** function (partial, surjective) fr -> to
-    ~~> forall j : to . exists i : fr . refn[i,j]                   $ every value in "to" is mapped to by at least one in "fr"
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) <= 1)             $ at most 1 true on every line
+    /\  (forall j : to . exists i : fr . refn[i,j])                 $ every value in "to" is mapped to by at least one in "fr"
 $ example: 
 $           fr = {1,2,3}
 $           to = {1}
 $           f = {1 -> 1, 2 -> 1}
 
-*** function (partial, bijective) fr -> to
-    ~~> (forall j : to . (sum i : fr . refn[i,j]) <= 1)                $ at most 1 true on every column, to preserve distinctness
+*** function (partial, bijective, _) fr -> to
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) <= 1)             $ at most 1 true on every line
+    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)             $ at most 1 true on every column, to preserve distinctness
     /\  (forall j : to . exists i : fr . refn[i,j])                 $ every value in "to" is mapped to by at least one in "fr"
 $ example: 
 $           fr = {1,2,3}
@@ -68,18 +58,6 @@ $           to = {1,2}
 $           f = {1 -> 1, 2 -> 2}
 
 *** function (partial, injective, surjective) fr -> to              $ same as (partial, bijective)
-    ~~> (forall j : to . (sum i : fr . refn[i,j]) <= 1)
-    /\  (forall j : to . exists i : fr . refn[i,j])
-
-
-*** function (partial, injective, bijective) fr -> to               $ same as (partial, bijective)
-    ~~> (forall j : to . (sum i : fr . refn[i,j]) <= 1)
-    /\  (forall j : to . exists i : fr . refn[i,j])
-
-*** function (partial, surjective, bijective) fr -> to              $ same as (partial, bijective)
-    ~~> (forall j : to . (sum i : fr . refn[i,j]) <= 1)
-    /\  (forall j : to . exists i : fr . refn[i,j])
-
-*** function (partial, injective, surjective, bijective) fr -> to   $ same as (partial, bijective)
-    ~~> (forall j : to . (sum i : fr . refn[i,j]) <= 1)
+    ~~> (forall i : fr . (sum j : to . refn[i,j]) <= 1)             $ at most 1 true on every line
+    /\  (forall j : to . (sum i : fr . refn[i,j]) <= 1)
     /\  (forall j : to . exists i : fr . refn[i,j])

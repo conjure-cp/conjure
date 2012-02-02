@@ -1,7 +1,6 @@
 
 ~~> Matrix2D
 ~~> matrix indexed by [fr, to] of bool
-~~> forall i : fr . (sum j : to . refn[i, j]) <= 1
     where fr :: int
     where to :: int
 
@@ -16,7 +15,7 @@
 *** function (total, surjective) fr -> to
     ~~> (forall i : fr . (sum j : to . refn[i, j]) = 1) /\ (forall j : to . exists i : fr . refn[i, j])
 
-*** function (total, bijective) fr -> to
+*** function (total, bijective, _) fr -> to
     ~~> (forall i : fr . (sum j : to . refn[i, j]) = 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
         /\
         (forall j : to . exists i : fr . refn[i, j])
@@ -26,40 +25,21 @@
         /\
         (forall j : to . exists i : fr . refn[i, j])
 
-*** function (total, injective, bijective) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i, j]) = 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
-        /\
-        (forall j : to . exists i : fr . refn[i, j])
-
-*** function (total, bijective, surjective) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i, j]) = 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
-        /\
-        (forall j : to . exists i : fr . refn[i, j])
-
-*** function (total, injective, bijective, surjective) fr -> to
-    ~~> (forall i : fr . (sum j : to . refn[i, j]) = 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
-        /\
-        (forall j : to . exists i : fr . refn[i, j])
-
 *** function (partial) fr -> to
+    ~~> forall i : fr . (sum j : to . refn[i, j]) <= 1
 
 *** function (partial, injective) fr -> to
-    ~~> forall j : to . (sum i : fr . refn[i, j]) <= 1
+    ~~> (forall i : fr . (sum j : to . refn[i, j]) <= 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
 
 *** function (partial, surjective) fr -> to
-    ~~> forall j : to . exists i : fr . refn[i, j]
+    ~~> (forall i : fr . (sum j : to . refn[i, j]) <= 1) /\ (forall j : to . exists i : fr . refn[i, j])
 
-*** function (partial, bijective) fr -> to
-    ~~> (forall j : to . (sum i : fr . refn[i, j]) <= 1) /\ (forall j : to . exists i : fr . refn[i, j])
+*** function (partial, bijective, _) fr -> to
+    ~~> (forall i : fr . (sum j : to . refn[i, j]) <= 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
+        /\
+        (forall j : to . exists i : fr . refn[i, j])
 
 *** function (partial, injective, surjective) fr -> to
-    ~~> (forall j : to . (sum i : fr . refn[i, j]) <= 1) /\ (forall j : to . exists i : fr . refn[i, j])
-
-*** function (partial, injective, bijective) fr -> to
-    ~~> (forall j : to . (sum i : fr . refn[i, j]) <= 1) /\ (forall j : to . exists i : fr . refn[i, j])
-
-*** function (partial, bijective, surjective) fr -> to
-    ~~> (forall j : to . (sum i : fr . refn[i, j]) <= 1) /\ (forall j : to . exists i : fr . refn[i, j])
-
-*** function (partial, injective, bijective, surjective) fr -> to
-    ~~> (forall j : to . (sum i : fr . refn[i, j]) <= 1) /\ (forall j : to . exists i : fr . refn[i, j])
+    ~~> (forall i : fr . (sum j : to . refn[i, j]) <= 1) /\ (forall j : to . (sum i : fr . refn[i, j]) <= 1)
+        /\
+        (forall j : to . exists i : fr . refn[i, j])
