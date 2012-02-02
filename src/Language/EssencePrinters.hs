@@ -355,10 +355,14 @@ prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constrain
 
     return . vcat . concat $
         [ [ langline ]
-        , if null topLevelBindings' then [] else emptyLine : bindings
-        , if null topLevelWheres    then [] else emptyLine : wheres
-        , if isNothing objective    then [] else emptyLine : obj
-        , if null constraints       then [] else emptyLine : text "such" <+> text "that" : punctuate comma cons
+        , if null topLevelBindings' then []
+                                    else emptyLine : bindings
+        , if null topLevelWheres    then []
+                                    else emptyLine : wheres
+        , if isNothing objective    then []
+                                    else emptyLine : obj
+        , if null constraints       then [ text "such that true" ]
+                                    else emptyLine : text "such" <+> text "that" : punctuate comma cons
         , [ emptyLine ]
         ]
 
