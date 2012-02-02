@@ -12,6 +12,7 @@ import System.Directory ( createDirectoryIfMissing )
 import Language.EssenceParsers ( pSpec, pRuleRepr )
 import Language.EssencePrinters ( prSpec )
 import ParsecUtils ( parseFromFile )
+import Phases.QuanRename ( quanRenameIO )
 import Phases.Repr ( callRepr )
 import PrintUtils ( render )
 import Utils ( padLeft )
@@ -23,7 +24,7 @@ main = do
     specFilename <- case filter (".essence" `isSuffixOf`) args of
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
-    spec  <- parseFromFile pSpec langlinePre specFilename id
+    spec  <- quanRenameIO =<< parseFromFile pSpec langlinePre specFilename id
     reprs <- mapM (\ r -> parseFromFile (pRuleRepr r) id r id ) $ filter (".repr" `isSuffixOf`) args
 
     when (null reprs) $ putStrLn "Warning: no *.repr file is given."

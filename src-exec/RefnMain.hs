@@ -13,6 +13,7 @@ import Language.Essence ( RuleRefn(..) )
 import Language.EssenceParsers ( pSpec, pRuleRefn )
 import Language.EssencePrinters ( prSpec )
 import ParsecUtils ( parseFromFile )
+import Phases.QuanRename ( quanRenameIO )
 import Phases.Refn ( callRefn )
 import PrintUtils ( render )
 import Utils ( padLeft )
@@ -24,7 +25,7 @@ main = do
     specFilename <- case filter (".essence" `isSuffixOf`) args of
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
-    spec  <- parseFromFile pSpec langlinePre specFilename id
+    spec  <- quanRenameIO =<< parseFromFile pSpec langlinePre specFilename id
     refns <- mapM (\ r -> parseFromFile (pRuleRefn r) id r id ) $ filter (".rule" `isSuffixOf`) args
 
     when (null refns) $ putStrLn "Warning: no *.rule file is given."
