@@ -3,6 +3,7 @@ clear
 # conjure-repr rules/repr/Set.Gent.repr "$1.essence"
 # conjure-repr rules/repr/Set.Occurrence.repr "$1.essence"
 # conjure-repr rules/repr/Set.Explicit.repr "$1.essence"
+# conjure-repr "rules/repr/Set.Explicit(IntOnly).repr" "$1.essence"
 # conjure-repr rules/repr/Set.ExplicitVarSize.repr "$1.essence"
 conjure-repr rules/repr/* "$1.essence"
 
@@ -13,7 +14,7 @@ ls $1-repr/*.essence | parallel -k -j3 "conjure-refn rules/refn/* {}"
 
 
 # runs every *.essence file through savilerow
-# ls -1 *.essence | parallel --noswap -k "echo {}; runsavilerow {} -runsolver"
+# ls -1 *.essence | parallel -k -j3 "echo {}; runsavilerow {} -runsolver"
 
 # same above, but nohup.
 # ls -1 *.essence | nohup parallel --noswap -j5 -k "echo {}; runsavilerow {} -runsolver" > nohup.out 2> nohup.err &
