@@ -1,0 +1,9 @@
+language Essence 2.0
+
+given n : int(1..)
+
+letting Index be domain int(1..n)
+
+find s : function (total) Index -> int(-1,1)
+
+minimising sum k : int(1..n-1) . (sum i : int(1..n-k-1) . s(i)*s(i+k))^2
