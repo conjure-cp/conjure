@@ -7,7 +7,6 @@ import Control.Applicative
 import Control.Monad.IO.Class ( MonadIO(..) )
 import Control.Monad.State ( MonadState(..), StateT, evalStateT )
 import Data.Generics.Uniplate.Direct ( Uniplate, Biplate, transformBi, descendM, descendBiM )
-import Data.IORef ( readIORef, writeIORef )
 import Data.List ( (\\) )
 
 import Language.Essence
@@ -26,34 +25,44 @@ quanRenameIO sp = descendBiM (encapsulated . quanVarNaming) sp
 
 
 quanVarNaming :: (RenamingMonad m) => Expr -> m Expr
-quanVarNaming (ExprQuantifier qnName (Identifier qnVar) qnOver qnGuard qnBody) = do
-    nextName <- getNextName
-    let
-        rename :: Biplate a Expr => String -> String -> a -> a
-        rename old new x = flip transformBi x $ \ t -> case t of Identifier nm | nm == old -> Identifier new
-                                                                 _ -> t
-        ren = rename qnVar nextName
+quanVarNaming p@(ExprQuantifier qnName (Identifier qnVar) qnOver qnGuard qnBody) = do
+    b <- shouldRename qnVar
+    if not b
+        then return p
+        else do
+            nextName <- getNextName
+            let
+                rename :: Biplate a Expr => String -> String -> a -> a
+                rename old new x = flip transformBi x $ \ t ->
+                    case t of
+                        Identifier nm | nm == old -> Identifier new
+                        _ -> t
+                ren = rename qnVar nextName
 
-    qnOver'  <- encapsulated $ quanVarNaming (ren qnOver)
+            qnOver'  <- encapsulated $ quanVarNaming (ren qnOver)
 
-    qnGuard' <- encapsulated $ case qnGuard of
-                                Nothing -> return Nothing
-                                Just t  -> Just <$> quanVarNaming (ren t)
+            qnGuard' <- encapsulated $ case qnGuard of
+                                            Nothing -> return Nothing
+                                            Just t  -> Just <$> quanVarNaming (ren t)
 
-    qnBody'  <- encapsulated $ quanVarNaming (ren qnBody)
+            qnBody'  <- encapsulated $ quanVarNaming (ren qnBody)
 
-    return $ ExprQuantifier qnName
-                            (Identifier nextName)
-                            qnOver'
-                            qnGuard'
-                            qnBody'
+            return $ ExprQuantifier qnName
+                                    (Identifier nextName)
+                                    qnOver'
+                                    qnGuard'
+                                    qnBody'
 quanVarNaming x = descendM (encapsulated . quanVarNaming) x
 
 
 class (Applicative m, Monad m) => RenamingMonad m where
     getNextName :: m String
+
     encapsulated :: m a -> m a
     encapsulated = id
+
+    shouldRename :: String -> m Bool
+    shouldRename _ = return True
 
 instance (Applicative m, MonadIO m) => RenamingMonad (StateT [String] m) where
     getNextName = do
@@ -78,3 +87,5 @@ instance RenamingMonad IO where
     --     result <- comp
     --     writeIORef intCounter st
     --     return result
+    shouldRename ('U':'Q':'_':_) = return False
+    shouldRename _ = return True
