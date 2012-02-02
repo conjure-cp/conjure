@@ -252,3 +252,5 @@ typeOf p@(ExprQuantifier {quanName=Identifier quanName, quanVar=Identifier quanV
         _  -> p ~$$ "multiple definitons of quantifier: " ++ quanName
 
 typeOf p@(ExprQuantifier {}) = p ~$$ "quantifier has a non-identifier in the quanVar field."
+
+typeOf p@(Bubble {}) = p ~$$ "bubble here."

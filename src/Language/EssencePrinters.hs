@@ -33,7 +33,7 @@ type Prec = Int
 prExprPrec :: Prec -> Expr -> Maybe Doc
 prExprPrec prec x = msum $ map (\ pr -> pr prec x) [ prIdentifier, prValue, prGenericNode
                                                    , prDomain, prDeclLambda "lambda" -- , \ _ -> prDeclQuantifier ""
-                                                   , prExprQuantifier, const prReplace
+                                                   , prExprQuantifier, const prReplace, const prBubble
                                                    ]
 
 prIdentifier :: Prec -> Expr -> Maybe Doc
@@ -286,6 +286,13 @@ prMatrixSlice (MatrixSlice Nothing  (Just b)) = (text ".." <>) <$> prExpr b
 prMatrixSlice (MatrixSlice (Just a) (Just b)) = (\ i j -> i <> text ".." <> j) <$> prExpr a <*> prExpr b
 prMatrixSlice _ = Nothing
 
+prBubble :: Expr -> Maybe Doc
+prBubble (Bubble actual toPosts binds) = do
+    actual'  <- prExpr actual
+    toPosts' <- mapM prExpr toPosts
+    binds'   <- mapM (prBinding []) binds
+    return $ parens actual' <+> text "@" <+> parens (vcat toPosts' <> comma <+> vcat binds')
+prBubble _ = Nothing
 
 --------------------------------------------------------------------------------
 -- DeclLambda ------------------------------------------------------------------
@@ -370,6 +377,7 @@ prBinding bs (Letting,nm,x) = do
          <+> textAfterBe bs x
          <+> x'
 prBinding _ (InRule,_,_) = error "EssencePrinters.prBinding InRule"
+prBinding _ (InRuleNewVar,_,_) = error "EssencePrinters.prBinding InRuleNewVar"
 
 prWhere :: Where -> Maybe Doc
 prWhere w = do

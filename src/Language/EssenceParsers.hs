@@ -303,7 +303,7 @@ pExpr = buildExpressionParser table core
             | otherwise = reservedOp s <?> "operator"
 
         pOps :: [(Int, Operator String () Identity Expr)]
-        pOps = rights (mapMaybe f (allValues :: [Op]))
+        pOps = pBubble : rights (mapMaybe f (allValues :: [Op]))
 
         table :: OperatorTable String () Identity Expr
         table = [Postfix pPostfix] :
@@ -325,6 +325,13 @@ pExprCore =  pExprQuantifier
           :  pValue
           ++ pDomains
           ++ [ pExprTwoBars, parens pExpr ]
+
+pBubble :: (Int, Operator String () Identity Expr)
+pBubble = ( 0
+          , Infix
+            (reservedOp "@" >> return (\ i j -> Bubble i [j] []))
+            AssocNone
+          )
 
 pExprQuantifier :: Parser Expr
 pExprQuantifier = do

@@ -87,3 +87,5 @@ kindOf p@(DeclLambda     {}) = p ~~$ KindLambda
 kindOf p@(DeclQuantifier {}) = p ~~$ KindExpr
 
 kindOf p@(ExprQuantifier {}) = p ~~$ KindExpr
+
+kindOf p@(Bubble {}) = p ~$$ "bubble here."

@@ -60,7 +60,7 @@ data Spec
 
 type Binding = (BindingEnum,String,Expr)
 
-data BindingEnum = Find | Given | Letting | InRule
+data BindingEnum = Find | Given | Letting | InRule | InRuleNewVar
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Objective = (ObjectiveEnum,Expr)
@@ -190,6 +190,12 @@ data Expr
         , quanBody  :: Expr
         }
 
+    | Bubble
+        { bubbleActual   :: Expr
+        , bubbleToPost   :: [Expr]
+        , bubbleBindings :: [Binding]
+        }
+
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 
@@ -237,7 +243,7 @@ data Op
 
     | HasType | HasDomain
 
-    | Replace | Bubble
+    | Replace
     
     | AllDiff
 
@@ -303,7 +309,6 @@ opDescriptor Index        = OpSpecial
 opDescriptor HasType      = OpInfixN "::"           ~~$ 1500
 opDescriptor HasDomain    = OpInfixN ":"            ~~$ 1500
 opDescriptor Replace      = OpSpecial
-opDescriptor Bubble       = OpInfixN "@"            ~~$ 0
 opDescriptor AllDiff      = OpLispy  "alldifferent" 1
 
 infixr 0 ~~$
@@ -497,8 +502,6 @@ validOpTypes Hist      [TypeMSet a,TypeMatrix b] | a == b = return (TypeMatrix T
 validOpTypes HasType   _ = return TypeBoolean
 validOpTypes HasDomain _ = return TypeBoolean
 
-validOpTypes Bubble    [a, TypeBoolean] = return a
-
 validOpTypes AllDiff   [TypeMatrix {}] = return TypeBoolean
 
 validOpTypes _ _ = Nothing
@@ -607,6 +610,9 @@ deriving instance UniplateDirect [Expr]                     (String,Type)
 
 deriving instance UniplateDirect (BindingEnum,String,Expr)
 deriving instance UniplateDirect Expr                       (BindingEnum,String,Expr)
+deriving instance UniplateDirect (Expr,Expr)                (BindingEnum,String,Expr)
+deriving instance UniplateDirect [Expr]                     (BindingEnum,String,Expr)
+deriving instance UniplateDirect (Maybe Expr)               (BindingEnum,String,Expr)
 deriving instance UniplateDirect RuleRefn                   (BindingEnum,String,Expr)
 deriving instance UniplateDirect RuleRepr                   (BindingEnum,String,Expr)
 deriving instance UniplateDirect RuleReprCase               (BindingEnum,String,Expr)
