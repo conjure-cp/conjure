@@ -276,6 +276,15 @@ evaluateExpr (GenericNode HasType [i,j]) = do
 
 evaluateExpr p@(ExprQuantifier {quanGuard=Just (ValueBoolean True)}) = rJust p {quanGuard = Nothing}
 
+-- defined(f)
+
+evaluateExpr (GenericNode Defined [Identifier nmP]) = do
+    bs <- ask
+    let nm = head $ splitOn "#" nmP
+    case [ x | (ty,nm',x) <- bs, nm == nm', ty `elem` [Find,Given] ] of
+        [DomainFunction {isTotal=True,functionFrom}] -> rJust functionFrom
+        _   -> rNothing
+
 -- no eval
 
 evaluateExpr _ = rNothing
