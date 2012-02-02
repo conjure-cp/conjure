@@ -5,10 +5,10 @@ module Phases.Repr ( callRepr ) where
 
 import Control.Applicative
 import Control.Arrow ( second )
-import Control.Monad ( (<=<), forM, forM_, zipWithM_ )
+import Control.Monad ( (<=<), forM )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
-import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, modify, evalRWST )
+import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, evalRWST )
 import Data.Either ( rights )
 import Data.Generics.Uniplate.Direct ( transformBi, transformBiM, universeBi )
 import Data.List ( group, nub, sort )
@@ -37,11 +37,6 @@ import Utils ( allPairs, runRWSET )
 -- appl :: Spec -> [RuleRepr] -> IO (Either ErrMsg [Spec])
 -- appl s rs = runErrorT $ applyToSpec rs s
 
-
-type Domain = Expr
-type Structural = Maybe Expr
-type ReprName = String
-type ReprResult = (ReprName, Domain, Structural)
 
 
 cross :: [a] -> Int -> [[a]]
@@ -215,7 +210,7 @@ applyToDom dom repr = do
         Nothing -> throwError "Cannot apply repr rule to domain."
         Just r  -> do
             b <- instantiateNames $ reprTemplate repr
-            c <- instantiateNames r
+            c <- case r of Nothing -> return Nothing; Just i -> do i' <- instantiateNames i; return (Just i')
             return (reprName repr, b, c)
     where
         cases :: [RuleReprCase]
@@ -240,134 +235,11 @@ applyCaseToDom dom reprcase = do
     --     putStrLn $ "\t" ++ render prExpr (reprCasePattern reprcase)
     --     putStrLn $ ""
     res <- runErrorT $ do
-        matchPattern (reprCasePattern reprcase) dom
-        forM_ (reprCaseBindings reprcase) $ \ (_,nm,x) -> addBinding InRule nm x
+        matchDomainPattern (reprCasePattern reprcase) dom
+        introduceLocalBindings $ reprCaseBindings reprcase
         mapM_ checkWheres $ reprCaseWheres reprcase
         return $ reprCaseStructural reprcase
     return res
-
-
-matchPattern ::
-    ( MonadError ErrMsg m
-    , MonadState [Binding] m
-    ) => Domain -- the pattern
-      -> Domain -- domain to match
-      -> m ()
-
-matchPattern (Identifier "_") _ = return ()
-
-matchPattern (Identifier nm) dom = addBinding InRule nm dom
-
-matchPattern DomainBoolean
-             DomainBoolean
-             = return ()
-
-matchPattern (DomainIntegerFromTo Nothing Nothing)
-             (DomainIntegerFromTo Nothing Nothing)
-             = return ()
-matchPattern (DomainIntegerFromTo Nothing (Just t1))
-             (DomainIntegerFromTo Nothing (Just t2))
-             = matchPattern t1 t2
-matchPattern (DomainIntegerFromTo (Just f1) Nothing)
-             (DomainIntegerFromTo (Just f2) Nothing)
-             = matchPattern f1 f2
-matchPattern (DomainIntegerFromTo (Just f1) (Just t1))
-             (DomainIntegerFromTo (Just f2) (Just t2))
-             = matchPattern f1 f2 >> matchPattern t1 t2
-
-matchPattern p@(DomainIntegerList xs)
-             v@(DomainIntegerList ys)
-             = if length xs == length ys
-                 then zipWithM_ matchPattern xs ys
-                 else matchPatternError p v
-
-matchPattern (DomainUnnamed s1 _)
-             (DomainUnnamed s2 _)
-             = matchPattern s1 s2
-
-matchPattern (DomainMatrix i1 e1)
-             (DomainMatrix i2 e2)
-             = matchPattern i1 i2 >> matchPattern e1 e2
-
-matchPattern p@(DomainTuple xs _)
-             v@(DomainTuple ys _)
-             = if length xs == length ys
-                 then zipWithM_ matchPattern xs ys
-                 else matchPatternError p v
-
-matchPattern (DomainSet s1 mns1 mxs1 dontcare e1 _)
-             (DomainSet s2 mns2 mxs2 _        e2 _)
-             = matchIfJust dontcare s1 s2 >>
-               matchIfJust dontcare mns1 mns2 >>
-               matchIfJust dontcare mxs1 mxs2 >>
-               matchPattern e1 e2
-
-matchPattern (DomainMSet s1 mns1 mxs1 o1 mno1 mxo1 dontcare e1 _)
-             (DomainMSet s2 mns2 mxs2 o2 mno2 mxo2 _        e2 _)
-             = matchIfJust dontcare s1   s2   >>
-               matchIfJust dontcare mns1 mns2 >>
-               matchIfJust dontcare mxs1 mxs2 >>
-               matchIfJust dontcare o1   o2   >>
-               matchIfJust dontcare mno1 mno2 >>
-               matchIfJust dontcare mxo1 mxo2 >>
-               matchPattern e1 e2
-
-matchPattern (DomainFunction fr1 to1 total1 partial1 injective1 bijective1 surjective1 dontcare _)
-             (DomainFunction fr2 to2 total2 partial2 injective2 bijective2 surjective2 _        _)
-             = matchBooleanAttr dontcare total1      total2      >>
-               matchBooleanAttr dontcare partial1    partial2    >>
-               matchBooleanAttr dontcare injective1  injective2  >>
-               matchBooleanAttr dontcare bijective1  bijective2  >>
-               matchBooleanAttr dontcare surjective1 surjective2 >>
-               matchPattern fr1 fr2 >>
-               matchPattern to1 to2
-
--- TODO: add rest of the domains here!
-
-matchPattern pattern value = matchPatternError pattern value
-
-
-matchPatternError ::
-    ( MonadError ErrMsg m
-    , MonadState [Binding] m
-    ) => Domain -> Domain -> m ()
-matchPatternError pattern value = do
-    pattern' <- maybe (throwError ("cannot render: " ++ show pattern)) return $ prExpr pattern
-    value'   <- maybe (throwError ("cannot render: " ++ show value  )) return $ prExpr value
-    throwError . renderDoc $ text "matchPattern:" <+> pattern'
-                                               <+> text "~~"
-                                               <+> value'
-
-
-matchIfJust ::
-    ( MonadError String m
-    , MonadState [Binding] m
-    ) => Bool         -- shall I not care?
-      -> Maybe Domain -- attr from the pattern
-      -> Maybe Domain
-      -> m ()
-matchIfJust _     Nothing  Nothing   = return ()
-matchIfJust _     (Just i) (Just j)  = matchPattern i j
-matchIfJust True  Nothing  _         = return ()
-matchIfJust False Nothing  (Just {}) = throwError "missing attribute in pattern."
-matchIfJust _     (Just {}) _        = throwError "extra attribute in pattern."
-
-matchBooleanAttr ::
-    ( MonadError String m
-    , MonadState [Binding] m
-    ) => Bool -- shall I not care?
-      -> Bool -- attr from the pattern
-      -> Bool
-      -> m ()
-matchBooleanAttr _     False False = return ()
-matchBooleanAttr _     True  True  = return ()
-matchBooleanAttr True  False _     = return ()
-matchBooleanAttr False False True  = throwError "missing attribute in pattern."
-matchBooleanAttr _     True  _     = throwError "extra attribute in pattern."
-
-
-addBinding :: MonadState [Binding] m => BindingEnum -> String -> Expr -> m ()
-addBinding e nm x = modify ((e,nm,x) :)
 
 
 ------------------------------------------------------------

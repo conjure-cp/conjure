@@ -4,7 +4,7 @@
 module Phases.Refn ( callRefn ) where
 
 import Control.Applicative
-import Control.Monad ( (<=<), forM, forM_, void, zipWithM_ )
+import Control.Monad ( (<=<), forM, zipWithM_ )
 import Control.Monad.Error ( MonadError, runErrorT, throwError )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.List ( ListT, runListT )
@@ -15,19 +15,17 @@ import Data.Either ( rights )
 import Data.Generics.Uniplate.Direct ( children, transformBiM )
 import Data.Monoid ( Any(..) )
 
+import Has
 import Language.Essence
-import Language.EssencePrinters ( prExpr )
 import MonadList ( MonadList, option )
+import Phases.BubbleUp ( bubbleUp )
 import Phases.Eval ( evalSpec )
 import Phases.InlineQuanGuards ( inlineQuanGuards )
 import Phases.QuanRename ( quanRenameSt, quanRenameIO )
 import Phases.RemoveUnusedDecls ( removeUnusedDecls )
-import Phases.ReprRefnCommon ( ErrMsg, checkWheres, instantiateNames )
+import Phases.ReprRefnCommon
 import Phases.TopLevelAnds ( topLevelAnds )
 import Phases.TupleExplode ( tupleExplode )
-import PrintUtils ( render )
-import Utils ( ppShow )
-import Has
 
 
 -- test :: IO ()
@@ -47,6 +45,7 @@ callRefn refns spec = mapM ( evalSpec
                          <=< removeUnusedDecls
                          <=< tupleExplode
                          <=< topLevelAnds
+                         <=< bubbleUp
                          )
                          =<< applyRefnsToSpec refns spec
 
@@ -106,32 +105,28 @@ applyRefnToExpr ::
 applyRefnToExpr rule x = do
     -- liftIO $ putStrLn $ padRight ' ' 60 (refnFilename rule) ++ render prExpr x
     result <- runErrorT $ do
-        matchPattern (refnPattern rule) x
-        forM_ (refnBindings rule) $ \ (_,nm,t) -> addBinding InRule nm t
+        matchExprPattern (refnPattern rule) x
+        introduceLocalBindings $ refnBindings rule
         mapM_ (checkWheres <=< instantiateNames) $ refnWheres rule
-        mapM instantiateNames (refnTemplates rule)
-    let
-        -- pr = liftIO . putStrLn
-        pr = void . return
-    -- pr $ "applying " ++ refnFilename rule ++ "\n" ++ ppShow x
+        mapM instantiateNames' (refnTemplates rule)
+
+    -- liftIO . putStrLn $ "applying " ++ refnFilename rule ++ "\n" ++ ppShow x
+
     case result of
         Left msg -> do
-            -- pr $ "[NOAPPLY] " ++ msg ++ "\n"
-            return ()
+            -- liftIO $ putStrLn $ "[NOAPPLY] " ++ msg ++ "\n"
+            return $ Left msg
         Right xs -> do
-            pr $ "[APPLIED] " ++ refnFilename rule
-            pr $ "\t" ++ render prExpr x
-            -- mapM_ (pr . ("\t"++) . render prExpr) xs
-            return ()
-    case result of
-        Left msg -> return $ Left msg
-        Right xs -> do
+            -- liftIO $ do
+            --     putStrLn $ "[APPLIED] " ++ refnFilename rule
+            --     putStrLn $ "\t" ++ render prExpr x
+            --     mapM_ (putStrLn . ("\t"++) . render prExpr) xs
             xs' <- liftIO $ quanRenameIO xs
-            mapM_ (pr . ("\t"++) . render prExpr) xs'
+            -- liftIO $ mapM_ (putStrLn . ("\t"++) . render prExpr) xs'
             return $ Right xs'
 
 
-matchPattern ::
+matchExprPattern ::
     ( Applicative m
     , MonadError ErrMsg m
     , MonadState st m
@@ -141,12 +136,12 @@ matchPattern ::
     ) => Expr -- the pattern
       -> Expr -- domain to match
       -> m ()
-matchPattern (Identifier "_") _ = return ()
-matchPattern (Identifier nm ) x = addBinding InRule nm x
-matchPattern p@(ExprQuantifier {quanGuard=Just _ })
-             x@(ExprQuantifier {quanGuard=Nothing}) = matchPattern p x { quanGuard = Just (ValueBoolean True) }
-matchPattern p x = do
-    -- liftIO $ putStrLn $ "matchPattern: " ++ render prExpr x
+matchExprPattern (Identifier "_") _ = return ()
+matchExprPattern (Identifier nm ) x = addBinding InRule nm x
+matchExprPattern p@(ExprQuantifier {quanGuard=Just _ })
+             x@(ExprQuantifier {quanGuard=Nothing}) = matchExprPattern p x { quanGuard = Just (ValueBoolean True) }
+matchExprPattern p x = do
+    -- liftIO $ putStrLn $ "matchExprPattern: " ++ render prExpr x
     let
         ctrP = exprTag p
         ctrX = exprTag x
@@ -158,7 +153,7 @@ matchPattern p x = do
                 chX = children x
                 nmX = length chX
             if nmP == nmX
-                then zipWithM_ matchPattern chP chX
+                then zipWithM_ matchExprPattern chP chX
                 else throwError $ "Different number of children: " ++ ctrP ++ "/" ++ show nmP
                                                           ++ " ~ " ++ ctrX ++ "/" ++ show nmX
         else do
@@ -166,11 +161,3 @@ matchPattern p x = do
             throwError msg
     -- st <- get
     -- liftIO $ ppPrint st
-
-addBinding ::
-    ( Applicative m
-    , MonadState st m
-    , Has st [Binding]
-    ) => BindingEnum -> String -> Expr -> m ()
-addBinding e nm x = modifyM $ ((e,nm,x) :)
-
