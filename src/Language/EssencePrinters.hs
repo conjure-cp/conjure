@@ -215,9 +215,9 @@ attrToDoc _ _ = Nothing
 prGenericNode :: Prec -> Expr -> Maybe Doc
 -- uncomment the following, if you want to use TwoBars in the output.
 -- I don't, hence commented out.
--- prGenericNode _ (GenericNode op [x]) | op `elem` [Abs,Card] = do
---     x' <- prExpr x
---     return $ char '|' <> x' <> char '|'
+prGenericNode _ (GenericNode op [x]) | op `elem` [Abs{-,Card-}] = do
+    x' <- prExpr x
+    return $ char '|' <> x' <> char '|'
 prGenericNode _ (GenericNode Index [m,i]) = do
     a'  <- prExpr a
     bs' <- mapM (\ t -> prMatrixSlice t <|> prExpr t ) (reverse (i:bs))

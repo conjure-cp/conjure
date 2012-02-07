@@ -1036,11 +1036,11 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
                       ]
 
 *** ParsePrint
-    abs(a)
+    |a|
     ~~ GenericNode Abs [ Identifier "a" ]
 
 *** Eval
-    abs ( -2 + 1 )
+    |-2 + 1|
     ~~ 1
 
 *** Eval
