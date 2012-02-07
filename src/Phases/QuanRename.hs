@@ -21,7 +21,7 @@ quanRenameSt spec = do
     evalStateT (descendBiM (encapsulated . quanVarNaming) spec) names
 
 quanRenameIO :: Biplate a Expr => a -> IO a
-quanRenameIO sp = descendBiM (encapsulated . quanVarNaming) sp
+quanRenameIO = descendBiM (encapsulated . quanVarNaming)
 
 
 quanVarNaming :: (RenamingMonad m) => Expr -> m Expr

@@ -100,7 +100,7 @@ applyRefnToExpr ::
     , MonadState st m
     , MonadWriter [Log] m
     , MonadIO m
-    , Has st ([Binding])
+    , Has st [Binding]
     ) => RuleRefn -> Expr -> m (Either ErrMsg [Expr])
 applyRefnToExpr rule x = do
     -- liftIO $ putStrLn $ padRight ' ' 60 (refnFilename rule) ++ render prExpr x

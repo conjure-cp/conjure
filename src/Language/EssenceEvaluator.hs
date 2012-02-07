@@ -12,6 +12,7 @@ import Control.Monad.Writer ( MonadWriter, tell )
 import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
 import Data.List ( genericIndex, isSuffixOf, sort, intersect, union )
 import Data.List.Split( splitOn )
+import Data.Maybe ( fromMaybe )
 
 import Language.Essence
 import Language.EssencePrinters ( prExpr )
@@ -186,7 +187,7 @@ evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
         let xs' = [ GenericNode Image [Identifier "domSize", d] | d <- xs ]
         xs'' <- mapM evaluateExpr xs'
         rJust $ foldr1 (\ a b -> GenericNode Plus [a,b] )
-              $ zipWith ( \ a b -> case b of Nothing -> a; Just c -> c) xs' xs''
+              $ zipWith fromMaybe xs' xs''
     _ -> rNothing
 
 evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
@@ -194,8 +195,8 @@ evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
                                                                ]
                                 ])
     = case splitOn "#" a of
-        [_,c] | isSuffixOf c b -> rJust $ ValueBoolean True
-        _                      -> rNothing
+        [_,c] | c `isSuffixOf` b -> rJust $ ValueBoolean True
+        _                        -> rNothing
 
 evaluateExpr (GenericNode Image [Identifier "refn", Identifier a])
     = case splitOn "#" a of
@@ -264,8 +265,7 @@ evaluateExpr (GenericNode Image [DeclLambda params body, ValueTuple arguments]) 
         else do
             let
                 lu = zip (map fst params) arguments
-                f (Identifier nm) = case lookup nm lu of Nothing -> Identifier nm
-                                                         Just x  -> x
+                f (Identifier nm) = fromMaybe (Identifier nm) (lookup nm lu)
                 f x = x
             rJust $ transform f body
 

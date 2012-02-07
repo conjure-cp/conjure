@@ -4,15 +4,15 @@
 module Phases.Repr ( callRepr ) where
 
 import Control.Applicative
-import Control.Arrow ( second )
-import Control.Monad ( (<=<), forM )
+import Control.Arrow ( (&&&), second )
+import Control.Monad ( (<=<), forM, replicateM )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, evalRWST )
 import Data.Either ( rights )
 import Data.Generics.Uniplate.Direct ( transformBi, transformBiM, universeBi )
 import Data.List ( group, nub, sort )
-import Data.Maybe ( catMaybes, maybeToList )
+import Data.Maybe ( catMaybes, maybeToList, isNothing, fromMaybe )
 import qualified Data.Map as M
 
 import Language.Essence
@@ -40,7 +40,7 @@ import Utils ( allPairs, runRWSET )
 
 
 cross :: [a] -> Int -> [[a]]
-cross xs n = sequence $ replicate n xs
+cross xs n = replicateM n xs
 
 
 callRepr :: [RuleRepr] -> Spec -> IO [Spec]
@@ -69,18 +69,18 @@ applyToSpec reprs spec = do
                             | b@(ty,_,x) <- bindings
                             , ty `elem` [Find, Given]
                             , needsRepresentation x
-                            , representation x == Nothing
+                            , isNothing (representation x)
                             ]
                          ++ [ b
                             | b@(ty,_,DomainMatrix {element=x}) <- bindings
                             , ty `elem` [Find, Given]
                             , needsRepresentation x
-                            , representation x == Nothing
+                            , isNothing (representation x)
                             ]
 
         -- number of occurrences of those bindings in "bindingsNeedsRepr" in the rest of the spec
         counts :: [(String, Int)]
-        counts = map (\ xs -> (head xs, length xs) )
+        counts = map (head &&& length)
                . group
                . sort
                $ [ nm1
@@ -119,9 +119,7 @@ applyToSpec reprs spec = do
                         ]
         lookupTables = map M.fromList $ foo [ (nm, cross [ (b,x,y,z) | (x,y,z) <- rrs ] cnt)
                                             | (b@(_,nm,_), rrs) <- applied
-                                            , let cnt = case lookup nm counts of
-                                                            Nothing -> 0 -- error ("in applyToSpec.lookupTables: " ++ nm)
-                                                            Just c  -> c
+                                            , let cnt = fromMaybe 0 (lookup nm counts)
                                             , cnt > 0
                                             ]
 
@@ -141,11 +139,11 @@ applyConfigToSpec ::
 applyConfigToSpec mp sp = do
     let
         forChannels :: [(String,String)]
-        forChannels = concat $ [ allPairs [ nm ++ "#" ++ r | r <- rs ]
-                               | ( nm, ls ) <- M.toList mp
-                               , let rs = nub [ a | (_,a,_,_) <- ls ]
-                               , length rs > 1
-                               ]
+        forChannels = concat [ allPairs [ nm ++ "#" ++ r | r <- rs ]
+                             | ( nm, ls ) <- M.toList mp
+                             , let rs = nub [ a | (_,a,_,_) <- ls ]
+                             , length rs > 1
+                             ]
         channels :: [Expr]
         channels = [ GenericNode Eq [Identifier i, Identifier j]
                    | (i,j) <- forChannels

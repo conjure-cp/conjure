@@ -362,7 +362,7 @@ pIndexed = do
     return (`helper` is)
     where
         helper :: Expr -> [Expr] -> Expr
-        helper m = foldl (\ m' i -> GenericNode Index [m', i]) m
+        helper = foldl (\ m' i -> GenericNode Index [m', i])
         -- helper m []     = m
         -- helper m (i:is) = helper (GenericNode Index [m,i]) is
 
@@ -572,7 +572,7 @@ pDeclQuantifier qnName = do
     let pre = "__" ++ qnName ++ "_"
     return $ transformBi (reprVarsNaming pre)
            $ transformBi (reprOneMoreRenaming pre)
-           $ result
+             result
 
 
 --------------------------------------------------------------------------------

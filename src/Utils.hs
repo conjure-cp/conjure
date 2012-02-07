@@ -13,6 +13,7 @@ module Utils
     , safeStr
     ) where
 
+import Control.Monad ( foldM )
 import Control.Monad.Error ( ErrorT, runErrorT )
 import Control.Monad.RWS ( RWS, evalRWS, RWST(..), evalRWST )
 import Data.Maybe ( listToMaybe )
@@ -80,15 +81,15 @@ thd3 (_,_,c) = c
 
 -- apply all those functions successively.
 applyAll :: a -> [a -> a] -> a
-applyAll x = foldl (\ t f -> f t) x
+applyAll = foldl (\ t f -> f t)
 -- applyAll x []     = x
 -- applyAll x (f:fs) = applyAll (f x) fs
 
 -- apply all those functions successively. in an M
 applyAllM :: (Monad m) => a -> [a -> m a] -> m a
-applyAllM x []     = return x
-applyAllM x (f:fs) = do y <- f x; applyAllM y fs
-
+applyAllM = foldM (\ t f -> f t)
+-- applyAllM x []     = return x
+-- applyAllM x (f:fs) = do y <- f x; applyAllM y fs
 
 allPairs :: [a] -> [(a,a)]
 allPairs [] = []
@@ -99,4 +100,4 @@ safeStr = map (\ ch -> if ch `elem` "/.()" then '_' else ch)
 
 
 rwst :: (r -> s -> m (a, s, w)) -> RWST r w s m a
-rwst f = RWST (\ r s -> f r s)
+rwst = RWST

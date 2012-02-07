@@ -30,7 +30,7 @@ class Has container field where
 instance Has a a where
     get a = a
     put a _ = a
-    modify f a = f a
+    modify f = f
 
 instance Has (a,b) a where
     get (a,_) = a

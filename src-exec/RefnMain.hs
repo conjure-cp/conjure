@@ -4,6 +4,7 @@
 module Main where
 
 import Control.Monad ( forM_, when )
+import Data.Function ( on )
 import Data.List ( groupBy, sortBy, isSuffixOf )
 import System.Directory ( createDirectoryIfMissing )
 import System.Environment ( getArgs )
@@ -41,8 +42,8 @@ main = do
         writeFile outFilename $ render prSpec s
 
 groupRefns :: [RuleRefn] -> [[RuleRefn]]
-groupRefns rs = groupBy (\ r1 r2 -> refnLevel r1 ==  refnLevel r2 )
-              $ sortBy  (\ r1 r2 -> refnLevel r1 `o` refnLevel r2 ) rs
+groupRefns rs = groupBy ((==) `on` refnLevel)
+              $ sortBy  (o    `on` refnLevel) rs
     where
         o :: Ord a => Maybe a -> Maybe a -> Ordering
         o (Just i) (Just j) = compare i j

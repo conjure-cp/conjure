@@ -17,7 +17,7 @@ bubbleUp sp = do
             Nothing -> return (Nothing, [], [])
             Just (oEnum,x) -> do
                 (x',(p,b)) <- runStateT (bubbleUpConstraint x) ([],[])
-                return $ (Just (oEnum,x'),p,b)
+                return (Just (oEnum,x'),p,b)
     (constraints',(toPosts2,binds2)) <- runStateT (mapM bubbleUpConstraint (constraints sp)) ([],[])
 
     return sp { topLevelBindings = concat $ topLevelBindings sp : binds1   ++ binds2
@@ -35,4 +35,4 @@ bubbleUpConstraint (Bubble actual toPost binds) = do
     modifyM (toPost:)
     modifyM (binds :)
     bubbleUpConstraint actual
-bubbleUpConstraint x = descendM (bubbleUpConstraint) x
+bubbleUpConstraint x = descendM bubbleUpConstraint x

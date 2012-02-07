@@ -524,8 +524,8 @@ doRenamings ::
 doRenamings pre = transformBi renaming1 . transformBi renaming2 . transformBi renaming3
     where
         renameStr :: String -> String
-        renameStr s | isPrefixOf pre s = drop (length pre) s
-                    | otherwise        = s
+        renameStr s | pre `isPrefixOf` s = drop (length pre) s
+                    | otherwise          = s
 
         renaming1 :: Expr -> Expr
         renaming1 (Identifier i) = Identifier $ renameStr i

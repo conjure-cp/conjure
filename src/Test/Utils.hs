@@ -18,4 +18,4 @@ propSafeStrLength :: String -> Bool
 propSafeStrLength s = length s == length (safeStr s)
 
 propSafeStrNoDots :: String -> Bool
-propSafeStrNoDots s = all (/='.') (safeStr s)
+propSafeStrNoDots s = '.' `notElem` safeStr s
