@@ -10,7 +10,7 @@ import Control.Monad.Reader ( MonadReader, ask )
 import Control.Monad.RWS ( RWST, evalRWST )
 import Control.Monad.Writer ( MonadWriter, tell )
 import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
-import Data.List ( isSuffixOf, sort, intersect, union )
+import Data.List ( genericIndex, isSuffixOf, sort, intersect, union )
 import Data.List.Split( splitOn )
 
 import Language.Essence
@@ -159,6 +159,11 @@ evaluateExpr (GenericNode Iff [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
 evaluateExpr p@(ExprQuantifier {quanOver=ValueSet xs@(ValueInteger _:_)})
     = rJust p { quanOver = DomainIntegerList xs }
 
+-- ValueTuple Index
+
+evaluateExpr (GenericNode Index [ValueTuple xs,ValueInteger i])
+    = rJust $ genericIndex xs i
+
 -- some special cases
 
 evaluateExpr (GenericNode Minus [GenericNode Plus [x,y],z])
@@ -172,6 +177,17 @@ evaluateExpr (GenericNode Image [Identifier "domSize",DomainIntegerFromTo (Just 
     = rJust $ GenericNode Plus [ GenericNode Minus [b,a]
                                , ValueInteger 1
                                ]
+evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
+    DomainIntegerFromTo (Just a) (Just b) -> rJust $ GenericNode Plus [ GenericNode Minus [b,a]
+                                                                      , ValueInteger 1
+                                                                      ]
+    DomainTuple [] _ -> rJust $ ValueInteger 0
+    DomainTuple xs _ -> do
+        let xs' = [ GenericNode Image [Identifier "domSize", d] | d <- xs ]
+        xs'' <- mapM evaluateExpr xs'
+        rJust $ foldr1 (\ a b -> GenericNode Plus [a,b] )
+              $ zipWith ( \ a b -> case b of Nothing -> a; Just c -> c) xs' xs''
+    _ -> rNothing
 
 evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
                                                                , Identifier b
