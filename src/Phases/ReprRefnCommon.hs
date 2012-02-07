@@ -218,6 +218,10 @@ matchDomainPattern (DomainFunction fr1 to1 total1 partial1 injective1 bijective1
                      matchDomainPattern fr1 fr2 >>
                      matchDomainPattern to1 to2
 
+matchDomainPattern (DomainRelation cs1 _ _)
+                   (DomainRelation cs2 _ _)
+                   = zipWithM_ matchDomainPattern cs1 cs2
+
 -- TODO: add rest of the domains here!
 
 matchDomainPattern pattern value = matchDomainPatternError pattern value
