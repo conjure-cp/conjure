@@ -1,0 +1,21 @@
+
+~~> ExplicitVarSize
+~~> matrix indexed by [int(1..mx)] of tuple of (bool, t)
+~~> (forall i : int(1..mx) . forall j : int(1..mx) , i < j /\ refn[i, 0] /\ refn[j, 0] . refn[i, 1]
+                                                                                         <
+                                                                                         refn[j, 1])
+    /\
+    (forall i : int(1..mx - 1) . refn[i, 0] <= refn[i + 1, 0])
+    where t :: int
+
+*** set of t
+    letting mx be image(domSize, t)
+
+*** set (minSize mn) of t
+    ~~> (sum i : int(1..mx) . refn[i, 0]) >= mn
+    letting mx be image(domSize, t)
+
+*** set (maxSize mx) of t
+
+*** set (minSize mn, maxSize mx) of t
+    ~~> (sum i : int(1..mx) . refn[i, 0]) >= mn
