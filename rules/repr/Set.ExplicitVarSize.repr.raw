@@ -59,7 +59,7 @@ RuleRepr
                                                                           ]
                                                                       ] )
                                                     , quanBody = GenericNode
-                                                                   Lt
+                                                                   Neq
                                                                    [ GenericNode
                                                                        Index
                                                                        [ GenericNode
@@ -120,12 +120,7 @@ RuleRepr
                                                     ]
                                      }
                                  ] )
-  , reprPrologueWheres = [ GenericNode
-                             HasType
-                             [ Identifier "__rules_repr_Set_ExplicitVarSize_repr_t"
-                             , DomainIntegerList []
-                             ]
-                         ]
+  , reprPrologueWheres = []
   , reprPrologueBindings = []
   , reprCases = [ RuleReprCase
                     { reprCasePattern = DomainSet
