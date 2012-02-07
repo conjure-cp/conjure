@@ -155,68 +155,68 @@ matchDomainPattern (Identifier "_") _ = return ()
 matchDomainPattern (Identifier nm) dom = addBinding InRule nm dom
 
 matchDomainPattern DomainBoolean
-             DomainBoolean
-             = return ()
+                   DomainBoolean
+                   = return ()
 
 matchDomainPattern (DomainIntegerFromTo Nothing Nothing)
-             (DomainIntegerFromTo Nothing Nothing)
-             = return ()
+                   (DomainIntegerFromTo Nothing Nothing)
+                   = return ()
 matchDomainPattern (DomainIntegerFromTo Nothing (Just t1))
-             (DomainIntegerFromTo Nothing (Just t2))
-             = matchDomainPattern t1 t2
+                   (DomainIntegerFromTo Nothing (Just t2))
+                   = matchDomainPattern t1 t2
 matchDomainPattern (DomainIntegerFromTo (Just f1) Nothing)
-             (DomainIntegerFromTo (Just f2) Nothing)
-             = matchDomainPattern f1 f2
+                   (DomainIntegerFromTo (Just f2) Nothing)
+                   = matchDomainPattern f1 f2
 matchDomainPattern (DomainIntegerFromTo (Just f1) (Just t1))
-             (DomainIntegerFromTo (Just f2) (Just t2))
-             = matchDomainPattern f1 f2 >> matchDomainPattern t1 t2
+                   (DomainIntegerFromTo (Just f2) (Just t2))
+                   = matchDomainPattern f1 f2 >> matchDomainPattern t1 t2
 
 matchDomainPattern p@(DomainIntegerList xs)
-             v@(DomainIntegerList ys)
-             = if length xs == length ys
-                 then zipWithM_ matchDomainPattern xs ys
-                 else matchDomainPatternError p v
+                   v@(DomainIntegerList ys)
+                   = if length xs == length ys
+                       then zipWithM_ matchDomainPattern xs ys
+                       else matchDomainPatternError p v
 
 matchDomainPattern (DomainUnnamed s1 _)
-             (DomainUnnamed s2 _)
-             = matchDomainPattern s1 s2
+                   (DomainUnnamed s2 _)
+                   = matchDomainPattern s1 s2
 
 matchDomainPattern (DomainMatrix i1 e1)
-             (DomainMatrix i2 e2)
-             = matchDomainPattern i1 i2 >> matchDomainPattern e1 e2
+                   (DomainMatrix i2 e2)
+                   = matchDomainPattern i1 i2 >> matchDomainPattern e1 e2
 
 matchDomainPattern p@(DomainTuple xs _)
-             v@(DomainTuple ys _)
-             = if length xs == length ys
-                 then zipWithM_ matchDomainPattern xs ys
-                 else matchDomainPatternError p v
+                   v@(DomainTuple ys _)
+                   = if length xs == length ys
+                       then zipWithM_ matchDomainPattern xs ys
+                       else matchDomainPatternError p v
 
 matchDomainPattern (DomainSet s1 mns1 mxs1 dontcare e1 _)
-             (DomainSet s2 mns2 mxs2 _        e2 _)
-             = matchIfJust dontcare s1 s2 >>
-               matchIfJust dontcare mns1 mns2 >>
-               matchIfJust dontcare mxs1 mxs2 >>
-               matchDomainPattern e1 e2
+                   (DomainSet s2 mns2 mxs2 _        e2 _)
+                   = matchIfJust dontcare s1 s2 >>
+                     matchIfJust dontcare mns1 mns2 >>
+                     matchIfJust dontcare mxs1 mxs2 >>
+                     matchDomainPattern e1 e2
 
 matchDomainPattern (DomainMSet s1 mns1 mxs1 o1 mno1 mxo1 dontcare e1 _)
-             (DomainMSet s2 mns2 mxs2 o2 mno2 mxo2 _        e2 _)
-             = matchIfJust dontcare s1   s2   >>
-               matchIfJust dontcare mns1 mns2 >>
-               matchIfJust dontcare mxs1 mxs2 >>
-               matchIfJust dontcare o1   o2   >>
-               matchIfJust dontcare mno1 mno2 >>
-               matchIfJust dontcare mxo1 mxo2 >>
-               matchDomainPattern e1 e2
+                   (DomainMSet s2 mns2 mxs2 o2 mno2 mxo2 _        e2 _)
+                   = matchIfJust dontcare s1   s2   >>
+                     matchIfJust dontcare mns1 mns2 >>
+                     matchIfJust dontcare mxs1 mxs2 >>
+                     matchIfJust dontcare o1   o2   >>
+                     matchIfJust dontcare mno1 mno2 >>
+                     matchIfJust dontcare mxo1 mxo2 >>
+                     matchDomainPattern e1 e2
 
 matchDomainPattern (DomainFunction fr1 to1 total1 partial1 injective1 bijective1 surjective1 dontcare _)
-             (DomainFunction fr2 to2 total2 partial2 injective2 bijective2 surjective2 _        _)
-             = matchBooleanAttr dontcare total1      total2      >>
-               matchBooleanAttr dontcare partial1    partial2    >>
-               matchBooleanAttr dontcare injective1  injective2  >>
-               matchBooleanAttr dontcare bijective1  bijective2  >>
-               matchBooleanAttr dontcare surjective1 surjective2 >>
-               matchDomainPattern fr1 fr2 >>
-               matchDomainPattern to1 to2
+                   (DomainFunction fr2 to2 total2 partial2 injective2 bijective2 surjective2 _        _)
+                   = matchBooleanAttr dontcare total1      total2      >>
+                     matchBooleanAttr dontcare partial1    partial2    >>
+                     matchBooleanAttr dontcare injective1  injective2  >>
+                     matchBooleanAttr dontcare bijective1  bijective2  >>
+                     matchBooleanAttr dontcare surjective1 surjective2 >>
+                     matchDomainPattern fr1 fr2 >>
+                     matchDomainPattern to1 to2
 
 -- TODO: add rest of the domains here!
 
