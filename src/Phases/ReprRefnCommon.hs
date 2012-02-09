@@ -222,6 +222,21 @@ matchDomainPattern (DomainRelation cs1 _ _)
                    (DomainRelation cs2 _ _)
                    = zipWithM_ matchDomainPattern cs1 cs2
 
+matchDomainPattern (DomainPartition e1 regular1 complete1 size1 minSize1 maxSize1 partSize1 minPartSize1 maxPartSize1 numParts1 minNumParts1 maxNumParts1 dontcare _)
+                   (DomainPartition e2 regular2 complete2 size2 minSize2 maxSize2 partSize2 minPartSize2 maxPartSize2 numParts2 minNumParts2 maxNumParts2 _        _)
+                   = matchBooleanAttr dontcare regular1     regular2     >>
+                     matchBooleanAttr dontcare complete1    complete2    >>
+                     matchIfJust      dontcare size1        size2        >>
+                     matchIfJust      dontcare minSize1     minSize2     >>
+                     matchIfJust      dontcare maxSize1     maxSize2     >>
+                     matchIfJust      dontcare partSize1    partSize2    >>
+                     matchIfJust      dontcare minPartSize1 minPartSize2 >>
+                     matchIfJust      dontcare maxPartSize1 maxPartSize2 >>
+                     matchIfJust      dontcare numParts1    numParts2    >>
+                     matchIfJust      dontcare minNumParts1 minNumParts2 >>
+                     matchIfJust      dontcare maxNumParts1 maxNumParts2 >>
+                     matchDomainPattern e1 e2
+
 -- TODO: add rest of the domains here!
 
 matchDomainPattern pattern value = matchDomainPatternError pattern value
