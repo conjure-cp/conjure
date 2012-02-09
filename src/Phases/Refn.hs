@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Phases.Refn ( callRefn ) where
@@ -12,11 +13,12 @@ import Control.Monad.RWS ( evalRWST )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
 import Data.Either ( rights )
-import Data.Generics.Uniplate.Direct ( children, transformBiM )
+import Data.Generics.Uniplate.Direct ( children, descendM, descendBiM)
 import Data.Monoid ( Any(..) )
 
 import Has
 import Language.Essence
+import Language.EssenceEvaluator ( quanDomain )
 import MonadList ( MonadList, option )
 import Phases.BubbleUp ( bubbleUp )
 import Phases.Eval ( evalSpec )
@@ -26,6 +28,9 @@ import Phases.RemoveUnusedDecls ( removeUnusedDecls )
 import Phases.ReprRefnCommon
 import Phases.TopLevelAnds ( topLevelAnds )
 import Phases.TupleExplode ( tupleExplode )
+
+import Language.EssencePrinters ( prExpr )
+import PrintUtils ( render )
 
 
 -- test :: IO ()
@@ -58,7 +63,7 @@ applyRefnsToSpec refns spec = do
         f :: Expr -> WriterT Any (ListT m) Expr
         f = applyRefnsToExpr (topLevelBindings spec) refns
     results :: [(Spec,Any)]
-        <- (runListT . runWriterT) (transformBiM f spec)
+        <- (runListT . runWriterT) (descendBiM f spec)
     t :: [[Spec]]
         <- forM results $ \ (sp,a) -> do
             sp' <- evalSpec sp
@@ -77,12 +82,23 @@ applyRefnsToExpr ::
       -> [RuleRefn]
       -> Expr
       -> m Expr
-applyRefnsToExpr bs rules x = do
+applyRefnsToExpr bs rules x@(ExprQuantifier{quanVar=Identifier nm, quanOver}) = do
+    let bs' = (Quantified,nm,quanDomain quanOver) : bs
+    x' <- descendM (applyRefnsToExpr bs' rules) x
+
     candidates :: [Either ErrMsg [Expr]]
-        <- mapM (\ r -> runApplyRefnToExpr bs r x ) rules
+        <- mapM (\ r -> runApplyRefnToExpr bs r x' ) rules
     -- forM_ (lefts candidates) $ (liftIO . putStrLn)
     let results = rights candidates
-    case results of [] -> tell (Any False) >> option [x]
+    case results of [] -> tell (Any False) >> option [x']
+                    _  -> tell (Any True ) >> option (concat results)
+applyRefnsToExpr bs rules x = do
+    x' <- descendM (applyRefnsToExpr bs rules) x
+    candidates :: [Either ErrMsg [Expr]]
+        <- mapM (\ r -> runApplyRefnToExpr bs r x' ) rules
+    -- forM_ (lefts candidates) $ (liftIO . putStrLn)
+    let results = rights candidates
+    case results of [] -> tell (Any False) >> option [x']
                     _  -> tell (Any True ) >> option (concat results)
 
 runApplyRefnToExpr ::
@@ -117,12 +133,12 @@ applyRefnToExpr rule x = do
             -- liftIO $ putStrLn $ "[NOAPPLY] " ++ msg ++ "\n"
             return $ Left msg
         Right xs -> do
+            xs' <- liftIO $ quanRenameIO xs
             -- liftIO $ do
             --     putStrLn $ "[APPLIED] " ++ refnFilename rule
             --     putStrLn $ "\t" ++ render prExpr x
             --     mapM_ (putStrLn . ("\t"++) . render prExpr) xs
-            xs' <- liftIO $ quanRenameIO xs
-            -- liftIO $ mapM_ (putStrLn . ("\t"++) . render prExpr) xs'
+            --     mapM_ (putStrLn . ("\t"++) . render prExpr) xs'
             return $ Right xs'
 
 
