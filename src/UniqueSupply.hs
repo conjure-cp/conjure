@@ -8,6 +8,9 @@ import Data.Global ( declareIORef )
 intCounter :: IORef Int
 intCounter = declareIORef "intCounter" 0
 
+resetUniqueInt :: IO ()
+resetUniqueInt = writeIORef intCounter 0
+
 nextUniqueInt :: IO Int
 nextUniqueInt = do
     !i <- readIORef intCounter
