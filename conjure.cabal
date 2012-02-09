@@ -188,3 +188,27 @@ Executable conjure-refn
         -fno-spec-constr-count
         -funfolding-use-threshold=256
         -with-rtsopts=-H
+
+
+Executable essence-diff
+    default-language : Haskell2010
+    hs-source-dirs   : src-exec
+    main-is          : EssenceDiff.hs
+    build-depends    : base, conjure
+                     , directory == 1.1.0.2
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -O2
+        -rtsopts
+        -fno-spec-constr-count
+        -funfolding-use-threshold=256
+        -with-rtsopts=-H
+
