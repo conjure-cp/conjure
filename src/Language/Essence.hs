@@ -60,7 +60,7 @@ data Spec
 
 type Binding = (BindingEnum,String,Expr)
 
-data BindingEnum = Find | Given | Letting | InRule | InRuleNewVar
+data BindingEnum = Find | Given | Letting | InRule | InRuleNewVar | Quantified
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 type Objective = (ObjectiveEnum,Expr)
@@ -274,7 +274,7 @@ opDescriptor Gt           = OpInfixN ">"            ~~$ 800
 opDescriptor Geq          = OpInfixN ">="           ~~$ 800
 opDescriptor Neq          = OpInfixN "!="           ~~$ 800
 opDescriptor Eq           = OpInfixN "="            ~~$ 800
-opDescriptor Not          = OpPrefix "!"            ~~$ 1300
+opDescriptor Not          = OpPrefix "!"            ~~$ 850 -- 1300
 opDescriptor Or           = OpInfixL "\\/"          ~~$ 1000
 opDescriptor And          = OpInfixL "/\\"          ~~$ 900
 opDescriptor Imply        = OpInfixN "=>"           ~~$ 1100
