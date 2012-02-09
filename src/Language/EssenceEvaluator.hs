@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns   #-}
 
-module Language.EssenceEvaluator ( runEvaluateExpr ) where
+module Language.EssenceEvaluator ( runEvaluateExpr, quanDomain ) where
 
 import Control.Applicative ( Applicative )
 import Control.Monad ( void )
@@ -10,7 +10,7 @@ import Control.Monad.Reader ( MonadReader, ask )
 import Control.Monad.RWS ( RWST, evalRWST )
 import Control.Monad.Writer ( MonadWriter, tell )
 import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
-import Data.List ( genericIndex, isSuffixOf, sort, intersect, union )
+import Data.List ( genericLength, genericIndex, isSuffixOf, sort, intersect, union )
 import Data.List.Split( splitOn )
 import Data.Maybe ( fromMaybe )
 
@@ -18,6 +18,14 @@ import Language.Essence
 import Language.EssencePrinters ( prExpr )
 import Language.EssenceTypes ( runTypeOf )
 import PrintUtils ( render )
+
+
+quanDomain :: Expr -> Expr
+quanDomain x@(DomainIntegerFromTo {}) = x
+quanDomain x@(DomainIntegerList   {}) = x
+quanDomain   (DomainSet    {element}) = element
+quanDomain   (DomainMSet   {element}) = element
+quanDomain _ = Identifier "<undefined>"
 
 
 runEvaluateExpr :: (Applicative m, MonadIO m) => [Binding] -> Expr -> m (Expr,[Log])
@@ -58,6 +66,12 @@ runEvaluateExpr topLevels x = do
                 Just _  -> return j
 
 
+conjunct :: [Expr] -> Expr
+conjunct [] = ValueBoolean True
+conjunct [x] = x
+conjunct (x:xs) = GenericNode And [x,conjunct xs]
+
+
 evaluateExpr ::
     ( Applicative m
     , MonadIO m
@@ -70,6 +84,8 @@ evaluateExpr p@(ExprQuantifier {quanOver=GenericNode Intersect [a@DomainIntegerF
     | unifyExpr a b = rJust p {quanOver = a}
 evaluateExpr (ExprQuantifier {quanName=qnName, quanOver=ValueInteger 0})
     = rJust $ GenericNode Image [Identifier "quanID", qnName]
+
+evaluateExpr (GenericNode SubsetEq [ValueSet xs,y]) = rJust $ conjunct [ GenericNode Elem [x,y] | x <- xs ]
 
 -- full evaluators
 
@@ -174,11 +190,8 @@ evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
     | y == z = rJust x
     | x == z = rJust $ GenericNode Negate [y]
 
-evaluateExpr (GenericNode Image [Identifier "domSize",DomainIntegerFromTo (Just a) (Just b)])
-    = rJust $ GenericNode Plus [ GenericNode Minus [b,a]
-                               , ValueInteger 1
-                               ]
 evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
+    DomainIntegerList xs -> rJust $ ValueInteger $ genericLength xs
     DomainIntegerFromTo (Just a) (Just b) -> rJust $ GenericNode Plus [ GenericNode Minus [b,a]
                                                                       , ValueInteger 1
                                                                       ]
@@ -186,8 +199,13 @@ evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
     DomainTuple xs _ -> do
         let xs' = [ GenericNode Image [Identifier "domSize", d] | d <- xs ]
         xs'' <- mapM evaluateExpr xs'
-        rJust $ foldr1 (\ a b -> GenericNode Plus [a,b] )
+        rJust $ foldr1 (\ a b -> GenericNode Times [a,b] )
               $ zipWith fromMaybe xs' xs''
+    DomainMSet {size=Just n,element=e} -> do
+        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
+        case e' of
+            Nothing -> rNothing
+            Just t  -> rJust $ GenericNode Pow [t,n]
     _ -> rNothing
 
 evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
