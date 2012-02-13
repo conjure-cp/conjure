@@ -16,9 +16,10 @@ module Language.Essence
     , Metadata(..)
     , Binding, BindingEnum(..), Where
     , Objective, ObjectiveEnum(..)
-    , Expr(..), exprTag, needsRepresentation
+    , Expr(..), exprTag
+    , Representation, needsRepresentation
     , Op(..), OpDescriptor(..), opDescriptor
-    , Kind(..), Type(..), typeUnify
+    , Kind(..), Type(..), typeUnify, intLikeType
     , associativeOps, commutativeOps, validOpTypes, elementType
     , RuleRepr(..), RuleReprCase(..)
     , RuleRefn(..)
@@ -229,6 +230,7 @@ needsRepresentation _ = False
 -- the data type for operators in Essence
 data Op
     = Plus | Minus | Times | Div | Mod | Pow | Abs | Negate
+    | Factorial
     | Lt | Leq | Gt | Geq | Neq | Eq
     | Not | Or | And | Imply | Iff
     | Union | Intersect | Subset | SubsetEq | Supset | SupsetEq
@@ -268,13 +270,14 @@ opDescriptor Mod          = OpInfixL "%"            ~~$ 300
 opDescriptor Pow          = OpInfixR "^"            ~~$ 200
 opDescriptor Abs          = OpLispy  "abs"          1
 opDescriptor Negate       = OpPrefix "-"            ~~$ 100
+opDescriptor Factorial    = OpSpecial
 opDescriptor Lt           = OpInfixN "<"            ~~$ 800
 opDescriptor Leq          = OpInfixN "<="           ~~$ 800
 opDescriptor Gt           = OpInfixN ">"            ~~$ 800
 opDescriptor Geq          = OpInfixN ">="           ~~$ 800
 opDescriptor Neq          = OpInfixN "!="           ~~$ 800
 opDescriptor Eq           = OpInfixN "="            ~~$ 800
-opDescriptor Not          = OpPrefix "!"            ~~$ 850 -- 1300
+opDescriptor Not          = OpPrefix "!"            ~~$ 1300
 opDescriptor Or           = OpInfixL "\\/"          ~~$ 1000
 opDescriptor And          = OpInfixL "/\\"          ~~$ 900
 opDescriptor Imply        = OpInfixN "=>"           ~~$ 1100
@@ -381,37 +384,37 @@ instance (TypeUnify t1, TypeUnify t2) => TypeUnify (t1,t2) where
 (~~) = typeUnify
 
 
-intLike :: Type -> Bool
-intLike TypeBoolean = True
-intLike TypeInteger = True
-intLike _ = False
+intLikeType :: Type -> Bool
+intLikeType TypeBoolean = True
+intLikeType TypeInteger = True
+intLikeType _ = False
 
 
 -- All the ops in Essence, with their overloadings if they are polymorphic
 validOpTypes :: Op -> [Type] -> Maybe Type
-validOpTypes Plus   ps@[_,_] | all intLike ps = return TypeInteger
-validOpTypes Minus  ps@[_,_] | all intLike ps = return TypeInteger
-validOpTypes Times  ps@[_,_] | all intLike ps = return TypeInteger
-validOpTypes Div    ps@[_,_] | all intLike ps = return TypeInteger
-validOpTypes Mod    ps@[_,_] | all intLike ps = return TypeInteger
-validOpTypes Pow    ps@[_,_] | all intLike ps = return TypeInteger
-validOpTypes Abs    ps@[_]   | all intLike ps = return TypeInteger
-validOpTypes Negate ps@[_]   | all intLike ps = return TypeInteger
+validOpTypes Plus   ps@[_,_] | all intLikeType ps = return TypeInteger
+validOpTypes Minus  ps@[_,_] | all intLikeType ps = return TypeInteger
+validOpTypes Times  ps@[_,_] | all intLikeType ps = return TypeInteger
+validOpTypes Div    ps@[_,_] | all intLikeType ps = return TypeInteger
+validOpTypes Mod    ps@[_,_] | all intLikeType ps = return TypeInteger
+validOpTypes Pow    ps@[_,_] | all intLikeType ps = return TypeInteger
+validOpTypes Abs    ps@[_]   | all intLikeType ps = return TypeInteger
+validOpTypes Negate ps@[_]   | all intLikeType ps = return TypeInteger
 
-validOpTypes Lt  ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Leq ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Gt  ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Geq ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Neq ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Eq  ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Lt  ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Leq ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Gt  ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Geq ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Neq ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Eq  ps@[_,_] | all intLikeType ps = return TypeBoolean
 validOpTypes Neq    [a,b] | a ~~ b = return TypeBoolean
 validOpTypes Eq     [a,b] | a ~~ b = return TypeBoolean
 
-validOpTypes Not   ps@[_]   | all intLike ps = return TypeBoolean
-validOpTypes Or    ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes And   ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Imply ps@[_,_] | all intLike ps = return TypeBoolean
-validOpTypes Iff   ps@[_,_] | all intLike ps = return TypeBoolean
+validOpTypes Not   ps@[_]   | all intLikeType ps = return TypeBoolean
+validOpTypes Or    ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes And   ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Imply ps@[_,_] | all intLikeType ps = return TypeBoolean
+validOpTypes Iff   ps@[_,_] | all intLikeType ps = return TypeBoolean
 
 validOpTypes Union     [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
 validOpTypes Union     [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
