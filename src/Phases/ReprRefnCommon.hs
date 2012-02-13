@@ -35,7 +35,6 @@ type ReprResult = (ReprName, Domain, Structural)
 --     ) => a -> m a
 instantiateNames ::
     ( MonadState st m
-    , MonadIO m
     , Has st [Binding]
     ) => Expr -> m Expr
 instantiateNames x = do
@@ -121,6 +120,29 @@ checkWheres (GenericNode HasDomain [Identifier nmP, d]) = do
                ] of
         [dom] -> checkWheres (GenericNode HasDomain [dom,d])
         _     -> throwError $ "Identifier not found: " ++ nm
+checkWheres (GenericNode HasDomain [GenericNode Index [Identifier nmP,_], d]) = do
+    let nm = head $ splitOn "#" nmP
+    st <- getM
+    case [ dom | (bEnum,nm',DomainMatrix {element=dom}) <- st
+               , bEnum `elem` [Find,Given]
+               , nm == nm'
+               ] of
+        [dom] -> checkWheres (GenericNode HasDomain [dom,d])
+        _     -> throwError $ "Identifier not found: " ++ nm
+checkWheres (GenericNode HasDomain [ValueSet xs,d]) = do
+    -- liftIO $ putStrLn $ "HasDomain ValueSet"
+    xs_doms <- mapM domainOf xs
+
+    -- liftIO $ putStr "\tbefore: "
+    -- st :: [Binding] <- getM
+    -- liftIO $ print $ map snd3 st
+
+    matchDomainPattern d $ DomainSet Nothing Nothing Nothing False (head xs_doms) Nothing
+
+    -- liftIO $ putStr "\tafter:  "
+    -- st :: [Binding] <- getM
+    -- liftIO $ print $ map snd3 st
+
 checkWheres (GenericNode HasDomain [x,d]) = do
     -- liftIO $ putStrLn $ "trying to match domain " ++ render prExpr x ++ " ~~ " ++ render prExpr d
 
@@ -145,6 +167,58 @@ checkWheres x = do
             xOut <- maybe (throwError ("cannot render: " ++ show x)) return $ prExpr x
             throwError . renderDoc $ text "where statement cannot be fully evaluated:" <+> xOut
                               $+$ vcat (map text logs)
+
+
+-- move this to somewhere appropriate later on:
+domainOf ::
+    ( MonadError ErrMsg m
+    , MonadState st m
+    , Has st [Binding]
+    ) => Expr -> m Expr
+
+domainOf d@(DomainBoolean       {}) = return d
+domainOf d@(DomainIntegerFromTo {}) = return d
+domainOf d@(DomainIntegerList   {}) = return d
+domainOf d@(DomainUnnamed       {}) = return d
+domainOf d@(DomainEnum          {}) = return d
+domainOf d@(DomainMatrix        {}) = return d
+domainOf d@(DomainTuple         {}) = return d
+domainOf d@(DomainSet           {}) = return d
+domainOf d@(DomainMSet          {}) = return d
+domainOf d@(DomainFunction      {}) = return d
+domainOf d@(DomainRelation      {}) = return d
+domainOf d@(DomainPartition     {}) = return d
+
+domainOf (ValueInteger i) = return $ DomainIntegerList [ValueInteger i]
+
+domainOf p@(GenericNode Index [m,_]) = do
+    mDom <- domainOf m
+    case mDom of
+        DomainMatrix _ e -> return e
+        _ -> thrDef p
+
+domainOf p@(GenericNode Plus [a,b]) = do
+    aDom <- domainOf a
+    bDom <- domainOf b
+    case (aDom, bDom) of
+        (DomainIntegerFromTo (Just l1) (Just u1), DomainIntegerList [i])
+          -> return $ DomainIntegerFromTo (Just (GenericNode Plus [l1,i]))
+                                                     (Just (GenericNode Plus [u1,i]))
+        (DomainIntegerFromTo (Just l1) (Just u1), DomainIntegerFromTo (Just l2) (Just u2))
+          -> return $ DomainIntegerFromTo (Just (GenericNode Plus [l1,l2]))
+                                                     (Just (GenericNode Plus [u1,u2]))
+        _ -> thrDef p
+domainOf (Identifier nm) = do
+    binds <- getM
+    case [ dom | (bEnum,nm',dom) <- binds, nm == nm', bEnum `elem` [Find,Given,Letting,Quantified] ] of
+        [dom] -> domainOf dom
+        _     -> throwError $ "not bound: " ++ nm
+domainOf p = thrDef p
+
+
+thrDef :: MonadError String m => Expr -> m a
+thrDef x = throwError $ "cannot find the domainOf: " ++ render prExpr x
+
 
 matchDomainPattern ::
     ( MonadError ErrMsg m
@@ -241,7 +315,8 @@ matchDomainPattern (DomainPartition e1 regular1 complete1 size1 minSize1 maxSize
                      matchIfJust      dontcare maxNumParts1 maxNumParts2 >>
                      matchDomainPattern e1 e2
 
--- TODO: add rest of the domains here!
+-- matchDomainPattern p (DomainMatrix i e)
+--     = matchDomainPattern p e
 
 matchDomainPattern pattern value = matchDomainPatternError pattern value
 
@@ -254,8 +329,8 @@ matchDomainPatternError pattern value = do
     pattern' <- maybe (throwError ("cannot render: " ++ show pattern)) return $ prExpr pattern
     value'   <- maybe (throwError ("cannot render: " ++ show value  )) return $ prExpr value
     throwError . renderDoc $ text "matchDomainPattern:" <+> pattern'
-                                               <+> text "~~"
-                                               <+> value'
+                                                        <+> text "~~"
+                                                        <+> value'
 
 matchIfJust ::
     ( MonadError String m
