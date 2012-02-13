@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Phases.Repr ( callRepr ) where
@@ -10,18 +11,19 @@ import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, evalRWST )
 import Data.Either ( rights )
-import Data.Generics.Uniplate.Direct ( transformBi, transformBiM, universeBi )
+import Data.Generics.Uniplate.Direct ( transform, transformBi, transformBiM, universeBi )
 import Data.List ( group, nub, sort )
 import Data.Maybe ( catMaybes, maybeToList, isNothing, fromMaybe )
 import qualified Data.Map as M
 
 import Language.Essence
-import Language.EssencePrinters ( prExpr )
+import Language.EssencePrinters ( prExpr, prBinding )
 import MonadInterleave ( MonadInterleave )
 import Phases.Eval ( evalSpec )
 import Phases.QuanRename ( quanRenameSt )
 import Phases.ReprRefnCommon
 import PrintUtils
+import UniqueSupply ( nextUniqueInt )
 import Utils ( allPairs, runRWSET )
 
 
@@ -63,19 +65,18 @@ applyToSpec reprs spec = do
         bindings :: [Binding]
         bindings  = topLevelBindings spec
 
+        matrNeedsRepr :: Expr -> (Bool, Maybe Representation)
+        matrNeedsRepr (DomainMatrix {element}) = matrNeedsRepr element
+        matrNeedsRepr x = (needsRepresentation x, representation x)
+
         -- those bindings which need a representation
         bindingsNeedsRepr :: [Binding]
         bindingsNeedsRepr = [ b
                             | b@(ty,_,x) <- bindings
                             , ty `elem` [Find, Given]
-                            , needsRepresentation x
-                            , isNothing (representation x)
-                            ]
-                         ++ [ b
-                            | b@(ty,_,DomainMatrix {element=x}) <- bindings
-                            , ty `elem` [Find, Given]
-                            , needsRepresentation x
-                            , isNothing (representation x)
+                            , let (boolean,m) = matrNeedsRepr x
+                            , boolean
+                            , isNothing m
                             ]
 
         -- number of occurrences of those bindings in "bindingsNeedsRepr" in the rest of the spec
@@ -92,6 +93,9 @@ applyToSpec reprs spec = do
         -- rest of bindings
         -- bindingsRest :: [Binding]
         -- bindingsRest = bindings \\ bindingsNeedsRepr
+
+    liftIO $ putStrLn "Choosing representations for the following: "
+    liftIO $ mapM_ (putStrLn . render (prBinding [])) bindingsNeedsRepr
 
     -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
     applied' :: [(Binding, (Either ErrMsg [ReprResult], [Log]))]
@@ -203,6 +207,13 @@ applyToDom ::
     ) => Domain
       -> RuleRepr
       -> m (String, Domain, Structural)
+applyToDom (DomainMatrix ind dom) repr = do
+    (nm,newdom,str) <- applyToDom dom repr
+    qnVar <- (\ i -> "UQ_" ++ show i ) <$> liftIO nextUniqueInt
+    let str' = case str of Nothing -> Nothing
+                           Just jstr -> Just $ ExprQuantifier (Identifier "forall") (Identifier qnVar) ind Nothing
+                                             $ transform (\ t -> case t of Identifier "refn" -> GenericNode Index [Identifier "refn", Identifier qnVar]; _ -> t ) jstr
+    return (nm, DomainMatrix ind newdom, str')
 applyToDom dom repr = do
     results <- mapM (applyCaseToDom dom) cases
     result :: Maybe Structural <- firstRight results
