@@ -120,7 +120,15 @@ RuleRepr
                                                     ]
                                      }
                                  ] )
-  , reprPrologueWheres = []
+  , reprPrologueWheres = [ GenericNode
+                             Not
+                             [ GenericNode
+                                 HasType
+                                 [ Identifier "__rules_repr_Set_ExplicitVarSize_repr_t"
+                                 , DomainIntegerList []
+                                 ]
+                             ]
+                         ]
   , reprPrologueBindings = []
   , reprCases = [ RuleReprCase
                     { reprCasePattern = DomainSet
