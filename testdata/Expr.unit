@@ -1443,3 +1443,10 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
 *** Eval
     m[1+2,3+i,i+3]
     ~~ m[3, 3+i, 3+i]
+
+*** ShouldParseTo
+    x!
+    ~~ GenericNode Factorial [Identifier "x"]
+
+*** ParsePrintIso (x)!
+
