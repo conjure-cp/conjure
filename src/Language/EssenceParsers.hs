@@ -5,6 +5,7 @@ module Language.EssenceParsers ( pSpec, pExpr, pType, pKind
                                , pTopLevels, pObjective
                                , pRuleRepr, pRuleRefn
                                , pExprPattern
+                               , knownQuans
                                ) where
 
 import Control.Applicative
@@ -353,8 +354,13 @@ pExprTwoBars = do
 
 pPostfix :: Parser (Expr -> Expr)
 pPostfix = do
-   fs <- many1 $ choiceTry [pIndexed, pFuncApp, pInvFuncApp, pReplace]
+   fs <- many1 $ choiceTry [pIndexed, pFuncApp, pInvFuncApp, pReplace, pFactorial]
    return $ \ i -> foldr1 (.) (reverse fs) i
+
+pFactorial :: Parser (Expr -> Expr)
+pFactorial = do
+    reservedOp "!"
+    return $ \ x -> GenericNode Factorial [x]
 
 pIndexed :: Parser (Expr -> Expr)
 pIndexed = do
@@ -454,8 +460,9 @@ pKind = choiceTry [ KindUnknown <$ reservedOp "?"
 -- The Spec parser -------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-knownQuans :: String
-knownQuans = "letting forall be quantifier                      "
+knownQuans :: ([Binding], [Where])
+knownQuans = unsafeParse pTopLevels
+           $ "letting forall be quantifier                      "
           ++ "    {                                             "
           ++ "        append   { x:bool, y:bool -> x /\\ y }    "
           ++ "        guard    { x:bool, y:bool -> x => y }     "
@@ -479,10 +486,9 @@ knownQuans = "letting forall be quantifier                      "
 
 pSpec :: Parser Spec
 pSpec = do
-    let knowns = unsafeParse pTopLevels knownQuans
     whiteSpace
     (lang,ver)        <- pLanguage
-    (bindings,wheres) <- mappend knowns <$> pTopLevels
+    (bindings,wheres) <- mappend knownQuans <$> pTopLevels
     obj               <- optionMaybe pObjective
     cons              <- pConstraints
     eof

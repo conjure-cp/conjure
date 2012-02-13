@@ -5,7 +5,7 @@
 
 module Language.EssencePrinters ( prSpec, prExpr
                                 , prType, prKind, prKindInteractive
-                                , prRuleRepr
+                                , prRuleRepr, prBinding
                                 ) where
 
 
@@ -218,6 +218,9 @@ prGenericNode :: Prec -> Expr -> Maybe Doc
 prGenericNode _ (GenericNode op [x]) | op `elem` [Abs{-,Card-}] = do
     x' <- prExpr x
     return $ char '|' <> x' <> char '|'
+prGenericNode _ (GenericNode Factorial [x]) = do
+    x' <- prExpr x
+    return $ parens x' <> text "!"
 prGenericNode _ (GenericNode Index [m,i]) = do
     a'  <- prExpr a
     bs' <- mapM (\ t -> prMatrixSlice t <|> prExpr t ) (reverse (i:bs))
@@ -291,7 +294,7 @@ prBubble (Bubble actual toPosts binds) = do
     actual'  <- prExpr actual
     toPosts' <- mapM prExpr toPosts
     binds'   <- mapM (prBinding []) binds
-    return $ parens actual' <+> text "@" <+> parens (vcat toPosts' <> comma <+> vcat binds')
+    return $ parens $ actual' <+> text "@" <+> parens (vcat toPosts' <> comma <+> vcat binds')
 prBubble _ = Nothing
 
 --------------------------------------------------------------------------------
@@ -382,6 +385,7 @@ prBinding bs (Letting,nm,x) = do
          <+> x'
 prBinding _ (InRule,_,_) = error "EssencePrinters.prBinding InRule"
 prBinding _ (InRuleNewVar,_,_) = error "EssencePrinters.prBinding InRuleNewVar"
+prBinding _ (Quantified,_,_) = error "EssencePrinters.prBinding Quantified"
 
 prWhere :: Where -> Maybe Doc
 prWhere w = do
