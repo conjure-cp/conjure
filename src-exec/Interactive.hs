@@ -18,7 +18,7 @@ import Constants ( figlet )
 import Language.Essence ( Spec(..), Log )
 import Language.EssenceEvaluator ( runEvaluateExpr )
 import Language.EssenceKinds ( runKindOf )
-import Language.EssenceParsers ( pSpec, pExpr, pTopLevels, pObjective )
+import Language.EssenceParsers ( pSpec, pExpr, pTopLevels, pObjective, knownQuans )
 import Language.EssencePrinters ( prSpec, prExpr, prType, prKind, prKindInteractive )
 import Language.EssenceTypes ( runTypeOf )
 import ParsecUtils ( Parser, parseEither, parseFromFile, eof, choiceTry )
@@ -93,7 +93,7 @@ initREPLState = REPLState { currentSpec   = sp
         sp :: Spec
         sp = Spec { language         = "Essence"
                   , version          = [2,0]
-                  , topLevelBindings = []
+                  , topLevelBindings = fst knownQuans
                   , topLevelWheres   = []
                   , objective        = Nothing
                   , constraints      = []
