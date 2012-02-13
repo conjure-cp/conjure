@@ -20,6 +20,7 @@ import Has
 import Language.Essence
 import Language.EssenceEvaluator ( quanDomain )
 import MonadList ( MonadList, option )
+import Phases.AuxRename ( auxRename )
 import Phases.BubbleUp ( bubbleUp )
 import Phases.Eval ( evalSpec )
 import Phases.InlineQuanGuards ( inlineQuanGuards )
@@ -29,8 +30,8 @@ import Phases.ReprRefnCommon
 import Phases.TopLevelAnds ( topLevelAnds )
 import Phases.TupleExplode ( tupleExplode )
 
-import Language.EssencePrinters ( prExpr )
-import PrintUtils ( render )
+-- import Language.EssencePrinters ( prExpr )
+-- import PrintUtils ( render )
 
 
 -- test :: IO ()
@@ -46,6 +47,7 @@ import PrintUtils ( render )
 callRefn :: [RuleRefn] -> Spec -> IO [Spec]
 callRefn refns spec = mapM ( evalSpec
                          <=< inlineQuanGuards
+                         <=< auxRename
                          <=< quanRenameSt
                          <=< removeUnusedDecls
                          <=< tupleExplode
@@ -137,7 +139,7 @@ applyRefnToExpr rule x = do
             -- liftIO $ do
             --     putStrLn $ "[APPLIED] " ++ refnFilename rule
             --     putStrLn $ "\t" ++ render prExpr x
-            --     mapM_ (putStrLn . ("\t"++) . render prExpr) xs
+            --     -- mapM_ (putStrLn . ("\t"++) . render prExpr) xs
             --     mapM_ (putStrLn . ("\t"++) . render prExpr) xs'
             return $ Right xs'
 
