@@ -71,6 +71,10 @@ conjunct [] = ValueBoolean True
 conjunct [x] = x
 conjunct (x:xs) = GenericNode And [x,conjunct xs]
 
+tauOfDomain :: Expr -> Maybe Expr
+tauOfDomain (DomainSet {element=e}) = Just e
+tauOfDomain _ = Nothing
+
 
 evaluateExpr ::
     ( Applicative m
@@ -98,6 +102,8 @@ evaluateExpr (GenericNode Pow    [ValueInteger i,ValueInteger j]) | j >  0 = rJu
 
 evaluateExpr (GenericNode Abs    [ValueInteger i]) = rJust $ ValueInteger $ abs i
 evaluateExpr (GenericNode Negate [ValueInteger i]) = rJust $ ValueInteger $ negate i
+
+-- evaluateExpr (GenericNode Factorial [ValueInteger i]) = rJust $ ValueInteger $ product [1..i]
 
 evaluateExpr (GenericNode Lt  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i <  j
 evaluateExpr (GenericNode Leq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i <= j
@@ -173,8 +179,12 @@ evaluateExpr (GenericNode Iff [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
 
 -- unroll set of int to int range
 
-evaluateExpr p@(ExprQuantifier {quanOver=ValueSet xs@(ValueInteger _:_)})
-    = rJust p { quanOver = DomainIntegerList xs }
+evaluateExpr p@(ExprQuantifier {quanOver=ValueSet xs@(x:_)}) = do
+    bs <- ask
+    let typeofX = runTypeOf bs x
+    case typeofX of
+        (Right TypeInteger, _) -> rJust p { quanOver = DomainIntegerList xs }
+        _ -> rNothing
 
 -- ValueTuple Index
 
@@ -191,6 +201,7 @@ evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
     | x == z = rJust $ GenericNode Negate [y]
 
 evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
+    ValueInteger {} -> rJust $ ValueInteger 1
     DomainIntegerList xs -> rJust $ ValueInteger $ genericLength xs
     DomainIntegerFromTo (Just a) (Just b) -> rJust $ GenericNode Plus [ GenericNode Minus [b,a]
                                                                       , ValueInteger 1
@@ -201,6 +212,21 @@ evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
         xs'' <- mapM evaluateExpr xs'
         rJust $ foldr1 (\ a b -> GenericNode Times [a,b] )
               $ zipWith fromMaybe xs' xs''
+    DomainSet {size=Just n,element=e} -> do
+        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
+        case e' of
+            Nothing -> rNothing
+            Just t  -> rJust $ GenericNode Pow [t,n]
+    DomainSet {maxSize=Just n,element=e} -> do
+        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
+        case e' of
+            Nothing -> rNothing
+            Just t  -> rJust $ GenericNode Pow [t,n]
+    DomainSet {element=e} -> do
+        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
+        case e' of
+            Nothing -> rNothing
+            Just t  -> rJust $ GenericNode Factorial [t]
     DomainMSet {size=Just n,element=e} -> do
         e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
         case e' of
@@ -208,18 +234,68 @@ evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
             Just t  -> rJust $ GenericNode Pow [t,n]
     _ -> rNothing
 
-evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
-                                                               , Identifier b
-                                                               ]
-                                ])
-    = case splitOn "#" a of
-        [_,c] | c `isSuffixOf` b -> rJust $ ValueBoolean True
-        _                        -> rNothing
+evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ theVal, Identifier reprName]]) = do
+    let
+        collectIndices :: Expr -> (Expr,[Expr])
+        collectIndices (GenericNode Index [m,i]) = let (m',is) = collectIndices m in (m', i:is)
+        collectIndices  x = (x,[])
+    case collectIndices theVal of
+        (Identifier nm, _) -> case splitOn "#" nm of
+                                [_,c] | c `isSuffixOf` reprName -> rJust $ ValueBoolean True
+                                _                               -> rNothing
+        _ -> rNothing
 
-evaluateExpr (GenericNode Image [Identifier "refn", Identifier a])
-    = case splitOn "#" a of
-        [b,c] -> rJust $ Identifier $ b ++ "_" ++ c
-        _     -> rNothing
+-- evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ GenericNode Index [Identifier a', _]
+--                                                                , Identifier b
+--                                                                ]
+--                                 ])
+--     = do
+--         let a = head $ splitOn "#" a'
+--         bs <- ask
+--         case [ () | (ty,nm,DomainMatrix{}) <- bs, nm == a, ty `elem` [Find,Given] ] of
+--             [] -> rNothing
+--             _  -> evaluateExpr $ GenericNode Image [Identifier "repr", ValueTuple [ Identifier a'
+--                                                                                   , Identifier b
+--                                                                                   ]
+--                                                    ]
+-- 
+-- evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
+--                                                                , Identifier b
+--                                                                ]
+--                                 ])
+--     = case splitOn "#" a of
+--         [_,c] | c `isSuffixOf` b -> rJust $ ValueBoolean True
+--         _                        -> rNothing
+
+evaluateExpr (GenericNode Image [Identifier "refn", theVal]) = do
+    let
+        collectIndices :: Expr -> (Expr,[Expr])
+        collectIndices (GenericNode Index [m,i]) = let (m',is) = collectIndices m in (m', i:is)
+        collectIndices  x = (x,[])
+
+        fromIndices :: Expr -> [Expr] -> Expr
+        fromIndices m []     = m
+        fromIndices m [i]    = GenericNode Index [m,i]
+        fromIndices m (i:is) = fromIndices (GenericNode Index [m,i]) is
+
+    case collectIndices theVal of
+        (Identifier nm, inds) -> case splitOn "#" nm of
+            [b,c] -> rJust $ fromIndices (Identifier (b ++ "_" ++ c)) inds
+            _     -> rNothing
+        _ -> rNothing
+
+-- evaluateExpr (GenericNode Image [Identifier "refn", GenericNode Index [ Identifier a
+--                                                                       , ind
+--                                                                       ]
+--                                 ])
+--     = case splitOn "#" a of
+--         [b,c] -> rJust $ GenericNode Index [Identifier (b ++ "_" ++ c), ind]
+--         _     -> rNothing
+-- 
+-- evaluateExpr (GenericNode Image [Identifier "refn", Identifier a])
+--     = case splitOn "#" a of
+--         [b,c] -> rJust $ Identifier $ b ++ "_" ++ c
+--         _     -> rNothing
 
 evaluateExpr (GenericNode Replace [x,old,new]) =
     let
@@ -227,12 +303,43 @@ evaluateExpr (GenericNode Replace [x,old,new]) =
             | otherwise = i
     in rJust $ transformBi f x
 
-evaluateExpr (GenericNode Image [Identifier "tau", Identifier nmParam]) = do
-    let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
-    bs <- ask
-    case [ e | (ty,nm',DomainSet{element=e}) <- bs, nm == nm', ty `elem` [Find,Given] ] of
-        [x] -> rJust x
-        _   -> rNothing
+evaluateExpr (GenericNode Image [Identifier "tau", theVal]) = do
+    let
+        collectIndices :: Expr -> (Expr,[Expr])
+        collectIndices (GenericNode Index [m,i]) = let (m',is) = collectIndices m in (m', i:is)
+        collectIndices  x = (x,[])
+
+        indexDom :: Int -> Expr -> Maybe Expr
+        indexDom 0 x = Just x
+        indexDom i (DomainMatrix {element}) = indexDom (i-1) element
+        indexDom _ _ = Nothing
+
+    case collectIndices theVal of
+        (Identifier nmParam, is) -> do
+            let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
+            bs <- ask
+            case [ dom | (ty,nm',dom) <- bs, nm == nm', ty `elem` [Find,Given] ] of
+                [dom] -> case indexDom (length is) dom of
+                    Nothing -> rNothing
+                    Just t  -> return (tauOfDomain t)
+                _   -> rNothing
+        _ -> rNothing
+
+
+-- evaluateExpr (GenericNode Image [Identifier "tau", GenericNode Index [Identifier nmParam, _]]) = do
+--     let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
+--     bs <- ask
+--     case [ e | (ty,nm',DomainMatrix{element=e}) <- bs, nm == nm', ty `elem` [Find,Given] ] of
+--         [x] -> return $ tauOfDomain x
+--         _   -> rNothing
+-- 
+-- 
+-- evaluateExpr (GenericNode Image [Identifier "tau", Identifier nmParam]) = do
+--     let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
+--     bs <- ask
+--     case [ dom | (ty,nm',dom) <- bs, nm == nm', ty `elem` [Find,Given] ] of
+--         [x] -> return $ tauOfDomain x
+--         _   -> rNothing
 
 
 
@@ -255,6 +362,8 @@ evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [DomainMatrix{
         -- liftIO $ putStrLn "indices 3."
         evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [element,ValueInteger (i-1)]]
 
+evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [GenericNode Index [m,_], ValueInteger i]])
+    = evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [m, ValueInteger (i+1)]]
 
 
 evaluateExpr (GenericNode Image [Identifier opParam, Identifier nm]) = do
