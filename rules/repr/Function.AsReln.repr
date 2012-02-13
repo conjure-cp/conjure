@@ -1,0 +1,51 @@
+
+~~> AsReln
+~~> relation of (fr * to)
+
+
+*** function fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) <= 1)
+
+
+*** function (total) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) = 1)
+
+*** function (total, injective) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) = 1)
+    /\  (forall i,j : toSet(refn) , i[0] != j[0] . i[1] != j[1])
+
+*** function (total, surjective) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) = 1)
+    /\  (forall i : to . exists j : toSet(refn) . i = j[1])
+
+*** function (total, injective, surjective) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) = 1)
+    /\  (forall i,j : toSet(refn) , i[0] != j[0] . i[1] != j[1])
+    /\  (forall i : to . exists j : toSet(refn) . i = j[1])
+
+*** function (total, bijective, _) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) = 1)
+    /\  (forall i,j : toSet(refn) , i[0] != j[0] . i[1] != j[1])
+    /\  (forall i : to . exists j : toSet(refn) . i = j[1])
+
+
+*** function (partial) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) <= 1)
+
+*** function (partial, injective) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) <= 1)
+    /\  (forall i,j : toSet(refn) , i[0] != j[0] . i[1] != j[1])
+
+*** function (partial, surjective) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) <= 1)
+    /\  (forall i : to . exists j : toSet(refn) . i = j[1])
+
+*** function (partial, injective, surjective) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) <= 1)
+    /\  (forall i,j : toSet(refn) , i[0] != j[0] . i[1] != j[1])
+    /\  (forall i : to . exists j : toSet(refn) . i = j[1])
+
+*** function (partial, bijective, _) fr -> to
+    ~~> (forall i : fr . (sum j : toSet(refn) . i = j[0]) <= 1)
+    /\  (forall i,j : toSet(refn) , i[0] != j[0] . i[1] != j[1])
+    /\  (forall i : to . exists j : toSet(refn) . i = j[1])

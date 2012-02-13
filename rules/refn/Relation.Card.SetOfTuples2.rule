@@ -1,0 +1,6 @@
+
+card(r) ~~> card(refn(r))
+
+    where
+        r :: relation of (_*_),
+        repr(r,SetOfTuples2)

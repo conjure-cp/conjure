@@ -1,0 +1,33 @@
+RuleRepr
+  { reprFilename = "rules/repr/Relation.SetOfTuples2.repr"
+  , reprName = "SetOfTuples2"
+  , reprTemplate = DomainSet
+                     { size = Nothing
+                     , minSize = Nothing
+                     , maxSize = Nothing
+                     , attrDontCare = False
+                     , element = DomainTuple
+                                   { components = [ Identifier "__rules_repr_Relation_SetOfTuples2_repr_a"
+                                                  , Identifier "__rules_repr_Relation_SetOfTuples2_repr_b"
+                                                  ]
+                                   , representation = Nothing
+                                   }
+                     , representation = Nothing
+                     }
+  , reprPrologueStructural = Nothing
+  , reprPrologueWheres = []
+  , reprPrologueBindings = []
+  , reprCases = [ RuleReprCase
+                    { reprCasePattern = DomainRelation
+                                          { components = [ Identifier "__rules_repr_Relation_SetOfTuples2_repr_a"
+                                                         , Identifier "__rules_repr_Relation_SetOfTuples2_repr_b"
+                                                         ]
+                                          , attrDontCare = False
+                                          , representation = Nothing
+                                          }
+                    , reprCaseStructural = Nothing
+                    , reprCaseWheres = []
+                    , reprCaseBindings = []
+                    }
+                ]
+  }

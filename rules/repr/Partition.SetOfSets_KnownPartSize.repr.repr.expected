@@ -1,0 +1,10 @@
+
+~~> SetOfSets_KnownPartSize
+~~> set of set (size n) of tau
+
+*** partition (partSize n) from tau
+    ~~> (forall i : refn . forall j : refn , i != j . card(i intersect j) = 0)
+        /\
+        (forall i : tau . exists s : refn . i elem s)
+        /\
+        (forall i : refn . forall j : refn . card(i) = card(j))

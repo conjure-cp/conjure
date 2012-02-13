@@ -1,0 +1,5 @@
+
+alldifferent(m) ~~> forall i,j : r, i < j . m[i] != m[j]
+
+    where !(m :: matrix indexed by [_] of int) /\ (m :: matrix indexed by [_] of _)
+    letting r be indices(m,0)

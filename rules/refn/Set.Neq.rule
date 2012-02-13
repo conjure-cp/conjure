@@ -1,0 +1,6 @@
+
+a != b ~~> (exists i : a . !(i elem b)) \/ (exists i : b . !(i elem a))
+
+    where
+        a :: set of _,
+        b :: set of _
