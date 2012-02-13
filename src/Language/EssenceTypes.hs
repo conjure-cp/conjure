@@ -193,6 +193,7 @@ typeOf p@(DeclLambda args x) = do
     p ~~$ TypeLambda (map snd args) x'
 
 typeOf p@(DeclQuantifier glueOp skipOp identity) = do
+    let x ~~ y = typeUnify x y || (intLikeType x && intLikeType y)
     tGlueOp   <- typeOf glueOp
     tSkipOp   <- typeOf skipOp
     tIdentity <- typeOf identity
@@ -202,7 +203,7 @@ typeOf p@(DeclQuantifier glueOp skipOp identity) = do
                                                         ++ render prType tIdentity
     case tGlueOp of
         (TypeLambda [a,b] c) ->
-            unless (typeUnify a b && typeUnify b c) fail_tGlueOp
+            unless ((a ~~ b) && (b ~~ c)) fail_tGlueOp
         _ -> fail_tGlueOp
 
     let fail_tSkipOp = p ~$$ "skip op must be of type " ++ "bool , "
@@ -210,12 +211,13 @@ typeOf p@(DeclQuantifier glueOp skipOp identity) = do
                                                         ++ render prType tIdentity
     case tSkipOp of
         (TypeLambda [TypeBoolean,a] b) ->
-            unless (typeUnify a b && typeUnify a tIdentity) fail_tSkipOp
+            unless ((a ~~ b) && (a ~~ tIdentity)) fail_tSkipOp
         _ -> fail_tSkipOp
 
     p ~~$ tIdentity
 
 typeOf p@(ExprQuantifier {quanName=Identifier quanName, quanVar=Identifier quanVar, quanOver, quanGuard, quanBody}) = do
+    let x ~~ y = typeUnify x y || (intLikeType x && intLikeType y)
     bindings <- ask
     case [ x | (Letting,nm,x) <- bindings, nm == quanName ] of
         [] -> p ~$$ "unknown quantifier: " ++ quanName
@@ -226,7 +228,14 @@ typeOf p@(ExprQuantifier {quanName=Identifier quanName, quanVar=Identifier quanV
             tq <- typeOf q
 
             -- get the expected type of the quantifier variable
-            kQuanOver <- kindOf quanOver
+            kQuanOver <- do
+                case quanOver of
+                    Identifier nm -> do
+                        knowns <- gets snd
+                        case nm `lookup` knowns of
+                            Nothing -> kindOf quanOver
+                            Just _  -> return KindExpr -- this is an identifier, which is a quanVar itself
+                    _ -> kindOf quanOver
             tQuanOver <- typeOf quanOver
             tQuanVar  <- case elementType kQuanOver tQuanOver of
                 Nothing -> quanOver ~$$ "Cannot quantify over " ++ show tQuanOver
@@ -241,11 +250,11 @@ typeOf p@(ExprQuantifier {quanName=Identifier quanName, quanVar=Identifier quanV
                 Nothing -> return ()
                 Just g  -> do
                     tg <- typeOf g
-                    unless (typeUnify TypeBoolean tg) $
+                    unless (TypeBoolean ~~ tg) $
                         p ~$$ "Type-error in the guard. Guards must be of type boolean."
 
             -- check the body type == quantifier.identity
-            unless (typeUnify tq tQuanBody) $
+            unless (tq ~~ tQuanBody) $
                 p ~$$ "Type-error in the body of quantified expression"
 
             return tq
