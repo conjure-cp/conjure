@@ -76,7 +76,11 @@ instantiateNames' x = do
             -- liftIO $ print binds
             -- tell binds
             -- return $ instantiateName nm (Identifier auxName) a
-            return $ Bubble (instantiateName nm (Identifier auxName) a) [] binds
+            case a of
+                Bubble t_act t_cons t_binds -> return $ Bubble (instantiateName nm (Identifier auxName) t_act)
+                                                               (map (instantiateName nm (Identifier auxName)) t_cons)
+                                                               (t_binds ++ binds)
+                _ -> return $ Bubble (instantiateName nm (Identifier auxName) a) [] binds
         forOne _ = return
     
     let funcs = map forOne stInRule
