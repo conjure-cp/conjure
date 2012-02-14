@@ -1,0 +1,12 @@
+language Essence 2.0
+
+given n_big : int
+given co,ca: int
+given vol,val: function (total) int(1..co) -> int(1..n_big)
+
+find x: set of int(1..co)
+
+maximising sum i : x . val(i)
+
+such that (sum i : x . vol(i)) <= ca
+    

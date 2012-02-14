@@ -1,0 +1,28 @@
+language ESSENCE 0.0
+$ prob001.essence: Car Sequencing
+$ Problem details available at http://www.csplib.org/prob/prob001/
+$ 04 September 2007
+
+given n_cars, n_classes, n_options : int(1..)
+given n_big : int(1..)
+
+letting Slots be domain int(1..n_cars)
+letting Class be domain int(1..n_classes)
+letting Option be domain int(1..n_options)
+
+given quantity : function (total) Class  -> int(1..n_big)
+given maxcars  : function (total) Option -> int(1..n_big)
+given blksize  : function (total) Option -> int(1..n_big)
+given usage    : relation of (Class * Option)
+
+find  car      : function (total) Slots -> Class
+
+such that
+    forall c : Class . (
+        card(car'(c)) = quantity(c)
+    ),
+    forall opt : Option . (
+        forall s : int(1..n_cars+1-blksize(opt)) . (
+            (sum i : int(s..s+blksize(opt)-1) . usage(car(i),opt)) <= maxcars(opt)
+        )
+    )

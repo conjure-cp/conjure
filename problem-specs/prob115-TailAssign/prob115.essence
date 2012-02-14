@@ -1,0 +1,54 @@
+language ESSENCE 1.2.0
+$ prob115.essence: Tail Assignment
+$ Problem details available in:
+$   A Constraint Programming Model for Tail Assignment
+$   M. Grönkvist
+$   Proc. First International Conference on Integration of AI and OR Techniques
+$   in Constraint Programming for Combinatorial Optimization Problems (CPAIOR
+$   2004), LNCS 3011, pp. 287-301, 2004.
+$
+$ 06 August 2007
+$
+
+given n_big : int
+
+$ n_flights: the number of flights
+$ n_planes: the number of aircraft
+$ maint_freq: how many flights an aircraft may make before needing maintenance
+given n_flights, n_planes, maint_freq : int(1..)
+
+$ Flight: flight identifiers
+$ Plane: aircraft identifiers
+# letting Flight be domain int(1..n_flights)
+# letting Plane be domain int(1..n_planes)
+
+$ network: the flight network. which flights can follow from which other flights
+$ can_fly: which aircraft can make which flights
+$ carry_in: the last flight made by each aircraft
+$ maint: the set of flights that have a maintenance facility at their
+$        destination
+given network : relation of (int(1..n_flights)**int(1..n_flights))
+given can_fly : relation of (int(1..n_planes)**int(1..n_flights))
+given carry_in : function (total) int(1..n_planes) -> int(1..n_flights)
+given maint : set of int(1..n_flights)
+
+$ route: the route for each aircraft
+find route : function (total) int(1..n_planes) -> function int(1..n_flights) -> int(1..n_flights)
+
+such that
+$ all elements of the range of the function 'route' are valid sequences
+    forall s : range(route) . forall i : int(1..abs(s)) . i elem defined(s),
+# $ the route for each aircraft begins with a flight that may follow on from the
+# $ last flight that it made
+#     forall p : int(1..n_planes) . <carry_in(p), route(p)(1)> in network,
+# $ each aircraft is able to make the flights on its route
+#     forall p : int(1..n_planes) . forall a in range(route(p)) . <a> in can_fly(p,_),
+# $ flights are made in the correct order
+#     forall s in range(route) . forall i : int(1..|s|-1) .
+#         <s(i),s(i+1)> in network,
+# $ every flight is made exactly once
+#     forall f : int(1..n_flights) . exists p : int(1..n_planes) . f in range(route(p)),
+#     forall p1,p2 : int(1..n_planes) . |range(route(p1)) cap range(route(p2))| = 0
+# $ every aircraft visits a maintenance depot frequently enough
+#     forall s in range(route) . forall i in int(1..|s|-maint_freq) .
+#         exists j in int(i..i+maint_freq) . s(j) in maint

@@ -1,0 +1,20 @@
+language ESSENCE 1.2.0
+$ prob019.essence: Magic Squares
+$ Problem details available at http://www.csplib.org/prob/prob019/
+$ 05 September 2007
+$
+
+given n : int(1..)
+
+letting Index be domain int(1..n)
+letting Value be domain int(1..n^2)
+
+find square : matrix indexed by [Index,Index] of Value
+find s : int(1..sum i : int(n^2+1-n..n^2) . i)
+
+such that
+    alldiff(square),
+    forall r : Index . (sum c : Index . square[r,c]) = s,
+    forall c : Index . (sum r : Index . square[r,c]) = s,
+    (sum d : Index . square[d,d]) = s,
+    (sum d : Index . square[d,n+1-d]) = s

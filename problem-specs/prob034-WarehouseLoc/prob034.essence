@@ -1,0 +1,21 @@
+language Essence 2.0
+
+$ given stores: enum {...}
+$ given warehouses: enum {...}
+
+given stores : int(1..9)
+given warehouses : int(1..3)
+
+given demand   : function (total) stores -> int(1..)
+given capacity : function (total) warehouses -> int(1..)
+given cost     : function (total) tuple (stores,warehouses) -> int(1..)
+
+find open : function (total) stores -> warehouses
+
+minimising fixed_cost * card(range(open)) + sum s : stores . cost(s,open(s))
+
+such that
+    forall w : warehouses . (
+        (sum s : open(_,w) . demand(s)) <= capacity(w)
+    )
+

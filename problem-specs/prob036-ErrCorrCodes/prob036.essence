@@ -1,0 +1,21 @@
+language ESSENCE 1.2.0
+$ prob036.essence: Fixed Length Error Correcting Codes
+$ Problem details available at http://www.csplib.org/prob/prob036/
+$ 07 September 2007
+$
+given n_big : int
+given Alphabet_count : int(1..)
+given Alphabet : int(1..Alphabet_count)
+given n : int(1..)
+
+letting Index  be domain int(1..n)
+letting String be domain function (total) Index -> Alphabet
+
+given dist    : function tuple (String,String) -> int(1..n_big)
+given mindist : int(1..n_big)
+
+find c : set of String
+
+such that
+    forall s1,s2 : c .
+        s1 != s2 => dist(s1,s2) >= mindist

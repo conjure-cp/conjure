@@ -1,0 +1,10 @@
+language ESSENCE 1.2.0
+
+given n_balls, n_boxes : int(1..)
+
+letting Ball be domain int(1..n_balls)
+
+find schur : partition (size n_boxes) from Ball
+
+such that
+    forall b1,b2,b3 : Ball, b1 + b2 = b3 . forall s : parts(schur) . !(set {b1,b2,b3} subseteq s)

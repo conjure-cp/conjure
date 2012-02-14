@@ -1,0 +1,26 @@
+language ESSENCE 1.2.0
+$ prob033.essence: Word Design for DNA Computing on Surfaces
+$ Problem details available at http://www.csplib.org/prob/prob033/
+$ 07 September 2007
+$
+
+letting Base  be domain int(1..4) # new type enum {A,C,G,T}
+letting Index be domain int(1..8)
+
+find words : set of function (total) Index -> Base
+
+maximising card(words)
+
+such that
+    forall w : words . card(w(_,2)) + card(w(_,3)) = 4,
+    forall w1,w2 : words . (
+        sum i : Index . w1(i) = w2(i) <= 4
+    ),
+    forall w1,w2 : words . (
+        (sum i : int(1..8) .
+            (w1(i) = 1 /\ w2(9-i) = 4) \/
+            (w1(i) = 2 /\ w2(9-i) = 3) \/
+            (w1(i) = 3 /\ w2(9-i) = 2) \/
+            (w1(i) = 4 /\ w2(9-i) = 1)
+        ) <= 4
+    )
