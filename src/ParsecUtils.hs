@@ -19,7 +19,6 @@ module ParsecUtils (
 
 
 import Control.Applicative
-import Control.Monad ( void )
 import Control.Monad.Identity ( Identity )
 
 import Text.Parsec ( ParsecT, alphaNum, char, letter, parse )
@@ -47,19 +46,19 @@ ldef  = emptyDef { commentLine     = "$"
 lexer :: GenTokenParser String () Identity
 lexer = makeTokenParser ldef
 
-angles     :: Parser a -> Parser a;  angles     =        T.angles     lexer
-braces     :: Parser a -> Parser a;  braces     =        T.braces     lexer
-brackets   :: Parser a -> Parser a;  brackets   =        T.brackets   lexer
-colon      :: Parser ();             colon      = void $ T.colon      lexer
-comma      :: Parser ();             comma      = void $ T.comma      lexer
-dot        :: Parser ();             dot        = void $ T.dot        lexer
-identifier :: Parser String;         identifier =        T.identifier lexer
-integer    :: Parser Integer;        integer    =        natural      lexer
-parens     :: Parser a -> Parser a;  parens     =        T.parens     lexer
-reserved   :: String -> Parser ();   reserved   =        T.reserved   lexer
-reservedOp :: String -> Parser ();   reservedOp =        T.reservedOp lexer
-symbol     :: String -> Parser ();   symbol s   = void $ T.symbol     lexer s
-whiteSpace :: Parser ();             whiteSpace =        T.whiteSpace lexer
+angles     :: Parser a -> Parser a;  angles     = T.angles     lexer
+braces     :: Parser a -> Parser a;  braces     = T.braces     lexer
+brackets   :: Parser a -> Parser a;  brackets   = T.brackets   lexer
+colon      :: Parser ();             colon      = T.colon      lexer   >> return ()
+comma      :: Parser ();             comma      = T.comma      lexer   >> return ()
+dot        :: Parser ();             dot        = T.dot        lexer   >> return ()
+identifier :: Parser String;         identifier = T.identifier lexer
+integer    :: Parser Integer;        integer    = natural      lexer
+parens     :: Parser a -> Parser a;  parens     = T.parens     lexer
+reserved   :: String -> Parser ();   reserved   = T.reserved   lexer
+reservedOp :: String -> Parser ();   reservedOp = T.reservedOp lexer
+symbol     :: String -> Parser ();   symbol s   = T.symbol     lexer s >> return ()
+whiteSpace :: Parser ();             whiteSpace = T.whiteSpace lexer
 
 
 -- choice with try applied to every parser in the list but not the last

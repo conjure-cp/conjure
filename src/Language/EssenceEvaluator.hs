@@ -4,7 +4,6 @@
 module Language.EssenceEvaluator ( runEvaluateExpr, quanDomain ) where
 
 import Control.Applicative ( Applicative )
-import Control.Monad ( void )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.Reader ( MonadReader, ask )
 import Control.Monad.RWS ( RWST, evalRWST )
@@ -381,7 +380,6 @@ evaluateExpr (GenericNode Image [Identifier opParam, Identifier nm]) = do
                      _ -> do
                          let msg = "quantifier " ++ nm ++ " is not defined."
                          liftIO $ putStrLn msg
-                         void $ error msg
                          rNothing
         else rNothing
 

@@ -5,7 +5,6 @@ module TestUtils where
 
 
 import Control.Applicative
-import Control.Monad ( void )
 import System.Random ( StdGen, newStdGen, split )
 
 import Test.HUnit ( Test, (~:), (~=?), runTestTT, test )
@@ -32,7 +31,7 @@ quickTest f = do
 
 
 runTest :: Test -> IO ()
-runTest t = void $ runTestTT t
+runTest t = runTestTT t >> return ()
 
 
 runTestNTimes :: Int -> Test -> IO ()
