@@ -124,7 +124,13 @@ pDomains = map (<?> "domain")
                 helper attrs e = DomainUnnamed e (lookupRepresentation attrs)
 
         pEnum :: Parser Expr
-        pEnum = DomainEnum <$> (reserved "enum" *> braces (sepBy1 identifier comma)) <*> pure Nothing
+        pEnum = do
+            reserved "enum"
+            mes <- optionMaybe $ braces $ sepBy identifier comma
+            
+            return $ case mes of
+                Nothing -> DomainEnum [] Nothing
+                Just es -> DomainEnum es Nothing
 
         pMatrix :: Parser Expr
         pMatrix = helper <$>

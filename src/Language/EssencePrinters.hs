@@ -88,7 +88,8 @@ prDomain _ (DomainUnnamed {theSize,representation}) = do
 prDomain _ (DomainEnum {enums,representation}) =
     return $ text "enum"
          <+> maybe empty (\ r -> parens (text "representation" <+> text r) ) representation
-         <+> braces (sep (punctuate comma (map text enums)))
+         <+> case enums of [] -> empty
+                           _  -> braces (sep (punctuate comma (map text enums)))
 prDomain _ (DomainMatrix i j) = do
     is' <- mapM prExpr is
     k'  <- prExpr k
