@@ -94,44 +94,48 @@ applyToSpec reprs spec = do
         -- bindingsRest :: [Binding]
         -- bindingsRest = bindings \\ bindingsNeedsRepr
 
-    liftIO $ putStrLn "Choosing representations for the following: "
-    liftIO $ mapM_ (putStrLn . render (prBinding [])) bindingsNeedsRepr
+    if null bindingsNeedsRepr
+        then return []
+        else do
+            liftIO $ do
+                putStrLn "Choosing representations for the following: "
+                mapM_ (putStrLn . render (prBinding [])) bindingsNeedsRepr
 
-    -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
-    applied' :: [(Binding, (Either ErrMsg [ReprResult], [Log]))]
-        <- zip bindingsNeedsRepr <$> sequence [ liftIO (applyAllToDom (topLevelBindings spec) d reprs)
-                                              | (_,_,d) <- bindingsNeedsRepr
-                                              ]
+            -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
+            applied' :: [(Binding, (Either ErrMsg [ReprResult], [Log]))]
+                <- zip bindingsNeedsRepr <$> sequence [ liftIO (applyAllToDom (topLevelBindings spec) d reprs)
+                                                      | (_,_,d) <- bindingsNeedsRepr
+                                                      ]
 
-    -- calls error if repr application fails for any binding.
-    applied :: [(Binding, [ReprResult])]
-        <- forM applied' $ \ t -> case t of (_, (Left err, _logs)) -> {- liftIO (ppPrint logs) >> -} throwError err
-                                            (b, (Right r , _logs)) -> return (b,r)
+            -- calls error if repr application fails for any binding.
+            applied :: [(Binding, [ReprResult])]
+                <- forM applied' $ \ t -> case t of (_, (Left err, _logs)) -> {- liftIO (ppPrint logs) >> -} throwError err
+                                                    (b, (Right r , _logs)) -> return (b,r)
 
-    let
-        foo :: [(a,[b])] -> [[(a,b)]]
-        foo [] = [[]]
-        foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
+            let
+                foo :: [(a,[b])] -> [[(a,b)]]
+                foo [] = [[]]
+                foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
 
-        -- a lookup table contains a list of repr rule application results for each identifier in the model.
-        -- there are as many lookup tables as the number of alternative models.
-        lookupTables :: [ M.Map String [( Binding           -- the old binding
-                                        , ReprName          -- the new representation name
-                                        , Domain            -- the new representation domain
-                                        , Structural        -- the structural constraint to be posted
-                                        )]
-                        ]
-        lookupTables = map M.fromList $ foo [ (nm, cross [ (b,x,y,z) | (x,y,z) <- rrs ] cnt)
-                                            | (b@(_,nm,_), rrs) <- applied
-                                            , let cnt = fromMaybe 0 (lookup nm counts)
-                                            , cnt > 0
-                                            ]
+                -- a lookup table contains a list of repr rule application results for each identifier in the model.
+                -- there are as many lookup tables as the number of alternative models.
+                lookupTables :: [ M.Map String [( Binding           -- the old binding
+                                                , ReprName          -- the new representation name
+                                                , Domain            -- the new representation domain
+                                                , Structural        -- the structural constraint to be posted
+                                                )]
+                                ]
+                lookupTables = map M.fromList $ foo [ (nm, cross [ (b,x,y,z) | (x,y,z) <- rrs ] cnt)
+                                                    | (b@(_,nm,_), rrs) <- applied
+                                                    , let cnt = fromMaybe 0 (lookup nm counts)
+                                                    , cnt > 0
+                                                    ]
 
-    -- liftIO $ ppPrint lookupTables
-    -- return []
+            -- liftIO $ ppPrint lookupTables
+            -- return []
 
-    results <- forM lookupTables $ \ table -> applyConfigToSpec table spec
-    mapM (quanRenameSt <=< evalSpec) results
+            results <- forM lookupTables $ \ table -> applyConfigToSpec table spec
+            mapM (quanRenameSt <=< evalSpec) results
 
 
 applyConfigToSpec ::
@@ -188,7 +192,7 @@ applyAllToDom binds dom reprs = do
     -- results :: [Either ErrMsg (String, Domain, Structural)]
     -- logs    :: [Log]
     (results, logs) <- second concat . unzip <$> sequence [ runApplyToDom binds dom r | r <- reprs ]
-    
+
     return $ case rights results of
         [] -> (Left ("No repr rule matches this domain: " ++ render prExpr dom), logs)
         rs -> (Right rs, logs)
