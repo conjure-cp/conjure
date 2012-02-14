@@ -290,8 +290,8 @@ pExpr = buildExpressionParser table core
             OpInfixN opFace prec -> return $ Right (prec, Infix  (pFace opFace >> return (toBinOp op)) AssocNone )
             OpInfixR opFace prec -> return $ Right (prec, Infix  (pFace opFace >> return (toBinOp op)) AssocRight)
             OpPrefix opFace prec -> return $ Right (prec, Prefix (pFace opFace >> return (toUnOp  op))           )
-            OpSpecial          -> Nothing
-        
+            OpSpecial            -> Nothing
+
         toBinOp :: Op -> Expr -> Expr -> Expr
         toBinOp op i j = GenericNode op [i,j]
 
