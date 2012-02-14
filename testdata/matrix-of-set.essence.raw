@@ -10,7 +10,7 @@ Spec
                                          Just ( ValueInteger 0 ) ) (
                                          Just ( ValueInteger 4 ) )
                              , element = DomainSet
-                                           { size = Nothing
+                                           { size = Just ( ValueInteger 2 )
                                            , minSize = Nothing
                                            , maxSize = Nothing
                                            , attrDontCare = False
@@ -33,6 +33,50 @@ Spec
                           , ValueInteger 3
                           ]
                       ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Max
+                          [ GenericNode
+                              Index
+                              [ Identifier "x"
+                              , ValueInteger 1
+                              ]
+                          ]
+                      , ValueInteger 2
+                      ]
+                  , GenericNode
+                      Eq
+                      [ GenericNode
+                          Min
+                          [ GenericNode
+                              Index
+                              [ Identifier "x"
+                              , ValueInteger 1
+                              ]
+                          ]
+                      , ValueInteger 2
+                      ]
+                  , ExprQuantifier
+                      { quanName = Identifier "forall"
+                      , quanVar = Identifier "i"
+                      , quanOver = DomainIntegerFromTo (
+                                     Just ( ValueInteger 1 ) ) (
+                                     Just ( ValueInteger 3 ) )
+                      , quanGuard = Nothing
+                      , quanBody = GenericNode
+                                     Eq
+                                     [ GenericNode
+                                         Max
+                                         [ GenericNode
+                                             Index
+                                             [ Identifier "x"
+                                             , Identifier "i"
+                                             ]
+                                         ]
+                                     , Identifier "i"
+                                     ]
+                      }
                   ]
   , metadata = []
   }
