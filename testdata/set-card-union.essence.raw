@@ -1,0 +1,42 @@
+Spec
+  { language = "Essence"
+  , version = [ 2
+              , 0
+              ]
+  , topLevelBindings = [ ( Find
+                         , "x"
+                         , DomainSet
+                             { size = Nothing
+                             , minSize = Nothing
+                             , maxSize = Just ( ValueInteger 4 )
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       , ( Find
+                         , "y"
+                         , DomainSet
+                             { size = Nothing
+                             , minSize = Nothing
+                             , maxSize = Just ( ValueInteger 4 )
+                             , attrDontCare = False
+                             , element = DomainIntegerFromTo (
+                                           Just ( ValueInteger 0 ) ) (
+                                           Just ( ValueInteger 9 ) )
+                             , representation = Nothing
+                             }
+                         )
+                       ]
+  , topLevelWheres = []
+  , objective = Nothing
+  , constraints = [ GenericNode
+                      Neq
+                      [ Identifier "x"
+                      , Identifier "y"
+                      ]
+                  ]
+  , metadata = []
+  }

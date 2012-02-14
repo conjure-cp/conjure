@@ -1,0 +1,7 @@
+language Essence 2.0
+
+find x : relation of (int(1..9) * int(3..7))
+
+such that
+    forall i : toSet(x) . i[0] = i[1],
+    card(x) = 3
