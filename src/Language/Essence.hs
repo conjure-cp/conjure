@@ -2,7 +2,10 @@
 -- This module defines core data types for Essence.
 
 -- Uses the tool derive, to `derive` instance of type classes.
--- See target `derivations` in the Makefile
+
+-- Any changes to this file, one needs to call the following command to
+-- re-derive the code in EssenceDerivations.hs
+-- "cd src/Language; derive Essence.hs"
 
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveDataTypeable #-}
