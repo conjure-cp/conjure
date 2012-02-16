@@ -156,7 +156,7 @@ checkWheres (GenericNode HasDomain [x,d]) = do
     -- st :: [Binding] <- getM
     -- liftIO $ print $ map snd3 st
 checkWheres x = do
-    bindings  <- getM
+    bindings :: [Binding]  <- getM
     (x',logs) <- runEvaluateExpr bindings x
     case x' of
         ValueBoolean True  -> return ()

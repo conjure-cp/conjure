@@ -27,7 +27,10 @@ quanDomain   (DomainMSet   {element}) = element
 quanDomain _ = Identifier "<undefined>"
 
 
-runEvaluateExpr :: (Applicative m, MonadIO m) => [Binding] -> Expr -> m (Expr,[Log])
+runEvaluateExpr ::
+    (Applicative m
+    , MonadIO m
+    ) => [Binding] -> Expr -> m (Expr,[Log])
 runEvaluateExpr topLevels x = do
     (y,logs) <- liftIO $ evalRWST (comp x) topLevels ()
     -- liftIO $ mapM_ (\ l -> putStrLn ("evaluator: " ++ l)) logs
