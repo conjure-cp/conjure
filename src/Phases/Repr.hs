@@ -6,7 +6,7 @@ module Phases.Repr ( callRepr ) where
 
 import Control.Applicative
 import Control.Arrow ( (&&&), second )
-import Control.Monad ( (<=<), forM, replicateM )
+import Control.Monad ( (<=<), forM, forM_, replicateM )
 import Control.Monad.Error ( MonadError, throwError, runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.RWS ( MonadWriter, tell, MonadState, get, put, evalRWST )
@@ -24,7 +24,7 @@ import Phases.QuanRename ( quanRenameSt )
 import Phases.ReprRefnCommon
 import PrintUtils
 import UniqueSupply ( nextUniqueInt )
-import Utils ( allPairs, runRWSET )
+import Utils ( allPairs, runRWSET, fst3, snd3 )
 
 
 -- test :: IO ()
@@ -98,7 +98,7 @@ applyToSpec reprs spec = do
         then return []
         else do
             liftIO $ do
-                putStrLn "Choosing representations for the following: "
+                putStrLn "[Choosing representations for the following]"
                 mapM_ (putStrLn . render (prBinding [])) bindingsNeedsRepr
 
             -- apply repr rules to every binding that's in "bindingsNeedsRepr". might fail.
@@ -111,6 +111,16 @@ applyToSpec reprs spec = do
             applied :: [(Binding, [ReprResult])]
                 <- forM applied' $ \ t -> case t of (_, (Left err, _logs)) -> {- liftIO (ppPrint logs) >> -} throwError err
                                                     (b, (Right r , _logs)) -> return (b,r)
+
+            liftIO $ do
+                putStrLn ""
+                putStrLn "[Applicable representation selection rules]"
+                forM_ applied $ \ (b,rs) -> do
+                    putStrLn $ snd3 b ++ " (" ++ fromMaybe "unknown" (show <$> lookup (snd3 b) counts) ++ ")"
+                    forM_ rs $ \ r -> do
+                        putStrLn $ "\t" ++ fst3 r
+
+            error "terminate."
 
             let
                 foo :: [(a,[b])] -> [[(a,b)]]
