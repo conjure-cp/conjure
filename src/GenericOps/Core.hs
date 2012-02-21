@@ -85,12 +85,18 @@ gplateUniList ::
     -> [b]
     -> ([GNode], [GNode] -> a)
 gplateUniList f xs =
-    ( map mkG xs
-    , \ gxs' -> let xs' = fromGs gxs'
-                in  if length xs == length xs'
-                        then f xs'
-                        else gplateError
-    )
+    let
+        sameLength :: [a] -> [b] -> Bool
+        sameLength []     []     = True
+        sameLength (_:is) (_:js) = sameLength is js
+        sameLength _      _      = False
+    in
+        ( map mkG xs
+        , \ gxs' -> let xs' = fromGs gxs'
+                    in  if xs `sameLength` xs'
+                            then f xs'
+                            else gplateError
+        )
 
 gplateError :: a
 gplateError = error "internal error: GPlate"
