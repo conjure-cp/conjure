@@ -1,628 +1,784 @@
-
--- This module defines core data types for Essence.
-
--- Uses the tool derive, to `derive` instance of type classes.
-
--- Any changes to this file, one needs to call the following command to
--- re-derive the code in EssenceDerivations.hs
--- "cd src/Language; derive Essence.hs"
-
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# OPTIONS_DERIVE --output=EssenceDerivations.hs #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
-module Language.Essence
-    ( Log
-    , Spec(..), addDeclarations
-    , Metadata(..)
-    , Binding, BindingEnum(..), Where
-    , Objective, ObjectiveEnum(..)
-    , Expr(..), exprTag
-    , Representation, needsRepresentation
-    , Op(..), OpDescriptor(..), opDescriptor
-    , Kind(..), Type(..), typeUnify, intLikeType
-    , associativeOps, commutativeOps, validOpTypes, elementType
-    , RuleRepr(..), RuleReprCase(..)
-    , RuleRefn(..)
-    ) where
+module Language.Essence where
 
+import GenericOps.Coerce
+import GenericOps.Core
+import ParsecUtils
+import ParsePrint ( ParsePrint(..), fromPairs, prettyList, prettyListDoc )
+import PrintUtils ( (<+>), (<>), text )
+import qualified PrintUtils as Pr
+import Utils ( padRight )
 
---------------------------------------------------------------------------------
--- imports ---------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-import Data.Binary
-import Data.Generics ( Data, Typeable, toConstr )
-import Data.Generics.Uniplate.Direct
-
-
---------------------------------------------------------------------------------
--- Log -------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
--- any kind of log generated while running Conjure is of this data type
-type Log = String
+-- import Control.Monad
+-- import Data.Char
+-- import Data.List
+-- import Debug.Trace
+import Control.Applicative
+import Control.Monad.Error
+import Control.Monad.State
+import Data.Default ( def )
+import Data.List
+import Data.Generics ( Data )
+import Data.Maybe ( fromMaybe )
+import Data.Typeable ( Typeable )
+import GHC.Generics ( Generic )
+import Test.QuickCheck ( Arbitrary(..), Testable, choose, elements, quickCheckWith, stdArgs, Args(..) )
+import Test.QuickCheck.Gen ( oneof )
+-- import Unsafe.Coerce ( unsafeCoerce )
 
 
---------------------------------------------------------------------------------
--- Spec ------------------------------------------------------------------------
---------------------------------------------------------------------------------
 
--- the data type for an Essence specification
-data Spec
-    = Spec { language         :: String
-           , version          :: [Int] 
-           , topLevelBindings :: [Binding]
-           , topLevelWheres   :: [Where]
-           , objective        :: Maybe Objective
-           , constraints      :: [Expr]
-           , metadata         :: [Metadata]
-           }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
-
-type Binding = (BindingEnum,String,Expr)
-
-data BindingEnum = Find | Given | Letting | InRule | InRuleNewVar | Quantified
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
-
-type Objective = (ObjectiveEnum,Expr)
-
-data ObjectiveEnum = Minimising | Maximising
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
-
-type Where = Expr
-
-addDeclarations :: [Binding] -> Spec -> Spec
-addDeclarations bs sp = sp { topLevelBindings = topLevelBindings sp ++ bs }
+runQC :: Testable prop => prop -> IO ()
+runQC = quickCheckWith stdArgs { maxSize = 3, maxSuccess = 1000 }
 
 
---------------------------------------------------------------------------------
--- Metadata --------------------------------------------------------------------
---------------------------------------------------------------------------------
+incr :: Value -> Value
+incr (VTuple [V (VInt 1),V (VInt 2)]) = VHole $ Identifier "found!"
+incr (VInt i) = VInt (i+1)
+incr v = v
 
-data Metadata = Represented Binding Binding
-              | ChannelAdded [Binding]
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+incrIO :: Value -> IO Value
+incrIO (VTuple [V (VInt 1),V (VInt 2)]) = do
+    putStrLn "first eq."
+    return $ VHole $ Identifier "found!"
+incrIO (VInt i) = do
+    putStrLn "second eq."
+    return $ VInt (i+1)
+incrIO v = do
+    putStrLn "third eq."
+    return v
+
+pr :: GNode -> IO GNode
+pr g = do
+    putStrLn $ showG g
+    return g
+
+
+matchTest :: String -> String -> IO ()
+matchTest p a = do
+    xp :: Expr <- parseIO (parse <* eof) p
+    xa :: Expr <- parseIO (parse <* eof) a
+    -- binds <- execStateT (runErrorT (gmatch (mkG xp) (mkG xa))) def
+    binds <- runErrorT (execStateT (match xp xa) def)
+    case binds of
+        Left err -> error err
+        Right (r,_) -> mapM_ (\ (nm,GNode _ x) -> putStrLn (nm ++ ": " ++ show (pretty x)) ) r
+
+
+promoteTest :: Expr -> IO ()
+promoteTest x = do
+    putStrLn " [ ==================== ]"
+    mapM_ (\ i -> putStrLn $ padRight ' ' 20 (show i) ++ showG i) $ universe $ mkG x
+    putStrLn " [ ==================== ]"
+    mapM_ (\ i -> putStrLn $ padRight ' ' 20 (show i) ++ showG i) $ universe $ mkG $ deepPromote x
+    putStrLn " [ ==================== ]"
+
+
+errorArbitrary :: a
+errorArbitrary = error "in Arbitrary"
+
+
 
 --------------------------------------------------------------------------------
 -- Expr ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
--- the data type for any kind of expression in Essence
--- this will end up being a giant type, but decidedly so.
-data Expr
-    = Underscore
+data Expr = EHole Identifier
+    | V Value
+    | D Domain
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
-    | GenericNode Op [Expr]
+instance NodeTag Expr
 
-    -- Inline values
-    | ValueBoolean   Bool
-    | ValueInteger   Integer
-    | ValueMatrix    [Expr]         -- the list has to be of uniform type.
-    | ValueTuple     [Expr]
-    | ValueSet       [Expr]         -- the list has to be unique.
-    | ValueMSet      [Expr]
-    | ValueFunction  [(Expr,Expr)]  -- the list (both fsts and snds) has to be of uniform type.
-    | ValueRelation  [Expr]         -- has to be a list of tuples of uniform type.
-    | ValuePartition [[Expr]]       -- has to be a list of lists of uniform type.
+instance Hole Expr where
+    hole (EHole (Identifier "_")) = UnnamedHole
+    hole (EHole (Identifier nm) ) = NamedHole nm
+    hole _           = NotAHole
 
-    -- Domains
-    | DomainBoolean
-    | DomainIntegerFromTo (Maybe Expr) (Maybe Expr)
-    | DomainIntegerList [Expr]
-    | DomainUnnamed
-        { theSize        :: Expr
-        , representation :: Maybe Representation
-        }
-    | DomainEnum
-        { enums          :: [String]
-        , representation :: Maybe Representation
-        }
-    | DomainMatrix
-        { index          :: Expr
-        , element        :: Expr
-        }
-    | DomainTuple
-        { components     :: [Expr]
-        , representation :: Maybe Representation
-        }
-    | DomainSet
-        { size           :: Maybe Expr
-        , minSize        :: Maybe Expr
-        , maxSize        :: Maybe Expr
-        , attrDontCare   :: Bool
-        , element        :: Expr
-        , representation :: Maybe Representation
-        }
-    | DomainMSet
-        { size           :: Maybe Expr
-        , minSize        :: Maybe Expr
-        , maxSize        :: Maybe Expr
-        , occr           :: Maybe Expr
-        , minOccr        :: Maybe Expr
-        , maxOccr        :: Maybe Expr
-        , attrDontCare   :: Bool
-        , element        :: Expr
-        , representation :: Maybe Representation
-        }
-    | DomainFunction
-        { functionFrom   :: Expr
-        , functionTo     :: Expr
-        , isTotal        :: Bool
-        , isPartial      :: Bool
-        , isInjective    :: Bool
-        , isBijective    :: Bool
-        , isSurjective   :: Bool
-        , attrDontCare   :: Bool
-        , representation :: Maybe Representation
-        }
-    | DomainRelation
-        { components     :: [Expr]
-        , attrDontCare   :: Bool
-        , representation :: Maybe Representation
-        }
-    | DomainPartition
-        { element        :: Expr
-        , isRegular      :: Bool
-        , isComplete     :: Bool
-        , size           :: Maybe Expr
-        , minSize        :: Maybe Expr
-        , maxSize        :: Maybe Expr
-        , partSize       :: Maybe Expr
-        , minPartSize    :: Maybe Expr
-        , maxPartSize    :: Maybe Expr
-        , numParts       :: Maybe Expr
-        , minNumParts    :: Maybe Expr
-        , maxNumParts    :: Maybe Expr
-        , attrDontCare   :: Bool
-        , representation :: Maybe Representation
-        }
+instance GPlate Expr where
+    gplate p@(EHole {}) = gplateLeaf p
+    gplate (V x) = gplateSingle V x
+    gplate (D x) = gplateSingle D x
 
-    | Identifier String
-    | MatrixSlice (Maybe Expr) (Maybe Expr)
+instance MatchBind Expr
 
-    | DeclLambda [(String,Type)] Expr
-    | DeclQuantifier Expr Expr Expr
-    
-    | ExprQuantifier
-        { quanName  :: Expr         -- must always be an (Identifier str)
-        , quanVar   :: Expr         -- must always be an (Identifier str)
-        , quanOver  :: Expr
-        , quanGuard :: Maybe Expr
-        , quanBody  :: Expr
-        }
+instance ParsePrint Expr where
+    parse = choiceTry
+        [ EHole <$> parse
+        , V     <$> parse
+        , D     <$> parse
+        ]
+    pretty (EHole x) = pretty x
+    pretty (V     x) = pretty x
+    pretty (D     x) = pretty x
 
-    | Bubble
-        { bubbleActual   :: Expr
-        , bubbleToPost   :: [Expr]
-        , bubbleBindings :: [Binding]
-        }
+instance Arbitrary Expr where
+    arbitrary = deepPromote <$> oneof
+        [ EHole <$> arbitrary
+        , V     <$> arbitrary
+        , D     <$> arbitrary
+        ]
+    shrink (V x) = map V $ shrink x
+    shrink (D x) = map D $ shrink x
+    shrink _     = []
 
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
-
-
-exprTag :: Expr -> String
-exprTag (GenericNode op _) = "GenericNode#" ++ show (toConstr op)
-exprTag x = constrName x
-
-constrName :: Data a => a -> String
-constrName = show . toConstr
-
-
-type Representation = String
-
-
-needsRepresentation :: Expr -> Bool
--- needsRepresentation (DomainUnnamed   {}) = True
--- needsRepresentation (DomainEnum      {}) = True
--- needsRepresentation (DomainTuple     {}) = True
-needsRepresentation (DomainSet       {}) = True
-needsRepresentation (DomainMSet      {}) = True
-needsRepresentation (DomainFunction  {}) = True
-needsRepresentation (DomainRelation  {}) = True
-needsRepresentation (DomainPartition {}) = True
-needsRepresentation _ = False
 
 
 --------------------------------------------------------------------------------
--- Op --------------------------------------------------------------------------
+-- Identifier ------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
--- the data type for operators in Essence
-data Op
-    = Plus | Minus | Times | Div | Mod | Pow | Abs | Negate
-    | Factorial
-    | Lt | Leq | Gt | Geq | Neq | Eq
-    | Not | Or | And | Imply | Iff
-    | Union | Intersect | Subset | SubsetEq | Supset | SupsetEq
-    | Card | Elem | Max | Min
-    | ToSet | ToMSet | ToRel | Defined | Range
-    | Image | PreImage | Inverse
-    | Together | Apart
-    | Party | Participants | Parts
-    | Freq | Hist
+newtype Identifier = Identifier String
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
-    | Index | Project
+instance NodeTag Identifier
 
-    | HasType | HasDomain
+instance Hole Identifier
 
-    | Replace
-    
-    | AllDiff
+instance GPlate Identifier
 
-    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable)
+instance MatchBind Identifier
 
+instance ParsePrint Identifier where
+    parse = Identifier <$> identifier
+    pretty (Identifier nm) = text nm
 
--- will be used while parsing and pretty-printing operators
-data OpDescriptor
-    = OpLispy  { face :: String, cardinality :: Int }
-    | OpInfixL { face :: String, precedence  :: Int }
-    | OpInfixN { face :: String, precedence  :: Int }
-    | OpInfixR { face :: String, precedence  :: Int }
-    | OpPrefix { face :: String, precedence  :: Int }
-    | OpSpecial
+instance Arbitrary Identifier where
+    arbitrary = Identifier . return <$> choose ('a', 'z')
 
-opDescriptor :: Op -> OpDescriptor
-opDescriptor Plus         = OpInfixL "+"            ~~$ 400
-opDescriptor Minus        = OpInfixL "-"            ~~$ 400
-opDescriptor Times        = OpInfixL "*"            ~~$ 300
-opDescriptor Div          = OpInfixL "/"            ~~$ 300
-opDescriptor Mod          = OpInfixL "%"            ~~$ 300
-opDescriptor Pow          = OpInfixR "^"            ~~$ 200
-opDescriptor Abs          = OpLispy  "abs"          1
-opDescriptor Negate       = OpPrefix "-"            ~~$ 100
-opDescriptor Factorial    = OpSpecial
-opDescriptor Lt           = OpInfixN "<"            ~~$ 800
-opDescriptor Leq          = OpInfixN "<="           ~~$ 800
-opDescriptor Gt           = OpInfixN ">"            ~~$ 800
-opDescriptor Geq          = OpInfixN ">="           ~~$ 800
-opDescriptor Neq          = OpInfixN "!="           ~~$ 800
-opDescriptor Eq           = OpInfixN "="            ~~$ 800
-opDescriptor Not          = OpPrefix "!"            ~~$ 1300
-opDescriptor Or           = OpInfixL "\\/"          ~~$ 1000
-opDescriptor And          = OpInfixL "/\\"          ~~$ 900
-opDescriptor Imply        = OpInfixN "=>"           ~~$ 1100
-opDescriptor Iff          = OpInfixN "<=>"          ~~$ 1200
-opDescriptor Union        = OpInfixL "union"        ~~$ 300
-opDescriptor Intersect    = OpInfixL "intersect"    ~~$ 300
-opDescriptor Subset       = OpInfixN "subset"       ~~$ 700
-opDescriptor SubsetEq     = OpInfixN "subseteq"     ~~$ 700
-opDescriptor Supset       = OpInfixN "supset"       ~~$ 700
-opDescriptor SupsetEq     = OpInfixN "supseteq"     ~~$ 700
-opDescriptor Card         = OpLispy  "card"         1
-opDescriptor Elem         = OpInfixN "elem"         ~~$ 700
-opDescriptor Max          = OpLispy  "max"          1
-opDescriptor Min          = OpLispy  "min"          1
-opDescriptor ToSet        = OpLispy  "toSet"        1
-opDescriptor ToMSet       = OpLispy  "toMSet"       1
-opDescriptor ToRel        = OpLispy  "toRel"        1
-opDescriptor Defined      = OpLispy  "defined"      1
-opDescriptor Range        = OpLispy  "range"        1
-opDescriptor Image        = OpLispy  "image"        2
-opDescriptor PreImage     = OpLispy  "preimage"     2
-opDescriptor Inverse      = OpLispy  "inverse"      2
-opDescriptor Together     = OpLispy  "together"     3
-opDescriptor Apart        = OpLispy  "apart"        3
-opDescriptor Party        = OpLispy  "party"        2
-opDescriptor Participants = OpLispy  "participants" 1
-opDescriptor Parts        = OpLispy  "parts"        1
-opDescriptor Freq         = OpLispy  "freq"         2
-opDescriptor Hist         = OpLispy  "hist"         2
-opDescriptor Project      = OpSpecial
-opDescriptor Index        = OpSpecial
-opDescriptor HasType      = OpInfixN "::"           ~~$ 1500
-opDescriptor HasDomain    = OpInfixN ":"            ~~$ 1500
-opDescriptor Replace      = OpSpecial
-opDescriptor AllDiff      = OpLispy  "alldifferent" 1
-
-infixr 0 ~~$
-(~~$) :: (Int -> t) -> Int -> t
-f ~~$ i = f (10000 - i)
-
-
-associativeOps :: [Op]
-associativeOps = [Plus,Times,And,Or]
-
-commutativeOps :: [Op]
-commutativeOps = [Plus,Times,And,Or,Eq,Neq,Iff]
 
 
 --------------------------------------------------------------------------------
--- Kinds and Types -------------------------------------------------------------
+-- Value -----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data Kind = KindUnknown
-          | KindDomain
-          | KindValue
-          | KindExpr
-          | KindLambda
-          | KindFind
-          | KindGiven
-    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable)
+data Value = VHole Identifier
+    | VBool   Bool
+    | VInt   Integer
+    | VMatrix    [Expr]         -- uniform type.
+    | VTuple     [Expr]
+    | VSet       [Expr]         -- uniform type. unique.
+    | VMSet      [Expr]         -- uniform type.
+    | VFunction  [Expr]         -- VTuple#2. uniform type.
+    | VRelation  [Expr]         -- VTuple. uniform type.
+    | VPartition [Expr]         -- VSet. uniform type.
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
-data Type = TypeUnknown
-    | TypeIdentifier String
+instance NodeTag Value
 
-    | TypeBoolean
-    | TypeInteger
-    | TypeUnnamed
-    | TypeEnum
-    | TypeMatrix Type
-    | TypeTuple [Type]
-    | TypeSet Type
-    | TypeMSet Type
-    | TypeFunction Type Type
-    | TypeRelation [Type]
-    | TypePartition Type
+instance Hole Value where
+    hole (VHole (Identifier "_")) = UnnamedHole
+    hole (VHole (Identifier nm) ) = NamedHole nm
+    hole _           = NotAHole
 
-    | TypeLambda [Type] Type
+instance GPlate Value where
+    gplate p@(VHole {}) = gplateLeaf p
+    gplate p@(VBool {}) = gplateLeaf p
+    gplate p@(VInt  {}) = gplateLeaf p
+    gplate   (VMatrix    xs) = gplateUniList VMatrix    xs
+    gplate   (VTuple     xs) = gplateUniList VTuple     xs
+    gplate   (VSet       xs) = gplateUniList VSet       xs
+    gplate   (VMSet      xs) = gplateUniList VMSet      xs
+    gplate   (VFunction  xs) = gplateUniList VFunction  xs
+    gplate   (VRelation  xs) = gplateUniList VRelation  xs
+    gplate   (VPartition xs) = gplateUniList VPartition xs
 
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+instance MatchBind Value
 
-class TypeUnify t where
-    typeUnify :: t -> t -> Bool
-    chooseType :: t -> t -> t
+instance ParsePrint Value where
+    parse = choiceTry
+                [ pHole, pBool, pInt
+                , pMatrix, pTuple, pSet, pMSet
+                , pFunction, pRelation, pPartition
+                ]
+        where
+            pHole = VHole <$> parse
 
-instance TypeUnify Type where
-    typeUnify TypeUnknown _ = True
-    typeUnify _ TypeUnknown = True
-    typeUnify a b
-        | constrName a == constrName b = and $ zipWith typeUnify (children a) (children b)
-        | otherwise = False
-    chooseType t TypeUnknown = t
-    chooseType TypeUnknown t = t
-    chooseType t _ = t
+            pBool = VBool False <$ reserved "false"
+                    <|>
+                    VBool True  <$ reserved "true"
 
-instance TypeUnify t => TypeUnify [t] where
-    typeUnify as bs = and $ zipWith typeUnify as bs
-    chooseType = zipWith chooseType
+            pInt = VInt <$> integer
 
-instance (TypeUnify t1, TypeUnify t2) => TypeUnify (t1,t2) where
-    typeUnify (a,b) (c,d) = typeUnify a c && typeUnify b d
-    chooseType (a,b) (c,d) = (chooseType a c, chooseType b d)
+            pMatrix = VMatrix <$> brackets (sepBy parse comma)
 
-(~~) :: TypeUnify t => t -> t -> Bool
-(~~) = typeUnify
+            pTuple = try (do reserved "tuple"; VTuple <$> parens (sepBy parse comma))
+                     <|>
+                     VTuple <$> parens (countSepAtLeast 2 parse comma)
 
+            pSet = do reserved "set"; VSet <$> braces (sepBy parse comma)
 
-intLikeType :: Type -> Bool
-intLikeType TypeBoolean = True
-intLikeType TypeInteger = True
-intLikeType _ = False
+            pMSet = do reserved "mst"; VMSet <$> braces (sepBy parse comma)
 
+            pFunction = do reserved "function"; VFunction <$> braces (sepBy pTuple2 comma)
+                where
+                    pTuple2 :: Parser Expr
+                    pTuple2 = do
+                        i <- parse
+                        reservedOp "->"
+                        j <- parse
+                        return $ V (VTuple [i,j])
 
--- All the ops in Essence, with their overloadings if they are polymorphic
-validOpTypes :: Op -> [Type] -> Maybe Type
-validOpTypes Plus   ps@[_,_] | all intLikeType ps = return TypeInteger
-validOpTypes Minus  ps@[_,_] | all intLikeType ps = return TypeInteger
-validOpTypes Times  ps@[_,_] | all intLikeType ps = return TypeInteger
-validOpTypes Div    ps@[_,_] | all intLikeType ps = return TypeInteger
-validOpTypes Mod    ps@[_,_] | all intLikeType ps = return TypeInteger
-validOpTypes Pow    ps@[_,_] | all intLikeType ps = return TypeInteger
-validOpTypes Abs    ps@[_]   | all intLikeType ps = return TypeInteger
-validOpTypes Negate ps@[_]   | all intLikeType ps = return TypeInteger
+            pRelation = do reserved "relation"; VRelation <$> braces (sepBy (V <$> pTuple) comma)
 
-validOpTypes Lt  ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Leq ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Gt  ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Geq ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Neq ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Eq  ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Neq    [a,b] | a ~~ b = return TypeBoolean
-validOpTypes Eq     [a,b] | a ~~ b = return TypeBoolean
+            pPartition = do reserved "partition"; VPartition <$> braces (sepBy aPart comma)
+                where
+                    aPart :: Parser Expr
+                    aPart = (V . VSet) <$> braces (sepBy parse comma)
 
-validOpTypes Not   ps@[_]   | all intLikeType ps = return TypeBoolean
-validOpTypes Or    ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes And   ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Imply ps@[_,_] | all intLikeType ps = return TypeBoolean
-validOpTypes Iff   ps@[_,_] | all intLikeType ps = return TypeBoolean
+    pretty (VHole (Identifier nm)) = text nm
+    pretty (VBool False) = text "false"
+    pretty (VBool True ) = text "true"
+    pretty (VInt  i    ) = Pr.integer i
+    pretty (VMatrix xs) = prettyList Pr.brackets Pr.comma xs
+    pretty (VTuple [] ) = text "tuple ()"
+    pretty (VTuple [x]) = text "tuple" <+> Pr.parens (pretty x)
+    pretty (VTuple xs ) = prettyList Pr.parens Pr.comma xs
+    pretty (VSet  xs) = text "set" <+> prettyList Pr.braces Pr.comma xs
+    pretty (VMSet xs) = text "mset" <+> prettyList Pr.braces Pr.comma xs
+    pretty (VFunction xs) = text "function" <+> prettyListDoc Pr.braces Pr.comma (map prE xs)
+        where
+            prE (V (VTuple [i,j])) = pretty i <+> text "->" <+> pretty j
+            prE p = pretty p
+    pretty (VRelation  xs) = text "relation"  <+> prettyList Pr.braces Pr.comma xs
+    pretty (VPartition xs) = text "partition" <+> prettyListDoc Pr.braces Pr.comma (map prE xs)
+        where
+            prE (V (VSet vs)) = prettyList Pr.braces Pr.comma vs
+            prE p = pretty p
 
-validOpTypes Union     [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
-validOpTypes Union     [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
-validOpTypes Union     [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return $ TypeRelation $ chooseType as bs
+instance Arbitrary Value where
+    arbitrary = deepPromote . VHole <$> arbitrary
 
-validOpTypes Intersect [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
-validOpTypes Intersect [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
-validOpTypes Intersect [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return $ TypeRelation $ chooseType as bs
-validOpTypes Intersect [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return $ TypeFunction (chooseType a c) (chooseType c d)
-
-validOpTypes Minus     [TypeSet        a, TypeSet        b] | a  ~~ b  = return $ TypeSet      $ chooseType a b
-validOpTypes Minus     [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return $ TypeMSet     $ chooseType a b
-validOpTypes Minus     [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return $ TypeRelation $ chooseType as bs
-validOpTypes Minus     [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return $ TypeFunction (chooseType a c) (chooseType c d)
-
--- even though there is a trivial code duplication here (which can be avoided
--- using pattern guards), I am happy to have it because it helps the
--- completeness checker. This function needs to be total, on the set of
--- defined operators.
-validOpTypes Subset    [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
-validOpTypes Subset    [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
-validOpTypes Subset    [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
-validOpTypes Subset    [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
-
-validOpTypes SubsetEq  [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
-validOpTypes SubsetEq  [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
-validOpTypes SubsetEq  [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
-validOpTypes SubsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
-
-validOpTypes Supset    [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
-validOpTypes Supset    [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
-validOpTypes Supset    [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
-validOpTypes Supset    [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
-
-validOpTypes SupsetEq  [TypeSet        a, TypeSet        b] | a  ~~ b  = return TypeBoolean
-validOpTypes SupsetEq  [TypeMSet       a, TypeMSet       b] | a  ~~ b  = return TypeBoolean
-validOpTypes SupsetEq  [TypeRelation  as, TypeRelation  bs] | as ~~ bs = return TypeBoolean
-validOpTypes SupsetEq  [TypeFunction a b, TypeFunction c d] | (a,b) ~~ (c,d) = return TypeBoolean
-
-validOpTypes Card      [TypeSet       {}] = return TypeInteger
-validOpTypes Card      [TypeMSet      {}] = return TypeInteger
-validOpTypes Card      [TypeRelation  {}] = return TypeInteger
-validOpTypes Card      [TypeFunction  {}] = return TypeInteger
-validOpTypes Card      [TypePartition {}] = return TypeInteger
-
-validOpTypes Elem      [_, TypeSet TypeUnknown] = return TypeBoolean
-validOpTypes Elem      [a, TypeSet b ] | a == b = return TypeBoolean
-validOpTypes Elem      [_, TypeMSet TypeUnknown] = return TypeBoolean
-validOpTypes Elem      [a, TypeMSet b ] | a == b = return TypeBoolean
-validOpTypes Elem      [TypeTuple as, TypeRelation bs] | as == bs = return TypeBoolean
-
-validOpTypes Max       [TypeSet TypeBoolean   ] = return TypeBoolean
-validOpTypes Max       [TypeSet TypeInteger] = return TypeInteger
-validOpTypes Min       [TypeSet TypeBoolean   ] = return TypeBoolean
-validOpTypes Min       [TypeSet TypeInteger] = return TypeInteger
-
-validOpTypes ToSet     [TypeMSet       a] = return (TypeSet a)
-validOpTypes ToSet     [TypeRelation  as] = return (TypeSet (TypeTuple as))
-validOpTypes ToSet     [TypeFunction a b] = return (TypeSet (TypeTuple [a,b]))
-
-validOpTypes ToMSet    [TypeSet        a] = return (TypeMSet a)
-validOpTypes ToMSet    [TypeRelation  as] = return (TypeMSet (TypeTuple as))
-validOpTypes ToMSet    [TypeFunction a b] = return (TypeMSet (TypeTuple [a,b]))
-
-validOpTypes ToRel     [TypeFunction a b] = return (TypeRelation [a,b])
-
-validOpTypes Defined   [TypeFunction a _] = return (TypeSet a)
-validOpTypes Range     [TypeFunction _ b] = return (TypeSet b)
-
-validOpTypes Image     [TypeFunction a b,c] | a == c = return b
-validOpTypes PreImage  [TypeFunction a b,c] | b == c = return (TypeSet a)
-
-validOpTypes Image     [TypeRelation as,TypeTuple bs] | as == bs = return TypeBoolean
-
-validOpTypes Inverse   [TypeFunction a b, TypeFunction c d] | (a,b) == (d,c) = return TypeBoolean
-
-validOpTypes Together  [a,b,TypePartition c] | a == b && a == c = return TypeBoolean
-validOpTypes Apart     [a,b,TypePartition c] | a == b && a == c = return TypeBoolean
-
-validOpTypes Party     [a,TypePartition b] | a == b = return (TypeSet a)
-validOpTypes Participants [TypePartition a] = return (TypeSet a)
-
-validOpTypes Parts     [TypePartition a] = return (TypeSet (TypeSet a))
-
-validOpTypes Freq      [TypeMSet a, b] | a == b = return TypeInteger
-validOpTypes Hist      [TypeMSet a,TypeMatrix b] | a == b = return (TypeMatrix TypeInteger)
-
-validOpTypes HasType   _ = return TypeBoolean
-validOpTypes HasDomain _ = return TypeBoolean
-
-validOpTypes AllDiff   [TypeMatrix {}] = return TypeBoolean
-
-validOpTypes _ _ = Nothing
-
-
-elementType :: Kind -> Type -> Maybe Type
-elementType _          (TypeUnknown    {}) = Nothing
-elementType _          (TypeIdentifier {}) = Nothing
-elementType _          (TypeBoolean    {}) = Nothing
-elementType KindDomain (TypeInteger    {}) = Just TypeInteger
-elementType _          (TypeInteger    {}) = Nothing
-elementType _          (TypeUnnamed    {}) = Nothing
-elementType _          (TypeEnum       {}) = Nothing
-elementType _          (TypeMatrix     {}) = Nothing
-elementType _          (TypeTuple      {}) = Nothing
-elementType _          (TypeSet         t) = Just t
-elementType _          (TypeMSet        t) = Just t
-elementType _          (TypeFunction   {}) = Nothing
-elementType _          (TypeRelation   {}) = Nothing
-elementType _          (TypePartition  {}) = Nothing
-elementType _          (TypeLambda     {}) = Nothing
 
 
 --------------------------------------------------------------------------------
--- RuleRepr --------------------------------------------------------------------
+-- Domain ----------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data RuleRepr = RuleRepr
-    { reprFilename           :: String
-    , reprName               :: String
-    , reprTemplate           :: Expr
-    , reprPrologueStructural :: Maybe Expr
-    , reprPrologueWheres     :: [Where]
-    , reprPrologueBindings   :: [Binding]
-    , reprCases              :: [RuleReprCase]
-    }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+data Domain = DHole Identifier
+    | DBool
+    | DInt                (Range Expr)
+    | DEnum    Identifier (Range Identifier)
+    | DUnnamed Identifier
+    | AnyDom { dConstr  :: AnyDomEnum
+             , dElement :: [Domain]
+             , dAttrs   :: [DomainAttr]
+             }
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
-data RuleReprCase = RuleReprCase
-    { reprCasePattern    :: Expr
-    , reprCaseStructural :: Maybe Expr
-    , reprCaseWheres     :: [Where]
-    , reprCaseBindings   :: [Binding]
-    }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+instance NodeTag Domain
+
+instance Hole Domain where
+    hole (DHole (Identifier "_")) = UnnamedHole
+    hole (DHole (Identifier nm) ) = NamedHole nm
+    hole _           = NotAHole
+
+instance GPlate Domain where
+    gplate p@(DHole {}) = gplateLeaf p
+    gplate p@(DBool {}) = gplateLeaf p
+    gplate (DInt x) = gplateSingle DInt x
+    gplate (DEnum nm x) =
+        ( [mkG nm, mkG x]
+        , \ xs ->
+            case xs of
+                [mnm,mx] ->
+                    case (fromG mnm, fromG mx) of
+                        (Just nm', Just x') -> DEnum nm' x'
+                        _                   -> gplateError
+                _ -> gplateError
+        )
+    gplate (DUnnamed x) = gplateSingle DUnnamed   x
+    gplate (AnyDom nm es as) = 
+        ( mkG nm : map mkG es ++ map mkG as
+        , \ xs -> let nm' = fromGs $ take 1 xs
+                      es' = fromGs $ take (length es) $ drop 1 xs
+                      as' = fromGs $ take (length as) $ drop (length es) $ drop 1 xs
+                  in  if length nm' == 1 &&
+                         length es' == length es &&
+                         length as' == length as
+                          then AnyDom (head nm') es' as'
+                          else gplateError
+        )
+
+instance MatchBind Domain
+
+instance ParsePrint Domain where
+    parse = choiceTry
+                [ pBool, pInt, pEnum, pUnnamed
+                , pTuple, pSetMSet "set" DSet, pSetMSet "mset" DMSet
+                , pFunction, pRelation, pPartition
+                , pDHole
+                ]
+        where
+            pDHole = DHole <$> parse
+
+            pBool = DBool <$ reserved "bool"
+
+            pInt     = do reserved "int" ; DInt  <$>           (try parse <|> return RAll)
+
+            pEnum    = do reserved "enum"; DEnum <$> parse <*> (try parse <|> return RAll)
+
+            -- needed to disambiguate from DHole
+            -- DHole can still be resolved to DUnnamed, after parsing.
+            pUnnamed = do reserved "unnamed";  DUnnamed <$> parse
+
+            pTuple = do
+                reserved "tuple"
+                as <- pDomainAttrs
+                reserved "of"
+                es <- parens (parse `sepBy` comma)
+                return $ AnyDom DTuple es as
+
+            pSetMSet kw en = do
+                reserved kw
+                as <- pDomainAttrs
+                reserved "of"
+                e  <- parse
+                return $ AnyDom en [e] as
+
+            pFunction = do
+                reserved "function"
+                as <- pDomainAttrs
+                fr <- parse
+                reservedOp "->"
+                to <- parse
+                return $ AnyDom DFunction [fr,to] as
+
+            pRelation = do
+                reserved "relation"
+                as <- pDomainAttrs
+                reserved "of"
+                es <- parens (parse `sepBy` (reservedOp "*"))
+                return $ AnyDom DRelation es as
+
+            pPartition = do
+                reserved "partition"
+                as <- pDomainAttrs
+                reserved "from"
+                e  <- parse
+                return $ AnyDom DPartition [e] as
+
+    pretty (DHole (Identifier nm)) = text nm
+    pretty DBool = text "bool"
+    pretty (DInt RAll) = text "int"
+    pretty (DInt r   ) = text "int" <> pretty r
+    pretty (DEnum i RAll) = text "enum" <+> pretty i
+    pretty (DEnum i r   ) = text "enum" <+> pretty i <> pretty r
+    pretty (DUnnamed i) = text "unnamed" <+> pretty i
+    pretty (AnyDom DTuple es as) = text "tuple" <+> prDomainAttrs as <+> text "of"
+                                                <+> prettyList Pr.parens Pr.comma es
+    pretty (AnyDom DSet  [e] as) = text "set"  <+> prDomainAttrs as <+> text "of" <+> pretty e
+    pretty (AnyDom DMSet [e] as) = text "mset" <+> prDomainAttrs as <+> text "of" <+> pretty e
+    pretty (AnyDom DFunction [fr,to] as) = text "function"  <+> prDomainAttrs as <+> pretty fr <+> text "->" <+> pretty to
+    pretty (AnyDom DRelation es as) = text "relation" <+> prDomainAttrs as <+> text "of"
+                                                      <+> prettyList Pr.parens (text "*") es
+    pretty (AnyDom DPartition [e] as) = text "partition" <+> prDomainAttrs as <+> text "from" <+> pretty e
+    pretty p = error ("Invalid domain: " ++ show p)
+
+instance Arbitrary Domain where
+    arbitrary = deepPromote <$> oneof
+        [ DHole    <$> arbitrary
+        , return DBool
+        , DInt     <$> arbitrary
+        , DEnum    <$> arbitrary <*> arbitrary
+        , DUnnamed <$> arbitrary
+        , AnyDom DTuple     <$> arbitrary              <*> return []
+        , AnyDom DSet       <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
+        , AnyDom DMSet      <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
+        , do (fr,to) <- arbitrary; as <- arbitrary; return $ AnyDom DFunction [fr,to] (sort (nub as))
+        , AnyDom DRelation  <$> arbitrary              <*> (sort . nub <$> arbitrary)
+        , AnyDom DPartition <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
+        ]
+
+
+
+data Range a = RAll | RList [a] | RFromTo (Maybe a) (Maybe a)
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance Data a =>  NodeTag (Range a)
+
+instance Hole (Range a)
+
+instance (Eq a, Show a, Data a, GPlate a) => GPlate (Range a) where
+    gplate RAll = gplateLeaf RAll
+    gplate (RList xs) = gplateUniList RList xs
+    gplate p@(RFromTo Nothing  Nothing ) = gplateLeaf p
+    gplate   (RFromTo Nothing  (Just y)) = gplateSingle  (\ y'      -> RFromTo Nothing   (Just y') ) y
+    gplate   (RFromTo (Just x) Nothing ) = gplateSingle  (\ x'      -> RFromTo (Just x') Nothing   ) x
+    gplate   (RFromTo (Just x) (Just y)) = gplateUniList (\ [x',y'] -> RFromTo (Just x') (Just y') ) [x,y]
+
+instance MatchBind a => MatchBind (Range a)
+
+instance ParsePrint a => ParsePrint (Range a) where
+    parse = parens (try pRList <|> pRFromTo)
+        where
+            pRList = do
+                i <- optionMaybe parse
+                dot; dot
+                j <- optionMaybe parse
+                return $ RFromTo i j
+            pRFromTo = RList <$> sepBy parse comma
+    pretty RAll = error "do not call pretty Range.RAll"
+    pretty (RList      xs) = prettyList Pr.parens Pr.comma xs
+    pretty (RFromTo fr to) = Pr.parens (fr' <> text ".." <> to')
+        where
+            fr' = fromMaybe Pr.empty (pretty <$> fr)
+            to' = fromMaybe Pr.empty (pretty <$> to)
+
+instance Arbitrary a => Arbitrary (Range a) where
+    arbitrary = oneof
+        [ return RAll
+        , RList   <$> arbitrary
+        , RFromTo <$> arbitrary <*> arbitrary
+        ]
+
+
+
+data AnyDomEnum = DTuple | DSet | DMSet | DFunction | DRelation | DPartition
+    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable, Generic)
+
+instance NodeTag AnyDomEnum
+
+instance Hole AnyDomEnum
+
+instance GPlate AnyDomEnum
+
+instance MatchBind AnyDomEnum
+
+instance ParsePrint AnyDomEnum where
+    isoParsePrint = fromPairs
+                        [ ( DTuple    , "tuple"     )
+                        , ( DSet      , "set"       )
+                        , ( DMSet     , "mset"      )
+                        , ( DFunction , "function"  )
+                        , ( DRelation , "set"       )
+                        , ( DPartition, "partition" )
+                        ]
+
+instance Arbitrary AnyDomEnum where
+    arbitrary = elements [minBound .. maxBound]
+
+
+
+data DomainAttr
+    = OnlyName DomainAttrEnum
+    | NameValue DomainAttrEnum Expr
+    | DontCare
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag DomainAttr
+
+instance Hole DomainAttr
+
+instance GPlate DomainAttr where
+    gplate (OnlyName e) = gplateSingle OnlyName e
+    gplate (NameValue e x) =
+        ( [mkG e, mkG x]
+        , \ ex ->
+            case ex of
+                [me,mx] ->
+                    case (fromG me, fromG mx) of
+                        (Just e', Just x') -> NameValue e' x'
+                        _ -> gplateError
+                _ -> gplateError
+        )
+    gplate p@(DontCare {}) = gplateLeaf p
+
+instance MatchBind DomainAttr
+
+pDomainAttrs :: Parser [DomainAttr]
+pDomainAttrs = fromMaybe [] <$> optionMaybe (parens (parse `sepBy` comma))
+
+prDomainAttrs :: [DomainAttr] -> Pr.Doc
+prDomainAttrs [] = Pr.empty
+prDomainAttrs xs = prettyList Pr.parens Pr.comma xs
+
+instance ParsePrint DomainAttr where
+    parse = choiceTry [pNameValue, pOnlyName, pDontCare]
+        where
+            pOnlyName  = OnlyName  <$> parse
+            pNameValue = NameValue <$> parse <*> parse
+            pDontCare  = DontCare  <$  reservedOp "_"
+    pretty (OnlyName e) = pretty e
+    pretty (NameValue e x) = pretty e <+> pretty x
+    pretty DontCare = text "_"
+
+instance Arbitrary DomainAttr where
+    arbitrary = oneof
+        [ OnlyName  <$> arbitrary
+        , NameValue <$> arbitrary <*> arbitrary
+        , return DontCare
+        ]
+
+
+
+data DomainAttrEnum
+    = AttrRepresentation
+    | AttrSize
+    | AttrMinSize
+    | AttrMaxSize
+    | AttrOccr
+    | AttrMinOccr
+    | AttrMaxOccr
+    | AttrTotal
+    | AttrPartial
+    | AttrInjective
+    | AttrSurjective
+    | AttrBijective
+    | AttrRegular
+    | AttrComplete
+    | AttrPartSize
+    | AttrMinPartSize
+    | AttrMaxPartSize
+    | AttrNumParts
+    | AttrMinNumParts
+    | AttrMaxNumParts
+    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable, Generic)
+
+instance NodeTag DomainAttrEnum
+
+instance Hole    DomainAttrEnum
+
+instance GPlate  DomainAttrEnum
+
+instance MatchBind DomainAttrEnum
+
+instance ParsePrint DomainAttrEnum where
+    isoParsePrint = fromPairs
+            [ ( AttrRepresentation , "representation" )
+            , ( AttrSize           , "size"           )
+            , ( AttrMinSize        , "minSize"        )
+            , ( AttrMaxSize        , "maxSize"        )
+            , ( AttrOccr           , "occr"           )
+            , ( AttrMinOccr        , "minOccr"        )
+            , ( AttrMaxOccr        , "maxOccr"        )
+            , ( AttrTotal          , "total"          )
+            , ( AttrPartial        , "partial"        )
+            , ( AttrInjective      , "injective"      )
+            , ( AttrSurjective     , "surjective"     )
+            , ( AttrBijective      , "bijective"      )
+            , ( AttrRegular        , "regular"        )
+            , ( AttrComplete       , "complete"       )
+            , ( AttrPartSize       , "partSize"       )
+            , ( AttrMinPartSize    , "minPartSize"    )
+            , ( AttrMaxPartSize    , "maxPartSize"    )
+            , ( AttrNumParts       , "numParts"       )
+            , ( AttrMinNumParts    , "minNumParts"    )
+            , ( AttrMaxNumParts    , "maxNumParts"    )
+            ]
+
+instance Arbitrary DomainAttrEnum where
+    arbitrary = elements [minBound .. maxBound]
+
 
 
 --------------------------------------------------------------------------------
--- RuleRefn --------------------------------------------------------------------
+-- Type ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data RuleRefn = RuleRefn
-    { refnLevel     :: Maybe Int
-    , refnFilename  :: String
-    , refnPattern   :: Expr
-    , refnTemplates :: [Expr]
-    , refnWheres    :: [Where]
-    , refnBindings  :: [Binding]
-    }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+data Type = THole Identifier
+    | TBool
+    | TInt
+    | TEnum (Maybe [Identifier])          -- Int is a unique integer determining which TEnum this is.
+    | TLambda [Type] Type
+    | AnyType AnyTypeEnum [Type]
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag Type
+
+instance Hole Type where
+    hole (THole (Identifier "_")) = UnnamedHole
+    hole (THole (Identifier nm) ) = NamedHole nm
+    hole _           = NotAHole
+
+instance GPlate Type where
+    gplate p@(THole {}) = gplateLeaf p
+    gplate p@(TBool {}) = gplateLeaf p
+    gplate p@(TInt  {}) = gplateLeaf p
+    gplate p@(TEnum {}) = gplateLeaf p
+    gplate (TLambda is o) = gplateUniList (\ (o':is') -> TLambda is' o' ) (o:is)
+    gplate (AnyType e ts) = gplateUniList (AnyType e) ts
+
+instance MatchBind Type
+
+instance ParsePrint Type where
+    parse = choiceTry
+                [ pTHole, pTBool, pTInt, pEnum
+                , pTTuple, pTSet, pTMSet
+                , pTFunction, pTRelation, pTPartition
+                , pTLambda
+                ]
+        where
+            pTHole  = THole <$> parse
+            pTBool  = TBool <$  reserved "bool"
+            pTInt   = TInt  <$  reserved "int"
+            pEnum   = do reserved "enum" ; TEnum <$> optionMaybe (braces (sepBy parse comma))
+            pTTuple = do reserved "tuple"; reserved "of"; AnyType TTuple <$> parens (sepBy parse comma)
+            pTSet   = do reserved "set"  ; reserved "of"; AnyType TSet  . return <$> parse
+            pTMSet  = do reserved "mset" ; reserved "of"; AnyType TMSet . return <$> parse
+            pTFunction = do
+                reserved "function"
+                fr <- parse
+                reservedOp "->"
+                to <- parse
+                return (AnyType TFunction [fr,to])
+            pTRelation  = do reserved "relation" ; reserved "of"  ; AnyType TRelation  <$> parens (sepBy parse (reservedOp "*"))
+            pTPartition = do reserved "partition"; reserved "from"; AnyType TPartition . return <$> parse
+            pTLambda = do
+                reserved "lambda"
+                braces $ do
+                    is <- sepBy1 parse comma
+                    reservedOp "->"
+                    o  <- parse
+                    return (TLambda is o)
+
+    pretty (THole i) = pretty i
+    pretty TBool = text "bool"
+    pretty TInt  = text "int"
+    pretty (TEnum Nothing  ) = text "enum"
+    pretty (TEnum (Just xs)) = text "enum" <+> prettyList Pr.braces Pr.comma xs
+    pretty (TLambda is  o) = text "lambda" <+> Pr.braces (prettyList id Pr.comma is <+> text "->" <+> pretty o)
+    pretty (AnyType TTuple ts) = text "tuple" <+> text "of" <+> prettyList Pr.parens Pr.comma ts
+    pretty (AnyType TSet  [t]) = text "set"  <+> text "of" <+> pretty t
+    pretty (AnyType TMSet [t]) = text "mset" <+> text "of" <+> pretty t
+    pretty (AnyType TFunction [fr,to]) = text "function" <+> pretty fr <+> text "->" <+> pretty to
+    pretty (AnyType TRelation  ts ) = text "relation"  <+> text "of"   <+> prettyList Pr.parens (text "*") ts
+    pretty (AnyType TPartition [t]) = text "partition" <+> text "from" <+> pretty t
+    pretty p = error ("Invalid type: " ++ show p)
+
+instance Arbitrary Type where
+    arbitrary = do
+        constrTag <- choose (0 :: Int, 5)
+        case constrTag of
+            0 -> THole <$> arbitrary
+            1 -> return TBool
+            2 -> return TInt
+            3 -> TEnum <$> arbitrary
+            4 -> do
+                i  <- arbitrary
+                is <- arbitrary
+                o  <- arbitrary
+                return (TLambda (i:is) o)
+            5 -> do
+                enum <- arbitrary
+                let f = AnyType enum
+                case enum of
+                    TTuple     -> f <$> arbitrary
+                    TSet       -> f . return <$> arbitrary
+                    TMSet      -> f . return <$> arbitrary
+                    TFunction  -> do (fr,to) <- arbitrary; return $ f [fr,to]
+                    TRelation  -> f <$> arbitrary
+                    TPartition -> f . return <$> arbitrary
+            _ -> errorArbitrary
+    -- shrink (TLambda is o) = do
+    --     is' <- shrink is
+    --     o'  <- shrink o
+    --     THole (Identifier "_") : o' : is' ++ map (\ t -> TLambda t o') (drop 1 $ take (length is) $ inits is')
+    -- shrink (AnyType enum is) | enum `elem` [TTuple, TRelation] = do
+    --     is' <- shrink is
+    --     THole (Identifier "_") : is' ++ map (AnyType enum) (take (length is) $ inits is')
+    -- shrink (AnyType enum ts) = do
+    --     ts' <- shrink ts
+    --     return $ AnyType enum ts'
+    -- shrink _ = []
+
+
+
+data AnyTypeEnum = TTuple | TSet | TMSet | TFunction | TRelation | TPartition
+    deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable, Generic)
+
+instance NodeTag AnyTypeEnum
+
+instance Hole    AnyTypeEnum
+
+instance GPlate  AnyTypeEnum
+
+instance MatchBind AnyTypeEnum
+
+instance ParsePrint AnyTypeEnum where
+    isoParsePrint = fromPairs
+                        [ ( TTuple    , "tuple"     )
+                        , ( TSet      , "set"       )
+                        , ( TMSet     , "mset"      )
+                        , ( TFunction , "function"  )
+                        , ( TRelation , "set"       )
+                        , ( TPartition, "partition" )
+                        ]
+
+instance Arbitrary AnyTypeEnum where
+    arbitrary = elements [minBound .. maxBound]
+
+
 
 --------------------------------------------------------------------------------
--- type class instances --------------------------------------------------------
+-- Coerce instances ------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-{-!
+instance Coerce Expr Expr where
+    promote = id
+    demote = Just
 
-deriving instance Binary Spec
-deriving instance Binary Metadata
-deriving instance Binary Expr
-deriving instance Binary Op
-deriving instance Binary BindingEnum
-deriving instance Binary ObjectiveEnum
-deriving instance Binary Type
-deriving instance Binary Kind
-deriving instance Binary RuleRepr
-deriving instance Binary RuleReprCase
-deriving instance Binary RuleRefn
+instance Coerce Value Expr where
+    promote (VHole x) = EHole x
+    promote x = V x
+
+    demote (EHole x) = Just $ VHole x
+    demote (V x) = Just x
+    demote _     = Nothing
+
+instance Coerce Domain Expr where
+    promote (DHole x) = EHole x
+    promote x = D x
+
+    demote (EHole x) = Just $ DHole x
+    demote (D x) = Just x
+    demote _     = Nothing
 
 
-deriving instance UniplateDirect Expr
-deriving instance UniplateDirect Type
+deepPromote :: GPlate a => a -> a
+deepPromote = unliftG (bottomUp (liftG f))
+    where
+        f (V x) = promote x
+        f (D x) = promote x
+        f x     = promote x
 
-deriving instance UniplateDirect Spec                       Expr
-deriving instance UniplateDirect Metadata                   Expr
-deriving instance UniplateDirect RuleRefn                   Expr
-deriving instance UniplateDirect RuleRepr                   Expr
-deriving instance UniplateDirect RuleReprCase               Expr
 
-deriving instance UniplateDirect (BindingEnum,String,Expr)  Expr
-deriving instance UniplateDirect (Expr, Expr)               Expr
-deriving instance UniplateDirect (Maybe Expr)               Expr
-deriving instance UniplateDirect (Maybe Objective)          Expr
-deriving instance UniplateDirect (ObjectiveEnum,Expr)       Expr
-deriving instance UniplateDirect Expr                       Expr
-deriving instance UniplateDirect [Expr]                     Expr
+--------------------------------------------------------------------------------
+-- QuickCheck properties -------------------------------------------------------
+--------------------------------------------------------------------------------
 
-deriving instance UniplateDirect (String,Type)
-deriving instance UniplateDirect (BindingEnum,String,Expr)  (String,Type)
-deriving instance UniplateDirect (Expr,Expr)                (String,Type)
-deriving instance UniplateDirect (Maybe Expr)               (String,Type)
-deriving instance UniplateDirect Expr                       (String,Type)
-deriving instance UniplateDirect RuleRepr                   (String,Type)
-deriving instance UniplateDirect RuleReprCase               (String,Type)
-deriving instance UniplateDirect [Expr]                     (String,Type)
+propCoerceExpr :: Expr -> Bool
+propCoerceExpr = propCoerce
 
-deriving instance UniplateDirect (BindingEnum,String,Expr)
-deriving instance UniplateDirect Expr                       (BindingEnum,String,Expr)
-deriving instance UniplateDirect (Expr,Expr)                (BindingEnum,String,Expr)
-deriving instance UniplateDirect [Expr]                     (BindingEnum,String,Expr)
-deriving instance UniplateDirect (Maybe Expr)               (BindingEnum,String,Expr)
-deriving instance UniplateDirect RuleRefn                   (BindingEnum,String,Expr)
-deriving instance UniplateDirect RuleRepr                   (BindingEnum,String,Expr)
-deriving instance UniplateDirect RuleReprCase               (BindingEnum,String,Expr)
+propCoerceValue :: Value -> Bool
+propCoerceValue = propCoerce
 
-!-}
+propCoerceDomain :: Domain -> Bool
+propCoerceDomain = propCoerce
 
-#include "EssenceDerivations.hs"
+propCoerce :: (Eq a, Coerce a Expr) => a -> Bool
+propCoerce x = demote (promote x :: Expr) == Just x
+
+
+propParsePrintExpr :: Expr -> Bool
+propParsePrintExpr = propParsePrint
+
+propParsePrintValue :: Value -> Bool
+propParsePrintValue = propParsePrint
+
+propParsePrintDomain :: Domain -> Bool
+propParsePrintDomain = propParsePrint
+
+propParsePrintType :: Type -> Bool
+propParsePrintType = propParsePrint
+
+propParsePrint :: (Eq a, ParsePrint a, GPlate a) => a -> Bool
+propParsePrint a = Just a == parseMaybe (parse <* eof) (show $ pretty a)
+
+
