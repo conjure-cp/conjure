@@ -85,18 +85,12 @@ gplateUniList ::
     -> [b]
     -> ([GNode], [GNode] -> a)
 gplateUniList f xs =
-    let
-        sameLength :: [a] -> [b] -> Bool
-        sameLength []     []     = True
-        sameLength (_:is) (_:js) = sameLength is js
-        sameLength _      _      = False
-    in
-        ( map mkG xs
-        , \ gxs' -> let xs' = fromGs gxs'
-                    in  if xs `sameLength` xs'
-                            then f xs'
-                            else gplateError
-        )
+    ( map mkG xs
+    , \ gxs' -> let xs' = fromGs gxs'
+                in  if xs `sameLength` xs'
+                        then f xs'
+                        else gplateError
+    )
 
 gplateError :: a
 gplateError = error "internal error: GPlate"
@@ -207,10 +201,9 @@ class MatchBind a where
                 case (fst $ gplate p, fst $ gplate a) of
                     ([], []) | p == a    -> return ()                                           -- if this is a leaf, must check for equality.
                              | otherwise -> gmatchError "Leafs inequal."                        -- otherwise matching fails.
-                    (ps, as) | nodeTag p /= nodeTag a -> gmatchError "Constructor mismatch."    -- node tags must match.
-                             | length ps /= length as -> gmatchError "Shape mismatch."          -- with equal number of children.
-                             | otherwise ->
-                                zipWithM_ gmatch ps as                                          -- recursive call.
+                    (ps, as) | nodeTag p /= nodeTag a   -> gmatchError "Constructor mismatch."  -- node tags must match.
+                             | not (ps `sameLength` as) -> gmatchError "Shape mismatch."        -- with equal number of children.
+                             | otherwise                -> zipWithM_ gmatch ps as               -- recursive call.
         modify $ second tail
 
     bind ::
@@ -289,3 +282,12 @@ gbindError msg = do
     throwError combinedMsg
 
 
+
+--------------------------------------------------------------------------------
+-- Helper functions ------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+sameLength :: [a] -> [b] -> Bool
+sameLength []     []     = True
+sameLength (_:is) (_:js) = sameLength is js
+sameLength _      _      = False
