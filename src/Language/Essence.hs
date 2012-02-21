@@ -653,29 +653,20 @@ instance ParsePrint Type where
     pretty p = error ("Invalid type: " ++ show p)
 
 instance Arbitrary Type where
-    arbitrary = do
-        constrTag <- choose (0 :: Int, 5)
-        case constrTag of
-            0 -> THole <$> arbitrary
-            1 -> return TBool
-            2 -> return TInt
-            3 -> TEnum <$> arbitrary
-            4 -> do
-                i  <- arbitrary
-                is <- arbitrary
-                o  <- arbitrary
-                return (TLambda (i:is) o)
-            5 -> do
-                enum <- arbitrary
-                let f = AnyType enum
-                case enum of
-                    TTuple     -> f <$> arbitrary
-                    TSet       -> f . return <$> arbitrary
-                    TMSet      -> f . return <$> arbitrary
-                    TFunction  -> do (fr,to) <- arbitrary; return $ f [fr,to]
-                    TRelation  -> f <$> arbitrary
-                    TPartition -> f . return <$> arbitrary
-            _ -> errorArbitrary
+    arbitrary = oneof
+        [ THole <$> arbitrary
+        , return TBool
+        , return TInt
+        , TEnum <$> arbitrary
+        , TMatrix <$> arbitrary <*> arbitrary
+        , do (i,is,o) <- arbitrary; return $ TLambda (i:is) o
+        , AnyType TTuple              <$> arbitrary
+        , AnyType TSet  . return      <$> arbitrary
+        , AnyType TMSet . return      <$> arbitrary
+        , do (fr,to)  <- arbitrary; return $ AnyType TFunction [fr,to]
+        , AnyType TRelation           <$> arbitrary
+        , AnyType TPartition . return <$> arbitrary
+        ]
     -- shrink (TLambda is o) = do
     --     is' <- shrink is
     --     o'  <- shrink o
