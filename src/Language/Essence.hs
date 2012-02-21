@@ -19,6 +19,7 @@ import Utils ( padRight )
 -- import Data.Char
 -- import Data.List
 -- import Debug.Trace
+import Control.Arrow ( first )
 import Control.Applicative
 import Control.Monad.Error
 import Control.Monad.State
@@ -266,6 +267,7 @@ data Domain = DHole Identifier
     | DInt                (Range Expr)
     | DEnum    Identifier (Range Identifier)
     | DUnnamed Identifier
+    | DMatrix  Domain Domain
     | AnyDom { dConstr  :: AnyDomEnum
              , dElement :: [Domain]
              , dAttrs   :: [DomainAttr]
@@ -293,7 +295,8 @@ instance GPlate Domain where
                         _                   -> gplateError
                 _ -> gplateError
         )
-    gplate (DUnnamed x) = gplateSingle DUnnamed   x
+    gplate (DUnnamed x) = gplateSingle DUnnamed x
+    gplate (DMatrix i e) = gplateUniList (\ [i',e'] -> DMatrix i' e' ) [i,e]
     gplate (AnyDom nm es as) = 
         ( mkG nm : map mkG es ++ map mkG as
         , \ xs -> let nm' = fromGs $ take 1 xs
@@ -310,7 +313,7 @@ instance MatchBind Domain
 
 instance ParsePrint Domain where
     parse = choiceTry
-                [ pBool, pInt, pEnum, pUnnamed
+                [ pBool, pInt, pEnum, pUnnamed, pMatrix
                 , pTuple, pSetMSet "set" DSet, pSetMSet "mset" DMSet
                 , pFunction, pRelation, pPartition
                 , pDHole
@@ -327,6 +330,15 @@ instance ParsePrint Domain where
             -- needed to disambiguate from DHole
             -- DHole can still be resolved to DUnnamed, after parsing.
             pUnnamed = do reserved "unnamed";  DUnnamed <$> parse
+
+            pMatrix = do
+                reserved "matrix"
+                reserved "indexed"
+                reserved "by"
+                is <- brackets (parse `sepBy1` comma)
+                reserved "of"
+                e  <- parse
+                return $ foldr DMatrix e is
 
             pTuple = do
                 reserved "tuple"
@@ -371,6 +383,13 @@ instance ParsePrint Domain where
     pretty (DEnum i RAll) = text "enum" <+> pretty i
     pretty (DEnum i r   ) = text "enum" <+> pretty i <> pretty r
     pretty (DUnnamed i) = text "unnamed" <+> pretty i
+    pretty (DMatrix i e) = text "matrix" <+> text "indexed"
+                       <+> text "by" <+> prettyList Pr.brackets Pr.comma is
+                       <+> text "of" <+> pretty e'
+        where
+            (is,e') = helper i e
+            helper a b = first (a:) $ case b of DMatrix c d -> helper c d
+                                                _           -> ([], b)
     pretty (AnyDom DTuple es as) = text "tuple" <+> prDomainAttrs as <+> text "of"
                                                 <+> prettyList Pr.parens Pr.comma es
     pretty (AnyDom DSet  [e] as) = text "set"  <+> prDomainAttrs as <+> text "of" <+> pretty e
@@ -388,6 +407,7 @@ instance Arbitrary Domain where
         , DInt     <$> arbitrary
         , DEnum    <$> arbitrary <*> arbitrary
         , DUnnamed <$> arbitrary
+        , DMatrix  <$> arbitrary <*> arbitrary
         , AnyDom DTuple     <$> arbitrary              <*> return []
         , AnyDom DSet       <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
         , AnyDom DMSet      <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
@@ -585,7 +605,8 @@ instance Arbitrary DomainAttrEnum where
 data Type = THole Identifier
     | TBool
     | TInt
-    | TEnum (Maybe [Identifier])          -- Int is a unique integer determining which TEnum this is.
+    | TEnum (Maybe [Identifier])
+    | TMatrix Type Type
     | TLambda [Type] Type
     | AnyType AnyTypeEnum [Type]
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
@@ -602,6 +623,7 @@ instance GPlate Type where
     gplate p@(TBool {}) = gplateLeaf p
     gplate p@(TInt  {}) = gplateLeaf p
     gplate p@(TEnum {}) = gplateLeaf p
+    gplate (TMatrix i  e) = gplateUniList (\ [i',e']  -> TMatrix i' e'  ) [i,e]
     gplate (TLambda is o) = gplateUniList (\ (o':is') -> TLambda is' o' ) (o:is)
     gplate (AnyType e ts) = gplateUniList (AnyType e) ts
 
@@ -609,7 +631,7 @@ instance MatchBind Type
 
 instance ParsePrint Type where
     parse = choiceTry
-                [ pTHole, pTBool, pTInt, pEnum
+                [ pTHole, pTBool, pTInt, pEnum, pMatrix
                 , pTTuple, pTSet, pTMSet
                 , pTFunction, pTRelation, pTPartition
                 , pTLambda
@@ -619,6 +641,14 @@ instance ParsePrint Type where
             pTBool  = TBool <$  reserved "bool"
             pTInt   = TInt  <$  reserved "int"
             pEnum   = do reserved "enum" ; TEnum <$> optionMaybe (braces (sepBy parse comma))
+            pMatrix = do
+                reserved "matrix"
+                reserved "indexed"
+                reserved "by"
+                is <- brackets (parse `sepBy1` comma)
+                reserved "of"
+                e  <- parse
+                return $ foldr TMatrix e is
             pTTuple = do reserved "tuple"; reserved "of"; AnyType TTuple <$> parens (sepBy parse comma)
             pTSet   = do reserved "set"  ; reserved "of"; AnyType TSet  . return <$> parse
             pTMSet  = do reserved "mset" ; reserved "of"; AnyType TMSet . return <$> parse
@@ -643,6 +673,13 @@ instance ParsePrint Type where
     pretty TInt  = text "int"
     pretty (TEnum Nothing  ) = text "enum"
     pretty (TEnum (Just xs)) = text "enum" <+> prettyList Pr.braces Pr.comma xs
+    pretty (TMatrix i e) = text "matrix" <+> text "indexed"
+                       <+> text "by" <+> prettyList Pr.brackets Pr.comma is
+                       <+> text "of" <+> pretty e'
+        where
+            (is,e') = helper i e
+            helper a b = first (a:) $ case b of TMatrix c d -> helper c d
+                                                _           -> ([], b)
     pretty (TLambda is  o) = text "lambda" <+> Pr.braces (prettyList id Pr.comma is <+> text "->" <+> pretty o)
     pretty (AnyType TTuple ts) = text "tuple" <+> text "of" <+> prettyList Pr.parens Pr.comma ts
     pretty (AnyType TSet  [t]) = text "set"  <+> text "of" <+> pretty t
