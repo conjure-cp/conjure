@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Language.Essence where
 
@@ -29,14 +30,23 @@ import Data.Generics ( Data )
 import Data.Maybe ( fromMaybe )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
-import Test.QuickCheck ( Arbitrary(..), Testable, choose, elements, quickCheckWith, stdArgs, Args(..) )
+import Test.QuickCheck
+    ( Arbitrary(..), Testable, Result
+    , choose, elements
+    , stdArgs, Args(..)
+    , quickCheckWithResult
+    )
+import Test.QuickCheck.All ( forAllProperties )
 import Test.QuickCheck.Gen ( oneof )
 -- import Unsafe.Coerce ( unsafeCoerce )
 
 
 
-runQC :: Testable prop => prop -> IO ()
-runQC = quickCheckWith stdArgs { maxSize = 3, maxSuccess = 1000 }
+runTests :: IO Bool
+runTests = $forAllProperties runQC
+
+runQC :: Testable prop => prop -> IO Result
+runQC = quickCheckWithResult stdArgs { maxSize = 2, maxSuccess = 1000 }
 
 
 incr :: Value -> Value
@@ -781,30 +791,30 @@ deepPromote = unliftG (bottomUp (liftG f))
 -- QuickCheck properties -------------------------------------------------------
 --------------------------------------------------------------------------------
 
-propCoerceExpr :: Expr -> Bool
-propCoerceExpr = propCoerce
+prop_CoerceExpr :: Expr -> Bool
+prop_CoerceExpr = propCoerce
 
-propCoerceValue :: Value -> Bool
-propCoerceValue = propCoerce
+prop_CoerceValue :: Value -> Bool
+prop_CoerceValue = propCoerce
 
-propCoerceDomain :: Domain -> Bool
-propCoerceDomain = propCoerce
+prop_CoerceDomain :: Domain -> Bool
+prop_CoerceDomain = propCoerce
 
 propCoerce :: (Eq a, Coerce a Expr) => a -> Bool
 propCoerce x = demote (promote x :: Expr) == Just x
 
 
-propParsePrintExpr :: Expr -> Bool
-propParsePrintExpr = propParsePrint
+prop_ParsePrintExpr :: Expr -> Bool
+prop_ParsePrintExpr = propParsePrint
 
-propParsePrintValue :: Value -> Bool
-propParsePrintValue = propParsePrint
+prop_ParsePrintValue :: Value -> Bool
+prop_ParsePrintValue = propParsePrint
 
-propParsePrintDomain :: Domain -> Bool
-propParsePrintDomain = propParsePrint
+prop_ParsePrintDomain :: Domain -> Bool
+prop_ParsePrintDomain = propParsePrint
 
-propParsePrintType :: Type -> Bool
-propParsePrintType = propParsePrint
+prop_ParsePrintType :: Type -> Bool
+prop_ParsePrintType = propParsePrint
 
 propParsePrint :: (Eq a, ParsePrint a, GPlate a) => a -> Bool
 propParsePrint a = Just a == parseMaybe (parse <* eof) (show $ pretty a)
