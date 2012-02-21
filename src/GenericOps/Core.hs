@@ -2,21 +2,26 @@
 {-# LANGUAGE DefaultSignatures         #-}
 {-# LANGUAGE FlexibleContexts          #-}
 
-module GenericOps.Core where
-    -- ( Hole(..), HoleStatus(..)
-    -- , NodeTag(..), nodeTagData
-    -- , GPlate(..), gplateLeaf, gplateSingle, gplateUniList, gplateError
-    -- , GNode(..), mkG, showG, fromG, fromGs, (===)
-    -- , descend
-    -- ) where
+module GenericOps.Core
+    ( Hole(..), HoleStatus(..)
+    , NodeTag(..), nodeTagData
+    , GPlate(..), gplateLeaf, gplateSingle, gplateUniList, gplateError
+    , GNode(..), mkG, showG, fromG, fromGs, (===)
+    , liftG, liftGM, unliftG, unliftGM
+    , universe, universeBi
+    , descend, descendM
+    , bottomUp, bottomUpM
+    , topDown, topDownM
+    , MatchBind(..)
+    ) where
 
-import Control.Arrow
-import Control.Monad.State
-import Control.Monad.Error
+import Control.Arrow ( first, second )
+import Control.Monad ( liftM, zipWithM_ )
+import Control.Monad.Error ( MonadError(..) )
+import Control.Monad.State ( MonadState (..), gets, modify )
 import Data.Data ( Data, toConstr )
 import Data.Generics ( Typeable, TypeRep, typeOf )
 import Data.Maybe ( mapMaybe)
-import Data.String ( IsString, fromString )
 import Data.Typeable ( cast )
 import Unsafe.Coerce ( unsafeCoerce )
 
@@ -34,19 +39,19 @@ class NodeTag a where
     nodeTag = nodeTagData
 
 nodeTagData :: Data a => a -> String
-nodeTagData = fromString . show . toConstr
+nodeTagData = show . toConstr
+
 
 
 --------------------------------------------------------------------------------
 -- Hole ------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data HoleStatus = NotAHole | UnnamedHole | NamedHole String
-    deriving (Eq, Show)
-
 class Hole a where
     hole :: a -> HoleStatus
     hole _ = NotAHole
+
+data HoleStatus = NotAHole | UnnamedHole | NamedHole String
 
 
 --------------------------------------------------------------------------------
@@ -102,9 +107,6 @@ instance Show GNode where
 
 showG :: GNode -> String
 showG (GNode _ x) = show x
-
-printG :: GNode -> IO ()
-printG = putStrLn . showG
 
 mkG :: GPlate a => a -> GNode
 mkG x = GNode (typeOf x) x
@@ -182,27 +184,6 @@ topDownM f = g
 --------------------------------------------------------------------------------
 
 
-gmatch ::
-    ( MonadState ( [(String,GNode)]
-                 , [(GNode,GNode)]
-                 ) m
-    , MonadError String m
-    ) => GNode -> GNode -> m ()
-gmatch (GNode ty_a a) (GNode ty_b b) | ty_a == ty_b = match a (unsafeCoerce b)
-gmatch p a = do
-    modify $ second ((p, a) :) 
-    gmatchError "Type mismatch."
-    modify $ second tail
-
-gbind ::
-    ( MonadState ( [(String,GNode)]
-                 , [GNode]
-                 ) m
-    , MonadError String m
-    ) => GNode -> m GNode
-gbind (GNode _ t) = mkG `liftM` bind t
-
-
 class MatchBind a where
     match ::
         ( MonadState ( [(String,GNode)]
@@ -255,8 +236,25 @@ class MatchBind a where
 
 
 
+gmatch ::
+    ( MonadState ( [(String,GNode)]
+                 , [(GNode,GNode)]
+                 ) m
+    , MonadError String m
+    ) => GNode -> GNode -> m ()
+gmatch (GNode ty_a a) (GNode ty_b b) | ty_a == ty_b = match a (unsafeCoerce b)
+gmatch p a = do
+    modify $ second ((p, a) :) 
+    gmatchError "Type mismatch."
+    modify $ second tail
 
-
+gbind ::
+    ( MonadState ( [(String,GNode)]
+                 , [GNode]
+                 ) m
+    , MonadError String m
+    ) => GNode -> m GNode
+gbind (GNode _ t) = mkG `liftM` bind t
 
 
 
@@ -284,70 +282,4 @@ gbindError msg = do
     let combinedMsg = unlines (msg : map ("\t"++) msgs)
     throwError combinedMsg
 
--- liftGM2 ::
---     ( MonadState ( [(String,GNode)]
---                  , [(GNode,GNode)]
---                  ) m
---     , MonadError String m
---     , Typeable a
---     ) => (a -> a -> m ())
---       -> GNode -> GNode -> m ()
--- liftGM2 f x y =
---     case (fromG x, fromG y) of
---         (Just x', Just y') -> f x' y'
---         _ -> gmatchError "liftGM2"
--- 
--- gmatch ::
---     ( MonadState ( [(String,GNode)]
---                  , [(GNode,GNode)]
---                  ) m
---     , MonadError String m
---     ) => GNode -> GNode -> m ()
--- gmatch pattern@(GNode ty_p p) actual@(GNode ty_a a) = do
---     modify $ second ((pattern,actual) :)                                                                        -- add this node on top of the call stack.
---     if ty_p /= ty_a
---         then gmatchError "Type mismatch."                                                                       -- types must match.
---         else case hole p of
---                 UnnamedHole  -> return ()                                                                       -- unnamed hole: matching succeeds, no bindings.
---                 NamedHole nm -> modify $ first ((nm,actual) :)                                                  -- named hole: matching succeeds, bind the name to rhs.
---                 NotAHole     -> do
---                     let children_p = fst $ gplate p
---                     let children_a = fst $ gplate a
---                     case (children_p, children_a) of
---                         ([], []) | pattern === actual -> return ()                                              -- if this is a leaf, must check for equality.
---                                  | otherwise          -> gmatchError "Leafs inequal."                           -- otherwise matching fails.
---                         (ps, as) -> case () of
---                                       _ | nodeTag p /= nodeTag a -> gmatchError "Constructor mismatch."         -- node tags must match.
---                                         | length ps /= length as -> gmatchError "Shape mismatch."               -- with equal number of children.
---                                         | otherwise -> zipWithM_ gmatch ps as                                   -- recursive call.
---     modify $ second tail
--- 
--- 
--- 
 
--- 
--- gbind ::
---     ( MonadState ( [(String,GNode)]
---                  , [GNode]
---                  ) m
---     , MonadError String m
---     ) => GNode -> m GNode
--- gbind template@(GNode ty_t t) = do
---     modify $ second (template :)                                                                                    -- add this node on top of the call stack.
---     result <- case hole t of
---         UnnamedHole  -> gbindError "Unnamed hole in template"                                                       -- unnamed hole in a template is just nonsense.
---         NamedHole nm -> do
---             bindings <- gets fst
---             case lookup nm bindings of
---                 Nothing -> gbindError ("Not found: " ++ nm)                                                         -- if the name cannot be found in te list of bindings.
---                 Just bound@(GNode ty_b _) | ty_t == ty_b -> return bound                                            -- the name is bound to something of the expected type. great.
---                                           | otherwise    -> gbindError $ "Type mismatch for: " ++ nm ++ "\n"        -- name is bound, but wrong type.
---                                                                       ++ "\tExpected: " ++ show ty_t ++ "\n"
---                                                                       ++ "\tBut got:  " ++ show ty_b
---         NotAHole -> case gplate t of
---                         ([], _  ) -> return template                                                                -- if this is not a hole, and is a leaf, just return it.
---                         (ts, gen) -> do
---                             ts' <- mapM gbind ts                                                                    -- otherwise, apply gbind recursively to immediate children.
---                             return $ mkG $ gen ts'
---     modify $ second tail
---     return result
