@@ -24,6 +24,7 @@ import Data.Generics ( Typeable, TypeRep, typeOf )
 import Data.Maybe ( mapMaybe)
 import Data.Typeable ( cast )
 import Unsafe.Coerce ( unsafeCoerce )
+import qualified Data.Map as M
 
 import ParsePrint
 
@@ -186,7 +187,7 @@ topDownM f = g
 
 class MatchBind a where
     match ::
-        ( MonadState ( [(String,GNode)]
+        ( MonadState ( M.Map String GNode
                      , [(GNode,GNode)]
                      ) m
         , MonadError String m
@@ -196,7 +197,7 @@ class MatchBind a where
         modify $ second ((mkG p, mkG a) :)                                      -- add this node on top of the call stack.
         case hole p of                                                          -- check hole-status of the pattern.
             UnnamedHole  -> return ()                                           -- unnamed hole: matching succeeds, no bindings.
-            NamedHole nm -> modify $ first ((nm,mkG a) :)                       -- named hole: matching succeeds, bind the name to rhs.
+            NamedHole nm -> modify $ first (M.insert nm (mkG a))                -- named hole: matching succeeds, bind the name to rhs.
             NotAHole     -> do
                 case (fst $ gplate p, fst $ gplate a) of
                     ([], []) | p == a    -> return ()                                           -- if this is a leaf, must check for equality.
@@ -207,7 +208,7 @@ class MatchBind a where
         modify $ second tail
 
     bind ::
-        ( MonadState ( [(String,GNode)]
+        ( MonadState ( M.Map String GNode
                      , [GNode]
                      ) m
         , MonadError String m
@@ -219,7 +220,7 @@ class MatchBind a where
             UnnamedHole  -> gbindError "Unnamed hole in template."      -- unnamed hole in a template is just nonsense.
             NamedHole nm -> do
                 bindings <- gets fst
-                case lookup nm bindings of
+                case M.lookup nm bindings of
                     Nothing -> gbindError ("Not found: " ++ nm)                                                         -- if the name cannot be found in te list of bindings.
                     Just (GNode ty_b b) | typeOf t == ty_b -> return (unsafeCoerce b)                                   -- the name is bound to something of the expected type. great.
                                         | otherwise        -> gbindError $ "Type mismatch for: " ++ nm ++ "\n"          -- name is bound, but wrong type.
@@ -236,7 +237,7 @@ class MatchBind a where
 
 
 gmatch ::
-    ( MonadState ( [(String,GNode)]
+    ( MonadState ( M.Map String GNode
                  , [(GNode,GNode)]
                  ) m
     , MonadError String m
@@ -248,7 +249,7 @@ gmatch p a = do
     modify $ second tail
 
 gbind ::
-    ( MonadState ( [(String,GNode)]
+    ( MonadState ( M.Map String GNode
                  , [GNode]
                  ) m
     , MonadError String m
@@ -258,7 +259,7 @@ gbind (GNode _ t) = mkG `liftM` bind t
 
 
 gmatchError ::
-    ( MonadState ( [(String,GNode)]
+    ( MonadState ( M.Map String GNode
                  , [(GNode,GNode)]
                  ) m
     , MonadError String m
@@ -270,7 +271,7 @@ gmatchError msg = do
     throwError combinedMsg
 
 gbindError ::
-    ( MonadState ( [(String,GNode)]
+    ( MonadState ( M.Map String GNode
                  , [GNode]
                  ) m
     , MonadError String m
