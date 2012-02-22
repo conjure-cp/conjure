@@ -20,25 +20,21 @@ import Utils ( padRight )
 -- import Data.Char
 -- import Data.List
 -- import Debug.Trace
-import Control.Arrow ( first )
+-- import Unsafe.Coerce ( unsafeCoerce )
 import Control.Applicative
+import Control.Arrow ( first, second )
 import Control.Monad.Error
 import Control.Monad.State
 import Data.Default ( def )
-import Data.List
 import Data.Generics ( Data )
+import Data.List
 import Data.Maybe ( fromMaybe )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
-import Test.QuickCheck
-    ( Arbitrary(..), Testable, Result
-    , choose, elements
-    , stdArgs, Args(..)
-    , quickCheckWithResult
-    )
+import qualified Data.Map as M
+import Test.QuickCheck ( Arbitrary(..), Testable, Result, choose, elements, stdArgs, Args(..) , quickCheckWithResult )
 import Test.QuickCheck.All ( forAllProperties )
 import Test.QuickCheck.Gen ( oneof )
--- import Unsafe.Coerce ( unsafeCoerce )
 
 
 
@@ -79,7 +75,7 @@ matchTest p a = do
     binds <- runErrorT (execStateT (match xp xa) def)
     case binds of
         Left err -> error err
-        Right (r,_) -> mapM_ (\ (nm,GNode _ x) -> putStrLn (nm ++ ": " ++ show (pretty x)) ) r
+        Right (r,_) -> mapM_ (\ (nm,GNode _ x) -> putStrLn (nm ++ ": " ++ show (pretty x)) ) (M.toList r)
 
 
 promoteTest :: Expr -> IO ()
@@ -280,7 +276,7 @@ data Domain = DHole Identifier
     | DMatrix  Domain Domain
     | AnyDom { dConstr  :: AnyDomEnum
              , dElement :: [Domain]
-             , dAttrs   :: [DomainAttr]
+             , dAttrs   :: DomainAttrs
              }
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -308,14 +304,14 @@ instance GPlate Domain where
     gplate (DUnnamed x) = gplateSingle DUnnamed x
     gplate (DMatrix i e) = gplateUniList (\ [i',e'] -> DMatrix i' e' ) [i,e]
     gplate (AnyDom nm es as) = 
-        ( mkG nm : map mkG es ++ map mkG as
+        ( mkG nm : mkG as : map mkG es
         , \ xs -> let nm' = fromGs $ take 1 xs
-                      es' = fromGs $ take (length es) $ drop 1 xs
-                      as' = fromGs $ take (length as) $ drop (length es) $ drop 1 xs
+                      as' = fromGs $ take 1 $ drop 1 xs
+                      es' = fromGs $ drop 2 xs
                   in  if length nm' == 1 &&
-                         length es' == length es &&
-                         length as' == length as
-                          then AnyDom (head nm') es' as'
+                         length as' == 1 &&
+                         length es' == length es
+                          then AnyDom (head nm') es' (head as')
                           else gplateError
         )
 
@@ -352,21 +348,21 @@ instance ParsePrint Domain where
 
             pTuple = do
                 reserved "tuple"
-                as <- pDomainAttrs
+                as <- parse
                 reserved "of"
                 es <- parens (parse `sepBy` comma)
                 return $ AnyDom DTuple es as
 
             pSetMSet kw en = do
                 reserved kw
-                as <- pDomainAttrs
+                as <- parse
                 reserved "of"
                 e  <- parse
                 return $ AnyDom en [e] as
 
             pFunction = do
                 reserved "function"
-                as <- pDomainAttrs
+                as <- parse
                 fr <- parse
                 reservedOp "->"
                 to <- parse
@@ -374,14 +370,14 @@ instance ParsePrint Domain where
 
             pRelation = do
                 reserved "relation"
-                as <- pDomainAttrs
+                as <- parse
                 reserved "of"
                 es <- parens (parse `sepBy` (reservedOp "*"))
                 return $ AnyDom DRelation es as
 
             pPartition = do
                 reserved "partition"
-                as <- pDomainAttrs
+                as <- parse
                 reserved "from"
                 e  <- parse
                 return $ AnyDom DPartition [e] as
@@ -400,14 +396,14 @@ instance ParsePrint Domain where
             (is,e') = helper i e
             helper a b = first (a:) $ case b of DMatrix c d -> helper c d
                                                 _           -> ([], b)
-    pretty (AnyDom DTuple es as) = text "tuple" <+> prDomainAttrs as <+> text "of"
+    pretty (AnyDom DTuple es as) = text "tuple" <+> pretty as <+> text "of"
                                                 <+> prettyList Pr.parens Pr.comma es
-    pretty (AnyDom DSet  [e] as) = text "set"  <+> prDomainAttrs as <+> text "of" <+> pretty e
-    pretty (AnyDom DMSet [e] as) = text "mset" <+> prDomainAttrs as <+> text "of" <+> pretty e
-    pretty (AnyDom DFunction [fr,to] as) = text "function"  <+> prDomainAttrs as <+> pretty fr <+> text "->" <+> pretty to
-    pretty (AnyDom DRelation es as) = text "relation" <+> prDomainAttrs as <+> text "of"
+    pretty (AnyDom DSet  [e] as) = text "set"  <+> pretty as <+> text "of" <+> pretty e
+    pretty (AnyDom DMSet [e] as) = text "mset" <+> pretty as <+> text "of" <+> pretty e
+    pretty (AnyDom DFunction [fr,to] as) = text "function"  <+> pretty as <+> pretty fr <+> text "->" <+> pretty to
+    pretty (AnyDom DRelation es as) = text "relation" <+> pretty as <+> text "of"
                                                       <+> prettyList Pr.parens (text "*") es
-    pretty (AnyDom DPartition [e] as) = text "partition" <+> prDomainAttrs as <+> text "from" <+> pretty e
+    pretty (AnyDom DPartition [e] as) = text "partition" <+> pretty as <+> text "from" <+> pretty e
     pretty p = error ("Invalid domain: " ++ show p)
 
 instance Arbitrary Domain where
@@ -418,12 +414,12 @@ instance Arbitrary Domain where
         , DEnum    <$> arbitrary <*> arbitrary
         , DUnnamed <$> arbitrary
         , DMatrix  <$> arbitrary <*> arbitrary
-        , AnyDom DTuple     <$> arbitrary              <*> return []
-        , AnyDom DSet       <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
-        , AnyDom DMSet      <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
-        , do (fr,to) <- arbitrary; as <- arbitrary; return $ AnyDom DFunction [fr,to] (sort (nub as))
-        , AnyDom DRelation  <$> arbitrary              <*> (sort . nub <$> arbitrary)
-        , AnyDom DPartition <$> (return <$> arbitrary) <*> (sort . nub <$> arbitrary)
+        , AnyDom DTuple     <$> arbitrary              <*> arbitrary
+        , AnyDom DSet       <$> (return <$> arbitrary) <*> arbitrary
+        , AnyDom DMSet      <$> (return <$> arbitrary) <*> arbitrary
+        , do (fr,to) <- arbitrary; AnyDom DFunction [fr,to] <$> arbitrary
+        , AnyDom DRelation  <$> arbitrary              <*> arbitrary
+        , AnyDom DPartition <$> (return <$> arbitrary) <*> arbitrary
         ]
 
 
@@ -496,6 +492,60 @@ instance Arbitrary AnyDomEnum where
 
 
 
+newtype DomainAttrs = DomainAttrs [DomainAttr]
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag DomainAttrs
+
+instance Hole DomainAttrs
+
+instance GPlate DomainAttrs where
+    gplate (DomainAttrs xs) = gplateUniList DomainAttrs xs
+
+instance MatchBind DomainAttrs where
+    match p@(DomainAttrs ps) a@(DomainAttrs as) = do
+        modify $ second ((mkG p, mkG a) :) -- add this node on top of the call stack.
+        helper (DontCare `elem` ps)
+               (sort $ filter (/=DontCare) ps)
+               (sort $ filter (/=DontCare) as)
+        modify $ second tail
+        where
+            -- checkMatch :: DomainAttr -> DomainAttr -> m Bool
+            checkMatch i j = do
+                res <- runErrorT (match i j)
+                case res of
+                    Right _ -> return True
+                    _       -> return False
+
+            -- tryMatch :: DomainAttr -> [DomainAttr] -> m (Bool, [DomainAttr])
+            tryMatch _ []     = return (False, [])
+            tryMatch i (j:js) = do
+                b <- checkMatch i j
+                if b
+                    then return (b,js)
+                    else second (j:) `liftM` tryMatch i js
+
+            -- helper :: Bool -> [DomainAttr] -> [DomainAttr] -> m ()
+            helper _    []     []     = return ()  -- if both attr lists are fully consumed.
+            helper True []     _      = return ()  -- if the pattern list is fully consumed, we DontCare.
+            helper d    (x:xs) ys = do
+                let
+                (res, ys') <- tryMatch x ys
+                if res
+                    then helper d xs ys'
+                    else throwError $ "attribute in pattern not found in actual: " ++ show (pretty x)
+            helper _ _ ys = throwError $ "some attibutes in actual not matched: " ++ show (prettyList id Pr.comma ys)
+
+instance ParsePrint DomainAttrs where
+    parse = DomainAttrs . fromMaybe [] <$> optionMaybe (parens (parse `sepBy` comma))
+    pretty (DomainAttrs []) = Pr.empty
+    pretty (DomainAttrs xs) = prettyList Pr.parens Pr.comma xs
+
+instance Arbitrary DomainAttrs where
+    arbitrary = DomainAttrs <$> arbitrary
+
+
+
 data DomainAttr
     = OnlyName DomainAttrEnum
     | NameValue DomainAttrEnum Expr
@@ -521,13 +571,6 @@ instance GPlate DomainAttr where
     gplate p@(DontCare {}) = gplateLeaf p
 
 instance MatchBind DomainAttr
-
-pDomainAttrs :: Parser [DomainAttr]
-pDomainAttrs = fromMaybe [] <$> optionMaybe (parens (parse `sepBy` comma))
-
-prDomainAttrs :: [DomainAttr] -> Pr.Doc
-prDomainAttrs [] = Pr.empty
-prDomainAttrs xs = prettyList Pr.parens Pr.comma xs
 
 instance ParsePrint DomainAttr where
     parse = choiceTry [pNameValue, pOnlyName, pDontCare]
@@ -626,7 +669,7 @@ instance NodeTag Type
 instance Hole Type where
     hole (THole (Identifier "_")) = UnnamedHole
     hole (THole (Identifier nm) ) = NamedHole nm
-    hole _           = NotAHole
+    hole _                        = NotAHole
 
 instance GPlate Type where
     gplate p@(THole {}) = gplateLeaf p
