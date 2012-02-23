@@ -118,8 +118,8 @@ instance MatchBind Expr
 instance ParsePrint Expr where
     parse = choiceTry
         [ EHole <$> parse
+        , D     <$> parse       -- ordering is important: try: tuple (_) of (a,b,c)
         , V     <$> parse
-        , D     <$> parse
         ]
     pretty (EHole x) = pretty x
     pretty (V     x) = pretty x
@@ -372,7 +372,7 @@ instance ParsePrint Domain where
                 reserved "relation"
                 as <- parse
                 reserved "of"
-                es <- parens (parse `sepBy` (reservedOp "*"))
+                es <- parens (parse `sepBy` reservedOp "*")
                 return $ AnyDom DRelation es as
 
             pPartition = do
@@ -529,7 +529,6 @@ instance MatchBind DomainAttrs where
             helper _    []     []     = return ()  -- if both attr lists are fully consumed.
             helper True []     _      = return ()  -- if the pattern list is fully consumed, we DontCare.
             helper d    (x:xs) ys = do
-                let
                 (res, ys') <- tryMatch x ys
                 if res
                     then helper d xs ys'
