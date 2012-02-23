@@ -106,7 +106,7 @@ instance NodeTag Expr
 instance Hole Expr where
     hole (EHole (Identifier "_")) = UnnamedHole
     hole (EHole (Identifier nm) ) = NamedHole nm
-    hole _           = NotAHole
+    hole _                        = NotAHole
 
 instance GPlate Expr where
     gplate p@(EHole {}) = gplateLeaf p
@@ -285,7 +285,7 @@ instance NodeTag Domain
 instance Hole Domain where
     hole (DHole (Identifier "_")) = UnnamedHole
     hole (DHole (Identifier nm) ) = NamedHole nm
-    hole _           = NotAHole
+    hole _                        = NotAHole
 
 instance GPlate Domain where
     gplate p@(DHole {}) = gplateLeaf p
