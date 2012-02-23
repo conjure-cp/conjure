@@ -197,7 +197,7 @@ class MatchBind a where
         modify $ second ((mkG p, mkG a) :)                                      -- add this node on top of the call stack.
         case hole p of                                                          -- check hole-status of the pattern.
             UnnamedHole  -> return ()                                           -- unnamed hole: matching succeeds, no bindings.
-            NamedHole nm -> modify $ first (M.insert nm (mkG a))                -- named hole: matching succeeds, bind the name to rhs.
+            NamedHole nm -> addBinding nm a                                     -- named hole: matching succeeds, bind the name to rhs.
             NotAHole     -> do
                 case (fst $ gplate p, fst $ gplate a) of
                     ([], []) | p == a    -> return ()                                           -- if this is a leaf, must check for equality.
@@ -234,6 +234,19 @@ class MatchBind a where
         modify $ second tail
         return result
 
+
+addBinding ::
+    ( MonadState ( M.Map String GNode
+                 , [(GNode,GNode)]
+                 ) m
+    , MonadError String m
+    , GPlate a
+    ) => String -> a -> m ()
+addBinding nm x = do
+    mp <- gets fst
+    case M.lookup nm mp of
+        Nothing -> modify $ first $ M.insert nm (mkG x)
+        Just _  -> throwError ("Name is already bound: " ++ nm)
 
 
 gmatch ::
