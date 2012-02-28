@@ -17,3 +17,17 @@
 *** set (minSize mn, maxSize mx) of t
     ~~> (sum i : t . refn[i]) >= mn
     /\  (sum i : t . refn[i]) <= mx
+
+
+$ ISO
+$ 
+$ A is the input : set of tau
+$ B is the output: matrix of bool
+$ 
+$ DOWN:
+$ forall i : B . B[i] := 0
+$ forall i : A . B[i] := 1
+$ 
+$ UP:
+$ forall i : B , B[i] = true . i in A
+$ 
