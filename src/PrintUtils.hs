@@ -1,8 +1,9 @@
 {-# LANGUAGE NamedFieldPuns  #-}
 
-module PrintUtils (
-    render, renderDoc, parensIf,
-    module Text.PrettyPrint
+module PrintUtils
+    ( render, renderDoc, parensIf
+	, dot
+    , module Text.PrettyPrint
     ) where
 
 import Text.PrettyPrint hiding (render)
@@ -22,3 +23,5 @@ wrapIf wrap c = if c then wrap else id
 parensIf :: Bool -> Doc -> Doc
 parensIf = wrapIf parens
 
+dot :: Doc
+dot = text "."
