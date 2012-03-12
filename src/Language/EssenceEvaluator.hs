@@ -1,467 +1,584 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE NamedFieldPuns   #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns        #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
-module Language.EssenceEvaluator ( runEvaluateExpr, quanDomain ) where
+module Language.EssenceEvaluator where
 
-import Control.Applicative ( Applicative )
-import Control.Monad.IO.Class ( MonadIO, liftIO )
-import Control.Monad.Reader ( MonadReader, ask )
-import Control.Monad.RWS ( RWST, evalRWST )
-import Control.Monad.Writer ( MonadWriter, tell )
-import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
-import Data.List ( genericLength, genericIndex, isSuffixOf, sort, intersect, union )
-import Data.List.Split( splitOn )
-import Data.Maybe ( fromMaybe )
+-- import Control.Monad.IO.Class ( MonadIO, liftIO )
+-- import Control.Monad.Identity
+-- import Control.Monad.Reader ( MonadReader, ask )
+-- import Control.Monad.RWS ( RWST, evalRWST )
+-- import Control.Monad.Writer ( MonadWriter, tell )
+-- import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
+-- import Data.List.Split( splitOn )
+-- import Data.Maybe ( fromMaybe )
+import Control.Applicative ( Applicative, (<$>), (<*) )
+import Control.Monad ( (<=<), forM )
+import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
+import Control.Monad.State ( MonadState(get), StateT, evalStateT )
+import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
+import Data.String ( IsString(fromString) )
+import Data.List ( delete, genericIndex, genericLength, nub, sort )
+import qualified Data.Map as M ( Map, fromList, lookup )
+import qualified Data.Set as S ( member )
 
 import Language.Essence
-import Language.EssencePrinters ( prExpr )
-import Language.EssenceTypes ( runTypeOf )
-import PrintUtils ( render )
+import ParsePrint
+import PrintUtils
+import ParsecUtils ( parseIO, eof, unsafeParse )
+import GenericOps.Core
+
+instance IsString (Maybe Doc) where
+    fromString "" = Nothing
+    fromString s  = Just $ fromString s
+
+testFullEval :: String -> IO ()
+testFullEval s = do
+    x <- parseIO (parse <* eof) s
+    -- print x
+    putStrLn $ renderDoc $ pretty (x :: Expr)
+    let m = M.fromList [ ( "x", mkG ( unsafeParse (parse <* eof) "2"   :: Expr ) )
+                       , ( "y", mkG ( unsafeParse (parse <* eof) "3"   :: Expr ) )
+                       , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
+                       , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
+                       ] 
+    (x',logs) <- runWriterT $ flip evalStateT m $ runErrorT $ (evaluate <=< deepSimplify) x
+    case x' of
+        Left err  -> print err
+        Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Value)
+    mapM_ (putStrLn . renderDoc) logs
 
 
-quanDomain :: Expr -> Expr
-quanDomain x@(DomainIntegerFromTo {}) = x
-quanDomain x@(DomainIntegerList   {}) = x
-quanDomain   (DomainSet    {element}) = element
-quanDomain   (DomainMSet   {element}) = element
-quanDomain _ = Identifier "<undefined>"
+testEval :: String -> IO ()
+testEval s = do
+    x <- parseIO (parse <* eof) s
+    -- print x
+    putStrLn $ renderDoc $ pretty (x :: Expr)
+    let m = M.fromList [ ( "x", mkG ( unsafeParse (parse <* eof) "2"   :: Expr ) )
+                       , ( "y", mkG ( unsafeParse (parse <* eof) "3"   :: Expr ) )
+                       , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
+                       , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
+                       ] 
+    (x',logs) <- runWriterT $ flip evalStateT m $ runErrorT $ evaluate x
+    case x' of
+        Left err  -> print err
+        Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Value)
+    mapM_ (putStrLn . renderDoc) logs
+
+testSimplify :: String -> IO ()
+testSimplify s = do
+    x <- parseIO (parse <* eof) s
+    -- print x
+    putStrLn $ renderDoc $ pretty (x :: Expr)
+    let m = M.fromList [ ( "x", mkG ( unsafeParse (parse <* eof) "2"   :: Expr ) )
+                       , ( "y", mkG ( unsafeParse (parse <* eof) "3"   :: Expr ) )
+                       , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
+                       , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
+                       ] 
+    (x',logs) <- runWriterT $ flip evalStateT m $ runErrorT $ deepSimplify x
+    case x' of
+        Left err  -> print err
+        Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Expr)
+    mapM_ (putStrLn . renderDoc) logs
 
 
-runEvaluateExpr ::
-    (Applicative m
-    , MonadIO m
-    ) => [Binding] -> Expr -> m (Expr,[Log])
-runEvaluateExpr topLevels x = do
-    (y,logs) <- liftIO $ evalRWST (comp x) topLevels ()
-    -- liftIO $ mapM_ (\ l -> putStrLn ("evaluator: " ++ l)) logs
-    -- liftIO $ mapM_ putStrLn logs
-    return (y,logs)
+
+type LookupMap = M.Map String GNode
+type EvalArrow m a b = a -> ErrorT Doc (StateT LookupMap (WriterT [Doc] m)) b
+
+-- tryEvalArrow :: EvalArrow m a b => EvalArrow m a (Either Doc b)
+tryEvalArrow :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Either e b)
+tryEvalArrow f x = (Right <$> f x) `catchError` (return . Left)
+
+tryEvalArrowMaybe :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Maybe b)
+tryEvalArrowMaybe f x = (Just <$> f x) `catchError` (\ _ -> return Nothing )
+
+--------------------------------------------------------------------------------
+-- partial evaluator -----------------------------------------------------------
+--------------------------------------------------------------------------------
+
+class Simplify a where
+    simplify :: (Applicative m, Monad m) => EvalArrow m a (Maybe a)
+
+infixr 0 ~~~>
+(~~~>) :: (MonadWriter [Doc] m, ParsePrint a) => a -> a -> m (Maybe a)
+a ~~~> b = do
+    tell [ "[ SIMPLIFY ]"
+            $$ nest 4 ("~~>" <+> pretty a)
+            $$ nest 4 ("~~>" <+> pretty b)
+         ]
+    return (Just b)
+
+deepSimplify :: (Applicative m, Monad m) => EvalArrow m Expr Expr
+deepSimplify = unliftGM $ bottomUpRewriteM f
     where
-        comp :: Expr -> RWST [Binding] [Log] () IO Expr
-        comp = rewriteBiM combined
-
-        withLog ::
-            ( MonadReader [Binding] m
-            , MonadWriter [Log] m
-            ) => String
-              -> (Expr -> m (Maybe Expr))
-              -> Expr
-              -> m (Maybe Expr)
-        withLog msg f i = do
-            mr <- f i
-            case mr of
-                Nothing -> return Nothing
-                Just r  -> do
-                    tell [msg ++ ": " ++ render prExpr i ++ " ~~> " ++ render prExpr r]
-                    return mr
-
-        combined ::
-            ( Applicative m
-            , MonadReader [Binding] m
-            , MonadWriter [Log] m
-            , MonadIO m
-            ) => Expr -> m (Maybe Expr)
-        combined i = do
-            j <- withLog "Evaluator " evaluateExpr i
-            case j of
-                Nothing -> withLog "Normaliser" normaliseExpr i
-                Just _  -> return j
-
-
-conjunct :: [Expr] -> Expr
-conjunct [] = ValueBoolean True
-conjunct [x] = x
-conjunct (x:xs) = GenericNode And [x,conjunct xs]
-
-tauOfDomain :: Expr -> Maybe Expr
-tauOfDomain (DomainSet {element=e}) = Just e
-tauOfDomain _ = Nothing
-
-
-evaluateExpr ::
-    ( Applicative m
-    , MonadIO m
-    , MonadReader [Binding] m
-    ) => Expr -> m (Maybe Expr)
-
--- set ops for int ranges
-
-evaluateExpr p@(ExprQuantifier {quanOver=GenericNode Intersect [a@DomainIntegerFromTo{}, b@DomainIntegerFromTo{}]})
-    | unifyExpr a b = rJust p {quanOver = a}
-evaluateExpr (ExprQuantifier {quanName=qnName, quanOver=ValueInteger 0})
-    = rJust $ GenericNode Image [Identifier "quanID", qnName]
-
-evaluateExpr (GenericNode SubsetEq [ValueSet xs,y]) = rJust $ conjunct [ GenericNode Elem [x,y] | x <- xs ]
-
--- full evaluators
-
-evaluateExpr (GenericNode Plus   [ValueInteger i,ValueInteger j])          = rJust $ ValueInteger $ i + j
-evaluateExpr (GenericNode Minus  [ValueInteger i,ValueInteger j])          = rJust $ ValueInteger $ i - j
-evaluateExpr (GenericNode Times  [ValueInteger i,ValueInteger j])          = rJust $ ValueInteger $ i * j
-evaluateExpr (GenericNode Div    [ValueInteger i,ValueInteger j]) | j /= 0 = rJust $ ValueInteger $ div i j
-evaluateExpr (GenericNode Mod    [ValueInteger i,ValueInteger j]) | j >  0 = rJust $ ValueInteger $ mod i j
-evaluateExpr (GenericNode Pow    [ValueInteger i,ValueInteger j]) | j >  0 = rJust $ ValueInteger $ i ^ j
-
-evaluateExpr (GenericNode Abs    [ValueInteger i]) = rJust $ ValueInteger $ abs i
-evaluateExpr (GenericNode Negate [ValueInteger i]) = rJust $ ValueInteger $ negate i
-
--- evaluateExpr (GenericNode Factorial [ValueInteger i]) = rJust $ ValueInteger $ product [1..i]
-
-evaluateExpr (GenericNode Lt  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i <  j
-evaluateExpr (GenericNode Leq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i <= j
-evaluateExpr (GenericNode Gt  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i >  j
-evaluateExpr (GenericNode Geq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i >= j
-evaluateExpr (GenericNode Neq [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i /= j
-evaluateExpr (GenericNode Eq  [ValueInteger i, ValueInteger j]) = rJust $ ValueBoolean $ i == j
-
-evaluateExpr (GenericNode Not    [ValueBoolean b]) = rJust $ ValueBoolean $ not b
-
-evaluateExpr (GenericNode Elem [i,ValueSet  is]) | i `elem` is = rJust $ ValueBoolean True
-evaluateExpr (GenericNode Elem [i,ValueMSet is]) | i `elem` is = rJust $ ValueBoolean True
-
-evaluateExpr (GenericNode Intersect [ValueSet is,ValueSet js]) = rJust $ ValueSet $ sort $ is `intersect` js
-evaluateExpr (GenericNode Union     [ValueSet is,ValueSet js]) = rJust $ ValueSet $ sort $ is `union`     js
-
--- partial evaluators
-
-evaluateExpr (GenericNode Plus   [ValueInteger 0,x]) = rJust x
-evaluateExpr (GenericNode Plus   [x,ValueInteger 0]) = rJust x
-evaluateExpr (GenericNode Minus  [ValueInteger 0,x]) = rJust $ GenericNode Negate [x]
-evaluateExpr (GenericNode Times  [ValueInteger 0,_]) = rJust $ ValueInteger 0
-evaluateExpr (GenericNode Times  [_,ValueInteger 0]) = rJust $ ValueInteger 0
-evaluateExpr (GenericNode Times  [ValueInteger 1,x]) = rJust x
-evaluateExpr (GenericNode Times  [x,ValueInteger 1]) = rJust x
-evaluateExpr (GenericNode Div    [x,ValueInteger 1]) = rJust x
-evaluateExpr (GenericNode Mod    [x,y])     | x == y = rJust $ ValueInteger 0
-evaluateExpr (GenericNode Pow    [_,ValueInteger 0]) = rJust $ ValueInteger 1
-evaluateExpr (GenericNode Pow    [x,ValueInteger 1]) = rJust x
-
-evaluateExpr (GenericNode Plus [x,y]) | unifyExpr x y
-    = rJust $ GenericNode Times [ValueInteger 2,x]
-evaluateExpr (GenericNode Plus [GenericNode Times [x,y],z]) | unifyExpr x z
-    = rJust $ GenericNode Times [x,GenericNode Plus [y,ValueInteger 1]]
-evaluateExpr (GenericNode Plus [GenericNode Times [y,x],z]) | unifyExpr x z
-    = rJust $ GenericNode Times [x,GenericNode Plus [y,ValueInteger 1]]
-evaluateExpr (GenericNode Plus [GenericNode Times [a,b],GenericNode Times [c,d]]) | unifyExpr b d
-    = rJust $ GenericNode Times [GenericNode Plus [a,c],b]
-evaluateExpr (GenericNode Plus [GenericNode Times [a,b],GenericNode Times [d,c]]) | unifyExpr b d
-    = rJust $ GenericNode Times [GenericNode Plus [a,c],b]
-
-evaluateExpr (GenericNode Times [x,y]) | unifyExpr x y
-    = rJust $ GenericNode Pow [x,ValueInteger 2]
-evaluateExpr (GenericNode Times [GenericNode Pow [x,y],z]) | x == z
-    = rJust $ GenericNode Pow [x,GenericNode Plus [y,ValueInteger 1]]
-
-evaluateExpr (GenericNode And [ValueBoolean True ,x]) = rJust x
-evaluateExpr (GenericNode And [x, ValueBoolean True]) = rJust x
-evaluateExpr (GenericNode And [ValueBoolean False,_]) = rJust $ ValueBoolean False
-evaluateExpr (GenericNode And [_,ValueBoolean False]) = rJust $ ValueBoolean False
-
-evaluateExpr (GenericNode Or  [ValueBoolean False,x]) = rJust x
-evaluateExpr (GenericNode Or  [x,ValueBoolean False]) = rJust x
-evaluateExpr (GenericNode Or  [ValueBoolean True ,_]) = rJust $ ValueBoolean True
-evaluateExpr (GenericNode Or  [_,ValueBoolean True ]) = rJust $ ValueBoolean True
-
-evaluateExpr (GenericNode Imply [ValueBoolean True ,x]) = rJust x
-evaluateExpr (GenericNode Imply [ValueBoolean False,_]) = rJust $ ValueBoolean True
-evaluateExpr (GenericNode Imply [_ ,ValueBoolean True]) = rJust $ ValueBoolean True
-evaluateExpr (GenericNode Imply [a,b]) | unifyExpr (GenericNode Not [a]) b = rJust b -- is this too clever?
-
-evaluateExpr (GenericNode Iff [ValueBoolean True ,x]) = rJust x
-evaluateExpr (GenericNode Iff [ValueBoolean False,x]) = rJust $ GenericNode Not [x]
-
--- symbolic full evaluators
-
-evaluateExpr (GenericNode Minus [a,b]) | unifyExpr a b = rJust $ ValueInteger 0
-evaluateExpr (GenericNode Negate [GenericNode Negate [x]]) = rJust x
-evaluateExpr (GenericNode Eq [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
-
-evaluateExpr (GenericNode Imply [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
-evaluateExpr (GenericNode Iff [a,b]) | unifyExpr a b = rJust $ ValueBoolean True
-
--- unroll set of int to int range
-
-evaluateExpr p@(ExprQuantifier {quanOver=ValueSet xs@(x:_)}) = do
-    bs <- ask
-    let typeofX = runTypeOf bs x
-    case typeofX of
-        (Right TypeInteger, _) -> rJust p { quanOver = DomainIntegerList xs }
-        _ -> rNothing
-
--- ValueTuple Index
-
-evaluateExpr (GenericNode Index [ValueTuple xs,ValueInteger i])
-    = rJust $ genericIndex xs i
-
--- some special cases
-
-evaluateExpr (GenericNode Minus [GenericNode Plus [x,y],z])
-    | y == z = rJust x
-    | x == z = rJust y
-evaluateExpr (GenericNode Plus [GenericNode Minus [x,y],z])
-    | y == z = rJust x
-    | x == z = rJust $ GenericNode Negate [y]
-
-evaluateExpr (GenericNode Image [Identifier "domSize",domain]) = case domain of
-    ValueInteger {} -> rJust $ ValueInteger 1
-    DomainIntegerList xs -> rJust $ ValueInteger $ genericLength xs
-    DomainIntegerFromTo (Just a) (Just b) -> rJust $ GenericNode Plus [ GenericNode Minus [b,a]
-                                                                      , ValueInteger 1
-                                                                      ]
-    DomainTuple [] _ -> rJust $ ValueInteger 0
-    DomainTuple xs _ -> do
-        let xs' = [ GenericNode Image [Identifier "domSize", d] | d <- xs ]
-        xs'' <- mapM evaluateExpr xs'
-        rJust $ foldr1 (\ a b -> GenericNode Times [a,b] )
-              $ zipWith fromMaybe xs' xs''
-    DomainSet {size=Just n,element=e} -> do
-        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
-        case e' of
-            Nothing -> rNothing
-            Just t  -> rJust $ GenericNode Pow [t,n]
-    DomainSet {maxSize=Just n,element=e} -> do
-        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
-        case e' of
-            Nothing -> rNothing
-            Just t  -> rJust $ GenericNode Pow [t,n]
-    DomainSet {element=e} -> do
-        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
-        case e' of
-            Nothing -> rNothing
-            Just t  -> rJust $ GenericNode Factorial [t]
-    DomainMSet {size=Just n,element=e} -> do
-        e' <- evaluateExpr $ GenericNode Image [Identifier "domSize", e]
-        case e' of
-            Nothing -> rNothing
-            Just t  -> rJust $ GenericNode Pow [t,n]
-    _ -> rNothing
-
-evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ theVal, Identifier reprName]]) = do
-    let
-        collectIndices :: Expr -> (Expr,[Expr])
-        collectIndices (GenericNode Index [m,i]) = let (m',is) = collectIndices m in (m', i:is)
-        collectIndices  x = (x,[])
-    case collectIndices theVal of
-        (Identifier nm, _) -> case splitOn "#" nm of
-                                [_,c] | c `isSuffixOf` reprName -> rJust $ ValueBoolean True
-                                _                               -> rNothing
-        _ -> rNothing
-
--- evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ GenericNode Index [Identifier a', _]
---                                                                , Identifier b
---                                                                ]
---                                 ])
---     = do
---         let a = head $ splitOn "#" a'
---         bs <- ask
---         case [ () | (ty,nm,DomainMatrix{}) <- bs, nm == a, ty `elem` [Find,Given] ] of
---             [] -> rNothing
---             _  -> evaluateExpr $ GenericNode Image [Identifier "repr", ValueTuple [ Identifier a'
---                                                                                   , Identifier b
---                                                                                   ]
---                                                    ]
--- 
--- evaluateExpr (GenericNode Image [Identifier "repr", ValueTuple [ Identifier a
---                                                                , Identifier b
---                                                                ]
---                                 ])
---     = case splitOn "#" a of
---         [_,c] | c `isSuffixOf` b -> rJust $ ValueBoolean True
---         _                        -> rNothing
-
-evaluateExpr (GenericNode Image [Identifier "refn", theVal]) = do
-    let
-        collectIndices :: Expr -> (Expr,[Expr])
-        collectIndices (GenericNode Index [m,i]) = let (m',is) = collectIndices m in (m', i:is)
-        collectIndices  x = (x,[])
-
-        fromIndices :: Expr -> [Expr] -> Expr
-        fromIndices m []     = m
-        fromIndices m [i]    = GenericNode Index [m,i]
-        fromIndices m (i:is) = fromIndices (GenericNode Index [m,i]) is
-
-    case collectIndices theVal of
-        (Identifier nm, inds) -> case splitOn "#" nm of
-            [b,c] -> rJust $ fromIndices (Identifier (b ++ "_" ++ c)) inds
-            _     -> rNothing
-        _ -> rNothing
-
--- evaluateExpr (GenericNode Image [Identifier "refn", GenericNode Index [ Identifier a
---                                                                       , ind
---                                                                       ]
---                                 ])
---     = case splitOn "#" a of
---         [b,c] -> rJust $ GenericNode Index [Identifier (b ++ "_" ++ c), ind]
---         _     -> rNothing
--- 
--- evaluateExpr (GenericNode Image [Identifier "refn", Identifier a])
---     = case splitOn "#" a of
---         [b,c] -> rJust $ Identifier $ b ++ "_" ++ c
---         _     -> rNothing
-
-evaluateExpr (GenericNode Replace [x,old,new]) =
-    let
-        f i | i == old  = new
-            | otherwise = i
-    in rJust $ transformBi f x
-
-evaluateExpr (GenericNode Image [Identifier "tau", theVal]) = do
-    let
-        collectIndices :: Expr -> (Expr,[Expr])
-        collectIndices (GenericNode Index [m,i]) = let (m',is) = collectIndices m in (m', i:is)
-        collectIndices  x = (x,[])
-
-        indexDom :: Int -> Expr -> Maybe Expr
-        indexDom 0 x = Just x
-        indexDom i (DomainMatrix {element}) = indexDom (i-1) element
-        indexDom _ _ = Nothing
-
-    case collectIndices theVal of
-        (Identifier nmParam, is) -> do
-            let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
-            bs <- ask
-            case [ dom | (ty,nm',dom) <- bs, nm == nm', ty `elem` [Find,Given] ] of
-                [dom] -> case indexDom (length is) dom of
-                    Nothing -> rNothing
-                    Just t  -> return (tauOfDomain t)
-                _   -> rNothing
-        _ -> rNothing
-
-
--- evaluateExpr (GenericNode Image [Identifier "tau", GenericNode Index [Identifier nmParam, _]]) = do
---     let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
---     bs <- ask
---     case [ e | (ty,nm',DomainMatrix{element=e}) <- bs, nm == nm', ty `elem` [Find,Given] ] of
---         [x] -> return $ tauOfDomain x
---         _   -> rNothing
--- 
--- 
--- evaluateExpr (GenericNode Image [Identifier "tau", Identifier nmParam]) = do
---     let nm = case splitOn "#" nmParam of [x,_] -> x; _ -> nmParam
---     bs <- ask
---     case [ dom | (ty,nm',dom) <- bs, nm == nm', ty `elem` [Find,Given] ] of
---         [x] -> return $ tauOfDomain x
---         _   -> rNothing
-
-
-
-evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [Identifier nm, i]]) = do
-    -- liftIO $ putStrLn "indices 1."
-    bs <- ask
-    case [ dom | (_,nm',dom@DomainMatrix{}) <- bs, nm == nm' ] of
-        [dom] -> do
-                    -- liftIO . ppPrint $ dom
-                    evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [dom, i]]
-        _     -> rNothing
-
-evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [DomainMatrix{index},ValueInteger 0]])
-    = do
-        -- liftIO $ putStrLn "indices 2."
-        rJust index
-
-evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [DomainMatrix{element},ValueInteger i]])
-    = do
-        -- liftIO $ putStrLn "indices 3."
-        evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [element,ValueInteger (i-1)]]
-
-evaluateExpr (GenericNode Image [Identifier "indices", ValueTuple [GenericNode Index [m,_], ValueInteger i]])
-    = evaluateExpr $ GenericNode Image [Identifier "indices", ValueTuple [m, ValueInteger (i+1)]]
-
-
-evaluateExpr (GenericNode Image [Identifier opParam, Identifier nm]) = do
-    let op = reverse $ take 6 $ reverse opParam
-    if op `elem` ["glueOp", "skipOp", "quanID"]
-        then do
-            bs <- ask
-            case [ (glueOp,skipOp,quanID)
-                 | (Letting,nm',DeclQuantifier glueOp skipOp quanID) <- bs
-                 , nm == nm' ] of
-                     [(glueOp,skipOp,quanID)] -> case op of "glueOp" -> rJust glueOp
-                                                            "skipOp" -> rJust skipOp
-                                                            "quanID" -> rJust quanID
-                                                            _        -> error "this should never happen."
-                     _ -> do
-                         let msg = "quantifier " ++ nm ++ " is not defined."
-                         liftIO $ putStrLn msg
-                         rNothing
-        else rNothing
-
-
-evaluateExpr (GenericNode Image [DeclLambda params body, ValueTuple arguments]) =
-    if length params /= length arguments
-        then rNothing
-        else do
-            let
-                lu = zip (map fst params) arguments
-                f (Identifier nm) = fromMaybe (Identifier nm) (lookup nm lu)
-                f x = x
-            rJust $ transform f body
-
-evaluateExpr (GenericNode Image [DeclLambda [param] body, x])
-    = evaluateExpr $ GenericNode Image [DeclLambda [param] body, ValueTuple [x]]
-
--- let binding
-
-evaluateExpr (Identifier nm) = do
-    bs <- ask
-    case [ x | (ty,nm',x) <- bs, nm == nm', ty `elem` [Letting,InRule] ] of
-        [DeclQuantifier {}] -> rNothing
-        [x] -> rJust x
-        _   -> rNothing
-
-evaluateExpr (GenericNode HasType [i,j]) = do
-    bs <- ask
-    let typeofI = runTypeOf bs i
-    let typeofJ = runTypeOf bs j
-    -- liftIO $ ppPrint (typeofI, typeofJ)
-    case (typeofI, typeofJ) of
-        ((Right it, _), (Right jt, _)) -> rJust $ ValueBoolean $ typeUnify it jt
-        _ -> rNothing
-
-evaluateExpr p@(ExprQuantifier {quanGuard=Just (ValueBoolean True)}) = rJust p {quanGuard = Nothing}
-
--- defined(f)
-
-evaluateExpr (GenericNode Defined [Identifier nmP]) = do
-    bs <- ask
-    let nm = head $ splitOn "#" nmP
-    case [ x | (ty,nm',x) <- bs, nm == nm', ty `elem` [Find,Given] ] of
-        [DomainFunction {isTotal=True,functionFrom}] -> rJust functionFrom
-        _   -> rNothing
-
--- no eval
-
-evaluateExpr _ = rNothing
-
-
-normaliseExpr :: Monad m => Expr -> m (Maybe Expr)
-normaliseExpr (GenericNode op [GenericNode op2 [a,b],c])
-    | op == op2
-    , op `elem` associativeOps
-    = let [x,y,z] = sort [a,b,c]
-      in  if [x,y,z] == [a,b,c]
-              then rNothing
-              else rJust $ GenericNode op [GenericNode op [x,y],z]
-normaliseExpr (GenericNode op [a,b])
-    | op `elem` commutativeOps
-    , b < a
-    = rJust $ GenericNode op [b,a]
-normaliseExpr _ = rNothing
-
-
--- return Nothing in a given monad
-rNothing :: Monad m => m (Maybe a)
-rNothing = return Nothing
-
--- return Just value in a given monad
-rJust :: Monad m => a -> m (Maybe a)
-rJust = return . Just
-
-
--- do these two expressions unify to the same thing?
-unifyExpr :: Expr -> Expr -> Bool
-unifyExpr (GenericNode Not [GenericNode Not [x]]) y
-    = unifyExpr x y
-unifyExpr (GenericNode Not [GenericNode Eq [a,b]]) (GenericNode Neq [c,d])
-    = unifyExpr a c && unifyExpr b d
-unifyExpr x y = x == y
+        f :: (Applicative m, Monad m) => EvalArrow m GNode (Maybe GNode)
+        f g = case fromG g of
+            Nothing -> return Nothing -- type not Expr
+            Just x  -> do
+                y <- simplifyReal x
+                case y of
+                    Nothing -> return Nothing -- no simplification
+                    Just z  -> return $ Just $ mkG z
+
+simplifyReal :: (Applicative m, Monad m) => EvalArrow m Expr (Maybe Expr)
+simplifyReal p = do
+    mres <- simplify p
+    case mres of
+        Nothing -> case p of
+            EOp op [a,b] | S.member op commutativeOps -> do -- simplify $ EOp op [b,a]
+                mres2 <- simplify (EOp op [b,a])
+                case mres2 of
+                    Nothing   -> return Nothing
+                    Just res2 -> p ~~~> res2
+            _ -> return Nothing
+        Just res -> return $ Just res
+
+instance Simplify Expr where
+
+    simplify p@(EOp Plus  [x, V (VInt 0)]) = p ~~~> x
+
+    simplify p@(EOp Minus [x, V (VInt 0)]) = p ~~~> x
+
+    simplify p@(EOp Times [_, V (VInt 0)]) = p ~~~> V $ VInt 0
+    simplify p@(EOp Times [x, V (VInt 1)]) = p ~~~> x
+
+    simplify p@(EOp Div [x, V (VInt 1)]) = p ~~~> x
+
+    simplify p@(EOp Pow   [_, V (VInt 0)]) = p ~~~> V $ VInt 1
+    simplify p@(EOp Pow   [x, V (VInt 1)]) = p ~~~> x
+    simplify p@(EOp Times [ EOp Pow [a ,x]
+                          , EOp Pow [a',y]
+                          ])
+        | a == a' = p ~~~> EOp Pow [ a
+                                   , EOp Plus [x,y]
+                                   ]
+
+    simplify p@(EOp Not [EOp Not [x]]) = p ~~~> x
+    simplify p@(EOp Not [EOp Imply [a,b]]) = p ~~~> EOp And [a, EOp Not [b]]
+
+    simplify p@(EOp And [V (VBool False), _]) = p ~~~> V $ VBool False
+    simplify p@(EOp And [V (VBool True ), x]) = p ~~~> x
+
+    simplify p@(EOp Or  [V (VBool False), x]) = p ~~~> x
+    simplify p@(EOp Or  [V (VBool True ), _]) = p ~~~> V $ VBool True
+
+    simplify p@(EOp Imply [V (VBool True ), x]) = p ~~~> x
+    simplify p@(EOp Imply [V (VBool False), x]) = p ~~~> EOp Not [x]
+    simplify p@(EOp Imply [x,y]) | x == y = p ~~~> V $ VBool True
+
+    simplify p@(EOp Iff [V (VBool True ), x]) = p ~~~> x
+    simplify p@(EOp Iff [V (VBool False), x]) = p ~~~> EOp Not [x]
+
+    simplify p = do
+        res <- tryEvalArrowMaybe evaluate p
+        case res of
+            Nothing         -> return Nothing
+            Just r | r == p -> return Nothing
+            Just r          -> return (Just r)
+
+
+
+--------------------------------------------------------------------------------
+-- full evaluator --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+class Evaluate a b where
+    evaluate :: (Applicative m, Monad m) => EvalArrow m a b
+
+infixr 0 ~~>
+(~~>) :: (MonadWriter [Doc] m, ParsePrint a, ParsePrint b) => a -> b -> m b
+a ~~> b = do
+    tell [ "[ EVALUATE ]"
+            $$ nest 4 ("~~>" <+> pretty a)
+            $$ nest 4 ("~~>" <+> pretty b)
+         ]
+    return b
+
+evaluateError :: (Monad m, ParsePrint a) => Maybe Doc -> EvalArrow m a b
+evaluateError Nothing    x = evaluateError "Cannot evaluate" x
+evaluateError (Just msg) x = throwError $ msg <> colon <+> pretty x
+
+instance (Evaluate a1 a2, Evaluate b1 b2) => Evaluate (a1,b1) (a2,b2) where
+    evaluate (a1,b1) = do
+        a2 <- evaluate a1
+        b2 <- evaluate b1
+        return (a2,b2)
+
+instance (Evaluate a1 a2, Evaluate b1 b2, Evaluate c1 c2) => Evaluate (a1,b1,c1) (a2,b2,c2) where
+    evaluate (a1,b1,c1) = do
+        a2 <- evaluate a1
+        b2 <- evaluate b1
+        c2 <- evaluate c1
+        return (a2,b2,c2)
+
+instance (Evaluate a b) => Evaluate [a] [b] where
+    evaluate = mapM evaluate
+
+instance Evaluate Expr Value where
+    evaluate p@(EHole (Identifier nm)) = do
+        st <- get
+        case M.lookup nm st of
+            Nothing -> evaluateError "Not bound" p
+            Just x  -> case fromG x of
+                Just (y :: Expr) -> do z <- evaluate y; p ~~> z
+                _                -> case fromG x of
+                    Just y -> p ~~> y
+                    _      -> evaluateError "Type mismatch (Value)" p
+    evaluate (V v) = evaluate v
+    evaluate p@(EOp Plus  [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VInt $ i + j
+    evaluate p@(EOp Minus [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VInt $ i - j
+    evaluate p@(EOp Times [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VInt $ i * j
+    evaluate p@(EOp Div   [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        if j == 0
+            then evaluateError "Division by zero" p
+            else p ~~> VInt (div i j)
+    evaluate p@(EOp Mod   [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        if j <= 0
+            then evaluateError "Non-positive modulus" p
+            else p ~~> VInt (mod i j)
+    evaluate p@(EOp Pow   [a,b]) = do
+        let pow :: Integer -> Integer -> Integer
+            pow = (^)
+        (i,j) <- evaluate (a,b)
+        p ~~> VInt (pow i j)
+    evaluate p@(EOp Abs       [a]) = do i <- evaluate a; p ~~> VInt $ abs i
+    evaluate p@(EOp Negate    [a]) = do i <- evaluate a; p ~~> VInt $ negate i
+    evaluate p@(EOp Factorial [a]) = do i <- evaluate a; p ~~> VInt $ product [1..i]
+
+    evaluate p@(EOp Lt  [a,b]) = do (i :: Integer, j) <- evaluate (a,b); p ~~> VBool $ i <  j
+    evaluate p@(EOp Leq [a,b]) = do (i :: Integer, j) <- evaluate (a,b); p ~~> VBool $ i <= j
+    evaluate p@(EOp Gt  [a,b]) = do (i :: Integer, j) <- evaluate (a,b); p ~~> VBool $ i >  j
+    evaluate p@(EOp Geq [a,b]) = do (i :: Integer, j) <- evaluate (a,b); p ~~> VBool $ i >= j
+    evaluate p@(EOp Neq [a,b]) = do (i :: Integer, j) <- evaluate (a,b); p ~~> VBool $ i /= j   -- need to be more general than this
+    evaluate p@(EOp Eq  [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VInt  x , VInt  y ) -> p ~~> VBool $ x == y
+            (VSet  xs, VSet  ys) -> let xs' = sort $ nub xs
+                                        ys' = sort $ nub ys
+                                    in  p ~~> VBool $ length xs' == length ys' && xs' == ys'
+            (VMSet xs, VMSet ys) -> p ~~> VBool $ length xs == length ys && sort xs == sort ys
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp Not   [a]  ) = do i     <- evaluate a    ; p ~~> VBool $ not i
+    evaluate p@(EOp Or    [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VBool $ i || j
+    evaluate p@(EOp And   [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VBool $ i && j
+    evaluate p@(EOp Imply [a,b]) = do (i :: Bool,j) <- evaluate (a,b); p ~~> VBool $ i <= j
+    evaluate p@(EOp Iff   [a,b]) = do (i :: Bool,j) <- evaluate (a,b); p ~~> VBool $ i == j
+
+    evaluate p@(EOp Union [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VSet  xs, VSet  ys) -> p ~~> VSet  $ sort $ nub $ xs ++ ys
+            (VMSet xs, VMSet ys) -> p ~~> VMSet $ sort       $ xs ++ ys
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp Intersect [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VSet  xs, VSet  ys) -> p ~~> VSet  $ sort $ nub $ msetIntersect xs ys
+            (VMSet xs, VMSet ys) -> p ~~> VMSet $ sort $       msetIntersect xs ys
+            _ -> evaluateError Nothing p
+            where
+                msetIntersect :: Eq a => [a] -> [a] -> [a]
+                msetIntersect [] _ = []
+                -- msetIntersect _  [] = []
+                msetIntersect (x:xs) ys | x `elem` ys = x : msetIntersect xs (delete x ys)
+                                        | otherwise   =     msetIntersect xs (delete x ys)
+
+    evaluate p@(EOp Subset   [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VSet  xs, VSet  ys) -> let xs' = sort $ nub xs
+                                        ys' = sort $ nub ys
+                                    in  p ~~> VBool $ length xs' < length ys' && all (`elem` ys) xs
+            (VMSet xs, VMSet ys) -> p ~~> VBool $ msetSubset xs ys
+            _ -> evaluateError Nothing p
+            where
+                msetSubset :: Eq a => [a] -> [a] -> Bool
+                msetSubset [] [] = False
+                msetSubset [] _  = True
+                msetSubset (x:xs) ys | x `elem` ys = msetSubset xs (delete x ys)
+                                     | otherwise   = False
+    evaluate p@(EOp SubsetEq [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VSet  xs, VSet  ys) -> p ~~> VBool $ all (`elem` ys) xs
+            (VMSet xs, VMSet ys) -> p ~~> VBool $ msetSubsetEq xs ys
+            _ -> evaluateError Nothing p
+            where
+                msetSubsetEq :: Eq a => [a] -> [a] -> Bool
+                msetSubsetEq [] _ = True
+                msetSubsetEq (x:xs) ys | x `elem` ys = msetSubsetEq xs (delete x ys)
+                                       | otherwise   = False
+    evaluate p@(EOp Supset   [a,b]) = do r <- evaluate (EOp Subset   [b,a]); p ~~> r
+    evaluate p@(EOp SupsetEq [a,b]) = do r <- evaluate (EOp SubsetEq [b,a]); p ~~> r
+
+    evaluate p@(EOp Card [a]) = do
+        i <- evaluate a
+        case i of
+            VSet  xs -> p ~~> VInt $ genericLength $ nub xs
+            VMSet xs -> p ~~> VInt $ genericLength       xs
+            _        -> evaluateError Nothing p
+
+    evaluate p@(EOp Elem [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (v, VSet  vs) -> p ~~> VBool $ elem v vs
+            (v, VMSet vs) -> p ~~> VBool $ elem v vs
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp op [a]) | op `elem` [Min,Max] = do
+        let operator = case op of Min -> minimum; Max -> maximum; _ -> error "while evaluating Min or Max"
+        i <- evaluate a
+        case i of
+            VSet  xs -> do ys <- evaluate xs; p ~~> operator ys
+            VMSet xs -> do ys <- evaluate xs; p ~~> operator ys
+            _        -> evaluateError Nothing p
+
+    evaluate p@(EOp ToSet [a]) = do
+        i <- evaluate a
+        case i of
+            VMSet xs     -> p ~~> VSet $ sort $ nub xs
+            VFunction xs -> p ~~> VSet $ sort $ nub xs
+            VRelation xs -> p ~~> VSet $ sort $ nub xs
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp ToMSet [a]) = do
+        i <- evaluate a
+        case i of
+            VSet xs      -> p ~~> VMSet $ sort xs
+            VFunction xs -> p ~~> VMSet $ sort xs
+            VRelation xs -> p ~~> VMSet $ sort xs
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp ToRel [a]) = do
+        i <- evaluate a
+        case i of
+            VFunction xs -> p ~~> VRelation $ sort xs
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp Defined [a]) = do
+        i <- evaluate a
+        case i of
+            VFunction xs -> do
+                ys <- forM xs $ \ t -> case t of V (VTuple (tt:_)) -> return tt
+                                                 _ -> evaluateError Nothing t
+                p ~~> VSet $ sort $ nub ys
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp Range [a]) = do
+        i <- evaluate a
+        case i of
+            VFunction xs -> do
+                ys <- forM xs $ \ t -> case t of V (VTuple (_:tt:_)) -> return tt
+                                                 _ -> evaluateError Nothing t
+                p ~~> VSet $ sort $ nub ys
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp Image [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VFunction xs, y) -> do
+                ys <- forM xs $ \ t -> case t of V (VTuple (V t1:V t2:_)) -> return (t1,t2)
+                                                 _ -> evaluateError Nothing t
+                case [ t2 | (t1,t2) <- ys, y == t1 ] of
+                    [z] -> p ~~> z
+                    []  -> evaluateError "'Not found' in function application" p
+                    _   -> evaluateError "'Multiple values' in function application" p
+            _ -> evaluateError Nothing p
+    evaluate p@(EOp PreImage [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VFunction xs, y) -> do
+                ys <- forM xs $ \ t -> case t of V (VTuple (V t1:V t2:_)) -> return (t1,t2)
+                                                 _ -> evaluateError Nothing t
+                p ~~> VSet [ V t1 | (t1,t2) <- ys, y == t2 ]
+            _ -> evaluateError Nothing p
+    evaluate p@(EOp Inverse [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VFunction xs, VFunction ys) -> do
+                let
+                    flipL (V (VTuple [x,y])) = return $ V $ VTuple [y,x]
+                    flipL pL = evaluateError Nothing pL
+                ys' <- mapM flipL ys
+                p ~~> VBool $ xs == ys'
+            _ -> evaluateError Nothing p
+
+    -- a and b are elements of partition c
+    -- Together evaluates to true, iff they are in the same part.
+    evaluate p@(EOp Together [a,b,c]) = do
+        (i,j,k) <- evaluate (a,b,c)
+        case k of
+            VPartition ks -> do
+                let
+                    bothInSet x y (V (VSet zs)) | V x `elem` zs && V y `elem` zs = True
+                    bothInSet _ _ _ = False
+                p ~~> VBool $ or [ bothInSet i j oneSet | oneSet <- ks ]
+            _ -> evaluateError Nothing p
+
+    -- similar to Together. see above.
+    evaluate p@(EOp Apart [a,b,c]) = do
+        (i,j,k) <- evaluate (a,b,c)
+        case k of
+            VPartition ks -> do
+                let
+                    inSet x (V (VSet zs)) | V x `elem` zs = True
+                    inSet _ _ = False
+
+                    bothInSet x y (V (VSet zs)) | V x `elem` zs && V y `elem` zs = True
+                    bothInSet _ _ _ = False
+                p ~~> VBool $ and [       or [ inSet       i oneSet | oneSet <- ks ]
+                                  ,       or [ inSet       j oneSet | oneSet <- ks ]
+                                  , not $ or [ bothInSet i j oneSet | oneSet <- ks ]
+                                  ]
+            _ -> evaluateError Nothing p
+
+    -- evaluates to a set, the part which contains a in it. b is the partition.
+    evaluate p@(EOp Party [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case j of
+            VPartition js -> case [ VSet ks | V (VSet ks) <- js, V i `elem` ks ] of
+                [z] -> p ~~> z
+                [ ] -> evaluateError "not present in partition" p
+                _   -> evaluateError "present in multiple parts" p
+            _ -> evaluateError Nothing p
+
+    -- union of all parts
+    evaluate p@(EOp Participants [a]) = do
+        i <- evaluate a
+        case i of
+            VPartition js -> do
+                jss <- forM js $ \ t -> case t of V (VSet ts) -> return ts
+                                                  _ -> evaluateError Nothing t
+                p ~~> VSet $ nub $ sort $ concat jss
+            _ -> evaluateError Nothing p
+
+    -- set of all parts
+    evaluate p@(EOp Parts [a]) = do
+        i <- evaluate a
+        case i of
+            VPartition js -> p ~~> VSet js
+            _ -> evaluateError Nothing p
+
+    -- number of occurrences of b in a. a is a mset.
+    evaluate p@(EOp Freq [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case i of
+            VMSet ks -> p ~~> VInt $ sum [ 1 | k <- ks, V j == k ]
+            _ -> evaluateError Nothing p
+
+    -- similar to Freq, however b is a matrix of values this time.
+    evaluate p@(EOp Hist [a,b]) = do
+        (i,j) <- evaluate (a,b)
+        case (i,j) of
+            (VMSet is, VMatrix js) -> p ~~> VMatrix [ V $ VInt $ sum [ 1 | k <- is, j' == k ]
+                                                    | j' <- js
+                                                    ]
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp Index [a,b]) = do
+        i <- evaluate a
+        j <- tryEvalArrowMaybe evaluate b
+        case (j,b) of
+            (Just jj,_) -> do
+                (is,k) <- case (i,jj) of
+                            (VTuple  is, VInt k) -> return (is,k)
+                            (VMatrix is, VInt k) -> return (is,k)
+                            _ -> evaluateError Nothing p
+                if k >= 0 && k < genericLength is
+                    then case genericIndex is k of
+                            V v -> p ~~> v
+                            _   -> evaluateError Nothing p
+                    else evaluateError "index out of bounds" p
+            (Nothing,D jj) -> case (i,jj) of
+                                (VMatrix is, DInt RAll) -> p ~~> VMatrix is
+                                (VMatrix is, DInt (RFromTo Nothing   Nothing)) -> p ~~> VMatrix is
+                                (VMatrix is, DInt (RFromTo (Just lb) Nothing)) -> do
+                                    lbInt :: Int <- evaluate lb
+                                    p ~~> VMatrix $ drop lbInt is
+                                (VMatrix is, DInt (RFromTo Nothing (Just ub))) -> do
+                                    ubInt :: Int <- evaluate ub
+                                    p ~~> VMatrix $ take (ubInt + 1) is
+                                (VMatrix is, DInt (RFromTo (Just lb) (Just ub))) -> do
+                                    lbInt :: Int <- evaluate lb
+                                    ubInt :: Int <- evaluate ub
+                                    p ~~> VMatrix $ take (ubInt + 1 - lbInt) $ drop lbInt is
+                                _ -> evaluateError Nothing p
+            _ -> evaluateError Nothing p
+
+    evaluate p@(EOp HasType _) = evaluateError "not implemented" p -- do
+        -- i <- typeOf a
+        -- j <- typeOf b
+        -- return $ VBool $ i `typeUnify` j
+
+    evaluate p@(EOp HasDomain _) = evaluateError "not implemented" p -- do
+        -- i <- domainOf a
+        -- j <- domainOf b
+        -- return $ VBool $ i `typeUnify` j
+
+    evaluate p@(EOp Replace []) = evaluateError "not implemented" p
+
+    evaluate p@(EOp AllDiff [a]) = do
+        i <- evaluate a
+        case i of
+            VMatrix xs -> p ~~> VBool $ xs == nub xs
+            _ -> evaluateError Nothing p
+
+    evaluate p = evaluateError Nothing p
+
+instance Evaluate Expr Expr where
+    evaluate p@(EHole (Identifier nm)) = do
+        st <- get
+        case M.lookup nm st of
+            Nothing -> evaluateError "Not bound" p
+            Just x  -> case fromG x of
+                Nothing -> evaluateError "Type mismatch" p
+                Just y  -> p ~~> y
+    evaluate x = V <$> evaluate x
+
+instance Evaluate Value Value where
+    evaluate p@(VBool {}) = return p
+    evaluate p@(VInt  {}) = return p
+    evaluate (VMatrix    xs) = VMatrix    <$> evaluate xs
+    evaluate (VTuple     xs) = VTuple     <$> evaluate xs
+    evaluate (VSet       xs) = VSet       <$> evaluate xs
+    evaluate (VMSet      xs) = VMSet      <$> evaluate xs
+    evaluate (VFunction  xs) = VFunction  <$> evaluate xs
+    evaluate (VRelation  xs) = VRelation  <$> evaluate xs
+    evaluate (VPartition xs) = VPartition <$> evaluate xs
+    evaluate p = evaluateError Nothing p
+
+instance Evaluate Expr Integer where
+    evaluate x = do
+        v :: Value   <- evaluate x
+        i :: Integer <- evaluate v
+        return i
+
+instance Evaluate Value Integer where
+    evaluate (VBool False) = return 0
+    evaluate (VBool True ) = return 1
+    evaluate (VInt i) = return i
+    evaluate v        = evaluateError Nothing v
+
+instance Evaluate Expr Int where
+    evaluate x = fromInteger <$> evaluate x
+
+instance Evaluate Expr Bool where
+    evaluate x = do
+        v :: Value <- evaluate x
+        b :: Bool  <- evaluate v
+        return b
+
+instance Evaluate Value Bool where
+    evaluate (VBool b) = return b
+    evaluate (VInt  0) = return False
+    evaluate (VInt  _) = return True
+    evaluate v         = evaluateError Nothing v
