@@ -7,21 +7,13 @@
 
 module Language.EssenceEvaluator where
 
--- import Control.Monad.IO.Class ( MonadIO, liftIO )
--- import Control.Monad.Identity
--- import Control.Monad.Reader ( MonadReader, ask )
--- import Control.Monad.RWS ( RWST, evalRWST )
--- import Control.Monad.Writer ( MonadWriter, tell )
--- import Data.Generics.Uniplate.Direct ( transform, transformBi, rewriteBiM )
--- import Data.List.Split( splitOn )
--- import Data.Maybe ( fromMaybe )
 import Control.Applicative ( Applicative, (<$>), (<*) )
 import Control.Monad ( (<=<), forM )
 import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
 import Control.Monad.State ( MonadState(get), StateT, evalStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
-import Data.String ( IsString(fromString) )
 import Data.List ( delete, genericIndex, genericLength, nub, sort )
+import Data.String ( IsString(fromString) )
 import qualified Data.Map as M ( Map, fromList, lookup )
 import qualified Data.Set as S ( member )
 
@@ -30,6 +22,8 @@ import ParsePrint
 import PrintUtils
 import ParsecUtils ( parseIO, eof, unsafeParse )
 import GenericOps.Core
+
+
 
 instance IsString (Maybe Doc) where
     fromString "" = Nothing
@@ -50,7 +44,6 @@ testFullEval s = do
         Left err  -> print err
         Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Value)
     mapM_ (putStrLn . renderDoc) logs
-
 
 testEval :: String -> IO ()
 testEval s = do
@@ -89,12 +82,17 @@ testSimplify s = do
 type LookupMap = M.Map String GNode
 type EvalArrow m a b = a -> ErrorT Doc (StateT LookupMap (WriterT [Doc] m)) b
 
--- tryEvalArrow :: EvalArrow m a b => EvalArrow m a (Either Doc b)
 tryEvalArrow :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Either e b)
 tryEvalArrow f x = (Right <$> f x) `catchError` (return . Left)
 
 tryEvalArrowMaybe :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Maybe b)
 tryEvalArrowMaybe f x = (Just <$> f x) `catchError` (\ _ -> return Nothing )
+
+evalArrowError :: (Monad m, ParsePrint a) => Maybe Doc -> EvalArrow m a b
+evalArrowError Nothing    x = evalArrowError "Cannot evaluate" x
+evalArrowError (Just msg) x = throwError $ msg <> colon <+> pretty x
+
+
 
 --------------------------------------------------------------------------------
 -- partial evaluator -----------------------------------------------------------
@@ -198,10 +196,6 @@ a ~~> b = do
          ]
     return b
 
-evaluateError :: (Monad m, ParsePrint a) => Maybe Doc -> EvalArrow m a b
-evaluateError Nothing    x = evaluateError "Cannot evaluate" x
-evaluateError (Just msg) x = throwError $ msg <> colon <+> pretty x
-
 instance (Evaluate a1 a2, Evaluate b1 b2) => Evaluate (a1,b1) (a2,b2) where
     evaluate (a1,b1) = do
         a2 <- evaluate a1
@@ -222,12 +216,12 @@ instance Evaluate Expr Value where
     evaluate p@(EHole (Identifier nm)) = do
         st <- get
         case M.lookup nm st of
-            Nothing -> evaluateError "Not bound" p
+            Nothing -> evalArrowError "Not bound" p
             Just x  -> case fromG x of
                 Just (y :: Expr) -> do z <- evaluate y; p ~~> z
                 _                -> case fromG x of
                     Just y -> p ~~> y
-                    _      -> evaluateError "Type mismatch (Value)" p
+                    _      -> evalArrowError "Type mismatch (Value)" p
     evaluate (V v) = evaluate v
     evaluate p@(EOp Plus  [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VInt $ i + j
     evaluate p@(EOp Minus [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VInt $ i - j
@@ -235,12 +229,12 @@ instance Evaluate Expr Value where
     evaluate p@(EOp Div   [a,b]) = do
         (i,j) <- evaluate (a,b)
         if j == 0
-            then evaluateError "Division by zero" p
+            then evalArrowError "Division by zero" p
             else p ~~> VInt (div i j)
     evaluate p@(EOp Mod   [a,b]) = do
         (i,j) <- evaluate (a,b)
         if j <= 0
-            then evaluateError "Non-positive modulus" p
+            then evalArrowError "Non-positive modulus" p
             else p ~~> VInt (mod i j)
     evaluate p@(EOp Pow   [a,b]) = do
         let pow :: Integer -> Integer -> Integer
@@ -264,7 +258,7 @@ instance Evaluate Expr Value where
                                         ys' = sort $ nub ys
                                     in  p ~~> VBool $ length xs' == length ys' && xs' == ys'
             (VMSet xs, VMSet ys) -> p ~~> VBool $ length xs == length ys && sort xs == sort ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp Not   [a]  ) = do i     <- evaluate a    ; p ~~> VBool $ not i
     evaluate p@(EOp Or    [a,b]) = do (i,j) <- evaluate (a,b); p ~~> VBool $ i || j
@@ -277,14 +271,14 @@ instance Evaluate Expr Value where
         case (i,j) of
             (VSet  xs, VSet  ys) -> p ~~> VSet  $ sort $ nub $ xs ++ ys
             (VMSet xs, VMSet ys) -> p ~~> VMSet $ sort       $ xs ++ ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp Intersect [a,b]) = do
         (i,j) <- evaluate (a,b)
         case (i,j) of
             (VSet  xs, VSet  ys) -> p ~~> VSet  $ sort $ nub $ msetIntersect xs ys
             (VMSet xs, VMSet ys) -> p ~~> VMSet $ sort $       msetIntersect xs ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
             where
                 msetIntersect :: Eq a => [a] -> [a] -> [a]
                 msetIntersect [] _ = []
@@ -299,7 +293,7 @@ instance Evaluate Expr Value where
                                         ys' = sort $ nub ys
                                     in  p ~~> VBool $ length xs' < length ys' && all (`elem` ys) xs
             (VMSet xs, VMSet ys) -> p ~~> VBool $ msetSubset xs ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
             where
                 msetSubset :: Eq a => [a] -> [a] -> Bool
                 msetSubset [] [] = False
@@ -311,7 +305,7 @@ instance Evaluate Expr Value where
         case (i,j) of
             (VSet  xs, VSet  ys) -> p ~~> VBool $ all (`elem` ys) xs
             (VMSet xs, VMSet ys) -> p ~~> VBool $ msetSubsetEq xs ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
             where
                 msetSubsetEq :: Eq a => [a] -> [a] -> Bool
                 msetSubsetEq [] _ = True
@@ -325,14 +319,14 @@ instance Evaluate Expr Value where
         case i of
             VSet  xs -> p ~~> VInt $ genericLength $ nub xs
             VMSet xs -> p ~~> VInt $ genericLength       xs
-            _        -> evaluateError Nothing p
+            _        -> evalArrowError Nothing p
 
     evaluate p@(EOp Elem [a,b]) = do
         (i,j) <- evaluate (a,b)
         case (i,j) of
             (v, VSet  vs) -> p ~~> VBool $ elem v vs
             (v, VMSet vs) -> p ~~> VBool $ elem v vs
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp op [a]) | op `elem` [Min,Max] = do
         let operator = case op of Min -> minimum; Max -> maximum; _ -> error "while evaluating Min or Max"
@@ -340,7 +334,7 @@ instance Evaluate Expr Value where
         case i of
             VSet  xs -> do ys <- evaluate xs; p ~~> operator ys
             VMSet xs -> do ys <- evaluate xs; p ~~> operator ys
-            _        -> evaluateError Nothing p
+            _        -> evalArrowError Nothing p
 
     evaluate p@(EOp ToSet [a]) = do
         i <- evaluate a
@@ -348,7 +342,7 @@ instance Evaluate Expr Value where
             VMSet xs     -> p ~~> VSet $ sort $ nub xs
             VFunction xs -> p ~~> VSet $ sort $ nub xs
             VRelation xs -> p ~~> VSet $ sort $ nub xs
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp ToMSet [a]) = do
         i <- evaluate a
@@ -356,61 +350,61 @@ instance Evaluate Expr Value where
             VSet xs      -> p ~~> VMSet $ sort xs
             VFunction xs -> p ~~> VMSet $ sort xs
             VRelation xs -> p ~~> VMSet $ sort xs
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp ToRel [a]) = do
         i <- evaluate a
         case i of
             VFunction xs -> p ~~> VRelation $ sort xs
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp Defined [a]) = do
         i <- evaluate a
         case i of
             VFunction xs -> do
                 ys <- forM xs $ \ t -> case t of V (VTuple (tt:_)) -> return tt
-                                                 _ -> evaluateError Nothing t
+                                                 _ -> evalArrowError Nothing t
                 p ~~> VSet $ sort $ nub ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp Range [a]) = do
         i <- evaluate a
         case i of
             VFunction xs -> do
                 ys <- forM xs $ \ t -> case t of V (VTuple (_:tt:_)) -> return tt
-                                                 _ -> evaluateError Nothing t
+                                                 _ -> evalArrowError Nothing t
                 p ~~> VSet $ sort $ nub ys
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp Image [a,b]) = do
         (i,j) <- evaluate (a,b)
         case (i,j) of
             (VFunction xs, y) -> do
                 ys <- forM xs $ \ t -> case t of V (VTuple (V t1:V t2:_)) -> return (t1,t2)
-                                                 _ -> evaluateError Nothing t
+                                                 _ -> evalArrowError Nothing t
                 case [ t2 | (t1,t2) <- ys, y == t1 ] of
                     [z] -> p ~~> z
-                    []  -> evaluateError "'Not found' in function application" p
-                    _   -> evaluateError "'Multiple values' in function application" p
-            _ -> evaluateError Nothing p
+                    []  -> evalArrowError "'Not found' in function application" p
+                    _   -> evalArrowError "'Multiple values' in function application" p
+            _ -> evalArrowError Nothing p
     evaluate p@(EOp PreImage [a,b]) = do
         (i,j) <- evaluate (a,b)
         case (i,j) of
             (VFunction xs, y) -> do
                 ys <- forM xs $ \ t -> case t of V (VTuple (V t1:V t2:_)) -> return (t1,t2)
-                                                 _ -> evaluateError Nothing t
+                                                 _ -> evalArrowError Nothing t
                 p ~~> VSet [ V t1 | (t1,t2) <- ys, y == t2 ]
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
     evaluate p@(EOp Inverse [a,b]) = do
         (i,j) <- evaluate (a,b)
         case (i,j) of
             (VFunction xs, VFunction ys) -> do
                 let
                     flipL (V (VTuple [x,y])) = return $ V $ VTuple [y,x]
-                    flipL pL = evaluateError Nothing pL
+                    flipL pL = evalArrowError Nothing pL
                 ys' <- mapM flipL ys
                 p ~~> VBool $ xs == ys'
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     -- a and b are elements of partition c
     -- Together evaluates to true, iff they are in the same part.
@@ -422,7 +416,7 @@ instance Evaluate Expr Value where
                     bothInSet x y (V (VSet zs)) | V x `elem` zs && V y `elem` zs = True
                     bothInSet _ _ _ = False
                 p ~~> VBool $ or [ bothInSet i j oneSet | oneSet <- ks ]
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     -- similar to Together. see above.
     evaluate p@(EOp Apart [a,b,c]) = do
@@ -439,7 +433,7 @@ instance Evaluate Expr Value where
                                   ,       or [ inSet       j oneSet | oneSet <- ks ]
                                   , not $ or [ bothInSet i j oneSet | oneSet <- ks ]
                                   ]
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     -- evaluates to a set, the part which contains a in it. b is the partition.
     evaluate p@(EOp Party [a,b]) = do
@@ -447,9 +441,9 @@ instance Evaluate Expr Value where
         case j of
             VPartition js -> case [ VSet ks | V (VSet ks) <- js, V i `elem` ks ] of
                 [z] -> p ~~> z
-                [ ] -> evaluateError "not present in partition" p
-                _   -> evaluateError "present in multiple parts" p
-            _ -> evaluateError Nothing p
+                [ ] -> evalArrowError "not present in partition" p
+                _   -> evalArrowError "present in multiple parts" p
+            _ -> evalArrowError Nothing p
 
     -- union of all parts
     evaluate p@(EOp Participants [a]) = do
@@ -457,23 +451,23 @@ instance Evaluate Expr Value where
         case i of
             VPartition js -> do
                 jss <- forM js $ \ t -> case t of V (VSet ts) -> return ts
-                                                  _ -> evaluateError Nothing t
+                                                  _ -> evalArrowError Nothing t
                 p ~~> VSet $ nub $ sort $ concat jss
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     -- set of all parts
     evaluate p@(EOp Parts [a]) = do
         i <- evaluate a
         case i of
             VPartition js -> p ~~> VSet js
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     -- number of occurrences of b in a. a is a mset.
     evaluate p@(EOp Freq [a,b]) = do
         (i,j) <- evaluate (a,b)
         case i of
             VMSet ks -> p ~~> VInt $ sum [ 1 | k <- ks, V j == k ]
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     -- similar to Freq, however b is a matrix of values this time.
     evaluate p@(EOp Hist [a,b]) = do
@@ -482,7 +476,7 @@ instance Evaluate Expr Value where
             (VMSet is, VMatrix js) -> p ~~> VMatrix [ V $ VInt $ sum [ 1 | k <- is, j' == k ]
                                                     | j' <- js
                                                     ]
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
     evaluate p@(EOp Index [a,b]) = do
         i <- evaluate a
@@ -492,12 +486,12 @@ instance Evaluate Expr Value where
                 (is,k) <- case (i,jj) of
                             (VTuple  is, VInt k) -> return (is,k)
                             (VMatrix is, VInt k) -> return (is,k)
-                            _ -> evaluateError Nothing p
+                            _ -> evalArrowError Nothing p
                 if k >= 0 && k < genericLength is
                     then case genericIndex is k of
                             V v -> p ~~> v
-                            _   -> evaluateError Nothing p
-                    else evaluateError "index out of bounds" p
+                            _   -> evalArrowError Nothing p
+                    else evalArrowError "index out of bounds" p
             (Nothing,D jj) -> case (i,jj) of
                                 (VMatrix is, DInt RAll) -> p ~~> VMatrix is
                                 (VMatrix is, DInt (RFromTo Nothing   Nothing)) -> p ~~> VMatrix is
@@ -511,36 +505,36 @@ instance Evaluate Expr Value where
                                     lbInt :: Int <- evaluate lb
                                     ubInt :: Int <- evaluate ub
                                     p ~~> VMatrix $ take (ubInt + 1 - lbInt) $ drop lbInt is
-                                _ -> evaluateError Nothing p
-            _ -> evaluateError Nothing p
+                                _ -> evalArrowError Nothing p
+            _ -> evalArrowError Nothing p
 
-    evaluate p@(EOp HasType _) = evaluateError "not implemented" p -- do
+    evaluate p@(EOp HasType _) = evalArrowError "not implemented" p -- do
         -- i <- typeOf a
         -- j <- typeOf b
         -- return $ VBool $ i `typeUnify` j
 
-    evaluate p@(EOp HasDomain _) = evaluateError "not implemented" p -- do
+    evaluate p@(EOp HasDomain _) = evalArrowError "not implemented" p -- do
         -- i <- domainOf a
         -- j <- domainOf b
         -- return $ VBool $ i `typeUnify` j
 
-    evaluate p@(EOp Replace []) = evaluateError "not implemented" p
+    evaluate p@(EOp Replace []) = evalArrowError "not implemented" p
 
     evaluate p@(EOp AllDiff [a]) = do
         i <- evaluate a
         case i of
             VMatrix xs -> p ~~> VBool $ xs == nub xs
-            _ -> evaluateError Nothing p
+            _ -> evalArrowError Nothing p
 
-    evaluate p = evaluateError Nothing p
+    evaluate p = evalArrowError Nothing p
 
 instance Evaluate Expr Expr where
     evaluate p@(EHole (Identifier nm)) = do
         st <- get
         case M.lookup nm st of
-            Nothing -> evaluateError "Not bound" p
+            Nothing -> evalArrowError "Not bound" p
             Just x  -> case fromG x of
-                Nothing -> evaluateError "Type mismatch" p
+                Nothing -> evalArrowError "Type mismatch" p
                 Just y  -> p ~~> y
     evaluate x = V <$> evaluate x
 
@@ -554,7 +548,7 @@ instance Evaluate Value Value where
     evaluate (VFunction  xs) = VFunction  <$> evaluate xs
     evaluate (VRelation  xs) = VRelation  <$> evaluate xs
     evaluate (VPartition xs) = VPartition <$> evaluate xs
-    evaluate p = evaluateError Nothing p
+    evaluate p = evalArrowError Nothing p
 
 instance Evaluate Expr Integer where
     evaluate x = do
@@ -566,7 +560,7 @@ instance Evaluate Value Integer where
     evaluate (VBool False) = return 0
     evaluate (VBool True ) = return 1
     evaluate (VInt i) = return i
-    evaluate v        = evaluateError Nothing v
+    evaluate v        = evalArrowError Nothing v
 
 instance Evaluate Expr Int where
     evaluate x = fromInteger <$> evaluate x
@@ -581,4 +575,4 @@ instance Evaluate Value Bool where
     evaluate (VBool b) = return b
     evaluate (VInt  0) = return False
     evaluate (VInt  _) = return True
-    evaluate v         = evaluateError Nothing v
+    evaluate v         = evalArrowError Nothing v
