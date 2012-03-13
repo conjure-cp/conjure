@@ -149,9 +149,9 @@ instance Simplify Expr where
     simplify p@(EOp Times [ EOp Pow [a ,x]
                           , EOp Pow [a',y]
                           ])
-        | a == a' = p ~~~> EOp Pow [ a
-                                   , EOp Plus [x,y]
-                                   ]
+        | a `exprUnify` a' = p ~~~> EOp Pow [ a
+                                            , EOp Plus [x,y]
+                                            ]
 
     simplify p@(EOp Not [EOp Not [x]]) = p ~~~> x
     simplify p@(EOp Not [EOp Imply [a,b]]) = p ~~~> EOp And [a, EOp Not [b]]
@@ -163,11 +163,16 @@ instance Simplify Expr where
     simplify p@(EOp Or  [V (VBool True ), _]) = p ~~~> V $ VBool True
 
     simplify p@(EOp Imply [V (VBool True ), x]) = p ~~~> x
-    simplify p@(EOp Imply [V (VBool False), x]) = p ~~~> EOp Not [x]
-    simplify p@(EOp Imply [x,y]) | x == y = p ~~~> V $ VBool True
+    simplify p@(EOp Imply [V (VBool False), _]) = p ~~~> V $ VBool True
+    simplify p@(EOp Imply [x, V (VBool False)]) = p ~~~> EOp Not [x]
+    simplify p@(EOp Imply [_, V (VBool True )]) = p ~~~> V $ VBool True
+
+    simplify p@(EOp Imply [x,y]) | x `exprUnify` y           = p ~~~> V $ VBool True
 
     simplify p@(EOp Iff [V (VBool True ), x]) = p ~~~> x
     simplify p@(EOp Iff [V (VBool False), x]) = p ~~~> EOp Not [x]
+    simplify p@(EOp Iff [x,y]) | x `exprUnify` y           = p ~~~> V $ VBool True
+    simplify p@(EOp Iff [x,y]) | x `exprUnify` EOp Not [y] = p ~~~> V $ VBool False
 
     simplify p = do
         res <- tryEvalArrowMaybe evaluate p
@@ -176,7 +181,12 @@ instance Simplify Expr where
             Just r | r == p -> return Nothing
             Just r          -> return (Just r)
 
-
+exprUnify :: Expr -> Expr -> Bool
+exprUnify i j = foo i j || foo j i
+    where
+        foo x (EOp Not [EOp Not [y]])
+            | x `exprUnify` y = True
+        foo x y = x == y
 
 --------------------------------------------------------------------------------
 -- full evaluator --------------------------------------------------------------
