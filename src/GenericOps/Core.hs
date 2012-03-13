@@ -15,6 +15,7 @@ module GenericOps.Core
     , bottomUp, bottomUpM
     , bottomUpRewrite, bottomUpRewriteM
     , topDown, topDownM
+    , topDownRewrite, topDownRewriteM
     , MatchBind(..)
     , gapply, gapplyDeep
     ) where
@@ -209,6 +210,10 @@ topDown :: (GNode -> GNode) -> GNode -> GNode
 topDown f = g
     where g = descend g . f
 
+topDownRewrite :: (GNode -> Maybe GNode) -> GNode -> GNode
+topDownRewrite f = topDown g
+    where g x = maybe x (topDownRewrite f) (f x)
+
 
 descendM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
 descendM f (GNode _ x) = do
@@ -227,6 +232,10 @@ bottomUpRewriteM f = bottomUpM g
 topDownM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
 topDownM f = g
     where g x = descendM g =<< f x
+
+topDownRewriteM :: Monad m => (GNode -> m (Maybe GNode)) -> GNode -> m GNode
+topDownRewriteM f = topDownM g
+    where g x = f x >>= maybe (return x) (topDownRewriteM f)
 
 
 
@@ -250,7 +259,7 @@ type BindMonad  m a = CommonMonad m a GNode
 class MatchBind a where
     match :: (Monad m, GPlate a) => a -> a -> MatchMonad m ()
     match p a = do
-        lift $ lift $ modify ((mkG p, mkG a) :)                               	-- add this node on top of the call stack.
+        lift $ lift $ modify ((mkG p, mkG a) :)                                 -- add this node on top of the call stack.
         case hole p of                                                          -- check hole-status of the pattern.
             UnnamedHole  -> return ()                                           -- unnamed hole: matching succeeds, no bindings.
             NamedHole nm -> addBinding nm a                                     -- named hole: matching succeeds, bind the name to rhs.
@@ -261,11 +270,11 @@ class MatchBind a where
                     (ps, as) | nodeTag p /= nodeTag a   -> gmatchError "Constructor mismatch."  -- node tags must match.
                              | not (ps `sameLength` as) -> gmatchError "Shape mismatch."        -- with equal number of children.
                              | otherwise                -> zipWithM_ gmatch ps as               -- recursive call.
-		lift $ lift $ modify tail
+        lift $ lift $ modify tail
 
     bind :: (Monad m, GPlate a) => a -> BindMonad m a
     bind t = do
-        lift $ lift $ modify (mkG t :)		                                    -- add this node on top of the call stack.
+        lift $ lift $ modify (mkG t :)                                          -- add this node on top of the call stack.
         result <- case hole t of                                                -- check hole-status of the pattern.
             UnnamedHole  -> return t -- gbindError "Unnamed hole in template."  -- unnamed hole in a template is just nonsense.
             NamedHole nm -> do
