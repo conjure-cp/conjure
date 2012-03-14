@@ -32,7 +32,7 @@ find layout : function Cell -> Shape
 
 such that
 $ only cells in the grid are part of the layout
-    forall c : defined(layout) . c elem grid,
+    forall c : defined(layout) . c in grid,
 # $ the cells that map to a shape match the shape's form.
 # $ this is long and complicated because we need the minimum x and y coordinates
 # $ (min(sx) and min(sy)) that map to each shape, and i can't think of a nicer way

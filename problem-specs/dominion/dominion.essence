@@ -24,39 +24,39 @@ such that
 
 $ variable type implications
 
-(pvw = 1) => (1 elem pvw_properties),
-(pvx = 1) => (1 elem pvx_properties),
-(pvy = 1) => (1 elem pvy_properties),
-(pvz = 1) => (1 elem pvz_properties),
-(pvc6 = 1) => (1 elem pvc6_properties),
+(pvw = 1) => (1 in pvw_properties),
+(pvx = 1) => (1 in pvx_properties),
+(pvy = 1) => (1 in pvy_properties),
+(pvz = 1) => (1 in pvz_properties),
+(pvc6 = 1) => (1 in pvc6_properties),
 
-(pvw = 2) => ((1 elem pvw_properties) /\ (4 elem pvw_properties)),
-(pvx = 2) => ((1 elem pvx_properties) /\ (4 elem pvx_properties)),
-(pvy = 2) => ((1 elem pvy_properties) /\ (4 elem pvy_properties)),
-(pvz = 2) => ((1 elem pvz_properties) /\ (4 elem pvz_properties)),
-(pvc6 = 2) => ((1 elem pvc6_properties) /\ (4 elem pvc6_properties)),
+(pvw = 2) => ((1 in pvw_properties) /\ (4 in pvw_properties)),
+(pvx = 2) => ((1 in pvx_properties) /\ (4 in pvx_properties)),
+(pvy = 2) => ((1 in pvy_properties) /\ (4 in pvy_properties)),
+(pvz = 2) => ((1 in pvz_properties) /\ (4 in pvz_properties)),
+(pvc6 = 2) => ((1 in pvc6_properties) /\ (4 in pvc6_properties)),
 
-(pvw = 3) => ((1 elem pvw_properties) /\ (4 elem pvw_properties) /\
-    (3 elem pvw_properties)),
-(pvx = 3) => ((1 elem pvx_properties) /\ (4 elem pvx_properties) /\
-    (3 elem pvx_properties)),
-(pvy = 3) => ((1 elem pvy_properties) /\ (4 elem pvy_properties) /\
-    (3 elem pvy_properties)),
-(pvz = 3) => ((1 elem pvz_properties) /\ (4 elem pvz_properties) /\
-    (3 elem pvz_properties)),
-(pvc6 = 3) => ((1 elem pvc6_properties) /\ (4 elem pvc6_properties) /\
-    (3 elem pvc6_properties)),
+(pvw = 3) => ((1 in pvw_properties) /\ (4 in pvw_properties) /\
+    (3 in pvw_properties)),
+(pvx = 3) => ((1 in pvx_properties) /\ (4 in pvx_properties) /\
+    (3 in pvx_properties)),
+(pvy = 3) => ((1 in pvy_properties) /\ (4 in pvy_properties) /\
+    (3 in pvy_properties)),
+(pvz = 3) => ((1 in pvz_properties) /\ (4 in pvz_properties) /\
+    (3 in pvz_properties)),
+(pvc6 = 3) => ((1 in pvc6_properties) /\ (4 in pvc6_properties) /\
+    (3 in pvc6_properties)),
 
-(pvw = 4) => ((1 elem pvw_properties) /\ (4 elem pvw_properties) /\
-    (2 elem pvw_properties)),
-(pvx = 4) => ((1 elem pvx_properties) /\ (4 elem pvx_properties) /\
-    (2 elem pvx_properties)),
-(pvy = 4) => ((1 elem pvy_properties) /\ (4 elem pvy_properties) /\
-    (2 elem pvy_properties)),
-(pvz = 4) => ((1 elem pvz_properties) /\ (4 elem pvz_properties) /\
-    (2 elem pvz_properties)),
-(pvc6 = 4) => ((1 elem pvc6_properties) /\ (4 elem pvc6_properties) /\
-    (2 elem pvc6_properties)),
+(pvw = 4) => ((1 in pvw_properties) /\ (4 in pvw_properties) /\
+    (2 in pvw_properties)),
+(pvx = 4) => ((1 in pvx_properties) /\ (4 in pvx_properties) /\
+    (2 in pvx_properties)),
+(pvy = 4) => ((1 in pvy_properties) /\ (4 in pvy_properties) /\
+    (2 in pvy_properties)),
+(pvz = 4) => ((1 in pvz_properties) /\ (4 in pvz_properties) /\
+    (2 in pvz_properties)),
+(pvc6 = 4) => ((1 in pvc6_properties) /\ (4 in pvc6_properties) /\
+    (2 in pvc6_properties)),
 
 
 $ variable properties required in problem spec
@@ -68,20 +68,20 @@ pvc6_properties subseteq set {1, 2},
 
 $ constraint type implications
 
-(scA = 1) => (4 elem scA_param1_properties),
-(scA = 1) => (4 elem scA_param2_properties),
+(scA = 1) => (4 in scA_param1_properties),
+(scA = 1) => (4 in scA_param2_properties),
 
-(scB = 1) => (4 elem scB_param1_properties),
-(scB = 1) => (4 elem scB_param2_properties),
+(scB = 1) => (4 in scB_param1_properties),
+(scB = 1) => (4 in scB_param2_properties),
 
-(scA = 3) => (3 elem scA_param1_properties),
-(scA = 3) => (2 elem scA_param2_properties),
+(scA = 3) => (3 in scA_param1_properties),
+(scA = 3) => (2 in scA_param2_properties),
 
-(scB = 3) => (3 elem scB_param1_properties),
-(scB = 3) => (2 elem scB_param2_properties),
+(scB = 3) => (3 in scB_param1_properties),
+(scB = 3) => (2 in scB_param2_properties),
 
 
-$ constraint properties required elem problem spec
+$ constraint properties required in problem spec
 
 scB_param1_properties subseteq pvz_properties,
 scA_param1_properties subseteq (pvx_properties union set {1, 3}),

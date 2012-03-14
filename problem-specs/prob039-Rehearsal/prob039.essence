@@ -21,8 +21,8 @@ maximising
 
 such that
     forall p : int(1..n_players) . (
-        arrive(p) elem plays_in(p,_) /\
-        leave(p)  elem plays_in(p,_) /\
+        arrive(p) in plays_in(p,_) /\
+        leave(p)  in plays_in(p,_) /\
         forall i : int(1..n_pieces) .
-            order(i) elem plays_in(p,_) => (arrive(p) <= i /\ leave(p) >= i)
+            order(i) in plays_in(p,_) => (arrive(p) <= i /\ leave(p) >= i)
     )

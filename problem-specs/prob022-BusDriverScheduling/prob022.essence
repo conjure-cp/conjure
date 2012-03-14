@@ -11,4 +11,4 @@ find sched : partition (partSize 3) from int(1..n_tasks)
 
 minimising card(sched)
 
-such that forall s : sched . s elem shifts
+such that forall s : sched . s in shifts

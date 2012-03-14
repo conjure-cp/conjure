@@ -43,7 +43,7 @@ such that
 $ every card is plugged in to at least one rack
     forall c : int(1..n_cards) . (
         exists r : defined(model) . (
-            c elem plugged(r)
+            c in plugged(r)
         )
     ),
 $ no card is plugged in to more than one rack
