@@ -2,7 +2,7 @@
 
 module PrintUtils
     ( render, renderDoc, parensIf
-	, dot
+    , dot
     , module Text.PrettyPrint
     ) where
 
