@@ -11,6 +11,7 @@ module Utils
     , applyAll, applyAllM
     , allPairs
     , safeStr
+    , mapButLast, matchingOuterParens
     ) where
 
 import Control.Monad ( foldM )
@@ -21,6 +22,10 @@ import System.IO ( hSetEcho, stdin )
 import Text.PrettyPrint ( lineLength, renderStyle, style )
 import Text.Show.Pretty ( ppDoc )
 
+mapButLast :: (a -> a) -> [a] -> [a]
+mapButLast _ [ ]    = []
+mapButLast _ [x]    = [x]
+mapButLast f (x:xs) = f x : mapButLast f xs
 
 fromJust :: String -> Maybe a -> a
 fromJust msg Nothing  = error msg
@@ -101,3 +106,20 @@ safeStr = map (\ ch -> if ch `elem` "/.()" then '_' else ch)
 
 rwst :: (r -> s -> m (a, s, w)) -> RWST r w s m a
 rwst = RWST
+
+
+
+-- check if a String is wrapped in parens. any parens inside should match-up.
+-- matchingOuterParens "(foo)" = True
+-- matchingOuterParens "(foo)=(bar)" = False
+-- matchingOuterParens "((foo)=(bar))" = True
+matchingOuterParens :: String -> Bool
+matchingOuterParens ('(':xs) = check [] xs
+    where
+        check []    ")"    = True
+        check stack ('(':as) = check (() : stack) as
+        check []    (')':_ ) = False -- error "closing parens with no matching openning parens"
+        check stack (')':as) = check (tail stack) as
+        check _     []       = False
+        check stack (_  :as) = check stack as
+matchingOuterParens _ = True
