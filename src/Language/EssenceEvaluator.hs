@@ -13,7 +13,6 @@ import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErro
 import Control.Monad.State ( MonadState(get), StateT, evalStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
 import Data.List ( delete, genericIndex, genericLength, nub, sort )
-import Data.String ( IsString(fromString) )
 import qualified Data.Map as M ( Map, fromList, lookup )
 import qualified Data.Set as S ( member )
 
@@ -23,6 +22,12 @@ import PrintUtils
 import ParsecUtils ( parseIO, eof, unsafeParse )
 import GenericOps.Core
 
+-- import Control.Monad.IO.Class
+-- import System.Environment
+-- main = do
+--     args <- getArgs
+--     case args of
+--         [arg] -> testSimplify arg
 
 
 testFullEval :: String -> IO ()
@@ -121,23 +126,71 @@ deepSimplify = unliftGM $ bottomUpRewriteM f
                     Just z  -> return $ Just $ mkG z
 
 simplifyReal :: (Applicative m, Monad m) => EvalArrow m Expr (Maybe Expr)
-simplifyReal p = do
-    mres <- simplify p
-    case mres of
-        Nothing -> case p of
-            EOp op [a,b] | S.member op commutativeOps -> do -- simplify $ EOp op [b,a]
-                mres2 <- simplify (EOp op [b,a])
-                case mres2 of
-                    Nothing   -> return Nothing
-                    Just res2 -> p ~~~> res2
-            _ -> return Nothing
-        Just res -> return $ Just res
+simplifyReal p@(EOp op [x,y])
+    | S.member op commutativeOps = do
+        -- liftIO $ putStr "trying[1]: "
+        -- liftIO $ print $ pretty $ EOp op [x,y]
+        cand1 <- simplify $ EOp op [x,y]
+        case cand1 of
+            Just res -> p ~~~> res
+            Nothing -> do
+                -- liftIO $ putStr "trying[2]: "
+                -- liftIO $ print $ pretty $ EOp op [y,x]
+                cand2 <- simplify $ EOp op [y,x]
+                case cand2 of
+                    Just res -> p ~~~> res
+                    Nothing  -> do
+                        let p' = if isAtomicExpr x && isAtomicExpr y
+                                     then EOp op $ sort [x,y]
+                                     else EOp op $ {-reverse $ -}sort [x,y]
+                        if p == p'
+                            then return Nothing
+                            else p ~~~> p'
+simplifyReal param = do
+    -- liftIO $ putStrLn "simplifyReal"
+    -- liftIO $ print $ pretty param
+
+    -- let
+    --     assocOnLeft p@(EOp op [EOp op' [a,b],c])
+    --         | op == op' && S.member op associativeOps = do
+    --             liftIO $ putStrLn " -- assocOnLeft --"
+    --             liftIO $ print $ pretty p
+    --             mres <- simplify (EOp op [b,c])
+    --             case mres of
+    --                 Nothing  -> return Nothing
+    --                 Just res -> p ~~~> EOp op [a,res]
+    --     assocOnLeft _ = return Nothing
+    -- 
+    --     assocOnRight p@(EOp op [a, EOp op' [b,c]])
+    --         | op == op' && S.member op associativeOps = do
+    --             liftIO $ putStrLn " -- assocOnRight --"
+    --             liftIO $ print $ pretty p
+    --             mres <- simplify (EOp op [a,b])
+    --             case mres of
+    --                 Nothing  -> return Nothing
+    --                 Just res -> p ~~~> EOp op [res,c]
+    --     assocOnRight _ = return Nothing
+    -- 
+    --     commu p@(EOp op [a,b])
+    --         | S.member op commutativeOps = do
+    --             mres <- simplify (EOp op [b,a])
+    --             case mres of
+    --                 Nothing  -> return Nothing
+    --                 Just res -> p ~~~> res
+    --     commu _ = return Nothing
+
+    simplify param
+
+    -- results <- mapM ($ param) [ simplify, assocOnLeft, assocOnRight ]
+    -- return $ msum results
+
 
 instance Simplify Expr where
 
     simplify p@(EOp Plus  [x, V (VInt 0)]) = p ~~~> x
 
     simplify p@(EOp Minus [x, V (VInt 0)]) = p ~~~> x
+    simplify p@(EOp Minus [a,b]) | a == b = p ~~~> V $ VInt 0
 
     simplify p@(EOp Times [_, V (VInt 0)]) = p ~~~> V $ VInt 0
     simplify p@(EOp Times [x, V (VInt 1)]) = p ~~~> x
@@ -153,6 +206,9 @@ instance Simplify Expr where
                                             , EOp Plus [x,y]
                                             ]
 
+    simplify p@(EOp Eq [x,y]) | x `exprUnify` y           = p ~~~> V $ VBool True
+    simplify p@(EOp Eq [x,y]) | x `exprUnify` EOp Not [y] = p ~~~> V $ VBool False
+
     simplify p@(EOp Not [EOp Not [x]]) = p ~~~> x
     simplify p@(EOp Not [EOp Imply [a,b]]) = p ~~~> EOp And [a, EOp Not [b]]
 
@@ -167,12 +223,53 @@ instance Simplify Expr where
     simplify p@(EOp Imply [x, V (VBool False)]) = p ~~~> EOp Not [x]
     simplify p@(EOp Imply [_, V (VBool True )]) = p ~~~> V $ VBool True
 
-    simplify p@(EOp Imply [x,y]) | x `exprUnify` y           = p ~~~> V $ VBool True
+    simplify p@(EOp Imply [x,y]) | x `exprUnify` y = p ~~~> V $ VBool True
 
     simplify p@(EOp Iff [V (VBool True ), x]) = p ~~~> x
     simplify p@(EOp Iff [V (VBool False), x]) = p ~~~> EOp Not [x]
     simplify p@(EOp Iff [x,y]) | x `exprUnify` y           = p ~~~> V $ VBool True
     simplify p@(EOp Iff [x,y]) | x `exprUnify` EOp Not [y] = p ~~~> V $ VBool False
+
+    simplify p@(EOp op [x,EOp op' [y,z]])
+        | op == op' && S.member op associativeOps = do
+            -- liftIO $ putStr "assoc[1]: "
+            -- liftIO $ print $ pretty p
+            cand1 <- simplifyReal $ EOp op [x,y]
+            case cand1 of
+                Just res -> p ~~~> EOp op [res,z]
+                Nothing -> do
+                    cand2 <- simplifyReal $ EOp op [x,z]
+                    case cand2 of
+                        Just res -> p ~~~> EOp op [res,y]
+                        Nothing -> do
+                            let [x',y',z'] = sort [x,y,z]
+                            p ~~~> EOp op [EOp op [x',y'],z']
+
+    simplify p@(EOp op [EOp op' [x,y],z])
+        | op == op' && S.member op associativeOps = do
+            -- liftIO $ putStr "assoc[2]: "
+            -- liftIO $ print $ pretty p
+            cand2 <- simplifyReal $ EOp op [x,z]
+            case cand2 of
+                Just res -> p ~~~> EOp op [res,y]
+                Nothing -> do
+                    cand3 <- simplifyReal $ EOp op [y,z]
+                    case cand3 of
+                        Just res -> p ~~~> EOp op [res,x]
+                        Nothing  -> do
+                            let [x',y',z'] = sort [x,y,z]
+                            if [x',y',z'] == [x,y,z]
+                                then return Nothing
+                                else p ~~~> EOp op [EOp op [x',y'],z']
+
+    -- simplify p@(EOp op [EOp op' [x,y],z])
+    --     | op == op' && S.member op associativeOps && not (and [x <= y, y <= z, x <= z])
+    --     = do
+    --         liftIO $ putStrLn " -- associative swap(2) --"
+    --         liftIO $ print $ pretty p
+    --         let [x',y',z'] = sort [x,y,z]
+    --         p ~~~> EOp op [EOp op [x',y'],z']
+
 
     simplify p = do
         res <- tryEvalArrowMaybe evaluate p
