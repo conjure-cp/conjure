@@ -1,8 +1,8 @@
-{-# LANGUAGE DefaultSignatures         #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE OverloadedStrings         #-}
-{-# OPTIONS_GHC -fno-warn-orphans      #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module GenericOps.Core
     ( Hole(..), HoleStatus(..)
