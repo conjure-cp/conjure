@@ -4,5 +4,5 @@
 
 *** partition (partSize n) from tau
     ~~> ( forall i,j : refn , i != j .card(i intersect j) = 0 )
-    /\  ( forall i : tau . exists s : refn . i elem s )
+    /\  ( forall i : tau . exists s : refn . i in s )
     /\  ( forall i,j : refn . card(i) = card(j) )

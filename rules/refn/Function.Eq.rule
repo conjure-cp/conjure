@@ -1,6 +1,6 @@
 
 a = b ~~> defined(a) = defined(b)
-       /\ forall i : defined(a) . a(i) = b(i)
+       /\ forall i in defined(a) . a(i) = b(i)
 
        where
             a :: function _ -> _,

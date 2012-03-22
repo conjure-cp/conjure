@@ -4,7 +4,7 @@
 
 *** partition (size n) from tau
     ~~> ( forall i,j : refn, i != j . card(i intersect j) = 0 )
-    /\  ( forall i : tau . exists s : refn . i elem s )
+    /\  ( forall i : tau . exists s : refn . i in s )
 
 $ partition (size n,regular) from tau
 $     ~~> AsSetOfSets
@@ -17,7 +17,7 @@ $         )
 $         /\ (
 $             forall i : tau .
 $                 exists s : refn .
-$                     i elem s
+$                     i in s
 $         )
 $         # /\ (
 $         #     forall i,j : refn .
@@ -41,7 +41,7 @@ $         )
 $         /\ (
 $             forall i : tau .
 $                 exists s : refn .
-$                     i elem s
+$                     i in s
 $         )
 $         # /\ (
 $         #     forall i,j : refn .

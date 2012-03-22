@@ -1,8 +1,8 @@
 
     quan i : a union b, g . k
-~~> quan j : tau(a) intersect tau(b) , j elem a /\
-                                       j elem b /\
-                                       g { i -> j }
-                                     . k { i -> j }
+~~> quan j in tau(a) intersect tau(b) , j in a /\
+                                        j in b /\
+                                        g { i -> j }
+                                      . k { i -> j }
 
     where a :: set of int

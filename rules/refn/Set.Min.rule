@@ -1,5 +1,5 @@
 
-min(s) ~~> aux @ forall i : s . i >= aux
+min(s) ~~> (aux @ forall i in s . i >= aux)
 
     where s : set (_) of t
 

@@ -1,5 +1,5 @@
 
-f(x) ~~> sum i : toSet(refn(f)) , i[0] = x . i[1]
+f(x) ~~> sum i in toSet(refn(f)) , i[0] = x . i[1]
 
     where
         f :: function _ -> _,
