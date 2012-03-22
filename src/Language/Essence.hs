@@ -1,35 +1,37 @@
-{-# LANGUAGE DeriveDataTypeable    #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeOperators         #-}
-
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+-- {-# LANGUAGE ScopedTypeVariables #-}
+-- {-# LANGUAGE TemplateHaskell #-}
+-- {-# LANGUAGE TypeOperators #-}
 
 module Language.Essence where
 
 import GenericOps.Coerce
 import GenericOps.Core
 import ParsecUtils
-import ParsePrint ( ParsePrint(..), fromPairs, prettyList, prettyListDoc )
+import ParsePrint
 import PrintUtils ( (<+>), (<>), text, Doc )
-import qualified PrintUtils as Pr
 import Utils
+import qualified PrintUtils as Pr
 
-import Control.Applicative
+-- import Data.Either
 -- import Debug.Trace
+-- import Test.HUnit ( Counts, runTestTT )
+-- import Test.QuickCheck.All ( forAllProperties )
+import Control.Applicative
 import Control.Arrow ( first, second )
 import Control.Monad.Error
 import Control.Monad.Identity
 import Control.Monad.State
 import Control.Monad.Writer ( runWriterT )
 import Data.Char ( isLetter, isNumber )
--- import Data.Default ( def )
--- import Data.Either
+import Data.Default ( Default, def )
+import Data.String ( IsString, fromString )
 import Data.Function ( on )
 import Data.Generics ( Data )
 import Data.List
@@ -37,19 +39,27 @@ import Data.Maybe ( fromMaybe, listToMaybe, mapMaybe, maybeToList )
 import Data.Ord ( comparing )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
-import Test.QuickCheck ( Arbitrary(..), Testable, Result, choose, elements, stdArgs, Args(..) , quickCheckWithResult )
-import Test.QuickCheck.All ( forAllProperties )
-import Test.QuickCheck.Gen ( oneof )
 import qualified Data.Map as M
 import qualified Data.Set as S
+import Test.QuickCheck ( Arbitrary(..), choose, elements )
+import Test.QuickCheck.Gen ( oneof )
 
 
+-- runTests :: IO ()
+-- runTests = do
+--     print =<< runHUnit
+--     print =<< runQC
+-- 
+-- runHUnit :: IO Counts
+-- runHUnit = runTestTT (getParsePrintUnitTests (undefined :: Expr))
+-- 
+-- runQC :: IO Bool
+-- runQC = $forAllProperties runner
+--     where
+--         runner = quickCheckWithResult stdArgs { maxSize = 2, maxSuccess = 1000 }
 
-runTests :: IO Bool
-runTests = $forAllProperties runQC
-
-runQC :: Testable prop => prop -> IO Result
-runQC = quickCheckWithResult stdArgs { maxSize = 2, maxSuccess = 1000 }
+-- runQC :: Testable prop => prop -> IO Result
+-- runQC = quickCheckWithResult stdArgs { maxSize = 2, maxSuccess = 1000 }
 
 
 incr :: Value -> Value
@@ -129,6 +139,9 @@ data Spec
            }
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
+instance Default Spec where
+    def = Spec def def def def def def
+
 instance NodeTag Spec
 
 instance Hole Spec
@@ -173,24 +186,20 @@ instance ParsePrint Spec where
                 is <- sepBy1 integer dot
                 return (l, map fromInteger is)
 
-
-    pretty = undefined
-
-
--- pTopLevels :: Parser [Either Binding Where]
--- pTopLevels = do
---     let
---         pOne :: Parser ([Binding],[Where])
---         pOne = choiceTry [ do i <- parse; return (i,[])
---                          , do i <- parse; return ([],i)
---                          ]
---     is <- many pOne
---     return (concatMap fst is, concatMap snd is)
-
-pConstraints :: Parser [Expr]
-pConstraints = choiceTry [ do reserved "such"; reserved "that"; sepEndBy parse comma
-                         , return []
-                         ]
+            pConstraints :: Parser [Expr]
+            pConstraints = choiceTry [ do reserved "such"; reserved "that"; sepEndBy parse comma
+                                     , return []
+                                     ]
+    pretty (Spec{..}) = Pr.vcat
+        $  ("language" <+> text language <+> Pr.hcat (intersperse Pr.dot (map Pr.int version)))
+        :  map pretty topLevels
+        ++ map pretty (maybeToList objective)
+        ++ case constraints of [] -> []
+                               _  -> "such that" : ( mapButLast (<> Pr.comma)
+                                                   $ map (\ x -> Pr.nest 4 $ case x of Q q -> pretty q
+                                                                                       _   -> pretty x )
+                                                     constraints
+                                                   )
 
 
 
@@ -198,18 +207,24 @@ newtype Where = Where Expr
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance NodeTag Where
-instance Hole    Where
-instance GPlate  Where where
+
+instance Hole Where
+
+instance GPlate Where where
     gplate (Where x) = gplateSingle Where x
+
 instance MatchBind Where
+
 instance ParsePrint Where where
-    parse = Where <$> (reserved "where" *> parse) <?> "where statement"
+    parse = error "do not use this one directly. use it via (parse :: [Where])"
     pretty (Where x) = "where" <+> pretty x
 
 instance ParsePrint [Where] where
     parse = do
-        reserved "where"
-        map Where <$> parse `sepBy1` comma
+        let one = do reserved "where"
+                     map Where <$> parse `sepBy1` comma
+        concat <$> many1 one
+        <?> "where statement"
     pretty = Pr.vcat . map pretty
 
 
@@ -221,21 +236,25 @@ data Binding
     | GivenType     Identifier Type
     | LettingDomain Identifier Domain
     | LettingExpr   Identifier Expr
+    | LettingLambda Identifier Lambda
+    | LettingQuan   Identifier QuantifierDecl
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
-instance NodeTag    Binding
+instance NodeTag Binding
 
-instance Hole       Binding
+instance Hole Binding
 
-instance GPlate     Binding where
+instance GPlate Binding where
     gplate (Find          i j) = gplateTwo Find          i j
     gplate (Given         i j) = gplateTwo Given         i j
     gplate (LettingType   i j) = gplateTwo LettingType   i j
     gplate (GivenType     i j) = gplateTwo GivenType     i j
     gplate (LettingDomain i j) = gplateTwo LettingDomain i j
     gplate (LettingExpr   i j) = gplateTwo LettingExpr   i j
+    gplate (LettingLambda i j) = gplateTwo LettingLambda i j
+    gplate (LettingQuan   i j) = gplateTwo LettingQuan  i j
 
-instance MatchBind  Binding
+instance MatchBind Binding
 
 instance ParsePrint Binding where
     parse = error "do not use this one directly. use it via (parse :: [Binding])"
@@ -245,7 +264,8 @@ instance ParsePrint Binding where
     pretty (GivenType     i j) = "given"   <+> pretty i <> Pr.colon <+> "new type" <+> pretty j
     pretty (LettingDomain i j) = "letting" <+> pretty i <+> "be" <+> "domain" <+> pretty j
     pretty (LettingExpr   i j) = "letting" <+> pretty i <+> "be"              <+> pretty j
-
+    pretty (LettingLambda i j) = "letting" <+> pretty i <+> "be" <+> "lambda" <+> pretty j
+    pretty (LettingQuan   i j) = "letting" <+> pretty i <+> "be"              <+> pretty j
 
 instance ParsePrint [Binding] where
     parse = do
@@ -301,14 +321,28 @@ instance ParsePrint [Binding] where
                         j <- parse
                         return [ LettingExpr i j | i <- is ]
                         <?> "letting statement"
+                    , do
+                        reserved "letting"
+                        is <- parse `sepBy1` comma
+                        reserved "be"
+                        reserved "lambda"
+                        j <- parse
+                        return [ LettingLambda i j | i <- is ]
+                        <?> "letting statement"
+                    , do
+                        reserved "letting"
+                        is <- parse `sepBy1` comma
+                        reserved "be"
+                        j <- parse
+                        return [ LettingQuan i j | i <- is ]
+                        <?> "letting statement"
                     ]
         concat <$> many1 one
     pretty = Pr.vcat . map pretty
 
-
 instance ParsePrint [Either Binding Where] where
-    parse = concatMap (\ t -> case t of Left bs -> map Left bs
-                                        Right w -> [Right w]
+    parse = concatMap (\ t -> case t of Left  bs -> map Left  bs
+                                        Right ws -> map Right ws
                       ) <$> many parse
     pretty = Pr.vcat . map pretty
 
@@ -317,15 +351,15 @@ instance ParsePrint [Either Binding Where] where
 data Objective = OMin Expr | OMax Expr
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
-instance NodeTag    Objective
+instance NodeTag Objective
 
-instance Hole       Objective
+instance Hole Objective
 
-instance GPlate     Objective where
+instance GPlate Objective where
     gplate (OMin x) = gplateSingle OMin x
     gplate (OMax x) = gplateSingle OMax x
 
-instance MatchBind  Objective
+instance MatchBind Objective
 
 instance ParsePrint Objective where
     parse = choiceTry [ OMin <$> (reserved "minimising" *> parse)
@@ -340,14 +374,20 @@ instance ParsePrint Objective where
 
 data Metadata = Metadata
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
-instance NodeTag    Metadata
-instance Hole       Metadata
-instance GPlate     Metadata where
+
+instance NodeTag Metadata
+
+instance Hole Metadata
+
+instance GPlate Metadata where
     gplate p@Metadata = gplateLeaf p
+
 instance MatchBind  Metadata
+
 instance ParsePrint Metadata where
     parse = undefined
     pretty = undefined
+
 
 
 --------------------------------------------------------------------------------
@@ -358,6 +398,7 @@ data Expr = EHole Identifier
     | V Value
     | D Domain
     | Q QuantifiedExpr
+    | Bubble Expr Expr [Either Binding Where]
     | EOp Op [Expr]
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -367,9 +408,8 @@ isAtomicExpr (V     {}) = True
 isAtomicExpr (D     {}) = True
 isAtomicExpr _          = False
 
-normalise :: Expr -> Expr
-normalise (EOp Plus [x,y]) | x < y = EOp Plus [y,x]
-normalise x = x
+instance IsString Expr where
+    fromString = EHole . fromString
 
 instance NodeTag Expr
 
@@ -383,13 +423,25 @@ instance GPlate Expr where
     gplate (V x) = gplateSingle V x
     gplate (D x) = gplateSingle D x
     gplate (Q x) = gplateSingle Q x
-    gplate (EOp op xs) = ( mkG op : map mkG xs
-                         , \ ys -> let op' = fromGs $ take 1 ys
-                                       xs' = fromGs $ drop 1 ys
-                                   in  if length op' == 1 && length xs' == length xs
-                                           then EOp (head op') xs'
-                                           else gplateError "Expr"
-                         )
+    gplate (Bubble x y bs) =
+        ( mkG x : mkG y : map mkG bs
+        , \ xs -> let x's = fromGs $ take 1 xs
+                      y's = fromGs $ take 1 $ drop 1 xs
+                      bs' = fromGs $ drop 2 xs
+                  in  case (x's,y's) of
+                          ([x'],[y']) -> if equalLengths bs bs'
+                                             then Bubble x' y' bs'
+                                             else gplateError "Expr.Bubble[1]"
+                          _ -> gplateError "Expr.Bubble[2]"
+        )
+    gplate (EOp op xs) =
+        ( mkG op : map mkG xs
+        , \ ys -> let op' = fromGs $ take 1 ys
+                      xs' = fromGs $ drop 1 ys
+                  in  if equalLengths [()] op' && equalLengths xs xs'
+                          then EOp (head op') xs'
+                          else gplateError "Expr.EOp"
+        )
 
 instance MatchBind Expr
 
@@ -401,7 +453,18 @@ instance ParsePrint Expr where
                 let allP = flip mapMaybe allValues $ \ op -> case opDescriptor op of
                             OpPostfix pa _ -> Just pa
                             _ -> Nothing
-                fs <- many1 (choiceTry allP)
+                let pImage = do
+                        ys <- parens (parse `sepBy1` comma)
+                        return $ \ x -> case ys of
+                            [y] -> EOp Image [x,y]
+                            _   -> EOp Image [x,V (VTuple ys)]
+                let pPreImage = do
+                        reservedOp "'"
+                        ys <- parens (parse `sepBy1` comma)
+                        return $ \ x -> case ys of
+                            [y] -> EOp PreImage [x,y]
+                            _   -> EOp PreImage [x,V (VTuple ys)]
+                fs <- many1 (choiceTry $ pImage : pPreImage : allP)
                 return $ foldr1 (.) (reverse fs)
 
             prefixes :: [Parser (Expr -> Expr)]
@@ -429,23 +492,37 @@ instance ParsePrint Expr where
                     ) infixes
 
             core :: Parser Expr
-            core = choiceTry $ [ Q     <$> parse
+            core = choiceTry $ [ pBubble
+                               , Q     <$> parse
                                , EHole <$> parse
                                , D     <$> parse       -- ordering is important: try: tuple (_) of (a,b,c)
                                , V     <$> parse
                                ] ++ pLispyAndSpecial
                                  ++ [ parens parse ]
 
+            pBubble :: Parser Expr
+            pBubble = parens $ do
+                x  <- parse
+                reservedOp "@"
+                bs <- optionMaybe $ braces parse
+                y  <- parse
+                return $ Bubble x y (fromMaybe [] bs)
+
     pretty (EHole x) = pretty x
     pretty (V     x) = pretty x
     pretty (D     x) = pretty x
-    pretty (Q     x) = pretty x
+    pretty (Q     x) = Pr.parens (pretty x)
+    pretty (Bubble x y bs) = Pr.parens (pretty x <+> "@" <+> bsPretty <+> pretty y)
+        where
+            bsPretty = case bs of [] -> Pr.empty
+                                  _  -> Pr.braces $ Pr.vcat (map pretty bs)
     pretty p@(EOp {}) = prettyOp 10000 p
         where
             prettyOp :: Int -> Expr -> Pr.Doc
             -- prettyOp i x | trace msg False = undefined
             --     where msg = " -- prettyOp " ++ show i ++ " " ++ show x
-            prettyOp _ param@(EOp Index _) = let OpPostfix _ pr = opDescriptor Index in pr param
+            prettyOp _ param@(EOp Index   _) = let OpPostfix _ pr = opDescriptor Index   in pr param
+            prettyOp _ param@(EOp Replace _) = let OpPostfix _ pr = opDescriptor Replace in pr param
             prettyOp envPrec param@(EOp op xs) = case (opDescriptor op, xs) of
                 (OpLispy   _ pr, _    ) -> pr xs
                 (OpInfix   _ pr, [i,j]) -> pr prettyOp envPrec i j
@@ -475,6 +552,9 @@ instance Arbitrary Expr where
 newtype Identifier = Identifier String
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
+instance IsString Identifier where
+    fromString = Identifier
+
 instance NodeTag Identifier
 
 instance Hole Identifier where
@@ -493,17 +573,109 @@ instance Arbitrary Identifier where
 
 
 
+data ComplexIdentifier
+    = I Identifier
+    | ITuple  [ComplexIdentifier]
+    | IMatrix [ComplexIdentifier]
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag ComplexIdentifier
+
+instance Hole ComplexIdentifier
+
+instance GPlate ComplexIdentifier
+
+instance MatchBind ComplexIdentifier
+
+instance ParsePrint ComplexIdentifier where
+    parse = choiceTry
+        [ ITuple  <$> parens   (countSepAtLeast 2 parse comma)
+        , IMatrix <$> brackets (countSepAtLeast 2 parse comma)
+        , I <$> parse
+        ]
+    pretty (I        i) = pretty i
+    pretty (ITuple  is) = prettyList Pr.parens   Pr.comma is
+    pretty (IMatrix is) = prettyList Pr.brackets Pr.comma is
+
+instance Arbitrary ComplexIdentifier where
+    arbitrary = oneof
+        [ I       <$> arbitrary
+        , do (i,j,ks) <- arbitrary; return $ ITuple  $ i:j:ks
+        , do (i,j,ks) <- arbitrary; return $ IMatrix $ i:j:ks
+        ]
+
+
+
+--------------------------------------------------------------------------------
+-- Lambda ----------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data Lambda = Lambda [(String, Type)] Expr
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag Lambda
+
+instance Hole Lambda
+
+instance GPlate Lambda -- everything is a leaf!
+
+instance MatchBind Lambda
+
+instance ParsePrint Lambda where
+    parse = braces $ do
+        args <- sepBy1 ((,) <$> identifier <*> (colon *> parse)) comma
+        reservedOp "->"
+        x <- parse
+        return $ Lambda args x
+    pretty (Lambda args x) = Pr.braces (prettyListDoc id Pr.comma argsDoc <+> "->" <+> pretty x)
+        where argsDoc = map (\ (i,t) -> text i <> Pr.colon <+> pretty t ) args
+
+
+
+--------------------------------------------------------------------------------
+-- QuantifierDecl --------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data QuantifierDecl = QuantifierDecl Lambda Lambda Expr
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag QuantifierDecl
+
+instance Hole QuantifierDecl
+
+instance GPlate QuantifierDecl -- everything is a leaf!
+
+instance MatchBind QuantifierDecl
+
+instance ParsePrint QuantifierDecl where
+    parse = do
+        reserved "quantifier"
+        braces $ QuantifierDecl
+            <$> (reserved "append"   >> parse)
+            <*> (reserved "guard"    >> parse)
+            <*> (reserved "identity" >> parse)
+    pretty (QuantifierDecl app gua ide) =
+        "quantifier" Pr.$$
+        Pr.braces (
+            Pr.nest 4 ("append  " <+> pretty app) Pr.$$
+            Pr.nest 4 ("guard   " <+> pretty gua) Pr.$$
+            Pr.nest 4 ("identity" <+> pretty ide)
+        )
+
+
+
 --------------------------------------------------------------------------------
 -- QuantifiedExpr --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-data QuantifiedExpr = QuantifiedExpr { quanName     :: Identifier
-                                     , quanVar      :: Identifier
-                                     , quanOverDom  :: Maybe Domain
-                                     , quanOverExpr :: Maybe (Op, Expr)
-                                     , quanGuards   :: [Expr]
-                                     , quanBody     :: Expr
-                                     }
+data QuantifiedExpr = QuantifiedExpr
+    { quanName     :: Identifier
+    , quanVar      :: Identifier
+    , quanOverDom  :: Maybe Domain
+    , quanOverExpr :: Maybe (Op, Expr)
+    , quanGuards   :: [Expr]
+    , quanBody     :: Expr
+    }
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance NodeTag QuantifiedExpr
@@ -603,19 +775,34 @@ instance MatchBind QuantifiedExpr
 instance ParsePrint QuantifiedExpr where
     parse = do
         qnName   <- parse
-        qnVar    <- parse
+        qnVars   <- parse `sepBy1` comma
         qnDom    <- optionMaybe (colon *> parse)
         qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
         qnGuards <- optionMaybe (comma *> parse)
         qnBody   <- dot *> parse
-        return $ QuantifiedExpr qnName qnVar qnDom qnExpr (maybeToList qnGuards) qnBody
+        let
+            f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
+            f [i]    = QuantifiedExpr qnName i qnDom qnExpr (maybeToList qnGuards) qnBody
+            f (i:is) = QuantifiedExpr qnName i qnDom qnExpr [] (Q $ f is)
+        return (f qnVars)
     pretty (QuantifiedExpr qnName qnVar qnDom qnExpr qnGuards qnBody)
         =   pretty qnName
         <+> pretty qnVar
-        <+> (case qnDom    of Nothing -> Pr.empty; Just i      -> Pr.colon  <+> pretty i)
-        <+> (case qnExpr   of Nothing -> Pr.empty; Just (op,i) -> pretty op <+> pretty i)
-        <+> (case qnGuards of []      -> Pr.empty; [i]         -> Pr.comma  <+> pretty i; _ -> error "Multiple guards, what the hell?")
-        <+> Pr.dot <+> pretty qnBody
+        <+> ( case qnDom of
+                Nothing -> Pr.empty
+                Just i  -> Pr.colon  <+> pretty i
+            )
+        <+> ( case qnExpr of
+                Nothing     -> Pr.empty
+                Just (op,i) -> pretty op <+> pretty i
+            )
+        <+> ( case qnGuards of
+                []  -> Pr.empty
+                [i] -> Pr.comma <+> pretty i
+                _   -> error "Multiple guards, what the hell?"
+            )
+        <+> Pr.dot
+        <+> pretty qnBody
 
 
 
@@ -653,6 +840,11 @@ commutativeOps = S.fromList
     , Neq, Eq
     , Or, And, Iff
     , Union, Intersect
+    ]
+
+associativeOps :: S.Set Op
+associativeOps = S.fromList
+    [ Plus
     ]
 
 opFace :: Op -> String
@@ -744,13 +936,6 @@ data OpDescriptor
     | OpSpecial
             (Parser Expr)
             (Expr -> Pr.Doc)
-
--- instance NodeTag OpDescriptor where
---     nodeTag (OpLispy {}) = "OpLispy"
---     nodeTag (OpInfix {}) = "OpInfix"
---     nodeTag (OpPrefix {}) = "OpPrefix"
---     nodeTag (OpPostfix {}) = "OpPostfix"
---     nodeTag (OpSpecial {}) = "OpSpecial"
 
 opDescriptor :: Op -> OpDescriptor
 opDescriptor = helper
@@ -866,7 +1051,17 @@ opDescriptor = helper
                 prettyIndexProject i = pretty i
         helper op@HasType   = genInfix op 1500 AssocNone
         helper op@HasDomain = genInfix op 1500 AssocNone
-        helper Replace = OpSpecial (fail "Replace") undefined
+        helper Replace = OpPostfix pa pr
+            where
+                pa = braces $ do
+                    i <- parse
+                    reservedOp "->"
+                    j <- parse
+                    return $ \ x -> EOp Replace [x,i,j]
+                pr (EOp Replace [a,b,c]) =
+                    (if isAtomicExpr a then id else Pr.parens) (pretty a)
+                    <+> Pr.braces (pretty b <+> "->" <+> pretty c)
+                pr x = error $ "pretty Replace: " ++ show x
         helper op@AllDiff = genLispy op 1
 
 
@@ -1334,9 +1529,9 @@ data DomainAttrEnum
 
 instance NodeTag DomainAttrEnum
 
-instance Hole    DomainAttrEnum
+instance Hole DomainAttrEnum
 
-instance GPlate  DomainAttrEnum
+instance GPlate DomainAttrEnum
 
 instance MatchBind DomainAttrEnum
 
@@ -1498,9 +1693,9 @@ data AnyTypeEnum = TTuple | TSet | TMSet | TFunction | TRelation | TPartition
 
 instance NodeTag AnyTypeEnum
 
-instance Hole    AnyTypeEnum
+instance Hole AnyTypeEnum
 
-instance GPlate  AnyTypeEnum
+instance GPlate AnyTypeEnum
 
 instance MatchBind AnyTypeEnum
 
@@ -1516,6 +1711,182 @@ instance ParsePrint AnyTypeEnum where
 
 instance Arbitrary AnyTypeEnum where
     arbitrary = elements [minBound .. maxBound]
+
+
+
+--------------------------------------------------------------------------------
+-- RuleRepr --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data RuleRepr = RuleRepr
+    { reprFilename           :: String
+    , reprName               :: String
+    , reprTemplate           :: Domain
+    , reprPrologueStructural :: Maybe Expr
+    , reprLocals             :: [Either Binding Where]
+    , reprCases              :: [RuleReprCase]
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag RuleRepr
+
+instance Hole RuleRepr
+
+instance GPlate RuleRepr where
+    gplate RuleRepr {..} =
+        (  mkG reprTemplate
+        :  map mkG (maybeToList reprPrologueStructural)
+        ++ map mkG reprLocals
+        ++ map mkG reprCases
+        , \ xs -> let
+            l1 = 1
+            l2 = length (maybeToList reprPrologueStructural)
+            l3 = length reprLocals
+            l4 = length reprCases
+            reprTemplate'           = fromGs $ take l1 xs
+            reprPrologueStructural' = fromGs $ take l2 $ drop l1 xs
+            reprLocals'             = fromGs $ take l3 $ drop l2 $ drop l1 xs
+            reprCases'              = fromGs $ take l4 $ drop l3 $ drop l2 $ drop l1 xs
+            in if l1 == length reprTemplate' &&
+                  l2 == length reprPrologueStructural' &&
+                  l3 == length reprLocals' &&
+                  l4 == length reprCases'
+                  then RuleRepr
+                        reprFilename
+                        reprName
+                        (head reprTemplate')
+                        (listToMaybe reprPrologueStructural')
+                        reprLocals'
+                        reprCases'
+                  else gplateError "RuleRepr"
+        )
+
+instance MatchBind RuleRepr
+
+instance ParsePrint RuleRepr where
+    parse = do
+        whiteSpace
+        name   <- reservedOp "~~>" >> identifier
+        templ  <- reservedOp "~~>" >> parse
+        cons   <- optionMaybe (reservedOp "~~>" >> parse)
+        locals <- parse
+        cases  <- many1 parse
+        return (RuleRepr "" name templ cons locals cases)
+    pretty RuleRepr {..} = Pr.vcat $ [ "~~>" <+> text reprName
+                                     , "~~>" <+> pretty reprTemplate ]
+                                  ++ [ "~~>" <+> pretty s | Just s <- [reprPrologueStructural] ]
+                                  ++ map (Pr.nest 4 . pretty) reprLocals
+                                  ++ [ text "" ]
+                                  ++ map pretty reprCases
+
+
+
+data RuleReprCase = RuleReprCase
+    { reprCasePattern    :: Domain
+    , reprCaseStructural :: Maybe Expr
+    , reprCaseLocals     :: [Either Binding Where]
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag RuleReprCase
+
+instance Hole RuleReprCase
+
+instance GPlate RuleReprCase where
+    gplate RuleReprCase {..} =
+        (  mkG reprCasePattern
+        :  map mkG (maybeToList reprCaseStructural)
+        ++ map mkG reprCaseLocals
+        , \ xs -> let
+            l1 = 1
+            l2 = length (maybeToList reprCaseStructural)
+            l3 = length reprCaseLocals
+            reprCasePattern'    = fromGs $ take l1 xs
+            reprCaseStructural' = fromGs $ take l2 $ drop l1 xs
+            reprCaseLocals'     = fromGs $ take l3 $ drop l2 $ drop l1 xs
+            in if l1 == length reprCasePattern'  &&
+                  l2 == length reprCaseStructural' &&
+                  l3 == length reprCaseLocals'
+                  then RuleReprCase
+                        (head reprCasePattern')
+                        (listToMaybe reprCaseStructural')
+                        reprCaseLocals'
+                  else gplateError "RuleReprCase"
+        )
+
+instance MatchBind RuleReprCase
+
+instance ParsePrint RuleReprCase where
+    parse = do
+        pattern <- reservedOp "***" >> parse
+        cons    <- optionMaybe (reservedOp "~~>" >> parse)
+        locals  <- parse
+        return (RuleReprCase pattern cons locals)
+    pretty RuleReprCase {..} = Pr.vcat $ [ "***" <+> pretty reprCasePattern ]
+                                      ++ [ "~~>" <+> pretty s | Just s <- [reprCaseStructural] ]
+                                      ++ map (Pr.nest 4 . pretty) reprCaseLocals
+                                      ++ [ text "" ]
+
+
+
+--------------------------------------------------------------------------------
+-- RuleRefn --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data RuleRefn = RuleRefn
+    { refnLevel     :: Maybe Int
+    , refnFilename  :: String
+    , refnPattern   :: Expr
+    , refnTemplates :: [Expr]
+    , refnLocals    :: [Either Binding Where]
+    }
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance NodeTag RuleRefn
+
+instance Hole RuleRefn
+
+instance GPlate RuleRefn where
+    gplate RuleRefn {..} = 
+        (  mkG refnPattern
+        :  map mkG refnTemplates
+        ++ map mkG refnLocals
+        , \ xs -> let
+            l1 = 1
+            l2 = length refnTemplates
+            l3 = length refnLocals
+            refnPattern'   = fromGs $ take l1 xs
+            refnTemplates' = fromGs $ take l2 $ drop l1 xs
+            refnLocals'    = fromGs $ take l3 $ drop l2 $ drop l1 xs
+            in if l1 == length refnPattern'  &&
+                  l2 == length refnTemplates' &&
+                  l3 == length refnLocals'
+                  then RuleRefn
+                        refnLevel
+                        refnFilename
+                        (head refnPattern')
+                        refnTemplates'
+                        refnLocals'
+                  else gplateError "RuleRefn"
+        )
+
+instance MatchBind RuleRefn
+
+instance ParsePrint RuleRefn where
+    parse = do
+        whiteSpace
+        level     <- optionMaybe (brackets (fromInteger <$> integer))
+        pattern   <- parse
+        templates <- reservedOp "~~>" >> try (braces (parse `sepBy1` comma)) <|> (return <$> parse)
+        locals    <- parse
+        return $ RuleRefn level "" pattern templates locals
+    pretty RuleRefn {..} = Pr.vcat $ concat [ [ Pr.brackets (Pr.int l), text "" ] | Just l <- [refnLevel] ]
+                                  ++ [ pretty refnPattern <+> "~~>"
+                                                          <+> case refnTemplates of
+                                                                   [t] -> pretty t
+                                                                   ts  -> prettyList Pr.braces Pr.comma ts ]
+                                  ++ [ text "" ]
+                                  ++ map pretty refnLocals
 
 
 
@@ -1584,5 +1955,4 @@ prop_ParsePrintType = propParsePrint
 
 propParsePrint :: (Eq a, ParsePrint a, GPlate a) => a -> Bool
 propParsePrint a = Right a == parseEither (parse <* eof) (show $ pretty a)
-
 
