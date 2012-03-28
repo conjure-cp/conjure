@@ -275,8 +275,9 @@ main = do
                 else ( initREPLState
                      , args
                      )
+    bindir <- getBinDir
     let settings = Settings { complete = completeFilename
-                            , historyFile = Nothing
+                            , historyFile = Just $ bindir ++ "/iconjure.hist"
                             , autoAddHistory = True
                             }
     let run k = evalStateT (runInputT settings k) initSt
