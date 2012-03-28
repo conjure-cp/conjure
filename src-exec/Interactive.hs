@@ -5,21 +5,25 @@ module Main where
 
 import Control.Applicative
 import Control.Exception ( SomeException, try )
-import Control.Monad ( when )
+import Control.Monad ( forM_, when )
+import Control.Monad.Error ( runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put, StateT, evalStateT, execStateT )
 import Control.Monad.Trans.Class ( lift )
-import Control.Monad.Error ( runErrorT )
 import Control.Monad.Writer ( runWriterT )
 import Data.Char ( toLower )
 import Data.Either ( lefts )
 import Data.List ( delete, intercalate, isPrefixOf )
+import Data.List.Split ( splitOn )
+import qualified Data.Map as M
 import System.Console.Haskeline ( InputT, runInputT, getInputLine , Settings(..) )
 import System.Console.Haskeline.Completion ( completeFilename )
 import System.Environment ( getArgs )
-import qualified Data.Map as M
+
+import Paths_conjure_cp ( getBinDir )
 
 import Constants ( figlet )
+import GenericOps.Core ( GPlate, GNode(..), runMatch )
 import ParsecUtils ( eof, parseEither, parseFromFile )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( Doc, nest, vcat )
@@ -45,6 +49,8 @@ data Command = EvalTypeKind String
              | RmObjective
              | Rollback
              | DisplaySpec
+             | TestExprMatch String
+             | TestDomMatch String
              | Quit
     deriving (Eq, Ord, Read, Show)
 
@@ -71,6 +77,8 @@ parseCommand s =
                           , ( "rmobjective"   , RmObjective              )
                           , ( "rollback"      , Rollback                 )
                           , ( "displayspec"   , DisplaySpec              )
+                          , ( "testexprmatch" , TestExprMatch restOfLine )
+                          , ( "testdommatch"  , TestDomMatch  restOfLine )
                           , ( "quit"          , Quit                     )
                           ]
             case filter (\ (i,_) -> isPrefixOf firstWord i ) actions of
@@ -222,11 +230,26 @@ step Rollback = returningTrue $ do
     case olds of
         []     -> return ()
         (s:ss) -> put st { currentSpec = s, oldSpecs = ss }
+step (TestDomMatch s) = testMatch (undefined :: Domain) ":testdommatch pattern ~~ domain" s
+step (TestExprMatch s) = testMatch (undefined :: Expr) ":testexprmatch pattern ~~ expr" s
 step DisplaySpec = returningTrue $ do
     sp <- gets currentSpec
     liftIO $ print $ pretty sp
 step Quit = return False
 
+testMatch :: (Applicative m, MonadIO m, GPlate a) => a -> String -> String -> m Bool
+testMatch undef msg s = returningTrue $ do
+    let pa = splitOn "~~" s
+    case pa of
+        [p,a] -> case (parseEither (parse <* eof) (strip p), parseEither (parse <* eof) (strip a)) of
+            (Left err,_) -> liftIO $ putStrLn $ "Error while parsing: " ++ p ++ "\n" ++ err
+            (_,Left err) -> liftIO $ putStrLn $ "Error while parsing: " ++ p ++ "\n" ++ err
+            (Right px, Right ax) -> case execStateT (runMatch (px `asTypeOf` undef) ax) M.empty of
+                Left err -> liftIO $ putStrLn $ "Error while pattern matching: " ++ show err
+                Right bs -> liftIO $ do
+                    putStrLn "Bindings: "
+                    forM_ (M.toList bs) $ \ (i, GNode ty g) -> putStrLn $ "[" ++ show ty ++ "] " ++ i ++ ": " ++ show (pretty g)
+        _ -> liftIO $ putStrLn $ "Usage: " ++ msg
 
 -- stepFlag :: (MonadIO m, MonadState REPLState m) => String -> m ()
 -- stepFlag "rawOutput" = do
