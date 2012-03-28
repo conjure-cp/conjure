@@ -282,10 +282,14 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Value "false"
             , shouldParseTo       "true"  $ VBool True
             , parsePrintIso_Value "true"
-            , parsePrintIso_Value "set {1,2,3}"
-            , parsePrintIso_Value "set {1,2+3,4-5}"
-            , parsePrintIso_Value "mset {1,2,3}"
-            , parsePrintIso_Value "partition {{1,2},{3,4},{x,y}}"
+            , parsePrintIso_Value "{1,2,3}"
+            , parsePrintIso_Value "{1,2+3,4-5}"
+            , parsePrintIso_Value "mset (1,2,3)"
+            , parsePrintIso_Value "(1,2,3)"
+            , parsePrintIso_Value "tuple (1,2,3)"
+            , parsePrintIso_Value "function(1->2,2->3,3->4)"
+            , parsePrintIso_Value "relation((1,2,3),(1,2,4),(2,3,4))"
+            , parsePrintIso_Value "partition({1,2},{3,4},{x,y})"
             ]
 
         parsingQuantifiedExpr =

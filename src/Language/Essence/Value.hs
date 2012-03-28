@@ -90,15 +90,15 @@ instance ParsePrint Value where
 
             pMatrix = VMatrix <$> brackets (sepBy parse comma)
 
-            pTuple = try (do reserved "tuple"; VTuple <$> parens (sepBy parse comma))
+            pTuple = try (do reserved "tuple"; VTuple <$> parens (sepBy1 parse comma))
                      <|>
                      VTuple <$> parens (countSepAtLeast 2 parse comma)
 
-            pSet = do reserved "set"; VSet <$> braces (sepBy parse comma)
+            pSet = do VSet <$> braces (sepBy parse comma)
 
-            pMSet = do reserved "mset"; VMSet <$> braces (sepBy parse comma)
+            pMSet = do reserved "mset"; VMSet <$> parens (sepBy parse comma)
 
-            pFunction = do reserved "function"; VFunction <$> braces (sepBy pTuple2 comma)
+            pFunction = do reserved "function"; VFunction <$> parens (sepBy pTuple2 comma)
                 where
                     pTuple2 :: Parser Expr
                     pTuple2 = do
@@ -107,9 +107,9 @@ instance ParsePrint Value where
                         j <- parse
                         return $ V (VTuple [i,j])
 
-            pRelation = do reserved "relation"; VRelation <$> braces (sepBy (V <$> pTuple) comma)
+            pRelation = do reserved "relation"; VRelation <$> parens (sepBy (V <$> pTuple) comma)
 
-            pPartition = do reserved "partition"; VPartition <$> braces (sepBy aPart comma)
+            pPartition = do reserved "partition"; VPartition <$> parens (sepBy aPart comma)
                 where
                     aPart :: Parser Expr
                     aPart = (V . VSet) <$> braces (sepBy parse comma)
@@ -123,14 +123,14 @@ instance ParsePrint Value where
     pretty (VTuple [] ) = "tuple ()"
     pretty (VTuple [x]) = "tuple" <+> Pr.parens (pretty x)
     pretty (VTuple xs ) = prettyList Pr.parens Pr.comma xs
-    pretty (VSet  xs) = "set" <+> prettyList Pr.braces Pr.comma xs
-    pretty (VMSet xs) = "mset" <+> prettyList Pr.braces Pr.comma xs
-    pretty (VFunction xs) = "function" <+> prettyListDoc Pr.braces Pr.comma (map prE xs)
+    pretty (VSet  xs) = prettyList Pr.braces Pr.comma xs
+    pretty (VMSet xs) = "mset" <+> prettyList Pr.parens Pr.comma xs
+    pretty (VFunction xs) = "function" <+> prettyListDoc Pr.parens Pr.comma (map prE xs)
         where
             prE (V (VTuple [i,j])) = pretty i <+> "->" <+> pretty j
             prE p = pretty p
-    pretty (VRelation  xs) = "relation"  <+> prettyList Pr.braces Pr.comma xs
-    pretty (VPartition xs) = "partition" <+> prettyListDoc Pr.braces Pr.comma (map prE xs)
+    pretty (VRelation  xs) = "relation"  <+> prettyList Pr.parens Pr.comma xs
+    pretty (VPartition xs) = "partition" <+> prettyListDoc Pr.parens Pr.comma (map prE xs)
         where
             prE (V (VSet vs)) = prettyList Pr.braces Pr.comma vs
             prE p = pretty p
