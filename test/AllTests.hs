@@ -5,31 +5,25 @@
 module Main ( main ) where
 
 import           Control.Applicative ( (<*) )
+import           Control.Monad ( forM )
 import           Control.Monad.Error ( runErrorT )
 import           Control.Monad.State ( evalStateT )
 import           Control.Monad.Writer ( runWriterT )
-import qualified Data.Map as Map
-import           Distribution.TestSuite
-import           Test.Framework (defaultMain, testGroup)
+import qualified Data.Map as M
+import           Test.Framework ( defaultMain )
 import           Test.Framework.Providers.HUnit ( hUnitTestToTests )
-import           Test.Framework.Providers.QuickCheck2 ( testProperty )
+-- import           Test.Framework.Providers.QuickCheck2 ( testProperty )
 import           Test.HUnit ( assertEqual, assertFailure, test )
 import qualified Test.HUnit as HUnit
 
 import GenericOps.Core ( GNode, GPlate, mkG )
 import Language.Essence
-import Language.EssenceEvaluator ( Simplify, deepSimplify )
+import Language.EssenceEvaluator ( deepSimplify )
 import ParsecUtils ( Parser, eof, parseEither, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( renderDoc )
 
 
--- data ParsePrintUnitTest a
---     = NoParse String
---     | shouldParseTo String a
---     | ParsePrintIso String
---     | ParsePrintIsoFile FilePath
---     | Eval [(String,GNode)] String String
 
 noParse :: forall a . (Eq a, ParsePrint a) => a -> String -> HUnit.Test
 noParse _ s = HUnit.TestLabel ("NoParse " ++ s) $ HUnit.TestCase $
@@ -68,12 +62,62 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
         (Left msg, _) -> assertFailure (unlines ["Eval [cannot parse]", px, msg])
         (_, Left msg) -> assertFailure (unlines ["Eval [cannot parse]", py, msg])
         (Right (x :: Expr), Right (y :: Expr)) -> do
-            (x',_logs) <- runWriterT $ flip evalStateT (Map.fromList bindings) $ runErrorT $ deepSimplify x
-            (y',_logs) <- runWriterT $ flip evalStateT (Map.fromList bindings) $ runErrorT $ deepSimplify y
+            (x',_logs) <- runWriterT $ flip evalStateT (M.fromList bindings) $ runErrorT $ deepSimplify x
+            (y',_logs) <- runWriterT $ flip evalStateT (M.fromList bindings) $ runErrorT $ deepSimplify y
             case (x',y') of
-                (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc (pretty x)])
-                (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc (pretty y)])
+                (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty x, renderDoc msg])
+                (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty y, renderDoc msg])
                 (Right x'', Right y'') -> assertEqual "Eval [not equal]" x'' y''
+
+applyRuleRefn :: String -> String -> [String] -> HUnit.Test
+applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", ruleRefn, expr]) $ HUnit.TestCase $ do
+    let qNames = [ "_q_" ++ show i | i <- [ (0 :: Int) .. ] ]
+    case (parseEither (parse <* eof) ruleRefn, parseEither (parse <* eof) expr) of
+        (Left msg, _) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg])
+        (_, Left msg) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
+        (Right r, Right x) -> do
+            let r' = scopeIdentifiers "__INRULE_" r
+            (mxs,_) <- runWriterT $ flip evalStateT (M.empty,qNames) $ runErrorT $ applyRefnsDeep [r'] x
+            putStr " == BEFORE ==> "
+            print r
+            putStr " == AFTER  ==> "
+            print r'
+            case (mxs, result) of
+                (Left _  , []) -> return ()
+                (Left msg, _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr, show msg])
+                -- (Right [], []) -> return ()
+                -- (Right [], _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr])
+                (Right xs, []) -> assertFailure (unlines (["ApplyRuleRefn [rule applied, was expected not to.]", ruleRefn, expr, "{Results}"] ++ map (renderDoc . pretty) xs))
+                (Right xs, _ ) -> do
+                    ys <- forM result $ \ s -> case parseEither (parse <* eof) s of
+                                                    Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", s, msg]) >> return undefined
+                                                    Right y  -> return y
+                    assertEqual "ApplyRuleRefn [not equal]" ys (xs :: [Expr])
+
+applyRuleRefns :: [String] -> String -> [String] -> HUnit.Test
+applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn" : expr : ruleRefns)) $ HUnit.TestCase $ do
+    let qNames = [ "_q_" ++ show i | i <- [ (0 :: Int) .. ] ]
+    rs <- forM ruleRefns $ \ ruleRefn -> do
+        case parseEither (parse <* eof) ruleRefn of
+            Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg]) >> return undefined
+            Right r  -> return r
+    case parseEither (parse <* eof) expr of
+        Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
+        Right x  -> do
+            let rs' = map (scopeIdentifiers "__INRULE_") rs
+            (mxs,_) <- runWriterT $ flip evalStateT (M.empty,qNames) $ runErrorT $ applyRefnsDeep rs' x
+            case (mxs, result) of
+                (Left _  , []) -> return ()
+                (Left msg, _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", unlines ruleRefns, expr, show msg])
+                -- (Right [], []) -> return ()
+                -- (Right [], _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr])
+                (Right xs, []) -> assertFailure (unlines (["ApplyRuleRefn [rule applied, was expected not to.]", unlines ruleRefns, expr, "{Results}"] ++ map (renderDoc . pretty) xs))
+                (Right xs, _ ) -> do
+                    ys <- forM result $ \ s -> case parseEither (parse <* eof) s of
+                                                    Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", s, msg]) >> return undefined
+                                                    Right y  -> return y
+                    assertEqual "ApplyRuleRefn [not equal]" ys (xs :: [Expr])
+
 
 gnode :: forall a . (GPlate a, ParsePrint a) => a -> String -> GNode
 gnode _ = mkG . unsafeParse (parse <* eof :: Parser a)
@@ -83,7 +127,7 @@ gnode _ = mkG . unsafeParse (parse <* eof :: Parser a)
 --         (Left msg, _) -> assertFailure (unlines ["Eval [cannot parse]", px, msg])
 --         (_, Left msg) -> assertFailure (unlines ["Eval [cannot parse]", py, msg])
 --         (Right (x :: a), Right (y :: a)) -> do
---             (x',_logs) <- runWriterT $ flip evalStateT (Map.fromList bindings) $ runErrorT $ deepSimplify x
+--             (x',_logs) <- runWriterT $ flip evalStateT (M.fromList bindings) $ runErrorT $ deepSimplify x
 --             case x' of
 --                 Left msg  -> assertFailure (unlines ["Eval [simplification]", renderDoc (pretty x)])
 --                 Right x'' -> assertEqual "Eval [not equal]" x'' y
@@ -225,7 +269,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , eval [] "m[1+2,3+i,i+3]" "m[3, 3+i, i+3]"
     , parsePrintIso_Expr "x!"
     , parsePrintIso_Expr "(x)!"
-
+    
     , parsePrintIso_Value "1"
     , shouldParseTo       "false" $ VBool False
     , parsePrintIso_Value "false"
@@ -235,7 +279,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIso_Value "set {1,2+3,4-5}"
     , parsePrintIso_Value "mset {1,2,3}"
     , parsePrintIso_Value "partition {{1,2},{3,4},{x,y}}"
-
+    
     , parsePrintIso_QuantifiedExpr "forall i : s . k"
     , parsePrintIso_QuantifiedExpr "exists i : s . sum k : i . k = t"
     , parsePrintIso_QuantifiedExpr "exists i : s . sum k : i . (k = t)"
@@ -244,7 +288,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIso_QuantifiedExpr "forall i in s, i % 2 = 0 . i in k"
     , parsePrintIso_QuantifiedExpr "forall i : int(0..9) in s . i in k"
     , parsePrintIso_QuantifiedExpr "forall i : set of int(0..9) subseteq s . i in k"
-
+    
     , noParse_Identifier       ""
     , noParse_Identifier       "a[i]"
     , noParse_Identifier       "a+b"
@@ -252,20 +296,20 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIso_Identifier "i"
     , parsePrintIso_Identifier "_i"
     , parsePrintIso_Identifier "_"
-
+    
     , noParse_Where       ""
     , noParse_Where       "x+y=z"
     , noParse_Where       "wher k"
     , parsePrintIso_Where "where k"
     , parsePrintIso_Where "where k,l"
     , parsePrintIso_Where "where x+y=z,l"
-
+    
     , parsePrintIso_Lambda "{ x:int, y:bool -> x % 2 = 0 <=> y }"
     , parsePrintIso_Lambda "{ x:int -> x % 2 }"
     , noParse_Lambda       "lambda { x:int -> x % 2 }"
     , noParse_Lambda       "{}{ x:int -> x % 2 }}"
     , noParse_Lambda       ""
-
+    
     , parsePrintIsoFile_Spec "testdata/1.essence"
     , parsePrintIsoFile_Spec "testdata/2.essence"
     , parsePrintIsoFile_Spec "testdata/3.essence"
@@ -302,7 +346,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIsoFile_Spec "testdata/sss.essence"
     , parsePrintIsoFile_Spec "testdata/tuple-explode.essence"
     -- , parsePrintIsoFile_Spec "testdata/two-bars.essence"
-
+    
     , parsePrintIsoFile_Repr "rules/repr/Function.AsReln.repr"
     , parsePrintIsoFile_Repr "rules/repr/Function.Matrix1D.repr"
     , parsePrintIsoFile_Repr "rules/repr/Function.Matrix2D.repr"
@@ -316,7 +360,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIsoFile_Repr "rules/repr/Set.ExplicitVarSize.repr"
     , parsePrintIsoFile_Repr "rules/repr/Set.Gent.repr"
     , parsePrintIsoFile_Repr "rules/repr/Set.Occurrence.repr"
-
+    
     , parsePrintIsoFile_Refn "rules/refn/Function.Apply.AsReln.rule"
     , parsePrintIsoFile_Refn "rules/refn/Function.Apply.Matrix1D.rule"
     , parsePrintIsoFile_Refn "rules/refn/Function.Apply.Matrix2D.rule"
@@ -353,7 +397,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIsoFile_Refn "rules/refn/Tuple2.Eq.rule"
     , parsePrintIsoFile_Refn "rules/refn/Tuple2.Neq.rule"
     , parsePrintIsoFile_Refn "rules/refn/alldifferent.rule"
-
+    
     , parsePrintIso_Type "of size 4"
     , parsePrintIso_Type "of size a"
     , parsePrintIso_Type "of size a + b"
@@ -362,7 +406,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIso_Type "enum {foo, intt}"
     , parsePrintIso_Type "matrix indexed by [int, int] of enum {foo, bar}"
     , parsePrintIso_Type "tuple of (int, fool, tuple of (enum {foo, bar}, int))"
-
+    
     , parsePrintIso_Domain "bool"
     , parsePrintIso_Domain "int"
     , parsePrintIso_Domain "int(1)"
@@ -423,7 +467,7 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , parsePrintIso_Domain "partition (regular, numParts 5) from int(0..9)"
     , parsePrintIso_Domain "partition (regular, numParts 5, _) from int(0..9)"
     , parsePrintIso_Domain "partition (regular, maxNumParts 5, representation foo, _) from int(0..9)"
-
+    
     , eval [] "abs(-2+1)" "1"
     , eval [] "1 + 1" "2"
     , eval [] "1 + 2 * 3" "7"
@@ -439,38 +483,121 @@ main = let noParse_Expr                 = noParse           ( undefined :: Expr 
     , eval [] "2 * c * d * 0" "0"
     , eval [] "(2 - c + d) * (2 * 2 - 4)" "0"
     , eval [] "(a - a) * 3" "0"
-    -- , eval [] "a * 3 + 2 * b" "2*b + 3*a"
-    , eval [] "a * b - b * a" "0"
-    , eval [] "1+1+1+1+1+1+1+1+1+1" "10"
-    , eval [] "1-1-1-1-1-1-1-1-1-1" "-8"
-    , eval [] "1*1*1*1*1*1*1*1*1*1" "1"
-    , eval [] "1/1/1/1/1/1/1/1/1/1" "1"
-    , eval [] "14 % 8" "6"
-    , eval [] "14 % 8 % 4" "2"
-    -- , eval [] "1+a+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1" "21 + a"
-    -- , eval [] "1+a+1+1+1+1+1+1+1+1+1+1" "11 + a"
-    -- , eval [] "1+a+1+1+1+b+1+1+1+1+1+1" "10 + a + b"
-    -- , eval [] "1+b+1+1+1+a+1+1+1+1+1+1" "10 + a + b"
-    , eval [] "a - a + 1" "1"
-    , eval [] "a - a + b" "b"
-    , eval [] "a+b=b+a" "true"
-    , eval [] "12 + 3 > 11" "true"
-    , eval [] "12 + 3 < 11" "false"
-    , eval [] "1 in set {1,2,3}" "true"
-    , eval [] "set {1,3,5} union set {2,4,6}" "set {1,2,3,4,5,6}"
-    , eval [] "set {1,3,5} intersect set {2,4,6}" "set {}"
-    , eval [] "1+a+2+b*0" "3+a"
-    , eval [] "true /\\ false" "false"
-    , eval [] "(true /\\ false) => false" "true"
-    , eval [] "((2^4 >= 2^3) /\\ (2^4 <= 2^5)) => (2^3 <= 2^5)" "true"
-    , eval [] "(1 + 2) * 3 = 10 - 2 + 1" "true"
-    , eval [] "1 + 2 * 3 = 10 - 2 + 1" "false"
-    -- -- , eval [] "a+a+2*a+b*a" "(4 + b) * a"
-    -- -- , eval [] "(a+b)*(a+b)+(a+b)^2" "(a+b)^2 * 2"
-    , eval [] "!(true => x)" "!x"
-    , eval [] "!true => x" "true"
-    , eval [] "false => x" "true"
-    , eval [] "(!true) => x" "true"
+    -- -- , eval [] "a * 3 + 2 * b" "2*b + 3*a"
+    -- , eval [] "a * b - b * a" "0"
+    -- , eval [] "1+1+1+1+1+1+1+1+1+1" "10"
+    -- , eval [] "1-1-1-1-1-1-1-1-1-1" "-8"
+    -- , eval [] "1*1*1*1*1*1*1*1*1*1" "1"
+    -- , eval [] "1/1/1/1/1/1/1/1/1/1" "1"
+    -- , eval [] "14 % 8" "6"
+    -- , eval [] "14 % 8 % 4" "2"
+    -- -- , eval [] "1+a+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1" "21 + a"
+    -- -- , eval [] "1+a+1+1+1+1+1+1+1+1+1+1" "11 + a"
+    -- -- , eval [] "1+a+1+1+1+b+1+1+1+1+1+1" "10 + a + b"
+    -- -- , eval [] "1+b+1+1+1+a+1+1+1+1+1+1" "10 + a + b"
+    -- , eval [] "a - a + 1" "1"
+    -- , eval [] "a - a + b" "b"
+    -- , eval [] "a+b=b+a" "true"
+    -- , eval [] "12 + 3 > 11" "true"
+    -- , eval [] "12 + 3 < 11" "false"
+    -- , eval [] "1 in set {1,2,3}" "true"
+    -- , eval [] "set {1,3,5} union set {2,4,6}" "set {1,2,3,4,5,6}"
+    -- , eval [] "set {1,3,5} intersect set {2,4,6}" "set {}"
+    -- , eval [] "1+a+2+b*0" "3+a"
+    -- , eval [] "true /\\ false" "false"
+    -- , eval [] "(true /\\ false) => false" "true"
+    -- , eval [] "((2^4 >= 2^3) /\\ (2^4 <= 2^5)) => (2^3 <= 2^5)" "true"
+    -- , eval [] "(1 + 2) * 3 = 10 - 2 + 1" "true"
+    -- , eval [] "1 + 2 * 3 = 10 - 2 + 1" "false"
+    -- -- -- , eval [] "a+a+2*a+b*a" "(4 + b) * a"
+    -- -- -- , eval [] "(a+b)*(a+b)+(a+b)^2" "(a+b)^2 * 2"
+    -- , eval [] "!(true => x)" "!x"
+    -- , eval [] "!true => x" "true"
+    -- , eval [] "false => x" "true"
+    -- , eval [] "(!true) => x" "true"
+    -- 
+    -- , applyRuleRefn "x+y ~~> 2*x" "1+3" ["2*1"]
+    -- 
+    -- , applyRuleRefn "x+y ~~> 2*x" "1-3" []
+    -- 
+    -- , applyRuleRefn "x+y ~~> 2*x where x = y" "5+5" ["2*5"]
+    -- 
+    -- , applyRuleRefn "x+y ~~> 2*x where x = y" "5+6" []
+    -- 
+    -- , applyRuleRefn (unlines [ "x+y ~~> res"
+    --                          , "where x = y"
+    --                          , "letting res be 2 * x"
+    --                          ])
+    --                          "5+5" ["2*5"]
+    -- 
+    -- , applyRuleRefn (unlines [ "x+y ~~> res"
+    --                          , "letting theGuard be x = y"
+    --                          , "where theGuard"
+    --                          , "where x :: int, y :: int"
+    --                          , "letting foo be 2"
+    --                          , "letting bar be x"
+    --                          , "letting baz be foo * bar"
+    --                          , "letting res be baz"
+    --                          ])
+    --                          "7+7" ["2*7"]
+    -- 
+    -- , applyRuleRefn (unlines [ "x+y ~~> res"
+    --                          , "letting theGuard be x = y"
+    --                          , "where theGuard"
+    --                          , "where !(x :: set of _), !(y :: function int -> int)"
+    --                          , "letting foo be 2"
+    --                          , "letting bar be x"
+    --                          , "letting baz be foo * bar"
+    --                          , "letting res be baz"
+    --                          ])
+    --                         "7+7" ["2*7"]
+    -- 
+    -- , applyRuleRefn (unlines [ "x+y ~~> res"
+    --                          , "letting theGuard be x = y"
+    --                          , "where theGuard"
+    --                          , "letting foo be 2"
+    --                          , "letting bar be x"
+    --                          , "letting baz be foo * bar"
+    --                          , "letting res be baz"
+    --                          ])
+    --                          "a+a" ["2*a"]
+    -- 
+    -- , applyRuleRefn (unlines [ "x+y ~~> res"
+    --                          , "letting theGuard be x = y"
+    --                          , "where theGuard"
+    --                          , "letting foo be 2"
+    --                          , "letting bar be x"
+    --                          , "letting baz be foo * bar"
+    --                          , "letting res be baz"
+    --                          ])
+    --                          "a+b" []
+    -- 
+    -- , applyRuleRefn "x+y ~~> { x * y, y * x }" "a + b" [ "a * b"
+    --                                                    , "b * a" ]
+    -- 
+    -- , applyRuleRefn "x+y ~~> { x * y, y * x }" "a - b" []
+    -- 
+    -- , applyRuleRefn "x + y ~~> 2 * x where x = y" "2 - (7 + 7)" ["2 - (2 * 7)"]
+    -- 
+    -- , applyRuleRefns [ "x + y ~~> 2 * x where x = y" ] "2 - (7 + 7)" ["2 - (2 * 7)"]
+    -- 
+    -- , applyRuleRefns [ "x + y ~~> 2 * x where x = y"
+    --                  , "x - y ~~> 0     where x = y"
+    --                  ]
+    --                  "(2 * a) - (a + a)"
+    --                  [ "0" ]
+    -- 
+    -- , applyRuleRefns [ "x + y ~~> 2 * x where x = y"
+    --                  , "x - y ~~> 0     where x = y"
+    --                  ]
+    --                  "(2 * x) - (x + x)"
+    --                  [ "0" ]
+    -- 
+    -- , applyRuleRefns [ "x + y ~~> 2 * x where x = y"
+    --                  , "x - y ~~> 0     where x = y"
+    --                  ]
+    --                  "(2 * x) - (y + z)"
+    --                  []
 
     ]
 

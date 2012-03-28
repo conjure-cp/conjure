@@ -9,20 +9,24 @@ module GenericOps.Core
     , NodeTag(..), nodeTagData
     , GPlate(..), gplateLeaf, gplateSingle, gplateTwo, gplateUniList, gplateError
     , GNode(..), mkG, showG, fromG, fromGs, (===)
-    , liftG, liftGM, unliftG, unliftGM
-    , universe, universeBi
+    -- , liftG, liftGM, liftGM_Maybe
+    -- , unliftG, unliftGM, unliftGM_Maybe
+    , universe
     , descend, descendM
-    , bottomUp, bottomUpM
-    , bottomUpRewrite, bottomUpRewriteM
-    , topDown, topDownM
-    , topDownRewrite, topDownRewriteM
-    , MatchBind(..)
+    , bottomUp , bottomUpRewrite
+    , bottomUpM, bottomUpRewriteM
+    , topDown , topDownRewrite
+    , topDownM, topDownRewriteM
+    , MatchBind(..), runMatch, runBind, gbind
+    , BindingsMap, addBinding, getBinding
     , gapply, gapplyDeep
     ) where
 
-import Control.Monad ( liftM, zipWithM_ )
-import Control.Monad.Error ( ErrorT(..), throwError, Error(..) )
-import Control.Monad.State ( StateT(..), evalStateT, get, modify )
+-- import Debug.Trace
+import Control.Arrow ( first, second )
+import Control.Monad ( forM, liftM, zipWithM_ )
+import Control.Monad.Error ( MonadError, ErrorT(..), throwError, Error(..) )
+import Control.Monad.State ( MonadState, StateT(..), evalStateT, get, gets, put, modify )
 import Control.Monad.Trans.Class ( lift )
 import Control.Monad.Writer ( MonadWriter(..) )
 import Data.Data ( Data, toConstr )
@@ -151,91 +155,179 @@ instance Show GNode where
 showG :: GNode -> String
 showG (GNode _ x) = show x
 
+{-# INLINE mkG #-}
 mkG :: GPlate a => a -> GNode
 mkG x = GNode (typeOf x) x
 
+{-# INLINE fromG #-}
 fromG :: Typeable a => GNode -> Maybe a
 fromG (GNode t v) =
     case unsafeCoerce v of
         r | t == typeOf r -> Just r
           | otherwise     -> Nothing
 
+{-# INLINE fromGs #-}
 fromGs :: Typeable a => [GNode] -> [a]
 fromGs gs = mapMaybe fromG gs
 
+{-# INLINE (===) #-}
 (===) :: GNode -> GNode -> Bool
 (GNode _ x) === (GNode _ y) = cast x == Just y
 
 
+{-# INLINE liftG #-}
 liftG :: GPlate a => (a -> a) -> GNode -> GNode
-liftG f x = case fromG x of
-                Nothing -> x
-                Just y  -> mkG (f y)
+liftG f x = case fromG x of Nothing -> x
+                            Just y  -> mkG (f y)
 
+{-# INLINE liftG_Maybe #-}
+liftG_Maybe :: GPlate a => (a -> Maybe a) -> GNode -> Maybe GNode
+liftG_Maybe f x = case fromG x of Nothing -> Nothing
+                                  Just y  -> liftM mkG (f y)
+
+{-# INLINE liftGM #-}
 liftGM :: (GPlate a, Monad m) => (a -> m a) -> GNode -> m GNode
-liftGM f x = case fromG x of
-                Nothing -> return x
-                Just y  -> mkG `liftM` f y
+liftGM f x = case fromG x of Nothing -> return x
+                             Just y  -> liftM mkG (f y)
 
+{-# INLINE liftGM_Maybe #-}
+liftGM_Maybe :: (GPlate a, Monad m) => (a -> m (Maybe a)) -> GNode -> m (Maybe GNode)
+liftGM_Maybe f x = case fromG x of Nothing -> return Nothing
+                                   Just y  -> liftM (liftM mkG) (f y)
+
+
+{-# INLINE unliftG #-}
 unliftG :: GPlate a => (GNode -> GNode) -> a -> a
 unliftG f x = case fromG $ f $ mkG x of Nothing -> x
                                         Just y  -> y
 
+-- {-# INLINE unliftG_Maybe #-}
+-- unliftG_Maybe :: GPlate a => (GNode -> Maybe GNode) -> a -> Maybe a
+-- unliftG_Maybe f x = case f (mkG x) of Nothing -> Nothing
+--                                       Just y  -> fromG y
+
+{-# INLINE unliftGM #-}
 unliftGM :: (GPlate a, Monad m) => (GNode -> m GNode) -> a -> m a
 unliftGM f x = do
     y <- f (mkG x)
     return $ case fromG y of Nothing -> x
                              Just z  -> z
 
+-- {-# INLINE unliftGM_Maybe #-}
+-- unliftGM_Maybe :: (GPlate a, Monad m) => (GNode -> m (Maybe GNode)) -> a -> m (Maybe a)
+-- unliftGM_Maybe f x = do
+--     y <- f (mkG x)
+--     return $ case y of Nothing -> Nothing
+--                        Just z  -> fromG z
 
-universe :: GNode -> [GNode]
-universe g@(GNode _ x) = g : concatMap universe (fst (gplate x))
 
-universeBi :: (GPlate a, Typeable b) => a -> [b]
-universeBi = fromGs . universe . mkG
 
-descend :: (GNode -> GNode) -> GNode -> GNode
-descend f (GNode _ x) = mkG $ generate $ map f current
+{-# INLINE gUniverse #-}
+gUniverse :: GNode -> [GNode]
+gUniverse g@(GNode _ x) = g : concatMap gUniverse (fst (gplate x))
+
+{-# INLINE universe #-}
+universe :: (GPlate a, Typeable b) => a -> [b]
+universe = fromGs . gUniverse . mkG
+
+
+
+{-# INLINE gDescend #-}
+gDescend :: (GNode -> GNode) -> GNode -> GNode
+gDescend f (GNode _ x) = mkG $ generate $ map f current
     where (current, generate) = gplate x
 
-bottomUp :: (GNode -> GNode) -> GNode -> GNode
-bottomUp f = g
-    where g = f . descend g
+{-# INLINE descend #-}
+descend :: (GPlate a, GPlate b) => (a -> a) -> b -> b
+descend = unliftG . gDescend . liftG
 
-bottomUpRewrite :: (GNode -> Maybe GNode) -> GNode -> GNode
-bottomUpRewrite f = bottomUp g
-    where g x = maybe x (bottomUpRewrite f) (f x)
-
-topDown :: (GNode -> GNode) -> GNode -> GNode
-topDown f = g
-    where g = descend g . f
-
-topDownRewrite :: (GNode -> Maybe GNode) -> GNode -> GNode
-topDownRewrite f = topDown g
-    where g x = maybe x (topDownRewrite f) (f x)
-
-
-descendM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
-descendM f (GNode _ x) = do
+{-# INLINE gDescendM #-}
+gDescendM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
+-- gDescendM f (GNode _ x) = trace ("gDescendM: " ++ show (pretty x)) $ do
+gDescendM f (GNode _ x) = do
     let (current, generate) = gplate x
     current' <- mapM f current
     return $ mkG $ generate current'
 
-bottomUpM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
-bottomUpM f = g
-    where g x = f =<< descendM g x
+{-# INLINE descendM #-}
+descendM :: (GPlate a, GPlate b, Monad m) => (a -> m a) -> b -> m b
+descendM = unliftGM . gDescendM . liftGM
 
-bottomUpRewriteM :: Monad m => (GNode -> m (Maybe GNode)) -> GNode -> m GNode
-bottomUpRewriteM f = bottomUpM g
-    where g x = f x >>= maybe (return x) (bottomUpRewriteM f)
 
-topDownM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
-topDownM f = g
-    where g x = descendM g =<< f x
 
-topDownRewriteM :: Monad m => (GNode -> m (Maybe GNode)) -> GNode -> m GNode
-topDownRewriteM f = topDownM g
-    where g x = f x >>= maybe (return x) (topDownRewriteM f)
+
+{-# INLINE gBottomUp #-}
+gBottomUp :: (GNode -> GNode) -> GNode -> GNode
+gBottomUp f = g
+    where g = f . gDescend g
+
+{-# INLINE bottomUp #-}
+bottomUp :: (GPlate a, GPlate b) => (a -> a) -> b -> b
+bottomUp = unliftG . gBottomUp . liftG
+
+{-# INLINE gBottomUpRewrite #-}
+gBottomUpRewrite :: (GNode -> Maybe GNode) -> GNode -> GNode
+gBottomUpRewrite f = gBottomUp g
+    where g x = maybe x (gBottomUpRewrite f) (f x)
+
+{-# INLINE bottomUpRewrite #-}
+bottomUpRewrite :: (GPlate a, GPlate b) => (a -> Maybe a) -> b -> b
+bottomUpRewrite f = unliftG (gBottomUpRewrite (liftG_Maybe f))
+
+{-# INLINE gBottomUpM #-}
+gBottomUpM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
+gBottomUpM f = g
+    where g x = f =<< gDescendM g x
+
+{-# INLINE bottomUpM #-}
+bottomUpM :: (GPlate a, GPlate b, Monad m) => (a -> m a) -> b -> m b
+bottomUpM = unliftGM . gBottomUpM . liftGM
+
+{-# INLINE gBottomUpRewriteM #-}
+gBottomUpRewriteM :: Monad m => (GNode -> m (Maybe GNode)) -> GNode -> m GNode
+gBottomUpRewriteM f = gBottomUpM g
+    where g x = f x >>= maybe (return x) (gBottomUpRewriteM f)
+
+{-# INLINE bottomUpRewriteM #-}
+bottomUpRewriteM :: (GPlate a, GPlate b, Monad m) => (a -> m (Maybe a)) -> b -> m b
+bottomUpRewriteM f = unliftGM (gBottomUpRewriteM (liftGM_Maybe f))
+
+
+{-# INLINE gTopDown #-}
+gTopDown :: (GNode -> GNode) -> GNode -> GNode
+gTopDown f = g
+    where g = gDescend g . f
+
+{-# INLINE topDown #-}
+topDown :: (GPlate a, GPlate b) => (a -> a) -> b -> b
+topDown = unliftG . gTopDown . liftG
+
+{-# INLINE gTopDownRewrite #-}
+gTopDownRewrite :: (GNode -> Maybe GNode) -> GNode -> GNode
+gTopDownRewrite f = gTopDown g
+    where g x = maybe x (gTopDownRewrite f) (f x)
+
+{-# INLINE topDownRewrite #-}
+topDownRewrite :: (GPlate a, GPlate b) => (a -> Maybe a) -> b -> b
+topDownRewrite f = unliftG (gTopDownRewrite (liftG_Maybe f))
+
+{-# INLINE gTopDownM #-}
+gTopDownM :: Monad m => (GNode -> m GNode) -> GNode -> m GNode
+gTopDownM f = g
+    where g x = gDescendM g =<< f x
+
+{-# INLINE topDownM #-}
+topDownM :: (GPlate a, GPlate b, Monad m) => (a -> m a) -> b -> m b
+topDownM = unliftGM . gTopDownM . liftGM
+
+{-# INLINE gTopDownRewriteM #-}
+gTopDownRewriteM :: Monad m => (GNode -> m (Maybe GNode)) -> GNode -> m GNode
+gTopDownRewriteM f = gTopDownM g
+    where g x = f x >>= maybe (return x) (gTopDownRewriteM f)
+
+{-# INLINE topDownRewriteM #-}
+topDownRewriteM :: (GPlate a, GPlate b, Monad m) => (a -> m (Maybe a)) -> b -> m b
+topDownRewriteM f = unliftGM (gTopDownRewriteM (liftGM_Maybe f))
 
 
 
@@ -247,14 +339,44 @@ instance Error Doc where
     strMsg = text
 
 type BindingsMap = M.Map String GNode
-type CommonMonad m a l = ErrorT Doc (StateT BindingsMap (StateT [l] m)) a
-type MatchMonad m a = CommonMonad m a (GNode,GNode)
-type BindMonad  m a = CommonMonad m a GNode
+type MatchMonad m a = ErrorT Doc (StateT BindingsMap (StateT [(GNode,GNode)] m)) a
+type BindMonad  m a = ErrorT Doc (StateT BindingsMap (StateT ([GNode],[String]) m)) a
 
 -- runMatchBind :: CommonMonad m a l -> Either String ()
 -- runMatchBind comp = do
 -- 	res <- runErrorT comp
 -- 	return res
+
+
+
+runMatch ::
+    ( GPlate a
+    , Monad m
+    , MonadError Doc m
+    , MonadState BindingsMap m
+    ) => a -> a -> m ()
+runMatch patt curr = do
+    oldBindings <- get
+    (i, newBindings) <- flip evalStateT [] $ flip runStateT oldBindings $ runErrorT $ match patt curr
+    case i of
+        Left msg -> throwError msg
+        Right () -> put newBindings
+
+runBind ::
+    ( GPlate a
+    , Monad m
+    , MonadError Doc m
+    , MonadState BindingsMap m
+    ) => a -> m a
+runBind template = do
+    bindings <- get
+    i <- flip evalStateT ([],[]) $ flip evalStateT bindings $ runErrorT $ bind template
+    case i of
+        Left msg       -> throwError msg
+        Right Nothing  -> return template
+        Right (Just j) -> runBind j
+
+
 
 class MatchBind a where
     match :: (Monad m, GPlate a) => a -> a -> MatchMonad m ()
@@ -272,36 +394,81 @@ class MatchBind a where
                              | otherwise                -> zipWithM_ gmatch ps as               -- recursive call.
         lift $ lift $ modify tail
 
-    bind :: (Monad m, GPlate a) => a -> BindMonad m a
+    -- returning a (Just value) means an update took place.
+    -- returning a (Nothing)    means the input hasn't been changed.
+    bind :: (Monad m, GPlate a) => a -> BindMonad m (Maybe a)
     bind t = do
-        lift $ lift $ modify (mkG t :)                                          -- add this node on top of the call stack.
+        lift $ lift $ modify $ first (mkG t :)                                  -- add this node on top of the call stack.
         result <- case hole t of                                                -- check hole-status of the pattern.
-            UnnamedHole  -> return t -- gbindError "Unnamed hole in template."  -- unnamed hole in a template is just nonsense.
+            UnnamedHole  -> return Nothing -- gbindError "Unnamed hole in template."  -- unnamed hole in a template is just nonsense.
             NamedHole nm -> do
-                bindings <- lift get
-                case M.lookup nm bindings of
-                    Nothing -> return t -- gbindError ("Not found: " <+> text nm)                                                    -- if the name cannot be found in te list of bindings.
-                    Just (GNode ty_b b) | typeOf t == ty_b -> return (unsafeCoerce b)                                                -- the name is bound to something of the expected type. great.
-                                        | otherwise        -> gbindError $ vcat [ "Type mismatch for: " <+> text nm                  -- name is bound, but wrong type.
-                                                                                , nest 4 "Expected: "   <+> text (show (typeOf t))
-                                                                                , nest 4 "But got:  "   <+> text (show ty_b)
-                                                                                ]
+                oldNames <- lift $ lift $ gets snd
+                if nm `elem` oldNames
+                    then error $ "cyclic definition of something: " ++ nm ++ " " ++ show oldNames
+                    else do
+                        lift $ lift $ modify $ second (nm :)
+                        bindings <- lift get
+                        res <- case M.lookup nm bindings of
+                            Nothing -> return Nothing -- gbindError ("Not found: " <+> text nm)                                                     -- if the name cannot be found in te list of bindings.
+                            Just (GNode ty_b b) | typeOf t == ty_b -> return (Just (unsafeCoerce b))                                                -- the name is bound to something of the expected type. great.
+                                                | otherwise        -> return Nothing
+                                                -- | otherwise        -> gbindError $ vcat [ "Type mismatch for: " <+> text nm                         -- name is bound, but wrong type.
+                                                --                                         , nest 4 "Expected: "   <+> text (show (typeOf t))
+                                                --                                         , nest 4 "But got:  "   <+> text (show ty_b)
+                                                --                                         ]
+                        lift $ lift $ modify $ second tail
+                        return res
             NotAHole -> case gplate t of
-                            ([], _  ) -> return t                       -- if this is not a hole, and is a leaf, just return it.
+                            ([], _  ) -> return Nothing                       -- if this is not a hole, and is a leaf, just return it.
                             (ts, gen) -> do
-                                ts' <- mapM gbind ts                    -- otherwise, apply gbind recursively to immediate children.
-                                return $ gen ts'
-        lift $ lift $ modify tail
+                                -- ts'  <- mapM gbind ts                    -- otherwise, apply gbind recursively to immediate children.
+                                (bools,ts') <- liftM unzip $ forM ts $ \ i -> do
+                                            j <- gbind i
+                                            case j of Nothing -> return (False, i)
+                                                      Just k  -> return (True , k)
+                                return $ if or bools
+                                             then Just (gen ts')         -- degisen var.
+                                             else Nothing
+        lift $ lift $ modify (first tail)
         return result
 
+    -- bind :: (Monad m, GPlate a) => a -> BindMonad m a
+    -- bind t = do
+    --     lift $ lift $ modify (mkG t :)                                          -- add this node on top of the call stack.
+    --     result <- case hole t of                                                -- check hole-status of the pattern.
+    --         UnnamedHole  -> return t -- gbindError "Unnamed hole in template."  -- unnamed hole in a template is just nonsense.
+    --         NamedHole nm -> do
+    --             bindings <- lift get
+    --             case M.lookup nm bindings of
+    --                 Nothing -> return t -- gbindError ("Not found: " <+> text nm)                                                    -- if the name cannot be found in te list of bindings.
+    --                 Just (GNode ty_b b) | typeOf t == ty_b -> return (unsafeCoerce b)                                                -- the name is bound to something of the expected type. great.
+    --                                     | otherwise        -> gbindError $ vcat [ "Type mismatch for: " <+> text nm                  -- name is bound, but wrong type.
+    --                                                                             , nest 4 "Expected: "   <+> text (show (typeOf t))
+    --                                                                             , nest 4 "But got:  "   <+> text (show ty_b)
+    --                                                                             ]
+    --         NotAHole -> case gplate t of
+    --                         ([], _  ) -> return t                       -- if this is not a hole, and is a leaf, just return it.
+    --                         (ts, gen) -> do
+    --                             ts' <- mapM gbind ts                    -- otherwise, apply gbind recursively to immediate children.
+    --                             return $ gen ts'
+    --     lift $ lift $ modify tail
+    --     return result
 
-addBinding :: (Monad m, GPlate a) => String -> a -> MatchMonad m ()
+
+addBinding :: (GPlate a, MonadError Doc m, MonadState BindingsMap m) => String -> a -> m ()
 addBinding nm x = do
-    mp <- lift get
+    mp <- get
     case M.lookup nm mp of
-        Nothing -> lift $ modify $ M.insert nm (mkG x)
+        Nothing -> modify $ M.insert nm (mkG x)
         Just _  -> throwError ("Name is already bound: " <+> text nm)
 
+
+getBinding :: (MonadState BindingsMap m, GPlate a) => String -> m (Maybe a)
+getBinding nm = do
+    bindings <- get
+    return $ case M.lookup nm bindings of
+        Nothing -> Nothing
+        Just gr -> fromG gr
 
 gmatch :: Monad m => GNode -> GNode -> MatchMonad m ()
 gmatch (GNode ty_a a) (GNode ty_b b) | ty_a == ty_b = match a (unsafeCoerce b)
@@ -310,8 +477,12 @@ gmatch p a = do
     gmatchError "Type mismatch."
     lift $ lift $ modify $ tail
 
-gbind :: Monad m => GNode -> BindMonad m GNode
-gbind (GNode _ t) = mkG `liftM` bind t
+gbind :: Monad m => GNode -> BindMonad m (Maybe GNode)
+gbind (GNode _ t) = liftM (liftM mkG) (bind t)
+    -- mresult <- bind t
+    -- case mresult of
+    --     Nothing -> return Nothing
+    --     Just res -> Just mkG
 
 
 
@@ -322,12 +493,12 @@ gmatchError msg = do
     let combinedMsg = vcat (msg : map (nest 4) msgs)
     throwError combinedMsg
 
-gbindError :: Monad m => Doc -> BindMonad m a
-gbindError msg = do
-    stack <- lift $ lift get
-    let msgs = map (text . showG) stack
-    let combinedMsg = vcat (msg : map (nest 4) msgs)
-    throwError combinedMsg
+-- gbindError :: Monad m => Doc -> BindMonad m a
+-- gbindError msg = do
+--     stack <- lift $ lift $ gets fst
+--     let msgs = map (text . showG) stack
+--     let combinedMsg = vcat (msg : map (nest 4) msgs)
+--     throwError combinedMsg
 
 
 data ApplResult = Applied    String GNode GNode
@@ -356,13 +527,14 @@ gapply name pattern template param = do
             tell [ Str $ text (padLeft ' ' 10 nm) <+> ":" <+> pretty n
                  | (nm, GNode _ n) <- M.toList binds
                  ]
-            j <- flip evalStateT [] $ flip evalStateT binds $ runErrorT $ bind template
+            j <- flip evalStateT ([],[]) $ flip evalStateT binds $ runErrorT $ bind template
             case j of
-                Left msg -> tell [ NotApplied name (mkG param) msg     ] >> return param
-                Right k  -> tell [ Applied    name (mkG param) (mkG k) ] >> return k
+                Left  msg      -> tell [ NotApplied name (mkG param) msg            ] >> return param
+                Right Nothing  -> tell [ Applied    name (mkG param) (mkG template) ] >> return template
+                Right (Just k) -> tell [ Applied    name (mkG param) (mkG k)        ] >> return k
 
 gapplyDeep :: (MonadWriter [ApplResult] m, GPlate a) => String -> a -> a -> a -> m a
-gapplyDeep name a b = unliftGM $ bottomUpM $ liftGM $ gapply name a b
+gapplyDeep name a b = unliftGM $ gBottomUpM $ liftGM $ gapply name a b
 
 
 

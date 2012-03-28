@@ -1,0 +1,20 @@
+
+* Document the implementation up until now, need gitit to do that!
+
+* BindingContext (in Expr?)
+
+    + Bindings bKind Identifier GNode
+                    TOPLEVEL    NESTED
+        - Find         +                        refine
+        - Given        +                        refine
+        - Let          +          +             inline
+        - Quan                    +             refine
+        - Rule                    +             inline
+        - NewVar                  +             bubbleup & make it a Find & will be refined if need be later on
+    + Conditions
+        - [Expr]       +          +             evaluate if possible
+                                                else, leave it as is.
+                                                subject to refinement.
+
+    + Body
+        - [Expr]       +          +

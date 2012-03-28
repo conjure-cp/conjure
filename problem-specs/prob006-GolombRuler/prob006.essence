@@ -9,4 +9,7 @@ find ticks : set (size n) of int(0..bound)
 minimising max(ticks)
 
 such that
-    forall i,j,k,l: ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k
+    $ forall i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k,
+    $ forall i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k,
+    $ forall i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k,
+    forall i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k

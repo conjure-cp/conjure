@@ -1,0 +1,14 @@
+language Essence 2.0
+
+find x: set (size 4) of int(0..9)
+find x_Gent: matrix indexed by [int(0..9)] of int(0..10)
+
+such that
+    forall i_Explicit : matrix indexed by [int(1..2)] of int(3..5), (forall _q_0 : int(1..1) .
+                                                                         i_Explicit[_q_0] < i_Explicit[_q_0 + 1]) /\ alldifferent(i_Explicit) .
+        i#Explicit subseteq x#Gent,
+    forall _q_1 : int(0..9) .
+        0 = x_Gent[_q_1] \/ 1 + (sum _q_2 : int(0..9), _q_2 < _q_1 /\ x_Gent[_q_2] > 0 .
+                                     1) = x_Gent[_q_1],
+    4 = (sum _q_3 : int(0..9), x_Gent[_q_3] > 0 .
+             1)

@@ -12,8 +12,11 @@ module Utils
     , allPairs
     , safeStr
     , mapButLast, matchingOuterParens
+    , equalLengths
+    , concatMapM
     ) where
 
+import Control.Applicative
 import Control.Monad ( foldM )
 import Control.Monad.Error ( ErrorT, runErrorT )
 import Control.Monad.RWS ( RWS, evalRWS, RWST(..), evalRWST )
@@ -21,6 +24,16 @@ import Data.Maybe ( listToMaybe )
 import System.IO ( hSetEcho, stdin )
 import Text.PrettyPrint ( lineLength, renderStyle, style )
 import Text.Show.Pretty ( ppDoc )
+
+
+
+concatMapM :: (Applicative m, Monad m) => (a -> m [b]) -> [a] -> m [b]
+concatMapM f xs = concat <$> mapM f xs
+
+equalLengths :: [a] -> [b] -> Bool
+equalLengths [] [] = True
+equalLengths (_:a) (_:b) = equalLengths a b
+equalLengths _ _ = False
 
 mapButLast :: (a -> a) -> [a] -> [a]
 mapButLast _ [ ]    = []

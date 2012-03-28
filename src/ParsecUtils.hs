@@ -38,8 +38,8 @@ ldef :: LanguageDef st
 ldef  = emptyDef { commentLine     = "$"
                  , identStart      = char '_' <|> letter
                  , identLetter     = char '_' <|> char '#' <|> alphaNum
-                 , reservedNames   = lines reservedNamesTxt
-                 , reservedOpNames = lines reservedOpNamesTxt
+                 , reservedNames   = reservedNamesTxt
+                 , reservedOpNames = reservedOpNamesTxt
                  , caseSensitive   = True
                  }
 

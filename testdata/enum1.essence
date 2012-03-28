@@ -1,7 +1,8 @@
 language Essence 2.0
 
 letting e be new type enum { foo, bar, baz }
+letting e2 be new type enum { foo, bar, baz }
 
 find x,y : e
 
-such that x != y
+such that x != y, x = foo

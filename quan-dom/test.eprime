@@ -1,0 +1,13 @@
+language ESSENCE' 2.0
+
+letting elems be 3
+letting setsize be 2
+letting nbsets be elems ^ setsize
+
+find m : matrix indexed by [int(1..nbsets), int(1..setsize)] of int(1..elems)
+
+such that
+    $ forall i : int(1..nbsets-1) . m[i,..] <lex m[i+1,..],
+    forall i, j : int(1..nbsets) . ((i != j) => !(forall k : int(1..setsize) . m[i,k] = m[j,k])),
+    $ forall i : int(1..nbsets) . alldifferent(m[i,..]),
+    true

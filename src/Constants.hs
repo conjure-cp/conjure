@@ -7,15 +7,20 @@ module Constants where
 
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
+import Data.Set as S ( Set, fromList )
+
 
 
 figlet :: String
 figlet = unpack $(embedFile (DATADIR ++ "conjure.figlet"))
 
+reservedSet :: S.Set String
+reservedSet = S.fromList $ reservedNamesTxt ++ reservedOpNamesTxt
+
 -- reservedNames are loaded from `reservedNames.txt` at compile time
-reservedNamesTxt :: String
-reservedNamesTxt = unpack $(embedFile (DATADIR ++ "reservedNames.txt"))
+reservedNamesTxt :: [String]
+reservedNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedNames.txt"))
 
 -- reservedOpNames are loaded from `reservedOpNames.txt` at compile time
-reservedOpNamesTxt :: String
-reservedOpNamesTxt = unpack $(embedFile (DATADIR ++ "reservedOpNames.txt"))
+reservedOpNamesTxt :: [String]
+reservedOpNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedOpNames.txt"))

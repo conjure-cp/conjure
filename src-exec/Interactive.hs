@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
@@ -6,30 +7,36 @@ import Control.Applicative
 import Control.Exception ( SomeException, try )
 import Control.Monad ( when )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
-import Control.Monad.State ( MonadState, get, gets, put )
+import Control.Monad.State ( MonadState, get, gets, put, StateT, evalStateT, execStateT )
 import Control.Monad.Trans.Class ( lift )
-import Control.Monad.Trans.State.Lazy ( StateT, evalStateT )
+import Control.Monad.Error ( runErrorT )
+import Control.Monad.Writer ( runWriterT )
 import Data.Char ( toLower )
-import Data.List ( intercalate, isPrefixOf )
-import System.Console.Haskeline ( InputT, defaultSettings, getInputLine, runInputT )
+import Data.Either ( lefts )
+import Data.List ( delete, intercalate, isPrefixOf )
+import System.Console.Haskeline ( InputT, runInputT, getInputLine , Settings(..) )
+import System.Console.Haskeline.Completion ( completeFilename )
 import System.Environment ( getArgs )
+import qualified Data.Map as M
 
 import Constants ( figlet )
-import Language.Essence ( Spec(..), Log )
-import Language.EssenceEvaluator ( runEvaluateExpr )
-import Language.EssenceKinds ( runKindOf )
-import Language.EssenceParsers ( pSpec, pExpr, pTopLevels, pObjective, knownQuans )
-import Language.EssencePrinters ( prSpec, prExpr, prType, prKind, prKindInteractive )
-import Language.EssenceTypes ( runTypeOf )
-import ParsecUtils ( Parser, parseEither, parseFromFile, eof, choiceTry )
-import PrintUtils ( Doc, text, render, renderDoc, sep, vcat )
+import ParsecUtils ( eof, parseEither, parseFromFile )
+import ParsePrint ( ParsePrint, parse, pretty )
+import PrintUtils ( Doc, nest, vcat )
 import Utils ( fromJust, ppPrint, strip )
+
+import Language.Essence
+import Language.Essence.Phases.EnumIdentifiers ( enumIdentifiers )
+import Language.EssenceEvaluator ( deepSimplify )
+
 
 
 data Command = EvalTypeKind String
-             | Eval String
+             | Evaluate String
              | TypeOf String
              | KindOf String
+             | ShowFullAST
+             | ShowAST String
              | Load FilePath
              | Save FilePath
              | Record String        -- might record a declaration, where clause, objective, or constraint
@@ -39,7 +46,6 @@ data Command = EvalTypeKind String
              | Rollback
              | DisplaySpec
              | Quit
-             | Flag String
     deriving (Eq, Ord, Read, Show)
 
 
@@ -52,19 +58,20 @@ parseCommand s =
             firstWord <- case words ss of []    -> Right ""
                                           (i:_) -> Right $ map toLower i
             let restOfLine = strip $ drop (length firstWord) ss
-            let actions = [ ( "evaluate"      , Eval restOfLine          )
-                          , ( "typeof"        , TypeOf restOfLine        )
-                          , ( "kindof"        , KindOf restOfLine        )
-                          , ( "load"          , Load restOfLine          )
-                          , ( "save"          , Save restOfLine          )
-                          , ( "record"        , Record restOfLine        )
+            let actions = [ ( "evaluate"      , Evaluate      restOfLine )
+                          , ( "typeof"        , TypeOf        restOfLine )
+                          , ( "kindof"        , KindOf        restOfLine )
+                          , ( "showast"       , ShowAST       restOfLine )
+                          , ( "fullshowast"   , ShowFullAST              )
+                          , ( "load"          , Load          restOfLine )
+                          , ( "save"          , Save          restOfLine )
+                          , ( "record"        , Record        restOfLine )
                           , ( "rmdeclaration" , RmDeclaration restOfLine )
-                          , ( "rmconstraint"  , RmConstraint restOfLine  )
+                          , ( "rmconstraint"  , RmConstraint  restOfLine )
                           , ( "rmobjective"   , RmObjective              )
                           , ( "rollback"      , Rollback                 )
                           , ( "displayspec"   , DisplaySpec              )
                           , ( "quit"          , Quit                     )
-                          , ( "flag"          , Flag restOfLine          )
                           ]
             case filter (\ (i,_) -> isPrefixOf firstWord i ) actions of
                 []        -> Left "no such action"
@@ -73,31 +80,29 @@ parseCommand s =
         line -> Right $ EvalTypeKind line
 
 
-data REPLState = REPLState { currentSpec   :: Spec
-                           , oldSpecs      :: [Spec]
-                           , commandHist   :: [Command]
-                           , flagLogs      :: Bool
-                           , flagRawOutput :: Bool
+data REPLState = REPLState { currentSpec :: Spec
+                           , oldSpecs    :: [Spec]
+                           , flags       :: [REPLFlag]
                            }
+    deriving (Eq, Ord, Read, Show)
+
+data REPLFlag = PrintLogs
     deriving (Eq, Ord, Read, Show)
 
 
 initREPLState :: REPLState
-initREPLState = REPLState { currentSpec   = sp
-                          , oldSpecs      = []
-                          , commandHist   = []
-                          , flagLogs      = False
-                          , flagRawOutput = False
+initREPLState = REPLState { currentSpec = sp
+                          , oldSpecs    = []
+                          , flags       = []
                           }
     where
         sp :: Spec
-        sp = Spec { language         = "Essence"
-                  , version          = [2,0]
-                  , topLevelBindings = fst knownQuans
-                  , topLevelWheres   = []
-                  , objective        = Nothing
-                  , constraints      = []
-                  , metadata         = []
+        sp = Spec { language    = "Essence"
+                  , version     = [2,0]
+                  , topLevels   = []
+                  , objective   = Nothing
+                  , constraints = []
+                  , metadata    = []
                   }
 
 modifySpec :: MonadState REPLState m => (Spec -> Spec) -> m ()
@@ -113,97 +118,99 @@ modifySpec f = do
 returningTrue :: Applicative f => f () -> f Bool
 returningTrue f = pure True <* f
 
-withParsed :: (Applicative m, MonadIO m) => Parser a -> String -> (a -> m ()) -> m Bool
-withParsed p s comp = returningTrue $ case parseEither (p <* eof) s of
+withParsed :: (Applicative m, MonadIO m, ParsePrint a) => String -> (a -> m ()) -> m Bool
+withParsed s comp = returningTrue $ case parseEither (parse <* eof) s of
     Left msg -> liftIO $ putStrLn msg
     Right x  -> comp x
 
-prettyPrint :: (MonadIO m, Show a) => (a -> Maybe Doc) -> a -> m ()
-prettyPrint f x = liftIO . putStrLn $ render f x
+-- prettyPrint :: (MonadIO m, Show a) => (a -> Maybe Doc) -> a -> m ()
+-- prettyPrint f x = liftIO . putStrLn $ render f x
 
-displayLogs :: (MonadIO m, MonadState REPLState m) => [Log] -> m ()
+displayLogs :: (MonadIO m, MonadState REPLState m) => [Doc] -> m ()
 displayLogs logs = do
-    flag <- gets flagLogs
-    when flag $ liftIO $ putStrLn $ unlines $ "[LOGS]" : map ("  "++) logs
+    fs <- gets flags
+    if PrintLogs `elem` fs
+        then liftIO $ putStrLn "[LOGS]" >> mapM_ (print . nest 4) logs
+        else return ()
 
-displayRaw :: (MonadIO m, MonadState REPLState m, Show a) => a -> m ()
-displayRaw x = do
-    flag <- gets flagRawOutput
-    when flag $ liftIO $ ppPrint x
+-- displayRaw :: (MonadIO m, MonadState REPLState m, Show a) => a -> m ()
+-- displayRaw x = do
+--     flag <- gets flagRawOutput
+--     when flag $ liftIO $ ppPrint x
 
 
-step :: Command -> StateT REPLState IO Bool
-step (EvalTypeKind s) = withParsed pExpr s $ \ x -> do
-    let err = liftIO $ putStrLn "Error. Try :e, :t, :k individually to see what it was."
-    bs <- gets $ topLevelBindings . currentSpec
-    (xEval,logsEval) <- runEvaluateExpr bs x
-    let (exType, logsType) = runTypeOf bs x
-    let (exKind, logsKind) = runKindOf bs x
-    displayLogs (logsEval ++ logsType ++ logsKind)
-    displayRaw x
-    displayRaw xEval
-    case (exType, exKind) of
-        (Right xType, Right xKind) ->
-            case (prExpr x, prExpr xEval, prType xType, prKindInteractive xKind) of
-                (Just inp, Just outp, Just t, k) -> do
-                    let firstLine  = sep [inp, text "is", k, text "of type", t]
-                    let secondLine = sep [text "Can be evaluated to:", outp]
-                    liftIO . putStrLn . renderDoc $
-                        if x == xEval
-                            then firstLine
-                            else vcat [firstLine, secondLine]
-                _ -> err
-        _ -> err
-step (Eval s) = withParsed pExpr s $ \ x -> do
-    bs <- gets $ topLevelBindings . currentSpec
-    (x', logs) <- runEvaluateExpr bs x
+step :: (Applicative m, MonadState REPLState m, MonadIO m) => Command -> m Bool
+step (EvalTypeKind _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
+-- withParsed pExpr s $ \ x -> do
+--     let err = liftIO $ putStrLn "Error. Try :e, :t, :k individually to see what it was."
+--     bs <- gets $ topLevelBindings . currentSpec
+--     (xEval,logsEval) <- runEvaluateExpr bs x
+--     let (exType, logsType) = runTypeOf bs x
+--     let (exKind, logsKind) = runKindOf bs x
+--     displayLogs (logsEval ++ logsType ++ logsKind)
+--     displayRaw x
+--     displayRaw xEval
+--     case (exType, exKind) of
+--         (Right xType, Right xKind) ->
+--             case (prExpr x, prExpr xEval, prType xType, prKindInteractive xKind) of
+--                 (Just inp, Just outp, Just t, k) -> do
+--                     let firstLine  = sep [inp, text "is", k, text "of type", t]
+--                     let secondLine = sep [text "Can be evaluated to:", outp]
+--                     liftIO . putStrLn . renderDoc $
+--                         if x == xEval
+--                             then firstLine
+--                             else vcat [firstLine, secondLine]
+--                 _ -> err
+--         _ -> err
+step (Evaluate s) = withParsed s $ \ x -> do
+    let bindings = M.empty
+    (x',logs) <- runWriterT $ runErrorT $ flip evalStateT bindings $ deepSimplify (x :: Expr)
     displayLogs logs
-    displayRaw x
-    displayRaw x'
-    prettyPrint prExpr x'
-step (TypeOf s) = withParsed pExpr s $ \ x -> do
-    bs <- gets $ topLevelBindings . currentSpec
-    let (et, logs) = runTypeOf bs x
-    displayRaw x
-    displayRaw et
-    case et of
-        Left err -> liftIO $ putStrLn $ "Error while type-checking: " ++ err
-        Right t  -> do
+    liftIO $ case x' of
+        Left err  -> print err
+        Right x'' -> print $ pretty x''
+step (TypeOf s) = withParsed s $ \ x -> do
+    sp <- gets currentSpec
+    bindings <- runErrorT $ flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels sp))
+    case bindings of
+        Left err -> liftIO $ print $ vcat [ "Error in top level bindings."
+                                          , nest 4 err ]
+        Right bs -> do
+            (t,logs) <- runWriterT $ runErrorT $ flip evalStateT bs $ typeOf (x :: Expr)
             displayLogs logs
-            prettyPrint prType t
-step (KindOf s) = withParsed pExpr s $ \ x -> do
-    bs <- gets $ topLevelBindings . currentSpec
-    let (ek, logs) = runKindOf bs x
-    displayRaw x
-    displayRaw ek
-    case ek of
-        Left err -> liftIO $ putStrLn $ "Error while kind-checking: " ++ err
-        Right k  -> do
-            displayLogs logs
-            prettyPrint prKind k
-step (Load fp) = returningTrue $ do
-    esp <- liftIO readIt
-    case esp of
-        Left e   -> liftIO $ putStrLn $ "IO Error: " ++ show e
-        Right sp -> modifySpec $ \ _ -> sp
+            case t of
+                Left err -> liftIO $ print $ vcat [ "Error while type-checking."
+                                                  , nest 4 err ]
+                Right t' -> liftIO $ print $ pretty t'
+    -- bs <- gets $ topLevelBindings . currentSpec
+    -- let (et, logs) = runTypeOf bs x
+    -- displayRaw x
+    -- displayRaw et
+    -- case et of
+    --     Left err -> liftIO $ putStrLn $ "Error while type-checking: " ++ err
+    --     Right t  -> do
+    --         displayLogs logs
+    --         prettyPrint prType t
+step (KindOf _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
+step ShowFullAST = returningTrue $ do sp <- gets currentSpec; liftIO $ ppPrint sp
+step (ShowAST s) = withParsed s  $ \  x  ->                   liftIO $ ppPrint (x :: Expr)
+step (Load   fp) = returningTrue $ do
+    msp <- liftIO readIt
+    case msp of
+        Left  e1  -> liftIO $ putStrLn $ "IO Error: " ++ show e1
+        Right sp1 -> case enumIdentifiers sp1 of
+            Left  e2  -> liftIO $ putStrLn $ "EnumIdentifiers Error: " ++ show e2
+            Right sp2 -> modifySpec $ const sp2
     where
         readIt :: IO (Either SomeException Spec)
-        readIt = try $ parseFromFile pSpec id fp id
+        readIt = try $ parseFromFile parse id fp id
 step (Save fp) = returningTrue $ do
     sp <- gets currentSpec
-    case prSpec sp of
-        Nothing  -> liftIO $ putStrLn "Error while rendering the current specification."
-        Just doc -> liftIO $ writeFile fp $ renderDoc doc
-
-step (Record s) = withParsed (choiceTry [ Left . Right <$> pObjective
-                                        , Right        <$> pExpr
-                                        , Left . Left  <$> pTopLevels
-                                        ]) s $ \ res -> case res of
-    Left (Left (bs,ws)) -> modifySpec $ \ sp -> sp { topLevelBindings = topLevelBindings sp ++ bs
-                                                   , topLevelWheres   = topLevelWheres   sp ++ ws
-                                                   }
-    Left (Right o)      -> modifySpec $ \ sp -> sp { objective = Just o }
-    Right x             -> modifySpec $ \ sp -> sp { constraints = constraints sp ++ [x] }
+    liftIO $ writeFile fp $ show $ pretty sp
+step (Record s) = withParsed s $ \ res -> case res of
+    Left tl         -> modifySpec $ \ sp -> sp { topLevels   = topLevels   sp ++ tl  }
+    Right (Left o)  -> modifySpec $ \ sp -> sp { objective   = Just o }
+    Right (Right x) -> modifySpec $ \ sp -> sp { constraints = constraints sp ++ [x] }
 
 step (RmDeclaration _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
 step (RmConstraint  _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
@@ -217,28 +224,40 @@ step Rollback = returningTrue $ do
         (s:ss) -> put st { currentSpec = s, oldSpecs = ss }
 step DisplaySpec = returningTrue $ do
     sp <- gets currentSpec
-    prettyPrint prSpec sp
-step (Flag nm) = returningTrue $ stepFlag nm
+    liftIO $ print $ pretty sp
 step Quit = return False
 
 
-stepFlag :: (MonadIO m, MonadState REPLState m) => String -> m ()
-stepFlag "rawOutput" = do
-    st  <- get
-    val <- gets flagRawOutput
-    put $ st { flagRawOutput = not val }
-stepFlag "logging" = do
-    st  <- get
-    val <- gets flagLogs
-    put $ st { flagLogs = not val }
-stepFlag flag = liftIO $ putStrLn $ "no such flag: " ++ flag
+-- stepFlag :: (MonadIO m, MonadState REPLState m) => String -> m ()
+-- stepFlag "rawOutput" = do
+--     st  <- get
+--     val <- gets flagRawOutput
+--     put $ st { flagRawOutput = not val }
+-- stepFlag "logging" = do
+--     st  <- get
+--     val <- gets flagLogs
+--     put $ st { flagLogs = not val }
+-- stepFlag flag = liftIO $ putStrLn $ "no such flag: " ++ flag
 
 
 main :: IO ()
 main = do
-    let run k = evalStateT (runInputT defaultSettings k) initREPLState
+    (initSt, args) <- do
+        args <- getArgs
+        return $
+            if "--printlogs" `elem` args
+                then ( initREPLState { flags = [PrintLogs] }
+                     , delete "--printlogs" args
+                     )
+                else ( initREPLState
+                     , args
+                     )
+    let settings = Settings { complete = completeFilename
+                            , historyFile = Nothing
+                            , autoAddHistory = True
+                            }
+    let run k = evalStateT (runInputT settings k) initSt
     putStrLn figlet
-    args <- getArgs
     case args of
         []   -> run repl
         [fp] -> do

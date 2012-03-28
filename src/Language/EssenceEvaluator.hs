@@ -10,17 +10,31 @@ module Language.EssenceEvaluator where
 import Control.Applicative ( Applicative, (<$>), (<*) )
 import Control.Monad ( (<=<), forM )
 import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
-import Control.Monad.State ( MonadState(get), StateT, evalStateT )
+import Control.Monad.State ( MonadState, get, evalStateT, execStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
-import Data.List ( delete, genericIndex, genericLength, nub, sort )
-import qualified Data.Map as M ( Map, fromList, lookup )
-import qualified Data.Set as S ( member )
+import Data.Either ( lefts )
+import Data.List ( delete, genericIndex, genericLength, isSuffixOf, nub, sort )
+import Data.List.Split ( splitOn )
+import qualified Data.Map as M
+import qualified Data.Set as S
 
-import Language.Essence
-import ParsePrint
-import PrintUtils
-import ParsecUtils ( parseIO, eof, unsafeParse )
 import GenericOps.Core
+import ParsecUtils ( parseIO, eof, unsafeParse )
+import ParsePrint ( ParsePrint, parse, pretty )
+import PrintUtils
+
+
+import Language.Essence.Binding
+import Language.Essence.Domain
+import Language.Essence.Expr
+import Language.Essence.Identifier
+import Language.Essence.Op
+import Language.Essence.QuantifiedExpr
+import Language.Essence.Range
+import Language.Essence.Spec
+import Language.Essence.Type
+import Language.Essence.Value
+
 
 -- import Control.Monad.IO.Class
 -- import System.Environment
@@ -80,8 +94,7 @@ testSimplify s = do
 
 
 
-type LookupMap = M.Map String GNode
-type EvalArrow m a b = a -> ErrorT Doc (StateT LookupMap (WriterT [Doc] m)) b
+-- type EvalArrow m a b = a -> ErrorT Doc (StateT BindingsMap (WriterT [Doc] m)) b
 
 tryEvalArrow :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Either e b)
 tryEvalArrow f x = (Right <$> f x) `catchError` (return . Left)
@@ -89,10 +102,10 @@ tryEvalArrow f x = (Right <$> f x) `catchError` (return . Left)
 tryEvalArrowMaybe :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Maybe b)
 tryEvalArrowMaybe f x = (Just <$> f x) `catchError` (\ _ -> return Nothing )
 
-evalArrowErrorDef :: (Monad m, ParsePrint a) => EvalArrow m a b
+evalArrowErrorDef :: (MonadError Doc m, ParsePrint a) => a -> m b
 evalArrowErrorDef = evalArrowError "Cannot evaluate"
 
-evalArrowError :: (Monad m, ParsePrint a) => Doc -> EvalArrow m a b
+evalArrowError :: (MonadError Doc m, ParsePrint a) => Doc -> a -> m b
 evalArrowError msg x = throwError $ msg <> colon <+> pretty x
 
 
@@ -102,30 +115,57 @@ evalArrowError msg x = throwError $ msg <> colon <+> pretty x
 --------------------------------------------------------------------------------
 
 class Simplify a where
-    simplify :: (Applicative m, Monad m) => EvalArrow m a (Maybe a)
+    simplify ::
+        ( Applicative m
+        , Monad m
+        , MonadError Doc m
+        , MonadState BindingsMap m
+        , MonadWriter [Doc] m
+        ) => a -> m (Maybe a)
 
 infixr 0 ~~~>
 (~~~>) :: (MonadWriter [Doc] m, ParsePrint a) => a -> a -> m (Maybe a)
-a ~~~> b = do
-    tell [ "[ SIMPLIFY ]"
-            $$ nest 4 ("~~>" <+> pretty a)
-            $$ nest 4 ("~~>" <+> pretty b)
-         ]
+_ ~~~> b = do
+-- a ~~~> b = do
+--     tell [ "[ SIMPLIFY ]"
+--             $$ nest 4 ("~~>" <+> pretty a)
+--             $$ nest 4 ("~~>" <+> pretty b)
+--          ]
     return (Just b)
 
-deepSimplify :: (Applicative m, Monad m) => EvalArrow m Expr Expr
-deepSimplify = unliftGM $ bottomUpRewriteM f
-    where
-        f :: (Applicative m, Monad m) => EvalArrow m GNode (Maybe GNode)
-        f g = case fromG g of
-            Nothing -> return Nothing -- type not Expr
-            Just x  -> do
-                y <- simplifyReal x
-                case y of
-                    Nothing -> return Nothing -- no simplification
-                    Just z  -> return $ Just $ mkG z
 
-simplifyReal :: (Applicative m, Monad m) => EvalArrow m Expr (Maybe Expr)
+runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m Spec
+runSimplify spec = do
+    bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
+    evalStateT (deepSimplify spec) bindings
+
+deepSimplify ::
+    ( GPlate a
+    , Applicative m
+    , Monad m
+    , MonadError Doc m
+    , MonadState BindingsMap m
+    , MonadWriter [Doc] m
+    ) => a -> m a
+-- deepSimplify = bottomUpRewriteM simplifyReal
+deepSimplify = topDownRewriteM simplifyReal
+    -- where
+    --     -- f :: (Applicative m, Monad m) => EvalArrow m GNode (Maybe GNode)
+    --     f g = case fromG g of
+    --         Nothing -> return Nothing -- type not Expr
+    --         Just x  -> do
+    --             y <- simplifyReal x
+    --             case y of
+    --                 Nothing -> return Nothing -- no simplification
+    --                 Just z  -> return $ Just $ mkG z
+
+simplifyReal ::
+    ( Applicative m
+    , Monad m
+    , MonadError Doc m
+    , MonadState BindingsMap m
+    , MonadWriter [Doc] m
+    ) => Expr -> m (Maybe Expr)
 simplifyReal p@(EOp op [x,y])
     | S.member op commutativeOps = do
         -- liftIO $ putStr "trying[1]: "
@@ -185,7 +225,60 @@ simplifyReal param = do
     -- return $ msum results
 
 
+domSize :: Domain -> Maybe Expr
+domSize DBool = Just $ V $ VInt $ 2
+domSize (DInt (RFromTo (Just lb) (Just ub))) = Just $ EOp Plus [ EOp Minus [ ub, lb ], V $ VInt 1 ]
+domSize (AnyDom TSet [d] (DomainAttrs [])) = do
+    ds <- domSize d
+    return $ EOp Factorial [ds]
+domSize _ = Nothing
+
+
 instance Simplify Expr where
+
+    simplify p@(EOp Image [EHole (Identifier "domSize"), x]) = do
+        d <- domainOf x
+        case domSize d of
+            Nothing -> return Nothing
+            Just s  -> p ~~~> s
+
+    simplify p@(EOp Image [EHole (Identifier "repr"), V (VTuple [ x
+                                                                , EHole (Identifier reprName)
+                                                                ])]) = do
+        x' <- runBind x
+        case x' of
+            EHole (Identifier nm) -> case splitOn "#" nm of
+                [_,nm'] -> if nm' `isSuffixOf` reprName
+                               then p ~~~> V $ VBool True
+                               else p ~~~> V $ VBool False
+                _ -> return Nothing
+            _ -> return Nothing
+
+    simplify p@(EOp Image [EHole (Identifier "refn"), EHole (Identifier nm)]) = do
+        case splitOn "#" nm of
+            [a,b] -> p ~~~> EHole $ Identifier $ a ++ "_" ++ b
+            _     -> return Nothing
+
+    simplify p@(Q q@(QuantifiedExpr {quanOverDom = Just (Indices (EHole (Identifier nm)) ind) })) = do
+        val <- evaluate ind
+        mdom <- getBinding nm
+        let
+            go :: Integer -> Domain -> Maybe Domain
+            go 0 (DMatrix index _) = return $ index
+            go i (DMatrix _   tau) = go (i-1) tau
+            go _ _ = Nothing
+        case mdom of
+            Nothing -> return Nothing
+            Just d  -> case go val d of
+                Nothing -> return Nothing
+                Just x  -> p ~~~> Q q { quanOverDom = Just x }
+
+    simplify p@(EOp Replace [a,b,c]) = do
+        let f i | i == b    = c
+                | otherwise = i
+        p ~~~> bottomUp f a
+
+
 
     simplify p@(EOp Plus  [x, V (VInt 0)]) = p ~~~> x
 
@@ -290,15 +383,21 @@ exprUnify i j = foo i j || foo j i
 --------------------------------------------------------------------------------
 
 class Evaluate a b where
-    evaluate :: (Applicative m, Monad m) => EvalArrow m a b
+    evaluate :: ( Applicative m
+                , Monad m
+                , MonadError Doc m
+                , MonadState BindingsMap m
+                , MonadWriter [Doc] m
+                ) => a -> m b
 
 infixr 0 ~~>
 (~~>) :: (MonadWriter [Doc] m, ParsePrint a, ParsePrint b) => a -> b -> m b
-a ~~> b = do
-    tell [ "[ EVALUATE ]"
-            $$ nest 4 ("~~>" <+> pretty a)
-            $$ nest 4 ("~~>" <+> pretty b)
-         ]
+_ ~~> b = do
+-- a ~~> b = do
+--     tell [ "[ EVALUATE ]"
+--             $$ nest 4 ("~~>" <+> pretty a)
+--             $$ nest 4 ("~~>" <+> pretty b)
+--          ]
     return b
 
 instance (Evaluate a1 a2, Evaluate b1 b2) => Evaluate (a1,b1) (a2,b2) where
@@ -318,7 +417,8 @@ instance (Evaluate a b) => Evaluate [a] [b] where
     evaluate = mapM evaluate
 
 instance Evaluate Expr Value where
-    evaluate p@(EHole (Identifier nm)) = do
+    evaluate p@(EHole (Identifier nm')) = do
+        let nm = head $ splitOn "#" nm'
         st <- get
         case M.lookup nm st of
             Nothing -> evalArrowError "Not bound" p
@@ -584,8 +684,8 @@ instance Evaluate Expr Value where
             _ -> evalArrowErrorDef p
 
     evaluate p@(EOp Index [a,b]) = do
-        i <- evaluate a
-        j <- tryEvalArrowMaybe evaluate b
+        i ::       Value <- evaluate a
+        j :: Maybe Value <- tryEvalArrowMaybe evaluate b
         case (j,b) of
             (Just jj,_) -> do
                 (is,k) <- case (i,jj) of
@@ -613,15 +713,37 @@ instance Evaluate Expr Value where
                                 _ -> evalArrowErrorDef p
             _ -> evalArrowErrorDef p
 
-    evaluate p@(EOp HasType _) = evalArrowError "not implemented" p -- do
-        -- i <- typeOf a
-        -- j <- typeOf b
-        -- return $ VBool $ i `typeUnify` j
+    evaluate p@(EOp HasType [a,b]) = do -- evalArrowError "not implemented" p -- do
+        tell $ return $ "In HasType: " <+> pretty p
+        ta <- typeOf a
+        tb <- typeOf b
+        tell $ return $ text $ show [ta,tb]
+        catchError
+            ( do
+                runMatch tb ta
+                p ~~> VBool True )
+            (\ e -> do
+                tell [pretty p, e]
+                p ~~> VBool False )
 
-    evaluate p@(EOp HasDomain _) = evalArrowError "not implemented" p -- do
-        -- i <- domainOf a
-        -- j <- domainOf b
-        -- return $ VBool $ i `typeUnify` j
+    evaluate p@(EOp HasDomain [a,b]) = do -- evalArrowError "not implemented" p -- do
+        -- error $ " [[HERE]] " ++ show (pretty p)
+        tell ["in:" <+> pretty p]
+        catchError
+            ( do
+                da <- domainOf a
+                db <- domainOf b
+                -- error $ " [[HERE 1]] " ++ show (da,db)
+                runMatch db da
+                tell [ "HasDomain returning true" ]
+                -- st <- get
+                -- tell $ map (\ (a,GNode _ b) -> text a <+> pretty b) (M.toList st)
+                p ~~> VBool True )
+            (\ e -> do
+                tell [pretty p, e]
+                -- error $ " [[HERE 2]] " ++ show e
+                tell [ "HasDomain returning false" ]
+                p ~~> VBool False )
 
     evaluate p@(EOp Replace []) = evalArrowError "not implemented" p
 

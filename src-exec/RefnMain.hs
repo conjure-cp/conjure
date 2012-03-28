@@ -1,23 +1,19 @@
-
--- | the expression refinement phase of Conjure
-
 module Main where
 
 import Control.Monad ( forM_, when )
-import Data.Function ( on )
-import Data.List ( groupBy, sortBy, isSuffixOf )
+import Control.Monad.Error ( runErrorT )
+import Control.Monad.Writer ( runWriter )
+import Data.List ( isSuffixOf )
 import System.Directory ( createDirectoryIfMissing )
 import System.Environment ( getArgs )
 import System.FilePath ( dropExtension )
 
-import Language.Essence ( RuleRefn(..) )
-import Language.EssenceParsers ( pSpec, pRuleRefn )
-import Language.EssencePrinters ( prSpec )
+import Language.Essence.RuleRefn ( RuleRefn, callRefn, refnFilename )
+
 import ParsecUtils ( parseFromFile )
-import Phases.QuanRename ( quanRenameIO )
-import Phases.Refn ( callRefn )
-import PrintUtils ( render )
+import ParsePrint ( parse, pretty )
 import Utils ( padLeft )
+
 
 
 main :: IO ()
@@ -26,28 +22,28 @@ main = do
     specFilename <- case filter (".essence" `isSuffixOf`) args of
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
-    spec  <- quanRenameIO =<< parseFromFile pSpec langlinePre specFilename id
-    refns <- mapM (\ r -> parseFromFile (pRuleRefn r) id r id ) $ filter (".rule" `isSuffixOf`) args
+    spec  <- {-quanRenameIO =<< -}parseFromFile parse langlinePre specFilename id
+    refns <- mapM (\ r -> parseFromFile parse id r (\ i -> i {refnFilename = r} ) ) $ filter (".rule" `isSuffixOf`) args
 
     when (null refns) $ putStrLn "Warning: no *.rule file is given."
 
-    specs <- callRefn refns spec
+    -- print spec
+
+    let (mspecs, logs) = runWriter $ runErrorT $ callRefn refns spec
+
+    mapM_ print logs
 
     let dirName = dropExtension specFilename ++ "-refn"
     createDirectoryIfMissing True dirName
 
-    forM_ (zip [(1::Int)..] specs) $ \ (i,s) -> do
-        let outFilename = dirName ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
-        putStrLn outFilename
-        writeFile outFilename $ render prSpec s
-
-groupRefns :: [RuleRefn] -> [[RuleRefn]]
-groupRefns rs = groupBy ((==) `on` refnLevel)
-              $ sortBy  (o    `on` refnLevel) rs
-    where
-        o :: Ord a => Maybe a -> Maybe a -> Ordering
-        o (Just i) (Just j) = compare i j
-        o i j = compare j i
+    case mspecs of
+        Left err -> error (show err)
+        Right specs ->
+            forM_ (zip [(1::Int)..] specs) $ \ (i,s) -> do
+                let outFilename = dirName ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
+                putStrLn outFilename
+                writeFile outFilename $ show $ pretty s
 
 langlinePre :: String -> String
 langlinePre s = unlines $ "language Essence 2.0" : drop 1 (lines s)
+

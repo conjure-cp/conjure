@@ -1,0 +1,15 @@
+language Essence 2.0
+
+find x: set (size 4) of int(0..9)
+find x_Explicit: matrix indexed by [int(1..4)] of int(0..9)
+
+such that
+    forall i_Gent : matrix indexed by [int(3..5)] of int(0..image(domSize,
+                                                                  int(3..5))), 2 = (sum _q_4 : int(3..5), i_Gent[_q_4] > 0 .
+                                                                                        1) /\ (forall _q_2 : int(3..5) .
+                                                                                                   0 = i_Gent[_q_2] \/ 1 + (sum _q_3 : int(3..5), _q_3 < _q_2 /\ i_Gent[_q_3] > 0 .
+                                                                                                                                1) = i_Gent[_q_2]) .
+        i#Gent subseteq x#Explicit,
+    forall _q_0 : int(1..3) .
+        x_Explicit[_q_0] < x_Explicit[_q_0 + 1],
+    alldifferent(x_Explicit)

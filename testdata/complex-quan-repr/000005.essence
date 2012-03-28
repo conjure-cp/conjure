@@ -1,0 +1,17 @@
+language Essence 2.0
+
+find x: set (size 4) of int(0..9)
+find x_Gent: matrix indexed by [int(0..9)] of int(0..10)
+
+such that
+    forall i_Gent : matrix indexed by [int(3..5)] of int(0..image(domSize,
+                                                                  int(3..5))), 2 = (sum _q_6 : int(3..5), i_Gent[_q_6] > 0 .
+                                                                                        1) /\ (forall _q_4 : int(3..5) .
+                                                                                                   0 = i_Gent[_q_4] \/ 1 + (sum _q_5 : int(3..5), _q_5 < _q_4 /\ i_Gent[_q_5] > 0 .
+                                                                                                                                1) = i_Gent[_q_4]) .
+        i#Gent subseteq x#Gent,
+    forall _q_1 : int(0..9) .
+        0 = x_Gent[_q_1] \/ 1 + (sum _q_2 : int(0..9), _q_2 < _q_1 /\ x_Gent[_q_2] > 0 .
+                                     1) = x_Gent[_q_1],
+    4 = (sum _q_3 : int(0..9), x_Gent[_q_3] > 0 .
+             1)
