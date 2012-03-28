@@ -133,7 +133,7 @@ instance ParsePrint Domain where
 
             pInt     = do reserved "int" ; DInt  <$>           (try (parens parse) <|> return RAll)
 
-            pEnum    = do reserved "enum"; DEnum <$> parse <*> (try (parens parse) <|> return RAll)
+            pEnum    = do DEnum <$> parse <*> (try (parens parse) <|> return RAll)
 
             -- needed to disambiguate from DHole
             -- DHole can still be resolved to DUnnamed, after parsing.
@@ -196,8 +196,8 @@ instance ParsePrint Domain where
     pretty DBool = "bool"
     pretty (DInt RAll) = "int"
     pretty (DInt r   ) = "int" <> Pr.parens (pretty r)
-    pretty (DEnum i RAll) = "enum" <+> pretty i
-    pretty (DEnum i r   ) = "enum" <+> pretty i <> Pr.parens (pretty r)
+    pretty (DEnum i RAll) = pretty i
+    pretty (DEnum i r   ) = pretty i <> Pr.parens (pretty r)
     pretty (DUnnamed i) = "unnamed" <+> pretty i
     pretty (DMatrix i e) = "matrix" <+> "indexed"
                        <+> "by" <+> prettyList Pr.brackets Pr.comma is
