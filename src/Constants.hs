@@ -24,3 +24,6 @@ reservedNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedNames.txt"))
 -- reservedOpNames are loaded from `reservedOpNames.txt` at compile time
 reservedOpNamesTxt :: [String]
 reservedOpNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedOpNames.txt"))
+
+freshNames :: [String]
+freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
