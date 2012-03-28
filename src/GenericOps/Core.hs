@@ -1,8 +1,11 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
+#define DEBUG
 
 module GenericOps.Core
     ( Hole(..), HoleStatus(..)
@@ -22,7 +25,9 @@ module GenericOps.Core
     , gapply, gapplyDeep
     ) where
 
--- import Debug.Trace
+#ifndef DEBUG
+import Debug.Trace
+#endif
 import Control.Arrow ( first, second )
 import Control.Monad ( forM, liftM, zipWithM_ )
 import Control.Monad.Error ( MonadError, ErrorT(..), throwError, Error(..) )
@@ -380,17 +385,21 @@ runBind template = do
 
 class MatchBind a where
     match :: (Monad m, GPlate a) => a -> a -> MatchMonad m ()
+#ifndef DEBUG
+    match p a = trace ("match " ++ show (pretty p) ++ " ~~ " ++ show (pretty a)) $ do
+#else
     match p a = do
+#endif
         lift $ lift $ modify ((mkG p, mkG a) :)                                 -- add this node on top of the call stack.
         case hole p of                                                          -- check hole-status of the pattern.
             UnnamedHole  -> return ()                                           -- unnamed hole: matching succeeds, no bindings.
             NamedHole nm -> addBinding nm a                                     -- named hole: matching succeeds, bind the name to rhs.
             NotAHole     -> do
                 case (fst $ gplate p, fst $ gplate a) of
-                    ([], []) | p == a    -> return ()                                           -- if this is a leaf, must check for equality.
-                             | otherwise -> gmatchError "Leafs inequal."                        -- otherwise matching fails.
-                    (ps, as) | nodeTag p /= nodeTag a   -> gmatchError "Constructor mismatch."  -- node tags must match.
-                             | not (ps `sameLength` as) -> gmatchError "Shape mismatch."        -- with equal number of children.
+                    ([], []) | p == a    -> return ()                                                                                           -- if this is a leaf, must check for equality.
+                             | otherwise -> gmatchError $ text $ "Leafs inequal: " ++ nodeTag p ++ " " ++ nodeTag a                                      -- otherwise matching fails.
+                    (ps, as) | nodeTag p /= nodeTag a   -> gmatchError $ text $ "Constructor mismatch in: " ++ nodeTag p ++ " " ++ nodeTag a    -- node tags must match.
+                             | not (ps `sameLength` as) -> gmatchError $ text $ "Shape mismatch in: "       ++ nodeTag p ++ " " ++ nodeTag a    -- with equal number of children.
                              | otherwise                -> zipWithM_ gmatch ps as               -- recursive call.
         lift $ lift $ modify tail
 
