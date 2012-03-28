@@ -142,13 +142,7 @@ instance ParsePrint Expr where
                         return $ \ x -> case ys of
                             [y] -> EOp Image [x,y]
                             _   -> EOp Image [x,toVTuple ys]
-                let pPreImage = do
-                        reservedOp "'"
-                        ys <- parens (parse `sepBy1` comma)
-                        return $ \ x -> case ys of
-                            [y] -> EOp PreImage [x,y]
-                            _   -> EOp PreImage [x,toVTuple ys]
-                fs <- many1 (choiceTry $ pImage : pPreImage : allP)
+                fs <- many1 (choiceTry $ pImage : allP)
                 return $ foldr1 (.) (reverse fs)
 
             prefixes :: [Parser (Expr -> Expr)]
