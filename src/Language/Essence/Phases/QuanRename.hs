@@ -4,8 +4,8 @@
 module Language.Essence.Phases.QuanRename where
 
 import Control.Monad.State ( MonadState, get, put )
-import Data.List ( isPrefixOf )
 
+import Constants ( isFreshName )
 import GenericOps.Core ( GPlate, topDownM, bottomUp )
 
 import Language.Essence.Identifier
@@ -24,11 +24,12 @@ quanRename = topDownM quanRenamer
 
         quanRenamer :: QuantifiedExpr -> m QuantifiedExpr
         quanRenamer p@(QuantifiedExpr {quanVar = Identifier qnVar}) = do
-            if isPrefixOf "_q_" qnVar
+            if isFreshName qnVar
                 then return p
                 else do
                     nm <- supply
                     return $ bottomUp (identifierRenamer qnVar nm) p
+        -- quanRenamer p@(QStructured {quanSVar = ?})
 
 
 identifierRenamer :: String -> String -> Identifier -> Identifier

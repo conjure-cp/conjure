@@ -28,6 +28,7 @@ import GHC.Generics ( Generic )
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+import Constants ( freshNames )
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError
                        , mkG, fromGs
@@ -178,13 +179,13 @@ callRepr ::
 callRepr rules' specParam = do
     spec <- (enumIdentifiers >=> runSimplify) specParam
     let identifiers = [ nm | Identifier nm <- universe spec ]
-    let qNames = [ "_q_" ++ show i | i <- [ (0 :: Int) .. ] ] \\ identifiers
+    let qNames = freshNames \\ identifiers
     let rules = map (scopeIdentifiers "__INRULE_") rules'
     bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
     results <- flip evalStateT (bindings,qNames) $ applyReprsToSpec rules spec
     ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
-    -- return ss
-    mapM runSimplify =<< concatMapM (quanDomRefine rules) =<< mapM runSimplify ss
+    return ss
+    -- mapM runSimplify =<< concatMapM (quanDomRefine rules) =<< mapM runSimplify ss
 
 
 type ReprResult = ( String     -- name of the representation
@@ -299,7 +300,7 @@ applyReprsToDom rules dom = withLog ("applyReprsToDom     " <+> pretty dom)
                           $ catMaybes <$> mapM tryApply rules
     where
         tryApply rule = catchError ( Just <$> applyReprToDom rule dom )
-                                   ( \ _ -> return Nothing )
+                                   ( \ e -> do {- tell [e]; -} return Nothing )
 
 
 applyReprToDom ::
@@ -319,7 +320,7 @@ applyReprToDom rule dom = do
 
     where
         tryApply rulecase = catchError ( Just <$> applyReprCaseToDom rule rulecase dom )
-                                       ( \ _ -> return Nothing )
+                                       ( \ e -> do {- tell [e]; -} return Nothing )
 
 
 applyReprCaseToDom ::

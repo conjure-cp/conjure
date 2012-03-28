@@ -21,6 +21,7 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified Data.Map as M
 
+import Constants ( freshNames )
 import GenericOps.Core ( NodeTag
                        , Hole
                        , GPlate, gplate, gplateError
@@ -114,7 +115,7 @@ callRefn ::
 callRefn rules' specParam = do
     spec <- (enumIdentifiers >=> runSimplify) specParam
     let identifiers = [ nm | Identifier nm <- universe spec ]
-    let qNames = [ "_q_" ++ show i | i <- [ (0 :: Int) .. ] ] \\ identifiers
+    let qNames = freshNames \\ identifiers
     let rules = map (scopeIdentifiers "__INRULE_") rules'
     bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
     results <- flip evalStateT (bindings,qNames) $ applyRefnsDeep rules spec

@@ -27,3 +27,7 @@ reservedOpNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedOpNames.txt
 
 freshNames :: [String]
 freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
+
+isFreshName :: String -> Bool
+isFreshName ('_':'_':_) = True
+isFreshName _ = False

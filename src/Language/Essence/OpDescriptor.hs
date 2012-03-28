@@ -95,7 +95,6 @@ opDescriptor = helper
         helper op@Div          = genInfix    op   300  AssocLeft
         helper op@Mod          = genInfix    op   300  AssocLeft
         helper op@Pow          = genInfix    op   200  AssocRight
-        helper op@Abs          = genLispy    op     1
         helper op@Negate       = genPrefix   op    50
         helper op@Factorial    = genPostfix  op   100
         helper op@Lt           = genInfix    op   800  AssocNone
@@ -115,8 +114,7 @@ opDescriptor = helper
         helper op@SubsetEq     = genInfix    op   700  AssocNone
         helper op@Supset       = genInfix    op   700  AssocNone
         helper op@SupsetEq     = genInfix    op   700  AssocNone
-        helper op@Card         = genLispy    op     1
-        helper op@Elem         = genInfix    op   700  AssocNone
+        helper op@In           = genInfix    op   700  AssocNone
         helper op@Max          = genLispy    op     1
         helper op@Min          = genLispy    op     1
         helper op@ToSet        = genLispy    op     1
@@ -134,6 +132,12 @@ opDescriptor = helper
         helper op@Parts        = genLispy    op     1
         helper op@Freq         = genLispy    op     2
         helper op@Hist         = genLispy    op     2
+        helper TwoBars         = OpSpecial pa pr
+            where
+                pa = between (symbol "|") (symbol "|") $ do i <- parse; return $ EOp TwoBars [i]
+                pr (EOp TwoBars [x]) = "|" <> pretty x <> "|"
+                pr x = error $ "pretty TwoBars: " ++ show x
+
         helper Index           = OpPostfix pa pr
             where
                 pa = do

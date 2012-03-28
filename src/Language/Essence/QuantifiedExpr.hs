@@ -28,13 +28,23 @@ import Language.Essence.Expr
 import Language.Essence.Identifier
 import Language.Essence.Op
 import Language.Essence.QuantifierDecl
+import Language.Essence.StructuredVar
 import Language.Essence.Type
 
 
 
-data QuantifiedExpr = QuantifiedExpr
+data QuantifiedExpr
+    = QuantifiedExpr
     { quanName     :: Identifier
     , quanVar      :: Identifier
+    , quanOverDom  :: Maybe Domain
+    , quanOverExpr :: Maybe (Op, Expr)
+    , quanGuard    :: QuanGuard
+    , quanBody     :: Expr
+    }
+    | QStructured
+    { quanName     :: Identifier
+    , quanSVar     :: StructuredVar
     , quanOverDom  :: Maybe Domain
     , quanOverExpr :: Maybe (Op, Expr)
     , quanGuard    :: QuanGuard

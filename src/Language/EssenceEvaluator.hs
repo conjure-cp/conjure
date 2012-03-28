@@ -446,7 +446,15 @@ instance Evaluate Expr Value where
             pow = (^)
         (i,j) <- evaluate (a,b)
         p ~~> VInt (pow i j)
-    evaluate p@(EOp Abs       [a]) = do i <- evaluate a; p ~~> VInt $ abs i
+
+    evaluate p@(EOp TwoBars [a]) = do
+        i <- evaluate a
+        case i of
+            VInt  x  -> p ~~> VInt $ abs x
+            VSet  xs -> p ~~> VInt $ genericLength $ nub xs
+            VMSet xs -> p ~~> VInt $ genericLength       xs
+            _        -> evalArrowErrorDef p
+
     evaluate p@(EOp Negate    [a]) = do i <- evaluate a; p ~~> VInt $ negate i
     evaluate p@(EOp Factorial [a]) = do i <- evaluate a; p ~~> VInt $ product [1..i]
 
@@ -519,14 +527,7 @@ instance Evaluate Expr Value where
     evaluate p@(EOp Supset   [a,b]) = do r <- evaluate (EOp Subset   [b,a]); p ~~> r
     evaluate p@(EOp SupsetEq [a,b]) = do r <- evaluate (EOp SubsetEq [b,a]); p ~~> r
 
-    evaluate p@(EOp Card [a]) = do
-        i <- evaluate a
-        case i of
-            VSet  xs -> p ~~> VInt $ genericLength $ nub xs
-            VMSet xs -> p ~~> VInt $ genericLength       xs
-            _        -> evalArrowErrorDef p
-
-    evaluate p@(EOp Elem [a,b]) = do
+    evaluate p@(EOp In [a,b]) = do
         (i,j) <- evaluate (a,b)
         case (i,j) of
             (v, VSet  vs) -> p ~~> VBool $ elem v vs

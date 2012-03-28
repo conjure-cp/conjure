@@ -27,6 +27,7 @@ import Data.Default ( Default, def )
 import Data.List ( (\\) )
 import Data.Maybe ( fromJust, maybeToList )
 
+import Constants ( freshNames )
 import GenericOps.Core ( universe, bottomUp, descendM )
 
 import Language.Essence.Binding
@@ -34,7 +35,7 @@ import Language.Essence.Domain
 import Language.Essence.Expr
 import Language.Essence.Identifier
 import Language.Essence.Objective
-import Language.Essence.Op ( Op(Index) )
+import Language.Essence.Op ( Op(Index,In) )
 import Language.Essence.QuantifiedExpr
 import Language.Essence.Spec
 import Language.Essence.Where
@@ -57,7 +58,7 @@ bubbleUp spec = spec { constraints = constraints'   ++ concat newcons1  ++ conca
                      }
     where
         identifiers = [ nm | Identifier nm <- universe spec ]
-        qNames = [ "_q_" ++ show i | i <- [ (0 :: Int) .. ] ] \\ identifiers
+        qNames = freshNames \\ identifiers
         f xs = let (xs',((nc,nb),_)) = flip runState (def,qNames) $ mapM bubbleUpCons xs
                in  (xs',nc,nb)
         (constraints', newcons1, newbinds1) = f (constraints spec)
@@ -120,6 +121,15 @@ bubbleUpCons (Q (QuantifiedExpr qnName qnVar (Just qnOverDom) Nothing qnGuard qn
     modify $ first $ first (xsLifted :)
 
     return $ Q $ QuantifiedExpr qnName qnVar (Just qnOverDom') Nothing qnGuard' qnBody'
+
+bubbleUpCons (Q (QuantifiedExpr qnName qnVar Nothing (Just (In,qnOverExpr)) qnGuard qnBody)) = do
+
+    qnOverExpr' <- bubbleUpCons qnOverExpr
+
+    -- modify $ first $ second (bs :)
+    -- modify $ first $ first  ([[xs]] ++)
+
+    return $ Q $ QuantifiedExpr qnName qnVar Nothing (Just (In,qnOverExpr')) qnGuard qnBody
 
 bubbleUpCons p = descendM bubbleUpCons p
 

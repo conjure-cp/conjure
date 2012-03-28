@@ -17,17 +17,19 @@ import Utils ( allValues )
 
 -- the data type for operators in Essence
 data Op
-    = Plus | Minus | Times | Div | Mod | Pow | Abs | Negate
+    = Plus | Minus | Times | Div | Mod | Pow | Negate
     | Factorial
     | Lt | Leq | Gt | Geq | Neq | Eq
     | Not | Or | And | Imply | Iff
     | Union | Intersect | Subset | SubsetEq | Supset | SupsetEq
-    | Card | Elem | Max | Min
+    | In | Max | Min
     | ToSet | ToMSet | ToRel | Defined | Range
     | Image | PreImage | Inverse
     | Together | Apart
     | Party | Participants | Parts
     | Freq | Hist
+
+    | TwoBars
 
     | Index
 
@@ -59,7 +61,6 @@ opFace Times        = "*"
 opFace Div          = "/"
 opFace Mod          = "%"
 opFace Pow          = "^"
-opFace Abs          = "abs"
 opFace Negate       = "-"
 opFace Factorial    = "!"
 opFace Lt           = "<"
@@ -79,8 +80,7 @@ opFace Subset       = "subset"
 opFace SubsetEq     = "subseteq"
 opFace Supset       = "supset"
 opFace SupsetEq     = "supseteq"
-opFace Card         = "card"
-opFace Elem         = "in"
+opFace In         = "in"
 opFace Max          = "max"
 opFace Min          = "min"
 opFace ToSet        = "toSet"
@@ -98,6 +98,7 @@ opFace Participants = "participants"
 opFace Parts        = "parts"
 opFace Freq         = "freq"
 opFace Hist         = "hist"
+opFace TwoBars      = "{TwoBars}"
 opFace Index        = "{Index}"
 opFace HasType      = "::"
 opFace HasDomain    = ":"

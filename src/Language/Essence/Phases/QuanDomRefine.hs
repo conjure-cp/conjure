@@ -9,6 +9,7 @@ import Control.Monad.Writer ( MonadWriter )
 import Data.Default ( def )
 import Data.List ( (\\) )
 
+import Constants ( freshNames )
 import GenericOps.Core ( BindingsMap, universe, bottomUp, topDownM )
 import PrintUtils ( Doc )
 import Utils.MonadList( MonadList, option, runListT )
@@ -30,7 +31,7 @@ quanDomRefine ::
     ) => [RuleRepr] -> Spec -> m [Spec]
 quanDomRefine rules spec = do
     let identifiers = [ nm | Identifier nm <- universe spec ]
-    let qNames = [ "_q_" ++ show i | i <- [ (0 :: Int) .. ] ] \\ identifiers
+    let qNames = freshNames \\ identifiers
     flip evalStateT (def,qNames) $ runListT $ topDownM (domRefineQ rules) spec
 
 domRefineQ ::
