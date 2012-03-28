@@ -37,7 +37,7 @@ type Parser a = ParsecT String () Identity a
 ldef :: LanguageDef st
 ldef  = emptyDef { commentLine     = "$"
                  , identStart      = char '_' <|> letter
-                 , identLetter     = char '_' <|> char '#' <|> alphaNum
+                 , identLetter     = char '_' <|> char '\'' <|> char '#' <|> alphaNum
                  , reservedNames   = reservedNamesTxt
                  , reservedOpNames = reservedOpNamesTxt
                  , caseSensitive   = True
