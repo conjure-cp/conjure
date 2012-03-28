@@ -133,7 +133,7 @@ instance ParsePrint Domain where
 
             pInt     = do reserved "int" ; DInt  <$>           (try (parens parse) <|> return RAll)
 
-            pEnum    = do DEnum <$> parse <*> (try (parens parse) <|> return RAll)
+            pEnum    = DEnum <$> parse <*> (try (parens parse) <|> return RAll)
 
             -- needed to disambiguate from DHole
             -- DHole can still be resolved to DUnnamed, after parsing.
