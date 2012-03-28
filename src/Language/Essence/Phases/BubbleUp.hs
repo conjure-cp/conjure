@@ -80,7 +80,7 @@ bubbleUpCons (Bubble actual bubble bindings) = do
     modify $ first $ second (bindings :)
     return actual
 
-bubbleUpCons (Q (QuantifiedExpr qnName qnVar (Just qnOverDom) Nothing qnGuard qnBody)) = do
+bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnGuard qnBody)) = do
 
     let bubbleUpDom dom = descendM bubbleUpCons dom
     let bubbleUpQuanGuard (QuanGuard xs) = QuanGuard <$> mapM bubbleUpCons xs
@@ -107,7 +107,7 @@ bubbleUpCons (Q (QuantifiedExpr qnName qnVar (Just qnOverDom) Nothing qnGuard qn
         xsLifted =
             [ Q ( QuantifiedExpr
                     (Identifier "forall")
-                    (Identifier q)
+                    (Left (Identifier q))
                     (Just qnOverDom')
                     Nothing
                     (QuanGuard [])
@@ -120,7 +120,7 @@ bubbleUpCons (Q (QuantifiedExpr qnName qnVar (Just qnOverDom) Nothing qnGuard qn
 
     modify $ first $ first (xsLifted :)
 
-    return $ Q $ QuantifiedExpr qnName qnVar (Just qnOverDom') Nothing qnGuard' qnBody'
+    return $ Q $ QuantifiedExpr qnName (Left qnVar) (Just qnOverDom') Nothing qnGuard' qnBody'
 
 bubbleUpCons (Q (QuantifiedExpr qnName qnVar Nothing (Just (In,qnOverExpr)) qnGuard qnBody)) = do
 
@@ -130,6 +130,8 @@ bubbleUpCons (Q (QuantifiedExpr qnName qnVar Nothing (Just (In,qnOverExpr)) qnGu
     -- modify $ first $ first  ([[xs]] ++)
 
     return $ Q $ QuantifiedExpr qnName qnVar Nothing (Just (In,qnOverExpr')) qnGuard qnBody
+
+bubbleUpCons p@(Q (QuantifiedExpr {})) = return p
 
 bubbleUpCons p = descendM bubbleUpCons p
 

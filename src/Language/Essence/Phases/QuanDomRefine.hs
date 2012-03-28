@@ -24,6 +24,7 @@ import Language.Essence.Phases.QuanRename ( identifierRenamer )
 
 
 
+-- refining quantification over complex domains.
 quanDomRefine ::
     ( Applicative m
     , MonadError Doc m
@@ -41,7 +42,7 @@ domRefineQ ::
     , MonadState (BindingsMap,[String]) m
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> QuantifiedExpr -> m QuantifiedExpr
-domRefineQ rules q@(QuantifiedExpr qnName (Identifier qnVar) (Just qnOverDom) Nothing (QuanGuard qnGuard) qnBody) = do
+domRefineQ rules q@(QuantifiedExpr qnName (Left (Identifier qnVar)) (Just qnOverDom) Nothing (QuanGuard qnGuard) qnBody) = do
     results <- applyReprsToDom rules qnOverDom
     case results of
         [] -> return q
@@ -59,7 +60,7 @@ domRefineQ rules q@(QuantifiedExpr qnName (Identifier qnVar) (Just qnOverDom) No
 
             let theGuard = conjunct $ str' ++ qnGuard'
 
-            return $ QuantifiedExpr qnName (Identifier refn) (Just newDom') Nothing (QuanGuard [theGuard]) qnBody'
+            return $ QuantifiedExpr qnName (Left (Identifier refn)) (Just newDom') Nothing (QuanGuard [theGuard]) qnBody'
 domRefineQ _ q = return q
 
 
