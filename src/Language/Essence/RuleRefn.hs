@@ -151,8 +151,10 @@ applyRefnsDeep rules x = do
             ) => Expr -> m Expr
         tryApply i = do
             mp <- gets fst
+
+            -- adding the quantified variable to the state.
             case i of
-                Q (QuantifiedExpr {quanVar = Identifier qnVar, quanOverDom = Just qnOverDom}) -> do
+                Q (QuantifiedExpr {quanVar = Left (Identifier qnVar), quanOverDom = Just qnOverDom}) -> do
                     case M.lookup qnVar mp of
                         Nothing -> modify $ first $ M.insert qnVar (mkG qnOverDom)
                         Just _  -> throwError ("Name is already bound: " <+> text qnVar)
@@ -171,6 +173,7 @@ applyRefnsDeep rules x = do
                                   return i
                        )
 
+            -- rest state to init.
             modify $ first $ const mp
             return res
 

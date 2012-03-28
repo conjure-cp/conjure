@@ -9,7 +9,7 @@ import Control.Applicative
 import Control.Monad.Error ( throwError )
 import Control.Monad.State ( get )
 import Data.Generics ( Data )
-import Data.Maybe ( mapMaybe, maybeToList )
+import Data.Maybe ( isNothing, mapMaybe, maybeToList )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified  Data.Map as M
@@ -36,15 +36,7 @@ import Language.Essence.Type
 data QuantifiedExpr
     = QuantifiedExpr
     { quanName     :: Identifier
-    , quanVar      :: Identifier
-    , quanOverDom  :: Maybe Domain
-    , quanOverExpr :: Maybe (Op, Expr)
-    , quanGuard    :: QuanGuard
-    , quanBody     :: Expr
-    }
-    | QStructured
-    { quanName     :: Identifier
-    , quanSVar     :: StructuredVar
+    , quanVar      :: Either Identifier StructuredVar
     , quanOverDom  :: Maybe Domain
     , quanOverExpr :: Maybe (Op, Expr)
     , quanGuard    :: QuanGuard
@@ -57,92 +49,139 @@ instance NodeTag QuantifiedExpr
 instance Hole QuantifiedExpr
 
 instance GPlate QuantifiedExpr where
-    gplate (QuantifiedExpr qnName qnVar Nothing Nothing qnGuard qnBody) =
-        ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard ]
-        , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
-                      qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
-                      qnBody'   = fromGs $ take 1 $ drop 2 xs
-                      qnGuard'  = fromGs $ take 1 $ drop 3 xs
-                  in  if length qnName'   == 1 &&
-                         length qnVar'    == 1 &&
-                         length qnBody'   == 1 &&
-                         length qnGuard'  == 1
-                         then QuantifiedExpr (head qnName')
-                                             (head qnVar')
-                                             Nothing
-                                             Nothing
-                                             (head qnGuard')
-                                             (head qnBody')
-                         else gplateError "QuantifiedExpr[1]"
+    gplate (QuantifiedExpr qnName qnVar qnOverDom qnOverOpExpr qnGuard qnBody) =
+        (  mkG (EHole qnName)
+        :  ( case qnVar of Left x -> mkG (EHole x); Right x -> mkG x )
+        :  mkG qnGuard
+        :  mkG qnBody
+        :  map mkG (maybeToList qnOverDom)
+        ++ concat [ [mkG op, mkG x] | (op,x) <- maybeToList qnOverOpExpr ]
+
+        , \ xs -> let idenOut  x = case x of EHole i -> Just i; _ -> Nothing
+                      qnVarOut x = case x of Left (EHole i) -> Just (Left i); Right i -> Just (Right i); _ -> Nothing
+                      qnName'       = mapMaybe idenOut  $ fromGs $ take 1 $ drop 0 xs
+                      qnVar'        = mapMaybe qnVarOut $ fromGs $ take 1 $ drop 1 xs
+                      qnGuard'      =                     fromGs $ take 1 $ drop 2 xs
+                      qnBody'       =                     fromGs $ take 1 $ drop 3 xs
+                      qnOverDom'    = if isNothing qnOverDom
+                                          then []
+                                          else fromGs $ take 1 $ drop 4 xs
+                      qnOverOp'   = let y = if isNothing qnOverDom then 5 else 6
+                                    in  if isNothing qnOverOpExpr
+                                            then []
+                                            else fromGs $ take 1 $ drop y xs
+                      qnOverExpr' = let y = if isNothing qnOverDom then 6 else 7
+                                    in  if isNothing qnOverOpExpr
+                                            then []
+                                            else fromGs $ take 1 $ drop y xs
+                  in  if length qnName'       == 1 &&
+                         length qnVar'        == 1 &&
+                         length qnGuard'      == 1 &&
+                         length qnBody'       == 1 &&
+                         length qnOverDom'    == (if isNothing qnOverDom    then 0 else 1) &&
+                         length qnOverOp'     == (if isNothing qnOverOpExpr then 0 else 2) &&
+                         length qnOverExpr'   == length qnOverOp'
+                         then QuantifiedExpr
+                                (head qnName')
+                                (head qnVar')
+                                (if isNothing qnOverDom
+                                    then Just (head qnOverDom')
+                                    else Nothing)
+                                (if isNothing qnOverOpExpr
+                                    then Just ( head qnOverOp'
+                                              , head qnOverExpr' )
+                                    else Nothing)
+                                (head qnGuard')
+                                (head qnBody')
+                        else gplateError "QuantifiedExpr"
         )
-    gplate (QuantifiedExpr qnName qnVar Nothing (Just (qnOp, qnExpr)) qnGuard qnBody) =
-        ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard, mkG qnOp, mkG qnExpr ]
-        , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
-                      qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
-                      qnBody'   = fromGs $ take 1 $ drop 2 xs
-                      qnGuard'  = fromGs $ take 1 $ drop 3 xs
-                      qnOp'     = fromGs $ take 1 $ drop 4 xs
-                      qnExpr'   = fromGs $ take 1 $ drop 5 xs
-                  in  if length qnName'   == 1 &&
-                         length qnVar'    == 1 &&
-                         length qnBody'   == 1 &&
-                         length qnOp'     == 1 &&
-                         length qnExpr'   == 1 &&
-                         length qnGuard'  == 1
-                         then QuantifiedExpr (head qnName')
-                                             (head qnVar')
-                                             Nothing
-                                             (Just (head qnOp', head qnExpr'))
-                                             (head qnGuard')
-                                             (head qnBody')
-                         else gplateError "QuantifiedExpr[2]"
-        )
-    gplate (QuantifiedExpr qnName qnVar (Just qnDom) Nothing qnGuard qnBody) =
-        ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard, mkG qnDom ]
-        , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
-                      qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
-                      qnBody'   = fromGs $ take 1 $ drop 2 xs
-                      qnGuard'  = fromGs $ take 1 $ drop 3 xs
-                      -- qnDom'    = mapMaybe (\ j -> case j of D     i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 3 xs
-                      qnDom'    = fromGs $ take 1 $ drop 4 xs
-                  in  if length qnName'   == 1 &&
-                         length qnVar'    == 1 &&
-                         length qnBody'   == 1 &&
-                         length qnDom'    == 1 &&
-                         length qnGuard'  == 1
-                         then QuantifiedExpr (head qnName')
-                                             (head qnVar')
-                                             (Just (head qnDom'))
-                                             Nothing
-                                             (head qnGuard')
-                                             (head qnBody')
-                         else gplateError "QuantifiedExpr[3]"
-        )
-    gplate (QuantifiedExpr qnName qnVar (Just qnDom) (Just (qnOp, qnExpr)) qnGuard qnBody) =
-        ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard, mkG qnDom, mkG qnOp, mkG qnExpr ]
-        , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
-                      qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
-                      qnBody'   = fromGs $ take 1 $ drop 2 xs
-                      qnGuard'  = fromGs $ take 1 $ drop 3 xs
-                      -- qnDom'    = mapMaybe (\ j -> case j of D     i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 3 xs
-                      qnDom'    = fromGs $ take 1 $ drop 4 xs
-                      qnOp'     = fromGs $ take 1 $ drop 5 xs
-                      qnExpr'   = fromGs $ take 1 $ drop 6 xs
-                  in  if length qnName'   == 1 &&
-                         length qnVar'    == 1 &&
-                         length qnBody'   == 1 &&
-                         length qnDom'    == 1 &&
-                         length qnOp'     == 1 &&
-                         length qnExpr'   == 1 &&
-                         length qnGuard'  == 1
-                         then QuantifiedExpr (head qnName')
-                                             (head qnVar')
-                                             (Just (head qnDom'))
-                                             (Just (head qnOp', head qnExpr'))
-                                             (head qnGuard')
-                                             (head qnBody')
-                         else gplateError "QuantifiedExpr[4]"
-        )
+
+    -- gplate (QuantifiedExpr qnName qnVar Nothing Nothing qnGuard qnBody) =
+    --     ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard ]
+    --     , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
+    --                   qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
+    --                   qnBody'   = fromGs $ take 1 $ drop 2 xs
+    --                   qnGuard'  = fromGs $ take 1 $ drop 3 xs
+    --               in  if length qnName'   == 1 &&
+    --                      length qnVar'    == 1 &&
+    --                      length qnBody'   == 1 &&
+    --                      length qnGuard'  == 1
+    --                      then QuantifiedExpr (head qnName')
+    --                                          (head qnVar')
+    --                                          Nothing
+    --                                          Nothing
+    --                                          (head qnGuard')
+    --                                          (head qnBody')
+    --                      else gplateError "QuantifiedExpr[1]"
+    --     )
+    -- gplate (QuantifiedExpr qnName qnVar Nothing (Just (qnOp, qnExpr)) qnGuard qnBody) =
+    --     ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard, mkG qnOp, mkG qnExpr ]
+    --     , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
+    --                   qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
+    --                   qnBody'   = fromGs $ take 1 $ drop 2 xs
+    --                   qnGuard'  = fromGs $ take 1 $ drop 3 xs
+    --                   qnOp'     = fromGs $ take 1 $ drop 4 xs
+    --                   qnExpr'   = fromGs $ take 1 $ drop 5 xs
+    --               in  if length qnName'   == 1 &&
+    --                      length qnVar'    == 1 &&
+    --                      length qnBody'   == 1 &&
+    --                      length qnOp'     == 1 &&
+    --                      length qnExpr'   == 1 &&
+    --                      length qnGuard'  == 1
+    --                      then QuantifiedExpr (head qnName')
+    --                                          (head qnVar')
+    --                                          Nothing
+    --                                          (Just (head qnOp', head qnExpr'))
+    --                                          (head qnGuard')
+    --                                          (head qnBody')
+    --                      else gplateError "QuantifiedExpr[2]"
+    --     )
+    -- gplate (QuantifiedExpr qnName qnVar (Just qnDom) Nothing qnGuard qnBody) =
+    --     ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard, mkG qnDom ]
+    --     , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
+    --                   qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
+    --                   qnBody'   = fromGs $ take 1 $ drop 2 xs
+    --                   qnGuard'  = fromGs $ take 1 $ drop 3 xs
+    --                   -- qnDom'    = mapMaybe (\ j -> case j of D     i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 3 xs
+    --                   qnDom'    = fromGs $ take 1 $ drop 4 xs
+    --               in  if length qnName'   == 1 &&
+    --                      length qnVar'    == 1 &&
+    --                      length qnBody'   == 1 &&
+    --                      length qnDom'    == 1 &&
+    --                      length qnGuard'  == 1
+    --                      then QuantifiedExpr (head qnName')
+    --                                          (head qnVar')
+    --                                          (Just (head qnDom'))
+    --                                          Nothing
+    --                                          (head qnGuard')
+    --                                          (head qnBody')
+    --                      else gplateError "QuantifiedExpr[3]"
+    --     )
+    -- gplate (QuantifiedExpr qnName qnVar (Just qnDom) (Just (qnOp, qnExpr)) qnGuard qnBody) =
+    --     ( [ mkG (EHole qnName), mkG (EHole qnVar), mkG qnBody, mkG qnGuard, mkG qnDom, mkG qnOp, mkG qnExpr ]
+    --     , \ xs -> let qnName'   = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 xs
+    --                   qnVar'    = mapMaybe (\ j -> case j of EHole i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 1 xs
+    --                   qnBody'   = fromGs $ take 1 $ drop 2 xs
+    --                   qnGuard'  = fromGs $ take 1 $ drop 3 xs
+    --                   -- qnDom'    = mapMaybe (\ j -> case j of D     i -> Just i; _ -> Nothing ) $ fromGs $ take 1 $ drop 3 xs
+    --                   qnDom'    = fromGs $ take 1 $ drop 4 xs
+    --                   qnOp'     = fromGs $ take 1 $ drop 5 xs
+    --                   qnExpr'   = fromGs $ take 1 $ drop 6 xs
+    --               in  if length qnName'   == 1 &&
+    --                      length qnVar'    == 1 &&
+    --                      length qnBody'   == 1 &&
+    --                      length qnDom'    == 1 &&
+    --                      length qnOp'     == 1 &&
+    --                      length qnExpr'   == 1 &&
+    --                      length qnGuard'  == 1
+    --                      then QuantifiedExpr (head qnName')
+    --                                          (head qnVar')
+    --                                          (Just (head qnDom'))
+    --                                          (Just (head qnOp', head qnExpr'))
+    --                                          (head qnGuard')
+    --                                          (head qnBody')
+    --                      else gplateError "QuantifiedExpr[4]"
+    --     )
 
 instance MatchBind QuantifiedExpr
 
@@ -198,6 +237,7 @@ instance GPlate QuanGuard where
     gplate (QuanGuard xs) = gplateUniList QuanGuard xs
 
 instance MatchBind QuanGuard where
+    match (QuanGuard []) (QuanGuard []) = return ()
     match (QuanGuard [EHole (Identifier _)]) (QuanGuard []) = return ()
     match (QuanGuard [p]) (QuanGuard [a]) = match p a
     match _ _ = throwError "while pattern matching a QuanGuard"
