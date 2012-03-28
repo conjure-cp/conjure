@@ -16,6 +16,7 @@ import           Test.Framework.Providers.HUnit ( hUnitTestToTests )
 import           Test.HUnit ( assertEqual, assertFailure, test )
 import qualified Test.HUnit as HUnit
 
+import Constants ( freshNames )
 import GenericOps.Core ( GNode, GPlate, mkG )
 import Language.Essence
 import Language.EssenceEvaluator ( deepSimplify )
@@ -71,7 +72,7 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
 
 applyRuleRefn :: String -> String -> [String] -> HUnit.Test
 applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", ruleRefn, expr]) $ HUnit.TestCase $ do
-    let qNames = [ "q_" ++ show i | i <- [ (0 :: Int) .. ] ]
+    let qNames = freshNames
     case (parseEither (parse <* eof) ruleRefn, parseEither (parse <* eof) expr) of
         (Left msg, _) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg])
         (_, Left msg) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
@@ -96,7 +97,7 @@ applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", 
 
 applyRuleRefns :: [String] -> String -> [String] -> HUnit.Test
 applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn" : expr : ruleRefns)) $ HUnit.TestCase $ do
-    let qNames = [ "q_" ++ show i | i <- [ (0 :: Int) .. ] ]
+    let qNames = freshNames
     rs <- forM ruleRefns $ \ ruleRefn -> do
         case parseEither (parse <* eof) ruleRefn of
             Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg]) >> return undefined
