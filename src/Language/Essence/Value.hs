@@ -7,7 +7,10 @@ module Language.Essence.Value where
 import Control.Applicative
 import Control.Monad ( unless )
 import Control.Monad.Error ( throwError )
+import Control.Monad.State ( get )
 import Data.Generics ( Data )
+import Data.Map ( elems )
+import Data.Maybe ( mapMaybe )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary )
@@ -15,14 +18,15 @@ import Test.QuickCheck ( Arbitrary, arbitrary )
 import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
-                       , GPlate, gplate, gplateError, gplateLeaf, gplateUniList
-                       , mkG, fromG
+                       , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
+                       , fromGs
                        , MatchBind )
 import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<+>), text )
 import qualified PrintUtils as Pr
 
+import Language.Essence.Binding
 import Language.Essence.Domain
 import Language.Essence.Expr
 import Language.Essence.Identifier
@@ -37,7 +41,7 @@ toVTuple = V . VTuple
 data Value = VHole Identifier
     | VBool   Bool
     | VInt   Integer
-    | VEnum  Identifier Type
+    | VEnum  Identifier
     | VMatrix    [Expr]         -- uniform type.
     | VTuple     [Expr]
     | VSet       [Expr]         -- uniform type. unique.
@@ -58,13 +62,7 @@ instance GPlate Value where
     gplate p@(VHole {}) = gplateLeaf p
     gplate p@(VBool {}) = gplateLeaf p
     gplate p@(VInt  {}) = gplateLeaf p
-    gplate (VEnum i t)  = ( [mkG i, mkG t]
-                          , \ xs -> case xs of
-                              [i',t'] -> case (fromG i', fromG t') of
-                                  (Just i'', Just t'') -> VEnum i'' t''
-                                  _ -> gplateError "Value.VEnum[1]"
-                              _ -> gplateError "Value.VEnum[2]"
-                          )
+    gplate   (VEnum       i) = gplateSingle  VEnum      i
     gplate   (VMatrix    xs) = gplateUniList VMatrix    xs
     gplate   (VTuple     xs) = gplateUniList VTuple     xs
     gplate   (VSet       xs) = gplateUniList VSet       xs
@@ -120,7 +118,7 @@ instance ParsePrint Value where
     pretty (VBool False) = "false"
     pretty (VBool True ) = "true"
     pretty (VInt  i    ) = Pr.integer i
-    pretty (VEnum i _  ) = pretty i
+    pretty (VEnum i    ) = pretty i
     pretty (VMatrix xs) = prettyList Pr.brackets Pr.comma xs
     pretty (VTuple [] ) = "tuple ()"
     pretty (VTuple [x]) = "tuple" <+> Pr.parens (pretty x)
@@ -144,7 +142,18 @@ instance TypeOf Value where
     typeOf (VHole    i) = typeOf i
     typeOf (VBool    _) = return TBool
     typeOf (VInt     _) = return TInt
-    typeOf (VEnum  _ t) = return t
+    typeOf (VEnum    i) = do
+        bs <- fromGs . elems <$> get
+        let
+            rs = flip mapMaybe bs $ \ t -> case t of
+                    LettingType _ ty@(TEnum (Just is)) | i `elem` is -> Just ty
+                    _ -> Nothing
+        case rs of
+            [t] -> return t
+            [ ] -> throwError $ Pr.vcat $ "Undefined enum value:"
+                                        : map (Pr.nest 4 . pretty) rs
+            _   -> throwError $ Pr.vcat $ "Same enum value used in multiple enumerated types: "
+                                        : map (Pr.nest 4 . pretty) rs
 
     typeOf (VMatrix []) = return $ TMatrix TInt TUnknown
     typeOf p@(VMatrix xs) = do

@@ -20,7 +20,7 @@ toVTuple :: [Expr] -> Expr
 data Value = VHole Identifier
     | VBool   Bool
     | VInt   Integer
-    | VEnum  Identifier Type
+    | VEnum  Identifier
     | VMatrix    [Expr]         -- uniform type.
     | VTuple     [Expr]
     | VSet       [Expr]         -- uniform type. unique.

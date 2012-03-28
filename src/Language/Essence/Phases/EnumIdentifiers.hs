@@ -40,7 +40,7 @@ enumIdentifiers spec = flip evalStateT [] $ do
             let rs = mapMaybe (chck i) ts
             case rs of
                 [ ] -> return p
-                [t] -> return $ V $ VEnum i t
+                [_] -> return $ V $ VEnum i
                 _   -> throwError $ vcat $ "Same enum value used in multiple enumerated types: "
                                          : map (nest 4 . pretty) rs
         f p = return p
