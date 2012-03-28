@@ -1,8 +1,9 @@
 
-toSet(m) ~~> (aux @ (forall i : ind . m[i] in aux) /\ (forall i : aux . exists j : ind . m[j] = i) )
+toSet(m) ~~> ( aux @ { find aux : set of t }
+                     ( forall i : ind . m[i] in aux) /\
+                     ( forall i in aux . exists j : ind . m[j] = i )
+             )
 
-    $ where m : matrix indexed by [ind] of t
+    where m : matrix indexed by [ind] of t
 
-    letting ind be domain int(0..9)
-
-    find aux : set of bool
+    $ find aux : set of t
