@@ -102,60 +102,46 @@ instance ParsePrint [Binding] where
                         reserved "given"
                         is <- parse `sepBy1` comma
                         colon
-                        j <- parse
-                        return [ Given i j | i <- is ]
+                        choiceTry
+                            [ do
+                                j <- parse
+                                return [ Given i j | i <- is ]
+                            , do
+                                reserved "new"
+                                reserved "type"
+                                reserved "enum"
+                                return [ GivenType i (TEnum Nothing) | i <- is ]
+                            ]
                         <?> "given statement"
                     , do
                         reserved "letting"
                         is <- parse `sepBy1` comma
                         reserved "be"
-                        reserved "new"
-                        reserved "type"
-                        j <- parse
-                        case j of
-                            TEnum {}    -> return ()
-                            TUnnamed {} -> return ()
-                            _           -> fail ""
-                        return [ LettingType i j | i <- is ]
-                        <?> "letting statement"
-                    , do
-                        reserved "given"
-                        is <- parse `sepBy1` comma
-                        colon
-                        reserved "new"
-                        reserved "type"
-                        reserved "enum"
-                        return [ GivenType i (TEnum Nothing) | i <- is ]
-                        <?> "given statement"
-                    , do
-                        reserved "letting"
-                        is <- parse `sepBy1` comma
-                        reserved "be"
-                        reserved "domain"
-                        j <- parse
-                        return [ LettingDomain i j | i <- is ]
-                        <?> "letting statement"
-                    , do
-                        reserved "letting"
-                        is <- parse `sepBy1` comma
-                        reserved "be"
-                        j <- parse
-                        return [ LettingExpr i j | i <- is ]
-                        <?> "letting statement"
-                    , do
-                        reserved "letting"
-                        is <- parse `sepBy1` comma
-                        reserved "be"
-                        reserved "lambda"
-                        j <- parse
-                        return [ LettingLambda i j | i <- is ]
-                        <?> "letting statement"
-                    , do
-                        reserved "letting"
-                        is <- parse `sepBy1` comma
-                        reserved "be"
-                        j <- parse
-                        return [ LettingQuan i j | i <- is ]
+                        choiceTry
+                            [ do
+                                reserved "new"
+                                reserved "type"
+                                j <- parse
+                                case j of
+                                    TEnum {}    -> return ()
+                                    TUnnamed {} -> return ()
+                                    _           -> fail ""
+                                return [ LettingType i j | i <- is ]
+                            , do
+                                reserved "domain"
+                                j <- parse
+                                return [ LettingDomain i j | i <- is ]
+                            , do
+                                j <- parse
+                                return [ LettingExpr i j | i <- is ]
+                            , do
+                                reserved "lambda"
+                                j <- parse
+                                return [ LettingLambda i j | i <- is ]
+                            , do
+                                j <- parse
+                                return [ LettingQuan i j | i <- is ]
+                            ]
                         <?> "letting statement"
                     ]
         concat <$> many1 one
