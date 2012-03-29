@@ -103,3 +103,8 @@ scopeIdentifiers prefix = bottomUp f
         -- f p@(Identifier nm ) | S.member nm reservedSet = p
         f p@(Identifier nm ) | nm `elem` ["forall","exists","sum","indices","refn","repr","domSize"] = p
         f   (Identifier nm ) = Identifier (prefix ++ nm)
+
+-- rename a single identifier.
+identifierRenamer :: String -> String -> Identifier -> Identifier
+identifierRenamer oldName newName (Identifier nm) | oldName == nm = Identifier newName
+identifierRenamer _ _ p = p
