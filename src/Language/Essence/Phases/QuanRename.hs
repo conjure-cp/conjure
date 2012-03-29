@@ -4,6 +4,7 @@
 module Language.Essence.Phases.QuanRename where
 
 import Control.Applicative
+import Control.Monad ( (<=<) )
 import Control.Monad.State ( MonadState, get, put )
 import qualified Data.Map as M
 
@@ -13,11 +14,12 @@ import GenericOps.Core ( GPlate, topDownM, bottomUp )
 import Language.Essence.Identifier
 import Language.Essence.StructuredVar
 import Language.Essence.QuantifiedExpr
+import Language.Essence.Phases.InBubbleRename
 
 
 
 quanRename :: forall a f m . (GPlate a, Applicative m, MonadState (f,[String]) m) => a -> m a
-quanRename = topDownM quanRenamer
+quanRename = inBubbleRename <=< topDownM worker
     where
         supply :: String -> m (Maybe String)
         supply old = do
@@ -28,13 +30,13 @@ quanRename = topDownM quanRenamer
                     put (f,ss)
                     return (Just new)
 
-        quanRenamer :: QuantifiedExpr -> m QuantifiedExpr
-        quanRenamer p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do
+        worker :: QuantifiedExpr -> m QuantifiedExpr
+        worker p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do
             mnew <- supply old
             return $ case mnew of
                 Nothing  -> p
                 Just new -> bottomUp (identifierRenamer old new) p
-        quanRenamer p@(QuantifiedExpr {quanVar = Right qnSVar}) = do
+        worker p@(QuantifiedExpr {quanVar = Right qnSVar}) = do
             let
                 rec :: StructuredVar -> m (M.Map String String)
                 rec (I (Identifier old)) = do
@@ -44,11 +46,11 @@ quanRename = topDownM quanRenamer
                         Just new -> M.singleton old new
                 rec (STuple  ps) = M.unions <$> mapM rec ps
                 rec (SMatrix ps) = M.unions <$> mapM rec ps
+
             lu <- rec qnSVar
-            return $ flip bottomUp p $ \ i@(Identifier nm) -> case M.lookup nm lu of Nothing  -> i
-                                                                                     Just new -> Identifier new
 
+            let f i@(Identifier nm) = case M.lookup nm lu of
+                                            Nothing  -> i
+                                            Just new -> Identifier new
 
-identifierRenamer :: String -> String -> Identifier -> Identifier
-identifierRenamer oldName newName (Identifier nm) | oldName == nm = Identifier newName
-identifierRenamer _ _ p = p
+            return $ bottomUp f p
