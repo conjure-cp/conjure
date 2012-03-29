@@ -3,7 +3,9 @@
 
 #define DATADIR "datafiles/"
 
-module Constants where
+module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
+                 , newRuleVar, isFreshName, freshNames
+                 ) where
 
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
@@ -26,8 +28,14 @@ reservedNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedNames.txt"))
 reservedOpNamesTxt :: [String]
 reservedOpNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedOpNames.txt"))
 
+newRuleVar :: String -> String
+newRuleVar = (ruleVarPrefix ++)
+
+ruleVarPrefix :: String
+ruleVarPrefix = "__INRULE_"
+
 freshNames :: [String]
 freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 isFreshName :: String -> Bool
-isFreshName s = not ("__INRULE_" `isPrefixOf` s) && "__" `isPrefixOf` s
+isFreshName s = not (ruleVarPrefix `isPrefixOf` s) && "__" `isPrefixOf` s
