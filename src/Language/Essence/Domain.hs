@@ -120,11 +120,11 @@ instance MatchBind Domain
 
 instance ParsePrint Domain where
     parse = choiceTry
-                [ pBool, pInt, pEnum, pUnnamed, pMatrix
+                [ pBool, pInt, pUnnamed, pMatrix
                 , pTuple, pSetMSet "set" TSet, pSetMSet "mset" TMSet
                 , pFunction, pRelation, pPartition
                 , pIndices
-                , pDHole
+                , pDHole, pEnum
                 ]
         where
             pDHole = DHole <$> parse
