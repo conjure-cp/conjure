@@ -25,6 +25,7 @@ import PrintUtils ( (<+>), text )
 import {-# SOURCE #-} Language.Essence.Binding ( Binding(..) )
 import {-# SOURCE #-} Language.Essence.Domain ( Domain, DomainOf, domainOf )
 import {-# SOURCE #-} Language.Essence.Expr ( Expr )
+import                Language.Essence.Lambda ( Lambda )
 import {-# SOURCE #-} Language.Essence.Type ( Type(..), TypeOf, typeOf )
 import {-# SOURCE #-} Language.Essence.Value ( Value )
 
@@ -63,17 +64,19 @@ instance TypeOf Identifier where
         d :: Maybe Domain  <- getBinding nm
         x :: Maybe Expr    <- getBinding nm
         b :: Maybe Binding <- getBinding nm
-        tt <- case t of Nothing -> return Nothing; Just i -> Just `liftM` typeOf i
-        tv <- case v of Nothing -> return Nothing; Just i -> Just `liftM` typeOf i
-        td <- case d of Nothing -> return Nothing; Just i -> Just `liftM` typeOf i
-        tx <- case x of Nothing -> return Nothing; Just i -> Just `liftM` typeOf i
+        l :: Maybe Lambda  <- getBinding nm
+        tt <- maybe (return Nothing) (liftM Just . typeOf) t
+        tv <- maybe (return Nothing) (liftM Just . typeOf) v
+        td <- maybe (return Nothing) (liftM Just . typeOf) d
+        tx <- maybe (return Nothing) (liftM Just . typeOf) x
         tb <- case b of Just (Find _  dom) -> Just `liftM` typeOf dom
                         Just (Given _ dom) -> Just `liftM` typeOf dom
                         Just (LettingType _ ty@(TEnum (Just is)))
                             | p `elem` is  -> return $ Just ty
                         _                  -> return Nothing
-        -- let msg = "typeOf Identifier" <+> braces (text nm') <+> text (show [tt,tv,td,tx,tb])
-        case msum [tt,tv,td,tx,tb] of
+        tl <- case l of Nothing -> return Nothing; Just i -> Just `liftM` typeOf i
+        -- let msg = "typeOf Identifier" <+> text nm' <+> text (show [tt,tv,td,tx,tb])
+        case msum [tt,tv,td,tx,tb,tl] of
             Nothing -> throwError $ "Identifier not bound:" <+> text nm
             Just r  -> return r
 
@@ -84,13 +87,13 @@ instance DomainOf Identifier where
         d :: Maybe Domain  <- getBinding nm
         x :: Maybe Expr    <- getBinding nm
         b :: Maybe Binding <- getBinding nm
-        dv <- case v of Nothing -> return Nothing; Just i -> Just `liftM` domainOf i
-        dd <- case d of Nothing -> return Nothing; Just i -> Just `liftM` domainOf i
-        dx <- case x of Nothing -> return Nothing; Just i -> Just `liftM` domainOf i
+        dv <- maybe (return Nothing) (liftM Just . domainOf) v
+        dd <- maybe (return Nothing) (liftM Just . domainOf) d
+        dx <- maybe (return Nothing) (liftM Just . domainOf) x
         db <- case b of Just (Find _  dom) -> Just `liftM` domainOf dom
                         Just (Given _ dom) -> Just `liftM` domainOf dom
                         _                  -> return Nothing
-        -- let msg = "domainOf Identifier" <+> braces (text nm') <+> text (show [dv,dd,dx,db])
+        -- let msg = "domainOf Identifier" <+> text nm' <+> text (show [dv,dd,dx,db])
         case msum [dv,dd,dx,db] of
             Nothing -> throwError $ "Identifier not bound:" <+> text nm
             Just r  -> return r

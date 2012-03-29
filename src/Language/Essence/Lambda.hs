@@ -39,3 +39,6 @@ instance ParsePrint Lambda where
         return $ Lambda args x
     pretty (Lambda args x) = Pr.braces (prettyListDoc id Pr.comma argsDoc <+> "->" <+> pretty x)
         where argsDoc = map (\ (i,t) -> text i <> Pr.colon <+> pretty t ) args
+
+instance TypeOf Lambda where
+    typeOf (Lambda xs x) = TLambda (map snd xs) <$> typeOf x
