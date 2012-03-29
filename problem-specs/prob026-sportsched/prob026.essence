@@ -15,10 +15,10 @@ letting Period be  type of size n_teams/2
 find sched : set (size ((n_teams-1)*n_teams)/2) of tuple (Week,Period,set (size 2) of Team)
 
 such that
-    forall t : Team . forall w : Week . exists s : sched . (s[0] = w /\ t in t[2]),
-    forall t : Team . forall p : Period . (
+    forAll t : Team . forAll w : Week . exists s : sched . (s[0] = w /\ t in t[2]),
+    forAll t : Team . forAll p : Period . (
         (sum s : sched . (s[1] = p) * (t in s[2])) <= 2
     ),
-    forall t1,t2 : Team . (
+    forAll t1,t2 : Team . (
         (t1 != t2) => ((sum s : sched . ((t1 in s[2]) * (t2 in s[2]))) = 1)
     )

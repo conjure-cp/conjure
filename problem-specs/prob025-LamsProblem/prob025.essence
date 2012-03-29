@@ -9,9 +9,9 @@ letting Index be type of size 111
 find m : matrix indexed by [Index,Index] of bool
 
 such that
-    forall r : Index . ((sum c : Index . not(m[r,c])) = 11),
-    forall c : Index . ((sum r : Index . not(m[r,c])) = 11),
-    forall r1,r2 : Index . (
+    forAll r : Index . ((sum c : Index . not(m[r,c])) = 11),
+    forAll c : Index . ((sum r : Index . not(m[r,c])) = 11),
+    forAll r1,r2 : Index . (
         (r1 != r2) => (
             (sum c : Index . not(m[r1,c] \/ m[r2,c])) = 1
         )

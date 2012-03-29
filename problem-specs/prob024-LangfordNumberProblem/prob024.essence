@@ -12,9 +12,9 @@ letting Num be domain int(1..n)
 find seq : function (total) Index -> Num
 
 such that
-    forall i : Index .
+    forAll i : Index .
         (sum j : Index . seq(i) = seq(j)) = k,
-    forall i : Index . (
+    forAll i : Index . (
         exists j : Index . (
             i != j /\
             abs(i-j) = 1 + seq(i) /\

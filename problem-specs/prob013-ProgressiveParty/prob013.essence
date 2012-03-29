@@ -13,19 +13,19 @@ find hosts : set (size 13) of Boat
 find sched : set (size n_periods) of function (total) Boat -> Boat
 
 such that
-    forall p : sched . (
+    forAll p : sched . (
         range(p) subseteq hosts
     ),
-    forall p : sched . (
-        forall h : hosts . (
+    forAll p : sched . (
+        forAll h : hosts . (
             p(h) = h
         )
     ),
-    forall p : sched . (
-        forall h : hosts . (
+    forAll p : sched . (
+        forAll h : hosts . (
             (sum b : p'(h) . crew(b)) <= capacity(h)
         )
     ),
-    forall b1,b2 : Boat . (
+    forAll b1,b2 : Boat . (
         (b1 != b2) => ((sum p : sched . p(b1) = p(b2)) <= 1)
     )

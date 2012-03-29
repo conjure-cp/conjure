@@ -12,6 +12,6 @@ find Sub : set (maxsize bignum) of VERTEX
 maximising card(Sub)
 
 such that
-    forall v_1 : Sub .
-        forall v_2 : Sub .
+    forAll v_1 : Sub .
+        forAll v_2 : Sub .
             (v_1 != v_2) => (set {v_1,v_2} in G)

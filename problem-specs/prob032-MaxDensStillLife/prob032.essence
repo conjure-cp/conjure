@@ -19,13 +19,13 @@ maximising card(alive)
 
 such that
 $ all border cells are dead
-    forall c : Cell . |{c[1],c[2]} cap {1,n+2}| = 0 implies c not_in alive
+    forAll c : Cell . |{c[1],c[2]} cap {1,n+2}| = 0 implies c not_in alive
 $ alive cells have between 2 and 3 alive neighbours (between 3 and 4, when
 $ including the cell itself)
-    forall c in alive . 3 <= (sum i : int(-1..1) . sum j : int(-1..1) .
+    forAll c in alive . 3 <= (sum i : int(-1..1) . sum j : int(-1..1) .
                               <c[1]+i,c[2]+j> in alive)
                          and (sum i : int(-1..1) . sum j : int(-1..1) .
                               <c[1]+i,c[2]+j> in alive) <= 4,
 $ dead cells must not have 3 alive neighbours
-    forall c not_in alive . (sum i : int(-1..1) . sum j : int(-1..1) .
+    forAll c not_in alive . (sum i : int(-1..1) . sum j : int(-1..1) .
                              <c[1]+i,c[2]+j> in alive) neq 3)

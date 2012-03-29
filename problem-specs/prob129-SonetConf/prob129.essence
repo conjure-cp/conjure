@@ -24,4 +24,4 @@ find network : mset (size nrings) of set (maxsize capacity) of Nodes
 
 minimising sum ring : network . card(ring)
 
-such that forall pair : demand . exists ring : network . pair subseteq ring
+such that forAll pair : demand . exists ring : network . pair subseteq ring

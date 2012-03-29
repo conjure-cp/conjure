@@ -8,4 +8,4 @@ letting Interval be domain int(1..n-1)
 find s : function (total, bijective) int(1..n) -> Num
 find v : function (total, bijective) int(1..n-1) -> Interval
 
-such that forall i : int(1..n-1) . v(i) = abs(s(i+1) - s(i))
+such that forAll i : int(1..n-1) . v(i) = abs(s(i+1) - s(i))

@@ -12,11 +12,11 @@ find words : set of function (total) Index -> Base
 maximising card(words)
 
 such that
-    forall w : words . card(w(_,2)) + card(w(_,3)) = 4,
-    forall w1,w2 : words . (
+    forAll w : words . card(w(_,2)) + card(w(_,3)) = 4,
+    forAll w1,w2 : words . (
         sum i : Index . w1(i) = w2(i) <= 4
     ),
-    forall w1,w2 : words . (
+    forAll w1,w2 : words . (
         (sum i : int(1..8) .
             (w1(i) = 1 /\ w2(9-i) = 4) \/
             (w1(i) = 2 /\ w2(9-i) = 3) \/

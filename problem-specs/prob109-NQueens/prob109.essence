@@ -16,5 +16,5 @@ find arrangement : function (bijective) Index -> Index
 
 $ no queens share diagonals
 such that
-    forall q1, q2 : Index .
+    forAll q1, q2 : Index .
         (q1 != q2) => (abs(arrangement(q1) - arrangement(q2)) != abs(q1 - q2))

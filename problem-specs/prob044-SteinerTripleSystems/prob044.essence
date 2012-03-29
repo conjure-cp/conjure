@@ -7,6 +7,6 @@ where (n % 6) in set {1,3}
 find x : set (size n*(n-1)/6) of set (size 3) of int(1..n)
 
 such that
-    forall i,j : x . (
+    forAll i,j : x . (
         (i != j) => (card(i intersect j) <= 1)
     )

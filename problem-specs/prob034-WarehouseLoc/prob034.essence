@@ -15,7 +15,7 @@ find open : function (total) stores -> warehouses
 minimising fixed_cost * card(range(open)) + sum s : stores . cost(s,open(s))
 
 such that
-    forall w : warehouses . (
+    forAll w : warehouses . (
         (sum s : open(_,w) . demand(s)) <= capacity(w)
     )
 

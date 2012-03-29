@@ -23,8 +23,8 @@ find valid : set of function (total) Road -> tuple of (VCol,PCol)
 
 $ all combinations obey the problem constraints
 such that
-    forall c : valid .
-        forall r : Road . (
+    forAll c : valid .
+        forAll r : Road . (
             ((c(1)[0] = 1) /\ (c((1 % n_roads)+1)[1] = 1)) \/
             ((c(1)[0] = 3) /\ (c((1 % n_roads)+1)[1] = 3)) \/
             ((c(1)[0] = 2) /\ (c((1 % n_roads)+1)[1] = 1)) \/

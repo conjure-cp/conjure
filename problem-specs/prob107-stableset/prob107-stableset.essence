@@ -10,4 +10,4 @@ find S : set (maxsize n) of V
 maximising (sum s : S. Weight(s))
 
 such that
-    forall v1, v2 : S. ( (v1 != v2) => !(set{v1,v2} in E))
+    forAll v1, v2 : S. ( (v1 != v2) => !(set{v1,v2} in E))

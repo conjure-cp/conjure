@@ -27,17 +27,17 @@ find s : int(1..maxsum)
 
 such that
 $ all elements are different (and therefore all values are included)
-    forall r1,r2 : int(1..d) .
-        forall i1 : int(1..d - abs(o - r1)) .
-            forall i2 : int(1..d - abs(o - r2)) . (
+    forAll r1,r2 : int(1..d) .
+        forAll i1 : int(1..d - abs(o - r1)) .
+            forAll i2 : int(1..d - abs(o - r2)) . (
                 ((r1 != r2) \/ (i1 != i2)) =>
                 (hexagon[r1,i1] != hexagon[r2,i2])
             ),
 $ all rows sum to s
-    forall r : int(1..d) . (sum i : int(1..d - abs(o - r)) . hexagon[r,i]) = s,
+    forAll r : int(1..d) . (sum i : int(1..d - abs(o - r)) . hexagon[r,i]) = s,
 $ all right-sloping diagonals sum to s
-    forall r : int(1..d) . (sum i : int(1..d - abs(o - r)) .
+    forAll r : int(1..d) . (sum i : int(1..d - abs(o - r)) .
         hexagon[i + max(0,o-r), r - max(0,o-(i + max(0,o-r)))]) = s,
 $ all left-sloping diagonals sum to s
-    forall r : int(1..d) . (sum i : int(1..d - abs(o - r)) .
+    forAll r : int(1..d) . (sum i : int(1..d - abs(o - r)) .
         hexagon[i + max(0,r-o), r - max(0,(i + max(0,r-o))-o)]) = s

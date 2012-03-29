@@ -37,25 +37,25 @@ find model : function int(1..n_racks) -> int(1..n_models)
 find plugged : function int(1..n_racks) -> set of int(1..n_cards)
 
 $ minimise the total rack price
-minimising forall r : defined(model) . price(model(r))
+minimising forAll r : defined(model) . price(model(r))
 
 such that
 $ every card is plugged in to at least one rack
-    forall c : int(1..n_cards) . (
+    forAll c : int(1..n_cards) . (
         exists r : defined(model) . (
             c in plugged(r)
         )
     ),
 $ no card is plugged in to more than one rack
-    forall r1, r2 : defined(model) . (
+    forAll r1, r2 : defined(model) . (
         (r1 != r2) => (card(plugged(r1) intersect plugged(r2)) = 0)
     ),
 $ the power demand placed on a rack does not exceed the maximum it can supply
-    forall r : defined(model) . (
+    forAll r : defined(model) . (
         (sum c : plugged(r) . req_power(ctype(c))) <= max_power(model(r))
     ),
 $ the number of cards plugged in to a rack does not exceed the number of slots
 $ available
-    forall r : defined(model) . (
+    forAll r : defined(model) . (
         card(plugged(r)) <= max_connects(model(r))
     )

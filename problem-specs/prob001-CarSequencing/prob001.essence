@@ -18,11 +18,11 @@ given usage    : relation of (Class * Option)
 find  car      : function (total) Slots -> Class
 
 such that
-    forall c : Class . (
+    forAll c : Class . (
         card(car'(c)) = quantity(c)
     ),
-    forall opt : Option . (
-        forall s : int(1..n_cars+1-blksize(opt)) . (
+    forAll opt : Option . (
+        forAll s : int(1..n_cars+1-blksize(opt)) . (
             (sum i : int(s..s+blksize(opt)-1) . usage(car(i),opt)) <= maxcars(opt)
         )
     )

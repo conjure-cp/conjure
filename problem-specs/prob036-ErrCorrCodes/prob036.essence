@@ -17,5 +17,5 @@ given mindist : int(1..n_big)
 find c : set of String
 
 such that
-    forall s1,s2 : c .
+    forAll s1,s2 : c .
         s1 != s2 => dist(s1,s2) >= mindist

@@ -13,6 +13,6 @@ letting Block be domain new type of size b
 find bibd : relation of ( Obj * Block )
 
 such that
-    forall o : Obj . card(bibd(o,_)) = r,
-    forall bl : Block . card(bibd(_,bl)) = k,
-    forall o1,o2 : Obj . o1 != o2 => card(bibd(o1,_) intersect bibd(o2,_)) = lambda_
+    forAll o : Obj . card(bibd(o,_)) = r,
+    forAll bl : Block . card(bibd(_,bl)) = k,
+    forAll o1,o2 : Obj . o1 != o2 => card(bibd(o1,_) intersect bibd(o2,_)) = lambda_

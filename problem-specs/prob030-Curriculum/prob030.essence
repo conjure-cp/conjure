@@ -12,7 +12,7 @@ given credits : function (total) Course -> int(1..n_big)
 find curr : function (total) Course -> Period
 
 such that
-    forall c1,c2 : Course . (prereq(c1,c2) => curr(c1) < curr(c2)),
-    forall p : Period . (sum c : curr(_,p). credits(c)) <= maxl,
-    forall p : Period . (sum c : curr(_,p). credits(c)) >= minl,
-    forall p : Period . (card(curr(_,p)) <= maxc /\ card(curr(_,p)) >= minc)
+    forAll c1,c2 : Course . (prereq(c1,c2) => curr(c1) < curr(c2)),
+    forAll p : Period . (sum c : curr(_,p). credits(c)) <= maxl,
+    forAll p : Period . (sum c : curr(_,p). credits(c)) >= minl,
+    forAll p : Period . (card(curr(_,p)) <= maxc /\ card(curr(_,p)) >= minc)

@@ -20,8 +20,8 @@ find cut : function set of Order -> sizes
 minimising sum os : defined(cut) . cut(os)
 
 such that
-    forall os1,os2 : defined(cut) . card(os1 intersect os2) = 0,
-    forall o : Order . exists os : defined(cut) . o in os,
-    forall os : defined(cut) . (sum o : os . ordsize(o)) <= cut(os),
-    forall os : defined(cut) .  ((sum c : Colour . exists i : os . ordcol(i) = c) <= col_per_slab)
+    forAll os1,os2 : defined(cut) . card(os1 intersect os2) = 0,
+    forAll o : Order . exists os : defined(cut) . o in os,
+    forAll os : defined(cut) . (sum o : os . ordsize(o)) <= cut(os),
+    forAll os : defined(cut) .  ((sum c : Colour . exists i : os . ordcol(i) = c) <= col_per_slab)
 

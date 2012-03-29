@@ -44,21 +44,21 @@ find orientation : function (total) Container -> int(0..1)
 such that
 $ all north, east, south & west coordinates are valid acc\/ding to the given
 $ width and length parameters
-    forall c : Container . (east(c) - west(c) = width(c) /\
+    forAll c : Container . (east(c) - west(c) = width(c) /\
                             south(c) - north(c) = length(c) /\ orientation(c) = 0) \/
                            (east(c) - west(c) = length(c) /\
                             south(c) - north(c) = width(c) /\ orientation(c) = 1),
 $ no two containers occupy the same space
-    forall c1, c2 : Container . (c1 != c2 => (west(c1)  != west(c2) \/
+    forAll c1, c2 : Container . (c1 != c2 => (west(c1)  != west(c2) \/
                                                  north(c1) != north(c2))),
 $ containers do not overlap each other
-    forall c1, c2 : Container . 
+    forAll c1, c2 : Container . 
     (c1 != c2 => (
         (max(set{west(c1), west(c2)}) - min(set{east(c1), east(c2)}) >= 0)\/
         (max(set{north(c1), north(c2)}) - min(set{south(c1), south(c2)}) >= 0))),
         
 $ container placement meets the class separation constraints
-    forall c1, c2 : Container . 
+    forAll c1, c2 : Container . 
     ((c1 != c2) =>
        ( (max(set {west(c1), west(c2)}) - min(set {east(c1), east(c2)})
             >= separation(set{class(c1), class(c2)})) \/

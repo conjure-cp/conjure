@@ -20,9 +20,9 @@ maximising
     )
 
 such that
-    forall p : int(1..n_players) . (
+    forAll p : int(1..n_players) . (
         arrive(p) in plays_in(p,_) /\
         leave(p)  in plays_in(p,_) /\
-        forall i : int(1..n_pieces) .
+        forAll i : int(1..n_pieces) .
             order(i) in plays_in(p,_) => (arrive(p) <= i /\ leave(p) >= i)
     )

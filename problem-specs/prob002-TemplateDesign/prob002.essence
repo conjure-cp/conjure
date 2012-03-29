@@ -17,6 +17,6 @@ minimising
     )
 
 such that
-    forall d : Design . (
+    forAll d : Design . (
         sum t : defined(layout) . (freq(t,d) * layout(t)) >= quantity(d)
     )
