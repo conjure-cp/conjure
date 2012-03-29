@@ -30,6 +30,7 @@ import Language.Essence.Op
 import Language.Essence.QuantifierDecl
 import Language.Essence.StructuredVar
 import Language.Essence.Type
+import Language.Essence.Value
 
 
 
@@ -237,8 +238,8 @@ instance GPlate QuanGuard where
     gplate (QuanGuard xs) = gplateUniList QuanGuard xs
 
 instance MatchBind QuanGuard where
-    match (QuanGuard []) (QuanGuard []) = return ()
-    match (QuanGuard [EHole (Identifier _)]) (QuanGuard []) = return ()
+    match (QuanGuard [] ) (QuanGuard [] ) = return ()
+    match (QuanGuard [p]) (QuanGuard [] ) = match p (V (VBool True))
     match (QuanGuard [p]) (QuanGuard [a]) = match p a
     match _ _ = throwError "while pattern matching a QuanGuard"
 
