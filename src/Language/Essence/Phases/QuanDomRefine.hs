@@ -20,7 +20,7 @@ import Language.Essence.Op
 import Language.Essence.QuantifiedExpr
 import {-# SOURCE #-} Language.Essence.RuleRepr
 import Language.Essence.Spec
-import Language.Essence.Phases.QuanRename ( identifierRenamer )
+import Language.Essence.Phases.QuanRename
 
 
 
