@@ -16,12 +16,13 @@ import qualified  Data.Map as M
 
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError, gplateUniList
-                       , mkG, fromGs
+                       , mkG, fromGs, showG
                        , MatchBind, match, bind, getBinding )
 import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<>), (<+>), text )
 import qualified PrintUtils as Pr
+import Utils ( ppShow )
 
 import Language.Essence.Domain
 import Language.Essence.Expr
@@ -50,28 +51,28 @@ instance NodeTag QuantifiedExpr
 instance Hole QuantifiedExpr
 
 instance GPlate QuantifiedExpr where
-    gplate (QuantifiedExpr qnName qnVar qnOverDom qnOverOpExpr qnGuard qnBody) =
+    gplate p@(QuantifiedExpr qnName qnVar qnOverDom qnOverOpExpr qnGuard qnBody) =
         (  mkG (EHole qnName)
-        :  ( case qnVar of Left x -> mkG (EHole x); Right x -> mkG x )
+        :  ( mkG $ case qnVar of Left x -> Left (EHole x); Right x -> Right x )
         :  mkG qnGuard
         :  mkG qnBody
         :  map mkG (maybeToList qnOverDom)
         ++ concat [ [mkG op, mkG x] | (op,x) <- maybeToList qnOverOpExpr ]
 
-        , \ xs -> let idenOut  x = case x of EHole i -> Just i; _ -> Nothing
-                      qnVarOut x = case x of Left (EHole i) -> Just (Left i); Right i -> Just (Right i); _ -> Nothing
+        , \ xs -> let idenOut   x = case x of EHole i -> Just i; _ -> Nothing
+                      qnVarOut  x = case x of Left (EHole i) -> Just (Left i); Right i -> Just (Right i); _ -> Nothing
                       qnName'       = mapMaybe idenOut  $ fromGs $ take 1 $ drop 0 xs
                       qnVar'        = mapMaybe qnVarOut $ fromGs $ take 1 $ drop 1 xs
                       qnGuard'      =                     fromGs $ take 1 $ drop 2 xs
                       qnBody'       =                     fromGs $ take 1 $ drop 3 xs
                       qnOverDom'    = if isNothing qnOverDom
-                                          then []
-                                          else fromGs $ take 1 $ drop 4 xs
-                      qnOverOp'   = let y = if isNothing qnOverDom then 5 else 6
+                                            then []
+                                            else fromGs $ take 1 $ drop 4 xs
+                      qnOverOp'   = let y = if isNothing qnOverDom then 4 else 5
                                     in  if isNothing qnOverOpExpr
                                             then []
                                             else fromGs $ take 1 $ drop y xs
-                      qnOverExpr' = let y = if isNothing qnOverDom then 6 else 7
+                      qnOverExpr' = let y = if isNothing qnOverDom then 5 else 6
                                     in  if isNothing qnOverOpExpr
                                             then []
                                             else fromGs $ take 1 $ drop y xs
@@ -80,21 +81,44 @@ instance GPlate QuantifiedExpr where
                          length qnGuard'      == 1 &&
                          length qnBody'       == 1 &&
                          length qnOverDom'    == (if isNothing qnOverDom    then 0 else 1) &&
-                         length qnOverOp'     == (if isNothing qnOverOpExpr then 0 else 2) &&
+                         length qnOverOp'     == (if isNothing qnOverOpExpr then 0 else 1) &&
                          length qnOverExpr'   == length qnOverOp'
                          then QuantifiedExpr
                                 (head qnName')
                                 (head qnVar')
                                 (if isNothing qnOverDom
-                                    then Just (head qnOverDom')
-                                    else Nothing)
+                                    then Nothing
+                                    else Just (head qnOverDom')
+                                )
                                 (if isNothing qnOverOpExpr
-                                    then Just ( head qnOverOp'
+                                    then Nothing
+                                    else Just ( head qnOverOp'
                                               , head qnOverExpr' )
-                                    else Nothing)
+                                )
                                 (head qnGuard')
                                 (head qnBody')
-                        else gplateError "QuantifiedExpr"
+                        else gplateError $ "QuantifiedExpr: " ++ show (pretty p) ++ "\n"
+                                        ++ ppShow ( qnName'
+                                                  , qnVar'
+                                                  , take 1 $ drop 1 xs
+                                                  , map showG $ take 1 $ drop 1 xs
+                                                  , fromGs $ take 1 $ drop 1 xs :: [Either Expr StructuredVar]
+                                                  , mapMaybe qnVarOut $ (fromGs $ take 1 $ drop 1 xs :: [Either Expr StructuredVar])
+                                                  , qnGuard'
+                                                  , qnBody'
+                                                  , qnOverDom'
+                                                  , qnOverOp'
+                                                  , qnOverExpr'
+                                                  ) ++ "\n"
+                                        ++ unlines (map showG xs)
+                                        ++ unlines (map show [ length qnName'       == 1
+                                                             , length qnVar'        == 1
+                                                             , length qnGuard'      == 1
+                                                             , length qnBody'       == 1
+                                                             , length qnOverDom'    == (if isNothing qnOverDom    then 0 else 1)
+                                                             , length qnOverOp'     == (if isNothing qnOverOpExpr then 0 else 1)
+                                                             , length qnOverExpr'   == length qnOverOp'
+                                                             ])
         )
 
     -- gplate (QuantifiedExpr qnName qnVar Nothing Nothing qnGuard qnBody) =
