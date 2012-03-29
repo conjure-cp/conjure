@@ -106,7 +106,7 @@ bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnG
     let
         xsLifted =
             [ Q ( QuantifiedExpr
-                    (Identifier "forall")
+                    (Identifier "forAll")
                     (Left (Identifier q))
                     (Just qnOverDom')
                     Nothing

@@ -96,13 +96,13 @@ instance DomainOf Identifier where
             Just r  -> return r
 
 
-scopeIdentifiers :: GPlate a => String -> a -> a
+scopeIdentifiers :: GPlate a => (String -> String) -> a -> a
 scopeIdentifiers prefix = bottomUp f
     where
         f p@(Identifier "_") = p
         -- f p@(Identifier nm ) | S.member nm reservedSet = p
-        f p@(Identifier nm ) | nm `elem` ["forall","exists","sum","indices","refn","repr","domSize"] = p
-        f   (Identifier nm ) = Identifier (prefix ++ nm)
+        f p@(Identifier nm ) | nm `elem` ["forAll","exists","sum","indices","refn","repr","domSize"] = p
+        f   (Identifier nm ) = Identifier (prefix nm)
 
 -- rename a single identifier.
 identifierRenamer :: String -> String -> Identifier -> Identifier
