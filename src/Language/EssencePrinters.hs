@@ -344,7 +344,7 @@ prSpec :: Spec -> Maybe Doc
 prSpec Spec{language,version,topLevelBindings,topLevelWheres,objective,constraints} = do
     let
         removeKnownQuans :: Binding -> Maybe Binding
-        removeKnownQuans (Letting, op, _) | op `elem` words "forall exists sum" = Nothing
+        removeKnownQuans (Letting, op, _) | op `elem` words "forAll exists sum" = Nothing
         removeKnownQuans x = Just x
     let topLevelBindings' = mapMaybe removeKnownQuans topLevelBindings
     let langline = text "language" <+> text language <+> hcat (intersperse (text ".") (map int version))

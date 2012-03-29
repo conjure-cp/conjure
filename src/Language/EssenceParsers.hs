@@ -468,7 +468,7 @@ pKind = choiceTry [ KindUnknown <$ reservedOp "?"
 
 knownQuans :: ([Binding], [Where])
 knownQuans = unsafeParse pTopLevels
-           $ "letting forall be quantifier                      "
+           $ "letting forAll be quantifier                      "
           ++ "    {                                             "
           ++ "        append   { x:bool, y:bool -> x /\\ y }    "
           ++ "        guard    { x:bool, y:bool -> x => y }     "
@@ -609,7 +609,7 @@ pConstraints = choiceTry [ reserved "such" *> reserved "that" *> sepEndBy pExpr 
                          ]
 
 
--- forall i : s . k ~~> forall i : s, _ . k
+-- forAll i : s . k ~~> forAll i : s, _ . k
 quantifiedPatternGuards :: Expr -> Expr
 quantifiedPatternGuards p@(ExprQuantifier {quanGuard=Nothing}) = p {quanGuard=Just (Identifier "_")}
 quantifiedPatternGuards p = p
@@ -667,7 +667,7 @@ renameIdentifier pre i | i `elem` ruleLangOps = i
                        | otherwise            = pre ++ i
     where
         ruleLangOps :: [String]
-        ruleLangOps = words "_ tau refn repr indices domSize forall sum exists glueOp skipOp quanID"
+        ruleLangOps = words "_ tau refn repr indices domSize forAll sum exists glueOp skipOp quanID"
 
 reprVarsNaming :: String -> Expr -> Expr
 reprVarsNaming pre (Identifier i) = Identifier $ renameIdentifier pre i
