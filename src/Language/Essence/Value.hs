@@ -103,7 +103,7 @@ instance ParsePrint Value where
                     pTuple2 :: Parser Expr
                     pTuple2 = do
                         i <- parse
-                        reservedOp "->"
+                        reservedOp "-->"
                         j <- parse
                         return $ V (VTuple [i,j])
 
@@ -127,7 +127,7 @@ instance ParsePrint Value where
     pretty (VMSet xs) = "mset" <+> prettyList Pr.parens Pr.comma xs
     pretty (VFunction xs) = "function" <+> prettyListDoc Pr.parens Pr.comma (map prE xs)
         where
-            prE (V (VTuple [i,j])) = pretty i <+> "->" <+> pretty j
+            prE (V (VTuple [i,j])) = pretty i <+> "-->" <+> pretty j
             prE p = pretty p
     pretty (VRelation  xs) = "relation"  <+> prettyList Pr.parens Pr.comma xs
     pretty (VPartition xs) = "partition" <+> prettyListDoc Pr.parens Pr.comma (map prE xs)

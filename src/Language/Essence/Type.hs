@@ -109,7 +109,7 @@ instance ParsePrint Type where
             pTFunction = do
                 reserved "function"
                 fr <- parse
-                reservedOp "->"
+                reservedOp "-->"
                 to <- parse
                 return (AnyType TFunction [fr,to])
             pTRelation  = do reserved "relation" ; reserved "of"  ; AnyType TRelation  <$> parens (sepBy parse (reservedOp "*"))
@@ -118,7 +118,7 @@ instance ParsePrint Type where
                 reserved "lambda"
                 braces $ do
                     is <- sepBy1 parse comma
-                    reservedOp "->"
+                    reservedOp "-->"
                     o  <- parse
                     return (TLambda is o)
 
@@ -135,11 +135,11 @@ instance ParsePrint Type where
             (is,e') = helper i e
             helper a b = first (a:) $ case b of TMatrix c d -> helper c d
                                                 _           -> ([], b)
-    pretty (TLambda is  o) = "lambda" <+> Pr.braces (prettyList id Pr.comma is <+> "->" <+> pretty o)
+    pretty (TLambda is  o) = "lambda" <+> Pr.braces (prettyList id Pr.comma is <+> "-->" <+> pretty o)
     pretty (AnyType TTuple ts) = "tuple" <+> "of" <+> prettyList Pr.parens Pr.comma ts
     pretty (AnyType TSet  [t]) = "set"  <+> "of" <+> pretty t
     pretty (AnyType TMSet [t]) = "mset" <+> "of" <+> pretty t
-    pretty (AnyType TFunction [fr,to]) = "function" <+> pretty fr <+> "->" <+> pretty to
+    pretty (AnyType TFunction [fr,to]) = "function" <+> pretty fr <+> "-->" <+> pretty to
     pretty (AnyType TRelation  ts ) = "relation"  <+> "of"   <+> prettyList Pr.parens "*" ts
     pretty (AnyType TPartition [t]) = "partition" <+> "from" <+> pretty t
     pretty TUnknown = "?"

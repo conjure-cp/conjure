@@ -166,7 +166,7 @@ instance ParsePrint Domain where
                 reserved "function"
                 as <- parse
                 fr <- parse
-                reservedOp "->"
+                reservedOp "-->"
                 to <- parse
                 return $ AnyDom TFunction [fr,to] as
 
@@ -210,7 +210,7 @@ instance ParsePrint Domain where
                                                 <+> prettyList Pr.parens Pr.comma es
     pretty (AnyDom TSet  [e] as) = "set"  <+> pretty as <+> "of" <+> pretty e
     pretty (AnyDom TMSet [e] as) = "mset" <+> pretty as <+> "of" <+> pretty e
-    pretty (AnyDom TFunction [fr,to] as) = "function"  <+> pretty as <+> pretty fr <+> "->" <+> pretty to
+    pretty (AnyDom TFunction [fr,to] as) = "function"  <+> pretty as <+> pretty fr <+> "-->" <+> pretty to
     pretty (AnyDom TRelation es as) = "relation" <+> pretty as <+> "of"
                                                       <+> prettyList Pr.parens "*" es
     pretty (AnyDom TPartition [e] as) = "partition" <+> pretty as <+> "from" <+> pretty e
