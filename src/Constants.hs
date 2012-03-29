@@ -7,6 +7,7 @@ module Constants where
 
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
+import Data.List ( isPrefixOf )
 import Data.Set as S ( Set, fromList )
 
 
@@ -29,5 +30,4 @@ freshNames :: [String]
 freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 isFreshName :: String -> Bool
-isFreshName ('_':'_':_) = True
-isFreshName _ = False
+isFreshName s = not ("__INRULE__" `isPrefixOf` s) && "__" `isPrefixOf` s
