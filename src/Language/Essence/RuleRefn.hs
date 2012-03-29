@@ -21,7 +21,7 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified Data.Map as M
 
-import Constants ( freshNames )
+import Constants ( freshNames, newRuleVar )
 import GenericOps.Core ( NodeTag
                        , Hole
                        , GPlate, gplate, gplateError
@@ -116,7 +116,7 @@ callRefn rules' specParam = do
     spec <- (enumIdentifiers >=> runSimplify) specParam
     let identifiers = [ nm | Identifier nm <- universe spec ]
     let qNames = freshNames \\ identifiers
-    let rules = map (scopeIdentifiers "__INRULE_") rules'
+    let rules = map (scopeIdentifiers newRuleVar) rules'
     bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
     results <- flip evalStateT (bindings,qNames) $ applyRefnsDeep rules spec
     ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
@@ -244,13 +244,14 @@ applyRefn (RuleRefn {..}) current = do
         res <- option =<< mapM runBind refnTemplates
         return (res,catMaybes newvars)
     res <- quanRename res'
-    case (newvars,res) of
-        ([Find (Identifier nm) dom],Bubble a b bs) -> do
-            newname:_ <- gets snd; modify (second tail)
-            let a' = bottomUp (identifierRenamer nm newname) a
-            let b' = bottomUp (identifierRenamer nm newname) b
-            return $ Bubble a' b' (Left (Find (Identifier newname) dom) : bs)
-        _ -> return res -- probably should do more checks. what if two new vars?
+    return res
+    -- case (newvars,res) of
+    --     ([Find (Identifier nm) dom],Bubble a b bs) -> do
+    --         newname:_ <- gets snd; modify (second tail)
+    --         let a' = bottomUp (identifierRenamer nm newname) a
+    --         let b' = bottomUp (identifierRenamer nm newname) b
+    --         return $ Bubble a' b' (Left (Find (Identifier newname) dom) : bs)
+    --     _ -> return res -- probably should do more checks. what if two new vars?
 
 
 -- withLog :: MonadWriter [Doc] m => Doc -> m a -> m a

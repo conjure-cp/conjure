@@ -28,7 +28,7 @@ import GHC.Generics ( Generic )
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-import Constants ( freshNames )
+import Constants ( freshNames, newRuleVar )
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError
                        , mkG, fromGs
@@ -180,7 +180,7 @@ callRepr rules' specParam = do
     spec <- (enumIdentifiers >=> runSimplify) specParam
     let identifiers = [ nm | Identifier nm <- universe spec ]
     let qNames = freshNames \\ identifiers
-    let rules = map (scopeIdentifiers "__INRULE_") rules'
+    let rules = map (scopeIdentifiers newRuleVar) rules'
     bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
     results <- flip evalStateT (bindings,qNames) $ applyReprsToSpec rules spec
     ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
