@@ -225,7 +225,7 @@ applyToDom (DomainMatrix ind dom) repr = do
     (nm,newdom,str) <- applyToDom dom repr
     qnVar <- (\ i -> "UQ_" ++ show i ) <$> liftIO nextUniqueInt
     let str' = case str of Nothing -> Nothing
-                           Just jstr -> Just $ ExprQuantifier (Identifier "forall") (Identifier qnVar) ind Nothing
+                           Just jstr -> Just $ ExprQuantifier (Identifier "forAll") (Identifier qnVar) ind Nothing
                                              $ transform (\ t -> case t of Identifier "refn" -> GenericNode Index [Identifier "refn", Identifier qnVar]; _ -> t ) jstr
     return (nm, DomainMatrix ind newdom, str')
 applyToDom dom repr = do

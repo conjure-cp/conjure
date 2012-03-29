@@ -66,7 +66,7 @@ bubbleUpConstraint (ExprQuantifier qnName qnVar qnOver qnGuardParam qnBody) = do
         liftAux _   t = t
     let xsLifted =
             [ ExprQuantifier
-                (Identifier "forall")
+                (Identifier "forAll")
                 q
                 qnOver'
                 Nothing
