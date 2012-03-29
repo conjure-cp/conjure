@@ -10,7 +10,10 @@ module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
 import Data.List ( isPrefixOf )
+import Data.List.Split ( splitOn )
 import Data.Set as S ( Set, fromList )
+
+import Utils ( strip )
 
 
 
@@ -22,11 +25,22 @@ reservedSet = S.fromList $ reservedNamesTxt ++ reservedOpNamesTxt
 
 -- reservedNames are loaded from `reservedNames.txt` at compile time
 reservedNamesTxt :: [String]
-reservedNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedNames.txt"))
+reservedNamesTxt
+    = filter (not . null)
+    $ map (strip . removeComment)
+    $ lines
+    $ unpack $(embedFile (DATADIR ++ "reservedNames.txt"))
 
 -- reservedOpNames are loaded from `reservedOpNames.txt` at compile time
 reservedOpNamesTxt :: [String]
-reservedOpNamesTxt = lines $ unpack $(embedFile (DATADIR ++ "reservedOpNames.txt"))
+reservedOpNamesTxt
+    = filter (not . null)
+    $ map (strip . removeComment)
+    $ lines
+    $ unpack $(embedFile (DATADIR ++ "reservedOpNames.txt"))
+
+removeComment :: String -> String
+removeComment s = case splitOn "#" s of (i:_) -> i
 
 newRuleVar :: String -> String
 newRuleVar = (ruleVarPrefix ++)
