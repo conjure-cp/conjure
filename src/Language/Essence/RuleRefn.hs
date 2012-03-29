@@ -44,7 +44,7 @@ import Language.Essence.Phases.BubbleUp ( bubbleUp )
 import Language.Essence.Phases.CheckWhere ( checkWhere )
 import Language.Essence.Phases.CleanUp ( cleanUp )
 import Language.Essence.Phases.EnumIdentifiers ( enumIdentifiers )
-import Language.Essence.Phases.QuanRename ( quanRename, identifierRenamer )
+import Language.Essence.Phases.QuanRename ( quanRename )
 import Language.EssenceEvaluator ( runSimplify )
 
 
