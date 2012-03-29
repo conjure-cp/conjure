@@ -16,7 +16,7 @@ import           Test.Framework.Providers.HUnit ( hUnitTestToTests )
 import           Test.HUnit ( assertEqual, assertFailure, test )
 import qualified Test.HUnit as HUnit
 
-import Constants ( freshNames )
+import Constants ( freshNames, newRuleVar )
 import GenericOps.Core ( GNode, GPlate, mkG )
 import Language.Essence
 import Language.EssenceEvaluator ( deepSimplify )
@@ -77,7 +77,7 @@ applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", 
         (Left msg, _) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg])
         (_, Left msg) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
         (Right r, Right x) -> do
-            let r' = scopeIdentifiers "__INRULE_" r
+            let r' = scopeIdentifiers newRuleVar r
             (mxs,_) <- runWriterT $ flip evalStateT (M.empty,qNames) $ runErrorT $ applyRefnsDeep [r'] x
             putStr " == BEFORE ==> "
             print r
@@ -105,7 +105,7 @@ applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn"
     case parseEither (parse <* eof) expr of
         Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
         Right x  -> do
-            let rs' = map (scopeIdentifiers "__INRULE_") rs
+            let rs' = map (scopeIdentifiers newRuleVar) rs
             (mxs,_) <- runWriterT $ flip evalStateT (M.empty,qNames) $ runErrorT $ applyRefnsDeep rs' x
             case (mxs, result) of
                 (Left _  , []) -> return ()
@@ -229,8 +229,8 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Expr "true /\\ false => false"
             , parsePrintIso_Expr "(1 + 2) * 3 = 10 - 2 + 1"
             , parsePrintIso_Expr "1 + 2 * 3 = 10 - 2 + 1"
-            , parsePrintIso_Expr "forall i : s , g . k"
-            , parsePrintIso_Expr "forall i : s . k"
+            , parsePrintIso_Expr "forAll i : s , g . k"
+            , parsePrintIso_Expr "forAll i : s . k"
             , parsePrintIso_Expr "(a = b) > c"
             , parsePrintIso_Expr "a = (b > c)"
             , parsePrintIso_Expr "-a > x"
@@ -294,14 +294,14 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             ]
 
         parsingQuantifiedExpr =
-            [ parsePrintIso_QuantifiedExpr "forall i : s . k"
+            [ parsePrintIso_QuantifiedExpr "forAll i : s . k"
             , parsePrintIso_QuantifiedExpr "exists i : s . sum k : i . k = t"
             , parsePrintIso_QuantifiedExpr "exists i : s . sum k : i . (k = t)"
             , parsePrintIso_QuantifiedExpr "exists i : s . (sum k : i . k = t)"
             , parsePrintIso_QuantifiedExpr "exists i : s . (sum k : i . k) = t"
-            , parsePrintIso_QuantifiedExpr "forall i in s, i % 2 = 0 . i in k"
-            , parsePrintIso_QuantifiedExpr "forall i : int(0..9) in s . i in k"
-            , parsePrintIso_QuantifiedExpr "forall i : set of int(0..9) subseteq s . i in k"
+            , parsePrintIso_QuantifiedExpr "forAll i in s, i % 2 = 0 . i in k"
+            , parsePrintIso_QuantifiedExpr "forAll i : int(0..9) in s . i in k"
+            , parsePrintIso_QuantifiedExpr "forAll i : set of int(0..9) subseteq s . i in k"
             ]
 
         parsingIdentifier =
@@ -346,10 +346,10 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIsoFile_Spec "testdata/double-quan.essence"
             , parsePrintIsoFile_Spec "testdata/enum1.essence"
             , parsePrintIsoFile_Spec "testdata/enum2.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-0.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-1.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-2.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-sum.essence"
+            , parsePrintIsoFile_Spec "testdata/forAll-0.essence"
+            , parsePrintIsoFile_Spec "testdata/forAll-1.essence"
+            , parsePrintIsoFile_Spec "testdata/forAll-2.essence"
+            , parsePrintIsoFile_Spec "testdata/forAll-sum.essence"
             , parsePrintIsoFile_Spec "testdata/has-funcs.essence"
             , parsePrintIsoFile_Spec "testdata/has-set-max.essence"
             , parsePrintIsoFile_Spec "testdata/has-sets.essence"
@@ -360,7 +360,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIsoFile_Spec "testdata/relation.essence"
             , parsePrintIsoFile_Spec "testdata/set-card-union.essence"
             , parsePrintIsoFile_Spec "testdata/set-eq.essence"
-            , parsePrintIsoFile_Spec "testdata/set-forall.essence"
+            , parsePrintIsoFile_Spec "testdata/set-forAll.essence"
             , parsePrintIsoFile_Spec "testdata/set-of-sets.essence"
             , parsePrintIsoFile_Spec "testdata/set-of-tuples.essence"
             , parsePrintIsoFile_Spec "testdata/set-union.essence"
