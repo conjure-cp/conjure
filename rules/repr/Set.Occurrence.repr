@@ -25,9 +25,9 @@ $ A is the input : set of tau
 $ B is the output: matrix of bool
 $ 
 $ DOWN:
-$ forall i : B . B[i] := 0
-$ forall i : A . B[i] := 1
+$ forAll i : B . B[i] := 0
+$ forAll i : A . B[i] := 1
 $ 
 $ UP:
-$ forall i : B , B[i] = true . i in A
+$ forAll i : B , B[i] = true . i in A
 $ 

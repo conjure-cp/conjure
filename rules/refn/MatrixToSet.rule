@@ -1,7 +1,7 @@
 
 toSet(m) ~~> ( aux @ { find aux : set of t }
-                     ( forall i : ind . m[i] in aux) /\
-                     ( forall i in aux . exists j : ind . m[j] = i )
+                     ( forAll i : ind . m[i] in aux) /\
+                     ( forAll i in aux . exists j : ind . m[j] = i )
              )
 
     where m : matrix indexed by [ind] of t

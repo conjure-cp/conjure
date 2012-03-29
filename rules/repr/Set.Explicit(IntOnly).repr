@@ -2,7 +2,7 @@
 ~~> Explicit
 ~~> matrix indexed by [int(1..n)] of t
 ~~> alldifferent(refn)
-/\  forall i : int(1..n-1) . refn[i] < refn[i+1]
+/\  forAll i : int(1..n-1) . refn[i] < refn[i+1]
 
     where t :: int
 

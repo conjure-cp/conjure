@@ -9,12 +9,12 @@
     ~~> alldifferent(refn)
 
 *** function (total, surjective) fr -> to
-    ~~> forall i : to . exists j : fr . refn[j] = i
+    ~~> forAll i : to . exists j : fr . refn[j] = i
 
 *** function (total, injective, surjective) fr -> to
     ~~> alldifferent(refn)
-    /\  forall i : to . exists j : fr . refn[j] = i
+    /\  forAll i : to . exists j : fr . refn[j] = i
 
 *** function (total, bijective, _) fr -> to
     ~~> alldifferent(refn)
-    /\  forall i : to . exists j : fr . refn[j] = i
+    /\  forAll i : to . exists j : fr . refn[j] = i

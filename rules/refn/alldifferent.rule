@@ -1,5 +1,5 @@
 
-alldifferent(m) ~~> forall i,j : r, i < j . m[i] != m[j]
+alldifferent(m) ~~> forAll i,j : r, i < j . m[i] != m[j]
 
     where !(m :: matrix indexed by [_] of int)
     where   m :: matrix indexed by [_] of _

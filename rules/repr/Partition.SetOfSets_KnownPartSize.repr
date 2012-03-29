@@ -3,6 +3,6 @@
 ~~> set of set (size n) of tau
 
 *** partition (partSize n) from tau
-    ~~> ( forall i,j : refn , i != j .card(i intersect j) = 0 )
-    /\  ( forall i : tau . exists s : refn . i in s )
-    /\  ( forall i,j : refn . card(i) = card(j) )
+    ~~> ( forAll i,j : refn , i != j . |i intersect j| = 0 )
+    /\  ( forAll i : tau . exists s : refn . i in s )
+    /\  ( forAll i,j : refn . |i| = |j| )

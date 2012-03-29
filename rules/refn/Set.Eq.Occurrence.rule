@@ -1,7 +1,7 @@
 
-a = b ~~> (forall i : ind_a intersect ind_b . m_a[i] = m_b[i])
-       /\ (forall i : ind_a - ind_b . m_a[i] = 0)
-       /\ (forall i : ind_b - ind_a . m_b[i] = 0)
+a = b ~~> (forAll i : ind_a intersect ind_b . m_a[i] = m_b[i])
+       /\ (forAll i : ind_a - ind_b . m_a[i] = 0)
+       /\ (forAll i : ind_b - ind_a . m_b[i] = 0)
 
     where
         a :: set of _,
