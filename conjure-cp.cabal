@@ -49,6 +49,7 @@ Library
                      , Language.Essence.RuleRefn
                      , Language.Essence.RuleRepr
                      , Language.Essence.Spec
+                     , Language.Essence.StructuredVar
                      , Language.Essence.Type
                      , Language.Essence.Value
                      , Language.Essence.Where
@@ -61,6 +62,8 @@ Library
                      , Language.Essence.Phases.QuanRename
 
                      , Language.EssenceEvaluator
+
+                     , Paths_conjure_cp
 
     build-depends    : base, ghc-prim, syb
                      , bytestring == 0.9.2.1
@@ -130,6 +133,7 @@ Executable iconjure
                      , containers == 0.4.2.1
                      , haskeline == 0.6.4.6
                      , mtl == 2.0.1.0
+                     , split == 0.1.4.2
                      , transformers == 0.2.2.0
     ghc-options:
         -fwarn-incomplete-patterns
