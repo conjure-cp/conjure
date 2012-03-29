@@ -1,7 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.StructuredVar where
 
@@ -12,7 +10,10 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, oneof, choose )
 
-import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind )
+import GenericOps.Core ( NodeTag
+                       , Hole, hole, HoleStatus(..)
+                       , GPlate, gplate, gplateSingle, gplateUniList
+                       , MatchBind )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyList )
 import qualified PrintUtils as Pr
@@ -31,9 +32,15 @@ instance IsString StructuredVar where
 
 instance NodeTag StructuredVar
 
-instance Hole StructuredVar
+instance Hole StructuredVar where
+    hole (I (Identifier "_")) = UnnamedHole
+    hole (I (Identifier nm )) = NamedHole nm
+    hole _                    = NotAHole
 
-instance GPlate StructuredVar
+instance GPlate StructuredVar where
+    gplate (I       i ) = gplateSingle I i
+    gplate (STuple  ss) = gplateUniList STuple  ss
+    gplate (SMatrix ss) = gplateUniList SMatrix ss
 
 instance MatchBind StructuredVar
 
@@ -45,7 +52,7 @@ instance ParsePrint StructuredVar where
                       ]
     pretty (STuple  ss) = prettyList Pr.parens   Pr.comma ss
     pretty (SMatrix ss) = prettyList Pr.brackets Pr.comma ss
-    pretty (I        i) = pretty i
+    pretty (I       i ) = pretty i
 
 instance Arbitrary StructuredVar where
     arbitrary = oneof [ do (i,j) <- arbitrary; ks <- arbitrary; return $ STuple  (i:j:ks)
