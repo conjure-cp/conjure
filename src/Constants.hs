@@ -30,4 +30,4 @@ freshNames :: [String]
 freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 isFreshName :: String -> Bool
-isFreshName s = not ("__INRULE__" `isPrefixOf` s) && "__" `isPrefixOf` s
+isFreshName s = not ("__INRULE_" `isPrefixOf` s) && "__" `isPrefixOf` s
