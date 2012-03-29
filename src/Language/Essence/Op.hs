@@ -80,7 +80,7 @@ opFace Subset       = "subset"
 opFace SubsetEq     = "subseteq"
 opFace Supset       = "supset"
 opFace SupsetEq     = "supseteq"
-opFace In         = "in"
+opFace In           = "in"
 opFace Max          = "max"
 opFace Min          = "min"
 opFace ToSet        = "toSet"
@@ -103,7 +103,7 @@ opFace Index        = "{Index}"
 opFace HasType      = "::"
 opFace HasDomain    = ":"
 opFace Replace      = "{Replace}"
-opFace AllDiff      = "alldifferent"
+opFace AllDiff      = "allDiff"
 
 instance NodeTag Op
 

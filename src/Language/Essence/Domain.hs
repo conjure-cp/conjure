@@ -362,9 +362,8 @@ data DomainAttrEnum
     | AttrSize
     | AttrMinSize
     | AttrMaxSize
-    | AttrOccr
-    | AttrMinOccr
-    | AttrMaxOccr
+    | AttrMinOccur
+    | AttrMaxOccur
     | AttrTotal
     | AttrPartial
     | AttrInjective
@@ -394,9 +393,8 @@ instance ParsePrint DomainAttrEnum where
             , ( AttrSize           , "size"           )
             , ( AttrMinSize        , "minSize"        )
             , ( AttrMaxSize        , "maxSize"        )
-            , ( AttrOccr           , "occr"           )
-            , ( AttrMinOccr        , "minOccr"        )
-            , ( AttrMaxOccr        , "maxOccr"        )
+            , ( AttrMinOccur       , "minOccur"       )
+            , ( AttrMaxOccur       , "maxOccur"       )
             , ( AttrTotal          , "total"          )
             , ( AttrPartial        , "partial"        )
             , ( AttrInjective      , "injective"      )
