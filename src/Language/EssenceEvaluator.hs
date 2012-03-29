@@ -4,6 +4,7 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE ViewPatterns          #-}
 
 module Language.EssenceEvaluator where
 
@@ -234,17 +235,20 @@ domSize (AnyDom TSet [d] (DomainAttrs [])) = do
 domSize _ = Nothing
 
 
+imageView :: Expr -> Maybe (String, Expr)
+imageView (EOp Image [EHole (Identifier nm), x]) = Just (nm,x)
+imageView _ = Nothing
+
+
 instance Simplify Expr where
 
-    simplify p@(EOp Image [EHole (Identifier "domSize"), x]) = do
+    simplify p@(imageView -> Just ("domSize", x)) = do
         d <- domainOf x
         case domSize d of
             Nothing -> return Nothing
             Just s  -> p ~~~> s
 
-    simplify p@(EOp Image [EHole (Identifier "repr"), V (VTuple [ x
-                                                                , EHole (Identifier reprName)
-                                                                ])]) = do
+    simplify p@(imageView -> Just ("repr", V (VTuple [x, EHole (Identifier reprName)]))) = do
         x' <- runBind x
         case x' of
             EHole (Identifier nm) -> case splitOn "#" nm of
@@ -254,7 +258,7 @@ instance Simplify Expr where
                 _ -> return Nothing
             _ -> return Nothing
 
-    simplify p@(EOp Image [EHole (Identifier "refn"), EHole (Identifier nm)]) = do
+    simplify p@(imageView -> Just ("refn", EHole (Identifier nm))) = do
         case splitOn "#" nm of
             [a,b] -> p ~~~> EHole $ Identifier $ a ++ "_" ++ b
             _     -> return Nothing
