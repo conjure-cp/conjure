@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE FlexibleContexts      #-}
 
-module Has where
+module Has ( Has(..) ) where
 
 import Control.Monad ( liftM )
 import qualified Control.Monad.State as S -- ( MonadState(..), modify )
@@ -32,6 +32,7 @@ instance Has a a where
     put a _ = a
     modify f = f
 
+
 instance Has (a,b) a where
     get (a,_) = a
     put a (_,b) = (a,b)
@@ -39,6 +40,46 @@ instance Has (a,b) a where
 instance Has (a,b) b where
     get (_,b) = b
     put b (a,_) = (a,b)
+
+
+instance Has (a,b,c) a where
+    get (a,_,_) = a
+    put a (_,b,c) = (a,b,c)
+
+instance Has (a,b,c) b where
+    get (_,b,_) = b
+    put b (a,_,c) = (a,b,c)
+
+instance Has (a,b,c) c where
+    get (_,_,c) = c
+    put c (a,b,_) = (a,b,c)
+
+
+instance Has ((a,b),c) a where
+    get ((a,_),_) = a
+    put a ((_,b),c) = ((a,b),c)
+
+instance Has ((a,b),c) b where
+    get ((_,b),_) = b
+    put b ((a,_),c) = ((a,b),c)
+
+instance Has ((a,b),c) c where
+    get ((_,_),c) = c
+    put c ((a,b),_) = ((a,b),c)
+
+
+instance Has (a,(b,c)) a where
+    get (a,(_,_)) = a
+    put a (_,(b,c)) = (a,(b,c))
+
+instance Has (a,(b,c)) b where
+    get (_,(b,_)) = b
+    put b (a,(_,c)) = (a,(b,c))
+
+instance Has (a,(b,c)) c where
+    get (_,(_,c)) = c
+    put c (a,(b,_)) = (a,(b,c))
+
 
 instance Has (Either a b) (Maybe a) where
     get (Left  x)  = Just x
