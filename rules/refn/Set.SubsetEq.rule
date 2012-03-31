@@ -1,6 +1,13 @@
 
+$ a subseteq b ~~> |a| <= |b| /\ forAll i in a . i in b
+
 a subseteq b ~~> forAll i in a . i in b
 
-    $ where
-    $     a :: set of _,
-    $     b :: set of _
+    where
+        a :: set of _,
+        b :: set of _
+
+$ suggestion:
+$ 
+$ a subseteq b ~~> forAll i in a . i in b     { actual  }
+$              ~~> |a| <= |b|                 { implied }
