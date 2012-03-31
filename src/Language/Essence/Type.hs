@@ -20,11 +20,13 @@ import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
+                       , GNode
                        , MatchBind, BindingsMap )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyList, isoParsePrint, fromPairs )
 import PrintUtils ( (<+>), Doc )
 import qualified PrintUtils as Pr
+import Has
 
 import {-# SOURCE #-} Language.Essence.Identifier
 import {-# SOURCE #-} Language.Essence.Expr
@@ -35,7 +37,9 @@ class TypeOf a where
     typeOf ::
         ( Applicative m
         , MonadError Doc m
-        , MonadState BindingsMap m
+        , MonadState st m
+        , Has st BindingsMap
+        , Has st [GNode]
         , MonadWriter [Doc] m
         ) => a -> m Type
 

@@ -11,6 +11,7 @@ import Data.Typeable ( Typeable )
 -- import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary )
 
+import Has
 import GenericOps.Core
 import ParsePrint
 import PrintUtils
@@ -22,8 +23,10 @@ import {-# SOURCE #-} Language.Essence.Type
 class DomainOf a where
     domainOf ::
         ( Applicative m
+        , Has st BindingsMap
+        , Has st [GNode]
         , MonadError Doc m
-        , MonadState BindingsMap m
+        , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m Domain
 

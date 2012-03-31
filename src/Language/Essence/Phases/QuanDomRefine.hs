@@ -7,9 +7,10 @@ import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState, evalStateT )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Default ( def )
-import Data.List ( (\\) )
+import Data.List ( nub )
 
-import Constants ( freshNames )
+import Has
+import Constants ( FreshName, mkFreshNames )
 import GenericOps.Core ( BindingsMap, universe, bottomUp, topDownM )
 import PrintUtils ( Doc )
 import Utils.MonadList( MonadList, option, runListT )
@@ -31,15 +32,18 @@ quanDomRefine ::
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> Spec -> m [Spec]
 quanDomRefine rules spec = do
-    let identifiers = [ nm | Identifier nm <- universe spec ]
-    let qNames = freshNames \\ identifiers
-    flip evalStateT (def,qNames) $ runListT $ topDownM (domRefineQ rules) spec
+    let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
+    flip evalStateT ( def    :: BindingsMap
+                    , qNames :: [FreshName]
+                    ) $ runListT $ topDownM (domRefineQ rules) spec
 
 domRefineQ ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , MonadError Doc m
     , MonadList m
-    , MonadState (BindingsMap,[String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> QuantifiedExpr -> m QuantifiedExpr
 domRefineQ rules q@(QuantifiedExpr qnName (Left (Identifier qnVar)) (Just qnOverDom) Nothing (QuanGuard qnGuard) qnBody) = do

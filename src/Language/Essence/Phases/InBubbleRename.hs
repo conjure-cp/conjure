@@ -9,7 +9,8 @@ import Control.Monad.State ( MonadState, get, put )
 import Data.Maybe
 import qualified Data.Map as M
 
-import Constants ( isFreshName )
+import Has
+import Constants ( FreshName, getFreshName, isFreshName )
 import GenericOps.Core ( GPlate, topDownM, bottomUp )
 
 import Language.Essence.Binding
@@ -18,17 +19,19 @@ import Language.Essence.Identifier
 
 
 
-inBubbleRename :: forall a f m . (GPlate a, Applicative m, MonadState (f,[String]) m) => a -> m a
+inBubbleRename :: forall a f m st .
+    ( GPlate a
+    , Applicative m
+    , Has st [FreshName]
+    , MonadState st m
+    ) => a -> m a
 inBubbleRename = topDownM worker
     where
         supply :: String -> m (Maybe String)
         supply old = do
             if isFreshName old
                 then return Nothing
-                else do
-                    (f,new:ss) <- get
-                    put (f,ss)
-                    return (Just new)
+                else Just <$> getFreshName
 
         worker :: Expr -> m Expr
         worker p@(Bubble a b bs) = do

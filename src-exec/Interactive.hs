@@ -23,7 +23,7 @@ import System.Environment ( getArgs )
 import Paths_conjure_cp ( getBinDir )
 
 import Constants ( figlet )
-import GenericOps.Core ( GPlate, GNode(..), runMatch )
+import GenericOps.Core ( GPlate, GNode(..), runMatch, BindingsMap )
 import ParsecUtils ( eof, parseEither, parseFromFile )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( Doc, nest, vcat )
@@ -172,19 +172,25 @@ step (EvalTypeKind _) = returningTrue $ liftIO $ putStrLn "not implemented, yet.
 --         _ -> err
 step (Evaluate s) = withParsed s $ \ x -> do
     let bindings = M.empty
-    (x',logs) <- runWriterT $ runErrorT $ flip evalStateT bindings $ deepSimplify (x :: Expr)
+    (x',logs) <- runWriterT $ runErrorT $ flip evalStateT ( bindings :: BindingsMap
+                                                          , []       :: [GNode]
+                                                          ) $ deepSimplify (x :: Expr)
     displayLogs logs
     liftIO $ case x' of
         Left err  -> print err
         Right x'' -> print $ pretty x''
 step (TypeOf s) = withParsed s $ \ x -> do
     sp <- gets currentSpec
-    bindings <- runErrorT $ flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels sp))
+    bindings <- runErrorT $ flip execStateT ( M.empty :: BindingsMap
+                                            , []      :: [(GNode,GNode)]
+                                            ) $ mapM_ addBinding' (lefts (topLevels sp))
     case bindings of
         Left err -> liftIO $ print $ vcat [ "Error in top level bindings."
                                           , nest 4 err ]
-        Right bs -> do
-            (t,logs) <- runWriterT $ runErrorT $ flip evalStateT bs $ typeOf (x :: Expr)
+        Right (bs,_) -> do
+            (t,logs) <- runWriterT $ runErrorT $ flip evalStateT ( bs :: BindingsMap
+                                                                 , [] :: [GNode]
+                                                                 ) $ typeOf (x :: Expr)
             displayLogs logs
             case t of
                 Left err -> liftIO $ print $ vcat [ "Error while type-checking."

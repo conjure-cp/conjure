@@ -11,7 +11,7 @@ module Language.EssenceEvaluator where
 import Control.Applicative ( Applicative, (<$>), (<*) )
 import Control.Monad ( (<=<), forM )
 import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
-import Control.Monad.State ( MonadState, get, evalStateT, execStateT )
+import Control.Monad.State ( MonadState, evalStateT, execStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
 import Data.Either ( lefts )
 import Data.List ( delete, genericIndex, genericLength, isSuffixOf, nub, sort )
@@ -19,11 +19,11 @@ import Data.List.Split ( splitOn )
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+import Has
 import GenericOps.Core
 import ParsecUtils ( parseIO, eof, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils
-
 
 import Language.Essence.Binding
 import Language.Essence.Domain
@@ -55,7 +55,9 @@ testFullEval s = do
                        , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
                        , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
                        ] 
-    (x',logs) <- runWriterT $ flip evalStateT m $ runErrorT $ (evaluate <=< deepSimplify) x
+    (x',logs) <- runWriterT $ flip evalStateT ( m  :: BindingsMap
+                                              , [] :: [GNode]
+                                              ) $ runErrorT $ (evaluate <=< deepSimplify) x
     case x' of
         Left err  -> print err
         Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Value)
@@ -71,7 +73,9 @@ testEval s = do
                        , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
                        , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
                        ] 
-    (x',logs) <- runWriterT $ flip evalStateT m $ runErrorT $ evaluate x
+    (x',logs) <- runWriterT $ flip evalStateT ( m  :: BindingsMap
+                                              , [] :: [GNode]
+                                              ) $ runErrorT $ evaluate x
     case x' of
         Left err  -> print err
         Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Value)
@@ -87,7 +91,9 @@ testSimplify s = do
                        , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
                        , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
                        ] 
-    (x',logs) <- runWriterT $ flip evalStateT m $ runErrorT $ deepSimplify x
+    (x',logs) <- runWriterT $ flip evalStateT ( m  :: BindingsMap
+                                              , [] :: [GNode]
+                                              ) $ runErrorT $ deepSimplify x
     case x' of
         Left err  -> print err
         Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Expr)
@@ -118,9 +124,11 @@ evalArrowError msg x = throwError $ msg <> colon <+> pretty x
 class Simplify a where
     simplify ::
         ( Applicative m
+        , Has st BindingsMap
+        , Has st [GNode]
         , Monad m
         , MonadError Doc m
-        , MonadState BindingsMap m
+        , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m (Maybe a)
 
@@ -137,15 +145,21 @@ _ ~~~> b = do
 
 runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m Spec
 runSimplify spec = do
-    bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
-    evalStateT (deepSimplify spec) bindings
+    (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
+                                    , []      :: [(GNode, GNode)]
+                                    ) $ mapM_ addBinding' (lefts (topLevels spec))
+    evalStateT (deepSimplify spec) ( bindings :: BindingsMap
+                                   , []       :: [GNode]
+                                   )
 
 deepSimplify ::
-    ( GPlate a
-    , Applicative m
+    ( Applicative m
+    , GPlate a
+    , Has st BindingsMap
+    , Has st [GNode]
     , Monad m
     , MonadError Doc m
-    , MonadState BindingsMap m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m a
 -- deepSimplify = bottomUpRewriteM simplifyReal
@@ -162,9 +176,11 @@ deepSimplify = topDownRewriteM simplifyReal
 
 simplifyReal ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [GNode]
     , Monad m
     , MonadError Doc m
-    , MonadState BindingsMap m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => Expr -> m (Maybe Expr)
 simplifyReal p@(EOp op [x,y])
@@ -387,12 +403,15 @@ exprUnify i j = foo i j || foo j i
 --------------------------------------------------------------------------------
 
 class Evaluate a b where
-    evaluate :: ( Applicative m
-                , Monad m
-                , MonadError Doc m
-                , MonadState BindingsMap m
-                , MonadWriter [Doc] m
-                ) => a -> m b
+    evaluate ::
+        ( Applicative m
+        , Has st BindingsMap
+        , Has st [GNode]
+        , Monad m
+        , MonadError Doc m
+        , MonadState st m
+        , MonadWriter [Doc] m
+        ) => a -> m b
 
 infixr 0 ~~>
 (~~>) :: (MonadWriter [Doc] m, ParsePrint a, ParsePrint b) => a -> b -> m b
@@ -423,7 +442,7 @@ instance (Evaluate a b) => Evaluate [a] [b] where
 instance Evaluate Expr Value where
     evaluate p@(EHole (Identifier nm')) = do
         let nm = head $ splitOn "#" nm'
-        st <- get
+        st :: BindingsMap <- getM
         case M.lookup nm st of
             Nothing -> evalArrowError "Not bound" p
             Just x  -> case fromG x of
@@ -762,7 +781,7 @@ instance Evaluate Expr Value where
 
 instance Evaluate Expr Expr where
     evaluate p@(EHole (Identifier nm)) = do
-        st <- get
+        st :: BindingsMap <- getM
         case M.lookup nm st of
             Nothing -> evalArrowError "Not bound" p
             Just x  -> case fromG x of

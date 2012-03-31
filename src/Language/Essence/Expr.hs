@@ -5,7 +5,6 @@
 module Language.Essence.Expr where
 
 import Control.Applicative
-import Control.Arrow ( first, second )
 import Control.Monad.Error ( throwError )
 import Control.Monad.Identity ( Identity )
 import Control.Monad.State
@@ -23,6 +22,7 @@ import Test.QuickCheck ( Arbitrary, arbitrary, shrink )
 import Test.QuickCheck.Gen ( oneof )
 import Unsafe.Coerce ( unsafeCoerce )
 
+import Has
 import GenericOps.Core
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
@@ -93,17 +93,15 @@ instance GPlate Expr where
         )
 
 instance MatchBind Expr where
-    bind t = do
-        lift $ lift $ modify $ first (mkG t :)                                  -- add this node on top of the call stack.
-        result <- case hole t of                                                -- check hole-status of the pattern.
-            UnnamedHole  -> return Nothing -- gbindError "Unnamed hole in template."  -- unnamed hole in a template is just nonsense.
+    bind t = inScope (mkG t) $ do
+        case hole t of                                                                -- check hole-status of the pattern.
+            UnnamedHole  -> return Nothing -- gbindError "Unnamed hole in template."            -- unnamed hole in a template is just nonsense.
             NamedHole nm -> do
-                oldNames <- lift $ lift $ gets snd
+                oldNames <- getM
                 if nm `elem` oldNames
                     then error $ "cyclic definition of something: " ++ nm ++ " " ++ show oldNames
-                    else do
-                        lift $ lift $ modify $ second (nm :)
-                        bindings <- lift get
+                    else inScope nm $ do
+                        bindings <- getM
                         res <- case M.lookup nm bindings of
                             Nothing -> return Nothing -- gbindError ("Not found: " <+> text nm)                                                     -- if the name cannot be found in te list of bindings.
                             Just (GNode ty_b b) | Typeable.typeOf t == ty_b -> return (Just (unsafeCoerce b))                                                -- the name is bound to something of the expected type. great.
@@ -113,7 +111,6 @@ instance MatchBind Expr where
                                                 --                                         , nest 4 "Expected: "   <+> text (show (typeOf t))
                                                 --                                         , nest 4 "But got:  "   <+> text (show ty_b)
                                                 --                                         ]
-                        lift $ lift $ modify $ second tail
                         return res
             NotAHole -> case gplate t of
                             ([], _  ) -> return Nothing                       -- if this is not a hole, and is a leaf, just return it.
@@ -126,8 +123,6 @@ instance MatchBind Expr where
                                 return $ if or bools
                                              then Just (gen ts')         -- degisen var.
                                              else Nothing
-        lift $ lift $ modify (first tail)
-        return result
 
 instance ParsePrint Expr where
     parse = buildExpressionParser table (core <?> "expression")

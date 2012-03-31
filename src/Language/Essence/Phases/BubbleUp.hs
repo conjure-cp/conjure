@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.Phases.BubbleUp where
 
@@ -21,13 +22,14 @@ module Language.Essence.Phases.BubbleUp where
 -- if bindings pass through a quantified context, they are "lifted up"
 
 import Control.Applicative
-import Control.Arrow ( first, second )
-import Control.Monad.State ( MonadState, modify, get, gets, put, runState )
+import Control.Monad.State ( MonadState, runState, runStateT )
 import Data.Default ( Default, def )
-import Data.List ( (\\) )
+import Data.Either ( lefts )
+import Data.List ( nub )
 import Data.Maybe ( fromJust, maybeToList )
 
-import Constants ( freshNames )
+import Has
+import Constants ( FreshName, mkFreshNames, getFreshName )
 import GenericOps.Core ( universe, bottomUp, descendM )
 
 import Language.Essence.Binding
@@ -38,7 +40,6 @@ import Language.Essence.Objective
 import Language.Essence.Op ( Op(Index,In) )
 import Language.Essence.QuantifiedExpr
 import Language.Essence.Spec
-import Language.Essence.Where
 
 
 -- Spec { language    :: String
@@ -51,15 +52,15 @@ import Language.Essence.Where
 
 bubbleUp :: Spec -> Spec
 bubbleUp spec = spec { constraints = constraints'   ++ concat newcons1  ++ concat newcons2
-                     , topLevels   = topLevels spec ++ concat newbinds1 ++ concat newbinds2
+                     , topLevels   = topLevels spec ++ map Left (concat newbinds1 ++ concat newbinds2)
                      , objective   = case objective' of [ ] -> Nothing
                                                         [x] -> Just $ (fromJust (objective spec)) { objExpr = x }
                                                         _   -> error "multiple objectives?"
                      }
     where
-        identifiers = [ nm | Identifier nm <- universe spec ]
-        qNames = freshNames \\ identifiers
-        f xs = let (xs',((nc,nb),_)) = flip runState (def,qNames) $ mapM bubbleUpCons xs
+        qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
+        f :: [Expr] -> ([Expr],[[Expr]],[[Binding]])
+        f xs = let (xs',(nc,nb,_)) = flip runState (def,def,qNames) $ mapM bubbleUpCons xs
                in  (xs',nc,nb)
         (constraints', newcons1, newbinds1) = f (constraints spec)
         (objective'  , newcons2, newbinds2) = f (map objExpr $ maybeToList $ objective spec)
@@ -68,16 +69,15 @@ bubbleUp spec = spec { constraints = constraints'   ++ concat newcons1  ++ conca
 
 bubbleUpCons ::
     ( Applicative m
-    , MonadState ( ( [ [Expr] ]
-                   , [ [Either Binding Where] ]
-                   )
-                 , [String]
-                 ) m
+    , Has st [[Expr]]
+    , Has st [[Binding]]
+    , Has st [FreshName]
+    , MonadState st m
     ) => Expr -> m Expr
 
 bubbleUpCons (Bubble actual bubble bindings) = do
-    modify $ first $ first  ([bubble] :)
-    modify $ first $ second (bindings :)
+    modifyM ([bubble] :)
+    modifyM (lefts bindings :)
     return actual
 
 bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnGuard qnBody)) = do
@@ -85,25 +85,29 @@ bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnG
     let bubbleUpDom dom = descendM bubbleUpCons dom
     let bubbleUpQuanGuard (QuanGuard xs) = QuanGuard <$> mapM bubbleUpCons xs
 
-    names <- gets snd
-    ((qnOverDom',qnGuard',qnBody'),((xs,bs),names')) <-
-        withState (def,names) $ (,,)
-            <$> bubbleUpDom qnOverDom
-            <*> bubbleUpQuanGuard qnGuard
-            <*> bubbleUpCons qnBody
-    modify $ second (const names')
+    names :: [FreshName] <- getM
+    ((qnOverDom',qnGuard',qnBody'),(xs,bs,names')) <-
+        runStateT ( (,,) <$> bubbleUpDom qnOverDom
+                         <*> bubbleUpQuanGuard qnGuard
+                         <*> bubbleUpCons qnBody
+                  )
+                  ( def   :: [[Expr]]
+                  , def   :: [[Binding]]
+                  , names :: [FreshName]
+                  )
+    putM names'
 
     -- bs needs lifting -> those bindings defined in bs should be lifted to matrix indexed by [qnOver'] of ?
-    let bsLifted = [ Left (Find i (DMatrix qnOverDom dom))
-                   | Left (Find i dom) <- concat bs
+    let bsLifted = [ Find i (DMatrix qnOverDom dom)
+                   | Find i dom <- concat bs
                    ]
-    modify $ first $ second (bsLifted :)
+    modifyM (bsLifted :)
 
     -- xs needs lifting -> replace i -> m[i] in zip oldbs newbs
-    q:_ <- gets snd
-    modify $ second tail
-    
+    q <- getFreshName
+
     let
+        xsLifted :: [Expr]
         xsLifted =
             [ Q ( QuantifiedExpr
                     (Identifier "forAll")
@@ -112,13 +116,13 @@ bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnG
                     Nothing
                     (QuanGuard [])
                     (flip bottomUp x $ \ t@(EHole (Identifier nm)) ->
-                        if null [ () | Left (Find (Identifier nm') _) <- concat bs, nm == nm' ]
+                        if null [ () | Find (Identifier nm') _ <- concat bs, nm == nm' ]
                             then EOp Index [EHole (Identifier nm), EHole (Identifier q)]
                             else t)
                  )
             | x <- concat xs ]
 
-    modify $ first $ first (xsLifted :)
+    modifyM (xsLifted :)
 
     return $ Q $ QuantifiedExpr qnName (Left qnVar) (Just qnOverDom') Nothing qnGuard' qnBody'
 
@@ -137,11 +141,11 @@ bubbleUpCons p = descendM bubbleUpCons p
 
 
 
-withState :: MonadState s m => s -> m a -> m (a, s)
-withState initSt comp = do
-    st <- get
-    put initSt
-    result <- comp
-    st' <- get
-    put st
-    return (result,st')
+-- withState :: MonadState s m => s -> m a -> m (a, s)
+-- withState initSt comp = do
+--     st <- S.get
+--     S.put initSt
+--     result <- comp
+--     st' <- S.get
+--     S.put st
+--     return (result,st')

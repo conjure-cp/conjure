@@ -3,31 +3,34 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.RuleRefn ( RuleRefn(..), callRefn, applyRefnsDeep ) where
 
 import Control.Applicative
-import Control.Arrow ( first, second )
+
 import Control.Monad ( (>=>), forM )
 import Control.Monad.Error ( MonadError, throwError, catchError )
-import Control.Monad.State ( MonadState, get, gets, modify, evalStateT, execStateT )
+import Control.Monad.State ( MonadState, evalStateT, execStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
 import Data.Either ( lefts )
 import Data.Generics ( Data )
-import Data.List ( (\\) )
+
+import Data.List ( nub )
 import Data.Maybe ( catMaybes )
 import Data.Monoid ( Any(..), getAny )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified Data.Map as M
 
-import Constants ( freshNames, newRuleVar )
+import Has
+import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( NodeTag
                        , Hole
-                       , GPlate, gplate, gplateError
+                       , GPlate, gplate, gplateError, GNode
                        , mkG, fromGs
                        , MatchBind, runMatch, runBind, BindingsMap
-                       , universe, bottomUp, topDownM  )
+                       , universe, topDownM  )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyList )
 import PrintUtils ( (<+>), text, Doc )
@@ -114,11 +117,14 @@ callRefn ::
     ) => [RuleRefn] -> Spec -> m [Spec]
 callRefn rules' specParam = do
     spec <- (enumIdentifiers >=> runSimplify) specParam
-    let identifiers = [ nm | Identifier nm <- universe spec ]
-    let qNames = freshNames \\ identifiers
+    let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
     let rules = map (scopeIdentifiers newRuleVar) rules'
-    bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
-    results <- flip evalStateT (bindings,qNames) $ applyRefnsDeep rules spec
+    (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
+                                   , []      :: [(GNode,GNode)]
+                                   ) $ mapM_ addBinding' (lefts (topLevels spec))
+    results <- flip evalStateT ( bindings :: BindingsMap
+                               , qNames   :: [FreshName]
+                               ) $ applyRefnsDeep rules spec
     ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
     mapM runSimplify ss
 
@@ -126,9 +132,11 @@ callRefn rules' specParam = do
 applyRefnsDeep ::
     ( GPlate a
     , Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> a -> m [a]
 applyRefnsDeep rules x = do
@@ -143,20 +151,22 @@ applyRefnsDeep rules x = do
     where
         tryApply ::
             ( Applicative m
+            , Has st BindingsMap
+            , Has st [FreshName]
             , Monad m
             , MonadError Doc m
             , MonadList m
-            , MonadState (BindingsMap, [String]) m
+            , MonadState st m
             , MonadWriter (Any,[Doc]) m
             ) => Expr -> m Expr
         tryApply i = do
-            mp <- gets fst
+            mp :: BindingsMap <- getM
 
             -- adding the quantified variable to the state.
             case i of
                 Q (QuantifiedExpr {quanVar = Left (Identifier qnVar), quanOverDom = Just qnOverDom}) -> do
                     case M.lookup qnVar mp of
-                        Nothing -> modify $ first $ M.insert qnVar (mkG qnOverDom)
+                        Nothing -> modifyM (M.insert qnVar (mkG qnOverDom) :: BindingsMap -> BindingsMap)
                         Just _  -> throwError ("Name is already bound: " <+> text qnVar)
                 _ -> return ()
 
@@ -174,7 +184,7 @@ applyRefnsDeep rules x = do
                        )
 
             -- rest state to init.
-            modify $ first $ const mp
+            putM mp
             return res
 
 
@@ -205,10 +215,12 @@ applyRefnsDeep rules x = do
 
 applyRefns ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
     , MonadList m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Expr -> m Expr
 applyRefns rs current = do
@@ -226,15 +238,21 @@ applyRefns rs current = do
 
 applyRefn ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
     , MonadList m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => RuleRefn -> Expr -> m Expr
 applyRefn (RuleRefn {..}) current = do
-    st  <- get
-    (res',newvars) <- flip evalStateT (fst st) $ do
+    mp :: BindingsMap <- getM
+    (res',_) <- flip evalStateT
+                    ( mp :: BindingsMap
+                    , [] :: [(GNode,GNode)]
+                    , [] :: [GNode]
+                    ) $ do
         runMatch refnPattern current
         newvars <- forM refnLocals $ \ l ->
             case l of

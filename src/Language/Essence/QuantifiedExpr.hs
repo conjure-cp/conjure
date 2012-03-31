@@ -7,17 +7,17 @@ module Language.Essence.QuantifiedExpr where
 
 import Control.Applicative
 import Control.Monad.Error ( throwError )
-import Control.Monad.State ( get )
 import Data.Generics ( Data )
 import Data.Maybe ( isNothing, mapMaybe, maybeToList )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified  Data.Map as M
 
+import Has
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError, gplateUniList
                        , mkG, fromGs, showG
-                       , MatchBind, match, bind, getBinding )
+                       , MatchBind, match, bind, getBinding, BindingsMap )
 import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<>), (<+>), text )
@@ -269,7 +269,7 @@ instance MatchBind QuanGuard where
 
     bind (QuanGuard []) = return Nothing
     bind (QuanGuard [EHole (Identifier nm)]) = do
-        bindings <- get
+        bindings :: BindingsMap <- getM
         case M.lookup nm bindings of
             Nothing -> return Nothing -- $ Just $ QuanGuard []
             Just _  -> do

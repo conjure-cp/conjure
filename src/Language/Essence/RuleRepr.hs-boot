@@ -7,6 +7,8 @@ import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 
+import Has
+import Constants ( FreshName )
 import GenericOps.Core ( BindingsMap )
 import PrintUtils ( Doc )
 
@@ -39,9 +41,11 @@ type ReprResult = ( String     -- name of the representation
 
 applyReprsToDom ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr]
       -> Domain

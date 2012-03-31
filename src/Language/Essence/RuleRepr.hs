@@ -13,13 +13,13 @@ import Control.Applicative
 import Control.Arrow ( (&&&) )
 import Control.Monad ( (<=<), (>=>), msum, when )
 import Control.Monad.Error ( MonadError, throwError, catchError )
-import Control.Monad.State ( MonadState, get, modify, StateT, evalStateT, execStateT, runStateT )
+import Control.Monad.State ( MonadState, StateT, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
 import Data.Either ( lefts, rights )
 import Data.Foldable ( forM_ )
 import Data.Function ( on )
 import Data.Generics ( Data )
-import Data.List ( (\\), group, sort, groupBy, sortBy )
+import Data.List ( group, sort, groupBy, sortBy, nub )
 import Data.Maybe ( catMaybes, listToMaybe, maybeToList, isNothing )
 import Data.Ord ( comparing )
 import Data.Traversable ( forM )
@@ -28,10 +28,11 @@ import GHC.Generics ( Generic )
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-import Constants ( freshNames, newRuleVar )
+import Has ( Has, getM, modifyM )
+import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError
-                       , mkG, fromGs
+                       , GNode, mkG, fromGs
                        , MatchBind, runMatch, runBind, BindingsMap
                        , universe, bottomUp, bottomUpM
                        )
@@ -39,7 +40,7 @@ import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyListDoc )
 import PrintUtils ( (<>), (<+>), text, Doc )
 import qualified PrintUtils as Pr
-import Utils ( allPairs, concatMapM, fst3 )
+import Utils ( allPairs, fst3 )
 import Utils.MonadList ( MonadList, option, runListT )
 
 import Language.Essence.Binding
@@ -178,11 +179,14 @@ callRepr ::
     ) => [RuleRepr] -> Spec -> m [Spec]
 callRepr rules' specParam = do
     spec <- (enumIdentifiers >=> runSimplify) specParam
-    let identifiers = [ nm | Identifier nm <- universe spec ]
-    let qNames = freshNames \\ identifiers
+    let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
     let rules = map (scopeIdentifiers newRuleVar) rules'
-    bindings <- flip execStateT M.empty $ mapM_ addBinding' (lefts (topLevels spec))
-    results <- flip evalStateT (bindings,qNames) $ applyReprsToSpec rules spec
+    (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
+                                    , [] :: [(GNode,GNode)]
+                                    ) $ mapM_ addBinding' (lefts (topLevels spec))
+    results      <- flip evalStateT ( bindings :: BindingsMap
+                                    , qNames   :: [FreshName]
+                                    ) $ applyReprsToSpec rules spec
     ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
     return ss
     -- mapM runSimplify =<< concatMapM (quanDomRefine rules) =<< mapM runSimplify ss
@@ -195,9 +199,11 @@ type ReprResult = ( String     -- name of the representation
 
 applyReprsToSpec ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr]
       -> Spec
@@ -255,10 +261,10 @@ applyReprsToSpec rules spec = do
                     Nothing -> return p
                     Just rs -> do
                         (nmR,dom,xs) <- option rs
-                        st <- get
+                        st :: [(String,String)] <- getM
                         when ((nm,nmR) `notElem` st) $ do
                             let refn = nm ++ "_" ++ nmR
-                            modify ((nm,nmR):)
+                            modifyM ((nm,nmR):)
                             tell ( map (bottomUp (identifierRenamer "refn" refn)) [ Find (Identifier refn) dom ]
                                  , map (bottomUp (identifierRenamer "refn" refn)) xs
                                  )
@@ -289,9 +295,11 @@ applyReprsToSpec rules spec = do
 
 applyReprsToDom ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr]
       -> Domain
@@ -305,9 +313,11 @@ applyReprsToDom rules dom = withLog ("applyReprsToDom     " <+> pretty dom)
 
 applyReprToDom ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => RuleRepr
       -> Domain
@@ -325,17 +335,22 @@ applyReprToDom rule dom = do
 
 applyReprCaseToDom ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadState (BindingsMap, [String]) m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => RuleRepr
       -> RuleReprCase
       -> Domain
       -> m ReprResult
 applyReprCaseToDom (RuleRepr {..}) (RuleReprCase {..}) dom = do
-    st <- get
-    (tmpl, str) <- flip evalStateT (fst st) $ do
+    mp :: BindingsMap <- getM
+    (tmpl, str) <- flip evalStateT ( mp :: BindingsMap
+                                   , [] :: [GNode]
+                                   , [] :: [(GNode,GNode)]
+                                   ) $ do
         runMatch reprCasePattern dom
         forM_ (reprCaseLocals ++ reprLocals) $ \ l ->
             case l of

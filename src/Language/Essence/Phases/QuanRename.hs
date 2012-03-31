@@ -5,10 +5,11 @@ module Language.Essence.Phases.QuanRename where
 
 import Control.Applicative
 import Control.Monad ( (<=<) )
-import Control.Monad.State ( MonadState, get, put )
+import Control.Monad.State ( MonadState )
 import qualified Data.Map as M
 
-import Constants ( isFreshName )
+import Has
+import Constants ( FreshName, getFreshName, isFreshName )
 import GenericOps.Core ( GPlate, topDownM, bottomUp )
 
 import Language.Essence.Identifier
@@ -18,17 +19,19 @@ import Language.Essence.Phases.InBubbleRename
 
 
 
-quanRename :: forall a f m . (GPlate a, Applicative m, MonadState (f,[String]) m) => a -> m a
+quanRename :: forall a f m st .
+    ( GPlate a
+    , Applicative m
+    , Has st [FreshName]
+    , MonadState st m
+    ) => a -> m a
 quanRename = inBubbleRename <=< topDownM worker
     where
         supply :: String -> m (Maybe String)
         supply old = do
             if isFreshName old
                 then return Nothing
-                else do
-                    (f,new:ss) <- get
-                    put (f,ss)
-                    return (Just new)
+                else Just <$> getFreshName
 
         worker :: QuantifiedExpr -> m QuantifiedExpr
         worker p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do

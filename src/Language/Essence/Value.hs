@@ -1,13 +1,13 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.Value where
 
 import Control.Applicative
 import Control.Monad ( unless )
 import Control.Monad.Error ( throwError )
-import Control.Monad.State ( get )
 import Data.Generics ( Data )
 import Data.Map ( elems )
 import Data.Maybe ( mapMaybe )
@@ -15,12 +15,13 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary )
 
+import Has
 import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
                        , fromGs
-                       , MatchBind )
+                       , MatchBind, BindingsMap )
 import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<+>), text )
@@ -143,9 +144,9 @@ instance TypeOf Value where
     typeOf (VBool    _) = return TBool
     typeOf (VInt     _) = return TInt
     typeOf (VEnum    i) = do
-        bs <- fromGs . elems <$> get
+        st :: BindingsMap <- getM
         let
-            rs = flip mapMaybe bs $ \ t -> case t of
+            rs = flip mapMaybe (fromGs (elems st)) $ \ t -> case t of
                     LettingType _ ty@(TEnum (Just is)) | i `elem` is -> Just ty
                     _ -> Nothing
         case rs of

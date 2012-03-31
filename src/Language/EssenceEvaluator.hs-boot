@@ -12,6 +12,7 @@ import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Writer
 
+import Has
 import GenericOps.Core
 import PrintUtils
 
@@ -29,31 +30,36 @@ import {-# SOURCE #-} Language.Essence.Spec
 class Simplify a where
     simplify ::
         ( Applicative m
+        , Has st BindingsMap
+        , Has st [GNode]
         , Monad m
         , MonadError Doc m
-        , MonadState BindingsMap m
+        , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m (Maybe a)
 
 runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m Spec
 
 deepSimplify ::
-    ( GPlate a
-    , Applicative m
+    ( Applicative m
+    , GPlate a
+    , Has st BindingsMap
+    , Has st [GNode]
     , Monad m
     , MonadError Doc m
-    , MonadState BindingsMap m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m a
 
 simplifyReal ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [GNode]
     , Monad m
     , MonadError Doc m
-    , MonadState BindingsMap m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => Expr -> m (Maybe Expr)
-
 
 
 domSize :: Domain -> Maybe Expr
@@ -69,12 +75,15 @@ exprUnify :: Expr -> Expr -> Bool
 --------------------------------------------------------------------------------
 
 class Evaluate a b where
-    evaluate :: ( Applicative m
-                , Monad m
-                , MonadError Doc m
-                , MonadState BindingsMap m
-                , MonadWriter [Doc] m
-                ) => a -> m b
+    evaluate ::
+        ( Applicative m
+        , Has st BindingsMap
+        , Has st [GNode]
+        , Monad m
+        , MonadError Doc m
+        , MonadState st m
+        , MonadWriter [Doc] m
+        ) => a -> m b
 
 instance (Evaluate a1 a2, Evaluate b1 b2) => Evaluate (a1,b1) (a2,b2)
 

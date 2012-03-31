@@ -5,28 +5,26 @@
 
 module Language.Essence.Domain where
 
-import Control.Monad.Trans.Class ( lift )
-
 import Control.Applicative
 import Control.Arrow ( first, second )
 import Control.Monad ( ap, liftM, msum )
 import Control.Monad.Error ( MonadError, ErrorT, throwError, runErrorT )
-import Control.Monad.State ( MonadState, StateT, modify )
+import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
 import Data.List ( sort )
 import Data.Maybe ( fromMaybe )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
-import qualified Data.Map as M
 import Test.QuickCheck ( Arbitrary, arbitrary, elements )
 import Test.QuickCheck.Gen ( oneof )
 
+import Has
 import GenericOps.Core ( NodeTag
                        , Hole, hole, HoleStatus(..)
                        , GPlate, gplate, gplateError, gplateLeaf, gplateSingle, gplateUniList
                        , GNode, mkG, fromG, fromGs
-                       , MatchBind, match, BindingsMap
+                       , MatchBind, match, BindingsMap, inScope
                        )
 import ParsecUtils
 import ParsePrint
@@ -45,8 +43,10 @@ import {-# SOURCE #-} Language.EssenceEvaluator ( deepSimplify )
 class DomainOf a where
     domainOf ::
         ( Applicative m
+        , Has st BindingsMap
+        , Has st [GNode]
         , MonadError Doc m
-        , MonadState BindingsMap m
+        , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m Domain
 
@@ -270,21 +270,19 @@ instance GPlate DomainAttrs where
     gplate (DomainAttrs xs) = gplateUniList DomainAttrs xs
 
 instance MatchBind DomainAttrs where
-    match p@(DomainAttrs ps) a@(DomainAttrs as) = do
-        lift $ lift $ modify ((mkG p, mkG a) :) -- add this node on top of the call stack.
+    match p@(DomainAttrs ps) a@(DomainAttrs as) = inScope (mkG p, mkG a) $ do
         helper (DontCare `elem` ps)
                (sort $ filter (/=DontCare) ps)
                (sort $ filter (/=DontCare) as)
-        lift $ lift $ modify tail
         where
-            checkMatch :: Monad m => DomainAttr -> DomainAttr -> StateT (M.Map String GNode) (StateT [(GNode,GNode)] m) Bool
+            -- checkMatch :: DomainAttr -> DomainAttr -> m Bool
             checkMatch i j = do
                 res <- runErrorT (match i j)
                 case res of
                     Right _ -> return True
                     _       -> return False
 
-            tryMatch :: Monad m => DomainAttr -> [DomainAttr] -> StateT (M.Map String GNode) (StateT [(GNode,GNode)] m) (Bool, [DomainAttr])
+            -- tryMatch :: DomainAttr -> [DomainAttr] -> m (Bool, [DomainAttr])
             tryMatch _ []     = return (False, [])
             tryMatch i (j:js) = do
                 b <- checkMatch i j
@@ -292,11 +290,11 @@ instance MatchBind DomainAttrs where
                     then return (b,js)
                     else second (j:) `liftM` tryMatch i js
 
-            helper :: Monad m => Bool -> [DomainAttr] -> [DomainAttr] -> ErrorT Doc (StateT (M.Map String GNode) (StateT [(GNode,GNode)] m)) ()
+            -- helper :: Bool -> [DomainAttr] -> [DomainAttr] -> m ()
             helper _    []     []     = return ()  -- if both attr lists are fully consumed.
             helper True []     _      = return ()  -- if the pattern list is fully consumed, we DontCare.
             helper d    (x:xs) ys = do
-                (res, ys') <- lift $ tryMatch x ys
+                (res, ys') <- tryMatch x ys
                 if res
                     then helper d xs ys'
                     else throwError $ "attribute in pattern not found in actual: " <+> pretty x

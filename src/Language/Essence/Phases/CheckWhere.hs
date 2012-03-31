@@ -9,10 +9,11 @@ import Control.Monad.Writer ( MonadWriter )
 import Control.Monad.State ( MonadState )
 -- import Control.Monad.IO.Class ( MonadIO, liftIO )
 
+import Has
 import ParsePrint ( pretty )
 import PrintUtils ( (<+>), Doc )
 
-import GenericOps.Core ( BindingsMap )
+import GenericOps.Core ( GNode, BindingsMap )
 import Language.Essence.Expr
 import Language.Essence.Value
 import Language.Essence.Where
@@ -22,9 +23,11 @@ import Language.EssenceEvaluator ( deepSimplify )
 
 checkWhere ::
     ( Applicative m
+    , Has st BindingsMap
+    , Has st [GNode]
     , Monad m
     , MonadError Doc m
-    , MonadState BindingsMap m
+    , MonadState st m
     , MonadWriter [Doc] m
     ) => Where -> m ()
 -- checkWhere (Where p@(EOp HasType [a,b])) = do

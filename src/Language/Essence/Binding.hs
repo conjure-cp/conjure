@@ -13,7 +13,8 @@ import Data.Generics ( Data )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
-import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateTwo, MatchBind, BindingsMap, addBinding )
+import Has
+import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateTwo, GNode, MatchBind, BindingsMap, addBinding )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), Doc)
@@ -29,7 +30,12 @@ import Language.Essence.Where
 
 
 
-addBinding' :: (MonadError Doc m, MonadState BindingsMap m) => Binding -> m ()
+addBinding' ::
+    ( MonadError Doc m
+    , MonadState st m
+    , Has st BindingsMap
+    , Has st [(GNode,GNode)]
+    ) => Binding -> m ()
 addBinding' b@(Find        (Identifier i) _) = addBinding i b
 addBinding' b@(Given       (Identifier i) _) = addBinding i b
 addBinding' (LettingType   (Identifier i) j) = addBinding i j

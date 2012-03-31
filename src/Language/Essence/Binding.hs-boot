@@ -9,6 +9,7 @@ import Data.Generics ( Data )
 import Data.Typeable ( Typeable )
 -- import GHC.Generics ( Generic )
 
+import Has
 import GenericOps.Core
 import PrintUtils
 import ParsePrint
@@ -23,7 +24,12 @@ import Language.Essence.Where
 
 
 
-addBinding' :: (MonadError Doc m, MonadState BindingsMap m) => Binding -> m ()
+addBinding' ::
+    ( MonadError Doc m
+    , MonadState st m
+    , Has st BindingsMap
+    , Has st [(GNode,GNode)]
+    ) => Binding -> m ()
 
 bindingName :: Binding -> String
 
