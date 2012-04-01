@@ -19,7 +19,7 @@ import Language.Essence.Phases.InBubbleRename
 
 
 
-quanRename :: forall a f m st .
+quanRename :: forall a m st .
     ( GPlate a
     , Applicative m
     , Has st [FreshName]

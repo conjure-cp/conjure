@@ -5,7 +5,7 @@ module Language.Essence.Phases.InBubbleRename where
 
 import Control.Applicative
 import Control.Monad ( forM )
-import Control.Monad.State ( MonadState, get, put )
+import Control.Monad.State ( MonadState )
 import Data.Maybe
 import qualified Data.Map as M
 
@@ -19,7 +19,7 @@ import Language.Essence.Identifier
 
 
 
-inBubbleRename :: forall a f m st .
+inBubbleRename :: forall a m st .
     ( GPlate a
     , Applicative m
     , Has st [FreshName]
