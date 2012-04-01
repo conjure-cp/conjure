@@ -52,10 +52,11 @@ opDescriptor = helper
             | otherwise = reservedOp s <?> "operator"
 
         genLispy :: Op -> Int -> OpDescriptor
-        genLispy op cardinality = OpLispy
+        genLispy op _cardinality = OpLispy
             ( do
                 reserved (opFace op)
-                is <- parens (countSep cardinality parse comma)
+                -- is <- parens (countSep cardinality parse comma)
+                is <- parens (parse `sepBy1` comma)
                 return $ EOp op is
             )
             ( \ xs -> text (opFace op) <> prettyList Pr.parens Pr.comma xs)
