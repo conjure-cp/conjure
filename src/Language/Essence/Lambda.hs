@@ -37,7 +37,7 @@ instance ParsePrint Lambda where
         reservedOp "-->"
         x <- parse
         return $ Lambda args x
-    pretty (Lambda args x) = Pr.braces (prettyListDoc id Pr.comma argsDoc <+> "->" <+> pretty x)
+    pretty (Lambda args x) = Pr.braces (prettyListDoc id Pr.comma argsDoc <+> "-->" <+> pretty x)
         where argsDoc = map (\ (i,t) -> text i <> Pr.colon <+> pretty t ) args
 
 instance TypeOf Lambda where
