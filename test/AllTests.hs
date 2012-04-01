@@ -16,8 +16,8 @@ import           Test.Framework.Providers.HUnit ( hUnitTestToTests )
 import           Test.HUnit ( assertEqual, assertFailure, test )
 import qualified Test.HUnit as HUnit
 
-import Constants ( freshNames, newRuleVar )
-import GenericOps.Core ( GNode, GPlate, mkG )
+import Constants ( FreshName, mkFreshNames, newRuleVar )
+import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap )
 import Language.Essence
 import Language.EssenceEvaluator ( deepSimplify )
 import ParsecUtils ( Parser, eof, parseEither, unsafeParse )
@@ -63,8 +63,12 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
         (Left msg, _) -> assertFailure (unlines ["Eval [cannot parse]", px, msg])
         (_, Left msg) -> assertFailure (unlines ["Eval [cannot parse]", py, msg])
         (Right (x :: Expr), Right (y :: Expr)) -> do
-            (x',_logs) <- runWriterT $ flip evalStateT (M.fromList bindings) $ runErrorT $ deepSimplify x
-            (y',_logs) <- runWriterT $ flip evalStateT (M.fromList bindings) $ runErrorT $ deepSimplify y
+            (x',_logs) <- runWriterT $ flip evalStateT ( M.fromList bindings :: BindingsMap
+                                                       , [] :: [GNode]
+                                                       ) $ runErrorT $ deepSimplify x
+            (y',_logs) <- runWriterT $ flip evalStateT ( M.fromList bindings :: BindingsMap
+                                                       , [] :: [GNode]
+                                                       ) $ runErrorT $ deepSimplify y
             case (x',y') of
                 (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty x, renderDoc msg])
                 (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty y, renderDoc msg])
@@ -72,13 +76,14 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
 
 applyRuleRefn :: String -> String -> [String] -> HUnit.Test
 applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", ruleRefn, expr]) $ HUnit.TestCase $ do
-    let qNames = freshNames
     case (parseEither (parse <* eof) ruleRefn, parseEither (parse <* eof) expr) of
         (Left msg, _) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg])
         (_, Left msg) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
         (Right r, Right x) -> do
             let r' = scopeIdentifiers newRuleVar r
-            (mxs,_) <- runWriterT $ flip evalStateT (M.empty,qNames) $ runErrorT $ applyRefnsDeep [r'] x
+            (mxs,_) <- runWriterT $ flip evalStateT ( M.empty         :: BindingsMap
+                                                    , mkFreshNames [] :: [FreshName]
+                                                    ) $ runErrorT $ applyRefnsDeep [r'] x
             putStr " == BEFORE ==> "
             print r
             putStr " == AFTER  ==> "
@@ -97,7 +102,6 @@ applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", 
 
 applyRuleRefns :: [String] -> String -> [String] -> HUnit.Test
 applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn" : expr : ruleRefns)) $ HUnit.TestCase $ do
-    let qNames = freshNames
     rs <- forM ruleRefns $ \ ruleRefn -> do
         case parseEither (parse <* eof) ruleRefn of
             Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg]) >> return undefined
@@ -106,7 +110,9 @@ applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn"
         Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
         Right x  -> do
             let rs' = map (scopeIdentifiers newRuleVar) rs
-            (mxs,_) <- runWriterT $ flip evalStateT (M.empty,qNames) $ runErrorT $ applyRefnsDeep rs' x
+            (mxs,_) <- runWriterT $ flip evalStateT ( M.empty         :: BindingsMap
+                                                    , mkFreshNames [] :: [FreshName]
+                                                    ) $ runErrorT $ applyRefnsDeep rs' x
             case (mxs, result) of
                 (Left _  , []) -> return ()
                 (Left msg, _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", unlines ruleRefns, expr, show msg])
@@ -203,9 +209,9 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Expr "mset {1, 2, true, false, (1, 2, 3)}"
             , parsePrintIso_Expr "mset {set {1, 2, 3}, set {1, 3, 5}, set {2, 4, 6}}"
             , parsePrintIso_Expr "function {}"
-            , parsePrintIso_Expr "function {1 -> 2}"
-            , parsePrintIso_Expr "function {1 -> 2, 3 -> 4, 5 -> 6, 7 -> 8}"
-            , parsePrintIso_Expr "function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true, 4)}"
+            , parsePrintIso_Expr "function {1 --> 2}"
+            , parsePrintIso_Expr "function {1 --> 2, 3 --> 4, 5 --> 6, 7 --> 8}"
+            , parsePrintIso_Expr "function {1 --> set {2}, 3 --> mset {4}, 5 --> function {6 --> 6}, 7 --> (false, true, 4)}"
             , parsePrintIso_Expr "relation {}"
             , parsePrintIso_Expr "relation {(1, a)}"
             , parsePrintIso_Expr "relation {(1, a), (2, b)}"
@@ -248,8 +254,8 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
                                                       ]
             , parsePrintIso_Expr "f'(i)"
             , shouldParseTo      "f'(i)" $ EOp PreImage ["f","i"]
-            , parsePrintIso_Expr "a {b -> c}"
-            , shouldParseTo      "a {b -> c}" $ EOp Replace ["a","b","c"]
+            , parsePrintIso_Expr "a {b --> c}"
+            , shouldParseTo      "a {b --> c}" $ EOp Replace ["a","b","c"]
             , eval [] "1+2" "3"
             , eval [("x",gnode_Expr "1")] "x+2" "3"
             , eval [] "a+(1+1)" "a+2"
@@ -288,7 +294,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Value "mset (1,2,3)"
             , parsePrintIso_Value "(1,2,3)"
             , parsePrintIso_Value "tuple (1,2,3)"
-            , parsePrintIso_Value "function(1->2,2->3,3->4)"
+            , parsePrintIso_Value "function(1-->2,2-->3,3-->4)"
             , parsePrintIso_Value "relation((1,2,3),(1,2,4),(2,3,4))"
             , parsePrintIso_Value "partition({1,2},{3,4},{x,y})"
             ]
@@ -324,10 +330,10 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             ]
 
         parsingLambda =
-            [ parsePrintIso_Lambda "{ x:int, y:bool -> x % 2 = 0 <=> y }"
-            , parsePrintIso_Lambda "{ x:int -> x % 2 }"
-            , noParse_Lambda       "lambda { x:int -> x % 2 }"
-            , noParse_Lambda       "{}{ x:int -> x % 2 }}"
+            [ parsePrintIso_Lambda "{ x:int, y:bool --> x % 2 = 0 <=> y }"
+            , parsePrintIso_Lambda "{ x:int --> x % 2 }"
+            , noParse_Lambda       "lambda { x:int --> x % 2 }"
+            , noParse_Lambda       "{}{ x:int --> x % 2 }}"
             , noParse_Lambda       ""
             ]
 
@@ -481,17 +487,17 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Domain "mset (maxSize n, occr o, _) of int"
             , parsePrintIso_Domain "mset (occr o, minOccr m) of int"
             , parsePrintIso_Domain "mset (maxOccr m) of int"
-            , parsePrintIso_Domain "function a -> b"
-            , parsePrintIso_Domain "function (total) a -> b"
-            , parsePrintIso_Domain "function (total, representation foo, _) a -> b"
-            , parsePrintIso_Domain "function (total, injective) a -> b"
-            , parsePrintIso_Domain "function a -> function b -> c"
-            , parsePrintIso_Domain "function function a -> b -> c"
+            , parsePrintIso_Domain "function a --> b"
+            , parsePrintIso_Domain "function (total) a --> b"
+            , parsePrintIso_Domain "function (total, representation foo, _) a --> b"
+            , parsePrintIso_Domain "function (total, injective) a --> b"
+            , parsePrintIso_Domain "function a --> function b --> c"
+            , parsePrintIso_Domain "function function a --> b --> c"
             , parsePrintIso_Domain "relation of ()"
             , parsePrintIso_Domain "relation of (a * b)"
             , parsePrintIso_Domain "relation (representation foo) of (a * b * c)"
             , parsePrintIso_Domain "relation (representation foo, _) of (a * b * c)"
-            , parsePrintIso_Domain "relation (representation foo, _) of (int(0..9) * set of a * function c -> d)"
+            , parsePrintIso_Domain "relation (representation foo, _) of (int(0..9) * set of a * function c --> d)"
             , parsePrintIso_Domain "partition from int(0..9)"
             , parsePrintIso_Domain "partition (regular) from int(0..9)"
             , parsePrintIso_Domain "partition (regular, numParts 5) from int(0..9)"
@@ -578,7 +584,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , applyRuleRefn (unlines [ "x+y ~~> res"
                                      , "letting theGuard be x = y"
                                      , "where theGuard"
-                                     , "where !(x :: set of _), !(y :: function int -> int)"
+                                     , "where !(x :: set of _), !(y :: function int --> int)"
                                      , "letting foo be 2"
                                      , "letting bar be x"
                                      , "letting baz be foo * bar"

@@ -12,6 +12,7 @@ import Control.Monad.State ( MonadState, get, gets, put, StateT, evalStateT, exe
 import Control.Monad.Trans.Class ( lift )
 import Control.Monad.Writer ( runWriterT )
 import Data.Char ( toLower )
+import Data.Default ( def )
 import Data.Either ( lefts )
 import Data.List ( delete, intercalate, isPrefixOf )
 import Data.List.Split ( splitOn )
@@ -171,10 +172,14 @@ step (EvalTypeKind _) = returningTrue $ liftIO $ putStrLn "not implemented, yet.
 --                 _ -> err
 --         _ -> err
 step (Evaluate s) = withParsed s $ \ x -> do
-    let bindings = M.empty
-    (x',logs) <- runWriterT $ runErrorT $ flip evalStateT ( bindings :: BindingsMap
-                                                          , []       :: [GNode]
-                                                          ) $ deepSimplify (x :: Expr)
+    spec <- gets currentSpec
+    (x',logs)
+        <- runWriterT $ runErrorT $ flip evalStateT ( def :: BindingsMap
+                                                    , def :: [GNode]
+                                                    , def :: [(GNode,GNode)]
+                                                    ) $ do
+                                                        mapM_ addBinding' (lefts (topLevels spec))
+                                                        deepSimplify (x :: Expr)
     displayLogs logs
     liftIO $ case x' of
         Left err  -> print err
