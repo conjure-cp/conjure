@@ -143,7 +143,14 @@ basedir :: FilePath
 basedir = "/Users/ozgurakgun/src/conjure-wd/"
 
 main :: IO ()
-main = defaultMain $ hUnitTestToTests . test $ parsingValue
+main = defaultMain $ hUnitTestToTests . test $ parsingExpr
+                                            ++ parsingValue
+                                            ++ parsingQuantifiedExpr
+                                            ++ parsingIdentifier
+                                            ++ parsingWhere
+                                            ++ parsingLambda
+                                            ++ parsingType
+                                            ++ parsingDomain
 
     where
 
@@ -197,42 +204,42 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Expr "(1, 2)"
             , parsePrintIso_Expr "(1, 2, 3, [1, 2, 3])"
             , parsePrintIso_Expr "(true, 1, (false, 2))"
-            , parsePrintIso_Expr "set {}"
-            , parsePrintIso_Expr "set {1}"
-            , parsePrintIso_Expr "set {a}"
-            , parsePrintIso_Expr "set {1, 2, true, false, (1, 2, 3)}"
-            , parsePrintIso_Expr "set {set {1, 2, 3}, set {1, 3, 5}, set {2, 4, 6}}"
-            , parsePrintIso_Expr "set {set {1, 2, 3}, set {1, 3, 5}, set {2, 4, 6}, set {true, false}}"
-            , parsePrintIso_Expr "mset {1}"
-            , parsePrintIso_Expr "mset {a}"
-            , parsePrintIso_Expr "mset {mset {}}"
-            , parsePrintIso_Expr "mset {1, 2, true, false, (1, 2, 3)}"
-            , parsePrintIso_Expr "mset {set {1, 2, 3}, set {1, 3, 5}, set {2, 4, 6}}"
-            , parsePrintIso_Expr "function {}"
-            , parsePrintIso_Expr "function {1 --> 2}"
-            , parsePrintIso_Expr "function {1 --> 2, 3 --> 4, 5 --> 6, 7 --> 8}"
-            , parsePrintIso_Expr "function {1 --> set {2}, 3 --> mset {4}, 5 --> function {6 --> 6}, 7 --> (false, true, 4)}"
-            , parsePrintIso_Expr "relation {}"
-            , parsePrintIso_Expr "relation {(1, a)}"
-            , parsePrintIso_Expr "relation {(1, a), (2, b)}"
-            , parsePrintIso_Expr "relation {(1, set {a}), (mset {2, 3, 4}, b)}"
-            , parsePrintIso_Expr "partition {}"
-            , parsePrintIso_Expr "partition {{}, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}"
-            , parsePrintIso_Expr "partition {{1, 2, 3}, {4, 5, 6}}"
+            , parsePrintIso_Expr "{}"
+            , parsePrintIso_Expr "{1}"
+            , parsePrintIso_Expr "{a}"
+            , parsePrintIso_Expr "{1, 2, true, false, (1, 2, 3)}"
+            , parsePrintIso_Expr "{{1, 2, 3}, {1, 3, 5}, {2, 4, 6}}"
+            , parsePrintIso_Expr "{{1, 2, 3}, {1, 3, 5}, {2, 4, 6}, {true, false}}"
+            , parsePrintIso_Expr "mset(1)"
+            , parsePrintIso_Expr "mset(a)"
+            , parsePrintIso_Expr "mset(mset())"
+            , parsePrintIso_Expr "mset(1, 2, true, false, (1, 2, 3))"
+            , parsePrintIso_Expr "mset({1, 2, 3}, {1, 3, 5}, {2, 4, 6})"
+            , parsePrintIso_Expr "function()"
+            , parsePrintIso_Expr "function(1 --> 2)"
+            , parsePrintIso_Expr "function(1 --> 2, 3 --> 4, 5 --> 6, 7 --> 8)"
+            , parsePrintIso_Expr "function(1 --> {2}, 3 --> mset(4), 5 --> function (6 --> 6), 7 --> (false, true, 4))"
+            , parsePrintIso_Expr "relation()"
+            , parsePrintIso_Expr "relation((1, a))"
+            , parsePrintIso_Expr "relation((1, a), (2, b))"
+            , parsePrintIso_Expr "relation((1, {a}), (mset(2, 3, 4), b))"
+            , parsePrintIso_Expr "partition()"
+            , parsePrintIso_Expr "partition({}, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3})"
+            , parsePrintIso_Expr "partition({1, 2, 3}, {4, 5, 6})"
             , parsePrintIso_Expr "1 + 2 + 3"
             , parsePrintIso_Expr "1 * 2 + 3 * 4"
             , parsePrintIso_Expr "1 * (2 + 3) * 4"
             , parsePrintIso_Expr "1 * (2 + 3) * 4 = 5"
             , noParse_Expr       "1 = 2 = 3"
-            , parsePrintIso_Expr "1 = 2 <=> 2 = 3"
-            , parsePrintIso_Expr "(1 = 2) <=> (2 = 3)"
-            , noParse_Expr       "1 = (2 <=> 2) = 3"
+            , parsePrintIso_Expr "1 = 2 <-> 2 = 3"
+            , parsePrintIso_Expr "(1 = 2) <-> (2 = 3)"
+            , noParse_Expr       "1 = (2 <-> 2) = 3"
             , parsePrintIso_Expr "-1 + 3 = a"
             , parsePrintIso_Expr "-a = -b + 1"
-            , parsePrintIso_Expr "abs(a)"
-            , parsePrintIso_Expr "2 ^ 4 >= 2 ^ 3 /\\ 2 ^ 4 <= 2 ^ 5 => 2 ^ 3 <= 2 ^ 5"
+            , parsePrintIso_Expr "|a|"
+            , parsePrintIso_Expr "2 ** 4 >= 2 ** 3 /\\ 2 ** 4 <= 2 ** 5 -> 2 ** 3 <= 2 ** 5"
             , parsePrintIso_Expr "true /\\ false"
-            , parsePrintIso_Expr "true /\\ false => false"
+            , parsePrintIso_Expr "true /\\ false -> false"
             , parsePrintIso_Expr "(1 + 2) * 3 = 10 - 2 + 1"
             , parsePrintIso_Expr "1 + 2 * 3 = 10 - 2 + 1"
             , parsePrintIso_Expr "forAll i : s , g . k"
@@ -253,15 +260,11 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
                                                       , V (VTuple ["i","j"])
                                                       ]
             , parsePrintIso_Expr "f'(i)"
-            , shouldParseTo      "f'(i)" $ EOp PreImage ["f","i"]
+            , shouldParseTo      "f'(i)" $ EOp Image ["f'","i"]
+            , shouldParseTo      "preimage(f,i)" $ EOp PreImage ["f","i"]
             , parsePrintIso_Expr "a {b --> c}"
             , shouldParseTo      "a {b --> c}" $ EOp Replace ["a","b","c"]
-            , eval [] "1+2" "3"
-            , eval [("x",gnode_Expr "1")] "x+2" "3"
-            , eval [] "a+(1+1)" "a+2"
-            , eval [] "(a+1)+1" "a+2"
-            , eval [] "a+1+1"   "a+2"
-    
+
             , shouldParseTo "m[i]" $ EOp Index ["m","i"]
             , shouldParseTo "m[i,j]" $ EOp Index [ EOp Index [ "m"
                                                              , "i"
@@ -330,7 +333,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             ]
 
         parsingLambda =
-            [ parsePrintIso_Lambda "{ x:int, y:bool --> x % 2 = 0 <=> y }"
+            [ parsePrintIso_Lambda "{ x:int, y:bool --> x % 2 = 0 <-> y }"
             , parsePrintIso_Lambda "{ x:int --> x % 2 }"
             , noParse_Lambda       "lambda { x:int --> x % 2 }"
             , noParse_Lambda       "{}{ x:int --> x % 2 }}"
@@ -484,9 +487,9 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , parsePrintIso_Domain "mset (_, maxSize n) of int"
             , parsePrintIso_Domain "mset (_, maxSize n, _) of int"
             , parsePrintIso_Domain "mset (_, maxSize n, _,_) of int"
-            , parsePrintIso_Domain "mset (maxSize n, occr o, _) of int"
-            , parsePrintIso_Domain "mset (occr o, minOccr m) of int"
-            , parsePrintIso_Domain "mset (maxOccr m) of int"
+            , parsePrintIso_Domain "mset (maxSize n, _) of int"
+            , parsePrintIso_Domain "mset (minOccur m) of int"
+            , parsePrintIso_Domain "mset (maxOccur m) of int"
             , parsePrintIso_Domain "function a --> b"
             , parsePrintIso_Domain "function (total) a --> b"
             , parsePrintIso_Domain "function (total, representation foo, _) a --> b"
@@ -507,6 +510,11 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
 
         evaluating =
             [ eval [] "abs(-2+1)" "1"
+            , eval [] "1+2" "3"
+            , eval [("x",gnode_Expr "1")] "x+2" "3"
+            , eval [] "a+(1+1)" "a+2"
+            , eval [] "(a+1)+1" "a+2"
+            , eval [] "a+1+1"   "a+2"
             , eval [] "1 + 1" "2"
             , eval [] "1 + 2 * 3" "7"
             , eval [] "(1 + 2) * 3" "9"
@@ -538,21 +546,21 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
             , eval [] "a+b=b+a" "true"
             , eval [] "12 + 3 > 11" "true"
             , eval [] "12 + 3 < 11" "false"
-            , eval [] "1 in set {1,2,3}" "true"
-            , eval [] "set {1,3,5} union set {2,4,6}" "set {1,2,3,4,5,6}"
-            , eval [] "set {1,3,5} intersect set {2,4,6}" "set {}"
+            , eval [] "1 in {1,2,3}" "true"
+            , eval [] "{1,3,5} union {2,4,6}" "{1,2,3,4,5,6}"
+            , eval [] "{1,3,5} intersect {2,4,6}" "{}"
             , eval [] "1+a+2+b*0" "3+a"
             , eval [] "true /\\ false" "false"
-            , eval [] "(true /\\ false) => false" "true"
-            , eval [] "((2^4 >= 2^3) /\\ (2^4 <= 2^5)) => (2^3 <= 2^5)" "true"
+            , eval [] "(true /\\ false) -> false" "true"
+            , eval [] "((2**4 >= 2**3) /\\ (2**4 <= 2**5)) -> (2**3 <= 2**5)" "true"
             , eval [] "(1 + 2) * 3 = 10 - 2 + 1" "true"
             , eval [] "1 + 2 * 3 = 10 - 2 + 1" "false"
             -- -- , eval [] "a+a+2*a+b*a" "(4 + b) * a"
-            -- -- , eval [] "(a+b)*(a+b)+(a+b)^2" "(a+b)^2 * 2"
-            , eval [] "!(true => x)" "!x"
-            , eval [] "!true => x" "true"
-            , eval [] "false => x" "true"
-            , eval [] "(!true) => x" "true"
+            -- -- , eval [] "(a+b)*(a+b)+(a+b)**2" "(a+b)**2 * 2"
+            , eval [] "!(true -> x)" "!x"
+            , eval [] "!true -> x" "true"
+            , eval [] "false -> x" "true"
+            , eval [] "(!true) -> x" "true"
             ]
 
         applyingRefn =
@@ -652,7 +660,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
 -- --     ~~ expression
 -- -- 
 -- -- *** TypeOf
--- --     2 ^ 4 >= 2 ^ 3 /\ 2 ^ 4 <= 2 ^ 5 => 2 ^ 3 <= 2 ^ 5
+-- --     2 ** 4 >= 2 ** 3 /\ 2 ** 4 <= 2 ** 5 => 2 ** 3 <= 2 ** 5
 -- --     ~~ bool
 -- --     ~~ expression
 -- -- 
@@ -702,14 +710,14 @@ main = defaultMain $ hUnitTestToTests . test $ parsingValue
 -- -- *** Eval {letting a be 4} a % 2 ~~ 0
 -- -- *** Eval {letting a be 5} a % 2 ~~ 1
 -- -- 
--- -- *** Eval 5 ^ 0 ~~ 1
--- -- *** Eval {letting a be 5} a ^ 0 ~~ 1
--- -- *** Eval a ^ 0 ~~ 1
--- -- *** Eval 5 ^ 2 ~~ 25
--- -- *** Eval {letting a be 5} a ^ 2 ~~ 25
--- -- *** Eval 4 ^ 3 ^ 2 ~~ 262144
--- -- *** Eval x ^ 1 ~~ x
--- -- *** Eval (x ^ y * x) ~~ x ^ (1 + y)
+-- -- *** Eval 5 ** 0 ~~ 1
+-- -- *** Eval {letting a be 5} a ** 0 ~~ 1
+-- -- *** Eval a ** 0 ~~ 1
+-- -- *** Eval 5 ** 2 ~~ 25
+-- -- *** Eval {letting a be 5} a ** 2 ~~ 25
+-- -- *** Eval 4 ** 3 ** 2 ~~ 262144
+-- -- *** Eval x ** 1 ~~ x
+-- -- *** Eval (x ** y * x) ~~ x ** (1 + y)
 -- -- 
 -- -- *** Eval 2 != 3 ~~ true
 -- -- *** Eval 2 != 2 ~~ false
