@@ -557,6 +557,11 @@ instance Evaluate Expr Value where
             (v, VMSet vs) -> p ~~> VBool $ elem v vs
             _ -> evalArrowErrorDef p
 
+    evaluate p@(EOp op [a,b]) | op `elem` [Min,Max] = do
+        let operator = case op of Min -> min; Max -> max; _ -> error "while evaluating Min or Max"
+        (i,j) <- evaluate (a,b)
+        p ~~> VInt $ operator i j
+
     evaluate p@(EOp op [a]) | op `elem` [Min,Max] = do
         let operator = case op of Min -> minimum; Max -> maximum; _ -> error "while evaluating Min or Max"
         i <- evaluate a
