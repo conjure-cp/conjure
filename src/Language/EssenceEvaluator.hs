@@ -1,10 +1,13 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns        #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns #-}
+
+-- #define DEBUG
 
 module Language.EssenceEvaluator where
 
@@ -30,12 +33,25 @@ import Language.Essence.Domain
 import Language.Essence.Expr
 import Language.Essence.Identifier
 import Language.Essence.Op
+import Language.Essence.OpDescriptor
 import Language.Essence.QuantifiedExpr
 import Language.Essence.Range
 import Language.Essence.Spec
 import Language.Essence.Type
 import Language.Essence.Value
 
+
+#ifdef DEBUG
+import qualified Debug.Trace as D
+trace :: String -> a -> a
+trace = D.trace
+#else
+trace :: String -> a -> a
+trace _ = id
+#endif
+
+traceM :: Monad m => String -> m ()
+traceM s = trace s $ return ()
 
 -- import Control.Monad.IO.Class
 -- import System.Environment
@@ -162,8 +178,8 @@ deepSimplify ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m a
--- deepSimplify = bottomUpRewriteM simplifyReal
-deepSimplify = topDownRewriteM simplifyReal
+deepSimplify = bottomUpRewriteM simplifyReal
+-- deepSimplify = topDownRewriteM simplifyReal
     -- where
     --     -- f :: (Applicative m, Monad m) => EvalArrow m GNode (Maybe GNode)
     --     f g = case fromG g of
@@ -183,30 +199,28 @@ simplifyReal ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Expr -> m (Maybe Expr)
-simplifyReal p@(EOp op [x,y])
-    | S.member op commutativeOps = do
-        -- liftIO $ putStr "trying[1]: "
-        -- liftIO $ print $ pretty $ EOp op [x,y]
-        cand1 <- simplify $ EOp op [x,y]
-        case cand1 of
-            Just res -> p ~~~> res
-            Nothing -> do
-                -- liftIO $ putStr "trying[2]: "
-                -- liftIO $ print $ pretty $ EOp op [y,x]
-                cand2 <- simplify $ EOp op [y,x]
-                case cand2 of
-                    Just res -> p ~~~> res
-                    Nothing  -> do
-                        let p' = if isAtomicExpr x && isAtomicExpr y
-                                     then EOp op $ sort [x,y]
-                                     else EOp op $ {-reverse $ -}sort [x,y]
-                        if p == p'
-                            then return Nothing
-                            else p ~~~> p'
+-- simplifyReal p | trace ("simplifyReal: " ++ show (pretty p)) False = undefined
+-- simplifyReal p@(EOp op [x,y])
+--     | S.member op commutativeOps = do
+--         traceM $ "in [1]: " ++ show (pretty p)
+--         cand1 <- simplify $ EOp op [x,y]
+--         case cand1 of
+--             Just res -> p ~~~> res
+--             Nothing -> do
+--                 traceM $ "in [2]: " ++ show (pretty $ EOp op [y,x])
+--                 cand2 <- simplify $ EOp op [y,x]
+--                 case cand2 of
+--                     Just res -> p ~~~> res
+--                     Nothing  -> do
+--                         traceM $ "in [3]: " ++ show (pretty p)
+--                         let p' = if isAtomicExpr x && isAtomicExpr y
+--                                      then EOp op $ sort [x,y]
+--                                      else EOp op $ reverse $ sort [x,y]
+--                         traceM $ "in [3]: " ++ show (pretty p')
+--                         if p == p'
+--                             then return Nothing
+--                             else p ~~~> p'
 simplifyReal param = do
-    -- liftIO $ putStrLn "simplifyReal"
-    -- liftIO $ print $ pretty param
-
     -- let
     --     assocOnLeft p@(EOp op [EOp op' [a,b],c])
     --         | op == op' && S.member op associativeOps = do
@@ -257,6 +271,10 @@ imageView _ = Nothing
 
 
 instance Simplify Expr where
+
+#ifdef DEBUG
+    simplify p | trace ("simplify: " ++ show (pretty p)) False = undefined
+#endif
 
     simplify p@(imageView -> Just ("domSize", x)) = do
         d <- domainOf x
@@ -343,37 +361,54 @@ instance Simplify Expr where
     simplify p@(EOp Iff [x,y]) | x `exprUnify` y           = p ~~~> V $ VBool True
     simplify p@(EOp Iff [x,y]) | x `exprUnify` EOp Not [y] = p ~~~> V $ VBool False
 
-    simplify p@(EOp op [x,EOp op' [y,z]])
-        | op == op' && S.member op associativeOps = do
-            -- liftIO $ putStr "assoc[1]: "
-            -- liftIO $ print $ pretty p
-            cand1 <- simplifyReal $ EOp op [x,y]
-            case cand1 of
-                Just res -> p ~~~> EOp op [res,z]
-                Nothing -> do
-                    cand2 <- simplifyReal $ EOp op [x,z]
-                    case cand2 of
-                        Just res -> p ~~~> EOp op [res,y]
-                        Nothing -> do
-                            let [x',y',z'] = sort [x,y,z]
-                            p ~~~> EOp op [EOp op [x',y'],z']
-
-    simplify p@(EOp op [EOp op' [x,y],z])
-        | op == op' && S.member op associativeOps = do
-            -- liftIO $ putStr "assoc[2]: "
-            -- liftIO $ print $ pretty p
-            cand2 <- simplifyReal $ EOp op [x,z]
-            case cand2 of
-                Just res -> p ~~~> EOp op [res,y]
-                Nothing -> do
-                    cand3 <- simplifyReal $ EOp op [y,z]
-                    case cand3 of
-                        Just res -> p ~~~> EOp op [res,x]
-                        Nothing  -> do
-                            let [x',y',z'] = sort [x,y,z]
-                            if [x',y',z'] == [x,y,z]
-                                then return Nothing
-                                else p ~~~> EOp op [EOp op [x',y'],z']
+    -- simplify p@(EOp op [x,EOp op' [y,z]])
+    --     | op == op' && S.member op associativeOps = do
+    --         traceM $ "assoc[1]: " ++ show (pretty p)
+    --         cand1 <- simplify $ EOp op [x,y]
+    --         case cand1 of
+    --             Just res -> simplify $ EOp op [res,z]
+    --             Nothing -> do
+    --                 cand2 <- simplify $ EOp op [x,z]
+    --                 case cand2 of
+    --                     Just res -> simplify $ EOp op [res,y]
+    --                     Nothing -> do
+    --                         let [x',y',z'] = sort [x,y,z]
+    --                         if [x',y',z'] == [x,y,z]
+    --                             then return Nothing
+    --                             else p ~~~>
+    --                                     if isLeftAssoc op
+    --                                         then EOp op [EOp op [x',y'],z']
+    --                                         else EOp op [x',EOp op [y',z']]
+    -- 
+    -- simplify p@(EOp op [EOp op' [x,y],z])
+    --     | op == op' && S.member op associativeOps = do
+    --         traceM $ "assoc[2]: " ++ show (pretty p)
+    --         cand2 <- simplify $ EOp op [x,z]
+    --         case cand2 of
+    --             Just res -> simplify $ EOp op [res,y]
+    --             Nothing -> do
+    --                 cand3 <- simplify $ EOp op [y,z]
+    --                 case cand3 of
+    --                     Just res -> simplify $ EOp op [res,x]
+    --                     Nothing  -> do
+    --                         let [x',y',z'] = sort [x,y,z]
+    --                         if [x',y',z'] == [x,y,z]
+    --                             then return Nothing
+    --                             else p ~~~>
+    --                                     if isLeftAssoc op
+    --                                         then EOp op [EOp op [x',y'],z']
+    --                                         else EOp op [x',EOp op [y',z']]
+    -- 
+    -- simplify p@(EOp op [x,y])
+    --     | S.member op commutativeOps && x > y = do
+    --         traceM $ "comm: " ++ show (pretty p)
+    --         cand <- simplify $ EOp op [y,x]
+    --         case cand of
+    --             Just res -> if res == EOp op [x,y] ||
+    --                            res == EOp op [y,x]
+    --                             then return Nothing
+    --                             else p ~~~> res
+    --             Nothing  -> return Nothing
 
     -- simplify p@(EOp op [EOp op' [x,y],z])
     --     | op == op' && S.member op associativeOps && not (and [x <= y, y <= z, x <= z])
