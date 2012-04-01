@@ -20,6 +20,17 @@ import Language.Essence.Op
 import Language.Essence.Range
 
 
+isLeftAssoc :: Op -> Bool
+isLeftAssoc op = case opDescriptor op of
+    OpInfix (_, Infix _ AssocLeft) _ -> True
+    _ -> False
+
+isRightAssoc :: Op -> Bool
+isRightAssoc op = case opDescriptor op of
+    OpInfix (_, Infix _ AssocRight) _ -> True
+    _ -> False
+
+
 
 type OperatorParser = Operator String () Identity Expr
 
@@ -57,23 +68,23 @@ opDescriptor = helper
                 reserved (opFace op)
                 is <- parens (parse `sepBy1` comma)
                 if length is `elem` cards
-                    then fail ("Unexpected number of arguments in " ++ opFace op)
-                    else return $ EOp op is
+                    then return $ EOp op is
+                    else fail ("Unexpected number of arguments in " ++ opFace op)
             )
             ( \ xs -> text (opFace op) <> prettyList Pr.parens Pr.comma xs)
 
         genInfix :: Op -> Int -> Assoc -> OpDescriptor
         genInfix op prec assoc = OpInfix
-            ( 10000 - prec
+            ( prec
             , Infix ( do pFace (opFace op)
                          return $ \ x y -> EOp op [x,y]
                     )
                     assoc
             )
             ( \ prettyPrec envPrec x y -> case assoc of
-                    AssocLeft  -> Pr.parensIf (envPrec < prec) $ prettyPrec  prec    x <+> text (opFace op) <+> prettyPrec (prec-1) y
-                    AssocNone  -> Pr.parensIf (envPrec < prec) $ prettyPrec (prec-1) x <+> text (opFace op) <+> prettyPrec (prec-1) y
-                    AssocRight -> Pr.parensIf (envPrec < prec) $ prettyPrec (prec-1) x <+> text (opFace op) <+> prettyPrec  prec    y
+                    AssocLeft  -> Pr.parensIf (envPrec > prec) $ prettyPrec  prec    x <+> text (opFace op) <+> prettyPrec (prec+1) y
+                    AssocNone  -> Pr.parensIf (envPrec > prec) $ prettyPrec (prec+1) x <+> text (opFace op) <+> prettyPrec (prec+1) y
+                    AssocRight -> Pr.parensIf (envPrec > prec) $ prettyPrec (prec+1) x <+> text (opFace op) <+> prettyPrec  prec    y
             )
 
         genPrefix :: Op -> OpDescriptor

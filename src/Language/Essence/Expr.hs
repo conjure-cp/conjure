@@ -165,6 +165,7 @@ instance ParsePrint Expr where
                   : map Prefix prefixes
                   : ( map (map snd)
                     . groupBy ((==) `on` fst)
+                    . reverse
                     . sortBy  (comparing fst)
                     ) infixes
 
@@ -193,7 +194,7 @@ instance ParsePrint Expr where
         where
             bsPretty = case bs of [] -> Pr.empty
                                   _  -> Pr.braces $ Pr.vcat (map pretty bs)
-    pretty p@(EOp {}) = prettyOp 10000 p
+    pretty p@(EOp {}) = prettyOp 0 p
         where
             prettyOp :: Int -> Expr -> Pr.Doc
             -- prettyOp i x | trace msg False = undefined
