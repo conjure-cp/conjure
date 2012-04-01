@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-#define DEBUG
+-- #define DEBUG
 
 module GenericOps.Core
     ( Hole(..), HoleStatus(..)
@@ -26,7 +26,7 @@ module GenericOps.Core
     , gapply, gapplyDeep
     ) where
 
-#ifndef DEBUG
+#ifdef DEBUG
 import Debug.Trace
 #endif
 import Control.Monad ( forM, liftM, zipWithM_ )
@@ -408,7 +408,7 @@ class MatchBind a where
         , Has st BindingsMap
         , Has st [(GNode,GNode)]
         ) => a -> a -> m ()
-#ifndef DEBUG
+#ifdef DEBUG
     match p a = trace ("match " ++ show (pretty p) ++ " ~~ " ++ show (pretty a)) $ do
 #else
     match p a = inScope (mkG p, mkG a) $ do
