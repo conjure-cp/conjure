@@ -166,7 +166,7 @@ opDescriptor = helper
             where
                 pa = braces $ do
                     ijs <- do i <- parse
-                              reservedOp "->"
+                              reservedOp "-->"
                               j <- parse
                               return (i,j)
                            `sepBy1` comma

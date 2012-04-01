@@ -34,7 +34,7 @@ instance MatchBind Lambda
 instance ParsePrint Lambda where
     parse = braces $ do
         args <- sepBy1 ((,) <$> identifier <*> (colon *> parse)) comma
-        reservedOp "->"
+        reservedOp "-->"
         x <- parse
         return $ Lambda args x
     pretty (Lambda args x) = Pr.braces (prettyListDoc id Pr.comma argsDoc <+> "->" <+> pretty x)
