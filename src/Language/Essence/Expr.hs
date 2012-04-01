@@ -1,13 +1,17 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.Expr where
 
 import Control.Applicative
-import Control.Monad.Error ( throwError )
+import Control.Monad ( forM, liftM, unless, zipWithM_ )
+import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.Identity ( Identity )
-import Control.Monad.State
+import Control.Monad.State ( MonadState )
+import Control.Monad.Writer ( MonadWriter )
 import Data.Function ( on )
 import Data.Generics ( Data )
 import Data.List ( groupBy, sortBy )
@@ -26,7 +30,7 @@ import Has
 import GenericOps.Core
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
-import PrintUtils ( (<+>) )
+import PrintUtils ( (<+>), Doc )
 import qualified PrintUtils as Pr
 import Utils
 
@@ -217,30 +221,40 @@ instance Arbitrary Expr where
     shrink _     = []
 
 instance TypeOf Expr where
-    typeOf (EHole i) = typeOf i
-    typeOf (V v) = typeOf v
-    typeOf (D d) = typeOf d
-    typeOf (Q q) = typeOf q
-    typeOf (Bubble x _ _) = typeOf x
-    typeOf p@(EOp Plus [x,y]) = do
-        tx <- typeOf x
-        unless (intLike tx) $ throwError $ Pr.vcat [ "Type mismatch."
-                                                   , Pr.nest 4 $ "in:" <+> pretty x
-                                                   , Pr.nest 4 $ "in:" <+> pretty p
-                                                   ]
-        ty <- typeOf y
-        unless (intLike ty) $ throwError $ Pr.vcat [ "Type mismatch."
-                                                   , Pr.nest 4 $ "in:" <+> pretty y
-                                                   , Pr.nest 4 $ "in:" <+> pretty p
-                                                   ]
-        return TInt
-    typeOf _ = throwError "typeOf Expr not implemented."
+    typeOf p@(EHole  i    ) = inScope (mkG p) $ typeOf i
+    typeOf p@(V      v    ) = inScope (mkG p) $ typeOf v
+    typeOf p@(D      d    ) = inScope (mkG p) $ typeOf d
+    typeOf p@(Q      q    ) = inScope (mkG p) $ typeOf q
+    typeOf p@(Bubble x _ _) = inScope (mkG p) $ typeOf x
+    typeOf p@(EOp Plus [x,y]) = typeOfOp p [x,y] [(TInt==),(TInt==)] TInt
+    typeOf p@(EOp Max  [x]  ) = typeOfOp p [x]   [(AnyType TSet [TInt]==)] TInt
+    typeOf p@(EOp Max  [x,y]) = typeOfOp p [x,y] [(TInt==),(TInt==)] TInt
+    typeOf p = inScope (mkG p) $ typeError "Type error in expression."
     -- typeOf
     -- | V Value
     -- | D Domain
     -- | Q QuantifiedExpr
     -- | Bubble Expr Expr [Either Binding Where]
     -- | EOp Op [Expr]
+
+-- typeOfOp :: (TypeOf a, Monad m) => Expr -> [a] -> [Type -> Bool] -> Type -> m Type
+typeOfOp ::
+    ( Applicative m
+    , Has st [GNode]
+    , Has st BindingsMap
+    , MonadWriter [Doc] m
+    , MonadState st m
+    , MonadError Doc m
+    , GPlate a
+    , GPlate b
+    , TypeOf b
+    ) => a -> [b] -> [Type -> Bool] -> t -> m t
+typeOfOp p xs fs ty = inScope (mkG p) $ do
+    txs <- mapM typeOf xs
+    zipWithM_ (\ f t -> unless (f t) (typeError "Type error in operator.")) fs txs
+    return ty
+
+
 
 instance DomainOf Expr where
     domainOf (EHole i) = domainOf i
@@ -252,3 +266,20 @@ intLike :: Type -> Bool
 intLike TBool = True
 intLike TInt = True
 intLike _ = False
+
+
+typeError ::
+    ( Applicative m
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    ) => Doc -> m a
+typeError s = do
+    nodes :: [GNode]
+          <- take 3 <$> getM
+    throwError $ Pr.vcat $ s : [ Pr.nest 4 $ "in: " <+> pretty n
+                               | GNode _ n <- nodes
+                               ]
+
+
+
