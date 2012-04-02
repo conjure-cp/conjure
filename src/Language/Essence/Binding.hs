@@ -88,7 +88,7 @@ instance ParsePrint Binding where
     pretty (Find          i j) = "find"    <+> pretty i <> Pr.colon <+> pretty j
     pretty (Given         i j) = "given"   <+> pretty i <> Pr.colon <+> pretty j
     pretty (LettingType   i j) = "letting" <+> pretty i <+> "be new type" <+> pretty j
-    pretty (GivenType     i j) = "given"   <+> pretty i <> Pr.colon <+> "new type" <+> pretty j
+    pretty (GivenType     i j) = "given"   <+> pretty i <+> "new type" <+> pretty j
     pretty (LettingDomain i j) = "letting" <+> pretty i <+> "be" <+> "domain" <+> pretty j
     pretty (LettingExpr   i j) = "letting" <+> pretty i <+> "be"              <+> pretty j
     pretty (LettingLambda i j) = "letting" <+> pretty i <+> "be" <+> "lambda" <+> pretty j
@@ -107,9 +107,9 @@ instance ParsePrint [Binding] where
                     , do
                         reserved "given"
                         is <- parse `sepBy1` comma
-                        colon
                         choiceTry
                             [ do
+                                colon
                                 j <- parse
                                 return [ Given i j | i <- is ]
                             , do
