@@ -10,7 +10,7 @@ import GHC.Generics ( Generic )
 import qualified Data.Set as S
 
 import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateLeaf, MatchBind )
-import ParsePrint ( ParsePrint, isoParsePrint, fromPairs )
+import ParsePrint ( ParsePrint, fromPairs )
 import Utils ( allValues )
 
 
@@ -118,8 +118,8 @@ instance GPlate Op where
 instance MatchBind Op
 
 instance ParsePrint Op where
-    isoParsePrint = fromPairs $ mapMaybe (\ v ->
-                                            case opFace v of
-                                                ""   -> Nothing
-                                                face -> Just (v, face)
-                                         ) allValues
+    fromPairs = mapMaybe (\ v ->
+                            case opFace v of
+                                '{':_ -> Nothing
+                                face  -> Just (v, face)
+                         ) allValues

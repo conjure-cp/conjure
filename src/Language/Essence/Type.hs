@@ -23,7 +23,7 @@ import GenericOps.Core ( NodeTag
                        , GNode
                        , MatchBind, BindingsMap )
 import ParsecUtils
-import ParsePrint ( ParsePrint, parse, pretty, prettyList, isoParsePrint, fromPairs )
+import ParsePrint ( ParsePrint, parse, pretty, prettyList, fromPairs )
 import PrintUtils ( (<+>), Doc )
 import qualified PrintUtils as Pr
 import Has
@@ -200,7 +200,7 @@ instance GPlate AnyTypeEnum
 instance MatchBind AnyTypeEnum
 
 instance ParsePrint AnyTypeEnum where
-    isoParsePrint = fromPairs
+    fromPairs =
                         [ ( TTuple    , "tuple"     )
                         , ( TSet      , "set"       )
                         , ( TMSet     , "mset"      )

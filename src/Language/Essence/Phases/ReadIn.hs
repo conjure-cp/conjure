@@ -1,14 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Language.Essence.Phases.ReadIn where
+module Language.Essence.Phases.ReadIn ( ReadIn(..), runReadIn ) where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError )
-import Control.Monad.Writer ( MonadWriter )
-import Control.Monad.IO.Class ( MonadIO, liftIO )
+import Control.Monad.Error ( MonadError, runErrorT )
+import Control.Monad.Writer ( MonadWriter, runWriter )
 
-import ParsecUtils ( parseFromFile )
-import ParsePrint ( parse )
+import ParsePrint ( runParser )
 import PrintUtils ( Doc )
 
 import Language.Essence.Spec
@@ -17,34 +15,32 @@ import Language.Essence.RuleRepr
 import Language.Essence.Phases.PostParse ( postParse )
 
 
-readInSpec ::
-    ( Applicative m
-    , MonadError Doc m
-    , MonadWriter [Doc] m
-    , MonadIO m
-    ) => FilePath -> m Spec
-readInSpec fp = do
-    raw   <- liftIO $ parseFromFile parse id fp id
-    fixed <- postParse raw
-    typeCheckSpec fixed
-    return fixed
 
+class ReadIn a where
+    readIn ::
+        ( Applicative m
+        , MonadError Doc m
+        , MonadWriter [Doc] m
+        ) => FilePath -> String -> m a
 
-readInRefn ::
-    ( Applicative m
-    , MonadError Doc m
-    , MonadIO m
-    ) => FilePath -> m RuleRefn
-readInRefn fp = do
-    raw <- liftIO $ parseFromFile parse id fp (\ i -> i {refnFilename = fp} )
-    return raw
+runReadIn :: ReadIn a => FilePath -> String -> (Either Doc a, [Doc])
+runReadIn fp contents = runWriter $ runErrorT $ readIn fp contents
 
+instance ReadIn Spec where
+    readIn fp contents = do
+        raw   <- runParser fp contents
+        fixed <- postParse raw
+        typeCheckSpec fixed
+        return fixed
 
-readInRepr ::
-    ( Applicative m
-    , MonadError Doc m
-    , MonadIO m
-    ) => FilePath -> m RuleRepr
-readInRepr fp = do
-    raw <- liftIO $ parseFromFile parse id fp (\ i -> i {reprFilename = fp} )
-    return raw
+instance ReadIn RuleRefn where
+    readIn fp contents = do
+        raw <- runParser fp contents
+        let fixed = raw { refnFilename = fp }
+        return fixed
+
+instance ReadIn RuleRepr where
+    readIn fp contents = do
+        raw <- runParser fp contents
+        let fixed = raw { reprFilename = fp }
+        return fixed

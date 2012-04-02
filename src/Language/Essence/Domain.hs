@@ -386,7 +386,7 @@ instance GPlate DomainAttrEnum
 instance MatchBind DomainAttrEnum
 
 instance ParsePrint DomainAttrEnum where
-    isoParsePrint = fromPairs
+    fromPairs =
             [ ( AttrRepresentation , "representation" )
             , ( AttrSize           , "size"           )
             , ( AttrMinSize        , "minSize"        )
