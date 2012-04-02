@@ -2,16 +2,16 @@ module Main where
 
 import Control.Monad ( forM_, when )
 import Control.Monad.Error ( runErrorT )
-import Control.Monad.Writer ( runWriter )
+import Control.Monad.Writer ( runWriterT )
 import Data.List ( isSuffixOf )
 import System.Directory ( createDirectoryIfMissing )
 import System.Environment ( getArgs )
 import System.FilePath ( dropExtension )
 
-import Language.Essence.RuleRepr ( RuleRepr, callRepr, reprFilename )
+import Language.Essence.RuleRepr ( callRepr )
+import Language.Essence.Phases.ReadIn ( readInSpec, readInRepr )
 
-import ParsecUtils ( parseFromFile )
-import ParsePrint ( parse, pretty )
+import ParsePrint ( pretty )
 import Utils ( padLeft )
 
 
@@ -22,12 +22,13 @@ main = do
     specFilename <- case filter (".essence" `isSuffixOf`) args of
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
-    spec  <- {-quanRenameIO =<< -}parseFromFile parse langlinePre specFilename id
-    reprs <- mapM (\ r -> parseFromFile parse id r (\ i -> i {reprFilename = r} ) ) $ filter (".repr" `isSuffixOf`) args
+    let reprFilenames = filter (".rule" `isSuffixOf`) args
+    when (null reprFilenames) $ putStrLn "Warning: no *.rule file is given."
 
-    when (null reprs) $ putStrLn "Warning: no *.repr file is given."
-
-    let (mspecs, logs) = runWriter $ runErrorT $ callRepr reprs spec
+    (mspecs, logs) <- runWriterT $ runErrorT $ do
+        spec  <- readInSpec specFilename
+        reprs <- mapM readInRepr reprFilenames
+        callRepr reprs spec
 
     mapM_ print logs
 
@@ -41,7 +42,3 @@ main = do
                 let outFilename = dirName ++ "/" ++ padLeft '0' 6 (show i) ++ ".essence"
                 putStrLn outFilename
                 writeFile outFilename $ show $ pretty s
-
-langlinePre :: String -> String
-langlinePre s = unlines $ "language Essence 2.0" : drop 1 (lines s)
-
