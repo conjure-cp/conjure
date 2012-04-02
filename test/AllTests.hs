@@ -4,17 +4,19 @@
 
 module Main ( main ) where
 
-import           Control.Applicative ( (<*) )
+import           Control.Applicative ( (<$>), (<*) )
 import           Control.Monad ( forM )
 import           Control.Monad.Error ( runErrorT )
 import           Control.Monad.State ( evalStateT )
 import           Control.Monad.Writer ( runWriterT )
+import           Data.List ( isSuffixOf )
 import qualified Data.Map as M
 import           Test.Framework ( defaultMain )
 import           Test.Framework.Providers.HUnit ( hUnitTestToTests )
 -- import           Test.Framework.Providers.QuickCheck2 ( testProperty )
 import           Test.HUnit ( assertEqual, assertFailure, test )
 import qualified Test.HUnit as HUnit
+import           System.Directory ( getDirectoryContents )
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap )
@@ -139,11 +141,16 @@ gnode _ = mkG . unsafeParse (parse <* eof :: Parser a)
 --                 Left msg  -> assertFailure (unlines ["Eval [simplification]", renderDoc (pretty x)])
 --                 Right x'' -> assertEqual "Eval [not equal]" x'' y
 
-basedir :: FilePath
-basedir = "/Users/ozgurakgun/src/conjure-wd/"
+getAllWithSuffix :: String -> FilePath -> IO [FilePath]
+getAllWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$>getDirectoryContents fp
 
 main :: IO ()
-main = defaultMain $ hUnitTestToTests . test $ parsingExpr
+main = do
+    let
+        basedir :: FilePath
+        basedir = "/Users/ozgurakgun/src/conjure-wd/"
+    specs <- map (\ f -> "testdata/" ++ f ) <$> getAllWithSuffix ".essence" "testdata"
+    defaultMain $ hUnitTestToTests . test $ parsingExpr
                                             ++ parsingValue
                                             ++ parsingQuantifiedExpr
                                             ++ parsingIdentifier
@@ -151,7 +158,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
                                             ++ parsingLambda
                                             ++ parsingType
                                             ++ parsingDomain
-                                            ++ parsingSpec
+                                            ++ parsingSpec specs
                                             -- ++ parsingRepr
                                             -- ++ parsingRefn
 
@@ -171,9 +178,9 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
         parsePrintIso_Type           = parsePrintIso     ( undefined :: Type )
         noParse_Domain               = noParse           ( undefined :: Domain )
         parsePrintIso_Domain         = parsePrintIso     ( undefined :: Domain )
-        parsePrintIsoFile_Spec fp    = parsePrintIsoFile ( undefined :: Spec )     ( basedir ++ fp )
-        parsePrintIsoFile_Repr fp    = parsePrintIsoFile ( undefined :: RuleRepr ) ( basedir ++ fp )
-        parsePrintIsoFile_Refn fp    = parsePrintIsoFile ( undefined :: RuleRefn ) ( basedir ++ fp )
+        parsePrintIsoFile_Spec       = parsePrintIsoFile ( undefined :: Spec )
+        parsePrintIsoFile_Repr       = parsePrintIsoFile ( undefined :: RuleRepr )
+        parsePrintIsoFile_Refn       = parsePrintIsoFile ( undefined :: RuleRefn )
 
         parsingExpr =
             [ noParse_Expr       "--x"
@@ -343,44 +350,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
             , noParse_Lambda       ""
             ]
 
-        parsingSpec =
-            [ parsePrintIsoFile_Spec "testdata/1.essence"
-            , parsePrintIsoFile_Spec "testdata/2.essence"
-            , parsePrintIsoFile_Spec "testdata/3.essence"
-            , parsePrintIsoFile_Spec "testdata/4.essence"
-            , parsePrintIsoFile_Spec "testdata/5.essence"
-            , parsePrintIsoFile_Spec "testdata/6.essence"
-            , parsePrintIsoFile_Spec "testdata/7.essence"
-            , parsePrintIsoFile_Spec "testdata/8.essence"
-            , parsePrintIsoFile_Spec "testdata/9.essence"
-            , parsePrintIsoFile_Spec "testdata/lambda.essence"
-            , parsePrintIsoFile_Spec "testdata/double-quan-guarded.essence"
-            , parsePrintIsoFile_Spec "testdata/double-quan.essence"
-            , parsePrintIsoFile_Spec "testdata/enum1.essence"
-            , parsePrintIsoFile_Spec "testdata/enum2.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-0.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-1.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-2.essence"
-            , parsePrintIsoFile_Spec "testdata/forall-sum.essence"
-            , parsePrintIsoFile_Spec "testdata/has-funcs.essence"
-            , parsePrintIsoFile_Spec "testdata/has-set-max.essence"
-            , parsePrintIsoFile_Spec "testdata/has-sets.essence"
-            , parsePrintIsoFile_Spec "testdata/letting-dom.essence"
-            , parsePrintIsoFile_Spec "testdata/matrix-of-set.essence"
-            , parsePrintIsoFile_Spec "testdata/mmt.essence"
-            , parsePrintIsoFile_Spec "testdata/nesting.essence"
-            , parsePrintIsoFile_Spec "testdata/relation.essence"
-            , parsePrintIsoFile_Spec "testdata/set-card-union.essence"
-            , parsePrintIsoFile_Spec "testdata/set-eq.essence"
-            , parsePrintIsoFile_Spec "testdata/set-forall.essence"
-            , parsePrintIsoFile_Spec "testdata/set-of-sets.essence"
-            , parsePrintIsoFile_Spec "testdata/set-of-tuples.essence"
-            , parsePrintIsoFile_Spec "testdata/set-union.essence"
-            , parsePrintIsoFile_Spec "testdata/simplest.essence"
-            , parsePrintIsoFile_Spec "testdata/sss.essence"
-            , parsePrintIsoFile_Spec "testdata/tuple-explode.essence"
-            -- , parsePrintIsoFile_Spec "testdata/two-bars.essence"
-            ]
+        parsingSpec fs = map parsePrintIsoFile_Spec fs
 
         parsingRepr =
             [ parsePrintIsoFile_Repr "rules/repr/Function.AsReln.repr"
