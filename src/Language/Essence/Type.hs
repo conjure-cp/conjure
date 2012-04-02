@@ -54,6 +54,13 @@ typeUnify a b | a == b = True
 typeUnify _ _ = False
 
 
+isOrderedType :: Type -> Bool
+isOrderedType TBool {} = True
+isOrderedType TInt  {} = True
+isOrderedType TEnum {} = True
+isOrderedType _ = False
+
+
 data Type = TUnknown
     | THole Identifier
     | TBool

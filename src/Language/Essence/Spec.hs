@@ -1,34 +1,42 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Language.Essence.Spec where
 
-import GenericOps.Core ( NodeTag
-                       , Hole
-                       , GPlate, gplate, gplateError
-                       , mkG, fromGs
-                       , MatchBind )
-import ParsecUtils
-import ParsePrint ( ParsePrint, parse, pretty )
-import PrintUtils ( (<+>), (<>), text )
-import Utils ( mapButLast )
-import qualified PrintUtils as Pr
-
 import Control.Applicative
+import Control.Monad ( unless )
+import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.State ( evalStateT )
+import Control.Monad.Writer ( MonadWriter )
 import Data.Default ( Default, def )
+import Data.Foldable ( forM_ )
 import Data.Generics ( Data )
 import Data.List ( intersperse )
 import Data.Maybe ( listToMaybe, maybeToList )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
+import GenericOps.Core ( NodeTag
+                       , Hole
+                       , GPlate, gplate, gplateError
+                       , GNode, mkG, fromGs
+                       , MatchBind, BindingsMap )
+import ParsecUtils
+import ParsePrint ( ParsePrint, parse, pretty )
+import PrintUtils ( (<+>), (<>), text, Doc )
+import Utils ( mapButLast )
+import qualified PrintUtils as Pr
+
 import Language.Essence.Binding
-import Language.Essence.Where
-import Language.Essence.Objective
 import Language.Essence.Expr
 import Language.Essence.Metadata
+import Language.Essence.Objective
+import Language.Essence.Type
+import Language.Essence.Where
 
 
 
@@ -109,3 +117,27 @@ instance ParsePrint Spec where
                                      )
         ++ [text ""]
 
+
+typeCheckSpec :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m ()
+typeCheckSpec Spec {topLevels, objective, constraints}
+    = flip evalStateT (def :: ( BindingsMap
+                              , [GNode]
+                              , [(GNode,GNode)]
+                              )) $ do
+    forM_ topLevels $ \ tl ->
+        case tl of
+            Left  b -> addBinding' b
+            Right w -> do
+                t <- typeOf (whereExpr w)
+                unless (t == TBool)
+                       (throwError $ "Where statement isn't a boolean expression: " <+> pretty w)
+
+    forM_ objective $ \ o -> do
+        t <- typeOf (objExpr o)
+        unless (isOrderedType t)
+               (throwError $ "Objective has to be of an ordered type: " <+> pretty o)
+
+    forM_ constraints $ \ c -> do
+        t <- typeOf c
+        unless (t == TBool)
+               (throwError $ "Constraint isn't a boolean expression: " <+> pretty c)

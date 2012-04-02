@@ -20,7 +20,7 @@ import {-# SOURCE #-} Language.Essence.Expr
 
 
 
-newtype Where = Where Expr
+newtype Where = Where { whereExpr :: Expr }
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance NodeTag Where
