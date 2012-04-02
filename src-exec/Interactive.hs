@@ -31,7 +31,7 @@ import PrintUtils ( Doc, nest, vcat )
 import Utils ( fromJust, ppPrint, strip )
 
 import Language.Essence
-import Language.Essence.Phases.EnumIdentifiers ( enumIdentifiers )
+import Language.Essence.Phases.PostParse ( postParse )
 import Language.EssenceEvaluator ( deepSimplify )
 
 
@@ -216,9 +216,9 @@ step (ShowAST s) = withParsed s  $ \  x  ->                   liftIO $ ppPrint (
 step (Load   fp) = returningTrue $ do
     msp <- liftIO readIt
     case msp of
-        Left  e1  -> liftIO $ putStrLn $ "IO Error: " ++ show e1
-        Right sp1 -> case enumIdentifiers sp1 of
-            Left  e2  -> liftIO $ putStrLn $ "EnumIdentifiers Error: " ++ show e2
+        Left  e1  -> liftIO $ putStrLn $ "Parsing error: " ++ show e1
+        Right sp1 -> case postParse sp1 of
+            Left  e2  -> liftIO $ putStrLn $ "Parsing error: " ++ show e2
             Right sp2 -> modifySpec $ const sp2
     where
         readIt :: IO (Either SomeException Spec)

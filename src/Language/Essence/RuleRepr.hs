@@ -53,7 +53,7 @@ import Language.Essence.Where
 import Language.Essence.Phases.BubbleUp ( bubbleUp )
 import Language.Essence.Phases.CheckWhere ( checkWhere )
 import Language.Essence.Phases.CleanUp ( cleanUp )
-import Language.Essence.Phases.EnumIdentifiers ( enumIdentifiers )
+import Language.Essence.Phases.PostParse ( postParse )
 import Language.Essence.Phases.QuanDomRefine ( quanDomRefine )
 import Language.Essence.Phases.QuanRename ( quanRename )
 import Language.EssenceEvaluator ( deepSimplify, runSimplify )
@@ -178,7 +178,7 @@ callRepr ::
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> Spec -> m [Spec]
 callRepr rules' specParam = do
-    spec <- (enumIdentifiers >=> runSimplify) specParam
+    spec <- (postParse >=> runSimplify) specParam
     let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
     let rules = map (scopeIdentifiers newRuleVar) rules'
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
