@@ -39,6 +39,8 @@ data Op
 
     | AllDiff
 
+    | ToInt
+
     deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable, Generic)
 
 commutativeOps :: S.Set Op
@@ -85,7 +87,7 @@ opFace Max          = "max"
 opFace Min          = "min"
 opFace ToSet        = "toSet"
 opFace ToMSet       = "toMSet"
-opFace ToRel        = "toRel"
+opFace ToRel        = "toRelation"
 opFace Defined      = "defined"
 opFace Range        = "range"
 opFace Image        = "image"
@@ -104,6 +106,7 @@ opFace HasType      = "::"
 opFace HasDomain    = ":"
 opFace Replace      = "{Replace}"
 opFace AllDiff      = "allDiff"
+opFace ToInt        = "toInt"
 
 instance NodeTag Op
 
