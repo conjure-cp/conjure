@@ -1282,7 +1282,7 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
 
 *** TypeOf { given a,b : int
              find s : set of int }
-    set {a,b} subseteq s
+    set {a,b} subsetEq s
     ~~ bool
     ~~ expression
 

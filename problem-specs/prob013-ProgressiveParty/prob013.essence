@@ -14,7 +14,7 @@ find sched : set (size n_periods) of function (total) Boat -> Boat
 
 such that
     forAll p : sched . (
-        range(p) subseteq hosts
+        range(p) subsetEq hosts
     ),
     forAll p : sched . (
         forAll h : hosts . (

@@ -313,7 +313,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
             , parsePrintIso_QuantifiedExpr "exists i : s . (sum k : i . k) = t"
             , parsePrintIso_QuantifiedExpr "forAll i in s, i % 2 = 0 . i in k"
             , parsePrintIso_QuantifiedExpr "forAll i : int(0..9) in s . i in k"
-            , parsePrintIso_QuantifiedExpr "forAll i : set of int(0..9) subseteq s . i in k"
+            , parsePrintIso_QuantifiedExpr "forAll i : set of int(0..9) subsetEq s . i in k"
             ]
 
         parsingIdentifier =
@@ -679,7 +679,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
 -- -- 
 -- -- *** TypeOf { given a,b : int
 -- --              find s : set of int }
--- --     set {a,b} subseteq s
+-- --     set {a,b} subsetEq s
 -- --     ~~ bool
 -- --     ~~ expression
 -- -- 
