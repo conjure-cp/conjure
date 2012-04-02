@@ -114,7 +114,7 @@ instance ParsePrint Type where
                 reserved "of"
                 e  <- parse
                 return $ foldr TMatrix e is
-            pTTuple = do reserved "tuple"; reserved "of"; AnyType TTuple <$> parens (sepBy parse comma)
+            pTTuple = do reserved "tuple"; AnyType TTuple <$> parens (sepBy parse comma)
             pTSet   = do reserved "set"  ; reserved "of"; AnyType TSet  . return <$> parse
             pTMSet  = do reserved "mset" ; reserved "of"; AnyType TMSet . return <$> parse
             pTFunction = do
@@ -147,7 +147,7 @@ instance ParsePrint Type where
             helper a b = first (a:) $ case b of TMatrix c d -> helper c d
                                                 _           -> ([], b)
     pretty (TLambda is  o) = "lambda" <+> Pr.braces (prettyList id Pr.comma is <+> "-->" <+> pretty o)
-    pretty (AnyType TTuple ts) = "tuple" <+> "of" <+> prettyList Pr.parens Pr.comma ts
+    pretty (AnyType TTuple ts) = "tuple" <+> prettyList Pr.parens Pr.comma ts
     pretty (AnyType TSet  [t]) = "set"  <+> "of" <+> pretty t
     pretty (AnyType TMSet [t]) = "mset" <+> "of" <+> pretty t
     pretty (AnyType TFunction [fr,to]) = "function" <+> pretty fr <+> "-->" <+> pretty to

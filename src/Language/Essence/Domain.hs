@@ -151,7 +151,6 @@ instance ParsePrint Domain where
             pTuple = do
                 reserved "tuple"
                 as <- parse
-                reserved "of"
                 es <- parens (parse `sepBy` comma)
                 return $ AnyDom TTuple es as
 
@@ -206,8 +205,7 @@ instance ParsePrint Domain where
             (is,e') = helper i e
             helper a b = first (a:) $ case b of DMatrix c d -> helper c d
                                                 _           -> ([], b)
-    pretty (AnyDom TTuple es as) = "tuple" <+> pretty as <+> "of"
-                                                <+> prettyList Pr.parens Pr.comma es
+    pretty (AnyDom TTuple es as) = "tuple" <+> pretty as <+> prettyList Pr.parens Pr.comma es
     pretty (AnyDom TSet  [e] as) = "set"  <+> pretty as <+> "of" <+> pretty e
     pretty (AnyDom TMSet [e] as) = "mset" <+> pretty as <+> "of" <+> pretty e
     pretty (AnyDom TFunction [fr,to] as) = "function"  <+> pretty as <+> pretty fr <+> "-->" <+> pretty to
