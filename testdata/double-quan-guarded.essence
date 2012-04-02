@@ -1,8 +1,8 @@
 language Essence 2.0
 
 letting myForall be quantifier {
-                                append   { x:bool, y:bool -> x /\ y }
-                                guard    { x:bool, y:bool -> x => y }
+                                append   { x:bool, y:bool --> x /\ y }
+                                guard    { x:bool, y:bool --> x -> y }
                                 identity true
                              }
 

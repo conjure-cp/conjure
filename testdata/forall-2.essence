@@ -8,8 +8,8 @@ find y : digit
 letting xy be x * y
 
 letting myForall be quantifier {
-    append   { x:bool, y:bool -> x /\ y }
-    guard    { x:bool, y:bool -> x => y }
+    append   { x:bool, y:bool --> x /\ y }
+    guard    { x:bool, y:bool --> x -> y }
     identity true
     }
 
