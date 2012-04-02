@@ -151,6 +151,9 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
                                             ++ parsingLambda
                                             ++ parsingType
                                             ++ parsingDomain
+                                            ++ parsingSpec
+                                            -- ++ parsingRepr
+                                            -- ++ parsingRefn
 
     where
 
@@ -355,10 +358,10 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
             , parsePrintIsoFile_Spec "testdata/double-quan.essence"
             , parsePrintIsoFile_Spec "testdata/enum1.essence"
             , parsePrintIsoFile_Spec "testdata/enum2.essence"
-            , parsePrintIsoFile_Spec "testdata/forAll-0.essence"
-            , parsePrintIsoFile_Spec "testdata/forAll-1.essence"
-            , parsePrintIsoFile_Spec "testdata/forAll-2.essence"
-            , parsePrintIsoFile_Spec "testdata/forAll-sum.essence"
+            , parsePrintIsoFile_Spec "testdata/forall-0.essence"
+            , parsePrintIsoFile_Spec "testdata/forall-1.essence"
+            , parsePrintIsoFile_Spec "testdata/forall-2.essence"
+            , parsePrintIsoFile_Spec "testdata/forall-sum.essence"
             , parsePrintIsoFile_Spec "testdata/has-funcs.essence"
             , parsePrintIsoFile_Spec "testdata/has-set-max.essence"
             , parsePrintIsoFile_Spec "testdata/has-sets.essence"
@@ -369,7 +372,7 @@ main = defaultMain $ hUnitTestToTests . test $ parsingExpr
             , parsePrintIsoFile_Spec "testdata/relation.essence"
             , parsePrintIsoFile_Spec "testdata/set-card-union.essence"
             , parsePrintIsoFile_Spec "testdata/set-eq.essence"
-            , parsePrintIsoFile_Spec "testdata/set-forAll.essence"
+            , parsePrintIsoFile_Spec "testdata/set-forall.essence"
             , parsePrintIsoFile_Spec "testdata/set-of-sets.essence"
             , parsePrintIsoFile_Spec "testdata/set-of-tuples.essence"
             , parsePrintIsoFile_Spec "testdata/set-union.essence"
