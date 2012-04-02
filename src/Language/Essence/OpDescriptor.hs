@@ -150,7 +150,7 @@ opDescriptor = helper
         helper op@AllDiff      = genLispy    op   [1]
         helper TwoBars         = OpSpecial pa pr
             where
-                pa = between (symbol "|") (symbol "|") $ do i <- parse; return $ EOp TwoBars [i]
+                pa = between (reservedOp "|") (reservedOp "|") $ do i <- parse; return $ EOp TwoBars [i]
                 pr (EOp TwoBars [x]) = "|" <> pretty x <> "|"
                 pr x = error $ "pretty TwoBars: " ++ show x
 
