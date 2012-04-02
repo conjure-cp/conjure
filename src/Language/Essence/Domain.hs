@@ -120,24 +120,24 @@ instance MatchBind Domain
 
 instance ParsePrint Domain where
     parse = choiceTry
-                [ pBool, pInt, pUnnamed, pMatrix
+                [ pBool, pInt, pEnum, pMatrix
                 , pTuple, pSetMSet "set" TSet, pSetMSet "mset" TMSet
                 , pFunction, pRelation, pPartition
                 , pIndices
-                , pDHole, pEnum
+                , pDHole
                 ]
         where
             pDHole = DHole <$> parse
 
             pBool = DBool <$ reserved "bool"
 
-            pInt     = do reserved "int" ; DInt  <$>           (try (parens parse) <|> return RAll)
+            pInt  = do reserved "int" ; DInt <$> (try (parens parse) <|> return RAll)
 
-            pEnum    = DEnum <$> parse <*> (try (parens parse) <|> return RAll)
+            pEnum = DEnum <$> parse <*> parens parse
 
             -- needed to disambiguate from DHole
-            -- DHole can still be resolved to DUnnamed, after parsing.
-            pUnnamed = do reserved "unnamed";  DUnnamed <$> parse
+            -- DHole can still be resolved to DUnnamed, after parsing. TODO: make it so!
+            -- pUnnamed = do reserved "unnamed";  DUnnamed <$> parse
 
             pMatrix = do
                 reserved "matrix"
