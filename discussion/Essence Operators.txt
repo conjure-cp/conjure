@@ -1,0 +1,65 @@
+
+prefix operators:
+    unary minus and logical negation.
+    symbols: - and !, no parens needed.  
+    	     they apply to the smallest expression possible.
+	     parens can be used to group expressions as usual.
+    example: !x /\ y is not the same as !(x /\ y)
+
+infix operators:
+    +           600     assoc-left
+    -           600     assoc-left
+    *           700     assoc-left
+    /           700     assoc-left
+    %           700     assoc-left
+    **          800     assoc-right
+    
+    <           400     assoc-none
+    <=          400     assoc-none
+    >           400     assoc-none
+    >=          400     assoc-none
+    !=          400     assoc-none
+    =           400     assoc-none
+    
+    \/          200     assoc-right
+    /\          300     assoc-right
+    ->          100     assoc-none
+    <->         100     assoc-none
+
+    union       200     assoc-left
+    intersect   300     assoc-left
+    subset      400     assoc-none
+    subsetEq    400     assoc-none
+    supset      400     assoc-none
+    supsetEq    400     assoc-none
+
+    in          150     assoc-none
+
+    ::           10     assoc-none
+
+    (the last one is type decoration. either (x :: t) or (x : 't') depending on the outcome of the other email)
+
+standard operators (I call these "lispy")
+
+    (name)          (nb of args)
+    max             1
+    min             1
+    toSet           1
+    toMSet          1
+    toRelation      1
+    defined         1
+    range           1
+    image           2  *
+    preimage        2
+    inverse         2
+    together        3
+    apart           3
+    party           2
+    participants    1
+    parts           1
+    freq            2
+    hist            2
+    allDiff         1
+    toInt           1
+
+    * f(i) is alternative syntax for image(f,i)
