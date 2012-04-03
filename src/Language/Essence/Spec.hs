@@ -151,7 +151,7 @@ instance ParsePrint Spec where
             pConstraints = do
                 reserved "such"
                 reserved "that"
-                sepEndBy parse comma
+                sepBy1 parse comma
 
     pretty (Spec{..}) = Pr.vcat
         $  ("language" <+> text language <+> Pr.hcat (intersperse Pr.dot (map Pr.int version)))
