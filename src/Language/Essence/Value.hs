@@ -147,13 +147,13 @@ instance TypeOf Value where
         st :: BindingsMap <- getM
         let
             rs = flip mapMaybe (fromGs (elems st)) $ \ t -> case t of
-                    LettingType _ ty@(TEnum (Just is)) | i `elem` is -> Just ty
+                    LettingType ty (TEnum (Just is)) | i `elem` is -> Just (THole ty)
                     _ -> Nothing
         case rs of
             [t] -> return t
-            [ ] -> throwError $ Pr.vcat $ "Undefined enum value:"
+            [ ] -> throwError $ Pr.vcat $ "Undefined enum value:" <+> pretty i
                                         : map (Pr.nest 4 . pretty) rs
-            _   -> throwError $ Pr.vcat $ "Same enum value used in multiple enumerated types: "
+            _   -> throwError $ Pr.vcat $ "Same enum value used in multiple enumerated types:"
                                         : map (Pr.nest 4 . pretty) rs
 
     typeOf (VMatrix []) = return $ TMatrix TInt TUnknown
