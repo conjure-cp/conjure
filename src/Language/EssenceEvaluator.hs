@@ -41,18 +41,6 @@ import Language.Essence.Type
 import Language.Essence.Value
 
 
-#ifdef DEBUG
-import qualified Debug.Trace as D
-trace :: String -> a -> a
-trace = D.trace
-#else
-trace :: String -> a -> a
-trace _ = id
-#endif
-
-traceM :: Monad m => String -> m ()
-traceM s = trace s $ return ()
-
 -- import Control.Monad.IO.Class
 -- import System.Environment
 -- main = do
@@ -621,7 +609,7 @@ instance Evaluate Expr Value where
             VRelation xs -> p ~~> VMSet $ sort xs
             _ -> evalArrowErrorDef p
 
-    evaluate p@(EOp ToRel [a]) = do
+    evaluate p@(EOp ToRelation [a]) = do
         i <- evaluate a
         case i of
             VFunction xs -> p ~~> VRelation $ sort xs
