@@ -1,4 +1,4 @@
-.PHONY: ghci install clean runtests
+.PHONY: install prof-install runtests clean
 
 install:
 	time cabal install
@@ -12,9 +12,6 @@ runtests:
 
 prof-install:
 	time cabal install --enable-library-profiling --enable-executable-profiling
-
-ghci: src/Language/Essence.o
-	# @ghci -isrc src/Language/Essence.hs
 
 clean:
 	@cabal clean
