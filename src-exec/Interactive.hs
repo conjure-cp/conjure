@@ -4,13 +4,12 @@
 module Main where
 
 import Control.Applicative
-import Control.Exception ( SomeException, try )
 import Control.Monad ( forM_, when )
 import Control.Monad.Error ( runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put, StateT, evalStateT, execStateT )
 import Control.Monad.Trans.Class ( lift )
-import Control.Monad.Writer ( runWriterT )
+import Control.Monad.Writer ( runWriter )
 import Data.Char ( toLower )
 import Data.Default ( def )
 import Data.Either ( lefts )
@@ -25,13 +24,13 @@ import Paths_conjure_cp ( getBinDir )
 
 import Constants ( figlet )
 import GenericOps.Core ( GPlate, GNode(..), runMatch, BindingsMap )
-import ParsecUtils ( eof, parseEither, parseFromFile )
+import ParsecUtils ( eof, parseEither )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( Doc, nest, vcat )
 import Utils ( fromJust, ppPrint, strip )
 
 import Language.Essence
-import Language.Essence.Phases.PostParse ( postParse )
+import Language.Essence.Phases.ReadIn ( runReadIn )
 import Language.EssenceEvaluator ( deepSimplify )
 
 
@@ -173,34 +172,31 @@ step (EvalTypeKind _) = returningTrue $ liftIO $ putStrLn "not implemented, yet.
 --         _ -> err
 step (Evaluate s) = withParsed s $ \ x -> do
     spec <- gets currentSpec
-    (x',logs)
-        <- runWriterT $ runErrorT $ flip evalStateT ( def :: BindingsMap
-                                                    , def :: [GNode]
-                                                    , def :: [(GNode,GNode)]
-                                                    ) $ do
-                                                        mapM_ addBinding' (lefts (topLevels spec))
-                                                        deepSimplify (x :: Expr)
+    let (x',logs) = runWriter $ runErrorT $ flip evalStateT ( def :: ( BindingsMap
+                                                                     , [GNode]
+                                                                     , [(GNode,GNode)]
+                                                                     )) $ do
+                        mapM_ addBinding' builtIns
+                        mapM_ addBinding' (lefts (topLevels spec))
+                        deepSimplify (x :: Expr)
     displayLogs logs
     liftIO $ case x' of
         Left err  -> print err
         Right x'' -> print $ pretty x''
 step (TypeOf s) = withParsed s $ \ x -> do
     sp <- gets currentSpec
-    bindings <- runErrorT $ flip execStateT ( M.empty :: BindingsMap
-                                            , []      :: [(GNode,GNode)]
-                                            ) $ mapM_ addBinding' (lefts (topLevels sp))
-    case bindings of
-        Left err -> liftIO $ print $ vcat [ "Error in top level bindings."
+    let (t,logs) = runWriter $ runErrorT $ flip evalStateT (def :: ( BindingsMap
+                                                                   , [GNode]
+                                                                   ,[(GNode,GNode)]
+                                                                   )) $ do
+                        mapM_ addBinding' builtIns
+                        mapM_ addBinding' (lefts (topLevels sp))
+                        typeOf (x :: Expr)
+    displayLogs logs
+    case t of
+        Left err -> liftIO $ print $ vcat [ "Error while type-checking."
                                           , nest 4 err ]
-        Right (bs,_) -> do
-            (t,logs) <- runWriterT $ runErrorT $ flip evalStateT ( bs :: BindingsMap
-                                                                 , [] :: [GNode]
-                                                                 ) $ typeOf (x :: Expr)
-            displayLogs logs
-            case t of
-                Left err -> liftIO $ print $ vcat [ "Error while type-checking."
-                                                  , nest 4 err ]
-                Right t' -> liftIO $ print $ pretty t'
+        Right t' -> liftIO $ print $ pretty t'
     -- bs <- gets $ topLevelBindings . currentSpec
     -- let (et, logs) = runTypeOf bs x
     -- displayRaw x
@@ -216,13 +212,15 @@ step (ShowAST s) = withParsed s  $ \  x  ->                   liftIO $ ppPrint (
 step (Load   fp) = returningTrue $ do
     msp <- liftIO readIt
     case msp of
-        Left  e1  -> liftIO $ putStrLn $ "Parsing error: " ++ show e1
-        Right sp1 -> case postParse sp1 of
-            Left  e2  -> liftIO $ putStrLn $ "Parsing error: " ++ show e2
-            Right sp2 -> modifySpec $ const sp2
+        Left  e  -> liftIO $ print e
+        Right sp -> modifySpec $ const sp
     where
-        readIt :: IO (Either SomeException Spec)
-        readIt = try $ parseFromFile parse id fp id
+        readIt :: IO (Either Doc Spec)
+        readIt = do
+            contents <- readFile fp
+            let (res,logs) = runReadIn fp contents
+            mapM_ print logs
+            return res
 step (Save fp) = returningTrue $ do
     sp <- gets currentSpec
     liftIO $ writeFile fp $ show $ pretty sp
