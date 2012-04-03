@@ -1,28 +1,43 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Main where
 
 import Control.Applicative
-import Control.Monad ( forM )
+import Control.Monad.Error ( runErrorT )
+import Control.Monad.Writer ( runWriter )
 import Data.List ( isSuffixOf )
-import System.Directory ( removeFile )
 import System.Environment ( getArgs )
 
-import Language.EssenceParsers ( pSpec )
-import ParsecUtils ( parseFromFile )
-import Phases.QuanRename ( quanRenameIO )
-import UniqueSupply ( resetUniqueInt )
+import Language.Essence ( Spec )
+import Language.Essence.Phases.ReadIn ( readIn )
+import PrintUtils ( ($$), Doc )
+
 
 
 main :: IO ()
 main = do
-    rmIn  <- filter ("--rm" `isSuffixOf`) <$> getArgs
-    args  <- filter (".essence" `isSuffixOf`) <$> getArgs
-    specs <- forM args $ \ nm -> resetUniqueInt >> parseFromFile pSpec langlinePre nm id >>= quanRenameIO
-    case specs of
-        [a,b]  -> case rmIn of [] -> if a == b then putStrLn "Same."
-                                               else putStrLn "Not same."
-                               _  -> if a == b then removeFile (args !! 1)
-                                               else return ()
+    specFilenames <- filter (".essence" `isSuffixOf`) <$> getArgs
+    case specFilenames of
+        [aFilename,bFilename] -> do
+
+            maSpec <- getSpec aFilename
+            mbSpec <- getSpec bFilename
+
+            case (maSpec,mbSpec) of
+                (Right aSpec, Right bSpec) ->
+                    if (aSpec :: Spec) == (bSpec :: Spec)
+                        then putStrLn "Same."
+                        else putStrLn "Not same."
+                (Left aErr, Left bErr) -> error $ show (aErr $$ bErr)
+                (Left aErr, _)         -> error $ show aErr
+                (_, Left bErr)         -> error $ show bErr
+
         _      -> error "Expected two *.essence files."
 
-langlinePre :: String -> String
-langlinePre s = unlines $ "language Essence 2.0" : drop 1 (lines s)
+
+getSpec :: FilePath -> IO (Either Doc Spec)
+getSpec filename = do
+    contents <- readFile filename
+    let (spec,logs) = runWriter $ runErrorT $ readIn filename contents
+    mapM_ print logs
+    return spec
