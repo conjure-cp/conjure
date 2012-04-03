@@ -27,17 +27,21 @@ import Utils ( strip )
 
 import qualified Debug.Trace as D
 
+{-# INLINE trace #-}
 trace :: String -> a -> a
 trace = D.trace
 
+{-# INLINE traceM #-}
 traceM :: Monad m => String -> m ()
 traceM s = trace s $ return ()
 
 #else
 
+{-# INLINE trace #-}
 trace :: String -> a -> a
 trace _ = id
 
+{-# INLINE traceM #-}
 traceM :: Monad m => String -> m ()
 traceM _ = return ()
 
