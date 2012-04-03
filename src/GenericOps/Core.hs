@@ -6,8 +6,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- #define DEBUG
-
 module GenericOps.Core
     ( Hole(..), HoleStatus(..)
     , NodeTag(..), nodeTagData
@@ -26,9 +24,6 @@ module GenericOps.Core
     , gapply, gapplyDeep
     ) where
 
-#ifdef DEBUG
-import Debug.Trace
-#endif
 import Control.Monad ( forM, liftM, zipWithM_ )
 import Control.Monad.Error ( MonadError, ErrorT(..), throwError, Error(..) )
 import Control.Monad.State ( MonadState, StateT(..), evalStateT )
@@ -40,6 +35,7 @@ import Data.Typeable ( cast )
 import Unsafe.Coerce ( unsafeCoerce )
 import qualified Data.Map as M
 
+import Constants ( traceM )
 import Has
 import ParsecUtils ( choiceTry )
 import ParsePrint
@@ -408,11 +404,8 @@ class MatchBind a where
         , Has st BindingsMap
         , Has st [(GNode,GNode)]
         ) => a -> a -> m ()
-#ifdef DEBUG
-    match p a = trace ("match " ++ show (pretty p) ++ " ~~ " ++ show (pretty a)) $ do
-#else
     match p a = inScope (mkG p, mkG a) $ do
-#endif
+        traceM $ "match " ++ show (pretty p) ++ " ~~ " ++ show (pretty a)
         -- add this node on top of the call stack.
         case hole p of                                                          -- check hole-status of the pattern.
             UnnamedHole  -> return ()                                           -- unnamed hole: matching succeeds, no bindings.
