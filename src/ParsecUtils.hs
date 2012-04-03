@@ -22,7 +22,7 @@ import Control.Applicative
 import Control.Monad.Identity ( Identity )
 
 import Text.Parsec ( ParsecT, alphaNum, char, letter, parse )
-import Text.Parsec.Combinator ( between, choice, eof, many1, optionMaybe, sepBy, sepBy1, sepEndBy, sepEndBy1 )
+import Text.Parsec.Combinator ( between, choice, eof, many1, optionMaybe, sepEndBy, sepEndBy1 )
 import Text.Parsec.Expr ( Assoc(..), Operator(..), OperatorTable, buildExpressionParser )
 import Text.Parsec.Language ( emptyDef )
 import Text.Parsec.Prim ( (<?>), try )
@@ -60,6 +60,11 @@ reservedOp :: String -> Parser ();   reservedOp = T.reservedOp lexer
 symbol     :: String -> Parser ();   symbol s   = T.symbol     lexer s >> return ()
 whiteSpace :: Parser ();             whiteSpace = T.whiteSpace lexer
 
+sepBy :: Parser a -> Parser sep -> Parser [a]
+sepBy  = sepEndBy
+
+sepBy1 :: Parser a -> Parser sep -> Parser [a]
+sepBy1 = sepEndBy1
 
 -- choice with try applied to every parser in the list but not the last
 choiceTry :: [Parser a] -> Parser a
