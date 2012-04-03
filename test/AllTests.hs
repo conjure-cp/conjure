@@ -20,11 +20,13 @@ import           System.Directory ( getDirectoryContents )
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap )
-import Language.Essence
-import Language.EssenceEvaluator ( deepSimplify )
 import ParsecUtils ( Parser, eof, parseEither, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( renderDoc )
+
+import Language.Essence
+import Language.EssenceEvaluator ( deepSimplify )
+import Language.Essence.Phases.ReadIn ( ReadIn, runReadIn )
 
 
 
@@ -49,14 +51,15 @@ parsePrintIso _ s = HUnit.TestLabel ("ParsePrintIso " ++ s) $ HUnit.TestCase $
             Left msg  -> assertFailure ("ParsePrintIso [cannot parse pretty print]: " ++ s' ++ msg)
             Right x'' -> assertEqual "ParsePrintIso [not equal]" x' x''
 
-parsePrintIsoFile :: forall a . (Eq a, Show a, ParsePrint a) => a -> FilePath -> HUnit.Test
+parsePrintIsoFile :: forall a . (Eq a, Show a, ParsePrint a, ReadIn a) => a -> FilePath -> HUnit.Test
 parsePrintIsoFile _ f = HUnit.TestLabel ("ParsePrintIsoFile " ++ f) $ HUnit.TestCase $ do
     s <- readFile f
-    case parseEither (parse <* eof) s of
-        Left msg        -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse]: ", f, s, msg])
+    case fst $ runReadIn f s of
+        Left msg        -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse]: ", f, s, show msg])
         Right (x' :: a) -> let s' = renderDoc $ pretty x'
-                           in  case parseEither parse s' of
-            Left msg  -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse pretty print]: ", f, s', msg])
+                               f' = f ++ " [after ParsePrint]"
+                           in  case fst $ runReadIn f' s' of
+            Left msg  -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse pretty print]: ", f', s', show msg])
             Right x'' -> assertEqual "ParsePrintIso [not equal]" x' x''
 
 eval :: [(String,GNode)] -> String -> String -> HUnit.Test
@@ -415,7 +418,7 @@ main = do
             , parsePrintIso_Type "enum {foo, bar, baz}"
             , parsePrintIso_Type "enum {foo, intt}"
             , parsePrintIso_Type "matrix indexed by [int, int] of enum {foo, bar}"
-            , parsePrintIso_Type "tuple of (int, fool, tuple of (enum {foo, bar}, int))"
+            , parsePrintIso_Type "tuple (int, fool, tuple (enum {foo, bar}, int))"
             ]
 
         parsingDomain =
@@ -431,13 +434,13 @@ main = do
             , noParse_Domain       "int(1,,2,3)"
             , parsePrintIso_Domain "matrix indexed by [int(1..9)] of bool"
             , parsePrintIso_Domain "matrix indexed by [int(1..9), int(a..), int(..b)] of bool"
-            , parsePrintIso_Domain "tuple of (int, bool)"
-            , parsePrintIso_Domain "tuple (representation foo) of (int, bool)"
+            , parsePrintIso_Domain "tuple (int, bool)"
+            , parsePrintIso_Domain "(int, bool)"
             , parsePrintIso_Domain "set of int"
             , parsePrintIso_Domain "set of a"
             , parsePrintIso_Domain "set (size n) of a"
-            , parsePrintIso_Domain "set (size n) of tuple of (a,b)"
-            , parsePrintIso_Domain "set (size n) of tuple of (a, b)"
+            , parsePrintIso_Domain "set (size n) of tuple (a,b)"
+            , parsePrintIso_Domain "set (size n) of tuple (a, b)"
             , parsePrintIso_Domain "set (minSize n) of a"
             , parsePrintIso_Domain "set (maxSize n) of a"
             , parsePrintIso_Domain "set (representation foo) of a"
@@ -450,7 +453,7 @@ main = do
             , parsePrintIso_Domain "mset of int"
             , parsePrintIso_Domain "mset of a"
             , parsePrintIso_Domain "mset (size n) of a"
-            , parsePrintIso_Domain "mset (size n) of tuple of (a, b)"
+            , parsePrintIso_Domain "mset (size n) of tuple (a, b)"
             , parsePrintIso_Domain "mset (minSize n) of a"
             , parsePrintIso_Domain "mset (maxSize n) of a"
             , parsePrintIso_Domain "mset (representation foo) of a"
