@@ -10,14 +10,20 @@ import Control.Monad ( liftM, msum )
 import Control.Monad.Error ( throwError )
 import Data.Generics ( Data )
 import Data.List.Split ( splitOn )
+import Data.Map ( elems )
+import Data.Maybe ( mapMaybe )
 -- import Data.Set as S ( member )
 import Data.String ( IsString, fromString )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, choose )
 
--- import Constants ( reservedSet )
-import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind, getBinding, bottomUp )
+import Constants ( trace )
+import Has ( getM )
+import GenericOps.Core ( NodeTag
+                       , Hole
+                       , GPlate, bottomUp, fromGs
+                       , MatchBind, getBinding, BindingsMap )
 import ParsecUtils ( identifier )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), text )
@@ -53,32 +59,43 @@ instance Arbitrary Identifier where
     arbitrary = Identifier . return <$> choose ('a', 'z')
 
 instance TypeOf Identifier where
-    typeOf p@(Identifier nm') = do
+    typeOf p | trace ("typeOf Identifier: " ++ show (pretty p)) False = undefined
+    typeOf (Identifier nm') = do
         -- bindings <- get
         -- return $ case M.lookup nm bindings of
         --     Nothing -> Nothing
         --     Just gr -> fromG gr
         let nm = head $ splitOn "#" nm'
         t :: Maybe Type    <- getBinding nm
+
         v :: Maybe Value   <- getBinding nm
-        d :: Maybe Domain  <- getBinding nm
-        x :: Maybe Expr    <- getBinding nm
-        b :: Maybe Binding <- getBinding nm
-        l :: Maybe Lambda  <- getBinding nm
-        tt <- maybe (return Nothing) (liftM Just . typeOf) t
         tv <- maybe (return Nothing) (liftM Just . typeOf) v
+
+        d :: Maybe Domain  <- getBinding nm
         td <- maybe (return Nothing) (liftM Just . typeOf) d
+
+        x :: Maybe Expr    <- getBinding nm
         tx <- maybe (return Nothing) (liftM Just . typeOf) x
-        tb <- case b of Just (Find _  dom) -> Just `liftM` typeOf dom
-                        Just (Given _ dom) -> Just `liftM` typeOf dom
-                        Just (LettingType _ ty@(TEnum (Just is)))
-                            | p `elem` is  -> return $ Just ty
-                        _                  -> return Nothing
+
+        b :: Maybe Binding <- getBinding nm
+        tb <- maybe (return Nothing) (liftM Just . typeOf) b
+
+        l :: Maybe Lambda  <- getBinding nm
         tl <- case l of Nothing -> return Nothing; Just i -> Just `liftM` typeOf i
+
         -- let msg = "typeOf Identifier" <+> text nm' <+> text (show [tt,tv,td,tx,tb])
-        case msum [tt,tv,td,tx,tb,tl] of
-            Nothing -> throwError $ "Identifier not bound:" <+> text nm
+        case msum [t,tv,td,tx,tb,tl] of
+            -- Nothing -> throwError $ "Identifier not bound:" <+> text nm
             Just r  -> return r
+            Nothing -> do -- checking if this is a reference to an enum type. useful in iconjure.
+                st :: BindingsMap <- getM
+                let rs = flip mapMaybe (fromGs (elems st)) $ \ j -> case j of
+                            LettingType ty (TEnum (Just is)) | Identifier nm `elem` is -> Just (THole ty)
+                            _ -> Nothing
+                case rs of
+                    [j] -> return j
+                    _   -> throwError $ "Identifier not bound:" <+> text nm
+
 
 instance DomainOf Identifier where
     domainOf (Identifier nm') = do

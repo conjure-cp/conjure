@@ -9,7 +9,7 @@ import Test.QuickCheck ( Arbitrary )
 import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind )
 import ParsePrint ( ParsePrint )
 
-import {-# SOURCE #-} Language.Essence.Type ( TypeOf )
+-- import {-# SOURCE #-} Language.Essence.Type ( TypeOf )
 
 
 
@@ -30,4 +30,4 @@ instance GPlate Identifier
 instance MatchBind Identifier
 instance ParsePrint Identifier
 instance Arbitrary Identifier
-instance TypeOf Identifier
+-- instance TypeOf Identifier
