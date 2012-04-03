@@ -373,6 +373,9 @@ instance TypeOf Expr where
         ty <- typeOf y
         case tx of
             AnyType TFunction [a,b] | a == ty -> return b
+            AnyType TRelation tes -> case ty of
+                AnyType TTuple tes' | tes == tes' -> return TBool
+                _ -> typeError "Type error."
             _ -> typeError "Type error."
 
     typeOf p@(EOp PreImage [x,y]) = inScope (mkG p) $ do
@@ -484,8 +487,9 @@ instance TypeOf Expr where
 -- typeOfOp :: (TypeOf a, Monad m) => Expr -> [a] -> [Type -> Bool] -> Type -> m Type
 typeOfOp ::
     ( Applicative m
-    , Has st [GNode]
     , Has st BindingsMap
+    , Has st [GNode]
+    , Has st [(GNode,GNode)]
     , MonadWriter [Doc] m
     , MonadState st m
     , MonadError Doc m
@@ -500,52 +504,6 @@ typeOfOp p xs fs tres = inScope (mkG p) $ do
         [tx,ty] -> zipWithM_ (\ f t -> unless (f t) (typeErrorBinOp tx ty "Type error in binary operator.")) fs txs
         _       -> zipWithM_ (\ f t -> unless (f t) (typeError "Type error in operator.")) fs txs
     return tres
-
-typeError ::
-    ( Applicative m
-    , Has st [GNode]
-    , MonadError Doc m
-    , MonadState st m
-    ) => Doc -> m a
-typeError s = do
-    nodes :: [GNode]
-          <- take 5 <$> getM
-    throwError $ Pr.vcat $ s : [ Pr.nest 4 $ "in: " <+> pretty n
-                               | GNode _ n <- nodes
-                               ]
-
-typeErrorUnOp ::
-    ( Applicative m
-    , Has st [GNode]
-    , MonadError Doc m
-    , MonadState st m
-    ) => Type -> Doc -> m a
-typeErrorUnOp tx s = do
-    nodes :: [GNode]
-          <- take 5 <$> getM
-    throwError $ Pr.vcat $ s
-                         :  [ "The operand has type:" <+> pretty tx ]
-                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
-                            | GNode _ n <- nodes
-                            ]
-
-typeErrorBinOp ::
-    ( Applicative m
-    , Has st [GNode]
-    , MonadError Doc m
-    , MonadState st m
-    ) => Type -> Type -> Doc -> m a
-typeErrorBinOp tx ty s = do
-    nodes :: [GNode]
-          <- take 5 <$> getM
-    throwError $ Pr.vcat $ s
-                         :  [ "First  operand has type:" <+> pretty tx
-                            , "Second operand has type:" <+> pretty ty
-                            ]
-                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
-                            | GNode _ n <- nodes
-                            ]
-
 
 
 instance DomainOf Expr where
