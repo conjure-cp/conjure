@@ -4,7 +4,7 @@
 
 module Main ( main ) where
 
-import           Control.Applicative ( (<$>), (<*) )
+import           Control.Applicative ( (<$>), (<*), (<*>) )
 import           Control.Monad ( forM )
 import           Control.Monad.Error ( runErrorT )
 import           Control.Monad.State ( evalStateT )
@@ -70,9 +70,11 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
         (Right (x :: Expr), Right (y :: Expr)) -> do
             (x',_logs) <- runWriterT $ flip evalStateT ( M.fromList bindings :: BindingsMap
                                                        , [] :: [GNode]
+                                                       , [] :: [(GNode,GNode)]
                                                        ) $ runErrorT $ deepSimplify x
             (y',_logs) <- runWriterT $ flip evalStateT ( M.fromList bindings :: BindingsMap
                                                        , [] :: [GNode]
+                                                       , [] :: [(GNode,GNode)]
                                                        ) $ runErrorT $ deepSimplify y
             case (x',y') of
                 (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty x, renderDoc msg])
@@ -145,23 +147,23 @@ gnode _ = mkG . unsafeParse (parse <* eof :: Parser a)
 --                 Right x'' -> assertEqual "Eval [not equal]" x'' y
 
 getAllWithSuffix :: String -> FilePath -> IO [FilePath]
-getAllWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$>getDirectoryContents fp
+getAllWithSuffix suffix fp = map (fp++) . filter (suffix `isSuffixOf`) <$> getDirectoryContents fp
 
 main :: IO ()
 main = do
-    let
-        basedir :: FilePath
-        basedir = "/Users/ozgurakgun/src/conjure-wd/"
-    specs <- map (\ f -> "testdata/" ++ f ) <$> getAllWithSuffix ".essence" "testdata"
+    -- let
+    --     basedir :: FilePath
+    --     basedir = "/Users/ozgurakgun/src/conjure-wd/"
+    specs <- getAllWithSuffix ".essence" "testdata/"
     defaultMain $ hUnitTestToTests . test $ parsingExpr
-                                            ++ parsingValue
-                                            ++ parsingQuantifiedExpr
-                                            ++ parsingIdentifier
-                                            ++ parsingWhere
-                                            ++ parsingLambda
-                                            ++ parsingType
-                                            ++ parsingDomain
-                                            ++ parsingSpec specs
+                                         ++ parsingValue
+                                         ++ parsingQuantifiedExpr
+                                         ++ parsingIdentifier
+                                         ++ parsingWhere
+                                         ++ parsingLambda
+                                         ++ parsingType
+                                         ++ parsingDomain
+                                         ++ parsingSpec specs
                                             -- ++ parsingRepr
                                             -- ++ parsingRefn
 
