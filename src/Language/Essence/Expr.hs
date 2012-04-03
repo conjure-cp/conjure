@@ -43,6 +43,7 @@ import {-# SOURCE #-} Language.Essence.QuantifiedExpr
 import                Language.Essence.Type
 import {-# SOURCE #-} Language.Essence.Value
 import                Language.Essence.Where
+import {-# SOURCE #-} Language.EssenceEvaluator
 
 
 
@@ -173,10 +174,10 @@ instance ParsePrint Expr where
             core = choiceTry $ [ pBubble
                                , Q     <$> parse
                                , EHole <$> parse
-                               , D     <$> parse       -- ordering is important: try: tuple (_) of (a,b,c)
+                               , parens    parse
                                , V     <$> parse
+                               , D     <$> parse
                                ] ++ pLispyAndSpecial
-                                 ++ [ parens parse ]
 
             pBubble :: Parser Expr
             pBubble = parens $ do
@@ -227,10 +228,252 @@ instance TypeOf Expr where
     typeOf p@(D      d    ) = inScope (mkG p) $ typeOf d
     typeOf p@(Q      q    ) = inScope (mkG p) $ typeOf q
     typeOf p@(Bubble x _ _) = inScope (mkG p) $ typeOf x
-    typeOf p@(EOp Plus [x,y]) = typeOfOp p [x,y] [(TInt==),(TInt==)] TInt
-    typeOf p@(EOp Max  [x]  ) = typeOfOp p [x]   [(AnyType TSet [TInt]==)] TInt
-    typeOf p@(EOp Max  [x,y]) = typeOfOp p [x,y] [(TInt==),(TInt==)] TInt
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Plus,Minus,Times,Div,Mod,Pow]
+        = typeOfOp p [x,y] [(TInt==),(TInt==)] TInt
+
+    typeOf p@(EOp op [x])
+        | op `elem` [Negate,Factorial]
+        = typeOfOp p [x] [(TInt==)] TInt
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Lt,Leq,Gt,Geq]
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            ty <- typeOf y
+            bx <- isOrderedType tx
+            by <- isOrderedType ty
+            if tx /= ty
+                then typeErrorBinOp tx ty "Type error: Comparing incompatible types."
+                else if bx && by
+                         then return TBool
+                         else typeErrorBinOp tx ty "Type error: Comparing unordered types."
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Neq,Eq]
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            ty <- typeOf y
+            if tx == ty
+                then return TBool
+                else typeErrorBinOp tx ty $ "Type error: Equality on incompatible types."
+
+    typeOf p@(EOp Not [x])
+        = typeOfOp p [x] [(TBool==)] TBool
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Or,And,Imply,Iff]
+        = typeOfOp p [x,y] [(TBool==),(TBool==)] TBool
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Union,Intersect]
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            ty <- typeOf y
+            case (tx,ty) of
+                (AnyType t1 a, AnyType t2 b)
+                    | t1 == t2
+                    , t1 == TSet || t1 == TMSet
+                    , a == b -> return $ AnyType t1 a
+                _ -> typeErrorBinOp tx ty "Type error."
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Subset,SubsetEq,Supset,SupsetEq]
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            ty <- typeOf y
+            case (tx,ty) of
+                (AnyType t1 a, AnyType t2 b)
+                    | t1 == t2
+                    , t1 == TSet || t1 == TMSet
+                    , a == b -> return TBool
+                _ -> typeErrorBinOp tx ty "Type error."
+
+    typeOf p@(EOp In [x,y])
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            ty <- typeOf y
+            case ty of
+                AnyType te [ty']
+                    | te `elem` [TSet,TMSet]
+                    , tx == ty' -> return TBool
+                _ -> typeErrorBinOp tx ty "Type error."
+
+    typeOf p@(EOp op [x,y])
+        | op `elem` [Max,Min]
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            ty <- typeOf y
+            bx <- isOrderedType tx
+            by <- isOrderedType ty
+            if tx /= ty
+                then typeErrorBinOp tx ty "Type error: Comparing incompatible types."
+                else if bx && by
+                         then return TBool
+                         else typeErrorBinOp tx ty "Type error: Comparing unordered types.";
+
+    typeOf p@(EOp op [x])
+        | op `elem` [Max,Min]
+        = inScope (mkG p) $ do
+            tx <- typeOf x
+            case tx of
+                AnyType te [tx'] | te `elem` [TSet,TMSet] -> do
+                    tb' <- isOrderedType tx'
+                    if tb'
+                        then return tx'
+                        else typeErrorUnOp tx "Type error."
+                _ -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp TwoBars [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            TInt -> return TInt
+            AnyType te _
+                 | te `elem` [TSet, TMSet, TFunction, TRelation, TPartition]
+                 -> return TInt
+            _    -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp ToSet [x]) = inScope (mkG p) $ do -- TODO toSet(dom)
+        tx <- typeOf x
+        case tx of
+            AnyType TMSet     [te] -> return $ AnyType TSet [te]
+            AnyType TRelation tes  -> return $ AnyType TSet [AnyType TTuple tes]
+            AnyType TFunction tes  -> return $ AnyType TSet [AnyType TTuple tes]
+            _ -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp ToMSet [x]) = inScope (mkG p) $ do -- TODO toSet(dom)
+        tx <- typeOf x
+        case tx of
+            AnyType TSet      [te] -> return $ AnyType TMSet [te]
+            AnyType TRelation tes  -> return $ AnyType TMSet [AnyType TTuple tes]
+            AnyType TFunction tes  -> return $ AnyType TMSet [AnyType TTuple tes]
+            _ -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp ToRelation [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            AnyType TFunction tes -> return $ AnyType TRelation tes
+            _ -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp Defined [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            AnyType TFunction [a,_] -> return $ AnyType TSet [a]
+            _ -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp Range [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            AnyType TFunction [_,b] -> return $ AnyType TSet [b]
+            _ -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp Image [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case tx of
+            AnyType TFunction [a,b] | a == ty -> return b
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp PreImage [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case tx of
+            AnyType TFunction [a,b] | b == ty -> return $ AnyType TSet [a]
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Inverse [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case (tx,ty) of
+            (AnyType TFunction [a,b], AnyType TFunction [c,d])
+                | a == d
+                , b == c -> return TBool
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp op [x,y,z])
+        | op `elem` [Together,Apart]
+        = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        tz <- typeOf z
+        case tz of
+            AnyType TPartition [te]
+                | te == tx
+                , te == ty -> return TBool
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Party [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case ty of
+            AnyType TPartition [te]
+                | te == tx -> return $ AnyType TSet [te]
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Participants [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            AnyType TPartition [te] -> return $ AnyType TSet [te]
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Parts [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            AnyType TPartition [te] -> return $ AnyType TSet [AnyType TSet [te]]
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Freq [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case tx of
+            AnyType TMSet [te] | te == ty -> return TInt
+            TMatrix _      te  | te == ty -> return TInt
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Hist [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case (tx,ty) of
+            (AnyType TMSet [te], TMatrix ti te')
+                | te == te' -> return $ TMatrix ti TInt
+            (TMatrix _      te,  TMatrix ti te')
+                | te == te' -> return $ TMatrix ti TInt
+            _ -> typeError "Type error."
+
+    typeOf p@(EOp Index [_,D _]) = inScope (mkG p) $ typeError "Type error in matrix slicing, not implemented."
+
+    typeOf p@(EOp Index [x,y]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        ty <- typeOf y
+        case (tx, ty) of
+            (TMatrix ti te, tj) | ti == tj -> do
+                bi <- isOrderedType ti
+                if bi
+                    then return te
+                    else typeErrorBinOp tx ty "Type error in indexing. Must use an ordered type."
+            (AnyType TTuple tis, TInt) -> do
+                val <- evaluate y
+                if val >= 1 && val <= length tis
+                    then return (tis !! (val - 1))
+                    else typeErrorBinOp tx ty $ "Type error in indexing. Value out of bounds: " <+> Pr.text (show val)
+            _ -> typeErrorBinOp tx ty "Type error in indexing."
+
+    typeOf   (EOp HasType   _) = return TBool
+    typeOf   (EOp HasDomain _) = return TBool
+    typeOf p@(EOp Replace   [a,_,_]) = inScope (mkG p) $ typeOf a
+
+    typeOf p@(EOp AllDiff [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            TMatrix {} -> return TBool
+            _          -> typeErrorUnOp tx "Type error."
+
+    typeOf p@(EOp ToInt [x])
+        = typeOfOp p [x] [(TBool==)] TInt
+
     typeOf p = inScope (mkG p) $ typeError "Type error in expression."
+
     -- typeOf
     -- | V Value
     -- | D Domain
@@ -250,24 +493,13 @@ typeOfOp ::
     , GPlate b
     , TypeOf b
     ) => a -> [b] -> [Type -> Bool] -> t -> m t
-typeOfOp p xs fs ty = inScope (mkG p) $ do
+typeOfOp p xs fs tres = inScope (mkG p) $ do
     txs <- mapM typeOf xs
-    zipWithM_ (\ f t -> unless (f t) (typeError "Type error in operator.")) fs txs
-    return ty
-
-
-
-instance DomainOf Expr where
-    domainOf (EHole i) = domainOf i
-    domainOf (D     d) = return d
-    domainOf _ = throwError "domainOf Expr not implemented."
-
-
-intLike :: Type -> Bool
-intLike TBool = True
-intLike TInt = True
-intLike _ = False
-
+    case txs of
+        [tx]    -> zipWithM_ (\ f t -> unless (f t) (typeErrorUnOp  tx    "Type error in unary operator.")) fs txs
+        [tx,ty] -> zipWithM_ (\ f t -> unless (f t) (typeErrorBinOp tx ty "Type error in binary operator.")) fs txs
+        _       -> zipWithM_ (\ f t -> unless (f t) (typeError "Type error in operator.")) fs txs
+    return tres
 
 typeError ::
     ( Applicative m
@@ -277,10 +509,47 @@ typeError ::
     ) => Doc -> m a
 typeError s = do
     nodes :: [GNode]
-          <- take 3 <$> getM
+          <- take 5 <$> getM
     throwError $ Pr.vcat $ s : [ Pr.nest 4 $ "in: " <+> pretty n
                                | GNode _ n <- nodes
                                ]
 
+typeErrorUnOp ::
+    ( Applicative m
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    ) => Type -> Doc -> m a
+typeErrorUnOp tx s = do
+    nodes :: [GNode]
+          <- take 5 <$> getM
+    throwError $ Pr.vcat $ s
+                         :  [ "The operand has type:" <+> pretty tx ]
+                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
+                            | GNode _ n <- nodes
+                            ]
 
+typeErrorBinOp ::
+    ( Applicative m
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    ) => Type -> Type -> Doc -> m a
+typeErrorBinOp tx ty s = do
+    nodes :: [GNode]
+          <- take 5 <$> getM
+    throwError $ Pr.vcat $ s
+                         :  [ "First  operand has type:" <+> pretty tx
+                            , "Second operand has type:" <+> pretty ty
+                            ]
+                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
+                            | GNode _ n <- nodes
+                            ]
+
+
+
+instance DomainOf Expr where
+    domainOf (EHole i) = domainOf i
+    domainOf (D     d) = return d
+    domainOf _ = throwError "domainOf Expr not implemented."
 
