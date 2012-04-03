@@ -17,10 +17,10 @@ import ParsePrint
 import {-# SOURCE #-} Language.Essence.Identifier
 import {-# SOURCE #-} Language.Essence.Domain
 import {-# SOURCE #-} Language.Essence.Expr
-import Language.Essence.Lambda
-import Language.Essence.QuantifierDecl
-import Language.Essence.Type
-import Language.Essence.Where
+import {-# SOURCE #-} Language.Essence.Lambda
+import                Language.Essence.QuantifierDecl
+import {-# SOURCE #-} Language.Essence.Type
+import                Language.Essence.Where
 
 
 
@@ -56,5 +56,6 @@ instance Hole Binding
 instance GPlate Binding
 instance MatchBind Binding
 instance ParsePrint Binding
+instance TypeOf Binding
 
 instance ParsePrint [Either Binding Where]

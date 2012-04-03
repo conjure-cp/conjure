@@ -3,18 +3,26 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.Binding where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError )
+import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.State ( MonadState )
+import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
+import Data.Map ( elems )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
+import Constants ( trace )
 import Has
-import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateTwo, GNode, MatchBind, BindingsMap, addBinding )
+import GenericOps.Core ( NodeTag
+                       , Hole
+                       , GPlate, gplate, gplateTwo
+                       , GNode, fromGs
+                       , MatchBind, BindingsMap, addBinding )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), Doc)
@@ -30,6 +38,25 @@ import Language.Essence.Where
 
 
 
+isOrderedType ::
+    ( Applicative m
+    , Has st BindingsMap
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => Type -> m Bool
+isOrderedType TBool {}  = return True
+isOrderedType TInt  {}  = return True
+isOrderedType TEnum {}  = return True
+isOrderedType (THole i) = do
+    st :: BindingsMap <- getM
+    let rs = flip map (fromGs (elems st)) $ \ j -> case j of
+                LettingType _ (TEnum (Just is)) | i `elem` is -> True
+                _ -> False
+    return $ or rs
+isOrderedType _ = return False
+
 addBinding' ::
     ( MonadError Doc m
     , MonadState st m
@@ -38,8 +65,8 @@ addBinding' ::
     ) => Binding -> m ()
 addBinding' b@(Find        (Identifier i) _) = addBinding i b
 addBinding' b@(Given       (Identifier i) _) = addBinding i b
-addBinding' (LettingType   (Identifier i) j) = addBinding i j
-addBinding' (GivenType     (Identifier i) j) = addBinding i j
+addBinding' b@(LettingType (Identifier i) _) = addBinding i b
+addBinding' b@(GivenType   (Identifier i) _) = addBinding i b
 addBinding' (LettingDomain (Identifier i) j) = addBinding i j
 addBinding' (LettingExpr   (Identifier i) j) = addBinding i j
 addBinding' (LettingLambda (Identifier i) j) = addBinding i j
@@ -159,3 +186,16 @@ instance ParsePrint [Either Binding Where] where
                       ) <$> many parse
     pretty = Pr.vcat . map pretty
 
+instance TypeOf Binding where
+    typeOf p | trace ("typeOf Binding: " ++ show (pretty p)) False = undefined
+    typeOf (Find          _ d) = typeOf d
+    typeOf (Given         _ d) = typeOf d
+    typeOf (LettingDomain _ d) = typeOf d
+    typeOf (LettingExpr   _ x) = typeOf x
+    typeOf (LettingLambda _ l) = typeOf l
+    typeOf (LettingQuan   i _) = throwError $ "Type error: " <+> pretty i
+
+    typeOf (LettingType   i (TEnum {})) = return (THole i)
+    typeOf (LettingType   _ t         ) = return t
+    typeOf (GivenType     i (TEnum {})) = return (THole i)
+    typeOf (GivenType     _ t         ) = return t
