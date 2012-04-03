@@ -23,7 +23,7 @@ data Op
     | Not | Or | And | Imply | Iff
     | Union | Intersect | Subset | SubsetEq | Supset | SupsetEq
     | In | Max | Min
-    | ToSet | ToMSet | ToRel | Defined | Range
+    | ToSet | ToMSet | ToRelation | Defined | Range
     | Image | PreImage | Inverse
     | Together | Apart
     | Party | Participants | Parts
@@ -87,7 +87,7 @@ opFace Max          = "max"
 opFace Min          = "min"
 opFace ToSet        = "toSet"
 opFace ToMSet       = "toMSet"
-opFace ToRel        = "toRelation"
+opFace ToRelation   = "toRelation"
 opFace Defined      = "defined"
 opFace Range        = "range"
 opFace Image        = "image"
