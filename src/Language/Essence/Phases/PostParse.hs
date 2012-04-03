@@ -39,6 +39,7 @@ postParse spec = bottomUpM enumIdentifiers (bottomUp enumDomains spec)
         typeBindings = unzip $ flip mapMaybe (topLevels spec) $ \ b ->
             case b of
                 Left (LettingType (Identifier i) t) -> Just (i,t)
+                Left (GivenType   (Identifier i) t) -> Just (i,t)
                 _ -> Nothing
 
         enumIdentifiers :: Expr -> m Expr
