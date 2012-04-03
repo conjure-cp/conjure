@@ -6,18 +6,24 @@
 module Language.Essence.QuantifiedExpr where
 
 import Control.Applicative
+import Control.Monad ( unless )
 import Control.Monad.Error ( throwError )
+import qualified Control.Monad.State as S
+import Data.Foldable ( forM_ )
 import Data.Generics ( Data )
 import Data.Maybe ( isNothing, mapMaybe, maybeToList )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified  Data.Map as M
 
+import Constants ( traceM )
 import Has
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError, gplateUniList
                        , mkG, fromGs, showG
-                       , MatchBind, match, bind, getBinding, BindingsMap )
+                       , MatchBind, match, bind
+                       , addBinding, getBinding, BindingsMap
+                       , inScope )
 import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<>), (<+>), text )
@@ -243,11 +249,48 @@ instance ParsePrint QuantifiedExpr where
         Pr.$$ Pr.nest 4 (pretty qnBody)
 
 instance TypeOf QuantifiedExpr where
-    typeOf (QuantifiedExpr {quanName = Identifier qnName}) = do
+    typeOf p@(QuantifiedExpr (Identifier qnName)
+                             qnVar
+                             qnOverDom
+                             qnOverOpExpr
+                             (QuanGuard qnGuards)
+                             qnBody ) = inScope (mkG p) $ do
         qd :: Maybe QuantifierDecl <- getBinding qnName
         case qd of
             Nothing -> throwError $ "Quantifier not declared:" <+> text qnName
-            Just (QuantifierDecl _ _ identity) -> typeOf identity
+            Just q  -> do
+
+                -- type check thr quantifier decl, and return the type of the identity.
+                ti <- typeOf q
+
+                -- add the quantified variable
+                st <- S.get
+                tForQnVar <- case (qnOverDom,qnOverOpExpr) of
+                                ( Just dom, Nothing        ) -> typeOf dom
+                                ( Nothing , Just (In,expr) ) -> do
+                                    tExpr <- typeOf expr
+                                    case tExpr of
+                                        AnyType TSet  [j] -> return j
+                                        AnyType TMSet [j] -> return j
+                                        _ -> throwError $ "Quantification over nsopported type: " <+> pretty tExpr
+                                _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show (qnOverDom,qnOverOpExpr)
+                case qnVar of
+                    Left (Identifier nm) -> addBinding nm tForQnVar
+                    _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show qnVar
+
+                traceM $ "adding quantified variable in context: " ++ show (qnVar,tForQnVar)
+
+                -- check guards are bools
+                forM_ qnGuards $ \ x -> inScope (mkG x) $ do 
+                    tx <- typeOf x
+                    unless (tx==TBool) $ typeError "Quantifier guard is not of type boolean."
+
+                -- check the inner expr.
+                tb <- typeOf qnBody
+                unless (ti==tb) $ typeError "Type mismatch in the inner expression of quantified expression."
+
+                S.put st
+                return ti
 
 
 
