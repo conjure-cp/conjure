@@ -17,6 +17,7 @@ import qualified PrintUtils as Pr
 
 import Language.Essence.Lambda
 import {-# SOURCE #-} Language.Essence.Expr
+import Language.Essence.Type
 
 
 
@@ -39,9 +40,11 @@ instance ParsePrint QuantifierDecl where
             <*> (reserved "guard"    >> parse)
             <*> (reserved "identity" >> parse)
     pretty (QuantifierDecl app gua ide) =
-        "quantifier" Pr.$$
-        Pr.braces (
+        "quantifier" Pr.$$ Pr.braces (
             Pr.nest 4 ("append  " <+> pretty app) Pr.$$
             Pr.nest 4 ("guard   " <+> pretty gua) Pr.$$
             Pr.nest 4 ("identity" <+> pretty ide)
-        )
+            )
+
+instance TypeOf QuantifierDecl where
+    typeOf (QuantifierDecl glueOp guardOp iden) = typeOf iden -- also check for glueOp and guardOp
