@@ -328,7 +328,7 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
                     }
 
 *** ParsePrint
-    tuple of (int, bool)
+    tuple (int, bool)
     ~~ DomainTuple { components = [DomainIntegerList [],DomainBoolean]
                    , representation = Nothing
                    }
@@ -340,7 +340,7 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
                    }
 
 *** ParsePrint
-    tuple of (int, fool, tuple of (enum {foo, bar}, int(1..9)))
+    tuple (int, fool, tuple (enum {foo, bar}, int(1..9)))
     ~~ DomainTuple { components = [ DomainIntegerList []
                                   , Identifier "fool"
                                   , DomainTuple { components = [ DomainEnum {enums = ["foo","bar"], representation = Nothing}
@@ -383,7 +383,7 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
                  }
 
 *** ShouldParseTo
-    set (size n) of tuple of (a,b)
+    set (size n) of tuple (a,b)
     ~~ DomainSet { size = Just (Identifier "n")
                  , minSize = Nothing
                  , maxSize = Nothing
@@ -393,7 +393,7 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
                  }
 
 *** ParsePrint
-    set (size n) of tuple of (a, b)
+    set (size n) of tuple (a, b)
     ~~ DomainSet { size = Just (Identifier "n")
                  , minSize = Nothing
                  , maxSize = Nothing
@@ -538,7 +538,7 @@ function {1 -> set {2}, 3 -> mset {4}, 5 -> function {6 -> 6}, 7 -> (false, true
                   }
 
 *** ParsePrint
-    mset (size n) of tuple of (a, b)
+    mset (size n) of tuple (a, b)
     ~~ DomainMSet { size = Just (Identifier "n")
                   , minSize = Nothing
                   , maxSize = Nothing
