@@ -25,6 +25,7 @@ checkWhere ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [GNode]
+    , Has st [(GNode,GNode)]
     , Monad m
     , MonadError Doc m
     , MonadState st m
