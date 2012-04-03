@@ -12,7 +12,6 @@ import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
-import Data.Map ( elems )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, elements )
@@ -22,7 +21,7 @@ import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
-                       , GNode, fromGs
+                       , GNode
                        , MatchBind, BindingsMap )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyList, fromPairs )
