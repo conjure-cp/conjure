@@ -2,12 +2,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.Domain where
 
 import Control.Applicative
 import Control.Arrow ( first, second )
-import Control.Monad ( ap, liftM, msum )
+import Control.Monad ( ap, liftM, msum, void )
 import Control.Monad.Error ( MonadError, ErrorT, throwError, runErrorT )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
@@ -19,6 +20,7 @@ import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, elements )
 import Test.QuickCheck.Gen ( oneof )
 
+import Constants ( trace )
 import Has
 import GenericOps.Core ( NodeTag
                        , Hole, hole, HoleStatus(..)
@@ -35,8 +37,8 @@ import {-# SOURCE #-} Language.Essence.Expr
 import                Language.Essence.Identifier
 import                Language.Essence.Range
 import                Language.Essence.Type
-import {-# SOURCE #-} Language.Essence.Value
-import {-# SOURCE #-} Language.EssenceEvaluator ( deepSimplify )
+import {-# SOURCE #-} Language.Essence.Value ()
+import {-# SOURCE #-} Language.EssenceEvaluator ( deepSimplify, evaluate )
 
 
 
@@ -149,10 +151,9 @@ instance ParsePrint Domain where
                 return $ foldr DMatrix e is
 
             pTuple = do
-                reserved "tuple"
-                as <- parse
+                void $ optionMaybe $ reserved "tuple"
                 es <- parens (parse `sepBy` comma)
-                return $ AnyDom TTuple es as
+                return $ AnyDom TTuple es (DomainAttrs [])
 
             pSetMSet kw en = do
                 reserved kw
@@ -232,16 +233,18 @@ instance Arbitrary Domain where
         ]
 
 instance TypeOf Domain where
-    typeOf (DHole  i) = return $ THole i
+    typeOf p | trace ("typeOf Domain: " ++ show (pretty p)) False = undefined
+    typeOf (DHole i)  = typeOf i
     typeOf DBool      = return TBool
     typeOf (DInt  {}) = return TInt
-    typeOf (DEnum {}) = return $ TEnum Nothing
+    typeOf (DEnum   i _) = typeOf i
     typeOf (DUnnamed  x) = return $ TUnnamed x
     typeOf (DMatrix a b) = TMatrix `liftM` typeOf a `ap` typeOf b
     typeOf (AnyDom e ds _) = AnyType e `liftM` mapM typeOf ds
-    typeOf p@(Indices m (V (VInt ind))) = do
-
+    typeOf p@(Indices m ind') = do
+        ind <- evaluate ind'
         let
+            go :: Type -> Int -> Maybe Type
             go (TMatrix x _) 0 = return x
             go (TMatrix _ x) n = go x (n-1)
             go _ _ = Nothing
@@ -250,7 +253,6 @@ instance TypeOf Domain where
         case go tm ind of
             Nothing -> throwError $ "typeOf fail:" <+> pretty p
             Just t  -> return t
-    typeOf p@(Indices _ _) = throwError $ "typeOf fail:" <+> pretty p
 
 instance DomainOf Domain where
     domainOf = return
