@@ -33,9 +33,13 @@ import qualified PrintUtils as Pr
 
 import Language.Essence.Binding
 import Language.Essence.Expr
+import Language.Essence.Lambda
 import Language.Essence.Metadata
 import Language.Essence.Objective
+import Language.Essence.Op
+import Language.Essence.QuantifierDecl
 import Language.Essence.Type
+import Language.Essence.Value
 import Language.Essence.Where
 
 
@@ -52,6 +56,52 @@ data Spec
 
 instance Default Spec where
     def = Spec def def def def def def
+
+builtIns :: [Binding]
+builtIns =
+    [ LettingQuan "forAll"
+        $ QuantifierDecl ( Lambda
+                            [ ("__IN_forALL_x", TBool)
+                            , ("__IN_forALL_y", TBool)
+                            ]
+                            ( EOp And [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                         )
+                         ( Lambda
+                            [ ("__IN_forALL_x", TBool)
+                            , ("__IN_forALL_y", TBool)
+                            ]
+                            ( EOp Imply [ "__IN_forALL_x", "__IN_forALL_y" ] )
+                         )
+                         ( V $ VBool True )
+     , LettingQuan "exists"
+        $ QuantifierDecl ( Lambda
+                            [ ("__IN_forALL_x", TBool)
+                            , ("__IN_forALL_y", TBool)
+                            ]
+                            ( EOp Or [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                         )
+                         ( Lambda
+                            [ ("__IN_forALL_x", TBool)
+                            , ("__IN_forALL_y", TBool)
+                            ]
+                            ( EOp And [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                         )
+                         ( V $ VBool False )
+     , LettingQuan "sum"
+        $ QuantifierDecl ( Lambda
+                            [ ("__IN_forALL_x", TInt)
+                            , ("__IN_forALL_y", TInt)
+                            ]
+                            ( EOp Plus [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                         )
+                         ( Lambda
+                            [ ("__IN_forALL_x", TBool)
+                            , ("__IN_forALL_y", TInt )
+                            ]
+                            ( EOp Times [ EOp ToInt ["__IN_forALL_x"] , "__IN_forALL_y" ] )
+                         )
+                         ( V $ VInt 0 )
+     ]
 
 instance NodeTag Spec
 
@@ -87,7 +137,7 @@ instance ParsePrint Spec where
         (lang,ver) <- pLanguage
         topLevels  <- parse
         obj        <- optionMaybe parse
-        cons       <- pConstraints
+        cons       <- concat <$> many pConstraints
         eof
         return (Spec lang ver topLevels obj cons [])
         where
@@ -98,9 +148,11 @@ instance ParsePrint Spec where
                 return (l, map fromInteger is)
 
             pConstraints :: Parser [Expr]
-            pConstraints = choiceTry [ do reserved "such"; reserved "that"; sepEndBy parse comma
-                                     , return []
-                                     ]
+            pConstraints = do
+                reserved "such"
+                reserved "that"
+                sepEndBy parse comma
+
     pretty (Spec{..}) = Pr.vcat
         $  ("language" <+> text language <+> Pr.hcat (intersperse Pr.dot (map Pr.int version)))
         : text ""
@@ -118,12 +170,18 @@ instance ParsePrint Spec where
         ++ [text ""]
 
 
-typeCheckSpec :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m ()
+typeCheckSpec ::
+    ( Applicative m
+    , MonadError Doc m
+    , MonadWriter [Doc] m
+    ) => Spec -> m ()
 typeCheckSpec Spec {topLevels, objective, constraints}
     = flip evalStateT (def :: ( BindingsMap
                               , [GNode]
                               , [(GNode,GNode)]
                               )) $ do
+    forM_ builtIns $ addBinding'
+
     forM_ topLevels $ \ tl ->
         case tl of
             Left  b -> addBinding' b
@@ -134,8 +192,8 @@ typeCheckSpec Spec {topLevels, objective, constraints}
 
     forM_ objective $ \ o -> do
         t <- typeOf (objExpr o)
-        unless (isOrderedType t)
-               (throwError $ "Objective has to be of an ordered type: " <+> pretty o)
+        b <- isOrderedType t
+        unless b (throwError $ "Objective has to be of an ordered type: " <+> pretty o)
 
     forM_ constraints $ \ c -> do
         t <- typeOf c
