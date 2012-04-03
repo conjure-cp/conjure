@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Essence.Type where
 
@@ -11,6 +12,7 @@ import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
+import Data.Map ( elems )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, elements )
@@ -20,7 +22,7 @@ import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
-                       , GNode
+                       , GNode, fromGs
                        , MatchBind, BindingsMap )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyList, fromPairs )
@@ -28,18 +30,18 @@ import PrintUtils ( (<+>), Doc )
 import qualified PrintUtils as Pr
 import Has
 
-import {-# SOURCE #-} Language.Essence.Identifier
 import {-# SOURCE #-} Language.Essence.Expr
+import {-# SOURCE #-} Language.Essence.Identifier
 
 
 
 class TypeOf a where
     typeOf ::
         ( Applicative m
-        , MonadError Doc m
-        , MonadState st m
         , Has st BindingsMap
         , Has st [GNode]
+        , MonadError Doc m
+        , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m Type
 
@@ -52,13 +54,6 @@ typeUnify (AnyType e1 t1) (AnyType e2 t2) | e1 == e2  = and $ zipWith typeUnify 
                                           | otherwise = False
 typeUnify a b | a == b = True
 typeUnify _ _ = False
-
-
-isOrderedType :: Type -> Bool
-isOrderedType TBool {} = True
-isOrderedType TInt  {} = True
-isOrderedType TEnum {} = True
-isOrderedType _ = False
 
 
 data Type = TUnknown
@@ -201,13 +196,13 @@ instance MatchBind AnyTypeEnum
 
 instance ParsePrint AnyTypeEnum where
     fromPairs =
-                        [ ( TTuple    , "tuple"     )
-                        , ( TSet      , "set"       )
-                        , ( TMSet     , "mset"      )
-                        , ( TFunction , "function"  )
-                        , ( TRelation , "set"       )
-                        , ( TPartition, "partition" )
-                        ]
+        [ ( TTuple    , "tuple"     )
+        , ( TSet      , "set"       )
+        , ( TMSet     , "mset"      )
+        , ( TFunction , "function"  )
+        , ( TRelation , "set"       )
+        , ( TPartition, "partition" )
+        ]
 
 instance Arbitrary AnyTypeEnum where
     arbitrary = elements [minBound .. maxBound]
