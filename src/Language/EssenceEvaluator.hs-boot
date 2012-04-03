@@ -32,6 +32,7 @@ class Simplify a where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
+        , Has st [(GNode,GNode)]
         , Monad m
         , MonadError Doc m
         , MonadState st m
@@ -45,6 +46,7 @@ deepSimplify ::
     , GPlate a
     , Has st BindingsMap
     , Has st [GNode]
+    , Has st [(GNode,GNode)]
     , Monad m
     , MonadError Doc m
     , MonadState st m
@@ -55,6 +57,7 @@ simplifyReal ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [GNode]
+    , Has st [(GNode,GNode)]
     , Monad m
     , MonadError Doc m
     , MonadState st m
@@ -79,6 +82,7 @@ class Evaluate a b where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
+        , Has st [(GNode,GNode)]
         , Monad m
         , MonadError Doc m
         , MonadState st m

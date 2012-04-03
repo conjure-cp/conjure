@@ -16,6 +16,7 @@ import Control.Monad ( (<=<), forM )
 import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
 import Control.Monad.State ( MonadState, evalStateT, execStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
+import Data.Default ( def )
 import Data.Either ( lefts )
 import Data.List ( delete, genericIndex, genericLength, isSuffixOf, nub, sort )
 import Data.List.Split ( splitOn )
@@ -59,8 +60,9 @@ testFullEval s = do
                        , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
                        , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
                        ] 
-    (x',logs) <- runWriterT $ flip evalStateT ( m  :: BindingsMap
-                                              , [] :: [GNode]
+    (x',logs) <- runWriterT $ flip evalStateT ( m   :: BindingsMap
+                                              , def :: [GNode]
+                                              , def :: [(GNode,GNode)]
                                               ) $ runErrorT $ (evaluate <=< deepSimplify) x
     case x' of
         Left err  -> print err
@@ -77,8 +79,9 @@ testEval s = do
                        , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
                        , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
                        ] 
-    (x',logs) <- runWriterT $ flip evalStateT ( m  :: BindingsMap
-                                              , [] :: [GNode]
+    (x',logs) <- runWriterT $ flip evalStateT ( m   :: BindingsMap
+                                              , def :: [GNode]
+                                              , def :: [(GNode,GNode)]
                                               ) $ runErrorT $ evaluate x
     case x' of
         Left err  -> print err
@@ -95,8 +98,9 @@ testSimplify s = do
                        , ( "z", mkG ( unsafeParse (parse <* eof) "x+y" :: Expr ) )
                        , ( "m", mkG ( unsafeParse (parse <* eof) "[1,2,3,4,5]" :: Expr ) )
                        ] 
-    (x',logs) <- runWriterT $ flip evalStateT ( m  :: BindingsMap
-                                              , [] :: [GNode]
+    (x',logs) <- runWriterT $ flip evalStateT ( m   :: BindingsMap
+                                              , def :: [GNode]
+                                              , def :: [(GNode,GNode)]
                                               ) $ runErrorT $ deepSimplify x
     case x' of
         Left err  -> print err
@@ -130,6 +134,7 @@ class Simplify a where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
+        , Has st [(GNode,GNode)]
         , Monad m
         , MonadError Doc m
         , MonadState st m
@@ -154,6 +159,7 @@ runSimplify spec = do
                                     ) $ mapM_ addBinding' (lefts (topLevels spec))
     evalStateT (deepSimplify spec) ( bindings :: BindingsMap
                                    , []       :: [GNode]
+                                   , []       :: [(GNode,GNode)]
                                    )
 
 deepSimplify ::
@@ -161,6 +167,7 @@ deepSimplify ::
     , GPlate a
     , Has st BindingsMap
     , Has st [GNode]
+    , Has st [(GNode,GNode)]
     , Monad m
     , MonadError Doc m
     , MonadState st m
@@ -182,6 +189,7 @@ simplifyReal ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [GNode]
+    , Has st [(GNode,GNode)]
     , Monad m
     , MonadError Doc m
     , MonadState st m
@@ -430,6 +438,7 @@ class Evaluate a b where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
+        , Has st [(GNode,GNode)]
         , Monad m
         , MonadError Doc m
         , MonadState st m
