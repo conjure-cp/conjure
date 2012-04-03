@@ -234,14 +234,14 @@ instance Arbitrary Domain where
 
 instance TypeOf Domain where
     typeOf p | trace ("typeOf Domain: " ++ show (pretty p)) False = undefined
-    typeOf (DHole i)  = typeOf i
-    typeOf DBool      = return TBool
-    typeOf (DInt  {}) = return TInt
-    typeOf (DEnum   i _) = typeOf i
-    typeOf (DUnnamed  x) = return $ TUnnamed x
-    typeOf (DMatrix a b) = TMatrix `liftM` typeOf a `ap` typeOf b
-    typeOf (AnyDom e ds _) = AnyType e `liftM` mapM typeOf ds
-    typeOf p@(Indices m ind') = do
+    typeOf p@(DHole i)  = inScope (mkG p) $ typeOf i
+    typeOf    DBool     = return TBool
+    typeOf   (DInt  {}) = return TInt
+    typeOf p@(DEnum      i _) = inScope (mkG p) $ typeOf i
+    typeOf   (DUnnamed     x) = return $ TUnnamed x
+    typeOf p@(DMatrix    a b) = inScope (mkG p) $ TMatrix `liftM` typeOf a `ap` typeOf b
+    typeOf p@(AnyDom  e ds _) = inScope (mkG p) $ AnyType e `liftM` mapM typeOf ds
+    typeOf p@(Indices m ind') = inScope (mkG p) $ do
         ind <- evaluate ind'
         let
             go :: Type -> Int -> Maybe Type
