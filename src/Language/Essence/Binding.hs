@@ -12,7 +12,6 @@ import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
-import Data.Map ( elems )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
@@ -21,8 +20,8 @@ import Has
 import GenericOps.Core ( NodeTag
                        , Hole
                        , GPlate, gplate, gplateTwo
-                       , GNode, fromGs
-                       , MatchBind, BindingsMap, addBinding )
+                       , GNode
+                       , MatchBind, BindingsMap, addBinding, getBinding )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), Doc)
@@ -46,15 +45,16 @@ isOrderedType ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Type -> m Bool
+isOrderedType p | trace ("isOrderedType: " ++ show (pretty p)) False = undefined
 isOrderedType TBool {}  = return True
 isOrderedType TInt  {}  = return True
 isOrderedType TEnum {}  = return True
-isOrderedType (THole i) = do
-    st :: BindingsMap <- getM
-    let rs = flip map (fromGs (elems st)) $ \ j -> case j of
-                LettingType _ (TEnum (Just is)) | i `elem` is -> True
-                _ -> False
-    return $ or rs
+isOrderedType (THole (Identifier i)) = do
+    b <- getBinding i
+    case b of
+        Just (LettingType _ (TEnum {})) -> return True
+        Just (GivenType   _ (TEnum {})) -> return True
+        _ -> return False
 isOrderedType _ = return False
 
 addBinding' ::
