@@ -4,8 +4,11 @@
 
 #define DATADIR "datafiles/"
 
+-- #define DEBUG
+
 module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
                  , FreshName, getFreshName, newRuleVar, isFreshName, mkFreshNames
+                 , trace, traceM
                  ) where
 
 import Control.Monad.State ( MonadState )
@@ -17,6 +20,29 @@ import Data.Set as S ( Set, fromList )
 
 import Has
 import Utils ( strip )
+
+
+
+#ifdef DEBUG
+
+import qualified Debug.Trace as D
+
+trace :: String -> a -> a
+trace = D.trace
+
+traceM :: Monad m => String -> m ()
+traceM s = trace s $ return ()
+
+#else
+
+trace :: String -> a -> a
+trace _ = id
+
+traceM :: Monad m => String -> m ()
+traceM _ = return ()
+
+#endif
+
 
 
 
