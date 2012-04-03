@@ -8,7 +8,7 @@ module Language.Essence.Type where
 
 import Control.Applicative
 import Control.Arrow ( first )
-import Control.Monad.Error ( MonadError )
+import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
@@ -21,7 +21,7 @@ import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
-                       , GNode
+                       , GNode(..)
                        , MatchBind, BindingsMap )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyList, fromPairs )
@@ -39,6 +39,7 @@ class TypeOf a where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
+        , Has st [(GNode,GNode)]
         , MonadError Doc m
         , MonadState st m
         , MonadWriter [Doc] m
@@ -53,6 +54,55 @@ typeUnify (AnyType e1 t1) (AnyType e2 t2) | e1 == e2  = and $ zipWith typeUnify 
                                           | otherwise = False
 typeUnify a b | a == b = True
 typeUnify _ _ = False
+
+stackDepth :: Int
+stackDepth = 5
+
+typeError ::
+    ( Applicative m
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    ) => Doc -> m a
+typeError s = do
+    nodes :: [GNode]
+          <- take stackDepth <$> getM
+    throwError $ Pr.vcat $ s : [ Pr.nest 4 $ "in: " <+> pretty n
+                               | GNode _ n <- nodes
+                               ]
+
+typeErrorUnOp ::
+    ( Applicative m
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    ) => Type -> Doc -> m a
+typeErrorUnOp tx s = do
+    nodes :: [GNode]
+          <- take stackDepth <$> getM
+    throwError $ Pr.vcat $ s
+                         :  [ "The operand has type:" <+> pretty tx ]
+                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
+                            | GNode _ n <- nodes
+                            ]
+
+typeErrorBinOp ::
+    ( Applicative m
+    , Has st [GNode]
+    , MonadError Doc m
+    , MonadState st m
+    ) => Type -> Type -> Doc -> m a
+typeErrorBinOp tx ty s = do
+    nodes :: [GNode]
+          <- take stackDepth <$> getM
+    throwError $ Pr.vcat $ s
+                         :  [ "First  operand has type:" <+> pretty tx
+                            , "Second operand has type:" <+> pretty ty
+                            ]
+                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
+                            | GNode _ n <- nodes
+                            ]
+
 
 
 data Type = TUnknown
@@ -205,6 +255,5 @@ instance ParsePrint AnyTypeEnum where
 
 instance Arbitrary AnyTypeEnum where
     arbitrary = elements [minBound .. maxBound]
-
 
 
