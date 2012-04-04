@@ -58,9 +58,8 @@ parsePrintIsoFile _ f = HUnit.TestLabel ("ParsePrintIsoFile " ++ f) $ HUnit.Test
     case fst $ runReadIn f s of
         Left msg        -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse]: ", f, s, show msg])
         Right (x' :: a) -> let s' = renderDoc $ pretty x'
-                               f' = f ++ " [after ParsePrint]"
-                           in  case fst $ runReadIn f' s' of
-            Left msg  -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse pretty print]: ", f', s', show msg])
+                           in  case fst $ runReadIn f s' of
+            Left msg  -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse pretty print]: ", f, s', show msg])
             Right x'' -> assertEqual "ParsePrintIso [not equal]" x' x''
 
 eval :: [(String,GNode)] -> String -> String -> HUnit.Test
@@ -92,10 +91,10 @@ applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", 
             (mxs,_) <- runWriterT $ flip evalStateT ( M.empty         :: BindingsMap
                                                     , mkFreshNames [] :: [FreshName]
                                                     ) $ runErrorT $ applyRefnsDeep [r'] x
-            putStr " == BEFORE ==> "
-            print r
-            putStr " == AFTER  ==> "
-            print r'
+            -- putStr " == BEFORE ==> "
+            -- print r
+            -- putStr " == AFTER  ==> "
+            -- print r'
             case (mxs, result) of
                 (Left _  , []) -> return ()
                 (Left msg, _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr, show msg])
