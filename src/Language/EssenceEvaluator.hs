@@ -145,7 +145,8 @@ runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec ->
 runSimplify spec = do
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
                                     , []      :: [(GNode, GNode)]
-                                    ) $ mapM_ addBinding' (lefts (topLevels spec))
+                                    ) $ do mapM_ addBinding' builtIns
+                                           mapM_ addBinding' (lefts (topLevels spec))
     evalStateT (deepSimplify spec) ( bindings :: BindingsMap
                                    , []       :: [GNode]
                                    , []       :: [(GNode,GNode)]
@@ -282,6 +283,18 @@ instance Simplify Expr where
             [a,b] -> p ~~~> EHole $ Identifier $ a ++ "_" ++ b
             _     -> return Nothing
 
+    simplify p@(imageView -> Just ("glueOp", EHole (Identifier nm))) = do
+        q :: Maybe QuantifierDecl <- getBinding nm
+        case q of
+            Nothing -> error (show $ pretty p)
+            Just (QuantifierDecl l _ _) -> p ~~~> L l
+
+    simplify p@(imageView -> Just ("guardOp", EHole (Identifier nm))) = do
+        q :: Maybe QuantifierDecl <- getBinding nm
+        case q of
+            Nothing -> error (show $ pretty p)
+            Just (QuantifierDecl _ l _) -> p ~~~> L l
+
     simplify p@(Q q@(QuantifiedExpr {quanOverDom = Just (Indices (EHole (Identifier nm)) ind) })) = do
         val <- evaluate ind
         mdom <- getBinding nm
@@ -301,7 +314,15 @@ instance Simplify Expr where
                 | otherwise = i
         p ~~~> bottomUp f a
 
-
+    simplify p@(EOp Image [L (Lambda args template), V (VTuple params)]) =
+        if length args == length params
+            then do
+                let lu = zip (map fst args) params
+                let f (EHole i) = case lookup i lu of Nothing -> EHole i
+                                                      Just j  -> j
+                    f x = x
+                p ~~~> bottomUp f template
+            else throwError $ "Error while applying lambda:" $$ nest 4 (pretty p)
 
     simplify p@(EOp Plus  [x, V (VInt 0)]) = p ~~~> x
 
