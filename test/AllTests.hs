@@ -154,7 +154,7 @@ main = do
     -- let
     --     basedir :: FilePath
     --     basedir = "/Users/ozgurakgun/src/conjure-wd/"
-    specs <- getAllWithSuffix ".essence" "testdata/"
+    specs <- getAllWithSuffix ".essence" "testsuite/valid/essence/"
     defaultMain $ hUnitTestToTests . test $ parsingExpr
                                          ++ parsingValue
                                          ++ parsingQuantifiedExpr
