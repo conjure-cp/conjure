@@ -137,9 +137,8 @@ withParsed s comp = returningTrue $ case parseEither (parse <* eof) s of
 displayLogs :: (MonadIO m, MonadState REPLState m) => [Doc] -> m ()
 displayLogs logs = do
     fs <- gets flags
-    if PrintLogs `elem` fs
-        then liftIO $ putStrLn "[LOGS]" >> mapM_ (print . nest 4) logs
-        else return ()
+    when ( PrintLogs `elem` fs )
+         ( liftIO $ putStrLn "[LOGS]" >> mapM_ (print . nest 4) logs )
 
 -- displayRaw :: (MonadIO m, MonadState REPLState m, Show a) => a -> m ()
 -- displayRaw x = do
