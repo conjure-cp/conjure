@@ -1,42 +1,24 @@
-module Language.Essence
-    ( module Language.Essence.Binding
-    , module Language.Essence.Domain
-    , module Language.Essence.Expr
-    , module Language.Essence.Identifier
-    , module Language.Essence.Lambda
-    , module Language.Essence.Metadata
-    , module Language.Essence.Objective
-    , module Language.Essence.Op
-    , module Language.Essence.OpDescriptor
-    , module Language.Essence.QuantifiedExpr
-    , module Language.Essence.QuantifierDecl
-    , module Language.Essence.Range
-    , module Language.Essence.RuleRefn
-    , module Language.Essence.RuleRepr
-    , module Language.Essence.Spec
-    , module Language.Essence.Type
-    , module Language.Essence.Value
-    , module Language.Essence.Where
-    ) where
+module Language.Essence ( module All ) where
 
-import Language.Essence.Binding
-import Language.Essence.Domain
-import Language.Essence.Expr
-import Language.Essence.Identifier
-import Language.Essence.Lambda
-import Language.Essence.Metadata
-import Language.Essence.Objective
-import Language.Essence.Op
-import Language.Essence.OpDescriptor
-import Language.Essence.QuantifiedExpr
-import Language.Essence.QuantifierDecl
-import Language.Essence.Range
-import Language.Essence.RuleRefn
-import Language.Essence.RuleRepr
-import Language.Essence.Spec
-import Language.Essence.Type
-import Language.Essence.Value
-import Language.Essence.Where
+import Language.Essence.Binding             as All
+import Language.Essence.Domain              as All
+import Language.Essence.Expr                as All
+import Language.Essence.Identifier          as All
+import Language.Essence.Lambda              as All
+import Language.Essence.Metadata            as All
+import Language.Essence.Objective           as All
+import Language.Essence.Op                  as All
+import Language.Essence.OpDescriptor        as All
+import Language.Essence.QuantifiedExpr      as All
+import Language.Essence.QuantifierDecl      as All
+import Language.Essence.Range               as All
+import Language.Essence.RuleRefn            as All
+import Language.Essence.RuleRepr            as All
+import Language.Essence.Spec                as All
+import Language.Essence.Type                as All
+import Language.Essence.Value               as All
+import Language.Essence.Where               as All
+
 
 
 -- runTests :: IO ()
