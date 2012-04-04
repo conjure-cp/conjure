@@ -175,10 +175,20 @@ instance ParsePrint [Binding] where
                                 , do
                                     reserved "lambda"
                                     j <- parse
-                                    return [ LettingLambda i j | i <- is ]
+                                    return [ LettingLambda i j'
+                                           | i <- is
+                                           , let Identifier nm = i
+                                           , let prefix = "__INLAMBDA_" ++ nm ++ "_"
+                                           , let j' = scopeIdentifiersIf prefix j
+                                           ]
                                 , do
                                     j <- parse
-                                    return [ LettingQuan i j | i <- is ]
+                                    return [ LettingQuan i j'
+                                           | i <- is
+                                           , let Identifier nm = i
+                                           , let prefix = "__INQUAN_" ++ nm ++ "_"
+                                           , let j' = scopeIdentifiersIf prefix j
+                                           ]
                                 ]
                         return $ concat decls
                         <?> "letting statement"

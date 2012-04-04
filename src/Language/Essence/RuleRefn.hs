@@ -120,13 +120,25 @@ callRefn rules' specParam = do
     let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
     let rules = map (scopeIdentifiers newRuleVar) rules'
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
-                                   , []      :: [(GNode,GNode)]
-                                   ) $ mapM_ addBinding' (lefts (topLevels spec))
+                                    , []      :: [(GNode,GNode)]
+                                    ) $ mapM_ addBinding' (lefts (topLevels spec))
     results <- flip evalStateT ( bindings :: BindingsMap
                                , qNames   :: [FreshName]
-                               ) $ applyRefnsDeep rules spec
+                               ) $ applyRefnsDeepSpec rules spec
     ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
     mapM runSimplify ss
+
+
+applyRefnsDeepSpec ::
+    ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
+    , Monad m
+    , MonadError Doc m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => [RuleRefn] -> Spec -> m [Spec]
+applyRefnsDeepSpec = applyRefnsDeep
 
 
 applyRefnsDeep ::

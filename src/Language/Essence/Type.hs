@@ -81,8 +81,8 @@ typeErrorUnOp tx s = do
     nodes :: [GNode]
           <- take stackDepth <$> getM
     throwError $ Pr.vcat $ s
-                         :  [ "The operand has type:" <+> pretty tx ]
-                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
+                         :  ( "The operand has type:" <+> pretty tx )
+                         :  [ Pr.nest 4 $ "in: " <+> pretty n
                             | GNode _ n <- nodes
                             ]
 

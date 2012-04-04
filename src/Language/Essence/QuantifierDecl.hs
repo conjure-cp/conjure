@@ -9,11 +9,12 @@ import Data.Generics ( Data )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
-import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind )
+import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind, inScope, mkG )
 import ParsecUtils ( braces, reserved )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>) )
 import qualified PrintUtils as Pr
+import Utils ( allEq )
 
 import Language.Essence.Lambda
 import {-# SOURCE #-} Language.Essence.Expr
@@ -47,4 +48,15 @@ instance ParsePrint QuantifierDecl where
             )
 
 instance TypeOf QuantifierDecl where
-    typeOf (QuantifierDecl glueOp guardOp iden) = typeOf iden -- also check for glueOp and guardOp
+    typeOf p@(QuantifierDecl glueOp guardOp iden) = inScope (mkG p) $ do
+        tGlueOp  <- typeOf glueOp
+        tGuardOp <- typeOf guardOp
+        tIden    <- typeOf iden
+        case tGlueOp of
+            TLambda [a,a'] a'' | allEq [tIden,a,a',a''] -> return ()
+            _ -> inScope (mkG glueOp ) $ typeError "Type error in Quantifier declaration."
+        case tGuardOp of
+            TLambda [b,a] a' | b == TBool && allEq [tIden,a,a'] -> return ()
+            _ -> inScope (mkG guardOp) $ typeError "Type error in Quantifier declaration."
+        return tIden
+

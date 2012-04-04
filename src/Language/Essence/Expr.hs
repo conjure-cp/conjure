@@ -310,7 +310,7 @@ instance TypeOf Expr where
             if tx /= ty
                 then typeErrorBinOp tx ty "Type error: Comparing incompatible types."
                 else if bx && by
-                         then return TBool
+                         then return tx
                          else typeErrorBinOp tx ty "Type error: Comparing unordered types.";
 
     typeOf p@(EOp op [x])
