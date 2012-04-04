@@ -1,9 +1,11 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Language.Essence.Phases.NormaliseDomains ( normaliseDomains ) where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError )
+import Control.Monad ( (>=>) )
+import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.State ( MonadState, State, runState, runStateT )
 import Data.Default ( def )
 import Data.Maybe ( catMaybes )
@@ -11,7 +13,8 @@ import Data.Traversable ( forM )
 import qualified Control.Monad.State as S
 
 import Has
-import PrintUtils ( Doc )
+import PrintUtils ( Doc, (<+>) )
+import ParsePrint ( pretty )
 
 import Language.Essence
 
@@ -26,12 +29,29 @@ normaliseDomains spec = do
     (topLevels', newWheres) <-
         flip runStateT (def :: [Where]) $
             forM (topLevels spec) $ \ tl -> case tl of
-                Left (Find  i d) -> Left . Find  i <$> normaliseDomain i d
-                Left (Given i d) -> Left . Given i <$> normaliseDomain i d
+                Left (Find  i d) -> Left . Find  i <$> (multipleValuesCheck >=> normaliseDomain i) d
+                Left (Given i d) -> Left . Given i <$> (multipleValuesCheck >=> normaliseDomain i) d
                 _ -> return tl
 
     return spec { topLevels = topLevels' ++ map Right (reverse newWheres) }
 
+
+multipleValuesCheck :: MonadError Doc m => Domain -> m Domain
+multipleValuesCheck dom@(AnyDom de es (DomainAttrs attrs)) = do
+    attrs' <- flip S.evalStateT [] $ forM attrs $ \ attr -> case attr of
+        OnlyName ae -> do
+            aes <- S.get
+            if ae `elem` aes
+                then return (Just attr)
+                else S.modify (ae :) >> return (Just attr)
+        NameValue ae _ -> do
+            aes <- S.get
+            if ae `elem` aes
+                then throwError $ "Domain has multiple values for an attribute:" <+> pretty dom
+                else S.modify (ae :) >> return (Just attr)
+        DontCare -> return Nothing
+    return $ AnyDom de es $ DomainAttrs $ catMaybes attrs' ++ [ DontCare | DontCare `elem` attrs ]
+multipleValuesCheck dom = return dom
 
 
 normaliseDomain ::
@@ -58,7 +78,6 @@ normaliseDomain _ pDom@(AnyDom TSet [e] (DomainAttrs attrs)) =
             return $ AnyDom TSet [e] (DomainAttrs attrs')
         _ -> return pDom
 normaliseDomain _ d = return d
-
 
 
 -- given an attribute enum for a name-value kind of attribute,
