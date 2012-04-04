@@ -13,7 +13,7 @@ module Utils
     , safeStr
     , mapButLast, matchingOuterParens
     , equalLengths
-    , concatMapM
+    , concatMapM, allEq
     ) where
 
 import Control.Applicative
@@ -121,6 +121,9 @@ rwst :: (r -> s -> m (a, s, w)) -> RWST r w s m a
 rwst = RWST
 
 
+allEq :: Eq a => [a] -> Bool
+allEq [] = True
+allEq (x:xs) = all (x==) xs
 
 -- check if a String is wrapped in parens. any parens inside should match-up.
 -- matchingOuterParens "(foo)" = True
