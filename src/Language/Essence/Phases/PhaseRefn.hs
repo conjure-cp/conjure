@@ -8,21 +8,22 @@
 module Language.Essence.Phases.PhaseRefn where
 
 import Control.Applicative
-import Control.Monad ( (>=>), forM )
+import Control.Monad ( (>=>) )
 import Control.Monad.Error ( MonadError, throwError, catchError )
 import Control.Monad.State ( MonadState, evalStateT, execStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
 import Data.Either ( lefts )
-
+import Data.Foldable ( forM_ )
 import Data.List ( nub )
 import Data.Maybe ( catMaybes )
 import Data.Monoid ( Any(..), getAny )
 import qualified Data.Map as M
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
+import GenericOps.Core -- ( GPlate, GNode, BindingsMap, mkG, runMatch, runBind, universe, bottomUpM, topDownM )
 import Has ( Has, getM, putM, modifyM)
-import GenericOps.Core ( GPlate, GNode, BindingsMap, mkG, runMatch, runBind, universe, topDownM )
 import PrintUtils ( Doc, (<+>), text )
+import Utils ( concatMapM )
 import Utils.MonadList ( MonadList, option, runListT )
 
 import Language.Essence
@@ -46,12 +47,13 @@ callRefn rules' specParam = do
     let rules = map (scopeIdentifiers newRuleVar) rules'
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
                                     , []      :: [(GNode,GNode)]
-                                    ) $ mapM_ addBinding' (lefts (topLevels spec))
-    results <- flip evalStateT ( bindings :: BindingsMap
-                               , qNames   :: [FreshName]
-                               ) $ applyRefnsDeepSpec rules spec
-    ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
-    mapM runSimplify ss
+                                    ) $ do mapM_ addBinding' builtIns
+                                           mapM_ addBinding' (lefts (topLevels spec))
+    results  <- flip evalStateT ( bindings :: BindingsMap
+                                , qNames   :: [FreshName]
+                                ) $ applyRefnsDeepSpec rules spec
+    results' <- mapM runSimplify results
+    mapM runSimplify $ map (cleanUp . bubbleUp) results'
 
 
 applyRefnsDeepSpec ::
@@ -82,9 +84,8 @@ applyRefnsDeep rules x = do
     -- error $ show $ map pretty y
     tell logs
     if getAny b
-        then return y
-        else do tell ["[in applyRefnsDeep] No rule applications."]
-                return [x]
+        then concatMapM (applyRefnsDeep rules) y
+        else return [x]
     where
         tryApply ::
             ( Applicative m
@@ -103,18 +104,16 @@ applyRefnsDeep rules x = do
             case i of
                 Q (QuantifiedExpr {quanVar = Left (Identifier qnVar), quanOverDom = Just qnOverDom}) -> do
                     case M.lookup qnVar mp of
-                        Nothing -> modifyM (M.insert qnVar (mkG qnOverDom) :: BindingsMap -> BindingsMap)
                         Just _  -> throwError ("Name is already bound: " <+> text qnVar)
+                        Nothing -> modifyM (M.insert qnVar (mkG qnOverDom) :: BindingsMap -> BindingsMap)
                 _ -> return ()
 
             -- tell (Any False, ["tryApply:" <+> pretty i])
             res <- catchError
-                       ( do (j,logs) <- runWriterT $ runListT $ applyRefns rules i
+                       ( do (j,logs) <- runWriterT $ applyRefns rules i
                             case j of
-                                [] -> do tell (Any False, logs); option [i]
+                                [] -> do tell (Any False, logs); return i
                                 _  -> do tell (Any True , logs); option j
-                            -- tell (Any True, logs)
-                            -- return j
                        )
                        (\ e -> do tell (Any False, [e])
                                   return i
@@ -125,52 +124,24 @@ applyRefnsDeep rules x = do
             return res
 
 
-
--- applyRefnDeep ::
---     ( GPlate a
---     , Applicative m
---     , Monad m
---     , MonadError Doc m
---     , MonadList m
---     ) => RuleRefn -> a -> m a
--- applyRefnDeep rule x = do
---     (y,b) <- runWriterT $ bottomUpM tryApply x
---     if getAny b
---         then return y
---         else throwError "Rule not applied."
---     where
---         tryApply ::
---             ( Applicative m
---             , Monad m
---             , MonadError Doc m
---             , MonadList m
---             , MonadWriter Any m
---             ) => Expr -> m Expr
---         tryApply i = catchError (       tell (Any True ) >> applyRefn rule i )
---                                 (\ _ -> tell (Any False) >> return i         )
-
-
 applyRefns ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadList m
     , MonadState st m
     , MonadWriter [Doc] m
-    ) => [RuleRefn] -> Expr -> m Expr
+    ) => [RuleRefn] -> Expr -> m [Expr]
 applyRefns rs current = do
     -- tell ["[applyRefns]" <+> pretty current]
-    let one r = catchError ( Just <$> runListT (applyRefn r current) )
-                           (\ e -> do tell [e]; return Nothing )
+    let one r = catchError ( Just <$> applyRefn r current )
+                           (\ _ -> return Nothing )
+                           -- (\ e -> do tell [e]; return Nothing )
     (xs,logs) <- runWriterT $ mapM one rs
     tell logs
     let result = concat $ catMaybes xs
-    case result of
-        -- [] -> throwError $ Pr.vcat $ logs ++ ["[in applyRefns] Rules not applied:" <+> pretty current]
-        [] -> option []
-        _  -> option result
+    return result
 
 
 applyRefn ::
@@ -179,39 +150,21 @@ applyRefn ::
     , Has st [FreshName]
     , Monad m
     , MonadError Doc m
-    , MonadList m
     , MonadState st m
     , MonadWriter [Doc] m
-    ) => RuleRefn -> Expr -> m Expr
+    ) => RuleRefn -> Expr -> m [Expr]
 applyRefn (RuleRefn {..}) current = do
     mp :: BindingsMap <- getM
-    (res',_) <- flip evalStateT
+    res <- flip evalStateT
                     ( mp :: BindingsMap
                     , [] :: [(GNode,GNode)]
                     , [] :: [GNode]
                     ) $ do
         runMatch refnPattern current
-        newvars <- forM refnLocals $ \ l ->
+        forM_ refnLocals $ \ l ->
             case l of
-                Left b@(Find {}) -> Just <$> runBind b          -- new var in bubble alert!
-                Left  b -> addBinding' b >> return Nothing
-                Right w -> checkWhere w  >> return Nothing
-        res <- option =<< mapM runBind refnTemplates
-        return (res,catMaybes newvars)
-    res <- quanRename res'
-    return res
-    -- case (newvars,res) of
-    --     ([Find (Identifier nm) dom],Bubble a b bs) -> do
-    --         newname:_ <- gets snd; modify (second tail)
-    --         let a' = bottomUp (identifierRenamer nm newname) a
-    --         let b' = bottomUp (identifierRenamer nm newname) b
-    --         return $ Bubble a' b' (Left (Find (Identifier newname) dom) : bs)
-    --     _ -> return res -- probably should do more checks. what if two new vars?
+                Left  b -> addBinding' b
+                Right w -> checkWhere w
+        mapM runBind refnTemplates
+    mapM quanRename res
 
-
--- withLog :: MonadWriter [Doc] m => Doc -> m a -> m a
--- withLog d comp = do
---     tell ["START:" <+> d]
---     res <- comp
---     tell ["END:  " <+> d]
---     return res
