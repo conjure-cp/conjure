@@ -10,13 +10,12 @@ module Language.Essence.Phases.PhaseRefn where
 import Control.Applicative
 import Control.Monad ( (>=>) )
 import Control.Monad.Error ( MonadError, throwError, catchError )
-import Control.Monad.State ( MonadState, evalStateT, execStateT )
+import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
 import Data.Either ( lefts )
 import Data.Foldable ( forM_ )
 import Data.List ( nub )
 import Data.Maybe ( catMaybes )
-import Data.Monoid ( Any(..), getAny )
 import qualified Data.Map as M
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
@@ -32,7 +31,7 @@ import Language.Essence.Phases.CheckWhere ( checkWhere )
 import Language.Essence.Phases.CleanUp ( cleanUp )
 import Language.Essence.Phases.PostParse ( postParse )
 import Language.Essence.Phases.QuanRename ( quanRename )
-import Language.EssenceEvaluator ( runSimplify )
+import Language.EssenceEvaluator ( deepSimplify, runSimplify )
 
 
 
@@ -48,12 +47,11 @@ callRefn rules' specParam = do
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
                                     , []      :: [(GNode,GNode)]
                                     ) $ do mapM_ addBinding' builtIns
-                                           mapM_ addBinding' (lefts (topLevels spec))
-    results  <- flip evalStateT ( bindings :: BindingsMap
-                                , qNames   :: [FreshName]
-                                ) $ applyRefnsDeepSpec rules spec
-    results' <- mapM runSimplify results
-    mapM runSimplify $ map (cleanUp . bubbleUp) results'
+                                           mapM_ addBinding' $ lefts $ topLevels spec
+    results <- flip evalStateT ( bindings :: BindingsMap
+                               , qNames   :: [FreshName]
+                               ) $ applyRefnsDeepSpec rules spec
+    mapM runSimplify $ map (cleanUp . bubbleUp) results
 
 
 applyRefnsDeepSpec ::
@@ -79,11 +77,15 @@ applyRefnsDeep ::
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> a -> m [a]
 applyRefnsDeep rules x = do
-    (y,(b,logs)) <- runWriterT $ runListT $ topDownM tryApply x
-    -- (y,(b,logs)) <- runWriterT $ runListT $ bottomUpM tryApply x
-    -- error $ show $ map pretty y
-    tell logs
-    if getAny b
+    mp  :: BindingsMap <- getM
+    nms :: [FreshName] <- getM
+    -- tell [ pretty x ]
+    (y,(_,nms',b)) <- flip runStateT ( mp  :: BindingsMap
+                                     , nms :: [FreshName]
+                                     , False
+                                     ) $ runListT $ topDownM tryApply x
+    putM nms'
+    if b
         then concatMapM (applyRefnsDeep rules) y
         else return [x]
     where
@@ -91,11 +93,12 @@ applyRefnsDeep rules x = do
             ( Applicative m
             , Has st BindingsMap
             , Has st [FreshName]
+            , Has st Bool
             , Monad m
             , MonadError Doc m
             , MonadList m
             , MonadState st m
-            , MonadWriter (Any,[Doc]) m
+            , MonadWriter [Doc] m
             ) => Expr -> m Expr
         tryApply i = do
             mp :: BindingsMap <- getM
@@ -110,12 +113,12 @@ applyRefnsDeep rules x = do
 
             -- tell (Any False, ["tryApply:" <+> pretty i])
             res <- catchError
-                       ( do (j,logs) <- runWriterT $ applyRefns rules i
+                       ( do j <- applyRefns rules i
                             case j of
-                                [] -> do tell (Any False, logs); return i
-                                _  -> do tell (Any True , logs); option j
+                                [] -> return i
+                                _  -> do putM True; option j
                        )
-                       (\ e -> do tell (Any False, [e])
+                       (\ e -> do tell [e]
                                   return i
                        )
 
@@ -165,6 +168,6 @@ applyRefn (RuleRefn {..}) current = do
             case l of
                 Left  b -> addBinding' b
                 Right w -> checkWhere w
-        mapM runBind refnTemplates
+        mapM (runBind >=> deepSimplify) refnTemplates
     mapM quanRename res
 
