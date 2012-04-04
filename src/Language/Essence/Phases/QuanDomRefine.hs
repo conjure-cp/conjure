@@ -15,14 +15,8 @@ import GenericOps.Core ( BindingsMap, universe, bottomUp, topDownM )
 import PrintUtils ( Doc )
 import Utils.MonadList( MonadList, option, runListT )
 
-import Language.Essence.Expr
-import Language.Essence.Identifier
-import Language.Essence.Op
-import Language.Essence.QuantifiedExpr
-import {-# SOURCE #-} Language.Essence.RuleRepr
-import Language.Essence.Spec
-import Language.Essence.Phases.QuanRename
-
+import Language.Essence
+import Language.Essence.Phases.PhaseRepr ( applyReprsToDom )
 
 
 -- refining quantification over complex domains.

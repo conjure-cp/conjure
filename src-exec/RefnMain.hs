@@ -8,7 +8,7 @@ import System.Directory ( createDirectoryIfMissing )
 import System.Environment ( getArgs )
 import System.FilePath ( dropExtension )
 
-import Language.Essence.RuleRefn ( callRefn )
+import Language.Essence.Phases.PhaseRefn ( callRefn )
 import Language.Essence.Phases.ReadIn ( readIn )
 
 import ParsePrint ( pretty )

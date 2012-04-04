@@ -21,7 +21,6 @@ import Data.Either ( lefts )
 import Data.List ( delete, genericIndex, genericLength, isSuffixOf, nub, sort )
 import Data.List.Split ( splitOn )
 import qualified Data.Map as M
-import qualified Data.Set as S
 
 import Has
 import GenericOps.Core
@@ -29,17 +28,7 @@ import ParsecUtils ( parseIO, eof, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils
 
-import Language.Essence.Binding
-import Language.Essence.Domain
-import Language.Essence.Expr
-import Language.Essence.Identifier
-import Language.Essence.Op
-import Language.Essence.OpDescriptor
-import Language.Essence.QuantifiedExpr
-import Language.Essence.Range
-import Language.Essence.Spec
-import Language.Essence.Type
-import Language.Essence.Value
+import Language.Essence
 
 
 -- import Control.Monad.IO.Class

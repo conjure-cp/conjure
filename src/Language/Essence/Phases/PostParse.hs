@@ -4,6 +4,8 @@
 
 module Language.Essence.Phases.PostParse where
 
+import Control.Applicative
+import Control.Monad ( (>=>) )
 import Control.Monad.Error ( MonadError, throwError )
 import Data.Maybe ( mapMaybe )
 
@@ -11,14 +13,8 @@ import GenericOps.Core ( bottomUp, bottomUpM )
 import ParsePrint ( pretty )
 import PrintUtils ( Doc, nest, vcat )
 
-import Language.Essence.Binding
-import Language.Essence.Domain
-import Language.Essence.Expr
-import Language.Essence.Identifier
-import Language.Essence.Range
-import Language.Essence.Spec
-import Language.Essence.Type
-import Language.Essence.Value
+import Language.Essence
+import Language.Essence.Phases.NormaliseDomains ( normaliseDomains )
 
 
 
@@ -31,8 +27,8 @@ import Language.Essence.Value
 -- when it refers to an enum type, it should be: "DEnum (Identifier nm) RAll"
 -- see: enumIdentifiersDom
 
-postParse :: forall m . MonadError Doc m => Spec -> m Spec
-postParse spec = bottomUpM enumIdentifiers (bottomUp enumDomains spec)
+postParse :: forall m . (Applicative m, MonadError Doc m) => Spec -> m Spec
+postParse spec = (normaliseDomains >=> bottomUpM enumIdentifiers) (bottomUp enumDomains spec)
     where
 
         typeBindings :: ([String],[Type])
