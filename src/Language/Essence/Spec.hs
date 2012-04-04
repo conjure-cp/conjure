@@ -61,44 +61,44 @@ builtIns :: [Binding]
 builtIns =
     [ LettingQuan "forAll"
         $ QuantifierDecl ( Lambda
-                            [ ("__IN_forALL_x", TBool)
-                            , ("__IN_forALL_y", TBool)
+                            [ ("x", TBool)
+                            , ("y", TBool)
                             ]
-                            ( EOp And [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                            ( EOp And [ "x" , "y" ] )
                          )
                          ( Lambda
-                            [ ("__IN_forALL_x", TBool)
-                            , ("__IN_forALL_y", TBool)
+                            [ ("x", TBool)
+                            , ("y", TBool)
                             ]
-                            ( EOp Imply [ "__IN_forALL_x", "__IN_forALL_y" ] )
+                            ( EOp Imply [ "x", "y" ] )
                          )
                          ( V $ VBool True )
      , LettingQuan "exists"
         $ QuantifierDecl ( Lambda
-                            [ ("__IN_forALL_x", TBool)
-                            , ("__IN_forALL_y", TBool)
+                            [ ("x", TBool)
+                            , ("y", TBool)
                             ]
-                            ( EOp Or [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                            ( EOp Or [ "x" , "y" ] )
                          )
                          ( Lambda
-                            [ ("__IN_forALL_x", TBool)
-                            , ("__IN_forALL_y", TBool)
+                            [ ("x", TBool)
+                            , ("y", TBool)
                             ]
-                            ( EOp And [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                            ( EOp And [ "x" , "y" ] )
                          )
                          ( V $ VBool False )
      , LettingQuan "sum"
         $ QuantifierDecl ( Lambda
-                            [ ("__IN_forALL_x", TInt)
-                            , ("__IN_forALL_y", TInt)
+                            [ ("x", TInt)
+                            , ("y", TInt)
                             ]
-                            ( EOp Plus [ "__IN_forALL_x" , "__IN_forALL_y" ] )
+                            ( EOp Plus [ "x" , "y" ] )
                          )
                          ( Lambda
-                            [ ("__IN_forALL_x", TBool)
-                            , ("__IN_forALL_y", TInt )
+                            [ ("x", TBool)
+                            , ("y", TInt )
                             ]
-                            ( EOp Times [ EOp ToInt ["__IN_forALL_x"] , "__IN_forALL_y" ] )
+                            ( EOp Times [ EOp ToInt ["x"] , "y" ] )
                          )
                          ( V $ VInt 0 )
      ]
