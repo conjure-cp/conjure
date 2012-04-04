@@ -9,11 +9,9 @@ import Control.Applicative
 import Control.Monad ( liftM, msum )
 import Control.Monad.Error ( throwError )
 import Data.Generics ( Data )
-import Data.List ( isPrefixOf )
 import Data.List.Split ( splitOn )
 import Data.Map ( elems )
 import Data.Maybe ( mapMaybe )
--- import Data.Set as S ( member )
 import Data.String ( IsString, fromString )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
@@ -122,16 +120,12 @@ scopeIdentifiers prefix = bottomUp f
     where
         f p@(Identifier "_") = p
         -- f p@(Identifier nm ) | S.member nm reservedSet = p
-        f p@(Identifier nm ) | nm `elem` ["forAll","exists","sum","indices","refn","repr","domSize"] = p
+        f p@(Identifier nm ) | nm `elem` [ "forAll", "exists", "sum"
+                                         , "indices", "refn", "repr", "domSize"
+                                         , "glueOp", "guardOp"
+                                         ] = p
         f   (Identifier nm ) = Identifier (prefix nm)
 
-scopeIdentifiersIf :: GPlate a => String -> a -> a
-scopeIdentifiersIf prefix = bottomUp f
-    where
-        f p@(Identifier "_") = p
-        f p@(Identifier nm ) | nm `elem` ["forAll","exists","sum","indices","refn","repr","domSize"] = p
-        f p@(Identifier nm ) | prefix `isPrefixOf` nm = p
-        f   (Identifier nm ) = Identifier (prefix ++ nm)
 
 -- rename a single identifier.
 identifierRenamer :: String -> String -> Identifier -> Identifier
