@@ -13,7 +13,7 @@ import Data.Traversable ( forM )
 import qualified Control.Monad.State as S
 
 import Has
-import PrintUtils ( Doc, (<+>) )
+import PrintUtils ( Doc, ($$), nest )
 import ParsePrint ( pretty )
 
 import Language.Essence
@@ -47,7 +47,7 @@ multipleValuesCheck dom@(AnyDom de es (DomainAttrs attrs)) = do
         NameValue ae _ -> do
             aes <- S.get
             if ae `elem` aes
-                then throwError $ "Domain has multiple values for an attribute:" <+> pretty dom
+                then throwError $ "Domain has multiple values for an attribute." $$ nest 4 (pretty dom)
                 else S.modify (ae :) >> return (Just attr)
         DontCare -> return Nothing
     return $ AnyDom de es $ DomainAttrs $ catMaybes attrs' ++ [ DontCare | DontCare `elem` attrs ]
