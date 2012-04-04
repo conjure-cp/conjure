@@ -25,8 +25,9 @@ import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( renderDoc )
 
 import Language.Essence
-import Language.EssenceEvaluator ( deepSimplify )
+import Language.Essence.Phases.PhaseRefn ( applyRefnsDeep )
 import Language.Essence.Phases.ReadIn ( ReadIn, runReadIn )
+import Language.EssenceEvaluator ( deepSimplify )
 
 
 
@@ -164,8 +165,10 @@ main = do
                                          ++ parsingType
                                          ++ parsingDomain
                                          ++ parsingSpec specs
-                                            -- ++ parsingRepr
-                                            -- ++ parsingRefn
+                                         ++ parsingRepr
+                                         ++ parsingRefn
+                                         ++ evaluating
+                                         ++ applyingRefn
 
     where
 
