@@ -37,6 +37,7 @@ import Utils
 import {-# SOURCE #-} Language.Essence.Binding
 import {-# SOURCE #-} Language.Essence.Domain
 import                Language.Essence.Identifier
+import {-# SOURCE #-} Language.Essence.Lambda
 import                Language.Essence.Op
 import {-# SOURCE #-} Language.Essence.OpDescriptor
 import {-# SOURCE #-} Language.Essence.QuantifiedExpr
@@ -51,6 +52,7 @@ data Expr = EHole Identifier
     | V Value
     | D Domain
     | Q QuantifiedExpr
+    | L Lambda
     | Bubble Expr Expr [Either Binding Where]
     | EOp Op [Expr]
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
@@ -59,6 +61,7 @@ isAtomicExpr :: Expr -> Bool
 isAtomicExpr (EHole {}) = True
 isAtomicExpr (V     {}) = True
 isAtomicExpr (D     {}) = True
+isAtomicExpr (L     {}) = True
 isAtomicExpr _          = False
 
 instance IsString Expr where
@@ -76,6 +79,7 @@ instance GPlate Expr where
     gplate (V     x) = gplateSingle V     x
     gplate (D     x) = gplateSingle D     x
     gplate (Q     x) = gplateSingle Q     x
+    gplate (L     x) = gplateSingle L     x
     -- gplate p@(Bubble {}) = gplateLeaf p
     gplate (Bubble x y bs) =
         ( mkG x : mkG y : map mkG bs
@@ -177,6 +181,7 @@ instance ParsePrint Expr where
                                , parens    parse
                                , V     <$> parse
                                , D     <$> parse
+                               , reserved "lambda" >> L <$> parse
                                ] ++ pLispyAndSpecial
 
             pBubble :: Parser Expr
@@ -191,6 +196,7 @@ instance ParsePrint Expr where
     pretty (V     x) = pretty x
     pretty (D     x) = pretty x
     pretty (Q     x) = Pr.parens (pretty x)
+    pretty (L     x) = "lambda" <+> pretty x
     pretty (Bubble x y bs) = Pr.parens (pretty x <+> "@" <+> bsPretty <+> pretty y)
         where
             bsPretty = case bs of [] -> Pr.empty
