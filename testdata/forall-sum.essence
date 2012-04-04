@@ -14,7 +14,7 @@ letting myForall be quantifier {
 
 letting mySum be quantifier {
     append   { x:int , y:int --> x + y }
-    guard    { x:bool, y:int --> x * y }
+    guard    { x:bool, y:int --> toInt(x) * y }
     identity 0 }
 
 such that
