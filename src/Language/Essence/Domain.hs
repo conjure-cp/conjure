@@ -270,7 +270,7 @@ instance GPlate DomainAttrs where
     gplate (DomainAttrs xs) = gplateUniList DomainAttrs xs
 
 instance MatchBind DomainAttrs where
-    match p@(DomainAttrs ps) a@(DomainAttrs as) = inScope (mkG p, mkG a) $ do
+    match p@(DomainAttrs ps) a@(DomainAttrs as) = inScope (mkG p, mkG a) $
         helper (DontCare `elem` ps)
                (sort $ filter (/=DontCare) ps)
                (sort $ filter (/=DontCare) as)

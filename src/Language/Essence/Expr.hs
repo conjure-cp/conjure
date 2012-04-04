@@ -257,7 +257,7 @@ instance TypeOf Expr where
             ty <- typeOf y
             if tx == ty
                 then return TBool
-                else typeErrorBinOp tx ty $ "Type error: Equality on incompatible types."
+                else typeErrorBinOp tx ty "Type error: Equality on incompatible types."
 
     typeOf p@(EOp Not [x])
         = typeOfOp p [x] [(TBool==)] TBool

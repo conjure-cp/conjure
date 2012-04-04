@@ -31,3 +31,9 @@ instance MatchBind Identifier
 instance ParsePrint Identifier
 instance Arbitrary Identifier
 -- instance TypeOf Identifier
+
+
+
+scopeIdentifiers :: GPlate a => (String -> String) -> a -> a
+
+identifierRenamer :: String -> String -> Identifier -> Identifier

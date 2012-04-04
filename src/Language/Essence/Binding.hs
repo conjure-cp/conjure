@@ -8,7 +8,7 @@
 module Language.Essence.Binding where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
@@ -175,20 +175,10 @@ instance ParsePrint [Binding] where
                                 , do
                                     reserved "lambda"
                                     j <- parse
-                                    return [ LettingLambda i j'
-                                           | i <- is
-                                           , let Identifier nm = i
-                                           , let prefix = "__INLAMBDA_" ++ nm ++ "_"
-                                           , let j' = scopeIdentifiersIf prefix j
-                                           ]
+                                    return [ LettingLambda i j | i <- is ]
                                 , do
                                     j <- parse
-                                    return [ LettingQuan i j'
-                                           | i <- is
-                                           , let Identifier nm = i
-                                           , let prefix = "__INQUAN_" ++ nm ++ "_"
-                                           , let j' = scopeIdentifiersIf prefix j
-                                           ]
+                                    return [ LettingQuan i j | i <- is ]
                                 ]
                         return $ concat decls
                         <?> "letting statement"
@@ -208,9 +198,8 @@ instance TypeOf Binding where
     typeOf (Given         _ d) = typeOf d
     typeOf (LettingDomain _ d) = typeOf d
     typeOf (LettingExpr   _ x) = typeOf x
-    typeOf (LettingLambda _ l) = typeOf l
-    typeOf (LettingQuan   i _) = throwError $ "Type error: " <+> pretty i
-
+    typeOf (LettingLambda _ x) = typeOf x
+    typeOf (LettingQuan   _ x) = typeOf x
     typeOf (LettingType   i (TEnum {})) = return (THole i)
     typeOf (LettingType   _ t         ) = return t
     typeOf (GivenType     i (TEnum {})) = return (THole i)

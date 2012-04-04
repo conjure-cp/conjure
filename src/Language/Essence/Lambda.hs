@@ -14,7 +14,7 @@ import qualified Control.Monad.State as S
 import GenericOps.Core ( NodeTag
                        , Hole
                        , GPlate, fromGs, mkG, gplate, gplateError
-                       , MatchBind, addBinding )
+                       , MatchBind, addBinding, inScope )
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty, prettyListDoc )
 import PrintUtils ( (<+>), (<>) )
@@ -59,7 +59,8 @@ instance ParsePrint Lambda where
         where argsDoc = map (\ (i,t) -> pretty i <> Pr.colon <+> pretty t ) args
 
 instance TypeOf Lambda where
-    typeOf (Lambda xs x) = do
+    typeOf l = inScope (mkG l) $ do
+        let Lambda xs x = scopeIdentifiers ("__INLAMBDA_"++) l
         st  <- S.get
         forM_ xs $ \ (Identifier i,t) -> addBinding i t
         res <- TLambda (map snd xs) <$> typeOf x

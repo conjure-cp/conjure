@@ -9,7 +9,11 @@ import Data.Generics ( Data )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
-import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind, inScope, mkG )
+import GenericOps.Core ( NodeTag
+                       , Hole
+                       , GPlate, gplate, gplateError
+                       , mkG, fromG
+                       , MatchBind, inScope )
 import ParsecUtils ( braces, reserved )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>) )
@@ -29,7 +33,15 @@ instance NodeTag QuantifierDecl
 
 instance Hole QuantifierDecl
 
-instance GPlate QuantifierDecl -- everything is a leaf!
+instance GPlate QuantifierDecl where
+    gplate (QuantifierDecl l1 l2 x) =
+        ( [mkG l1, mkG l2, mkG x]
+        , \ xs -> case xs of
+                    [gl1',gl2',gx'] -> case (fromG gl1', fromG gl2', fromG gx') of
+                                        (Just l1', Just l2', Just x') -> QuantifierDecl l1' l2' x'
+                                        _ -> gplateError "QuantifierDecl[2]"
+                    _ -> gplateError "QuantifierDecl[1]"
+        )
 
 instance MatchBind QuantifierDecl
 

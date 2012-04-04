@@ -8,7 +8,7 @@
 module Language.Essence.Spec where
 
 import Control.Applicative
-import Control.Monad ( unless )
+import Control.Monad ( unless, void )
 import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.State ( evalStateT )
 import Control.Monad.Writer ( MonadWriter )
@@ -184,7 +184,9 @@ typeCheckSpec Spec {topLevels, objective, constraints}
 
     forM_ topLevels $ \ tl ->
         case tl of
-            Left  b -> addBinding' b
+            Left  b -> do
+                addBinding' b
+                void (typeOf b)
             Right w -> do
                 t <- typeOf (whereExpr w)
                 unless (t == TBool)
