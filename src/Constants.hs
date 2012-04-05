@@ -7,7 +7,9 @@
 -- #define DEBUG
 
 module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
-                 , FreshName, getFreshName, newRuleVar, isFreshName, mkFreshNames
+                 , FreshName, getFreshName, newRuleVar, isFreshName
+                 , mkFreshNames
+                 , mkPrettyFreshNames
                  , trace, traceM
                  ) where
 
@@ -85,11 +87,13 @@ ruleVarPrefix = "__INRULE_"
 
 newtype FreshName = FreshName String
 
-freshNames :: [String]
-freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
-
 mkFreshNames :: [String] -> [FreshName]
 mkFreshNames used = map FreshName (freshNames \\ used)
+    where freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
+
+mkPrettyFreshNames :: [String] -> [FreshName]
+mkPrettyFreshNames used = map FreshName (freshNames \\ used)
+    where freshNames = words "i j k l" ++ [ "q" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 getFreshName :: (MonadState st m, Has st [FreshName]) => m String
 getFreshName = do
