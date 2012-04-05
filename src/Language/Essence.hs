@@ -15,6 +15,7 @@ import Language.Essence.Range               as All
 import Language.Essence.RuleRefn            as All
 import Language.Essence.RuleRepr            as All
 import Language.Essence.Spec                as All
+import Language.Essence.StructuredVar       as All
 import Language.Essence.Type                as All
 import Language.Essence.Value               as All
 import Language.Essence.Where               as All
