@@ -82,9 +82,18 @@ opDescriptor = helper
                     assoc
             )
             ( \ prettyPrec envPrec x y -> case assoc of
-                    AssocLeft  -> Pr.parensIf (envPrec > prec) $ prettyPrec  prec    x <+> text (opFace op) <+> prettyPrec (prec+1) y
-                    AssocNone  -> Pr.parensIf (envPrec > prec) $ prettyPrec (prec+1) x <+> text (opFace op) <+> prettyPrec (prec+1) y
-                    AssocRight -> Pr.parensIf (envPrec > prec) $ prettyPrec (prec+1) x <+> text (opFace op) <+> prettyPrec  prec    y
+                    AssocLeft  -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    x
+                                                                        , text (opFace op)
+                                                                        , prettyPrec (prec+1) y
+                                                                        ]
+                    AssocNone  -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) x
+                                                                        , text (opFace op)
+                                                                        , prettyPrec (prec+1) y
+                                                                        ]
+                    AssocRight -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) x
+                                                                        , text (opFace op)
+                                                                        , prettyPrec  prec    y
+                                                                        ]
             )
 
         genPrefix :: Op -> OpDescriptor

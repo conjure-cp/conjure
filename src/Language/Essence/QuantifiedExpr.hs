@@ -230,23 +230,24 @@ instance ParsePrint QuantifiedExpr where
             f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
         return (f qnVars)
     pretty (QuantifiedExpr qnName qnVar qnDom qnExpr qnGuard qnBody)
-        =   pretty qnName
-        <+> pretty qnVar
-        <+> ( case qnDom of
-                Nothing -> Pr.empty
-                Just i  -> Pr.colon  <+> pretty i
-            )
-        <+> ( case qnExpr of
-                Nothing     -> Pr.empty
-                Just (op,i) -> pretty op <+> pretty i
-            )
-        <>  ( case qnGuard of
-                QuanGuard []  -> Pr.empty
-                QuanGuard [i] -> Pr.comma <+> pretty i
-                _   -> error "Multiple guards, what the hell?"
-            )
-        <+> Pr.dot
-        Pr.$$ Pr.nest 4 (pretty qnBody)
+        = let header =  pretty qnName
+                    <+> pretty qnVar
+                    <+> ( case qnDom of
+                            Nothing -> Pr.empty
+                            Just i  -> Pr.colon  <+> pretty i
+                        )
+                    <+> ( case qnExpr of
+                            Nothing     -> Pr.empty
+                            Just (op,i) -> pretty op <+> pretty i
+                        )
+                    <>  ( case qnGuard of
+                            QuanGuard []  -> Pr.empty
+                            QuanGuard [i] -> Pr.comma <+> pretty i
+                            _   -> error "Multiple guards, what the hell?"
+                        )
+                    <+> Pr.dot
+              body = pretty qnBody
+          in  Pr.hang header 4 body
 
 instance TypeOf QuantifiedExpr where
     typeOf p@(QuantifiedExpr (Identifier qnName)
