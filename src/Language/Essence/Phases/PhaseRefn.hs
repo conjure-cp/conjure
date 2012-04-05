@@ -9,22 +9,23 @@ module Language.Essence.Phases.PhaseRefn where
 
 import Control.Applicative
 import Control.Monad ( (<=<), (>=>) )
-import Control.Monad.Error ( MonadError, throwError, catchError )
+import Control.Monad.Error ( MonadError, catchError )
 import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
 import Data.Either ( lefts )
 import Data.Foldable ( forM_ )
 import Data.List ( nub )
 import Data.Maybe ( catMaybes )
+import Unsafe.Coerce ( unsafeCoerce )
 import qualified Data.Map as M
+import qualified Data.Typeable as T
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
-import GenericOps.Core ( GPlate, GNode, BindingsMap, mkG, runMatch, runBind, universe, topDownM )
-import Has ( Has, getM, putM, modifyM)
+import GenericOps.Core ( GPlate, gplate, GNode(..), BindingsMap, mkG, fromGs, runMatch, runBind, universe )
+import Has ( Has, getM, putM )
 import ParsePrint ( pretty )
-import PrintUtils ( Doc, (<+>), text, nest )
+import PrintUtils ( Doc, (<+>), nest )
 import Utils ( concatMapM )
-import Utils.MonadList ( MonadList, option, runListT )
 
 import Language.Essence
 import Language.Essence.Phases.BubbleUp ( bubbleUp )
@@ -65,8 +66,7 @@ applyRefnsDeepSpec ::
     ) => [RuleRefn] -> Spec -> m [Spec]
 applyRefnsDeepSpec = applyRefnsDeep
 
-
-applyRefnsDeep ::
+applyRefnsDeep :: forall a st m .
     ( GPlate a
     , Applicative m
     , Has st BindingsMap
@@ -75,59 +75,83 @@ applyRefnsDeep ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> a -> m [a]
-applyRefnsDeep rules x = do
-    mp  :: BindingsMap <- getM
-    nms :: [FreshName] <- getM
-    (y,(_,nms',b)) <- flip runStateT ( mp  :: BindingsMap
-                                     , nms :: [FreshName]
-                                     , False
-                                     ) $ runListT $ topDownM tryApply x
-    putM nms'
-    if b
-        then concatMapM (applyRefnsDeep rules) y
-        else return [x]
+applyRefnsDeep rules param = do
+    let func = funcFromRules rules
+    let
+        runner :: GNode -> m [GNode]
+        runner gparam = do
+            mp  :: BindingsMap <- getM
+            nms :: [FreshName] <- getM
+            (results,(_,nms',_)) <- flip runStateT ( mp  :: BindingsMap
+                                                   , nms :: [FreshName]
+                                                   , False
+                                                   -- , []  :: [GNode]
+                                                   ) $ treeWalker func gparam
+            putM nms'
+            return results
+    results <- runner $ mkG param
+    return $ fromGs results
+
+
+funcFromRules ::
+    ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
+    -- , Has st [GNode]
+    , Has st Bool
+    , MonadError Doc m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => [RuleRefn] -> Expr -> m [Expr]
+funcFromRules rules i = catchError
+        ( do
+            j <- applyRefns rules i
+            case j of
+                [] -> return [i]
+                _  -> do
+                    putM True
+                    tell $ ("***" <+> prettyNoParens i)
+                         : map (nest 4 . ("~~>" <+>) . prettyNoParens) j
+                    return j
+        )
+        (\ e -> do
+                    tell [e]
+                    return [i]
+        )
     where
         prettyNoParens :: Expr -> Doc
-        prettyNoParens (Q i) = pretty i
-        prettyNoParens i     = pretty i
+        prettyNoParens (Q x) = pretty x
+        prettyNoParens x     = pretty x
 
-        tryApply ::
-            ( Applicative m
-            , Has st BindingsMap
-            , Has st [FreshName]
-            , Has st Bool
-            , MonadError Doc m
-            , MonadList m
-            , MonadState st m
-            , MonadWriter [Doc] m
-            ) => Expr -> m Expr
-        tryApply i = do
-            mp :: BindingsMap <- getM
 
-            -- adding the quantified variable to the state.
-            case i of
-                Q (QuantifiedExpr {quanVar = Left (Identifier qnVar), quanOverDom = Just qnOverDom}) -> do
-                    case M.lookup qnVar mp of
-                        Just _  -> throwError ("Name is already bound: " <+> text qnVar)
-                        Nothing -> modifyM (M.insert qnVar (mkG qnOverDom) :: BindingsMap -> BindingsMap)
-                _ -> return ()
-
-            res <- catchError
-                       ( do j <- applyRefns rules i
-                            case j of
-                                [] -> return i
-                                _  -> do putM True
-                                         tell $ ("***" <+> prettyNoParens i)
-                                              : map (nest 4 . ("~~>" <+>) . prettyNoParens) j
-                                         option j
-                       )
-                       (\ e -> do tell [e]
-                                  return i
-                       )
-
-            -- rest state to init.
-            putM mp
-            return res
+treeWalker :: forall m st .
+    ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
+    -- , Has st [GNode]
+    , Has st Bool
+    , MonadError Doc m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => (Expr -> m [Expr]) -> GNode -> m [GNode]
+treeWalker f gx = do
+    putM False
+    -- modifyM ((gx:) :: [GNode] -> [GNode])
+    result <- case gx of
+        GNode tx x' | tx == T.typeOf (undefined :: Expr) -> do
+            let x = unsafeCoerce x' :: Expr
+            let (children, generate) = gplate x
+            results :: [Expr]
+                   <- map generate . sequence <$> mapM (treeWalker f) children
+            map mkG <$> concatMapM f results
+        GNode _  x -> do
+            let (children, generate) = gplate x
+            map mkG . map generate . sequence <$> mapM (treeWalker f) children
+    -- modifyM (tail :: [GNode] -> [GNode])
+    b <- getM
+    if b
+        then putM False >> concatMapM (treeWalker f) result
+        else putM False >> return result
 
 
 applyRefns ::
