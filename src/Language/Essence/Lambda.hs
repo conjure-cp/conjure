@@ -63,6 +63,6 @@ instance TypeOf Lambda where
         let Lambda xs x = scopeIdentifiers ("__INLAMBDA_"++) l
         st  <- S.get
         forM_ xs $ \ (Identifier i,t) -> addBinding i t
-        res <- TLambda (map snd xs) <$> typeOf x
+        res <- TLambda (map snd xs) <$> inScope (mkG x) (typeOf x)
         S.put st
         return res

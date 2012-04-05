@@ -60,7 +60,7 @@ callRepr rules' specParam = do
     results      <- flip evalStateT ( bindings :: BindingsMap
                                     , qNames   :: [FreshName]
                                     ) $ applyReprsToSpec rules spec
-    ss <- fmap (map cleanUp) $ mapM runSimplify $ map bubbleUp results
+    ss <- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
     return ss
     -- mapM runSimplify =<< concatMapM (quanDomRefine rules) =<< mapM runSimplify ss
 

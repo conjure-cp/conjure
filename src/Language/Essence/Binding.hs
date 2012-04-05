@@ -170,12 +170,12 @@ instance ParsePrint [Binding] where
                                     j <- parse
                                     return [ LettingDomain i j | i <- is ]
                                 , do
-                                    j <- parse
-                                    return [ LettingExpr i j | i <- is ]
-                                , do
                                     reserved "lambda"
                                     j <- parse
                                     return [ LettingLambda i j | i <- is ]
+                                , do
+                                    j <- parse
+                                    return [ LettingExpr i j | i <- is ]
                                 , do
                                     j <- parse
                                     return [ LettingQuan i j | i <- is ]

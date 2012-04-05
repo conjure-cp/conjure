@@ -8,7 +8,7 @@
 module Language.Essence.Phases.PhaseRefn where
 
 import Control.Applicative
-import Control.Monad ( (>=>) )
+import Control.Monad ( (<=<), (>=>) )
 import Control.Monad.Error ( MonadError, throwError, catchError )
 import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
@@ -19,9 +19,10 @@ import Data.Maybe ( catMaybes )
 import qualified Data.Map as M
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
-import GenericOps.Core -- ( GPlate, GNode, BindingsMap, mkG, runMatch, runBind, universe, bottomUpM, topDownM )
+import GenericOps.Core ( GPlate, GNode, BindingsMap, mkG, runMatch, runBind, universe, topDownM )
 import Has ( Has, getM, putM, modifyM)
-import PrintUtils ( Doc, (<+>), text )
+import ParsePrint ( pretty )
+import PrintUtils ( Doc, (<+>), text, nest )
 import Utils ( concatMapM )
 import Utils.MonadList ( MonadList, option, runListT )
 
@@ -51,14 +52,13 @@ callRefn rules' specParam = do
     results <- flip evalStateT ( bindings :: BindingsMap
                                , qNames   :: [FreshName]
                                ) $ applyRefnsDeepSpec rules spec
-    mapM runSimplify $ map (cleanUp . bubbleUp) results
+    mapM (cleanUp <=< runSimplify) $ map bubbleUp results
 
 
 applyRefnsDeepSpec ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , Monad m
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
@@ -71,7 +71,6 @@ applyRefnsDeep ::
     , Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , Monad m
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
@@ -79,7 +78,6 @@ applyRefnsDeep ::
 applyRefnsDeep rules x = do
     mp  :: BindingsMap <- getM
     nms :: [FreshName] <- getM
-    -- tell [ pretty x ]
     (y,(_,nms',b)) <- flip runStateT ( mp  :: BindingsMap
                                      , nms :: [FreshName]
                                      , False
@@ -89,12 +87,15 @@ applyRefnsDeep rules x = do
         then concatMapM (applyRefnsDeep rules) y
         else return [x]
     where
+        prettyNoParens :: Expr -> Doc
+        prettyNoParens (Q i) = pretty i
+        prettyNoParens i     = pretty i
+
         tryApply ::
             ( Applicative m
             , Has st BindingsMap
             , Has st [FreshName]
             , Has st Bool
-            , Monad m
             , MonadError Doc m
             , MonadList m
             , MonadState st m
@@ -111,12 +112,14 @@ applyRefnsDeep rules x = do
                         Nothing -> modifyM (M.insert qnVar (mkG qnOverDom) :: BindingsMap -> BindingsMap)
                 _ -> return ()
 
-            -- tell (Any False, ["tryApply:" <+> pretty i])
             res <- catchError
                        ( do j <- applyRefns rules i
                             case j of
                                 [] -> return i
-                                _  -> do putM True; option j
+                                _  -> do putM True
+                                         tell $ ("***" <+> prettyNoParens i)
+                                              : map (nest 4 . ("~~>" <+>) . prettyNoParens) j
+                                         option j
                        )
                        (\ e -> do tell [e]
                                   return i
@@ -131,7 +134,6 @@ applyRefns ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , Monad m
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
@@ -151,7 +153,6 @@ applyRefn ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , Monad m
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m

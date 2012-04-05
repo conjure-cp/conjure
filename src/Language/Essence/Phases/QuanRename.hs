@@ -12,10 +12,8 @@ import Has
 import Constants ( FreshName, getFreshName, isFreshName )
 import GenericOps.Core ( GPlate, topDownM, bottomUp )
 
-import Language.Essence.Identifier
-import Language.Essence.StructuredVar
-import Language.Essence.QuantifiedExpr
-import Language.Essence.Phases.InBubbleRename
+import Language.Essence
+import Language.Essence.Phases.InBubbleRename ( inBubbleRename )
 
 
 
@@ -57,3 +55,4 @@ quanRename = inBubbleRename <=< topDownM worker
                                             Just new -> Identifier new
 
             return $ bottomUp f p
+
