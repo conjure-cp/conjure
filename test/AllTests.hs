@@ -149,12 +149,21 @@ gnode _ = mkG . unsafeParse (parse <* eof :: Parser a)
 getAllWithSuffix :: String -> FilePath -> IO [FilePath]
 getAllWithSuffix suffix fp = map (fp++) . filter (suffix `isSuffixOf`) <$> getDirectoryContents fp
 
+
 main :: IO ()
 main = do
     -- let
     --     basedir :: FilePath
     --     basedir = "/Users/ozgurakgun/src/conjure-wd/"
     specs <- getAllWithSuffix ".essence" "testsuite/valid/essence/"
+    refns <- concat <$> sequence [ getAllWithSuffix ".rule" "rules/"
+                                 , getAllWithSuffix ".rule" "rules/refn/"
+                                 , getAllWithSuffix ".rule" "rules/repr/"
+                                 ]
+    reprs <- concat <$> sequence [ getAllWithSuffix ".repr" "rules/"
+                                 , getAllWithSuffix ".repr" "rules/refn/"
+                                 , getAllWithSuffix ".repr" "rules/repr/"
+                                 ]
     defaultMain $ hUnitTestToTests . test $ parsingExpr
                                          ++ parsingValue
                                          ++ parsingQuantifiedExpr
@@ -164,8 +173,8 @@ main = do
                                          ++ parsingType
                                          ++ parsingDomain
                                          ++ parsingSpec specs
-                                         ++ parsingRepr
-                                         ++ parsingRefn
+                                         ++ parsingRepr reprs
+                                         ++ parsingRefn refns
                                          ++ evaluating
                                          ++ applyingRefn
 
@@ -357,62 +366,11 @@ main = do
             , noParse_Lambda       ""
             ]
 
-        parsingSpec fs = map parsePrintIsoFile_Spec fs
+        parsingSpec = map parsePrintIsoFile_Spec
 
-        parsingRepr =
-            [ parsePrintIsoFile_Repr "rules/repr/Function.AsReln.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Function.Matrix1D.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Function.Matrix2D.repr"
-            , parsePrintIsoFile_Repr "rules/repr/MSet.Explicit.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Partition.SetOfSets_KnownPartSize.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Partition.SetOfSets_KnownSize.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Relation.SetOfTuples2.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Set.Explicit(IntOnly).repr"
-            , parsePrintIsoFile_Repr "rules/repr/Set.Explicit.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Set.ExplicitVarSize(IntOnly).repr"
-            , parsePrintIsoFile_Repr "rules/repr/Set.ExplicitVarSize.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Set.Gent.repr"
-            , parsePrintIsoFile_Repr "rules/repr/Set.Occurrence.repr"
-            ]
+        parsingRepr = map parsePrintIsoFile_Repr
 
-        parsingRefn =
-            [parsePrintIsoFile_Refn "rules/refn/Function.Apply.AsReln.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Function.Apply.Matrix1D.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Function.Apply.Matrix2D.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Function.DefinedQuan.AsReln.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Function.Eq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Function.PreImageQuan.AsReln.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Function.PreImageQuan.Matrix1D.rule"
-            , parsePrintIsoFile_Refn "rules/refn/MSet.Eq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/MSet.Quantifier.Explicit.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Matrix.Eq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Partition.QuanParts.SetOfSets_KnownSize.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Relation.Apply.SetOfTuples2.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Relation.Card.SetOfTuples2.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Relation.Quantifier.SetOfTuples2.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Card.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Elem.Gent.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Elem.Occurrence.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Elem.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.ElemIntersect.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Eq.Gent.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Eq.Occurrence.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Eq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Intersect.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Max.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Min.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Neq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Quantifier.Explicit.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Quantifier.ExplicitVarSize.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Quantifier.Gent.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Quantifier.Occurrence.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.QuantifierUnion.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.SubsetEq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Set.Union.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Tuple2.Eq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/Tuple2.Neq.rule"
-            , parsePrintIsoFile_Refn "rules/refn/alldifferent.rule"
-            ]
+        parsingRefn = map parsePrintIsoFile_Refn
 
         parsingType =
             [ parsePrintIso_Type "of size 4"
