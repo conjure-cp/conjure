@@ -81,6 +81,23 @@ instance Has (a,(b,c)) c where
     put c (a,(b,_)) = (a,(b,c))
 
 
+instance Has (a,b,c,d) a where
+    get (a,_,_,_) = a
+    put a (_,b,c,d) = (a,b,c,d)
+
+instance Has (a,b,c,d) b where
+    get (_,b,_,_) = b
+    put b (a,_,c,d) = (a,b,c,d)
+
+instance Has (a,b,c,d) c where
+    get (_,_,c,_) = c
+    put c (a,b,_,d) = (a,b,c,d)
+
+instance Has (a,b,c,d) d where
+    get (_,_,_,d) = d
+    put d (a,b,c,_) = (a,b,c,d)
+
+
 instance Has (Either a b) (Maybe a) where
     get (Left  x)  = Just x
     get (Right _)  = Nothing
