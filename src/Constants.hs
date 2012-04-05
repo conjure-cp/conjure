@@ -13,6 +13,7 @@ module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
                  , trace, traceM
                  ) where
 
+import Control.DeepSeq ( deepseq )
 import Control.Monad.State ( MonadState )
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
@@ -88,11 +89,11 @@ ruleVarPrefix = "__INRULE_"
 newtype FreshName = FreshName String
 
 mkFreshNames :: [String] -> [FreshName]
-mkFreshNames used = map FreshName (freshNames \\ used)
+mkFreshNames used = used `deepseq` map FreshName (freshNames \\ used)
     where freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 mkPrettyFreshNames :: [String] -> [FreshName]
-mkPrettyFreshNames used = map FreshName (freshNames \\ used)
+mkPrettyFreshNames used = used `deepseq` map FreshName (freshNames \\ used)
     where freshNames = words "i j k l" ++ [ "q" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 getFreshName :: (MonadState st m, Has st [FreshName]) => m String
