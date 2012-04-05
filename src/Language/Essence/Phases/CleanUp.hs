@@ -10,8 +10,8 @@ import Data.List ( nub )
 import Data.Traversable ( mapM )
 import qualified Data.Map as M
 
-import Constants ( mkPrettyFreshNames, getFreshName )
-import GenericOps.Core ( bottomUp, universe )
+import Constants ( FreshName, mkPrettyFreshNames, getFreshName )
+import GenericOps.Core ( universe, bottomUp )
 import PrintUtils ( Doc )
 
 import Language.Essence
@@ -46,7 +46,7 @@ quanRenameFinal spec = do
                       }
 
     where
-        -- workerExpr :: Expr -> m Expr
+        workerExpr :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Expr -> m Expr
         workerExpr (Q       x) = Q <$> workerQ x
         workerExpr (Bubble x y zs) = Bubble <$> (withState $ workerExpr x)
                                             <*> (withState $ workerExpr y)
@@ -54,16 +54,16 @@ quanRenameFinal spec = do
         workerExpr (EOp op xs) = EOp op <$> mapM (withState . workerExpr) xs
         workerExpr x           = return x
 
-        -- workerObj :: Objective -> m Objective
+        workerObj :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Objective -> m Objective
         workerObj (OMin x) = OMin <$> workerExpr x
         workerObj (OMax x) = OMax <$> workerExpr x
 
-        -- workerTL :: Either Binding Where -> m (Either Binding Where)
+        workerTL :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Either Binding Where -> m (Either Binding Where)
         workerTL (Left (LettingExpr i x)) = Left . LettingExpr i <$> (withState . workerExpr) x
         workerTL (Left  b)                = Left                 <$> return b
         workerTL (Right (Where w))        = Right . Where        <$> (withState . workerExpr) w
 
-        -- workerQ :: QuantifiedExpr -> m QuantifiedExpr
+        workerQ :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => QuantifiedExpr -> m QuantifiedExpr
         workerQ p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do
             new <- getFreshName
             return $ bottomUp (identifierRenamer old new) p
