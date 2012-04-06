@@ -41,7 +41,7 @@ import Language.Essence.Phases.CheckWhere ( checkWhere )
 import Language.Essence.Phases.CleanUp ( cleanUp )
 import Language.Essence.Phases.PostParse ( postParse )
 import Language.Essence.Phases.QuanRename ( quanRename )
-import Language.EssenceEvaluator ( deepSimplify, oldDeepSimplify, runSimplify )
+import Language.EssenceEvaluator ( oldDeepSimplify, runSimplify )
 
 
 

@@ -15,6 +15,7 @@ import PrintUtils ( Doc, nest, vcat )
 
 import Language.Essence
 import Language.Essence.Phases.CheckDomains ( checkDomains )
+import Language.Essence.Phases.ToETyped ( toETyped )
 
 
 
@@ -28,7 +29,7 @@ import Language.Essence.Phases.CheckDomains ( checkDomains )
 -- see: enumIdentifiersDom
 
 postParse :: forall m . (Applicative m, MonadError Doc m) => Spec -> m Spec
-postParse spec = (checkDomains >=> bottomUpM enumIdentifiers) (bottomUp enumDomains spec)
+postParse spec = (checkDomains >=> toETyped >=> bottomUpM enumIdentifiers) (bottomUp enumDomains spec)
     where
 
         typeBindings :: ([String],[Type])
