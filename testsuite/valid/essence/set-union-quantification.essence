@@ -1,0 +1,8 @@
+language Essence 2.0
+
+given a,b,c : int
+
+find x : set (size a, minSize b) of int(0..9)
+find y : set (size a, maxSize c) of int(0..9)
+
+such that forAll i in x union y, i <= 4 . i % 2 = 0
