@@ -4,7 +4,7 @@
 module Main where
 
 import Control.Applicative
-import Control.Monad ( forM_, when )
+import Control.Monad ( (>=>), forM_, when )
 import Control.Monad.Error ( runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put, StateT, evalStateT, execStateT )
@@ -26,11 +26,12 @@ import Constants ( figlet )
 import GenericOps.Core ( GPlate, GNode(..), runMatch, BindingsMap )
 import ParsecUtils ( eof, parseEither )
 import ParsePrint ( ParsePrint, parse, pretty )
-import PrintUtils ( Doc, nest, vcat )
+import PrintUtils ( Doc, nest, vcat, text, (<+>), ($$) )
 import Utils ( fromJust, ppPrint, strip )
 
 import Language.Essence
 import Language.Essence.Phases.ReadIn ( runReadIn )
+import Language.Essence.Phases.ToETyped ( toETypedG )
 import Language.EssenceEvaluator ( deepSimplify )
 
 
@@ -128,8 +129,14 @@ returningTrue f = pure True <* f
 
 withParsed :: (Applicative m, MonadIO m, ParsePrint a) => String -> (a -> m ()) -> m Bool
 withParsed s comp = returningTrue $ case parseEither (parse <* eof) s of
-    Left msg -> liftIO $ putStrLn msg
+    Left msg -> liftIO $ print msg
     Right x  -> comp x
+
+withParsedGPlate :: (Applicative m, MonadIO m, ParsePrint a, GPlate a) => String -> (a -> m ()) -> m Bool
+withParsedGPlate s comp = returningTrue $ case (parseEither (parse <* eof) >=> toETypedG) s of
+    Left msg -> liftIO $ print msg
+    Right x  -> comp x
+
 
 -- prettyPrint :: (MonadIO m, Show a) => (a -> Maybe Doc) -> a -> m ()
 -- prettyPrint f x = liftIO . putStrLn $ render f x
@@ -148,7 +155,7 @@ displayLogs logs = do
 
 step :: (Applicative m, MonadState REPLState m, MonadIO m) => Command -> m Bool
 step (EvalTypeKind _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
--- withParsed pExpr s $ \ x -> do
+-- withParsedGPlate pExpr s $ \ x -> do
 --     let err = liftIO $ putStrLn "Error. Try :e, :t, :k individually to see what it was."
 --     bs <- gets $ topLevelBindings . currentSpec
 --     (xEval,logsEval) <- runEvaluateExpr bs x
@@ -169,7 +176,7 @@ step (EvalTypeKind _) = returningTrue $ liftIO $ putStrLn "not implemented, yet.
 --                             else vcat [firstLine, secondLine]
 --                 _ -> err
 --         _ -> err
-step (Evaluate s) = withParsed s $ \ x -> do
+step (Evaluate s) = withParsedGPlate s $ \ x -> do
     spec <- gets currentSpec
     let (x',logs) = runWriter $ runErrorT $ flip evalStateT ( def :: ( BindingsMap
                                                                      , [GNode]
@@ -182,7 +189,7 @@ step (Evaluate s) = withParsed s $ \ x -> do
     liftIO $ case x' of
         Left  err     -> print err
         Right (x'',_) -> print $ pretty x''
-step (TypeOf s) = withParsed s $ \ x -> do
+step (TypeOf s) = withParsedGPlate s $ \ x -> do
     sp <- gets currentSpec
     let (t,logs) = runWriter $ runErrorT $ flip evalStateT (def :: ( BindingsMap
                                                                    , [GNode]
@@ -207,7 +214,7 @@ step (TypeOf s) = withParsed s $ \ x -> do
     --         prettyPrint prType t
 step (KindOf _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
 step ShowFullAST = returningTrue $ do sp <- gets currentSpec; liftIO $ ppPrint sp
-step (ShowAST s) = withParsed s  $ \  x  ->                   liftIO $ ppPrint (x :: Expr)
+step (ShowAST s) = withParsedGPlate s  $ \  x  ->                   liftIO $ ppPrint (x :: Expr)
 step (Load   fp) = returningTrue $ do
     msp <- liftIO readIt
     case msp of
@@ -250,8 +257,8 @@ testMatch undef msg s = returningTrue $ do
     let pa = splitOn "~~" s
     case pa of
         [p,a] -> case (parseEither (parse <* eof) (strip p), parseEither (parse <* eof) (strip a)) of
-            (Left err,_) -> liftIO $ putStrLn $ "Error while parsing: " ++ p ++ "\n" ++ err
-            (_,Left err) -> liftIO $ putStrLn $ "Error while parsing: " ++ p ++ "\n" ++ err
+            (Left err,_) -> liftIO $ print $ "Error while parsing:" <+> text p $$ err
+            (_,Left err) -> liftIO $ print $ "Error while parsing:" <+> text p $$ err
             (Right px, Right ax) -> case execStateT (runMatch (px `asTypeOf` undef) ax) M.empty of
                 Left err -> liftIO $ putStrLn $ "Error while pattern matching: " ++ show err
                 Right bs -> liftIO $ do
