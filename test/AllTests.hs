@@ -309,6 +309,9 @@ main = do
             , parsePrintIso_Expr "m[i, j, k]"
             , parsePrintIso_Expr "x!"
             , parsePrintIso_Expr "(x)!"
+
+            -- parsing type expressions.
+            , parsePrintIso_Expr "a = (b : `set of int`)"
             ]
 
         parsingValue =
