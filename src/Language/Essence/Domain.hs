@@ -67,6 +67,15 @@ representationValue (AnyDom {dAttrs = DomainAttrs attrs}) = msum $ flip map attr
     _ -> Nothing
 representationValue _ = Nothing
 
+domToType :: (Applicative m, MonadError Doc m) => Domain -> m Type
+domToType (DHole i) = return $ THole i
+domToType DBool = return $ TBool
+domToType (DInt _) = return $ TInt
+domToType (DEnum i _) = return $ THole i
+domToType (DUnnamed x) = return $ TUnnamed x
+domToType (DMatrix i e) = TMatrix <$> domToType i <*> domToType e
+domToType (AnyDom enum es _) = AnyType enum <$> mapM domToType es
+domToType p@(Indices {}) = throwError $ "not a valie type: " <+> pretty p
 
 
 data Domain = DHole Identifier
@@ -127,6 +136,8 @@ instance ParsePrint Domain where
                 , pFunction, pRelation, pPartition
                 , pIndices
                 , pDHole
+                , between (reservedOp "`") (reservedOp "`") parse
+                -- , between (reservedOp "'") (reservedOp "'") parse
                 ]
         where
             pDHole = DHole <$> parse
