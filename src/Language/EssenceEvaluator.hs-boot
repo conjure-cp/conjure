@@ -33,6 +33,7 @@ class Simplify a where
         , Has st BindingsMap
         , Has st [GNode]
         , Has st [(GNode,GNode)]
+        , Has st Bool
         , Monad m
         , MonadError Doc m
         , MonadState st m
@@ -41,23 +42,31 @@ class Simplify a where
 
 runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m Spec
 
-deepSimplify ::
+
+oldDeepSimplify ::
     ( Applicative m
     , GPlate a
     , Has st BindingsMap
-    , Has st [GNode]
-    , Has st [(GNode,GNode)]
-    , Monad m
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m a
+
+deepSimplify ::
+    ( Applicative m
+    , GPlate a
+    , Has st BindingsMap
+    , MonadError Doc m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => a -> m (a,Bool)
 
 simplifyReal ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [GNode]
     , Has st [(GNode,GNode)]
+    , Has st Bool
     , Monad m
     , MonadError Doc m
     , MonadState st m

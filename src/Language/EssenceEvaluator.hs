@@ -14,7 +14,7 @@ module Language.EssenceEvaluator where
 import Control.Applicative ( Applicative, (<$>), (<*) )
 import Control.Monad ( (<=<), forM )
 import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
-import Control.Monad.State ( MonadState, evalStateT, execStateT )
+import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
 import Data.Default ( def )
 import Data.Either ( lefts )
@@ -52,7 +52,7 @@ testFullEval s = do
     (x',logs) <- runWriterT $ flip evalStateT ( m   :: BindingsMap
                                               , def :: [GNode]
                                               , def :: [(GNode,GNode)]
-                                              ) $ runErrorT $ (evaluate <=< deepSimplify) x
+                                              ) $ runErrorT $ (evaluate <=< oldDeepSimplify) x
     case x' of
         Left err  -> print err
         Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Value)
@@ -90,7 +90,7 @@ testSimplify s = do
     (x',logs) <- runWriterT $ flip evalStateT ( m   :: BindingsMap
                                               , def :: [GNode]
                                               , def :: [(GNode,GNode)]
-                                              ) $ runErrorT $ deepSimplify x
+                                              ) $ runErrorT $ oldDeepSimplify x
     case x' of
         Left err  -> print err
         Right x'' -> putStrLn $ renderDoc $ pretty (x'' :: Expr)
@@ -124,6 +124,7 @@ class Simplify a where
         , Has st BindingsMap
         , Has st [GNode]
         , Has st [(GNode,GNode)]
+        , Has st Bool
         , Monad m
         , MonadError Doc m
         , MonadState st m
@@ -131,13 +132,14 @@ class Simplify a where
         ) => a -> m (Maybe a)
 
 infixr 0 ~~~>
-(~~~>) :: (MonadWriter [Doc] m, ParsePrint a) => a -> a -> m (Maybe a)
+(~~~>) :: (MonadWriter [Doc] m, ParsePrint a, MonadState st m, Has st Bool) => a -> a -> m (Maybe a)
 _ ~~~> b = do
 -- a ~~~> b = do
 --     tell [ "[ SIMPLIFY ]"
 --             $$ nest 4 ("~~>" <+> pretty a)
 --             $$ nest 4 ("~~>" <+> pretty b)
 --          ]
+    putM True
     return (Just b)
 
 
@@ -147,23 +149,39 @@ runSimplify spec = do
                                     , []      :: [(GNode, GNode)]
                                     ) $ do mapM_ addBinding' builtIns
                                            mapM_ addBinding' (lefts (topLevels spec))
-    evalStateT (deepSimplify spec) ( bindings :: BindingsMap
+    evalStateT (oldDeepSimplify spec) ( bindings :: BindingsMap
                                    , []       :: [GNode]
                                    , []       :: [(GNode,GNode)]
                                    )
+
+oldDeepSimplify ::
+    ( Applicative m
+    , GPlate a
+    , Has st BindingsMap
+    , MonadError Doc m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => a -> m a
+oldDeepSimplify x = fst <$> deepSimplify x
 
 deepSimplify ::
     ( Applicative m
     , GPlate a
     , Has st BindingsMap
-    , Has st [GNode]
-    , Has st [(GNode,GNode)]
-    , Monad m
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
-    ) => a -> m a
-deepSimplify = bottomUpRewriteM simplifyReal
+    ) => a -> m (a,Bool)
+deepSimplify x = do
+    mp <- getM
+    (x', (mp',_,_,b)) <- runStateT (bottomUpRewriteM simplifyReal x)
+                                        ( mp :: BindingsMap
+                                        , [] :: [GNode]
+                                        , [] :: [(GNode,GNode)]
+                                        , False
+                                        )
+    putM mp'
+    return (x',b)
 -- deepSimplify = topDownRewriteM simplifyReal
     -- where
     --     -- f :: (Applicative m, Monad m) => EvalArrow m GNode (Maybe GNode)
@@ -180,6 +198,7 @@ simplifyReal ::
     , Has st BindingsMap
     , Has st [GNode]
     , Has st [(GNode,GNode)]
+    , Has st Bool
     , Monad m
     , MonadError Doc m
     , MonadState st m
@@ -430,7 +449,7 @@ instance Simplify Expr where
         case res of
             Nothing         -> return Nothing
             Just r | r == p -> return Nothing
-            Just r          -> return (Just r)
+            Just r          -> p ~~~> r
 
 exprUnify :: Expr -> Expr -> Bool
 exprUnify i j = foo i j || foo j i
