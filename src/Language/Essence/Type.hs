@@ -103,6 +103,16 @@ typeErrorBinOp tx ty s = do
                             | GNode _ n <- nodes
                             ]
 
+typeHasUnknowns :: Type -> Bool
+typeHasUnknowns TUnknown = True
+typeHasUnknowns THole    {}    = False
+typeHasUnknowns TBool    {}    = False
+typeHasUnknowns TInt     {}    = False
+typeHasUnknowns TEnum    {}    = False
+typeHasUnknowns TUnnamed {}    = False
+typeHasUnknowns (TMatrix i  e) = any typeHasUnknowns [i,e]
+typeHasUnknowns (TLambda is e) = any typeHasUnknowns (e:is)
+typeHasUnknowns (AnyType _ ts) = any typeHasUnknowns ts
 
 
 data Type = TUnknown
