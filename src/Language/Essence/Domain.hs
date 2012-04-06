@@ -38,7 +38,7 @@ import                Language.Essence.Identifier
 import                Language.Essence.Range
 import                Language.Essence.Type
 import {-# SOURCE #-} Language.Essence.Value ()
-import {-# SOURCE #-} Language.EssenceEvaluator ( deepSimplify, evaluate )
+import {-# SOURCE #-} Language.EssenceEvaluator ( oldDeepSimplify, evaluate )
 
 
 
@@ -249,7 +249,7 @@ instance TypeOf Domain where
             go (TMatrix _ x) n = go x (n-1)
             go _ _ = Nothing
 
-        tm <- typeOf =<< deepSimplify m
+        tm <- typeOf =<< oldDeepSimplify m
         case go tm ind of
             Nothing -> throwError $ "typeOf fail:" <+> pretty p
             Just t  -> return t
