@@ -79,7 +79,7 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
             case (x',y') of
                 (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty x, renderDoc msg])
                 (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty y, renderDoc msg])
-                (Right x'', Right y'') -> assertEqual "Eval [not equal]" x'' y''
+                (Right (x'',_), Right (y'',_)) -> assertEqual "Eval [not equal]" x'' y''
 
 applyRuleRefn :: String -> String -> [String] -> HUnit.Test
 applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", ruleRefn, expr]) $ HUnit.TestCase $ do
