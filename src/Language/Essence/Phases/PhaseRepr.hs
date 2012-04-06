@@ -41,7 +41,7 @@ import Language.Essence.Phases.CheckWhere ( checkWhere )
 import Language.Essence.Phases.CleanUp ( cleanUp )
 import Language.Essence.Phases.PostParse ( postParse )
 import Language.Essence.Phases.QuanRename ( quanRename )
-import Language.EssenceEvaluator ( deepSimplify, runSimplify )
+import Language.EssenceEvaluator ( deepSimplify, oldDeepSimplify, runSimplify )
 
 
 
@@ -230,7 +230,7 @@ applyReprCaseToDom (RuleRepr {..}) (RuleReprCase {..}) dom = do
                 Left  b -> withLog "addBinding" $ addBinding' b
                 Right w -> withLog "checkWhere" $ checkWhere w
         tmpl <- runBind reprTemplate
-        str  <- mapM (deepSimplify <=< runBind) (maybeToList reprStructural ++ maybeToList reprCaseStructural)
+        str  <- mapM (oldDeepSimplify <=< runBind) (maybeToList reprStructural ++ maybeToList reprCaseStructural)
         return (tmpl, str)
     tmpl' <- quanRename tmpl
     str'  <- mapM quanRename str

@@ -38,7 +38,7 @@ checkWhere ::
 --         then return ()
 --         else throwError $ "Type mismatch in where statement:" <+> pretty p
 checkWhere (Where x) = do
-    x' <- deepSimplify x
+    (x',_) <- deepSimplify x
     case x' of
         V (VBool True ) -> return ()
         V (VBool False) -> do

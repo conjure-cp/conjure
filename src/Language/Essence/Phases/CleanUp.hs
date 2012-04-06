@@ -19,7 +19,7 @@ import Language.Essence
 
 
 cleanUp :: (Applicative m, MonadError Doc m) => Spec -> m Spec
-cleanUp spec = quanRenameFinal (topLevelConstraints spec)
+cleanUp spec = return (topLevelConstraints spec)
 
 
 topLevelConstraints :: Spec -> Spec

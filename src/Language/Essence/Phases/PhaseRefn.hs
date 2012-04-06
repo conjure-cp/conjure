@@ -8,7 +8,7 @@
 module Language.Essence.Phases.PhaseRefn where
 
 import Control.Applicative
-import Control.Monad ( (<=<), (>=>) )
+import Control.Monad ( (>=>), when )
 import Control.Monad.Error ( MonadError, catchError )
 import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
@@ -28,12 +28,11 @@ import PrintUtils ( Doc, (<+>), nest )
 import Utils ( concatMapM )
 
 import Language.Essence
-import Language.Essence.Phases.BubbleUp ( bubbleUp )
+-- import Language.Essence.Phases.BubbleUp ( bubbleUp )
 import Language.Essence.Phases.CheckWhere ( checkWhere )
 import Language.Essence.Phases.CleanUp ( cleanUp )
-import Language.Essence.Phases.PostParse ( postParse )
 import Language.Essence.Phases.QuanRename ( quanRename )
-import Language.EssenceEvaluator ( deepSimplify, runSimplify )
+import Language.EssenceEvaluator ( deepSimplify, oldDeepSimplify )
 
 
 
@@ -42,8 +41,7 @@ callRefn ::
     , MonadError Doc m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Spec -> m [Spec]
-callRefn rules' specParam = do
-    spec <- (postParse >=> runSimplify) specParam
+callRefn rules' spec = do
     let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
     let rules = map (scopeIdentifiers newRuleVar) rules'
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
@@ -53,7 +51,10 @@ callRefn rules' specParam = do
     results <- flip evalStateT ( bindings :: BindingsMap
                                , qNames   :: [FreshName]
                                ) $ applyRefnsDeepSpec rules spec
-    mapM (cleanUp <=< runSimplify) $ map bubbleUp results
+    -- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
+    -- mapM (cleanUp <=< runSimplify) $ results
+    mapM cleanUp results
+    -- return results
 
 
 applyRefnsDeepSpec ::
@@ -103,8 +104,13 @@ funcFromRules ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Expr -> m [Expr]
-funcFromRules rules i = catchError
+funcFromRules rules i' = catchError
         ( do
+            (i,b) <- deepSimplify i'
+            when b $ tell [ "***" <+> prettyNoParens i'
+                          , nest 4 $ "~~> {Simplifier}" <+> prettyNoParens i
+                          ]
+
             j <- applyRefns rules i
             case j of
                 [] -> return [i]
@@ -116,7 +122,7 @@ funcFromRules rules i = catchError
         )
         (\ e -> do
                     tell [e]
-                    return [i]
+                    return [i']
         )
     where
         prettyNoParens :: Expr -> Doc
@@ -193,6 +199,6 @@ applyRefn (RuleRefn {..}) current = do
             case l of
                 Left  b -> addBinding' b
                 Right w -> checkWhere w
-        mapM (runBind >=> deepSimplify) refnTemplates
+        mapM (runBind >=> oldDeepSimplify) refnTemplates
     mapM quanRename res
 
