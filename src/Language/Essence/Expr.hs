@@ -7,6 +7,7 @@
 module Language.Essence.Expr where
 
 import Control.Applicative
+import Control.Arrow ( first )
 import Control.Monad ( forM, liftM, unless, zipWithM_ )
 import Control.Monad.Error ( MonadError, throwError )
 import Control.Monad.Identity ( Identity )
@@ -346,6 +347,7 @@ instance TypeOf Expr where
             AnyType TMSet     [te] -> return $ AnyType TSet [te]
             AnyType TRelation tes  -> return $ AnyType TSet [AnyType TTuple tes]
             AnyType TFunction tes  -> return $ AnyType TSet [AnyType TTuple tes]
+            TMatrix _ te           -> return $ AnyType TSet [te]
             _ -> typeErrorUnOp tx "Type error."
 
     typeOf p@(EOp ToMSet [x]) = inScope (mkG p) $ do -- TODO toSet(dom)
@@ -354,6 +356,7 @@ instance TypeOf Expr where
             AnyType TSet      [te] -> return $ AnyType TMSet [te]
             AnyType TRelation tes  -> return $ AnyType TMSet [AnyType TTuple tes]
             AnyType TFunction tes  -> return $ AnyType TMSet [AnyType TTuple tes]
+            TMatrix _ te           -> return $ AnyType TSet [te]
             _ -> typeErrorUnOp tx "Type error."
 
     typeOf p@(EOp ToRelation [x]) = inScope (mkG p) $ do
@@ -480,6 +483,40 @@ instance TypeOf Expr where
 
     typeOf p@(EOp ToInt [x])
         = typeOfOp p [x] [(TBool==)] TInt
+
+    typeOf p@(EOp Flatten [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        let
+            collectIndices :: Type -> ([Type],Type)
+            collectIndices (TMatrix i e) = first (i:) $ collectIndices e
+            collectIndices e = ([], e)
+        let (_,e) = collectIndices tx
+        case tx of
+            TMatrix {} -> return $ TMatrix TInt e
+            _          -> typeError "flatten works on matrices only."
+
+    typeOf p@(EOp Flatten [x,y]) = inScope (mkG p) $ do
+        val <- evaluate y
+        tx <- typeOf x
+        let
+            collectIndices :: Type -> Int -> ([Type],Type)
+            collectIndices e 0 = ([],e)
+            collectIndices (TMatrix i e) n = first (i:) $ collectIndices e (n-1)
+            collectIndices e _ = ([], e)
+        let (_,e) = collectIndices tx val
+        case tx of
+            TMatrix {} -> return $ TMatrix TInt e
+            _          -> typeError "flatten works on matrices only."
+
+    typeOf p@(EOp NormIndices [x]) = inScope (mkG p) $ do
+        tx <- typeOf x
+        case tx of
+            TMatrix i e -> do
+                b <- isOrderedType i
+                if b
+                    then return $ TMatrix i e
+                    else typeError "normIndices works on matrices indexed by an ordered type only."
+            _ -> typeError "normIndices works on matrices only."
 
     typeOf p = inScope (mkG p) $ typeError "Type error in expression."
 

@@ -41,6 +41,8 @@ data Op
 
     | ToInt
 
+    | Flatten | NormIndices
+
     deriving (Eq, Ord, Read, Show, Enum, Bounded, Data, Typeable, Generic)
 
 commutativeOps :: S.Set Op
@@ -107,6 +109,8 @@ opFace HasDomain    = ":"
 opFace Replace      = "{Replace}"
 opFace AllDiff      = "allDiff"
 opFace ToInt        = "toInt"
+opFace Flatten      = "flatten"
+opFace NormIndices  = "normIndices"
 
 instance NodeTag Op
 

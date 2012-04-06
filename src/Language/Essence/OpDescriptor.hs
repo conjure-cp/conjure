@@ -158,6 +158,8 @@ opDescriptor = helper
         helper op@HasDomain    = genInfix    op    10 AssocNone
         helper op@AllDiff      = genLispy    op   [1]
         helper op@ToInt        = genLispy    op   [1]
+        helper op@Flatten      = genLispy    op   [1,2]
+        helper op@NormIndices  = genLispy    op   [1]
         helper TwoBars         = OpSpecial pa pr
             where
                 pa = between (reservedOp "|") (reservedOp "|") $ do i <- parse; return $ EOp TwoBars [i]
