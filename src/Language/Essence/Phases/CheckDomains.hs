@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Language.Essence.Phases.NormaliseDomains ( normaliseDomains ) where
+module Language.Essence.Phases.CheckDomains ( checkDomains ) where
 
 import Control.Applicative
 import Control.Monad ( (>=>) )
@@ -20,17 +20,17 @@ import Language.Essence
 
 
 
-normaliseDomains ::
+checkDomains ::
     ( Applicative m
     , MonadError Doc m
     ) => Spec -> m Spec
-normaliseDomains spec = do
+checkDomains spec = do
 
     (topLevels', newWheres) <-
         flip runStateT (def :: [Where]) $
             forM (topLevels spec) $ \ tl -> case tl of
-                Left (Find  i d) -> Left . Find  i <$> (multipleValuesCheck >=> normaliseDomain i) d
-                Left (Given i d) -> Left . Given i <$> (multipleValuesCheck >=> normaliseDomain i) d
+                Left (Find  i d) -> Left . Find  i <$> (multipleValuesCheck >=> checkDomain i) d
+                Left (Given i d) -> Left . Given i <$> (multipleValuesCheck >=> checkDomain i) d
                 _ -> return tl
 
     return spec { topLevels = topLevels' ++ map Right (reverse newWheres) }
@@ -54,12 +54,12 @@ multipleValuesCheck dom@(AnyDom de es (DomainAttrs attrs)) = do
 multipleValuesCheck dom = return dom
 
 
-normaliseDomain ::
+checkDomain ::
     ( Has st [Where]
     , MonadState st m
     , MonadError Doc m
     ) => Identifier -> Domain -> m Domain
-normaliseDomain _ pDom@(AnyDom TSet [e] (DomainAttrs attrs)) =
+checkDomain _ pDom@(AnyDom TSet [e] (DomainAttrs attrs)) =
     case [ s | NameValue AttrSize s <- attrs ] of
 
         -- set has size attribute set.
@@ -77,7 +77,7 @@ normaliseDomain _ pDom@(AnyDom TSet [e] (DomainAttrs attrs)) =
                 Just x  -> modifyM ( Where (EOp Geq [ x , s ]) : )
             return $ AnyDom TSet [e] (DomainAttrs attrs')
         _ -> return pDom
-normaliseDomain _ d = return d
+checkDomain _ d = return d
 
 
 -- given an attribute enum for a name-value kind of attribute,
