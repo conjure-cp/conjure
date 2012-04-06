@@ -30,6 +30,7 @@ import Text.Parsec.Token ( GenTokenParser, LanguageDef, caseSensitive, commentLi
 import qualified Text.Parsec.Token as T ( angles, braces, brackets, colon, comma, dot, identifier, parens, reserved, reservedOp, symbol, whiteSpace )
 
 import Constants ( reservedNamesTxt, reservedOpNamesTxt )
+import PrintUtils ( Doc, text )
 
 
 type Parser a = ParsecT String () Identity a
@@ -105,9 +106,9 @@ parseMaybe p s = case parse p "" s of
     Right a -> return a
 
 
-parseEither :: Parser a -> String -> Either String a
+parseEither :: Parser a -> String -> Either Doc a
 parseEither p s = case parse p "" s of
-    Left msg -> Left (show msg)
+    Left msg -> Left (text $ show msg)
     Right a  -> Right a
 
 
