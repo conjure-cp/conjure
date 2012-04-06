@@ -31,7 +31,7 @@ import Has
 import GenericOps.Core
 import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
-import PrintUtils ( (<+>), Doc )
+import PrintUtils ( (<+>), (<>), Doc )
 import qualified PrintUtils as Pr
 import Utils
 
@@ -56,6 +56,7 @@ data Expr = EHole Identifier
     | L Lambda
     | Bubble Expr Expr [Either Binding Where]
     | EOp Op [Expr]
+    | ETyped Expr Type
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 isAtomicExpr :: Expr -> Bool
@@ -100,6 +101,14 @@ instance GPlate Expr where
                   in  if equalLengths [()] op' && equalLengths xs xs'
                           then EOp (head op') xs'
                           else gplateError "Expr.EOp"
+        )
+    gplate (ETyped x t) =
+        ( [mkG x, mkG t]
+        , \ ys -> let xs' = fromGs $ take 1 ys
+                      ts' = fromGs $ take 1 $ drop 1 ys
+                  in  case (xs', ts') of
+                          ([x'],[t']) -> ETyped x' t'
+                          _ -> gplateError "Expr.ETyped"
         )
 
 instance MatchBind Expr where
@@ -217,6 +226,7 @@ instance ParsePrint Expr where
                 (OpSpecial _ pr, _    ) -> pr param
                 _ -> error $ "prettyOp: " ++ show param
             prettyOp _ x = pretty x
+    pretty (ETyped x t) = Pr.parens $ pretty x <+> Pr.colon <+> "'" <> pretty t <> "'"
 
 instance Arbitrary Expr where
     arbitrary = {-deepPromote <$> -}oneof
@@ -235,6 +245,14 @@ instance TypeOf Expr where
     typeOf p@(D      d    ) = inScope (mkG p) $ typeOf d
     typeOf p@(Q      q    ) = inScope (mkG p) $ typeOf q
     typeOf p@(Bubble x _ _) = inScope (mkG p) $ typeOf x
+
+    typeOf p@(ETyped x t) = inScope (mkG p) $ do
+        tx <- typeOf x
+        if typeHasUnknowns tx
+            then return t
+            else if t == tx
+                    then return t
+                    else throwError "Supplied type doesn't match the inferred type."
 
     typeOf p@(EOp op [x,y])
         | op `elem` [Plus,Minus,Times,Div,Mod,Pow]
