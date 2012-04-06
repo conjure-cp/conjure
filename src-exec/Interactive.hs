@@ -180,8 +180,8 @@ step (Evaluate s) = withParsed s $ \ x -> do
                         deepSimplify (x :: Expr)
     displayLogs logs
     liftIO $ case x' of
-        Left err  -> print err
-        Right x'' -> print $ pretty x''
+        Left  err     -> print err
+        Right (x'',_) -> print $ pretty x''
 step (TypeOf s) = withParsed s $ \ x -> do
     sp <- gets currentSpec
     let (t,logs) = runWriter $ runErrorT $ flip evalStateT (def :: ( BindingsMap
