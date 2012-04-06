@@ -1,0 +1,139 @@
+m[i][i]
+m[i,j]
+m[i] gives back a row
+m[i][..]
+
+
+Using domToSet and int(S) for domain operators:
+
+===
+
+int(domToSet(int(a..b)) intersect domToSet(int(c..d)))
+
+
+forAll i : int(1..n) . 
+    forAll j : int(1..i-3) intersect int(2*i..10) .
+        m[i+j] = 13
+
+
+- domToSet(D) compiles away
+- domToSet(Dw) goes into int(Dw)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+after lunch:
+
+$ normIndices & flatten in the presence of
+$ non-standard indices
+
+normIndices(m) : m (same dimensions)
+flatten(m)   : m (one dimensional)
+flatten(m,i) : m (#of dimensions of m - i)
+                 (goes i+1 dimensions deep)
+flatten(m,i-1) == flatten(m) iff i = #of dimensions of m
+flatten(m,0) == m
+
+Decisions (flatten)
+- Essence only has standard matrices.
+- Essence' has to implement flatten for standard matrices.
+
+
+
+Essence:    Essence for the user
+Essence++:  Essence for Conjure
+Essence':   Essence' for the user (Essence' for SavileRow)
+Essence'--: Essence' Conjure outputs
+
+
+flatten for standard indices:
+
+find m : matrix indexed by [ int(a..b)
+                           , int(c..d)
+                           , int(e..f)
+                           ] of t
+
+flatten(m)   = flatten(m,2)
+flatten(m)   is 1D
+flatten(m,0) is 3D
+flatten(m,1) is 2D
+flatten(m,2) is 1D
+flatten(m,?) is incorrect, at Conjure compile time.
+
+* Categories in Essence: Constant / Param / Dec / Quan?
+
+* flatten(m,1) is a primop of all kinds of flatten.
+
+* flatten(m,1) if m is a param expr, is impossible without
+  creating decision variables.
+
+* normIndices(m) if m is a param expr, 
+
+m : matrix indexed by [int(a..b)] of t
+
+normIndices(m)[i] ~~> m[i+a]
+normIndices(m)[..] ~~> m[..]
+normIndices(m)[i..] ~~> m[i+a..]
+normIndices(m)[..i] ~~> m[..i+a]
+normIndices(m)[i..j] ~~> m[i+a..j+a]
+normIndices(normIndices(m)) ~~> m
+flatten(normIndices(m)) ~~> flatten(m)
+freq(normIndices(m)) ~~> freq(m)
+hist(normIndices(m),v) ~~> hist(m,v)
+hist(m,normIndices(v)) ~~> normIndices(hist(m,v))
+normIndices(m) <=lex n              ~~> m <=lex n
+m <=lex normIndices(n)              ~~> m <=lex n
+normIndices(m) <=lex normIndices(n) ~~> m <=lex n
+and for all other lex's.
+
+
+
+
+
+
+
+
+
+variable length stuff.
+
+domains:    tuple
+            relation
+
+Proposal: To effectively remove them. So:
+
+find x : (int(0..9), bool, int(3..5))               $ is equivalent to:
+find x : (int(0..9), (bool, int(3..5)))             $ is equivalent to:
+find x : (int(0..9), (bool, tuple (int(3..5))))     $ is equivalent to:
+
+literals:   matrix
+            tuple
+            set
+            mset
+            function
+            relation
+            partition
+
+
+
+
+
+
+
+
+
+
+
+

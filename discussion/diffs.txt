@@ -1,0 +1,47 @@
+
+Changes to the language.
+
+rel to relation
+
+forall to forAll
+
+Final decisions:
+
+exponentiation is **
+negation is !
+implication is ->
+iff is <->
+only spelling in Essence for all different is allDiff
+function domains and constants use --> for arrow
+
+forall is forAll
+
+exponentiation is ^ not **              talk to Pete. everyone wants *.
+                  ! vs not              talk to Pete.
+                  -> <->                talk to Pete.
+
+:, ::, @, ~~> are operators in the rule language, reserved for the input lang.
+
+(* *) removed, ( ) is used instead
+
+<< , >> for domains, types, constants
+
+"tuple ( , )" is used instead. the tuple keyword is optional for constants, probably only useful for singleton tuples.
+
+tuple indexing uses [ ] not < >
+
+"S" ~~> domToSet(S)
+
+identifier syntax.
+
+
+
+Changes to the implementation:
+
+tuple indexing start from 1.
+
+remove "of" from tuple.
+forall and forAll
+rel and relation
+add (optional) "tuple" in front of tuple value constructors.
+remove f'(j) syntax. add ' in identifiers.

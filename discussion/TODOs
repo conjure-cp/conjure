@@ -1,0 +1,103 @@
+
+
+quotation operator: perhaps implement - ozgur to decide how difficult and
+discuss with us
+
+undefinedness
+
+structured variable using matrices
+
+type decorations on any expressions: don't implement?
+
+notational difference such as name of constant constructors -- do with
+keyboard
+
+implicit where statements: we need a full list -- alan to come up with list
+
+can't have domain with int(S) -- discuss this wk
+
+flatten/normIndices/freq/hist/toSet/toMset -- this week
+
+note: we don't have max on matrices and neither does SRow
+
+can't write constant matrices that don't have normalIndices
+
+toInt
+
+
+
+
+* Constraint to Where
+
+* fix bubbleUp, so that it only bubbles up to the nearest relational context
+
+* local decision variables in the output.
+
+* domain intersection!, needed for : forAll i : set (size a) of int subsetEq S . ...
+
+* toSet(domain)
+
+* int(S:set of int)
+
+* think about variable length stuff
+
+* the two options for repr rules, discuss with chris.
+
+* Make infinite doms via introducing new params.
+
+
+
+Quantification:
+
+A quantified expression in Essence has the following form:
+
+quantifier (identifier | structured-variable) [: dom] [(in | subset | subsetEq) expr] body
+
+Structured variables are handled early in the process, so we can focus on the following:
+
+quantifier identifier [: dom] [(in | subset | subsetEq) expr] body
+
+In the above, both the domain and operator-expression tuple are optional, but
+at least one is required.
+
+Examples:
+
+find t : set of int(0..9)
+find s : set of set of int(0..9)
+
+[1] such that forAll i : set of int(3..5) . i in s
+
+[2] such that forAll i subsetEq t . i in s
+
+[3] such that forall i : set of int(3..5) subsetEq t . i in s
+
+
+We know what to do for [1] and [2].
+
+One possible refinement for [3] is the following:
+
+forAll i : set of int(3..5), i subsetEq t . i in s
+
+Everything is great so far. The problem is that the holy paper contains the
+following example:
+
+forall pair1 : set (size 2) of int subsetEq Ticks . ...
+
+Here, the domain isn't finite, so we can't apply the above transformation. I
+believe we have to implement a domain intersect operator which works arbitrary
+domains, and translate the above to:
+
+forAll pair1 : domIntersect(set (size 2) of int, domainOf(t)) subsetEq Ticks . ...
+
+
+
+
+
+
+
+
+
+
+
+
+
