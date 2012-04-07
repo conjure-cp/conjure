@@ -22,7 +22,7 @@ import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap )
 import ParsecUtils ( Parser, eof, parseEither, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
-import PrintUtils ( renderDoc )
+import PrintUtils ( (<+>), renderDoc, text, vcat )
 
 import Language.Essence
 import Language.Essence.Phases.PhaseRefn ( applyRefnsDeep )
@@ -40,16 +40,16 @@ noParse _ s = HUnit.TestLabel ("NoParse " ++ s) $ HUnit.TestCase $
 shouldParseTo :: (Eq a, Show a, ParsePrint a) => String -> a -> HUnit.Test
 shouldParseTo s x = HUnit.TestLabel ("ShouldParseTo " ++ s) $ HUnit.TestCase $
     case parseEither (parse <* eof) s of
-        Left msg -> assertFailure ("ShouldParseTo [cannot parse]: " ++ s ++ msg)
+        Left msg -> assertFailure $ show $ "ShouldParseTo [cannot parse]: " <+> text s <+> msg
         Right x' -> assertEqual "ShouldParseTo [parses to a different thing]" x x'
 
 parsePrintIso :: forall a . (Eq a, Show a, ParsePrint a) => a -> String -> HUnit.Test
 parsePrintIso _ s = HUnit.TestLabel ("ParsePrintIso " ++ s) $ HUnit.TestCase $
     case parseEither (parse <* eof) s of
-        Left msg        -> assertFailure ("ParsePrintIso [cannot parse]: " ++ s ++ msg)
+        Left msg        -> assertFailure $ show $ "ParsePrintIso [cannot parse]: " <+> text s <+> msg
         Right (x' :: a) -> let s' = renderDoc $ pretty x'
                            in  case parseEither parse s' of
-            Left msg  -> assertFailure ("ParsePrintIso [cannot parse pretty print]: " ++ s' ++ msg)
+            Left msg  -> assertFailure $ show $ "ParsePrintIso [cannot parse pretty print]: " <+> text s' <+> msg
             Right x'' -> assertEqual "ParsePrintIso [not equal]" x' x''
 
 parsePrintIsoFile :: forall a . (Eq a, Show a, ParsePrint a, ReadIn a) => a -> FilePath -> HUnit.Test
@@ -65,8 +65,8 @@ parsePrintIsoFile _ f = HUnit.TestLabel ("ParsePrintIsoFile " ++ f) $ HUnit.Test
 eval :: [(String,GNode)] -> String -> String -> HUnit.Test
 eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.TestCase $ do
     case (parseEither (parse <* eof) px, parseEither (parse <* eof) py) of
-        (Left msg, _) -> assertFailure (unlines ["Eval [cannot parse]", px, msg])
-        (_, Left msg) -> assertFailure (unlines ["Eval [cannot parse]", py, msg])
+        (Left msg, _) -> assertFailure $ show $ vcat ["Eval [cannot parse]", text px, msg]
+        (_, Left msg) -> assertFailure $ show $ vcat ["Eval [cannot parse]", text py, msg]
         (Right (x :: Expr), Right (y :: Expr)) -> do
             (x',_logs) <- runWriterT $ flip evalStateT ( M.fromList bindings :: BindingsMap
                                                        , [] :: [GNode]
@@ -81,40 +81,15 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
                 (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty y, renderDoc msg])
                 (Right (x'',_), Right (y'',_)) -> assertEqual "Eval [not equal]" x'' y''
 
-applyRuleRefn :: String -> String -> [String] -> HUnit.Test
-applyRuleRefn ruleRefn expr result = HUnit.TestLabel (unlines ["ApplyRuleRefn", ruleRefn, expr]) $ HUnit.TestCase $ do
-    case (parseEither (parse <* eof) ruleRefn, parseEither (parse <* eof) expr) of
-        (Left msg, _) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg])
-        (_, Left msg) -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
-        (Right r, Right x) -> do
-            let r' = scopeIdentifiers newRuleVar r
-            (mxs,_) <- runWriterT $ flip evalStateT ( M.empty         :: BindingsMap
-                                                    , mkFreshNames [] :: [FreshName]
-                                                    ) $ runErrorT $ applyRefnsDeep [r'] x
-            -- putStr " == BEFORE ==> "
-            -- print r
-            -- putStr " == AFTER  ==> "
-            -- print r'
-            case (mxs, result) of
-                (Left _  , []) -> return ()
-                (Left msg, _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr, show msg])
-                -- (Right [], []) -> return ()
-                -- (Right [], _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr])
-                (Right xs, []) -> assertFailure (unlines (["ApplyRuleRefn [rule applied, was expected not to.]", ruleRefn, expr, "{Results}"] ++ map (renderDoc . pretty) xs))
-                (Right xs, _ ) -> do
-                    ys <- forM result $ \ s -> case parseEither (parse <* eof) s of
-                                                    Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", s, msg]) >> return undefined
-                                                    Right y  -> return y
-                    assertEqual "ApplyRuleRefn [not equal]" ys (xs :: [Expr])
-
 applyRuleRefns :: [String] -> String -> [String] -> HUnit.Test
 applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn" : expr : ruleRefns)) $ HUnit.TestCase $ do
     rs <- forM ruleRefns $ \ ruleRefn -> do
         case parseEither (parse <* eof) ruleRefn of
-            Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", ruleRefn, msg]) >> return undefined
+            Left msg -> do assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text ruleRefn, msg]
+                           return undefined
             Right r  -> return r
     case parseEither (parse <* eof) expr of
-        Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", expr, msg])
+        Left msg -> assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text expr, msg]
         Right x  -> do
             let rs' = map (scopeIdentifiers newRuleVar) rs
             (mxs,_) <- runWriterT $ flip evalStateT ( M.empty         :: BindingsMap
@@ -123,12 +98,14 @@ applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn"
             case (mxs, result) of
                 (Left _  , []) -> return ()
                 (Left msg, _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", unlines ruleRefns, expr, show msg])
-                -- (Right [], []) -> return ()
-                -- (Right [], _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", ruleRefn, expr])
+                (Right [], []) -> return ()
+                (Right [], _ ) -> assertFailure (unlines ["ApplyRuleRefn [rule not applied, was expected to.]", unlines ruleRefns, expr])
                 (Right xs, []) -> assertFailure (unlines (["ApplyRuleRefn [rule applied, was expected not to.]", unlines ruleRefns, expr, "{Results}"] ++ map (renderDoc . pretty) xs))
                 (Right xs, _ ) -> do
                     ys <- forM result $ \ s -> case parseEither (parse <* eof) s of
-                                                    Left msg -> assertFailure (unlines ["ApplyRuleRefn [cannot parse]", s, msg]) >> return undefined
+                                                    Left msg -> do
+                                                        assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text s, msg]
+                                                        return undefined
                                                     Right y  -> return y
                     assertEqual "ApplyRuleRefn [not equal]" ys (xs :: [Expr])
 
@@ -164,7 +141,8 @@ main = do
                                  , getAllWithSuffix ".repr" "rules/refn/"
                                  , getAllWithSuffix ".repr" "rules/repr/"
                                  ]
-    defaultMain $ hUnitTestToTests . test $ parsingExpr
+    defaultMain $ hUnitTestToTests . test $ []
+                                         ++ parsingExpr
                                          ++ parsingValue
                                          ++ parsingQuantifiedExpr
                                          ++ parsingIdentifier
@@ -481,70 +459,66 @@ main = do
             ]
 
         applyingRefn =
-            [ applyRuleRefn "x+y ~~> 2*x" "1+3" ["2*1"]
+            [ applyRuleRefns ["x+y ~~> 2*x"] "a+b" ["2*a"]
             
-            , applyRuleRefn "x+y ~~> 2*x" "1-3" []
+            , applyRuleRefns ["x+y ~~> 2*x"] "a-b" []
             
-            , applyRuleRefn "x+y ~~> 2*x where x = y" "5+5" ["2*5"]
+            , applyRuleRefns ["x+y ~~> 2*x where x = y"] "a+a" ["2*a"]
             
-            , applyRuleRefn "x+y ~~> 2*x where x = y" "5+6" []
+            , applyRuleRefns ["x+y ~~> 2*x where x = y"] "a+b" []
             
-            , applyRuleRefn (unlines [ "x+y ~~> res"
-                                     , "where x = y"
-                                     , "letting res be 2 * x"
-                                     ])
-                                     "5+5" ["2*5"]
+            , applyRuleRefns [unlines [ "x+y ~~> res"
+                                      , "where x = y"
+                                      , "letting res be 2 * x"
+                                      ]]
+                                      "a+a" ["2*a"]
             
-            , applyRuleRefn (unlines [ "x+y ~~> res"
-                                     , "letting theGuard be x = y"
-                                     , "where theGuard"
-                                     , "where x :: int, y :: int"
-                                     , "letting foo be 2"
-                                     , "letting bar be x"
-                                     , "letting baz be foo * bar"
-                                     , "letting res be baz"
-                                     ])
-                                     "7+7" ["2*7"]
+            , applyRuleRefns [unlines [ "x+y ~~> res"
+                                      , "letting theGuard be x = y"
+                                      , "where theGuard"
+                                      , "letting foo be 2"
+                                      , "letting bar be x"
+                                      , "letting baz be foo * bar"
+                                      , "letting res be baz"
+                                      ]]
+                                      "a+a" ["2*a"]
             
-            , applyRuleRefn (unlines [ "x+y ~~> res"
-                                     , "letting theGuard be x = y"
-                                     , "where theGuard"
-                                     , "where !(x :: set of _), !(y :: function int --> int)"
-                                     , "letting foo be 2"
-                                     , "letting bar be x"
-                                     , "letting baz be foo * bar"
-                                     , "letting res be baz"
-                                     ])
-                                    "7+7" ["2*7"]
+            , applyRuleRefns [unlines [ "x+y ~~> res"
+                                      , "letting theGuard be x = y"
+                                      , "where theGuard"
+                                      , "letting foo be 2"
+                                      , "letting bar be x"
+                                      , "letting baz be foo * bar"
+                                      , "letting res be baz"
+                                      ]]
+                                      "a+a" ["2*a"]
             
-            , applyRuleRefn (unlines [ "x+y ~~> res"
-                                     , "letting theGuard be x = y"
-                                     , "where theGuard"
-                                     , "letting foo be 2"
-                                     , "letting bar be x"
-                                     , "letting baz be foo * bar"
-                                     , "letting res be baz"
-                                     ])
-                                     "a+a" ["2*a"]
+            , applyRuleRefns [unlines [ "x+y ~~> res"
+                                      , "letting theGuard be x = y"
+                                      , "where theGuard"
+                                      , "letting foo be 2"
+                                      , "letting bar be x"
+                                      , "letting baz be foo * bar"
+                                      , "letting res be baz"
+                                      ]]
+                                      "a+a" ["2*a"]
             
-            , applyRuleRefn (unlines [ "x+y ~~> res"
-                                     , "letting theGuard be x = y"
-                                     , "where theGuard"
-                                     , "letting foo be 2"
-                                     , "letting bar be x"
-                                     , "letting baz be foo * bar"
-                                     , "letting res be baz"
-                                     ])
+            , applyRuleRefns [unlines [ "x+y ~~> res"
+                                      , "letting theGuard be x = y"
+                                      , "where theGuard"
+                                      , "letting foo be 2"
+                                      , "letting bar be x"
+                                      , "letting baz be foo * bar"
+                                      , "letting res be baz"
+                                      ]]
                                      "a+b" []
             
-            , applyRuleRefn "x+y ~~> { x * y, y * x }" "a + b" [ "a * b"
-                                                               , "b * a" ]
+            , applyRuleRefns ["x+y ~~> { x * y, y * x }"] "a + b" [ "a * b"
+                                                                  , "b * a" ]
             
-            , applyRuleRefn "x+y ~~> { x * y, y * x }" "a - b" []
+            , applyRuleRefns ["x+y ~~> { x * y, y * x }"] "a - b" []
             
-            , applyRuleRefn "x + y ~~> 2 * x where x = y" "2 - (7 + 7)" ["2 - (2 * 7)"]
-            
-            , applyRuleRefns [ "x + y ~~> 2 * x where x = y" ] "2 - (7 + 7)" ["2 - (2 * 7)"]
+            , applyRuleRefns ["x + y ~~> 2 * x where x = y"] "b - (a + a)" ["b - (2 * a)"]
             
             , applyRuleRefns [ "x + y ~~> 2 * x where x = y"
                              , "x - y ~~> 0     where x = y"
@@ -561,7 +535,7 @@ main = do
             , applyRuleRefns [ "x + y ~~> 2 * x where x = y"
                              , "x - y ~~> 0     where x = y"
                              ]
-                             "(2 * x) - (y + z)"
+                             "(2 * a) - (a + b)"
                              []
             ]
 
