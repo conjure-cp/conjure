@@ -25,7 +25,7 @@ module GenericOps.Core
     ) where
 
 import Control.Monad ( forM, liftM, zipWithM_ )
-import Control.Monad.Error ( MonadError, ErrorT(..), throwError, Error(..) )
+import Control.Monad.Error ( MonadError, ErrorT(..), throwError )
 import Control.Monad.State ( MonadState, StateT(..), evalStateT )
 import Control.Monad.Writer ( MonadWriter(..) )
 import Data.Data ( Data, toConstr )
@@ -336,9 +336,6 @@ topDownRewriteM f = unliftGM (gTopDownRewriteM (liftGM_Maybe f))
 --------------------------------------------------------------------------------
 -- MatchBind -------------------------------------------------------------------
 --------------------------------------------------------------------------------
-
-instance Error Doc where
-    strMsg = text
 
 type BindingsMap = M.Map String GNode
 -- type MatchMonad m a = ErrorT Doc (StateT (BindingsMap, [(GNode,GNode)]) m) a

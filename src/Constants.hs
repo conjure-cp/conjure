@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 #define DATADIR "datafiles/"
 
@@ -14,6 +15,7 @@ module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
                  ) where
 
 import Control.DeepSeq ( deepseq )
+import Control.Monad.Error ( Error(..) )
 import Control.Monad.State ( MonadState )
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
@@ -22,6 +24,7 @@ import Data.List.Split ( splitOn )
 import Data.Set as S ( Set, fromList )
 
 import Has
+import PrintUtils ( Doc, text )
 import Utils ( strip )
 
 
@@ -104,3 +107,7 @@ getFreshName = do
 
 isFreshName :: String -> Bool
 isFreshName s = not (ruleVarPrefix `isPrefixOf` s) && "__" `isPrefixOf` s
+
+
+instance Error Doc where
+    strMsg = text
