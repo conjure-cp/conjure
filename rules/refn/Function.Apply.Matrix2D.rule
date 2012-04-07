@@ -1,8 +1,8 @@
 
-f(i) ~~> sum j in indices(m,1), m[i,j] . j
+f(i) ~~> sum j : indices(m,1) , m[i][j] . j
 
     where
-        f :: function _ -> _,
+        f :: function _ --> _,
         repr(f,Matrix2D)
 
     letting m be refn(f)

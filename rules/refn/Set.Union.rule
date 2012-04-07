@@ -1,9 +1,9 @@
 
-quan i : a union b . k
-    ~~> glueOp(quan) ( quan j : a . k {i->j}
-                     , quan j : b . k {i->j}
+quan i in a union b, g . k
+    ~~> glueOp(quan) ( quan j in a, g { i --> j } . k { i --> j }
+                     , quan j in b, g { i --> j } . k { i --> j }
                      )
 
-    where
-        a :: set of _,
-        b :: set of _
+    $ where
+    $     a :: set of _,
+    $     b :: set of _
