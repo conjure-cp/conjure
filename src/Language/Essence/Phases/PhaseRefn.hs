@@ -78,20 +78,21 @@ applyRefnsDeep :: forall a st m .
     ) => [RuleRefn] -> a -> m [a]
 applyRefnsDeep rules param = do
     let func = funcFromRules rules
-    let
-        runner :: GNode -> m [GNode]
-        runner gparam = do
-            mp  :: BindingsMap <- getM
-            nms :: [FreshName] <- getM
-            (results,(_,nms',_)) <- flip runStateT ( mp  :: BindingsMap
-                                                   , nms :: [FreshName]
-                                                   , False
-                                                   -- , []  :: [GNode]
-                                                   ) $ treeWalker func gparam
-            putM nms'
-            return results
-    results <- runner $ mkG param
-    return $ fromGs results
+    let gparam = mkG param
+
+    mp  :: BindingsMap <- getM
+    nms :: [FreshName] <- getM
+    (results,(_,nms',_,GlobalFlag b))
+        <- runStateT (treeWalker func gparam)
+                     ( mp  :: BindingsMap
+                     , nms :: [FreshName]
+                     , LocalFlag False
+                     , GlobalFlag False
+                     ) 
+    putM nms'
+    if b
+        then return $ fromGs results
+        else return []
 
 
 funcFromRules ::
@@ -99,7 +100,8 @@ funcFromRules ::
     , Has st BindingsMap
     , Has st [FreshName]
     -- , Has st [GNode]
-    , Has st Bool
+    , Has st LocalFlag
+    , Has st GlobalFlag
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
@@ -115,7 +117,8 @@ funcFromRules rules i' = catchError
             case j of
                 [] -> return [i]
                 _  -> do
-                    putM True
+                    putM $ LocalFlag True
+                    putM $ GlobalFlag True
                     tell $ ("***" <+> prettyNoParens i)
                          : map (nest 4 . ("~~>" <+>) . prettyNoParens) j
                     return j
@@ -130,18 +133,22 @@ funcFromRules rules i' = catchError
         prettyNoParens x     = pretty x
 
 
+newtype LocalFlag = LocalFlag Bool
+newtype GlobalFlag = GlobalFlag Bool
+
 treeWalker :: forall m st .
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
     -- , Has st [GNode]
-    , Has st Bool
+    , Has st LocalFlag
+    , Has st GlobalFlag
     , MonadError Doc m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => (Expr -> m [Expr]) -> GNode -> m [GNode]
 treeWalker f gx = do
-    putM False
+    putM $ LocalFlag False
     -- modifyM ((gx:) :: [GNode] -> [GNode])
     result <- case gx of
         GNode tx x' | tx == T.typeOf (undefined :: Expr) -> do
@@ -154,10 +161,10 @@ treeWalker f gx = do
             let (children, generate) = gplate x
             map mkG . map generate . sequence <$> mapM (treeWalker f) children
     -- modifyM (tail :: [GNode] -> [GNode])
-    b <- getM
+    LocalFlag b <- getM
     if b
-        then putM False >> concatMapM (treeWalker f) result
-        else putM False >> return result
+        then concatMapM (treeWalker f) result
+        else return result
 
 
 applyRefns ::
