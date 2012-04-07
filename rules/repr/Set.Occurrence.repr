@@ -35,3 +35,35 @@ $
 $ UP:
 $ forAll i : B , B[i] = true . i in A
 $ 
+
+
+
+$ ALTERNATIVE
+
+$ ~~> Occurrence
+$ ~~> matrix indexed by [t] of bool
+$     where t :: int
+$ 
+$ *** set (size n, minSize nMin) of t
+$     ~~> (sum i : t . refn[i]) = n
+$     /\  (nMin <= n)
+$ 
+$ *** set (size n, minSize nMin) of t
+$     ~~> (sum i : t . refn[i]) = n
+$     /\  (nMin <= n)
+$ 
+$ *** set (size n, maxSize nMax) of t
+$     ~~> (sum i : t . refn[i]) = n
+$     /\  (nMax >= n)
+$ 
+$ *** set (size n) of t
+$     ~~> (sum i : t . refn[i]) = n
+$ 
+$ *** set (minSize n) of t
+$     ~~> (sum i : t . refn[i]) >= n
+$ 
+$ *** set (maxSize n) of t
+$     ~~> (sum i : t . refn[i]) <= n
+$ 
+$ *** set of t
+$     ~~> true

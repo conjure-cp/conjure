@@ -3,18 +3,18 @@
 ~~> matrix indexed by [fr] of to
     where fr :: int
 
-*** function (total) fr -> to
+*** function (total) fr --> to
 
-*** function (total, injective) fr -> to
+*** function (total, injective) fr --> to
     ~~> alldifferent(refn)
 
-*** function (total, surjective) fr -> to
+*** function (total, surjective) fr --> to
     ~~> forAll i : to . exists j : fr . refn[j] = i
 
-*** function (total, injective, surjective) fr -> to
+*** function (total, injective, surjective) fr --> to
     ~~> alldifferent(refn)
     /\  forAll i : to . exists j : fr . refn[j] = i
 
-*** function (total, bijective, _) fr -> to
+*** function (total, bijective, _) fr --> to
     ~~> alldifferent(refn)
     /\  forAll i : to . exists j : fr . refn[j] = i

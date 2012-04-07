@@ -1,6 +1,6 @@
 
 ~~> ExplicitVarSize
-~~> matrix indexed by [int(1..mx)] of tuple of (bool,t)
+~~> matrix indexed by [int(1..mx)] of (bool,t)
 ~~> (
         forAll i,j : int(1..mx), i < j /\ refn[i][0] /\ refn[j][0] . refn[i][1] != refn[j][1]
     )
