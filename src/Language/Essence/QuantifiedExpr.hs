@@ -133,54 +133,25 @@ instance MatchBind QuantifiedExpr
 
 instance ParsePrint QuantifiedExpr where
     parse = do
-        qnName   <- parse
+        qnName   <- choice [ try $ reserved "quantifier" >> parse
+                           , Identifier "forAll" <$ reserved "forAll"
+                           , Identifier "exists" <$ reserved "exists"
+                           , Identifier "sum"    <$ reserved "sum"
+                           ]
         qnVars   <- parse `sepBy1` comma
-        (qnDom,qnExpr,qnGuard,qnBody) <- dxgbFunc
-        -- qnDom    <- optionMaybe (colon *> parse)
-        -- qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
-        -- qnGuard  <- optionMaybe (comma *> parse)
-        -- qnBody   <- dot *> parse
+        qnDom    <- optionMaybe (colon *> parse)
+        qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
+        qnGuard' <- optionMaybe (comma *> parse)
+        qnBody   <- dot *> parse
+        let qnGuard = case qnGuard' of Nothing -> QuanGuard []; Just x -> QuanGuard [x]
         let
             f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
             f [i]    = QuantifiedExpr qnName i qnDom qnExpr qnGuard qnBody
             f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
-        return (f qnVars)
-        where
-            dxgbFunc
-                = choiceTry
-                        [ do
-                            colon
-                            d <- parse
-                            (x,g,b) <- xgbFunc
-                            return (Just d,x,g,b)
-                        , do
-                            (x,g,b) <- xgbFunc
-                            return (Nothing,x,g,b)
-                        ]
-
-            xgbFunc
-                = choiceTry
-                        [ do
-                            x <- (,) <$> parse <*> parse
-                            (g,b) <- gbFunc
-                            return (Just x,g,b)
-                        , do
-                            (g,b) <- gbFunc
-                            return (Nothing,g,b)
-                        ]
-
-            gbFunc
-                = choiceTry
-                        [ do
-                            g <- comma >> parse
-                            x <- dot >> parse
-                            return (QuanGuard [g],x)
-                        , do
-                            x <- dot >> parse
-                            return (QuanGuard [], x)
-                        ]
+        return (f (map Right qnVars))
     pretty (QuantifiedExpr qnName qnVar qnDom qnExpr qnGuard qnBody)
-        = let header =  pretty qnName
+        = let header =  (if qnName `notElem` ["forAll", "exists", "sum"] then "quantifier" else Pr.empty)
+                    <+> pretty qnName
                     <+> pretty qnVar
                     <+> ( case qnDom of
                             Nothing -> Pr.empty
