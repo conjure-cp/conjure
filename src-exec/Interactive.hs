@@ -4,7 +4,7 @@
 module Main where
 
 import Control.Applicative
-import Control.Monad ( (>=>), forM_, when )
+import Control.Monad ( (>=>), forM_, when, void )
 import Control.Monad.Error ( runErrorT )
 import Control.Monad.IO.Class ( MonadIO, liftIO )
 import Control.Monad.State ( MonadState, get, gets, put, StateT, evalStateT, execStateT )
@@ -301,7 +301,11 @@ main = do
         []   -> run repl
         [fp] -> do
             putStrLn ("Loading from: " ++ fp)
-            run $ lift (step (Load fp)) >> repl
+            run $ do
+                lift $ do
+                    void $ step $ Load fp
+                    void $ step $ DisplaySpec
+                repl
         _    ->
             putStrLn $ unlines [ "This program accepts 1 optional argument,"
                                , "which must be a file path pointing to an Essence specification."
