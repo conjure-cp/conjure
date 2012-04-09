@@ -5,13 +5,12 @@
 
 #define DATADIR "datafiles/"
 
--- #define DEBUG
 
 module Constants ( figlet, reservedNamesTxt, reservedOpNamesTxt
                  , FreshName, getFreshName, newRuleVar, isFreshName
                  , mkFreshNames
                  , mkPrettyFreshNames
-                 , trace, traceM
+                 , trace, traceM, TraceEnum(..)
                  ) where
 
 import Control.DeepSeq ( deepseq )
@@ -27,33 +26,20 @@ import Has
 import PrintUtils ( Doc, text )
 import Utils ( strip )
 
+-- import qualified Debug.Trace as D
 
 
-#ifdef DEBUG
-
-import qualified Debug.Trace as D
 
 {-# INLINE trace #-}
-trace :: String -> a -> a
-trace = D.trace
+trace :: TraceEnum -> String -> a -> a
+-- trace Parsing s = D.trace ("[Parsing] " ++ s)
+trace _       _ = id
 
 {-# INLINE traceM #-}
-traceM :: Monad m => String -> m ()
-traceM s = trace s $ return ()
+traceM :: Monad m => TraceEnum -> String -> m ()
+traceM e s = trace e s $ return ()
 
-#else
-
-{-# INLINE trace #-}
-trace :: String -> a -> a
-trace _ = id
-
-{-# INLINE traceM #-}
-traceM :: Monad m => String -> m ()
-traceM _ = return ()
-
-#endif
-
-
+data TraceEnum = Parsing | PatternMatching | TypeChecking | Debug
 
 
 figlet :: String
