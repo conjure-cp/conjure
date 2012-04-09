@@ -71,7 +71,7 @@ opDescriptor = helper
                     then return $ EOp op is
                     else fail ("Unexpected number of arguments in " ++ opFace op)
             )
-            ( \ xs -> text (opFace op) <> prettyList Pr.parens Pr.comma xs)
+            (\ xs -> text (opFace op) <> prettyList Pr.parens Pr.comma xs )
 
         genInfix :: Op -> Int -> Assoc -> OpDescriptor
         genInfix op prec assoc = OpInfix
@@ -166,7 +166,7 @@ opDescriptor = helper
                 pr (EOp TwoBars [x]) = "|" <> pretty x <> "|"
                 pr x = error $ "pretty TwoBars: " ++ show x
 
-        helper Index           = OpPostfix pa pr
+        helper Index           = OpPostfix (pa <?> "indexed expression") pr
             where
                 pa = do
                     let pIndexer = try pRList <|> parse
