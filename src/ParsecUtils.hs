@@ -47,19 +47,19 @@ ldef  = emptyDef { commentLine     = "$"
 lexer :: GenTokenParser String () Identity
 lexer = makeTokenParser ldef
 
-angles     :: Parser a -> Parser a;  angles     = T.angles     lexer
-braces     :: Parser a -> Parser a;  braces     = T.braces     lexer
-brackets   :: Parser a -> Parser a;  brackets   = T.brackets   lexer
-colon      :: Parser ();             colon      = T.colon      lexer   >> return ()
-comma      :: Parser ();             comma      = T.comma      lexer   >> return ()
-dot        :: Parser ();             dot        = T.dot        lexer   >> return ()
-identifier :: Parser String;         identifier = T.identifier lexer
-integer    :: Parser Integer;        integer    = natural      lexer
-parens     :: Parser a -> Parser a;  parens     = T.parens     lexer
-reserved   :: String -> Parser ();   reserved   = T.reserved   lexer
-reservedOp :: String -> Parser ();   reservedOp = T.reservedOp lexer
-symbol     :: String -> Parser ();   symbol s   = T.symbol     lexer s >> return ()
-whiteSpace :: Parser ();             whiteSpace = T.whiteSpace lexer
+angles     :: Parser a -> Parser a;  angles       = T.angles     lexer
+braces     :: Parser a -> Parser a;  braces       = T.braces     lexer
+brackets   :: Parser a -> Parser a;  brackets     = T.brackets   lexer
+colon      :: Parser ();             colon        = T.colon      lexer   >> return ()   <?> "colon"
+comma      :: Parser ();             comma        = T.comma      lexer   >> return ()   <?> "comma"
+dot        :: Parser ();             dot          = T.dot        lexer   >> return ()   <?> "dot"
+identifier :: Parser String;         identifier   = T.identifier lexer
+integer    :: Parser Integer;        integer      = natural      lexer                  <?> "integer literal"
+parens     :: Parser a -> Parser a;  parens       = T.parens     lexer
+reserved   :: String -> Parser ();   reserved   s = T.reserved   lexer s                <?> "reserved word"
+reservedOp :: String -> Parser ();   reservedOp s = T.reservedOp lexer s                <?> "reserved operator symbol"
+symbol     :: String -> Parser ();   symbol     s = T.symbol     lexer s >> return ()   <?> "symbol"
+whiteSpace :: Parser ();             whiteSpace   = T.whiteSpace lexer
 
 sepBy :: Parser a -> Parser sep -> Parser [a]
 sepBy  = sepEndBy
