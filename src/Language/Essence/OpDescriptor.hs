@@ -174,7 +174,7 @@ opDescriptor = helper
                             i <- optionMaybe parse
                             dot; dot
                             j <- optionMaybe parse
-                            return $ D $ DInt $ RFromTo i j
+                            return $ D $ DInt $ RFromTo [Right (i,j)]
                     is <- brackets $ pIndexer `sepBy1` comma
                     return (\ x -> foldl (\ m' i -> EOp Index [m', i]) x is)
                 pr (EOp Index [m,i]) =

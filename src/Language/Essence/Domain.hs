@@ -20,7 +20,7 @@ import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, elements )
 import Test.QuickCheck.Gen ( oneof )
 
-import Constants ( trace )
+import Constants
 import Has
 import GenericOps.Core ( NodeTag
                        , Hole, hole, HoleStatus(..)
@@ -244,7 +244,7 @@ instance Arbitrary Domain where
         ]
 
 instance TypeOf Domain where
-    typeOf p | trace ("typeOf Domain: " ++ show (pretty p)) False = undefined
+    typeOf p | trace TypeChecking ("typeOf Domain: " ++ show (pretty p)) False = undefined
     typeOf p@(DHole i)  = inScope (mkG p) $ typeOf i
     typeOf    DBool     = return TBool
     typeOf   (DInt  {}) = return TInt

@@ -6,21 +6,24 @@ module Language.Essence.Range where
 
 import Control.Applicative
 import Data.Generics ( Data )
-import Data.Maybe ( fromMaybe )
+import Data.Maybe ( fromMaybe, maybeToList )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary )
 import Test.QuickCheck.Gen ( oneof )
 
-import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList, MatchBind )
-import ParsecUtils ( comma, dot, optionMaybe, sepBy, try )
-import ParsePrint ( ParsePrint, parse, pretty, prettyList )
+import GenericOps.Core ( NodeTag, Hole
+                       , GPlate, gplate, gplateLeaf, gplateError
+                       , GNode, mkG, fromG
+                       , MatchBind )
+import ParsecUtils ( choiceTry, comma, dot, optionMaybe, sepBy )
+import ParsePrint ( ParsePrint, parse, pretty, prettyListDoc )
 import PrintUtils ( (<>) )
 import qualified PrintUtils as Pr
 
 
 
-data Range a = RAll | RList [a] | RFromTo (Maybe a) (Maybe a)
+data Range a = RAll | RFromTo [Either a (Maybe a, Maybe a)]
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance Data a => NodeTag (Range a)
@@ -29,33 +32,58 @@ instance Hole (Range a)
 
 instance (Eq a, Show a, Data a, GPlate a) => GPlate (Range a) where
     gplate RAll = gplateLeaf RAll
-    gplate (RList xs) = gplateUniList RList xs
-    gplate p@(RFromTo Nothing  Nothing ) = gplateLeaf p
-    gplate   (RFromTo Nothing  (Just y)) = gplateSingle  (\ y'      -> RFromTo Nothing   (Just y') ) y
-    gplate   (RFromTo (Just x) Nothing ) = gplateSingle  (\ x'      -> RFromTo (Just x') Nothing   ) x
-    gplate   (RFromTo (Just x) (Just y)) = gplateUniList (\ [x',y'] -> RFromTo (Just x') (Just y') ) [x,y]
+    gplate (RFromTo xs) =
+        ( map mkG $ concatMap (\ t -> case t of Left a -> [a]; Right (b,c) -> maybeToList b ++ maybeToList c ) xs
+        , RFromTo . consume xs
+        )
+
+consume :: GPlate a => [Either b (Maybe b, Maybe b)] -> [GNode] -> [Either a (Maybe a, Maybe a)]
+
+consume (Left _                 :xs) (y:ys) = case fromG y of
+    Just z  -> Left z : consume xs ys
+    Nothing -> gplateError "Range{1}"
+                                                              
+consume (Right (Nothing,Nothing):xs)    ys  = Right (Nothing,Nothing) : consume xs ys
+
+consume (Right (Just _ ,Nothing):xs) (y:ys) = case fromG y of
+    Just z  -> Right (Just z, Nothing) : consume xs ys
+    Nothing -> gplateError "Range{2}"
+                                                              
+consume (Right (Nothing,Just _ ):xs) (y:ys) = case fromG y of
+    Just z  -> Right (Nothing, Just z) : consume xs ys
+    Nothing -> gplateError "Range{3}"
+
+consume (Right (Just _ ,Just _ ):xs) (y1:y2:ys) = case (fromG y1, fromG y2) of
+    (Just z1, Just z2) -> Right (Just z1, Just z2) : consume xs ys
+    _ -> gplateError "Range{4}"
+
+consume [] [] = []
+
+consume _ _ = gplateError "Range{5}"
+
 
 instance MatchBind a => MatchBind (Range a)
 
 instance ParsePrint a => ParsePrint (Range a) where
-    parse = try pRList <|> pRFromTo
+    parse = RFromTo <$> sepBy one comma
         where
-            pRList = do
+            one = choiceTry [ Right <$> singleRange
+                            , Left  <$> parse
+                            ]
+            singleRange = do
                 i <- optionMaybe parse
                 dot; dot
                 j <- optionMaybe parse
-                return $ RFromTo i j
-            pRFromTo = RList <$> sepBy parse comma
+                return (i,j)
     pretty RAll = error "do not call pretty Range.RAll"
-    pretty (RList      xs) = prettyList id Pr.comma xs
-    pretty (RFromTo fr to) = fr' <> ".." <> to'
+    pretty (RFromTo xs) = prettyListDoc id Pr.comma (map one xs)
         where
-            fr' = fromMaybe Pr.empty (pretty <$> fr)
-            to' = fromMaybe Pr.empty (pretty <$> to)
+            one (Left a) = pretty a
+            one (Right (a,b)) = fromMaybe Pr.empty (pretty <$> a) <> ".." <>
+                                fromMaybe Pr.empty (pretty <$> b)
 
 instance Arbitrary a => Arbitrary (Range a) where
     arbitrary = oneof
         [ return RAll
-        , RList   <$> arbitrary
-        , RFromTo <$> arbitrary <*> arbitrary
+        , RFromTo <$> arbitrary
         ]

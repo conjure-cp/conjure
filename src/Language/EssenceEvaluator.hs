@@ -263,7 +263,7 @@ simplifyReal param = do
 
 domSize :: Domain -> Maybe Expr
 domSize DBool = Just $ V $ VInt $ 2
-domSize (DInt (RFromTo (Just lb) (Just ub))) = Just $ EOp Plus [ EOp Minus [ ub, lb ], V $ VInt 1 ]
+domSize (DInt (RFromTo [Right (Just lb, Just ub)])) = Just $ EOp Plus [ EOp Minus [ ub, lb ], V $ VInt 1 ]
 domSize (AnyDom TSet [d] (DomainAttrs [])) = do
     ds <- domSize d
     return $ EOp Factorial [ds]
@@ -789,14 +789,14 @@ instance Evaluate Expr Value where
                     else evalArrowError "index out of bounds" p
             (Nothing,D jj) -> case (i,jj) of
                                 (VMatrix is, DInt RAll) -> p ~~> VMatrix is
-                                (VMatrix is, DInt (RFromTo Nothing   Nothing)) -> p ~~> VMatrix is
-                                (VMatrix is, DInt (RFromTo (Just lb) Nothing)) -> do
+                                (VMatrix is, DInt (RFromTo [Right (Nothing, Nothing)])) -> p ~~> VMatrix is
+                                (VMatrix is, DInt (RFromTo [Right (Just lb, Nothing)])) -> do
                                     lbInt :: Int <- evaluate lb
                                     p ~~> VMatrix $ drop lbInt is
-                                (VMatrix is, DInt (RFromTo Nothing (Just ub))) -> do
+                                (VMatrix is, DInt (RFromTo [Right (Nothing, Just ub)])) -> do
                                     ubInt :: Int <- evaluate ub
                                     p ~~> VMatrix $ take (ubInt + 1) is
-                                (VMatrix is, DInt (RFromTo (Just lb) (Just ub))) -> do
+                                (VMatrix is, DInt (RFromTo [Right (Just lb, Just ub)])) -> do
                                     lbInt :: Int <- evaluate lb
                                     ubInt :: Int <- evaluate ub
                                     p ~~> VMatrix $ take (ubInt + 1 - lbInt) $ drop lbInt is

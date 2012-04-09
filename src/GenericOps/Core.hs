@@ -35,7 +35,7 @@ import Data.Typeable ( cast )
 import Unsafe.Coerce ( unsafeCoerce )
 import qualified Data.Map as M
 
-import Constants ( traceM )
+import Constants
 import Has
 import ParsecUtils ( choiceTry )
 import ParsePrint
@@ -402,7 +402,7 @@ class MatchBind a where
         , Has st [(GNode,GNode)]
         ) => a -> a -> m ()
     match p a = inScope (mkG p, mkG a) $ do
-        traceM $ "match " ++ show (pretty p) ++ " ~~ " ++ show (pretty a)
+        traceM PatternMatching $ "match " ++ show (pretty p) ++ " ~~ " ++ show (pretty a)
         -- add this node on top of the call stack.
         case hole p of                                                          -- check hole-status of the pattern.
             UnnamedHole  -> return ()                                           -- unnamed hole: matching succeeds, no bindings.

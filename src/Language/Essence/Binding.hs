@@ -15,7 +15,7 @@ import Data.Generics ( Data )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
-import Constants ( trace )
+import Constants
 import Has
 import GenericOps.Core ( NodeTag
                        , Hole
@@ -45,7 +45,6 @@ isOrderedType ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Type -> m Bool
-isOrderedType p | trace ("isOrderedType: " ++ show (pretty p)) False = undefined
 isOrderedType TBool {}  = return True
 isOrderedType TInt  {}  = return True
 isOrderedType TEnum {}  = return True
@@ -193,7 +192,7 @@ instance ParsePrint [Either Binding Where] where
     pretty = Pr.vcat . map pretty
 
 instance TypeOf Binding where
-    typeOf p | trace ("typeOf Binding: " ++ show (pretty p)) False = undefined
+    typeOf p | trace TypeChecking ("typeOf Binding: " ++ show (pretty p)) False = undefined
     typeOf (Find          _ d) = typeOf d
     typeOf (Given         _ d) = typeOf d
     typeOf (LettingDomain _ d) = typeOf d

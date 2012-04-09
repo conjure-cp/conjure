@@ -17,7 +17,7 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, choose )
 
-import Constants ( trace )
+import Constants
 import Has ( getM )
 import GenericOps.Core ( NodeTag
                        , Hole
@@ -58,7 +58,7 @@ instance Arbitrary Identifier where
     arbitrary = Identifier . return <$> choose ('a', 'z')
 
 instance TypeOf Identifier where
-    typeOf p | trace ("typeOf Identifier: " ++ show (pretty p)) False = undefined
+    typeOf p | trace TypeChecking ("typeOf Identifier: " ++ show (pretty p)) False = undefined
     typeOf (Identifier nm') = do
         -- bindings <- get
         -- return $ case M.lookup nm bindings of

@@ -47,7 +47,7 @@ instance MatchBind StructuredVar
 instance ParsePrint StructuredVar where
     parse = choiceTry [ do reserved "tuple"; STuple <$> parens (sepBy1 parse comma)
                       , STuple  <$> parens   (countSepAtLeast 2 parse comma)
-                      , SMatrix <$> brackets (countSepAtLeast 2 parse comma)
+                      , SMatrix <$> brackets (countSepAtLeast 1 parse comma)
                       , I . Identifier <$> identifier
                       ]
     pretty (STuple  ss) = prettyList Pr.parens   Pr.comma ss

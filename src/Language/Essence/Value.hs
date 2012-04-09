@@ -221,7 +221,7 @@ instance TypeOf Value where
                                       ]
 
 instance DomainOf Value where
-    domainOf (VBool False) = return $ DInt $ RList [ V $ VInt 0 ]
-    domainOf (VBool True ) = return $ DInt $ RList [ V $ VInt 1 ]
-    domainOf (VInt  i    ) = return $ DInt $ RList [ V $ VInt i ]
+    domainOf (VBool False) = return $ DInt $ RFromTo [ Left $ V $ VInt 0 ]
+    domainOf (VBool True ) = return $ DInt $ RFromTo [ Left $ V $ VInt 1 ]
+    domainOf (VInt  i    ) = return $ DInt $ RFromTo [ Left $ V $ VInt i ]
     domainOf _ = throwError "domainOf Value not implemented."

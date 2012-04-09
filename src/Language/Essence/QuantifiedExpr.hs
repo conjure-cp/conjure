@@ -16,7 +16,7 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified  Data.Map as M
 
-import Constants ( traceM )
+import Constants
 import Has
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError, gplateUniList
@@ -216,19 +216,56 @@ instance GPlate QuantifiedExpr where
 
 instance MatchBind QuantifiedExpr
 
+
+
 instance ParsePrint QuantifiedExpr where
     parse = do
         qnName   <- parse
         qnVars   <- parse `sepBy1` comma
-        qnDom    <- optionMaybe (colon *> parse)
-        qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
-        qnGuard  <- optionMaybe (comma *> parse)
-        qnBody   <- dot *> parse
+        (qnDom,qnExpr,qnGuard,qnBody) <- dxgbFunc
+        -- qnDom    <- optionMaybe (colon *> parse)
+        -- qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
+        -- qnGuard  <- optionMaybe (comma *> parse)
+        -- qnBody   <- dot *> parse
         let
             f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
-            f [i]    = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard (maybeToList qnGuard)) qnBody
+            f [i]    = QuantifiedExpr qnName i qnDom qnExpr qnGuard qnBody
             f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
         return (f qnVars)
+        where
+            dxgbFunc
+                = choiceTry
+                        [ do
+                            colon
+                            d <- parse
+                            (x,g,b) <- xgbFunc
+                            return (Just d,x,g,b)
+                        , do
+                            (x,g,b) <- xgbFunc
+                            return (Nothing,x,g,b)
+                        ]
+
+            xgbFunc
+                = choiceTry
+                        [ do
+                            x <- (,) <$> parse <*> parse
+                            (g,b) <- gbFunc
+                            return (Just x,g,b)
+                        , do
+                            (g,b) <- gbFunc
+                            return (Nothing,g,b)
+                        ]
+
+            gbFunc
+                = choiceTry
+                        [ do
+                            g <- comma >> parse
+                            x <- dot >> parse
+                            return (QuanGuard [g],x)
+                        , do
+                            x <- dot >> parse
+                            return (QuanGuard [], x)
+                        ]
     pretty (QuantifiedExpr qnName qnVar qnDom qnExpr qnGuard qnBody)
         = let header =  pretty qnName
                     <+> pretty qnVar
@@ -279,7 +316,7 @@ instance TypeOf QuantifiedExpr where
                     Left (Identifier nm) -> addBinding nm tForQnVar
                     _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show qnVar
 
-                traceM $ "adding quantified variable in context: " ++ show (qnVar,tForQnVar)
+                traceM Debug $ "adding quantified variable in context: " ++ show (qnVar,tForQnVar)
 
                 -- check guards are bools
                 forM_ qnGuards $ \ x -> inScope (mkG x) $ do 
