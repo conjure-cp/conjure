@@ -149,8 +149,7 @@ instance ParsePrint Spec where
 
             pConstraints :: Parser [Expr]
             pConstraints = do
-                reserved "such"
-                reserved "that"
+                (reserved "such" >> reserved "that") <?> "such that"
                 sepBy1 parse comma
 
     pretty (Spec{..}) = Pr.vcat
