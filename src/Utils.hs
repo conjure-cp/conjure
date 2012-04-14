@@ -14,6 +14,7 @@ module Utils
     , mapButLast, matchingOuterParens
     , equalLengths
     , concatMapM, allEq
+    , isLeft, isRight
     ) where
 
 import Control.Applicative
@@ -26,6 +27,13 @@ import Text.PrettyPrint ( lineLength, renderStyle, style )
 import Text.Show.Pretty ( ppDoc )
 
 
+isLeft :: Either a b -> Bool
+isLeft Left {} = True
+isLeft _ = False
+
+isRight :: Either a b -> Bool
+isRight Right {} = True
+isRight _ = False
 
 concatMapM :: (Applicative m, Monad m) => (a -> m [b]) -> [a] -> m [b]
 concatMapM f xs = concat <$> mapM f xs
