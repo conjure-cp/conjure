@@ -2,7 +2,7 @@ language Essence 2.0
 
 given a,b,c : int
 
-find x : set (size a, minSize b) of int(0..9)
-find y : set (size a, maxSize c) of int(0..9)
+find x : set (size a, minSize b) of (int(0..9), bool)
+find y : set (size a, maxSize c) of (int(0..9), bool)
 
-such that forAll i in x union y, i <= 4 . i % 2 = 0
+such that forAll (a,b) in x union y, a <= 4 . a % 2 = 0 <-> b
