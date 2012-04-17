@@ -19,22 +19,23 @@ import Constants
 import Has
 import GenericOps.Core ( NodeTag
                        , Hole
-                       , GPlate, gplate, gplateTwo
+                       , GPlate, gplate, gplateTwo, gplateSingle
                        , GNode
                        , MatchBind, BindingsMap, addBinding, getBinding )
-import ParsecUtils
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), Doc)
 import qualified PrintUtils as Pr
 
-import Language.Essence.Identifier
 import Language.Essence.Domain
 import {-# SOURCE #-} Language.Essence.Expr
+import Language.Essence.Identifier
 import Language.Essence.Lambda
 import Language.Essence.QuantifierDecl
+import {-# SOURCE #-} Language.Essence.QuantifiedExpr
 import Language.Essence.Type
 import Language.Essence.Where
-
 
 
 isOrderedType ::
@@ -70,16 +71,8 @@ addBinding' (LettingDomain (Identifier i) j) = addBinding i j
 addBinding' (LettingExpr   (Identifier i) j) = addBinding i j
 addBinding' (LettingLambda (Identifier i) j) = addBinding i j
 addBinding' (LettingQuan   (Identifier i) j) = addBinding i j
-
-bindingName :: Binding -> String
-bindingName (Find          (Identifier nm) _) = nm
-bindingName (Given         (Identifier nm) _) = nm
-bindingName (LettingType   (Identifier nm) _) = nm
-bindingName (GivenType     (Identifier nm) _) = nm
-bindingName (LettingDomain (Identifier nm) _) = nm
-bindingName (LettingExpr   (Identifier nm) _) = nm
-bindingName (LettingLambda (Identifier nm) _) = nm
-bindingName (LettingQuan   (Identifier nm) _) = nm
+addBinding' b@(BindingDim  (Identifier i) _) = addBinding i b
+addBinding'    BindingDimFind {}             = return ()
 
 
 data Binding
@@ -91,6 +84,8 @@ data Binding
     | LettingExpr   Identifier Expr
     | LettingLambda Identifier Lambda
     | LettingQuan   Identifier QuantifierDecl
+    | BindingDim    Identifier Domain
+    | BindingDimFind Expr
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance NodeTag Binding
@@ -106,6 +101,8 @@ instance GPlate Binding where
     gplate (LettingExpr   i j) = gplateTwo LettingExpr   i j
     gplate (LettingLambda i j) = gplateTwo LettingLambda i j
     gplate (LettingQuan   i j) = gplateTwo LettingQuan   i j
+    gplate (BindingDim    i j) = gplateTwo BindingDim    i j
+    gplate (BindingDimFind  i) = gplateSingle BindingDimFind i
 
 instance MatchBind Binding
 
@@ -119,12 +116,14 @@ instance ParsePrint Binding where
     pretty (LettingExpr   i j) = "letting" <+> pretty i <+> "be"              <+> pretty j
     pretty (LettingLambda i j) = "letting" <+> pretty i <+> "be" <+> "lambda" <+> pretty j
     pretty (LettingQuan   i j) = "letting" <+> pretty i <+> "be"              <+> pretty j
+    pretty (BindingDim    i j) = "dim"     <+> pretty i <> Pr.colon <+> pretty j
+    pretty (BindingDimFind  i) = prettyExprTopLevel i
 
 instance ParsePrint [Binding] where
     parse = do
-        let one = choiceTry
+        let one = msum1
                     [ do
-                        reserved "find"
+                        lexeme L_find
                         decls <- flip sepBy1 comma $ do
                             is <- parse `sepBy1` comma
                             colon
@@ -133,31 +132,31 @@ instance ParsePrint [Binding] where
                         return $ concat decls
                         <?> "find statement"
                     , do
-                        reserved "given"
+                        lexeme L_given
                         decls <- flip sepBy1 comma $ do
                             is <- parse `sepBy1` comma
-                            choiceTry
+                            msum1
                                 [ do
                                     colon
                                     j <- parse
                                     return [ Given i j | i <- is ]
                                 , do
-                                    reserved "new"
-                                    reserved "type"
-                                    reserved "enum"
+                                    lexeme L_new
+                                    lexeme L_type
+                                    lexeme L_enum
                                     return [ GivenType i (TEnum Nothing) | i <- is ]
                                 ]
                         return $ concat decls
                         <?> "given statement"
                     , do
-                        reserved "letting"
+                        lexeme L_letting
                         decls <- flip sepBy1 comma $ do
                             is <- parse `sepBy1` comma
-                            reserved "be"
-                            choiceTry
+                            lexeme L_be
+                            msum1
                                 [ do
-                                    reserved "new"
-                                    reserved "type"
+                                    lexeme L_new
+                                    lexeme L_type
                                     j <- parse
                                     case j of
                                         TEnum {}    -> return ()
@@ -165,11 +164,11 @@ instance ParsePrint [Binding] where
                                         _           -> fail ""
                                     return [ LettingType i j | i <- is ]
                                 , do
-                                    reserved "domain"
+                                    lexeme L_domain
                                     j <- parse
                                     return [ LettingDomain i j | i <- is ]
                                 , do
-                                    reserved "lambda"
+                                    lexeme L_lambda
                                     j <- parse
                                     return [ LettingLambda i j | i <- is ]
                                 , do
@@ -181,8 +180,17 @@ instance ParsePrint [Binding] where
                                 ]
                         return $ concat decls
                         <?> "letting statement"
+                    , do
+                        lexeme L_dim
+                        is <- parse `sepBy1` comma
+                        colon
+                        j  <- parse
+                        return [ BindingDim i j | i <- is ]
+                    , do
+                        let p = pDimExpr <||> pQuantifiedExprAsExpr p
+                        return . BindingDimFind <$> p
                     ]
-        concat <$> many1 one
+        concat <$> some one
     pretty = Pr.vcat . map pretty
 
 instance ParsePrint [Either Binding Where] where
@@ -203,3 +211,5 @@ instance TypeOf Binding where
     typeOf (LettingType   _ t         ) = return t
     typeOf (GivenType     i (TEnum {})) = return (THole i)
     typeOf (GivenType     _ t         ) = return t
+    typeOf (BindingDim    _ d) = typeOf d
+    typeOf BindingDimFind {}   = return TBool

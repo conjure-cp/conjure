@@ -23,11 +23,12 @@ structuredVars spec = do
         f q@(QuantifiedExpr {quanVar = Right sv}) = do
             newName <- getFreshName
             let mapping = getMapping newName sv
-            return $ flip bottomUp q $ \ t -> case t of
-                                                EHole (Identifier nm) -> case M.lookup nm mapping of
-                                                                            Nothing -> t
-                                                                            Just t' -> t'
-                                                _ -> t
+            let q' = flip bottomUp q $ \ t -> case t of
+                        EHole (Identifier nm) -> case M.lookup nm mapping of
+                                                        Nothing -> t
+                                                        Just t' -> t'
+                        _ -> t
+            return q' { quanVar = Left (Identifier newName) }
         f q = return q
 
 

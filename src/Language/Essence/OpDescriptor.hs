@@ -4,12 +4,10 @@
 
 module Language.Essence.OpDescriptor where
 
-import Control.Applicative
 import Control.Arrow ( second )
-import Control.Monad.Identity
-import Data.Char ( isLetter, isNumber )
 
-import ParsecUtils
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint
 import PrintUtils ( (<+>), (<>), text )
 import qualified PrintUtils as Pr
@@ -22,19 +20,17 @@ import Language.Essence.Range
 
 isLeftAssoc :: Op -> Bool
 isLeftAssoc op = case opDescriptor op of
-    OpInfix (_, Infix _ AssocLeft) _ -> True
+    OpInfix (_, InfixL, _) _ -> True
     _ -> False
 
 isRightAssoc :: Op -> Bool
 isRightAssoc op = case opDescriptor op of
-    OpInfix (_, Infix _ AssocRight) _ -> True
+    OpInfix (_, InfixR, _) _ -> True
     _ -> False
 
 
 
-type OperatorParser = Operator String () Identity Expr
-
-data Fixity = InfixL | InfixN | InfixR
+data Fixity = InfixL | InfixN | InfixR deriving Eq
 
 -- will be used while parsing and pretty-printing operators
 data OpDescriptor
@@ -42,7 +38,7 @@ data OpDescriptor
             (Parser Expr)
             ([Expr] -> Pr.Doc)
     | OpInfix
-            (Int, OperatorParser)
+            (Int, Fixity, Parser (Expr -> Expr -> Expr))
             ((Int -> Expr -> Pr.Doc) -> Int -> Expr -> Expr -> Pr.Doc)
     | OpPrefix
             (Parser (Expr -> Expr))
@@ -57,86 +53,91 @@ data OpDescriptor
 opDescriptor :: Op -> OpDescriptor
 opDescriptor = helper
     where
-        pFace :: String -> Parser ()
-        pFace s
-            | all (\ i -> isLetter i || isNumber i || i == '_' ) s = reserved s <?> "operator"
-            | otherwise = reservedOp s <?> "operator"
+
+        pFace :: Op -> Parser ()
+        pFace op = case opFace op of
+                    Nothing -> error $ "opFace " ++ show op
+                    Just f  -> lexeme f
+
+        prFace :: Op -> String;
+        prFace op = case opFace op of
+                    Nothing -> error $ "opFace " ++ show op
+                    Just f  -> show $ lexemeFace f
 
         genLispy :: Op -> [Int] -> OpDescriptor
         genLispy op cards = OpLispy
             ( do
-                reserved (opFace op)
+                pFace op <?> "expecting" <+> maybe Pr.empty lexemeFace (opFace op)
                 is <- parens (parse `sepBy1` comma)
                 if length is `elem` cards
                     then return $ EOp op is
-                    else fail ("Unexpected number of arguments in " ++ opFace op)
+                    else fail ("Unexpected number of arguments in " ++ prFace op)
             )
-            (\ xs -> text (opFace op) <> prettyList Pr.parens Pr.comma xs )
+            (\ xs -> text (prFace op) <> prettyList Pr.parens Pr.comma xs )
 
-        genInfix :: Op -> Int -> Assoc -> OpDescriptor
+        genInfix :: Op -> Int -> Fixity -> OpDescriptor
         genInfix op prec assoc = OpInfix
             ( prec
-            , Infix ( do pFace (opFace op)
-                         return $ \ x y -> EOp op [x,y]
-                    )
-                    assoc
+            , assoc
+            , do pFace op
+                 return $ \ x y -> EOp op [x,y]
             )
             ( \ prettyPrec envPrec x y -> case assoc of
-                    AssocLeft  -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    x
-                                                                        , text (opFace op)
+                    InfixL     -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    x
+                                                                        , text $ prFace op
                                                                         , prettyPrec (prec+1) y
                                                                         ]
-                    AssocNone  -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) x
-                                                                        , text (opFace op)
+                    InfixN     -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) x
+                                                                        , text $ prFace op
                                                                         , prettyPrec (prec+1) y
                                                                         ]
-                    AssocRight -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) x
-                                                                        , text (opFace op)
+                    InfixR     -> Pr.parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) x
+                                                                        , text $ prFace op
                                                                         , prettyPrec  prec    y
                                                                         ]
             )
 
         genPrefix :: Op -> OpDescriptor
         genPrefix op = OpPrefix
-            ( do pFace (opFace op)
+            ( do pFace op
                  return $ \ x -> EOp op [x]
             )
-            ( \ x -> text (opFace op) <> Pr.parensIf (not $ isAtomicExpr x) (pretty x) )
+            ( \ x -> text (prFace op) <> Pr.parensIf (not $ isAtomicExpr x) (pretty x) )
 
         genPostfix :: Op -> OpDescriptor
         genPostfix op = OpPostfix
-            ( do pFace (opFace op)
+            ( do pFace op
                  return $ \ x -> EOp op [x]
             )
-            ( \ x -> Pr.parensIf (not $ isAtomicExpr x) (pretty x) <> text (opFace op) )
+            ( \ x -> Pr.parensIf (not $ isAtomicExpr x) (pretty x) <> text (prFace op) )
 
         helper :: Op -> OpDescriptor
-        helper op@Plus         = genInfix    op   600  AssocLeft
-        helper op@Minus        = genInfix    op   600  AssocLeft
-        helper op@Times        = genInfix    op   700  AssocLeft
-        helper op@Div          = genInfix    op   700  AssocLeft
-        helper op@Mod          = genInfix    op   700  AssocLeft
-        helper op@Pow          = genInfix    op   800  AssocRight
+        helper op@Plus         = genInfix    op   600  InfixL
+        helper op@Minus        = genInfix    op   600  InfixL
+        helper op@Times        = genInfix    op   700  InfixL
+        helper op@Div          = genInfix    op   700  InfixL
+        helper op@Mod          = genInfix    op   700  InfixL
+        helper op@Pow          = genInfix    op   800  InfixR
         helper op@Negate       = genPrefix   op
         helper op@Factorial    = genPostfix  op
-        helper op@Lt           = genInfix    op   400  AssocNone
-        helper op@Leq          = genInfix    op   400  AssocNone
-        helper op@Gt           = genInfix    op   400  AssocNone
-        helper op@Geq          = genInfix    op   400  AssocNone
-        helper op@Neq          = genInfix    op   400  AssocNone
-        helper op@Eq           = genInfix    op   400  AssocNone
+        helper op@Lt           = genInfix    op   400  InfixN
+        helper op@Leq          = genInfix    op   400  InfixN
+        helper op@Gt           = genInfix    op   400  InfixN
+        helper op@Geq          = genInfix    op   400  InfixN
+        helper op@Neq          = genInfix    op   400  InfixN
+        helper op@Eq           = genInfix    op   400  InfixN
         helper op@Not          = genPrefix   op
-        helper op@Or           = genInfix    op   110  AssocRight
-        helper op@And          = genInfix    op   120  AssocRight
-        helper op@Imply        = genInfix    op    50  AssocNone
-        helper op@Iff          = genInfix    op    50  AssocNone
-        helper op@Union        = genInfix    op   200  AssocLeft
-        helper op@Intersect    = genInfix    op   300  AssocLeft
-        helper op@Subset       = genInfix    op   400  AssocNone
-        helper op@SubsetEq     = genInfix    op   400  AssocNone
-        helper op@Supset       = genInfix    op   400  AssocNone
-        helper op@SupsetEq     = genInfix    op   400  AssocNone
-        helper op@In           = genInfix    op   150  AssocNone
+        helper op@Or           = genInfix    op   110  InfixR
+        helper op@And          = genInfix    op   120  InfixR
+        helper op@Imply        = genInfix    op    50  InfixN
+        helper op@Iff          = genInfix    op    50  InfixN
+        helper op@Union        = genInfix    op   200  InfixL
+        helper op@Intersect    = genInfix    op   300  InfixL
+        helper op@Subset       = genInfix    op   400  InfixN
+        helper op@SubsetEq     = genInfix    op   400  InfixN
+        helper op@Supset       = genInfix    op   400  InfixN
+        helper op@SupsetEq     = genInfix    op   400  InfixN
+        helper op@In           = genInfix    op   150  InfixN
         helper op@Max          = genLispy    op   [1,2]
         helper op@Min          = genLispy    op   [1,2]
         helper op@ToSet        = genLispy    op   [1]
@@ -154,22 +155,22 @@ opDescriptor = helper
         helper op@Parts        = genLispy    op   [1]
         helper op@Freq         = genLispy    op   [2]
         helper op@Hist         = genLispy    op   [2]
-        helper op@HasType      = genInfix    op    1000 AssocNone
-        helper op@HasDomain    = genInfix    op    1000 AssocNone
+        helper op@HasType      = genInfix    op    1000 InfixN
+        helper op@HasDomain    = genInfix    op    1000 InfixN
         helper op@AllDiff      = genLispy    op   [1]
         helper op@ToInt        = genLispy    op   [1]
         helper op@Flatten      = genLispy    op   [1,2]
         helper op@NormIndices  = genLispy    op   [1]
-        helper TwoBars         = OpSpecial pa pr
+        helper TwoBars         = OpSpecial (pa <??> "|expression|") pr
             where
-                pa = between (reservedOp "|") (reservedOp "|") $ do i <- parse; return $ EOp TwoBars [i]
+                pa = between (lexeme L_Bar) (lexeme L_Bar) $ do i <- parse; return $ EOp TwoBars [i]
                 pr (EOp TwoBars [x]) = "|" <> pretty x <> "|"
                 pr x = error $ "pretty TwoBars: " ++ show x
 
         helper Index           = OpPostfix (pa <?> "indexed expression") pr
             where
                 pa = do
-                    let pIndexer = try pRList <|> parse
+                    let pIndexer = pRList <||> parse
                         pRList   = do
                             i <- optionMaybe parse
                             dot; dot
@@ -191,7 +192,7 @@ opDescriptor = helper
             where
                 pa = braces $ do
                     ijs <- do i <- parse
-                              reservedOp "-->"
+                              lexeme L_LongArrow
                               j <- parse
                               return (i,j)
                            `sepBy1` comma

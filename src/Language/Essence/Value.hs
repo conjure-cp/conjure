@@ -22,11 +22,12 @@ import GenericOps.Core ( NodeTag
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
                        , fromGs
                        , MatchBind, BindingsMap )
-import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<+>), text )
 import qualified PrintUtils as Pr
 
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import Language.Essence.Binding
 import Language.Essence.Domain
 import Language.Essence.Expr
@@ -75,7 +76,7 @@ instance GPlate Value where
 instance MatchBind Value
 
 instance ParsePrint Value where
-    parse = choiceTry
+    parse = msum1
                 [ pHole, pBool, pInt
                 , pMatrix, pTuple, pSet, pMSet
                 , pFunction, pRelation, pPartition
@@ -83,34 +84,35 @@ instance ParsePrint Value where
         where
             pHole = VHole <$> parse
 
-            pBool = VBool False <$ reserved "false"
+            pBool = VBool False <$ lexeme L_false
                     <|>
-                    VBool True  <$ reserved "true"
+                    VBool True  <$ lexeme L_true
 
             pInt = VInt <$> integer
 
             pMatrix = VMatrix <$> brackets (sepBy parse comma)
 
-            pTuple = try (do reserved "tuple"; VTuple <$> parens (sepBy1 parse comma))
-                     <|>
-                     VTuple <$> parens (countSepAtLeast 2 parse comma)
+            pTuple = msum1
+                        [ do lexeme L_tuple; VTuple <$> parens (sepBy1 parse comma)
+                        , VTuple <$> parens (countSepAtLeast 2 parse comma)
+                        ]
 
             pSet = do VSet <$> braces (sepBy parse comma)
 
-            pMSet = do reserved "mset"; VMSet <$> parens (sepBy parse comma)
+            pMSet = do lexeme L_mset; VMSet <$> parens (sepBy parse comma)
 
-            pFunction = do reserved "function"; VFunction <$> parens (sepBy pTuple2 comma)
+            pFunction = do lexeme L_function; VFunction <$> parens (sepBy pTuple2 comma)
                 where
                     pTuple2 :: Parser Expr
                     pTuple2 = do
                         i <- parse
-                        reservedOp "-->"
+                        lexeme L_LongArrow
                         j <- parse
                         return $ V (VTuple [i,j])
 
-            pRelation = do reserved "relation"; VRelation <$> parens (sepBy (V <$> pTuple) comma)
+            pRelation = do lexeme L_relation; VRelation <$> parens (sepBy (V <$> pTuple) comma)
 
-            pPartition = do reserved "partition"; VPartition <$> parens (sepBy aPart comma)
+            pPartition = do lexeme L_partition; VPartition <$> parens (sepBy aPart comma)
                 where
                     aPart :: Parser Expr
                     aPart = (V . VSet) <$> braces (sepBy parse comma)

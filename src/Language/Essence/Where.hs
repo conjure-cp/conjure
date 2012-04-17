@@ -11,7 +11,8 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
 import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateSingle, MatchBind )
-import ParsecUtils ( (<?>), comma, many1, reserved, sepBy1 )
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>) )
 import qualified PrintUtils as Pr
@@ -38,8 +39,8 @@ instance ParsePrint Where where
 
 instance ParsePrint [Where] where
     parse = do
-        let one = do reserved "where"
+        let one = do lexeme L_where
                      map Where <$> parse `sepBy1` comma
-        concat <$> many1 one
+        concat <$> some one
         <?> "where statement"
     pretty = Pr.vcat . map pretty

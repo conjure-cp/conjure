@@ -8,7 +8,7 @@ module Language.Essence.Domain where
 
 import Control.Applicative
 import Control.Arrow ( first, second )
-import Control.Monad ( ap, liftM, msum, void )
+import Control.Monad ( ap, liftM, msum )
 import Control.Monad.Error ( MonadError, ErrorT, throwError, runErrorT )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
@@ -19,6 +19,7 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, elements )
 import Test.QuickCheck.Gen ( oneof )
+import qualified Data.Text.Lazy as T
 
 import Constants
 import Has
@@ -28,10 +29,12 @@ import GenericOps.Core ( NodeTag
                        , GNode, mkG, fromG, fromGs
                        , MatchBind, match, BindingsMap, inScope
                        )
-import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<+>), (<>), text, Doc )
 import qualified PrintUtils as Pr
+
+import Language.EssenceLexer
+import Language.EssenceLexerP
 
 import {-# SOURCE #-} Language.Essence.Expr
 import                Language.Essence.Identifier
@@ -130,78 +133,89 @@ instance GPlate Domain where
 instance MatchBind Domain
 
 instance ParsePrint Domain where
-    parse = choiceTry
-                [ pBool, pInt, pEnum, pMatrix
-                , pTuple, pSetMSet "set" TSet, pSetMSet "mset" TMSet
-                , pFunction, pRelation, pPartition
-                , pIndices
-                , pDHole
-                , between (reservedOp "`") (reservedOp "`") parse
-                -- , between (reservedOp "'") (reservedOp "'") parse
-                ]
-        where
-            pDHole = DHole <$> parse
+    parse = do
 
-            pBool = DBool <$ reserved "bool"
+        lxm <- next
 
-            pInt  = do reserved "int" ; DInt <$> (try (parens parse) <|> return RAll)
+        case lxm of
 
-            pEnum = DEnum <$> parse <*> parens parse
-
-            -- needed to disambiguate from DHole
-            -- DHole can still be resolved to DUnnamed, after parsing. TODO: make it so!
-            -- pUnnamed = do reserved "unnamed";  DUnnamed <$> parse
-
-            pMatrix = do
-                reserved "matrix"
-                reserved "indexed"
-                reserved "by"
-                is <- brackets (parse `sepBy1` comma)
-                reserved "of"
-                e  <- parse
-                return $ foldr DMatrix e is
-
-            pTuple = do
-                void $ optionMaybe $ reserved "tuple"
-                es <- parens (parse `sepBy` comma)
-                return $ AnyDom TTuple es (DomainAttrs [])
-
-            pSetMSet kw en = do
-                reserved kw
-                as <- parse
-                reserved "of"
-                e  <- parse
-                return $ AnyDom en [e] as
-
-            pFunction = do
-                reserved "function"
-                as <- parse
-                fr <- parse
-                reservedOp "-->"
-                to <- parse
-                return $ AnyDom TFunction [fr,to] as
-
-            pRelation = do
-                reserved "relation"
-                as <- parse
-                reserved "of"
-                es <- parens (parse `sepBy` reservedOp "*")
-                return $ AnyDom TRelation es as
-
-            pPartition = do
-                reserved "partition"
-                as <- parse
-                reserved "from"
-                e  <- parse
-                return $ AnyDom TPartition [e] as
-
-            pIndices = do
-                reserved "indices"
+            LIdentifier "indices" -> do
                 parens $ do
                     i <- parse
                     comma
                     j <- parse
                     return (Indices i j)
+
+            LIdentifier i -> let iden = Identifier (T.unpack i)
+                             in  ( DEnum iden <$> parens parse )
+                                 <||>
+                                 ( return (DHole iden)         )
+
+            L_bool -> return DBool
+
+            L_int  -> DInt <$> (parens parse <||> return RAll)
+
+            L_matrix -> do
+                lexeme L_indexed
+                lexeme L_by
+                is <- brackets (parse `sepBy1` comma)
+                lexeme L_of
+                e  <- parse
+                return $ foldr DMatrix e is
+
+            L_tuple -> do
+                es <- parens (parse `sepBy` comma)
+                return $ AnyDom TTuple es (DomainAttrs [])
+
+            L_OpenParen -> do
+                es <- parse `sepBy` comma
+                lexeme L_CloseParen
+                return $ AnyDom TTuple es (DomainAttrs [])
+
+            L_set -> do
+                as <- parse
+                lexeme L_of
+                e  <- parse
+                return $ AnyDom TSet [e] as
+
+            L_mset -> do
+                as <- parse
+                lexeme L_of
+                e  <- parse
+                return $ AnyDom TMSet [e] as
+
+            L_function -> do
+                as <- parse
+                fr <- parse
+                lexeme L_LongArrow
+                to <- parse
+                return $ AnyDom TFunction [fr,to] as
+
+            L_relation -> do
+                as <- parse
+                lexeme L_of
+                es <- parens (parse `sepBy` lexeme L_Times)
+                return $ AnyDom TRelation es as
+
+            L_partition -> do
+                as <- parse
+                lexeme L_from
+                e  <- parse
+                return $ AnyDom TPartition [e] as
+
+            _ -> failUnexpected lxm "domain"
+        -- [ pBool, pInt, pEnum, pMatrix
+        -- , pTuple, pSetMSet L_set TSet, pSetMSet L_mset TMSet
+        -- , pFunction, pRelation, pPartition
+        -- , pIndices
+        -- , pDHole
+        -- -- , between (lexeme L_BackTick) (lexeme L_BackTick) parse
+        -- -- , between (reservedOp "'") (reservedOp "'") parse
+        -- ]
+        -- where
+        --     pDHole = DHole <$> parse
+
+
 
     pretty (DHole (Identifier nm)) = text nm
     pretty DBool = "bool"
@@ -348,11 +362,11 @@ instance GPlate DomainAttr where
 instance MatchBind DomainAttr
 
 instance ParsePrint DomainAttr where
-    parse = choiceTry [pNameValue, pOnlyName, pDontCare]
+    parse = msum1 [pNameValue, pOnlyName, pDontCare]
         where
             pOnlyName  = OnlyName  <$> parse
             pNameValue = NameValue <$> parse <*> parse
-            pDontCare  = DontCare  <$  reservedOp "_"
+            pDontCare  = DontCare  <$  lexeme (LIdentifier "_")
     pretty (OnlyName e) = pretty e
     pretty (NameValue e x) = pretty e <+> pretty x
     pretty DontCare = "_"
@@ -398,25 +412,25 @@ instance MatchBind DomainAttrEnum
 
 instance ParsePrint DomainAttrEnum where
     fromPairs =
-            [ ( AttrRepresentation , "representation" )
-            , ( AttrSize           , "size"           )
-            , ( AttrMinSize        , "minSize"        )
-            , ( AttrMaxSize        , "maxSize"        )
-            , ( AttrMinOccur       , "minOccur"       )
-            , ( AttrMaxOccur       , "maxOccur"       )
-            , ( AttrTotal          , "total"          )
-            , ( AttrPartial        , "partial"        )
-            , ( AttrInjective      , "injective"      )
-            , ( AttrSurjective     , "surjective"     )
-            , ( AttrBijective      , "bijective"      )
-            , ( AttrRegular        , "regular"        )
-            , ( AttrComplete       , "complete"       )
-            , ( AttrPartSize       , "partSize"       )
-            , ( AttrMinPartSize    , "minPartSize"    )
-            , ( AttrMaxPartSize    , "maxPartSize"    )
-            , ( AttrNumParts       , "numParts"       )
-            , ( AttrMinNumParts    , "minNumParts"    )
-            , ( AttrMaxNumParts    , "maxNumParts"    )
+            [ ( AttrRepresentation , L_representation )
+            , ( AttrSize           , L_size           )
+            , ( AttrMinSize        , L_minSize        )
+            , ( AttrMaxSize        , L_maxSize        )
+            , ( AttrMinOccur       , L_minOccur       )
+            , ( AttrMaxOccur       , L_maxOccur       )
+            , ( AttrTotal          , L_total          )
+            , ( AttrPartial        , L_partial        )
+            , ( AttrInjective      , L_injective      )
+            , ( AttrSurjective     , L_surjective     )
+            , ( AttrBijective      , L_bijective      )
+            , ( AttrRegular        , L_regular        )
+            , ( AttrComplete       , L_complete       )
+            , ( AttrPartSize       , L_partSize       )
+            , ( AttrMinPartSize    , L_minPartSize    )
+            , ( AttrMaxPartSize    , L_maxPartSize    )
+            , ( AttrNumParts       , L_numParts       )
+            , ( AttrMinNumParts    , L_minNumParts    )
+            , ( AttrMaxNumParts    , L_maxNumParts    )
             ]
 
 instance Arbitrary DomainAttrEnum where

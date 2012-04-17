@@ -16,7 +16,7 @@ import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateLeaf, gplateError
                        , GNode, mkG, fromG
                        , MatchBind )
-import ParsecUtils ( choiceTry, comma, dot, optionMaybe, sepBy )
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty, prettyListDoc )
 import PrintUtils ( (<>) )
 import qualified PrintUtils as Pr
@@ -67,14 +67,16 @@ instance MatchBind a => MatchBind (Range a)
 instance ParsePrint a => ParsePrint (Range a) where
     parse = RFromTo <$> sepBy one comma
         where
-            one = choiceTry [ Right <$> singleRange
-                            , Left  <$> parse
-                            ]
-            singleRange = do
-                i <- optionMaybe parse
-                dot; dot
-                j <- optionMaybe parse
-                return (i,j)
+            one = Right <$> singleRange
+                  <||>
+                  Left  <$> parse
+            singleRange = do dot; dot; j <- optionMaybe parse; return (Nothing, j)
+                        <||>
+                          do 
+                              i <- parse
+                              dot; dot
+                              j <- optionMaybe parse
+                              return (Just i,j)
     pretty RAll = error "do not call pretty Range.RAll"
     pretty (RFromTo xs) = prettyListDoc id Pr.comma (map one xs)
         where

@@ -10,32 +10,33 @@ import Control.Applicative
 import Control.Arrow ( first )
 import Control.Monad ( forM, liftM, unless, zipWithM_ )
 import Control.Monad.Error ( MonadError, throwError )
-import Control.Monad.Identity ( Identity )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
-import Data.Function ( on )
 import Data.Generics ( Data )
-import Data.List ( groupBy, sortBy )
+import Data.List ( minimumBy )
+import qualified Data.Map as M
+import qualified Data.Typeable as Typeable ( typeOf )
 import Data.Maybe ( fromMaybe, mapMaybe )
 import Data.Ord ( comparing )
 import Data.String ( IsString, fromString )
 import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
-import qualified Data.Map as M
-import qualified Data.Typeable as Typeable ( typeOf )
 import Test.QuickCheck ( Arbitrary, arbitrary, shrink )
 import Test.QuickCheck.Gen ( oneof )
 import Unsafe.Coerce ( unsafeCoerce )
 
-import Has
+
 import GenericOps.Core
-import ParsecUtils
+import Has
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), Doc )
-import qualified PrintUtils as Pr
 import Utils
+import qualified PrintUtils as Pr
 
-import {-# SOURCE #-} Language.Essence.Binding
+import Language.EssenceLexer
+import Language.EssenceLexerP
+
+import                Language.Essence.Binding
 import {-# SOURCE #-} Language.Essence.Domain
 import                Language.Essence.Identifier
 import {-# SOURCE #-} Language.Essence.Lambda
@@ -57,13 +58,22 @@ data Expr = EHole Identifier
     | Bubble Expr Expr [Either Binding Where]
     | EOp Op [Expr]
     | ETyped Expr Type
+    | DimExpr Expr Domain
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
+constr_Q :: QuantifiedExpr -> Expr
+constr_Q = Q
+
+prettyExprTopLevel :: Expr -> Doc
+prettyExprTopLevel (Q i) = pretty i
+prettyExprTopLevel i     = pretty i
+
 isAtomicExpr :: Expr -> Bool
-isAtomicExpr (EHole {}) = True
-isAtomicExpr (V     {}) = True
-isAtomicExpr (D     {}) = True
-isAtomicExpr (L     {}) = True
+isAtomicExpr EHole   {} = True
+isAtomicExpr V       {} = True
+isAtomicExpr D       {} = True
+isAtomicExpr L       {} = True
+isAtomicExpr DimExpr {} = True
 isAtomicExpr _          = False
 
 instance IsString Expr where
@@ -110,6 +120,14 @@ instance GPlate Expr where
                           ([x'],[t']) -> ETyped x' t'
                           _ -> gplateError "Expr.ETyped"
         )
+    gplate (DimExpr x t) =
+        ( [mkG x, mkG t]
+        , \ ys -> let xs' = fromGs $ take 1 ys
+                      ts' = fromGs $ take 1 $ drop 1 ys
+                  in  case (xs', ts') of
+                          ([x'],[t']) -> DimExpr x' t'
+                          _ -> gplateError "Expr.DimExpr"
+        )
 
 instance MatchBind Expr where
     bind t = inScope (mkG t) $ do
@@ -143,64 +161,292 @@ instance MatchBind Expr where
                                              then Just (gen ts')         -- degisen var.
                                              else Nothing
 
+
+findPivotOp :: [Either Op Expr] -> Parser (Either Expr ([Either Op Expr], Op, [Either Op Expr]))
+findPivotOp [Right x] = return $ Left x
+findPivotOp xs = do
+    let
+        infixes = [ (i,f) | Left op <- xs
+                          , OpInfix (i,f,_) _ <- [opDescriptor op]
+                          ]
+
+        (minP,minF) = minimumBy (comparing fst) infixes
+
+        chck op = case opDescriptor op of
+                    OpInfix (i,_,_) _ -> i == minP
+                    _ -> False
+
+        findFirst :: [Either Op Expr] -> Parser ([Either Op Expr], Op, [Either Op Expr])
+        findFirst [] = failWithMsg "findPivotOp.findFirst"
+        findFirst (Left i:is) | chck i = return ([], i, is)
+        findFirst (i:is) = do
+            (before, op, after) <- findFirst is
+            return (i:before, op, after)
+
+        findLast :: [Either Op Expr] -> Parser ([Either Op Expr], Op, [Either Op Expr])
+        findLast is = do
+            (before, op, after) <- findFirst (reverse is)
+            return (reverse after, op, reverse before)
+
+        findOnly :: [Either Op Expr] -> Parser ([Either Op Expr], Op, [Either Op Expr])
+        findOnly is = do
+            f <- findFirst is
+            l <- findLast  is
+            if f == l
+                then return f
+                else failWithMsg "Ambiguous use of non-associative operator."
+
+    case (infixes,minF) of
+        ( [], _      ) -> failWithMsg $ "Shunting Yard." <+> Pr.text (ppShow xs)
+        ( _ , InfixL ) -> Right <$> findLast  xs
+        ( _ , InfixN ) -> Right <$> findOnly  xs
+        ( _ , InfixR ) -> Right <$> findFirst xs
+
+
+shunt :: [Either Op Expr] -> Parser Expr
+shunt xs = do
+    result <- findPivotOp xs
+    case result of
+        Left x -> return x
+        Right (before, op, after) -> do
+            b <- shunt before
+            a <- shunt after
+            return $ EOp op [b,a]
+-- shunt list = do
+--     let result = S.evalState (worker list) ([],[])
+--     result
+--     where
+-- 
+--         worker :: [Either Op Expr] -> S.State ([Op],[Expr]) (Parser Expr)
+-- 
+--         worker [] = do
+--             mcomp <- applyOp
+--             case mcomp of
+--                 Left  err   -> return err
+--                 Right True  -> worker []
+--                 Right False -> do
+--                     st <- S.get
+--                     case st of
+--                         ([],[x]) -> return $ return x
+--                         _        -> return $ failWithMsg $ "Failed" <+> Pr.text (show st)
+-- 
+--         worker (Left Negate : rest) = do
+--             pushOp Negate
+--             worker rest
+-- 
+--         worker (Left op : rest) = workerNegateOp op rest
+-- 
+--         worker (Right x : rest) = pushExpr x >> worker rest
+-- 
+--         workerNegateOp op rest = do
+--             bOp <- checkCountOp (1 <=)
+--             bX  <- checkCountExpr (1 <=)
+--             if bOp && bX
+--                 then do
+--                     Just opOld <- popOp
+--                     pushOp opOld
+--                     if opOld == Negate
+--                         then do
+--                             applyOpResult <- applyOp
+--                             case applyOpResult of
+--                                 Left  p     -> return p
+--                                 Right False -> return $ failWithMsg "error in Shunting Yard {1}"
+--                                 Right True  -> do pushOp op
+--                                                   worker rest
+--                         else workerNormalOp op rest
+--                 else workerNormalOp op rest
+-- 
+--         workerNormalOp op rest = do
+--             bOp <- checkCountOp (1 <=)
+--             bX  <- checkCountExpr (2 <=)
+--             if bOp && bX
+--                 then
+--                     case opDescriptor op of
+--                         OpInfix (opPrec, opFix, _) _ -> do
+--                             Just opOld <- popOp
+--                             case opDescriptor opOld of
+--                                 OpInfix (opOldPrec, opOldFix, _) _ ->
+--                                     case () of
+--                                         _ | or [ opOld == Negate
+--                                                , and [ opOldPrec > opPrec
+--                                                      ]
+--                                                ] -> do
+--                                             pushOp opOld
+--                                             applyOpResult <- applyOp
+--                                             case applyOpResult of
+--                                                 Left  p     -> return p
+--                                                 Right False -> return $ failWithMsg "error in Shunting Yard {2}"
+--                                                 Right True  -> do pushOp op
+--                                                                   worker rest
+--                                         _ | and [ opOldPrec == opPrec
+--                                                 , opOldFix  == InfixN
+--                                                 , opFix     == InfixN
+--                                                 ] -> 
+--                                             return $ failWithMsg $ "Ambiguous use of non-associative operator: \"" <> pretty op <> "\"."
+--                                         _ -> do
+--                                             pushOp opOld
+--                                             pushOp op
+--                                             worker rest
+--                                 _            -> return $ failWithMsg $ "Operator is not infix:" <+> pretty opOld
+--                         _            -> return $ failWithMsg $ "Operator is not infix:" <+> pretty op
+--                 else do
+--                     pushOp op
+--                     worker rest
+-- 
+--         applyOp :: S.State ([Op],[Expr]) (Either (Parser Expr) Bool)
+--         applyOp = do
+--             st <- S.get
+--             case st of
+--                 (Negate:os,x1:ys) -> do
+--                     S.put (os, EOp Negate [x1] : ys)
+--                     return $ Right True
+--                 (o:os,x1:x2:ys) ->
+--                     case () of
+--                         _ | o `elem` [HasDomain,HasType] ->
+--                             case x1 of
+--                                 D _ -> do
+--                                     S.put (os, EOp o [x2,x1] : ys)
+--                                     return $ Right True
+--                                 _   ->
+--                                     return $ Left $ failWithMsg "Has{Domain|Type} can only be used with a domain."
+--                         _ -> do
+--                             S.put (os, EOp o [x2,x1] : ys)
+--                             return $ Right True
+--                 _ -> return $ Right False
+-- 
+--         checkCountOp f = do
+--             (ops,_) <- S.get
+--             return $ f (length ops)
+-- 
+--         checkCountExpr f = do
+--             (_,xs) <- S.get
+--             return $ f (length xs)
+-- 
+--         pushOp   x = S.modify $ first  (x:)
+--         pushExpr x = S.modify $ second (x:)
+-- 
+--         popOp = do
+--             (ops,xs) <- S.get
+--             case ops of
+--                 (a:as) -> S.put (as,xs) >> return (Just a)
+--                 _      -> return Nothing
+-- 
+--         -- popExpr = do
+--         --     (ops,xs) <- S.get
+--         --     case xs of
+--         --         (a:as) -> S.put (ops,as) >> return (Just a)
+--         --         _      -> return Nothing
+-- 
+--         -- evalStacks [op] [a]   = EOp op [a]
+--         -- evalStacks [op] [a,b] = EOp op [a,b]
+
+minusToNegate :: [Either Op Expr] -> Parser [Either Op Expr]
+minusToNegate ls = worker $ let (a,b) = span (==Left Minus) ls
+                            in  map (\ _ -> Left Negate) a ++ b
+    where
+        worker (Left op1 : Left Minus : rest) = do
+            let (a,bs) = span (==Left Minus) rest
+            let a' = Left Negate : map (\ _ -> Left Negate) a
+            bs' <- worker bs
+            return $ Left op1 : a' ++ bs'
+        worker (Left op1 : Left op2 : _)
+            | op2 /= Negate
+            = failWithMsg $ "Two operator symbols next to each other," <+> Pr.text (show op1) <+> "and" <+> Pr.text (show op2) <> "."
+        worker (a:rest) = do as <- worker rest; return (a:as)
+        worker []       = return []
+
+applyNegate :: [Either Op Expr] -> [Either Op Expr]
+applyNegate [] = []
+applyNegate (Left Negate : Right x     : xs) = Right (EOp Negate [x]) : applyNegate xs
+applyNegate (Left Negate : Left Negate : xs) = applyNegate xs
+applyNegate (x:xs) = x : applyNegate xs
+
+pDimExpr :: Parser Expr
+pDimExpr = flip (<?>) "DimExpr" $ do
+    lexeme L_find
+    x <- pCorePrePost
+    colon
+    d <- parse
+    return $ DimExpr x d
+
+pCorePrePost :: Parser Expr
+pCorePrePost = applyPrefix prefixes $ applyPostFix postfixes pCore
+    where
+        prefixes :: Parser (Expr -> Expr)
+        prefixes = do
+            let allP = flip mapMaybe allValues $ \ op -> case opDescriptor op of
+                        OpPrefix pa _ -> Just pa
+                        _ -> Nothing
+            fs <- some (msum1 allP)
+            return $ foldr1 (.) fs
+
+        postfixes :: Parser (Expr -> Expr)
+        postfixes = do
+            let allP = flip mapMaybe allValues $ \ op -> case opDescriptor op of
+                        OpPostfix pa _ -> Just pa
+                        _ -> Nothing
+            let pImage = do
+                    ys <- parens (parse `sepBy1` comma)
+                    return $ \ x -> case ys of
+                        [y] -> EOp Image [x,y]
+                        _   -> EOp Image [x,toVTuple ys]
+            fs <- some (msum1 $ pImage : allP)
+            return $ foldr1 (.) (reverse fs)
+
+        applyPrefix :: Parser (Expr -> Expr) -> Parser Expr -> Parser Expr
+        applyPrefix pre item = item <||>
+            ( do f <- pre; x <- item; return (f x) )
+
+        applyPostFix :: Parser (Expr -> Expr) -> Parser Expr -> Parser Expr
+        applyPostFix post item = do
+            x  <- item
+            mf <- optionMaybe post
+            case mf of
+                Nothing -> return x
+                Just f  -> return (f x)
+
+pCore :: Parser Expr
+pCore = msum1 $
+        [ pBubble
+        , lexeme L_lambda >>                                  L     <$> parse  <?>  "lambda expression"
+        ,                                                     Q     <$> parse  <?>  "quantified expression"
+        ,                                                     EHole <$> parse  <??> "identifier"
+        , parens parse                                                         <??> "(expression)"
+        ,                                                     V     <$> parse  <??> "constant"
+        , ( between (lexeme L_BackTick) (lexeme L_BackTick) $ D     <$> parse) <??> "`domain`"
+        ] ++ pLispyAndSpecial
+    where
+        pLispyAndSpecial :: [Parser Expr]
+        pLispyAndSpecial = flip mapMaybe allValues $ \ op -> case opDescriptor op of
+            OpLispy   pa _ -> Just pa
+            OpSpecial pa _ -> Just pa
+            _ -> Nothing
+
+        pBubble :: Parser Expr
+        pBubble = flip (<?>) "bubble" $ parens $ do
+            x  <- parse
+            lexeme L_At
+            bs <- optionMaybe $ braces parse
+            y  <- parse
+            return $ Bubble x y (fromMaybe [] bs)
+
 instance ParsePrint Expr where
-    parse = buildExpressionParser table (core <?> "expression")
+    parse = flip (<?>) "malformed expression" $ do
+        xs   <- parseExprOpList pCorePrePost
+        xs'  <- minusToNegate xs
+        shunt $ applyNegate xs'
         where
-            postfixes :: Parser (Expr -> Expr)
-            postfixes = do
-                let allP = flip mapMaybe allValues $ \ op -> case opDescriptor op of
-                            OpPostfix pa _ -> Just pa
-                            _ -> Nothing
-                let pImage = do
-                        ys <- parens (parse `sepBy1` comma)
-                        return $ \ x -> case ys of
-                            [y] -> EOp Image [x,y]
-                            _   -> EOp Image [x,toVTuple ys]
-                fs <- many1 (choiceTry $ pImage : allP)
-                return $ foldr1 (.) (reverse fs)
+            parseExprOpList :: Parser Expr -> Parser [Either Op Expr]
+            -- parseExprOpList p = some $ ( Right <$> p <||> Left <$> msum1 infixOps )
+            parseExprOpList p = some $ Left  <$> (msum1 infixOps <??> "infix operator")
+                                  <||> Right <$> p
 
-            prefixes :: [Parser (Expr -> Expr)]
-            prefixes = flip mapMaybe allValues $ \ op -> case opDescriptor op of
-                OpPrefix pa _ -> Just pa
-                _ -> Nothing
-
-            infixes :: [(Int, Operator String () Identity Expr)]
-            infixes = flip mapMaybe allValues $ \ op -> case opDescriptor op of
-                OpInfix pa _ -> Just pa
-                _ -> Nothing
-
-            pLispyAndSpecial :: [Parser Expr]
-            pLispyAndSpecial = flip mapMaybe allValues $ \ op -> case opDescriptor op of
-                OpLispy   pa _ -> Just pa
-                OpSpecial pa _ -> Just pa
-                _ -> Nothing
-
-            table :: OperatorTable String () Identity Expr
-            table = [ Postfix postfixes ]
-                  : map Prefix prefixes
-                  : ( map (map snd)
-                    . groupBy ((==) `on` fst)
-                    . reverse
-                    . sortBy  (comparing fst)
-                    ) infixes
-
-            core :: Parser Expr
-            core = choiceTry $ [ pBubble
-                               , Q     <$> parse
-                               , EHole <$> parse
-                               , parens    parse
-                               , V     <$> parse
-                               , D     <$> parse
-                               , reserved "lambda" >> L <$> parse
-                               ] ++ pLispyAndSpecial
-
-            pBubble :: Parser Expr
-            pBubble = parens $ do
-                x  <- parse
-                reservedOp "@"
-                bs <- optionMaybe $ braces parse
-                y  <- parse
-                return $ Bubble x y (fromMaybe [] bs)
+            infixOps :: [Parser Op]
+            infixOps = flip mapMaybe allValues $ \ op -> case opDescriptor op of
+                        OpInfix _ _ -> case opFace op of
+                                            Nothing -> Nothing
+                                            Just l  -> Just $ do lexeme l; return op
+                        _           -> Nothing
 
     pretty (EHole x) = pretty x
     pretty (V     x) = pretty x
@@ -225,8 +471,10 @@ instance ParsePrint Expr where
                 (OpPostfix _ pr, [i]  ) -> pr i
                 (OpSpecial _ pr, _    ) -> pr param
                 _ -> error $ "prettyOp: " ++ show param
+            prettyOp _ (D x) = "`" <> pretty x <> "`"
             prettyOp _ x = pretty x
-    pretty (ETyped x t) = Pr.parens $ pretty x <+> Pr.colon <+> "'" <> pretty t <> "'"
+    pretty (ETyped  x t) = Pr.parens $ pretty x <+> Pr.colon <+> "'" <> pretty t <> "'"
+    pretty (DimExpr x d) = "find" <+> pretty x <+> Pr.colon <+> pretty d
 
 instance Arbitrary Expr where
     arbitrary = {-deepPromote <$> -}oneof
@@ -245,6 +493,8 @@ instance TypeOf Expr where
     typeOf p@(D      d    ) = inScope (mkG p) $ typeOf d
     typeOf p@(Q      q    ) = inScope (mkG p) $ typeOf q
     typeOf p@(Bubble x _ _) = inScope (mkG p) $ typeOf x
+
+    typeOf DimExpr {} = return TBool
 
     typeOf p@(ETyped x t) = inScope (mkG p) $ do
         tx <- typeOf x

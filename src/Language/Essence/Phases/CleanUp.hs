@@ -59,14 +59,18 @@ quanRenameFinal spec = do
         workerObj (OMax x) = OMax <$> workerExpr x
 
         workerTL :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Either Binding Where -> m (Either Binding Where)
-        workerTL (Left (LettingExpr i x)) = Left . LettingExpr i <$> (withState . workerExpr) x
-        workerTL (Left  b)                = Left                 <$> return b
-        workerTL (Right (Where w))        = Right . Where        <$> (withState . workerExpr) w
+        workerTL (Left (LettingExpr i x))  = Left  . LettingExpr i  <$> (withState . workerExpr) x
+        workerTL (Left (BindingDimFind x)) = Left  . BindingDimFind <$> (withState . workerExpr) x
+        workerTL (Left  b)                 = Left                   <$> return b
+        workerTL (Right (Where w))         = Right . Where          <$> (withState . workerExpr) w
 
         workerQ :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => QuantifiedExpr -> m QuantifiedExpr
         workerQ p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do
             new <- getFreshName
-            return $ bottomUp (identifierRenamer old new) p
+            let p' = bottomUp (identifierRenamer old new) p
+            guard' <- (withState . workerG)    $ quanGuard p'
+            body'  <- (withState . workerExpr) $ quanBody p'
+            return $ p' { quanBody = body', quanGuard = guard' }
         workerQ p@(QuantifiedExpr {quanVar = Right qnSVar}) = do
             let
                 -- rec :: StructuredVar -> m (M.Map String String)
@@ -82,8 +86,16 @@ quanRenameFinal spec = do
                                             Nothing  -> i
                                             Just new -> Identifier new
 
-            return $ bottomUp f p
+            let p' = bottomUp f p
+            guard' <- (withState . workerG)    $ quanGuard p'
+            body'  <- (withState . workerExpr) $ quanBody p'
+            return $ p' { quanBody = body', quanGuard = guard' }
 
+        workerG :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => QuanGuard -> m QuanGuard
+        workerG (QuanGuard [x]) = do
+            x' <- workerExpr x
+            return $ QuanGuard [x']
+        workerG p = return p
 
 withState :: MonadState s m => m a -> m a
 withState comp = do

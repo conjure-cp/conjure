@@ -7,6 +7,7 @@ import Data.List ( isSuffixOf )
 import System.Directory ( createDirectoryIfMissing )
 import System.Environment ( getArgs )
 import System.FilePath ( dropExtension )
+import qualified Data.Text.Lazy.IO as T
 
 import Language.Essence.Phases.PhaseRefn ( callRefn )
 import Language.Essence.Phases.ReadIn ( readIn )
@@ -25,8 +26,8 @@ main = do
     let refnFilenames = filter (".rule" `isSuffixOf`) args
     when (null refnFilenames) $ putStrLn "Warning: no *.rule file is given."
 
-    specFile  <- readFile specFilename
-    refnFiles <- mapM readFile refnFilenames
+    specFile  <- T.readFile specFilename
+    refnFiles <- mapM T.readFile refnFilenames
     let (mspecs, logs) = runWriter $ runErrorT $ do
             spec  <- readIn specFilename specFile
             refns <- zipWithM readIn refnFilenames refnFiles

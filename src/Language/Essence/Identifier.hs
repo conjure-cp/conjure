@@ -23,7 +23,7 @@ import GenericOps.Core ( NodeTag
                        , Hole
                        , GPlate, bottomUp, fromGs
                        , MatchBind, getBinding, BindingsMap )
-import ParsecUtils ( identifier )
+import Language.EssenceLexerP ( identifier )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), text )
 
@@ -131,3 +131,9 @@ scopeIdentifiers prefix = bottomUp f
 identifierRenamer :: String -> String -> Identifier -> Identifier
 identifierRenamer oldName newName (Identifier nm) | oldName == nm = Identifier newName
 identifierRenamer _ _ p = p
+
+identifierRenamerDeep :: GPlate a => [(String ,String)] -> a -> a
+identifierRenamerDeep names = bottomUp f
+    where f (Identifier old) = case old `lookup` names of
+                                    Nothing  -> Identifier old
+                                    Just new -> Identifier new

@@ -15,21 +15,23 @@ import Data.Default ( def )
 import Data.Either ( lefts )
 import Data.List ( delete, intercalate, isPrefixOf )
 import Data.List.Split ( splitOn )
-import qualified Data.Map as M
 import System.Console.Haskeline ( InputT, runInputT, getInputLine , Settings(..) )
 import System.Console.Haskeline.Completion ( completeFilename )
 import System.Environment ( getArgs )
+import qualified Data.Map as M
+import qualified Data.Text.Lazy.IO as T
 
 import Paths_conjure_cp ( getBinDir )
 
 import Constants ( figlet )
 import GenericOps.Core ( GPlate, GNode(..), runMatch, BindingsMap )
-import ParsecUtils ( eof, parseEither )
+import Language.EssenceLexerP ( eof, parseEither )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( Doc, nest, vcat, text, (<+>), ($$) )
 import Utils ( fromJust, ppPrint, strip )
 
 import Language.Essence
+import Language.Essence.Phases.CleanUp ( quanRenameFinal )
 import Language.Essence.Phases.ReadIn ( runReadIn )
 import Language.Essence.Phases.ToETyped ( toETypedG )
 import Language.EssenceEvaluator ( deepSimplify )
@@ -223,10 +225,11 @@ step (Load   fp) = returningTrue $ do
     where
         readIt :: IO (Either Doc Spec)
         readIt = do
-            contents <- readFile fp
+            contents <- T.readFile fp
             let (res,logs) = runReadIn fp contents
             mapM_ print logs
-            return res
+            return $ do s <- res
+                        quanRenameFinal s
 step (Save fp) = returningTrue $ do
     sp <- gets currentSpec
     liftIO $ writeFile fp $ show $ pretty sp

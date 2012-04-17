@@ -8,12 +8,17 @@ import Test.QuickCheck ( Arbitrary )
 
 import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind )
 import ParsePrint ( ParsePrint )
-import {-# SOURCE #-} Language.Essence.Domain ( DomainOf )
-import {-# SOURCE #-} Language.Essence.Type ( TypeOf )
-
+import PrintUtils ( Doc )
+import Language.EssenceLexerP ( Parser )
+import {-# SOURCE #-} Language.Essence.Domain
+import {-# SOURCE #-} Language.Essence.Type
 
 
 isAtomicExpr :: Expr -> Bool
+
+prettyExprTopLevel :: Expr -> Doc
+
+pDimExpr :: Parser Expr
 
 data Expr
 

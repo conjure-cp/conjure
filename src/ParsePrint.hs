@@ -6,11 +6,8 @@ module ParsePrint
     , runParser
     ) where
 
-import Control.Monad.Error ( MonadError, throwError )
-import Data.Maybe ( fromMaybe )
-import qualified Text.Parsec as P ( parse )
-
-import ParsecUtils
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import PrintUtils
 
 
@@ -21,10 +18,12 @@ import PrintUtils
 class (Eq a, Show a) => ParsePrint a where
     parse  :: Parser a
     pretty :: a -> Doc
-    fromPairs :: [(a,String)]
+    fromPairs :: [(a,Lexeme)]
 
-    parse     = choiceTry [ do reserved s; return a | (a,s) <- fromPairs ]
-    pretty a  = text $ fromMaybe (error ("Cannot render: " ++ show a)) (lookup a fromPairs)
+    parse     = msum1 [ do lexeme s; return a | (a,s) <- fromPairs ]
+    pretty a  = case lookup a fromPairs of
+                    Nothing -> error $ "Cannot render: " ++ show a
+                    Just l  -> lexemeFace l
     fromPairs = error "fromPairs not defined."
 
 
@@ -35,8 +34,3 @@ prettyList wrap punc = prettyListDoc wrap punc . map pretty
 prettyListDoc :: (Doc -> Doc) -> Doc -> [Doc] -> Doc
 prettyListDoc wrap punc = wrap . sep . punctuate punc
 
-
-runParser :: (ParsePrint a, MonadError Doc m) => FilePath -> String -> m a
-runParser fp s = case P.parse parse fp s of
-    Left msg -> throwError $ text $ show msg
-    Right a  -> return a

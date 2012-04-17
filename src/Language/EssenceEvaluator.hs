@@ -24,9 +24,10 @@ import qualified Data.Map as M
 
 import Has
 import GenericOps.Core
-import ParsecUtils ( parseIO, eof, unsafeParse )
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty )
-import PrintUtils
+import PrintUtils hiding ( colon )
+import qualified PrintUtils as Pr
 
 import Language.Essence
 
@@ -41,7 +42,7 @@ import Language.Essence
 
 testFullEval :: String -> IO ()
 testFullEval s = do
-    x <- parseIO (parse <* eof) s
+    let x = unsafeParse (parse <* eof) s
     -- print x
     putStrLn $ renderDoc $ pretty (x :: Expr)
     let m = M.fromList [ ( "x", mkG ( unsafeParse (parse <* eof) "2"   :: Expr ) )
@@ -60,7 +61,7 @@ testFullEval s = do
 
 testEval :: String -> IO ()
 testEval s = do
-    x <- parseIO (parse <* eof) s
+    let x = unsafeParse (parse <* eof) s
     -- print x
     putStrLn $ renderDoc $ pretty (x :: Expr)
     let m = M.fromList [ ( "x", mkG ( unsafeParse (parse <* eof) "2"   :: Expr ) )
@@ -79,7 +80,7 @@ testEval s = do
 
 testSimplify :: String -> IO ()
 testSimplify s = do
-    x <- parseIO (parse <* eof) s
+    let x = unsafeParse (parse <* eof) s
     -- print x
     putStrLn $ renderDoc $ pretty (x :: Expr)
     let m = M.fromList [ ( "x", mkG ( unsafeParse (parse <* eof) "2"   :: Expr ) )
@@ -110,7 +111,7 @@ evalArrowErrorDef :: (MonadError Doc m, ParsePrint a) => a -> m b
 evalArrowErrorDef = evalArrowError "Cannot evaluate"
 
 evalArrowError :: (MonadError Doc m, ParsePrint a) => Doc -> a -> m b
-evalArrowError msg x = throwError $ msg <> colon <+> pretty x
+evalArrowError msg x = throwError $ msg <> Pr.colon <+> pretty x
 
 
 

@@ -4,8 +4,11 @@ import Data.Generics ( Data )
 import Data.Typeable ( Typeable )
 
 import GenericOps.Core ( NodeTag, Hole, GPlate, MatchBind )
+import Language.EssenceLexerP ( Parser )
 import ParsePrint ( ParsePrint )
+
 import Language.Essence.Type ( TypeOf )
+import {-# SOURCE #-} Language.Essence.Expr ( Expr )
 
 
 
@@ -24,3 +27,5 @@ instance GPlate QuantifiedExpr
 instance MatchBind QuantifiedExpr
 instance ParsePrint QuantifiedExpr
 instance TypeOf QuantifiedExpr
+
+pQuantifiedExprAsExpr :: Parser Expr -> Parser Expr

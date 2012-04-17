@@ -10,7 +10,8 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
 import GenericOps.Core ( NodeTag, Hole, GPlate, gplate, gplateSingle, MatchBind )
-import ParsecUtils
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>) )
 
@@ -33,10 +34,8 @@ instance GPlate Objective where
 instance MatchBind Objective
 
 instance ParsePrint Objective where
-    parse = choiceTry [ OMin <$> (reserved "minimising" *> parse)
-                      , OMin <$> (reserved "minimizing" *> parse)
-                      , OMax <$> (reserved "maximising" *> parse)
-                      , OMax <$> (reserved "maximizing" *> parse)
-                      ]
+    parse = msum1 [ OMin <$> (lexeme L_minimising *> parse)
+                  , OMax <$> (lexeme L_maximising *> parse)
+                  ]
     pretty (OMin x) = "minimising" <+> pretty x
     pretty (OMax x) = "maximising" <+> pretty x

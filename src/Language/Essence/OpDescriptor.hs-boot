@@ -1,25 +1,22 @@
 module Language.Essence.OpDescriptor where
 
-import Control.Monad.Identity ( Identity )
-
-import ParsecUtils ( Parser, Operator )
+import Language.EssenceLexerP ( Parser )
 import qualified PrintUtils as Pr
 
 import {-# SOURCE #-} Language.Essence.Expr
 import Language.Essence.Op
 
 
-
-type OperatorParser = Operator String () Identity Expr
-
 data Fixity = InfixL | InfixN | InfixR
+
+instance Eq Fixity
 
 data OpDescriptor
     = OpLispy
             (Parser Expr)
             ([Expr] -> Pr.Doc)
     | OpInfix
-            (Int, OperatorParser)
+            (Int, Fixity, Parser (Expr -> Expr -> Expr))
             ((Int -> Expr -> Pr.Doc) -> Int -> Expr -> Expr -> Pr.Doc)
     | OpPrefix
             (Parser (Expr -> Expr))

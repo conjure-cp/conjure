@@ -34,6 +34,7 @@ data Lexeme
     | L_domain
 
     | L_language
+    | L_dim
     | L_find
     | L_given
     | L_letting
@@ -245,6 +246,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_of       , "of"       )
     , ( L_domain   , "domain"   )
     , ( L_language , "language" )
+    , ( L_dim      , "dim"      )
     , ( L_find     , "find"     )
     , ( L_given    , "given"    )
     , ( L_letting  , "letting"  )

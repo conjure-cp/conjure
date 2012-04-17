@@ -15,7 +15,8 @@ import GenericOps.Core ( NodeTag
                        , Hole
                        , GPlate, fromGs, mkG, gplate, gplateError
                        , MatchBind, addBinding, inScope )
-import ParsecUtils
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty, prettyListDoc )
 import PrintUtils ( (<+>), (<>) )
 import qualified PrintUtils as Pr
@@ -52,7 +53,7 @@ instance MatchBind Lambda
 instance ParsePrint Lambda where
     parse = braces $ do
         args <- sepBy1 ((,) <$> parse <*> (colon *> parse)) comma
-        reservedOp "-->"
+        lexeme L_LongArrow
         x <- parse
         return $ Lambda args x
     pretty (Lambda args x) = Pr.braces (prettyListDoc id Pr.comma argsDoc <+> "-->" <+> pretty x)

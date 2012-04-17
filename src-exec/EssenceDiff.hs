@@ -7,6 +7,7 @@ import Control.Monad.Error ( runErrorT )
 import Control.Monad.Writer ( runWriter )
 import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
+import qualified Data.Text.Lazy.IO as T
 
 import Language.Essence ( Spec )
 import Language.Essence.Phases.ReadIn ( readIn )
@@ -37,7 +38,7 @@ main = do
 
 getSpec :: FilePath -> IO (Either Doc Spec)
 getSpec filename = do
-    contents <- readFile filename
+    contents <- T.readFile filename
     let (spec,logs) = runWriter $ runErrorT $ readIn filename contents
     mapM_ print logs
     return spec

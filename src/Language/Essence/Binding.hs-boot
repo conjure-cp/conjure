@@ -31,8 +31,6 @@ addBinding' ::
     , Has st [(GNode,GNode)]
     ) => Binding -> m ()
 
-bindingName :: Binding -> String
-
 data Binding
     = Find          Identifier Domain
     | Given         Identifier Domain
@@ -42,6 +40,8 @@ data Binding
     | LettingExpr   Identifier Expr
     | LettingLambda Identifier Lambda
     | LettingQuan   Identifier QuantifierDecl
+    | BindingDim    Identifier Domain
+    | BindingDimFind Expr
 
 instance Eq Binding
 instance Ord Binding

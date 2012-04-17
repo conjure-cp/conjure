@@ -24,6 +24,7 @@ module GenericOps.Core
     , gapply, gapplyDeep
     ) where
 
+import Control.Applicative
 import Control.Monad ( forM, liftM, zipWithM_ )
 import Control.Monad.Error ( MonadError, ErrorT(..), throwError )
 import Control.Monad.State ( MonadState, StateT(..), evalStateT )
@@ -37,7 +38,6 @@ import qualified Data.Map as M
 
 import Constants
 import Has
-import ParsecUtils ( choiceTry )
 import ParsePrint
 import PrintUtils ( Doc, (<+>), ($$), brackets, nest, text, vcat )
 import Utils ( padLeft )
@@ -85,9 +85,7 @@ instance (Data a, Data b) => NodeTag (Either a b)
 instance Hole (Either a b)
 instance MatchBind (Either a b)
 instance (ParsePrint a, ParsePrint b) => ParsePrint (Either a b) where
-    parse = choiceTry [ liftM Left  parse
-                      , liftM Right parse
-                      ]
+    parse = liftM Left  parse <|> liftM Right parse
     pretty (Left  x) = pretty x
     pretty (Right x) = pretty x
 instance (GPlate a, GPlate b, Data a, Data b) => GPlate (Either a b) where

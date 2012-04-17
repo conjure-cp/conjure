@@ -23,7 +23,8 @@ import GenericOps.Core ( NodeTag
                        , GPlate, gplate, gplateLeaf, gplateSingle, gplateUniList
                        , GNode(..)
                        , MatchBind, BindingsMap )
-import ParsecUtils
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty, prettyList, fromPairs )
 import PrintUtils ( (<+>), Doc )
 import qualified PrintUtils as Pr
@@ -148,7 +149,7 @@ instance GPlate Type where
 instance MatchBind Type
 
 instance ParsePrint Type where
-    parse = choiceTry
+    parse = msum1
                 [ pTHole, pTBool, pTInt, pEnum, pUnnamed, pMatrix
                 , pTTuple, pTSet, pTMSet
                 , pTFunction, pTRelation, pTPartition
@@ -156,34 +157,34 @@ instance ParsePrint Type where
                 ]
         where
             pTHole  = THole <$> parse
-            pTBool  = TBool <$  reserved "bool"
-            pTInt   = TInt  <$  reserved "int"
-            pEnum   = do reserved "enum" ; TEnum <$> optionMaybe (braces (sepBy parse comma))
-            pUnnamed = do reserved "of"; reserved "size"; TUnnamed <$> parse
+            pTBool  = TBool <$  lexeme L_bool
+            pTInt   = TInt  <$  lexeme L_int
+            pEnum   = do lexeme L_enum ; TEnum <$> optionMaybe (braces (sepBy parse comma))
+            pUnnamed = do lexeme L_of; lexeme L_size; TUnnamed <$> parse
             pMatrix = do
-                reserved "matrix"
-                reserved "indexed"
-                reserved "by"
+                lexeme L_matrix
+                lexeme L_indexed
+                lexeme L_by
                 is <- brackets (parse `sepBy1` comma)
-                reserved "of"
+                lexeme L_of
                 e  <- parse
                 return $ foldr TMatrix e is
-            pTTuple = do reserved "tuple"; AnyType TTuple <$> parens (sepBy parse comma)
-            pTSet   = do reserved "set"  ; reserved "of"; AnyType TSet  . return <$> parse
-            pTMSet  = do reserved "mset" ; reserved "of"; AnyType TMSet . return <$> parse
+            pTTuple = do lexeme L_tuple; AnyType TTuple <$> parens (sepBy parse comma)
+            pTSet   = do lexeme L_set  ; lexeme L_of; AnyType TSet  . return <$> parse
+            pTMSet  = do lexeme L_mset ; lexeme L_of; AnyType TMSet . return <$> parse
             pTFunction = do
-                reserved "function"
+                lexeme L_function
                 fr <- parse
-                reservedOp "-->"
+                lexeme L_LongArrow
                 to <- parse
                 return (AnyType TFunction [fr,to])
-            pTRelation  = do reserved "relation" ; reserved "of"  ; AnyType TRelation  <$> parens (sepBy parse (reservedOp "*"))
-            pTPartition = do reserved "partition"; reserved "from"; AnyType TPartition . return <$> parse
+            pTRelation  = do lexeme L_relation ; lexeme L_of  ; AnyType TRelation  <$> parens (sepBy parse (lexeme L_Times))
+            pTPartition = do lexeme L_partition; lexeme L_from; AnyType TPartition . return <$> parse
             pTLambda = do
-                reserved "lambda"
+                lexeme L_lambda
                 braces $ do
                     is <- sepBy1 parse comma
-                    reservedOp "-->"
+                    lexeme L_LongArrow
                     o  <- parse
                     return (TLambda is o)
 
@@ -255,12 +256,12 @@ instance MatchBind AnyTypeEnum
 
 instance ParsePrint AnyTypeEnum where
     fromPairs =
-        [ ( TTuple    , "tuple"     )
-        , ( TSet      , "set"       )
-        , ( TMSet     , "mset"      )
-        , ( TFunction , "function"  )
-        , ( TRelation , "set"       )
-        , ( TPartition, "partition" )
+        [ ( TTuple    , L_tuple     )
+        , ( TSet      , L_set       )
+        , ( TMSet     , L_mset      )
+        , ( TFunction , L_function  )
+        , ( TRelation , L_set       )
+        , ( TPartition, L_partition )
         ]
 
 instance Arbitrary AnyTypeEnum where

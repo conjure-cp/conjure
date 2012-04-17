@@ -16,7 +16,6 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 import qualified  Data.Map as M
 
-import Constants
 import Has
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError, gplateUniList
@@ -24,12 +23,13 @@ import GenericOps.Core ( NodeTag, Hole
                        , MatchBind, match, bind
                        , addBinding, getBinding, BindingsMap
                        , inScope )
-import ParsecUtils
 import ParsePrint
 import PrintUtils ( (<>), (<+>), text )
 import qualified PrintUtils as Pr
-import Utils ( ppShow )
+import Utils
 
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import Language.Essence.Domain
 import Language.Essence.Expr
 import Language.Essence.Identifier
@@ -131,27 +131,63 @@ instance GPlate QuantifiedExpr where
 instance MatchBind QuantifiedExpr
 
 
-instance ParsePrint QuantifiedExpr where
-    parse = do
-        qnName   <- choice [ try $ reserved "quantifier" >> parse
-                           , Identifier "forAll" <$ reserved "forAll"
-                           , Identifier "exists" <$ reserved "exists"
-                           , Identifier "sum"    <$ reserved "sum"
-                           ]
+-- pQuantifiedExprGuarded :: Parser QuantifiedExpr
+-- pQuantifiedExprGuarded = do
+--     qnName   <- parse
+--     qnVars   <- parse `sepBy1` comma
+--     qnDom    <- optionMaybe (colon *> parse)
+--     qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
+--     qnGuard  <- comma *> parse
+--     qnBody   <- dot   *> parse
+--     let
+--         f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
+--         f [i]    = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard [qnGuard]) qnBody
+--         f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []       ) (Q $ f is)
+--     return $ f (map Right qnVars)
+-- 
+-- pQuantifiedExprNotGuarded :: Parser QuantifiedExpr
+-- pQuantifiedExprNotGuarded = do
+--     qnName   <- parse
+--     qnVars   <- parse `sepBy1` comma
+--     qnDom    <- optionMaybe (colon *> parse)
+--     qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
+--     qnBody   <- dot *> parse
+--     let
+--         f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
+--         f [i]    = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) qnBody
+--         f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
+--     return $ f (map Right qnVars)
+
+pQuantifiedExprAsExpr :: Parser Expr -> Parser Expr
+pQuantifiedExprAsExpr p = Q <$> pQuantifiedExpr p
+
+pQuantifiedExpr :: Parser Expr -> Parser QuantifiedExpr
+pQuantifiedExpr p = do
+        let parseOp = msum1 [ Subset   <$ lexeme L_subset
+                            , SubsetEq <$ lexeme L_subsetEq
+                            , In       <$ lexeme L_in
+                            ]
+        qnName   <- parse
         qnVars   <- parse `sepBy1` comma
         qnDom    <- optionMaybe (colon *> parse)
-        qnExpr   <- optionMaybe ((,) <$> parse <*> parse)
+        qnExpr   <- optionMaybe ((,) <$> parseOp <*> parse)
+        case (qnDom,qnExpr) of
+            (Nothing, Nothing) -> failWithMsg "expecting something to quantify over"
+            _ -> return ()
         qnGuard' <- optionMaybe (comma *> parse)
-        qnBody   <- dot *> parse
-        let qnGuard = case qnGuard' of Nothing -> QuanGuard []; Just x -> QuanGuard [x]
+        qnBody   <- dot *> ( p <??> "expecting body of a quantified expression" )
+        let qnGuard = case qnGuard' of Nothing -> QuanGuard []; Just i -> QuanGuard [i]
         let
             f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
             f [i]    = QuantifiedExpr qnName i qnDom qnExpr qnGuard qnBody
             f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
-        return (f (map Right qnVars))
+        return $ f (map Right qnVars)
+
+
+instance ParsePrint QuantifiedExpr where
+    parse = pQuantifiedExpr parse
     pretty (QuantifiedExpr qnName qnVar qnDom qnExpr qnGuard qnBody)
-        = let header =  (if qnName `notElem` ["forAll", "exists", "sum"] then "quantifier" else Pr.empty)
-                    <+> pretty qnName
+        = let header =  pretty qnName
                     <+> pretty qnVar
                     <+> ( case qnDom of
                             Nothing -> Pr.empty
@@ -200,7 +236,7 @@ instance TypeOf QuantifiedExpr where
                     Left (Identifier nm) -> addBinding nm tForQnVar
                     _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show qnVar
 
-                traceM Debug $ "adding quantified variable in context: " ++ show (qnVar,tForQnVar)
+                -- traceM Debug $ "adding quantified variable in context: " ++ show (qnVar,tForQnVar)
 
                 -- check guards are bools
                 forM_ qnGuards $ \ x -> inScope (mkG x) $ do 

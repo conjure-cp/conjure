@@ -15,11 +15,12 @@ import GenericOps.Core ( NodeTag
                        , GPlate, gplate, gplateError 
                        , mkG, fromGs
                        , MatchBind )
-import ParsecUtils
-import ParsePrint ( ParsePrint, parse, pretty, prettyList )
+import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), text )
 import qualified PrintUtils as Pr
 
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import Language.Essence.Binding
 import Language.Essence.Expr
 import Language.Essence.Where
@@ -66,19 +67,14 @@ instance GPlate RuleRefn where
 instance MatchBind RuleRefn
 
 instance ParsePrint RuleRefn where
-    parse = do
-        whiteSpace
+    parse = inCompleteFile $ do
         level     <- optionMaybe (brackets (fromInteger <$> integer))
         pattern   <- parse
-        templates <- reservedOp "~~>" >> try (braces (parse `sepBy1` comma)) <|> (return <$> parse)
+        templates <- some (lexeme L_SquigglyArrow >> parse)
         locals    <- parse
-        eof
         return $ RuleRefn level "" pattern templates locals
     pretty RuleRefn {..} = Pr.vcat $ concat [ [ Pr.brackets (Pr.int l), text "" ] | Just l <- [refnLevel] ]
-                                  ++ [ pretty refnPattern <+> "~~>"
-                                                          <+> case refnTemplates of
-                                                                   [t] -> pretty t
-                                                                   ts  -> prettyList Pr.braces Pr.comma ts ]
+                                  ++ [ pretty refnPattern <+> Pr.vcat [ "~~>" <+> pretty t | t <- refnTemplates ] ]
                                   ++ [ text "" ]
                                   ++ map pretty refnLocals
 

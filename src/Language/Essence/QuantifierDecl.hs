@@ -14,7 +14,8 @@ import GenericOps.Core ( NodeTag
                        , GPlate, gplate, gplateError
                        , mkG, fromG
                        , MatchBind, inScope )
-import ParsecUtils ( braces, reserved )
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>) )
 import qualified PrintUtils as Pr
@@ -47,11 +48,11 @@ instance MatchBind QuantifierDecl
 
 instance ParsePrint QuantifierDecl where
     parse = do
-        reserved "quantifier"
+        lexeme L_quantifier
         braces $ QuantifierDecl
-            <$> (reserved "append"   >> parse)
-            <*> (reserved "guard"    >> parse)
-            <*> (reserved "identity" >> parse)
+            <$> (lexeme (LIdentifier "append"  ) >> parse)
+            <*> (lexeme (LIdentifier "guard"   ) >> parse)
+            <*> (lexeme (LIdentifier "identity") >> parse)
     pretty (QuantifierDecl app gua ide) =
         "quantifier" Pr.$$ Pr.braces (
             Pr.nest 4 ("append  " <+> pretty app) Pr.$$

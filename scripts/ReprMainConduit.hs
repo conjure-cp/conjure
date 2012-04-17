@@ -12,7 +12,7 @@ import Data.Conduit.List as Con
 
 import Language.EssenceParsers ( pSpec, pRuleRepr )
 import Language.EssencePrinters ( prSpec )
-import ParsecUtils ( parseFromFile )
+import Language.EssenceLexerP ( parseFromFile )
 import Phases.Repr ( callRepr )
 import PrintUtils ( render )
 import Utils ( padLeft )

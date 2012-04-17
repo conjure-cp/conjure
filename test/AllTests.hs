@@ -10,6 +10,8 @@ import           Control.Monad.Error ( runErrorT )
 import           Control.Monad.State ( evalStateT )
 import           Control.Monad.Writer ( runWriterT )
 import           Data.List ( isSuffixOf )
+import qualified Data.Text.Lazy    as T
+import qualified Data.Text.Lazy.IO as T
 import qualified Data.Map as M
 import           Test.Framework ( defaultMain )
 import           Test.Framework.Providers.HUnit ( hUnitTestToTests )
@@ -19,8 +21,8 @@ import qualified Test.HUnit as HUnit
 import           System.Directory ( getDirectoryContents )
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
-import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap )
-import ParsecUtils ( Parser, eof, parseEither, unsafeParse )
+import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap, bottomUp )
+import Language.EssenceLexerP ( Parser, eof, parseEither, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), renderDoc, text, vcat )
 
@@ -37,30 +39,39 @@ noParse _ s = HUnit.TestLabel ("NoParse " ++ s) $ HUnit.TestCase $
         Left _         -> return ()
         Right (_ :: a) -> assertFailure ("NoParse: " ++ s)
 
-shouldParseTo :: (Eq a, Show a, ParsePrint a) => String -> a -> HUnit.Test
+removeIdentifierNames :: GPlate a => String -> a -> a
+removeIdentifierNames nm = bottomUp $ \ _ -> Identifier nm
+
+shouldParseTo :: forall a . (Eq a, Show a, ParsePrint a, GPlate a) => String -> a -> HUnit.Test
 shouldParseTo s x = HUnit.TestLabel ("ShouldParseTo " ++ s) $ HUnit.TestCase $
     case parseEither (parse <* eof) s of
         Left msg -> assertFailure $ show $ "ShouldParseTo [cannot parse]: " <+> text s <+> msg
-        Right x' -> assertEqual "ShouldParseTo [parses to a different thing]" x x'
+        Right x' -> assertEqual "ShouldParseTo [parses to a different thing]"
+                        (removeIdentifierNames "_" x)
+                        (removeIdentifierNames "_" x')
 
-parsePrintIso :: forall a . (Eq a, Show a, ParsePrint a) => a -> String -> HUnit.Test
+parsePrintIso :: forall a . (Eq a, Show a, ParsePrint a, GPlate a) => a -> String -> HUnit.Test
 parsePrintIso _ s = HUnit.TestLabel ("ParsePrintIso " ++ s) $ HUnit.TestCase $
     case parseEither (parse <* eof) s of
         Left msg        -> assertFailure $ show $ "ParsePrintIso [cannot parse]: " <+> text s <+> msg
         Right (x' :: a) -> let s' = renderDoc $ pretty x'
                            in  case parseEither parse s' of
             Left msg  -> assertFailure $ show $ "ParsePrintIso [cannot parse pretty print]: " <+> text s' <+> msg
-            Right x'' -> assertEqual "ParsePrintIso [not equal]" x' x''
+            Right x'' -> assertEqual "ShouldParseTo [parses to a different thing]"
+                            (removeIdentifierNames "_" x')
+                            (removeIdentifierNames "_" x'')
 
-parsePrintIsoFile :: forall a . (Eq a, Show a, ParsePrint a, ReadIn a) => a -> FilePath -> HUnit.Test
+parsePrintIsoFile :: forall a . (Eq a, Show a, ParsePrint a, GPlate a, ReadIn a) => a -> FilePath -> HUnit.Test
 parsePrintIsoFile _ f = HUnit.TestLabel ("ParsePrintIsoFile " ++ f) $ HUnit.TestCase $ do
-    s <- readFile f
+    s <- T.readFile f
     case fst $ runReadIn f s of
-        Left msg        -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse]: ", f, s, show msg])
+        Left msg        -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse]: ", f, T.unpack s, show msg])
         Right (x' :: a) -> let s' = renderDoc $ pretty x'
-                           in  case fst $ runReadIn f s' of
+                           in  case fst $ runReadIn f (T.pack s') of
             Left msg  -> assertFailure (unlines ["ParsePrintIsoFile [cannot parse pretty print]: ", f, s', show msg])
-            Right x'' -> assertEqual "ParsePrintIso [not equal]" x' x''
+            Right x'' -> assertEqual "ShouldParseTo [parses to a different thing]"
+                            (removeIdentifierNames "_" x')
+                            (removeIdentifierNames "_" x'')
 
 eval :: [(String,GNode)] -> String -> String -> HUnit.Test
 eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.TestCase $ do
@@ -146,7 +157,6 @@ main = do
                                          ++ parsingValue
                                          ++ parsingQuantifiedExpr
                                          ++ parsingIdentifier
-                                         ++ parsingWhere
                                          ++ parsingLambda
                                          ++ parsingType
                                          ++ parsingDomain
@@ -165,8 +175,6 @@ main = do
         parsePrintIso_QuantifiedExpr = parsePrintIso     ( undefined :: QuantifiedExpr )
         noParse_Identifier           = noParse           ( undefined :: Identifier )
         parsePrintIso_Identifier     = parsePrintIso     ( undefined :: Identifier )
-        noParse_Where                = noParse           ( undefined :: [Where] )
-        parsePrintIso_Where          = parsePrintIso     ( undefined :: [Where] )
         noParse_Lambda               = noParse           ( undefined :: Lambda )
         parsePrintIso_Lambda         = parsePrintIso     ( undefined :: Lambda )
         parsePrintIso_Type           = parsePrintIso     ( undefined :: Type )
@@ -177,8 +185,30 @@ main = do
         parsePrintIsoFile_Refn       = parsePrintIsoFile ( undefined :: RuleRefn )
 
         parsingExpr =
-            [ noParse_Expr       "--x"
-            , parsePrintIso_Expr "-x"
+            [ parsePrintIso_Expr "-x"
+            , parsePrintIso_Expr "--x"
+            , parsePrintIso_Expr "---x"
+            , parsePrintIso_Expr "a-x"
+            , parsePrintIso_Expr "a--x"
+            , parsePrintIso_Expr "a---x"
+            , parsePrintIso_Expr "-a-x"
+            , parsePrintIso_Expr "-a--x"
+            , parsePrintIso_Expr "-a---x"
+            , parsePrintIso_Expr "--a-x"
+            , parsePrintIso_Expr "--a--x"
+            , parsePrintIso_Expr "--a---x"
+            , parsePrintIso_Expr "---a-x"
+            , parsePrintIso_Expr "---a--x"
+            , parsePrintIso_Expr "---a---x"
+            , parsePrintIso_Expr "-(a-x)"
+            , parsePrintIso_Expr "-(a--x)"
+            , parsePrintIso_Expr "-(a---x)"
+            , parsePrintIso_Expr "--(a-x)"
+            , parsePrintIso_Expr "--(a--x)"
+            , parsePrintIso_Expr "--(a---x)"
+            , parsePrintIso_Expr "---(a-x)"
+            , parsePrintIso_Expr "---(a--x)"
+            , parsePrintIso_Expr "---(a---x)"
             , shouldParseTo      "x" $ EHole "x"
             , shouldParseTo      "1" $ V $ VInt 1
             , parsePrintIso_Expr "1+2"
@@ -329,15 +359,6 @@ main = do
             , parsePrintIso_Identifier "_"
             ]
 
-        parsingWhere =
-            [ noParse_Where       ""
-            , noParse_Where       "x+y=z"
-            , noParse_Where       "wher k"
-            , parsePrintIso_Where "where k"
-            , parsePrintIso_Where "where k,l"
-            , parsePrintIso_Where "where x+y=z,l"
-            ]
-
         parsingLambda =
             [ parsePrintIso_Lambda "{ x:int, y:bool --> x % 2 = 0 <-> y }"
             , parsePrintIso_Lambda "{ x:int --> x % 2 }"
@@ -442,6 +463,9 @@ main = do
             , eval [] "1/1/1/1/1/1/1/1/1/1" "1"
             , eval [] "14 % 8" "6"
             , eval [] "14 % 8 % 4" "2"
+            , eval [] "14 % 7 % 4" "0"
+            , eval [] "(14 % 7) % 4" "0"
+            , eval [] "14 % (7 % 4)" "2"
             , eval [] "12 + 3 > 11" "true"
             , eval [] "12 + 3 < 11" "false"
             , eval [] "1 in {1,2,3}" "true"
@@ -513,10 +537,10 @@ main = do
                                       ]]
                                      "a+b" []
             
-            , applyRuleRefns ["x+y ~~> { x * y, y * x }"] "a + b" [ "a * b"
+            , applyRuleRefns ["x+y ~~> x * y ~~> y * x"] "a + b" [ "a * b"
                                                                   , "b * a" ]
             
-            , applyRuleRefns ["x+y ~~> { x * y, y * x }"] "a - b" []
+            , applyRuleRefns ["x+y ~~> x * y ~~> y * x"] "a - b" []
             
             , applyRuleRefns ["x + y ~~> 2 * x where x = y"] "b - (a + a)" ["b - (2 * a)"]
             

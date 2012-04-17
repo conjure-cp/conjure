@@ -25,11 +25,13 @@ import GenericOps.Core ( NodeTag
                        , GPlate, gplate, gplateError
                        , GNode, mkG, fromGs
                        , MatchBind, BindingsMap )
-import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), text, Doc )
 import Utils ( mapButLast )
 import qualified PrintUtils as Pr
+
+import Language.EssenceLexer
+import Language.EssenceLexerP
 
 import Language.Essence.Binding
 import Language.Essence.Expr
@@ -132,24 +134,22 @@ instance GPlate Spec where
 instance MatchBind Spec
 
 instance ParsePrint Spec where
-    parse = do
-        whiteSpace
+    parse = inCompleteFile $ do
         (lang,ver) <- pLanguage
         topLevels  <- parse
         obj        <- optionMaybe parse
         cons       <- concat <$> many pConstraints
-        eof
         return (Spec lang ver topLevels obj cons [])
         where
             pLanguage :: Parser (String,[Int])
             pLanguage = do
-                l  <- reserved "language" *> identifier
+                l  <- lexeme L_language *> identifier
                 is <- sepBy1 integer dot
                 return (l, map fromInteger is)
 
             pConstraints :: Parser [Expr]
             pConstraints = do
-                (reserved "such" >> reserved "that") <?> "such that"
+                (lexeme L_such >> lexeme L_that) <?> "such that"
                 sepBy1 parse comma
 
     pretty (Spec{..}) = Pr.vcat

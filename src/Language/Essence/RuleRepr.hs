@@ -5,6 +5,7 @@
 
 module Language.Essence.RuleRepr ( RuleRepr(..), RuleReprCase(..) ) where
 
+import Control.Applicative
 import Data.Generics ( Data )
 import Data.Maybe ( listToMaybe, maybeToList )
 import Data.Typeable ( Typeable )
@@ -16,11 +17,12 @@ import GenericOps.Core ( NodeTag, Hole
                        , mkG, fromGs
                        , MatchBind
                        )
-import ParsecUtils
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), text )
 import qualified PrintUtils as Pr
 
+import Language.EssenceLexer
+import Language.EssenceLexerP
 import Language.Essence.Binding
 import Language.Essence.Domain
 import Language.Essence.Expr
@@ -74,14 +76,12 @@ instance GPlate RuleRepr where
 instance MatchBind RuleRepr
 
 instance ParsePrint RuleRepr where
-    parse = do
-        whiteSpace
-        name   <- reservedOp "~~>" >> identifier
-        templ  <- reservedOp "~~>" >> parse
-        cons   <- optionMaybe (reservedOp "~~>" >> parse)
+    parse = inCompleteFile $ do
+        name   <- lexeme L_SquigglyArrow >> identifier
+        templ  <- lexeme L_SquigglyArrow >> parse
+        cons   <- optionMaybe (lexeme L_SquigglyArrow >> parse)
         locals <- parse
-        cases  <- many1 parse
-        eof
+        cases  <- some (parse <?> "case for a representation selection rule")
         return (RuleRepr "" name templ cons locals cases)
     pretty RuleRepr {..} = Pr.vcat $ [ "~~>" <+> text reprName
                                      , "~~>" <+> pretty reprTemplate ]
@@ -129,8 +129,8 @@ instance MatchBind RuleReprCase
 
 instance ParsePrint RuleReprCase where
     parse = do
-        pattern <- reservedOp "***" >> parse
-        cons    <- optionMaybe (reservedOp "~~>" >> parse)
+        pattern <- lexeme L_CaseSeparator >> parse
+        cons    <- optionMaybe (lexeme L_SquigglyArrow >> parse)
         locals  <- parse
         return (RuleReprCase pattern cons locals)
     pretty RuleReprCase {..} = Pr.vcat $ [ "***" <+> pretty reprCasePattern ]
