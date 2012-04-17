@@ -9,7 +9,7 @@ module Language.Essence.Domain where
 import Control.Applicative
 import Control.Arrow ( first, second )
 import Control.Monad ( ap, liftM, msum )
-import Control.Monad.Error ( MonadError, ErrorT, throwError, runErrorT )
+import Control.Monad.Error ( MonadError, ErrorT, runErrorT )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
@@ -21,6 +21,7 @@ import Test.QuickCheck ( Arbitrary, arbitrary, elements )
 import Test.QuickCheck.Gen ( oneof )
 import qualified Data.Text.Lazy as T
 
+import Nested
 import Constants
 import Has
 import GenericOps.Core ( NodeTag
@@ -50,7 +51,7 @@ class DomainOf a where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m Domain
@@ -70,7 +71,7 @@ representationValue (AnyDom {dAttrs = DomainAttrs attrs}) = msum $ flip map attr
     _ -> Nothing
 representationValue _ = Nothing
 
-domToType :: (Applicative m, MonadError Doc m) => Domain -> m Type
+domToType :: (Applicative m, MonadError (Nested Doc) m) => Domain -> m Type
 domToType (DHole i) = return $ THole i
 domToType DBool = return $ TBool
 domToType (DInt _) = return $ TInt
@@ -78,13 +79,13 @@ domToType (DEnum i _) = return $ THole i
 domToType (DUnnamed x) = return $ TUnnamed x
 domToType (DMatrix i e) = TMatrix <$> domToType i <*> domToType e
 domToType (AnyDom enum es _) = AnyType enum <$> mapM domToType es
-domToType p@(Indices {}) = throwError $ "not a valie type: " <+> pretty p
+domToType p@(Indices {}) = throwErrorSingle $ "not a valie type: " <+> pretty p
 
 
 data Domain = DHole Identifier
     | DBool
     | DInt                (Range Expr)
-    | DEnum    Identifier (Range Identifier)
+    | DEnum    Identifier (Range Expr)
     | DUnnamed Expr
     | DMatrix  Domain Domain
     | AnyDom { dConstr  :: AnyTypeEnum
@@ -276,7 +277,7 @@ instance TypeOf Domain where
 
         tm <- typeOf =<< oldDeepSimplify m
         case go tm ind of
-            Nothing -> throwError $ "typeOf fail:" <+> pretty p
+            Nothing -> throwErrorSingle $ "typeOf fail:" <+> pretty p
             Just t  -> return t
 
 instance DomainOf Domain where
@@ -322,8 +323,8 @@ instance MatchBind DomainAttrs where
                 (res, ys') <- tryMatch x ys
                 if res
                     then helper d xs ys'
-                    else throwError $ "attribute in pattern not found in actual: " <+> pretty x
-            helper _ _ ys = throwError $ "some attibutes in actual not matched: " <+> prettyList id Pr.comma ys
+                    else throwErrorSingle $ "attribute in pattern not found in actual: " <+> pretty x
+            helper _ _ ys = throwErrorSingle $ "some attibutes in actual not matched: " <+> prettyList id Pr.comma ys
 
 instance ParsePrint DomainAttrs where
     parse = DomainAttrs . fromMaybe [] <$> optionMaybe (parens (parse `sepBy` comma))

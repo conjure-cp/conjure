@@ -20,6 +20,7 @@ import Unsafe.Coerce ( unsafeCoerce )
 import qualified Data.Map as M
 import qualified Data.Typeable as T
 
+import Nested
 import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( GPlate, gplate, GNode(..), BindingsMap, mkG, fromGs, runMatch, runBind, universe )
 import Has ( Has, getM, putM )
@@ -38,7 +39,7 @@ import Language.EssenceEvaluator ( deepSimplify, oldDeepSimplify )
 
 callRefn ::
     ( Applicative m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Spec -> m [Spec]
 callRefn rules' spec = do
@@ -61,7 +62,7 @@ applyRefnsDeepSpec ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Spec -> m [Spec]
@@ -72,7 +73,7 @@ applyRefnsDeep :: forall a st m .
     , Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> a -> m [a]
@@ -102,7 +103,7 @@ funcFromRules ::
     -- , Has st [GNode]
     , Has st LocalFlag
     , Has st GlobalFlag
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Expr -> m [Expr]
@@ -124,7 +125,7 @@ funcFromRules rules i' = catchError
                     return j
         )
         (\ e -> do
-                    tell [e]
+                    tell [nestedToDoc e]
                     return [i']
         )
     where
@@ -143,7 +144,7 @@ treeWalker :: forall m st .
     -- , Has st [GNode]
     , Has st LocalFlag
     , Has st GlobalFlag
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => (Expr -> m [Expr]) -> GNode -> m [GNode]
@@ -171,7 +172,7 @@ applyRefns ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Expr -> m [Expr]
@@ -190,7 +191,7 @@ applyRefn ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => RuleRefn -> Expr -> m [Expr]

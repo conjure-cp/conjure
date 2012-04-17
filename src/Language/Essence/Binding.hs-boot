@@ -10,6 +10,7 @@ import Data.Typeable ( Typeable )
 -- import GHC.Generics ( Generic )
 
 import Has
+import Nested
 import GenericOps.Core
 import PrintUtils
 import ParsePrint
@@ -25,7 +26,7 @@ import                Language.Essence.Where
 
 
 addBinding' ::
-    ( MonadError Doc m
+    ( MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     , Has st [(GNode,GNode)]

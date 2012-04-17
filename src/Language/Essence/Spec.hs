@@ -9,7 +9,7 @@ module Language.Essence.Spec where
 
 import Control.Applicative
 import Control.Monad ( unless, void )
-import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( evalStateT )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Default ( Default, def )
@@ -28,6 +28,7 @@ import GenericOps.Core ( NodeTag
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), text, Doc )
 import Utils ( mapButLast )
+import Nested ( Nested, throwErrorSingle )
 import qualified PrintUtils as Pr
 
 import Language.EssenceLexer
@@ -171,7 +172,7 @@ instance ParsePrint Spec where
 
 typeCheckSpec ::
     ( Applicative m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadWriter [Doc] m
     ) => Spec -> m ()
 typeCheckSpec Spec {topLevels, objective, constraints}
@@ -189,14 +190,14 @@ typeCheckSpec Spec {topLevels, objective, constraints}
             Right w -> do
                 t <- typeOf (whereExpr w)
                 unless (t == TBool)
-                       (throwError $ "Where statement isn't a boolean expression: " <+> pretty w)
+                       (throwErrorSingle $ "Where statement isn't a boolean expression: " <+> pretty w)
 
     forM_ objective $ \ o -> do
         t <- typeOf (objExpr o)
         b <- isOrderedType t
-        unless b (throwError $ "Objective has to be of an ordered type: " <+> pretty o)
+        unless b (throwErrorSingle $ "Objective has to be of an ordered type: " <+> pretty o)
 
     forM_ constraints $ \ c -> do
         t <- typeOf c
         unless (t == TBool)
-               (throwError $ "Constraint isn't a boolean expression: " <+> pretty c)
+               (throwErrorSingle $ "Constraint isn't a boolean expression: " <+> pretty c)

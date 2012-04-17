@@ -5,7 +5,7 @@
 module Language.EssenceLexer where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.Error ( MonadError )
 import Data.Char
 import Data.List ( genericLength, nub, sortBy )
 import Data.Maybe
@@ -16,7 +16,7 @@ import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import qualified Data.Text.Lazy.Read as T
 
-import Constants ()
+import Nested ( Nested, throwErrorSingle )
 import PrintUtils ( Doc, (<+>) )
 import qualified PrintUtils as Pr
 
@@ -368,7 +368,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_CaseSeparator   , "***"   )
     ]
 
-runLexer :: (Applicative m, MonadError Doc m) => T.Text -> m [Lexeme]
+runLexer :: (Applicative m, MonadError (Nested Doc) m) => T.Text -> m [Lexeme]
 runLexer t =
     let results = catMaybes $  map (tryLex t) lexemes
                             ++ [ tryLexIntLiteral t
@@ -378,7 +378,7 @@ runLexer t =
     in  if T.null t
             then return []
             else case results of
-                    [] -> throwError $ "Lexing error:" <+> Pr.text (T.unpack t)
+                    [] -> throwErrorSingle $ "Lexing error:" <+> Pr.text (T.unpack t)
                     ((rest,lexeme):_) -> (lexeme:) <$> runLexer rest
                     -- several -> throwError $ Pr.vcat $ "Ambigious lexing" : map (Pr.text . show) several
 

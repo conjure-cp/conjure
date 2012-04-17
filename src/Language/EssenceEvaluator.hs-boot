@@ -13,6 +13,7 @@ import Control.Monad.State
 import Control.Monad.Writer
 
 import Has
+import Nested
 import GenericOps.Core
 import PrintUtils
 
@@ -35,19 +36,19 @@ class Simplify a where
         , Has st [(GNode,GNode)]
         , Has st Bool
         , Monad m
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m (Maybe a)
 
-runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m Spec
+runSimplify :: (Applicative m, MonadError (Nested Doc) m, MonadWriter [Doc] m) => Spec -> m Spec
 
 
 oldDeepSimplify ::
     ( Applicative m
     , GPlate a
     , Has st BindingsMap
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m a
@@ -56,7 +57,7 @@ deepSimplify ::
     ( Applicative m
     , GPlate a
     , Has st BindingsMap
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m (a,Bool)
@@ -68,7 +69,7 @@ simplifyReal ::
     , Has st [(GNode,GNode)]
     , Has st Bool
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Expr -> m (Maybe Expr)
@@ -93,7 +94,7 @@ class Evaluate a b where
         , Has st [GNode]
         , Has st [(GNode,GNode)]
         , Monad m
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m b

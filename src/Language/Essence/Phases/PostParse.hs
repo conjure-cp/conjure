@@ -9,9 +9,10 @@ import Control.Monad ( (>=>) )
 import Control.Monad.Error ( MonadError, throwError )
 import Data.Maybe ( mapMaybe )
 
+import Nested
 import GenericOps.Core ( bottomUp, bottomUpM )
 import ParsePrint ( pretty )
-import PrintUtils ( Doc, nest, vcat )
+import PrintUtils ( Doc )
 
 import Language.Essence
 import Language.Essence.Phases.CheckDomains ( checkDomains )
@@ -29,7 +30,7 @@ import Language.Essence.Phases.ToETyped ( toETyped )
 -- when it refers to an enum type, it should be: "DEnum (Identifier nm) RAll"
 -- see: enumIdentifiersDom
 
-postParse :: forall m . (Applicative m, MonadError Doc m) => Spec -> m Spec
+postParse :: forall m . (Applicative m, MonadError (Nested Doc) m) => Spec -> m Spec
 postParse spec = do
     spec1 <- (checkDomains >=> toETyped >=> bottomUpM enumIdentifiers) (bottomUp enumDomains spec)
     return (structuredVars spec1)
@@ -53,8 +54,7 @@ postParse spec = do
             case rs of
                 [ ] -> return p
                 [_] -> return $ V $ VEnum i
-                _   -> throwError $ vcat $ "Same enum value used in multiple enumerated types: "
-                                         : map (nest 4 . pretty) rs
+                _   -> throwError $ Nested (Just "Same enum value used in multiple enumerated types: ") $ map (singletonNested . pretty) rs
         enumIdentifiers p = return p
 
         enumDomains :: Domain -> Domain

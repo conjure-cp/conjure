@@ -7,7 +7,6 @@ module Language.Essence.Value where
 
 import Control.Applicative
 import Control.Monad ( unless )
-import Control.Monad.Error ( throwError )
 import Data.Generics ( Data )
 import Data.Map ( elems )
 import Data.Maybe ( mapMaybe )
@@ -16,6 +15,7 @@ import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary )
 
 import Has
+import Nested ( throwErrorSingle )
 import GenericOps.Core ( NodeTag
                        , Hole, hole
                        , HoleStatus(..)
@@ -153,17 +153,17 @@ instance TypeOf Value where
                     _ -> Nothing
         case rs of
             [t] -> return t
-            [ ] -> throwError $ Pr.vcat $ "Undefined enum value:" <+> pretty i
-                                        : map (Pr.nest 4 . pretty) rs
-            _   -> throwError $ Pr.vcat $ "Same enum value used in multiple enumerated types:"
-                                        : map (Pr.nest 4 . pretty) rs
+            [ ] -> throwErrorSingle $ Pr.vcat $ "Undefined enum value:" <+> pretty i
+                                              : map (Pr.nest 4 . pretty) rs
+            _   -> throwErrorSingle $ Pr.vcat $ "Same enum value used in multiple enumerated types:"
+                                              : map (Pr.nest 4 . pretty) rs
 
     typeOf (VMatrix []) = return $ TMatrix TInt TUnknown
     typeOf p@(VMatrix xs) = do
         t:ts <- mapM typeOf xs
-        unless (all (==t) ts) $ throwError $ Pr.vcat [ "Elements of a matrix literal has to be of uniform type."
-                                                     , Pr.nest 4 $ "in:" <+> pretty p
-                                                     ]
+        unless (all (==t) ts) $ throwErrorSingle $ Pr.vcat [ "Elements of a matrix literal has to be of uniform type."
+                                                           , Pr.nest 4 $ "in:" <+> pretty p
+                                                           ]
         return $ TMatrix TInt t
 
     typeOf (VTuple xs) = do
@@ -173,57 +173,57 @@ instance TypeOf Value where
     typeOf   (VSet []) = return $ AnyType TSet [TUnknown]
     typeOf p@(VSet xs) = do
         t:ts <- mapM typeOf xs
-        unless (all (==t) ts) $ throwError $ Pr.vcat [ "Elements of a set literal has to be of uniform type."
-                                                     , Pr.nest 4 $ "in:" <+> pretty p
-                                                     ]
+        unless (all (==t) ts) $ throwErrorSingle $ Pr.vcat [ "Elements of a set literal has to be of uniform type."
+                                                           , Pr.nest 4 $ "in:" <+> pretty p
+                                                           ]
         return $ AnyType TSet [t]
 
     typeOf   (VMSet []) = return $ AnyType TMSet [TUnknown]
     typeOf p@(VMSet xs) = do
         t:ts <- mapM typeOf xs
-        unless (all (==t) ts) $ throwError $ Pr.vcat [ "Elements of a multi-set literal has to be of uniform type."
-                                                     , Pr.nest 4 $ "in:" <+> pretty p
-                                                     ]
+        unless (all (==t) ts) $ throwErrorSingle $ Pr.vcat [ "Elements of a multi-set literal has to be of uniform type."
+                                                           , Pr.nest 4 $ "in:" <+> pretty p
+                                                           ]
         return $ AnyType TMSet [t]
 
     typeOf   (VFunction []) = return $ AnyType TFunction [TUnknown,TUnknown]
     typeOf p@(VFunction xs) = do
         t:ts <- mapM typeOf xs
-        unless (all (==t) ts) $ throwError $ Pr.vcat [ "Elements of a function literal has to be of uniform type."
-                                                     , Pr.nest 4 $ "in:" <+> pretty p
-                                                     ]
+        unless (all (==t) ts) $ throwErrorSingle $ Pr.vcat [ "Elements of a function literal has to be of uniform type."
+                                                           , Pr.nest 4 $ "in:" <+> pretty p
+                                                           ]
         case t of
             AnyType TTuple [a,b] -> return $ AnyType TFunction [a,b]
-            _ -> throwError $ Pr.vcat [ "Elements of a function literal has to be 2-tuples."
-                                      , Pr.nest 4 $ "in:" <+> pretty p
-                                      ]
+            _ -> throwErrorSingle $ Pr.vcat [ "Elements of a function literal has to be 2-tuples."
+                                            , Pr.nest 4 $ "in:" <+> pretty p
+                                            ]
 
     typeOf   (VRelation []) = return $ AnyType TRelation [TUnknown]
     typeOf p@(VRelation xs) = do
         t:ts <- mapM typeOf xs
-        unless (all (==t) ts) $ throwError $ Pr.vcat [ "Elements of a relation literal has to be of uniform type."
-                                                     , Pr.nest 4 $ "in:" <+> pretty p
-                                                     ]
+        unless (all (==t) ts) $ throwErrorSingle $ Pr.vcat [ "Elements of a relation literal has to be of uniform type."
+                                                           , Pr.nest 4 $ "in:" <+> pretty p
+                                                           ]
         case t of
             AnyType TTuple as -> return $ AnyType TRelation as
-            _ -> throwError $ Pr.vcat [ "Elements of a relation literal has to be tuples."
-                                      , Pr.nest 4 $ "in:" <+> pretty p
-                                      ]
+            _ -> throwErrorSingle $ Pr.vcat [ "Elements of a relation literal has to be tuples."
+                                            , Pr.nest 4 $ "in:" <+> pretty p
+                                            ]
 
     typeOf   (VPartition []) = return $ AnyType TPartition [TUnknown]
     typeOf p@(VPartition xs) = do
         t:ts <- mapM typeOf xs
-        unless (all (==t) ts) $ throwError $ Pr.vcat [ "Elements of a partition literal has to be of uniform type."
-                                                     , Pr.nest 4 $ "in:" <+> pretty p
-                                                     ]
+        unless (all (==t) ts) $ throwErrorSingle $ Pr.vcat [ "Elements of a partition literal has to be of uniform type."
+                                                           , Pr.nest 4 $ "in:" <+> pretty p
+                                                           ]
         case t of
             AnyType TSet [a] -> return $ AnyType TPartition [a]
-            _ -> throwError $ Pr.vcat [ "Elements of a partition literal has to be sets."
-                                      , Pr.nest 4 $ "in:" <+> pretty p
-                                      ]
+            _ -> throwErrorSingle $ Pr.vcat [ "Elements of a partition literal has to be sets."
+                                            , Pr.nest 4 $ "in:" <+> pretty p
+                                            ]
 
 instance DomainOf Value where
     domainOf (VBool False) = return $ DInt $ RFromTo [ Left $ V $ VInt 0 ]
     domainOf (VBool True ) = return $ DInt $ RFromTo [ Left $ V $ VInt 1 ]
     domainOf (VInt  i    ) = return $ DInt $ RFromTo [ Left $ V $ VInt i ]
-    domainOf _ = throwError "domainOf Value not implemented."
+    domainOf _ = throwErrorSingle "domainOf Value not implemented."

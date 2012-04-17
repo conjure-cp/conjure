@@ -24,6 +24,7 @@ import qualified Data.Text.Lazy.IO as T
 import Paths_conjure_cp ( getBinDir )
 
 import Constants ( figlet )
+import Nested ( Nested(..), nestedToDoc )
 import GenericOps.Core ( GPlate, GNode(..), runMatch, BindingsMap )
 import Language.EssenceLexerP ( eof, parseEither )
 import ParsePrint ( ParsePrint, parse, pretty )
@@ -203,7 +204,7 @@ step (TypeOf s) = withParsedGPlate s $ \ x -> do
     displayLogs logs
     case t of
         Left err -> liftIO $ print $ vcat [ "Error while type-checking."
-                                          , nest 4 err ]
+                                          , nest 4 (nestedToDoc err) ]
         Right t' -> liftIO $ print $ pretty t'
     -- bs <- gets $ topLevelBindings . currentSpec
     -- let (et, logs) = runTypeOf bs x
@@ -216,14 +217,14 @@ step (TypeOf s) = withParsedGPlate s $ \ x -> do
     --         prettyPrint prType t
 step (KindOf _) = returningTrue $ liftIO $ putStrLn "not implemented, yet."
 step ShowFullAST = returningTrue $ do sp <- gets currentSpec; liftIO $ ppPrint sp
-step (ShowAST s) = withParsedGPlate s  $ \  x  ->                   liftIO $ ppPrint (x :: Expr)
+step (ShowAST s) = withParsedGPlate s $ \ x -> liftIO $ ppPrint (x :: Expr)
 step (Load   fp) = returningTrue $ do
     msp <- liftIO readIt
     case msp of
-        Left  e  -> liftIO $ print e
+        Left  e  -> liftIO $ print $ nestedToDoc e
         Right sp -> modifySpec $ const sp
     where
-        readIt :: IO (Either Doc Spec)
+        readIt :: IO (Either (Nested Doc) Spec)
         readIt = do
             contents <- T.readFile fp
             let (res,logs) = runReadIn fp contents
@@ -260,8 +261,8 @@ testMatch undef msg s = returningTrue $ do
     let pa = splitOn "~~" s
     case pa of
         [p,a] -> case (parseEither (parse <* eof) (strip p), parseEither (parse <* eof) (strip a)) of
-            (Left err,_) -> liftIO $ print $ "Error while parsing:" <+> text p $$ err
-            (_,Left err) -> liftIO $ print $ "Error while parsing:" <+> text p $$ err
+            (Left err,_) -> liftIO $ print $ "Error while parsing:" <+> text p $$ nestedToDoc err
+            (_,Left err) -> liftIO $ print $ "Error while parsing:" <+> text p $$ nestedToDoc err
             (Right px, Right ax) -> case execStateT (runMatch (px `asTypeOf` undef) ax) M.empty of
                 Left err -> liftIO $ putStrLn $ "Error while pattern matching: " ++ show err
                 Right bs -> liftIO $ do

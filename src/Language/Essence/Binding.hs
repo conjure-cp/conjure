@@ -16,6 +16,7 @@ import Data.Typeable ( Typeable )
 import GHC.Generics ( Generic )
 
 import Constants
+import Nested ( Nested )
 import Has
 import GenericOps.Core ( NodeTag
                        , Hole
@@ -42,7 +43,7 @@ isOrderedType ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [GNode]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Type -> m Bool
@@ -58,7 +59,7 @@ isOrderedType (THole (Identifier i)) = do
 isOrderedType _ = return False
 
 addBinding' ::
-    ( MonadError Doc m
+    ( MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     , Has st [(GNode,GNode)]

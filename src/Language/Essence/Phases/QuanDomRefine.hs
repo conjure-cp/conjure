@@ -10,6 +10,7 @@ import Data.Default ( def )
 import Data.List ( nub )
 
 import Has
+import Nested
 import Constants ( FreshName, mkFreshNames )
 import GenericOps.Core ( BindingsMap, universe, bottomUp, topDownM )
 import PrintUtils ( Doc )
@@ -22,7 +23,7 @@ import Language.Essence.Phases.PhaseRepr ( applyReprsToDom )
 -- refining quantification over complex domains.
 quanDomRefine ::
     ( Applicative m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> Spec -> m [Spec]
 quanDomRefine rules spec = do
@@ -35,7 +36,7 @@ domRefineQ ::
     ( Applicative m
     , Has st BindingsMap
     , Has st [FreshName]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadList m
     , MonadState st m
     , MonadWriter [Doc] m

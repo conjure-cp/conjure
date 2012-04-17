@@ -13,7 +13,7 @@ module Language.EssenceEvaluator where
 
 import Control.Applicative ( Applicative, (<$>), (<*) )
 import Control.Monad ( (<=<), forM )
-import Control.Monad.Error ( MonadError(catchError, throwError), ErrorT, runErrorT )
+import Control.Monad.Error ( MonadError(catchError), ErrorT, runErrorT )
 import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter(tell), WriterT, runWriterT )
 import Data.Default ( def )
@@ -23,6 +23,7 @@ import Data.List.Split ( splitOn )
 import qualified Data.Map as M
 
 import Has
+import Nested
 import GenericOps.Core
 import Language.EssenceLexerP
 import ParsePrint ( ParsePrint, parse, pretty )
@@ -101,17 +102,17 @@ testSimplify s = do
 
 -- type EvalArrow m a b = a -> ErrorT Doc (StateT BindingsMap (WriterT [Doc] m)) b
 
-tryEvalArrow :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Either e b)
+tryEvalArrow :: (Applicative m, MonadError (Nested Doc) m) => (a -> m b) -> a -> m (Either (Nested Doc) b)
 tryEvalArrow f x = (Right <$> f x) `catchError` (return . Left)
 
-tryEvalArrowMaybe :: (Applicative m, MonadError e m) => (a -> m b) -> a -> m (Maybe b)
+tryEvalArrowMaybe :: (Applicative m, MonadError (Nested Doc) m) => (a -> m b) -> a -> m (Maybe b)
 tryEvalArrowMaybe f x = (Just <$> f x) `catchError` (\ _ -> return Nothing )
 
-evalArrowErrorDef :: (MonadError Doc m, ParsePrint a) => a -> m b
+evalArrowErrorDef :: (MonadError (Nested Doc) m, ParsePrint a) => a -> m b
 evalArrowErrorDef = evalArrowError "Cannot evaluate"
 
-evalArrowError :: (MonadError Doc m, ParsePrint a) => Doc -> a -> m b
-evalArrowError msg x = throwError $ msg <> Pr.colon <+> pretty x
+evalArrowError :: (MonadError (Nested Doc) m, ParsePrint a) => Doc -> a -> m b
+evalArrowError msg x = throwErrorSingle $ msg <> Pr.colon <+> pretty x
 
 
 
@@ -127,7 +128,7 @@ class Simplify a where
         , Has st [(GNode,GNode)]
         , Has st Bool
         , Monad m
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m (Maybe a)
@@ -144,7 +145,7 @@ _ ~~~> b = do
     return (Just b)
 
 
-runSimplify :: (Applicative m, MonadError Doc m, MonadWriter [Doc] m) => Spec -> m Spec
+runSimplify :: (Applicative m, MonadError (Nested Doc) m, MonadWriter [Doc] m) => Spec -> m Spec
 runSimplify spec = do
     (bindings,_) <- flip execStateT ( M.empty :: BindingsMap
                                     , []      :: [(GNode, GNode)]
@@ -159,7 +160,7 @@ oldDeepSimplify ::
     ( Applicative m
     , GPlate a
     , Has st BindingsMap
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m a
@@ -169,7 +170,7 @@ deepSimplify ::
     ( Applicative m
     , GPlate a
     , Has st BindingsMap
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => a -> m (a,Bool)
@@ -201,7 +202,7 @@ simplifyReal ::
     , Has st [(GNode,GNode)]
     , Has st Bool
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Expr -> m (Maybe Expr)
@@ -342,7 +343,7 @@ instance Simplify Expr where
                                                       Just j  -> j
                     f x = x
                 p ~~~> bottomUp f template
-            else throwError $ "Error while applying lambda:" $$ nest 4 (pretty p)
+            else throwErrorSingle $ "Error while applying lambda:" $$ nest 4 (pretty p)
 
     simplify p@(EOp Plus  [x, V (VInt 0)]) = p ~~~> x
 
@@ -470,7 +471,7 @@ class Evaluate a b where
         , Has st [GNode]
         , Has st [(GNode,GNode)]
         , Monad m
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m b
@@ -814,7 +815,7 @@ instance Evaluate Expr Value where
                 runMatch tb ta
                 p ~~> VBool True )
             (\ e -> do
-                tell [pretty p, e]
+                tell [pretty p, nestedToDoc e]
                 p ~~> VBool False )
 
     evaluate p@(EOp HasDomain [a,b]) = do -- evalArrowError "not implemented" p -- do
@@ -831,7 +832,7 @@ instance Evaluate Expr Value where
                 -- tell $ map (\ (a,GNode _ b) -> text a <+> pretty b) (M.toList st)
                 p ~~> VBool True )
             (\ e -> do
-                tell [pretty p, e]
+                tell [pretty p, nestedToDoc e]
                 -- error $ " [[HERE 2]] " ++ show e
                 tell [ "HasDomain returning false" ]
                 p ~~> VBool False )

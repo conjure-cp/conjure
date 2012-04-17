@@ -36,10 +36,11 @@ import Data.Typeable ( cast )
 import Unsafe.Coerce ( unsafeCoerce )
 import qualified Data.Map as M
 
+import Nested
 import Constants
 import Has
 import ParsePrint
-import PrintUtils ( Doc, (<+>), ($$), brackets, nest, text, vcat )
+import PrintUtils ( Doc, (<+>), ($$), brackets, nest, text )
 import Utils ( padLeft )
 
 
@@ -349,7 +350,7 @@ type BindingsMap = M.Map String GNode
 runMatch ::
     ( GPlate a
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     ) => a -> a -> m ()
@@ -366,7 +367,7 @@ runMatch patt curr = do
 runBind ::
     ( GPlate a
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     ) => a -> m a
@@ -394,7 +395,7 @@ inScope a comp = do
 class MatchBind a where
     match ::
         ( GPlate a
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , Has st BindingsMap
         , Has st [(GNode,GNode)]
@@ -417,7 +418,7 @@ class MatchBind a where
     -- returning a (Nothing)    means the input hasn't been changed.
     bind ::
         ( GPlate a
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , Has st BindingsMap
         , Has st [GNode]
@@ -478,7 +479,7 @@ class MatchBind a where
 
 addBinding ::
     ( GPlate a
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     , Has st [(GNode,GNode)]
@@ -487,7 +488,7 @@ addBinding nm x = do
     mp :: BindingsMap <- getM
     case M.lookup nm mp of
         Nothing -> modifyM $ M.insert nm (mkG x)
-        Just _  -> throwError ("Name is already bound: " <+> text nm)
+        Just _  -> throwErrorSingle ("Name is already bound: " <+> text nm)
 
 
 getBinding ::
@@ -502,7 +503,7 @@ getBinding nm = do
         Just gr -> fromG gr
 
 gmatch ::
-    ( MonadError Doc m
+    ( MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     , Has st [(GNode,GNode)]
@@ -512,7 +513,7 @@ gmatch p a = inScope (p,a) $ do
     gmatchError "Type mismatch."
 
 gbind ::
-    ( MonadError Doc m
+    ( MonadError (Nested Doc) m
     , MonadState st m
     , Has st BindingsMap
     , Has st [GNode]
@@ -527,15 +528,14 @@ gbind (GNode _ t) = liftM (liftM mkG) (bind t)
 
 
 gmatchError ::
-    ( MonadError Doc m
+    ( MonadError (Nested Doc) m
     , MonadState st m
     , Has st [(GNode,GNode)]
     ) => Doc -> m ()
 gmatchError msg = do
     stack <- getM
     let msgs = map (\ (GNode _ a, GNode _ b) -> pretty a <+> "~~" <+> pretty b ) stack
-    let combinedMsg = vcat (msg : map (nest 4) msgs)
-    throwError combinedMsg
+    throwError $ Nested (Just msg) $ map (flip Nested [] . Just) msgs
 
 -- gbindError :: Monad m => Doc -> BindMonad m a
 -- gbindError msg = do
@@ -546,7 +546,7 @@ gmatchError msg = do
 
 
 data ApplResult = Applied    String GNode GNode
-                | NotApplied String GNode Doc
+                | NotApplied String GNode (Nested Doc)
                 | Str Doc
 
 instance Show ApplResult where
@@ -558,7 +558,7 @@ instance Show ApplResult where
     show (NotApplied nm (GNode _ node) msg)
         = show $ brackets ("NOT APPLIED:" <+> text nm)
              <+> pretty node
-             $$  nest 4 msg
+             $$  nest 4 (nestedToDoc msg)
     show (Str s) = show s
 
 

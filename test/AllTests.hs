@@ -21,6 +21,7 @@ import qualified Test.HUnit as HUnit
 import           System.Directory ( getDirectoryContents )
 
 import Constants ( FreshName, mkFreshNames, newRuleVar )
+import Nested
 import GenericOps.Core ( GNode, GPlate, mkG, GNode, BindingsMap, bottomUp )
 import Language.EssenceLexerP ( Parser, eof, parseEither, unsafeParse )
 import ParsePrint ( ParsePrint, parse, pretty )
@@ -45,7 +46,7 @@ removeIdentifierNames nm = bottomUp $ \ _ -> Identifier nm
 shouldParseTo :: forall a . (Eq a, Show a, ParsePrint a, GPlate a) => String -> a -> HUnit.Test
 shouldParseTo s x = HUnit.TestLabel ("ShouldParseTo " ++ s) $ HUnit.TestCase $
     case parseEither (parse <* eof) s of
-        Left msg -> assertFailure $ show $ "ShouldParseTo [cannot parse]: " <+> text s <+> msg
+        Left msg -> assertFailure $ show $ "ShouldParseTo [cannot parse]: " <+> text s <+> nestedToDoc msg
         Right x' -> assertEqual "ShouldParseTo [parses to a different thing]"
                         (removeIdentifierNames "_" x)
                         (removeIdentifierNames "_" x')
@@ -53,10 +54,10 @@ shouldParseTo s x = HUnit.TestLabel ("ShouldParseTo " ++ s) $ HUnit.TestCase $
 parsePrintIso :: forall a . (Eq a, Show a, ParsePrint a, GPlate a) => a -> String -> HUnit.Test
 parsePrintIso _ s = HUnit.TestLabel ("ParsePrintIso " ++ s) $ HUnit.TestCase $
     case parseEither (parse <* eof) s of
-        Left msg        -> assertFailure $ show $ "ParsePrintIso [cannot parse]: " <+> text s <+> msg
+        Left msg        -> assertFailure $ show $ "ParsePrintIso [cannot parse]: " <+> text s <+> nestedToDoc msg
         Right (x' :: a) -> let s' = renderDoc $ pretty x'
                            in  case parseEither parse s' of
-            Left msg  -> assertFailure $ show $ "ParsePrintIso [cannot parse pretty print]: " <+> text s' <+> msg
+            Left msg  -> assertFailure $ show $ "ParsePrintIso [cannot parse pretty print]: " <+> text s' <+> nestedToDoc msg
             Right x'' -> assertEqual "ShouldParseTo [parses to a different thing]"
                             (removeIdentifierNames "_" x')
                             (removeIdentifierNames "_" x'')
@@ -76,8 +77,8 @@ parsePrintIsoFile _ f = HUnit.TestLabel ("ParsePrintIsoFile " ++ f) $ HUnit.Test
 eval :: [(String,GNode)] -> String -> String -> HUnit.Test
 eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.TestCase $ do
     case (parseEither (parse <* eof) px, parseEither (parse <* eof) py) of
-        (Left msg, _) -> assertFailure $ show $ vcat ["Eval [cannot parse]", text px, msg]
-        (_, Left msg) -> assertFailure $ show $ vcat ["Eval [cannot parse]", text py, msg]
+        (Left msg, _) -> assertFailure $ show $ vcat ["Eval [cannot parse]", text px, nestedToDoc msg]
+        (_, Left msg) -> assertFailure $ show $ vcat ["Eval [cannot parse]", text py, nestedToDoc msg]
         (Right (x :: Expr), Right (y :: Expr)) -> do
             (x',_logs) <- runWriterT $ flip evalStateT ( M.fromList bindings :: BindingsMap
                                                        , [] :: [GNode]
@@ -88,19 +89,19 @@ eval bindings px py = HUnit.TestLabel ("Eval " ++ px ++ " ~~ " ++ py) $ HUnit.Te
                                                        , [] :: [(GNode,GNode)]
                                                        ) $ runErrorT $ deepSimplify y
             case (x',y') of
-                (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty x, renderDoc msg])
-                (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty y, renderDoc msg])
+                (Left msg, _) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty x, renderDoc $ nestedToDoc msg])
+                (_, Left msg) -> assertFailure (unlines ["Eval [simplification]", renderDoc $ pretty y, renderDoc $ nestedToDoc msg])
                 (Right (x'',_), Right (y'',_)) -> assertEqual "Eval [not equal]" x'' y''
 
 applyRuleRefns :: [String] -> String -> [String] -> HUnit.Test
 applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn" : expr : ruleRefns)) $ HUnit.TestCase $ do
     rs <- forM ruleRefns $ \ ruleRefn -> do
         case parseEither (parse <* eof) ruleRefn of
-            Left msg -> do assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text ruleRefn, msg]
+            Left msg -> do assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text ruleRefn, nestedToDoc msg]
                            return undefined
             Right r  -> return r
     case parseEither (parse <* eof) expr of
-        Left msg -> assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text expr, msg]
+        Left msg -> assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text expr, nestedToDoc msg]
         Right x  -> do
             let rs' = map (scopeIdentifiers newRuleVar) rs
             (mxs,_) <- runWriterT $ flip evalStateT ( M.empty         :: BindingsMap
@@ -115,7 +116,7 @@ applyRuleRefns ruleRefns expr result = HUnit.TestLabel (unlines ("ApplyRuleRefn"
                 (Right xs, _ ) -> do
                     ys <- forM result $ \ s -> case parseEither (parse <* eof) s of
                                                     Left msg -> do
-                                                        assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text s, msg]
+                                                        assertFailure $ show $ vcat ["ApplyRuleRefn [cannot parse]", text s, nestedToDoc msg]
                                                         return undefined
                                                     Right y  -> return y
                     assertEqual "ApplyRuleRefn [not equal]" ys (xs :: [Expr])

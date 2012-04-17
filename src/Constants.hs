@@ -12,7 +12,6 @@ module Constants ( figlet
                  ) where
 
 import Control.DeepSeq ( deepseq )
-import Control.Monad.Error ( Error(..) )
 import Control.Monad.State ( MonadState )
 import Data.ByteString.Char8 ( unpack)
 import Data.FileEmbed ( embedFile )
@@ -20,7 +19,6 @@ import Data.List ( (\\), isPrefixOf )
 import qualified Debug.Trace as D
 
 import Has
-import PrintUtils ( Doc, text )
 
 
 
@@ -52,7 +50,7 @@ newtype FreshName = FreshName String
 
 mkFreshNames :: [String] -> [FreshName]
 mkFreshNames used = used `deepseq` map FreshName (freshNames \\ used)
-    where freshNames = [ "__" ++ show i | i <- [ (1 :: Integer) .. ] ]
+    where freshNames = [ "___" ++ show i | i <- [ (1 :: Integer) .. ] ]
 
 mkPrettyFreshNames :: [String] -> [FreshName]
 mkPrettyFreshNames used = used `deepseq` map FreshName (freshNames \\ used)
@@ -65,8 +63,5 @@ getFreshName = do
     return n
 
 isFreshName :: String -> Bool
-isFreshName s = not (ruleVarPrefix `isPrefixOf` s) && "__" `isPrefixOf` s
+isFreshName s = not (ruleVarPrefix `isPrefixOf` s) && "___" `isPrefixOf` s
 
-
-instance Error Doc where
-    strMsg = text

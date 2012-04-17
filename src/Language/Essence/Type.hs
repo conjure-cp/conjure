@@ -8,7 +8,7 @@ module Language.Essence.Type where
 
 import Control.Applicative
 import Control.Arrow ( first )
-import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
 import Data.Generics ( Data )
@@ -29,6 +29,7 @@ import ParsePrint ( ParsePrint, parse, pretty, prettyList, fromPairs )
 import PrintUtils ( (<+>), Doc )
 import qualified PrintUtils as Pr
 import Has
+import Nested
 
 import {-# SOURCE #-} Language.Essence.Expr
 import {-# SOURCE #-} Language.Essence.Identifier
@@ -41,7 +42,7 @@ class TypeOf a where
         , Has st BindingsMap
         , Has st [GNode]
         , Has st [(GNode,GNode)]
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m Type
@@ -62,47 +63,47 @@ stackDepth = 5
 typeError ::
     ( Applicative m
     , Has st [GNode]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     ) => Doc -> m a
 typeError s = do
     nodes :: [GNode]
           <- take stackDepth <$> getM
-    throwError $ Pr.vcat $ s : [ Pr.nest 4 $ "in: " <+> pretty n
-                               | GNode _ n <- nodes
-                               ]
+    throwErrorSingle $ Pr.vcat $ s : [ Pr.nest 4 $ "in: " <+> pretty n
+                                     | GNode _ n <- nodes
+                                     ]
 
 typeErrorUnOp ::
     ( Applicative m
     , Has st [GNode]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     ) => Type -> Doc -> m a
 typeErrorUnOp tx s = do
     nodes :: [GNode]
           <- take stackDepth <$> getM
-    throwError $ Pr.vcat $ s
-                         :  ( "The operand has type:" <+> pretty tx )
-                         :  [ Pr.nest 4 $ "in: " <+> pretty n
-                            | GNode _ n <- nodes
-                            ]
+    throwErrorSingle $ Pr.vcat $ s
+                               :  ( "The operand has type:" <+> pretty tx )
+                               :  [ Pr.nest 4 $ "in: " <+> pretty n
+                                  | GNode _ n <- nodes
+                                  ]
 
 typeErrorBinOp ::
     ( Applicative m
     , Has st [GNode]
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     ) => Type -> Type -> Doc -> m a
 typeErrorBinOp tx ty s = do
     nodes :: [GNode]
           <- take stackDepth <$> getM
-    throwError $ Pr.vcat $ s
-                         :  [ "First  operand has type:" <+> pretty tx
-                            , "Second operand has type:" <+> pretty ty
-                            ]
-                         ++ [ Pr.nest 4 $ "in: " <+> pretty n
-                            | GNode _ n <- nodes
-                            ]
+    throwErrorSingle $ Pr.vcat $ s
+                               :  [ "First  operand has type:" <+> pretty tx
+                                  , "Second operand has type:" <+> pretty ty
+                                  ]
+                               ++ [ Pr.nest 4 $ "in: " <+> pretty n
+                                  | GNode _ n <- nodes
+                                  ]
 
 typeHasUnknowns :: Type -> Bool
 typeHasUnknowns TUnknown = True

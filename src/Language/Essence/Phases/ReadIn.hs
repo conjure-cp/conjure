@@ -4,38 +4,37 @@
 module Language.Essence.Phases.ReadIn ( ReadIn(..), runReadIn ) where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError, throwError, runErrorT )
+import Control.Monad.Error ( MonadError, runErrorT )
 import Control.Monad.Writer ( MonadWriter, runWriter )
 import qualified Data.Text.Lazy as T
 
+import Nested
 import ParsePrint ( ParsePrint, parse )
 import PrintUtils ( Doc, text, vcat, ($$) )
-import Utils
 
 import Language.Essence
 import Language.Essence.Phases.PostParse ( postParse )
-import Language.EssenceLexer ( runLexer )
-import Language.EssenceLexerP ( Pos(..), runParser, treeToDoc )
+import Language.EssenceLexerP ( lexAndParse )
 
 
 
 class ReadIn a where
     readIn ::
         ( Applicative m
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadWriter [Doc] m
         ) => FilePath -> T.Text -> m a
 
-runReadIn :: ReadIn a => FilePath -> T.Text -> (Either Doc a, [Doc])
+runReadIn :: ReadIn a => FilePath -> T.Text -> (Either (Nested Doc) a, [Doc])
 runReadIn fp contents = runWriter $ runErrorT $ readIn fp contents
 
-runParser' :: (ParsePrint a, Applicative m, MonadError Doc m) => FilePath -> T.Text -> m a
+runParser' :: (ParsePrint a, Applicative m, MonadError (Nested Doc) m) => FilePath -> T.Text -> m a
 runParser' fp t = do
-    ls <- runLexer t
-    case runParser parse (Pos (Just fp) 1 1) ls of
-        Left tree -> throwError (treeToDoc tree)
-        Right [(result, _, [])] -> return result
-        Right rs -> throwError $ "Unknown error." $$ vcat (map (text . ppShow) rs)
+    is <- lexAndParse (Just fp) parse t
+    case is of
+        []  -> throwErrorSingle "No Parse."
+        [i] -> return i
+        _   -> throwErrorSingle $ "Ambigious parse:" $$ vcat (map (text . show) is)
 
 instance ReadIn Spec where
     readIn fp contents = do

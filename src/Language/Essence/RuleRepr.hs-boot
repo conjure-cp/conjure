@@ -44,7 +44,7 @@ applyReprsToDom ::
     , Has st BindingsMap
     , Has st [FreshName]
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr]

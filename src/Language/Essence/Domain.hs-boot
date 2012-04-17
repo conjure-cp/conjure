@@ -12,6 +12,7 @@ import Data.Typeable ( Typeable )
 import Test.QuickCheck ( Arbitrary )
 
 import Has
+import Nested
 import GenericOps.Core
 import ParsePrint
 import PrintUtils
@@ -25,7 +26,7 @@ class DomainOf a where
         ( Applicative m
         , Has st BindingsMap
         , Has st [GNode]
-        , MonadError Doc m
+        , MonadError (Nested Doc) m
         , MonadState st m
         , MonadWriter [Doc] m
         ) => a -> m Domain

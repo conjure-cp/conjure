@@ -27,6 +27,7 @@ import Unsafe.Coerce ( unsafeCoerce )
 
 
 import GenericOps.Core
+import Nested ( Nested )
 import Has
 import ParsePrint ( ParsePrint, parse, pretty )
 import PrintUtils ( (<+>), (<>), Doc )
@@ -803,7 +804,7 @@ typeOfOp ::
     , Has st [(GNode,GNode)]
     , MonadWriter [Doc] m
     , MonadState st m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , GPlate a
     , GPlate b
     , TypeOf b

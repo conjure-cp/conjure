@@ -5,7 +5,7 @@ module Language.Essence.Phases.CheckDomains ( checkDomains ) where
 
 import Control.Applicative
 import Control.Monad ( (>=>) )
-import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState, State, runState, runStateT )
 import Data.Default ( def )
 import Data.Maybe ( catMaybes )
@@ -13,6 +13,7 @@ import Data.Traversable ( forM )
 import qualified Control.Monad.State as S
 
 import Has
+import Nested
 import PrintUtils ( Doc, ($$), nest )
 import ParsePrint ( pretty )
 
@@ -22,7 +23,7 @@ import Language.Essence
 
 checkDomains ::
     ( Applicative m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     ) => Spec -> m Spec
 checkDomains spec = do
 
@@ -36,7 +37,7 @@ checkDomains spec = do
     return spec { topLevels = topLevels' ++ map Right (reverse newWheres) }
 
 
-multipleValuesCheck :: MonadError Doc m => Domain -> m Domain
+multipleValuesCheck :: MonadError (Nested Doc) m => Domain -> m Domain
 multipleValuesCheck dom@(AnyDom de es (DomainAttrs attrs)) = do
     attrs' <- flip S.evalStateT [] $ forM attrs $ \ attr -> case attr of
         OnlyName ae -> do
@@ -47,7 +48,7 @@ multipleValuesCheck dom@(AnyDom de es (DomainAttrs attrs)) = do
         NameValue ae _ -> do
             aes <- S.get
             if ae `elem` aes
-                then throwError $ "Domain has multiple values for an attribute." $$ nest 4 (pretty dom)
+                then throwErrorSingle $ "Domain has multiple values for an attribute." $$ nest 4 (pretty dom)
                 else S.modify (ae :) >> return (Just attr)
         DontCare -> return Nothing
     return $ AnyDom de es $ DomainAttrs $ catMaybes attrs' ++ [ DontCare | DontCare `elem` attrs ]
@@ -57,7 +58,7 @@ multipleValuesCheck dom = return dom
 checkDomain ::
     ( Has st [Where]
     , MonadState st m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     ) => Identifier -> Domain -> m Domain
 checkDomain _ pDom@(AnyDom TSet [e] (DomainAttrs attrs)) =
     case [ s | NameValue AttrSize s <- attrs ] of

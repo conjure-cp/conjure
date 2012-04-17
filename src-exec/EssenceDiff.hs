@@ -9,6 +9,7 @@ import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 import qualified Data.Text.Lazy.IO as T
 
+import Nested
 import Language.Essence ( Spec )
 import Language.Essence.Phases.ReadIn ( readIn )
 import PrintUtils ( ($$), Doc )
@@ -29,14 +30,14 @@ main = do
                     if (aSpec :: Spec) == (bSpec :: Spec)
                         then putStrLn "Same."
                         else putStrLn "Not same."
-                (Left aErr, Left bErr) -> error $ show (aErr $$ bErr)
+                (Left aErr, Left bErr) -> error $ show (nestedToDoc aErr $$ nestedToDoc bErr)
                 (Left aErr, _)         -> error $ show aErr
                 (_, Left bErr)         -> error $ show bErr
 
         _      -> error "Expected two *.essence files."
 
 
-getSpec :: FilePath -> IO (Either Doc Spec)
+getSpec :: FilePath -> IO (Either (Nested Doc) Spec)
 getSpec filename = do
     contents <- T.readFile filename
     let (spec,logs) = runWriter $ runErrorT $ readIn filename contents

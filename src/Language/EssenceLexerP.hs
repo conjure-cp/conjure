@@ -12,9 +12,9 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Error ( MonadError, throwError )
 import Data.Either
-import Data.String
 import qualified Data.Text.Lazy as T
 
+import Nested ( Nested(..), addToTop, nestedToDoc )
 import Language.EssenceLexer ( Lexeme(..), runLexer, lexemeFace, lexemeWidth )
 import PrintUtils ( Doc, (<>), (<+>), text, renderDoc )
 import qualified PrintUtils as P
@@ -22,20 +22,6 @@ import qualified PrintUtils as P
 
 
 type Stream = [Lexeme]
-
-
-
-data Tree a = Tree (Maybe a) [Tree a] deriving Show
-
-addToTop :: a -> [Tree a] -> Tree a
-addToTop a ts = Tree (Just a) ts
-
-instance IsString a => IsString (Tree a) where
-    fromString s = addToTop (fromString s) []
-
-treeToDoc :: Tree Doc -> Doc
-treeToDoc (Tree Nothing  xs) = P.vcat $ map treeToDoc xs
-treeToDoc (Tree (Just x) xs) = P.hang x 4 (P.vcat $ map treeToDoc xs)
 
 
 
@@ -50,7 +36,7 @@ showPos (Pos (Just fp) line col) = "(in file" <+> text fp        <+>
 
 
 
-newtype Parser a = Parser { runParser :: Pos -> Stream -> Either (Tree Doc) [(a, Pos, Stream)] }
+newtype Parser a = Parser { runParser :: Pos -> Stream -> Either (Nested Doc) [(a, Pos, Stream)] }
 
 failWithMsg :: Doc -> Parser a
 failWithMsg msg = Parser $ \ pos _ -> Left (addToTop (showPos pos <+> msg) [])
@@ -86,7 +72,7 @@ instance Monad Parser where
                     msgs    = lefts  applied
                     results = rights applied
                 in  case results of
-                        [] -> Left $ Tree Nothing msgs
+                        [] -> Left $ Nested Nothing msgs
                         _  -> Right (concat results)
 
 instance MonadPlus Parser where
@@ -97,7 +83,7 @@ instance MonadPlus Parser where
             msgs    = lefts  applied
             results = rights applied
         in  case results of
-                [] -> Left $ Tree Nothing msgs
+                [] -> Left $ Nested Nothing msgs
                 _  -> Right (concat results)
 
 
@@ -123,7 +109,7 @@ infixl 3 <||>
 a <||> b = Parser $ \ pos stream ->
     case runParser a pos stream of
         Left  err1    -> case runParser b pos stream of
-            Left  err2    -> Left $ Tree Nothing [err1, err2]
+            Left  err2    -> Left $ Nested Nothing [err1, err2]
             Right results -> Right results
         Right results -> Right results
 
@@ -148,7 +134,7 @@ satisfy f = core <* (whiteSpace <||> eof)
                                 else
                                     let msg = "unexpected \"" <> lexemeFace x <> "\"."
                                     in  Left $ addToTop msg []
-                        _ -> Left $ Tree Nothing []
+                        _ -> Left $ Nested Nothing []
 
 advancePos :: Lexeme -> Pos -> Pos
 advancePos L_Newline (Pos fp line _  ) = Pos fp (line + 1) 1
@@ -300,20 +286,18 @@ next3 = do
 
 lexAndParse ::
     ( Applicative m
-    , MonadError Doc m
-    ) => Parser a -> T.Text -> m [a]
-lexAndParse parser string = case comp of
-                    Left msg -> throwError $ treeToDoc msg
-                    Right rs -> return [ a | (a,_,_) <- rs ]
-    where comp = case runLexer string of
-                    Left  msg     -> Left $ addToTop msg []
-                    Right lexemes -> runParser parser (Pos Nothing 1 1) lexemes
+    , MonadError (Nested Doc) m
+    ) => Maybe FilePath -> Parser a -> T.Text -> m [a]
+lexAndParse mfp parser string = do
+    lexemes <- runLexer string
+    results <- case runParser parser (Pos mfp 1 1) lexemes of Left err -> throwError err; Right r -> return r
+    return [ a | (a,_,_) <- results ]
 
-parseEither :: Show a => Parser a -> String -> Either Doc a
-parseEither p s = case lexAndParse p (T.pack s) of
+parseEither :: Show a => Parser a -> String -> Either (Nested Doc) a
+parseEither p s = case lexAndParse Nothing p (T.pack s) of
     Left msg  -> Left msg
     Right [a] -> Right a
-    Right as  -> Left $ treeToDoc $ addToTop "Unknown parsing error." (map (flip addToTop [] . text . show) as)
+    Right as  -> Left $ addToTop "Unknown parsing error." (map (flip addToTop [] . text . show) as)
 
 unsafeParse :: Show a => Parser a -> String -> a
 unsafeParse p s = case parseEither p s of
@@ -321,12 +305,12 @@ unsafeParse p s = case parseEither p s of
     Right a   -> a
 
 lexAndParseIO :: Show a => Parser a -> T.Text -> IO ()
-lexAndParseIO parser string = case lexAndParse parser string of
-    Left msg -> putStrLn $ renderDoc msg
+lexAndParseIO parser string = case lexAndParse Nothing parser string of
+    Left msg -> putStrLn $ renderDoc $ nestedToDoc msg
     Right as -> mapM_ print as
 
 
--- -- runParser :: MonadError Doc m => Parser a -> Stream -> m [a]
+-- -- runParser :: MonadError (Nested Doc) m => Parser a -> Stream -> m [a]
 -- -- runParser p ls = case P.papply' p () ls of
 -- --     Left msg -> throwError msg
 -- --     Right rs -> return [ r

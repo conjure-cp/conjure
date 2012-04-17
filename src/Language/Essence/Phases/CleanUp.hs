@@ -10,6 +10,7 @@ import Data.List ( nub )
 import Data.Traversable ( mapM )
 import qualified Data.Map as M
 
+import Nested
 import Constants ( FreshName, mkPrettyFreshNames, getFreshName )
 import GenericOps.Core ( universe, bottomUp )
 import PrintUtils ( Doc )
@@ -18,7 +19,7 @@ import Language.Essence
 
 
 
-cleanUp :: (Applicative m, MonadError Doc m) => Spec -> m Spec
+cleanUp :: (Applicative m, MonadError (Nested Doc) m) => Spec -> m Spec
 cleanUp spec = return (topLevelConstraints spec)
 
 
@@ -32,7 +33,7 @@ topLevelConstraints spec = spec { constraints = concatMap conjunct' $ constraint
 
 quanRenameFinal ::
     ( Applicative m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     ) => Spec -> m Spec
 quanRenameFinal spec = do
     let qNames = mkPrettyFreshNames $ nub [ nm | Identifier nm <- universe spec ]
@@ -46,7 +47,7 @@ quanRenameFinal spec = do
                       }
 
     where
-        workerExpr :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Expr -> m Expr
+        workerExpr :: (Applicative m, MonadError (Nested Doc) m, MonadState [FreshName] m) => Expr -> m Expr
         workerExpr (Q       x) = Q <$> workerQ x
         workerExpr (Bubble x y zs) = Bubble <$> (withState $ workerExpr x)
                                             <*> (withState $ workerExpr y)
@@ -54,17 +55,17 @@ quanRenameFinal spec = do
         workerExpr (EOp op xs) = EOp op <$> mapM (withState . workerExpr) xs
         workerExpr x           = return x
 
-        workerObj :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Objective -> m Objective
+        workerObj :: (Applicative m, MonadError (Nested Doc) m, MonadState [FreshName] m) => Objective -> m Objective
         workerObj (OMin x) = OMin <$> workerExpr x
         workerObj (OMax x) = OMax <$> workerExpr x
 
-        workerTL :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => Either Binding Where -> m (Either Binding Where)
+        workerTL :: (Applicative m, MonadError (Nested Doc) m, MonadState [FreshName] m) => Either Binding Where -> m (Either Binding Where)
         workerTL (Left (LettingExpr i x))  = Left  . LettingExpr i  <$> (withState . workerExpr) x
         workerTL (Left (BindingDimFind x)) = Left  . BindingDimFind <$> (withState . workerExpr) x
         workerTL (Left  b)                 = Left                   <$> return b
         workerTL (Right (Where w))         = Right . Where          <$> (withState . workerExpr) w
 
-        workerQ :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => QuantifiedExpr -> m QuantifiedExpr
+        workerQ :: (Applicative m, MonadError (Nested Doc) m, MonadState [FreshName] m) => QuantifiedExpr -> m QuantifiedExpr
         workerQ p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do
             new <- getFreshName
             let p' = bottomUp (identifierRenamer old new) p
@@ -91,7 +92,7 @@ quanRenameFinal spec = do
             body'  <- (withState . workerExpr) $ quanBody p'
             return $ p' { quanBody = body', quanGuard = guard' }
 
-        workerG :: (Applicative m, MonadError Doc m, MonadState [FreshName] m) => QuanGuard -> m QuanGuard
+        workerG :: (Applicative m, MonadError (Nested Doc) m, MonadState [FreshName] m) => QuanGuard -> m QuanGuard
         workerG (QuanGuard [x]) = do
             x' <- workerExpr x
             return $ QuanGuard [x']

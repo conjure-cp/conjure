@@ -4,12 +4,13 @@
 module Language.Essence.Phases.CheckWhere where
 
 import Control.Applicative
-import Control.Monad.Error ( MonadError, throwError )
+import Control.Monad.Error ( MonadError )
 import Control.Monad.Writer ( MonadWriter )
 import Control.Monad.State ( MonadState )
 -- import Control.Monad.IO.Class ( MonadIO, liftIO )
 
 import Has
+import Nested
 import ParsePrint ( pretty )
 import PrintUtils ( (<+>), Doc )
 
@@ -27,7 +28,7 @@ checkWhere ::
     , Has st [GNode]
     , Has st [(GNode,GNode)]
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => Where -> m ()
@@ -43,7 +44,7 @@ checkWhere (Where x) = do
         V (VBool True ) -> return ()
         V (VBool False) -> do
             -- tell $ return $ vcat $ ("where statement evaluated to false:" <+> pretty x) : map (nest 4) logs
-            throwError $ "where statement evaluated to false:" <+> pretty x
+            throwErrorSingle $ "where statement evaluated to false:" <+> pretty x
         _               -> do
             -- tell $ return $ vcat $ ("where statement cannot be fully evaluated:" <+> pretty x) : map (nest 4) logs
-            throwError $ "where statement cannot be fully evaluated:" <+> pretty x
+            throwErrorSingle $ "where statement cannot be fully evaluated:" <+> pretty x

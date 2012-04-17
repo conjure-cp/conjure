@@ -7,7 +7,6 @@ module Language.Essence.Identifier where
 
 import Control.Applicative
 import Control.Monad ( liftM, msum )
-import Control.Monad.Error ( throwError )
 import Data.Generics ( Data )
 import Data.List.Split ( splitOn )
 import Data.Map ( elems )
@@ -18,6 +17,7 @@ import GHC.Generics ( Generic )
 import Test.QuickCheck ( Arbitrary, arbitrary, choose )
 
 import Constants
+import Nested
 import Has ( getM )
 import GenericOps.Core ( NodeTag
                        , Hole
@@ -93,7 +93,7 @@ instance TypeOf Identifier where
                             _ -> Nothing
                 case rs of
                     [j] -> return j
-                    _   -> throwError $ "Identifier not bound:" <+> text nm
+                    _   -> throwErrorSingle $ "Identifier not bound:" <+> text nm
 
 
 instance DomainOf Identifier where
@@ -111,7 +111,7 @@ instance DomainOf Identifier where
                         _                  -> return Nothing
         -- let msg = "domainOf Identifier" <+> text nm' <+> text (show [dv,dd,dx,db])
         case msum [dv,dd,dx,db] of
-            Nothing -> throwError $ "Identifier not bound:" <+> text nm
+            Nothing -> throwErrorSingle $ "Identifier not bound:" <+> text nm
             Just r  -> return r
 
 

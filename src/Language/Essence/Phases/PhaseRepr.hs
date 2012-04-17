@@ -10,7 +10,7 @@ module Language.Essence.Phases.PhaseRepr where
 import Control.Applicative
 import Control.Arrow ( (&&&) )
 import Control.Monad ( (<=<), (>=>), msum, when )
-import Control.Monad.Error ( MonadError, throwError, catchError )
+import Control.Monad.Error ( MonadError, catchError )
 import Control.Monad.State ( MonadState, StateT, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, WriterT, runWriterT )
 import Data.Either ( lefts, rights )
@@ -26,6 +26,7 @@ import Data.Traversable ( forM )
 import qualified Data.Map as M
 import qualified Data.Set as S
 
+import Nested
 import Constants ( FreshName, mkFreshNames, newRuleVar )
 import GenericOps.Core ( GNode, BindingsMap, runMatch, runBind, universe, bottomUp, bottomUpM )
 import Has ( Has, getM, modifyM )
@@ -47,7 +48,7 @@ import Language.EssenceEvaluator ( oldDeepSimplify, runSimplify )
 
 callRepr ::
     ( Applicative m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> Spec -> m [Spec]
 callRepr rules' specParam = do
@@ -75,7 +76,7 @@ applyReprsToSpec ::
     , Has st BindingsMap
     , Has st [FreshName]
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr]
@@ -112,7 +113,7 @@ applyReprsToSpec rules spec = do
         then return []
         else do
             forM_ (M.toList candidates) $ \ (nm,rs) -> case rs of
-                [] -> throwError $ text nm <+> "needs a representation, but no rule matches it."
+                [] -> throwErrorSingle $ text nm <+> "needs a representation, but no rule matches it."
                 _  -> return ()
 
             tell [ Pr.vcat $ "Representation options:"
@@ -171,7 +172,7 @@ applyReprsToDom ::
     , Has st BindingsMap
     , Has st [FreshName]
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr]
@@ -189,7 +190,7 @@ applyReprToDom ::
     , Has st BindingsMap
     , Has st [FreshName]
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => RuleRepr
@@ -198,7 +199,7 @@ applyReprToDom ::
 applyReprToDom rule dom = do
     candidates <- mapM tryApply (reprCases rule)
     case msum candidates of
-        Nothing -> throwError "Rule not applied."
+        Nothing -> throwErrorSingle "Rule not applied."
         Just r  -> return r
 
     where
@@ -211,7 +212,7 @@ applyReprCaseToDom ::
     , Has st BindingsMap
     , Has st [FreshName]
     , Monad m
-    , MonadError Doc m
+    , MonadError (Nested Doc) m
     , MonadState st m
     , MonadWriter [Doc] m
     ) => RuleRepr

@@ -7,7 +7,6 @@ module Language.Essence.QuantifiedExpr where
 
 import Control.Applicative
 import Control.Monad ( unless )
-import Control.Monad.Error ( throwError )
 import qualified Control.Monad.State as S
 import Data.Foldable ( forM_ )
 import Data.Generics ( Data )
@@ -17,6 +16,7 @@ import GHC.Generics ( Generic )
 import qualified  Data.Map as M
 
 import Has
+import Nested ( throwErrorSingle )
 import GenericOps.Core ( NodeTag, Hole
                        , GPlate, gplate, gplateError, gplateUniList
                        , mkG, fromGs, showG
@@ -215,7 +215,7 @@ instance TypeOf QuantifiedExpr where
                              qnBody ) = inScope (mkG p) $ do
         qd :: Maybe QuantifierDecl <- getBinding qnName
         case qd of
-            Nothing -> throwError $ "Quantifier not declared:" <+> text qnName
+            Nothing -> throwErrorSingle $ "Quantifier not declared:" <+> text qnName
             Just q  -> do
 
                 -- type check thr quantifier decl, and return the type of the identity.
@@ -230,7 +230,7 @@ instance TypeOf QuantifiedExpr where
                                     case tExpr of
                                         AnyType TSet  [j] -> return j
                                         AnyType TMSet [j] -> return j
-                                        _ -> throwError $ "Quantification over nsopported type: " <+> pretty tExpr
+                                        _ -> throwErrorSingle $ "Quantification over nsopported type: " <+> pretty tExpr
                                 _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show (qnOverDom,qnOverOpExpr)
                 case qnVar of
                     Left (Identifier nm) -> addBinding nm tForQnVar
@@ -266,7 +266,7 @@ instance MatchBind QuanGuard where
     match (QuanGuard [] ) (QuanGuard [] ) = return ()
     match (QuanGuard [p]) (QuanGuard [] ) = match p (V (VBool True))
     match (QuanGuard [p]) (QuanGuard [a]) = match p a
-    match _ _ = throwError "while pattern matching a QuanGuard"
+    match _ _ = throwErrorSingle "while pattern matching a QuanGuard"
 
     bind (QuanGuard []) = return Nothing
     bind (QuanGuard [EHole (Identifier nm)]) = do
