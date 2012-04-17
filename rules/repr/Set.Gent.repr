@@ -2,7 +2,7 @@
 ~~> Gent
 ~~> matrix indexed by [t] of int(0..mx)
 ~~> forAll i : t . (refn[i] = 0) \/ (refn[i] = 1 + sum j : t, j < i /\ refn[j] > 0 . 1)
-    where t :: int
+    where t :: `int`
 
 *** set of t
     letting mx be domSize(t)

@@ -1,8 +1,12 @@
 [10]
 
-quan i in s, g . k ~~> quan j : t, m[j] /\ g {i-->j} . k {i-->j}
+quan i in s, g . k
 
-    where s : set (_) of t
+~~>
+
+quan j : t, m[j] /\ g {i-->j} . k {i-->j}
+
+    where s : `set (_) of t`
     where repr(s,Occurrence)
 
     letting m be refn(s)

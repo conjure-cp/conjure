@@ -1,10 +1,10 @@
 
 ~~> Explicit
 ~~> matrix indexed by [int(1..n)] of t
-~~> alldifferent(refn)
+~~> allDiff(refn)
 /\  forAll i : int(1..n-1) . refn[i] < refn[i+1]
 
-    where t :: int
+    where t :: `int`
 
 *** set (size n, _) of t
 

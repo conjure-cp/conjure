@@ -1,7 +1,7 @@
 
-quan i : a intersect b, g . k
-    ~~> quan j : a, j in b /\ g {i-->j} . k {i-->j}
+quan i in a intersect b, g . k
+    ~~> quan j in a, j in b /\ g {i-->j} . k {i-->j}
 
     where
-        a :: set of _,
-        b :: set of _
+        a :: `set of _`,
+        b :: `set of _`

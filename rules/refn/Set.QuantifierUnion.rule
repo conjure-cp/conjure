@@ -4,12 +4,12 @@ quan i in a union b, g . k
             ~~>
 
 quan j : domU
-       , j in a /\
-         j in b /\
-         g { i --> j }
-       . k { i --> j }
-
-    where a : set (_) of aElem
-    where b : set (_) of bElem
+                  , j in a /\
+                    j in b /\
+                    g { i --> j }
+                  . k { i --> j }
+           
+    where a : `set (_) of aElem`
+    where b : `set (_) of bElem`
 
     letting domU be domUnion(aElem,bElem)

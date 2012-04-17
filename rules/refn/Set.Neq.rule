@@ -2,5 +2,5 @@
 a != b ~~> (exists i : a . !(i in b)) \/ (exists i : b . !(i in a))
 
     where
-        a :: set of _,
-        b :: set of _
+        a :: `set of _`,
+        b :: `set of _`

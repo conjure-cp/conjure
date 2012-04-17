@@ -1,8 +1,12 @@
 
-quan i in f'(x), g . k ~~> quan j in toSet(refn(f)), g { i --> j[0] } /\ j[1] = x . k { i --> j[0] }
+quan i in f'(x), g . k
+
+~~>
+
+quan j in toSet(refn(f)), g { i --> j[0] } /\ j[1] = x . k { i --> j[0] }
 
     where
-        f :: function _ --> _,
+        f :: `function _ --> _`,
         repr(f,AsReln)
 
     letting m be refn(f)

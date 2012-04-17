@@ -1,12 +1,13 @@
 
 ~~> Matrix1D
 ~~> matrix indexed by [fr] of to
-    where fr :: int
+
+    where fr :: `int`
 
 *** function (total) fr --> to
 
 *** function (total, injective) fr --> to
-    ~~> alldifferent(refn)
+    ~~> allDiff(refn)
 
 *** function (total, surjective) fr --> to
     ~~> forAll i : to . exists j : fr . refn[j] = i
