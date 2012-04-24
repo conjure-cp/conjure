@@ -132,12 +132,12 @@ returningTrue f = pure True <* f
 
 withParsed :: (Applicative m, MonadIO m, ParsePrint a) => String -> (a -> m ()) -> m Bool
 withParsed s comp = returningTrue $ case parseEither (parse <* eof) s of
-    Left msg -> liftIO $ print msg
+    Left msg -> liftIO $ print $ nestedToDoc msg
     Right x  -> comp x
 
 withParsedGPlate :: (Applicative m, MonadIO m, ParsePrint a, GPlate a) => String -> (a -> m ()) -> m Bool
 withParsedGPlate s comp = returningTrue $ case (parseEither (parse <* eof) >=> toETypedG) s of
-    Left msg -> liftIO $ print msg
+    Left msg -> liftIO $ print $ nestedToDoc msg
     Right x  -> comp x
 
 
@@ -190,7 +190,7 @@ step (Evaluate s) = withParsedGPlate s $ \ x -> do
                         deepSimplify (x :: Expr)
     displayLogs logs
     liftIO $ case x' of
-        Left  err     -> print err
+        Left  err     -> print $ nestedToDoc err
         Right (x'',_) -> print $ pretty x''
 step (TypeOf s) = withParsedGPlate s $ \ x -> do
     sp <- gets currentSpec
