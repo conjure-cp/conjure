@@ -29,8 +29,8 @@ main = do
     specFile  <- T.readFile specFilename
     refnFiles <- mapM T.readFile refnFilenames
     let (mspecs, logs) = runWriter $ runErrorT $ do
-            spec  <- readIn specFilename specFile
-            refns <- zipWithM readIn refnFilenames refnFiles
+            spec  <- readIn (Just specFilename) specFile
+            refns <- zipWithM readIn (map Just refnFilenames) refnFiles
             callRefn refns spec
 
     mapM_ print logs

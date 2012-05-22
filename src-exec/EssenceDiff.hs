@@ -40,6 +40,6 @@ main = do
 getSpec :: FilePath -> IO (Either (Nested Doc) Spec)
 getSpec filename = do
     contents <- T.readFile filename
-    let (spec,logs) = runWriter $ runErrorT $ readIn filename contents
+    let (spec,logs) = runWriter $ runErrorT $ readIn (Just filename) contents
     mapM_ print logs
     return spec

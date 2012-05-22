@@ -227,7 +227,7 @@ step (Load   fp) = returningTrue $ do
         readIt :: IO (Either (Nested Doc) Spec)
         readIt = do
             contents <- T.readFile fp
-            let (res,logs) = runReadIn fp contents
+            let (res,logs) = runReadIn (Just fp) contents
             mapM_ print logs
             return $ do s <- res
                         quanRenameFinal s
@@ -264,7 +264,7 @@ testMatch undef msg s = returningTrue $ do
             (Left err,_) -> liftIO $ print $ "Error while parsing:" <+> text p $$ nestedToDoc err
             (_,Left err) -> liftIO $ print $ "Error while parsing:" <+> text p $$ nestedToDoc err
             (Right px, Right ax) -> case execStateT (runMatch (px `asTypeOf` undef) ax) M.empty of
-                Left err -> liftIO $ putStrLn $ "Error while pattern matching: " ++ show err
+                Left err -> liftIO $ print $ "Error while pattern matching: " $$ nestedToDoc err
                 Right bs -> liftIO $ do
                     putStrLn "Bindings: "
                     forM_ (M.toList bs) $ \ (i, GNode ty g) -> putStrLn $ "[" ++ show ty ++ "] " ++ i ++ ": " ++ show (pretty g)

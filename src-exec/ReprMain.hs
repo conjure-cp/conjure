@@ -24,14 +24,14 @@ main = do
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
     let reprFilenames = filter (".repr" `isSuffixOf`) args
-    when (null reprFilenames) $ putStrLn "Warning: no *.rule file is given."
+    when (null reprFilenames) $ putStrLn "Warning: no *.repr file is given."
 
     specFile  <- T.readFile specFilename
     reprFiles <- mapM T.readFile reprFilenames
     let (mspecs, logs) = runWriter $ runErrorT $ do
-            spec  <- readIn specFilename specFile
-            reprs <- zipWithM readIn reprFilenames reprFiles
-            callRepr reprs spec
+            spec  <- readIn (Just specFilename) specFile
+            reprs <- zipWithM readIn (map Just reprFilenames) reprFiles
+            callRepr Nothing reprs spec
 
     mapM_ print logs
 
