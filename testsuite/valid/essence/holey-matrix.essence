@@ -1,0 +1,9 @@
+language Essence 2.0
+
+dim x : matrix indexed by [int,int] of int
+
+forAll i : int(0..9) .
+    forAll j : int(0..i), i * j > 0 .
+        find x[i,j] : int(i..j)
+
+such that allDiff(x)
