@@ -3,5 +3,5 @@ a = b ~~> defined(a) = defined(b)
        /\ forAll i in defined(a) . a(i) = b(i)
 
        where
-            a :: `function _ --> _`,
-            b :: `function _ --> _`
+            a : `function _ --> _`,
+            b : `function _ --> _`

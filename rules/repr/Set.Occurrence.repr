@@ -10,17 +10,17 @@
                                         $ additional bindings.
 
 *** set (size n, _) of t
-    ~~> (sum i : t . refn[i]) = n       $ additional structural cons
+    ~~> (sum i : t . toInt(refn[i])) = n       $ additional structural cons
 
 *** set (minSize mn) of t
-    ~~> (sum i : t . refn[i]) >= mn
+    ~~> (sum i : t . toInt(refn[i])) >= mn
 
 *** set (maxSize mx) of t
-    ~~> (sum i : t . refn[i]) <= mx
+    ~~> (sum i : t . toInt(refn[i])) <= mx
 
 *** set (minSize mn, maxSize mx) of t
-    ~~> (sum i : t . refn[i]) >= mn
-    /\  (sum i : t . refn[i]) <= mx
+    ~~> (sum i : t . toInt(refn[i])) >= mn
+    /\  (sum i : t . toInt(refn[i])) <= mx
 
 
 $ ISO
@@ -42,7 +42,7 @@ $ ALTERNATIVE
 
 $ ~~> Occurrence
 $ ~~> matrix indexed by [t] of bool
-$     where t :: int
+$     where t : int
 $ 
 $ *** set (size n, minSize nMin) of t
 $     ~~> (sum i : t . refn[i]) = n

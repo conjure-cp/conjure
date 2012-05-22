@@ -4,8 +4,8 @@ a = b ~~> (forAll i in toSet(ind_a) intersect toSet(ind_b) . m_a[i] = m_b[i])
        /\ (forAll i in toSet(ind_b) - toSet(ind_a) . m_b[i] = 0)
 
     where
-        a :: `set of _`,
-        b :: `set of _`,
+        a : `set of _`,
+        b : `set of _`,
         repr(a,Gent),
         repr(b,Gent)
 

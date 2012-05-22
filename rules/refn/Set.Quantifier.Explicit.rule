@@ -3,9 +3,9 @@ quan i in s, g . k
 
 ~~>
 
-quan j : r, g {i --> m[j]} . k { i --> m[j] }
+quan j : r, i {i --> m[j]} . k { i --> m[j] }
 
-    where s :: `set of _`
+    where s : `set (_) of _`
     where repr(s,Explicit)
 
     letting m be refn(s)

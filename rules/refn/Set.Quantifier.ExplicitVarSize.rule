@@ -3,10 +3,10 @@ quan i in s, g . k
 
 ~~>
 
-quan j in r, m[j][0] /\ g {i-->m[j][1]} . k { i --> m[j][1] }
+quan j : r, m[j][0] /\ g {i-->m[j][1]} . k { i --> m[j][1] }
 
-    where s :: `set of _`
-    $ where repr(s,ExplicitVarSize)
+    where s : `set (_) of _`
+    where repr(s,ExplicitVarSize)
 
     letting m be refn(s)
-    letting r be indices(m,0)
+    letting r be domain indices(m,0)

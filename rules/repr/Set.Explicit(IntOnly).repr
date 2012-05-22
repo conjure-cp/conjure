@@ -1,8 +1,8 @@
 
 ~~> Explicit
 ~~> matrix indexed by [int(1..n)] of t
-~~> allDiff(refn)
-/\  forAll i : int(1..n-1) . refn[i] < refn[i+1]
+$ ~~> allDiff(refn)
+$ /\  forAll i : int(1..n-1) . refn[i] < refn[i+1]
 
     where t :: `int`
 
