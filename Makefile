@@ -1,19 +1,25 @@
-.PHONY: install prof-install runtests clean
+.PHONY: install prof-install buildtests runtests clean
 
 install:
+	time cabal configure
+	time cabal build
 	time cabal install
 
-runtests:
-	# time cabal install --only-dependencies
+buildtests:
+	# ghc-pkg unregister conjure-cp
 	time cabal configure --enable-tests
 	time cabal build
-	# @say "starting the test"
+
+runtests:
 	time cabal test
 
 prof-install:
-	time cabal install --enable-library-profiling --enable-executable-profiling
+	time cabal configure --enable-library-profiling --enable-executable-profiling
+	time cabal build
+	time cabal install
 
 clean:
 	@cabal clean
+	@ghc-pkg unregister conjure-cp
 	@find . -name "*.hi" -delete
 	@find . -name "*.o" -delete
