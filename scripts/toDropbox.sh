@@ -10,7 +10,6 @@ cd
 cd src
 zip -r ~/Dropbox/Public/conjure-wd.zip conjure-wd/Makefile
 zip -r ~/Dropbox/Public/conjure-wd.zip conjure-wd/conjure-cp.cabal
-zip -r ~/Dropbox/Public/conjure-wd.zip conjure-wd/TODO
 zip -r ~/Dropbox/Public/conjure-wd.zip conjure-wd/*.hs
 zip -r ~/Dropbox/Public/conjure-wd.zip conjure-wd/datafiles
 zip -r ~/Dropbox/Public/conjure-wd.zip conjure-wd/figlets
