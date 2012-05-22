@@ -36,7 +36,7 @@ import {-# SOURCE #-} Language.Essence.Value ( Value )
 
 
 
-newtype Identifier = Identifier String
+newtype Identifier = Identifier { identifierToString :: String }
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance IsString Identifier where
@@ -59,6 +59,7 @@ instance Arbitrary Identifier where
 
 instance TypeOf Identifier where
     typeOf p | trace TypeChecking ("typeOf Identifier: " ++ show (pretty p)) False = undefined
+    typeOf (Identifier "_") = return TUnknown
     typeOf (Identifier nm') = do
         -- bindings <- get
         -- return $ case M.lookup nm bindings of

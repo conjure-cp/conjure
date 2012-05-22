@@ -135,12 +135,12 @@ class Simplify a where
 
 infixr 0 ~~~>
 (~~~>) :: (MonadWriter [Doc] m, ParsePrint a, MonadState st m, Has st Bool) => a -> a -> m (Maybe a)
-_ ~~~> b = do
--- a ~~~> b = do
---     tell [ "[ SIMPLIFY ]"
---             $$ nest 4 ("~~>" <+> pretty a)
---             $$ nest 4 ("~~>" <+> pretty b)
---          ]
+-- _ ~~~> b = do
+a ~~~> b = do
+    tell [ "[ SIMPLIFY ]"
+            $$ nest 4 ("~~>" <+> pretty a)
+            $$ nest 4 ("~~>" <+> pretty b)
+         ]
     putM True
     return (Just b)
 
@@ -317,6 +317,7 @@ instance Simplify Expr where
             Just (QuantifierDecl _ l _) -> p ~~~> L l
 
     simplify p@(Q q@(QuantifiedExpr {quanOverDom = Just (Indices (EHole (Identifier nm)) ind) })) = do
+        -- debug this.
         val <- evaluate ind
         mdom <- getBinding nm
         let
@@ -329,6 +330,25 @@ instance Simplify Expr where
             Just d  -> case go val d of
                 Nothing -> return Nothing
                 Just x  -> p ~~~> Q q { quanOverDom = Just x }
+
+    simplify p@(Q q@QuantifiedExpr {quanName = Identifier qnName, quanVar = I qnVar, quanOverExpr=Just (In, V (VSet xs))}) = do
+        qDecl :: Maybe QuantifierDecl <- getBinding qnName
+        case qDecl of
+            Nothing -> return Nothing
+            Just (QuantifierDecl glueOp guardOp identity) -> do
+                let enumeration =
+                        case quanGuard q of
+                            QuanGuard [qnGuard] ->
+                                [ EOp Replace [ quanBody q, EHole qnVar, x' ]
+                                | x <- xs
+                                , let x' = EOp Image [L guardOp, V (VTuple [qnGuard,x]) ]
+                                ]
+                            _ ->
+                                [ EOp Replace [ quanBody q, EHole qnVar, x ]
+                                | x <- xs
+                                ]
+                p ~~~> foldr (\ a b -> EOp Image [L glueOp, V (VTuple [a, b])]) identity enumeration
+
 
     simplify p@(EOp Replace [a,b,c]) = do
         let f i | i == b    = c

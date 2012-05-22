@@ -20,7 +20,8 @@ structuredVars spec = do
     evalState (bottomUpM f spec) qNames
     where
         f :: (MonadState st m, Has st [FreshName]) => QuantifiedExpr -> m QuantifiedExpr
-        f q@(QuantifiedExpr {quanVar = Right sv}) = do
+        -- f q@(QuantifiedExpr {quanVar = Right (I i)}) = return $ q { quanVar = Left i }
+        f q@(QuantifiedExpr {quanVar = sv}) = do
             newName <- getFreshName
             let mapping = getMapping newName sv
             let q' = flip bottomUp q $ \ t -> case t of
@@ -28,8 +29,8 @@ structuredVars spec = do
                                                         Nothing -> t
                                                         Just t' -> t'
                         _ -> t
-            return q' { quanVar = Left (Identifier newName) }
-        f q = return q
+            return q' { quanVar = I (Identifier newName) }
+        -- f q = return q
 
 
 -- to test:

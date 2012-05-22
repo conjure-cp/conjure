@@ -32,14 +32,7 @@ import Has
 import Constants ( FreshName, mkFreshNames, getFreshName )
 import GenericOps.Core ( universe, bottomUp, descendM )
 
-import Language.Essence.Binding
-import Language.Essence.Domain
-import Language.Essence.Expr
-import Language.Essence.Identifier
-import Language.Essence.Objective
-import Language.Essence.Op ( Op(Index,In) )
-import Language.Essence.QuantifiedExpr
-import Language.Essence.Spec
+import Language.Essence
 
 
 -- Spec { language    :: String
@@ -80,7 +73,7 @@ bubbleUpCons (Bubble actual bubble bindings) = do
     modifyM (lefts bindings :)
     return actual
 
-bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnGuard qnBody)) = do
+bubbleUpCons (Q (QuantifiedExpr qnName (I qnVar) (Just qnOverDom) Nothing qnGuard qnBody)) = do
 
     let bubbleUpDom dom = descendM bubbleUpCons dom
     let bubbleUpQuanGuard (QuanGuard xs) = QuanGuard <$> mapM bubbleUpCons xs
@@ -111,7 +104,7 @@ bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnG
         xsLifted =
             [ Q ( QuantifiedExpr
                     (Identifier "forAll")
-                    (Left (Identifier q))
+                    (I (Identifier q))
                     (Just qnOverDom')
                     Nothing
                     (QuanGuard [])
@@ -124,7 +117,7 @@ bubbleUpCons (Q (QuantifiedExpr qnName (Left qnVar) (Just qnOverDom) Nothing qnG
 
     modifyM (xsLifted :)
 
-    return $ Q $ QuantifiedExpr qnName (Left qnVar) (Just qnOverDom') Nothing qnGuard' qnBody'
+    return $ Q $ QuantifiedExpr qnName (I qnVar) (Just qnOverDom') Nothing qnGuard' qnBody'
 
 bubbleUpCons (Q (QuantifiedExpr qnName qnVar Nothing (Just (In,qnOverExpr)) qnGuard qnBody)) = do
 

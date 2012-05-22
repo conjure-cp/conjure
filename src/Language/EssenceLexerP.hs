@@ -42,7 +42,7 @@ failWithMsg :: Doc -> Parser a
 failWithMsg msg = Parser $ \ pos _ -> Left (addToTop (showPos pos <+> msg) [])
 
 failUnexpected :: Lexeme -> Doc -> Parser a
-failUnexpected l msg = failWithMsg ("unexpected" <+> lexemeFace l <> ", expecting" <+> msg <> ".")
+failUnexpected l msg = failWithMsg ("parsing error in" <+> lexemeFace l <> ", expecting" <+> msg <> ".")
 
 instance Functor Parser where
     fmap f parser = Parser $ \ pos stream ->
@@ -132,7 +132,7 @@ satisfy f = core <* (whiteSpace <||> eof)
                             if f x
                                 then Right [(x, advancePos x pos, xs)]
                                 else
-                                    let msg = "unexpected \"" <> lexemeFace x <> "\"."
+                                    let msg = "parsing error in \"" <> lexemeFace x <> "\"."
                                     in  Left $ addToTop msg []
                         _ -> Left $ Nested Nothing []
 
@@ -151,7 +151,7 @@ eof :: Parser ()
 eof = Parser $ \ pos stream ->
     case stream of
         []    -> Right [((), pos, stream)]
-        (s:_) -> let msg = showPos pos <+> "unexpected token \"" <> lexemeFace s <> "\"."
+        (s:_) -> let msg = showPos pos <+> "parsing error in \"" <> lexemeFace s <> "\"."
                  in  Left $ addToTop msg []
 
 isWhiteSpace :: Lexeme -> Bool

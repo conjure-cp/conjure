@@ -45,13 +45,14 @@ import Language.Essence.Phases.QuanRename ( quanRename )
 import Language.EssenceEvaluator ( oldDeepSimplify, runSimplify )
 
 
+type SelectedRepr = (String,String)
 
 callRepr ::
     ( Applicative m
     , MonadError (Nested Doc) m
     , MonadWriter [Doc] m
-    ) => [RuleRepr] -> Spec -> m [Spec]
-callRepr rules' specParam = do
+    ) => Maybe [SelectedRepr] -> [RuleRepr] -> Spec -> m [Spec]
+callRepr selectedRepr rules' specParam = do
     spec <- (postParse >=> runSimplify) specParam
     let qNames = mkFreshNames $ nub [ nm | Identifier nm <- universe spec ]
     let rules = map (scopeIdentifiers newRuleVar) rules'
@@ -60,7 +61,7 @@ callRepr rules' specParam = do
                                     ) $ mapM_ addBinding' (lefts (topLevels spec))
     results      <- flip evalStateT ( bindings :: BindingsMap
                                     , qNames   :: [FreshName]
-                                    ) $ applyReprsToSpec rules spec
+                                    ) $ applyReprsToSpec_NoChannel selectedRepr rules spec
     ss <- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
     return ss
     -- mapM runSimplify =<< concatMapM (quanDomRefine rules) =<< mapM runSimplify ss
@@ -165,6 +166,141 @@ applyReprsToSpec rules spec = do
                 return sp { topLevels   = topLevels   sp ++ map Left bs
                           , constraints = constraints sp ++ xs ++ channelCons
                           }
+
+applyReprsToSpec_NoChannel ::
+    ( Applicative m
+    , Has st BindingsMap
+    , Has st [FreshName]
+    , Monad m
+    , MonadError (Nested Doc) m
+    , MonadState st m
+    , MonadWriter [Doc] m
+    ) => Maybe [SelectedRepr]
+      -> [RuleRepr]
+      -> Spec
+      -> m [Spec]
+applyReprsToSpec_NoChannel selectedRepr rules spec = do
+    let
+        remainingBindings :: M.Map String Domain
+        remainingBindings = M.fromList $
+            [ (nm, dom) | Find (Identifier nm) dom <- lefts (topLevels spec)
+                        , needsRepresentation dom
+                        , isNothing $ representationValue dom ]
+            ++
+            [ (nm, dom) | Given (Identifier nm) dom <- lefts (topLevels spec)
+                        , needsRepresentation dom
+                        , isNothing $ representationValue dom ]
+
+    candidates :: M.Map String [ReprResult]
+               <- forM remainingBindings $ applyReprsToDom rules
+
+    let
+        foos :: [[(String,ReprResult)]]
+        foos = sequence [ [ (x,y) | y@(nm,_,_) <- ys
+                                  , case selectedRepr of
+                                      Nothing -> True
+                                      Just list -> (x,nm) `elem` list
+                          ]
+                        | (x,ys) <- M.toList candidates
+                        ]
+
+    let
+        -- applyOne :: [(String,ReprResult)] -> m Spec
+        applyOne ss = do
+            ((), (bindings,conss)) <- runWriterT $ forM_ ss $ \ (nm, (reprName, reprDom, reprCons)) -> do
+                let refn = nm ++ "_" ++ reprName
+                tell ( map (bottomUp (identifierRenamer "refn" refn)) [ Find (Identifier refn) reprDom ]
+                     , map (bottomUp (identifierRenamer "refn" refn)) reprCons
+                     )
+            let spec' = flip bottomUp spec $ \ x ->
+                        case x of
+                            EHole (Identifier nm) -> case lookup nm ss of
+                                Nothing -> x
+                                Just (reprName,_,_) -> EHole $ Identifier $ nm ++ "#" ++ reprName
+                            _ -> x
+            return spec' { topLevels   = topLevels   spec' ++ map Left bindings
+                         , constraints = constraints spec' ++ conss
+                         }
+    --                     (nmR,dom,xs) <- option rs
+    --                     st :: [(String,String)] <- getM
+    --                     when ((nm,nmR) `notElem` st) $ do
+    --                         let refn = nm ++ "_" ++ nmR
+    --                         modifyM ((nm,nmR):)
+    --                         tell ( map (bottomUp (identifierRenamer "refn" refn)) [ Find (Identifier refn) dom ]
+    --                              , map (bottomUp (identifierRenamer "refn" refn)) xs
+    --                              )
+    --                     return $ EHole $ Identifier $ nm ++ "#" ++ nmR
+
+    forM foos applyOne
+
+    -- let
+    --     counts :: M.Map String Int
+    --     counts =
+    --         let lu = M.keysSet remainingBindings
+    --         in  M.fromList
+    --           $ map (head &&& length)
+    --           . group
+    --           . sort
+    --           $  [ nm | Identifier nm <- concatMap universe (maybeToList $ objective spec), S.member nm lu ]
+    --           ++ [ nm | Identifier nm <- concatMap universe (            constraints spec), S.member nm lu ]
+    --           ++ [ nm | Identifier nm <- concatMap universe (     rights $ topLevels spec), S.member nm lu ]
+    -- 
+    -- if M.null remainingBindings
+    --     then return []
+    --     else do
+    --         forM_ (M.toList candidates) $ \ (nm,rs) -> case rs of
+    --             [] -> throwErrorSingle $ text nm <+> "needs a representation, but no rule matches it."
+    --             _  -> return ()
+    -- 
+    --         tell [ Pr.vcat $ "Representation options:"
+    --                        : map (\ (nm,rs) -> Pr.nest 4 $ text nm <> Pr.colon
+    --                                                               <+> prettyListDoc id Pr.comma (map (text . fst3) rs)
+    --                              ) (M.toList candidates)
+    --              ]
+    -- 
+    --         tell [ Pr.vcat $ "Number of occurrences in the specification:"
+    --                        : map (\ (nm,c) -> Pr.nest 4 $ text nm <> Pr.colon <+> Pr.int c ) (M.toList counts)
+    --              ]
+    -- 
+    --         let
+    --             f :: ( MonadList m
+    --                  , MonadWriter ([Binding],[Expr]) m
+    --                  , MonadState [(String,String)] m                -- those added. name reprName pair.
+    --                  ) => Expr -> m Expr
+    --             f p@(EHole (Identifier nm)) = case M.lookup nm candidates of
+    --                 Nothing -> return p
+    --                 Just rs -> do
+    --                     (nmR,dom,xs) <- option rs
+    --                     st :: [(String,String)] <- getM
+    --                     when ((nm,nmR) `notElem` st) $ do
+    --                         let refn = nm ++ "_" ++ nmR
+    --                         modifyM ((nm,nmR):)
+    --                         tell ( map (bottomUp (identifierRenamer "refn" refn)) [ Find (Identifier refn) dom ]
+    --                              , map (bottomUp (identifierRenamer "refn" refn)) xs
+    --                              )
+    --                     return $ EHol  e $ Identifier $ nm ++ "#" ++ nmR
+    --             f p = return p
+    -- 
+    --         results <- runListT $ flip runStateT [] $ runWriterT $ bottomUpM f spec
+    --         forM results $ \ ((sp,(bs,xs)),stuffAdded) -> do
+    --             let
+    --                 channels :: [(String,[String])]
+    --                 channels
+    --                     = filter (\ (_,i) -> length i > 1 )                    -- remove those which have only one repr
+    --                     $ map (\ i -> (fst (head i), map snd i) )
+    --                     $ groupBy ((==) `on` fst)
+    --                     $ sortBy (comparing fst)
+    --                       stuffAdded
+    --                 channelCons :: [Expr]
+    --                 channelCons
+    --                     = map (\ (a,b) -> EOp Eq [ EHole (Identifier a)
+    --                                              , EHole (Identifier b) ] )
+    --                     $ concatMap allPairs
+    --                     $ map (\ (nm,rs) -> [ nm ++ "_" ++ r | r <- rs ] )
+    --                       channels
+    --             return sp { topLevels   = topLevels   sp ++ map Left bs
+    --                       , constraints = constraints sp ++ xs ++ channelCons
+    --                       }
 
 
 applyReprsToDom ::

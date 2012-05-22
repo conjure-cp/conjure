@@ -23,14 +23,14 @@ class ReadIn a where
         ( Applicative m
         , MonadError (Nested Doc) m
         , MonadWriter [Doc] m
-        ) => FilePath -> T.Text -> m a
+        ) => Maybe FilePath -> T.Text -> m a
 
-runReadIn :: ReadIn a => FilePath -> T.Text -> (Either (Nested Doc) a, [Doc])
+runReadIn :: ReadIn a => Maybe FilePath -> T.Text -> (Either (Nested Doc) a, [Doc])
 runReadIn fp contents = runWriter $ runErrorT $ readIn fp contents
 
-runParser' :: (ParsePrint a, Applicative m, MonadError (Nested Doc) m) => FilePath -> T.Text -> m a
+runParser' :: (ParsePrint a, Applicative m, MonadError (Nested Doc) m) => Maybe FilePath -> T.Text -> m a
 runParser' fp t = do
-    is <- lexAndParse (Just fp) parse t
+    is <- lexAndParse fp parse t
     case is of
         []  -> throwErrorSingle "No Parse."
         [i] -> return i
@@ -46,11 +46,13 @@ instance ReadIn Spec where
 instance ReadIn RuleRefn where
     readIn fp contents = do
         raw <- runParser' fp contents
-        let fixed = raw { refnFilename = fp }
+        let fixed = case fp of Nothing -> raw
+                               Just p  -> raw { refnFilename = p }
         return fixed
 
 instance ReadIn RuleRepr where
     readIn fp contents = do
         raw <- runParser' fp contents
-        let fixed = raw { reprFilename = fp }
+        let fixed = case fp of Nothing -> raw
+                               Just p  -> raw { reprFilename = p }
         return fixed

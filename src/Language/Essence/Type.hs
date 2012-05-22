@@ -50,8 +50,6 @@ class TypeOf a where
 typeUnify :: Type -> Type -> Bool
 typeUnify TUnknown _ = True
 typeUnify _ TUnknown = True
-typeUnify TBool TInt = True
-typeUnify TInt TBool = True
 typeUnify (AnyType e1 t1) (AnyType e2 t2) | e1 == e2  = and $ zipWith typeUnify t1 t2
                                           | otherwise = False
 typeUnify a b | a == b = True

@@ -24,7 +24,7 @@ import GenericOps.Core ( NodeTag, Hole
                        , addBinding, getBinding, BindingsMap
                        , inScope )
 import ParsePrint
-import PrintUtils ( (<>), (<+>), text )
+import PrintUtils ( (<+>), text )
 import qualified PrintUtils as Pr
 import Utils
 
@@ -44,7 +44,7 @@ import Language.Essence.Value
 data QuantifiedExpr
     = QuantifiedExpr
     { quanName     :: Identifier
-    , quanVar      :: Either Identifier StructuredVar
+    , quanVar      :: StructuredVar
     , quanOverDom  :: Maybe Domain
     , quanOverExpr :: Maybe (Op, Expr)
     , quanGuard    :: QuanGuard
@@ -59,16 +59,15 @@ instance Hole QuantifiedExpr
 instance GPlate QuantifiedExpr where
     gplate p@(QuantifiedExpr qnName qnVar qnOverDom qnOverOpExpr qnGuard qnBody) =
         (  mkG (EHole qnName)
-        :  ( mkG $ case qnVar of Left x -> Left (EHole x); Right x -> Right x )
+        :  mkG  qnVar
         :  mkG qnGuard
         :  mkG qnBody
         :  map mkG (maybeToList qnOverDom)
         ++ concat [ [mkG op, mkG x] | (op,x) <- maybeToList qnOverOpExpr ]
 
         , \ xs -> let idenOut   x = case x of EHole i -> Just i; _ -> Nothing
-                      qnVarOut  x = case x of Left (EHole i) -> Just (Left i); Right i -> Just (Right i); _ -> Nothing
                       qnName'       = mapMaybe idenOut  $ fromGs $ take 1 $ drop 0 xs
-                      qnVar'        = mapMaybe qnVarOut $ fromGs $ take 1 $ drop 1 xs
+                      qnVar'        =                     fromGs $ take 1 $ drop 1 xs
                       qnGuard'      =                     fromGs $ take 1 $ drop 2 xs
                       qnBody'       =                     fromGs $ take 1 $ drop 3 xs
                       qnOverDom'    = if isNothing qnOverDom
@@ -108,8 +107,7 @@ instance GPlate QuantifiedExpr where
                                                   , qnVar'
                                                   , take 1 $ drop 1 xs
                                                   , map showG $ take 1 $ drop 1 xs
-                                                  , fromGs $ take 1 $ drop 1 xs :: [Either Expr StructuredVar]
-                                                  , mapMaybe qnVarOut $ (fromGs $ take 1 $ drop 1 xs :: [Either Expr StructuredVar])
+                                                  , fromGs $ take 1 $ drop 1 xs :: [StructuredVar]
                                                   , qnGuard'
                                                   , qnBody'
                                                   , qnOverDom'
@@ -181,7 +179,7 @@ pQuantifiedExpr p = do
             f []     = error "The Impossible has happenned. in QuantifiedExpr.parse.f"
             f [i]    = QuantifiedExpr qnName i qnDom qnExpr qnGuard qnBody
             f (i:is) = QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
-        return $ f (map Right qnVars)
+        return $ f qnVars
 
 
 instance ParsePrint QuantifiedExpr where
@@ -197,14 +195,14 @@ instance ParsePrint QuantifiedExpr where
                             Nothing     -> Pr.empty
                             Just (op,i) -> pretty op <+> pretty i
                         )
-                    <>  ( case qnGuard of
-                            QuanGuard []  -> Pr.empty
-                            QuanGuard [i] -> Pr.comma <+> pretty i
+              hangGuard x = case qnGuard of
+                            QuanGuard []  -> x
+                            -- QuanGuard [i] -> Pr.hang (x <> Pr.comma) 4 (pretty i)
+                            QuanGuard [i] -> Pr.hang (x) 4 (Pr.comma <+> pretty i)
                             _   -> error "Multiple guards, what the hell?"
-                        )
-                    <+> Pr.dot
-              body = pretty qnBody
-          in  Pr.hang header 4 body
+              -- hangBody x = Pr.hang (x <> Pr.dot) 4 (pretty qnBody)
+              hangBody x = Pr.hang x 4 (Pr.dot <+> pretty qnBody)
+          in  hangBody $ hangGuard header
 
 instance TypeOf QuantifiedExpr where
     typeOf p@(QuantifiedExpr (Identifier qnName)
@@ -233,7 +231,7 @@ instance TypeOf QuantifiedExpr where
                                         _ -> throwErrorSingle $ "Quantification over nsopported type: " <+> pretty tExpr
                                 _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show (qnOverDom,qnOverOpExpr)
                 case qnVar of
-                    Left (Identifier nm) -> addBinding nm tForQnVar
+                    I (Identifier nm) -> addBinding nm tForQnVar
                     _ -> error $ "not handled in QuantifiedExpr.typeOf: " ++ show qnVar
 
                 -- traceM Debug $ "adding quantified variable in context: " ++ show (qnVar,tForQnVar)

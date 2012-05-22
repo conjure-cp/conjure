@@ -13,7 +13,7 @@ import ParsePrint ( ParsePrint )
 
 
 
-newtype Identifier = Identifier String
+newtype Identifier = Identifier { identifierToString :: String }
 
 instance IsString Identifier
 instance Eq Identifier

@@ -43,6 +43,7 @@ import                Language.Essence.Identifier
 import {-# SOURCE #-} Language.Essence.Lambda
 import                Language.Essence.Op
 import {-# SOURCE #-} Language.Essence.OpDescriptor
+import                Language.Essence.StructuredVar
 import {-# SOURCE #-} Language.Essence.QuantifiedExpr
 import                Language.Essence.Type
 import {-# SOURCE #-} Language.Essence.Value
@@ -142,8 +143,14 @@ instance MatchBind Expr where
                         bindings <- getM
                         res <- case M.lookup nm bindings of
                             Nothing -> return Nothing -- gbindError ("Not found: " <+> text nm)                                                     -- if the name cannot be found in te list of bindings.
-                            Just (GNode ty_b b) | Typeable.typeOf t == ty_b -> return (Just (unsafeCoerce b))                                                -- the name is bound to something of the expected type. great.
-                            Just (GNode ty_b b) | Typeable.typeOf (undefined :: Domain) == ty_b -> return $ Just $ D $ unsafeCoerce b
+                            Just (GNode ty_b b) | ty_b == Typeable.typeOf t
+                                                    -> return (Just (unsafeCoerce b))                                                -- the name is bound to something of the expected type. great.
+                                                | ty_b == Typeable.typeOf (undefined :: Domain)
+                                                    -> return $ Just $ D $ unsafeCoerce b
+                                                | ty_b == Typeable.typeOf (undefined :: StructuredVar)
+                                                    -> case unsafeCoerce b of
+                                                        I x -> return (Just $ EHole x)
+                                                        _   -> return Nothing
                                                 | otherwise        -> return Nothing
                                                 -- | otherwise        -> gbindError $ vcat [ "Type mismatch for: " <+> text nm                         -- name is bound, but wrong type.
                                                 --                                         , nest 4 "Expected: "   <+> text (show (typeOf t))
@@ -464,6 +471,8 @@ instance ParsePrint Expr where
             -- prettyOp i x | trace msg False = undefined
             --     where msg = " -- prettyOp " ++ show i ++ " " ++ show x
             prettyOp _ param@(EOp Index   _) = let OpPostfix _ pr = opDescriptor Index   in pr param
+            prettyOp _       (EOp Image [f, V i@(VTuple _)]) = pretty f <> pretty i
+            prettyOp _       (EOp Image [f,   i           ]) = pretty f <> Pr.parens (pretty i)
             prettyOp _ param@(EOp Replace _) = let OpPostfix _ pr = opDescriptor Replace in pr param
             prettyOp envPrec param@(EOp op xs) = case (opDescriptor op, xs) of
                 (OpLispy   _ pr, _    ) -> pr xs
@@ -474,7 +483,7 @@ instance ParsePrint Expr where
                 _ -> error $ "prettyOp: " ++ show param
             prettyOp _ (D x) = "`" <> pretty x <> "`"
             prettyOp _ x = pretty x
-    pretty (ETyped  x t) = Pr.parens $ pretty x <+> Pr.colon <+> "'" <> pretty t <> "'"
+    pretty (ETyped  x t) = Pr.parens $ pretty x <+> Pr.colon <+> "`" <> pretty t <> "`"
     pretty (DimExpr x d) = "find" <+> pretty x <+> Pr.colon <+> pretty d
 
 instance Arbitrary Expr where
@@ -573,7 +582,7 @@ instance TypeOf Expr where
             case ty of
                 AnyType te [ty']
                     | te `elem` [TSet,TMSet]
-                    , tx == ty' -> return TBool
+                    , tx `typeUnify` ty' -> return TBool
                 _ -> typeErrorBinOp tx ty "Type error."
 
     typeOf p@(EOp op [x,y])
@@ -653,6 +662,17 @@ instance TypeOf Expr where
             AnyType TFunction [a,b] | a == ty -> return b
             AnyType TRelation tes -> case ty of
                 AnyType TTuple tes' | tes == tes' -> return TBool
+                AnyType TTuple tes' |  length tes == length tes'
+                                    && any (==TUnknown) tes' -> do
+                    rs <- sequence
+                            [ if b == TUnknown
+                                then return a
+                                else if a == b
+                                        then return a
+                                        else typeError "Type error."
+                            | (a,b) <- zip tes tes'
+                            ]
+                    return $ AnyType TRelation rs
                 _ -> typeError "Type error."
             _ -> typeError "Type error."
 

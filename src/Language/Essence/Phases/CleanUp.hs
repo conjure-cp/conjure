@@ -21,10 +21,15 @@ import Language.Essence
 
 cleanUp :: (Applicative m, MonadError (Nested Doc) m) => Spec -> m Spec
 cleanUp spec = return (topLevelConstraints spec)
+-- cleanUp spec = quanRenameFinal (topLevelConstraints spec)
 
 
 topLevelConstraints :: Spec -> Spec
-topLevelConstraints spec = spec { constraints = concatMap conjunct' $ constraints spec }
+topLevelConstraints spec = spec { constraints = nub
+                                              $ filter (/=V (VBool True))
+                                              $ concatMap conjunct'
+                                              $ constraints spec
+                                }
     where
         conjunct' :: Expr -> [Expr]
         conjunct' (EOp And [x,y]) = conjunct' x ++ conjunct' y
@@ -66,13 +71,13 @@ quanRenameFinal spec = do
         workerTL (Right (Where w))         = Right . Where          <$> (withState . workerExpr) w
 
         workerQ :: (Applicative m, MonadError (Nested Doc) m, MonadState [FreshName] m) => QuantifiedExpr -> m QuantifiedExpr
-        workerQ p@(QuantifiedExpr {quanVar = Left (Identifier old)}) = do
+        workerQ p@(QuantifiedExpr {quanVar = I (Identifier old)}) = do
             new <- getFreshName
             let p' = bottomUp (identifierRenamer old new) p
             guard' <- (withState . workerG)    $ quanGuard p'
             body'  <- (withState . workerExpr) $ quanBody p'
             return $ p' { quanBody = body', quanGuard = guard' }
-        workerQ p@(QuantifiedExpr {quanVar = Right qnSVar}) = do
+        workerQ p@(QuantifiedExpr {quanVar = qnSVar}) = do
             let
                 -- rec :: StructuredVar -> m (M.Map String String)
                 rec (I (Identifier old)) = do

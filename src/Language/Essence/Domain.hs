@@ -8,7 +8,7 @@ module Language.Essence.Domain where
 
 import Control.Applicative
 import Control.Arrow ( first, second )
-import Control.Monad ( ap, liftM, msum )
+import Control.Monad ( ap, liftM, msum, void )
 import Control.Monad.Error ( MonadError, ErrorT, runErrorT )
 import Control.Monad.State ( MonadState )
 import Control.Monad.Writer ( MonadWriter )
@@ -237,7 +237,7 @@ instance ParsePrint Domain where
     pretty (AnyDom TMSet [e] as) = "mset" <+> pretty as <+> "of" <+> pretty e
     pretty (AnyDom TFunction [fr,to] as) = "function"  <+> pretty as <+> pretty fr <+> "-->" <+> pretty to
     pretty (AnyDom TRelation es as) = "relation" <+> pretty as <+> "of"
-                                                      <+> prettyList Pr.parens "*" es
+                                                      <+> prettyList Pr.parens " *" es
     pretty (AnyDom TPartition [e] as) = "partition" <+> pretty as <+> "from" <+> pretty e
     pretty (Indices x y) = "indices" <> prettyList Pr.parens Pr.comma [x,y]
     pretty p = error ("Invalid domain: " ++ show p)
@@ -266,7 +266,9 @@ instance TypeOf Domain where
     typeOf p@(DEnum      i _) = inScope (mkG p) $ typeOf i
     typeOf   (DUnnamed     x) = return $ TUnnamed x
     typeOf p@(DMatrix    a b) = inScope (mkG p) $ TMatrix `liftM` typeOf a `ap` typeOf b
-    typeOf p@(AnyDom  e ds _) = inScope (mkG p) $ AnyType e `liftM` mapM typeOf ds
+    typeOf p@(AnyDom  e ds as) = do
+        void $ typeOf as
+        inScope (mkG p) $ AnyType e `liftM` mapM typeOf ds
     typeOf p@(Indices m ind') = inScope (mkG p) $ do
         ind <- evaluate ind'
         let
@@ -294,6 +296,11 @@ instance Hole DomainAttrs
 
 instance GPlate DomainAttrs where
     gplate (DomainAttrs xs) = gplateUniList DomainAttrs xs
+
+instance TypeOf DomainAttrs where
+    typeOf (DomainAttrs as) = do
+        mapM_ typeOf as
+        return TUnknown
 
 instance MatchBind DomainAttrs where
     match p@(DomainAttrs ps) a@(DomainAttrs as) = inScope (mkG p, mkG a) $
@@ -359,6 +366,13 @@ instance GPlate DomainAttr where
                 _ -> gplateError "DomainAttr[2]"
         )
     gplate p@(DontCare {}) = gplateLeaf p
+
+instance TypeOf DomainAttr where
+    typeOf (OnlyName {}) = return TUnknown
+    typeOf (NameValue _ x) = do
+        void $ typeOf x
+        return TUnknown
+    typeOf DontCare = return TUnknown
 
 instance MatchBind DomainAttr
 

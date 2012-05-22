@@ -41,7 +41,7 @@ domRefineQ ::
     , MonadState st m
     , MonadWriter [Doc] m
     ) => [RuleRepr] -> QuantifiedExpr -> m QuantifiedExpr
-domRefineQ rules q@(QuantifiedExpr qnName (Left (Identifier qnVar)) (Just qnOverDom) Nothing (QuanGuard qnGuard) qnBody) = do
+domRefineQ rules q@(QuantifiedExpr qnName (I (Identifier qnVar)) (Just qnOverDom) Nothing (QuanGuard qnGuard) qnBody) = do
     results <- applyReprsToDom rules qnOverDom
     case results of
         [] -> return q
@@ -59,7 +59,7 @@ domRefineQ rules q@(QuantifiedExpr qnName (Left (Identifier qnVar)) (Just qnOver
 
             let theGuard = conjunct $ str' ++ qnGuard'
 
-            return $ QuantifiedExpr qnName (Left (Identifier refn)) (Just newDom') Nothing (QuanGuard [theGuard]) qnBody'
+            return $ QuantifiedExpr qnName (I (Identifier refn)) (Just newDom') Nothing (QuanGuard [theGuard]) qnBody'
 domRefineQ _ q = return q
 
 
