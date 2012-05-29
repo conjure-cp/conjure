@@ -2,9 +2,10 @@
 
 module Language.Core.Properties.IsSafe where
 
-
-import Language.Core
-import Language.Core.Properties.Pretty
+import Language.Core.Imports
+import Language.Core.Definition
+import Language.Core.MultiMatch
+import Language.Core.Properties.ShowAST
 import Language.Core.Properties.ToInt
 
 
@@ -40,14 +41,14 @@ instance IsSafe Core where
     -- isSafe (Expr "div" [_,L (I 0)]) = return False
     -- isSafe (Expr "div" [_,possiblyZero]) = do
     -- isSafe p@(Expr {}) = do
-    --     tell [ "Assumed to be safe:" <+> pretty p ]
+    --     tell [ "Assumed to be safe:" <+> showAST p ]
     --     return True
     -- isSafe p@(Let r _ x) = do
-    --     tell [ "Passing through a let expression:" <+> Pr.parens (pretty r) <+> pretty p ]
+    --     tell [ "Passing through a let expression:" <+> Pr.parens (showAST r) <+> showAST p ]
     --     isSafe x
 
 instance IsSafe Reference where
-    isSafe r = core <?> "safety check for reference" <+> pretty r
+    isSafe r = core <?> "safety check for reference" <+> showAST r
         where
             core = do
                 val <- lookUpRef r

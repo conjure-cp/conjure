@@ -3,8 +3,9 @@
 module Language.Core.Properties.ToLit where
 
 
-import Language.Core
-import Language.Core.Properties.Pretty
+import Language.Core.Imports
+import Language.Core.Definition
+import Language.Core.Properties.ShowAST
 
 
 class ToLit a where
@@ -13,13 +14,13 @@ class ToLit a where
 instance ToLit Core where
     toLit (L x) = toLit x
     toLit (R x) = toLit x
-    toLit p     = err $ "Core.toLit:" <+> pretty p
+    toLit p     = err $ "Core.toLit:" <+> showAST p
 
 instance ToLit Literal where
     toLit = return
 
 instance ToLit Reference where
-    toLit r = core <?> "Reference.toLit:" <+> pretty r
+    toLit r = core <?> "Reference.toLit:" <+> showAST r
         where
             core = do
                 val <- lookUpRef r

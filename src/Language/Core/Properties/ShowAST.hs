@@ -2,7 +2,9 @@
 
 module Language.Core.Properties.ShowAST where
 
-import Language.Core
+import Language.Core.Imports
+import Language.Core.Definition
+
 import PrintUtils as Pr
 
 

@@ -13,16 +13,16 @@ import Language.Core.Properties.ShowAST
 
 
 
-test_ParsePrint' :: (Show a, ShowAST a) => Parser a -> Text -> IO ()
+test_ParsePrint' :: (Show a, ShowAST a) => Parser a -> Text -> IO (Maybe a)
 test_ParsePrint' p t = do
     xs <- lexAndParseIO (p <* eof) t
-    case xs of
-        []  -> putStrLn "No parse."
-        [_] -> return ()
-        _   -> putStrLn "Ambiguous parse."
     mapM_ (print . showAST) xs
+    case xs of
+        []  -> do putStrLn "No parse."; return Nothing
+        [a] -> return $ Just a
+        _   -> do putStrLn "Ambiguous parse."; return Nothing
 
-test_ParsePrint :: Text -> IO ()
+test_ParsePrint :: Text -> IO (Maybe Core)
 test_ParsePrint = test_ParsePrint' parseExpr
 
 parseSpec :: Parser Spec

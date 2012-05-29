@@ -2,21 +2,22 @@
 
 module Language.Core.Properties.TypeOf where
 
+import Language.Core.Imports
+import Language.Core.Definition
 
-import Language.Core
-import Language.Core.Properties.Pretty
+import Language.Core.Properties.ShowAST
 import Language.Core.Parser
 import Language.EssenceLexerP ( lexAndParseIO, eof )
 
 
-errInvariant :: (Monad m, Pretty a) => a -> CompT m b
-errInvariant p = err $ "TypeOf, invariant violation in:" <+> pretty p
+errInvariant :: (Monad m, ShowAST a) => a -> CompT m b
+errInvariant p = err $ "TypeOf, invariant violation in:" <+> showAST p
 
-errCannot :: (Monad m, Pretty a) => a -> CompT m b
-errCannot p = err $ "Cannot determine the type of" <+> pretty p
+errCannot :: (Monad m, ShowAST a) => a -> CompT m b
+errCannot p = err $ "Cannot determine the type of" <+> showAST p
 
-errMismatch :: (Monad m, Pretty a) => a -> CompT m b
-errMismatch p = err $ "Type error in" <+> pretty p
+errMismatch :: (Monad m, ShowAST a) => a -> CompT m b
+errMismatch p = err $ "Type error in" <+> showAST p
 
 tester_typeOfDomain :: Text -> IO ()
 tester_typeOfDomain t = do
@@ -24,10 +25,10 @@ tester_typeOfDomain t = do
     case xs of
         [x] -> do
             y  <- runCompIO def def (typeOf x)
-            print $ pretty x
-            print $ pretty y
+            print $ showAST x
+            print $ showAST y
         _ -> do
-            mapM_ (print . pretty) xs
+            mapM_ (print . showAST) xs
 
 tester_typeOf :: Text -> IO ()
 tester_typeOf t = do
@@ -35,10 +36,10 @@ tester_typeOf t = do
     case xs of
         [x] -> do
             y  <- runCompIO def def (typeOf x)
-            print $ pretty x
-            print $ pretty y
+            print $ showAST x
+            print $ showAST y
         _ -> do
-            mapM_ (print . pretty) xs
+            mapM_ (print . showAST) xs
 
 
 class TypeOf a where
@@ -266,7 +267,7 @@ instance TypeOf Literal where
     typeOf (I {}) = return $ Expr ":type" [Expr ":type-int"  []]
 
 instance TypeOf Reference where
-    typeOf r = core <?> "Reference.typeOf:" <+> pretty r
+    typeOf r = core <?> "Reference.typeOf:" <+> showAST r
         where
             core = do
                 val <- lookUpRef r
