@@ -12,9 +12,9 @@ import Data.Maybe
 import Data.Ord ( comparing )
 import Data.Tuple ( swap )
 import qualified Data.Map as M
-import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.IO as T
-import qualified Data.Text.Lazy.Read as T
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+import qualified Data.Text.Read as T
 
 import Nested ( Nested, throwErrorSingle )
 import PrintUtils ( Doc, (<+>) )
@@ -25,6 +25,7 @@ import qualified PrintUtils as Pr
 data Lexeme
     = LIntLiteral Integer
     | LIdentifier T.Text
+    | LMetaVar T.Text
     | LComment T.Text
 
     -- general
@@ -195,6 +196,7 @@ data Lexeme
     -- others
     | L_Dot
     | L_Comma
+    | L_SemiColon
 
     | L_OpenParen
     | L_CloseParen
@@ -210,8 +212,13 @@ data Lexeme
     | L_SquigglyArrow
     | L_CaseSeparator
 
+    | L_HasType
+    | L_HasDomain
+
     deriving (Eq,Ord,Read,Show)
 
+lexemeText :: Lexeme -> T.Text
+lexemeText l = T.pack $ ':' : show (lexemeFace l)
 
 lexemeFace :: Lexeme -> Doc
 lexemeFace L_Newline = "new line"
@@ -269,28 +276,28 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_indexed, "indexed" )
     , ( L_by, "by" )
     , ( L_set, "set" )
-    , ( L_size, "size" )
-    , ( L_minSize, "minSize" )
-    , ( L_maxSize, "maxSize" )
+    -- , ( L_size, "size" )
+    -- , ( L_minSize, "minSize" )
+    -- , ( L_maxSize, "maxSize" )
     , ( L_mset, "mset" )
-    , ( L_minOccur, "minOccur" )
-    , ( L_maxOccur, "maxOccur" )
+    -- , ( L_minOccur, "minOccur" )
+    -- , ( L_maxOccur, "maxOccur" )
     , ( L_function, "function" )
-    , ( L_total, "total" )
-    , ( L_partial, "partial" )
-    , ( L_injective, "injective" )
-    , ( L_surjective, "surjective" )
-    , ( L_bijective, "bijective" )
+    -- , ( L_total, "total" )
+    -- , ( L_partial, "partial" )
+    -- , ( L_injective, "injective" )
+    -- , ( L_surjective, "surjective" )
+    -- , ( L_bijective, "bijective" )
     , ( L_relation, "relation" )
     , ( L_partition, "partition" )
     , ( L_regular, "regular" )
     , ( L_complete, "complete" )
-    , ( L_partSize, "partSize" )
-    , ( L_minPartSize, "minPartSize" )
-    , ( L_maxPartSize, "maxPartSize" )
-    , ( L_numParts, "numParts" )
-    , ( L_minNumParts, "minNumParts" )
-    , ( L_maxNumParts, "maxNumParts" )
+    -- , ( L_partSize, "partSize" )
+    -- , ( L_minPartSize, "minPartSize" )
+    -- , ( L_maxPartSize, "maxPartSize" )
+    -- , ( L_numParts, "numParts" )
+    -- , ( L_minNumParts, "minNumParts" )
+    -- , ( L_maxNumParts, "maxNumParts" )
     , ( L_union, "union" )
     , ( L_intersect, "intersect" )
     , ( L_subset, "subset" )
@@ -351,6 +358,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_BackTick        , "`"     )
     , ( L_Dot             , "."     )
     , ( L_Comma           , ","     )
+    , ( L_SemiColon       , ";"     )
     , ( L_OpenParen       , "("     )
     , ( L_CloseParen      , ")"     )
     , ( L_OpenBracket     , "["     )
@@ -366,11 +374,16 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
 
     , ( L_SquigglyArrow   , "~~>"   )
     , ( L_CaseSeparator   , "***"   )
+
+    , ( L_HasType         , "hastype"   )
+    , ( L_HasDomain       , "hasdomain" )
     ]
 
 runLexer :: (Applicative m, MonadError (Nested Doc) m) => T.Text -> m [Lexeme]
 runLexer t =
-    let results = catMaybes $  map (tryLex t) lexemes
+    let results = catMaybes $  [ tryLexMetaVar t
+                               ]
+                            ++ map (tryLex t) lexemes
                             ++ [ tryLexIntLiteral t
                                , tryLexIden t
                                , tryLexComment t
@@ -400,11 +413,25 @@ tryLexIntLiteral t = case T.decimal t of
 isIdentifierLetter :: Char -> Bool
 isIdentifierLetter ch = isAlphaNum ch || ch `elem` "_'#"
 
+tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
+tryLexMetaVar running =
+    case T.uncons running of
+        Just ('@',rest) -> do
+            (rest2, LIdentifier iden) <- tryLexIden rest
+            return $ (rest2, LMetaVar iden)
+        _ -> Nothing
+
 tryLexIden :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIden running = let (iden,rest) = T.span isIdentifierLetter running
-                     in  if T.null iden
-                            then Nothing
-                            else Just (rest, LIdentifier iden)
+tryLexIden running =
+    let
+        (iden,rest) = T.span isIdentifierLetter running
+    in
+        case T.uncons running of
+            Just (ch,_) | isAlpha ch ->
+                if T.null iden
+                    then Nothing
+                    else Just (rest, LIdentifier iden)
+            _ -> Nothing
 
 tryLexComment :: T.Text -> Maybe (T.Text, Lexeme)
 tryLexComment running = let (dollar,rest1) = T.span (=='$') running

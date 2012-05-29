@@ -12,7 +12,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Error ( MonadError, throwError )
 import Data.Either
-import qualified Data.Text.Lazy as T
+import qualified Data.Text as T
 
 import Nested ( Nested(..), addToTop, nestedToDoc )
 import Language.EssenceLexer ( Lexeme(..), runLexer, lexemeFace, lexemeWidth )
@@ -169,6 +169,7 @@ whiteSpace = flip (<?>) "white space" $ Parser $ \ pos ns ->
                 in
                     Right [((), newPos, rest)]
 
+
 lexeme :: Lexeme -> Parser ()
 lexeme l = void (satisfy (l==)) <?> "expecting" <+> lexemeFace l <> ","
 
@@ -176,7 +177,10 @@ lexeme' :: Lexeme -> Parser Lexeme
 lexeme' l = l <$ lexeme l
 
 identifier :: Parser String
-identifier = do LIdentifier i <- satisfy isIdentifier; return (T.unpack i)
+identifier = T.unpack <$> identifierText
+
+identifierText :: Parser T.Text
+identifierText = do LIdentifier i <- satisfy isIdentifier; return i
     where isIdentifier LIdentifier {} = True
           isIdentifier _ = False
 
@@ -224,6 +228,9 @@ between before after inner = do
     result <- inner
     after
     return result
+
+betweenTicks :: Parser a -> Parser a
+betweenTicks = between (lexeme L_BackTick) (lexeme L_BackTick)
 
 parens :: Parser a -> Parser a
 parens = between (lexeme L_OpenParen) (lexeme L_CloseParen)
@@ -304,10 +311,14 @@ unsafeParse p s = case parseEither p s of
     Left  msg -> error $ show msg
     Right a   -> a
 
-lexAndParseIO :: Show a => Parser a -> T.Text -> IO ()
+lexAndParseIO :: Show a => Parser a -> T.Text -> IO [a]
 lexAndParseIO parser string = case lexAndParse Nothing parser string of
-    Left msg -> putStrLn $ renderDoc $ nestedToDoc msg
-    Right as -> mapM_ print as
+    Left msg -> do
+        putStrLn $ renderDoc $ nestedToDoc msg
+        return []
+    Right as -> do
+        -- mapM_ ppPrint as
+        return as
 
 
 -- -- runParser :: MonadError (Nested Doc) m => Parser a -> Stream -> m [a]

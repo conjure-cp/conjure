@@ -60,7 +60,7 @@ quanRename inp = do
 
             lu <- rec qnSVar
 
-            tell [ "quanRename all:" <+> Pr.text (show lu) ]
+            -- tell [ "quanRename all:" <+> Pr.text (show lu) ]
 
             let
                 f i@(Identifier nm) = do

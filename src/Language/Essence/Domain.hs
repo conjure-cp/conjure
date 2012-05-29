@@ -66,6 +66,7 @@ needsRepresentation (AnyDom {dConstr = TPartition}) = True
 needsRepresentation _ = False
 
 representationValue :: Domain -> Maybe Expr
+representationValue (DMatrix _ e) = representationValue e
 representationValue (AnyDom {dAttrs = DomainAttrs attrs}) = msum $ flip map attrs $ \ a -> case a of
     NameValue AttrRepresentation x -> Just x
     _ -> Nothing

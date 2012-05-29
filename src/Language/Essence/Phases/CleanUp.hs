@@ -6,21 +6,51 @@ import Prelude hiding ( mapM )
 import Control.Applicative
 import Control.Monad.Error ( MonadError )
 import Control.Monad.State ( MonadState, get, put, evalStateT )
-import Data.List ( nub )
+import Data.List ( nub, isPrefixOf )
+import Data.Maybe ( catMaybes )
+import Data.Either ( rights )
 import Data.Traversable ( mapM )
 import qualified Data.Map as M
 
 import Nested
 import Constants ( FreshName, mkPrettyFreshNames, getFreshName )
-import GenericOps.Core ( universe, bottomUp )
+import GenericOps.Core ( GPlate, universe, bottomUp )
 import PrintUtils ( Doc )
 
 import Language.Essence
 
 
+isReferencedIn :: GPlate a => Identifier -> a -> Bool
+isReferencedIn (Identifier nm) x = not $ null [ () | Identifier nm' <- universe x
+                                                   , or [ nm == nm'
+                                                        , isPrefixOf (nm ++ "#") nm'
+                                                        ]
+                                                   ]
+
+isReferencedIn' :: GPlate a => Identifier -> [a] -> Bool
+isReferencedIn' iden xs = or [isReferencedIn iden x | x <- xs]
+
+removeNonreferenced :: Spec -> Spec
+removeNonreferenced spec =
+    let
+        checkOneIdentifier i = or [ isReferencedIn' i (constraints spec)
+                                  , isReferencedIn' i (rights $ topLevels spec)
+                                  ]
+                        
+        checkOneBinding (Find  i _) = checkOneIdentifier i
+        checkOneBinding (Given i _) = checkOneIdentifier i
+        checkOneBinding _ = True
+
+        newTopLevels = flip map (topLevels spec) $ \ tl -> case tl of
+                        Left b -> if checkOneBinding b
+                                    then Just $ Left b
+                                    else Nothing
+                        Right w -> Just (Right w)
+    in spec { topLevels = catMaybes newTopLevels }
+
 
 cleanUp :: (Applicative m, MonadError (Nested Doc) m) => Spec -> m Spec
-cleanUp spec = return (topLevelConstraints spec)
+cleanUp spec = return (removeNonreferenced $ topLevelConstraints spec)
 -- cleanUp spec = quanRenameFinal (topLevelConstraints spec)
 
 

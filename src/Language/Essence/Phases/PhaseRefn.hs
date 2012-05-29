@@ -8,7 +8,7 @@
 module Language.Essence.Phases.PhaseRefn where
 
 import Control.Applicative
-import Control.Monad ( (<=<), (>=>), when )
+import Control.Monad ( (<=<), when )
 import Control.Monad.Error ( MonadError, catchError )
 import Control.Monad.State ( MonadState, evalStateT, execStateT, runStateT )
 import Control.Monad.Writer ( MonadWriter, tell, runWriterT )
@@ -51,16 +51,23 @@ callRefn rules' spec = do
                                     , []      :: [(GNode,GNode)]
                                     ) $ do mapM_ addBinding' builtIns
                                            mapM_ addBinding' $ lefts $ topLevels spec
+    -- forM_ (M.toList bindings) $ \ (nm,GNode _ t) -> do
+    --     tell [Pr.text nm <+> ":" <+> pretty t]
     results <- flip evalStateT ( bindings :: BindingsMap
                                , qNames   :: [FreshName]
                                ) $ applyRefnsDeepSpec (groupRuleRefns rules) spec
-    -- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
-    mapM (cleanUp <=< runSimplify) $ results
-    -- mapM cleanUp results
-    -- return results
+    -- finals <- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
+    finals <- mapM (cleanUp <=< runSimplify) $ results
+    -- finals <- mapM cleanUp results
+    -- finals <- return results
+
+    case finals of
+        [] -> return [spec]
+        _  -> return finals
 
 groupRuleRefns :: [RuleRefn] -> [[RuleRefn]]
-groupRuleRefns = groupBy ((==) `on` refnLevel) . sortBy (compare' `on` refnLevel)
+groupRuleRefns = groupBy ((==)     `on` refnLevel)
+               . sortBy  (compare' `on` refnLevel)
     where
         compare' Nothing  Nothing  = EQ
         compare' Nothing  (Just _) = GT
@@ -132,13 +139,14 @@ funcFromRules rules i' = catchError
                         [] -> do
                             let lvl = case rs of []    -> "unknown"
                                                  (r:_) -> show $ refnLevel r
-                            -- tell [ "didn't apply anthing at level:" <+> text lvl <+> "to" <+> prettyNoParens i ]
+                            tell [ "didn't apply anthing at level:" <+> Pr.text lvl <+> "to" <+> prettyNoParens i ]
                             return Nothing
                         _  -> do
                             putM $ LocalFlag True
                             putM $ GlobalFlag True
                             tell $ ("***" <+> prettyNoParens i)
                                  : map (nest 4 . ("~~>" <+>) . prettyNoParens) j
+                                 -- ++ map (nest 4 . ("~~>" <+>) . (Pr.text . ppShow)) j
                             return $ Just j
 
             let
@@ -188,7 +196,7 @@ treeWalker f gx = do
                    <- map generate . sequence <$> mapM (treeWalker f) children
             -- tell ["treeWalker trying:" <+> Pr.vcat (map pretty results)]
             map mkG <$> concatMapM f results
-        GNode tx  x -> do
+        GNode _tx  x -> do
             -- tell ["treeWalker:" <+> text (show tx) <+> pretty x]
             let (children, generate) = gplate x
             map mkG . map generate . sequence <$> mapM (treeWalker f) children
@@ -209,10 +217,10 @@ applyRefns ::
     , MonadWriter [Doc] m
     ) => [RuleRefn] -> Expr -> m [Expr]
 applyRefns rs current = do
-    -- tell ["[applyRefns]" <+> pretty current]
+    tell ["[applyRefns]" <+> pretty current]
     let one r = catchError ( Just <$> applyRefn r current )
-                           (\ _ -> return Nothing )
-                           -- (\ e -> do tell [nestedToDoc e]; return Nothing ) -- THIS gives why matching fails.
+                           -- (\ _ -> return Nothing )
+                           (\ e -> do tell [nestedToDoc e]; return Nothing ) -- THIS gives why matching fails.
     (xs,logs) <- runWriterT $ mapM one rs
     tell logs
     let result = concat $ catMaybes xs
@@ -228,6 +236,7 @@ applyRefn ::
     , MonadWriter [Doc] m
     ) => RuleRefn -> Expr -> m [Expr]
 applyRefn (RuleRefn {..}) current = do
+    tell ["[applyRefn]" <+> pretty current]
     mp :: BindingsMap <- getM
     res <- flip evalStateT
                     ( mp :: BindingsMap
@@ -237,21 +246,29 @@ applyRefn (RuleRefn {..}) current = do
         runMatch refnPattern current
         forM_ refnLocals $ \ l ->
             case l of
-                Left  b -> addBinding' b
-                Right w -> checkWhere w
+                Left  b -> withLog "addBinding" $ addBinding' b
+                Right w -> withLog "checkWhere" $ checkWhere w
 
-        mp :: BindingsMap <- getM
-        tell [ Pr.text $ ppShow mp ]
+        -- mp :: BindingsMap <- getM
+        -- tell [ Pr.text $ ppShow mp ]
 
-        tell ["tmpl1:" <+> Pr.vcat (map (Pr.nest 4 . pretty) refnTemplates) ]
+        -- tell ["tmpl1:" <+> Pr.vcat (map (Pr.nest 4 . pretty) refnTemplates) ]
 
         tmpl2 <- mapM runBind refnTemplates
-        tell ["tmpl2:" <+> Pr.vcat (map (Pr.nest 4 . pretty) tmpl2) ]
+        -- tell ["tmpl2:" <+> Pr.vcat (map (Pr.nest 4 . pretty) tmpl2) ]
 
         tmpl3 <- mapM oldDeepSimplify tmpl2
-        tell ["tmpl3:" <+> Pr.vcat (map (Pr.nest 4 . pretty) tmpl3) ]
+        -- tell ["tmpl3:" <+> Pr.vcat (map (Pr.nest 4 . pretty) tmpl3) ]
 
         return tmpl3
     mapM quanRename res
     -- return res
 
+
+withLog :: MonadWriter [Doc] m => Doc -> m a -> m a
+-- withLog _ = id
+withLog d comp = do
+    tell ["~~ START:" <+> d]
+    res <- comp
+    tell ["~~ END:  " <+> d]
+    return res

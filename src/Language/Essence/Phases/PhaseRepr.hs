@@ -27,7 +27,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Nested
-import Constants ( FreshName, mkFreshNames, newRuleVar )
+import Constants ( FreshName, mkFreshNames, newRuleVar, getFreshName )
 import GenericOps.Core ( GNode, BindingsMap, runMatch, runBind, universe, bottomUp, bottomUpM )
 import Has ( Has, getM, modifyM )
 import ParsePrint ( ParsePrint, pretty, prettyListDoc )
@@ -39,7 +39,7 @@ import Utils.MonadList ( MonadList, option, runListT )
 import Language.Essence
 import Language.Essence.Phases.BubbleUp ( bubbleUp )
 import Language.Essence.Phases.CheckWhere ( checkWhere )
-import Language.Essence.Phases.CleanUp ( cleanUp )
+-- import Language.Essence.Phases.CleanUp ( cleanUp )
 import Language.Essence.Phases.PostParse ( postParse )
 import Language.Essence.Phases.QuanRename ( quanRename )
 import Language.EssenceEvaluator ( oldDeepSimplify, runSimplify )
@@ -62,7 +62,8 @@ callRepr selectedRepr rules' specParam = do
     results      <- flip evalStateT ( bindings :: BindingsMap
                                     , qNames   :: [FreshName]
                                     ) $ applyReprsToSpec_NoChannel selectedRepr rules spec
-    ss <- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
+    -- ss <- mapM (cleanUp <=< runSimplify) $ map bubbleUp results
+    ss <- mapM (runSimplify) $ map bubbleUp results
     return ss
     -- mapM runSimplify =<< concatMapM (quanDomRefine rules) =<< mapM runSimplify ss
 
@@ -89,11 +90,17 @@ applyReprsToSpec rules spec = do
         remainingBindings = M.fromList $
             [ (nm, dom) | Find (Identifier nm) dom <- lefts (topLevels spec)
                         , needsRepresentation dom
-                        , isNothing $ representationValue dom ]
+                        , isNothing $ representationValue dom
+                        ]
             ++
             [ (nm, dom) | Given (Identifier nm) dom <- lefts (topLevels spec)
                         , needsRepresentation dom
-                        , isNothing $ representationValue dom ]
+                        , isNothing $ representationValue dom
+                        ]
+
+    tell ["applyReprsToSpec.remainingBindings"]
+    forM_ (M.toList remainingBindings) $ \ (nm,dom) -> do
+        tell [ Pr.text nm <+> pretty dom ]
 
     candidates :: M.Map String [ReprResult]
                <- forM remainingBindings $ applyReprsToDom rules
@@ -190,6 +197,10 @@ applyReprsToSpec_NoChannel selectedRepr rules spec = do
             [ (nm, dom) | Given (Identifier nm) dom <- lefts (topLevels spec)
                         , needsRepresentation dom
                         , isNothing $ representationValue dom ]
+
+    tell ["applyReprsToSpec.remainingBindings"]
+    forM_ (M.toList remainingBindings) $ \ (nm,dom) -> do
+        tell [ Pr.text nm <+> pretty dom ]
 
     candidates :: M.Map String [ReprResult]
                <- forM remainingBindings $ applyReprsToDom rules
@@ -314,6 +325,27 @@ applyReprsToDom ::
     ) => [RuleRepr]
       -> Domain
       -> m [ReprResult]
+applyReprsToDom rules (DMatrix index inner) = do
+    results <- applyReprsToDom rules inner
+    forM results $ \ (nm, dom, cons) -> do
+        i <- getFreshName
+        let
+
+            liftRefn (EHole (Identifier "refn")) = EOp Index [ EHole (Identifier "refn")
+                                                             , EHole (Identifier i)
+                                                             ]
+            liftRefn x = x
+
+            lift a = Q $ QuantifiedExpr
+                            "forAll"
+                            (I (Identifier i))
+                            (Just index)
+                            Nothing
+                            (QuanGuard [])
+                            (bottomUp liftRefn a)
+
+            cons' = map lift cons
+        return (nm, DMatrix index dom, cons')
 applyReprsToDom rules dom = withLog ("applyReprsToDom     " <+> pretty dom)
                           $ catMaybes <$> mapM tryApply rules
     where
@@ -375,9 +407,9 @@ applyReprCaseToDom (RuleRepr {..}) (RuleReprCase {..}) dom = do
 
 
 withLog :: MonadWriter [Doc] m => Doc -> m a -> m a
-withLog _ = id
--- withLog d comp = do
---     tell ["START:" <+> d]
---     res <- comp
---     tell ["END:  " <+> d]
---     return res
+-- withLog _ = id
+withLog d comp = do
+    tell ["START:" <+> d]
+    res <- comp
+    tell ["END:  " <+> d]
+    return res

@@ -43,8 +43,6 @@ checkWhere (Where x) = do
     case x' of
         V (VBool True ) -> return ()
         V (VBool False) -> do
-            -- tell $ return $ vcat $ ("where statement evaluated to false:" <+> pretty x) : map (nest 4) logs
             throwErrorSingle $ "where statement evaluated to false:" <+> pretty x
         _               -> do
-            -- tell $ return $ vcat $ ("where statement cannot be fully evaluated:" <+> pretty x) : map (nest 4) logs
             throwErrorSingle $ "where statement cannot be fully evaluated:" <+> pretty x

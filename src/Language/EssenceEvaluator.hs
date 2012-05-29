@@ -22,6 +22,7 @@ import Data.List ( delete, genericIndex, genericLength, isSuffixOf, nub, sort )
 import Data.List.Split ( splitOn )
 import qualified Data.Map as M
 
+import Utils
 import Has
 import Nested
 import GenericOps.Core
@@ -135,12 +136,12 @@ class Simplify a where
 
 infixr 0 ~~~>
 (~~~>) :: (MonadWriter [Doc] m, ParsePrint a, MonadState st m, Has st Bool) => a -> a -> m (Maybe a)
--- _ ~~~> b = do
-a ~~~> b = do
-    tell [ "[ SIMPLIFY ]"
-            $$ nest 4 ("~~>" <+> pretty a)
-            $$ nest 4 ("~~>" <+> pretty b)
-         ]
+_ ~~~> b = do
+-- a ~~~> b = do
+--     tell [ "[ SIMPLIFY ]"
+--             $$ nest 4 ("~~>" <+> pretty a)
+--             $$ nest 4 ("~~>" <+> pretty b)
+--          ]
     putM True
     return (Just b)
 
@@ -316,20 +317,47 @@ instance Simplify Expr where
             Nothing -> error (show $ pretty p)
             Just (QuantifierDecl _ l _) -> p ~~~> L l
 
-    simplify p@(Q q@(QuantifiedExpr {quanOverDom = Just (Indices (EHole (Identifier nm)) ind) })) = do
+    simplify p@(Q (QuantifiedExpr {quanName = Identifier "forAll", quanBody = V (VBool True)})) =
+        p ~~~> V $ VBool True
+
+    simplify p@(Q q@(QuantifiedExpr {quanGuard = QuanGuard [V (VBool True)]})) =
+        p ~~~> Q q { quanGuard = QuanGuard [] }
+
+    simplify p@(Q q@(QuantifiedExpr {quanOverDom = Just (Indices a ind) })) = do
+        -- tell ["in simplify quanOverDom"]
         -- debug this.
         val <- evaluate ind
-        mdom <- getBinding nm
-        let
-            go :: Integer -> Domain -> Maybe Domain
-            go 0 (DMatrix index _) = return $ index
-            go i (DMatrix _   tau) = go (i-1) tau
-            go _ _ = Nothing
-        case mdom of
-            Nothing -> return Nothing
-            Just d  -> case go val d of
-                Nothing -> return Nothing
-                Just x  -> p ~~~> Q q { quanOverDom = Just x }
+        -- tell ["evaluated to: " <+> Pr.integer val]
+        case a of
+            EHole (Identifier nm) -> do
+                -- tell ["getting binding for: " <+> Pr.text nm ]
+                mdom  :: Maybe Domain  <- getBinding nm
+                mdecl :: Maybe Binding <- getBinding nm
+                let
+                    go :: Integer -> Domain -> Maybe Domain
+                    go 0 (DMatrix index _) = return $ index
+                    go i (DMatrix _   tau) = go (i-1) tau
+                    go _ _ = Nothing
+                case (mdom, mdecl) of
+                    (Just d, _)  -> do
+                        -- tell ["got it: " <+> pretty d ]
+                        case go val d of
+                            Nothing -> return Nothing
+                            Just x  -> p ~~~> Q q { quanOverDom = Just x }
+                    (_, Just (Find _ d))  -> do
+                        -- tell ["got it (Find): " <+> pretty d ]
+                        case go val d of
+                            Nothing -> return Nothing
+                            Just x  -> p ~~~> Q q { quanOverDom = Just x }
+                    (_, Just (Given _ d))  -> do
+                        -- tell ["got it (Given): " <+> pretty d ]
+                        case go val d of
+                            Nothing -> return Nothing
+                            Just x  -> p ~~~> Q q { quanOverDom = Just x }
+                    _ -> do
+                        -- tell ["cannot"]
+                        return Nothing
+            _ -> return Nothing
 
     simplify p@(Q q@QuantifiedExpr {quanName = Identifier qnName, quanVar = I qnVar, quanOverExpr=Just (In, V (VSet xs))}) = do
         qDecl :: Maybe QuantifierDecl <- getBinding qnName
@@ -465,8 +493,8 @@ instance Simplify Expr where
     --         let [x',y',z'] = sort [x,y,z]
     --         p ~~~> EOp op [EOp op [x',y'],z']
 
-
     simplify p = do
+        tell [ "trying to evaluate:" <+> pretty p]
         res <- tryEvalArrowMaybe evaluate p
         case res of
             Nothing         -> return Nothing
@@ -557,8 +585,12 @@ instance Evaluate Expr Value where
         i <- evaluate a
         case i of
             VInt  x  -> p ~~> VInt $ abs x
-            VSet  xs -> p ~~> VInt $ genericLength $ nub xs
-            VMSet xs -> p ~~> VInt $ genericLength       xs
+            VSet  xs -> do
+                vs :: [Value] <- mapM evaluate xs
+                p ~~> VInt $ genericLength $ nub vs
+            VMSet xs -> do
+                vs :: [Value] <- mapM evaluate xs
+                p ~~> VInt $ genericLength       vs
             _        -> evalArrowErrorDef p
 
     evaluate p@(EOp Negate    [a]) = do i <- evaluate a; p ~~> VInt $ negate i
@@ -826,25 +858,28 @@ instance Evaluate Expr Value where
             _ -> evalArrowErrorDef p
 
     evaluate p@(EOp HasType [a,b]) = do -- evalArrowError "not implemented" p -- do
-        tell $ return $ "In HasType: " <+> pretty p
-        ta <- typeOf a
-        tb <- typeOf b
-        tell $ return $ text $ show [ta,tb]
+        -- tell $ return $ text $ show [ta,tb]
+        tell $ ["In HasType: " <+> pretty p]
         catchError
             ( do
+                ta <- typeOf a
+                tb <- typeOf b
                 runMatch tb ta
+                tell [ "HasType returning true" ]
                 p ~~> VBool True )
             (\ e -> do
                 tell [pretty p, nestedToDoc e]
+                tell [ "HasType returning false" ]
                 p ~~> VBool False )
 
     evaluate p@(EOp HasDomain [a,b]) = do -- evalArrowError "not implemented" p -- do
         -- error $ " [[HERE]] " ++ show (pretty p)
-        tell ["in:" <+> pretty p]
+        tell ["in HasDomain:" <+> pretty p]
         catchError
             ( do
                 da <- domainOf a
                 db <- domainOf b
+                error $ ppShow ("HasDomain",da,db)
                 -- error $ " [[HERE 1]] " ++ show (da,db)
                 runMatch db da
                 tell [ "HasDomain returning true" ]
@@ -853,7 +888,7 @@ instance Evaluate Expr Value where
                 p ~~> VBool True )
             (\ e -> do
                 tell [pretty p, nestedToDoc e]
-                -- error $ " [[HERE 2]] " ++ show e
+                error $ " [[HERE 2]] " ++ show e
                 tell [ "HasDomain returning false" ]
                 p ~~> VBool False )
 

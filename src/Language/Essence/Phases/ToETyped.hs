@@ -22,8 +22,8 @@ toETypedG = bottomUpM toETypedExpr
 
 
 toETypedExpr :: (Applicative m, MonadError (Nested Doc) m) => Expr -> m Expr
-toETypedExpr (EOp HasDomain [x,D d]) = do
-    t <- domToType d
-    return $ ETyped x t
+-- toETypedExpr (EOp HasDomain [x,D d]) = do
+--     t <- domToType d
+--     return $ ETyped x t
 toETypedExpr x = return x
 
