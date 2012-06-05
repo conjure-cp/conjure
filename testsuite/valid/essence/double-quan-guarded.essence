@@ -1,10 +1,13 @@
 language Essence 2.0
 
-letting myForall be quantifier {
-                                append   { x:bool, y:bool --> x /\ y }
-                                guard    { x:bool, y:bool --> x -> y }
-                                identity true
-                             }
+letting myForall be quantifier
+    {
+        append   { (x,y) --> x /\ y }
+        guard    { (x,y) --> x -> y }
+        $ append   { (x:`bool`, y:`bool`) --> x /\ y }
+        $ guard    { (x:`bool`, y:`bool`) --> x -> y }
+        identity true
+    }
 
 find s : set of int(1..90)
 

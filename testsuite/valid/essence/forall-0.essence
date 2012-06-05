@@ -9,8 +9,8 @@ letting xy be x * y
 
 letting myForall be quantifier
     {
-        append   { x:bool, y:bool --> x /\ y }
-        guard    { x:bool, y:bool --> x -> y }
+        append   { (x,y) --> x /\ y }
+        guard    { (x,y) --> x -> y }
         identity true
     }
 
