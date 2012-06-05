@@ -1,23 +1,19 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Language.Core.Definition where
 
 import Language.Core.Imports
--- import Control.Applicative
-import Control.Monad.Error ( ErrorT, runErrorT )
-import Control.Monad.Identity ( Identity, runIdentity )
-import Control.Monad.RWS ( RWST, runRWST )
--- 
--- import Data.Default ( Default(def) )
--- 
-import Data.String ( IsString(..) )
-
-import Data.Generics ( Data, Typeable )
-import GHC.Generics ( Generic )
-
 import Language.EssenceLexer ( Lexeme(..) )
+
+import Control.Monad.RWS ( RWST, runRWST )
+import Data.Generics ( Data, Typeable )
+import Data.String ( IsString(..) )
+import GHC.Generics ( Generic )
+import Text.PrettyPrint as Pr
 
 
 data Spec = Spec Version [Core]
@@ -37,17 +33,25 @@ data Core
     --     Core            -- context in which it is defined
     deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 
+type RuleRefn = (Text, Maybe Int, Core)
+
 view :: Core -> ([Tag],[Core])
 view (Expr t [x]) = let (ts,c) = view x
                     in  (t:ts,c)
 view (Expr t xs) = ([t],xs)
 view x = ([],[x])
 
+viewDeep :: [Tag] -> Core -> Maybe [Core]
+viewDeep [] _ = Nothing
+viewDeep [t] (Expr t' xs) | t == t' = Just xs
+viewDeep (t:ts) (Expr t' xs) | t == t' = listToMaybe $ catMaybes [ viewDeep ts x | x <- xs ]
+viewDeep _ _ = Nothing
+
 data Literal = B Bool | I Integer
     deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 
 newtype Reference = Reference Text
-    deriving (Eq, Ord, Show, Read, Data, Typeable, Generic, IsString)
+    deriving (Eq, Ord, Show, Read, Data, Typeable, Generic, IsString, Monoid)
 
 newtype Tag = Tag Text
     deriving (Eq, Ord, Show, Read, Data, Typeable, Generic, IsString)
@@ -62,7 +66,9 @@ type    NestedDoc  = Nested Doc
 newtype CompConfig = CompConfig ()
 newtype CompLog    = CompLog [(Tag,Doc)]
     deriving ( Show, Monoid )
-data    CompState  = CompState { binders :: [Binder] }
+data    CompState  = CompState { binders :: [Binder]
+                               , uniqueNameInt :: Integer
+                               }
     deriving ( Show )
 newtype CompT m a  = CompT (ErrorT NestedDoc (RWST CompConfig CompLog CompState m) a)
     deriving ( Functor
@@ -73,6 +79,7 @@ newtype CompT m a  = CompT (ErrorT NestedDoc (RWST CompConfig CompLog CompState 
              , MonadWriter CompLog
              , MonadState  CompState
              , MonadPlus
+             , MonadIO
              )
 
 instance MonadTrans CompT where
@@ -84,25 +91,58 @@ instance Default CompConfig where
     def = CompConfig ()
 
 instance Default CompState where
-    def = CompState { binders = [] }
+    def = CompState { binders = [], uniqueNameInt = 1 }
 
 mkLog :: Monad m => Tag -> Doc -> CompT m ()
-mkLog t d = tell (CompLog [(t,d)])
+-- mkLog _ _ = return ()
+mkLog t d
+    | t `elem` supress = return ()
+    | otherwise        = tell (CompLog [(t,d)])
+    where supress = [ "toLit"
+                    , "match"
+                    , "bind"
+                    , "rule-fail"
+                    , "ApplyTransformation.tryAgain"
+                    , "ApplyTransformation.worker"
+                    ]
+
+nextUniqueName :: Monad m => CompT m Text
+nextUniqueName = do
+    !i <- gets uniqueNameInt
+    modify $ \ st -> st { uniqueNameInt = i + 1 }
+    return $ "__" `mappend` (stringToText $ show i)
+
+addBinder :: Monad m => Reference -> Core -> CompT m ()
+addBinder r c = modify $ \ st -> 
+    let !newBinders = Binder r c : binders st
+    in  st { binders = newBinders }
+
+removeLastBinder :: Monad m => CompT m ()
+removeLastBinder = modify $ \ st ->
+    let !newBinders = tailNote "removeLastBinder" $ binders st
+    in  st { binders = newBinders }
+
+localState :: Monad m => CompT m a -> CompT m a
+localState comp = do
+    before <- gets binders
+    result <- comp
+    modify $ \ st -> st { binders = before }
+    return result
 
 withLog :: Monad m => Tag -> Doc -> CompT m a -> CompT m a
 withLog t d a = mkLog t d >> a
 
 prettyLog :: CompLog -> [Doc]
-prettyLog (CompLog xs) = [ textToDoc t <+> d | (Tag t,d) <- xs ]
+prettyLog (CompLog xs) = [ Pr.brackets (stringToDoc $ padRight 7 ' ' $ textToString t) <+> d | (Tag t,d) <- xs ]
 
 runCompT :: CompConfig -> CompState -> CompT m a -> m (Either (Nested Doc) a, CompState, CompLog)
 runCompT r s (CompT a) = runRWST (runErrorT a) r s
 
 runCompIO :: CompConfig -> CompState -> CompT IO a -> IO a
 runCompIO r s a = do
-    (result, finalSt, logs) <- runCompT r s a
+    (result, _finalSt, logs) <- runCompT r s a
     mapM_ (print . nest 4) (prettyLog logs)
-    ppPrint finalSt
+    -- ppPrint finalSt
     case result of
         Left  e -> error $ show $ nestedToDoc e
         Right b -> return b
@@ -111,10 +151,14 @@ runComp :: CompConfig -> CompState -> Comp a -> (Either (Nested Doc) a, CompStat
 runComp r s a = runIdentity $ runCompT r s a
 
 lookUpRef :: Monad m => Reference -> CompT m Core
-lookUpRef r = do
+lookUpRef r@(Reference t) = do
     bs <- gets binders
     case listToMaybe [ c | Binder r' c <- bs, r == r' ] of
-        Nothing  -> throwErrorSingle "Identifier not bound."
+        Nothing  -> do
+            throwError $ Nested Nothing
+                $ singletonNested ("Identifier not bound:" <+> textToDoc t)
+                : map (\ (Binder (Reference s) _) -> singletonNested $ textToDoc s ) bs
+            -- err $ "Identifier not bound:" <+> textToDoc t
         Just val -> return val
 
 lookUpInExpr :: Text -> [Core] -> Maybe [Core]
@@ -160,6 +204,66 @@ operators =
     , ( L_supset    , FNone  ,  400 )
     , ( L_supsetEq  , FNone  ,  400 )
     , ( L_in        , FNone  ,  550 )
+    -- , ( L_Colon     , FNone  ,   10 )
     , ( L_HasType   , FNone  ,   10 )
     , ( L_HasDomain , FNone  ,   10 )
     ]
+
+functionals :: [Lexeme]
+functionals =
+    [ L_toInt
+    , L_min
+    , L_max
+    , L_allDiff
+    , L_hist
+
+    , L_toSet
+    , L_toMSet
+    , L_toRelation
+    , L_defined
+    , L_range
+    , L_image
+    , L_preImage
+    , L_inverse
+    , L_together
+    , L_apart
+    , L_party
+    , L_participants
+    , L_parts
+    , L_freq
+    , L_hist
+    , L_allDiff
+    , L_toInt
+    , L_flatten
+    , L_normIndices
+    ]
+
+
+
+
+
+processStatement :: Monad m => Core -> CompT m ()
+processStatement s@( viewDeep [":toplevel",":declaration",":find"]
+                      -> Just [ Expr ":find-name"   [R name]
+                              , Expr ":find-domain" [_]
+                              ]
+                   ) = addBinder name s
+processStatement s@( viewDeep [":toplevel",":declaration",":given"]
+                      -> Just [ Expr ":given-name"   [R name]
+                              , Expr ":given-domain" [_]
+                              ]
+                   ) = addBinder name s
+processStatement   ( viewDeep [":toplevel",":letting"]
+                      -> Just [ Expr ":letting-name" [R name]
+                              , Expr ":letting-expr" [expression]
+                              ]
+                   ) = addBinder name expression
+processStatement   ( viewDeep [":toplevel",":suchthat"]
+                      -> Just _
+                   ) = return ()
+processStatement s@( viewDeep [":toplevel"]
+                      -> Just _
+                   ) = mkLog "not handled in processStatement" (stringToDoc $ show s)
+processStatement _s = do
+    -- mkLog "default case" (stringToDoc $ show c)
+    return ()

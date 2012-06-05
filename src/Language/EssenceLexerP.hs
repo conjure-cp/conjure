@@ -8,13 +8,15 @@
 
 module Language.EssenceLexerP where
 
+import Language.Core.Imports ( textToDoc )
+
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error ( MonadError, throwError )
 import Data.Either
 import qualified Data.Text as T
 
-import Nested ( Nested(..), addToTop, nestedToDoc )
+import Nested ( Nested(..), addToTop, nestedToDoc, singletonNested )
 import Language.EssenceLexer ( Lexeme(..), runLexer, lexemeFace, lexemeWidth )
 import PrintUtils ( Doc, (<>), (<+>), text, renderDoc )
 import qualified PrintUtils as P
@@ -297,7 +299,13 @@ lexAndParse ::
     ) => Maybe FilePath -> Parser a -> T.Text -> m [a]
 lexAndParse mfp parser string = do
     lexemes <- runLexer string
-    results <- case runParser parser (Pos mfp 1 1) lexemes of Left err -> throwError err; Right r -> return r
+    results <- case runParser parser (Pos mfp 1 1) lexemes of
+                    Left err -> case mfp of
+                                    Just "<memory>" -> throwError $ Nested Nothing [ err
+                                                                                   , singletonNested $ textToDoc string
+                                                                                   ]
+                                    _ -> throwError err
+                    Right r  -> return r
     return [ a | (a,_,_) <- results ]
 
 parseEither :: Show a => Parser a -> String -> Either (Nested Doc) a

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Language.Core.Properties.TypeOf where
 
@@ -6,12 +7,16 @@ import Language.Core.Imports
 import Language.Core.Definition
 
 import Language.Core.Properties.ShowAST
+import Language.Core.Properties.Pretty
 import Language.Core.Parser
 import Language.EssenceLexerP ( lexAndParseIO, eof )
 
 
-errInvariant :: (Monad m, ShowAST a) => a -> CompT m b
-errInvariant p = err $ "TypeOf, invariant violation in:" <+> showAST p
+errInvariant :: (Monad m, Pretty a) => a -> CompT m b
+-- errInvariant p = err $ "TypeOf, invariant violation in:" <+> (stringToDoc $ show p)
+-- errInvariant p = err $ "TypeOf, invariant violation in:" <+> (stringToDoc $ ppShow p)
+-- errInvariant p = err $ "TypeOf, invariant violation in:" <+> showAST p
+errInvariant p = err $ "TypeOf, invariant violation in:" <+> pretty p
 
 errCannot :: (Monad m, ShowAST a) => a -> CompT m b
 errCannot p = err $ "Cannot determine the type of" <+> showAST p
@@ -48,6 +53,14 @@ class TypeOf a where
 instance TypeOf Core where
     typeOf (L x) = typeOf x
     typeOf (R x) = typeOf x
+    typeOf ( viewDeep [":metavar"] -> Just [R x] ) = typeOf ("@" `mappend` x)
+
+    typeOf ( viewDeep [":toplevel",":declaration",":find"]
+              -> Just [ Expr ":find-name" _
+                      , Expr ":find-domain" [domain]
+                      ]
+           ) = typeOf domain
+    
     typeOf p@(Expr ":range"  [d]) =
         case d of
             Expr ":range-open" []  -> errCannot p
@@ -81,6 +94,7 @@ instance TypeOf Core where
             _ -> errInvariant p
     typeOf p@(Expr ":domain" [d]) = do
         x <- case d of
+            R r -> typeOf r
             Expr ":domain-bool"   _  ->
                 return $ Expr ":type-bool" []
             Expr ":domain-int"    _  ->
@@ -260,6 +274,24 @@ instance TypeOf Core where
                                         ]
                             else errMismatch p
             _ -> errInvariant p
+
+    typeOf p@( Expr ":quanVar" [ Expr ":quanVar-name" _
+                               , Expr ":quanVar-within"
+                                    [ Expr ":expr-quantified" xs ]
+                               ]
+             ) = do
+        let
+            quanOverDom'  = lookUpInExpr ":expr-quantified-quanOverDom"   xs
+            quanOverOp'   = lookUpInExpr ":expr-quantified-quanOverOp"    xs
+            quanOverExpr' = lookUpInExpr ":expr-quantified-quanOverExpr"  xs
+        case (quanOverDom', quanOverOp', quanOverExpr') of
+            (Just [quanOverDom], Nothing, Nothing) ->
+                typeOf quanOverDom
+            (Nothing, Just [Expr ":operator-in" []], Just [x]) -> do
+                tx <- typeOf x
+                innerTypeOf tx
+            _ -> errInvariant p
+
     typeOf p     = errInvariant p
 
 instance TypeOf Literal where
@@ -267,8 +299,14 @@ instance TypeOf Literal where
     typeOf (I {}) = return $ Expr ":type" [Expr ":type-int"  []]
 
 instance TypeOf Reference where
+    typeOf "_" = return $ Expr ":type-unknown" []
     typeOf r = core <?> "Reference.typeOf:" <+> showAST r
         where
             core = do
                 val <- lookUpRef r
                 typeOf val
+
+
+innerTypeOf :: Monad m => Core -> CompT m Core
+innerTypeOf ( viewDeep [":type",":type-set",":type-set-inner"] -> Just [t] ) = return t
+innerTypeOf p = errInvariant p

@@ -9,29 +9,29 @@ import Language.Core.Parser
 import Language.EssenceLexerP
 
 import Text.PrettyPrint as Pr ( comma )
-import Data.Set as S ( fromList, toList )
+import Data.Set as S ( fromList, toList, isSubsetOf, unions )
 import Data.Generics.Uniplate.Data ( universe )
 
 match :: Monad m => Core -> Core -> CompT m Bool
-match (Expr ":meta-var" [R r]) c = do
-    mkLog "match::variable binding" $ showAST r <+> "~~" <+> showAST c
-    modify $ \ st -> st { binders = Binder r c : binders st }
+match p@(Expr ":metavar" [R r]) c = do
+    mkLog "match" $ showAST p <+> "~~" <+> showAST c
+    addBinder ("@" `mappend` r) c
     return True
 match x@(L {}) y@(L {}) =
     if x == y
         then do
-            mkLog "match::same literal" $ showAST x <+> "~~" <+> showAST y
+            mkLog "match" $ "same literal" <+> showAST x <+> "~~" <+> showAST y
             return True
         else do
-            mkLog "match::literals not equal" $ showAST x <+> "~~" <+> showAST y
+            mkLog "match" $ "literals not equal" <+> showAST x <+> "~~" <+> showAST y
             return False
 match x@(R {}) y@(R {}) =
     if x == y
         then do
-            mkLog "match::same identifier" $ showAST x <+> "~~" <+> showAST y
+            mkLog "match" $ "same identifier" <+> showAST x <+> "~~" <+> showAST y
             return True
         else do
-            mkLog "match::identifiers not equal" $ showAST x <+> "~~" <+> showAST y
+            mkLog "match" $ "identifiers not equal" <+> showAST x <+> "~~" <+> showAST y
             return False
 match (Expr ":attributes" xArgs') (Expr ":attributes" yArgs) = do
     let dontcare    = Expr ":attribute" [ Expr ":attribute-dontcare" [] ]
@@ -53,57 +53,60 @@ match (Expr ":attributes" xArgs') (Expr ":attributes" yArgs) = do
 match _x@(Expr xTag xArgs) _y@(Expr yTag yArgs) = do
     case (xTag == yTag, length xArgs == length yArgs) of
         (True, True) -> do
-            -- mkLog "match::same tree label & equal number of subtrees. great." $ showAST xTag
+            -- mkLog "match" $ "same tree label & equal number of subtrees. great" <+> showAST xTag
             bs <- zipWithM match xArgs yArgs
             if and bs
                 then do
-                    -- mkLog "match::all subtrees matched fine." $ showAST x <+> "~~" <+> showAST y
+                    -- mkLog "match" $ "all subtrees matched fine" <+> showAST x <+> "~~" <+> showAST y
                     return True
                 else do
-                    -- mkLog "match::some subtrees didn't match." $ showAST x <+> "~~" <+> showAST y
+                    -- mkLog "match" $ "some subtrees didn't match" <+> showAST x <+> "~~" <+> showAST y
                     return False
         (False, _) -> do
-            mkLog "match::different tree labels." $ showAST xTag
+            -- mkLog "match" $ "different tree labels" <+> showAST xTag <+> "~~" <+> showAST yTag
             return False
         (_, False) -> do
-            mkLog "match::different number of subtrees." $ showAST xTag
+            -- mkLog "match" $ "different number of subtrees" <+> showAST xTag <+> "~~" <+> showAST yTag
             return False
-match x y = do
-    mkLog "match::this just fails." $ showAST x <+> "~~" <+> showAST y
+match _x _y = do
+    -- mkLog "match" $ "this just fails" <+> showAST x <+> "~~" <+> showAST y
     return False
 
 
 bind :: (Functor m, Monad m) => Core -> MaybeT (CompT m) Core
-bind p@(Expr (Tag ":meta-var") [R r]) = do
-    lift $ mkLog "bind::meta-var" $ showAST p
+bind p@(Expr (Tag ":metavar") [R r']) = do
+    let r = "@" `mappend` r'
+    lift $ mkLog "bind" $ showAST p
     mx <- lift $ (Just <$> lookUpRef r) `catchError` \ _ -> return Nothing
     case mx of
         Nothing -> do
-            lift $ mkLog "bind:meta-var fail" $ showAST p
+            lift $ mkLog "bind-fail" $ showAST p
             mzero
         Just x  -> return x
 bind (Expr xTag xArgs) = Expr xTag <$> mapM bind xArgs
 bind x = return x
 
 
-mkFunction :: (Functor m, Monad m) => Core -> Core -> CompT m (Core -> MaybeT (CompT m) Core)
-mkFunction pattern template = do
-    let patternMetaVars  = S.fromList [ r | Expr ":meta-var" [R r] <- universe pattern  ]
-    let templateMetaVars = S.fromList [ r | Expr ":meta-var" [R r] <- universe template ]
-    unless (patternMetaVars == templateMetaVars)
+mkFunction :: (Functor m, Monad m) => Core -> [Core] -> CompT m (Core -> MaybeT (CompT m) [Core])
+mkFunction pattern templates = do
+    let patternMetaVars  = S.fromList [ r | Expr ":metavar" [R r] <- universe pattern  ]
+    let templateMetaVars = S.unions [ S.fromList [ r | Expr ":metavar" [R r] <- universe template ]
+                                    | template <- templates
+                                    ]
+    unless (templateMetaVars `S.isSubsetOf` patternMetaVars)
         $ err $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id Pr.comma (map showAST $ S.toList patternMetaVars)
                      , "Template meta variables:" <+> prettyListDoc id Pr.comma (map showAST $ S.toList templateMetaVars)
                      ]
     return $ \ x -> do
-        stateBefore <- get
+        bindersBefore <- gets binders
         b <- lift $ match pattern x
         if b
             then do
-                y <- bind template
-                put stateBefore
-                return y
+                ys <- mapM bind templates
+                modify $ \ st -> st { binders = bindersBefore }
+                return ys
             else do
-                put stateBefore
+                modify $ \ st -> st { binders = bindersBefore }
                 mzero
 
 testAsAFunc :: Text -> Text -> Text -> IO Doc
@@ -112,12 +115,12 @@ testAsAFunc pattern' template' x' = do
     template <- headNote "template" <$> lexAndParseIO (parseExpr <* eof) template'
     x        <- headNote "x"        <$> lexAndParseIO (parseExpr <* eof) x'
     runCompIO def def $ do
-        f  <- mkFunction pattern template
+        f  <- mkFunction pattern [template]
         my <- runMaybeT (f x)
         case my of
             Nothing -> return "function returns Nothing"
             Just y  -> do
-                mkLog "" (showAST y)
+                mkLog "testAsAFunc" (showAST y)
                 return $ showAST y
 
 

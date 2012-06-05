@@ -1,4 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Language.Core.Properties.ShowAST where
 
@@ -37,3 +39,5 @@ instance ShowAST Reference where
 instance ShowAST a => ShowAST [a] where
     showAST = vcat . map showAST
 
+instance ShowAST RuleRefn where
+    showAST (name,mInt,core) = vcat [textToDoc name, stringToDoc $ show mInt, showAST core]

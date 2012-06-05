@@ -9,11 +9,12 @@ import Language.Core.MatchBind  as X
 import Language.Core.MultiMatch as X
 import Language.Core.Parser     as X
 
-import Language.Core.Properties.CategoryOf  as X
+-- import Language.Core.Properties.IsValid     as X
+import Language.Core.Properties.CategoryOf  as X hiding ( tests )
 import Language.Core.Properties.DomainOf    as X
 import Language.Core.Properties.IsSafe      as X
--- import Language.Core.Properties.IsValid     as X
 import Language.Core.Properties.MkSafe      as X
+import Language.Core.Properties.Pretty      as X
 import Language.Core.Properties.ShowAST     as X
 import Language.Core.Properties.Simplify    as X
 import Language.Core.Properties.ToBool      as X

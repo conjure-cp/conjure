@@ -10,13 +10,22 @@ import Language.EssenceLexerP
 import Language.Core.Imports hiding ( (<?>), (<??>) )
 import Language.Core.Definition
 import Language.Core.Properties.ShowAST
+import Language.Core.Properties.Pretty
 
 
+runP :: (Functor m, Monad m, ShowAST a) => Maybe FilePath -> Parser a -> Text -> CompT m a
+runP mfp pa te = do
+    xs <- lexAndParse mfp pa te
+    case xs of
+        []  -> err $ "No parse."
+        [x] -> return x
+        _   -> throwError $ Nested (Just "Ambiguous parse.") (map (singletonNested . showAST) xs)
 
-test_ParsePrint' :: (Show a, ShowAST a) => Parser a -> Text -> IO (Maybe a)
+test_ParsePrint' :: (Show a, ShowAST a, Pretty a) => Parser a -> Text -> IO (Maybe a)
 test_ParsePrint' p t = do
     xs <- lexAndParseIO (p <* eof) t
     mapM_ (print . showAST) xs
+    mapM_ (print . pretty ) xs
     case xs of
         []  -> do putStrLn "No parse."; return Nothing
         [a] -> return $ Just a
@@ -33,15 +42,17 @@ parseSpec = do
             l  <- lexeme L_language *> identifier
             is <- sepBy1 integer dot
             return (l, map fromInteger is)
+    whiteSpace
     l  <- pLanguage
     xs <- many parseTopLevels
+    eof
     return $ Spec l $ concat xs
 
 
 parseMetaVariable :: Parser Core
 parseMetaVariable = do
     LMetaVar iden <- satisfy $ \ i -> case i of LMetaVar {} -> True; _ -> False
-    return $ Expr ":meta-var" [R $ Reference iden]
+    return $ Expr ":metavar" [R $ Reference iden]
 
 parseExpr :: Parser Core
 parseExpr = do
@@ -53,7 +64,7 @@ parseExpr = do
         else shunt xs
     where
         fixNegate :: [Either Lexeme Core] -> [Either Lexeme Core]
-        fixNegate (Right a:Right (Expr ":negate" [b]):cs) = fixNegate $ Right a : Left L_Minus : Right b : cs
+        fixNegate (Right a:Right (Expr ":operator-negate" [b]):cs) = fixNegate $ Right a : Left L_Minus : Right b : cs
         fixNegate (a:bs) = a : fixNegate bs
         fixNegate [] = []
 
@@ -70,7 +81,7 @@ parseExpr = do
                 Right (before, op, after) -> do
                     b <- shunt before
                     a <- shunt after
-                    return $ Expr (Tag $ lexemeText op) [b,a]
+                    return $ Expr (Tag $ ":operator-" `mappend` lexemeText op) [b,a]
 
         findPivotOp :: [Either Lexeme Core] -> Parser (Either Core ([Either Lexeme Core], Lexeme, [Either Lexeme Core]))
         findPivotOp [Right x] = return $ Left x
@@ -129,8 +140,11 @@ parseAtomicExpr = do
 
 parseAtomicExpr_NoPrePost :: Parser Core
 parseAtomicExpr_NoPrePost = msum1
-    [ parseMetaVariable
-    , parseQuantifiedExpr parseExpr
+    $ parseMetaVariable
+    : parseWithLocals
+    : parseOthers
+    ++ 
+    [ parseQuantifiedExpr parseExpr
     , parseReference
     , parseValue
     , betweenTicks parseDomain
@@ -138,14 +152,17 @@ parseAtomicExpr_NoPrePost = msum1
     ]
 
 parsePrefixes :: [Parser (Core -> Core)]
-parsePrefixes = [parseUnaryMinus]
+parsePrefixes = [parseUnaryMinus, parseUnaryNot]
     where
         parseUnaryMinus = do
             lexeme L_Minus
-            return $ \ x -> Expr ":negate" [x]
+            return $ \ x -> Expr ":operator-negate" [x]
+        parseUnaryNot = do
+            lexeme L_ExclamationMark
+            return $ \ x -> Expr ":operator-not" [x]
 
 parsePostfixes :: [Parser (Core -> Core)]
-parsePostfixes = [parseIndexed]
+parsePostfixes = [parseIndexed,parseFuncApply]
     where
         parseIndexed :: Parser (Core -> Core)
         parseIndexed = do
@@ -158,26 +175,37 @@ parsePostfixes = [parseIndexed]
                     return $ Expr ":slicer" $ [ Expr ":slicer-from" [a] | Just a <- [i] ]
                                            ++ [ Expr ":slicer-to"   [a] | Just a <- [j] ]
             is <- brackets $ pIndexer `sepBy1` comma
-            return (\ x -> foldl (\ m' i -> Expr ":index" [m', i] ) x is )
+            return (\ x -> foldl (\ m' i -> Expr ":operator-index" [m', i] ) x is )
+        parseFuncApply :: Parser (Core -> Core)
+        parseFuncApply = parens $ do
+            xs <- parseExpr `sepBy1` comma
+            return $ \ x -> Expr ":function-apply" [ Expr ":function-apply-actual" [x]
+                                                   , Expr ":function-apply-args"   xs
+                                                   ]
 
 parseOthers :: [Parser Core]
 parseOthers = [ parseFunctional l
-              | l <- [ L_max, L_min
-                     , L_toSet, L_toMSet, L_toRelation
-                     , L_defined, L_range
-                     , L_image, L_preimage
-                     , L_inverse, L_together, L_apart, L_party, L_participants, L_parts
-                     , L_freq, L_hist
-                     , L_toInt, L_flatten, L_normIndices
-                     , L_allDiff
-                     ]
-              ]
+              | l <- functionals
+              ] ++ [parseTyped, parseTwoBars]
     where
+
+        parseTwoBars :: Parser Core
+        parseTwoBars = do
+            x <- between (lexeme L_Bar) (lexeme L_Bar) parseExpr
+            return $ Expr ":operator-twobars" [x]
+
+        parseTyped :: Parser Core
+        parseTyped = parens $ do
+            x <- parseExpr
+            lexeme L_Colon
+            y <- betweenTicks parseDomain
+            return $ Expr ":typed" [x,y]
+
         parseFunctional :: Lexeme -> Parser Core
         parseFunctional l = do
             lexeme l
             xs <- parens $ parseExpr `sepBy1` comma
-            return $ Expr (Tag $ lexemeText l) xs
+            return $ Expr (Tag $ ":operator-" `mappend` lexemeText l) xs
 
 
         -- helper op@Negate       = genPrefix   op
@@ -369,7 +397,7 @@ parseRange = do
 
 
 parseDomain :: Parser Core
-parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
+parseDomain = msum1 [pDomain, parseMetaVariable]
     where
         pDomain = do
             x <- msum1
@@ -377,7 +405,9 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
                 , pMatrix, pTuple
                 , pSet, pMSet, pFunction, pRelation, pPartition
                 ]
-            return $ Expr ":domain" [x]
+            return $ case x of
+                Expr ":domain" _ -> x
+                _                -> Expr ":domain" [x]
 
         pParens = parens parseDomain
 
@@ -387,16 +417,15 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
 
         pInt = do
             lexeme L_int
-            xs <- optionMaybe $ parens $ parseRange `sepBy` comma
-            case xs of
-                Nothing -> return $ Expr ":domain-int" []
-                Just ys -> return $ Expr ":domain-int" ys
+            mxs <- optionMaybe $ parens $ parseRange `sepBy` comma
+            let xs = case mxs of Nothing -> []; Just i -> i
+            return $ Expr ":domain-int" [ Expr ":domain-int-ranges" xs ]
 
         pEnum = do
             r <- parseReference
             xs <- optionMaybe $ parens $ parseRange `sepBy` comma
             case xs of
-                Nothing -> return $ Expr ":domain-enum" [ Expr ":domain-enum-name" [r] ]
+                Nothing -> return r
                 Just ys -> return $ Expr ":domain-enum" [ Expr ":domain-enum-name" [r]
                                                         , Expr ":domain-enum-range" ys
                                                         ]
@@ -410,9 +439,11 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
             y  <- parseDomain
             return $
                 foldr (\ i j ->
-                    Expr ":domain-matrix"
-                        [ Expr ":domain-matrix-index" [i]
-                        , Expr ":domain-matrix-inner" [j]
+                    Expr ":domain"
+                        [ Expr ":domain-matrix"
+                            [ Expr ":domain-matrix-index" [i]
+                            , Expr ":domain-matrix-inner" [j]
+                            ]
                         ]
                       ) y xs
 
@@ -431,7 +462,7 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
             y  <- parseDomain
             return $
                 Expr ":domain-set"
-                    [ Expr ":domain-set-attibutes" [ Expr ":attributes" xs ]
+                    [ Expr ":domain-set-attributes" [ Expr ":attributes" xs ]
                     , Expr ":domain-set-inner"     [y]
                     ]
 
@@ -442,7 +473,7 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
             y  <- parseDomain
             return $
                 Expr ":domain-mset"
-                    [ Expr ":domain-mset-attibutes" [ Expr ":attributes" xs ]
+                    [ Expr ":domain-mset-attributes" [ Expr ":attributes" xs ]
                     , Expr ":domain-mset-inner"     [y]
                     ]
 
@@ -454,7 +485,7 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
             z  <- parseDomain
             return $
                 Expr ":domain-function"
-                    [ Expr ":domain-function-attibutes" [ Expr ":attributes" xs ]
+                    [ Expr ":domain-function-attributes" [ Expr ":attributes" xs ]
                     , Expr ":domain-function-innerfrom" [y]
                     , Expr ":domain-function-innerto"   [z]
                     ]
@@ -466,7 +497,7 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
             ys <- parens (parseDomain `sepBy` lexeme L_Times)
             return $
                 Expr ":domain-relation"
-                    [ Expr ":domain-relation-attibutes" [ Expr ":attributes" xs ]
+                    [ Expr ":domain-relation-attributes" [ Expr ":attributes" xs ]
                     , Expr ":domain-relation-inners"    ys
                     ]
 
@@ -477,7 +508,7 @@ parseDomain = msum1 [pDomain, parseReference, parseMetaVariable]
             y  <- parseDomain
             return $
                 Expr ":domain-partition"
-                    [ Expr ":domain-partition-attibutes" [ Expr ":attributes" xs ]
+                    [ Expr ":domain-partition-attributes" [ Expr ":attributes" xs ]
                     , Expr ":domain-partition-inner"     [y]
                     ]
 
@@ -663,7 +694,7 @@ parseTopLevels = do
                                 [ Expr ":dimfind-name"   [i]
                                 , Expr ":dimfind-domain" [j]
                                 ]
-                    let nested = dimfind <|> parseQuantifiedExpr nested
+                    let nested = dimfind <|> parseQuantifiedExpr nested <|> parens nested
                     i <- nested
                     return
                         [ Expr ":declaration"
@@ -674,12 +705,20 @@ parseTopLevels = do
                 , do
                     lexeme L_where
                     xs <- parseExpr `sepBy1` comma
-                    return $ [ Expr ":where" [x] | x <- xs ]
+                    return [ Expr ":where" [x] | x <- xs ]
                 , do
                     lexeme L_such
                     lexeme L_that
                     xs <- parseExpr `sepBy1` comma
-                    return $ [ Expr ":suchthat" [x] | x <- xs ]
+                    return [ Expr ":suchthat" [x] | x <- xs ]
+                , do
+                    lexeme L_minimising
+                    x <- parseExpr
+                    return [ Expr ":objective" [ Expr ":minimising" [x] ] ]
+                , do
+                    lexeme L_maximising
+                    x <- parseExpr
+                    return [ Expr ":objective" [ Expr ":maximising" [x] ] ]
                 ]
     map (\ x -> Expr ":toplevel" [x]) . concat <$> some one
 
@@ -714,10 +753,14 @@ parseQuanDecl = do
 
 parseQuantifiedExpr :: Parser Core -> Parser Core
 parseQuantifiedExpr parseBody = do
-        let pOp = msum1 [ Tag (lexemeText L_subset  ) <$ lexeme L_subset
-                        , Tag (lexemeText L_subsetEq) <$ lexeme L_subsetEq
-                        , Tag (lexemeText L_in      ) <$ lexeme L_in
+        let pOp = msum1 [ Tag (":operator-" `mappend` lexemeText L_subset  ) <$ lexeme L_subset
+                        , Tag (":operator-" `mappend` lexemeText L_subsetEq) <$ lexeme L_subsetEq
+                        , Tag (":operator-" `mappend` lexemeText L_in      ) <$ lexeme L_in
                         ]
+        -- let pOp = msum1 [ Tag (lexemeText L_subset  ) <$ lexeme L_subset
+        --                 , Tag (lexemeText L_subsetEq) <$ lexeme L_subsetEq
+        --                 , Tag (lexemeText L_in      ) <$ lexeme L_in
+        --                 ]
         qnName   <- parseReference
         qnVars   <- parseStructural `sepBy1` comma
         qnDom    <- optionMaybe (colon *> parseDomain)
@@ -763,5 +806,31 @@ parseQuantifiedExpr parseBody = do
         return $ f qnVars
 
 parseStructural :: Parser Core
-parseStructural = do
-    parseReference
+parseStructural = msum1
+    [ do
+        x <- parseReference
+        return $ Expr ":structural-single" [x]
+    , do
+        xs <- parens $ parseStructural `sepBy1` comma
+        return $ Expr ":structural-tuple" xs
+    , do
+        xs <- brackets $ parseStructural `sepBy1` comma
+        return $ Expr ":structural-matrix" xs
+    ]
+
+parseRuleRefn :: Text -> Parser RuleRefn
+parseRuleRefn t = do
+    whiteSpace
+    level     <- optionMaybe (brackets (fromInteger <$> integer))
+    pattern   <- parseExpr
+    templates <- some (lexeme L_SquigglyArrow >> parseExpr)
+    locals    <- concat <$> many parseTopLevels
+    eof
+    return ( t
+           , level
+           , Expr ":rulerefn"
+                [ Expr ":rulerefn-pattern"   [pattern]
+                , Expr ":rulerefn-templates" templates
+                , Expr ":rulerefn-locals"    locals
+                ]
+           )

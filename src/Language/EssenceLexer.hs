@@ -115,7 +115,7 @@ data Lexeme
     | L_defined
     | L_range
     | L_image
-    | L_preimage
+    | L_preImage
     | L_inverse
     | L_together
     | L_apart
@@ -218,7 +218,10 @@ data Lexeme
     deriving (Eq,Ord,Read,Show)
 
 lexemeText :: Lexeme -> T.Text
-lexemeText l = T.pack $ ':' : show (lexemeFace l)
+lexemeText l = T.pack $ show (lexemeFace l)
+
+textToLexeme :: T.Text -> Maybe Lexeme
+textToLexeme t = M.lookup t mapTextToLexeme
 
 lexemeFace :: Lexeme -> Doc
 lexemeFace L_Newline = "new line"
@@ -290,8 +293,8 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     -- , ( L_bijective, "bijective" )
     , ( L_relation, "relation" )
     , ( L_partition, "partition" )
-    , ( L_regular, "regular" )
-    , ( L_complete, "complete" )
+    -- , ( L_regular, "regular" )
+    -- , ( L_complete, "complete" )
     -- , ( L_partSize, "partSize" )
     -- , ( L_minPartSize, "minPartSize" )
     -- , ( L_maxPartSize, "maxPartSize" )
@@ -313,7 +316,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_defined, "defined" )
     , ( L_range, "range" )
     , ( L_image, "image" )
-    , ( L_preimage, "preimage" )
+    , ( L_preImage, "preimage" )
     , ( L_inverse, "inverse" )
     , ( L_together, "together" )
     , ( L_apart, "apart" )
@@ -427,7 +430,7 @@ tryLexIden running =
         (iden,rest) = T.span isIdentifierLetter running
     in
         case T.uncons running of
-            Just (ch,_) | isAlpha ch ->
+            Just (ch,_) | isAlpha ch || ch `elem` "_" ->
                 if T.null iden
                     then Nothing
                     else Just (rest, LIdentifier iden)
