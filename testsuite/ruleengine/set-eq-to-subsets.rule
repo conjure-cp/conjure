@@ -1,0 +1,8 @@
+
+[1000]
+
+@a = @b ~~> @a subsetEq @b /\ @a supsetEq @b
+
+    where
+        @a hastype `set of _`,
+        @b hastype `set of _`
