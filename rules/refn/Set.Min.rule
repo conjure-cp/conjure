@@ -1,6 +1,6 @@
 
 min(s) ~~> (aux @ forAll i in s . i >= aux)
 
-    where s : `set (_) of t`
+    where s hasdomain `set (_) of t`
 
     find aux : t

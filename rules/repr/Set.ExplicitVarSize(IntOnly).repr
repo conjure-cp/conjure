@@ -9,7 +9,7 @@
         forAll i : int(1..mx-1) . refn[i][0] <= refn[i+1][0]
     )
 
-    where t :: `int`
+    where t hastype `int`
 
 
 *** set of t

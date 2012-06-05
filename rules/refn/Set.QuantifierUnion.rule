@@ -9,7 +9,7 @@ quan j : domU
                     g { i --> j }
                   . k { i --> j }
            
-    where a : `set (_) of aElem`
-    where b : `set (_) of bElem`
+    where a hasdomain `set (_) of aElem`
+    where b hasdomain `set (_) of bElem`
 
     letting domU be domUnion(aElem,bElem)

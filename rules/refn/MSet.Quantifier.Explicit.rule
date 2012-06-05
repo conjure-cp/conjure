@@ -6,7 +6,7 @@ quan i in s, g . k
 quan j in r, g {i --> m[j]} . k { i --> m[j] }
 
     where
-        s : `mset of _`,
+        s hastype `mset of _`,
         repr(s,Explicit)
 
     letting m be refn(s)

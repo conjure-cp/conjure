@@ -1,6 +1,6 @@
 
 a = b ~~> forAll i : ra . a[i] = b[i]
 
-    where a : `matrix indexed by [ra] of _`
-    where b : `matrix indexed by [rb] of _`
+    where a hastype `matrix indexed by [ra] of _`
+    where b hastype `matrix indexed by [rb] of _`
     where ra = rb

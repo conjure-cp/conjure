@@ -6,7 +6,7 @@ quan i in f'(x), g . k
 quan j in defined(f), g {i-->j} /\ m[j]=x . k {i-->j}
 
     where
-        f : `function _ --> _`,
+        f hastype `function _ --> _`,
         repr(f,Matrix1D)
 
     letting m be refn(f)

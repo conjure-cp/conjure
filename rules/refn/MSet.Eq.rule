@@ -2,5 +2,5 @@
 a = b ~~> a subsetEq b /\ b subsetEq a
 
     where
-        a : `mset of _`,
-        b : `mset of _`
+        a hastype `mset of _`,
+        b hastype `mset of _`

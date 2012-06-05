@@ -2,7 +2,7 @@
 f(i) ~~> sum j : indices(m,1) , m[i,j] . j
 
     where
-        f : `function _ --> _`,
+        f hastype `function _ --> _`,
         repr(f,Matrix2D)
 
     letting m be refn(f)

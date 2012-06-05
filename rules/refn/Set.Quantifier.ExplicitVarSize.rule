@@ -5,7 +5,7 @@ quan i in s, g . k
 
 quan j : r, m[j][0] /\ g {i-->m[j][1]} . k { i --> m[j][1] }
 
-    where s : `set (_) of _`
+    where s hastype `set of _`
     where repr(s,ExplicitVarSize)
 
     letting m be refn(s)

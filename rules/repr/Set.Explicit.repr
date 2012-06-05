@@ -1,9 +1,9 @@
 
 ~~> Explicit
 ~~> matrix indexed by [int(1..n)] of t
-~~> alldifferent(refn)
+~~> allDiff(refn)
 
-    where !(t :: `int`)
+    where !(t hastype `int`)
 
 *** set (size n, _) of t
 

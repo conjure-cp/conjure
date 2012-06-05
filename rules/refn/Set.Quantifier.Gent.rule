@@ -3,11 +3,11 @@ quan i in s, g . k
 
 ~~>
 
-quan j : r , g {i-->j} /\ (m[j] > 0) . k {i-->j}
+quan j : indices(m,0) , g {i-->j} /\ (m[j] > 0) . k {i-->j}
 
     where
-        s : `set (_) of _`,
+        s hastype `set of _`,
         repr(s,Gent)
 
     letting m be refn(s)
-    letting r be indices(m,0)
+    $ letting r be indices(m,0)
