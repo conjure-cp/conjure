@@ -18,6 +18,11 @@ prof-install:
 	time cabal build
 	time cabal install
 
+prof-buildtests:
+	# time cabal configure --enable-library-profiling --enable-executable-profiling --enable-tests --ghc-options="-with-rtsopts -xc" # gives a stack trace in case of runtime error.
+	time cabal configure --enable-library-profiling --enable-executable-profiling --enable-tests
+	time cabal build
+
 clean:
 	@cabal clean
 	@ghc-pkg unregister conjure-cp
