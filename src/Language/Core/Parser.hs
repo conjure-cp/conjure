@@ -59,8 +59,8 @@ parseExpr = do
     xs <- fixNegate <$> parseBeforeShunt
     if not $ checkAlternating xs
         then do
-            fail $ ppShow xs
-            -- failWithMsg "Shunting Yard failed. How dare you."
+            -- fail $ ppShow xs
+            failWithMsg "Shunting Yard failed. How dare you."
         else shunt xs
     where
         fixNegate :: [Either Lexeme Core] -> [Either Lexeme Core]
@@ -140,14 +140,13 @@ parseAtomicExpr = do
 
 parseAtomicExpr_NoPrePost :: Parser Core
 parseAtomicExpr_NoPrePost = msum1
-    $ parseMetaVariable
-    : parseWithLocals
-    : parseOthers
-    ++ 
+    $ parseOthers ++ 
     [ parseQuantifiedExpr parseExpr
+    , parseMetaVariable
     , parseReference
     , parseValue
     , betweenTicks parseDomain
+    , parseWithLocals
     , parens parseExpr
     ]
 
@@ -761,7 +760,7 @@ parseQuantifiedExpr parseBody = do
         --                 , Tag (lexemeText L_subsetEq) <$ lexeme L_subsetEq
         --                 , Tag (lexemeText L_in      ) <$ lexeme L_in
         --                 ]
-        qnName   <- parseReference
+        qnName   <- parseMetaVariable <|> parseReference
         qnVars   <- parseStructural `sepBy1` comma
         qnDom    <- optionMaybe (colon *> parseDomain)
         qnExpr   <- optionMaybe ((,) <$> pOp <*> parseExpr)
@@ -808,6 +807,9 @@ parseQuantifiedExpr parseBody = do
 parseStructural :: Parser Core
 parseStructural = msum1
     [ do
+        x <- parseMetaVariable
+        return $ Expr ":structural-single" [x]
+    , do
         x <- parseReference
         return $ Expr ":structural-single" [x]
     , do

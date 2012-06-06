@@ -48,20 +48,6 @@ instance Simplify Reference where
                 val <- lift $ lookUpRef r
                 simplify val
 
-typeUnify :: (Functor m, Monad m) => Core -> Core -> CompT m Bool
-typeUnify (viewDeep [":type-unknown"] -> Just []) _ = return True
-typeUnify _ (viewDeep [":type-unknown"] -> Just []) = return True
-typeUnify (Expr t1 xs1) (Expr t2 xs2)
-    | t1 == t2
-    , length xs1 == length xs2
-    = and <$> zipWithM typeUnify xs1 xs2
-typeUnify x y = do
-    mkLog "typeUnify" $ "default case" <++>
-                        vcat [ pretty x
-                             , "~~"
-                             , pretty y
-                             ]
-    return $ x == y
 
 domainUnify :: Monad m => Core -> Core -> CompT m Bool
 domainUnify y x = do

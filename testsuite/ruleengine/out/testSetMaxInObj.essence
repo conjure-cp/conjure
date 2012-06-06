@@ -1,0 +1,12 @@
+language Essence 2.0
+
+find x: set of int(0..9)
+minimising (__1 @ find __1: int(0..9)
+                  such that forAll __2 in x . __2 <= __1
+                  such that exists __3 in x . __3 = __1)
+such that
+    3
+    =
+    (__4 @ find __4: int(0..9)
+           such that forAll __5 in x . __5 >= __4
+           such that exists __6 in x . __6 = __4)

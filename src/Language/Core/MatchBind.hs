@@ -111,9 +111,9 @@ mkFunction pattern templates = do
 
 testAsAFunc :: Text -> Text -> Text -> IO Doc
 testAsAFunc pattern' template' x' = do
-    pattern  <- headNote "pattern"  <$> lexAndParseIO (parseExpr <* eof) pattern'
-    template <- headNote "template" <$> lexAndParseIO (parseExpr <* eof) template'
-    x        <- headNote "x"        <$> lexAndParseIO (parseExpr <* eof) x'
+    pattern  <- headNote "parsing pattern"  <$> lexAndParseIO (parseExpr <* eof) pattern'
+    template <- headNote "parsing template" <$> lexAndParseIO (parseExpr <* eof) template'
+    x        <- headNote "parsing x"        <$> lexAndParseIO (parseExpr <* eof) x'
     runCompIO def def $ do
         f  <- mkFunction pattern [template]
         my <- runMaybeT (f x)

@@ -34,7 +34,7 @@ combineRuleRefns fs = return $ \ x -> do
         ys -> Just ys
 
 single :: forall m . (Functor m, Monad m) => Middleware (CompT m) RuleRefn (Middleware (CompT m) Core (Maybe [Core]))
-single ( ( _name
+single ( ( name
          , _
          , viewDeep [":rulerefn"]
             -> Just [ Expr ":rulerefn-pattern"   [pattern]
@@ -64,10 +64,16 @@ single ( ( _name
                 case xBool of
                     Just True  -> return ()
                     Just False -> do
-                        lift $ mkLog "rule-fail" $ "where statement evaluated to false: " <++> pretty local
+                        lift $ mkLog "rule-fail" $ "where statement evaluated to false: " <++> vcat [ pretty local
+                                                                                                    , "in rule" <+> textToDoc name
+                                                                                                    , "at expression" <+> pretty x
+                                                                                                    ]
                         mzero
                     Nothing    -> do
-                        lift $ mkLog "rule-fail" $ "where statement cannot be fully evaluated: " <++> pretty local
+                        lift $ mkLog "rule-fail" $ "where statement cannot be fully evaluated: " <++> vcat [ pretty local
+                                                                                                           , "in rule" <+> textToDoc name
+                                                                                                           , "at expression" <+> pretty x
+                                                                                                           ]
                         mzero
             localHandler local = err $ "not handled" <+> showAST local
         beforeRenamer <-

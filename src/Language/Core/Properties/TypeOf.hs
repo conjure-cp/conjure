@@ -48,7 +48,7 @@ tester_typeOf t = do
 
 
 class TypeOf a where
-    typeOf :: Monad m => a -> CompT m Core
+    typeOf :: (Functor m, Monad m) => a -> CompT m Core
 
 instance TypeOf Core where
     typeOf (L x) = typeOf x
@@ -292,6 +292,28 @@ instance TypeOf Core where
                 innerTypeOf tx
             _ -> errInvariant p
 
+
+    typeOf p@( viewDeep [":operator-union"]
+                -> Just [a,b]
+             ) = do
+        ta <- typeOf a
+        tb <- typeOf b
+        flag <- typeUnify ta tb
+        if flag
+            then return ta
+            else errMismatch p
+
+    typeOf p@( viewDeep [":operator-intersect"]
+                -> Just [a,b]
+             ) = do
+        ta <- typeOf a
+        tb <- typeOf b
+        flag <- typeUnify ta tb
+        if flag
+            then return ta
+            else errMismatch p
+
+
     typeOf p     = errInvariant p
 
 instance TypeOf Literal where
@@ -310,3 +332,18 @@ instance TypeOf Reference where
 innerTypeOf :: Monad m => Core -> CompT m Core
 innerTypeOf ( viewDeep [":type",":type-set",":type-set-inner"] -> Just [t] ) = return t
 innerTypeOf p = errInvariant p
+
+typeUnify :: (Functor m, Monad m) => Core -> Core -> CompT m Bool
+typeUnify (viewDeep [":type-unknown"] -> Just []) _ = return True
+typeUnify _ (viewDeep [":type-unknown"] -> Just []) = return True
+typeUnify (Expr t1 xs1) (Expr t2 xs2)
+    | t1 == t2
+    , length xs1 == length xs2
+    = and <$> zipWithM typeUnify xs1 xs2
+typeUnify x y = do
+    mkLog "typeUnify" $ "default case" <++>
+                        vcat [ pretty x
+                             , "~~"
+                             , pretty y
+                             ]
+    return $ x == y

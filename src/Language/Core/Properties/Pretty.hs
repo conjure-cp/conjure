@@ -261,6 +261,7 @@ instance Pretty Core where
     pretty ( viewDeep [":structural-matrix"] -> Just xs )
         = prettyListDoc Pr.brackets Pr.comma (map pretty xs)
 
+
     -- :atTopLevel is only used to indicate whether we want a Pr.parens
     -- around a expr-quantified or not.
     pretty ( viewDeep [":atTopLevel",":expr-quantified"] -> Just xs )

@@ -104,6 +104,7 @@ mkLog t d
                             , "bind"
                             , "rule-fail"
                             , "domainUnify"
+                            , "typeUnify"
                             , "ApplyTransformation.tryAgain"
                             , "ApplyTransformation.worker"
                             ]
@@ -261,6 +262,9 @@ processStatement   ( viewDeep [":toplevel",":letting"]
                               ]
                    ) = addBinder name expression
 processStatement   ( viewDeep [":toplevel",":suchthat"]
+                      -> Just _
+                   ) = return ()
+processStatement   ( viewDeep [":toplevel",":objective"]
                       -> Just _
                    ) = return ()
 processStatement s@( viewDeep [":toplevel"]
