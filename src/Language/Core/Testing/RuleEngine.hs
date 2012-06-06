@@ -188,7 +188,7 @@ testSetMaxInObj = void $ loadAndApply
         ]
 
 testSetIntersect1 :: IO ()
-testSetIntersect1 = runInteractively "setIntersect1"
+testSetIntersect1 = runInteractively "setIntersect-1"
 
 
 loadAndApply :: FilePath -> [FilePath] -> IO [Language.Core.Spec]
@@ -512,6 +512,7 @@ testData =
         ]
       )
 
+
     , (   "setMaxInObj"
       ,   "testsuite/ruleengine/setMaxInObj.essence"
       , [ "testsuite/ruleengine/out/testSetMaxInObj.essence"
@@ -522,7 +523,8 @@ testData =
         ]
       )
 
-    , ( "setIntersect1"
+
+    , ( "setIntersect-1"
       , "testsuite/ruleengine/setIntersect.essence"
       , [ "testsuite/ruleengine/out/testSetIntersect1.essence"
         ]
