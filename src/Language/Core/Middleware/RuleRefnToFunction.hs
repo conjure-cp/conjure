@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Core.Middleware.RuleRefnToFunction ( worker ) where
 
@@ -32,7 +33,7 @@ combineRuleRefns fs = return $ \ x -> do
         [] -> Nothing
         ys -> Just ys
 
-single :: (Functor m, Monad m) => Middleware (CompT m) RuleRefn (Middleware (CompT m) Core (Maybe [Core]))
+single :: forall m . (Functor m, Monad m) => Middleware (CompT m) RuleRefn (Middleware (CompT m) Core (Maybe [Core]))
 single ( ( _name
          , _
          , viewDeep [":rulerefn"]
@@ -42,17 +43,18 @@ single ( ( _name
                     ]
          )
        ) = do
-
-   -- f <- mkFunction pa tes
-   -- return $ \ x -> runMaybeT (f x)
-    let patternMetaVars  = S.fromList [ r | Expr ":metavar" [R r] <- universe pattern  ]
-    let templateMetaVars = S.unions [ S.fromList [ r | Expr ":metavar" [R r] <- universe template ]
-                                    | template <- templates
-                                    ]
-    unless (templateMetaVars `S.isSubsetOf` patternMetaVars)
-        $ err $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id "," (map showAST $ S.toList patternMetaVars)
-                     , "Template meta variables:" <+> prettyListDoc id "," (map showAST $ S.toList templateMetaVars)
-                     ]
+    let
+        staticCheck :: CompT m ()
+        staticCheck = do
+            let patternMetaVars  = S.fromList [ r | Expr ":metavar" [R r] <- universe pattern  ]
+            let templateMetaVars = S.unions [ S.fromList [ r | Expr ":metavar" [R r] <- universe template ]
+                                            | template <- templates
+                                            ]
+            unless (templateMetaVars `S.isSubsetOf` patternMetaVars)
+                $ err $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id "," (map showAST $ S.toList patternMetaVars)
+                             , "Template meta variables:" <+> prettyListDoc id "," (map showAST $ S.toList templateMetaVars)
+                             ]
+    -- staticCheck
     return $ \ x -> runMaybeT $ do
         bindersBefore <- gets binders
         b <- lift $ match pattern x
