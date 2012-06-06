@@ -286,8 +286,8 @@ buildTests params = describe "rule engine" $ do
                             $ Pr.renderStyle Pr.style { Pr.lineLength = 260 }
                             $ "specs not equal"
                                 <+> Pr.parens (stringToDoc $ show i)
-                                <++> vcat [ "generated" <++> showAST a
-                                          , "expected " <++> showAST b
+                                <++> vcat [ "generated" <++> pretty a
+                                          , "expected " <++> pretty b
                                           ]
 
 runInteractively :: String -> IO ()
@@ -533,6 +533,20 @@ testData =
         , "testsuite/ruleengine/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/set-in-to-quantified.rule"
         , "testsuite/ruleengine/quantifier-intersect.rule"
+        ]
+      )
+
+    , ( "setUnion-1"
+      , "testsuite/ruleengine/setUnion.essence"
+      , [ "testsuite/ruleengine/out/testSetUnion1.essence"
+        ]
+      , [ "testsuite/ruleengine/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/set-in-to-quantified.rule"
+        , "testsuite/ruleengine/quantifier-intersect.rule"
+        , "testsuite/ruleengine/forAll-union.rule"
+        , "testsuite/ruleengine/exists-union.rule"
         ]
       )
 

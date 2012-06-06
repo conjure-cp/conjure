@@ -1,0 +1,4 @@
+
+[1000]
+
+sum @i in @a union @b . @body ~~> (sum @i in @a . @body) + (sum @i in @b . @body) - (sum @i in @a intersect @b . @body)

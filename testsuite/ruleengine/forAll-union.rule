@@ -1,0 +1,4 @@
+
+[1000]
+
+forAll @i in @a union @b . @body ~~> (forAll @i in @a . @body) /\ (forAll @i in @b . @body)

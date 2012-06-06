@@ -103,6 +103,7 @@ mkLog t d
                             , "match"
                             , "bind"
                             , "rule-fail"
+                            , "simplify"
                             , "domainUnify"
                             , "typeUnify"
                             , "ApplyTransformation.tryAgain"
