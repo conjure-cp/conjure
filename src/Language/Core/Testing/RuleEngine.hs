@@ -153,6 +153,19 @@ testSetNeq9 = void $ loadAndApply
         , "testsuite/ruleengine/bogus/set-subseteq-to-quantified-1000-Mod.rule"
         ]
 
+testSetMax1 :: IO ()
+testSetMax1 = void $ loadAndApply
+        "testsuite/ruleengine/setMax.essence"
+        [ "testsuite/ruleengine/set-max.rule"
+        ]
+
+testSetMax2 :: IO ()
+testSetMax2 = void $ loadAndApply
+        "testsuite/ruleengine/setMax.essence"
+        [ "testsuite/ruleengine/set-max.rule"
+        , "testsuite/ruleengine/set-in-to-quantified.rule"
+        ]
+
 
 loadAndApply :: FilePath -> [FilePath] -> IO [Language.Core.Spec]
 loadAndApply b as = do
@@ -427,5 +440,42 @@ tests = buildTests
                 , "testsuite/ruleengine/bogus/set-subseteq-to-quantified-1000-Mod.rule"
                 ]
               )
+
+
+            , (   "setMax-1"
+              ,   "testsuite/ruleengine/setMax.essence"
+              , [ "testsuite/ruleengine/out/testSetMax1.essence"
+                ]
+              , [ "testsuite/ruleengine/set-max.rule"
+                ]
+              )
+
+            , (   "setMax-2"
+              ,   "testsuite/ruleengine/setMax.essence"
+              , [ "testsuite/ruleengine/out/testSetMax2.essence"
+                ]
+              , [ "testsuite/ruleengine/set-max.rule"
+                , "testsuite/ruleengine/set-in-to-quantified.rule"
+                ]
+              )
+
+
+            , (   "setMin-1"
+              ,   "testsuite/ruleengine/setMin.essence"
+              , [ "testsuite/ruleengine/out/testSetMin1.essence"
+                ]
+              , [ "testsuite/ruleengine/set-min.rule"
+                ]
+              )
+
+            , (   "setMin-2"
+              ,   "testsuite/ruleengine/setMin.essence"
+              , [ "testsuite/ruleengine/out/testSetMin2.essence"
+                ]
+              , [ "testsuite/ruleengine/set-min.rule"
+                , "testsuite/ruleengine/set-in-to-quantified.rule"
+                ]
+              )
+
 
             ]

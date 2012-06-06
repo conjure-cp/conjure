@@ -1,0 +1,9 @@
+language Essence 2.0
+
+find x: set of int(0..9)
+such that
+    3
+    =
+    (__1 @   find __1: int(0..9)
+             such that forAll __2 in x . __2 >= __1
+             such that __1 in x)
