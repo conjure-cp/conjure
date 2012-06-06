@@ -96,17 +96,17 @@ instance Default CompState where
 mkLog :: Monad m => Tag -> Doc -> CompT m ()
 -- mkLog _ _ = return ()
 mkLog t d
-    | t `elem` supress = return ()
-    | otherwise        = tell (CompLog [(t,d)])
-    where supress = drop 1 [ ""
-                           , "toLit"
-                           , "match"
-                           , "bind"
-                           , "rule-fail"
-                           , "domainUnify"
-                           , "ApplyTransformation.tryAgain"
-                           , "ApplyTransformation.worker"
-                           ]
+    | t `elem` suppress = return ()
+    | otherwise         = tell (CompLog [(t,d)])
+    where suppress = drop 1 [ ""
+                            , "toLit"
+                            , "match"
+                            , "bind"
+                            , "rule-fail"
+                            , "domainUnify"
+                            , "ApplyTransformation.tryAgain"
+                            , "ApplyTransformation.worker"
+                            ]
 
 nextUniqueName :: Monad m => CompT m Text
 nextUniqueName = do
