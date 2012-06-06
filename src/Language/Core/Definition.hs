@@ -98,13 +98,15 @@ mkLog :: Monad m => Tag -> Doc -> CompT m ()
 mkLog t d
     | t `elem` supress = return ()
     | otherwise        = tell (CompLog [(t,d)])
-    where supress = [ "toLit"
-                    , "match"
-                    , "bind"
-                    , "rule-fail"
-                    , "ApplyTransformation.tryAgain"
-                    , "ApplyTransformation.worker"
-                    ]
+    where supress = drop 1 [ ""
+                           , "toLit"
+                           , "match"
+                           , "bind"
+                           , "rule-fail"
+                           , "domainUnify"
+                           , "ApplyTransformation.tryAgain"
+                           , "ApplyTransformation.worker"
+                           ]
 
 nextUniqueName :: Monad m => CompT m Text
 nextUniqueName = do
