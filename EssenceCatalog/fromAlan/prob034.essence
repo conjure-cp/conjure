@@ -1,0 +1,20 @@
+language ESSENCE 1.2.0
+$ prob034.essence: Warehouse Location Problem
+$ Problem details available at http://www.csplib.org/prob/prob034/
+$ 07 September 2007
+$
+
+given n_stores, n_warehouses, fixed_cost : int(1..)
+
+letting Store be domain int(1..n_stores),
+        WHouse be domain int(1..n_warehouses)
+
+given capacity : function (total) WHouse --> int(1..),
+      cost : function (total) tuple (Store, WHouse) --> int(1..)
+
+find open : function (total) Store --> WHouse
+
+minimising fixed_cost * |range(open)| + sum s : Store . cost((s,open(s)))
+
+such that forAll w : WHouse . |preimage(open,w)| <= capacity(w)
+

@@ -1,0 +1,25 @@
+language ESSENCE 1.2.0
+$ prob039.essence: Rehearsal Problem
+$ Problem details available at http://www.csplib.org/prob/prob039/
+$ 07 September 2007
+$
+
+given n_pieces, n_players : int(1..)
+
+letting Piece be domain int(1..n_pieces),
+        Index be domain int(1..n_pieces),
+        Player be domain int(1..n_players)
+
+given duration : function (total) Piece --> int(1..),
+      plays_in : relation of (Player*Piece)
+
+find order : function (total, bijective) Index --> Piece,
+     arrive, leave : function (total) Player --> Index
+
+maximising sum p : Player . (sum i : int(1..arrive(p)) . duration(order(i)))
+                    + (sum i : int(leave(p)..n_pieces) . duration(order(i)))
+
+such that forAll p : Player . {(arrive(p)),(leave(p))} subsetEq plays_in(p,_)
+    /\ forAll i : Index . (order(i)) in plays_in(p,_) ->
+        arrive(p) <= i /\ leave(p) >= i
+

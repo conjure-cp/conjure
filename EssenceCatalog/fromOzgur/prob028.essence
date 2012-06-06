@@ -1,0 +1,19 @@
+language ESSENCE 1.2.0
+
+given v, b, r, k, lambda_ : int(1..)
+
+where
+    r * v = b * k,
+    lambda_ * (v-1) = r * (k-1),
+    b >= v
+
+letting Obj   be new type of size v
+letting Block be new type of size b
+
+find bibd : relation of ( Obj * Block )
+
+such that
+    forAll o      : Obj   . |bibd(o,_)| = r,
+    forAll bl     : Block . |bibd(_,bl)| = k,
+    forAll o1, o2 : Obj   , o1 != o2
+                          . |bibd(o1,_) intersect bibd(o2,_)| = lambda_

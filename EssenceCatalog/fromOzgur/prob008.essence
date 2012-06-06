@@ -1,0 +1,67 @@
+language ESSENCE 1.2.0
+$ prob008.essence: Vessel Loading
+$ Problem details available at http://www.csplib.\/g/prob/prob008/
+$ 25 July 2007
+$
+
+$ deck_width: the width of the ship deck
+$ deck_length: the length of the ship deck
+$ n_containers: the number of containers
+$ n_classes: the number of container classes
+given n_limit : int(2..)
+given deck_width, deck_length, n_containers, n_classes : int(1..n_limit)
+
+$ Container: containers are represented as an integer between 1 and n_containers
+$ Class: classes are represented as an integer between 1 and n_classes
+$ Width: a container width may be between 1 and the width of the deck
+$ Length: a container length may be between 1 and the length of the deck
+$ X: a position on x-axis (width) of the deck
+$ Y: a position on y-axis (length) of the deck
+letting Container be domain int(1..n_containers)
+letting Class be domain int(1..n_classes)
+letting Width be domain int(1..deck_width)
+letting Length be domain int(1..deck_length)
+letting X be domain int(0..deck_width)
+letting Y be domain int(0..deck_length)
+
+$ width: a container's width
+$ length: a container's length
+$ class: a container's class
+$ separation: the minimum allowed separation between two container classes
+given width : function (total) Container -> Width
+given length : function (total) Container ->  Length
+given class : function (total) Container ->  Class
+given separation : function (total) set (size 2) of Class -> int(0..n_limit)
+
+$ west: the x coordinate of a container's western edge
+$ north: the y coordinate of a container's northern edge
+$ east: the x coordinate of a container's eastern edge
+$ south: the y coordinate of a container's southern edge
+find west, east : function (total) Container ->  X
+find north, south : function (total) Container ->  Y
+find orientation : function (total) Container -> int(0..1)
+
+such that
+$ all north, east, south & west coordinates are valid acc\/ding to the given
+$ width and length parameters
+    forAll c : Container . (east(c) - west(c) = width(c) /\
+                            south(c) - north(c) = length(c) /\ orientation(c) = 0) \/
+                           (east(c) - west(c) = length(c) /\
+                            south(c) - north(c) = width(c) /\ orientation(c) = 1),
+$ no two containers occupy the same space
+    forAll c1, c2 : Container . (c1 != c2 => (west(c1)  != west(c2) \/
+                                                 north(c1) != north(c2))),
+$ containers do not overlap each other
+    forAll c1, c2 : Container . 
+    (c1 != c2 => (
+        (max(set{west(c1), west(c2)}) - min(set{east(c1), east(c2)}) >= 0)\/
+        (max(set{north(c1), north(c2)}) - min(set{south(c1), south(c2)}) >= 0))),
+        
+$ container placement meets the class separation constraints
+    forAll c1, c2 : Container . 
+    ((c1 != c2) =>
+       ( (max(set {west(c1), west(c2)}) - min(set {east(c1), east(c2)})
+            >= separation(set{class(c1), class(c2)})) \/
+        (max(set {north(c1), north(c2)}) - min(set {south(c1), south(c2)})
+            >= separation(set{class(c1), class(c2)}))))
+

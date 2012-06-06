@@ -1,0 +1,34 @@
+language ESSENCE 1.2.0
+$ prob110.essence: Peaceably Co-existing Armies of Queens
+$ Problem details available in:
+$   Models and Symmetry Breaking for `Peaceable Armies of Queens'
+$   B. M. Smith, K. E. Petrie, I. P. Gent.
+$   Proc. First International Conference on Integration of AI and OR Techniques
+$   in Constraint Programming for Combinatorial Optimization Problems (CPAIOR
+$   2004), LNCS 3011, pp. 271-286, 2004.
+$
+$ 26 July 2007
+$
+
+$ n: the side length of the board
+given n : int(1..)
+
+$ Index: square indicies can be between 1 and n on both axes
+$ Square: a square is a tuple made up of two elements, an x-index and a y-index
+letting Index be domain int(1..n),
+        Square be domain tuple (Index,Index)
+
+$ black: the set of squares that contain a black queen
+$ white: the set of squares that contain a white queen
+find black, white : set of Square
+
+$ maximise the number of squares that contain queens
+maximising |black| + |white|
+
+such that
+$ there are an equal number of black and white queens on the board
+    |black| = |white|,
+$ no row/column/diagonal has both black and white queens on it
+    forAll (rb,cb) in black . forAll (rw,cw) in white .
+        (rb != rw) /\ (cb != cw) /\ (|rw - rb| != |cw - cb|)
+

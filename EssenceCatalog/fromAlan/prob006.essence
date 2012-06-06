@@ -1,0 +1,22 @@
+language ESSENCE 1.2.0
+$ prob006.essence: Golomb Ruler Problem
+$ Problem details available at http://www.csplib.org/prob/prob006/
+$
+$ Given n, put n integer ticks on a ruler of size m so that all inter-tick
+$ distances are unique. Minimise m,
+$
+$ 03 September 2007
+$
+
+given n : int
+
+where n >= 0
+
+letting bound be 2 ** n
+
+find Ticks : set (size n) of int(0..bound)
+
+minimising max(Ticks)
+
+such that forAll pair1, pair2 : set (size 2) of int subsetEq Ticks .
+    pair1 != pair2 -> max(pair1) - min(pair1) != max(pair2) - min(pair2)

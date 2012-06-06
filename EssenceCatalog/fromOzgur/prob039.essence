@@ -1,0 +1,28 @@
+language ESSENCE 1.2.0
+$ prob039.essence: Rehearsal Problem
+$ Problem details available at http://www.csplib.org/prob/prob039/
+$ 07 September 2007
+$
+
+given n_pieces, n_players : int(1..)
+
+given duration : function (total) int(1..n_pieces) -> int(1..)
+given plays_in : relation of (int(1..n_players) ** int(1..n_pieces))
+
+find order : function (total,bijective) int(1..n_pieces) -> int(1..n_pieces)
+find arrive, leave : function (total) int(1..n_players) -> int(1..n_pieces)
+
+maximising
+    sum p : int(1..n_players) . (
+        (sum i : int(1..arrive(p)) . duration(order(i)))
+        +
+        (sum i : int(leave(p)..n_pieces) . duration(order(i)))
+    )
+
+such that
+    forAll p : int(1..n_players) . (
+        arrive(p) in plays_in(p,_) /\
+        leave(p)  in plays_in(p,_) /\
+        forAll i : int(1..n_pieces) .
+            order(i) in plays_in(p,_) => (arrive(p) <= i /\ leave(p) >= i)
+    )

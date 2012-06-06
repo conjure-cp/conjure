@@ -1,0 +1,22 @@
+language ESSENCE 1.2.0
+$ prob016.essence: Traffic Lights
+$ Problem details available at http://www.csplib.org/prob/prob016/
+$ 04 September 2007
+$
+
+$ n_roads; the number of roads
+given n_roads : int(1..)
+
+$ Road: road identifers are between 1 and n_roads
+$ VCol: colours for vehicle traffic lights
+$ PCol: colours for pedestrian traffic lights
+letting Road be domain int(1..n_roads),
+        VCol be new type enum {r,ry,g,y},
+        PCol be new type enum {pr,pg}
+
+$ valid: the valid traffic light combinations
+find valid : set of function (total) Road --> (VCol,PCol)
+
+$ all combinations obey the problem constraints
+such that forAll c in valid . forAll rd : Road .
+    {c(rd),c((rd % n_roads)+1)} in {{(r,pr),(g,pg)},{(ry,pr),(y,pr)}}

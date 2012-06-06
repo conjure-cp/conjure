@@ -1,0 +1,31 @@
+language ESSENCE 1.2.0
+$ prob013.essence: Progressive Party Problem
+$ Problem details available at http://www.csplib.org/prob/prob013/
+$ 05 September 2007
+
+given n_boats, n_periods : int(1..)
+
+letting Boat be domain int(1..n_boats)
+
+given capacity, crew : function (total) Boat -> int(1..)
+
+find hosts : set (size 13) of Boat
+find sched : set (size n_periods) of function (total) Boat -> Boat
+
+such that
+    forAll p : sched . (
+        range(p) subseteq hosts
+    ),
+    forAll p : sched . (
+        forAll h : hosts . (
+            p(h) = h
+        )
+    ),
+    forAll p : sched . (
+        forAll h : hosts . (
+            (sum b : p'(h) . crew(b)) <= capacity(h)
+        )
+    ),
+    forAll b1,b2 : Boat . (
+        (b1 != b2) => ((sum p : sched . p(b1) = p(b2)) <= 1)
+    )

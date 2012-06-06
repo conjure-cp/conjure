@@ -1,0 +1,18 @@
+language ESSENCE 1.2.0
+$ prob025.essence: Lam's Problem
+$ Problem details available at http://www.csplib.org/prob/prob025/
+$ 06 September 2007
+$
+
+letting Index be type of size 111
+
+find m : matrix indexed by [Index,Index] of bool
+
+such that
+    forAll r : Index . ((sum c : Index . not(m[r,c])) = 11),
+    forAll c : Index . ((sum r : Index . not(m[r,c])) = 11),
+    forAll r1,r2 : Index . (
+        (r1 != r2) => (
+            (sum c : Index . not(m[r1,c] \/ m[r2,c])) = 1
+        )
+    )

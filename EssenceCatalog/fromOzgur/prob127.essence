@@ -1,0 +1,15 @@
+language Essence 0.0
+
+given n, k : int(1..)
+letting V be domain int(1..n)
+given graph : set of tuple of (V,V)
+
+find colouring : function (total) V -> int(1..k)
+
+such that
+    forAll v : graph. colouring(v[0]) != colouring(v[1])
+
+$ find x : set of tuple of (V,V)
+$ 
+$ such that
+$     (2,3) in x

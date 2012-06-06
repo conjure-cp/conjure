@@ -1,0 +1,21 @@
+language ESSENCE 1.2.0
+$ prob033.essence: Word Design for DNA Computing on Surfaces
+$ Problem details available at http://www.csplib.org/prob/prob033/
+$ 07 September 2007
+$
+
+letting Base be new type enum {A,C,G,T},
+        Index be domain int(1..8)
+
+find words : set of function (total) Index --> Base
+
+maximising |words|
+
+such that
+    forAll w in words . |preimage(w,C)| + |preimage(w,G)| = 4,
+    $ forAll {w1,w2} subsetEq words . sum i : Index . (w1(i) = w2(i)) <= 4,
+    forAll w1,w2 in words . sum i : Index . (w1(i) = A /\ w2(9-i) = T \/
+                                             w1(i) = C /\ w2(9-i) = G \/
+                                             w1(i) = G /\ w2(9-i) = C \/
+                                             w1(i) = T /\ w2(9-i) = A) <= 4
+

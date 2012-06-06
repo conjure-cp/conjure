@@ -1,0 +1,13 @@
+language Essence 0.0
+
+given n : int(1..)
+letting V be domain int(1..n)
+given E: set (maxsize n) of set (size 2) of V
+given Weight : function (total) V -> int(1..)
+
+find S : set (maxsize n) of V
+
+maximising (sum s : S. Weight(s))
+
+such that
+    forAll v1, v2 : S. ( (v1 != v2) => !(set{v1,v2} in E))

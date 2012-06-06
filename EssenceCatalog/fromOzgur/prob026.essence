@@ -1,0 +1,24 @@
+language ESSENCE 1.2.0
+$ prob026.essence: Round Robin Tournament Scheduling
+$ Problem details available at http://www.csplib.org/prob/prob026/
+$ 06 September 2007
+$
+
+given n_teams : int(1..)
+
+where n_teams % 2 = 0
+
+letting Team be type of size n_teams
+letting Week be type of size n_teams-1
+letting Period be  type of size n_teams/2
+
+find sched : set (size ((n_teams-1)*n_teams)/2) of tuple (Week,Period,set (size 2) of Team)
+
+such that
+    forAll t : Team . forAll w : Week . exists s : sched . (s[0] = w /\ t in t[2]),
+    forAll t : Team . forAll p : Period . (
+        (sum s : sched . (s[1] = p) * (t in s[2])) <= 2
+    ),
+    forAll t1,t2 : Team . (
+        (t1 != t2) => ((sum s : sched . ((t1 in s[2]) * (t2 in s[2]))) = 1)
+    )

@@ -1,0 +1,15 @@
+language ESSENCE 1.2.0
+$ prob015.essence: Schur's Lemma
+$ Problem details available at http://www.csplib.org/prob/prob015/
+$ 05 September 2007
+$
+
+given n_balls, n_boxes : int(1..)
+
+letting Ball be domain int(1..n_balls)
+
+find schur : partition (size n_boxes) from Ball
+
+such that forAll b1,b2,b3 : Ball . forAll s in parts(schur) .
+    b1 != b2 /\ b1 + b2 = b3 -> ! ({b1,b2,b3} subsetEq s)
+

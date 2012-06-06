@@ -1,0 +1,15 @@
+language Essence 2.0
+
+given n : int(0..)
+
+letting bound be 2^n
+
+find ticks : set (size n) of int(0..bound)
+
+minimising max(ticks)
+
+such that
+    $ forAll i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k,
+    $ forAll i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k,
+    $ forAll i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k,
+    forAll i,j,k,l in ticks, i < j /\ k < l /\ (i,j) != (k,l) . j-i != l-k
