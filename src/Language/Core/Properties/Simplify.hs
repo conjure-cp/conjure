@@ -5,7 +5,9 @@ module Language.Core.Properties.Simplify where
 
 import Language.Core.Imports
 import Language.Core.Definition
+import Language.Core.MatchBind ( match )
 import Language.Core.Properties.TypeOf
+import Language.Core.Properties.DomainOf
 import Language.Core.Properties.ShowAST
 import Language.Core.Properties.Pretty
 
@@ -25,8 +27,18 @@ instance Simplify Core where
         flag <- lift $ typeUnify ta tb
         tell $ Any True
         return $ L $ B flag
+    simplify _p@( viewDeep [":operator-hasdomain"] -> Just [a,b] ) = do
+        -- lift $ mkLog "simplify" $ pretty p
+        da   <- lift $ domainOf a
+        db   <- lift $ domainOf b
+        flag <- lift $ domainUnify da db
+        tell $ Any True
+        return $ L $ B flag
     simplify x = do
-        lift $ mkLog "simplify" $ "default case:" <+> pretty x
+        lift $ mkLog "simplify" $ "default case:" <++>
+                                vcat [ pretty x
+                                     , showAST x
+                                     ]
         return x
 
 instance Simplify Reference where
@@ -44,8 +56,14 @@ typeUnify (Expr t1 xs1) (Expr t2 xs2)
     , length xs1 == length xs2
     = and <$> zipWithM typeUnify xs1 xs2
 typeUnify x y = do
-    -- mkLog "typeUnify" $ vcat [ pretty x
-    --                          , "~~"
-    --                          , pretty y
-    --                          ]
+    mkLog "typeUnify" $ "default case" <++>
+                        vcat [ pretty x
+                             , "~~"
+                             , pretty y
+                             ]
     return $ x == y
+
+domainUnify :: Monad m => Core -> Core -> CompT m Bool
+domainUnify y x = do
+    mkLog "domainUnify" $ pretty x <+> "~~" <++> pretty y
+    match x y

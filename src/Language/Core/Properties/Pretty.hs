@@ -118,6 +118,15 @@ instance Pretty Core where
         = let xs' = [ Expr ":atTopLevel" [x] | x <- xs ] in
             "such that" <++> vcat (punctuate comma $ map pretty xs')
 
+
+    pretty ( viewDeep [":withlocals"]
+              -> Just [ Expr ":actual" [actual]
+                      , Expr ":locals" locals
+                      ]
+           ) = let locals' = [ Expr ":atTopLevel" [x] | x <- locals ] in
+                Pr.parens $ pretty actual <+> "@" <+> vcat (map pretty locals')
+
+
     pretty ( viewDeep [":domain"]
               -> Just [R r]
            ) = pretty r
@@ -209,6 +218,8 @@ instance Pretty Core where
         = pretty name
     pretty ( viewDeep [":attribute-name-name"] -> Just [x]) = pretty x
 
+    pretty ( viewDeep [":attribute",":attribute-dontcare"] -> Just [] )
+        = ".."
 
     pretty ( viewDeep [":range",":range-single"] -> Just [x]   ) = pretty x
     pretty ( viewDeep [":range",":range-from"  ] -> Just [x]   ) = pretty x <> ".."

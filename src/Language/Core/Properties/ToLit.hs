@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Language.Core.Properties.ToLit where
-
 
 import Language.Core.Imports
 import Language.Core.Definition
@@ -16,7 +16,7 @@ class ToLit a where
 instance ToLit Core where
     toLit (L x) = toLit x
     toLit (R x) = toLit x
-    toLit (Expr ":value" [Expr ":value-literal" [L x]]) = return $ Just x
+    toLit ( viewDeep [":value", ":value-literal"] -> Just [L x] ) = return $ Just x
     toLit p     = do
         mkLog "toLit" $ pretty p
         -- mkLog "toLit" $ showAST p
