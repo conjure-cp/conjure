@@ -298,7 +298,11 @@ runInteractively name = case [ (input,rules) | (name',input,_,rules) <- testData
 tests :: Test.Hspec.Monadic.Spec
 tests = buildTests testData
 
-testData :: [(String, FilePath, [FilePath], [FilePath])]
+testData :: [ ( String              -- a name for the test case
+              , FilePath            -- input Essence spec
+              , [FilePath]          -- output specs
+              , [FilePath]          -- rules to use
+              ) ]
 testData =
     [ (   "setIn"
       ,   "testsuite/ruleengine/setIn.essence"
