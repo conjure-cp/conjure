@@ -166,6 +166,19 @@ testSetMax2 = void $ loadAndApply
         , "testsuite/ruleengine/set-in-to-quantified.rule"
         ]
 
+testSetMin1 :: IO ()
+testSetMin1 = void $ loadAndApply
+        "testsuite/ruleengine/setMin.essence"
+        [ "testsuite/ruleengine/set-min.rule"
+        ]
+
+testSetMin2 :: IO ()
+testSetMin2 = void $ loadAndApply
+        "testsuite/ruleengine/setMin.essence"
+        [ "testsuite/ruleengine/set-min.rule"
+        , "testsuite/ruleengine/set-in-to-quantified.rule"
+        ]
+
 
 loadAndApply :: FilePath -> [FilePath] -> IO [Language.Core.Spec]
 loadAndApply b as = do
