@@ -313,6 +313,25 @@ instance TypeOf Core where
             then return ta
             else errMismatch p
 
+    -- Int -> Int -> Int
+    -- set of a -> set of a -> set of a
+    -- mset of a -> mset of a -> mset of a
+    typeOf p@( viewDeep [":operator--"]
+                -> Just [a,b]
+             ) = do
+        ta <- typeOf a
+        tb <- typeOf b
+        flag <- typeUnify ta tb
+        if not flag
+            then errMismatch p
+            else do
+                let
+                    checkAndReturn q@( viewDeep [":type",":type-int" ] -> Just [ ]) = return q
+                    checkAndReturn q@( viewDeep [":type",":type-set" ] -> Just [_]) = return q
+                    checkAndReturn q@( viewDeep [":type",":type-mset"] -> Just [_]) = return q
+                    checkAndReturn q = errMismatch q
+                checkAndReturn ta
+
 
     typeOf p     = errInvariant p
 

@@ -23,14 +23,14 @@ instance Simplify Core where
 
     simplify ( viewDeep [":metavar"] -> Just [R x] ) = simplify ("@" `mappend` x)
 
-    simplify _p@( viewDeep [":operator-hastype"] -> Just [a,b] ) = do
+    simplify  p@( viewDeep [":operator-hastype"] -> Just [a,b] ) = do
         lift $ mkLog "simplify" $ pretty p
         ta   <- lift $ typeOf a
         tb   <- lift $ typeOf b
         flag <- lift $ typeUnify ta tb
         tell $ Any True
         return $ L $ B flag
-    simplify _p@( viewDeep [":operator-hasdomain"] -> Just [a,b] ) = do
+    simplify  p@( viewDeep [":operator-hasdomain"] -> Just [a,b] ) = do
         lift $ mkLog "simplify" $ pretty p
         da   <- lift $ domainOf a
         db   <- lift $ domainOf b
@@ -49,12 +49,24 @@ instance Simplify Core where
                            ]
                  ) = returnTrue
 
+    simplify _p@( viewDeep [":operator-/\\"]
+                   -> Just [ Expr ":empty-guard" []
+                           , x
+                           ]
+                 ) = do tell $ Any True
+                        return x
+    simplify _p@( viewDeep [":operator-/\\"]
+                   -> Just [ x
+                           , Expr ":empty-guard" []
+                           ]
+                 ) = do tell $ Any True
+                        return x
 
     -- simplify _p@( viewDeep [":operator-\\/"] -> Just [a,b] ) = do
     --     a' <- simplify a
     --     b' <- simplify b
     --     return $ Expr ":operator-\\/" [a',b']
-    simplify  p@( viewDeep [":operator-="] -> Just [R a,R b] ) | a == b = do
+    simplify _p@( viewDeep [":operator-="] -> Just [R a,R b] ) | a == b = do
         tell $ Any True
         returnTrue
     -- simplify  p@( viewDeep [":operator-="] -> Just [a,b] ) = do

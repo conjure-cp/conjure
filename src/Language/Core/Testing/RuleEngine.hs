@@ -550,4 +550,16 @@ testData =
         ]
       )
 
+    , ( "setMinus-1"
+      , "testsuite/ruleengine/setMinus.essence"
+      , [ "testsuite/ruleengine/out/testSetMinus1.essence"
+        ]
+      , [ "testsuite/ruleengine/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/set-in-to-quantified.rule"
+        , "testsuite/ruleengine/quantifier-minus.rule"
+        ]
+      )
+
     ]

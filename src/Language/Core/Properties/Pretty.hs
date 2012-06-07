@@ -377,6 +377,7 @@ prettyQuantified xs =
                         _ -> Pr.empty
                   )
         hangGuard x = case guard of
+                        Just [Expr ":empty-guard" []] -> x
                         Just [i] -> x <++> (Pr.comma <+> pretty i)
                         _        -> x
         hangBody x = x <++> ("." <+> pretty body)
