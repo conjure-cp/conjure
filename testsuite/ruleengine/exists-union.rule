@@ -1,4 +1,4 @@
 
 [1000]
 
-exists @i in @a union @b . @body ~~> (exists @i in @a . @body) \/ (exists @i in @b . @body)
+exists @i in @a union @b, @guard . @body ~~> (exists @i in @a, @guard . @body) \/ (exists @i in @b, @guard . @body)
