@@ -769,6 +769,10 @@ parseQuantifiedExpr parseBody = do
             _ -> return ()
         qnGuard <- optionMaybe (comma *> parseExpr)
         qnBody  <- dot *> ( parseBody <??> "expecting body of a quantified expression" )
+        let emptyGuard      = [ Expr ":expr-quantified-guard" [ Expr ":empty-guard" [] ] ]
+        let emptyGuardOr Nothing  = emptyGuard
+            emptyGuardOr (Just a) = [ Expr ":expr-quantified-guard" [a] ]
+
         let
             f []     = error "The Impossible has happenned. in parseQuantifiedExpr.f"
             f [i]    = Expr ":expr-quantified" $ concat
@@ -782,9 +786,7 @@ parseQuantifiedExpr parseBody = do
                                    ]
                                  | Just (a,b) <- [qnExpr]
                                  ]
-                        , [ Expr ":expr-quantified-guard"        [a]
-                          | Just a <- [qnGuard]
-                          ]
+                        , emptyGuardOr qnGuard
                         , [ Expr ":expr-quantified-body"         [qnBody]  ]
                         ]
                         -- QuantifiedExpr qnName i qnDom qnExpr qnGuard qnBody
@@ -799,6 +801,7 @@ parseQuantifiedExpr parseBody = do
                                    ]
                                  | Just (a,b) <- [qnExpr]
                                  ]
+                        , emptyGuard
                         , [ Expr ":expr-quantified-body"         [f is]  ]
                         ]
                         -- QuantifiedExpr qnName i qnDom qnExpr (QuanGuard []) (Q $ f is)
