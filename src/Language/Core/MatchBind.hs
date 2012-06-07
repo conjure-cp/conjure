@@ -5,6 +5,7 @@ module Language.Core.MatchBind where
 import Language.Core.Definition
 import Language.Core.Imports
 import Language.Core.Properties.ShowAST
+import Language.Core.Properties.Pretty
 import Language.Core.Parser
 import Language.EssenceLexerP
 
@@ -109,7 +110,7 @@ mkFunction pattern templates = do
                 modify $ \ st -> st { binders = bindersBefore }
                 mzero
 
-testAsAFunc :: Text -> Text -> Text -> IO Doc
+testAsAFunc :: Text -> Text -> Text -> IO ()
 testAsAFunc pattern' template' x' = do
     pattern  <- headNote "parsing pattern"  <$> lexAndParseIO (parseExpr <* eof) pattern'
     template <- headNote "parsing template" <$> lexAndParseIO (parseExpr <* eof) template'
@@ -118,10 +119,13 @@ testAsAFunc pattern' template' x' = do
         f  <- mkFunction pattern [template]
         my <- runMaybeT (f x)
         case my of
-            Nothing -> return "function returns Nothing"
-            Just y  -> do
-                mkLog "testAsAFunc" (showAST y)
-                return $ showAST y
+            Nothing -> do
+                error "function returns Nothing"
+            Just ys -> forM_ ys $ \ y -> do
+                liftIO $ print $ pretty y
+                -- mkLog "testAsAFunc" (showAST y)
+                -- return $ showAST y
+                -- return $ pretty y
 
 
 
