@@ -64,8 +64,8 @@ onCoreGeneric fs x t xs = do
         else return [x]
 
 
-tryApply :: Monad m => RuleBase (CompT m) -> Middleware (WriterT Any (CompT m)) Core [Core]
-tryApply fs x =
+tryApply :: (Functor m, Monad m) => RuleBase (CompT m) -> Middleware (WriterT Any (CompT m)) Core [Core]
+tryApply fs x = do
     let
         go [] = return [x]
         go (g:gs) = do
@@ -77,4 +77,9 @@ tryApply fs x =
                     lift $ mkLog "applied" $ vcat (pretty x : map (("~~>" <+>) . pretty) ys)
                     tell (Any True)
                     return ys
-    in go fs
+    (x',Any flag) <- listen (simplify x)
+    if flag
+        then do
+            lift $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x']
+            return [x']
+        else go fs
