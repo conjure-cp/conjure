@@ -1,0 +1,11 @@
+language Essence 1.3
+
+find a: mset (size 3) of int(1..10)
+find b: mset (size 3) of int(1..10)
+find c: int(1..10)
+such that
+    (sum __1 in toSet(a)
+         . (sum __2 : int(1..min((sum __3 in a . __3 = __1), (sum __4 in b . __4 = __1)))
+                . 1))
+    =
+    c

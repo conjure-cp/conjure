@@ -15,6 +15,8 @@ import Data.String ( IsString(..) )
 import GHC.Generics ( Generic )
 import Text.PrettyPrint as Pr
 
+import Data.Generics.Uniplate.Data ( transform )
+
 
 data Spec = Spec Version [Core]
     deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
@@ -104,8 +106,11 @@ mkLog t d
                             , "bind"
                             , "rule-fail"
                             , "simplify"
+                            , "simplify-step"
+                            , "simplify-generic-case"
                             , "domainUnify"
                             , "typeUnify"
+                            , "typeOf"
                             , "ApplyTransformation.tryAgain"
                             , "ApplyTransformation.worker"
                             ]
@@ -168,17 +173,6 @@ lookUpRef r@(Reference t) = do
 lookUpInExpr :: Text -> [Core] -> Maybe [Core]
 lookUpInExpr t cs = listToMaybe [ xs | Expr (Tag t') xs <- cs, t == t' ]
 
-boolValue :: Bool -> Core
-boolValue = L . B
-
-intValue :: Integer -> Core
-intValue = L . I
-
-absolute :: Core -> Core
-absolute a = Expr "Abs" [a]
-
-plus :: Core -> Core -> Core
-plus a b = Expr "Plus" [a,b]
 
 data Fixity = FNone | FLeft | FRight
     deriving Show
@@ -197,8 +191,8 @@ operators =
     , ( L_Geq       , FNone  ,  400 )
     , ( L_Neq       , FNone  ,  400 )
     , ( L_Eq        , FNone  ,  400 )
-    , ( L_Or        , FRight ,  110 )
-    , ( L_And       , FRight ,  120 )
+    , ( L_Or        , FLeft  ,  110 )
+    , ( L_And       , FLeft  ,  120 )
     , ( L_Imply     , FNone  ,   50 )
     , ( L_Iff       , FNone  ,   50 )
     , ( L_union     , FLeft  ,  600 )
@@ -274,3 +268,33 @@ processStatement s@( viewDeep [":toplevel"]
 processStatement _s = do
     -- mkLog "default case" (stringToDoc $ show c)
     return ()
+
+
+
+replaceCore :: Core -> Core -> Core -> Core
+replaceCore old new = transform f
+    where f i | i == old  = new
+              | otherwise = i
+
+
+
+---
+
+valueBool :: Bool -> Core
+valueBool x = Expr ":value"
+            [ Expr ":value-literal"
+            [ L $ B x
+            ]]
+
+valueTrue :: Core
+valueTrue = valueBool True
+
+valueFalse :: Core
+valueFalse = valueBool False
+
+valueInt :: Integer -> Core
+valueInt x = Expr ":value"
+            [ Expr ":value-literal"
+            [ L $ I x
+            ]]
+

@@ -1,0 +1,9 @@
+language Essence 2.0
+
+find x: mset of int(0..9)
+find y: mset of int(0..9)
+such that
+    forAll __1 in x . freq(x, __1) <= freq(y, __1),
+    forAll __1 in y . freq(x, __1) <= freq(y, __1),
+    forAll __2 in y . freq(y, __2) <= freq(x, __2),
+    forAll __2 in x . freq(y, __2) <= freq(x, __2)

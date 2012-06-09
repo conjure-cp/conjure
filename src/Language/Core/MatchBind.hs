@@ -115,7 +115,7 @@ testAsAFunc pattern' template' x' = do
     pattern  <- headNote "parsing pattern"  <$> lexAndParseIO (parseExpr <* eof) pattern'
     template <- headNote "parsing template" <$> lexAndParseIO (parseExpr <* eof) template'
     x        <- headNote "parsing x"        <$> lexAndParseIO (parseExpr <* eof) x'
-    runCompIO def def $ do
+    void $ runCompIO def def $ do
         f  <- mkFunction pattern [template]
         my <- runMaybeT (f x)
         case my of

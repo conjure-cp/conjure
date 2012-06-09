@@ -12,11 +12,11 @@ import Language.Core.Parser
 import Language.EssenceLexerP ( lexAndParseIO, eof )
 
 
-errInvariant :: (Monad m, Pretty a) => a -> CompT m b
+errInvariant :: (Monad m, Pretty a) => Doc -> a -> CompT m b
 -- errInvariant p = err $ "TypeOf, invariant violation in:" <+> (stringToDoc $ show p)
 -- errInvariant p = err $ "TypeOf, invariant violation in:" <+> (stringToDoc $ ppShow p)
 -- errInvariant p = err $ "TypeOf, invariant violation in:" <+> showAST p
-errInvariant p = err $ "TypeOf, invariant violation in:" <+> pretty p
+errInvariant doc p = err $ "TypeOf, invariant violation in (" <+> doc <+> ")" <++> pretty p
 
 errCannot :: (Monad m, ShowAST a) => a -> CompT m b
 errCannot p = err $ "Cannot determine the type of" <+> showAST p
@@ -60,7 +60,9 @@ instance TypeOf Core where
                       , Expr ":find-domain" [domain]
                       ]
            ) = typeOf domain
-    
+
+    typeOf p@( viewDeep [":type"] -> Just _) = return p
+
     typeOf p@(Expr ":range"  [d]) =
         case d of
             Expr ":range-open" []  -> errCannot p
@@ -91,7 +93,7 @@ instance TypeOf Core where
                     Expr ":type"
                         [ Expr ":type-range" [tx]
                         ]
-            _ -> errInvariant p
+            _ -> errInvariant "range" p
     typeOf p@(Expr ":domain" [d]) = do
         x <- case d of
             R r -> typeOf r
@@ -102,7 +104,7 @@ instance TypeOf Core where
             Expr ":domain-enum"   xs ->
                 case lookUpInExpr ":domain-enum-name" xs of
                     Just [a] -> return $ Expr ":type-enum" [ Expr ":type-enum-name" [a] ]
-                    _ -> errInvariant p
+                    _ -> errInvariant "domain-enum" p
             Expr ":domain-matrix" xs ->
                 case ( lookUpInExpr ":domain-matrix-index" xs
                      , lookUpInExpr ":domain-matrix-inner" xs
@@ -115,7 +117,7 @@ instance TypeOf Core where
                                     [ Expr ":type-matrix-index" [ta]
                                     , Expr ":type-matrix-inner" [tb]
                                     ]
-                         _ -> errInvariant p
+                         _ -> errInvariant "domain-matrix" p
             Expr ":domain-tuple" [Expr ":domain-tuple-inners" xs] -> do
                 txs <- mapM typeOf xs
                 return $
@@ -129,7 +131,7 @@ instance TypeOf Core where
                         return $
                             Expr ":type-set"
                                 [ Expr ":type-set-inner" [ta] ]
-                    _ -> errInvariant p
+                    _ -> errInvariant "domain-set" p
             Expr ":domain-mset" xs ->
                 case lookUpInExpr ":domain-mset-inner" xs of
                     Just [a] -> do
@@ -137,7 +139,7 @@ instance TypeOf Core where
                         return $
                             Expr ":type-mset"
                                 [ Expr ":type-mset-inner" [ta] ]
-                    _ -> errInvariant p
+                    _ -> errInvariant "domain-mset" p
             Expr ":domain-function" xs ->
                 case ( lookUpInExpr ":domain-function-innerfrom" xs
                      , lookUpInExpr ":domain-function-innerto" xs
@@ -150,7 +152,7 @@ instance TypeOf Core where
                                     [ Expr ":type-function-innerfrom" [ta]
                                     , Expr ":type-function-innerto" [tb]
                                     ]
-                         _ -> errInvariant p
+                         _ -> errInvariant "domain-function" p
             Expr ":domain-relation" xs ->
                 case lookUpInExpr ":domain-relation-inners" xs of
                     Just as -> do
@@ -159,7 +161,7 @@ instance TypeOf Core where
                             Expr ":type-relation"
                                 [ Expr ":type-relation-inners" tas
                                 ]
-                    _ -> errInvariant p
+                    _ -> errInvariant "domain-relation" p
             Expr ":domain-partition" xs ->
                 case lookUpInExpr ":domain-partition-inner" xs of
                     Just [a] -> do
@@ -168,8 +170,8 @@ instance TypeOf Core where
                             Expr ":type-partition"
                                 [ Expr ":type-partition-inner" [ta]
                                 ]
-                    _ -> errInvariant p
-            _ -> errInvariant p
+                    _ -> errInvariant "domain-partition" p
+            _ -> errInvariant "domain" p
         return $ Expr ":type" [x]
     typeOf p@(Expr ":value"  [d]) =
         case d of
@@ -205,7 +207,7 @@ instance TypeOf Core where
                                                         [Expr ":type-matrix-values" [i]]
                                                     ]
                                         else errMismatch p
-                         _ -> errInvariant p
+                         _ -> errInvariant "value-matrix" p
             Expr ":value-tuple" xs -> do
                 txs <- mapM typeOf xs
                 return $
@@ -218,7 +220,10 @@ instance TypeOf Core where
                     [] -> errCannot p
                     (i:is) ->
                         if all (i==) is
-                            then return $ Expr ":type" [Expr ":type-set" [i]]
+                            then return $ Expr ":type" [
+                                          Expr ":type-set" [
+                                          Expr ":type-set-inner" [i]
+                                          ]]
                             else errMismatch p
             Expr ":value-mset" xs -> do
                 txs <- mapM typeOf xs
@@ -226,7 +231,10 @@ instance TypeOf Core where
                     [] -> errCannot p
                     (i:is) ->
                         if all (i==) is
-                            then return $ Expr ":type" [Expr ":type-mset" [i]]
+                            then return $ Expr ":type" [
+                                          Expr ":type-mset" [
+                                          Expr ":type-mset-inner" [i]
+                                          ]]
                             else errMismatch p
             Expr ":value-function" xs -> do
                 let
@@ -234,7 +242,7 @@ instance TypeOf Core where
                         ta <- typeOf a
                         tb <- typeOf b
                         return (ta,tb)
-                    getOut _ = errInvariant p
+                    getOut _ = errInvariant "value-function" p
                 ys <- mapM getOut xs
                 case ys of
                     [] -> errCannot p
@@ -260,7 +268,7 @@ instance TypeOf Core where
                                 if all (i==) is
                                     then return $ Expr ":type" [i]
                                     else errMismatch p
-                    getOut _ = errInvariant p
+                    getOut _ = errInvariant "value-partition" p
                 ys <- mapM getOut xs
                 case ys of
                     [] -> errCannot p
@@ -273,7 +281,7 @@ instance TypeOf Core where
                                             ]
                                         ]
                             else errMismatch p
-            _ -> errInvariant p
+            _ -> errInvariant "value" p
 
     typeOf p@( Expr ":quanVar" [ Expr ":quanVar-name" _
                                , Expr ":quanVar-within"
@@ -290,8 +298,34 @@ instance TypeOf Core where
             (Nothing, Just [Expr ":operator-in" []], Just [x]) -> do
                 tx <- typeOf x
                 innerTypeOf tx
-            _ -> errInvariant p
+            _ -> errInvariant "quanVar" p
 
+
+    typeOf _p@( viewDeep [":operator-toSet"]
+                 -> Just [a]
+              ) = do
+        ta <- typeOf a
+        let
+            checkAndReturn ( viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [b] )
+                = return $ Expr ":type"
+                         [ Expr ":type-set"
+                         [ Expr ":type-set-inner" [b]]]
+            checkAndReturn q = errInvariant "toSet" q
+        checkAndReturn ta
+
+    typeOf _p@( viewDeep [":operator-twobars"]
+                 -> Just [a]
+              ) = do
+        ta <- typeOf a
+        let
+            checkAndReturn  q@( viewDeep [":type",":type-int"] -> Just _ )
+                = return q
+            checkAndReturn _q@( viewDeep [":type",":type-set"] -> Just _ )
+                = return $ Expr ":type" [Expr ":type-int"  []]
+            checkAndReturn _q@( viewDeep [":type",":type-mset"] -> Just _ )
+                = return $ Expr ":type" [Expr ":type-int"  []]
+            checkAndReturn  q = errInvariant "twobars" q
+        checkAndReturn ta
 
     typeOf p@( viewDeep [":operator-union"]
                 -> Just [a,b]
@@ -332,8 +366,9 @@ instance TypeOf Core where
                     checkAndReturn q = errMismatch q
                 checkAndReturn ta
 
-
-    typeOf p     = errInvariant p
+    typeOf p = do
+        mkLog "typeOf" $ "catch all case" <++> pretty p
+        return $ Expr ":type" [Expr ":type-unknown" []]
 
 instance TypeOf Literal where
     typeOf (B {}) = return $ Expr ":type" [Expr ":type-bool" []]
@@ -349,8 +384,9 @@ instance TypeOf Reference where
 
 
 innerTypeOf :: Monad m => Core -> CompT m Core
-innerTypeOf ( viewDeep [":type",":type-set",":type-set-inner"] -> Just [t] ) = return t
-innerTypeOf p = errInvariant p
+innerTypeOf ( viewDeep [":type",":type-set" ,":type-set-inner" ] -> Just [t] ) = return t
+innerTypeOf ( viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [t] ) = return t
+innerTypeOf p = errInvariant "innerTypeOf" p
 
 typeUnify :: (Functor m, Monad m) => Core -> Core -> CompT m Bool
 typeUnify (viewDeep [":type-unknown"] -> Just []) _ = return True

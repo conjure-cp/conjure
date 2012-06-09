@@ -74,7 +74,7 @@ tryApply fs x = do
                 Nothing -> go gs
                 -- Just [] -> return [x]
                 Just ys -> do
-                    lift $ mkLog "applied" $ vcat (pretty x : map (("~~>" <+>) . pretty) ys)
+                    lift $ mkLog "applied" $ vcat (pretty x : concatMap (\ y -> ["~~>", pretty y] ) ys)
                     tell (Any True)
                     return ys
     (x',Any flag) <- listen (simplify x)
