@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.Core.Testing.RuleEngine where
 
@@ -17,7 +18,8 @@ import Data.Traversable ( mapM )
 
 import qualified Text.PrettyPrint as Pr
 
-import Test.Hspec.Monadic
+import qualified Test.Hspec.Monadic
+import Test.Hspec.Monadic ( describe, it )
 import Test.Hspec.HUnit ()
 import Test.HUnit
 
