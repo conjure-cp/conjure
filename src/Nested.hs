@@ -29,9 +29,6 @@ singletonNested = flip Nested [] . Just
 throwErrorSingle :: (MonadError (Nested e) m) => e -> m a
 throwErrorSingle = throwError . flip Nested [] . Just
 
-err :: (MonadError (Nested e) m) => e -> m a
-err = throwErrorSingle
-
 infix 0 <?>
 (<?>) :: (MonadError (Nested e) m) => m a -> e -> m a
 comp <?> msg = comp `catchError` \ e -> throwError $ addToTop msg [e]

@@ -5,7 +5,6 @@ module Language.Core.Properties.CategoryOf where
 
 import Language.Core.Imports
 import Language.Core.Definition
-import Language.Core.Properties.ShowAST
 import Language.Core.Parser
 
 
@@ -25,11 +24,9 @@ instance CategoryOf Core where
         concat <$> mapM categoryOf xs
 
 instance CategoryOf Reference where
-    categoryOf r = core <?> "category check for reference" <+> showAST r
-        where
-            core = do
-                val <- lookUpRef r
-                categoryOf val
+    categoryOf r = do
+        val <- lookUpRef r
+        categoryOf val
 
 
 tests :: [([Category], Text)]
@@ -61,7 +58,7 @@ testRunner1 :: ([Category], Text) -> Bool
 testRunner1 (a,b) =
     let comp = do i <- runP Nothing parseExpr b; categoryOf i
     in  case runComp def def comp of
-            (Right a', _, _) | a `setEq` a' -> True
+            [(Right a', _, _)] | a `setEq` a' -> True
             other -> error $ ppShow other
 
 testRunner :: Bool

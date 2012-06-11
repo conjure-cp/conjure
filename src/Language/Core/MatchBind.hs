@@ -95,7 +95,9 @@ mkFunction pattern templates = do
                                     | template <- templates
                                     ]
     unless (templateMetaVars `S.isSubsetOf` patternMetaVars)
-        $ err $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id Pr.comma (map showAST $ S.toList patternMetaVars)
+        $ err undefined
+        $ singletonNested
+        $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id Pr.comma (map showAST $ S.toList patternMetaVars)
                      , "Template meta variables:" <+> prettyListDoc id Pr.comma (map showAST $ S.toList templateMetaVars)
                      ]
     return $ \ x -> do

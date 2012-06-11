@@ -15,18 +15,16 @@ Library
     default-language : Haskell2010
     hs-source-dirs   : src
 
-    exposed-modules  : Language.Core
-                     , Language.Core.Testing.ParsePrintIO
-                     , Language.Core.Testing.RuleEngine
-                     , Paths_conjure_cp
+    exposed-modules  : Paths_conjure_cp
 
-    other-modules    : Nested
+                     , Nested
                      , PrintUtils
                      , Utils
 
                      , Language.EssenceLexer
                      , Language.EssenceLexerP
 
+                     , Language.Core
                      , Language.Core.Imports
                      , Language.Core.Definition
                      , Language.Core.Parser
@@ -56,10 +54,15 @@ Library
                      , Language.Core.Middleware.RuleRefnToFunction
                      , Language.Core.Middleware.FreshNames
 
+                     , Language.Core.Pipeline.ToCore
+
+                     , Language.Core.Testing.ParsePrintIO
+                     , Language.Core.Testing.RuleEngine
+
     build-depends    : base, ghc-prim, syb
                      , containers == 0.5.0.0
                      , data-default == 0.4.0
-                     , hspec == 1.1.1
+                     , hspec == 1.1.2
                      , HUnit == 1.2.4.2
                      , mtl == 2.1.1
                      , pretty == 1.1.1.0
@@ -68,6 +71,7 @@ Library
                      , text == 0.11.2.1
                      , transformers == 0.3.0.0
                      , uniplate == 1.6.7
+                     , parallel == 3.2.0.3
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -92,7 +96,7 @@ Test-Suite conjure-tests
     type             : exitcode-stdio-1.0
     main-is          : AllTests.hs
     build-depends    : conjure-cp, base
-                     , hspec == 1.1.1
+                     , hspec == 1.1.2
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -108,4 +112,32 @@ Test-Suite conjure-tests
         -fno-spec-constr-count
         -funfolding-use-threshold=256
         -fprof-auto-calls
+        -threaded
         -- -Werror
+
+
+Executable conjure-toCore
+    default-language : Haskell2010
+    hs-source-dirs   : src-exec
+    main-is          : ToCoreMain.hs
+    build-depends    : conjure-cp, base
+
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -O2
+        -fno-spec-constr-count
+        -funfolding-use-threshold=256
+        -fprof-auto-calls
+        -threaded
+        -rtsopts
+        -with-rtsopts=-N3
+        -- -Werror
+

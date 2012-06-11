@@ -15,11 +15,12 @@ import Language.Core.Properties.Pretty
 
 runP :: (Functor m, Monad m, ShowAST a) => Maybe FilePath -> Parser a -> Text -> CompT m a
 runP mfp pa te = do
-    xs <- lexAndParse mfp pa te
-    case xs of
-        []  -> err $ "No parse."
-        [x] -> return x
-        _   -> throwError $ Nested (Just "Ambiguous parse.") (map (singletonNested . showAST) xs)
+    case lexAndParse mfp pa te of
+        Left  e  -> err ErrParsing e
+        Right xs -> case xs of
+            []  -> err ErrParsing "No parse."
+            [x] -> return x
+            _   -> err ErrParsing $ Nested (Just "Ambiguous parse.") (map (singletonNested . showAST) xs)
 
 test_ParsePrint' :: (Show a, ShowAST a, Pretty a) => Parser a -> Text -> IO (Maybe a)
 test_ParsePrint' p t = do

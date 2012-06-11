@@ -3,7 +3,7 @@
 module Language.Core.MultiMatch ( multiMatch, matchSuccess, matchFail ) where
 
 import Language.Core.Imports
-import Language.Core.Definition ( CompT )
+import Language.Core.Definition
 
 
 -- given a description, and a list of poccibly failing computations, 
@@ -13,7 +13,7 @@ multiMatch :: Monad m => Doc -> [MaybeT (CompT m) a] -> CompT m a
 multiMatch name as = do
     bs <- runMaybeT (msum as)
     case bs of
-        Nothing -> throwErrorSingle $ "Non exhaustive patterns in " <+> name
+        Nothing -> throwError (ErrMultiMatch, singletonNested $ "Non exhaustive patterns in " <+> name)
         Just b  -> return b
 
 -- use this to indicate a code path where pattern matching succeeds.

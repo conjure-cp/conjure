@@ -10,29 +10,31 @@ module Language.Core.Imports
     , prettyListDoc, parensIf
     , setEq
     , padRight, padLeft, padCenter
+    , pairWithContents
     ) where
 
-import Control.Applicative    as X ( Applicative, (<$>), (<*>), (<*), (*>) )
+import Control.Applicative    as X ( Applicative(..), (<$>), (<*), (*>) )
 import Control.Arrow          as X ( first, second )
 
 import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM
-                                      , (<=<), foldM )
+                                      , (<=<), (>=>), foldM, ap )
 import Control.Monad.Identity    as X ( Identity, runIdentity )
-import Control.Monad.Error       as X ( MonadError, throwError, catchError, ErrorT, runErrorT )
-import Control.Monad.Reader      as X ( MonadReader )
+import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT )
+import Control.Monad.Reader      as X ( MonadReader(..) )
 import Control.Monad.State       as X ( MonadState, gets, modify )
-import Control.Monad.Writer      as X ( MonadWriter, tell, listen, WriterT, runWriterT, execWriterT )
-import Control.Monad.List        as X ( ListT, runListT )
+import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT )
+import Control.Monad.List        as X ( ListT(..), runListT )
 import Control.Monad.IO.Class    as X ( MonadIO, liftIO )
 import Control.Monad.Trans.Class as X ( MonadTrans, lift )
 import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )
 
 import Data.Default      as X ( Default, def )
+import Data.Either       as X ( lefts, rights )
+import Data.Foldable     as X ( forM_ )
 import Data.List         as X ( intersperse, minimumBy, nub, groupBy, sortBy )
 import Data.Maybe        as X ( catMaybes, listToMaybe )
-import Data.Monoid       as X ( Monoid, mappend, mconcat, Any(..) )
+import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
-import Data.Foldable     as X ( forM_ )
 import Data.Traversable  as X ( forM )
 
 import Data.Text        as X ( Text, stripPrefix )
@@ -47,6 +49,7 @@ import Nested as X
 import Debug.Trace as X ( trace )
 
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
 import qualified Data.Set as S
 
@@ -85,3 +88,8 @@ padCenter :: Int -> Char -> String -> String
 padCenter n ch s = replicate (div diff 2) ch ++ s ++ replicate (diff - div diff 2) ch
     where
         diff = n - length s
+
+pairWithContents :: FilePath -> IO (FilePath, Text)
+pairWithContents fp = do
+    con <- T.readFile fp
+    return (fp,con)

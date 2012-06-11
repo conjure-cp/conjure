@@ -5,7 +5,6 @@ module Language.Core.Properties.ToLit where
 
 import Language.Core.Imports
 import Language.Core.Definition
-import Language.Core.Properties.ShowAST
 import Language.Core.Properties.Simplify
 import Language.Core.Properties.Pretty
 
@@ -34,8 +33,6 @@ instance ToLit Literal where
     toLit = return . Just
 
 instance ToLit Reference where
-    toLit r = core <?> "Reference.toLit:" <+> showAST r
-        where
-            core = do
-                val <- lookUpRef r
-                toLit val
+    toLit r = do
+        val <- lookUpRef r
+        toLit val

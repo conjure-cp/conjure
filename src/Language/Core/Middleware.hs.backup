@@ -3,6 +3,8 @@ module Language.Core.Middleware
     , runMiddlewareIO
     , runMiddleware
     , (~>)
+    , runMiddlewareIOSingle
+    , runMiddlewareSingle
     , middlewareInMaybe
     ) where
 
@@ -11,19 +13,17 @@ import Language.Core.Definition
 
 type Middleware m a b = a -> m b
 
-runMiddlewareIO :: a -> (Middleware (CompT IO) a b) -> IO b
-runMiddlewareIO x f = singleNote "runMiddlewareIO" <$> runCompIO def def (f x)
+runMiddlewareIO :: a -> (Middleware (CompT IO) a b) -> IO [b]
+runMiddlewareIO x f = runCompIO def def (f x)
 
-runMiddleware :: a -> Middleware (CompT Identity) a b -> (Either CompError b, CompState, CompLog)
-runMiddleware x f = singleNote "runMiddleware" $ runComp def def (f x)
-    -- case runComp def def (f x) of
-    --     (Left  e,_,logs) -> (Left (nestedToDoc e), logs)
-    --     (Right a,_,logs) -> (Right a             , logs)
+runMiddleware :: a -> Middleware (CompT Identity) a b -> [(Either (Nested Doc) b,CompState,CompLog)]
+runMiddleware x f = runComp def def (f x)
 
-singleNote :: String -> [a] -> a
-singleNote _    [x] = x
-singleNote note []  = error $ "[] " ++ note
-singleNote note _   = error $ "_ "  ++ note
+runMiddlewareIOSingle :: a -> Middleware (CompT IO) a b -> IO b
+runMiddlewareIOSingle x f = headNote "runMiddlewareIOSingle" <$> runMiddlewareIO x f
+
+runMiddlewareSingle :: a -> Middleware (CompT Identity) a b -> (Either (Nested Doc) b,CompState,CompLog)
+runMiddlewareSingle x f = headNote "runMiddlewareSingle" $ runMiddleware x f
 
 (~>) :: Monad m => Middleware m a b -> Middleware m b c -> Middleware m a c
 f ~> g = \ x -> do

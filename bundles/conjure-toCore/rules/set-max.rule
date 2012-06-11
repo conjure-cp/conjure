@@ -1,0 +1,11 @@
+
+[1000]
+
+max(@s) ~~> ( aux
+            @ find aux : @t
+              such that
+                forAll i in @s . i <= aux,
+                aux in @s
+            )
+
+    where @s hasdomain `set (..) of @t`

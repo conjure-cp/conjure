@@ -5,8 +5,6 @@ module Language.Core.Properties.IsSafe where
 
 import Language.Core.Imports
 import Language.Core.Definition
--- import Language.Core.MultiMatch
-import Language.Core.Properties.ShowAST
 import Language.Core.Properties.ToInt
 
 -- testing: runCompIO def def $ do a <- runP Nothing parseExpr "(1+(3/x)+foo @ find x,y : int(1..8) letting foo be 3/x)"; isSafe a
@@ -93,9 +91,7 @@ instance IsSafe Core where
     --     isSafe x
 
 instance IsSafe Reference where
-    isSafe r = core <?> "safety check for reference" <+> showAST r
-        where
-            core = do
-                val <- lookUpRef r
-                isSafe val
+    isSafe r = do
+        val <- lookUpRef r
+        isSafe val
 

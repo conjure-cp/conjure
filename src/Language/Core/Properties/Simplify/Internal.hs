@@ -143,17 +143,23 @@ instance Simplify Core where
                                 "forAll" -> return $ Expr ":operator-->"  [a, b]
                                 "exists" -> return $ Expr ":operator-/\\" [a, b]
                                 "sum"    -> return $ Expr ":operator-*"   [a, b]
-                                _        -> err $ "unknown quantifier in simplify" <+> pretty quantifier
+                                _        -> lift $ err ErrInvariant
+                                                    $ singletonNested
+                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
                 glueOp a b = case quantifier of
                                 "forAll" -> return $ Expr ":operator-/\\" [a, b]
                                 "exists" -> return $ Expr ":operator-\\/" [a, b]
                                 "sum"    -> return $ Expr ":operator-+"   [a, b]
-                                _        -> err $ "unknown quantifier in simplify" <+> pretty quantifier
+                                _        -> lift $ err ErrInvariant
+                                                    $ singletonNested
+                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
                 identity = case quantifier of
                                 "forAll" -> return valueTrue
                                 "exists" -> return valueFalse
                                 "sum"    -> return (valueInt 0)
-                                _        -> err $ "unknown quantifier in simplify" <+> pretty quantifier
+                                _        -> lift $ err ErrInvariant
+                                                    $ singletonNested
+                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
 
             identity' <- identity
             vs' <- sequence [ guardOp (replaceCore qnVar v qnGuard)
@@ -178,12 +184,27 @@ instance Simplify Core where
     --     return x
 
 instance Simplify Reference where
-    simplify r = core <?> "domain check for reference" <+> showAST r
-        where
-            core = do
+    simplify r =
+        catchError
+            ( do
                 val <- lift $ lookUpRef r
-                tell $ Any True
+                tell (Any True)
                 simplify val
+            )
+            (\ _ -> lift $ err ErrUndefinedReference
+                            $ singletonNested
+                            $ "Reference.simplify:" <+> showAST r
+            )
+        -- lift $
+        --     catchIf
+        --         core
+        --         (ErrLookUpRef==)
+        --         $ \ _ -> 
+        -- where
+        --     core = do
+        --         val <- lift $ lookUpRef r
+        --         tell $ Any True
+        --         simplify val
 
 
 returnTrue :: (Functor m, Monad m) => WriterT Any (CompT m) Core

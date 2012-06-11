@@ -16,13 +16,19 @@ errInvariant :: (Monad m, Pretty a) => Doc -> a -> CompT m b
 -- errInvariant p = err $ "TypeOf, invariant violation in:" <+> (stringToDoc $ show p)
 -- errInvariant p = err $ "TypeOf, invariant violation in:" <+> (stringToDoc $ ppShow p)
 -- errInvariant p = err $ "TypeOf, invariant violation in:" <+> showAST p
-errInvariant doc p = err $ "TypeOf, invariant violation in (" <+> doc <+> ")" <++> pretty p
+errInvariant doc p =
+    err ErrTypeOf $ singletonNested
+                  $ "TypeOf, invariant violation in (" <+> doc <+> ")" <++> pretty p
 
 errCannot :: (Monad m, ShowAST a) => a -> CompT m b
-errCannot p = err $ "Cannot determine the type of" <+> showAST p
+errCannot p =
+    err ErrTypeOf $ singletonNested
+                  $ "Cannot determine the type of" <+> showAST p
 
 errMismatch :: (Monad m, ShowAST a) => a -> CompT m b
-errMismatch p = err $ "Type error in" <+> showAST p
+errMismatch p =
+    err ErrTypeOf $ singletonNested
+                  $ "Type error in" <+> showAST p
 
 tester_typeOfDomain :: Text -> IO ()
 tester_typeOfDomain t = do
@@ -298,6 +304,12 @@ instance TypeOf Core where
             (Nothing, Just [Expr ":operator-in" []], Just [x]) -> do
                 tx <- typeOf x
                 innerTypeOf tx
+            (Nothing, Just [Expr ":operator-subset" []], Just [x]) -> do
+                tx <- typeOf x
+                return tx
+            (Nothing, Just [Expr ":operator-subsetEq" []], Just [x]) -> do
+                tx <- typeOf x
+                return tx
             _ -> errInvariant "quanVar" p
 
 
@@ -376,11 +388,9 @@ instance TypeOf Literal where
 
 instance TypeOf Reference where
     typeOf "_" = return $ Expr ":type-unknown" []
-    typeOf r = core <?> "Reference.typeOf:" <+> showAST r
-        where
-            core = do
-                val <- lookUpRef r
-                typeOf val
+    typeOf r = do
+        val <- lookUpRef r
+        typeOf val
 
 
 innerTypeOf :: Monad m => Core -> CompT m Core

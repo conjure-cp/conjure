@@ -29,16 +29,16 @@ instance DomainOf Core where
 
 
 
-    domainOf x = err $ "Unknown domain." <++> vcat [ pretty x
-                                                   , showAST x
-                                                   ]
+    domainOf x = err ErrDomainOf
+                    $ singletonNested
+                    $ "Unknown domain." <++> vcat [ pretty x
+                                                  , showAST x
+                                                  ]
 
 instance DomainOf Reference where
-    domainOf r = core <?> "domain check for reference" <+> showAST r
-        where
-            core = do
-                val <- lookUpRef r
-                domainOf val
+    domainOf r = do
+        val <- lookUpRef r
+        domainOf val
 
 instance DomainOf Literal where
     domainOf (B {}) = return $ Expr ":domain" [Expr ":domain-bool" []]

@@ -4,14 +4,7 @@
 module Language.Core.Testing.RuleEngine where
 
 import Language.Core
-import Language.Core.Middleware
-import qualified Language.Core.Middleware.ReadFile            as ReadFile            ( worker )
-import qualified Language.Core.Middleware.ParseSpec           as ParseSpec           ( worker )
-import qualified Language.Core.Middleware.AtMostOneSuchThat   as AtMostOneSuchThat   ( worker )
--- import qualified Language.Core.Middleware.PrintSpec           as PrintSpec           ( worker )
-import qualified Language.Core.Middleware.ApplyTransformation as ApplyTransformation ( worker )
-import qualified Language.Core.Middleware.ParseRuleRefn       as ParseRuleRefn       ( worker )
-import qualified Language.Core.Middleware.RuleRefnToFunction  as RuleRefnToFunction  ( worker )
+import Language.Core.Pipeline.ToCore ( toCore, readSpec )
 
 import Prelude hiding ( mapM )
 import Data.Traversable ( mapM )
@@ -21,7 +14,7 @@ import qualified Text.PrettyPrint as Pr
 import qualified Test.Hspec.Monadic
 import Test.Hspec.Monadic ( describe, it )
 import Test.Hspec.HUnit ()
-import Test.HUnit
+import Test.HUnit ( assertFailure )
 
 
 testSetIn :: IO ()
@@ -193,104 +186,75 @@ testSetIntersect1 :: IO ()
 testSetIntersect1 = runInteractively "setIntersect-1"
 
 
-loadAndApply :: FilePath -> [FilePath] -> IO [Language.Core.Spec]
-loadAndApply b as = do
-
-    inputRules <- forM as $ \ a ->
-                    runMiddlewareIO a
-                    $  ReadFile.worker
-                    ~> ParseRuleRefn.worker
-    let (mRefnFunc,_,logs1) = runMiddleware inputRules $ RuleRefnToFunction.worker
-
-    mapM_ print $ prettyLog logs1
-
-    refnFunc <- case mRefnFunc of
-                    Left  e -> error $ show $ nestedToDoc e
-                    Right x -> return x
-
-    inputSpec <- runMiddlewareIO b
-                        $  ReadFile.worker
-                        ~> ParseSpec.worker
-
-    let (mspecs,_,logs2) = runMiddleware inputSpec
-                            $  ApplyTransformation.worker refnFunc
-                            ~> mapM (mapM AtMostOneSuchThat.worker)
-
-    mapM_ print $ prettyLog logs2
-
-    specs' <- case mspecs of
-                Left  e         -> error $ show $ nestedToDoc e
-                Right Nothing   -> return []
-                Right (Just xs) -> return xs
-
-    mapM_ (print . pretty) specs'
-    print $ length specs'
-
-    return specs'
-
+loadAndApply :: FilePath -> [FilePath] -> IO ()
+loadAndApply spec' rules' = do
+    spec    <- pairWithContents spec'
+    rules   <- mapM pairWithContents rules'
+    let
+        mresults = runComp def def (toCore spec rules)
+        logs     = mconcat [ ls | (_      , _, ls) <- mresults ]
+        errors   =         [ x  | (Left  x, _, _ ) <- mresults ]
+        results  =         [ x  | (Right x, _, _ ) <- mresults ]
+    mapM_ print $ prettyLog logs
+    if null errors
+        then mapM_ (print . pretty) results
+        else error $ show
+                   $ prettyErrors "There were errors in at least one branch." errors
 
 buildTests :: [(String, FilePath, [FilePath], [FilePath])] -> Test.Hspec.Monadic.Spec
+-- buildTests = undefined
 buildTests params = describe "rule engine" $ do
-    forM_ params $ \ (name, input, outputs, rules) -> do
+    forM_ params $ \ (name, spec', outputs', rules') -> do
         it ("testing " ++ name) $ do
-            inputRules <- forM rules $ \ a ->
-                            runMiddlewareIO a
-                                $  ReadFile.worker
-                                ~> ParseRuleRefn.worker
 
-            let (mRefnFunc,_,logs1) = runMiddleware inputRules $ RuleRefnToFunction.worker
+            spec    <- pairWithContents spec'
+            rules   <- mapM pairWithContents rules'
+            outputs <- mapM pairWithContents outputs'
 
-            mapM_ print $ prettyLog logs1
+            let
+                mgenerateds = runComp def def (toCore spec rules)
+                logsG       = mconcat [ ls | (_      , _, ls) <- mgenerateds ]
+                errorsG     =         [ x  | (Left  x, _, _ ) <- mgenerateds ]
+                generateds  =         [ x  | (Right x, _, _ ) <- mgenerateds ]
+            mapM_ print $ prettyLog logsG
+            unless (null errorsG)
+                $ assertFailure
+                $ show
+                $ prettyErrors "There were errors in at least one branch." errorsG
 
-            refnFunc <- case mRefnFunc of
-                            Left  e -> error $ show $ nestedToDoc e
-                            Right x -> return x
+            let
+                mexpecteds = runComp def def (mapM readSpec outputs)
+                logsE      = mconcat [ ls | (_        , _, ls) <- mexpecteds ]
+                errorsE    =         [ x  | (Left  x  , _, _ ) <- mexpecteds ]
+                expecteds  =  concat [ xs  | (Right xs, _, _ ) <- mexpecteds ]
+            mapM_ print $ prettyLog logsE
+            unless (null errorsE)
+                $ assertFailure
+                $ show
+                $ prettyErrors "There were errors in at least one branch." errorsE
 
-            inputSpec <- runMiddlewareIO input
-                            $  ReadFile.worker
-                            ~> ParseSpec.worker
+            ppPrint ( length outputs'
+                    , length expecteds
+                    , length generateds
+                    )
+            unless (length generateds == length expecteds)
+                $ assertFailure
+                $ show
+                $ vcat [ "different number of outputs generated."
+                       , "expected:"  <++> (stringToDoc $ show $ length expecteds )
+                       , "generated:" <++> (stringToDoc $ show $ length generateds)
+                       ]
 
-            let (mspecs,_,logs2) = runMiddleware inputSpec
-                                    $  ApplyTransformation.worker refnFunc
-                                    ~> mapM (mapM AtMostOneSuchThat.worker)
-
-            mapM_ print $ prettyLog logs2
-
-            specs' <- case mspecs of
-                        Left  e         -> do
-                            assertFailure $ show $ nestedToDoc e
-                            return $ error "never here"
-                        Right Nothing   -> return []
-                        Right (Just xs) -> return xs
-
-            mapM_ (print . pretty) specs'
-            print $ length specs'
-
-            outputSpecs <- forM outputs $ \ a ->
-                            runMiddlewareIO a
-                                $  ReadFile.worker
-                                ~> ParseSpec.worker
-                                ~> AtMostOneSuchThat.worker
-
-            if length specs' == length outputSpecs
-                then return ()
-                else assertFailure $ unlines [ "different number of outputs generated."
-                                             , show (length specs', length outputSpecs)
-                                             ]
-
-            forM_ (zip3 [(1::Int) ..] specs' outputSpecs) $ \ (i,a,b) ->
-                if a == b
-                    then return ()
-                    -- else assertFailure
-                    --         $ show
-                    --         $ vcat $ map pretty specs'
-                    else assertFailure
-                            $ Pr.renderStyle Pr.style { Pr.lineLength = 120 }
-                            $ "specs not equal"
-                                <+> Pr.parens (stringToDoc $ show i)
-                                $$ vcat [ " == generated ==" $$ pretty a
-                                        , " == expected  == " $$ pretty b
+            forM_ (zip3 [(1::Int) ..] generateds expecteds) $ \ (i,generated,expected) ->
+                unless (generated == expected)
+                    $ assertFailure
+                    $ Pr.renderStyle Pr.style { Pr.lineLength = 120 }
+                        $ "specs not equal"
+                            <+> Pr.parens (stringToDoc $ show i)
+                                $$ vcat [ " == generated ==" $$ pretty generated
+                                        , " == expected  ==" $$ pretty expected
                                         ]
+
 
 runInteractively :: String -> IO ()
 runInteractively name = case [ (input,rules) | (name',input,_,rules) <- testData, name == name' ] of
