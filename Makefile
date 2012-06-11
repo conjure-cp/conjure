@@ -2,7 +2,7 @@
 
 install:
 	# ghc-pkg unregister conjure-cp
-	time cabal install --disable-library-profiling --disable-executable-profiling
+	time cabal install --disable-library-profiling --disable-executable-profiling --force-reinstalls
 	# upx ~/.cabal/bin/conjure-toCore
 
 buildtests:
