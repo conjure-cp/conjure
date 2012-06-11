@@ -461,7 +461,7 @@ intToIntToInt p a b = do
         else do
             let
                 checkAndReturn q@( viewDeep [":type",":type-int" ] -> Just [ ]) = return q
-                checkAndReturn q = errMismatch "intToIntToInt.checkAndReturn" p
+                checkAndReturn _ = errMismatch "intToIntToInt.checkAndReturn" p
             checkAndReturn ta
 
 
