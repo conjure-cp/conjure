@@ -1,0 +1,8 @@
+
+[1000]
+
+@quan @i subset   @a , @guard . @body
+    ~~>
+@quan @i subsetEq @a , @guard /\ @i != @a . @body
+
+    where @a hastype `set of _`
