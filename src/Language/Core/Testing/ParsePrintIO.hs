@@ -16,8 +16,8 @@ import Test.HUnit
 
 specs :: [FilePath]
 -- specs = map ("EssenceCatalog/fromAlan/" ++) (drop 1 catalog)
-specs = map ("/Users/ozgurakgun/src/conjure-wd/testsuite/valid/essence/" ++) (drop 1 testsuite)
-     ++ map ("/Users/ozgurakgun/src/conjure-wd/EssenceCatalog/fromAlan/" ++) (drop 1 catalog)
+specs = map ("testsuite/valid/essence/" ++) (drop 1 testsuite)
+     ++ map ("EssenceCatalog/fromAlan/" ++) (drop 1 catalog)
     where
         testsuite = 
             [ ""
