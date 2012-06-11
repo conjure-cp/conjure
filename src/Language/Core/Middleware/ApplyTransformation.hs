@@ -57,16 +57,33 @@ onCore fs x@(R {}) = tryApply fs x
 onCore fs x@( viewDeep [":expr-quantified"] -> Just xs ) = 
     case lookUpInExpr ":expr-quantified-quanVar" xs of
         Just [Expr ":structural-single" [R r]] -> do
+            bindersBefore <- lift $ gets binders
+            let restoreState = modify $ \ st -> st { binders = bindersBefore }
             lift $ addBinder r
                     $ Expr ":quanVar" [ Expr ":quanVar-name"   [R r]
                                       , Expr ":quanVar-within" [x]
                                       ]
             result <- onCoreGeneric fs x ":expr-quantified" xs
-            lift $ removeLastBinder
+            lift restoreState
             return result
         _ -> lift $ err ErrInvariant
                     $ singletonNested
                     $ "Invariant violation in ApplyTransformation.onCore" <+> pretty x
+onCore fs ( viewDeep [":withlocals"] -> Just [ Expr ":actual" [actual]
+                                             , Expr ":locals" locals
+                                             ] ) = do
+    bindersBefore <- lift $ gets binders
+    let restoreState = modify $ \ st -> st { binders = bindersBefore }
+    lift $ mapM_ processStatement locals
+    results    <- onCore fs actual
+    outLocalss <- sequence <$> mapM (onCore fs) locals 
+    lift restoreState
+    return [ Expr ":withlocals" [ Expr ":actual" [result]
+                                , Expr ":locals" outLocals
+                                ]
+           | result <- results
+           , outLocals <- outLocalss
+           ]
 onCore fs x@(Expr t xs) = onCoreGeneric fs x t xs
 
 

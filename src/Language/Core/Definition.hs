@@ -380,7 +380,7 @@ processStatement s@( viewDeep [":toplevel"]
                       -> Just _
                    ) = mkLog "not handled in processStatement" (stringToDoc $ show s)
 processStatement _s = do
-    -- mkLog "default case" (stringToDoc $ show c)
+    -- mkLog "processStatement" (stringToDoc $ show s)
     return ()
 
 
