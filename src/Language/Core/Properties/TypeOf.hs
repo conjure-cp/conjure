@@ -25,10 +25,10 @@ errCannot p =
     err ErrTypeOf $ singletonNested
                   $ "Cannot determine the type of" <+> showAST p
 
-errMismatch :: (Monad m, ShowAST a) => a -> CompT m b
+errMismatch :: Monad m => Doc -> CompT m a
 errMismatch p =
     err ErrTypeOf $ singletonNested
-                  $ "Type error in" <+> showAST p
+                  $ "Type error in" <+> p
 
 tester_typeOfDomain :: Text -> IO ()
 tester_typeOfDomain t = do
@@ -69,6 +69,8 @@ instance TypeOf Core where
 
     typeOf p@( viewDeep [":type"] -> Just _) = return p
 
+    typeOf ( viewDeep [":empty-guard"] -> Just _ ) = return $ Expr ":type" [Expr ":type-bool" []]
+
     typeOf p@(Expr ":range"  [d]) =
         case d of
             Expr ":range-open" []  -> errCannot p
@@ -92,7 +94,7 @@ instance TypeOf Core where
                             Expr ":type"
                                 [ Expr ":type-range" [tx]
                                 ]
-                    else errMismatch p
+                    else errMismatch (pretty p)
             Expr ":range-single" [x] -> do
                 tx <- typeOf x
                 return $
@@ -200,7 +202,7 @@ instance TypeOf Core where
                                                         , Expr ":type-matrix-values"     [i]
                                                         ]
                                                     ]
-                                        else errMismatch p
+                                        else errMismatch (pretty p)
                          (Nothing, Just ys) -> do
                              tys <- mapM typeOf ys
                              case tys of
@@ -212,7 +214,7 @@ instance TypeOf Core where
                                                     [ Expr ":type-matrix"
                                                         [Expr ":type-matrix-values" [i]]
                                                     ]
-                                        else errMismatch p
+                                        else errMismatch (pretty p)
                          _ -> errInvariant "value-matrix" p
             Expr ":value-tuple" xs -> do
                 txs <- mapM typeOf xs
@@ -230,7 +232,7 @@ instance TypeOf Core where
                                           Expr ":type-set" [
                                           Expr ":type-set-inner" [i]
                                           ]]
-                            else errMismatch p
+                            else errMismatch (pretty p)
             Expr ":value-mset" xs -> do
                 txs <- mapM typeOf xs
                 case txs of
@@ -241,7 +243,7 @@ instance TypeOf Core where
                                           Expr ":type-mset" [
                                           Expr ":type-mset-inner" [i]
                                           ]]
-                            else errMismatch p
+                            else errMismatch (pretty p)
             Expr ":value-function" xs -> do
                 let
                     getOut (Expr ":value-function-mapping" [a,b]) = do
@@ -255,7 +257,7 @@ instance TypeOf Core where
                     (i@(a,b):is) ->
                         if all (i==) is
                             then return $ Expr ":type" [Expr ":type-function" [a,b]]
-                            else errMismatch p
+                            else errMismatch (pretty p)
             Expr ":value-relation" xs -> do
                 txs <- mapM typeOf xs
                 case txs of
@@ -263,7 +265,7 @@ instance TypeOf Core where
                     (i:is) ->
                         if all (i==) is
                             then return $ Expr ":type" [Expr ":type-relation" [i]]
-                            else errMismatch p
+                            else errMismatch (pretty p)
             Expr ":value-partition" xs -> do
                 let
                     getOut (Expr ":value-partition-part" as) = do
@@ -273,7 +275,7 @@ instance TypeOf Core where
                             (i:is) ->
                                 if all (i==) is
                                     then return $ Expr ":type" [i]
-                                    else errMismatch p
+                                    else errMismatch (pretty p)
                     getOut _ = errInvariant "value-partition" p
                 ys <- mapM getOut xs
                 case ys of
@@ -286,7 +288,7 @@ instance TypeOf Core where
                                             [ Expr ":type-partition-inner" [i]
                                             ]
                                         ]
-                            else errMismatch p
+                            else errMismatch (pretty p)
             _ -> errInvariant "value" p
 
     typeOf p@( Expr ":quanVar" [ Expr ":quanVar-name" _
@@ -312,6 +314,38 @@ instance TypeOf Core where
                 return tx
             _ -> errInvariant "quanVar" p
 
+    typeOf p@( viewDeep [":expr-quantified"] -> Just xs )
+        | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
+        , Just [ Expr ":structural-single" [R r]
+               ]                          <- lookUpInExpr ":expr-quantified-quanVar"      xs
+        , Just [ qnGuard ]                <- lookUpInExpr ":expr-quantified-guard"        xs
+        , Just [ qnBody  ]                <- lookUpInExpr ":expr-quantified-body"         xs
+        = do
+            bindersBefore <- gets binders
+            let restoreState = modify $ \ st -> st { binders = bindersBefore }
+            addBinder r
+                    $ Expr ":quanVar" [ Expr ":quanVar-name"   [R r]
+                                      , Expr ":quanVar-within" [p]
+                                      ]
+            tyGuard    <- typeOf qnGuard
+            tyBody     <- typeOf qnBody
+
+            unless (tyGuard == Expr ":type" [Expr ":type-bool" []])
+                $ errMismatch $ vcat [ pretty p, "guard must be a boolean expression" ]
+
+            result <- case () of
+                _ | quantifier `elem` ["forAll", "exists"] -> do
+                    unless (tyBody == Expr ":type" [Expr ":type-bool" []])
+                        $ errMismatch $ vcat [ pretty p, "body must be a boolean expression" ]
+                    return $ Expr ":type" [Expr ":type-bool" []]
+                _ | quantifier == "sum" -> do
+                    unless (tyBody == Expr ":type" [Expr ":type-int" []])
+                        $ errMismatch $ vcat [ pretty p, "body must be an integer expression" ]
+                    return $ Expr ":type" [Expr ":type-int" []]
+                _ -> errInvariant "typeOf" p
+
+            restoreState
+            return result
 
     typeOf _p@( viewDeep [":operator-toSet"]
                  -> Just [a]
@@ -347,7 +381,7 @@ instance TypeOf Core where
         flag <- typeUnify ta tb
         if flag
             then return ta
-            else errMismatch p
+            else errMismatch (pretty p)
 
     typeOf p@( viewDeep [":operator-intersect"]
                 -> Just [a,b]
@@ -357,7 +391,7 @@ instance TypeOf Core where
         flag <- typeUnify ta tb
         if flag
             then return ta
-            else errMismatch p
+            else errMismatch (pretty p)
 
     -- Int -> Int -> Int
     -- set of a -> set of a -> set of a
@@ -369,13 +403,13 @@ instance TypeOf Core where
         tb <- typeOf b
         flag <- typeUnify ta tb
         if not flag
-            then errMismatch p
+            then errMismatch (pretty p)
             else do
                 let
                     checkAndReturn q@( viewDeep [":type",":type-int" ] -> Just [ ]) = return q
                     checkAndReturn q@( viewDeep [":type",":type-set" ] -> Just [_]) = return q
                     checkAndReturn q@( viewDeep [":type",":type-mset"] -> Just [_]) = return q
-                    checkAndReturn q = errMismatch q
+                    checkAndReturn q = errMismatch (pretty q)
                 checkAndReturn ta
 
     typeOf p = do

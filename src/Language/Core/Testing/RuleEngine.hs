@@ -688,6 +688,17 @@ testData =
         ]
       )
 
+    , ( "sets-chris1"
+      , "testsuite/ruleengine/sets-chris1.essence"
+      , [ "testsuite/ruleengine/sets-chris1.expected.essence" ]
+      , allrules
+      )
+
+    , ( "sets-chris2"
+      , "testsuite/ruleengine/sets-chris2.essence"
+      , [ "testsuite/ruleengine/sets-chris2.expected.essence" ]
+      , allrules
+      )
 
     ]
 

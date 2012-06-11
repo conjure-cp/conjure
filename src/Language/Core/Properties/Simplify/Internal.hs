@@ -106,6 +106,44 @@ instance Simplify Core where
                      return $ valueBool $ not b
 
 
+    simplify _p@( viewDeep [":operator-+"]
+                   -> Just [ Expr ":value" [Expr ":value-literal" [L (I 0)]]
+                           , x
+                           ]
+                 ) = tell (Any True) >> return x
+    simplify _p@( viewDeep [":operator-+"]
+                   -> Just [ x
+                           , Expr ":value" [Expr ":value-literal" [L (I 0)]]
+                           ]
+                 ) = tell (Any True) >> return x
+
+
+    simplify _p@( viewDeep [":operator-*"]
+                   -> Just [ Expr ":value" [Expr ":value-literal" [L (I 1)]]
+                           , x
+                           ]
+                 ) = tell (Any True) >> return x
+    simplify _p@( viewDeep [":operator-*"]
+                   -> Just [ x
+                           , Expr ":value" [Expr ":value-literal" [L (I 1)]]
+                           ]
+                 ) = tell (Any True) >> return x
+
+
+    simplify _p@( viewDeep [":operator-*"]
+                   -> Just [ Expr ":value" [Expr ":value-literal" [L (I 0)]]
+                           , _
+                           ]
+                 ) = do tell (Any True)
+                        return $ Expr ":value" [Expr ":value-literal" [L (I 0)]]
+    simplify _p@( viewDeep [":operator-*"]
+                   -> Just [ _
+                           , Expr ":value" [Expr ":value-literal" [L (I 0)]]
+                           ]
+                 ) = do tell (Any True)
+                        return $ Expr ":value" [Expr ":value-literal" [L (I 0)]]
+
+
     -- simplify _p@( viewDeep [":operator-\\/"] -> Just [a,b] ) = do
     --     a' <- simplify a
     --     b' <- simplify b
@@ -129,6 +167,63 @@ instance Simplify Core where
         , Just [ Expr ":operator-in" [] ] <- lookUpInExpr ":expr-quantified-quanOverOp"   xs
         , Just [ Expr ":value"
                [ Expr ":value-set" vs
+               ]]                         <- lookUpInExpr ":expr-quantified-quanOverExpr" xs
+        , Just [ Expr ":structural-single" [qnVar]
+               ]                          <- lookUpInExpr ":expr-quantified-quanVar"      xs
+        , Just [ qnGuard ]                <- lookUpInExpr ":expr-quantified-guard"        xs
+        , Just [ qnBody  ]                <- lookUpInExpr ":expr-quantified-body"         xs
+        -- = error $ show qnVar
+        = do
+            tell $ Any True
+            let
+                guardOp (Expr ":empty-guard" []) b = return b
+                guardOp a b = case quantifier of
+                                "forAll" -> return $ Expr ":operator-->"  [a, b]
+                                "exists" -> return $ Expr ":operator-/\\" [a, b]
+                                "sum"    -> return $ Expr ":operator-*"   [a, b]
+                                _        -> lift $ err ErrInvariant
+                                                    $ singletonNested
+                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
+                glueOp a b = case quantifier of
+                                "forAll" -> return $ Expr ":operator-/\\" [a, b]
+                                "exists" -> return $ Expr ":operator-\\/" [a, b]
+                                "sum"    -> return $ Expr ":operator-+"   [a, b]
+                                _        -> lift $ err ErrInvariant
+                                                    $ singletonNested
+                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
+                identity = case quantifier of
+                                "forAll" -> return valueTrue
+                                "exists" -> return valueFalse
+                                "sum"    -> return (valueInt 0)
+                                _        -> lift $ err ErrInvariant
+                                                    $ singletonNested
+                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
+
+            identity' <- identity
+            case quantifier of
+                "sum" -> do
+                    vs' <- sequence [ guardOp (Expr ":operator-/\\" [ replaceCore qnVar v qnGuard
+                                                                    , Expr ":operator-toInt" [
+                                                                        Expr ":operator-in" [v,rest]
+                                                                      ]
+                                                                    ]
+                                              )
+                                              (replaceCore qnVar v qnBody)
+                                    | v <- vs
+                                    , let rest = Expr ":value" [ Expr ":value-mset" (vs \\ [v]) ]
+                                    ]
+                    foldM glueOp identity' vs'
+                _     -> do
+                    vs' <- sequence [ guardOp (replaceCore qnVar v qnGuard)
+                                              (replaceCore qnVar v qnBody)
+                                    | v <- vs ]
+                    foldM glueOp identity' vs'
+
+    simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
+        | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
+        , Just [ Expr ":operator-in" [] ] <- lookUpInExpr ":expr-quantified-quanOverOp"   xs
+        , Just [ Expr ":value"
+               [ Expr ":value-mset" vs
                ]]                         <- lookUpInExpr ":expr-quantified-quanOverExpr" xs
         , Just [ Expr ":structural-single" [qnVar]
                ]                          <- lookUpInExpr ":expr-quantified-quanVar"      xs

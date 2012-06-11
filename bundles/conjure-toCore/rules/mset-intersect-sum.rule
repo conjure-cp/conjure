@@ -1,0 +1,13 @@
+
+[1000]
+
+sum @i in @a intersect @b , @guard . @body
+    ~~>
+sum @i in toSet(@a), @guard .
+    sum j : int(1..min(freq(@a,@i)
+                      ,freq(@b,@i)
+                      )
+               ) . @body
+
+    where @a hastype `mset of _`
+    where @b hastype `mset of _`

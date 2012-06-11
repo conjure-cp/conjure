@@ -234,6 +234,9 @@ instance Pretty Core where
         <+> prettyListDoc Pr.parens Pr.comma (map pretty xs)
     pretty ( viewDeep [":value",":value-set"  ] -> Just xs )
         =   prettyListDoc Pr.braces Pr.comma (map pretty xs)
+    pretty ( viewDeep [":value",":value-mset"  ] -> Just xs )
+        =   "mset" <> prettyListDoc Pr.parens Pr.comma (map pretty xs)
+
 
     pretty ( viewDeep [":quantifier"]
               -> Just [ Expr ":quantifier-append"   [app]
