@@ -116,7 +116,7 @@ catchIf ma predicate handler =
                     if predicate enum
                         then do
                             cs <- runCompT r s' (handler e)
-                            return $ map (\ (c,s'',w') -> (c,s'',w `mappend` w') ) cs
+                            return $ map (\ (c,s'',!w') -> (c,s'',w `mappend` w') ) cs
                         else return [a]
                 _               -> return [a]
         return (concat bs)
@@ -143,7 +143,7 @@ instance Monad m => Monad (CompT m) where
             (Left  e, s', w) -> return [(Left e, s', w)]
             (Right a, s', w) -> do
                 ys <- runCompT r s' (f a)
-                return $ parMap rseq (\ (b,s'',w') -> (b,s'',w `mappend` w') ) ys
+                return $ parMap rseq (\ (b,s'',!w') -> (b,s'',w `mappend` w') ) ys
         return (concat zss)
 
 instance Monad m => MonadError CompError (CompT m) where
@@ -153,7 +153,7 @@ instance Monad m => MonadError CompError (CompT m) where
         zss <- forM xs $ \ x -> case x of
             (Left  e, s', w) -> do
                 ys <- runCompT r s' (f e)
-                return $ map (\ (a,s'',w') -> (a,s'',w `mappend` w') ) ys
+                return $ map (\ (a,s'',!w') -> (a,s'',w `mappend` w') ) ys
             (Right a, s', w) -> return [(Right a, s', w)]
         return (concat zss)
 

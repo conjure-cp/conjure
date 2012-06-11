@@ -202,15 +202,18 @@ instance Simplify Core where
             identity' <- identity
             case quantifier of
                 "sum" -> do
-                    vs' <- sequence [ guardOp (Expr ":operator-/\\" [ replaceCore qnVar v qnGuard
-                                                                    , Expr ":operator-toInt" [
-                                                                        Expr ":operator-in" [v,rest]
-                                                                      ]
-                                                                    ]
-                                              )
+                    vs' <- sequence [ guardOp theGuard
                                               (replaceCore qnVar v qnBody)
                                     | v <- vs
                                     , let rest = Expr ":value" [ Expr ":value-mset" (vs \\ [v]) ]
+                                    , let theGuard = if not $ null $ vs \\ [v]
+                                                        then Expr ":operator-/\\"
+                                                                [ replaceCore qnVar v qnGuard
+                                                                , Expr ":operator-toInt" [
+                                                                    Expr ":operator-in" [v,rest]
+                                                                  ]
+                                                                ]
+                                                        else replaceCore qnVar v qnGuard
                                     ]
                     foldM glueOp identity' vs'
                 _     -> do

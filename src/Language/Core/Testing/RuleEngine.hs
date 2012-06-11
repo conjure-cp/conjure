@@ -706,6 +706,12 @@ testData =
       , allrules
       )
 
+    , ( "sets-chris4"
+      , "testsuite/ruleengine/sets-chris4.essence"
+      , [ "testsuite/ruleengine/sets-chris4.expected.essence" ]
+      , allrules
+      )
+
     ]
 
 
