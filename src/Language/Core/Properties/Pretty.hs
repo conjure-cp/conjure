@@ -344,7 +344,7 @@ prettyPrec envPrec x@(Expr (Tag t) [a,b])
                                                                   , textToDoc rest
                                                                   , prettyPrec (prec+1) b
                                                                   ]
-            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
+            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) a
                                                                   , textToDoc rest
                                                                   , prettyPrec (prec+1) b
                                                                   ]
