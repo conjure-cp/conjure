@@ -173,8 +173,30 @@ instance Simplify Core where
     simplify _p@( viewDeep [":operator-toInt"] -> Just [ Expr ":value" [Expr ":value-literal" [L (B a)]]
                                                        ] ) = do tell (Any True)
                                                                 return $ valueInt $ if a then 1 else 0
+    simplify _p@( viewDeep [":operator-not"  ] -> Just [ Expr ":value" [Expr ":value-literal" [L (B a)]]
+                                                       ] ) = do tell (Any True)
+                                                                return $ valueBool $ not a
 
 
+    simplify _p@( viewDeep [":operator-="] -> Just [ Expr ":operator-" [Expr ":value-literal" [L (B a)]]
+                                                       ] ) = do tell (Any True)
+                                                                return $ valueInt $ if a then 1 else 0
+
+    simplify _p@( viewDeep [":operator-+"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L (I a)]]
+                                                       , Expr ":value" [Expr ":value-literal" [L (I b)]]
+                                                       ] ) = intToIntToInt (+) a b
+    simplify _p@( viewDeep [":operator--"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L (I a)]]
+                                                       , Expr ":value" [Expr ":value-literal" [L (I b)]]
+                                                       ] ) = intToIntToInt (-) a b
+    simplify _p@( viewDeep [":operator-*"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L (I a)]]
+                                                       , Expr ":value" [Expr ":value-literal" [L (I b)]]
+                                                       ] ) = intToIntToInt (*) a b
+    simplify _p@( viewDeep [":operator-/"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L (I a)]]
+                                                       , Expr ":value" [Expr ":value-literal" [L (I b)]]
+                                                       ] ) | b /= 0 = intToIntToInt div a b
+    simplify _p@( viewDeep [":operator-%"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L (I a)]]
+                                                       , Expr ":value" [Expr ":value-literal" [L (I b)]]
+                                                       ] ) | b /= 0 = intToIntToInt mod a b
 
     simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
         | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
@@ -224,10 +246,11 @@ instance Simplify Core where
                                                 then Expr ":operator-/\\"
                                                       [ replaceCore qnVar v qnGuard
                                                       , Expr ":operator-toInt" [
+                                                        Expr ":operator-not" [
                                                         Expr ":operator-in" [
                                                             v ,
                                                              Expr ":value" [ Expr ":value-mset" rest ]
-                                                        ]]
+                                                        ]]]
                                                        ]
                                                 else replaceCore qnVar v qnGuard
                                     ]
@@ -337,3 +360,8 @@ intToIntToBool :: Monad m => (Literal -> Literal -> Bool) -> Literal -> Literal 
 intToIntToBool f a b = do
     tell (Any True)
     return $ valueBool $ f a b
+
+intToIntToInt :: Monad m => (Integer -> Integer -> Integer) -> Integer -> Integer -> WriterT Any (CompT m) Core
+intToIntToInt f a b = do
+    tell (Any True)
+    return $ valueInt $ f a b

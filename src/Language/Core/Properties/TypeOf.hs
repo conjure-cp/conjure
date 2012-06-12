@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Language.Core.Properties.TypeOf where
+module Language.Core.Properties.TypeOf ( typeOf, typeUnify ) where
 
 import Language.Core.Imports
 import Language.Core.Definition
