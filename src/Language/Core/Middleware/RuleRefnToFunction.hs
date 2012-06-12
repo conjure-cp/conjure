@@ -87,19 +87,25 @@ single ( ( name
          )
        ) = do
     let
-        staticCheck :: CompT m ()
+        staticCheck :: Either CompError ()
         staticCheck = do
-            let patternMetaVars  = S.fromList [ r | Expr ":metavar" [R r] <- universe pattern  ]
-            let templateMetaVars = S.unions [ S.fromList [ r | Expr ":metavar" [R r] <- universe template ]
-                                            | template <- templates
-                                            ]
-            unless (templateMetaVars `S.isSubsetOf` patternMetaVars)
-                $ err ErrInvalidRule
-                      $ singletonNested
-                      $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id "," (map showAST $ S.toList patternMetaVars)
-                             , "Template meta variables:" <+> prettyListDoc id "," (map showAST $ S.toList templateMetaVars)
-                             ]
-    -- staticCheck
+            let metaVarsIn p = S.fromList [ r | Expr ":metavar" [R r] <- universe p ]
+            let patternMetaVars   = metaVarsIn pattern
+            let templateMetaVars  = S.unions [ metaVarsIn template
+                                             | template <- templates ]
+            let hasDomainMetaVars = S.unions [ S.unions [ metaVarsIn b
+                                                        | Expr ":operator-hasdomain" [_,b] <- universe loc
+                                                        ]
+                                             | loc <- locals
+                                             ]
+            unless (templateMetaVars `S.isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars])
+                $ Left ( ErrInvalidRule
+                       , singletonNested
+                         $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id "," (map showAST $ S.toList patternMetaVars)
+                                , "Template meta variables:" <+> prettyListDoc id "," (map showAST $ S.toList templateMetaVars)
+                                ]
+                       )
+    staticCheck
     return $ \ x -> do
         bindersBefore <- gets binders
         let restoreState = modify $ \ st -> st { binders = bindersBefore }
