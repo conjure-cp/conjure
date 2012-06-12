@@ -151,16 +151,30 @@ instance Simplify Core where
     simplify _p@( viewDeep [":operator-="] -> Just [R a,R b] ) | a == b = do
         tell $ Any True
         returnTrue
-    simplify _p@( viewDeep [":operator-="] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
-                                                   , Expr ":value" [Expr ":value-literal" [L b]]
-                                                   ] ) = do
-        tell $ Any True
-        return $ valueBool $ a == b
 
-    -- simplify  p@( viewDeep [":operator-="] -> Just [a,b] ) = do
-    --     a' <- simplify a
-    --     b' <- simplify b
-    --             return $ Expr ":operator-=" [a',b']
+    simplify _p@( viewDeep [":operator-="    ] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
+                                                       , Expr ":value" [Expr ":value-literal" [L b]]
+                                                       ] ) = intToIntToBool (==) a b
+    simplify _p@( viewDeep [":operator-!="   ] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
+                                                       , Expr ":value" [Expr ":value-literal" [L b]]
+                                                       ] ) = intToIntToBool (/=) a b
+    simplify _p@( viewDeep [":operator->="   ] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
+                                                       , Expr ":value" [Expr ":value-literal" [L b]]
+                                                       ] ) = intToIntToBool (>=) a b
+    simplify _p@( viewDeep [":operator->"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
+                                                       , Expr ":value" [Expr ":value-literal" [L b]]
+                                                       ] ) = intToIntToBool (>) a b
+    simplify _p@( viewDeep [":operator-<="   ] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
+                                                       , Expr ":value" [Expr ":value-literal" [L b]]
+                                                       ] ) = intToIntToBool (<=) a b
+    simplify _p@( viewDeep [":operator-<"    ] -> Just [ Expr ":value" [Expr ":value-literal" [L a]]
+                                                       , Expr ":value" [Expr ":value-literal" [L b]]
+                                                       ] ) = intToIntToBool (<) a b
+    simplify _p@( viewDeep [":operator-toInt"] -> Just [ Expr ":value" [Expr ":value-literal" [L (B a)]]
+                                                       ] ) = do tell (Any True)
+                                                                return $ valueInt $ if a then 1 else 0
+
+
 
     simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
         | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
@@ -204,16 +218,18 @@ instance Simplify Core where
                 "sum" -> do
                     vs' <- sequence [ guardOp theGuard
                                               (replaceCore qnVar v qnBody)
-                                    | v <- vs
-                                    , let rest = Expr ":value" [ Expr ":value-mset" (vs \\ [v]) ]
-                                    , let theGuard = if not $ null $ vs \\ [v]
-                                                        then Expr ":operator-/\\"
-                                                                [ replaceCore qnVar v qnGuard
-                                                                , Expr ":operator-toInt" [
-                                                                    Expr ":operator-in" [v,rest]
-                                                                  ]
-                                                                ]
-                                                        else replaceCore qnVar v qnGuard
+                                    | (v, rest) <- withRestToL vs
+                                    , let theGuard =
+                                            if not $ null $ vs \\ [v]
+                                                then Expr ":operator-/\\"
+                                                      [ replaceCore qnVar v qnGuard
+                                                      , Expr ":operator-toInt" [
+                                                        Expr ":operator-in" [
+                                                            v ,
+                                                             Expr ":value" [ Expr ":value-mset" rest ]
+                                                        ]]
+                                                       ]
+                                                else replaceCore qnVar v qnGuard
                                     ]
                     foldM glueOp identity' vs'
                 _     -> do
@@ -315,3 +331,9 @@ domainUnify :: Monad m => Core -> Core -> CompT m Bool
 domainUnify y x = do
     mkLog "domainUnify" $ pretty x <+> "~~" <++> pretty y
     match x y
+
+
+intToIntToBool :: Monad m => (Literal -> Literal -> Bool) -> Literal -> Literal -> WriterT Any (CompT m) Core
+intToIntToBool f a b = do
+    tell (Any True)
+    return $ valueBool $ f a b

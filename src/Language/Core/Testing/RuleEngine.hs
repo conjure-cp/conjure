@@ -718,6 +718,12 @@ testData =
       , allrules
       )
 
+    , ( "sets-chris6"
+      , "testsuite/ruleengine/sets-chris6.essence"
+      , [ "testsuite/ruleengine/sets-chris6.expected.essence" ]
+      , allrules
+      )
+
     ]
 
 
@@ -757,4 +763,6 @@ allrules = map ("testsuite/ruleengine/"++)
             , "set-union-exists.rule"
             , "set-union-forAll.rule"
             , "set-union-sum.rule"
+            , "toInt-eq-1.rule"
+            , "toInt-eq-0.rule"
             ]

@@ -11,6 +11,7 @@ module Language.Core.Imports
     , setEq
     , padRight, padLeft, padCenter
     , pairWithContents
+    , withRest, withRestToR, withRestToL
     ) where
 
 import Control.Applicative    as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -93,3 +94,14 @@ pairWithContents :: FilePath -> IO (FilePath, Text)
 pairWithContents fp = do
     con <- T.readFile fp
     return (fp,con)
+
+withRest :: [a] -> [(a,[a])]
+withRest [] = []
+withRest (x:xs) = (x,xs) : map (second (x:)) (withRest xs)
+
+withRestToR :: [a] -> [(a,[a])]
+withRestToR [] = []
+withRestToR (x:xs) = (x,xs) : withRestToR xs
+
+withRestToL :: [a] -> [(a,[a])]
+withRestToL = reverse . withRestToR . reverse
