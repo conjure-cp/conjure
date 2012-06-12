@@ -203,6 +203,20 @@ instance Simplify Core where
                                                        ] ) | b /= 0 = intToIntToInt mod a b
 
     simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
+        | Just [ body       ] <- lookUpInExpr ":expr-quantified-body" xs
+        , Just [ R "forAll" ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
+        , valueFalse == body
+        = returnFalse
+
+    simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
+        | Just [ body         ] <- lookUpInExpr ":expr-quantified-body" xs
+        , Just [ R quantifier ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
+        , qnIdentity quantifier == body
+        = do
+            tell (Any True)
+            return body
+
+    simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
         | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
         , Just [ Expr ":operator-in" [] ] <- lookUpInExpr ":expr-quantified-quanOverOp"   xs
         , Just [ qnOverExpr             ] <- lookUpInExpr ":expr-quantified-quanOverExpr" xs
@@ -213,68 +227,19 @@ instance Simplify Core where
                ]                          <- lookUpInExpr ":expr-quantified-quanVar"      xs
         , Just [ qnGuard ]                <- lookUpInExpr ":expr-quantified-guard"        xs
         , Just [ qnBody  ]                <- lookUpInExpr ":expr-quantified-body"         xs
-        -- = error $ show qnVar
-        = do
-            tell $ Any True
-            let
-                guardOp (Expr ":empty-guard" []) b = return b
-                guardOp a b = case quantifier of
-                                "forAll" -> return $ Expr ":operator-->"  [a, b]
-                                "exists" -> return $ Expr ":operator-/\\" [a, b]
-                                "sum"    -> return $ Expr ":operator-*"   [a, b]
-                                _        -> lift $ err ErrInvariant
-                                                    $ singletonNested
-                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
-                glueOp a b = case quantifier of
-                                "forAll" -> return $ Expr ":operator-/\\" [a, b]
-                                "exists" -> return $ Expr ":operator-\\/" [a, b]
-                                "sum"    -> return $ Expr ":operator-+"   [a, b]
-                                _        -> lift $ err ErrInvariant
-                                                    $ singletonNested
-                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
-                identity = case quantifier of
-                                "forAll" -> return valueTrue
-                                "exists" -> return valueFalse
-                                "sum"    -> return (valueInt 0)
-                                _        -> lift $ err ErrInvariant
-                                                    $ singletonNested
-                                                    $ "unknown quantifier in simplify" <+> pretty quantifier
+        = quantificationOverValueSet_In quantifier qnOverExpr vs qnVar qnGuard qnBody
+    simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
+        | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
+        , Just [ Expr ":operator-in" [] ] <- lookUpInExpr ":expr-quantified-quanOverOp"   xs
+        , Just [ qnOverExpr             ] <- lookUpInExpr ":expr-quantified-quanOverExpr" xs
+        , Just [ Expr ":typed" [ Expr ":value" [Expr ":value-set" vs], _ ]
+                                        ] <- lookUpInExpr ":expr-quantified-quanOverExpr" xs
+        , Just [ Expr ":structural-single" [qnVar]
+               ]                          <- lookUpInExpr ":expr-quantified-quanVar"      xs
+        , Just [ qnGuard ]                <- lookUpInExpr ":expr-quantified-guard"        xs
+        , Just [ qnBody  ]                <- lookUpInExpr ":expr-quantified-body"         xs
+        = quantificationOverValueSet_In quantifier qnOverExpr vs qnVar qnGuard qnBody
 
-            identity'  <- identity
-            tyOverExpr <- lift $ typeOf qnOverExpr
-            tyInner    <- lift $ innerTypeOf "in simplify" tyOverExpr
-            case quantifier of
-                "sum" -> do
-                    vs' <- sequence [ guardOp theGuard
-                                              (replaceCore qnVar v qnBody)
-                                    | (v, rest) <- withRestToL vs
-                                    , let theGuard =
-                                            if not $ null $ vs \\ [v]
-                                                then Expr ":operator-/\\"
-                                                      [ replaceCore qnVar v qnGuard
-                                                      , Expr ":operator-toInt" [
-                                                        Expr ":operator-not" [
-                                                        Expr ":operator-in"
-                                                            [ v
-                                                            , Expr ":typed"
-                                                                [ Expr ":value" [ Expr ":value-mset" rest ]
-                                                                , Expr ":domain-in-expr" [
-                                                                  Expr ":type" [
-                                                                  Expr ":type-mset" [
-                                                                  Expr ":type-mset-inner" [
-                                                                  tyInner
-                                                                  ]]]]]
-                                                            ]
-                                                        ]]
-                                                       ]
-                                                else replaceCore qnVar v qnGuard
-                                    ]
-                    foldM glueOp identity' vs'
-                _     -> do
-                    vs' <- sequence [ guardOp (replaceCore qnVar v qnGuard)
-                                              (replaceCore qnVar v qnBody)
-                                    | v <- vs ]
-                    foldM glueOp identity' vs'
 
     simplify _p@( viewDeep [":expr-quantified"] -> Just xs )
         | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
@@ -297,6 +262,7 @@ instance Simplify Core where
         , Just [ qnGuard ]                <- lookUpInExpr ":expr-quantified-guard"        xs
         , Just [ qnBody  ]                <- lookUpInExpr ":expr-quantified-body"         xs
         = quantificationOverValueMSet_In quantifier vs qnVar qnGuard qnBody
+
 
     simplify p@(Expr t xs) = do
         ys <- mapM simplify xs
@@ -399,3 +365,73 @@ quantificationOverValueMSet_In quantifier vs qnVar qnGuard qnBody = do
                               (replaceCore qnVar v qnBody)
                     | v <- vs ]
     foldM glueOp identity' vs'
+
+
+quantificationOverValueSet_In :: (Functor m, Monad m)
+    => Reference
+    -> Core
+    -> [Core]
+    -> Core
+    -> Core
+    -> Core
+    -> WriterT Any (CompT m) Core
+quantificationOverValueSet_In quantifier qnOverExpr vs qnVar qnGuard qnBody = do
+    tell $ Any True
+    let
+        guardOp (Expr ":empty-guard" []) b = return b
+        guardOp a b = case quantifier of
+                        "forAll" -> return $ Expr ":operator-->"  [a, b]
+                        "exists" -> return $ Expr ":operator-/\\" [a, b]
+                        "sum"    -> return $ Expr ":operator-*"   [a, b]
+                        _        -> lift $ err ErrInvariant
+                                            $ singletonNested
+                                            $ "unknown quantifier in simplify" <+> pretty quantifier
+        glueOp a b = case quantifier of
+                        "forAll" -> return $ Expr ":operator-/\\" [a, b]
+                        "exists" -> return $ Expr ":operator-\\/" [a, b]
+                        "sum"    -> return $ Expr ":operator-+"   [a, b]
+                        _        -> lift $ err ErrInvariant
+                                            $ singletonNested
+                                            $ "unknown quantifier in simplify" <+> pretty quantifier
+    let identity' = qnIdentity quantifier
+    tyOverExpr <- lift $ typeOf qnOverExpr
+    tyInner    <- lift $ innerTypeOf "in simplify" tyOverExpr
+    case quantifier of
+        "sum" -> do
+            vs' <- sequence [ guardOp theGuard
+                                      (replaceCore qnVar v qnBody)
+                            | (v, rest) <- withRestToL vs
+                            , let theGuard =
+                                    if not $ null $ vs \\ [v]
+                                        then Expr ":operator-/\\"
+                                              [ replaceCore qnVar v qnGuard
+                                              , Expr ":operator-toInt" [
+                                                Expr ":operator-not" [
+                                                Expr ":operator-in"
+                                                    [ v
+                                                    , Expr ":typed"
+                                                        [ Expr ":value" [ Expr ":value-mset" rest ]
+                                                        , Expr ":domain-in-expr" [
+                                                          Expr ":type" [
+                                                          Expr ":type-mset" [
+                                                          Expr ":type-mset-inner" [
+                                                          tyInner
+                                                          ]]]]]
+                                                    ]
+                                                ]]
+                                               ]
+                                        else replaceCore qnVar v qnGuard
+                            ]
+            foldM glueOp identity' vs'
+        _     -> do
+            vs' <- sequence [ guardOp (replaceCore qnVar v qnGuard)
+                                      (replaceCore qnVar v qnBody)
+                            | v <- vs ]
+            foldM glueOp identity' vs'
+
+qnIdentity :: Reference -> Core
+qnIdentity "forAll" = valueTrue
+qnIdentity "exists" = valueFalse
+qnIdentity "sum"    = valueInt 0
+qnIdentity qn       = error $ show
+                            $ "unknown quantifier" <+> pretty qn

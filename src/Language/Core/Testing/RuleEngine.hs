@@ -736,6 +736,24 @@ testData =
       , allrules
       )
 
+    , ( "forAll-true"
+      , "testsuite/ruleengine/forAll-true.essence"
+      , [ "testsuite/ruleengine/forAll-true.expected.essence" ]
+      , allrules
+      )
+
+    , ( "sets-ian1"
+      , "testsuite/ruleengine/sets-ian1.essence"
+      , [ "testsuite/ruleengine/sets-ian1.expected.essence" ]
+      , allrules
+      )
+
+    , ( "sets-ian2"
+      , "testsuite/ruleengine/sets-ian2.essence"
+      , [ "testsuite/ruleengine/sets-ian2.expected.essence" ]
+      , allrules
+      )
+
     ]
 
 
