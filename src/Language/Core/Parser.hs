@@ -146,10 +146,15 @@ parseAtomicExpr_NoPrePost = msum1
     , parseMetaVariable
     , parseReference
     , parseValue
-    , betweenTicks parseDomain
+    , parseDomainAsExpr
     , parseWithLocals
     , parens parseExpr
     ]
+
+parseDomainAsExpr :: Parser Core
+parseDomainAsExpr = do
+    d <- betweenTicks parseDomain
+    return $ Expr ":domain-in-expr" [d]
 
 parsePrefixes :: [Parser (Core -> Core)]
 parsePrefixes = [parseUnaryMinus, parseUnaryNot]
@@ -207,7 +212,7 @@ parseOthers = [ parseFunctional l
         parseTyped = parens $ do
             x <- parseExpr
             lexeme L_Colon
-            y <- betweenTicks parseDomain
+            y <- parseDomainAsExpr
             return $ Expr ":typed" [x,y]
 
         parseFunctional :: Lexeme -> Parser Core

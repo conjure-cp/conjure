@@ -126,6 +126,17 @@ instance Pretty Core where
            ) = let locals' = [ Expr ":atTopLevel" [x] | x <- locals ] in
                 Pr.parens $ pretty actual <+> "@" <+> vcat (map pretty locals')
 
+    pretty ( viewDeep [":typed"]
+              -> Just [a,b]
+           ) = Pr.parens $ pretty a <+> ":" <+> pretty b
+
+    pretty ( viewDeep [":domain-in-expr"]
+              -> Just [d]
+           ) = "`" <> pretty d <> "`"
+
+    pretty (viewDeep [":type",":type-int"] -> Just []) = "int"
+    pretty (viewDeep [":type",":type-set" ,":type-set-inner" ] -> Just [a]) = "set of" <+> pretty a
+    pretty (viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [a]) = "mset of" <+> pretty a
 
     pretty ( viewDeep [":domain"]
               -> Just [R r]

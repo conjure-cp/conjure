@@ -15,7 +15,7 @@ worker :: (Functor m, Monad m)
     => [RuleRefn]
     -> Either
         [CompError]
-        [Core -> CompT m [Core]]
+        [Core -> CompT m [(Text,Core)]]
     -- Middleware (CompT m) [RuleRefn] [Middleware (CompT m) Core (Maybe [Core])]
 worker fs = 
     let
@@ -48,7 +48,7 @@ combineRuleRefns :: (Functor m, Monad m)
     => [RuleRefn]
     -> Either
         [CompError]
-        (Core -> CompT m [Core])
+        (Core -> CompT m [(Text,Core)])
 -- Middleware (CompT m) [RuleRefn] (Middleware (CompT m) Core (Maybe [Core]))
 combineRuleRefns fs =
     let
@@ -75,7 +75,7 @@ single :: forall m . (Functor m, Monad m)
     => RuleRefn
     -> Either
         CompError                   -- static errors in the rule
-        (Core -> CompT m (Maybe Core))      -- the rule as a function.
+        (Core -> CompT m (Maybe (Text,Core)))      -- the rule as a function.
  -- Middleware (CompT m) RuleRefn (Middleware (CompT m) Core (Maybe [Core]))
 single ( ( name
          , _
@@ -143,7 +143,7 @@ single ( ( name
                         mres      <- runMaybeT $ bind template'
                         case mres of
                             Nothing  -> restoreState >> errRuleFail
-                            Just res -> restoreState >> return (Just res)
+                            Just res -> restoreState >> return (Just (name, res))
                     else restoreState >> errRuleFail
             else restoreState >> errRuleFail
 single _ = Left (ErrInvariant, "This should never happen. (in RuleRefnToFunction.worker)")

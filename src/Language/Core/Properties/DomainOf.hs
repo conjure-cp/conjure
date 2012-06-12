@@ -16,7 +16,8 @@ instance DomainOf Core where
     domainOf (L x) = domainOf x
     domainOf (R x) = domainOf x
 
-    domainOf p@( viewDeep [":domain"] -> Just [_] ) = return p
+    domainOf _p@( viewDeep [":domain-in-expr"] -> Just [d] ) = domainOf d
+    domainOf  p@( viewDeep [":domain"]         -> Just [_] ) = return p
 
     domainOf ( viewDeep [":metavar"] -> Just [R x] ) = domainOf ("@" `mappend` x)
 

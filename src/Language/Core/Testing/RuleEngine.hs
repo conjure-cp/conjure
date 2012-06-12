@@ -567,7 +567,7 @@ testData =
       , "testsuite/ruleengine/msetIn.essence"
       , [ "testsuite/ruleengine/out/testMSetIn1.essence"
         ]
-      , [ "testsuite/ruleengine/mset-in-to-freq.rule"
+      , [ "testsuite/ruleengine/mset-in.rule"
         ]
       )
 
@@ -594,7 +594,7 @@ testData =
       , [ "testsuite/ruleengine/out/testMSetCard1.essence"
         ]
       , [ "testsuite/ruleengine/mset-card.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         ]
       )
 
@@ -606,7 +606,7 @@ testData =
       , [ "testsuite/ruleengine/mset-eq-to-subsets.rule"
         , "testsuite/ruleengine/mset-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         , "testsuite/ruleengine/mset-intersect-forAll.rule"
         , "testsuite/ruleengine/mset-intersect-exists.rule"
         , "testsuite/ruleengine/mset-intersect-sum.rule"
@@ -620,7 +620,7 @@ testData =
       , [ "testsuite/ruleengine/mset-eq-to-subsets.rule"
         , "testsuite/ruleengine/mset-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         , "testsuite/ruleengine/mset-intersect-forAll.rule"
         , "testsuite/ruleengine/mset-intersect-exists.rule"
         , "testsuite/ruleengine/mset-intersect-sum.rule"
@@ -635,7 +635,7 @@ testData =
       , [ "testsuite/ruleengine/mset-eq-to-subsets.rule"
         , "testsuite/ruleengine/mset-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         , "testsuite/ruleengine/mset-intersect-forAll.rule"
         , "testsuite/ruleengine/mset-intersect-exists.rule"
         , "testsuite/ruleengine/mset-intersect-sum.rule"
@@ -650,7 +650,7 @@ testData =
       , [ "testsuite/ruleengine/mset-eq-to-subsets.rule"
         , "testsuite/ruleengine/mset-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         , "testsuite/ruleengine/mset-intersect-forAll.rule"
         , "testsuite/ruleengine/mset-intersect-exists.rule"
         , "testsuite/ruleengine/mset-intersect-sum.rule"
@@ -666,7 +666,7 @@ testData =
       , [ "testsuite/ruleengine/mset-eq-to-subsets.rule"
         , "testsuite/ruleengine/mset-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         , "testsuite/ruleengine/mset-intersect-forAll.rule"
         , "testsuite/ruleengine/mset-intersect-exists.rule"
         , "testsuite/ruleengine/mset-intersect-sum.rule"
@@ -680,7 +680,7 @@ testData =
       , [ "testsuite/ruleengine/mset-eq-to-subsets.rule"
         , "testsuite/ruleengine/mset-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/mset-in-to-freq.rule"
+        , "testsuite/ruleengine/mset-in.rule"
         , "testsuite/ruleengine/mset-intersect-forAll.rule"
         , "testsuite/ruleengine/mset-intersect-exists.rule"
         , "testsuite/ruleengine/mset-intersect-sum.rule"
@@ -724,6 +724,18 @@ testData =
       , allrules
       )
 
+    , ( "sets-chris7"
+      , "testsuite/ruleengine/sets-chris7.essence"
+      , [ "testsuite/ruleengine/sets-chris7.expected.essence" ]
+      , allrules
+      )
+
+    , ( "sets-chris8"
+      , "testsuite/ruleengine/sets-chris8.essence"
+      , [ "testsuite/ruleengine/sets-chris8.expected.essence" ]
+      , allrules
+      )
+
     ]
 
 
@@ -733,7 +745,7 @@ allrules = map ("testsuite/ruleengine/"++)
             [ "mset-card.rule"
             , "mset-eq-to-subsets.rule"
             , "mset-freq-to-sum.rule"
-            , "mset-in-to-freq.rule"
+            , "mset-in.rule"
             , "mset-intersect-exists.rule"
             , "mset-intersect-forAll.rule"
             , "mset-intersect-sum.rule"

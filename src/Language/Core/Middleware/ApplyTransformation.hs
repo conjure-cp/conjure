@@ -4,8 +4,9 @@
 module Language.Core.Middleware.ApplyTransformation ( worker ) where
 
 import Language.Core
+import qualified Text.PrettyPrint as Pr
 
-type RulesDB m = [Core -> CompT m [Core]]
+type RulesDB m = [Core -> CompT m [(Text,Core)]]
 
 worker :: (Functor m, Monad m)
     => RulesDB m
@@ -59,12 +60,14 @@ onCore fs x@( viewDeep [":expr-quantified"] -> Just xs ) =
         Just [Expr ":structural-single" [R r]] -> do
             bindersBefore <- lift $ gets binders
             let restoreState = modify $ \ st -> st { binders = bindersBefore }
+            -- lift $ mkLog " ------------ adding   quanVar ------------ " $ pretty r
             lift $ addBinder r
                     $ Expr ":quanVar" [ Expr ":quanVar-name"   [R r]
                                       , Expr ":quanVar-within" [x]
                                       ]
             result <- onCoreGeneric fs x ":expr-quantified" xs
             lift restoreState
+            -- lift $ mkLog " ------------ removing quanVar ------------ " $ pretty r
             return result
         _ -> lift $ err ErrInvariant
                     $ singletonNested
@@ -127,9 +130,9 @@ tryApply fs x = do
                 doIt = do
                     ys <- g x
                     mkLog "applied" $ vcat $ pretty x
-                                           : map (("~~>" <+>) . pretty) ys
+                                           : [ Pr.braces (textToDoc n) $$ nest 4 (pretty y) | (n,y) <- ys ]
                     -- mkLog "applied" $ vcat [pretty x, "~~>", pretty y]
-                    return (True, ys)
+                    return (True, map snd ys)
             catchIf doIt
                     (ErrNoRuleApplications==)
                     (\ _ -> go gs )

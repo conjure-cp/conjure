@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Language.Core.Properties.TypeOf ( typeOf, typeUnify ) where
+module Language.Core.Properties.TypeOf ( typeOf, typeUnify, innerTypeOf ) where
 
 import Language.Core.Imports
 import Language.Core.Definition
@@ -61,6 +61,9 @@ instance TypeOf Core where
     typeOf (L x) = typeOf x
     typeOf (R x) = typeOf x
     typeOf ( viewDeep [":metavar"] -> Just [R x] ) = typeOf ("@" `mappend` x)
+
+    typeOf ( viewDeep [":domain-in-expr"] -> Just [ d ] ) = typeOf d
+    typeOf ( viewDeep [":typed"]          -> Just [_,d] ) = typeOf d
 
     typeOf ( viewDeep [":toplevel",":declaration",":find"]
               -> Just [ Expr ":find-name" _
@@ -229,8 +232,9 @@ instance TypeOf Core where
                     [] -> return $ Expr ":type" [
                                    Expr ":type-set" [
                                    Expr ":type-set-inner" [
+                                   Expr ":type" [
                                    Expr ":type-unknown" [
-                                   ]]]]
+                                   ]]]]]
                     (i:is) -> do
                         flags <- mapM (typeUnify i) is
                         if and flags
@@ -245,8 +249,9 @@ instance TypeOf Core where
                     [] -> return $ Expr ":type" [
                                    Expr ":type-mset" [
                                    Expr ":type-mset-inner" [
+                                   Expr ":type" [
                                    Expr ":type-unknown" [
-                                   ]]]]
+                                   ]]]]]
                     (i:is) -> do
                         flags <- mapM (typeUnify i) is
                         if and flags
@@ -316,7 +321,17 @@ instance TypeOf Core where
                 typeOf quanOverDom
             (Nothing, Just [Expr ":operator-in" []], Just [x]) -> do
                 tx <- typeOf x
-                innerTypeOf tx
+                bs <- gets binders
+                -- mkLog ":typeOf-before-innerTypeOf" $ vcat [ pretty p
+                --                                           , "--"
+                --                                           , pretty x
+                --                                           , "--"
+                --                                           , pretty tx
+                --                                           , stringToDoc $ show [ r | Binder (Reference r) _ <- bs ]
+                --                                           ]
+                r <- innerTypeOf (vcat ["here", pretty x, pretty tx]) tx
+                -- mkLog ":typeOf-after-innerTypeOf" $ pretty r
+                return r
             (Nothing, Just [Expr ":operator-subset" []], Just [x]) -> do
                 tx <- typeOf x
                 return tx
@@ -356,6 +371,7 @@ instance TypeOf Core where
                 _ -> errInvariant "typeOf" p
 
             restoreState
+            -- mkLog "debug" $ vcat [ pretty p, pretty result ]
             return result
 
     typeOf _p@( viewDeep [":operator-toSet"]
@@ -446,7 +462,7 @@ instance TypeOf Literal where
     typeOf (I {}) = return $ Expr ":type" [Expr ":type-int"  []]
 
 instance TypeOf Reference where
-    typeOf "_" = return $ Expr ":type-unknown" []
+    typeOf "_" = return $ Expr ":type" [Expr ":type-unknown" []]
     typeOf r = do
         val <- lookUpRef r
         typeOf val
@@ -465,14 +481,14 @@ intToIntToInt p a b = do
             checkAndReturn ta
 
 
-innerTypeOf :: Monad m => Core -> CompT m Core
-innerTypeOf ( viewDeep [":type",":type-set" ,":type-set-inner" ] -> Just [t] ) = return t
-innerTypeOf ( viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [t] ) = return t
-innerTypeOf p = errInvariant "innerTypeOf" p
+innerTypeOf :: Monad m => Doc -> Core -> CompT m Core
+innerTypeOf _ ( viewDeep [":type",":type-set" ,":type-set-inner" ] -> Just [t] ) = return t
+innerTypeOf _ ( viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [t] ) = return t
+innerTypeOf doc p = err ErrInvariant $ singletonNested $ vcat [ "innerTypeOf", pretty p, doc ]
 
 typeUnify :: (Functor m, Monad m) => Core -> Core -> CompT m Bool
-typeUnify (viewDeep [":type-unknown"] -> Just []) _ = return True
-typeUnify _ (viewDeep [":type-unknown"] -> Just []) = return True
+typeUnify (viewDeep [":type",":type-unknown"] -> Just []) _ = return True
+typeUnify _ (viewDeep [":type",":type-unknown"] -> Just []) = return True
 typeUnify (Expr t1 xs1) (Expr t2 xs2)
     | t1 == t2
     , length xs1 == length xs2

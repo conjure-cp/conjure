@@ -4,7 +4,9 @@ find a: mset (size 3) of int(1..10)
 find b: mset (size 3) of int(1..10)
 find c: mset (size 3) of int(1..10)
 such that
-    forAll __1 in a , freq(b, __1) >= 1 . freq(a intersect b, __1) <= freq(c, __1),
+    forAll __1 in a , (exists __2 in b . __2 = __1)
+        . freq(a intersect b, __1) <= freq(c, __1),
     forAll __1 in c . freq(a intersect b, __1) <= freq(c, __1),
-    forAll __2 in c . freq(c, __2) <= freq(a intersect b, __2),
-    forAll __2 in a , freq(b, __2) >= 1 . freq(c, __2) <= freq(a intersect b, __2)
+    forAll __3 in c . freq(c, __3) <= freq(a intersect b, __3),
+    forAll __3 in a , (exists __4 in b . __4 = __3)
+        . freq(c, __3) <= freq(a intersect b, __3)

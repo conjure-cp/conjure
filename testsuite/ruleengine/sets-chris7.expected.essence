@@ -1,0 +1,20 @@
+language Essence 2.0
+
+find x: set of int(0..9)
+find y: set of int(0..9)
+find z: set of int(0..9)
+find a: int(0..9)
+find b: int(0..9)
+find c: int(0..9)
+find d: int(0..9)
+find e: int(0..9)
+such that
+    (sum __1 in x . 1)
+    +
+    toInt(!((forAll __8 in x . (exists __9 in y . __9 = __8))
+            /\
+            (forAll __10 in y . (exists __11 in x . __11 = __10))))
+    *
+    (sum __1 in y . 1)
+    =
+    1
