@@ -3,6 +3,7 @@
 
 @quan @i subsetEq @a , @guard . @body
     ~~>
-....
+@quan @i : @domainA, @i subsetEq @a , guard . @body
 
     where @a hastype `set of _`
+    where @a hasdomain `@domainA`

@@ -299,6 +299,9 @@ instance Pretty Core where
             collect (Expr ":operator-index" [a,b]) = second (b:) $ collect a
             collect b = (b,[])
 
+    pretty (viewDeep [":operator-replace"] -> Just [a,b,c])
+        = pretty a <+> Pr.braces (pretty b <+> "-->" <+> pretty c)
+
     pretty (Expr (Tag t) args)
         | Just rest <- T.stripPrefix ":operator-" t
         , let lexeme = textToLexeme rest

@@ -162,7 +162,7 @@ parsePrefixes = [parseUnaryMinus, parseUnaryNot]
             return $ \ x -> Expr ":operator-not" [x]
 
 parsePostfixes :: [Parser (Core -> Core)]
-parsePostfixes = [parseIndexed,parseFuncApply]
+parsePostfixes = [parseIndexed,parseFuncApply,parseReplace]
     where
         parseIndexed :: Parser (Core -> Core)
         parseIndexed = do
@@ -175,13 +175,22 @@ parsePostfixes = [parseIndexed,parseFuncApply]
                     return $ Expr ":slicer" $ [ Expr ":slicer-from" [a] | Just a <- [i] ]
                                            ++ [ Expr ":slicer-to"   [a] | Just a <- [j] ]
             is <- brackets $ pIndexer `sepBy1` comma
-            return (\ x -> foldl (\ m' i -> Expr ":operator-index" [m', i] ) x is )
+            return $ \ x -> foldl (\ m' i -> Expr ":operator-index" [m', i] ) x is
         parseFuncApply :: Parser (Core -> Core)
         parseFuncApply = parens $ do
             xs <- parseExpr `sepBy1` comma
             return $ \ x -> Expr ":function-apply" [ Expr ":function-apply-actual" [x]
                                                    , Expr ":function-apply-args"   xs
                                                    ]
+        parseReplace :: Parser (Core -> Core)
+        parseReplace = braces $ do
+            let one = do
+                    i <- parseExpr
+                    lexeme L_LongArrow
+                    j <- parseExpr
+                    return (i,j)
+            pairs <- one `sepBy1` comma
+            return $ \ x -> foldl (\ m' (i,j) -> Expr ":operator-replace" [m',i,j] ) x pairs
 
 parseOthers :: [Parser Core]
 parseOthers = [ parseFunctional l

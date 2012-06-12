@@ -743,7 +743,6 @@ allrules = map ("testsuite/ruleengine/"++)
             , "mset-supseteq-to-subseteq.rule"
             , "mset-toset-exists.rule"
             , "mset-toset-forAll.rule"
-            , "mset-toset-sum.rule"
             , "mset-union-exists.rule"
             , "mset-union-forAll.rule"
             , "mset-union-sum.rule"
@@ -763,6 +762,7 @@ allrules = map ("testsuite/ruleengine/"++)
             , "set-union-exists.rule"
             , "set-union-forAll.rule"
             , "set-union-sum.rule"
-            , "toInt-eq-1.rule"
             , "toInt-eq-0.rule"
+            , "toInt-eq-1.rule"
+            , "toInt-geq-1.rule"
             ]
