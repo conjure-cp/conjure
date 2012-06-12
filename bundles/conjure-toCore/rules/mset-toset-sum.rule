@@ -1,8 +1,0 @@
-
-[1000]
-
-sum @i in toSet(@a) , @guard . @body
-    ~~>
-sum @i in @a, @guard . @body
-
-    where @a hastype `mset of _`
