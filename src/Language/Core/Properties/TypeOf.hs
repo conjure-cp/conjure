@@ -31,8 +31,8 @@ errMismatch doc p =
                   $ "Type error in" <+> pretty p $$ doc
                   
 
-tester_typeOfDomain :: Text -> IO ()
-tester_typeOfDomain t = do
+_tester_typeOfDomain :: Text -> IO ()
+_tester_typeOfDomain t = do
     xs <- lexAndParseIO (parseDomain <* eof)  t
     case xs of
         [x] -> do
@@ -42,8 +42,8 @@ tester_typeOfDomain t = do
         _ -> do
             mapM_ (print . showAST) xs
 
-tester_typeOf :: Text -> IO ()
-tester_typeOf t = do
+_tester_typeOf :: Text -> IO ()
+_tester_typeOf t = do
     xs <- lexAndParseIO (parseExpr <* eof)  t
     case xs of
         [x] -> do
