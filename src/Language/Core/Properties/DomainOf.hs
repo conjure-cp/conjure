@@ -27,8 +27,9 @@ instance DomainOf Core where
                       ]
              ) = return domain
 
-
-
+    domainOf x@( viewDeep [":value",":value-set"] -> Just xs ) = do
+        dxs <- mapM domainOf xs
+        domainUnions (pretty x) dxs
 
     domainOf x = err ErrDomainOf
                     $ singletonNested
@@ -52,3 +53,16 @@ instance DomainOf Literal where
                  [ Expr ":value"
                  [ Expr ":value-literal" [L $ I i]
                  ]]]]]]
+
+
+domainUnions :: Monad m => Doc -> [Core] -> CompT m Core
+domainUnions msg [] = err ErrDomainOf
+                    $ singletonNested
+                    $ "Unknown domain." <++> msg
+domainUnions _ [x] = return x
+domainUnions _ (x:xs)   = foldM domainUnion x xs
+
+domainUnion :: Monad m => Core -> Core -> CompT m Core
+domainUnion a b = err ErrDomainOf
+                    $ singletonNested
+                    $ "Cannot calculate the union of two domains" $$ vcat [ pretty a, pretty b ]

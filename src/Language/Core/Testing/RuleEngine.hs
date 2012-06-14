@@ -736,6 +736,18 @@ testData =
       , allrules
       )
 
+    , ( "sets-chris9"
+      , "testsuite/ruleengine/specs/sets-chris9.essence"
+      , [ "testsuite/ruleengine/specs/sets-chris9.expected.essence" ]
+      , allrules
+      )
+
+    , ( "sets-chris10"
+      , "testsuite/ruleengine/specs/sets-chris10.essence"
+      , [ "testsuite/ruleengine/specs/sets-chris10.expected.essence" ]
+      , allrules
+      )
+
     , ( "forAll-true"
       , "testsuite/ruleengine/specs/forAll-true.essence"
       , [ "testsuite/ruleengine/specs/forAll-true.expected.essence" ]
@@ -770,6 +782,7 @@ allrules = map ("testsuite/ruleengine/rules/"++)
             , "set-in-to-quantified.rule"
             , "set-intersect-quantifier.rule"
             , "set-max.rule"
+            , "set-max-union.rule"
             , "set-min.rule"
             , "set-minus-quantifier.rule"
             , "set-subset-to-subsetEq.rule"
