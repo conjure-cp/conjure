@@ -18,7 +18,7 @@ given quantity : function (total) Class  --> int(1..),
 find car : function (total) Slots --> Class
 
 such that
-    forAll c : Class . |preimage(car,c)| = quantity(c),
+    forAll c : Class . |preImage(car,c)| = quantity(c),
     forAll opt : Option .
         forAll s : int(1..n_cars+1-blksize(opt)) .
             (sum i : int(s..s+blksize(opt)-1) . toInt(usage(car(i),opt))) <= maxcars(opt)

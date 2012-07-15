@@ -27,6 +27,6 @@ prof-buildtests:
 
 clean:
 	cabal clean
-	ghc-pkg unregister conjure-cp
+	# ghc-pkg unregister conjure-cp
 	find . -name "*.hi" -delete
 	find . -name "*.o" -delete

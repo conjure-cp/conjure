@@ -11,67 +11,66 @@ Category:       Constraint Programming
 Build-type:     Simple
 Cabal-version:  >= 1.10
 
+
 Library
     default-language : Haskell2010
     hs-source-dirs   : src
 
     exposed-modules  : Paths_conjure_cp
+                     , Language.E.Testing.ParsePrintSpec
+                     , Language.E.Testing.RuleEngine
 
-                     , Nested
-                     , PrintUtils
-                     , Utils
+    other-modules    : Stuff.CompT
 
-                     , Language.EssenceLexer
-                     , Language.EssenceLexerP
+                     , Stuff.Generic
+                     , Stuff.Generic.Definition
 
-                     , Language.Core
-                     , Language.Core.Imports
-                     , Language.Core.Definition
-                     , Language.Core.Parser
-                     , Language.Core.MatchBind
+                     , Stuff.Pretty
+                     , Stuff.MetaVariable
+                     , Stuff.NamedLog
 
-                     , Language.Core.Properties.CategoryOf
-                     , Language.Core.Properties.DomainOf
-                     , Language.Core.Properties.IsSafe
-                     , Language.Core.Properties.IsValid
-                     , Language.Core.Properties.MkSafe
-                     , Language.Core.Properties.Pretty
-                     , Language.Core.Properties.ShowAST
-                     , Language.Core.Properties.Simplify
-                     , Language.Core.Properties.Simplify.Internal
-                     , Language.Core.Properties.ToBool
-                     , Language.Core.Properties.ToInt
-                     , Language.Core.Properties.ToLit
-                     , Language.Core.Properties.TypeOf
+                     , Language.E
+                     , Language.E.Imports
+                     , Language.E.Definition
+                     , Language.E.Data
+                     , Language.E.Lexer
+                     , Language.E.Parser
+                     , Language.E.Pretty
+                     , Language.E.MatchBind
+                     , Language.E.TypeOf
+                     , Language.E.DomainOf
 
-                     , Language.Core.Middleware
-                     , Language.Core.Middleware.ApplyTransformation
-                     , Language.Core.Middleware.AtMostOneSuchThat
-                     , Language.Core.Middleware.ParseRuleRefn
-                     , Language.Core.Middleware.ParseSpec
-                     , Language.Core.Middleware.PrintSpec
-                     , Language.Core.Middleware.ReadFile
-                     , Language.Core.Middleware.RuleRefnToFunction
-                     , Language.Core.Middleware.FreshNames
+                     , Language.E.Evaluator
+                     , Language.E.Evaluator.Full
+                     , Language.E.Evaluator.Partial
+                     , Language.E.Evaluator.ToBool
 
-                     , Language.Core.Pipeline.ToCore
+                     , Language.E.Pipeline.ToCore
+                     , Language.E.Pipeline.AtMostOneSuchThat
+                     , Language.E.Pipeline.RuleRefnToFunction
+                     , Language.E.Pipeline.ApplyTransformation
+                     , Language.E.Pipeline.FreshNames
 
-                     , Language.Core.Testing.ParsePrintIO
-                     , Language.Core.Testing.RuleEngine
-
-    build-depends    : base, ghc-prim, syb
+    build-depends    : base, ghc-prim
+                     , syb == 0.3.7
                      , containers == 0.5.0.0
-                     , data-default == 0.4.0
-                     , hspec == 1.1.2
+                     , data-default == 0.5.0
+                     , directory == 1.1.0.2
+                     , haskell-src-meta == 0.5.1.2
+                     , hspec == 1.3.0
                      , HUnit == 1.2.4.3
-                     , mtl == 2.1.1
+                     , mtl == 2.1.2
+                     , parallel == 3.2.0.3
+                     , parsec == 3.1.3
                      , pretty == 1.1.1.0
                      , pretty-show == 1.2
                      , safe == 0.3.3
-                     , text == 0.11.2.1
+                     , split == 0.1.4.3
+                     , template-haskell == 2.7.0.0
+                     , text == 0.11.2.2
+                     , th-lift == 0.5.5
                      , transformers == 0.3.0.0
                      , uniplate == 1.6.7
-                     , parallel == 3.2.0.3
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -82,11 +81,14 @@ Library
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
+        -fllvm
         -O2
         -rtsopts
-        -fno-spec-constr-count
-        -funfolding-use-threshold=256
-        -fprof-auto-calls
+        -eventlog
+        -- -ddump-rule-firings
+        -- -fno-spec-constr-count
+        -- -funfolding-use-threshold=256
+        -- -fprof-auto-calls
         -- -Werror
 
 
@@ -96,7 +98,7 @@ Test-Suite conjure-tests
     type             : exitcode-stdio-1.0
     main-is          : AllTests.hs
     build-depends    : conjure-cp, base
-                     , hspec == 1.1.2
+                     , hspec == 1.3.0
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -107,37 +109,40 @@ Test-Suite conjure-tests
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
+        -fllvm
         -O2
         -rtsopts
-        -fno-spec-constr-count
-        -funfolding-use-threshold=256
-        -fprof-auto-calls
         -threaded
+        -eventlog
+        -- -ddump-rule-firings
+        -- -fno-spec-constr-count
+        -- -funfolding-use-threshold=256
+        -- -fprof-auto-calls
         -- -Werror
 
 
-Executable conjure-toCore
-    default-language : Haskell2010
-    hs-source-dirs   : src-exec
-    main-is          : ToCoreMain.hs
-    build-depends    : conjure-cp, base
-
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -O2
-        -fno-spec-constr-count
-        -funfolding-use-threshold=256
-        -fprof-auto-calls
-        -threaded
-        -rtsopts
-        -with-rtsopts=-N3
-        -- -Werror
+-- Executable conjure-toCore
+--     default-language : Haskell2010
+--     hs-source-dirs   : src-exec
+--     main-is          : ToCoreMain.hs
+--     build-depends    : conjure-cp, base
+-- 
+--     ghc-options:
+--         -fwarn-incomplete-patterns
+--         -fwarn-missing-signatures
+--         -fwarn-name-shadowing
+--         -fwarn-orphans
+--         -fwarn-overlapping-patterns
+--         -fwarn-tabs
+--         -fwarn-unused-do-bind
+--         -fwarn-unused-matches
+--         -Wall
+--         -O2
+--         -fno-spec-constr-count
+--         -funfolding-use-threshold=256
+--         -fprof-auto-calls
+--         -threaded
+--         -rtsopts
+--         -with-rtsopts=-N3
+--         -- -Werror
 
