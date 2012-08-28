@@ -13,6 +13,7 @@ import Language.E.Lexer as X
 import Language.E.Parser as X
 import Language.E.Pretty as X
 import Language.E.MatchBind as X
+import Language.E.Traversals as X
 
 import Language.E.Evaluator as X
 import Language.E.Evaluator.ToBool as X

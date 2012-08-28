@@ -63,7 +63,14 @@ onE fs x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference
 --     case lookUpInExpr ":expr-quantified-quanVar" xs of
 --         Just [Expr ":structural-single" [R r]] -> do
             bindersBefore <- lift $ gets binders
-            let restoreState = modify $ \ st -> st { binders = bindersBefore }
+            let
+                restoreState = do
+                    bs1 <- gets binders
+                    modify $ \ st -> st { binders = bindersBefore }
+                    bs2 <- gets binders
+                    mkLog "restoreState" $ vcat [ "before:" <+> prettyList id "," [ a | Binder a _ <- bs1 ]
+                                                , "after :" <+> prettyList id "," [ a | Binder a _ <- bs2 ]
+                                                ]
             -- lift $ mkLog " ------------ adding   quanVar ------------ " $ pretty r
             lift $ addBinder r
                     [xMake| quanVar.name   := [Prim (S r)]
@@ -73,17 +80,24 @@ onE fs x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference
             lift restoreState
             -- lift $ mkLog " ------------ removing quanVar ------------ " $ pretty r
             return result
-onE fs [xMatch| [actual] := withlocals.actual
-              | locals   := withlocals.locals
+onE fs [xMatch| [actual] := withLocals.actual
+              | locals   := withLocals.locals
               |] = do
     bindersBefore <- lift $ gets binders
-    let restoreState = modify $ \ st -> st { binders = bindersBefore }
+    let
+        restoreState = do
+            bs1 <- gets binders
+            modify $ \ st -> st { binders = bindersBefore }
+            bs2 <- gets binders
+            mkLog "restoreState" $ vcat [ "before:" <+> prettyList id "," [ a | Binder a _ <- bs1 ]
+                                        , "after :" <+> prettyList id "," [ a | Binder a _ <- bs2 ]
+                                        ]
     lift $ mapM_ processStatement locals
     results    <- onE fs actual
     outLocalss <- sequence <$> mapM (onE fs) locals 
     lift restoreState
-    return [ [xMake| withlocals.actual := [result]
-                   | withlocals.locals := outLocals
+    return [ [xMake| withLocals.actual := [result]
+                   | withLocals.locals := outLocals
                    |]
            | result <- results
            , outLocals <- outLocalss
@@ -124,7 +138,10 @@ tryApply :: (Functor m, Monad m)
     -> WriterT Any (CompE m) [E]
 -- tryApply :: (Functor m, Monad m) => RuleBase (CompE m) -> Middleware (WriterT Any (CompE m)) E [E]
 tryApply fs x = do
+    -- lift $ mkLog "debug" $ "in tryApply" <+> pretty x
     let
+        -- returns a pair, first component: True if a modification has been made.
+        --               , second component: list of results. should always be non-empty.
         go [] = return (False, [x])
         go (g:gs) = do
             mys <- g x
@@ -135,6 +152,8 @@ tryApply fs x = do
                 --         Tagged "quantified" _ -> mkLog "not applied" $ pretty x
                 --         _ -> return ()
                 --     go gs
+                Just [] -> do
+                    throwError (ErrFatal, "Rewrites to nothing.")
                 Just ys -> do
                     mkLog "applied"
                         $ vcat $ pretty x
@@ -165,5 +184,6 @@ processStatement   [xMatch| [Prim (S name)] := topLevel.declaration.letting.name
 processStatement   [xMatch| _ := topLevel.suchThat  |] = return ()
 processStatement   [xMatch| _ := topLevel.objective |] = return ()
 processStatement   [xMatch| _ := topLevel.where     |] = return ()
-processStatement s@[xMatch| _ := topLevel           |] = mkLog "processStatement" $ "not handled in processStatement" <+> (prettyAsPaths s)
+processStatement s@[xMatch| _ := topLevel           |] = mkLog "processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
+processStatement s = mkLog "processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
 processStatement _ = return ()

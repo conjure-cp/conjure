@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns #-}
 
 module Language.E.Pipeline.ToCore where
 
@@ -15,6 +16,8 @@ toCore :: (Functor m, Monad m)
 toCore spectobe rulestobe = do
     mkLog "debug:toCore" "in toCore 1"
     spec  <- readSpec spectobe
+    -- spec' <- traverseSpec Nothing foo Nothing spec
+    -- return spec'
     mkLog "debug:toCore" "in toCore 2"
     rules <- mapM readRuleRefn rulestobe
     mkLog "debug:toCore" "in toCore 3"
@@ -42,3 +45,12 @@ readRuleRefn (fp,con) =
     case runLexerAndParser (parseRuleRefn fp) fp con of
         Left  e -> err ErrFatal e
         Right x -> return x
+
+
+
+-- intro [xMatch|  |]
+
+foo :: Monad m => Generic BuiltIn -> m (Generic BuiltIn)
+foo [xMatch| [Prim (I i)] := value.literal |] = return [xMake| value.literal := [Prim $ I $ i+1] |]
+-- foo (Prim (I i)) = return $ Prim $ I $ i + 1
+foo x = return x

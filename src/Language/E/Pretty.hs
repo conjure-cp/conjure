@@ -375,13 +375,13 @@ prettyAtTopLevel x = pretty x
 prettyQuantified :: E -> Doc
 prettyQuantified
     [xMatch| [quantifier] := quantified.quantifier
-          | [var]        := quantified.quanVar
-          | overDom      := quantified.quanOverDom
-          | overOp       := quantified.quanOverOp
-          | overExpr     := quantified.quanOverExpr
-          | guard        := quantified.guard
-          | body         := quantified.body
-          |] = 
+           | [var]        := quantified.quanVar
+           | overDom      := quantified.quanOverDom
+           | overOp       := quantified.quanOverOp
+           | overExpr     := quantified.quanOverExpr
+           | guard        := quantified.guard
+           | body         := quantified.body
+           |] = 
     let
         header =  pretty quantifier
               <+> pretty var
@@ -402,4 +402,5 @@ prettyQuantified
 prettyQuantified x = prettyNotImplemented x
 
 prettyNotImplemented :: E -> Doc
+prettyNotImplemented (Tagged s _) = "{{" <> text s <> "}}"
 prettyNotImplemented x = "[pretty] catch all case" <++> prettyAsPaths x

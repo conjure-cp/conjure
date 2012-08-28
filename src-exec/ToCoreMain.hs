@@ -5,8 +5,8 @@ module Main where
 import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
-import Language.Core
-import Language.Core.Pipeline.ToCore ( toCore )
+import Language.E
+import Language.E.Pipeline.ToCore ( toCore )
 
 
 main :: IO ()
@@ -23,11 +23,11 @@ main = do
     rules   <- mapM pairWithContents refnFilenames
 
     let
-        mgenerateds = runComp def def (toCore spec rules)
+        mgenerateds = runIdentity $ runCompE (toCore spec rules)
         logs        = mconcat [ ls | (_      , _, ls) <- mgenerateds ]
         errors      =         [ x  | (Left  x, _, _ ) <- mgenerateds ]
         generateds  =         [ x  | (Right x, _, _ ) <- mgenerateds ]
-    mapM_ print $ prettyLog logs
+    print $ prettyLogs logs
     unless (null errors)
         $ error
         $ show

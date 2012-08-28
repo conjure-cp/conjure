@@ -17,10 +17,10 @@ Library
     hs-source-dirs   : src
 
     exposed-modules  : Paths_conjure_cp
-                     , Language.E.Testing.ParsePrintSpec
-                     , Language.E.Testing.RuleEngine
 
-    other-modules    : Stuff.CompT
+                     , Stuff.CompT
+                     , Stuff.FunkyT
+                     , Stuff.MonadList
 
                      , Stuff.Generic
                      , Stuff.Generic.Definition
@@ -39,6 +39,7 @@ Library
                      , Language.E.MatchBind
                      , Language.E.TypeOf
                      , Language.E.DomainOf
+                     , Language.E.Traversals
 
                      , Language.E.Evaluator
                      , Language.E.Evaluator.Full
@@ -51,23 +52,27 @@ Library
                      , Language.E.Pipeline.ApplyTransformation
                      , Language.E.Pipeline.FreshNames
 
+                     , Language.E.Testing.ParsePrintSpec
+                     , Language.E.Testing.RuleEngine
+
+
     build-depends    : base, ghc-prim
                      , syb == 0.3.7
                      , containers == 0.5.0.0
                      , data-default == 0.5.0
-                     , directory == 1.1.0.2
+                     , directory == 1.1.0.2 
                      , haskell-src-meta == 0.5.1.2
                      , hspec == 1.3.0
-                     , HUnit == 1.2.4.3
+                     , HUnit == 1.2.5.1
                      , mtl == 2.1.2
                      , parallel == 3.2.0.3
                      , parsec == 3.1.3
                      , pretty == 1.1.1.0
                      , pretty-show == 1.2
                      , safe == 0.3.3
-                     , split == 0.1.4.3
+                     , split == 0.2.0.0
                      , template-haskell == 2.7.0.0
-                     , text == 0.11.2.2
+                     , text == 0.11.2.3
                      , th-lift == 0.5.5
                      , transformers == 0.3.0.0
                      , uniplate == 1.6.7
@@ -82,7 +87,7 @@ Library
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -rtsopts
         -eventlog
         -- -ddump-rule-firings
@@ -110,7 +115,7 @@ Test-Suite conjure-tests
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -rtsopts
         -threaded
         -eventlog
@@ -121,28 +126,31 @@ Test-Suite conjure-tests
         -- -Werror
 
 
--- Executable conjure-toCore
---     default-language : Haskell2010
---     hs-source-dirs   : src-exec
---     main-is          : ToCoreMain.hs
---     build-depends    : conjure-cp, base
--- 
---     ghc-options:
---         -fwarn-incomplete-patterns
---         -fwarn-missing-signatures
---         -fwarn-name-shadowing
---         -fwarn-orphans
---         -fwarn-overlapping-patterns
---         -fwarn-tabs
---         -fwarn-unused-do-bind
---         -fwarn-unused-matches
---         -Wall
---         -O2
---         -fno-spec-constr-count
---         -funfolding-use-threshold=256
---         -fprof-auto-calls
---         -threaded
---         -rtsopts
---         -with-rtsopts=-N3
---         -- -Werror
+Executable conjure-toCore
+    default-language : Haskell2010
+    hs-source-dirs   : src-exec
+    -- main-is          : ToCoreMain.hs
+    main-is          : Test.hs
+    build-depends    : conjure-cp, base
+                     , pretty-show, syb, containers
+
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -fllvm
+        -- -O2
+        -fno-spec-constr-count
+        -funfolding-use-threshold=256
+        -fprof-auto-calls
+        -threaded
+        -rtsopts
+        -with-rtsopts=-N3
+        -- -Werror
 

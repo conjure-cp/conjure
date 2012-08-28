@@ -127,7 +127,7 @@ xMake = qq {
                 case parseExp rhs of
                     Left  e -> error  $ "Malformed expression: " ++ e
                     Right x -> do
-                        runIO $ appendFile "tags.txt" $ stripped ++ "\n"
+                        -- runIO $ appendFile "tags.txt" $ stripped ++ "\n"
                         return $ mkTaggedTH tags x
         xs <- mapM each inps
         case mergeTaggedTH xs of

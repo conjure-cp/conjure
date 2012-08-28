@@ -12,7 +12,7 @@ module Language.E.Definition
 
     , Spec(..), Version, RuleRefn, E, BuiltIn(..)
 
-    , CompE, runCompE
+    , CompE, runCompE, toCompE
 
     , CompState(..), Binder(..)
     , addBinder, lookupBinder, nextUniqueName
@@ -41,6 +41,7 @@ import Data.Generics ( Data, Typeable )
 -- import Data.Maybe ( listToMaybe )
 
 -- import Text.PrettyPrint ( Doc )
+
 
 
 data Spec = Spec Version [E]
@@ -79,6 +80,9 @@ newtype CompE m a = CompE (CompT () CompState [NamedLog] CompError m a)
              , MonadIO
              )
 
+toCompE :: CompT () CompState [NamedLog] CompError m a -> CompE m a
+toCompE = CompE
+
 runCompE :: Monad m => CompE m a -> m [(Either CompError a, CompState, [NamedLog])]
 runCompE (CompE compt) = runCompT def def compt
 
@@ -111,7 +115,11 @@ instance Default CompState where
     def = CompState [] 1
 
 addBinder :: Monad m => String -> E -> CompE m ()
-addBinder nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
+addBinder nm val = do
+    case nm of
+        '@':_ -> return ()
+        _ -> mkLog "addBinder" $ stringToDoc nm
+    modify $ \ st -> st { binders = Binder nm val : binders st }
 
 lookupBinder :: Monad m => String -> MaybeT (CompE m) E
 lookupBinder nm = do
