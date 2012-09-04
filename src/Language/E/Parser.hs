@@ -539,7 +539,8 @@ parseAttributes = do
             v <- parseExpr
             return
                 ( Just n
-                , [xMake| attribute.nameValue := [n,v]
+                , [xMake| attribute.nameValue.name  := [n]
+                        | attribute.nameValue.value := [v]
                         |]
                 )
         parseName = do

@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction ) where
+module Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction, localHandler ) where
 
 import Language.E
 import Language.E.Pipeline.FreshNames
@@ -109,30 +109,9 @@ single ( name
         bindersBefore <- getsLocal binders
         let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
         flagMatch <- patternMatch pattern x
-        let
-            localHandler :: E -> CompE m Bool
-            localHandler lokal@[xMatch| [y] := topLevel.where |] = do
-                xBool <- toBool y
-                case xBool of
-                    Just True  -> return True
-                    Just False -> do
-                        mkLog "rule-fail"
-                            $ "where statement evaluated to false: " <++> vcat [ pretty lokal
-                                                                               , "in rule" <+> stringToDoc name
-                                                                               , "at expression" <+> pretty x
-                                                                               ]
-                        return False
-                    Nothing    -> do
-                        mkLog "rule-fail"
-                            $ "where statement cannot be fully evaluated: " <++> vcat [ pretty lokal
-                                                                                      , "in rule" <+> stringToDoc name
-                                                                                      , "at expression" <+> pretty x
-                                                                                      ]
-                        return False
-            localHandler lokal = throwError ( ErrFatal, "not handled" <+> prettyAsTree lokal )
         if flagMatch
             then do
-                bs        <- mapM localHandler locals
+                bs        <- mapM (localHandler name x) locals
                 if and bs
                     then do
                         template  <- returns templates
@@ -148,3 +127,29 @@ single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.wor
 
 errRuleFail :: Monad m => CompE m (Maybe a)
 errRuleFail = return Nothing
+
+
+localHandler :: (Functor m, Monad m)
+    => String           -- rule name
+    -> E                -- containing expression
+    -> E
+    -> CompE m Bool
+localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
+    xBool <- toBool y
+    case xBool of
+        Just True  -> return True
+        Just False -> do
+            mkLog "rule-fail"
+                $ "where statement evaluated to false: " <++> vcat [ pretty lokal
+                                                                   , "in rule" <+> stringToDoc name
+                                                                   , "at expression" <+> pretty x
+                                                                   ]
+            return False
+        Nothing    -> do
+            mkLog "rule-fail"
+                $ "where statement cannot be fully evaluated: " <++> vcat [ pretty lokal
+                                                                          , "in rule" <+> stringToDoc name
+                                                                          , "at expression" <+> pretty x
+                                                                          ]
+            return False
+localHandler _ _ lokal = throwError ( ErrFatal, "not handled" <+> prettyAsTree lokal )

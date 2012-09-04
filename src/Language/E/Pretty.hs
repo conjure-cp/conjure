@@ -199,7 +199,9 @@ instance Pretty E where
     pretty [xMatch| []    := attrCollection |] = empty
     pretty [xMatch| attrs := attrCollection |] = prettyList Pr.parens "," attrs
 
-    pretty [xMatch| [name,value] := attribute.nameValue |] = pretty name <+> pretty value
+    pretty [xMatch| [name ] := attribute.nameValue.name
+                  | [value] := attribute.nameValue.value
+                  |] = pretty name <+> pretty value
     pretty [xMatch| [   name   ] := attribute.name      |] = pretty name
     pretty [xMatch| [          ] := attribute.dontCare  |] = ".."
 

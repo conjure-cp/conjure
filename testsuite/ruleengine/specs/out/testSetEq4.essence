@@ -1,7 +1,7 @@
 language Essence 2.0
 
-find x: set of int(0..9)
-find y: set of int(0..9)
+find x: set (size 4) of int(0..9)
+find y: set (size 4) of int(0..9)
 such that
     forAll __1 in x . (exists __2 in y . __2 = __1),
     forAll __3 in y . (exists __4 in x . __4 = __3)

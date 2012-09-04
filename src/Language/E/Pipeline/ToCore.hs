@@ -17,18 +17,16 @@ toCore :: (Functor m, Monad m)
 toCore spectobe rulestobe reprstobe = do
     spec  <- readSpec spectobe
     rules <- mapM readRuleRefn rulestobe
-    reprs <- mapM readRuleRepr reprstobe
+    -- reprs <- mapM readRuleRepr reprstobe
+    -- mkLog "toCore" $ stringToDoc $ show reprs
+    -- return spec
 
-    mkLog "toCore" $ stringToDoc $ show reprs
-
-    -- case ruleRefnToFunction (concat rules) of
-    --     Left  es -> err ErrFatal $ vcat $ map snd es
-    --     Right fs ->
-    --         let pipeline =  applyTransformation fs
-    --                     >=> (return . atMostOneSuchThat)
-    --         in  pipeline spec
-
-    return spec
+    case ruleRefnToFunction (concat rules) of
+        Left  es -> err ErrFatal $ vcat $ map snd es
+        Right fs ->
+            let pipeline =  applyTransformation fs
+                        >=> (return . atMostOneSuchThat)
+            in  pipeline spec
 
 
 readSpec :: (Functor m, Monad m)

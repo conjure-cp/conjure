@@ -27,7 +27,6 @@ import Stuff.Pretty
 import Stuff.MetaVariable
 import Stuff.FunkyT
 import Stuff.NamedLog
-import Stuff.MonadList
 
 import Language.E.Imports
 
