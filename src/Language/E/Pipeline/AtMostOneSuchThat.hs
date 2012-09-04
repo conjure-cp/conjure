@@ -9,8 +9,8 @@ module Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat ) where
 import Language.E
 
 
-atMostOneSuchThat :: Monad m => Spec -> CompE m Spec
-atMostOneSuchThat (Spec lang statements) = return $ Spec lang $ others ++ toSuchThat suchthats
+atMostOneSuchThat :: Spec -> Spec
+atMostOneSuchThat (Spec lang statements) = Spec lang $ others ++ toSuchThat suchthats
     where
         f [] = ([],[])
         f (x:xs) = case isSuchThat x of

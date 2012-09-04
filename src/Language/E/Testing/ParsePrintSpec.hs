@@ -38,10 +38,10 @@ tests = do
 one :: FilePath -> IO ()
 one filepath = do
     content <- T.readFile filepath
-    results <- runCompT () () $ do
+    result  <- runErrorT $ do
         -- liftIO $ putStrLn "content"
         -- liftIO $ putStrLn $ T.unpack content
-        parsed1 <- (runLexer >=> runParser parseSpec filepath  ) content
+        parsed1 <- (runLexer >=> runParser parseSpec filepath) content
         let printed = T.pack $ show $ pretty parsed1
         -- liftIO $ putStrLn "parse 1"
         -- liftIO $ print $ pretty parsed1
@@ -51,7 +51,8 @@ one filepath = do
         -- liftIO $ print $ pretty parsed2
         -- liftIO $ writeFile "last2.essence" $ show $ pretty parsed2
         return (parsed1, parsed2)
-    forM_ results $ \ (result, (), ()) -> case result of
+
+    case result of
         Left  e        -> assertFailure $ show e
         Right (p1@(Spec _ s1), p2@(Spec _ s2)) -> do
             print $ pretty p1

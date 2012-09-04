@@ -12,21 +12,23 @@ import Language.E.Pipeline.AtMostOneSuchThat
 toCore :: (Functor m, Monad m)
     => (FilePath, Text)
     -> [(FilePath, Text)]
+    -> [(FilePath, Text)]
     -> CompE m Spec
-toCore spectobe rulestobe = do
-    mkLog "debug:toCore" "in toCore 1"
+toCore spectobe rulestobe reprstobe = do
     spec  <- readSpec spectobe
-    -- spec' <- traverseSpec Nothing foo Nothing spec
-    -- return spec'
-    mkLog "debug:toCore" "in toCore 2"
     rules <- mapM readRuleRefn rulestobe
-    mkLog "debug:toCore" "in toCore 3"
-    case ruleRefnToFunction (concat rules) of
-        Left  es -> err ErrFatal $ vcat $ map snd es
-        Right fs ->
-            let pipeline =  applyTransformation fs
-                        >=> atMostOneSuchThat
-            in  pipeline spec
+    reprs <- mapM readRuleRepr reprstobe
+
+    mkLog "toCore" $ stringToDoc $ show reprs
+
+    -- case ruleRefnToFunction (concat rules) of
+    --     Left  es -> err ErrFatal $ vcat $ map snd es
+    --     Right fs ->
+    --         let pipeline =  applyTransformation fs
+    --                     >=> (return . atMostOneSuchThat)
+    --         in  pipeline spec
+
+    return spec
 
 
 readSpec :: (Functor m, Monad m)
@@ -35,7 +37,7 @@ readSpec :: (Functor m, Monad m)
 readSpec (fp,con) =
     case runLexerAndParser parseSpec fp con of
         Left  e -> err ErrFatal e
-        Right x -> atMostOneSuchThat x
+        Right x -> return $ atMostOneSuchThat x
 
 
 readRuleRefn :: (Functor m, Monad m)
@@ -46,6 +48,13 @@ readRuleRefn (fp,con) =
         Left  e -> err ErrFatal e
         Right x -> return x
 
+readRuleRepr :: (Functor m, Monad m)
+    => (FilePath, Text)
+    -> CompE m RuleRepr
+readRuleRepr (fp,con) =
+    case runLexerAndParser (parseRuleRepr fp) fp con of
+        Left  e -> err ErrFatal e
+        Right x -> return x
 
 
 -- intro [xMatch|  |]

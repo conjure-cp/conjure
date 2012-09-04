@@ -24,9 +24,9 @@ test_Simplify t = do
         Right x -> do
             print $ pretty x
             -- print $ prettyAsTree x
-            let results = runIdentity $ runCompE $ runWriterT $ simplify x
-            forM_ results $ \ (result, _, logs) -> do
-                print $ prettyLogs logs
+            let (results, globalSt) = runIdentity $ runCompE $ runWriterT $ simplify x
+            print $ prettyLogs $ logs globalSt
+            forM_ results $ \ (result, _) -> do
                 case result of
                     Left e -> error (show e)
                     Right (y, Any flag) ->
@@ -37,7 +37,7 @@ test_Simplify t = do
                             else return ()
 
 
-simplify :: (Functor m, Monad m) => E -> WriterT Any (CompE m) E
+-- simplify :: (Functor m, Monad m) => E -> WriterT Any (CompE m) E
 -- simplify = return
 simplify x = do
     -- lift $ mkLog "debug:simplify" $ pretty x

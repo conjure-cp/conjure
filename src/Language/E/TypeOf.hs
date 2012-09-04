@@ -6,6 +6,7 @@ module Language.E.TypeOf where
 
 import Stuff.Generic
 import Stuff.NamedLog
+import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.TH
@@ -21,6 +22,8 @@ typeUnify [xMatch| _ := type.unknown |] _ = return True
 typeUnify _ [xMatch| _ := type.unknown |] = return True
 typeUnify [xMatch| [a] := type.set.inner |]
           [xMatch| [b] := type.set.inner |] = typeUnify a b
+typeUnify [xMatch| [a] := type.mset.inner |]
+          [xMatch| [b] := type.mset.inner |] = typeUnify a b
 typeUnify x y = do
     mkLog "debug:typeUnify" $ pretty x <+> "~~" <+> pretty y
     return (x == y)
@@ -50,9 +53,9 @@ test_TypeOf t = do
         Right x -> do
             print $ pretty x
             -- print $ prettyAsTree x
-            let results = runIdentity $ runCompE $ typeOf x
-            forM_ results $ \ (result, _, logs) -> do
-                print $ prettyLogs logs
+            let (results, globalSt) = runIdentity $ runCompE $ typeOf x
+            print $ prettyLogs $ logs globalSt
+            forM_ results $ \ (result, _) -> do
                 case result of
                     Left  e -> error (show e)
                     Right y -> print $ pretty y
@@ -63,8 +66,10 @@ typeOf :: Monad m => E -> CompE m E
 typeOf (Prim (B {})) = return [xMake| type.bool := [] |]
 typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
+typeOf p@[xMatch| _ := type |] = return p
+
 typeOf [xMatch| [Prim (S i)] := reference |] = do
-    bs <- gets binders
+    bs <- getsLocal binders
     if i == "_"
         then return [xMake| type.unknown := [] |]
         else case [ x | Binder nm x <- bs, nm == i ] of
@@ -75,14 +80,14 @@ typeOf [xMatch| [Prim (S i)] := reference |] = do
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
     let j = '@' : i
-    bs <- gets binders
+    bs <- getsLocal binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> typeOf x
         _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
 
 typeOf [xMatch| [d] := topLevel.declaration.find.domain |] = typeOf d
 
-typeOf [xMatch| [_,d] := typed |] = typeOf d
+typeOf [xMatch| [d] := typed.right |] = typeOf d
 
 -- domain.*
 
@@ -119,6 +124,28 @@ typeOf p@[xMatch| xs := value.mset.values |] = do
 
 -- expressions
 
+typeOf p@[eMatch| @a = @b |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tya <- typeOf a
+    tyb <- typeOf b
+    if tya == tyb
+        then return [xMake| type.bool := [] |]
+        else err'
+
+typeOf p@[eMatch| ! @a |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tya <- typeOf a
+    case tya of
+        [xMatch| [] := type.bool |] -> return [xMake| type.bool := [] |]
+        _ -> err'
+
+typeOf p@[eMatch| toInt(@a) |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tya <- typeOf a
+    case tya of
+        [xMatch| [] := type.bool |] -> return [xMake| type.int := [] |]
+        _ -> err'
+
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverDom |] = typeOf i
 
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
@@ -126,7 +153,8 @@ typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
               |] = do
     ti <- typeOf i
     case ti of
-        [xMatch| [j] := type.set.inner |] -> return j
+        [xMatch| [j] := type.set.inner  |] -> return j
+        [xMatch| [j] := type.mset.inner |] -> return j
         _ -> err ErrFatal $ "Cannot determine the inner type of: " <+> prettyAsPaths ti
 
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
@@ -136,6 +164,33 @@ typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
               | [ ] := quanVar.within.quantified.quanOverOp.binOp.subsetEq
               |] = typeOf i
+
+typeOf [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference |] = do
+    return [xMake| type.bool := [] |]
+
+typeOf [xMatch| [Prim (S "exists")] := quantified.quantifier.reference |] = do
+    return [xMake| type.bool := [] |]
+
+typeOf [xMatch| [Prim (S "sum")] := quantified.quantifier.reference |] = do
+    return [xMake| type.int := [] |]
+
+typeOf p@[xMatch| [x] := operator.twoBars |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tx <- typeOf x
+    case tx of
+        [xMatch| [] := type.int |]                 -> return [xMake| type.int := [] |]
+        [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
+        -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
+        _ -> err'
+
+typeOf p@[xMatch| [x] := operator.toSet |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tx <- typeOf x
+    case tx of
+        [xMatch| [innerTy] := type.mset.inner |] -> return [xMake| type.set.inner := [innerTy] |]
+        -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
+        _ -> err'
 
 typeOf p@[eMatch| @a intersect @b |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
@@ -189,7 +244,49 @@ typeOf p@[eMatch| @a - @b |] = do
                 else err'
         _ -> err'
 
-typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
+typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
+                | [a] := binOp.left
+                | [b] := binOp.right
+                |] | operator `elem` words "+ - * /" = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
+        _ -> err'
+
+typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
+                | [a] := binOp.left
+                | [b] := binOp.right
+                |] | operator `elem` words "/\\ \\/ => <=>" = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        ( [xMatch| [] := type.bool |] , [xMatch| [] := type.bool |] ) -> return [xMake| type.bool := [] |]
+        _ -> err'
+
+typeOf p@[eMatch| max(@a) |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    ta <- typeOf a
+    case ta of
+        [xMatch| [] := type.set.inner.type.int |] -> return [xMake| type.int := [] |]
+        _ -> err'
+
+typeOf p@[eMatch| max(@a,@b) |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    ta <- typeOf a
+    tb <- typeOf b
+    case (ta,tb) of
+        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
+        _ -> err'
+
+typeOf [xMatch| [i] := withLocals.actual |] = typeOf i
+
+
+-- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
+typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
+
 
 
 
@@ -613,13 +710,13 @@ typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
 --                 checkAndReturn q@( viewDeep [":type",":type-int" ] -> Just [ ]) = return q
 --                 checkAndReturn _ = errMismatch "intToIntToInt.checkAndReturn" p
 --             checkAndReturn ta
--- 
--- 
--- innerTypeOf :: Monad m => Doc -> Core -> CompT m Core
--- innerTypeOf _ ( viewDeep [":type",":type-set" ,":type-set-inner" ] -> Just [t] ) = return t
--- innerTypeOf _ ( viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [t] ) = return t
--- innerTypeOf doc p = err ErrInvariant $ singletonNested $ vcat [ "innerTypeOf", pretty p, doc ]
--- 
+
+
+innerTypeOf :: Monad m => Doc -> E -> CompE m E
+innerTypeOf _ [xMatch| [ty] := type. set.inner |] = return ty
+innerTypeOf _ [xMatch| [ty] := type.mset.inner |] = return ty
+innerTypeOf doc p = err ErrFatal $ vcat [ "innerTypeOf", pretty p, doc ]
+
 -- typeUnify :: (Functor m, Monad m) => Core -> Core -> CompT m Bool
 -- typeUnify (viewDeep [":type",":type-unknown"] -> Just []) _ = return True
 -- typeUnify _ (viewDeep [":type",":type-unknown"] -> Just []) = return True

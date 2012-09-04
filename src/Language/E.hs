@@ -2,7 +2,7 @@
 
 module Language.E ( module X ) where
 
-import Stuff.CompT as X
+import Stuff.FunkyT as X
 import Stuff.Generic as X
 import Stuff.NamedLog as X
 import Stuff.MonadList as X

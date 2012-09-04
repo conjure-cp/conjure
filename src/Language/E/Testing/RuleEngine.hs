@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Language.E.Testing.RuleEngine where
 
@@ -191,10 +192,9 @@ loadAndApply spec' rules' = do
     spec    <- pairWithContents spec'
     rules   <- mapM pairWithContents rules'
     let
-        mresults = runIdentity $ runCompE (toCore spec rules)
-        logs     = mconcat [ ls | (_      , _, ls) <- mresults ]
-        errors   =         [ x  | (Left  x, _, _ ) <- mresults ]
-        results  =         [ x  | (Right x, _, _ ) <- mresults ]
+        (mresults, GlobalState{logs}) = runIdentity $ runCompE (toCore spec rules [])
+        errors   =         [ x  | (Left  x, _ ) <- mresults ]
+        results  =         [ x  | (Right x, _ ) <- mresults ]
     print $ prettyLogs logs
     if null errors
         then
@@ -215,10 +215,9 @@ buildTests params = describe "rule engine" $ do
             outputs <- mapM pairWithContents outputs'
 
             let
-                mgenerateds = runIdentity $ runCompE (toCore spec rules)
-                logsG       = mconcat [ ls | (_      , _, ls) <- mgenerateds ]
-                errorsG     =         [ x  | (Left  x, _, _ ) <- mgenerateds ]
-                generateds  =         [ x  | (Right x, _, _ ) <- mgenerateds ]
+                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (toCore spec rules [])
+                errorsG     =         [ x  | (Left  x, _ ) <- mgenerateds ]
+                generateds  =         [ x  | (Right x, _ ) <- mgenerateds ]
             print $ prettyLogs logsG
             unless (null errorsG)
                 $ assertFailure
@@ -226,10 +225,9 @@ buildTests params = describe "rule engine" $ do
                 $ prettyErrors "There were errors in at least one branch." errorsG
 
             let
-                mexpecteds = runIdentity $ runCompE (mapM readSpec outputs)
-                logsE      = mconcat [ ls | (_        , _, ls) <- mexpecteds ]
-                errorsE    =         [ x  | (Left  x  , _, _ ) <- mexpecteds ]
-                expecteds  =  concat [ xs  | (Right xs, _, _ ) <- mexpecteds ]
+                (mexpecteds, GlobalState{logs=logsE}) = runIdentity $ runCompE (mapM readSpec outputs)
+                errorsE    =         [ x  | (Left  x , _ ) <- mexpecteds ]
+                expecteds  =  concat [ xs | (Right xs, _ ) <- mexpecteds ]
             print $ prettyLogs logsE
             unless (null errorsE)
                 $ assertFailure
@@ -290,7 +288,7 @@ runInteractively name = case [ (input,rules) | (name',input,_,rules) <- testData
     _               -> error $ "not found " ++ name
 
 tests :: Test.Hspec.Monadic.Spec
-tests = buildTests $ take 25 $ testData
+tests = buildTests $ reverse $ drop 4 $ reverse $ testData
 
 testData :: [ ( String              -- a name for the test case
               , FilePath            -- input Essence spec

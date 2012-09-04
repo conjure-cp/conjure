@@ -16,11 +16,10 @@ suppress = [ "patternMatch.core"
            , "rule-fail"
            ]
 
-mkLog :: MonadWriter [NamedLog] m => String -> Doc -> m ()
-mkLog nm _ | "debug:" `isPrefixOf` nm = return ()
-mkLog nm doc = tell [ NamedLog nm doc | nm `notElem` suppress ]
--- mkLog nm doc = tell [ NamedLog nm doc ]
--- mkLog _ _ = return ()
+buildLog :: String -> Doc -> Maybe NamedLog
+buildLog nm _ | "debug:" `isPrefixOf` nm = Nothing
+buildLog nm _ | nm `elem` suppress       = Nothing
+buildLog nm doc = Just (NamedLog nm doc)
 
 prettyLogs :: [NamedLog] -> Doc
 prettyLogs = vcat . map (\ (NamedLog nm doc) -> brackets (text nm) <+> doc )

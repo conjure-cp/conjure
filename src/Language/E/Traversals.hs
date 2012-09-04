@@ -6,6 +6,7 @@ module Language.E.Traversals where
 
 import Stuff.Generic
 import Stuff.NamedLog
+import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
@@ -25,7 +26,7 @@ labelOf (Tagged s _) = stringToDoc s
 --     -> Spec
 --     -> m Spec
 traverseSpec mpre func mpost (Spec v xs) = do
-    forM_ xs $ \ x -> mkLog "debug" $ prettyAsPaths x
+    forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
     xs' <- mapM (traverse mpre func mpost) xs
     return $ Spec v xs'
 
@@ -36,9 +37,9 @@ traverseSpec mpre func mpost (Spec v xs) = do
 --     -> Generic primitive
 --     -> m (Generic primitive)
 traverse mpre func mpost t = do
-    mkLog " ==>    " $ labelOf t
+    mkLog "debug: ==>    " $ labelOf t
     printAllBound "1"
-    bindersBefore <- gets binders
+    bindersBefore <- getsLocal binders
     introduceStuff t
     result <- case mpre of
         Nothing  -> do
@@ -48,7 +49,7 @@ traverse mpre func mpost t = do
             t' <- pre t
             mkLog "traverse" $ "after pre:" <+> labelOf t
             afterPre mpre func mpost t'
-    modify $ \ st -> st { binders = bindersBefore }
+    modifyLocal $ \ st -> st { binders = bindersBefore }
     printAllBound "2"
     return result
 
@@ -65,7 +66,7 @@ afterPre mpre func mpost t = do
             xs' <- mapM (traverse mpre func mpost) xs
             func (Tagged s xs')
         _ -> func t
-    mkLog "    ==> " $ labelOf t'
+    mkLog "debug:    ==> " $ labelOf t'
     -- printAllBound ()
     case mpost of 
         Nothing -> do
@@ -81,7 +82,7 @@ introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
              | [      _      ] := topLevel.declaration.find.domain
              |] = do
-                 mkLog "introduceStuff" $ "find" <+> stringToDoc name
+                 mkLog "debug:introduceStuff" $ "find" <+> stringToDoc name
                  addBinder name s
 introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
@@ -94,14 +95,15 @@ introduceStuff
 introduceStuff
     [xMatch| ls := withLocals.locals |] = do
         mapM_ introduceStuff ls
-        mkLog "introduceStuff" $ vcat $ map pretty ls
+        mkLog "debug:introduceStuff" $ vcat $ map pretty ls
 introduceStuff _ = do
     -- mkLog "introduceStuff" $ pretty x
     return ()
 
 
 printAllBound s = do
-    bs <- gets binders
+    bs <- getsLocal binders
     let names = [ s | Binder s _ <- bs ]
-    mkLog ("----- ----- ----- ----- " ++ s) $ prettyList id "," names
+    -- mkLog ("----- ----- ----- ----- " ++ s) $ prettyList id "," names
+    return ()
 

@@ -9,7 +9,7 @@ module Language.E.Parser where
 import Stuff.Generic
 import Stuff.Pretty
 import Stuff.CompT ()
-import Language.E.Definition ( E, BuiltIn(..), Spec(..), RuleRefn )
+import Language.E.Definition ( E, BuiltIn(..), Spec(..), RuleRefn, RuleRepr, RuleReprCase )
 import Language.E.Data ( Fixity(..), operators, functionals )
 import Language.E.Lexer ( Lexeme(..), lexemeFace, lexemeText, lexemeWidth, runLexer )
 import Language.E.Pretty ()
@@ -289,7 +289,9 @@ parseOthers = [ parseFunctional l
             x <- parseExpr
             lexeme L_Colon
             y <- parseDomainAsExpr
-            return [xMake| typed := [x,y] |]
+            return [xMake| typed.left  := [x]
+                         | typed.right := [y]
+                         |]
 
         parseFunctional :: Lexeme -> Parser E
         parseFunctional l = do
@@ -796,6 +798,31 @@ parseRuleRefn t = inCompleteFile $ do
                            |]
                    )
     some one
+
+parseRuleReprCase :: Parser RuleReprCase
+parseRuleReprCase = do
+    lexeme L_CaseSeparator
+    dom    <- parseDomain
+    mcons  <- optionMaybe (lexeme L_SquigglyArrow >> parseExpr)
+    locals <- concat <$> many parseTopLevels
+    return (dom, mcons, locals)
+
+
+parseRuleRepr :: String -> Parser RuleRepr
+parseRuleRepr t = inCompleteFile $ do
+    let arr i = lexeme L_SquigglyArrow >> i
+    nmRepr <- arr $ identifier
+    domOut <- arr $ parseDomain
+    mcons  <- optionMaybe $ arr $ parseExpr
+    locals <- concat <$> many parseTopLevels
+    cases  <- some parseRuleReprCase
+    return ( t
+           , nmRepr
+           , domOut
+           , mcons
+           , locals
+           , cases
+           )
 
 
 

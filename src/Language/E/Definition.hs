@@ -1,21 +1,21 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Language.E.Definition
     ( module Stuff.Generic
 
-    , Spec(..), Version, RuleRefn, E, BuiltIn(..)
+    , Spec(..), Version, E, BuiltIn(..)
+    , RuleRefn, RuleRepr, RuleReprCase
 
-    , CompE, runCompE, toCompE
+    , CompE, runCompE
 
-    , CompState(..), Binder(..)
-    , addBinder, lookupBinder, nextUniqueName
+    , LocalState(..), GlobalState(..), Binder(..)
+    , addBinder, lookupBinder, nextUniqueName, mkLog
 
     , CompError, ErrEnum(..)
     , err, prettyErrors
@@ -25,7 +25,7 @@ module Language.E.Definition
 import Stuff.Generic
 import Stuff.Pretty
 import Stuff.MetaVariable
-import Stuff.CompT
+import Stuff.FunkyT
 import Stuff.NamedLog
 import Stuff.MonadList
 
@@ -50,6 +50,17 @@ data Spec = Spec Version [E]
 type Version = (String,[Int])
 
 type RuleRefn = (String, Maybe Int, E)
+type RuleRepr = ( String        -- name of the rule
+                , String        -- name of the representation
+                , E             -- domain out.
+                , Maybe E       -- structural constraints
+                , [E]           -- locals
+                , [RuleReprCase]
+                )
+type RuleReprCase = ( E         -- domain in.
+                    , Maybe E   -- structural constraints
+                    , [E]       -- locals
+                    )
 
 type E = Generic BuiltIn
 
@@ -69,22 +80,10 @@ instance MetaVariable E where
 
 
 
-newtype CompE m a = CompE (CompT () CompState [NamedLog] CompError m a)
-    deriving ( Functor
-             , Applicative
-             , Monad
-             , MonadState CompState
-             , MonadWriter [NamedLog]
-             , MonadError CompError
-             , MonadList
-             , MonadIO
-             )
+type CompE m a = FunkyT LocalState GlobalState CompError m a
 
-toCompE :: CompT () CompState [NamedLog] CompError m a -> CompE m a
-toCompE = CompE
-
-runCompE :: Monad m => CompE m a -> m [(Either CompError a, CompState, [NamedLog])]
-runCompE (CompE compt) = runCompT def def compt
+runCompE :: Monad m => CompE m a -> m ([(Either CompError a, LocalState)], GlobalState)
+runCompE comp = runFunkyT def def comp
 
 
 -- errors
@@ -104,32 +103,46 @@ prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
 
 -- state
 
-data CompState = CompState { binders :: [Binder]
-                           , uniqueNameInt :: Integer }
+data LocalState = LocalState
+        { binders       :: [Binder]
+        , uniqueNameInt :: Integer
+        }
     deriving ( Show )
 
 data Binder = Binder String E
     deriving (Show)
 
-instance Default CompState where
-    def = CompState [] 1
+instance Default LocalState where
+    def = LocalState [] 1
+
+data GlobalState = GlobalState
+        { logs :: [NamedLog]
+        }
+
+instance Default GlobalState where
+    def = GlobalState []
+
+mkLog :: Monad m => String -> Doc -> CompE m ()
+mkLog nm doc = case buildLog nm doc of
+    Nothing -> return ()
+    Just l  -> modifyGlobal $ \ st -> st { logs = logs st ++ [l] }
 
 addBinder :: Monad m => String -> E -> CompE m ()
 addBinder nm val = do
     case nm of
         '@':_ -> return ()
-        _ -> mkLog "addBinder" $ stringToDoc nm
-    modify $ \ st -> st { binders = Binder nm val : binders st }
+        _ -> mkLog "debug:addBinder" $ stringToDoc nm
+    modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
 
-lookupBinder :: Monad m => String -> MaybeT (CompE m) E
+-- lookupBinder :: Monad m => String -> MaybeT (CompE m) E
 lookupBinder nm = do
-    bs <- lift $ gets binders
+    bs <- lift $ getsLocal binders
     case listToMaybe [ x | Binder nm' x <- bs, nm == nm' ] of
         Nothing -> mzero
         Just x  -> return x
 
 nextUniqueName :: Monad m => CompE m String
 nextUniqueName = do
-    !i <- gets uniqueNameInt
-    modify $ \ st -> st { uniqueNameInt = i + 1 }
+    !i <- getsLocal uniqueNameInt
+    modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
     return $ "__" ++ show i

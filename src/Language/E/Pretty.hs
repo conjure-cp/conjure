@@ -18,7 +18,7 @@ import Control.Arrow ( first, second )
 import Data.List ( intersperse )
 import Text.PrettyPrint as Pr
 import qualified Data.Text as T
--- import Debug.Trace
+import Debug.Trace
 
 
 instance Pretty Spec where
@@ -124,8 +124,9 @@ instance Pretty E where
         = let locals' = [ [xMake| atTopLevel := [x] |] | x <- locals ] in
             Pr.parens $ pretty actual <+> "@" <+> vcat (map pretty locals')
 
-    pretty [xMatch| [a,b] := typed
-                 |]
+    pretty [xMatch| [a] := typed.left
+                  | [b] := typed.right
+                  |]
         = Pr.parens $ pretty a <+> ":" <+> pretty b
 
     pretty [xMatch| [d] := domainInExpr
@@ -280,7 +281,10 @@ instance Pretty E where
     pretty [xMatch| [] := binOp.subset   |] = "subset"
     pretty [xMatch| [] := binOp.subsetEq |] = "subsetEq"
 
-    pretty x@[xMatch| [Prim (S t)] := binOp.operator |]
+    pretty x@[xMatch| [Prim (S t)] := binOp.operator
+                    | [_] := binOp.left
+                    | [_] := binOp.right
+                    |]
         | let lexeme = textToLexeme (T.pack t)
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
         = prettyPrec 0 x
@@ -321,8 +325,8 @@ instance Pretty E where
     -- pretty [xMatch| [x] := hsTerm |]
     --     = "#{" <> pretty x <> "}#"
 
-    pretty x = prettyNotImplemented x
-    -- pretty x = "catch all case" <++> vcat [prettyAsPaths x, prettyAsTree x]
+    -- pretty x = prettyNotImplemented x
+    pretty x = "catch all case" <++> vcat [prettyAsPaths x, prettyAsTree x]
 
     -- pretty x = Pr.text $ show x
 
@@ -343,7 +347,6 @@ instance Pretty E where
 
 
 prettyPrec :: Int -> E -> Doc
--- prettyPrec _ c | trace (show $ "prettyPrec" <+> showAST c) False = undefined
 prettyPrec envPrec x@([xMatch| [Prim (S t)] := binOp.operator
                              | [a]          := binOp.left
                              | [b]          := binOp.right
@@ -366,6 +369,7 @@ prettyPrec envPrec x@([xMatch| [Prim (S t)] := binOp.operator
                                                                   , prettyPrec (prec+1) b
                                                                   ]
             _ -> error $ show $ "error in prettyPrec:" <+> prettyAsTree x
+-- prettyPrec _ c | trace (show $ "prettyPrec" <+> prettyAsPaths c) False = undefined
 prettyPrec _ x = pretty x
 
 prettyAtTopLevel :: E -> Doc

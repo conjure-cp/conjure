@@ -30,6 +30,7 @@ import Language.Haskell.Meta.Parse.Careful
 import Stuff.Pretty ( Pretty(..) )
 import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
 
+import Debug.Trace
 
 data Generic primitive
     = Prim primitive
@@ -123,7 +124,7 @@ xMake = qq {
             each i = do
                 let [lhs,rhs] = splitOn ":=" i
                 let stripped = strip lhs
-                let tags = splitOn "." stripped
+                let tags = map strip $ splitOn "." stripped
                 case parseExp rhs of
                     Left  e -> error  $ "Malformed expression: " ++ e
                     Right x -> do
@@ -136,8 +137,12 @@ xMake = qq {
     }
 
 viewTagged :: Show primitive => [String] -> Generic primitive -> Maybe [Generic primitive]
+-- viewTagged ts g | trace (show ("viewTagged",ts,g)) False = undefined
 viewTagged [] g = Just [g]
-viewTagged (t:_ ) (Tagged i []) | t == i = Just []
+-- viewTagged (t:_ ) (Tagged i []) | t == i = Just []
+-- viewTagged [] _ = Just []
+-- viewTagged (t:_ ) (Tagged i []) | t == i = Nothing
+viewTagged [t] (Tagged i []) | t == i = Just []
 viewTagged (t:ts) (Tagged i xs) | t == i = do
     let justs = filter isJust $ map (viewTagged ts) xs
     if null justs
@@ -177,4 +182,3 @@ viewTaggeds as g = map (`viewTagged` g) as
 -- mergeTaggeds :: [Generic primitive] -> Maybe (Generic primitive)
 -- mergeTaggeds [] = Nothing
 -- mergeTaggeds (g:gs) = mergeTagged g =<< mergeTaggeds gs
-

@@ -36,6 +36,19 @@ fullEvaluator [xMatch| [Prim (S "%")] := binOp.operator
                      | [Prim (I b)  ] := binOp.right.value.literal
                      |] | b > 0 = returnInt $ a `mod` b
 
+fullEvaluator [eMatch| !false |] = ret [eMake| true  |]
+fullEvaluator [eMatch| !true  |] = ret [eMake| false |]
+
+fullEvaluator [eMatch| toInt(false) |] = ret [eMake| 0 |]
+fullEvaluator [eMatch| toInt(true)  |] = ret [eMake| 1 |]
+
+fullEvaluator [xMatch| [Prim (S "=")] := binOp.operator
+                     | [Prim x] := binOp.left .value.literal
+                     | [Prim y] := binOp.right.value.literal
+                     |]
+                     | x == y
+                     = ret [eMake| true |]
+
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.left.emptyGuard
                      | [x] := binOp.right

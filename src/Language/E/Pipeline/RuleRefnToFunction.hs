@@ -106,8 +106,8 @@ single ( name
     staticCheck
 
     return $ \ x -> do
-        bindersBefore <- gets binders
-        let restoreState = modify $ \ st -> st { binders = bindersBefore }
+        bindersBefore <- getsLocal binders
+        let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
         flagMatch <- patternMatch pattern x
         let
             localHandler :: E -> CompE m Bool
