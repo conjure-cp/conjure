@@ -1,8 +1,0 @@
-
-[1000]
-
-exists @i in toSet(@a) , @guard . @body
-    ~~>
-exists @i in @a, @guard . @body
-
-    where @a hastype `mset of _`
