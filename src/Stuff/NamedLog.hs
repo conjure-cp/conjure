@@ -14,6 +14,9 @@ suppress :: [String]
 suppress = [ "patternMatch.core"
            , "patternMatch"
            , "rule-fail"
+           , "restoreState"
+           , "Simplify"
+           , "Evaluator"
            ]
 
 buildLog :: String -> Doc -> Maybe NamedLog

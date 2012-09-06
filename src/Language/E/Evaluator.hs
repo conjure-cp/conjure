@@ -49,7 +49,7 @@ simplify x = do
     rewriteM (\ i -> firstJust [ logged "Evaluator"                     fullEvaluator    i
                                , logged "debug:Evaluator (has type)"    evalHasType      i
                                , logged "debug:Evaluator (has domain)"  evalHasDomain    i
-                               , logged "Simplify "                     partialEvaluator i
+                               , logged "Simplify"                      partialEvaluator i
                                ]
              ) x
     where

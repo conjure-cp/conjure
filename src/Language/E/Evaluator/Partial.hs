@@ -43,6 +43,13 @@ partialEvaluator [eMatch| true  -> &a |] = ret a
 partialEvaluator [eMatch| max({&a}) |] = ret a
 partialEvaluator [eMatch| min({&a}) |] = ret a
 
+partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
+                        | [Prim (B True)]     := quantified.body.value.literal
+                        |] = ret [eMake| true |]
+partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
+                        | [Prim (B False)]     := quantified.guard.value.literal
+                        |] = ret [eMake| true |]
+
 -- quantification over an empty set or mset constant.
 partialEvaluator
     p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference

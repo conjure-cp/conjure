@@ -24,7 +24,7 @@ domainOf [xMatch| [Prim (S i)] := reference |] = do
                     err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
 
 domainOf [xMatch| [Prim (S i)] := metavar |] = do
-    let j = '@' : i
+    let j = '&' : i
     bs <- getsLocal binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> domainOf x

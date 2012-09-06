@@ -166,21 +166,3 @@ tryApply fs x = do
             (b,z) <- lift $ go fs
             tell (Any b)
             return z
-
--- much needed
-processStatement :: Monad m => E -> CompE m ()
-processStatement s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
-                          | [      _      ] := topLevel.declaration.find.domain
-                          |] = addBinder name s
-processStatement s@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
-                          | [      _      ] := topLevel.declaration.given.domain
-                          |] = addBinder name s
-processStatement   [xMatch| [Prim (S name)] := topLevel.declaration.letting.name.reference
-                          | [ expression ]  := topLevel.declaration.letting.expr
-                          |] = addBinder name expression
-processStatement   [xMatch| _ := topLevel.suchThat  |] = return ()
-processStatement   [xMatch| _ := topLevel.objective |] = return ()
-processStatement   [xMatch| _ := topLevel.where     |] = return ()
-processStatement s@[xMatch| _ := topLevel           |] = mkLog "processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
-processStatement s = mkLog "processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
-processStatement _ = return ()

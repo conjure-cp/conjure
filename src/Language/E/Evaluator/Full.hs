@@ -72,20 +72,25 @@ ret = return . Just
 
 
 evalHasType :: Monad m => E -> CompE m (Maybe E)
-evalHasType [eMatch| &s hastype &dom |] = do
+evalHasType p@[eMatch| &s hastype &dom |] = do
+    -- mkLog "evalHasType1" $ pretty p
     ts <- typeOf s
+    -- mkLog "evalHasType2" $ pretty p
     td <- typeOf dom
+    -- mkLog "evalHasType3" $ pretty p
     b  <- typeUnify ts td
+    -- mkLog "evalHasType4" $ pretty p
     returnBool b
 evalHasType _ = return Nothing
 
 evalHasDomain :: Monad m => E -> CompE m (Maybe E)
-evalHasDomain [eMatch| &x hasdomain &y |] = do
+evalHasDomain p@[eMatch| &x hasdomain &y |] = do
+    -- mkLog "evalHasDomain" $ pretty p
     dx <- domainOf x
     dy <- domainOf y
-    mkLog "debug:evalHasDomain" $ pretty dx
-    mkLog "debug:evalHasDomain" $ prettyAsPaths dx
-    mkLog "debug:evalHasDomain" $ pretty dy
+    -- mkLog "debug:evalHasDomain" $ pretty dx
+    -- mkLog "debug:evalHasDomain" $ prettyAsPaths dx
+    -- mkLog "debug:evalHasDomain" $ pretty dy
     b  <- patternMatch dy dx
     returnBool b
 evalHasDomain _ = return Nothing

@@ -63,6 +63,8 @@ test_TypeOf t = do
 
 typeOf :: Monad m => E -> CompE m E
 
+-- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
+
 typeOf (Prim (B {})) = return [xMake| type.bool := [] |]
 typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
@@ -79,7 +81,7 @@ typeOf [xMatch| [Prim (S i)] := reference |] = do
                     err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
-    let j = '@' : i
+    let j = '&' : i
     bs <- getsLocal binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> typeOf x
@@ -274,15 +276,18 @@ typeOf p@[eMatch| max(&a) |] = do
         _ -> err'
 
 typeOf p@[eMatch| max(&a,&b) |] = do
+    mkLog "in (max/2)" $ pretty a $$ pretty b
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
+    mkLog "ta" $ pretty ta
     tb <- typeOf b
+    mkLog "ta" $ pretty tb
     case (ta,tb) of
         ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
         _ -> err'
 
-typeOf [xMatch| [i] := withLocals.actual |] = typeOf i
-
+typeOf [xMatch| [i] := withLocals.actual
+              | js  := withLocals.locals |] = mapM_ processStatement js >> typeOf i
 
 -- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
 typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e

@@ -16,6 +16,7 @@ module Language.E.Definition
 
     , LocalState(..), GlobalState(..), Binder(..)
     , addBinder, lookupBinder, nextUniqueName, mkLog
+    , processStatement
 
     , CompError, ErrEnum(..)
     , err, prettyErrors
@@ -134,9 +135,9 @@ mkLog nm doc = case buildLog nm doc of
 
 addBinder :: Monad m => String -> E -> CompE m ()
 addBinder nm val = do
-    case nm of
-        '@':_ -> return ()
-        _ -> mkLog "debug:addBinder" $ stringToDoc nm
+    -- case nm of
+    --     '&':_ -> return ()
+    --     _ -> mkLog "addBinder" $ stringToDoc nm
     modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
 
 -- lookupBinder :: Monad m => String -> MaybeT (CompE m) E
@@ -151,3 +152,22 @@ nextUniqueName = do
     !i <- getsLocal uniqueNameInt
     modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
     return $ "__" ++ show i
+
+
+-- much needed
+processStatement :: Monad m => E -> CompE m ()
+processStatement s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
+                          | [      _      ] := topLevel.declaration.find.domain
+                          |] = addBinder name s
+processStatement s@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
+                          | [      _      ] := topLevel.declaration.given.domain
+                          |] = addBinder name s
+processStatement   [xMatch| [Prim (S name)] := topLevel.declaration.letting.name.reference
+                          | [ expression ]  := topLevel.declaration.letting.expr
+                          |] = addBinder name expression
+processStatement   [xMatch| _ := topLevel.suchThat  |] = return ()
+processStatement   [xMatch| _ := topLevel.objective |] = return ()
+processStatement   [xMatch| _ := topLevel.where     |] = return ()
+processStatement s@[xMatch| _ := topLevel           |] = mkLog "processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
+-- processStatement s = mkLog "processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
+processStatement _ = return ()

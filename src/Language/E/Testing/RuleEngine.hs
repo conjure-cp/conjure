@@ -288,7 +288,7 @@ runInteractively name = case [ (input,rules) | (name',input,_,rules) <- testData
     _               -> error $ "not found " ++ name
 
 tests :: Test.Hspec.Monadic.Spec
-tests = buildTests $ reverse $ drop 4 $ reverse $ testData
+tests = buildTests $ testData
 
 testData :: [ ( String              -- a name for the test case
               , FilePath            -- input Essence spec

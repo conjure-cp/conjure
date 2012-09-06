@@ -135,6 +135,7 @@ localHandler :: (Functor m, Monad m)
     -> E
     -> CompE m Bool
 localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
+    -- mkLog "localHandler" $ pretty x
     xBool <- toBool y
     case xBool of
         Just True  -> return True
