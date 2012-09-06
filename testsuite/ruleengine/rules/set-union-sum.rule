@@ -1,16 +1,16 @@
 
 [1000]
 
-sum @i in @a union @b, @guard . @body
+sum &i in &a union &b, &guard . &body
 
 $     ~~>
-$ (sum @i in @a . @body) +
-$ (sum @i in @b . @body) -
-$ (sum @i in @a intersect @b . @body)
+$ (sum &i in &a . &body) +
+$ (sum &i in &b . &body) -
+$ (sum &i in &a intersect &b . &body)
 
     ~~>
-(sum @i in @a, @guard . @body) +
-(sum @i in @b - @a, @guard . @body)
+(sum &i in &a, &guard . &body) +
+(sum &i in &b - &a, &guard . &body)
 
-    where @a hastype `set of _`
-    where @b hastype `set of _`
+    where &a hastype `set of _`
+    where &b hastype `set of _`

@@ -1,10 +1,10 @@
 
 [1000]
 
-forAll @i in @a union @b, @guard . @body
+forAll &i in &a union &b, &guard . &body
     ~~>
-(forAll @i in @a, @guard . @body) /\
-(forAll @i in @b, @guard . @body)
+(forAll &i in &a, &guard . &body) /\
+(forAll &i in &b, &guard . &body)
 
-    where @a hastype `set of _`
-    where @b hastype `set of _`
+    where &a hastype `set of _`
+    where &b hastype `set of _`

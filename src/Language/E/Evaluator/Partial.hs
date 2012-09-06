@@ -14,34 +14,34 @@ import Language.E.TH ( eMatch, eMake )
 
 partialEvaluator :: (Functor m, Monad m) => E -> CompE m (Maybe E)
 
-partialEvaluator [eMatch| @x + 0 |] = ret x -- or ret [eMake| @x |]
-partialEvaluator [eMatch| 0 + @x |] = ret x
+partialEvaluator [eMatch| &x + 0 |] = ret x
+partialEvaluator [eMatch| 0 + &x |] = ret x
 
-partialEvaluator [eMatch| @x - 0 |] = ret x
+partialEvaluator [eMatch| &x - 0 |] = ret x
 
-partialEvaluator [eMatch| @_ * 0 |] = ret [eMake| 0  |]
-partialEvaluator [eMatch| 0 * @_ |] = ret [eMake| 0  |]
+partialEvaluator [eMatch| &_ * 0 |] = ret [eMake| 0  |]
+partialEvaluator [eMatch| 0 * &_ |] = ret [eMake| 0  |]
 
-partialEvaluator [eMatch| @x * 1 |] = ret [eMake| @x |]
-partialEvaluator [eMatch| 1 * @x |] = ret [eMake| @x |]
+partialEvaluator [eMatch| &x * 1 |] = ret x
+partialEvaluator [eMatch| 1 * &x |] = ret x
 
-partialEvaluator [eMatch| @x / 1 |] = ret x
+partialEvaluator [eMatch| &x / 1 |] = ret x
 
-partialEvaluator [eMatch| true /\ @a |] = ret a
-partialEvaluator [eMatch| @a /\ true |] = ret a
-partialEvaluator [eMatch| false /\ @_ |] = ret [eMake| false |]
-partialEvaluator [eMatch| @_ /\ false |] = ret [eMake| false |]
+partialEvaluator [eMatch| true /\ &a |] = ret a
+partialEvaluator [eMatch| &a /\ true |] = ret a
+partialEvaluator [eMatch| false /\ &_ |] = ret [eMake| false |]
+partialEvaluator [eMatch| &_ /\ false |] = ret [eMake| false |]
 
-partialEvaluator [eMatch| false \/ @a |] = ret a
-partialEvaluator [eMatch| @a \/ false |] = ret a
-partialEvaluator [eMatch| true \/ @_ |] = ret [eMake| true |]
-partialEvaluator [eMatch| @_ \/ true |] = ret [eMake| true |]
+partialEvaluator [eMatch| false \/ &a |] = ret a
+partialEvaluator [eMatch| &a \/ false |] = ret a
+partialEvaluator [eMatch| true \/ &_ |] = ret [eMake| true |]
+partialEvaluator [eMatch| &_ \/ true |] = ret [eMake| true |]
 
-partialEvaluator [eMatch| false -> @_ |] = ret [eMake| true |]
-partialEvaluator [eMatch| true  -> @a |] = ret a
+partialEvaluator [eMatch| false -> &_ |] = ret [eMake| true |]
+partialEvaluator [eMatch| true  -> &a |] = ret a
 
-partialEvaluator [eMatch| max({@a}) |] = ret a
-partialEvaluator [eMatch| min({@a}) |] = ret a
+partialEvaluator [eMatch| max({&a}) |] = ret a
+partialEvaluator [eMatch| min({&a}) |] = ret a
 
 -- quantification over an empty set or mset constant.
 partialEvaluator
@@ -84,17 +84,17 @@ partialEvaluator
         guardOp as b =
             let a = conjunct as
             in  case quantifier of
-                    "forAll" -> return [eMake| @a -> @b |]
-                    "exists" -> return [eMake| @a /\ @b |]
-                    "sum"    -> return [eMake| @a *  @b |]
+                    "forAll" -> return [eMake| &a -> &b |]
+                    "exists" -> return [eMake| &a /\ &b |]
+                    "sum"    -> return [eMake| &a *  &b |]
                     _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
         glueOp a b = case quantifier of
-                        "forAll" -> return [eMake| @a /\ @b |]
-                        "exists" -> return [eMake| @a \/ @b |]
-                        "sum"    -> return [eMake| @a +  @b |]
+                        "forAll" -> return [eMake| &a /\ &b |]
+                        "exists" -> return [eMake| &a \/ &b |]
+                        "sum"    -> return [eMake| &a +  &b |]
                         _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
         conjunct [] = error "Impossible."
-        conjunct xs = let f a b = [eMake| @a /\ @b |] in foldr1 f xs
+        conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
     identity <- identityOp quantifier
     tyOverExpr <- typeOf qnOverExpr
     tyInner    <- innerTypeOf "in simplify" tyOverExpr
@@ -169,17 +169,17 @@ partialEvaluator
         guardOp as b =
             let a = conjunct as
             in  case quantifier of
-                    "forAll" -> return [eMake| @a -> @b |]
-                    "exists" -> return [eMake| @a /\ @b |]
-                    "sum"    -> return [eMake| @a *  @b |]
+                    "forAll" -> return [eMake| &a -> &b |]
+                    "exists" -> return [eMake| &a /\ &b |]
+                    "sum"    -> return [eMake| &a *  &b |]
                     _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
         glueOp a b = case quantifier of
-                        "forAll" -> return [eMake| @a /\ @b |]
-                        "exists" -> return [eMake| @a \/ @b |]
-                        "sum"    -> return [eMake| @a +  @b |]
+                        "forAll" -> return [eMake| &a /\ &b |]
+                        "exists" -> return [eMake| &a \/ &b |]
+                        "sum"    -> return [eMake| &a +  &b |]
                         _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
         conjunct [] = error "Impossible."
-        conjunct xs = let f a b = [eMake| @a /\ @b |] in foldr1 f xs
+        conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
     identity <- identityOp quantifier
     tyOverExpr <- typeOf qnOverExpr
     tyInner    <- innerTypeOf "in simplify" tyOverExpr

@@ -25,7 +25,7 @@ isSuchThat _ = Nothing
 
 toSuchThat :: [E] -> [E]
 toSuchThat [] = []
-toSuchThat xs = [ [xMake| topLevel.suchThat := concatMap conjunctOut xs |] ]
+toSuchThat xs = [ [xMake| topLevel.suchThat := nub $ concatMap conjunctOut xs |] ]
     where
         conjunctOut :: E -> [E]
         conjunctOut [xMatch| [Prim (S "/\\")] := binOp.operator

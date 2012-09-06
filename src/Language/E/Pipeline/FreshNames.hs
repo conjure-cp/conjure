@@ -15,7 +15,8 @@ freshNames :: Monad m => E -> CompE m E
 freshNames param = do
     let
         newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param
-                                  , r `notElem` ["forAll","exists","sum"]
+                                  , r `notElem` ["forAll","exists","sum"]           -- don't rename these
+                                  , '#' `notElem` r                                 -- and if it has a # in it
                                   ]
     uniqueNames <- forM (S.toList newvars) $ \ a -> do b <- nextUniqueName; return (a, Prim (S b))
     let uniqueNamesMap = M.fromList uniqueNames

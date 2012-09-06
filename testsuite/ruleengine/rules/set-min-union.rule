@@ -1,6 +1,6 @@
 [900]
 
-min(@a union @b) ~~> min(min(@a),min(@b))
+min(&a union &b) ~~> min(min(&a),min(&b))
 
-    where @a hastype `set of _`
-    where @b hastype `set of _`
+    where &a hastype `set of _`
+    where &b hastype `set of _`

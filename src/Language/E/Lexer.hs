@@ -418,7 +418,7 @@ isIdentifierLetter ch = isAlphaNum ch || ch `elem` "_'#"
 tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
 tryLexMetaVar running =
     case T.uncons running of
-        Just ('@',rest) -> do
+        Just ('&',rest) -> do
             (rest2, LIdentifier iden) <- tryLexIden rest
             return (rest2, LMetaVar iden)
         _ -> Nothing

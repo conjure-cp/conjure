@@ -105,6 +105,12 @@ prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
 data LocalState = LocalState
         { binders       :: [Binder]
         , uniqueNameInt :: Integer
+        , representationLog :: [ ( String   -- original name
+                                 , String   -- representation name
+                                 , E        -- original full declaration
+                                 , E        -- new domain
+                                 ) ]
+        , structuralConsLog :: [E]
         }
     deriving ( Show )
 
@@ -112,7 +118,7 @@ data Binder = Binder String E
     deriving (Show)
 
 instance Default LocalState where
-    def = LocalState [] 1
+    def = LocalState [] 1 [] []
 
 data GlobalState = GlobalState
         { logs :: [NamedLog]

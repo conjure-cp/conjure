@@ -93,6 +93,7 @@ patternMatch pattern actual = do
             return False
 
 
+-- if this returns nothing, that means there is some unbound reference.
 -- patternBind :: (Functor m, Monad m) => E -> MaybeT (CompE m) E
 patternBind x | Just nm <- namedMV x = lookupBinder ('@':nm)
 patternBind (Tagged xTag xArgs) = Tagged xTag <$> mapM patternBind xArgs

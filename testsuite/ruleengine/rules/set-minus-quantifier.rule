@@ -1,7 +1,7 @@
 
 [1000]
 
-@quan @i in @a - @b , @guard . @body ~~> @quan @i in @a, !(@i in @b) /\ @guard . @body
+&quan &i in &a - &b , &guard . &body ~~> &quan &i in &a, !(&i in &b) /\ &guard . &body
 
-    where @a hastype `set of _`
-    where @b hastype `set of _`
+    where &a hastype `set of _`
+    where &b hastype `set of _`

@@ -124,7 +124,7 @@ typeOf p@[xMatch| xs := value.mset.values |] = do
 
 -- expressions
 
-typeOf p@[eMatch| @a = @b |] = do
+typeOf p@[eMatch| &a = &b |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     tyb <- typeOf b
@@ -132,14 +132,14 @@ typeOf p@[eMatch| @a = @b |] = do
         then return [xMake| type.bool := [] |]
         else err'
 
-typeOf p@[eMatch| ! @a |] = do
+typeOf p@[eMatch| ! &a |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     case tya of
         [xMatch| [] := type.bool |] -> return [xMake| type.bool := [] |]
         _ -> err'
 
-typeOf p@[eMatch| toInt(@a) |] = do
+typeOf p@[eMatch| toInt(&a) |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     case tya of
@@ -192,7 +192,7 @@ typeOf p@[xMatch| [x] := operator.toSet |] = do
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> err'
 
-typeOf p@[eMatch| @a intersect @b |] = do
+typeOf p@[eMatch| &a intersect &b |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b
@@ -209,7 +209,7 @@ typeOf p@[eMatch| @a intersect @b |] = do
                 else err'
         _ -> err'
 
-typeOf p@[eMatch| @a union @b |] = do
+typeOf p@[eMatch| &a union &b |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b
@@ -226,7 +226,7 @@ typeOf p@[eMatch| @a union @b |] = do
                 else err'
         _ -> err'
 
-typeOf p@[eMatch| @a - @b |] = do
+typeOf p@[eMatch| &a - &b |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b
@@ -266,14 +266,14 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
         ( [xMatch| [] := type.bool |] , [xMatch| [] := type.bool |] ) -> return [xMake| type.bool := [] |]
         _ -> err'
 
-typeOf p@[eMatch| max(@a) |] = do
+typeOf p@[eMatch| max(&a) |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     case ta of
         [xMatch| [] := type.set.inner.type.int |] -> return [xMake| type.int := [] |]
         _ -> err'
 
-typeOf p@[eMatch| max(@a,@b) |] = do
+typeOf p@[eMatch| max(&a,&b) |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b

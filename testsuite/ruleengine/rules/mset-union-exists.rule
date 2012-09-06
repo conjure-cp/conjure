@@ -1,10 +1,10 @@
 
 [1000]
 
-exists @i in @a union @b , @guard . @body
+exists &i in &a union &b , &guard . &body
     ~~>
-(exists @i in @a /\ @guard . @body) \/
-(exists @i in @b /\ @guard . @body)
+(exists &i in &a /\ &guard . &body) \/
+(exists &i in &b /\ &guard . &body)
 
-    where @a hastype `mset of _`
-    where @b hastype `mset of _`
+    where &a hastype `mset of _`
+    where &b hastype `mset of _`

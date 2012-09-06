@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Language.E.Evaluator ( simplify ) where
+module Language.E.Evaluator ( simplify, trySimplifySpec ) where
 
 import Stuff.Pretty
 import Stuff.NamedLog
@@ -35,6 +35,11 @@ test_Simplify t = do
                                 print $ pretty y
                                 -- print $ prettyAsTree y
                             else return ()
+
+
+trySimplifySpec (Spec v xs) = do
+    (xs', Any flag) <- runWriterT (mapM simplify xs)
+    return $ Spec v xs'
 
 
 -- simplify :: (Functor m, Monad m) => E -> WriterT Any (CompE m) E

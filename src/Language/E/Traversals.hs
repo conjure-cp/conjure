@@ -31,6 +31,15 @@ traverseSpec mpre func mpost (Spec v xs) = do
     return $ Spec v xs'
 
 
+traverseSpecNoFindGiven mpre func mpost (Spec v xs) = do
+    forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
+    xs' <- forM xs $ \ x -> case x of
+            [xMatch| _ := topLevel.declaration.find  |] -> return x
+            [xMatch| _ := topLevel.declaration.given |] -> return x
+            _ -> traverse mpre func mpost x
+    return $ Spec v xs'
+
+
 -- traverse :: (MonadWriter [NamedLog] m, Pretty primitive)
 --     => Maybe (Generic primitive -> m (Generic primitive))
 --     -> (Generic primitive -> m (Generic primitive))
