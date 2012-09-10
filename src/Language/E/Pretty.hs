@@ -156,8 +156,8 @@ instance Pretty E where
         <+> prettyList Pr.parens "," inners
 
     pretty [xMatch| [   index   ] := domain.matrix.index
-                 | [innerNested] := domain.matrix.inner
-                 |]
+                  | [innerNested] := domain.matrix.inner
+                  |]
         = "matrix indexed by" <+> prettyList Pr.brackets "," indices
                               <+> "of" <+> pretty inner
         where
@@ -263,11 +263,12 @@ instance Pretty E where
     pretty [xMatch| [x] := operator.twoBars |]
         = "|" <> pretty x <> "|"
 
-    pretty x@[xMatch| [_,_] := operator.index |]
+    pretty x@[xMatch| _ := operator.index |]
         = pretty actual <> prettyListDoc Pr.brackets Pr.comma (map pretty indices)
         where
             (actual,indices) = second reverse $ collect x
-            collect [xMatch| [a,b] := operator.index |] = second (b:) $ collect a
+            collect [xMatch| [a] := operator.index.left
+                           | [b] := operator.index.right |] = second (b:) $ collect a
             collect b = (b,[])
 -- 
 --     pretty (viewDeep [":operator-replace"] -> Just [a,b,c])

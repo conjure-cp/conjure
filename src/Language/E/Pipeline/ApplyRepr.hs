@@ -36,7 +36,7 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
         let f p@[xMatch| [Prim (S nm)] := reference |] = case lookup nm candidates of
                 Nothing     -> return p
                 Just (originalDecl,ys) -> do
-                    (ruleName, reprName, newDom, cons) <- returns ys
+                    (_ruleName, reprName, newDom, cons) <- returns ys
                     modifyLocal $ \ st -> st { representationLog = (nm, reprName, originalDecl, newDom) : representationLog st }
                     modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
                     return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
@@ -86,7 +86,7 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
                         [xMake| topLevel.declaration.given.name   := [Prim (S $ origName ++ "#" ++ reprName)]
                               | topLevel.declaration.given.domain := [newDom]
                               |]
-                    mk (origName, reprName, original, newDom) = error "Impossible: addChannellingFromLog.mk"
+                    mk _ = error "Impossible: addChannellingFromLog.mk"
 
                 let
                     insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat |] : _) = toInsert ++ rest
@@ -111,11 +111,12 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
 
 
 domainNeedsRepresentation :: E -> Bool
-domainNeedsRepresentation [xMatch| _ := domain.set       |] = True
-domainNeedsRepresentation [xMatch| _ := domain.mset      |] = True
-domainNeedsRepresentation [xMatch| _ := domain.function  |] = True
-domainNeedsRepresentation [xMatch| _ := domain.relation  |] = True
-domainNeedsRepresentation [xMatch| _ := domain.partition |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.set          |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.mset         |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.function     |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.relation     |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.partition    |] = True
+domainNeedsRepresentation [xMatch| [i] := domain.matrix.inner |] = domainNeedsRepresentation i
 domainNeedsRepresentation _ = False
 
 allPairs :: [a] -> [(a,a)]

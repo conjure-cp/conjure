@@ -44,7 +44,7 @@ one :: (Functor m, Monad m)
                        , [E]          -- structural constraints
                        ) ]
         )
-one repr@(ruleName, reprName, domTemplate, mcons, locals, cases) =
+one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
     let
         mresults = map (oneCase repr) cases
         errors   = concat $ lefts mresults
@@ -72,32 +72,74 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         mcons  = maybeToList mcons1 ++ maybeToList mcons2
         locals = locals1 ++ locals2
     in
-        Right $ \ (origName,x) -> do
+        Right $ \ (origName, x) -> do
             bindersBefore <- getsLocal binders
             let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
-            flagMatch <- patternMatch domPattern x
-            if flagMatch
-                then do
-                    bs <- mapM (localHandler ruleName domPattern) locals
-                    if and bs
+            case x of
+                [xMatch| [xIndex] := domain.matrix.index
+                       | [xInner] := domain.matrix.inner |] -> do
+                    flagMatch <- patternMatch domPattern xInner
+                    if flagMatch
                         then do
-                            domTemplate' <- freshNames domTemplate
-                            mres         <- runMaybeT $ patternBind domTemplate'
-                            case mres of
-                                Nothing  -> restoreState >> errRuleFail
-                                Just res -> do
-                                    mcons' <- forM mcons $ \ con -> do
-                                        con' <- (freshNames <=< renRefn (origName ++ "#" ++ reprName)) con
-                                        maybeCon <- runMaybeT $ patternBind con'
-                                        case maybeCon of
-                                            Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con'
-                                            Just c  -> return c
-                                    restoreState >> return [(ruleName, reprName, res, mcons')]
+                            bs <- mapM (localHandler ruleName domPattern) locals
+                            if and bs
+                                then do
+                                    domTemplate' <- freshNames domTemplate
+                                    mres         <- runMaybeT $ patternBind domTemplate'
+                                    case mres of
+                                        Nothing -> restoreState >> errRuleFail
+                                        Just res -> do
+                                            let resInMatrix = [xMake| domain.matrix.index := [xIndex]
+                                                                    | domain.matrix.inner := [res]
+                                                                    |]
+                                            loopVarName <- nextUniqueName
+                                            mcons' <- forM mcons $ \ con -> do
+                                                con' <- (freshNames <=<
+                                                        renRefn [xMake| operator.index.left .reference := [Prim $ S $ origName ++ "#" ++ reprName]
+                                                                       | operator.index.right.reference := [Prim $ S loopVarName]
+                                                                       |]
+                                                        ) con
+                                                let con'' = [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
+                                                                  | quantified.quanVar.structural.single.reference := [Prim $ S loopVarName]
+                                                                  | quantified.quanOverDom                         := [xIndex]
+                                                                  | quantified.quanOverOp                          := []
+                                                                  | quantified.quanOverExpr                        := []
+                                                                  | quantified.guard.emptyGuard                    := []
+                                                                  | quantified.body                                := [con']
+                                                                  |]
+                                                maybeCon <- runMaybeT $ patternBind con''
+                                                case maybeCon of
+                                                    Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con''
+                                                    Just c  -> return c
+                                            restoreState >> return [(ruleName, reprName, resInMatrix, mcons')]
+                                else restoreState >> errRuleFail
                         else restoreState >> errRuleFail
-                else restoreState >> errRuleFail
+                _ -> do
+                    flagMatch <- patternMatch domPattern x
+                    if flagMatch
+                        then do
+                            bs <- mapM (localHandler ruleName domPattern) locals
+                            if and bs
+                                then do
+                                    domTemplate' <- freshNames domTemplate
+                                    mres         <- runMaybeT $ patternBind domTemplate'
+                                    case mres of
+                                        Nothing  -> restoreState >> errRuleFail
+                                        Just res -> do
+                                            mcons' <- forM mcons $ \ con -> do
+                                                con' <- (freshNames <=<
+                                                         renRefn [xMake| reference := [Prim $ S $ origName ++ "#" ++ reprName] |]
+                                                        ) con
+                                                maybeCon <- runMaybeT $ patternBind con'
+                                                case maybeCon of
+                                                    Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con'
+                                                    Just c  -> return c
+                                            restoreState >> return [(ruleName, reprName, res, mcons')]
+                                else restoreState >> errRuleFail
+                        else restoreState >> errRuleFail
 
-renRefn :: Monad m => String -> E -> CompE m E
-renRefn newName [xMatch| [Prim (S "refn")] := reference |] = return [xMake| reference := [Prim (S newName)] |]
+renRefn :: Monad m => E -> E -> CompE m E
+renRefn newName [xMatch| [Prim (S "refn")] := reference |] = return newName
 renRefn newName (Tagged t xs) = Tagged t <$> mapM (renRefn newName) xs
 renRefn _ x = return x
 

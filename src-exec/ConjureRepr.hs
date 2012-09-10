@@ -38,4 +38,4 @@ main = do
     putStrLn "[ === Generated === ]"
     putStrLn ""
 
-    mapM_ (print . pretty) generateds
+    mapM_ (putStrLn . renderPretty) generateds

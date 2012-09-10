@@ -14,10 +14,24 @@ import qualified Data.Map as M
 freshNames :: Monad m => E -> CompE m E
 freshNames param = do
     let
-        newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param
-                                  , r `notElem` ["forAll","exists","sum"]           -- don't rename these
-                                  , '#' `notElem` r                                 -- and if it has a # in it
-                                  ]
+        newvarsInQuanVar = S.fromList
+                                [ r | [xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference |] <- universe param
+                                ]
+    let
+        newvarsInBubbles = S.fromList $ concat
+                                [ r | [xMatch| ls := withLocals.locals |] <- universe param
+                                    , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find .name.reference |] = Just s
+                                          nameOut [xMatch| [Prim (S s)] := topLevel.declaration.given.name.reference |] = Just s
+                                          nameOut _ = Nothing
+                                    , let r = mapMaybe nameOut ls
+                                ]
+    let
+        newvars = S.union newvarsInQuanVar newvarsInBubbles
+    -- let
+    --     newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param
+    --                               , r `notElem` ["forAll","exists","sum"]           -- don't rename these
+    --                               , '#' `notElem` r                                 -- and if it has a # in it
+    --                               ]
     uniqueNames <- forM (S.toList newvars) $ \ a -> do b <- nextUniqueName; return (a, Prim (S b))
     let uniqueNamesMap = M.fromList uniqueNames
     let

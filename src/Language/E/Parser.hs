@@ -256,7 +256,9 @@ parsePostfixes = [parseIndexed,parseFuncApply,parseReplace]
                                                     | slicer.to   := [b]
                                                     |]
             is <- brackets $ pIndexer `sepBy1` comma
-            return $ \ x -> foldl (\ m' i -> [xMake| operator.index := [m',i] |] ) x is
+            return $ \ x -> foldl (\ m' i -> [xMake| operator.index.left  := [m']
+                                                   | operator.index.right := [i]
+                                                   |] ) x is
         parseFuncApply :: Parser (E -> E)
         parseFuncApply = parens $ do
             xs <- parseExpr `sepBy1` comma
