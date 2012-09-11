@@ -89,7 +89,8 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
                     mk _ = error "Impossible: addChannellingFromLog.mk"
 
                 let
-                    insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat |] : _) = toInsert ++ rest
+                    insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest
+                    insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.objective |] : _) = toInsert ++ rest
                     insertBeforeSuchThat toInsert (i:is) = i : insertBeforeSuchThat toInsert is
                     insertBeforeSuchThat toInsert []     = toInsert
 

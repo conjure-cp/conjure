@@ -43,61 +43,61 @@ instance Pretty E where
 
     -- top levels
     pretty [xMatch| [ name ] := topLevel.declaration.given.name
-                 | [domain] := topLevel.declaration.given.domain
-                 |]
+                  | [domain] := topLevel.declaration.given.domain
+                  |]
         = "given" <+> pretty name <> ":" <+> pretty domain
 
     pretty [xMatch| [ name ] := topLevel.declaration.find.name
-                 | [domain] := topLevel.declaration.find.domain
-                 |]
+                  | [domain] := topLevel.declaration.find.domain
+                  |]
         = "find" <+> pretty name <> ":" <+> pretty domain
 
     pretty [xMatch| [ name ] := topLevel.declaration.dim.name
-                 | [domain] := topLevel.declaration.dim.domain
-                 |]
+                  | [domain] := topLevel.declaration.dim.domain
+                  |]
         = "dim" <+> pretty name <> ":" <+> pretty domain
 
     pretty [xMatch| [ name ] := topLevel.declaration.given.name
-                 | [      ] := topLevel.declaration.given.typeEnum
-                 |]
+                  | [      ] := topLevel.declaration.given.typeEnum
+                  |]
         = "given" <+> pretty name <+> "new type enum"
 
     pretty [xMatch| [ name ] := dimFind.name
-                 | [domain] := dimFind.domain
-                 |]
+                  | [domain] := dimFind.domain
+                  |]
         = "find" <+> pretty name <> ":" <+> pretty domain
 
     pretty [xMatch| [x] := topLevel.declaration.nestedDimFind |]
         = pretty [xMake| atTopLevel := [x] |]
 
     pretty [xMatch| [ name ] := topLevel.letting.name
-                 | [thingy] := topLevel.letting.expr
-                 |]
+                  | [thingy] := topLevel.letting.expr
+                  |]
         = "letting" <+> pretty name <+> "be" <+> pretty thingy
 
     pretty [xMatch| [ name ] := topLevel.letting.name
-                 | [thingy] := topLevel.letting.domain
-                 |]
+                  | [thingy] := topLevel.letting.domain
+                  |]
         = "letting" <+> pretty name <+> "be domain" <+> pretty thingy
 
     pretty [xMatch| [ name ] := topLevel.letting.name
-                 | [thingy] := topLevel.letting.lambda
-                 |]
+                  | [thingy] := topLevel.letting.lambda
+                  |]
         = "letting" <+> pretty name <+> "be lambda" <+> pretty thingy
 
     pretty [xMatch| [ name ] := topLevel.letting.name
-                 | [thingy] := topLevel.letting.quantifier
-                 |]
+                  | [thingy] := topLevel.letting.quantifier
+                  |]
         = "letting" <+> pretty name <+> "be" <+> pretty thingy
 
     pretty [xMatch| [ name ] := topLevel.letting.name
-                 |  values  := topLevel.letting.typeEnum.values
-                 |]
+                  |  values  := topLevel.letting.typeEnum.values
+                  |]
         = "letting" <+> pretty name <+> "be new type enum" <+> prettyList Pr.braces "," values
 
     pretty [xMatch| [ name ] := topLevel.letting.name
-                 | [thingy] := topLevel.letting.typeUnnamed
-                 |]
+                  | [thingy] := topLevel.letting.typeUnnamed
+                  |]
         = "letting" <+> pretty name <+> "be new type of size" <+> pretty thingy
 
     -- pretty ( viewDeep [":type-enum-values"] -> Just xs )
