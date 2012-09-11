@@ -140,7 +140,7 @@ addBinder nm val = do
     --     _ -> mkLog "addBinder" $ stringToDoc nm
     modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
 
--- lookupBinder :: Monad m => String -> MaybeT (CompE m) E
+lookupBinder :: Monad m => String -> MaybeT (FunkyT LocalState GlobalState CompError m) E
 lookupBinder nm = do
     bs <- lift $ getsLocal binders
     case listToMaybe [ x | Binder nm' x <- bs, nm == nm' ] of

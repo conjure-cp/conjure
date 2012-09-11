@@ -5,7 +5,6 @@
 module Language.E.Evaluator.ToBool where
 
 import Stuff.Generic
-import Stuff.NamedLog
 import Stuff.Pretty
 import Language.E.Imports
 import Language.E.Definition

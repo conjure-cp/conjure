@@ -18,7 +18,6 @@ import Control.Arrow ( first, second )
 import Data.List ( intersperse )
 import Text.PrettyPrint as Pr
 import qualified Data.Text as T
-import Debug.Trace
 
 
 instance Pretty Spec where

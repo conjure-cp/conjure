@@ -2,7 +2,6 @@
 
 module Stuff.NamedLog where
 
-import Control.Monad.Writer ( MonadWriter(tell) )
 import Data.List ( isPrefixOf )
 import Text.PrettyPrint ( Doc, (<+>), vcat, brackets, text )
 

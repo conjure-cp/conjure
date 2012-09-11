@@ -7,7 +7,6 @@ module Language.E.MatchBind where
 import Stuff.Pretty
 import Stuff.Generic
 import Stuff.MetaVariable
-import Stuff.NamedLog
 import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
@@ -94,7 +93,7 @@ patternMatch pattern actual = do
 
 
 -- if this returns nothing, that means there is some unbound reference.
--- patternBind :: (Functor m, Monad m) => E -> MaybeT (CompE m) E
+patternBind :: (Functor m, Monad m) => E -> MaybeT (FunkyT LocalState GlobalState CompError m) E
 patternBind x | Just nm <- namedMV x = lookupBinder ('&':nm)
 patternBind (Tagged xTag xArgs) = Tagged xTag <$> mapM patternBind xArgs
 patternBind x = return x

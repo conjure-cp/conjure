@@ -19,7 +19,7 @@ import Data.Generics ( Data, Typeable )
 import Data.List.Split ( splitOn )
 
 -- template-haskell
-import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName, runIO )
+import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
 import Language.Haskell.TH.Lift ( deriveLift )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 
@@ -30,7 +30,6 @@ import Language.Haskell.Meta.Parse.Careful
 import Stuff.Pretty ( Pretty(..) )
 import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
 
-import Debug.Trace
 
 data Generic primitive
     = Prim primitive

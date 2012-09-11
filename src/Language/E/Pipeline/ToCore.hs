@@ -14,7 +14,7 @@ toCore :: (Functor m, Monad m)
     -> [(FilePath, Text)]
     -> [(FilePath, Text)]
     -> CompE m Spec
-toCore spectobe rulestobe reprstobe = do
+toCore spectobe rulestobe _reprstobe = do
     spec  <- readSpec spectobe
     rules <- mapM readRuleRefn rulestobe
     -- reprs <- mapM readRuleRepr reprstobe

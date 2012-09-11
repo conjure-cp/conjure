@@ -5,12 +5,10 @@
 module Language.E.Traversals where
 
 import Stuff.Generic
-import Stuff.NamedLog
 import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
-
 
 
 
@@ -19,18 +17,23 @@ labelOf (Prim   p  ) = pretty p
 labelOf (Tagged s _) = stringToDoc s
 
 
--- traverseSpec :: MonadWriter [NamedLog] m
---     => Maybe (Generic BuiltIn -> m (Generic BuiltIn))
---     -> (Generic BuiltIn -> m (Generic BuiltIn))
---     -> Maybe (Generic BuiltIn -> m (Generic BuiltIn))
---     -> Spec
---     -> m Spec
+traverseSpec :: (Monad m)
+    => Maybe (E -> CompE m E)
+    -> (E -> CompE m E)
+    -> Maybe (E -> CompE m E)
+    -> Spec
+    -> CompE m Spec
 traverseSpec mpre func mpost (Spec v xs) = do
     forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
     xs' <- mapM (traverse mpre func mpost) xs
     return $ Spec v xs'
 
-
+traverseSpecNoFindGiven :: (Monad m)
+    => Maybe (E -> CompE m E)
+    -> (E -> CompE m E)
+    -> Maybe (E -> CompE m E)
+    -> Spec
+    -> CompE m Spec
 traverseSpecNoFindGiven mpre func mpost (Spec v xs) = do
     forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
     xs' <- forM xs $ \ x -> case x of
@@ -40,14 +43,15 @@ traverseSpecNoFindGiven mpre func mpost (Spec v xs) = do
     return $ Spec v xs'
 
 
--- traverse :: (MonadWriter [NamedLog] m, Pretty primitive)
---     => Maybe (Generic primitive -> m (Generic primitive))
---     -> (Generic primitive -> m (Generic primitive))
---     -> Generic primitive
---     -> m (Generic primitive)
+traverse :: (Monad m)
+    => Maybe (E -> CompE m E)
+    -> (E -> CompE m E)
+    -> Maybe (E -> CompE m E)
+    -> E
+    -> CompE m E
 traverse mpre func mpost t = do
     mkLog "debug: ==>    " $ labelOf t
-    printAllBound "1"
+    -- printAllBound "1"
     bindersBefore <- getsLocal binders
     introduceStuff t
     result <- case mpre of
@@ -59,15 +63,16 @@ traverse mpre func mpost t = do
             mkLog "traverse" $ "after pre:" <+> labelOf t
             afterPre mpre func mpost t'
     modifyLocal $ \ st -> st { binders = bindersBefore }
-    printAllBound "2"
+    -- printAllBound "2"
     return result
 
 
--- afterPre :: (MonadWriter [NamedLog] m, Pretty primitive)
---     => Maybe (Generic primitive -> m (Generic primitive))
---     -> (Generic primitive -> m (Generic primitive))
---     -> Generic primitive
---     -> m (Generic primitive)
+afterPre :: (Monad m)
+    => Maybe (E -> CompE m E)
+    -> (E -> CompE m E)
+    -> Maybe (E -> CompE m E)
+    -> E
+    -> CompE m E
 afterPre mpre func mpost t = do
     -- mkLog "afterPre" $ labelOf t
     t' <- case t of
@@ -87,6 +92,7 @@ afterPre mpre func mpost t = do
             return t''
 
 
+introduceStuff :: Monad m => E -> CompE m ()
 introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
              | [      _      ] := topLevel.declaration.find.domain
@@ -110,9 +116,10 @@ introduceStuff _ = do
     return ()
 
 
+printAllBound :: Monad m => String -> CompE m ()
 printAllBound s = do
     bs <- getsLocal binders
-    let names = [ s | Binder s _ <- bs ]
-    -- mkLog ("----- ----- ----- ----- " ++ s) $ prettyList id "," names
+    let names = [ i | Binder i _ <- bs ]
+    mkLog ("----- ----- ----- ----- " ++ s) $ prettyList id "," names
     return ()
 

@@ -40,20 +40,20 @@ tryAgain fs spec = do
         else return spec
 
 
--- onSpec :: (Functor m, Monad m)
---     => RulesDB m
---     -> Spec
---     -> WriterT Any (CompE m) Spec
+onSpec :: (Functor m, Monad m)
+    => RulesDB m
+    -> Spec
+    -> WriterT Any (FunkyT LocalState GlobalState CompError m) Spec
 onSpec fs (Spec lang statements) = do
     lift $ mapM_ processStatement statements
     statements' <- sequence <$> mapM (onE fs) statements
     lift $ returns [ Spec lang s | s <- statements' ]
 
 
--- onE :: (Functor m, Monad m)
---     => RulesDB m
---     -> E
---     -> WriterT Any (CompE m) [E]
+onE :: (Functor m, Monad m)
+    => RulesDB m
+    -> E
+    -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
 -- onE _ x | trace (show $ "onE" <+> pretty x) False = undefined
 onE fs x@(Prim {}) = tryApply fs x
 onE fs x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference
@@ -105,12 +105,12 @@ onE fs [xMatch| [actual] := withLocals.actual
 onE fs x@(Tagged t xs) = onEGeneric fs x t xs
 
 
--- onEGeneric :: (Functor m, Monad m)
---     => RulesDB m
---     -> E
---     -> String
---     -> [E]
---     -> WriterT Any (CompE m) [E]
+onEGeneric :: (Functor m, Monad m)
+    => RulesDB m
+    -> E
+    -> String
+    -> [E]
+    -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
 onEGeneric fs x t xs = do
     (results, Any flag) <- listen $ do
         yss <- sequence <$> mapM (onE fs) xs
@@ -129,11 +129,10 @@ onEGeneric fs x t xs = do
     --     else return [x]
 
 
--- tryApply :: (Functor m, Monad m)
---     => RulesDB m
---     -> E
---     -> WriterT Any (CompE m) [E]
-
+tryApply :: (Functor m, Monad m)
+    => RulesDB m
+    -> E
+    -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
 tryApply fs x = do
     -- lift $ mkLog "debug" $ "in tryApply" <+> pretty x
     let

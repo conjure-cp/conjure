@@ -7,7 +7,6 @@ module Language.E.Evaluator.Full where
 import Language.E.Definition
 import Language.E.DomainOf
 import Language.E.MatchBind
-import Language.E.Pretty
 import Language.E.TH
 import Language.E.TypeOf
 
@@ -72,7 +71,7 @@ ret = return . Just
 
 
 evalHasType :: Monad m => E -> CompE m (Maybe E)
-evalHasType p@[eMatch| &s hastype &dom |] = do
+evalHasType _p@[eMatch| &s hastype &dom |] = do
     -- mkLog "evalHasType1" $ pretty p
     ts <- typeOf s
     -- mkLog "evalHasType2" $ pretty p
@@ -84,7 +83,7 @@ evalHasType p@[eMatch| &s hastype &dom |] = do
 evalHasType _ = return Nothing
 
 evalHasDomain :: Monad m => E -> CompE m (Maybe E)
-evalHasDomain p@[eMatch| &x hasdomain &y |] = do
+evalHasDomain _p@[eMatch| &x hasdomain &y |] = do
     -- mkLog "evalHasDomain" $ pretty p
     dx <- domainOf x
     dy <- domainOf y

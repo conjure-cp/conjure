@@ -7,7 +7,6 @@ module Language.E.Evaluator.Partial ( partialEvaluator ) where
 import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
-import Language.E.Pretty
 import Language.E.TypeOf
 import Language.E.TH ( eMatch, eMake )
 
@@ -52,22 +51,22 @@ partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
 
 -- quantification over an empty set or mset constant.
 partialEvaluator
-    p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
              | [] := quantified.quanOverExpr.value.set.values
              |] = do identity <- identityOp quantifier; ret identity
 
 partialEvaluator
-    p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
              | [] := quantified.quanOverExpr.value.mset.values
              |] = do identity <- identityOp quantifier; ret identity
 
 partialEvaluator
-    p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
              | [] := quantified.quanOverExpr.typed.left.value.set.values
              |] = do identity <- identityOp quantifier; ret identity
 
 partialEvaluator
-    p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
              | [] := quantified.quanOverExpr.typed.left.value.mset.values
              |] = do identity <- identityOp quantifier; ret identity
 
@@ -157,14 +156,14 @@ partialEvaluator
                     Just <$> foldM glueOp identity vs'
 
 partialEvaluator
+             -- | [qnOverExpr]          := quantified.quanOverExpr
     p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
-           | _            := quantified.quanOverOp.binOp.in
-           | [qnVar]      := quantified.quanVar.structural.single
-           | [qnOverExpr] := quantified.quanOverExpr
-           | vs           := quantified.quanOverExpr.value.mset.values
-           | qnGuards     := quantified.guard
-           | [qnBody]     := quantified.body
-           |] = do
+             | _                     := quantified.quanOverOp.binOp.in
+             | [qnVar]               := quantified.quanVar.structural.single
+             | vs                    := quantified.quanOverExpr.value.mset.values
+             | qnGuards              := quantified.guard
+             | [qnBody]              := quantified.body
+             |] = do
     mkLog "debug partialEvaluator" $ prettyAsPaths p
     mkLog "debug partialEvaluator" $ stringToDoc $ show vs
     let
@@ -188,8 +187,8 @@ partialEvaluator
         conjunct [] = error "Impossible."
         conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
     identity <- identityOp quantifier
-    tyOverExpr <- typeOf qnOverExpr
-    tyInner    <- innerTypeOf "in simplify" tyOverExpr
+    -- tyOverExpr <- typeOf qnOverExpr
+    -- tyInner    <- innerTypeOf "in simplify" tyOverExpr
     case vs of
         [] -> ret identity
         _  -> do
@@ -267,6 +266,7 @@ ret = return . Just
 --                             | v <- vs ]
 --             foldM glueOp identity' vs'
 
+identityOp :: Monad m => String -> CompE m E
 identityOp quantifier = case quantifier of
                 "forAll" -> return [eMake| true  |]
                 "exists" -> return [eMake| false |]
@@ -274,11 +274,11 @@ identityOp quantifier = case quantifier of
                 _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
 
 
-x = [xMake| a.b.x := [Prim (I 1)]
-          | a.b.y := [Prim (I 2)]
-          | a.b.test := []
-          |]
-
-success [xMatch| q := a.b.test |] = show q
-failure [xMatch| q := a.b.test.foo |] = show q
+-- x = [xMake| a.b.x := [Prim (I 1)]
+--           | a.b.y := [Prim (I 2)]
+--           | a.b.test := []
+--           |]
+-- 
+-- success [xMatch| q := a.b.test |] = show q
+-- failure [xMatch| q := a.b.test.foo |] = show q
 
