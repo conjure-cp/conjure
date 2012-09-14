@@ -32,6 +32,7 @@ operators =
     , ( L_supsetEq  , FNone  ,  400 )
     , ( L_in        , FNone  ,  550 )
     -- , ( L_Colon     , FNone  ,   10 )
+    , ( L_HasRepr   , FNone  ,   10 )
     , ( L_HasType   , FNone  ,   10 )
     , ( L_HasDomain , FNone  ,   10 )
     ]

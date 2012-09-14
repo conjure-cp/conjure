@@ -4,11 +4,14 @@
 
 module Language.E.Evaluator.Full where
 
+import Stuff.FunkyT
+import Language.E.Imports
 import Language.E.Definition
 import Language.E.DomainOf
 import Language.E.MatchBind
 import Language.E.TH
 import Language.E.TypeOf
+import Language.E.Pretty
 
 
 fullEvaluator :: Monad m => E -> CompE m (Maybe E)
@@ -71,7 +74,7 @@ ret = return . Just
 
 
 evalHasType :: Monad m => E -> CompE m (Maybe E)
-evalHasType _p@[eMatch| &s hastype &dom |] = do
+evalHasType _p@[eMatch| &s hasType &dom |] = do
     -- mkLog "evalHasType1" $ pretty p
     ts <- typeOf s
     -- mkLog "evalHasType2" $ pretty p
@@ -83,7 +86,7 @@ evalHasType _p@[eMatch| &s hastype &dom |] = do
 evalHasType _ = return Nothing
 
 evalHasDomain :: Monad m => E -> CompE m (Maybe E)
-evalHasDomain p@[eMatch| &x hasdomain &y |] = do
+evalHasDomain _p@[eMatch| &x hasDomain &y |] = do
     -- mkLog "evalHasDomain" $ pretty p
     dx <- domainOf x
     dy <- domainOf y
@@ -94,3 +97,26 @@ evalHasDomain p@[eMatch| &x hasdomain &y |] = do
     b  <- patternMatch dy dx
     returnBool b
 evalHasDomain _ = return Nothing
+
+evalHasRepr :: Monad m => E -> CompE m (Maybe E)
+evalHasRepr _p@[eMatch| &x hasRepr &y |] = do
+    -- mkLog "evalHasRepr" $ pretty p
+    -- mkLog "evalHasRepr" $ prettyAsPaths x
+    -- mkLog "evalHasRepr" $ prettyAsPaths y
+    case (x,y) of
+        ( [xMatch| [Prim (S iden )] := reference |] , [xMatch| [Prim (S reprName)] := reference |] ) -> do
+            -- mkLog "evalHasRepr" "1"
+            case splitOn "#" iden of
+                [_,idenReprName] -> returnBool $ idenReprName == reprName
+                _ -> return Nothing
+        ( [xMatch| [Prim (S iden')] := metavar   |] , _ ) -> do
+            -- mkLog "evalHasRepr" "2"
+            let iden = '&' : iden'
+            bs <- getsLocal binders
+            case [ a | Binder nm a <- bs, nm == iden ] of
+                [a] -> evalHasRepr [eMake| &a hasRepr &y |]
+                _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
+        _ -> do
+            -- mkLog "evalHasRepr" "3"
+            return Nothing
+evalHasRepr _ = return Nothing

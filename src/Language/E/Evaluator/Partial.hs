@@ -47,9 +47,9 @@ partialEvaluator [xMatch| [a] := operator.replace.arg1
                         | [c]  := operator.replace.new
                         |] =
     let
-        helper old new now | old == now = new
-        helper old new (Tagged t xs) = Tagged t $ map (helper old new) xs
-        helper old new other = other
+        helper  old  new now | old == now = new
+        helper  old  new (Tagged t xs) = Tagged t $ map (helper old new) xs
+        helper _old _new other = other
     in  ret $ helper b c a
 
 partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference

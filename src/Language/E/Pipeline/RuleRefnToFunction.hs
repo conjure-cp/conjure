@@ -91,7 +91,7 @@ single ( name
             let templateMetaVars  = S.unions [ metaVarsIn template
                                              | template <- templates ]
             let hasDomainMetaVars = S.unions [ S.unions [ metaVarsIn b
-                                                        | [xMatch| [Prim (S "hasdomain")] := binOp.operator
+                                                        | [xMatch| [Prim (S "hasDomain")] := binOp.operator
                                                                  | [b] := binOp.right
                                                                  |] <- universe loc
                                                         ]
@@ -99,7 +99,8 @@ single ( name
                                              ]
             unless (templateMetaVars `S.isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars])
                 $ Left ( ErrFatal
-                       , vcat [ "Pattern meta variables:"  <+> prettyListDoc id "," (map stringToDoc $ S.toList patternMetaVars)
+                       , vcat [ "in rule:" <+> pretty name
+                              , "Pattern meta variables:"  <+> prettyListDoc id "," (map stringToDoc $ S.toList patternMetaVars)
                               , "Template meta variables:" <+> prettyListDoc id "," (map stringToDoc $ S.toList templateMetaVars)
                               ]
                        )

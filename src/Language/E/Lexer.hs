@@ -206,6 +206,7 @@ data Lexeme
     | L_SquigglyArrow
     | L_CaseSeparator
 
+    | L_HasRepr
     | L_HasType
     | L_HasDomain
 
@@ -375,8 +376,9 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_SquigglyArrow   , "~~>"   )
     , ( L_CaseSeparator   , "***"   )
 
-    , ( L_HasType         , "hastype"   )
-    , ( L_HasDomain       , "hasdomain" )
+    , ( L_HasRepr         , "hasRepr"   )
+    , ( L_HasType         , "hasType"   )
+    , ( L_HasDomain       , "hasDomain" )
 
     ]
 

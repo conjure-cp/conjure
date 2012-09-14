@@ -10,7 +10,7 @@ import Language.E.Definition
 import Language.E.Lexer
 import Language.E.Parser
 
-import Language.E.Evaluator.Full    ( fullEvaluator, evalHasType, evalHasDomain )
+import Language.E.Evaluator.Full    ( fullEvaluator, evalHasType, evalHasDomain, evalHasRepr )
 import Language.E.Evaluator.Partial ( partialEvaluator )
 
 import qualified Data.Text as T
@@ -49,16 +49,18 @@ simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalSt
 simplify x = do
     -- lift $ mkLog "debug:simplify" $ pretty x
     rewriteM (\ i -> firstJust $ map ($ i) [ loggedFullEvaluator
+                                           , loggedEvalHasRepr
                                            , loggedEvalHasType
                                            , loggedEvalHasDomain
                                            , loggedPartialEvaluator
                                            ]
              ) x
     where
-        loggedFullEvaluator    = logged "Evaluator"                     fullEvaluator
-        loggedEvalHasType      = logged "debug:Evaluator (has type)"    evalHasType
-        loggedEvalHasDomain    = logged "debug:Evaluator (has domain)"  evalHasDomain
-        loggedPartialEvaluator = logged "Simplify"                      partialEvaluator
+        loggedFullEvaluator    = logged "Evaluator"                 fullEvaluator
+        loggedEvalHasRepr      = logged "Evaluator.hasRepr"         evalHasRepr
+        loggedEvalHasType      = logged "Evaluator.hasType"         evalHasType
+        loggedEvalHasDomain    = logged "Evaluator.hasDomain"       evalHasDomain
+        loggedPartialEvaluator = logged "Simplify"                  partialEvaluator
         logged str act inp = do
             moutp <- lift $ act inp
             case moutp of

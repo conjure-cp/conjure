@@ -16,6 +16,9 @@ suppress = [ "patternMatch.core"
            , "restoreState"
            , "Simplify"
            , "Evaluator"
+           , "Evaluator.hasType"
+           , "Evaluator.hasDomain"
+           , "Evaluator.hasRepr"
            ]
 
 buildLog :: String -> Doc -> Maybe NamedLog
