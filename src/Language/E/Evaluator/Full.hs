@@ -83,13 +83,14 @@ evalHasType _p@[eMatch| &s hastype &dom |] = do
 evalHasType _ = return Nothing
 
 evalHasDomain :: Monad m => E -> CompE m (Maybe E)
-evalHasDomain _p@[eMatch| &x hasdomain &y |] = do
+evalHasDomain p@[eMatch| &x hasdomain &y |] = do
     -- mkLog "evalHasDomain" $ pretty p
     dx <- domainOf x
     dy <- domainOf y
-    -- mkLog "debug:evalHasDomain" $ pretty dx
-    -- mkLog "debug:evalHasDomain" $ prettyAsPaths dx
-    -- mkLog "debug:evalHasDomain" $ pretty dy
+    -- mkLog "evalHasDomain" $ pretty dx
+    -- mkLog "evalHasDomain" $ prettyAsPaths dx
+    -- mkLog "evalHasDomain" $ pretty dy
+    -- mkLog "evalHasDomain" $ prettyAsPaths dy
     b  <- patternMatch dy dx
     returnBool b
 evalHasDomain _ = return Nothing

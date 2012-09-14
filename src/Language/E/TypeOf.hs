@@ -70,7 +70,8 @@ typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
 typeOf p@[xMatch| _ := type |] = return p
 
-typeOf [xMatch| [Prim (S i)] := reference |] = do
+typeOf [xMatch| [Prim (S i')] := reference |] = do
+    let i = head $ splitOn "#" i'
     bs <- getsLocal binders
     if i == "_"
         then return [xMake| type.unknown := [] |]
@@ -95,7 +96,17 @@ typeOf [xMatch| [d] := typed.right |] = typeOf d
 
 typeOf [xMatch| [d] := domainInExpr |] = typeOf d
 
-typeOf [xMatch| _ := domain.int |] = return [xMake| type.int := [] |]
+typeOf [xMatch| _ := domain.bool |] = return [xMake| type.bool := [] |]
+typeOf [xMatch| _ := domain.int  |] = return [xMake| type.int  := [] |]
+
+typeOf [xMatch| [index] := domain.matrix.index
+              | [inner] := domain.matrix.inner
+              |] = do
+    tIndex <- typeOf index
+    tInner <- typeOf inner
+    return [xMake| type.matrix.index := [tIndex]
+                 | type.matrix.inner := [tInner]
+                 |]
 
 typeOf [xMatch| [i] := domain.set.inner |] = do
     ti <- typeOf i

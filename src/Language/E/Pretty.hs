@@ -279,6 +279,11 @@ instance Pretty E where
 --         , lexeme `elem` map Just functionals
 --         = textToDoc rest <> prettyListDoc Pr.parens Pr.comma (map pretty args)
 
+    pretty [xMatch| [ a ] := operator.replace.arg1
+                  | [old] := operator.replace.old
+                  | [new] := operator.replace.new
+                  |] = parens $ parens (pretty a) <+> braces ( pretty old <+> "-->" <+> pretty new )
+
     pretty [xMatch| [] := binOp.in       |] = "in"
     pretty [xMatch| [] := binOp.subset   |] = "subset"
     pretty [xMatch| [] := binOp.subsetEq |] = "subsetEq"

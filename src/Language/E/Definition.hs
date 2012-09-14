@@ -32,6 +32,7 @@ import Stuff.NamedLog
 import Language.E.Imports
 
 import Data.Generics ( Data, Typeable )
+import qualified Data.Set as S
 
 -- import Control.Monad ( mzero )
 -- import Control.Monad.Trans ( lift )
@@ -122,11 +123,12 @@ instance Default LocalState where
     def = LocalState [] 1 [] []
 
 data GlobalState = GlobalState
-        { logs :: [NamedLog]
+        { logs               :: [NamedLog]                  -- logs about execution
+        , allNamesPreConjure :: S.Set String                -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 instance Default GlobalState where
-    def = GlobalState []
+    def = GlobalState [] S.empty
 
 mkLog :: Monad m => String -> Doc -> CompE m ()
 mkLog nm doc = case buildLog nm doc of
@@ -151,7 +153,11 @@ nextUniqueName :: Monad m => CompE m String
 nextUniqueName = do
     !i <- getsLocal uniqueNameInt
     modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
-    return $ "__" ++ show i
+    let !nm = "__" ++ show i
+    nms <- getsGlobal allNamesPreConjure
+    if nm `S.member` nms
+        then nextUniqueName
+        else return $! nm
 
 
 -- much needed

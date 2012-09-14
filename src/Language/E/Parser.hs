@@ -49,7 +49,7 @@ test_ParsePrint' p t = do
             -- print x
             -- print $ prettyAsTree x
             print $ prettyAsPaths x
-            -- print $ pretty x
+            print $ pretty x
 
 test_ParsePrint :: T.Text -> IO ()
 test_ParsePrint = test_ParsePrint' (inCompleteFile parseExpr)
@@ -273,7 +273,10 @@ parsePostfixes = [parseIndexed,parseFuncApply,parseReplace]
                     j <- parseExpr
                     return (i,j)
             pairs <- one `sepBy1` comma
-            return $ \ x -> foldl (\ m' (i,j) -> [xMake| operator.replace := [m',i,j] |] ) x pairs
+            return $ \ x -> foldl (\ m' (i,j) -> [xMake| operator.replace.arg1 := [m']
+                                                       | operator.replace.old  := [i]
+                                                       | operator.replace.new  := [j]
+                                                       |] ) x pairs
 
 parseOthers :: [Parser E]
 parseOthers = [ parseFunctional l

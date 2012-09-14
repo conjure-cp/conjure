@@ -13,7 +13,8 @@ import Language.E.Pretty
 
 domainOf :: Monad m => E -> CompE m E
 
-domainOf [xMatch| [Prim (S i)] := reference |] = do
+domainOf [xMatch| [Prim (S i')] := reference |] = do
+    let i = head $ splitOn "#" i'
     bs <- getsLocal binders
     if i == "_"
         then return [xMake| type.unknown := [] |]

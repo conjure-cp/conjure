@@ -5,7 +5,8 @@
 module Language.E.Testing.RuleEngine where
 
 import Language.E
-import Language.E.Pipeline.ToCore ( toCore, readSpec )
+import Language.E.Pipeline.ReadIn ( readSpec )
+import Language.E.Pipeline.ToCore ( toCore )
 
 import Prelude hiding ( mapM )
 import Data.Traversable ( mapM )

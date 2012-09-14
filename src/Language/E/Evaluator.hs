@@ -48,13 +48,17 @@ simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalSt
 -- simplify = return
 simplify x = do
     -- lift $ mkLog "debug:simplify" $ pretty x
-    rewriteM (\ i -> firstJust [ logged "Evaluator"                     fullEvaluator    i
-                               , logged "debug:Evaluator (has type)"    evalHasType      i
-                               , logged "debug:Evaluator (has domain)"  evalHasDomain    i
-                               , logged "Simplify"                      partialEvaluator i
-                               ]
+    rewriteM (\ i -> firstJust $ map ($ i) [ loggedFullEvaluator
+                                           , loggedEvalHasType
+                                           , loggedEvalHasDomain
+                                           , loggedPartialEvaluator
+                                           ]
              ) x
     where
+        loggedFullEvaluator    = logged "Evaluator"                     fullEvaluator
+        loggedEvalHasType      = logged "debug:Evaluator (has type)"    evalHasType
+        loggedEvalHasDomain    = logged "debug:Evaluator (has domain)"  evalHasDomain
+        loggedPartialEvaluator = logged "Simplify"                      partialEvaluator
         logged str act inp = do
             moutp <- lift $ act inp
             case moutp of
