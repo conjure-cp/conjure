@@ -5,6 +5,7 @@ module Language.E.Pipeline.BubbleUp where
 
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.Pipeline.ReadIn
 
 
 conjureBubbleUp :: (Monad m, Functor m)
@@ -14,13 +15,6 @@ conjureBubbleUp spectobe = do
     spec  <- readSpec spectobe
     (bubbleUpSpec >=> return . atMostOneSuchThat) spec
 
-readSpec :: (Functor m, Monad m)
-    => (FilePath, Text)
-    -> CompE m Spec
-readSpec (fp,con) =
-    case runLexerAndParser parseSpec fp con of
-        Left  e -> err ErrFatal e
-        Right x -> return $ atMostOneSuchThat x
 
 
 

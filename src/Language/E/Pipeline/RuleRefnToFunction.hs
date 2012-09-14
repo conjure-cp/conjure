@@ -119,10 +119,24 @@ single ( name
                         mres      <- runMaybeT $ patternBind template'
                         case mres of
                             Nothing  -> restoreState >> errRuleFail
-                            Just res -> restoreState >> return (Just (name, res))
+                            Just res -> do
+                                res' <- renRefn res
+                                restoreState
+                                return (Just (name, res'))
                     else restoreState >> errRuleFail
             else restoreState >> errRuleFail
 single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.worker)")
+
+
+renRefn :: Monad m => E -> CompE m E
+renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
+                 | [Prim (S i'    )] := functionApply.args.reference
+                 |] = do
+    case splitOn "#" i' of
+        [i,j] -> return [xMake| reference := [Prim (S $ i ++ "_" ++ j)] |]
+        _     -> err ErrFatal $ "Problem here:" <+> pretty p
+renRefn (Tagged t xs) = Tagged t <$> mapM renRefn xs
+renRefn x = return x
 
 
 errRuleFail :: Monad m => CompE m (Maybe a)

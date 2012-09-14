@@ -79,11 +79,11 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
 
                 let
                     mk (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
-                        [xMake| topLevel.declaration.find.name   := [Prim (S $ origName ++ "#" ++ reprName)]
+                        [xMake| topLevel.declaration.find.name   := [Prim (S $ origName ++ "_" ++ reprName)]
                               | topLevel.declaration.find.domain := [newDom]
                               |]
                     mk (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
-                        [xMake| topLevel.declaration.given.name   := [Prim (S $ origName ++ "#" ++ reprName)]
+                        [xMake| topLevel.declaration.given.name   := [Prim (S $ origName ++ "_" ++ reprName)]
                               | topLevel.declaration.given.domain := [newDom]
                               |]
                     mk _ = error "Impossible: addChannellingFromLog.mk"

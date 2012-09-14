@@ -95,9 +95,9 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                             loopVarName <- nextUniqueName
                                             mcons' <- forM mcons $ \ con -> do
                                                 con' <- (freshNames <=<
-                                                        renRefn [xMake| operator.index.left .reference := [Prim $ S $ origName ++ "#" ++ reprName]
-                                                                       | operator.index.right.reference := [Prim $ S loopVarName]
-                                                                       |]
+                                                        renRefn [xMake| operator.index.left .reference := [Prim $ S $ origName ++ "_" ++ reprName]
+                                                                      | operator.index.right.reference := [Prim $ S loopVarName]
+                                                                      |]
                                                         ) con
                                                 let con'' = [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
                                                                   | quantified.quanVar.structural.single.reference := [Prim $ S loopVarName]
@@ -128,7 +128,7 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                         Just res -> do
                                             mcons' <- forM mcons $ \ con -> do
                                                 con' <- (freshNames <=<
-                                                         renRefn [xMake| reference := [Prim $ S $ origName ++ "#" ++ reprName] |]
+                                                         renRefn [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
                                                         ) con
                                                 maybeCon <- runMaybeT $ patternBind con'
                                                 case maybeCon of
