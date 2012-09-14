@@ -6,5 +6,5 @@ exists &i in &a union &b, &guard . &body
 (exists &i in &a, &guard . &body) \/
 (exists &i in &b, &guard . &body)
 
-    where &a hastype `set of _`
-    where &b hastype `set of _`
+    where &a hasType `set of _`
+    where &b hasType `set of _`

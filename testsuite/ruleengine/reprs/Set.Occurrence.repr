@@ -1,0 +1,69 @@
+
+~~> Occurrence                          $ name of the repr.
+~~> matrix indexed by [&t] of bool      $ domain of the refinement
+$ ~~> true                                $ structural cons. (optional)
+
+    where &t hasType `int`              $ guards.
+
+*** set of &t
+                                        $ additional guards on cases.
+                                        $ additional bindings.
+
+*** set (size &n, ..) of &t
+    ~~> (sum i : &t . toInt(refn[i])) = &n      $ additional structural cons
+
+*** set (minSize &mn) of &t
+    ~~> (sum i : &t . toInt(refn[i])) >= &mn
+
+*** set (maxSize &mx) of &t
+    ~~> (sum i : &t . toInt(refn[i])) <= &mx
+
+*** set (minSize &mn, maxSize &mx) of t
+    ~~> (sum i : &t . toInt(refn[i])) >= &mn
+    /\  (sum i : &t . toInt(refn[i])) <= &mx
+
+
+$ ISO
+$ 
+$ A is the input : set of tau
+$ B is the output: matrix of bool
+$ 
+$ DOWN:
+$ forAll i : B . B[i] := 0
+$ forAll i : A . B[i] := 1
+$ 
+$ UP:
+$ forAll i : B , B[i] = true . i in A
+$ 
+
+
+
+$ ALTERNATIVE
+
+$ ~~> Occurrence
+$ ~~> matrix indexed by [t] of bool
+$     where t : int
+$ 
+$ *** set (size n, minSize nMin) of t
+$     ~~> (sum i : t . refn[i]) = n
+$     /\  (nMin <= n)
+$ 
+$ *** set (size n, minSize nMin) of t
+$     ~~> (sum i : t . refn[i]) = n
+$     /\  (nMin <= n)
+$ 
+$ *** set (size n, maxSize nMax) of t
+$     ~~> (sum i : t . refn[i]) = n
+$     /\  (nMax >= n)
+$ 
+$ *** set (size n) of t
+$     ~~> (sum i : t . refn[i]) = n
+$ 
+$ *** set (minSize n) of t
+$     ~~> (sum i : t . refn[i]) >= n
+$ 
+$ *** set (maxSize n) of t
+$     ~~> (sum i : t . refn[i]) <= n
+$ 
+$ *** set of t
+$     ~~> true
