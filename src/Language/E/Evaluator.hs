@@ -10,7 +10,7 @@ import Language.E.Definition
 import Language.E.Lexer
 import Language.E.Parser
 
-import Language.E.Evaluator.Full    ( fullEvaluator, evalHasType, evalHasDomain, evalHasRepr )
+import Language.E.Evaluator.Full    ( fullEvaluator, evalHasType, evalHasDomain, evalHasRepr, evalDomSize )
 import Language.E.Evaluator.Partial ( partialEvaluator )
 
 import qualified Data.Text as T
@@ -52,6 +52,7 @@ simplify x = do
                                            , loggedEvalHasRepr
                                            , loggedEvalHasType
                                            , loggedEvalHasDomain
+                                           , loggedEvalDomSize
                                            , loggedPartialEvaluator
                                            ]
              ) x
@@ -60,6 +61,7 @@ simplify x = do
         loggedEvalHasRepr      = logged "Evaluator.hasRepr"         evalHasRepr
         loggedEvalHasType      = logged "Evaluator.hasType"         evalHasType
         loggedEvalHasDomain    = logged "Evaluator.hasDomain"       evalHasDomain
+        loggedEvalDomSize      = logged "Evaluator.domSize"         evalDomSize
         loggedPartialEvaluator = logged "Simplify"                  partialEvaluator
         logged str act inp = do
             moutp <- lift $ act inp

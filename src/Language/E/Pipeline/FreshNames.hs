@@ -14,10 +14,22 @@ import qualified Data.Map as M
 freshNames :: Monad m => E -> CompE m E
 freshNames param = do
     let
+        quanVars :: [E]
+        quanVars = [ s | [xMatch| [s] := quantified.quanVar |] <- universe param ]
+
+        collectSingles :: [E] -> [String]
+        collectSingles i = [ r | [xMatch| [Prim (S r)] := structural.single.reference |] <- i ]
+
+        collectTuples :: [E] -> [E]
+        collectTuples  i = [ r | [xMatch| rs := structural.tuple |] <- i , r <- rs ]
+
+        newvarsInQuanVar :: S.Set String
         newvarsInQuanVar = S.fromList
-                                [ r | [xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference |] <- universe param
-                                ]
+                         $ collectSingles quanVars
+                        ++ collectSingles (collectTuples quanVars)
+
     let
+        newvarsInBubbles :: S.Set String
         newvarsInBubbles = S.fromList $ concat
                                 [ r | [xMatch| ls := withLocals.locals |] <- universe param
                                     , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find .name.reference |] = Just s
@@ -26,6 +38,7 @@ freshNames param = do
                                     , let r = mapMaybe nameOut ls
                                 ]
     let
+        newvars :: S.Set String
         newvars = S.union newvarsInQuanVar newvarsInBubbles
     -- let
     --     newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param

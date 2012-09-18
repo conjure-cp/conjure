@@ -10,10 +10,10 @@ data NamedLog = NamedLog String Doc
     deriving Show
 
 suppress :: [String]
-suppress = [ "patternMatch.core"
+suppress = [ "restoreState"
+           , "patternMatch.core"
            , "patternMatch"
            , "rule-fail"
-           , "restoreState"
            , "Simplify"
            , "Evaluator"
            , "Evaluator.hasType"
@@ -22,7 +22,7 @@ suppress = [ "patternMatch.core"
            ]
 
 buildLog :: String -> Doc -> Maybe NamedLog
-buildLog nm _ | "debug:" `isPrefixOf` nm = Nothing
+-- buildLog nm _ | "debug:" `isPrefixOf` nm = Nothing
 buildLog nm _ | nm `elem` suppress       = Nothing
 buildLog nm doc = Just (NamedLog nm doc)
 

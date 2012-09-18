@@ -24,7 +24,7 @@ traverseSpec :: (Monad m)
     -> Spec
     -> CompE m Spec
 traverseSpec mpre func mpost (Spec v xs) = do
-    forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
+    -- forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
     xs' <- mapM (traverse mpre func mpost) xs
     return $ Spec v xs'
 
@@ -35,7 +35,7 @@ traverseSpecNoFindGiven :: (Monad m)
     -> Spec
     -> CompE m Spec
 traverseSpecNoFindGiven mpre func mpost (Spec v xs) = do
-    forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
+    -- forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
     xs' <- forM xs $ \ x -> case x of
             [xMatch| _ := topLevel.declaration.find  |] -> return x
             [xMatch| _ := topLevel.declaration.given |] -> return x
@@ -50,7 +50,7 @@ traverse :: (Monad m)
     -> E
     -> CompE m E
 traverse mpre func mpost t = do
-    mkLog "debug: ==>    " $ labelOf t
+    -- mkLog "debug: ==>    " $ labelOf t
     -- printAllBound "1"
     bindersBefore <- getsLocal binders
     introduceStuff t
@@ -80,7 +80,7 @@ afterPre mpre func mpost t = do
             xs' <- mapM (traverse mpre func mpost) xs
             func (Tagged s xs')
         _ -> func t
-    mkLog "debug:    ==> " $ labelOf t'
+    -- mkLog "debug:    ==> " $ labelOf t'
     -- printAllBound ()
     case mpost of 
         Nothing -> do
@@ -97,7 +97,7 @@ introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
              | [      _      ] := topLevel.declaration.find.domain
              |] = do
-                 mkLog "debug:introduceStuff" $ "find" <+> stringToDoc name
+                 -- mkLog "debug:introduceStuff" $ "find" <+> stringToDoc name
                  addBinder name s
 introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
@@ -110,7 +110,7 @@ introduceStuff
 introduceStuff
     [xMatch| ls := withLocals.locals |] = do
         mapM_ introduceStuff ls
-        mkLog "debug:introduceStuff" $ vcat $ map pretty ls
+        -- mkLog "debug:introduceStuff" $ vcat $ map pretty ls
 introduceStuff _ = do
     -- mkLog "introduceStuff" $ pretty x
     return ()

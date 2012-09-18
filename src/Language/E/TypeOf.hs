@@ -20,12 +20,24 @@ import qualified Data.Text as T
 typeUnify :: Monad m => E -> E -> CompE m Bool
 typeUnify [xMatch| _ := type.unknown |] _ = return True
 typeUnify _ [xMatch| _ := type.unknown |] = return True
-typeUnify [xMatch| [a] := type.set.inner |]
-          [xMatch| [b] := type.set.inner |] = typeUnify a b
-typeUnify [xMatch| [a] := type.mset.inner |]
-          [xMatch| [b] := type.mset.inner |] = typeUnify a b
+typeUnify
+    [xMatch| [a] := type.set.inner |]
+    [xMatch| [b] := type.set.inner |]
+    = typeUnify a b
+typeUnify
+    [xMatch| [a] := type.mset.inner |]
+    [xMatch| [b] := type.mset.inner |]
+    = typeUnify a b
+typeUnify
+    [xMatch| [aFr] := type.function.innerFrom
+           | [aTo] := type.function.innerTo
+           |]
+    [xMatch| [bFr] := type.function.innerFrom
+           | [bTo] := type.function.innerTo
+           |]
+    = (&&) <$> typeUnify aFr bFr <*> typeUnify aTo bTo
 typeUnify x y = do
-    mkLog "debug:typeUnify" $ pretty x <+> "~~" <+> pretty y
+    -- mkLog "debug:typeUnify" $ pretty x <+> "~~" <+> pretty y
     return (x == y)
 
 mostKnown :: Monad m => E -> E -> CompE m E
@@ -40,8 +52,8 @@ mostKnown [xMatch| [a] := type.mset.inner |]
               x <- mostKnown a b
               return [xMake| type.mset.inner := [x] |]
 
-mostKnown x y = do
-    mkLog "debug:mostKnown" $ pretty x <+> "~~" <+> pretty y
+mostKnown x _y = do
+    -- mkLog "debug:mostKnown" $ pretty x <+> "~~" <+> pretty y
     return x
 
 
@@ -81,12 +93,13 @@ typeOf [xMatch| [Prim (S i')] := reference |] = do
                     let bsText = sep $ map (\ (Binder nm _) -> stringToDoc nm ) bs
                     err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
 
-typeOf [xMatch| [Prim (S i)] := metavar |] = do
+typeOf p@[xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
     bs <- getsLocal binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> typeOf x
-        _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
+        _   -> return p
+        -- _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
 
 typeOf [xMatch| [d] := topLevel.declaration.find.domain |] = typeOf d
 
@@ -106,6 +119,15 @@ typeOf [xMatch| [index] := domain.matrix.index
     tInner <- typeOf inner
     return [xMake| type.matrix.index := [tIndex]
                  | type.matrix.inner := [tInner]
+                 |]
+
+typeOf [xMatch| [fr] := domain.function.innerFrom
+              | [to] := domain.function.innerTo
+              |] = do
+    frTy <- typeOf fr
+    toTy <- typeOf to
+    return [xMake| type.function.innerFrom := [frTy]
+                 | type.function.innerTo   := [toTy]
                  |]
 
 typeOf [xMatch| [i] := domain.set.inner |] = do
@@ -202,6 +224,9 @@ typeOf p@[xMatch| [x] := operator.toSet |] = do
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.mset.inner |] -> return [xMake| type.set.inner := [innerTy] |]
+        [xMatch| [innerFr] := type.function.innerFrom
+               | [innerTo] := type.function.innerTo
+               |] -> return [xMake| type.tuple.inners := [innerFr,innerTo] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> err'
 
@@ -300,8 +325,48 @@ typeOf p@[eMatch| max(&a,&b) |] = do
 typeOf [xMatch| [i] := withLocals.actual
               | js  := withLocals.locals |] = mapM_ processStatement js >> typeOf i
 
--- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
-typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
+typeOf p@[xMatch| [f] := functionApply.actual
+                | [x] := functionApply.args
+                |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tyF <- typeOf f
+    tyX <- typeOf x
+    case tyF of
+        [xMatch| [fr] := type.function.innerFrom
+               | [to] := type.function.innerTo
+               |] | fr == tyX -> return to
+        _ -> err'
+
+typeOf p@[xMatch| [f] := operator.defined |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tyF <- typeOf f
+    case tyF of
+        [xMatch| [fr] := type.function.innerFrom
+               |] -> return [xMake| type.set.inner := [fr] |]
+        _ -> err'
+
+typeOf p@[xMatch| [f] := operator.range |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tyF <- typeOf f
+    case tyF of
+        [xMatch| [to] := type.function.innerTo
+               |] -> return [xMake| type.set.inner := [to] |]
+        _ -> err'
+
+typeOf p@[xMatch| [m] := operator.index.left
+                | [i] := operator.index.right
+                |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tyM <- typeOf m
+    tyI <- typeOf i
+    case tyM of
+        [xMatch| [ind] := type.matrix.index
+               | [inn] := type.matrix.inner
+               |] | ind == tyI -> return inn
+        _ -> err'
+
+typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
+-- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
 
 
 

@@ -6,6 +6,7 @@ import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
 import Language.E
+import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRepr ( conjureRepr )
 
 
@@ -34,8 +35,9 @@ main = do
         $ show
         $ prettyErrors "There were errors in at least one branch." errors
 
-    putStrLn ""
-    putStrLn "[ === Generated === ]"
-    putStrLn ""
+    -- putStrLn ""
+    -- putStrLn "[ === Generated === ]"
+    -- putStrLn ""
+    -- mapM_ (putStrLn . renderPretty) generateds
 
-    mapM_ (putStrLn . renderPretty) generateds
+    writeSpecs (dropExtEssence specFilename) generateds

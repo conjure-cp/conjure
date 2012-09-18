@@ -137,6 +137,10 @@ instance Pretty E where
     pretty [xMatch| [x] := type.set.inner  |] = "set of"  <+> pretty x
     pretty [xMatch| [x] := type.mset.inner |] = "mset of" <+> pretty x
 
+    pretty [xMatch| [a] := type.function.innerFrom
+                  | [b] := type.function.innerTo
+                  |] = "function" <+> pretty a <+> "-->" <+> pretty b
+
 -- domain.*
     pretty [xMatch| [Prim (S x)] := domain.reference   |] = pretty x
 
@@ -333,7 +337,8 @@ instance Pretty E where
     --     = "#{" <> pretty x <> "}#"
 
     -- pretty x = prettyNotImplemented x
-    pretty x = "catch all case" <++> vcat [prettyAsPaths x, prettyAsTree x]
+    -- pretty x = "catch all case" <++> vcat [prettyAsPaths x, prettyAsTree x]
+    pretty x = "catch all case" <++> prettyAsPaths x
 
     -- pretty x = Pr.text $ show x
 

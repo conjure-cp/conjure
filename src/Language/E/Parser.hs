@@ -604,7 +604,7 @@ parseTopLevels = do
                 , do
                     lexeme L_letting
                     decls <- flip sepBy1 comma $ do
-                        is <- parseReference `sepBy1` comma
+                        is <- (try parseMetaVariable <|> parseReference) `sepBy1` comma
                         lexeme L_be
                         msum
                             [ do

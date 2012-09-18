@@ -6,7 +6,8 @@ import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
 import Language.E
-import Language.E.Pipeline.ToCore ( toCore )
+import Language.E.Pipeline.ReadIn
+import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 
 
 main :: IO ()
@@ -17,20 +18,10 @@ main = do
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
 
-    let refnFilenames = filter (".rule" `isSuffixOf`) args
-    -- when (null refnFilenames)
-    --     $ error "Warning: no *.rule file is given."
-
-    let reprFilenames = filter (".repr" `isSuffixOf`) args
-    -- when (null reprFilenames)
-    --     $ error "Warning: no *.repr file is given."
-
     spec    <- pairWithContents specFilename
-    rules   <- mapM pairWithContents refnFilenames
-    reprs   <- mapM pairWithContents reprFilenames
 
     let
-        (mgenerateds, glo) = runIdentity $ runCompE (toCore spec rules reprs)
+        (mgenerateds, glo) = runIdentity $ runCompE (conjureNoGuards spec)
         errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
         generateds = [ x  | (Right x, _ ) <- mgenerateds ]
     print $ prettyLogs $ logs glo
@@ -39,8 +30,9 @@ main = do
         $ show
         $ prettyErrors "There were errors in at least one branch." errors
 
-    putStrLn ""
-    putStrLn "[ === Generated === ]"
-    putStrLn ""
+    -- putStrLn ""
+    -- putStrLn "[ === Generated === ]"
+    -- putStrLn ""
+    -- mapM_ (putStrLn . renderPretty) generateds
 
-    mapM_ (putStrLn . renderPretty) generateds
+    writeSpecs (dropExtEssence specFilename) generateds

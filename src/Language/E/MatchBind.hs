@@ -33,13 +33,24 @@ patternMatch pattern actual = do
             return ()
     return flag
     where
+        core [xMatch| [] := type.unknown |] y = do
+            mkLog "patternMatch.core" $ vcat ["type.unknown", "~~", pretty y]
+            return True
         core (Prim x) (Prim y) =
             if x == y
                 then do
-                    mkLog "patternMatch.core" $ "same literal" <+> pretty x <+> "~~" <+> pretty y
+                    mkLog "patternMatch.core" $ vcat [ "same literal"
+                                                     , pretty x
+                                                     , "~~"
+                                                     , pretty y
+                                                     ]
                     return True
                 else do
-                    mkLog "patternMatch.core" $ "literals not equal" <+> pretty x <+> "~~" <+> pretty y
+                    mkLog "patternMatch.core" $ vcat [ "literals not equal"
+                                                     , pretty x
+                                                     , "~~"
+                                                     , pretty y
+                                                     ]
                     return False
         core p _ | unnamedMV p = do
             return True
@@ -76,25 +87,47 @@ patternMatch pattern actual = do
                     bs <- zipWithM core xArgs yArgs
                     if and bs
                         then do
-                            mkLog "patternMatch.core" $ "all subtrees matched fine" <+> pretty _x <+> "~~" <+> pretty _y
+                            -- mkLog "patternMatch.core" $ vcat [ "all subtrees matched fine"
+                            --                                  , pretty _x
+                            --                                  , "~~"
+                            --                                  , pretty _y
+                            --                                  ]
                             return True
                         else do
-                            mkLog "patternMatch.core" $ "some subtrees didn't match" <+> pretty _x <+> "~~" <+> pretty _y
+                            mkLog "patternMatch.core" $ vcat [ "some subtrees didn't match"
+                                                             , pretty _x
+                                                             , "~~"
+                                                             , pretty _y
+                                                             ]
                             return False
                 (False, _) -> do
-                    mkLog "patternMatch.core" $ "different tree labels" <+> pretty xTag <+> "~~" <+> pretty yTag
+                    mkLog "patternMatch.core" $ vcat [ "different tree labels"
+                                                     , pretty xTag
+                                                     , "~~"
+                                                     , pretty yTag
+                                                     ]
                     return False
                 (_, False) -> do
-                    mkLog "patternMatch.core" $ "different number of subtrees" <+> pretty xTag <+> "~~" <+> pretty yTag
+                    mkLog "patternMatch.core" $ vcat [ "different number of subtrees"
+                                                     , pretty _x
+                                                     , "~~"
+                                                     , pretty _y
+                                                     ]
                     return False
         core _x _y = do
-            -- mkLog "patternMatch.core" $ "this just fails" <+> pretty x <+> "~~" <+> pretty y
+            -- mkLog "patternMatch.core" $ vcat [ "this just fails"
+            --                                  , pretty x
+            --                                  , "~~"
+            --                                  , pretty y
+            --                                  ]
             return False
 
 
 -- if this returns nothing, that means there is some unbound reference.
 patternBind :: (Functor m, Monad m) => E -> MaybeT (FunkyT LocalState GlobalState CompError m) E
-patternBind x | Just nm <- namedMV x = lookupBinder ('&':nm)
+patternBind x | Just nm <- namedMV x = do
+    res <- lookupBinder ('&':nm)
+    patternBind res
 patternBind (Tagged xTag xArgs) = Tagged xTag <$> mapM patternBind xArgs
 patternBind x = return x
 

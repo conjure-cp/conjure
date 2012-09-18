@@ -168,9 +168,12 @@ processStatement s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.re
 processStatement s@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                           | [      _      ] := topLevel.declaration.given.domain
                           |] = addBinder name s
-processStatement   [xMatch| [Prim (S name)] := topLevel.declaration.letting.name.reference
-                          | [ expression ]  := topLevel.declaration.letting.expr
+processStatement   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
+                          | [ expression ]  := topLevel.letting.expr
                           |] = addBinder name expression
+processStatement   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
+                          | [ expression ]  := topLevel.letting.expr
+                          |] = addBinder ('&':name) expression
 processStatement   [xMatch| _ := topLevel.suchThat  |] = return ()
 processStatement   [xMatch| _ := topLevel.objective |] = return ()
 processStatement   [xMatch| _ := topLevel.where     |] = return ()

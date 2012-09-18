@@ -1,0 +1,11 @@
+
+inverse(&f, &g)
+
+    ~~>
+
+(forAll (i,j) in toSet(&f) . &g(j) = i)
+    /\
+(forAll (i,j) in toSet(&g) . &f(j) = i)
+
+    where &f hasType `function _ --> _`
+    where &g hasType `function _ --> _`

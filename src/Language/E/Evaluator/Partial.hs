@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Language.E.Evaluator.Partial ( partialEvaluator ) where
+module Language.E.Evaluator.Partial ( partialEvaluator, guardOp ) where
 
 import Stuff.Generic
 import Language.E.Imports
@@ -81,42 +81,27 @@ partialEvaluator
              |] = do identity <- identityOp quantifier; ret identity
 
 partialEvaluator
-    p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
-           | _            := quantified.quanOverOp.binOp.in
-           | [qnVar]      := quantified.quanVar.structural.single
-           | [qnOverExpr] := quantified.quanOverExpr
-           | vs           := quantified.quanOverExpr.value.set.values
-           | qnGuards     := quantified.guard
-           | [qnBody]     := quantified.body
-           |] = do
-    mkLog "debug partialEvaluator" $ prettyAsPaths p
-    mkLog "debug partialEvaluator" $ stringToDoc $ show vs
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+             | _            := quantified.quanOverOp.binOp.in
+             | [qnVar]      := quantified.quanVar.structural.single
+             | [qnOverExpr] := quantified.quanOverExpr
+             | vs           := quantified.quanOverExpr.value.set.values
+             | qnGuards     := quantified.guard
+             | [qnBody]     := quantified.body
+             |] = do
+    -- mkLog "debug partialEvaluator" $ prettyAsPaths p
+    -- mkLog "debug partialEvaluator" $ stringToDoc $ show vs
     let
         qnGuards' = case qnGuards of
                         [ [xMatch| [] := emptyGuard |] ] -> []
                         _ -> qnGuards
-    let
-        guardOp [] b = return b
-        guardOp as b =
-            let a = conjunct as
-            in  case quantifier of
-                    "forAll" -> return [eMake| &a -> &b |]
-                    "exists" -> return [eMake| &a /\ &b |]
-                    "sum"    -> return [eMake| &a *  &b |]
-                    _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-        glueOp a b = case quantifier of
-                        "forAll" -> return [eMake| &a /\ &b |]
-                        "exists" -> return [eMake| &a \/ &b |]
-                        "sum"    -> return [eMake| &a +  &b |]
-                        _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-        conjunct [] = error "Impossible."
-        conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
     identity <- identityOp quantifier
     tyOverExpr <- typeOf qnOverExpr
     tyInner    <- innerTypeOf "in simplify" tyOverExpr
     case quantifier of
         "sum" -> do
-            vs' <- sequence [ guardOp (map (replace qnVar v) theGuard)
+            vs' <- sequence [ guardOp quantifier
+                                      (map (replace qnVar v) theGuard)
                                       (replace qnVar v qnBody)
                             | (v, rest) <- withRestToL vs
                             , let theGuard =
@@ -155,57 +140,42 @@ partialEvaluator
                                         --            ]
                                         else qnGuards'
                             ]
-            Just <$> foldM glueOp identity vs'
+            Just <$> foldM (glueOp quantifier) identity vs'
         _ ->
             case vs of
                 [] -> ret identity
                 _  -> do
-                    vs' <- sequence [ guardOp (map (replace qnVar v) qnGuards')
+                    vs' <- sequence [ guardOp quantifier
+                                              (map (replace qnVar v) qnGuards')
                                               (replace qnVar v qnBody)
                                     | v <- vs ]
-                    Just <$> foldM glueOp identity vs'
+                    Just <$> foldM (glueOp quantifier) identity vs'
 
 partialEvaluator
-             -- | [qnOverExpr]          := quantified.quanOverExpr
-    p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
              | _                     := quantified.quanOverOp.binOp.in
              | [qnVar]               := quantified.quanVar.structural.single
              | vs                    := quantified.quanOverExpr.value.mset.values
              | qnGuards              := quantified.guard
              | [qnBody]              := quantified.body
              |] = do
-    mkLog "debug partialEvaluator" $ prettyAsPaths p
-    mkLog "debug partialEvaluator" $ stringToDoc $ show vs
+    -- mkLog "debug partialEvaluator" $ prettyAsPaths p
+    -- mkLog "debug partialEvaluator" $ stringToDoc $ show vs
     let
         qnGuards' = case qnGuards of
                         [ [xMatch| [] := emptyGuard |] ] -> []
                         _ -> qnGuards
-    let
-        guardOp [] b = return b
-        guardOp as b =
-            let a = conjunct as
-            in  case quantifier of
-                    "forAll" -> return [eMake| &a -> &b |]
-                    "exists" -> return [eMake| &a /\ &b |]
-                    "sum"    -> return [eMake| &a *  &b |]
-                    _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-        glueOp a b = case quantifier of
-                        "forAll" -> return [eMake| &a /\ &b |]
-                        "exists" -> return [eMake| &a \/ &b |]
-                        "sum"    -> return [eMake| &a +  &b |]
-                        _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-        conjunct [] = error "Impossible."
-        conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
     identity <- identityOp quantifier
     -- tyOverExpr <- typeOf qnOverExpr
     -- tyInner    <- innerTypeOf "in simplify" tyOverExpr
     case vs of
         [] -> ret identity
         _  -> do
-            vs' <- sequence [ guardOp (map (replace qnVar v) qnGuards')
+            vs' <- sequence [ guardOp quantifier
+                                      (map (replace qnVar v) qnGuards')
                                       (replace qnVar v qnBody)
                             | v <- vs ]
-            Just <$> foldM glueOp identity vs'
+            Just <$> foldM (glueOp quantifier) identity vs'
 partialEvaluator _ = return Nothing
 
 
@@ -282,6 +252,28 @@ identityOp quantifier = case quantifier of
                 "exists" -> return [eMake| false |]
                 "sum"    -> return [eMake| 0     |]
                 _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
+
+guardOp :: Monad m => String -> [E] -> E -> CompE m E
+guardOp _ [] b = return b
+guardOp quantifier as b =
+    let a = conjunct as
+    in  case quantifier of
+            "forAll" -> return [eMake| &a -> &b |]
+            "exists" -> return [eMake| &a /\ &b |]
+            "sum"    -> return [eMake| &a *  &b |]
+            _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
+
+glueOp :: Monad m => String -> E -> E -> CompE m E
+glueOp quantifier a b = case quantifier of
+            "forAll" -> return [eMake| &a /\ &b |]
+            "exists" -> return [eMake| &a \/ &b |]
+            "sum"    -> return [eMake| &a +  &b |]
+            _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
+
+conjunct :: [E] -> E
+conjunct [] = error "Impossible."
+conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
+
 
 
 -- x = [xMake| a.b.x := [Prim (I 1)]

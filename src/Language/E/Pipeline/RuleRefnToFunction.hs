@@ -168,4 +168,4 @@ localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
                                                                           , "at expression" <+> pretty x
                                                                           ]
             return False
-localHandler _ _ lokal = throwError ( ErrFatal, "not handled" <+> prettyAsTree lokal )
+localHandler _ _ lokal = processStatement lokal >> return True

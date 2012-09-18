@@ -75,13 +75,16 @@ ret = return . Just
 
 evalHasType :: Monad m => E -> CompE m (Maybe E)
 evalHasType _p@[eMatch| &s hasType &dom |] = do
-    -- mkLog "evalHasType1" $ pretty p
     ts <- typeOf s
-    -- mkLog "evalHasType2" $ pretty p
     td <- typeOf dom
-    -- mkLog "evalHasType3" $ pretty p
-    b  <- typeUnify ts td
-    -- mkLog "evalHasType4" $ pretty p
+    -- b  <- typeUnify ts td
+    b  <- patternMatch td ts
+    -- if b
+    --     then do
+    --         mkLog "debug:evalHasType" $ pretty p
+    --         mkLog "debug:evalHasType" $ pretty ts
+    --         mkLog "debug:evalHasType" $ pretty td
+    --     else return ()
     returnBool b
 evalHasType _ = return Nothing
 
@@ -120,3 +123,23 @@ evalHasRepr _p@[eMatch| &x hasRepr &y |] = do
             -- mkLog "evalHasRepr" "3"
             return Nothing
 evalHasRepr _ = return Nothing
+
+evalDomSize :: Monad m => E -> CompE m (Maybe E)
+evalDomSize [eMatch| domSize(&i) |] = domSize i
+    where
+        sumE []     = [eMake| 0 |]
+        sumE [x]    = x
+        sumE [x,y]  = [eMake| &x + &y |]
+        sumE (x:xs) = let sumxs = sumE xs in [eMake| &x + &sumxs |]
+
+        domSize [xMatch| rs := domain.int.ranges |] = do
+            mxs <- mapM domSize rs
+            let xs = catMaybes mxs
+            if all isJust mxs
+                then return $ Just $ sumE xs
+                else return Nothing
+        domSize [xMatch| [fr,to] := range.fromTo |] =
+            return $ Just [eMake| &to - &fr + 1 |]
+        domSize p = do
+            err ErrFatal $ "domSize:" <+> prettyAsPaths p
+evalDomSize _ = return Nothing

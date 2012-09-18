@@ -14,7 +14,7 @@ applyTransformation :: (Functor m, Monad m)
     -> Spec
     -> CompE m Spec
 applyTransformation fs spec = do
-    mkLog "debug:ApplyTransformation.worker" $ pretty spec
+    -- mkLog "debug:ApplyTransformation.worker" $ pretty spec
     (spec', Any flag) <- runWriterT $ onSpec fs spec
     -- return spec'
     if flag
@@ -33,7 +33,7 @@ tryAgain :: (Functor m, Monad m)
 -- tryAgain fs spec = trace (show $ "tryAgain" <+> pretty spec) $ do
 tryAgain fs spec = do
     modifyLocal $ \ st -> st { binders = [] }
-    mkLog "debug:ApplyTransformation.tryAgain" $ pretty spec
+    -- mkLog "debug:ApplyTransformation.tryAgain" $ pretty spec
     (result, Any flag) <- runWriterT $ onSpec fs spec
     if flag
         then tryAgain fs result

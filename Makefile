@@ -17,7 +17,7 @@ prof-install:
 	# ghc-pkg unregister conjure-cp
 	time cabal configure --enable-library-profiling --enable-executable-profiling
 	time cabal build
-	time cabal install
+	time cabal install --disable-documentation
 
 prof-buildtests:
 	# ghc-pkg unregister conjure-cp
