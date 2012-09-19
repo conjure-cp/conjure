@@ -174,6 +174,9 @@ processStatement   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
 processStatement   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
                           | [ expression ]  := topLevel.letting.expr
                           |] = addBinder ('&':name) expression
+processStatement   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
+                          | [ expression ]  := topLevel.letting.domain
+                          |] = addBinder ('&':name) expression
 processStatement   [xMatch| _ := topLevel.suchThat  |] = return ()
 processStatement   [xMatch| _ := topLevel.objective |] = return ()
 processStatement   [xMatch| _ := topLevel.where     |] = return ()

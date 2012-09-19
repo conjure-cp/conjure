@@ -73,7 +73,7 @@ ret :: Monad m => E -> CompE m (Maybe E)
 ret = return . Just
 
 
-evalHasType :: Monad m => E -> CompE m (Maybe E)
+evalHasType :: (Functor m, Monad m) => E -> CompE m (Maybe E)
 evalHasType _p@[eMatch| &s hasType &dom |] = do
     ts <- typeOf s
     td <- typeOf dom
@@ -143,3 +143,25 @@ evalDomSize [eMatch| domSize(&i) |] = domSize i
         domSize p = do
             err ErrFatal $ "domSize:" <+> prettyAsPaths p
 evalDomSize _ = return Nothing
+
+evalIndices :: Monad m => E -> CompE m (Maybe E)
+evalIndices [xMatch| [a,b] := operator.indices |] = indices a b
+    where
+        indices [xMatch| [Prim (S iden)] := reference |] i = do
+            mres <- runMaybeT $ lookupBinder iden
+            case mres of
+                Nothing  -> err ErrFatal $ "(evalIndices) Undefined reference:" <+> pretty iden
+                Just res -> indices res i
+        indices [xMatch| [d] := topLevel.declaration.find.domain |] i = indices d i
+        indices [xMatch| [index] := domain.matrix.index |]
+                [xMatch| [Prim (I 0)] := value.literal  |] = return $ Just index
+        indices [xMatch| [inner] := domain.matrix.inner |]
+                [xMatch| [Prim (I i)] := value.literal  |] = indices inner [xMake| value.literal := [Prim (I $ i-1)] |]
+        indices m i = do
+            mkLog "debug:indices" $ vcat [ pretty m
+                                         , prettyAsPaths m
+                                         , pretty i
+                                         , prettyAsPaths i
+                                         ]
+            return Nothing
+evalIndices _ = return Nothing

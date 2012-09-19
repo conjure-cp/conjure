@@ -43,8 +43,8 @@ partialEvaluator [eMatch| max({&a}) |] = ret a
 partialEvaluator [eMatch| min({&a}) |] = ret a
 
 partialEvaluator [xMatch| [a] := operator.replace.arg1
-                        | [b]  := operator.replace.old
-                        | [c]  := operator.replace.new
+                        | [b] := operator.replace.old
+                        | [c] := operator.replace.new
                         |] =
     let
         helper  old  new now | old == now = new

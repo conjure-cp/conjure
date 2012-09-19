@@ -10,6 +10,7 @@ import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.TH
+import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import Language.E.Lexer ( runLexer )
 import Language.E.Parser ( runParser, inCompleteFile, parseExpr )
 import Language.E.Pretty
@@ -73,7 +74,7 @@ test_TypeOf t = do
                     Right y -> print $ pretty y
 
 
-typeOf :: Monad m => E -> CompE m E
+typeOf :: (Functor m, Monad m) => E -> CompE m E
 
 -- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
 
@@ -82,7 +83,7 @@ typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
 typeOf p@[xMatch| _ := type |] = return p
 
-typeOf [xMatch| [Prim (S i')] := reference |] = do
+typeOf p@[xMatch| [Prim (S i')] := reference |] = do
     let i = head $ splitOn "#" i'
     bs <- getsLocal binders
     if i == "_"
@@ -91,7 +92,10 @@ typeOf [xMatch| [Prim (S i')] := reference |] = do
                 (x:_) -> typeOf x
                 _   -> do
                     let bsText = sep $ map (\ (Binder nm _) -> stringToDoc nm ) bs
-                    err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
+                    err ErrFatal $ "(typeOf) Undefined reference:" <+> vcat [ pretty i
+                                                                            , bsText
+                                                                            , pretty p
+                                                                            ]
 
 typeOf p@[xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
@@ -120,6 +124,10 @@ typeOf [xMatch| [index] := domain.matrix.index
     return [xMake| type.matrix.index := [tIndex]
                  | type.matrix.inner := [tInner]
                  |]
+
+typeOf [xMatch| ds := domain.tuple.inners |] = do
+    ts <- mapM typeOf ds
+    return [xMake| type.tuple.inners := ts |]
 
 typeOf [xMatch| [fr] := domain.function.innerFrom
               | [to] := domain.function.innerTo
@@ -218,6 +226,22 @@ typeOf p@[xMatch| [x] := operator.twoBars |] = do
         [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> err'
+
+typeOf p@[xMatch| [m,i'] := operator.indices |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    i <- case i' of
+        [xMatch| [Prim (I i)] := value.literal |] -> return i
+        _ -> err'
+    tm <- typeOf m
+
+    let
+        getIndex 0 [xMatch| [indexTy] := type.matrix.index
+                          |] = return indexTy
+        getIndex n [xMatch| [innerTy] := type.matrix.inner
+                          |] = getIndex (n-1) innerTy
+        getIndex _ _ = err'
+
+    getIndex i tm
 
 typeOf p@[xMatch| [x] := operator.toSet |] = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
@@ -363,6 +387,11 @@ typeOf p@[xMatch| [m] := operator.index.left
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
                |] | ind == tyI -> return inn
+        [xMatch| ts := type.tuple.inners |] -> do
+            mint <- toInt i
+            case mint of
+                Just int | int >= 0 && int < genericLength ts -> return $ ts `genericIndex` int
+                _ -> err'
         _ -> err'
 
 typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e

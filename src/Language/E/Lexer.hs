@@ -209,6 +209,7 @@ data Lexeme
     | L_HasRepr
     | L_HasType
     | L_HasDomain
+    | L_indices
 
     | L_HsTerm T.Text
 
@@ -379,6 +380,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_HasRepr         , "hasRepr"   )
     , ( L_HasType         , "hasType"   )
     , ( L_HasDomain       , "hasDomain" )
+    , ( L_indices         , "indices"   )
 
     ]
 

@@ -109,7 +109,7 @@ testSetNeq6 = void $ loadAndApply
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-100-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-100-Plus.rule"
         ]
 
 testSetNeq7 :: IO ()
@@ -120,7 +120,7 @@ testSetNeq7 = void $ loadAndApply
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         ]
 
 testSetNeq8 :: IO ()
@@ -131,8 +131,8 @@ testSetNeq8 = void $ loadAndApply
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Plus.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Times.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
         ]
 
 testSetNeq9 :: IO ()
@@ -143,11 +143,11 @@ testSetNeq9 = void $ loadAndApply
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Plus.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Minus.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Times.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Div.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Mod.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Minus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Div.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Mod.rule"
         ]
 
 testSetMax1 :: IO ()
@@ -427,7 +427,7 @@ testData =
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-100-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-100-Plus.rule"
         ]
       )
 
@@ -441,7 +441,7 @@ testData =
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         ]
       )
 
@@ -455,8 +455,8 @@ testData =
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Plus.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Times.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
         ]
       )
 
@@ -470,11 +470,11 @@ testData =
         , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
         , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
         , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Plus.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Minus.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Times.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Div.rule"
-        , "testsuite/ruleengine/rules/bogus/set-subseteq-to-quantified-1000-Mod.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Minus.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Div.rule"
+        , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Mod.rule"
         ]
       )
 

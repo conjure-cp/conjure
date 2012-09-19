@@ -97,7 +97,10 @@ single ( name
                                                         ]
                                              | loc <- locals
                                              ]
-            unless (templateMetaVars `S.isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars])
+            let lettingMetaVars   = S.unions [ metaVarsIn n
+                                             | [xMatch| [n] := topLevel.letting.name |] <- locals
+                                             ]
+            unless (templateMetaVars `S.isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars,lettingMetaVars])
                 $ Left ( ErrFatal
                        , vcat [ "in rule:" <+> pretty name
                               , "Pattern meta variables:"  <+> prettyListDoc id "," (map stringToDoc $ S.toList patternMetaVars)

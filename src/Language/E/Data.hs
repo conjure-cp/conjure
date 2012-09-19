@@ -64,4 +64,5 @@ functionals =
     , L_toInt
     , L_flatten
     , L_normIndices
+    , L_indices
     ]

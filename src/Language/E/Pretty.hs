@@ -141,6 +141,22 @@ instance Pretty E where
                   | [b] := type.function.innerTo
                   |] = "function" <+> pretty a <+> "-->" <+> pretty b
 
+    pretty [xMatch| [   index   ] := type.matrix.index
+                  | [innerNested] := type.matrix.inner
+                  |]
+        = "matrix indexed by" <+> prettyList Pr.brackets "," indices
+                              <+> "of" <+> pretty inner
+        where
+            (indices,inner) = first (index:) $ collect innerNested
+            collect [xMatch| [i] := type.matrix.index
+                           | [j] := type.matrix.inner
+                           |] = first (i:) $ collect j
+            collect x = ([],x)
+
+    pretty [xMatch| ts := type.tuple.inners |] = if length ts >= 2 then prettyList Pr.parens "," ts
+                                                                   else "tuple" <+> prettyList Pr.parens "," ts
+
+
 -- domain.*
     pretty [xMatch| [Prim (S x)] := domain.reference   |] = pretty x
 
@@ -265,6 +281,9 @@ instance Pretty E where
 
     pretty [xMatch| [x] := operator.twoBars |]
         = "|" <> pretty x <> "|"
+
+    pretty [xMatch| [a,b] := operator.indices |]
+        = "indices" <> parens (pretty a <> "," <+> pretty b)
 
     pretty x@[xMatch| _ := operator.index |]
         = pretty actual <> prettyListDoc Pr.brackets Pr.comma (map pretty indices)

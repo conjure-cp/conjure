@@ -19,6 +19,8 @@ suppress = [ "restoreState"
            , "Evaluator.hasType"
            , "Evaluator.hasDomain"
            , "Evaluator.hasRepr"
+           , "Evaluator.domSize"
+           , "Evaluator.indices"
            ]
 
 buildLog :: String -> Doc -> Maybe NamedLog
