@@ -33,6 +33,9 @@ prof-runtests:
 	dist/build/conjure-tests/conjure-tests +RTS -hr && mv conjure-tests.hp debugging/conjure-tests-hr.hp && cd debugging && hp2ps -c conjure-tests-hr.hp && ps2pdf conjure-tests-hr.ps && rm conjure-tests-hr.aux
 	dist/build/conjure-tests/conjure-tests +RTS -hy && mv conjure-tests.hp debugging/conjure-tests-hy.hp && cd debugging && hp2ps -c conjure-tests-hy.hp && ps2pdf conjure-tests-hy.ps && rm conjure-tests-hy.aux
 
+deps:
+	cabal install --only-dependencies --enable-library-profiling --disable-executable-profiling --enable-optimisation --enable-documentation
+
 clean:
 	cabal clean
 	# ghc-pkg unregister conjure-cp
