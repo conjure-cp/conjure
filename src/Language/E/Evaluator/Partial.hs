@@ -42,6 +42,15 @@ partialEvaluator [eMatch| true  -> &a |] = ret a
 partialEvaluator [eMatch| max({&a}) |] = ret a
 partialEvaluator [eMatch| min({&a}) |] = ret a
 
+partialEvaluator [eMatch| &a + &b - &c |]
+    | [xMatch| [Prim (I bInt)] := value.literal |] <- b
+    , [xMatch| [Prim (I cInt)] := value.literal |] <- c
+    , bInt == cInt = ret a
+partialEvaluator [eMatch| &a - &b + &c |]
+    | [xMatch| [Prim (I bInt)] := value.literal |] <- b
+    , [xMatch| [Prim (I cInt)] := value.literal |] <- c
+    , bInt == cInt = ret a
+
 partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
                         | [Prim (B True)]     := quantified.body.value.literal
                         |] = ret [eMake| true |]

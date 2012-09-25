@@ -132,27 +132,43 @@ evalDomSize [eMatch| domSize(&i) |] = domSize i
         sumE [x,y]  = [eMake| &x + &y |]
         sumE (x:xs) = let sumxs = sumE xs in [eMake| &x + &sumxs |]
 
+        retSum = return . Just . sumE
+
+        domSize [xMatch| [Prim (S s)] := reference |] = do
+            mx <- runMaybeT $ lookupBinder s
+            case mx of
+                Nothing -> err ErrFatal $ "identifier not bound:" <+> pretty s
+                Just x  -> domSize x
         domSize [xMatch| rs := domain.int.ranges |] = do
             mxs <- mapM domSize rs
             let xs = catMaybes mxs
             if all isJust mxs
-                then return $ Just $ sumE xs
+                then retSum xs
                 else return Nothing
         domSize [xMatch| [fr,to] := range.fromTo |] =
             return $ Just [eMake| &to - &fr + 1 |]
+        domSize [xMatch| rs := domain.tuple.inners |] = do
+            mxs <- mapM domSize rs
+            let xs = catMaybes mxs
+            if all isJust mxs
+                then retSum xs
+                else return Nothing
         domSize p = do
             err ErrFatal $ "domSize:" <+> prettyAsPaths p
+
 evalDomSize _ = return Nothing
 
 evalIndices :: Monad m => E -> CompE m (Maybe E)
 evalIndices [xMatch| [a,b] := operator.indices |] = indices a b
     where
+        -- indices (matrix) (integer)
         indices [xMatch| [Prim (S iden)] := reference |] i = do
             mres <- runMaybeT $ lookupBinder iden
             case mres of
                 Nothing  -> err ErrFatal $ "(evalIndices) Undefined reference:" <+> pretty iden
                 Just res -> indices res i
-        indices [xMatch| [d] := topLevel.declaration.find.domain |] i = indices d i
+        indices [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
+        indices [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
         indices [xMatch| [index] := domain.matrix.index |]
                 [xMatch| [Prim (I 0)] := value.literal  |] = return $ Just index
         indices [xMatch| [inner] := domain.matrix.inner |]
