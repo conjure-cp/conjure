@@ -16,7 +16,9 @@ ruleReprToFunction :: (Functor m, Monad m)
     => [RuleRepr]
     -> Either
         [CompError]                   -- static errors
-        ( (String,E)
+        ( ( String                    -- original name of the variable
+          , E                         -- original domain
+          )
           -> CompE m [ ( String       -- rule name
                        , String       -- name of the representation
                        , E            -- replacement domain

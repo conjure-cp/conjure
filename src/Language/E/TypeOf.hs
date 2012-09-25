@@ -86,6 +86,7 @@ typeOf p@[xMatch| _ := type |] = return p
 typeOf p@[xMatch| [Prim (S i')] := reference |] = do
     let i = head $ splitOn "#" i'
     bs <- getsLocal binders
+    let nms = [ nm | Binder nm _ <- bs ]
     if i == "_"
         then return [xMake| type.unknown := [] |]
         else case [ x | Binder nm x <- bs, nm == i ] of
@@ -95,6 +96,7 @@ typeOf p@[xMatch| [Prim (S i')] := reference |] = do
                     err ErrFatal $ "(typeOf) Undefined reference:" <+> vcat [ pretty i
                                                                             , bsText
                                                                             , pretty p
+                                                                            , pretty $ show nms
                                                                             ]
 
 typeOf p@[xMatch| [Prim (S i)] := metavar |] = do

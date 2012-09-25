@@ -40,6 +40,7 @@ Library
                      , Language.E.TypeOf
                      , Language.E.DomainOf
                      , Language.E.Traversals
+                     , Language.E.BuiltInRepr
 
                      , Language.E.Evaluator
                      , Language.E.Evaluator.Full
@@ -98,7 +99,7 @@ Library
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls
@@ -127,7 +128,7 @@ Test-Suite conjure-tests
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls
@@ -157,7 +158,7 @@ Executable conjure-toCore
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls
@@ -185,7 +186,7 @@ Executable conjure-repr
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls
@@ -213,7 +214,7 @@ Executable conjure-bubble
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls
@@ -241,7 +242,7 @@ Executable conjure-noguards
         -fwarn-unused-matches
         -Wall
         -fllvm
-        -O2
+        -- -O2
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls

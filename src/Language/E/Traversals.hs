@@ -25,6 +25,7 @@ traverseSpec :: (Monad m)
     -> CompE m Spec
 traverseSpec mpre func mpost (Spec v xs) = do
     -- forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
+    mapM_ processStatement xs
     xs' <- mapM (traverse mpre func mpost) xs
     return $ Spec v xs'
 

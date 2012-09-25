@@ -7,14 +7,19 @@ module Language.E.Pipeline.ApplyRepr where
 import Language.E
 import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.BuiltInRepr
 
 
 applyRepr :: (Functor m, Monad m) => Spec -> [RuleRepr] -> CompE m Spec
 applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
-    Left es    -> err ErrFatal $ prettyErrors "There were errors." es
-    Right func -> do
+    Left es     -> err ErrFatal $ prettyErrors "There were errors." es
+    Right func' -> do
+
+        let func = mergeReprFunc [func',builtInRepr]
 
         let Spec _ statements = spec
+
+        mapM_ processStatement statements
 
         let topLevels' = [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
                                               | [d]          := topLevel.declaration.find .domain |] <- statements ]
@@ -27,7 +32,10 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
             case ys of
                 [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
                 _  -> do
-                    mkLog "representation" $ pretty (length ys) <+> "different representation option(s) for: " <+> pretty x
+                    let ysNames = flip map ys $ \ (_ruleName, reprName, _newDom, _cons) -> reprName
+                    mkLog "representation" $ vcat [ pretty x
+                                                  , "(#" <> pretty (length ys) <> ")" <+> prettyList id "," ysNames
+                                                  ] 
                     -- forM_ ys $ \ (ruleName, reprName, newDom, cons) -> do
                     --     mkLog "newDom" $ pretty newDom
                     --     forM_ cons $ \ con -> mkLog "cons" $ pretty con

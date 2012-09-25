@@ -21,6 +21,7 @@ conjureBubbleUp spectobe = do
 
 bubbleUpSpec :: (Functor m, Monad m) => Spec -> CompE m Spec
 bubbleUpSpec (Spec v xs) = do
+    mapM_ processStatement xs
     (xs', locals) <- unzip <$> mapM bubbleUpE xs
     let (newDecls, newCons) = partition isDeclaration $ concat locals
     return $ Spec v $ insertBeforeSuchThat newDecls xs' ++ newCons

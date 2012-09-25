@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Stuff.Pretty ( Pretty(..)
                     , (<++>), (<+>), (<>)
@@ -21,6 +22,11 @@ instance Pretty ()      where pretty = pretty . show
 instance Pretty Int     where pretty = pretty . show
 instance Pretty Integer where pretty = pretty . show
 instance Pretty Bool    where pretty = pretty . show
+
+instance (Pretty a, Pretty b) => Pretty (a,b) where
+    pretty (a,b) = prettyListDoc parens "," [pretty a, pretty b]
+
+
 
 (<++>) :: Doc -> Doc -> Doc
 a <++> b = hang a 4 b
