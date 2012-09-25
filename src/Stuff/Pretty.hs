@@ -16,6 +16,7 @@ import Text.PrettyPrint
 class Pretty a where
     pretty :: a -> Doc
 
+instance Pretty Doc     where pretty = id
 instance Pretty T.Text  where pretty = pretty . T.unpack
 instance Pretty String  where pretty = text
 instance Pretty ()      where pretty = pretty . show
@@ -44,5 +45,5 @@ parensIf = wrapIf parens
         wrapIf wrap c = if c then wrap else id
 
 renderPretty :: Pretty a => a -> String
--- renderPretty = renderStyle (style { lineLength = 160 }) . pretty
-renderPretty = renderStyle (style { lineLength = 120 }) . pretty
+renderPretty = renderStyle (style { lineLength = 160 }) . pretty
+-- renderPretty = renderStyle (style { lineLength = 120 }) . pretty

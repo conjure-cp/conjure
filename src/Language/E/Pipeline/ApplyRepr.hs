@@ -7,7 +7,7 @@ module Language.E.Pipeline.ApplyRepr where
 import Language.E
 import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Language.E.BuiltInRepr
+import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 
 
 applyRepr :: (Functor m, Monad m) => Spec -> [RuleRepr] -> CompE m Spec
@@ -15,7 +15,7 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
     Left es     -> err ErrFatal $ prettyErrors "There were errors." es
     Right func' -> do
 
-        let func = mergeReprFunc [func',builtInRepr]
+        let func = mergeReprFunc (func' : builtInRepr)
 
         let Spec _ statements = spec
 

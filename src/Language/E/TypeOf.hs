@@ -107,7 +107,8 @@ typeOf p@[xMatch| [Prim (S i)] := metavar |] = do
         _   -> return p
         -- _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
 
-typeOf [xMatch| [d] := topLevel.declaration.find.domain |] = typeOf d
+typeOf [xMatch| [d] := topLevel.declaration.find .domain |] = typeOf d
+typeOf [xMatch| [d] := topLevel.declaration.given.domain |] = typeOf d
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
 
@@ -148,9 +149,17 @@ typeOf [xMatch| [i] := domain.mset.inner |] = do
     ti <- typeOf i
     return [xMake| type.mset.inner := [ti] |]
 
+typeOf [xMatch| xs := domain.relation.inners |] = do
+    txs <- mapM typeOf xs
+    return [xMake| type.relation.inners := txs |]
+
 -- value.*
 
 typeOf [xMatch| [i] := value.literal |] = typeOf i
+
+typeOf [xMatch| xs := value.tuple.values |] = do
+    txs <- mapM typeOf xs
+    return [xMake| type.tuple.inners := txs |]
 
 typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.unknown := [] |]
 typeOf p@[xMatch| xs := value.set.values |] = do
@@ -361,6 +370,16 @@ typeOf p@[xMatch| [f] := functionApply.actual
         [xMatch| [fr] := type.function.innerFrom
                | [to] := type.function.innerTo
                |] | fr == tyX -> return to
+        _ -> err'
+
+typeOf p@[eMatch| preImage(&f,&x) |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tyF <- typeOf f
+    tyX <- typeOf x
+    case tyF of
+        [xMatch| [fr] := type.function.innerFrom
+               | [to] := type.function.innerTo
+               |] | to == tyX -> return [xMake| type.set.inner := [fr] |]
         _ -> err'
 
 typeOf p@[xMatch| [f] := operator.defined |] = do

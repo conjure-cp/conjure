@@ -165,3 +165,17 @@ evalIndices [xMatch| [a,b] := operator.indices |] = indices a b
                                          ]
             return Nothing
 evalIndices _ = return Nothing
+
+evalReplace :: Monad m => E -> CompE m (Maybe E)
+evalReplace
+    [xMatch| [a] := operator.replace.arg1
+           | [b] := operator.replace.old
+           | [c] := operator.replace.new
+           |] =
+    let
+        helper  old  new now | old == now = new
+        helper  old  new (Tagged t xs) = Tagged t $ map (helper old new) xs
+        helper _old _new other = other
+    in  ret $ helper b c a
+evalReplace _ = return Nothing
+

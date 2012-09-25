@@ -21,6 +21,7 @@ suppress = [ "restoreState"
            , "Evaluator.hasRepr"
            , "Evaluator.domSize"
            , "Evaluator.indices"
+           , "Evaluator.replace"
            ]
 
 buildLog :: String -> Doc -> Maybe NamedLog

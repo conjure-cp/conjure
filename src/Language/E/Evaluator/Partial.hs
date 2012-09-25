@@ -42,16 +42,6 @@ partialEvaluator [eMatch| true  -> &a |] = ret a
 partialEvaluator [eMatch| max({&a}) |] = ret a
 partialEvaluator [eMatch| min({&a}) |] = ret a
 
-partialEvaluator [xMatch| [a] := operator.replace.arg1
-                        | [b] := operator.replace.old
-                        | [c] := operator.replace.new
-                        |] =
-    let
-        helper  old  new now | old == now = new
-        helper  old  new (Tagged t xs) = Tagged t $ map (helper old new) xs
-        helper _old _new other = other
-    in  ret $ helper b c a
-
 partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
                         | [Prim (B True)]     := quantified.body.value.literal
                         |] = ret [eMake| true |]

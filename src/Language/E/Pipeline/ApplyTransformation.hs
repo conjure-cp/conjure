@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Language.E.Pipeline.ApplyTransformation ( applyTransformation ) where
 
 import Language.E
+import Language.E.BuiltIn ( builtInRefn )
 import qualified Text.PrettyPrint as Pr
 
 type RulesDB m = [E -> CompE m (Maybe [(String,E)])]
@@ -13,7 +15,8 @@ applyTransformation :: (Functor m, Monad m)
     => RulesDB m
     -> Spec
     -> CompE m Spec
-applyTransformation fs spec = do
+applyTransformation fs' spec = do
+    let !fs = fs' ++ builtInRefn
     -- mkLog "debug:ApplyTransformation.worker" $ pretty spec
     (spec', Any flag) <- runWriterT $ onSpec fs spec
     -- return spec'
