@@ -37,10 +37,10 @@ relationRepr ( _name, [xMatch| ts := domain.relation.inners |]) = do
             )]
 
 relationRepr ( _, [xMatch| _ := domain.function |] ) = return []
-relationRepr ( name, dom ) = do
-    mkLog "relationRepr" $ vcat [ pretty name
-                                , prettyAsPaths dom
-                                ]
+relationRepr ( _name, _dom ) = do
+    -- mkLog "relationRepr" $ vcat [ pretty _name
+    --                             , prettyAsPaths _dom
+    --                             ]
     return []
 
 
@@ -51,8 +51,11 @@ type RefnFunc m =
                                         -- returns a list of rewrites, fst being rulename
                                         --                           , snd being E
 
+ret :: Monad m => String -> E -> CompE m (Maybe [(String, E)])
+ret name result = return $ Just [(name, result)]
+
 builtInRefn :: (Functor m, Monad m) => [RefnFunc m]
-builtInRefn = [relationApply]
+builtInRefn = [relationApply, tupleExplode]
 
 relationApply :: (Functor m, Monad m) => RefnFunc m
 relationApply [xMatch| [actual]             := functionApply.actual
@@ -67,13 +70,38 @@ relationApply [xMatch| [actual]             := functionApply.actual
                 [xMatch| actualInners := type.relation.inners |] | actualInners == argsTy -> do
                     let theTuple = [xMake| value.tuple.values := args |]
                     let theSet   = [xMake| reference := [Prim $ S $ actualName ++ "_RelationAsSet" ] |]
-                    return $! Just [( "builtIn.relationApply"
-                                    , [eMake| &theTuple in &theSet |]
-                                    )]
+                    ret "builtIn.relationApply" [eMake| &theTuple in &theSet |]
                 _ -> return Nothing
         _ -> return Nothing
 relationApply _ = return Nothing
 
+tupleExplode :: (Functor m, Monad m) => RefnFunc m
+tupleExplode [xMatch| values       := operator.index.left .value.tuple.values
+                    | [Prim (I i)] := operator.index.right.value.literal
+                    |]
+                    | i >= 1 && i <= genericLength values
+                    = ret "builtIn.tupleExplode" $ values `genericIndex` (i - 1)
+tupleExplode [eMatch| &a = &b |] = do
+    aTy <- typeOf a
+    case aTy of
+        [xMatch| is := type.tuple.inners |] -> do
+            let result = conjunct [ [eMake| &a[&j] = &b[&j] |]
+                                  | i <- [1 .. genericLength is]
+                                  , let j = [xMake| value.literal := [Prim (I i)] |]
+                                  ]
+            ret "builtIn.tupleExplode" result
+        _ -> return Nothing
+tupleExplode [eMatch| &a != &b |] = do
+    aTy <- typeOf a
+    case aTy of
+        [xMatch| is := type.tuple.inners |] -> do
+            let result = disjunct [ [eMake| &a[&j] != &b[&j] |]
+                                  | i <- [1 .. genericLength is]
+                                  , let j = [xMake| value.literal := [Prim (I i)] |]
+                                  ]
+            ret "builtIn.tupleExplode" result
+        _ -> return Nothing
+tupleExplode _ = return Nothing
 
 
 
@@ -83,15 +111,12 @@ relationApply _ = return Nothing
 
 
 
+conjunct :: [E] -> E
+conjunct []     = [eMake| true |]
+conjunct [x]    = x
+conjunct (x:xs) = let y = conjunct xs in [eMake| &x /\ &y |]
 
-
-
-
-
-
-
-
-
-
-
-
+disjunct :: [E] -> E
+disjunct []     = [eMake| false |]
+disjunct [x]    = x
+disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
