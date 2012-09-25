@@ -33,7 +33,7 @@ import Data.Default      as X ( Default, def )
 import Data.Either       as X ( lefts, rights )
 import Data.Foldable     as X ( forM_ )
 import Data.Function     as X ( on )
-import Data.List         as X ( (\\), intersperse, minimumBy, nub, groupBy, sortBy, partition, genericLength, genericIndex )
+import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, groupBy, sortBy, partition, genericLength, genericIndex )
 import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( catMaybes, listToMaybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
@@ -79,14 +79,20 @@ pairWithContents fp = do
     con <- T.readFile fp
     return (fp,con)
 
+-- the fst component: generate a list yielding the elements of the input list in order
+-- the snd component: is all those elements except the fst.
 withRest :: [a] -> [(a,[a])]
 withRest [] = []
 withRest (x:xs) = (x,xs) : map (second (x:)) (withRest xs)
 
+-- generate a list yielding the elements of the input list in order in the fst component.
+-- the snd component is all those elements to the right of fst.
 withRestToR :: [a] -> [(a,[a])]
 withRestToR [] = []
 withRestToR (x:xs) = (x,xs) : withRestToR xs
 
+-- generate a list yielding the elements of the input list in order in the fst component.
+-- the snd component is all those elements to the left of fst.
 withRestToL :: [a] -> [(a,[a])]
 withRestToL = reverse . withRestToR . reverse
 
