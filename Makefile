@@ -1,8 +1,11 @@
 .PHONY: install prof-install buildtests runtests clean
 
+quick-install:
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls --disable-optimisation --ghc-options="-H2G"
+
 install:
 	# ghc-pkg unregister conjure-cp
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls --disable-optimisation --ghc-options="-Rghc-timing"
 	# upx ~/.cabal/bin/conjure-toCore
 
 buildtests:
@@ -12,6 +15,9 @@ buildtests:
 
 runtests:
 	time cabal test
+
+quick-prof-install:
+	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls --disable-optimisation --ghc-options="-H2G"
 
 prof-install:
 	# ghc-pkg unregister conjure-cp
