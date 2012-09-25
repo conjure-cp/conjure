@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Language.E.TypeOf where
 
@@ -387,7 +388,7 @@ typeOf p@[xMatch| [f] := operator.defined |] = do
     tyF <- typeOf f
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
-               |] -> return [xMake| type.set.inner := [fr] |]
+               |] -> return [xMake| type.set.inner := [fr] |]   
         _ -> err'
 
 typeOf p@[xMatch| [f] := operator.range |] = do
@@ -401,19 +402,24 @@ typeOf p@[xMatch| [f] := operator.range |] = do
 typeOf p@[xMatch| [m] := operator.index.left
                 | [i] := operator.index.right
                 |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
-    tyM <- typeOf m
-    tyI <- typeOf i
-    case tyM of
+    let err' = err ErrFatal $ "{operator.index} Type error in:" <+> pretty p
+    !tyM <- typeOf m
+    !tyI <- typeOf i
+    -- mkLog "debug:typeOf1" $ pretty p
+    -- mkLog "debug:typeOf2" $ pretty tyM
+    -- mkLog "debug:typeOf3" $ pretty tyI
+    !result <- case tyM of
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
                |] | ind == tyI -> return inn
         [xMatch| ts := type.tuple.inners |] -> do
             mint <- toInt i
             case mint of
-                Just int | int >= 0 && int < genericLength ts -> return $ ts `genericIndex` int
+                Just int | int >= 1 && int <= genericLength ts -> return $ ts `genericIndex` (int - 1)
                 _ -> err'
         _ -> err'
+    -- mkLog "debug:typeOf4" $ pretty result
+    return result
 
 typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
 -- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
