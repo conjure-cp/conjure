@@ -13,7 +13,7 @@
 
 
 *** set of &t
-    letting &mx be domSize(t)
+    letting &mx be domSize(&t)
 
 $ *** set (size n) of t
 $     ~~> (sum i : int(1..mx) . refn[i][0]) = n
@@ -21,7 +21,7 @@ $     letting mx be domSize(t)
 
 *** set (minSize &mn) of &t
     ~~> (sum i : int(1..&mx) . refn[i][0]) >= &mn
-    letting &mx be domSize(t)
+    letting &mx be domSize(&t)
 
 *** set (maxSize &mx) of &t
 
