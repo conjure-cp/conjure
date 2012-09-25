@@ -35,4 +35,4 @@ main = do
     -- putStrLn ""
     -- mapM_ (putStrLn . renderPretty) generateds
 
-    writeSpecs (dropExtEssence specFilename) generateds
+    writeSpecs (dropExtEssence specFilename) "noguards" generateds

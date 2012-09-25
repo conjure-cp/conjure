@@ -34,7 +34,7 @@ main = do
         (mgenerateds, glo) = runIdentity $ runCompE (toCore spec rules reprs)
         errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
         generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    print $ prettyLogs $ logs glo
+    putStrLn $ renderPretty $ prettyLogs $ logs glo
     unless (null errors)
         $ error
         $ show
@@ -45,4 +45,4 @@ main = do
     -- putStrLn ""
     -- mapM_ (putStrLn . renderPretty) generateds
 
-    writeSpecs (dropExtEssence specFilename) generateds
+    writeSpecs (dropExtEssence specFilename) "refn" generateds
