@@ -5,7 +5,7 @@ quick-install:
 
 install:
 	# ghc-pkg unregister conjure-cp
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls --disable-optimisation --ghc-options="-Rghc-timing"
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls --enable-optimisation --ghc-options="-H2G"
 	# upx ~/.cabal/bin/conjure-toCore
 
 buildtests:
