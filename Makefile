@@ -1,11 +1,11 @@
 .PHONY: install prof-install buildtests runtests clean
 
 quick-install:
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls --disable-optimisation --ghc-options="-H2G"
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="-H2G"
 
 install:
 	# ghc-pkg unregister conjure-cp
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls --enable-optimisation --ghc-options="-H2G"
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="-H2G"
 	# upx ~/.cabal/bin/conjure-toCore
 
 buildtests:
@@ -17,7 +17,7 @@ runtests:
 	time cabal test
 
 quick-prof-install:
-	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls --disable-optimisation --ghc-options="-H2G"
+	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="-H2G"
 
 prof-install:
 	# ghc-pkg unregister conjure-cp
@@ -40,7 +40,7 @@ prof-runtests:
 	dist/build/conjure-tests/conjure-tests +RTS -hy && mv conjure-tests.hp debugging/conjure-tests-hy.hp && cd debugging && hp2ps -c conjure-tests-hy.hp && ps2pdf conjure-tests-hy.ps && rm conjure-tests-hy.aux
 
 deps:
-	cabal install --only-dependencies --enable-library-profiling --disable-executable-profiling --enable-optimisation --enable-documentation
+	cabal install --only-dependencies --enable-library-profiling --disable-executable-profiling -O2 --enable-documentation
 
 clean:
 	cabal clean
