@@ -13,6 +13,7 @@ module Language.E.Imports
     , T.Text
     , ppShow, ppPrint
     , replace
+    , sameLength
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -105,3 +106,8 @@ ppPrint = putStrLn . ppShow
 
 replace :: (Uniplate a, Eq a) => a -> a -> a -> a
 replace old new = transform $ \ i -> if i == old then new else i
+
+sameLength :: [a] -> [b] -> Bool
+sameLength [] [] = True
+sameLength (_:xs) (_:ys) = sameLength xs ys
+sameLength _ _ = False
