@@ -40,7 +40,7 @@ tryAgain fs spec = do
     (result, Any flag) <- runWriterT $ onSpec fs spec
     if flag
         then tryAgain fs result
-        else return spec
+        else do s <- trySimplifySpec spec; return s
 
 
 onSpec :: (Functor m, Monad m)
