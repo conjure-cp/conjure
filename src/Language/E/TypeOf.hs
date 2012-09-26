@@ -262,7 +262,18 @@ typeOf p@[xMatch| [x] := operator.toSet |] = do
         [xMatch| [innerTy] := type.mset.inner |] -> return [xMake| type.set.inner := [innerTy] |]
         [xMatch| [innerFr] := type.function.innerFrom
                | [innerTo] := type.function.innerTo
-               |] -> return [xMake| type.tuple.inners := [innerFr,innerTo] |]
+               |] -> return [xMake| type.set.inner.type.tuple.inners := [innerFr,innerTo] |]
+        -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
+        _ -> err'
+
+typeOf p@[xMatch| [x] := operator.toMSet |] = do
+    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    tx <- typeOf x
+    case tx of
+        [xMatch| [innerTy] := type.set.inner |] -> return [xMake| type.mset.inner := [innerTy] |]
+        [xMatch| [innerFr] := type.function.innerFrom
+               | [innerTo] := type.function.innerTo
+               |] -> return [xMake| type.mset.inner.type.tuple.inners := [innerFr,innerTo] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> err'
 
@@ -321,7 +332,7 @@ typeOf p@[eMatch| &a - &b |] = do
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
-                |] | operator `elem` words "+ - * /" = do
+                |] | operator `elem` words "+ - * / %" = do
     let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     tyb <- typeOf b
