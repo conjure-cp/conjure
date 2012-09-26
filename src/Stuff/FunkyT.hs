@@ -24,9 +24,11 @@ runFunky :: localSt -> globalSt -> FunkyT localSt globalSt err Identity a -> ([(
 runFunky local global ma = runIdentity $ runFunkyT local global ma
 
 instance Monad m => MonadList (FunkyT localSt globalSt err m) where
+    {-# INLINE returns #-}
     returns xs = FunkyT $ \ local global -> return ([ (Right x, local) | x <- xs ], global)
 
 instance Monad m => Functor (FunkyT localSt globalSt err m) where
+    {-# INLINE fmap #-}
     fmap f (FunkyT g) = FunkyT $ \ local global -> do
         (results, global') <- g local global
         results' <- forM results $ \ one -> return $ case one of
@@ -35,14 +37,19 @@ instance Monad m => Functor (FunkyT localSt globalSt err m) where
         return (results', global')
 
 instance Monad m => Applicative (FunkyT localSt globalSt err m) where
+    {-# INLINE pure #-}
+    {-# INLINE (<*>) #-}
     pure x = FunkyT $ \ local global -> let !result = ([(Right x, local)], global) in return result
     (<*>) = ap
 
 instance Monad m => Monad (FunkyT localSt globalSt err m) where
+    {-# INLINE return #-}
+    {-# INLINE (>>=) #-}
     return = pure
     FunkyT g >>= f = FunkyT $ \ local global -> do
         (results, global') <- g local global
         let
+            {-# INLINE doOne #-}
             -- doOne :: Monad m => (a -> FunkyT localSt globalSt err m b) -> [(Either err a, localSt)] -> globalSt -> m ([(Either err b, localSt)], globalSt)
             doOne [] gl = return ([], gl)
             doOne ((Left  e, l) : rest) gl = do
@@ -56,6 +63,8 @@ instance Monad m => Monad (FunkyT localSt globalSt err m) where
         doOne results global'
 
 instance Monad m => MonadError err (FunkyT localSt globalSt err m) where
+    {-# INLINE throwError #-}
+    {-# INLINE catchError #-}
     throwError e = FunkyT $ \ local global -> return ([(Left e, local)], global)
     catchError ma f = FunkyT $ \ local global -> do
         (results, global') <- runFunkyT local global ma
@@ -70,6 +79,11 @@ instance Monad m => MonadError err (FunkyT localSt globalSt err m) where
                 return ((Right x, l) : rest', g')
         doOne results global'
 
+{-# INLINE getsLocal #-}
+{-# INLINE getsGlobal #-}
+{-# INLINE modifyLocal #-}
+{-# INLINE modifyGlobal #-}
+
 getsLocal    :: Monad m => (localSt  -> a) -> FunkyT localSt globalSt err m a
 getsGlobal   :: Monad m => (globalSt -> a) -> FunkyT localSt globalSt err m a
 modifyLocal  :: Monad m => (localSt  -> localSt ) -> FunkyT localSt globalSt err m ()
@@ -81,11 +95,13 @@ modifyLocal  f = FunkyT $ \ local global -> return ([(Right (), f local)],   glo
 modifyGlobal f = FunkyT $ \ local global -> return ([(Right (),   local)], f global)
 
 instance MonadIO m => MonadIO (FunkyT localSt globalSt err m) where
+    {-# INLINE liftIO #-}
     liftIO io = FunkyT $ \ local global -> do
         a <- liftIO io
         return ([(Right a, local)], global)
 
 instance MonadTrans (FunkyT localSt globalSt err) where
+    {-# INLINE lift #-}
     lift ma = FunkyT $ \ local global -> do
         x <- ma
         return ([(Right x, local)], global)
