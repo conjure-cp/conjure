@@ -44,8 +44,10 @@ test_Simplify t = do
 
 trySimplifySpec :: (Functor m, Monad m) => Spec -> CompE m Spec
 trySimplifySpec (Spec v xs) = do
-    (xs', Any _flag) <- runWriterT (mapM simplify xs)
-    return $ Spec v xs'
+    (xs', Any flag) <- runWriterT (mapM simplify xs)
+    if flag
+        then trySimplifySpec (Spec v xs')
+        else return $ Spec v xs'
 
 
 simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalState CompError m) E
