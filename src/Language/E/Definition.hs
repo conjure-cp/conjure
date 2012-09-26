@@ -16,7 +16,7 @@ module Language.E.Definition
 
     , LocalState(..), GlobalState(..), Binder(..)
     , addBinder, lookupBinder, nextUniqueName, mkLog
-    , processStatement
+    , processStatement, makeIdempotent
 
     , CompError, ErrEnum(..)
     , err, prettyErrors
@@ -33,6 +33,7 @@ import Language.E.Imports
 
 import Data.Generics ( Data, Typeable )
 import qualified Data.Set as S
+import qualified Data.DList as DList
 
 -- import Control.Monad ( mzero )
 -- import Control.Monad.Trans ( lift )
@@ -123,17 +124,17 @@ instance Default LocalState where
     def = LocalState [] 1 [] []
 
 data GlobalState = GlobalState
-        { logs               :: [NamedLog]                  -- logs about execution
+        { logs               :: DList.DList NamedLog        -- logs about execution
         , allNamesPreConjure :: S.Set String                -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 instance Default GlobalState where
-    def = GlobalState [] S.empty
+    def = GlobalState DList.empty S.empty
 
 mkLog :: Monad m => String -> Doc -> CompE m ()
 mkLog nm doc = case buildLog nm doc of
     Nothing -> return ()
-    Just l  -> modifyGlobal $ \ st -> st { logs = logs st ++ [l] }
+    Just l  -> modifyGlobal $ \ st -> st { logs = logs st `DList.snoc` l }
 
 addBinder :: Monad m => String -> E -> CompE m ()
 addBinder nm val = do
@@ -159,6 +160,13 @@ nextUniqueName = do
         then nextUniqueName
         else return $! nm
 
+
+makeIdempotent :: Monad m => (a -> CompE m (a,Bool)) -> a -> CompE m a
+makeIdempotent f x = do
+    (y,flag) <- f x
+    if flag
+        then makeIdempotent f y
+        else return y
 
 -- much needed
 processStatement :: Monad m => E -> CompE m ()
