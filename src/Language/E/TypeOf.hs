@@ -260,6 +260,7 @@ typeOf p@[xMatch| [x] := operator.toSet |] = do
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.mset.inner |] -> return [xMake| type.set.inner := [innerTy] |]
+        [xMatch| innerTys  := type.relation.inners |] -> return [xMake| type.set.inner.type.tuple.inners := innerTys |]
         [xMatch| [innerFr] := type.function.innerFrom
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.set.inner.type.tuple.inners := [innerFr,innerTo] |]
@@ -271,6 +272,7 @@ typeOf p@[xMatch| [x] := operator.toMSet |] = do
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.set.inner |] -> return [xMake| type.mset.inner := [innerTy] |]
+        [xMatch| innerTys  := type.relation.inners |] -> return [xMake| type.mset.inner.type.tuple.inners := innerTys |]
         [xMatch| [innerFr] := type.function.innerFrom
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.mset.inner.type.tuple.inners := [innerFr,innerTo] |]
