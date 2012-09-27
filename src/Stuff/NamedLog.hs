@@ -3,7 +3,6 @@
 module Stuff.NamedLog where
 
 import Data.Hashable
-import Data.List ( isPrefixOf )
 import Text.PrettyPrint ( Doc, (<+>), vcat, brackets, text )
 import qualified Data.Set as S
 import qualified Data.DList as DList
@@ -32,8 +31,7 @@ suppress = S.fromList
     ]
 
 buildLog :: String -> Doc -> Maybe NamedLog
--- buildLog nm _ | "debug:" `isPrefixOf` nm = Nothing
-buildLog nm _ | nm `S.member` suppress       = Nothing
+buildLog nm _ | nm `S.member` suppress = Nothing
 buildLog nm doc = Just (NamedLog nm doc)
 
 prettyLogs :: DList.DList NamedLog -> Doc
