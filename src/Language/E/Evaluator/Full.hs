@@ -125,14 +125,14 @@ evalHasRepr _p@[eMatch| &x hasRepr &y |] = do
 evalHasRepr _ = return Nothing
 
 evalDomSize :: Monad m => E -> CompE m (Maybe E)
-evalDomSize [eMatch| domSize(&i) |] = domSize i
+evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
     where
         sumE []     = [eMake| 0 |]
         sumE [x]    = x
         sumE [x,y]  = [eMake| &x + &y |]
         sumE (x:xs) = let sumxs = sumE xs in [eMake| &x + &sumxs |]
 
-        retSum = return . Just . sumE
+        retSum = return . sumE
 
         domSize [xMatch| [Prim (S s)] := reference |] = do
             mx <- runMaybeT $ lookupBinder s
@@ -140,19 +140,16 @@ evalDomSize [eMatch| domSize(&i) |] = domSize i
                 Nothing -> err ErrFatal $ "identifier not bound:" <+> pretty s
                 Just x  -> domSize x
         domSize [xMatch| rs := domain.int.ranges |] = do
-            mxs <- mapM domSize rs
-            let xs = catMaybes mxs
-            if all isJust mxs
-                then retSum xs
-                else return Nothing
+            xs <- mapM domSize rs
+            retSum xs
         domSize [xMatch| [fr,to] := range.fromTo |] =
-            return $ Just [eMake| &to - &fr + 1 |]
+            return [eMake| &to - &fr + 1 |]
         domSize [xMatch| rs := domain.tuple.inners |] = do
-            mxs <- mapM domSize rs
-            let xs = catMaybes mxs
-            if all isJust mxs
-                then retSum xs
-                else return Nothing
+            xs <- mapM domSize rs
+            retSum xs
+        domSize [dMatch| mset (size &s) of &inn |] = do
+            innSize <- domSize inn
+            return [eMake| &s * &innSize |]
         domSize p = do
             err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
