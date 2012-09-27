@@ -10,5 +10,3 @@ main = do
     hspec $ do
         parsePrintSpecTests
         RuleEngine.tests
-
--- main = ParsePrintSpec.one "EssenceCatalog/fromAlan/prob036.essence"
