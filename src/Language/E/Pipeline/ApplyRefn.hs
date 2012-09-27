@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE BangPatterns #-}
 
-module Language.E.Pipeline.ApplyTransformation ( applyTransformation ) where
+module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
 import Language.E
 import Language.E.BuiltIn ( builtInRefn )
@@ -11,13 +11,13 @@ import qualified Text.PrettyPrint as Pr
 
 type RulesDB m = [E -> CompE m (Maybe [(String,E)])]
 
-applyTransformation :: (Functor m, Monad m)
+applyRefn :: (Functor m, Monad m)
     => RulesDB m
     -> Spec
     -> CompE m Spec
-applyTransformation fs' spec = do
+applyRefn fs' spec = do
     let !fs = fs' ++ builtInRefn
-    -- mkLog "debug:ApplyTransformation.worker" $ pretty spec
+    -- mkLog "debug:applyRefn.worker" $ pretty spec
     (spec', Any flag) <- runWriterT $ onSpec fs spec
     -- return spec'
     if flag
@@ -36,11 +36,11 @@ tryAgain :: (Functor m, Monad m)
 -- tryAgain fs spec = trace (show $ "tryAgain" <+> pretty spec) $ do
 tryAgain fs spec = do
     modifyLocal $ \ st -> st { binders = [] }
-    -- mkLog "debug:ApplyTransformation.tryAgain" $ pretty spec
+    -- mkLog "debug:applyRefn.tryAgain" $ pretty spec
     (result, Any flag) <- runWriterT $ onSpec fs spec
     if flag
         then tryAgain fs result
-        else do s <- trySimplifySpec spec; return s
+        else return spec
 
 
 onSpec :: (Functor m, Monad m)

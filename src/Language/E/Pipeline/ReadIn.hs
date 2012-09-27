@@ -6,6 +6,7 @@ import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
 import qualified Data.Set as S
+import System.Directory ( createDirectoryIfMissing )
 
 
 readSpec :: (Functor m, Monad m)
@@ -48,9 +49,11 @@ writeSpecs base tag specs = do
     let padShow n i = let s = show i in replicate (n - length s) '0' ++ s
     let numbers = map (padShow 4) [ (1 :: Int) .. ]
     forM_ (zip numbers specs) $ \ (i, spec) -> do
-        let outFilename = base ++ "-" ++ tag ++ i ++ ".essence"
-        putStrLn $ "[created file] " ++ outFilename
+        let outDirname  = base ++ "-" ++ tag
+        let outFilename = base ++ "-" ++ tag ++ "/" ++ i ++ ".essence"
+        createDirectoryIfMissing True outDirname
         writeFile outFilename $ renderPretty spec
+        putStrLn $ "[created file] " ++ outFilename
 
 
 dropExtEssence :: String -> String

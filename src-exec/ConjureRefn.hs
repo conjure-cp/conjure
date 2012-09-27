@@ -7,7 +7,7 @@ import System.Environment ( getArgs )
 
 import Language.E
 import Language.E.Pipeline.ReadIn
-import Language.E.Pipeline.ToCore ( toCore )
+import Language.E.Pipeline.ConjureRefn ( conjureRefn )
 
 
 main :: IO ()
@@ -31,7 +31,7 @@ main = do
     reprs   <- mapM pairWithContents reprFilenames
 
     let
-        (mgenerateds, glo) = runIdentity $ runCompE (toCore spec rules reprs)
+        (mgenerateds, glo) = runIdentity $ runCompE (conjureRefn spec rules reprs)
         errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
         generateds = [ x  | (Right x, _ ) <- mgenerateds ]
     putStrLn $ renderPretty $ prettyLogs $ logs glo

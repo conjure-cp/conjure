@@ -45,5 +45,5 @@ parensIf = wrapIf parens
         wrapIf wrap c = if c then wrap else id
 
 renderPretty :: Pretty a => a -> String
-renderPretty = renderStyle (style { lineLength = 160 }) . pretty
+renderPretty = renderStyle (style { lineLength = 200 }) . pretty
 -- renderPretty = renderStyle (style { lineLength = 120 }) . pretty

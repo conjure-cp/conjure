@@ -6,7 +6,7 @@ module Language.E.Testing.RuleEngine where
 
 import Language.E
 import Language.E.Pipeline.ReadIn ( readSpec )
-import Language.E.Pipeline.ToCore ( toCore )
+import Language.E.Pipeline.ConjureRefn ( conjureRefn )
 
 import Prelude hiding ( mapM )
 import Data.Traversable ( mapM )
@@ -193,7 +193,7 @@ loadAndApply spec' rules' = do
     spec    <- pairWithContents spec'
     rules   <- mapM pairWithContents rules'
     let
-        (mresults, GlobalState{logs}) = runIdentity $ runCompE (toCore spec rules [])
+        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn spec rules [])
         errors   =         [ x  | (Left  x, _ ) <- mresults ]
         results  =         [ x  | (Right x, _ ) <- mresults ]
     print $ prettyLogs logs
@@ -216,7 +216,7 @@ buildTests params = describe "rule engine" $ do
             outputs <- mapM pairWithContents outputs'
 
             let
-                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (toCore spec rules [])
+                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn spec rules [])
                 errorsG     =         [ x  | (Left  x, _ ) <- mgenerateds ]
                 generateds  =         [ x  | (Right x, _ ) <- mgenerateds ]
             print $ prettyLogs logsG

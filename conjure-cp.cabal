@@ -49,18 +49,18 @@ Library
                      , Language.E.Evaluator.ToInt
 
                      , Language.E.Pipeline.ReadIn
-                     , Language.E.Pipeline.ToCore
 
                      , Language.E.Pipeline.FreshNames
                      , Language.E.Pipeline.AtMostOneSuchThat
                      , Language.E.Pipeline.RemoveUnused
 
+                     , Language.E.Pipeline.ConjureRefn
                      , Language.E.Pipeline.RuleRefnToFunction
-                     , Language.E.Pipeline.ApplyTransformation
+                     , Language.E.Pipeline.ApplyRefn
 
-                     , Language.E.Pipeline.ApplyRepr
                      , Language.E.Pipeline.ConjureRepr
                      , Language.E.Pipeline.RuleReprToFunction
+                     , Language.E.Pipeline.ApplyRepr
 
                      , Language.E.Pipeline.BubbleUp
                      , Language.E.Pipeline.NoGuards
@@ -106,10 +106,6 @@ Library
         -- -fno-spec-constr-count
         -- -funfolding-use-threshold=256
         -fprof-auto-calls
-        -rtsopts
-        -- -eventlog
-        -- -ddump-rule-firings
-        -- -Werror
 
 
 Test-Suite conjure-tests
@@ -139,7 +135,6 @@ Test-Suite conjure-tests
         -- -ddump-rule-firings
         -- -threaded
         -- -with-rtsopts=-N3
-        -- -Werror
 
 
 Executable conjure-refn
@@ -166,7 +161,6 @@ Executable conjure-refn
         -rtsopts
         -- -threaded
         -- -with-rtsopts=-N3
-        -- -Werror
 
 
 Executable conjure-repr
@@ -193,7 +187,6 @@ Executable conjure-repr
         -rtsopts
         -- -threaded
         -- -with-rtsopts=-N3
-        -- -Werror
 
 
 Executable conjure-bubble
@@ -220,7 +213,6 @@ Executable conjure-bubble
         -rtsopts
         -- -threaded
         -- -with-rtsopts=-N3
-        -- -Werror
 
 
 Executable conjure-noguards
@@ -247,7 +239,6 @@ Executable conjure-noguards
         -rtsopts
         -- -threaded
         -- -with-rtsopts=-N3
-        -- -Werror
 
 
 Executable conjure-notuples
@@ -274,5 +265,4 @@ Executable conjure-notuples
         -rtsopts
         -- -threaded
         -- -with-rtsopts=-N3
-        -- -Werror
 
