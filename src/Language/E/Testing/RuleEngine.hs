@@ -247,29 +247,10 @@ buildTests params = describe "rule engine" $ do
                        , "generated:" <++> (stringToDoc $ show $ length generateds)
                        ]
 
-            -- forM_ (zip generateds expecteds) $ \ (Spec _ generated,Spec _ expected) ->
-            --     if length generated /= length expected
-            --         then assertFailure "different number of children."
-            --         else
-            --             let
-            --                 diffs = [ (g,e)
-            --                         | (g,e) <- zip generated expected
-            --                         , g /= e
-            --                         ]
-            --             in  if null diffs
-            --                     then return ()
-            --                     else assertFailure
-            --                             $ Pr.renderStyle Pr.style {Pr.lineLength=120}
-            --                             $ vcat $ concat [ [ " == generated ==" $$ prettyAsPaths g
-            --                                               , " == expected  ==" $$ prettyAsPaths e
-            --                                               ]
-            --                                             | (g,e) <- diffs
-            --                                             ]
-
             forM_ (zip3 [(1::Int) ..] generateds expecteds) $ \ (i,generated,expected) ->
                 unless (generated == expected)
                     $ assertFailure
-                    $ Pr.renderStyle Pr.style { Pr.lineLength = 120 }
+                    $ renderPretty
                         $ "specs not equal"
                             <+> Pr.parens (stringToDoc $ show i)
                                 -- $$ vcat [ " == generated ==" $$ prettyAsPaths (generated :: Spec)
@@ -289,7 +270,7 @@ runInteractively name = case [ (input,rules) | (name',input,_,rules) <- testData
     _               -> error $ "not found " ++ name
 
 tests :: Test.Hspec.Monadic.Spec
-tests = buildTests $ testData
+tests = buildTests testData
 
 testData :: [ ( String              -- a name for the test case
               , FilePath            -- input Essence spec
