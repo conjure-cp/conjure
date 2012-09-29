@@ -38,9 +38,9 @@ relationRepr ( _name, [xMatch| ts := domain.relation.inners |]) = do
 
 relationRepr ( _, [xMatch| _ := domain.function |] ) = return []
 relationRepr ( _name, _dom ) = do
-    -- mkLog "relationRepr" $ vcat [ pretty _name
-    --                             , prettyAsPaths _dom
-    --                             ]
+    mkLog "missing:relationRepr" $ vcat [ pretty _name
+                                        , prettyAsPaths _dom
+                                        ]
     return []
 
 
@@ -61,7 +61,7 @@ relationApply :: (Functor m, Monad m) => RefnFunc m
 relationApply [xMatch| [actual]             := functionApply.actual
                      | [Prim (S actualRef)] := functionApply.actual.reference
                      |  args                := functionApply.args
-                     |] = do
+                     |] =
     case splitOn "#" actualRef of
         [actualName, "RelationAsSet"] -> do
             actualTy <- typeOf actual

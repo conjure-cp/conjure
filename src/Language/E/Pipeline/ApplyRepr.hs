@@ -72,7 +72,7 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
                             $ groupBy ((==) `on` fst)
                             $ sortBy (comparing fst)
                             $ nub
-                            $ [ (nm, reprName) | (nm, reprName, _, _) <- rlogs ]
+                              [ (nm, reprName) | (nm, reprName, _, _) <- rlogs ]
 
                 let newCons = [ [ [xMake| topLevel.suchThat.binOp.operator        := [Prim (S "=")]
                                         | topLevel.suchThat.binOp.left .reference := [ Prim $ S $ nm1 ++ "#" ++ r1 ]

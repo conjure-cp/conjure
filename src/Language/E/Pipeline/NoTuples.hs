@@ -27,26 +27,23 @@ noTuplesSpec specIn@(Spec v statements) = do
         runWriterT $ forM statements $ \ statement ->
             case checkTopLevel statement of
                 Nothing      -> return [statement]
-                Just (f,n,d) -> do
-                    -- lift $ mkLog "noTuplesSpec" $ prettyAsPaths statement
+                Just (f,n,d) ->
                     case checkTupleDomain d of
-                        Just ts -> do
-                            newDecls <- forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
+                        Just ts -> 
+                            -- returning newDecls:
+                            forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
                                 tell ([n],[])
                                 let n' = n ++ "_tuple" ++ show i
                                 return $ f n' t
-                            return newDecls
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
                                     tell ([],[(n,length indices)])
-                                    -- lift $ mkLog "index" $ prettyList id " £" indices
-                                    -- lift $ mkLog "inner" $ prettyList id " £" tuples
-                                    newDecls <- forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
+                                    -- returning newDecls:
+                                    forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
                                         let n' = n ++ "_tuple" ++ show i
                                         let t' = constructMatrixDomain indices t
                                         return $ f n' t'
-                                    return newDecls
                                 Nothing -> return [statement]
     let statementsOut = concat statements'
     if and [null tuplesToExplode, null matrixOfTuplesToExplode, sameLength statements statementsOut, statements == statementsOut]
@@ -134,7 +131,6 @@ viewIndexed [xMatch| [i] := operator.index.left
                         in  (i',js ++ [j])
 viewIndexed p = (p,[])
 
+-- given an expression and a list of indexers, producers an indexed expression.
 mkIndexed :: E -> [E] -> E
-mkIndexed x [] = x
-mkIndexed x (i:is) = let y = [eMake| &x[&i] |]
-                     in  mkIndexed y is
+mkIndexed = foldl (\ x i -> [eMake| &x[&i] |])

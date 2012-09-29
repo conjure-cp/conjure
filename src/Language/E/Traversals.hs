@@ -36,7 +36,6 @@ traverseSpecNoFindGiven :: (Monad m)
     -> Spec
     -> CompE m Spec
 traverseSpecNoFindGiven mpre func mpost (Spec v xs) = do
-    -- forM_ xs $ \ x -> mkLog "debug:traverseSpec" $ prettyAsPaths x
     xs' <- forM xs $ \ x -> case x of
             [xMatch| _ := topLevel.declaration.find  |] -> return x
             [xMatch| _ := topLevel.declaration.given |] -> return x
@@ -51,20 +50,16 @@ traverse :: (Monad m)
     -> E
     -> CompE m E
 traverse mpre func mpost t = do
-    -- mkLog "debug: ==>    " $ labelOf t
-    -- printAllBound "1"
     bindersBefore <- getsLocal binders
     introduceStuff t
     result <- case mpre of
-        Nothing  -> do
-            -- mkLog "traverse" "no preorder modification"
+        Nothing  ->
             afterPre mpre func mpost t
         Just pre -> do
             t' <- pre t
             mkLog "traverse" $ "after pre:" <+> labelOf t
             afterPre mpre func mpost t'
     modifyLocal $ \ st -> st { binders = bindersBefore }
-    -- printAllBound "2"
     return result
 
 
@@ -84,8 +79,7 @@ afterPre mpre func mpost t = do
     -- mkLog "debug:    ==> " $ labelOf t'
     -- printAllBound ()
     case mpost of 
-        Nothing -> do
-            -- mkLog "traverse" "no postorder modification"
+        Nothing ->
             return t'
         Just post -> do
             t'' <- post t'
@@ -97,9 +91,7 @@ introduceStuff :: Monad m => E -> CompE m ()
 introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
              | [      _      ] := topLevel.declaration.find.domain
-             |] = do
-                 -- mkLog "debug:introduceStuff" $ "find" <+> stringToDoc name
-                 addBinder name s
+             |] = addBinder name s
 introduceStuff
     s@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
              | [      _      ] := topLevel.declaration.given.domain
@@ -109,12 +101,8 @@ introduceStuff
              | [ expression ]  := topLevel.declaration.letting.expr
              |] = addBinder name expression
 introduceStuff
-    [xMatch| ls := withLocals.locals |] = do
-        mapM_ introduceStuff ls
-        -- mkLog "debug:introduceStuff" $ vcat $ map pretty ls
-introduceStuff _ = do
-    -- mkLog "introduceStuff" $ pretty x
-    return ()
+    [xMatch| ls := withLocals.locals |] = mapM_ introduceStuff ls
+introduceStuff _ = return ()
 
 
 printAllBound :: Monad m => String -> CompE m ()

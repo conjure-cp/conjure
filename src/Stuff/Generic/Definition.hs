@@ -20,7 +20,6 @@ import Data.List.Split ( splitOn )
 
 -- template-haskell
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
-import Language.Haskell.TH.Lift ( deriveLift )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 
 -- haskell-src-meta
@@ -35,8 +34,6 @@ data Generic primitive
     = Prim primitive
     | Tagged String [Generic primitive]
     deriving (Eq, Ord, Read, Show, Data, Typeable)
-
-deriveLift ''Generic
 
 prettyAsTree :: Pretty primitive => Generic primitive -> Doc
 prettyAsTree (Prim p) = pretty p
@@ -94,23 +91,16 @@ xMatch = qq {
         let inps = splitOn "|" inp
         let each i = do
                 let [patternS, tag] = splitOn ":=" i
-                let stripped = strip tag
-                -- paths <- runIO $ readFile "tags.txt"
-                -- let flag = stripped `elem` lines paths
-                let flag = True
-                if flag
-                    then do
-                        let tags = splitOn "." stripped
-                        case parsePat patternS of
-                            Left  e -> error e
-                            Right p -> do
-                                tags' <- [e| tags |]
-                                return (tags', p)
-                    else error $ "No such tag: " ++ stripped
+                let tags = splitOn "." $ strip tag
+                case parsePat patternS of
+                    Left  e -> error e
+                    Right p -> do
+                        tags' <- [e| tags |]
+                        return (tags', p)
         xs <- mapM each inps
         let lhs = AppE (VarE  $ mkName "viewTaggeds")
                        (ListE $ map fst xs)
-        let rhs = ListP $ map (\ i -> ConP (mkName "Just") [i] ) $ map snd xs
+        let rhs = ListP $ map (\ (_,i) -> ConP (mkName "Just") [i] ) xs
         return (ViewP lhs rhs)
     }
 
@@ -126,7 +116,7 @@ xMake = qq {
                 let tags = map strip $ splitOn "." stripped
                 case parseExp rhs of
                     Left  e -> error  $ "Malformed expression: " ++ e
-                    Right x -> do
+                    Right x ->
                         -- runIO $ appendFile "tags.txt" $ stripped ++ "\n"
                         return $ mkTaggedTH tags x
         xs <- mapM each inps
@@ -146,7 +136,7 @@ viewTagged (t:ts) (Tagged i xs) | t == i = do
     let justs = filter isJust $ map (viewTagged ts) xs
     if null justs
         then Nothing
-        else return (concat $ map fromJust justs)
+        else return (concatMap fromJust justs)
 viewTagged _ _ = Nothing
 
 -- viewTagged :: Show primitive => [String] -> Generic primitive -> Maybe [Generic primitive]

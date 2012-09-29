@@ -135,7 +135,7 @@ single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.wor
 renRefn :: Monad m => E -> CompE m E
 renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
                  | [Prim (S i'    )] := functionApply.args.reference
-                 |] = do
+                 |] =
     case splitOn "#" i' of
         [i,j] -> return [xMake| reference := [Prim (S $ i ++ "_" ++ j)] |]
         _     -> err ErrFatal $ "Problem here:" <+> pretty p

@@ -151,7 +151,7 @@ tryApply fs x = do
                 --         Tagged "quantified" _ -> mkLog "not applied" $ pretty x
                 --         _ -> return ()
                 --     go gs
-                Just [] -> do
+                Just [] ->
                     throwError (ErrFatal, "Rewrites to nothing.")
                 Just ys -> do
                     mkLog "applied"

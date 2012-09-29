@@ -817,9 +817,9 @@ parseRuleReprCase = do
 parseRuleRepr :: String -> Parser RuleRepr
 parseRuleRepr t = inCompleteFile $ do
     let arr i = lexeme L_SquigglyArrow >> i
-    nmRepr <- arr $ identifier
-    domOut <- arr $ parseDomain
-    mcons  <- optionMaybe $ arr $ parseExpr
+    nmRepr <- arr identifier
+    domOut <- arr parseDomain
+    mcons  <- optionMaybe $ arr parseExpr
     locals <- concat <$> many parseTopLevels
     cases  <- some parseRuleReprCase
     return ( t

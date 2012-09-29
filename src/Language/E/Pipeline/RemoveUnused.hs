@@ -17,14 +17,11 @@ removeUnused (Spec v statements) = do
                             [xMatch| [Prim (S nm)] := topLevel.letting          .name.reference |] -> Just nm
                             _ -> Nothing
         case maybeName of
-            Nothing   -> do
-                -- mkLog "removeUnused" $ "has no name" <+> pretty this
-                return (Just this)
+            Nothing   -> return (Just this)
             Just name -> do
-                -- mkLog "removeUnused" $ "has a name" <+> pretty this
-                if name `elem` concatMap identifiersIn afterThis
-                    then do
-                        -- mkLog "removeUnused" $ "is referenced later" <+> pretty this
+                let identifiersAfterThis = concatMap identifiersIn afterThis
+                if name `elem` identifiersAfterThis
+                    then
                         return (Just this)
                     else do
                         mkLog "removed" $ pretty this

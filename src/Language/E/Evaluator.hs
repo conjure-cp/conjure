@@ -31,15 +31,13 @@ test_Simplify t = do
             -- print $ prettyAsTree x
             let (results, globalSt) = runIdentity $ runCompE $ runWriterT $ simplify x
             print $ prettyLogs $ logs globalSt
-            forM_ results $ \ (result, _) -> do
+            forM_ results $ \ (result, _) ->
                 case result of
                     Left e -> error (show e)
                     Right (y, Any flag) ->
-                        if flag
-                            then do
-                                print $ pretty y
-                                -- print $ prettyAsTree y
-                            else return ()
+                        when flag $ do
+                            print $ pretty y
+                            print $ prettyAsTree y
 
 
 trySimplifySpec :: (Functor m, Monad m) => Spec -> CompE m Spec
@@ -51,9 +49,7 @@ trySimplifySpec (Spec v xs) = do
 
 
 simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalState CompError m) E
--- simplify = return
-simplify x = do
-    -- lift $ mkLog "debug:simplify" $ pretty x
+simplify =
     rewriteM (\ i -> firstJust $ map ($ i) [ loggedFullEvaluator
                                            , loggedEvalHasRepr
                                            , loggedEvalHasType
@@ -63,7 +59,7 @@ simplify x = do
                                            , loggedEvalReplace
                                            , loggedPartialEvaluator
                                            ]
-             ) x
+             )
     where
         loggedFullEvaluator    = logged "Evaluator"                 fullEvaluator
         loggedEvalHasRepr      = logged "Evaluator.hasRepr"         evalHasRepr

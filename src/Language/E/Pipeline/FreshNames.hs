@@ -39,7 +39,7 @@ freshNames param = do
                                 ]
     let
         newvars :: S.Set String
-        newvars = S.union newvarsInQuanVar newvarsInBubbles
+        newvars = newvarsInQuanVar `S.union` newvarsInBubbles
     -- let
     --     newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param
     --                               , r `notElem` ["forAll","exists","sum"]           -- don't rename these

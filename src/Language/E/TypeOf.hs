@@ -39,7 +39,7 @@ typeUnify
            |]
     = (&&) <$> typeUnify aFr bFr <*> typeUnify aTo bTo
 typeUnify x y = do
-    -- mkLog "debug:typeUnify" $ pretty x <+> "~~" <+> pretty y
+    mkLog "missing:typeUnify" $ pretty x <+> "~~" <+> pretty y
     return (x == y)
 
 mostKnown :: Monad m => E -> E -> CompE m E
@@ -54,8 +54,8 @@ mostKnown [xMatch| [a] := type.mset.inner |]
               x <- mostKnown a b
               return [xMake| type.mset.inner := [x] |]
 
-mostKnown x _y = do
-    -- mkLog "debug:mostKnown" $ pretty x <+> "~~" <+> pretty y
+mostKnown x y = do
+    mkLog "missing:mostKnown" $ pretty x <+> "~~" <+> pretty y
     return x
 
 
@@ -69,7 +69,7 @@ test_TypeOf t = do
             -- print $ prettyAsTree x
             let (results, globalSt) = runIdentity $ runCompE $ typeOf x
             print $ prettyLogs $ logs globalSt
-            forM_ results $ \ (result, _) -> do
+            forM_ results $ \ (result, _) ->
                 case result of
                     Left  e -> error (show e)
                     Right y -> print $ pretty y
@@ -220,13 +220,13 @@ typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
               | [ ] := quanVar.within.quantified.quanOverOp.binOp.subsetEq
               |] = typeOf i
 
-typeOf [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference |] = do
+typeOf [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference |] =
     return [xMake| type.bool := [] |]
 
-typeOf [xMatch| [Prim (S "exists")] := quantified.quantifier.reference |] = do
+typeOf [xMatch| [Prim (S "exists")] := quantified.quantifier.reference |] =
     return [xMake| type.bool := [] |]
 
-typeOf [xMatch| [Prim (S "sum")] := quantified.quantifier.reference |] = do
+typeOf [xMatch| [Prim (S "sum")] := quantified.quantifier.reference |] =
     return [xMake| type.int := [] |]
 
 typeOf p@[xMatch| [x] := operator.twoBars |] = do

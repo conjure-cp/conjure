@@ -207,8 +207,8 @@ loadAndApply spec' rules' = do
 
 buildTests :: [(String, FilePath, [FilePath], [FilePath])] -> Test.Hspec.Monadic.Spec
 -- buildTests = undefined
-buildTests params = describe "rule engine" $ do
-    forM_ params $ \ (name, spec', outputs', rules') -> do
+buildTests params = describe "rule engine" $
+    forM_ params $ \ (name, spec', outputs', rules') ->
         it ("testing " ++ name) $ do
 
             spec    <- pairWithContents spec'
@@ -243,8 +243,8 @@ buildTests params = describe "rule engine" $ do
                 $ assertFailure
                 $ show
                 $ vcat [ "different number of outputs generated."
-                       , "expected:"  <++> (stringToDoc $ show $ length expecteds )
-                       , "generated:" <++> (stringToDoc $ show $ length generateds)
+                       , "expected:"  <++> stringToDoc (show $ length expecteds )
+                       , "generated:" <++> stringToDoc (show $ length generateds)
                        ]
 
             forM_ (zip3 [(1::Int) ..] generateds expecteds) $ \ (i,generated,expected) ->

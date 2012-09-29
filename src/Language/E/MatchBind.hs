@@ -29,7 +29,7 @@ patternMatch pattern actual = do
             mkLog "patternMatch" $ vcat ["(successful)", pretty pattern, pretty actual]
             return ()
         else do
-            -- mkLog "patternMatch" $ vcat ["(failed)"    , pretty pattern, pretty actual]
+            mkLog "patternMatch" $ vcat ["(failed)"    , pretty pattern, pretty actual]
             return ()
     return flag
     where
@@ -52,7 +52,7 @@ patternMatch pattern actual = do
                                                      , pretty y
                                                      ]
                     return False
-        core p _ | unnamedMV p = do
+        core p _ | unnamedMV p =
             return True
         core p x | Just nm <- namedMV p = do
             addBinder ('&':nm) x
@@ -75,18 +75,14 @@ patternMatch pattern actual = do
                                 b <- core j i
                                 if b then return True else foo j is
                         bs <- forM xs' $ \ x -> foo x ys
-                        if and bs
-                            then do
-                                return True
-                            else do
-                                return False
-        core _x@(Tagged xTag xArgs) _y@(Tagged yTag yArgs) = do
+                        return $ and bs
+        core _x@(Tagged xTag xArgs) _y@(Tagged yTag yArgs) =
             case (xTag == yTag, length xArgs == length yArgs) of
                 (True, True) -> do
                     -- mkLog "patternMatch.core" $ "same tree label & equal number of subtrees. great" <+> pretty xTag
                     bs <- zipWithM core xArgs yArgs
                     if and bs
-                        then do
+                        then
                             -- mkLog "patternMatch.core" $ vcat [ "all subtrees matched fine"
                             --                                  , pretty _x
                             --                                  , "~~"
@@ -114,7 +110,7 @@ patternMatch pattern actual = do
                                                      , pretty _y
                                                      ]
                     return False
-        core _x _y = do
+        core _ _ =
             -- mkLog "patternMatch.core" $ vcat [ "this just fails"
             --                                  , pretty x
             --                                  , "~~"
@@ -142,7 +138,7 @@ test_Match patternText actualText = do
         forM_ bs $ \ (Binder nm val) -> liftIO $ do
             putStr nm
             putStr " : "
-            putStrLn $ show $ pretty val
+            putStrLn $ renderPretty val
         if flag
             then liftIO $ putStrLn "Matched."
             else liftIO $ putStrLn "Not matched."

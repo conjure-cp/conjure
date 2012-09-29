@@ -28,6 +28,9 @@ suppress = S.fromList
     , "Evaluator.domSize"
     , "Evaluator.indices"
     , "Evaluator.replace"
+    , "missing:relationRepr"
+    , "missing:typeUnify"
+    , "missing:mostKnown"
     ]
 
 buildLog :: String -> Doc -> Maybe NamedLog

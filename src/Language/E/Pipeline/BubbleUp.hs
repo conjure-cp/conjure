@@ -82,13 +82,13 @@ bubbleUpE [xMatch| [quantifier] := quantified.quantifier
                     | quantified.guard                     := [guard]
                     | quantified.body                      := [b]
                     |]
-    return $ ( (inLoop . liftName) body'
-             , map (inLoop . liftName) newCons ++ newDecls'
-             )
+    return ( (inLoop . liftName) body'
+           , map (inLoop . liftName) newCons ++ newDecls'
+           )
 bubbleUpE p@[xMatch| _ := quantified |] = return (p, [])
 bubbleUpE (Tagged t xs) = do
     (xs', locals) <- unzip <$> mapM bubbleUpE xs
-    return $ (Tagged t xs', concat locals)
+    return (Tagged t xs', concat locals)
 bubbleUpE x = return (x, [])
 
 

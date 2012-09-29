@@ -85,7 +85,7 @@ instance MetaVariable E where
 type CompE m a = FunkyT LocalState GlobalState CompError m a
 
 runCompE :: Monad m => CompE m a -> m ([(Either CompError a, LocalState)], GlobalState)
-runCompE comp = runFunkyT def def comp
+runCompE = runFunkyT def def
 
 
 -- errors
@@ -137,11 +137,7 @@ mkLog nm doc = case buildLog nm doc of
     Just l  -> modifyGlobal $ \ st -> st { logs = logs st `DList.snoc` l }
 
 addBinder :: Monad m => String -> E -> CompE m ()
-addBinder nm val = do
-    -- case nm of
-    --     '&':_ -> return ()
-    --     _ -> mkLog "addBinder" $ stringToDoc nm
-    modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
+addBinder nm val = modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
 
 lookupBinder :: Monad m => String -> MaybeT (FunkyT LocalState GlobalState CompError m) E
 lookupBinder nm = do

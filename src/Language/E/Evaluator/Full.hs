@@ -74,54 +74,35 @@ ret = return . Just
 
 
 evalHasType :: (Functor m, Monad m) => E -> CompE m (Maybe E)
-evalHasType _p@[eMatch| &s hasType &dom |] = do
+evalHasType [eMatch| &s hasType &dom |] = do
     ts <- typeOf s
     td <- typeOf dom
-    -- b  <- typeUnify ts td
     b  <- patternMatch td ts
-    -- if b
-    --     then do
-    --         mkLog "debug:evalHasType" $ pretty p
-    --         mkLog "debug:evalHasType" $ pretty ts
-    --         mkLog "debug:evalHasType" $ pretty td
-    --     else return ()
     returnBool b
 evalHasType _ = return Nothing
 
 evalHasDomain :: Monad m => E -> CompE m (Maybe E)
-evalHasDomain _p@[eMatch| &x hasDomain &y |] = do
-    -- mkLog "evalHasDomain" $ pretty p
+evalHasDomain [eMatch| &x hasDomain &y |] = do
     dx <- domainOf x
     dy <- domainOf y
-    -- mkLog "evalHasDomain" $ pretty dx
-    -- mkLog "evalHasDomain" $ prettyAsPaths dx
-    -- mkLog "evalHasDomain" $ pretty dy
-    -- mkLog "evalHasDomain" $ prettyAsPaths dy
     b  <- patternMatch dy dx
     returnBool b
 evalHasDomain _ = return Nothing
 
 evalHasRepr :: Monad m => E -> CompE m (Maybe E)
-evalHasRepr _p@[eMatch| &x hasRepr &y |] = do
-    -- mkLog "evalHasRepr" $ pretty p
-    -- mkLog "evalHasRepr" $ prettyAsPaths x
-    -- mkLog "evalHasRepr" $ prettyAsPaths y
+evalHasRepr [eMatch| &x hasRepr &y |] =
     case (x,y) of
-        ( [xMatch| [Prim (S iden )] := reference |] , [xMatch| [Prim (S reprName)] := reference |] ) -> do
-            -- mkLog "evalHasRepr" "1"
+        ( [xMatch| [Prim (S iden )] := reference |] , [xMatch| [Prim (S reprName)] := reference |] ) ->
             case splitOn "#" iden of
                 [_,idenReprName] -> returnBool $ idenReprName == reprName
                 _ -> return Nothing
         ( [xMatch| [Prim (S iden')] := metavar   |] , _ ) -> do
-            -- mkLog "evalHasRepr" "2"
             let iden = '&' : iden'
             bs <- getsLocal binders
             case [ a | Binder nm a <- bs, nm == iden ] of
                 [a] -> evalHasRepr [eMake| &a hasRepr &y |]
                 _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
-        _ -> do
-            -- mkLog "evalHasRepr" "3"
-            return Nothing
+        _ -> return Nothing
 evalHasRepr _ = return Nothing
 
 evalDomSize :: Monad m => E -> CompE m (Maybe E)
@@ -150,7 +131,7 @@ evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
         domSize [dMatch| mset (size &s) of &inn |] = do
             innSize <- domSize inn
             return [eMake| &s * &innSize |]
-        domSize p = do
+        domSize p =
             err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
 evalDomSize _ = return Nothing

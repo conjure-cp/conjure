@@ -12,7 +12,6 @@ import Language.E.Parser
 import Language.Haskell.TH ( Exp(..), Pat(..), Lit(..), mkName )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 
--- import qualified GHC.Types
 import qualified Data.Text as T
 
 
@@ -35,9 +34,9 @@ eMatch = qq {
                     [ LitP (StringL s) ]
             -- buildP' s = error ("buildP': " ++ show s)
 
-            buildP (Prim p) = do
+            buildP (Prim p) =
                 return $ ConP (mkName "Prim") [buildP' p]
-            buildP (Tagged "metavar" [Prim (S s)]) = do
+            buildP (Tagged "metavar" [Prim (S s)]) =
                 return $ VarP (mkName s)
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
@@ -69,9 +68,9 @@ dMatch = qq {
                     [ LitP (StringL s) ]
             -- buildP' s = error ("buildP': " ++ show s)
 
-            buildP (Prim p) = do
+            buildP (Prim p) =
                 return $ ConP (mkName "Prim") [buildP' p]
-            buildP (Tagged "metavar" [Prim (S s)]) = do
+            buildP (Tagged "metavar" [Prim (S s)]) =
                 return $ VarP (mkName s)
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
@@ -107,9 +106,9 @@ eMake = qq {
                   LitE (StringL s)
             -- build' s = error ("build': " ++ show s)
 
-            build (Prim p) = do
+            build (Prim p) =
                 return $ ConE (mkName "Prim") `AppE` build' p
-            build (Tagged "metavar" [Prim (S s)]) = do
+            build (Tagged "metavar" [Prim (S s)]) =
                 return $ VarE (mkName s)
             build (Tagged s xs) = do
                 ys <- mapM build xs

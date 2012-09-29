@@ -32,7 +32,7 @@ import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )
 
 import Data.Default      as X ( Default, def )
 import Data.Either       as X ( lefts, rights )
-import Data.Foldable     as X ( forM_ )
+import Data.Foldable     as X ( forM_, fold, foldMap, toList )
 import Data.Function     as X ( on )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, groupBy, sortBy, partition, genericLength, genericIndex )
 import Data.List.Split   as X ( splitOn )
@@ -40,13 +40,10 @@ import Data.Maybe        as X ( catMaybes, listToMaybe, maybeToList, mapMaybe, i
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
-import Data.Foldable     as X ( fold, foldMap, toList )
 
 import Data.Generics.Uniplate.Data as X ( Uniplate, universe, transform )
 
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, vcat, (<+>), ($$) )
-
-import Safe as X ( headNote, tailNote )
 
 import Debug.Trace as X ( trace )
 
