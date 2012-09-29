@@ -1,32 +1,32 @@
 .PHONY: install prof-install buildtests runtests clean
 
 quick-install:
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="-H2G"
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="+RTS -M4G"
 
 install:
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="-H2G"
+	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="+RTS -M4G"
 
 quick-buildtests:
-	time cabal configure --enable-tests --disable-library-profiling --disable-executable-profiling -O0
-	time cabal build	
+	time cabal configure --enable-tests --disable-library-profiling --disable-executable-profiling -O0 --ghc-options="+RTS -M4G"
+	time cabal build
 
 buildtests:
-	time cabal configure --enable-tests --disable-library-profiling --disable-executable-profiling -O2
+	time cabal configure --enable-tests --disable-library-profiling --disable-executable-profiling -O2 --ghc-options="+RTS -M4G"
 	time cabal build
 
 runtests:
 	time dist/build/conjure-tests/conjure-tests
 
 quick-prof-install:
-	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="-H2G"
+	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="+RTS -M4G"
 
 prof-install:
-	time cabal configure --enable-library-profiling --enable-executable-profiling
+	time cabal configure --enable-library-profiling --enable-executable-profiling --ghc-options="+RTS -M4G"
 	time cabal build
 	time cabal install --disable-documentation
 
 prof-buildtests:
-	time cabal configure --enable-library-profiling --enable-executable-profiling --enable-tests
+	time cabal configure --enable-library-profiling --enable-executable-profiling --enable-tests -O2 --ghc-options="+RTS -M4G"
 	time cabal build
 
 prof-runtests:
@@ -41,9 +41,9 @@ deps:
 	cabal install --only-dependencies --enable-library-profiling --disable-executable-profiling -O2 --enable-documentation
 
 clean:
-	find . -name "*.hi" -delete
-	find . -name "*.o" -delete
-	find . -name "*.hi-boot" -delete
-	find . -name "*.o-boot" -delete
-	cabal clean
-	ghc-pkg unregister conjure-cp
+	-find . -name "*.hi" -delete
+	-find . -name "*.o" -delete
+	-find . -name "*.hi-boot" -delete
+	-find . -name "*.o-boot" -delete
+	-cabal clean
+	-ghc-pkg unregister conjure-cp
