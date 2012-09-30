@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes, ViewPatterns #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
 
 module Language.E.Pipeline.ApplyRepr where

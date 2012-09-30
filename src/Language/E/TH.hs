@@ -1,6 +1,5 @@
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Language.E.TH where
 
@@ -9,7 +8,7 @@ import Language.E.Definition
 import Language.E.Parser
 
 -- template-haskell
-import Language.Haskell.TH ( Exp(..), Pat(..), Lit(..), mkName )
+import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 
 import qualified Data.Text as T
@@ -20,6 +19,7 @@ eMatch :: QuasiQuoter
 eMatch = qq {
     quotePat = \ inp -> do
         let
+            buildP' :: BuiltIn -> Pat
             buildP' (B False)
                 = ConP (mkName "B")
                     [ ConP (mkName "False") [] ]
@@ -32,8 +32,8 @@ eMatch = qq {
             buildP' (S s)
                 = ConP (mkName "S")
                     [ LitP (StringL s) ]
-            -- buildP' s = error ("buildP': " ++ show s)
 
+            buildP :: E -> Q Pat
             buildP (Prim p) =
                 return $ ConP (mkName "Prim") [buildP' p]
             buildP (Tagged "metavar" [Prim (S s)]) =
@@ -41,19 +41,22 @@ eMatch = qq {
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
-                              [ LitP (StringL t)
+                              [ LitP (StringL $ T.unpack t)
                               , ListP ys
                               ]
+
         case runLexerAndParser (inCompleteFile parseExpr) "" (T.pack inp) of
             Left  e -> error $ show e
             Right x -> buildP x
     }
+
 
 -- match by parsing a domain
 dMatch :: QuasiQuoter
 dMatch = qq {
     quotePat = \ inp -> do
         let
+            buildP' :: BuiltIn -> Pat
             buildP' (B False)
                 = ConP (mkName "B")
                     [ ConP (mkName "False") [] ]
@@ -66,8 +69,8 @@ dMatch = qq {
             buildP' (S s)
                 = ConP (mkName "S")
                     [ LitP (StringL s) ]
-            -- buildP' s = error ("buildP': " ++ show s)
 
+            buildP :: E -> Q Pat
             buildP (Prim p) =
                 return $ ConP (mkName "Prim") [buildP' p]
             buildP (Tagged "metavar" [Prim (S s)]) =
@@ -75,9 +78,10 @@ dMatch = qq {
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
-                              [ LitP (StringL t)
+                              [ LitP (StringL $ T.unpack t)
                               , ListP ys
                               ]
+
         case runLexerAndParser (inCompleteFile parseDomain) "" (T.pack inp) of
             Left  e -> error $ show e
             Right x -> buildP x
@@ -88,6 +92,7 @@ eMake :: QuasiQuoter
 eMake = qq {
     quoteExp = \ inp -> do
         let
+            build' :: BuiltIn -> Exp
             build' (B False)
                 = ConE (mkName "B")
                     `AppE`
@@ -104,8 +109,8 @@ eMake = qq {
                 = ConE (mkName "S")
                     `AppE`
                   LitE (StringL s)
-            -- build' s = error ("build': " ++ show s)
 
+            build :: E -> Q Exp
             build (Prim p) =
                 return $ ConE (mkName "Prim") `AppE` build' p
             build (Tagged "metavar" [Prim (S s)]) =
@@ -114,11 +119,12 @@ eMake = qq {
                 ys <- mapM build xs
                 return $ ConE (mkName "Tagged")
                             `AppE`
-                         LitE (StringL s)
+                         LitE (StringL $ T.unpack s)
                             `AppE`
                          ListE ys
-            -- build s = error ("build: " ++ show s)
+
         case runLexerAndParser (inCompleteFile parseExpr) "" (T.pack inp) of
             Left  e -> error $ show e
             Right x -> build x
     }
+

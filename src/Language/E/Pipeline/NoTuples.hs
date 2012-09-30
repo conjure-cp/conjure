@@ -1,5 +1,4 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.Pipeline.NoTuples where
 

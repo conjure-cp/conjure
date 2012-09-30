@@ -1,12 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 
 module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
 import Language.E
 import Language.E.BuiltIn ( builtInRefn )
+
+import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
 
 type RulesDB m = [E -> CompE m (Maybe [(String,E)])]
@@ -111,7 +111,7 @@ onE fs x@(Tagged t xs) = onEGeneric fs x t xs
 onEGeneric :: (Functor m, Monad m)
     => RulesDB m
     -> E
-    -> String
+    -> T.Text
     -> [E]
     -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
 onEGeneric fs x t xs = do

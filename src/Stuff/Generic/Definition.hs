@@ -29,10 +29,13 @@ import Language.Haskell.Meta.Parse.Careful
 import Stuff.Pretty ( Pretty(..) )
 import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
 
+-- text
+import qualified Data.Text as T
+
 
 data Generic primitive
     = Prim primitive
-    | Tagged String [Generic primitive]
+    | Tagged T.Text [Generic primitive]
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 prettyAsTree :: Pretty primitive => Generic primitive -> Doc
@@ -45,7 +48,7 @@ prettyAsPaths = vcat . map pOne . toPaths
         pOne (ts,Nothing) = hcat (map pretty $ intersperse "." ts) <+> ":= []"
         pOne (ts,Just p ) = hcat (map pretty $ intersperse "." ts) <+> ":=" <+> pretty p
 
-        toPaths :: Generic primitive -> [([String],Maybe primitive)]
+        toPaths :: Generic primitive -> [([T.Text],Maybe primitive)]
         toPaths (Prim p) = [([], Just p)]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
@@ -125,12 +128,8 @@ xMake = qq {
             _   -> error "These do not seem to have a commmon root."
     }
 
-viewTagged :: Show primitive => [String] -> Generic primitive -> Maybe [Generic primitive]
--- viewTagged ts g | trace (show ("viewTagged",ts,g)) False = undefined
+viewTagged :: Show primitive => [T.Text] -> Generic primitive -> Maybe [Generic primitive]
 viewTagged [] g = Just [g]
--- viewTagged (t:_ ) (Tagged i []) | t == i = Just []
--- viewTagged [] _ = Just []
--- viewTagged (t:_ ) (Tagged i []) | t == i = Nothing
 viewTagged [t] (Tagged i []) | t == i = Just []
 viewTagged (t:ts) (Tagged i xs) | t == i = do
     let justs = filter isJust $ map (viewTagged ts) xs
@@ -139,35 +138,5 @@ viewTagged (t:ts) (Tagged i xs) | t == i = do
         else return (concatMap fromJust justs)
 viewTagged _ _ = Nothing
 
--- viewTagged :: Show primitive => [String] -> Generic primitive -> Maybe [Generic primitive]
--- viewTagged [] g = trace "1" $ Just [g]
--- viewTagged (t:ts) (Tagged i []) | t == i = trace ("2i: " ++ show (t,t:ts) ) $ Just []
--- viewTagged (t:ts) (Tagged i xs) | t == i = trace ("2j: " ++ show (t,t:ts) ) $ do
---     let (nothings,justs) = partition isNothing
---                          $ map (\ x -> trace ("calling with " ++ show ts ++ show x) $ viewTagged ts x) xs
---     trace ("nothings: " ++ show nothings) $
---         trace ("justs:" ++ show justs) $
---             if null justs
---                 then trace "THEN" $ Nothing
---                 else trace "ELSE" $ return (concat $ map fromJust justs)
--- viewTagged ts g = trace ("3: " ++ (show ts)) Nothing
-
-viewTaggeds :: Show primitive => [[String]] -> Generic primitive -> [Maybe [Generic primitive]]
+viewTaggeds :: Show primitive => [[T.Text]] -> Generic primitive -> [Maybe [Generic primitive]]
 viewTaggeds as g = map (`viewTagged` g) as
--- viewTaggeds as g = let out = map (`viewTagged` g) as in
---     trace (ppShow ("viewTaggeds",as,g,out)) out
-
-
--- mkTagged :: [String] -> Generic primitive -> Generic primitive
--- mkTagged [] g = g
--- mkTagged (t:ts) g = Tagged t [mkTagged ts g]
--- 
--- mergeTagged :: Generic primitive -> Generic primitive -> Maybe (Generic primitive)
--- mergeTagged (Tagged ta as) (Tagged tb bs) | ta == tb = do
---     inner <- mergeTaggeds (as++bs)
---     return $ Tagged ta [inner]
--- mergeTagged _ _ = Nothing
--- 
--- mergeTaggeds :: [Generic primitive] -> Maybe (Generic primitive)
--- mergeTaggeds [] = Nothing
--- mergeTaggeds (g:gs) = mergeTagged g =<< mergeTaggeds gs

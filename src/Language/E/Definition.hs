@@ -1,9 +1,8 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Language.E.Definition
@@ -34,16 +33,6 @@ import Language.E.Imports
 import Data.Generics ( Data, Typeable )
 import qualified Data.Set as S
 import qualified Data.DList as DList
-
--- import Control.Monad ( mzero )
--- import Control.Monad.Trans ( lift )
--- import Control.Monad.Trans.Maybe ( MaybeT )
--- import Control.Monad.State ( gets, modify )
--- import Data.Default ( Default(..) )
--- import Data.Maybe ( listToMaybe )
-
--- import Text.PrettyPrint ( Doc )
-
 
 
 data Spec = Spec Version [E]

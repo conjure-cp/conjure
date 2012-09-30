@@ -1,7 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 module Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction, localHandler ) where
 

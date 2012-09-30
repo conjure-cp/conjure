@@ -1,6 +1,5 @@
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes, ViewPatterns #-}
 
 module Language.E.Traversals where
 
@@ -14,7 +13,7 @@ import Language.E.Pretty
 
 labelOf :: Pretty primitive => Generic primitive -> Doc
 labelOf (Prim   p  ) = pretty p
-labelOf (Tagged s _) = stringToDoc s
+labelOf (Tagged s _) = pretty s
 
 
 traverseSpec :: (Monad m)

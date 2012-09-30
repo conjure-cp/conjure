@@ -1,10 +1,8 @@
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+-- {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.E.Pretty ( module Stuff.Pretty ) where
 
@@ -437,5 +435,5 @@ prettyQuantified
 prettyQuantified x = prettyNotImplemented x
 
 prettyNotImplemented :: E -> Doc
-prettyNotImplemented (Tagged s _) = "{{" <> text s <> "}}"
+prettyNotImplemented (Tagged s _) = "{{" <> pretty s <> "}}"
 prettyNotImplemented x = "[pretty] catch all case" <++> prettyAsPaths x

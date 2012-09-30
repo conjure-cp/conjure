@@ -1,5 +1,3 @@
--- {-# LANGUAGE QuasiQuotes #-}
-
 module Language.E ( module X ) where
 
 import Stuff.FunkyT as X
@@ -20,8 +18,3 @@ import Language.E.TypeOf as X
 
 import Language.E.Evaluator as X
 import Language.E.Evaluator.ToBool as X
-
--- import Language.E.TH ( matchE )
--- import Language.Haskell.TH
-
--- f [matchE| @a + 0 |] = 12

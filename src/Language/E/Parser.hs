@@ -1,7 +1,5 @@
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Language.E.Parser where
@@ -306,7 +304,7 @@ parseOthers = [ parseFunctional l
                 (L_image, y:ys) -> [xMake| functionApply.actual := [y]
                                          | functionApply.args   := ys
                                          |]
-                _ -> Tagged "operator" [Tagged (T.unpack $ lexemeText l) xs]
+                _ -> Tagged "operator" [Tagged (lexemeText l) xs]
 
 parseWithLocals :: Parser E
 parseWithLocals = parens $ do
