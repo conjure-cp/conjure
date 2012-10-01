@@ -10,32 +10,25 @@ import qualified Text.PrettyPrint as Pr
 
 type RulesDB m = [E -> CompE m (Maybe [(String,E)])]
 
+
 applyRefn :: (Functor m, Monad m)
     => RulesDB m
     -> Spec
     -> CompE m Spec
 applyRefn fs' spec = do
     let fs = fs' ++ builtInRefn
-    -- mkLog "debug:applyRefn.worker" $ pretty spec
     (spec', Any flag) <- runWriterT $ onSpec fs spec
-    -- return spec'
     if flag
          then tryAgain fs spec'
-         -- else returns []
-         else return spec'
-    -- return spec
+         else returns []
 
 
 tryAgain :: (Functor m, Monad m)
     => RulesDB m
     -> Spec
     -> CompE m Spec
--- tryAgain :: (Functor m, Monad m) => RuleBase (CompE m) -> Middleware (CompE m) Spec [Spec]
--- tryAgain _ spec = return [spec]
--- tryAgain fs spec = trace (show $ "tryAgain" <+> pretty spec) $ do
 tryAgain fs spec = do
     modifyLocal $ \ st -> st { binders = [] }
-    -- mkLog "debug:applyRefn.tryAgain" $ pretty spec
     (result, Any flag) <- runWriterT $ onSpec fs spec
     if flag
         then tryAgain fs result
@@ -56,14 +49,10 @@ onE :: (Functor m, Monad m)
     => RulesDB m
     -> E
     -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
--- onE _ x | trace (show $ "onE" <+> pretty x) False = undefined
 onE fs x@(Prim {}) = tryApply fs x
 onE fs x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference
                 | xs           := quantified
                 |] = do
--- onE fs x@( viewDeep [":expr-quantified"] -> Just xs ) = 
---     case lookUpInExpr ":expr-quantified-quanVar" xs of
---         Just [Expr ":structural-single" [R r]] -> do
             bindersBefore <- lift $ getsLocal binders
             let
                 restoreState = do
@@ -122,21 +111,12 @@ onEGeneric fs x t xs = do
         then concat <$> mapM (onE fs) results
         else return [x]
 
-    -- (result, Any flag) <- listen $ do
-    --     ys <- mapM (onE fs) xs
-    --     let z = Expr t ys
-    --     tryApply fs z
-    -- if flag
-    --     then return result
-    --     else return [x]
-
 
 tryApply :: (Functor m, Monad m)
     => RulesDB m
     -> E
     -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
 tryApply fs x = do
-    -- lift $ mkLog "debug" $ "in tryApply" <+> pretty x
     let
         -- returns a pair, first component: True if a modification has been made.
         --               , second component: list of results. should always be non-empty.
@@ -145,25 +125,21 @@ tryApply fs x = do
             mys <- g x
             case mys of
                 Nothing -> go gs
-                -- Nothing -> do
-                --     case x of
-                --         Tagged "quantified" _ -> mkLog "not applied" $ pretty x
-                --         _ -> return ()
-                --     go gs
                 Just [] ->
                     throwError (ErrFatal, "Rewrites to nothing.")
                 Just ys -> do
+                    ys' <- forM ys $ \ (n,y) -> do (y',_) <- runWriterT (simplify y) ; return (n,y')
                     mkLog "applied"
                         $ vcat $ pretty x
-                               : [ Pr.braces (stringToDoc n) $$ nest 4 (pretty y) | (n,y) <- ys ]
-                    -- mkLog "applied" $ vcat [pretty x, "~~>", pretty y]
-                    return (True, map snd ys)
+                               : [ Pr.braces (stringToDoc n) $$ nest 4 (pretty y) | (n,y) <- ys' ]
+
+                    return (True, map snd ys')
     (x', Any flag) <- listen (simplify x)
     if flag
         then do
             lift $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x']
             return [x']
         else do
-            (b,z) <- lift $ go fs
+            (b,zs) <- lift $ go fs
             tell (Any b)
-            return z
+            return zs

@@ -19,9 +19,7 @@ conjureRefn spec rules =
         Left  es -> err ErrFatal $ vcat $ map snd es
         Right fs ->
             let pipeline =  applyRefn fs
-                        >=> trySimplifySpec
                         >=> removeUnused
                         >=> makeIdempotent noTuplesSpec
-                        >=> trySimplifySpec
                         >=> (return . atMostOneSuchThat) 
             in  pipeline spec

@@ -62,8 +62,7 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
 
                 let pipeline = addStructuralFromLog  >=>
                                addChannellingFromLog >=>
-                               return . atMostOneSuchThat >=>
-                               trySimplifySpec
+                               return . atMostOneSuchThat
                 pipeline spec'
 
 
