@@ -5,7 +5,7 @@
 module Language.E.Testing.RuleEngine where
 
 import Language.E
-import Language.E.Pipeline.ReadIn ( readSpec )
+import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRefn ( conjureRefn )
 
 import Prelude hiding ( mapM )
@@ -189,14 +189,18 @@ testSetIntersect1 = runInteractively "setIntersect-1"
 
 
 loadAndApply :: FilePath -> [FilePath] -> IO ()
-loadAndApply spec' rules' = do
-    spec    <- pairWithContents spec'
-    rules   <- mapM pairWithContents rules'
+loadAndApply specFilename refnFilenames = do
+    specPair  <- pairWithContents specFilename
+    refnPairs <- mapM pairWithContents refnFilenames
+
+    [spec]  <- runCompEIO (readSpec specPair)
+    [refns] <- concat <$> runCompEIO (mapM readRuleRefn refnPairs)
+
     let
-        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn spec rules [])
+        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn spec refns)
         errors   =         [ x  | (Left  x, _ ) <- mresults ]
         results  =         [ x  | (Right x, _ ) <- mresults ]
-    print $ prettyLogs logs
+    printLogs logs
     if null errors
         then
             if null results
@@ -211,34 +215,24 @@ buildTests params = describe "rule engine" $
     forM_ params $ \ (name, spec', outputs', rules') ->
         it ("testing " ++ name) $ do
 
-            spec    <- pairWithContents spec'
-            rules   <- mapM pairWithContents rules'
-            outputs <- mapM pairWithContents outputs'
+            specPair    <- pairWithContents spec'
+            rulePairs   <- mapM pairWithContents rules'
+            outputPairs <- mapM pairWithContents outputs'
+
+            [spec]      <- runCompEIO (readSpec specPair)
+            [rules]     <- concat <$> runCompEIO (mapM readRuleRefn rulePairs)
+            [expecteds] <- runCompEIO (mapM readSpec outputPairs)
 
             let
-                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn spec rules [])
+                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn spec rules)
                 errorsG     =         [ x  | (Left  x, _ ) <- mgenerateds ]
                 generateds  =         [ x  | (Right x, _ ) <- mgenerateds ]
-            print $ prettyLogs logsG
+            printLogs logsG
             unless (null errorsG)
                 $ assertFailure
                 $ show
                 $ prettyErrors "There were errors in at least one branch." errorsG
 
-            let
-                (mexpecteds, GlobalState{logs=logsE}) = runIdentity $ runCompE (mapM readSpec outputs)
-                errorsE    =         [ x  | (Left  x , _ ) <- mexpecteds ]
-                expecteds  =  concat [ xs | (Right xs, _ ) <- mexpecteds ]
-            print $ prettyLogs logsE
-            unless (null errorsE)
-                $ assertFailure
-                $ show
-                $ prettyErrors "There were errors in at least one branch." errorsE
-
-            ppPrint ( length outputs'
-                    , length expecteds
-                    , length generateds
-                    )
             unless (length generateds == length expecteds)
                 $ assertFailure
                 $ show

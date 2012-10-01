@@ -1,11 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Stuff.NamedLog where
+module Stuff.NamedLog ( NamedLog, buildLog, printLogs ) where
 
+import Control.Monad ( unless )
 import Data.Hashable
 import Text.PrettyPrint ( Doc, (<+>), vcat, brackets, text )
 import qualified Data.Set as S
 import qualified Data.DList as DList
+
+import Stuff.Pretty ( renderPretty )
 
 
 data NamedLog = NamedLog String Doc
@@ -31,6 +34,15 @@ suppress = S.fromList
     , "missing:relationRepr"
     , "missing:typeUnify"
     , "missing:mostKnown"
+
+    -- process indicators for conjure-repr, uncomment if you want to suppress
+    -- , "representation"
+
+    -- process indicators for conjure-refn, uncomment if you want to suppress
+    -- , "applied"
+    -- , "simplified"
+    -- , "removed"
+
     ]
 
 buildLog :: String -> Doc -> Maybe NamedLog
@@ -43,6 +55,11 @@ prettyLogs = id
     . map (\ (NamedLog nm doc) -> brackets (text nm) <+> doc )
     . nubKeepOrder
     . DList.toList
+
+printLogs :: DList.DList NamedLog -> IO ()
+printLogs logs =
+    unless (null $ DList.toList logs)
+        $ putStrLn $ renderPretty $ prettyLogs logs
 
 nubKeepOrder :: Hashable a => [a] -> [a]
 nubKeepOrder = go []

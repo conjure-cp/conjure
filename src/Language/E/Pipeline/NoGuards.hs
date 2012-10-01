@@ -4,16 +4,12 @@ module Language.E.Pipeline.NoGuards where
 
 import Language.E
 import Language.E.Evaluator.Partial ( guardOp )
-import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Language.E.Pipeline.ReadIn
 
 
 conjureNoGuards :: (Monad m, Functor m)
-    => (FilePath, Text)
+    => Spec
     -> CompE m Spec
-conjureNoGuards spectobe = do
-    spec  <- readSpec spectobe
-    (noGuardsSpec >=> return . atMostOneSuchThat) spec
+conjureNoGuards = noGuardsSpec
 
 
 noGuardsSpec :: (Functor m, Monad m) => Spec -> CompE m Spec

@@ -40,82 +40,82 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
                     --     forM_ cons $ \ con -> mkLog "cons" $ pretty con
                     return (n,(x,ys))
 
-        let f p@[xMatch| [Prim (S nm)] := reference |] = case lookup nm candidates of
-                Nothing     -> return p
-                Just (originalDecl,ys) -> do
-                    (_ruleName, reprName, newDom, cons) <- returns ys
-                    modifyLocal $ \ st -> st { representationLog = (nm, reprName, originalDecl, newDom) : representationLog st }
-                    modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
-                    return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
+        if null candidates
+            then returns []
+            else do
+                let f p@[xMatch| [Prim (S nm)] := reference |] = case lookup nm candidates of
+                        Nothing     -> return p
+                        Just (originalDecl,ys) -> do
+                            (_ruleName, reprName, newDom, cons) <- returns ys
+                            modifyLocal $ \ st -> st { representationLog = (nm, reprName, originalDecl, newDom) : representationLog st }
+                            modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
+                            return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
 
-                    -- news <- forM ys $ \ (ruleName, reprName, newDom, cons) -> do
-                    --             modifyLocal $ \ st -> st { representationLog = (nm,reprName, newDom) : representationLog st }
-                    --             modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
-                    --             return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
-                    -- returns news
-            f p = return p
+                            -- news <- forM ys $ \ (ruleName, reprName, newDom, cons) -> do
+                            --             modifyLocal $ \ st -> st { representationLog = (nm,reprName, newDom) : representationLog st }
+                            --             modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
+                            --             return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
+                            -- returns news
+                    f p = return p
 
-        spec' <- traverseSpecNoFindGiven Nothing f Nothing spec
+                spec' <- traverseSpecNoFindGiven Nothing f Nothing spec
 
-        let addStructuralFromLog (Spec v xs) = do
-                cs <- getsLocal structuralConsLog
-                modifyLocal $ \ st -> st { structuralConsLog = [] }
-                let mk i = [xMake| topLevel.suchThat := [i] |]
-                return $ Spec v $ xs ++ map mk cs
+                let pipeline = addStructuralFromLog  >=>
+                               addChannellingFromLog >=>
+                               return . atMostOneSuchThat >=>
+                               trySimplifySpec
+                pipeline spec'
 
-        let addChannellingFromLog (Spec v xs) = do
-                rlogs <- getsLocal representationLog
-                modifyLocal $ \ st -> st { representationLog = [] }
 
-                let grouped = filter ( (>1) . length )
-                            $ groupBy ((==) `on` fst)
-                            $ sortBy (comparing fst)
-                            $ nub
-                              [ (nm, reprName) | (nm, reprName, _, _) <- rlogs ]
+addStructuralFromLog :: Monad m => Spec -> CompE m Spec
+addStructuralFromLog (Spec v xs) = do
+    cs <- getsLocal structuralConsLog
+    modifyLocal $ \ st -> st { structuralConsLog = [] }
+    let mk i = [xMake| topLevel.suchThat := [i] |]
+    return $ Spec v $ xs ++ map mk cs
 
-                let newCons = [ [ [xMake| topLevel.suchThat.binOp.operator        := [Prim (S "=")]
-                                        | topLevel.suchThat.binOp.left .reference := [ Prim $ S $ nm1 ++ "#" ++ r1 ]
-                                        | topLevel.suchThat.binOp.right.reference := [ Prim $ S $ nm2 ++ "#" ++ r2 ]
-                                        |]
-                                | ((nm1,r1),(nm2,r2)) <- allPairs one
-                                ]
-                              | one <- grouped
-                              ]
 
-                -- mkLog "addChannellingFromLog" $ vcat $ map pretty newCons
+addChannellingFromLog :: Monad m => Spec -> CompE m Spec
+addChannellingFromLog (Spec v xs) = do
+    rlogs <- getsLocal representationLog
+    modifyLocal $ \ st -> st { representationLog = [] }
 
-                let
-                    mk (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
-                        [xMake| topLevel.declaration.find.name   := [Prim (S $ origName ++ "_" ++ reprName)]
-                              | topLevel.declaration.find.domain := [newDom]
-                              |]
-                    mk (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
-                        [xMake| topLevel.declaration.given.name   := [Prim (S $ origName ++ "_" ++ reprName)]
-                              | topLevel.declaration.given.domain := [newDom]
-                              |]
-                    mk _ = error "Impossible: addChannellingFromLog.mk"
+    let grouped = filter ( (>1) . length )
+                $ groupBy ((==) `on` fst)
+                $ sortBy (comparing fst)
+                $ nub
+                  [ (nm, reprName) | (nm, reprName, _, _) <- rlogs ]
 
-                let
-                    insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest
-                    insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.objective |] : _) = toInsert ++ rest
-                    insertBeforeSuchThat toInsert (i:is) = i : insertBeforeSuchThat toInsert is
-                    insertBeforeSuchThat toInsert []     = toInsert
+    let newCons = [ [ [xMake| topLevel.suchThat.binOp.operator        := [Prim (S "=")]
+                            | topLevel.suchThat.binOp.left .reference := [ Prim $ S $ nm1 ++ "#" ++ r1 ]
+                            | topLevel.suchThat.binOp.right.reference := [ Prim $ S $ nm2 ++ "#" ++ r2 ]
+                            |]
+                    | ((nm1,r1),(nm2,r2)) <- allPairs one
+                    ]
+                  | one <- grouped
+                  ]
 
-                let
-                    newDecls = nub $ map mk rlogs
+    let
+        mk (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
+            [xMake| topLevel.declaration.find.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
+                  | topLevel.declaration.find.domain         := [newDom]
+                  |]
+        mk (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
+            [xMake| topLevel.declaration.given.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
+                  | topLevel.declaration.given.domain         := [newDom]
+                  |]
+        mk _ = error "Impossible: addChannellingFromLog.mk"
 
-                return $ Spec v $ insertBeforeSuchThat newDecls xs ++ concat newCons
+    let
+        insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest
+        insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.objective |] : _) = toInsert ++ rest
+        insertBeforeSuchThat toInsert (i:is) = i : insertBeforeSuchThat toInsert is
+        insertBeforeSuchThat toInsert []     = toInsert
 
-        ( trySimplifySpec <=< return . atMostOneSuchThat
-                          <=< addChannellingFromLog
-                          <=< addStructuralFromLog ) spec'
+    let
+        newDecls = nub $ map mk rlogs
 
-        -- forM_ topLevels $ \ (i,_,_) -> mkLog "applyRepr" $ prettyAsPaths i
-        -- ys <- func $ head [ (n,d) | (_,n,d) <- topLevels ]
-        -- case ys of
-        --     [] -> return spec
-        --     _  -> return spec
-        -- -- return spec
+    return $ Spec v $ insertBeforeSuchThat newDecls xs ++ concat newCons
 
 
 domainNeedsRepresentation :: E -> Bool
@@ -126,6 +126,7 @@ domainNeedsRepresentation [xMatch|  _  := domain.relation     |] = True
 domainNeedsRepresentation [xMatch|  _  := domain.partition    |] = True
 domainNeedsRepresentation [xMatch| [i] := domain.matrix.inner |] = domainNeedsRepresentation i
 domainNeedsRepresentation _ = False
+
 
 allPairs :: [a] -> [(a,a)]
 allPairs [ ] = []

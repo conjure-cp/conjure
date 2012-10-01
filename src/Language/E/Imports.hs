@@ -14,6 +14,7 @@ module Language.E.Imports
     , ppShow, ppPrint
     , replace
     , sameLength
+    , concatMapM
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -108,3 +109,6 @@ sameLength :: [a] -> [b] -> Bool
 sameLength [] [] = True
 sameLength (_:xs) (_:ys) = sameLength xs ys
 sameLength _ _ = False
+
+concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
+concatMapM f xs = fmap concat $ mapM f xs

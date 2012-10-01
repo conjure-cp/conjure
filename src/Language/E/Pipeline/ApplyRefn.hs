@@ -21,8 +21,8 @@ applyRefn fs' spec = do
     -- return spec'
     if flag
          then tryAgain fs spec'
-         else returns []
-         -- else return spec'
+         -- else returns []
+         else return spec'
     -- return spec
 
 

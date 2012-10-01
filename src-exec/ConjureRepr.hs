@@ -22,22 +22,17 @@ main = do
     when (null reprFilenames)
         $ error "Warning: no *.repr file is given."
 
-    spec    <- pairWithContents specFilename
-    reprs   <- mapM pairWithContents reprFilenames
+    specPair  <- pairWithContents specFilename
+    reprPairs <- mapM pairWithContents reprFilenames
 
-    let
-        (mgenerateds, glo) = runIdentity $ runCompE (conjureRepr spec reprs)
-        errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
-        generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    putStrLn $ renderPretty $ prettyLogs $ logs glo
-    unless (null errors)
-        $ error
-        $ show
-        $ prettyErrors "There were errors in at least one branch." errors
+    [spec ] <- runCompEIO (readSpec specPair)
+    [reprs] <- runCompEIO (mapM readRuleRepr reprPairs)
 
-    -- putStrLn ""
+    outSpecs <- runCompEIO (conjureRepr spec reprs)
+
     -- putStrLn "[ === Generated === ]"
     -- putStrLn ""
-    -- mapM_ (putStrLn . renderPretty) generateds
+    -- mapM_ (putStrLn . renderPretty) outSpecs
 
-    writeSpecs (dropExtEssence specFilename) "repr" generateds
+    -- writeSpecs (dropExtEssence specFilename) "repr" outSpecs
+    writeSpecs specFilename "repr" outSpecs

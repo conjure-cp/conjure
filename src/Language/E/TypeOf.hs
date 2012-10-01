@@ -65,11 +65,15 @@ test_TypeOf t = do
             print $ pretty x
             -- print $ prettyAsTree x
             let (results, globalSt) = runIdentity $ runCompE $ typeOf x
-            print $ prettyLogs $ logs globalSt
+            printLogs $ logs globalSt
             forM_ results $ \ (result, _) ->
                 case result of
                     Left  e -> error (show e)
                     Right y -> print $ pretty y
+
+
+typeErrorIn :: Monad m => E -> CompE m a
+typeErrorIn p = err ErrFatal $ "Type error in: " <+> prettyAsPaths p
 
 
 typeOf :: (Functor m, Monad m) => E -> CompE m E
@@ -164,39 +168,36 @@ typeOf p@[xMatch| xs := value.set.values |] = do
     (tx:txs) <- mapM typeOf xs
     if all (tx==) txs
         then return [xMake| type.set.inner := [tx] |]
-        else err ErrFatal $ "Type error in: " <+> pretty p
+        else typeErrorIn p
 
 typeOf   [xMatch| [] := value.mset.values |] = return [xMake| type.unknown := [] |]
 typeOf p@[xMatch| xs := value.mset.values |] = do
     (tx:txs) <- mapM typeOf xs
     if all (tx==) txs
         then return [xMake| type.mset.inner := [tx] |]
-        else err ErrFatal $ "Type error in: " <+> pretty p
+        else typeErrorIn p
 
 
 -- expressions
 
 typeOf p@[eMatch| &a = &b |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     tyb <- typeOf b
     if tya == tyb
         then return [xMake| type.bool := [] |]
-        else err'
+        else typeErrorIn p
 
 typeOf p@[eMatch| ! &a |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     case tya of
         [xMatch| [] := type.bool |] -> return [xMake| type.bool := [] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| toInt(&a) |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     case tya of
         [xMatch| [] := type.bool |] -> return [xMake| type.int := [] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverDom |] = typeOf i
 
@@ -227,20 +228,18 @@ typeOf [xMatch| [Prim (S "sum")] := quantified.quantifier.reference |] =
     return [xMake| type.int := [] |]
 
 typeOf p@[xMatch| [x] := operator.twoBars |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tx <- typeOf x
     case tx of
         [xMatch| [] := type.int |]                 -> return [xMake| type.int := [] |]
         [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
         [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [m,i'] := operator.indices |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     i <- case i' of
         [xMatch| [Prim (I i)] := value.literal |] -> return i
-        _ -> err'
+        _ -> typeErrorIn p
     tm <- typeOf m
 
     let
@@ -248,12 +247,11 @@ typeOf p@[xMatch| [m,i'] := operator.indices |] = do
                           |] = return indexTy
         getIndex n [xMatch| [innerTy] := type.matrix.inner
                           |] = getIndex (n-1) innerTy
-        getIndex _ _ = err'
+        getIndex _ _ = typeErrorIn p
 
     getIndex i tm
 
 typeOf p@[xMatch| [x] := operator.toSet |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.mset.inner |] -> return [xMake| type.set.inner := [innerTy] |]
@@ -262,10 +260,9 @@ typeOf p@[xMatch| [x] := operator.toSet |] = do
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.set.inner.type.tuple.inners := [innerFr,innerTo] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [x] := operator.toMSet |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.set.inner |] -> return [xMake| type.mset.inner := [innerTy] |]
@@ -274,10 +271,9 @@ typeOf p@[xMatch| [x] := operator.toMSet |] = do
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.mset.inner.type.tuple.inners := [innerFr,innerTo] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a intersect &b |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b
     case (ta, tb) of
@@ -285,16 +281,15 @@ typeOf p@[eMatch| &a intersect &b |] = do
             res <- typeUnify ia ib
             if res
                 then mostKnown ta tb
-                else err'
+                else typeErrorIn p
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
             res <- typeUnify ia ib
             if res
                 then mostKnown ta tb
-                else err'
-        _ -> err'
+                else typeErrorIn p
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a union &b |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b
     case (ta, tb) of
@@ -302,16 +297,15 @@ typeOf p@[eMatch| &a union &b |] = do
             res <- typeUnify ia ib
             if res
                 then mostKnown ta tb
-                else err'
+                else typeErrorIn p
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
             res <- typeUnify ia ib
             if res
                 then mostKnown ta tb
-                else err'
-        _ -> err'
+                else typeErrorIn p
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a - &b |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     tb <- typeOf b
     case (ta, tb) of
@@ -320,53 +314,50 @@ typeOf p@[eMatch| &a - &b |] = do
             res <- typeUnify ia ib
             if res
                 then mostKnown ta tb
-                else err'
+                else typeErrorIn p
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
             res <- typeUnify ia ib
             if res
                 then mostKnown ta tb
-                else err'
-        _ -> err'
+                else typeErrorIn p
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
                 |] | operator `elem` words "+ - * / %" = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
         ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
                 |] | operator `elem` words "/\\ \\/ => <=>" = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
         ( [xMatch| [] := type.bool |] , [xMatch| [] := type.bool |] ) -> return [xMake| type.bool := [] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| max(&a) |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     ta <- typeOf a
     case ta of
         [xMatch| [] := type.set.inner.type.int |] -> return [xMake| type.int := [] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| max(&a,&b) |] = do
     mkLog "in (max/2)" $ pretty a $$ pretty b
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
+    
     ta <- typeOf a
     mkLog "ta" $ pretty ta
     tb <- typeOf b
     mkLog "ta" $ pretty tb
     case (ta,tb) of
         ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf [xMatch| [i] := withLocals.actual
               | js  := withLocals.locals |] = mapM_ processStatement js >> typeOf i
@@ -374,51 +365,46 @@ typeOf [xMatch| [i] := withLocals.actual
 typeOf p@[xMatch| [f] := functionApply.actual
                 | [x] := functionApply.args
                 |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tyF <- typeOf f
     tyX <- typeOf x
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
                | [to] := type.function.innerTo
                |] | fr == tyX -> return to
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[eMatch| preImage(&f,&x) |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tyF <- typeOf f
     tyX <- typeOf x
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
                | [to] := type.function.innerTo
                |] | to == tyX -> return [xMake| type.set.inner := [fr] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [f] := operator.defined |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tyF <- typeOf f
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
                |] -> return [xMake| type.set.inner := [fr] |]   
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [f] := operator.range |] = do
-    let err' = err ErrFatal $ "Type error in:" <+> pretty p
     tyF <- typeOf f
     case tyF of
         [xMatch| [to] := type.function.innerTo
                |] -> return [xMake| type.set.inner := [to] |]
-        _ -> err'
+        _ -> typeErrorIn p
 
 typeOf p@[xMatch| [m] := operator.index.left
                 | [i] := operator.index.right
                 |] = do
-    let err' = err ErrFatal $ "{operator.index} Type error in:" <+> pretty p
+    -- mkLog "debug:typeOf p" $ pretty p
     tyM <- typeOf m
     tyI <- typeOf i
-    -- mkLog "debug:typeOf1" $ pretty p
-    -- mkLog "debug:typeOf2" $ pretty tyM
-    -- mkLog "debug:typeOf3" $ pretty tyI
-    result <- case tyM of
+    -- mkLog "debug:typeOf tyM" $ pretty tyM
+    -- mkLog "debug:typeOf tyI" $ pretty tyI
+    ret <- case tyM of
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
                |] | ind == tyI -> return inn
@@ -426,437 +412,14 @@ typeOf p@[xMatch| [m] := operator.index.left
             mint <- toInt i
             case mint of
                 Just int | int >= 1 && int <= genericLength ts -> return $ ts `genericIndex` (int - 1)
-                _ -> err'
-        _ -> err'
-    -- mkLog "debug:typeOf4" $ pretty result
-    return result
+                _ -> typeErrorIn p
+        _ -> typeErrorIn p
+    -- mkLog "debug:typeOf ret" $ pretty ret
+    return ret
 
 typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
 -- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
 
-
-
-
-
---     typeOf ( viewDeep [":metavar"] -> Just [R x] ) = typeOf ("@" `mappend` x)
--- 
---     typeOf ( viewDeep [":domain-in-expr"] -> Just [ d ] ) = typeOf d
---     typeOf ( viewDeep [":typed"]          -> Just [_,d] ) = typeOf d
--- 
---     typeOf ( viewDeep [":toplevel",":declaration",":find"]
---               -> Just [ Expr ":find-name" _
---                       , Expr ":find-domain" [domain]
---                       ]
---            ) = typeOf domain
--- 
---     typeOf p@( viewDeep [":type"] -> Just _) = return p
--- 
---     typeOf ( viewDeep [":empty-guard"] -> Just _ ) = return $ Expr ":type" [Expr ":type-bool" []]
--- 
---     typeOf p@(Expr ":range"  [d]) =
---         case d of
---             Expr ":range-open" []  -> errCannot p
---             Expr ":range-from" [x] -> do
---                 tx <- typeOf x
---                 return $
---                     Expr ":type"
---                         [ Expr ":type-range" [tx]
---                         ]
---             Expr ":range-to" [x] -> do
---                 tx <- typeOf x
---                 return $
---                     Expr ":type"
---                         [ Expr ":type-range" [tx]
---                         ]
---             Expr ":range-fromto" [x,y] -> do
---                 tx <- typeOf x
---                 ty <- typeOf y
---                 if tx == ty
---                     then return $
---                             Expr ":type"
---                                 [ Expr ":type-range" [tx]
---                                 ]
---                     else errMismatch "range" p
---             Expr ":range-single" [x] -> do
---                 tx <- typeOf x
---                 return $
---                     Expr ":type"
---                         [ Expr ":type-range" [tx]
---                         ]
---             _ -> errInvariant "range" p
---     typeOf p@(Expr ":domain" [d]) = do
---         x <- case d of
---             R r -> typeOf r
---             Expr ":domain-bool"   _  ->
---                 return $ Expr ":type-bool" []
---             Expr ":domain-int"    _  ->
---                 return $ Expr ":type-int"  []
---             Expr ":domain-enum"   xs ->
---                 case lookUpInExpr ":domain-enum-name" xs of
---                     Just [a] -> return $ Expr ":type-enum" [ Expr ":type-enum-name" [a] ]
---                     _ -> errInvariant "domain-enum" p
---             Expr ":domain-matrix" xs ->
---                 case ( lookUpInExpr ":domain-matrix-index" xs
---                      , lookUpInExpr ":domain-matrix-inner" xs
---                      ) of
---                          (Just [a], Just [b]) -> do
---                             ta <- typeOf a
---                             tb <- typeOf b
---                             return $
---                                 Expr ":type-matrix"
---                                     [ Expr ":type-matrix-index" [ta]
---                                     , Expr ":type-matrix-inner" [tb]
---                                     ]
---                          _ -> errInvariant "domain-matrix" p
---             Expr ":domain-tuple" [Expr ":domain-tuple-inners" xs] -> do
---                 txs <- mapM typeOf xs
---                 return $
---                     Expr ":type-tuple"
---                         [ Expr ":type-tuple-inners" txs
---                         ]
---             Expr ":domain-set" xs ->
---                 case lookUpInExpr ":domain-set-inner" xs of
---                     Just [a] -> do
---                         ta <- typeOf a
---                         return $
---                             Expr ":type-set"
---                                 [ Expr ":type-set-inner" [ta] ]
---                     _ -> errInvariant "domain-set" p
---             Expr ":domain-mset" xs ->
---                 case lookUpInExpr ":domain-mset-inner" xs of
---                     Just [a] -> do
---                         ta <- typeOf a
---                         return $
---                             Expr ":type-mset"
---                                 [ Expr ":type-mset-inner" [ta] ]
---                     _ -> errInvariant "domain-mset" p
---             Expr ":domain-function" xs ->
---                 case ( lookUpInExpr ":domain-function-innerfrom" xs
---                      , lookUpInExpr ":domain-function-innerto" xs
---                      ) of
---                          (Just [a], Just [b]) -> do
---                              ta <- typeOf a
---                              tb <- typeOf b
---                              return $
---                                 Expr ":type-function"
---                                     [ Expr ":type-function-innerfrom" [ta]
---                                     , Expr ":type-function-innerto" [tb]
---                                     ]
---                          _ -> errInvariant "domain-function" p
---             Expr ":domain-relation" xs ->
---                 case lookUpInExpr ":domain-relation-inners" xs of
---                     Just as -> do
---                         tas <- mapM typeOf as
---                         return $
---                             Expr ":type-relation"
---                                 [ Expr ":type-relation-inners" tas
---                                 ]
---                     _ -> errInvariant "domain-relation" p
---             Expr ":domain-partition" xs ->
---                 case lookUpInExpr ":domain-partition-inner" xs of
---                     Just [a] -> do
---                         ta <- typeOf a
---                         return $
---                             Expr ":type-partition"
---                                 [ Expr ":type-partition-inner" [ta]
---                                 ]
---                     _ -> errInvariant "domain-partition" p
---             _ -> errInvariant "domain" p
---         return $ Expr ":type" [x]
---     typeOf p@(Expr ":value"  [d]) =
---         case d of
---             Expr ":value-literal" [L x] -> typeOf x
---             Expr ":value-matrix" xs ->
---                 case ( lookUpInExpr ":value-matrix-indexrange"  xs
---                      , lookUpInExpr ":value-matrix-values" xs
---                      ) of
---                          (Just [a], Just ys) -> do
---                              ta  <- typeOf a
---                              tys <- mapM typeOf ys
---                              case tys of
---                                  [] -> errCannot p
---                                  (i:is) ->
---                                     if all (i==) is
---                                         then return $
---                                                 Expr ":type"
---                                                     [ Expr ":type-matrix"
---                                                         [ Expr ":type-matrix-indexrange" [ta]
---                                                         , Expr ":type-matrix-values"     [i]
---                                                         ]
---                                                     ]
---                                         else errMismatch "value" p
---                          (Nothing, Just ys) -> do
---                              tys <- mapM typeOf ys
---                              case tys of
---                                  [] -> errCannot p
---                                  (i:is) ->
---                                     if all (i==) is
---                                         then return $
---                                                 Expr ":type"
---                                                     [ Expr ":type-matrix"
---                                                         [Expr ":type-matrix-values" [i]]
---                                                     ]
---                                         else errMismatch "value" p
---                          _ -> errInvariant "value-matrix" p
---             Expr ":value-tuple" xs -> do
---                 txs <- mapM typeOf xs
---                 return $
---                     Expr ":type"
---                         [ Expr ":type-tuple" txs
---                         ]
---             Expr ":value-set" xs -> do
---                 txs <- mapM typeOf xs
---                 case txs of
---                     [] -> return $ Expr ":type" [
---                                    Expr ":type-set" [
---                                    Expr ":type-set-inner" [
---                                    Expr ":type" [
---                                    Expr ":type-unknown" [
---                                    ]]]]]
---                     (i:is) -> do
---                         flags <- mapM (typeUnify i) is
---                         if and flags
---                             then return $ Expr ":type" [
---                                           Expr ":type-set" [
---                                           Expr ":type-set-inner" [i]
---                                           ]]
---                             else errMismatch "value-set" p
---             Expr ":value-mset" xs -> do
---                 txs <- mapM typeOf xs
---                 case txs of
---                     [] -> return $ Expr ":type" [
---                                    Expr ":type-mset" [
---                                    Expr ":type-mset-inner" [
---                                    Expr ":type" [
---                                    Expr ":type-unknown" [
---                                    ]]]]]
---                     (i:is) -> do
---                         flags <- mapM (typeUnify i) is
---                         if and flags
---                             then return $ Expr ":type" [
---                                           Expr ":type-mset" [
---                                           Expr ":type-mset-inner" [i]
---                                           ]]
---                             else errMismatch "value-mset" p
---             Expr ":value-function" xs -> do
---                 let
---                     getOut (Expr ":value-function-mapping" [a,b]) = do
---                         ta <- typeOf a
---                         tb <- typeOf b
---                         return (ta,tb)
---                     getOut _ = errInvariant "value-function" p
---                 ys <- mapM getOut xs
---                 case ys of
---                     [] -> errCannot p
---                     (i@(a,b):is) ->
---                         if all (i==) is
---                             then return $ Expr ":type" [Expr ":type-function" [a,b]]
---                             else errMismatch "value-function" p
---             Expr ":value-relation" xs -> do
---                 txs <- mapM typeOf xs
---                 case txs of
---                     [] -> errCannot p
---                     (i:is) ->
---                         if all (i==) is
---                             then return $ Expr ":type" [Expr ":type-relation" [i]]
---                             else errMismatch "value-relation" p
---             Expr ":value-partition" xs -> do
---                 let
---                     getOut (Expr ":value-partition-part" as) = do
---                         tas <- mapM typeOf as
---                         case tas of
---                             [] -> errCannot p
---                             (i:is) ->
---                                 if all (i==) is
---                                     then return $ Expr ":type" [i]
---                                     else errMismatch "value-partition" p
---                     getOut _ = errInvariant "value-partition" p
---                 ys <- mapM getOut xs
---                 case ys of
---                     [] -> errCannot p
---                     (i:is) ->
---                         if all (i==) is
---                             then return $
---                                     Expr ":type"
---                                         [ Expr ":type-partition"
---                                             [ Expr ":type-partition-inner" [i]
---                                             ]
---                                         ]
---                             else errMismatch "value-partition" p
---             _ -> errInvariant "value" p
--- 
---     typeOf p@( Expr ":quanVar" [ Expr ":quanVar-name" _
---                                , Expr ":quanVar-within"
---                                     [ Expr ":expr-quantified" xs ]
---                                ]
---              ) = do
---         let
---             quanOverDom'  = lookUpInExpr ":expr-quantified-quanOverDom"   xs
---             quanOverOp'   = lookUpInExpr ":expr-quantified-quanOverOp"    xs
---             quanOverExpr' = lookUpInExpr ":expr-quantified-quanOverExpr"  xs
---         case (quanOverDom', quanOverOp', quanOverExpr') of
---             (Just [quanOverDom], Nothing, Nothing) ->
---                 typeOf quanOverDom
---             (Nothing, Just [Expr ":operator-in" []], Just [x]) -> do
---                 tx <- typeOf x
---                 bs <- gets binders
---                 -- mkLog ":typeOf-before-innerTypeOf" $ vcat [ pretty p
---                 --                                           , "--"
---                 --                                           , pretty x
---                 --                                           , "--"
---                 --                                           , pretty tx
---                 --                                           , stringToDoc $ show [ r | Binder (Reference r) _ <- bs ]
---                 --                                           ]
---                 r <- innerTypeOf (vcat ["here", pretty x, pretty tx]) tx
---                 -- mkLog ":typeOf-after-innerTypeOf" $ pretty r
---                 return r
---             (Nothing, Just [Expr ":operator-subset" []], Just [x]) -> do
---                 tx <- typeOf x
---                 return tx
---             (Nothing, Just [Expr ":operator-subsetEq" []], Just [x]) -> do
---                 tx <- typeOf x
---                 return tx
---             _ -> errInvariant "quanVar" p
--- 
---     typeOf p@( viewDeep [":expr-quantified"] -> Just xs )
---         | Just [ R quantifier           ] <- lookUpInExpr ":expr-quantified-quantifier"   xs
---         , Just [ Expr ":structural-single" [R r]
---                ]                          <- lookUpInExpr ":expr-quantified-quanVar"      xs
---         , Just [ qnGuard ]                <- lookUpInExpr ":expr-quantified-guard"        xs
---         , Just [ qnBody  ]                <- lookUpInExpr ":expr-quantified-body"         xs
---         = do
---             bindersBefore <- gets binders
---             let restoreState = modify $ \ st -> st { binders = bindersBefore }
---             addBinder r
---                     $ Expr ":quanVar" [ Expr ":quanVar-name"   [R r]
---                                       , Expr ":quanVar-within" [p]
---                                       ]
---             tyGuard    <- typeOf qnGuard
---             tyBody     <- typeOf qnBody
--- 
---             unless (tyGuard == Expr ":type" [Expr ":type-bool" []])
---                 $ errMismatch "guard must be a boolean expression" p
--- 
---             result <- case () of
---                 _ | quantifier `elem` ["forAll", "exists"] -> do
---                     unless (tyBody == Expr ":type" [Expr ":type-bool" []])
---                         $ errMismatch "body must be a boolean expression" p
---                     return $ Expr ":type" [Expr ":type-bool" []]
---                 _ | quantifier == "sum" -> do
---                     unless (tyBody == Expr ":type" [Expr ":type-int" []])
---                         $ errMismatch "body must be an integer expression" p
---                     return $ Expr ":type" [Expr ":type-int" []]
---                 _ -> errInvariant "typeOf" p
--- 
---             restoreState
---             -- mkLog "debug" $ vcat [ pretty p, pretty result ]
---             return result
--- 
---     typeOf _p@( viewDeep [":operator-toSet"]
---                  -> Just [a]
---               ) = do
---         ta <- typeOf a
---         let
---             checkAndReturn ( viewDeep [":type",":type-mset",":type-mset-inner"] -> Just [b] )
---                 = return $ Expr ":type"
---                          [ Expr ":type-set"
---                          [ Expr ":type-set-inner" [b]]]
---             checkAndReturn q = errInvariant "toSet" q
---         checkAndReturn ta
--- 
---     typeOf _p@( viewDeep [":operator-twobars"]
---                  -> Just [a]
---               ) = do
---         ta <- typeOf a
---         let
---             checkAndReturn  q@( viewDeep [":type",":type-int"] -> Just _ )
---                 = return q
---             checkAndReturn _q@( viewDeep [":type",":type-set"] -> Just _ )
---                 = return $ Expr ":type" [Expr ":type-int"  []]
---             checkAndReturn _q@( viewDeep [":type",":type-mset"] -> Just _ )
---                 = return $ Expr ":type" [Expr ":type-int"  []]
---             checkAndReturn  q = errInvariant "twobars" q
---         checkAndReturn ta
--- 
---     typeOf p@( viewDeep [":operator-toInt"]
---                 -> Just [a]
---              ) = do
---         ta <- typeOf a
---         flag <- typeUnify ta $ Expr ":type" [Expr ":type-bool" []]
---         if flag
---             then return $ Expr ":type" [Expr ":type-int" []]
---             else errMismatch "expecting a boolean expression inside toInt" p
--- 
---     typeOf p@( viewDeep [":operator-union"]
---                 -> Just [a,b]
---              ) = do
---         ta <- typeOf a
---         tb <- typeOf b
---         flag <- typeUnify ta tb
---         if flag
---             then return ta
---             else errMismatch "operator-union" p
--- 
---     typeOf p@( viewDeep [":operator-intersect"]
---                 -> Just [a,b]
---              ) = do
---         ta <- typeOf a
---         tb <- typeOf b
---         flag <- typeUnify ta tb
---         if flag
---             then return ta
---             else errMismatch "operator-intersect" p
--- 
---     typeOf p@( viewDeep [":operator-+"] -> Just [a,b] ) = intToIntToInt p a b
---     typeOf p@( viewDeep [":operator-*"] -> Just [a,b] ) = intToIntToInt p a b
---     typeOf p@( viewDeep [":operator-/"] -> Just [a,b] ) = intToIntToInt p a b
---     typeOf p@( viewDeep [":operator-%"] -> Just [a,b] ) = intToIntToInt p a b
--- 
---     -- Int -> Int -> Int
---     -- set of a -> set of a -> set of a
---     -- mset of a -> mset of a -> mset of a
---     typeOf p@( viewDeep [":operator--"]
---                 -> Just [a,b]
---              ) = do
---         ta <- typeOf a
---         tb <- typeOf b
---         flag <- typeUnify ta tb
---         if not flag
---             then errMismatch "operator (-)" p
---             else do
---                 let
---                     checkAndReturn q@( viewDeep [":type",":type-int" ] -> Just [ ]) = return q
---                     checkAndReturn q@( viewDeep [":type",":type-set" ] -> Just [_]) = return q
---                     checkAndReturn q@( viewDeep [":type",":type-mset"] -> Just [_]) = return q
---                     checkAndReturn q = errMismatch "checkAndReturn" q
---                 checkAndReturn ta
--- 
---     typeOf p = do
---         mkLog "typeOf" $ "catch all case" <++> pretty p
---         return $ Expr ":type" [Expr ":type-unknown" []]
--- 
--- instance TypeOf Literal where
---     typeOf (B {}) = return $ Expr ":type" [Expr ":type-bool" []]
---     typeOf (I {}) = return $ Expr ":type" [Expr ":type-int"  []]
--- 
--- instance TypeOf Reference where
---     typeOf "_" = return $ Expr ":type" [Expr ":type-unknown" []]
---     typeOf r = do
---         val <- lookUpRef r
---         typeOf val
--- 
--- intToIntToInt :: (Monad m, Functor m, Pretty a, TypeOf a) => a -> a -> a -> CompT m Core
--- intToIntToInt p a b = do
---     ta <- typeOf a
---     tb <- typeOf b
---     flag <- typeUnify ta tb
---     if not flag
---         then errMismatch "intToIntToInt" p
---         else do
---             let
---                 checkAndReturn q@( viewDeep [":type",":type-int" ] -> Just [ ]) = return q
---                 checkAndReturn _ = errMismatch "intToIntToInt.checkAndReturn" p
---             checkAndReturn ta
 
 
 innerTypeOf :: Monad m => Doc -> E -> CompE m E
@@ -864,17 +427,3 @@ innerTypeOf _ [xMatch| [ty] := type. set.inner |] = return ty
 innerTypeOf _ [xMatch| [ty] := type.mset.inner |] = return ty
 innerTypeOf doc p = err ErrFatal $ vcat [ "innerTypeOf", pretty p, doc ]
 
--- typeUnify :: (Functor m, Monad m) => Core -> Core -> CompT m Bool
--- typeUnify (viewDeep [":type",":type-unknown"] -> Just []) _ = return True
--- typeUnify _ (viewDeep [":type",":type-unknown"] -> Just []) = return True
--- typeUnify (Expr t1 xs1) (Expr t2 xs2)
---     | t1 == t2
---     , length xs1 == length xs2
---     = and <$> zipWithM typeUnify xs1 xs2
--- typeUnify x y = do
---     mkLog "typeUnify" $ "default case" <++>
---                         vcat [ pretty x
---                              , "~~"
---                              , pretty y
---                              ]
---     return $ x == y

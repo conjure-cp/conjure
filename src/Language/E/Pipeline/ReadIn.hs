@@ -3,7 +3,7 @@
 module Language.E.Pipeline.ReadIn where
 
 import Language.E
-import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 
 import qualified Data.Set as S
 import System.Directory ( createDirectoryIfMissing )
@@ -15,17 +15,12 @@ readSpec :: (Functor m, Monad m)
 readSpec (fp,con) =
     case runLexerAndParser parseSpec fp con of
         Left  e -> err ErrFatal e
-        Right x@(Spec _ statements) -> do
-            let names = [ nm
-                        | statement <- statements
-                        , [xMatch| [Prim (S nm)] := reference |] <- universe statement
-                        ]
-            modifyGlobal $ \ st -> st { allNamesPreConjure = S.fromList names }
-            return $! atMostOneSuchThat x
+        Right x -> initialiseSpecState x >> return x
 
 
 fixRulename :: String -> String
 fixRulename = intercalate "/" . reverse . take 2 . reverse . splitOn "/"
+
 
 readRuleRefn :: (Functor m, Monad m)
     => (FilePath, Text)
@@ -34,6 +29,7 @@ readRuleRefn (fp,con) =
     case runLexerAndParser (parseRuleRefn $ fixRulename fp) fp con of
         Left  e -> err ErrFatal e
         Right x -> return x
+
 
 readRuleRepr :: (Functor m, Monad m)
     => (FilePath, Text)

@@ -10,7 +10,7 @@ module Language.E.Definition
     , Spec(..), Version, E, BuiltIn(..)
     , RuleRefn, RuleRepr, RuleReprCase
 
-    , CompE, runCompE
+    , CompE, runCompE, runCompEIO
 
     , LocalState(..), GlobalState(..), Binder(..)
     , addBinder, lookupBinder, nextUniqueName, mkLog
@@ -74,6 +74,17 @@ type CompE m a = FunkyT LocalState GlobalState CompError m a
 
 runCompE :: Monad m => CompE m a -> m ([(Either CompError a, LocalState)], GlobalState)
 runCompE = runFunkyT def def
+
+runCompEIO :: CompE Identity a -> IO [a]
+runCompEIO comp = do
+    let
+        (mgenerateds, glo) = runIdentity $ runCompE comp
+        errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
+        generateds = [ x  | (Right x, _ ) <- mgenerateds ]
+    printLogs $ logs glo
+    if null errors
+        then return generateds
+        else error $ show $ prettyErrors "There were errors." errors
 
 
 -- errors

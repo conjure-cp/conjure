@@ -22,27 +22,17 @@ main = do
     -- when (null refnFilenames)
     --     $ error "Warning: no *.rule file is given."
 
-    let reprFilenames = filter (".repr" `isSuffixOf`) args
-    -- when (null reprFilenames)
-    --     $ error "Warning: no *.repr file is given."
+    specPair  <- pairWithContents specFilename
+    refnPairs <- mapM pairWithContents refnFilenames
 
-    spec    <- pairWithContents specFilename
-    rules   <- mapM pairWithContents refnFilenames
-    reprs   <- mapM pairWithContents reprFilenames
+    [spec ] <- runCompEIO (readSpec specPair)
+    [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
-    let
-        (mgenerateds, glo) = runIdentity $ runCompE (conjureRefn spec rules reprs)
-        errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
-        generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    putStrLn $ renderPretty $ prettyLogs $ logs glo
-    unless (null errors)
-        $ error
-        $ show
-        $ prettyErrors "There were errors in at least one branch." errors
+    outSpecs <- runCompEIO (conjureRefn spec refns)
 
-    -- putStrLn ""
     -- putStrLn "[ === Generated === ]"
     -- putStrLn ""
-    -- mapM_ (putStrLn . renderPretty) generateds
+    -- mapM_ (putStrLn . renderPretty) outSpecs
 
-    writeSpecs (dropExtEssence specFilename) "refn" generateds
+    -- writeSpecs (dropExtEssence specFilename) "refn" outSpecs
+    writeSpecs specFilename "refn" outSpecs

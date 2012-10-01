@@ -18,13 +18,14 @@ main = do
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
 
-    spec    <- pairWithContents specFilename
+    specPair <- pairWithContents specFilename
+    [spec]   <- runCompEIO (readSpec specPair)
 
     let
         (mgenerateds, glo) = runIdentity $ runCompE (conjureNoGuards spec)
         errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
         generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    print $ prettyLogs $ logs glo
+    printLogs $ logs glo
     unless (null errors)
         $ error
         $ show

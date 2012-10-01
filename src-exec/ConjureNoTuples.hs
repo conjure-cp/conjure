@@ -24,7 +24,7 @@ main = do
         (mgenerateds, glo) = runIdentity $ runCompE (conjureNoTuples spec)
         errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
         generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    print $ prettyLogs $ logs glo
+    printLogs $ logs glo
     unless (null errors)
         $ error
         $ show
