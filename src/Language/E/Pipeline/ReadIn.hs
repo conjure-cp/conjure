@@ -5,7 +5,6 @@ module Language.E.Pipeline.ReadIn where
 import Language.E
 import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 
-import qualified Data.Set as S
 import System.Directory ( createDirectoryIfMissing )
 
 
@@ -19,7 +18,7 @@ readSpec (fp,con) =
 
 
 fixRulename :: String -> String
-fixRulename = intercalate "/" . reverse . take 2 . reverse . splitOn "/"
+fixRulename = intercalate "/" . dropWhile (/="rules") . splitOn "/"
 
 
 readRuleRefn :: (Functor m, Monad m)
