@@ -47,3 +47,6 @@ clean:
 	-find . -name "*.o-boot" -delete
 	-cabal clean
 	-ghc-pkg unregister conjure-cp
+
+mate:
+	mate conjure-cp.cabal Makefile src src-exec testsuite EssenceCatalog
