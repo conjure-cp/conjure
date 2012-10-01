@@ -4,13 +4,13 @@ $ Problem details available at http://www.csplib.org/prob/prob002/
 $ 05 September 2007
 $
 
-given n_designs, n_slots : int(1..)
+given n_designs, n_slots, n_quantity, n_Design_Quant : int(1..)
 
 letting Design be domain int(1..n_designs)
 
-given quantity : function (total) Design --> int(1..)
+given quantity : function (total) Design --> int(1..n_quantity)
 
-letting Design_Quant be domain int(1..max(range(quantity)))
+letting Design_Quant be domain int(1..n_Design_Quant)
 
 find layout : function mset (size n_slots) of Design --> Design_Quant
 
