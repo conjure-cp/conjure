@@ -1,0 +1,9 @@
+
+&quan &i in toSet(&f), &g . &b
+
+    ~~>
+
+&quan &i in toSet(refn(&f)) , &g . &b
+
+    where &f hasType   `function _ --> _`
+    where &f hasRepr    AsReln

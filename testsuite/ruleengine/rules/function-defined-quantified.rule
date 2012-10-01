@@ -1,0 +1,9 @@
+
+&quan &i in defined(&f), &g . &b
+
+    ~~>
+
+&quan j in toSet(&f) , &g { &i --> j[1] }
+                     . &b { &i --> j[1] }
+
+    where &f hasType   `function _ --> _`
