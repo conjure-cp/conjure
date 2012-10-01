@@ -1,4 +1,3 @@
 #!/bin/sh
 
-# clear
-conjure-refn `find ~/src/conjure-wd/testsuite/ruleengine/rules -name "*.rule"` $@
+conjure-refn `find testsuite/ruleengine/rules -name "*.rule"` $@
