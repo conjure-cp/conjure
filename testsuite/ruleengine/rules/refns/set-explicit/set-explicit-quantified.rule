@@ -1,0 +1,13 @@
+
+&quan &i in &s , &g . &k
+
+~~>
+
+&quan j : &r , &g { &i --> &m[j] }
+             . &k { &i --> &m[j] }
+
+    where &s hasType `set of _`
+    where &s hasRepr Explicit
+
+    letting &m be refn(&s)
+    letting &r be indices(&m,0)
