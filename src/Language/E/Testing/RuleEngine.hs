@@ -7,6 +7,7 @@ module Language.E.Testing.RuleEngine where
 import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRefn ( conjureRefn )
+import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
 import Prelude hiding ( mapM )
 import Data.Traversable ( mapM )
@@ -22,37 +23,37 @@ import Test.HUnit ( assertFailure )
 testSetIn :: IO ()
 testSetIn = void $ loadAndApply
         "testsuite/ruleengine/specs/setIn.essence"
-        [ "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
 
 testSetEq1 :: IO ()
 testSetEq1 = void $ loadAndApply
         "testsuite/ruleengine/specs/setEq.essence"
-        [ "testsuite/ruleengine/rules/set-eq.rule"
+        [ "testsuite/ruleengine/rules/refns/set-eq.rule"
         ]
 
 testSetEq2 :: IO ()
 testSetEq2 = void $ loadAndApply
         "testsuite/ruleengine/specs/setEq.essence"
-        [ "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
+        [ "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
         ]
 
 testSetEq3 :: IO ()
 testSetEq3 = void $ loadAndApply
         "testsuite/ruleengine/specs/setEq.essence"
-        [ "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
         ]
 
 testSetEq4 :: IO ()
 testSetEq4 = void $ loadAndApply
         "testsuite/ruleengine/specs/setEq.essence"
-        [ "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
 
 
@@ -64,73 +65,73 @@ testSetNeq0 = void $ loadAndApply
 testSetNeq1 :: IO ()
 testSetNeq1 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
         ]
 
 testSetNeq2 :: IO ()
 testSetNeq2 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
         ]
 
 testSetNeq3 :: IO ()
 testSetNeq3 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
         ]
 
 testSetNeq4 :: IO ()
 testSetNeq4 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
         ]
 
 testSetNeq5 :: IO ()
 testSetNeq5 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
 
 testSetNeq6 :: IO ()
 testSetNeq6 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-100-Plus.rule"
         ]
 
 testSetNeq7 :: IO ()
 testSetNeq7 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         ]
 
 testSetNeq8 :: IO ()
 testSetNeq8 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
         ]
@@ -138,11 +139,11 @@ testSetNeq8 = void $ loadAndApply
 testSetNeq9 :: IO ()
 testSetNeq9 = void $ loadAndApply
         "testsuite/ruleengine/specs/setNeq.essence"
-        [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Minus.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
@@ -153,35 +154,35 @@ testSetNeq9 = void $ loadAndApply
 testSetMax1 :: IO ()
 testSetMax1 = void $ loadAndApply
         "testsuite/ruleengine/specs/setMax.essence"
-        [ "testsuite/ruleengine/rules/set-max.rule"
+        [ "testsuite/ruleengine/rules/refns/set-max.rule"
         ]
 
 testSetMax2 :: IO ()
 testSetMax2 = void $ loadAndApply
         "testsuite/ruleengine/specs/setMax.essence"
-        [ "testsuite/ruleengine/rules/set-max.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-max.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
 
 testSetMin1 :: IO ()
 testSetMin1 = void $ loadAndApply
         "testsuite/ruleengine/specs/setMin.essence"
-        [ "testsuite/ruleengine/rules/set-min.rule"
+        [ "testsuite/ruleengine/rules/refns/set-min.rule"
         ]
 
 testSetMin2 :: IO ()
 testSetMin2 = void $ loadAndApply
         "testsuite/ruleengine/specs/setMin.essence"
-        [ "testsuite/ruleengine/rules/set-min.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-min.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
 
 testSetMaxInObj :: IO ()
 testSetMaxInObj = void $ loadAndApply
         "testsuite/ruleengine/specs/setMaxInObj.essence"
-        [ "testsuite/ruleengine/rules/set-max.rule"
-        , "testsuite/ruleengine/rules/set-min.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+        [ "testsuite/ruleengine/rules/refns/set-max.rule"
+        , "testsuite/ruleengine/rules/refns/set-min.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
 
 testSetIntersect1 :: IO ()
@@ -194,7 +195,7 @@ loadAndApply specFilename refnFilenames = do
     refnPairs <- mapM pairWithContents refnFilenames
 
     [spec]  <- runCompEIO (readSpec specPair)
-    [refns] <- concat <$> runCompEIO (mapM readRuleRefn refnPairs)
+    [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
     let
         (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn spec refns)
@@ -220,8 +221,8 @@ buildTests params = describe "rule engine" $
             outputPairs <- mapM pairWithContents outputs'
 
             [spec]      <- runCompEIO (readSpec specPair)
-            [rules]     <- concat <$> runCompEIO (mapM readRuleRefn rulePairs)
-            [expecteds] <- runCompEIO (mapM readSpec outputPairs)
+            [rules]     <- runCompEIO (concat <$> mapM readRuleRefn rulePairs)
+            [expecteds] <- runCompEIO (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
 
             let
                 (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn spec rules)
@@ -276,7 +277,7 @@ testData =
       ,   "testsuite/ruleengine/specs/setIn.essence"
       , [ "testsuite/ruleengine/specs/out/testSetIn.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -292,7 +293,7 @@ testData =
       ,   "testsuite/ruleengine/specs/setEq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetEq1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
         ]
       )
 
@@ -300,8 +301,8 @@ testData =
       ,   "testsuite/ruleengine/specs/setEq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetEq2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
         ]
       )
 
@@ -309,9 +310,9 @@ testData =
       ,   "testsuite/ruleengine/specs/setEq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetEq3.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
         ]
       )
 
@@ -319,10 +320,10 @@ testData =
       ,   "testsuite/ruleengine/specs/setEq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetEq4.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -347,7 +348,7 @@ testData =
       ,   "testsuite/ruleengine/specs/setNeq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetNeq1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
         ]
       )
 
@@ -355,8 +356,8 @@ testData =
       ,   "testsuite/ruleengine/specs/setNeq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetNeq2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
         ]
       )
 
@@ -364,9 +365,9 @@ testData =
       ,   "testsuite/ruleengine/specs/setNeq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetNeq3.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
         ]
       )
 
@@ -374,10 +375,10 @@ testData =
       ,   "testsuite/ruleengine/specs/setNeq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetNeq4.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
         ]
       )
 
@@ -385,11 +386,11 @@ testData =
       ,   "testsuite/ruleengine/specs/setNeq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetNeq5.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -397,11 +398,11 @@ testData =
       ,   "testsuite/ruleengine/specs/setNeq.essence"
       , [ "testsuite/ruleengine/specs/out/testSetNeq6.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-100-Plus.rule"
         ]
       )
@@ -411,11 +412,11 @@ testData =
       , [ "testsuite/ruleengine/specs/out/testSetNeq7-" ++ show i ++ ".essence"
         | i <- [ (1::Int) .. 4 ]
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         ]
       )
@@ -425,11 +426,11 @@ testData =
       , [ "testsuite/ruleengine/specs/out/testSetNeq8-" ++ show i ++ ".essence"
         | i <- [ (1::Int) .. 9 ]
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
         ]
@@ -440,11 +441,11 @@ testData =
       , [ "testsuite/ruleengine/specs/out/testSetNeq9-" ++ show i ++ ".essence"
         | i <- [ (1::Int) .. 36 ]
         ]
-      , [ "testsuite/ruleengine/rules/set-neq-to-eq.rule"
-        , "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-neq-to-eq.rule"
+        , "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Plus.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Minus.rule"
         , "testsuite/ruleengine/rules-bogus/set-subseteq-to-quantified-1000-Times.rule"
@@ -458,7 +459,7 @@ testData =
       ,   "testsuite/ruleengine/specs/setMax.essence"
       , [ "testsuite/ruleengine/specs/out/testSetMax1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-max.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-max.rule"
         ]
       )
 
@@ -466,8 +467,8 @@ testData =
       ,   "testsuite/ruleengine/specs/setMax.essence"
       , [ "testsuite/ruleengine/specs/out/testSetMax2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-max.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-max.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -476,7 +477,7 @@ testData =
       ,   "testsuite/ruleengine/specs/setMin.essence"
       , [ "testsuite/ruleengine/specs/out/testSetMin1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-min.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-min.rule"
         ]
       )
 
@@ -484,8 +485,8 @@ testData =
       ,   "testsuite/ruleengine/specs/setMin.essence"
       , [ "testsuite/ruleengine/specs/out/testSetMin2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-min.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-min.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -494,9 +495,9 @@ testData =
       ,   "testsuite/ruleengine/specs/setMaxInObj.essence"
       , [ "testsuite/ruleengine/specs/out/testSetMaxInObj.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-max.rule"
-        , "testsuite/ruleengine/rules/set-min.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-max.rule"
+        , "testsuite/ruleengine/rules/refns/set-min.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -505,11 +506,11 @@ testData =
       , "testsuite/ruleengine/specs/setIntersect.essence"
       , [ "testsuite/ruleengine/specs/out/testSetIntersect1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-intersect-quantifier.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-intersect-quantifier.rule"
         ]
       )
 
@@ -517,13 +518,13 @@ testData =
       , "testsuite/ruleengine/specs/setUnion.essence"
       , [ "testsuite/ruleengine/specs/out/testSetUnion1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-intersect-quantifier.rule"
-        , "testsuite/ruleengine/rules/set-union-forAll.rule"
-        , "testsuite/ruleengine/rules/set-union-exists.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-intersect-quantifier.rule"
+        , "testsuite/ruleengine/rules/refns/set-union-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/set-union-exists.rule"
         ]
       )
 
@@ -531,11 +532,11 @@ testData =
       , "testsuite/ruleengine/specs/setMinus.essence"
       , [ "testsuite/ruleengine/specs/out/testSetMinus1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/set-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
-        , "testsuite/ruleengine/rules/set-minus-quantifier.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/set-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/set-minus-quantifier.rule"
         ]
       )
 
@@ -543,8 +544,8 @@ testData =
       , "testsuite/ruleengine/specs/setCard.essence"
       , [ "testsuite/ruleengine/specs/out/testSetCard1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-card.rule"
-        , "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-card.rule"
+        , "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -552,7 +553,7 @@ testData =
       , "testsuite/ruleengine/specs/setToMSet.essence"
       , [ "testsuite/ruleengine/specs/out/testSetToMSet1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/set-toMSet-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-toMSet-to-quantified.rule"
         ]
       )
 
@@ -561,7 +562,7 @@ testData =
     , ( "msetIn-0"
       , "testsuite/ruleengine/specs/msetIn.essence"
       , [ ]
-      , [ "testsuite/ruleengine/rules/set-in-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-in-to-quantified.rule"
         ]
       )
 
@@ -569,15 +570,15 @@ testData =
       , "testsuite/ruleengine/specs/msetIn.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIn1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-in.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-in.rule"
         ]
       )
 
     , ( "msetEq-0"
       , "testsuite/ruleengine/specs/msetEq.essence"
       , [ ]
-      , [ "testsuite/ruleengine/rules/set-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/set-supseteq-to-subseteq.rule"
+      , [ "testsuite/ruleengine/rules/refns/set-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/set-supseteq-to-subseteq.rule"
         ]
       )
 
@@ -585,9 +586,9 @@ testData =
       , "testsuite/ruleengine/specs/msetEq.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetEq1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
         ]
       )
 
@@ -595,8 +596,8 @@ testData =
       , "testsuite/ruleengine/specs/msetCard.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetCard1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-card.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-card.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
         ]
       )
 
@@ -605,13 +606,13 @@ testData =
       , "testsuite/ruleengine/specs/msetIntersect1.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIntersect1-1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-forAll.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-exists.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-sum.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-exists.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-sum.rule"
         ]
       )
 
@@ -619,14 +620,14 @@ testData =
       , "testsuite/ruleengine/specs/msetIntersect1.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIntersect1-2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-forAll.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-exists.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-sum.rule"
-        , "testsuite/ruleengine/rules/mset-freq-to-sum.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-exists.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-sum.rule"
+        , "testsuite/ruleengine/rules/refns/mset-freq-to-sum.rule"
         ]
       )
 
@@ -634,14 +635,14 @@ testData =
       , "testsuite/ruleengine/specs/msetIntersect2.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIntersect2-1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-forAll.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-exists.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-sum.rule"
-        , "testsuite/ruleengine/rules/mset-card.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-exists.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-sum.rule"
+        , "testsuite/ruleengine/rules/refns/mset-card.rule"
         ]
       )
 
@@ -649,15 +650,15 @@ testData =
       , "testsuite/ruleengine/specs/msetIntersect2.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIntersect2-2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-forAll.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-exists.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-sum.rule"
-        , "testsuite/ruleengine/rules/mset-card.rule"
-        , "testsuite/ruleengine/rules/mset-freq-to-sum.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-exists.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-sum.rule"
+        , "testsuite/ruleengine/rules/refns/mset-card.rule"
+        , "testsuite/ruleengine/rules/refns/mset-freq-to-sum.rule"
         ]
       )
 
@@ -665,13 +666,13 @@ testData =
       , "testsuite/ruleengine/specs/msetIntersect3.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIntersect3-1.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-forAll.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-exists.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-sum.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-exists.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-sum.rule"
         ]
       )
 
@@ -679,14 +680,14 @@ testData =
       , "testsuite/ruleengine/specs/msetIntersect3.essence"
       , [ "testsuite/ruleengine/specs/out/testMSetIntersect3-2.essence"
         ]
-      , [ "testsuite/ruleengine/rules/mset-eq-to-subsets.rule"
-        , "testsuite/ruleengine/rules/mset-supseteq-to-subseteq.rule"
-        , "testsuite/ruleengine/rules/mset-subseteq-to-quantified.rule"
-        , "testsuite/ruleengine/rules/mset-in.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-forAll.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-exists.rule"
-        , "testsuite/ruleengine/rules/mset-intersect-sum.rule"
-        , "testsuite/ruleengine/rules/mset-freq-to-sum.rule"
+      , [ "testsuite/ruleengine/rules/refns/mset-eq-to-subsets.rule"
+        , "testsuite/ruleengine/rules/refns/mset-supseteq-to-subseteq.rule"
+        , "testsuite/ruleengine/rules/refns/mset-subseteq-to-quantified.rule"
+        , "testsuite/ruleengine/rules/refns/mset-in.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-forAll.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-exists.rule"
+        , "testsuite/ruleengine/rules/refns/mset-intersect-sum.rule"
+        , "testsuite/ruleengine/rules/refns/mset-freq-to-sum.rule"
         ]
       )
 
@@ -773,7 +774,7 @@ testData =
 
 
 allrules :: [FilePath]
-allrules = map ("testsuite/ruleengine/rules/"++)
+allrules = map ("testsuite/ruleengine/rules/refns/"++)
             [ "toInt-eq-0.rule"
             , "toInt-eq-1.rule"
             , "toInt-geq-1.rule"
