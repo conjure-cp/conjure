@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE BangPatterns #-}
 
 module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
@@ -16,7 +15,7 @@ applyRefn :: (Functor m, Monad m)
     -> Spec
     -> CompE m Spec
 applyRefn fs' spec = do
-    let !fs = fs' ++ builtInRefn
+    let fs = fs' ++ builtInRefn
     -- mkLog "debug:applyRefn.worker" $ pretty spec
     (spec', Any flag) <- runWriterT $ onSpec fs spec
     -- return spec'

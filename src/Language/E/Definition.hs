@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -110,7 +109,7 @@ data Binder = Binder String E
     deriving (Show)
 
 instance Default LocalState where
-    def = LocalState [] 1 [] []
+    def = LocalState def 1 def def
 
 data GlobalState = GlobalState
         { logs               :: DList.DList NamedLog        -- logs about execution
@@ -137,13 +136,13 @@ lookupBinder nm = do
 
 nextUniqueName :: Monad m => CompE m String
 nextUniqueName = do
-    !i <- getsLocal uniqueNameInt
+    i <- getsLocal uniqueNameInt
     modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
-    let !nm = "__" ++ show i
+    let nm = "__" ++ show i
     nms <- getsGlobal allNamesPreConjure
     if nm `S.member` nms
         then nextUniqueName
-        else return $! nm
+        else return nm
 
 
 makeIdempotent :: Monad m => (a -> CompE m (a,Bool)) -> a -> CompE m a

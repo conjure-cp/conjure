@@ -136,7 +136,10 @@ renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
                  |] =
     case splitOn "#" i' of
         [i,j] -> return [xMake| reference := [Prim (S $ i ++ "_" ++ j)] |]
-        _     -> err ErrFatal $ "Problem here:" <+> pretty p
+        _     -> err ErrFatal $ "{renRefn} Problem here:" <+> pretty p
+renRefn [eMatch| refn(&m[&j]) |] = do
+    n <- renRefn [eMake| refn(&m) |]
+    return [eMake| &n[&j] |]
 renRefn (Tagged t xs) = Tagged t <$> mapM renRefn xs
 renRefn x = return x
 
@@ -162,11 +165,9 @@ localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
                                                                    , "at expression" <+> pretty x
                                                                    ]
             return False
-        Nothing    -> do
-            mkLog "rule-fail"
+        Nothing    -> err ErrFatal
                 $ "where statement cannot be fully evaluated: " <++> vcat [ pretty lokal
                                                                           , "in rule" <+> stringToDoc name
                                                                           , "at expression" <+> pretty x
                                                                           ]
-            return False
 localHandler _ _ lokal = processStatement lokal >> return True

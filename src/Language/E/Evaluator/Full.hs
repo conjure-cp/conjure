@@ -10,6 +10,7 @@ import Language.E.MatchBind
 import Language.E.TH
 import Language.E.TypeOf
 import Language.E.Pretty
+import {-# SOURCE #-} Language.E.Evaluator.ToInt
 
 
 fullEvaluator :: Monad m => E -> CompE m (Maybe E)
@@ -89,18 +90,24 @@ evalHasDomain _ = return Nothing
 
 evalHasRepr :: Monad m => E -> CompE m (Maybe E)
 evalHasRepr [eMatch| &x hasRepr &y |] =
-    case (x,y) of
-        ( [xMatch| [Prim (S iden )] := reference |] , [xMatch| [Prim (S reprName)] := reference |] ) ->
-            case splitOn "#" iden of
-                [_,idenReprName] -> returnBool $ idenReprName == reprName
-                _ -> return Nothing
-        ( [xMatch| [Prim (S iden')] := metavar   |] , _ ) -> do
+    case x of
+        [eMatch| &m[&_] |] ->
+            evalHasRepr [eMake| &m hasRepr &y |]
+        [xMatch| [Prim (S iden')] := metavar   |] -> do
             let iden = '&' : iden'
             bs <- getsLocal binders
             case [ a | Binder nm a <- bs, nm == iden ] of
                 [a] -> evalHasRepr [eMake| &a hasRepr &y |]
                 _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
-        _ -> return Nothing
+        [xMatch| [Prim (S iden )] := reference |] ->
+            case splitOn "#" iden of
+                [_,idenReprName] ->
+                    case y of
+                        [xMatch| [Prim (S reprName)] := reference |] ->
+                            returnBool $ idenReprName == reprName
+                        _ -> err ErrFatal $ "Not a representation:" <+> pretty y
+                _ -> returnBool False
+        _ -> returnBool False
 evalHasRepr _ = return Nothing
 
 evalDomSize :: Monad m => E -> CompE m (Maybe E)
@@ -134,10 +141,15 @@ evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
 
 evalDomSize _ = return Nothing
 
-evalIndices :: Monad m => E -> CompE m (Maybe E)
-evalIndices [xMatch| [a,b] := operator.indices |] = indices a b
+evalIndices :: (Functor m, Monad m) => E -> CompE m (Maybe E)
+evalIndices p@[xMatch| [a,b] := operator.indices |] = do
+    bInt <- toInt b
+    case bInt of
+        Nothing    -> err ErrFatal $ "Second argument is not an integer:" <+> pretty p
+        Just bInt' -> indices a bInt'
     where
         -- indices (matrix) (integer)
+        indices :: (Functor m, Monad m) => E -> Integer -> CompE m (Maybe E)
         indices [xMatch| [Prim (S iden)] := reference |] i = do
             mres <- runMaybeT $ lookupBinder iden
             case mres of
@@ -145,16 +157,14 @@ evalIndices [xMatch| [a,b] := operator.indices |] = indices a b
                 Just res -> indices res i
         indices [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
         indices [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
-        indices [xMatch| [index] := domain.matrix.index |]
-                [xMatch| [Prim (I 0)] := value.literal  |] = return $ Just index
-        indices [xMatch| [inner] := domain.matrix.inner |]
-                [xMatch| [Prim (I i)] := value.literal  |] = indices inner [xMake| value.literal := [Prim (I $ i-1)] |]
+        indices [xMatch| [index] := domain.matrix.index |] 0 = return $ Just index
+        indices [xMatch| [inner] := domain.matrix.inner |] i = indices inner (i-1)
+        indices [eMatch| &m[&_]                         |] i = indices m (i+1)
         indices m i = do
-            mkLog "debug:indices" $ vcat [ pretty m
-                                         , prettyAsPaths m
-                                         , pretty i
-                                         , prettyAsPaths i
-                                         ]
+            mkLog "missing:indices" $ vcat [ pretty m
+                                           , prettyAsPaths m
+                                           , pretty i
+                                           ]
             return Nothing
 evalIndices _ = return Nothing
 

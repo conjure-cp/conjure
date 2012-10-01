@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE BangPatterns #-}
 
 module Language.E.TypeOf where
 
@@ -414,12 +413,12 @@ typeOf p@[xMatch| [m] := operator.index.left
                 | [i] := operator.index.right
                 |] = do
     let err' = err ErrFatal $ "{operator.index} Type error in:" <+> pretty p
-    !tyM <- typeOf m
-    !tyI <- typeOf i
+    tyM <- typeOf m
+    tyI <- typeOf i
     -- mkLog "debug:typeOf1" $ pretty p
     -- mkLog "debug:typeOf2" $ pretty tyM
     -- mkLog "debug:typeOf3" $ pretty tyI
-    !result <- case tyM of
+    result <- case tyM of
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
                |] | ind == tyI -> return inn

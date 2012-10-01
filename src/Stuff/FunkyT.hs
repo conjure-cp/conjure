@@ -1,7 +1,5 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
--- {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Stuff.FunkyT where
 
@@ -39,7 +37,7 @@ instance Monad m => Functor (FunkyT localSt globalSt err m) where
 instance Monad m => Applicative (FunkyT localSt globalSt err m) where
     {-# INLINE pure #-}
     {-# INLINE (<*>) #-}
-    pure x = FunkyT $ \ local global -> let !result = ([(Right x, local)], global) in return result
+    pure x = FunkyT $ \ local global -> let result = ([(Right x, local)], global) in return result
     (<*>) = ap
 
 instance Monad m => Monad (FunkyT localSt globalSt err m) where
@@ -53,12 +51,12 @@ instance Monad m => Monad (FunkyT localSt globalSt err m) where
             -- doOne :: Monad m => (a -> FunkyT localSt globalSt err m b) -> [(Either err a, localSt)] -> globalSt -> m ([(Either err b, localSt)], globalSt)
             doOne [] gl = return ([], gl)
             doOne ((Left  e, l) : rest) gl = do
-                (!rest', !gl') <- doOne rest gl
+                (rest', gl') <- doOne rest gl
                 return ((Left e, l) : rest', gl')
             doOne ((Right x, l) : rest) gl = do
-                (!rest' , !gl' ) <- runFunkyT l gl (f x)
-                (!rest'', !gl'') <- doOne rest gl'
-                let !rests = rest' ++ rest''
+                (rest' , gl' ) <- runFunkyT l gl (f x)
+                (rest'', gl'') <- doOne rest gl'
+                let rests = rest' ++ rest''
                 return (rests, gl'')
         doOne results global'
 

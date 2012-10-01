@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -53,7 +52,7 @@ instance (Monad m, Monoid w) => Monad (CompT r s w e m) where
             (Left  e, s', w) -> return [(Left e, s', w)]
             (Right a, s', w) -> do
                 ys <- runCompT r s' (f a)
-                return $ parMap rseq (\ (b,s'',!w') -> (b,s'',w `mappend` w') ) ys
+                return $ parMap rseq (\ (b,s'',w') -> (b,s'',w `mappend` w') ) ys
         return (concat zss)
 
 instance (Monad m, Monoid w) => MonadError e (CompT r s w e m) where
@@ -63,7 +62,7 @@ instance (Monad m, Monoid w) => MonadError e (CompT r s w e m) where
         zss <- forM xs $ \ x -> case x of
             (Left  e, s', w) -> do
                 ys <- runCompT r s' (f e)
-                return $ map (\ (a,s'',!w') -> (a,s'',w `mappend` w') ) ys
+                return $ map (\ (a,s'',w') -> (a,s'',w `mappend` w') ) ys
             (Right a, s', w) -> return [(Right a, s', w)]
         return (concat zss)
 
