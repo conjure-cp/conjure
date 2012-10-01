@@ -41,6 +41,7 @@ deps:
 	cabal install --only-dependencies --enable-library-profiling --disable-executable-profiling -O2 --enable-documentation
 
 clean:
+	-find . -name "*.prof" -delete
 	-find . -name "*.hi" -delete
 	-find . -name "*.o" -delete
 	-find . -name "*.hi-boot" -delete
