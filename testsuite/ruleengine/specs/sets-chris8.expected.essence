@@ -5,9 +5,9 @@ find y: set of int(0..9)
 such that
     (sum __1 in x . 1)
     +
-    toInt(!((forAll __8 in x . (exists __9 in y . __9 = __8))
+    toInt(!((forAll __4 in x . (exists __5 in y . __5 = __4))
             /\
-            (forAll __10 in y . (exists __11 in x . __11 = __10))))
+            (forAll __6 in y . (exists __7 in x . __7 = __6))))
     *
     (sum __1 in y . 1)
     =
