@@ -21,5 +21,6 @@ conjureRefn spec rules =
             let pipeline =  applyRefn fs
                         >=> removeUnused
                         >=> makeIdempotent noTuplesSpec
-                        >=> (return . atMostOneSuchThat) 
+                        >=> trySimplifySpec
+                        >=> (return . atMostOneSuchThat)
             in  pipeline spec
