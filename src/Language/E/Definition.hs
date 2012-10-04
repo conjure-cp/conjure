@@ -33,6 +33,7 @@ import Data.Generics ( Data, Typeable )
 import qualified Data.Set as S
 import qualified Data.Map as M
 import qualified Data.DList as DList
+import System.IO.Unsafe ( unsafeInterleaveIO )
 
 
 data Spec = Spec Version [E]
@@ -91,7 +92,7 @@ runCompEIO comp = do
         generateds = [ x  | (Right x, _ ) <- mgenerateds ]
     printLogs $ logs glo
     if null errors
-        then return generateds
+        then mapM (unsafeInterleaveIO . return) generateds
         else error $ show $ prettyErrors "There were errors." errors
 
 
