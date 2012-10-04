@@ -41,8 +41,10 @@ instance Monad m => Applicative (FunkyT localSt globalSt err m) where
     (<*>) = ap
 
 instance Monad m => Monad (FunkyT localSt globalSt err m) where
+    {-# INLINE fail #-}
     {-# INLINE return #-}
     {-# INLINE (>>=) #-}
+    fail = error
     return = pure
     FunkyT g >>= f = FunkyT $ \ local global -> do
         (results, global') <- g local global
