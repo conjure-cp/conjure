@@ -85,21 +85,17 @@ typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
 typeOf p@[xMatch| _ := type |] = return p
 
-typeOf p@[xMatch| [Prim (S i')] := reference |] = do
+typeOf [xMatch| [Prim (S i')] := reference |] = do
     let i = head $ splitOn "#" i'
     bs <- getsLocal binders
-    let nms = [ nm | Binder nm _ <- bs ]
     if i == "_"
         then return [xMake| type.unknown := [] |]
         else case [ x | Binder nm x <- bs, nm == i ] of
                 (x:_) -> typeOf x
                 _   -> do
-                    let bsText = sep $ map (\ (Binder nm _) -> stringToDoc nm ) bs
-                    err ErrFatal $ "(typeOf) Undefined reference:" <+> vcat [ pretty i
-                                                                            , bsText
-                                                                            , pretty p
-                                                                            , pretty $ show nms
-                                                                            ]
+                    let bsText = prettyList id "," [ nm | Binder nm _ <- bs ]
+                    err ErrFatal $ "(typeOf) Undefined reference:" <+> pretty i
+                                 $$ nest 4 ("Current bindings:" <+> bsText)
 
 typeOf p@[xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
