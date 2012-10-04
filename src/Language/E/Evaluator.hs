@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Language.E.Evaluator ( simplify, trySimplifySpec, test_Simplify ) where
+module Language.E.Evaluator ( simplify, trySimplifySpec, trySimplifyE, test_Simplify ) where
 
 import Stuff.Pretty
 import Stuff.FunkyT
@@ -47,6 +47,10 @@ trySimplifySpec (Spec v xs) = do
         then trySimplifySpec (Spec v xs')
         else return $ Spec v xs'
 
+trySimplifyE :: (Functor m, Monad m) => E -> CompE m E
+trySimplifyE x = do
+    (x', Any flag) <- runWriterT (simplify x)
+    (if flag then trySimplifyE else return) x'
 
 simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalState CompError m) E
 simplify =

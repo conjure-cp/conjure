@@ -130,15 +130,22 @@ evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
             retSum xs
         domSize [xMatch| [fr,to] := range.fromTo |] =
             return [eMake| &to - &fr + 1 |]
+
         domSize [xMatch| rs := domain.tuple.inners |] = do
             xs <- mapM domSize rs
             retSum xs
-        domSize [dMatch| set of &t |] = do
+
+        domSize [xMatch| [t] := domain.set.inner |] = do
             x <- domSize t
             return [eMake| 2 ** &x |]
+
         domSize [dMatch| mset (size &s) of &inn |] = do
             innSize <- domSize inn
             return [eMake| &s * &innSize |]
+        domSize [xMatch| [t] := domain.mset.inner |] = do
+            x <- domSize t
+            return [eMake| 2 ** &x |]
+
         domSize p =
             err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
