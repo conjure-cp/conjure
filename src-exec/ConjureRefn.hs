@@ -8,7 +8,6 @@ import System.Environment ( getArgs )
 import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRefn ( conjureRefn )
-import Language.E.Pipeline.Groom ( groomSpec )
 
 
 main :: IO ()
@@ -29,7 +28,7 @@ main = do
     [spec ] <- runCompEIO (readSpec specPair)
     [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
-    outSpecs <- runCompEIO (conjureRefn spec refns) >>= concatMapM groomSpec
+    outSpecs <- runCompEIO (conjureRefn True spec refns)
 
     -- putStrLn "[ === Generated === ]"
     -- putStrLn ""

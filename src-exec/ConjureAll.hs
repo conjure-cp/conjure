@@ -50,16 +50,16 @@ loop reprs refns = go Repr
     where
         go Repr s = do
             putStrLn "starting Repr"
-            generateds <- runCompEIO (conjureRepr s reprs)
+            generateds <- runCompEIO (conjureRepr False s reprs)
             putStrLn $ "Repr: returning " ++ show (length generateds)
             if null generateds
-                then groomSpec s
+                then runCompEIO (groomSpec s)
                 else concat <$> mapM (go Refn) generateds
         go Refn s = do
             putStrLn "starting Refn"
-            generateds <- runCompEIO (conjureRefn s refns)
+            generateds <- runCompEIO (conjureRefn False s refns)
             putStrLn $ "Refn: returning " ++ show (length generateds)
             if null generateds
-                then groomSpec s
+                then runCompEIO (groomSpec s)
                 else concat <$> mapM (go Repr) generateds
 

@@ -198,7 +198,7 @@ loadAndApply specFilename refnFilenames = do
     [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
     let
-        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn spec refns)
+        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn True spec refns)
         errors   =         [ x  | (Left  x, _ ) <- mresults ]
         results  =         [ x  | (Right x, _ ) <- mresults ]
     printLogs logs
@@ -225,7 +225,7 @@ buildTests params = describe "rule engine" $
             [expecteds] <- runCompEIO (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
 
             let
-                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn spec rules)
+                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn True spec rules)
                 errorsG     =         [ x  | (Left  x, _ ) <- mgenerateds ]
                 generateds  =         [ x  | (Right x, _ ) <- mgenerateds ]
             printLogs logsG
