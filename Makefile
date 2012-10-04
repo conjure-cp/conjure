@@ -48,4 +48,4 @@ clean:
 	-ghc-pkg unregister conjure-cp
 
 mate:
-	mate *.cabal *.sh Makefile src src-exec test testsuite EssenceCatalog
+	mate *.cabal *.sh Makefile src src-exec test testsuite EssenceCatalog bundles scripts
