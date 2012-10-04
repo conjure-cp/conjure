@@ -9,8 +9,7 @@ import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRepr ( conjureRepr )
 import Language.E.Pipeline.ConjureRefn ( conjureRefn )
-import Language.E.Pipeline.NoGuards ( conjureNoGuards )
-import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.Pipeline.Groom ( groomSpec )
 
 
 main :: IO ()
@@ -63,10 +62,4 @@ loop reprs refns = go Repr
             if null generateds
                 then groomSpec s
                 else concat <$> mapM (go Repr) generateds
-
-groomSpec :: Spec -> IO [Spec]
-groomSpec = runCompEIO . pipeline
-    where pipeline = conjureNoGuards >=> return . atMostOneSuchThat
-                                     >=> return . langEPrime
-          langEPrime (Spec _ xs) = Spec ("ESSENCE'", [1,0]) xs
 
