@@ -2,11 +2,11 @@
 ~~> ExplicitVarSize
 ~~> matrix indexed by [int(1..&mx)] of (bool,&t)
 ~~> (
-        forAll i,j : int(1..&mx), i < j /\ refn[i][0] /\ refn[j][0] . refn[i][1] < refn[j][1]
+        forAll i,j : int(1..&mx), i < j /\ refn[i][1] /\ refn[j][1] . refn[i][2] < refn[j][2]
     )
         /\
     (
-        forAll i : int(1..&mx-1) . refn[i][0] <= refn[i+1][0]
+        forAll i : int(1..&mx-1) . refn[i][1] <= refn[i+1][1]
     )
 
     where &t hasType `int`
@@ -16,24 +16,24 @@
     letting &mx be domSize(&t)
 
 $ *** set (size n) of t
-$     ~~> (sum i : int(1..mx) . refn[i][0]) = n
+$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
 $     letting mx be domSize(t)
 
 *** set (minSize &mn) of &t
-    ~~> (sum i : int(1..&mx) . refn[i][0]) >= &mn
+    ~~> (sum i : int(1..&mx) . refn[i][1]) >= &mn
     letting &mx be domSize(&t)
 
 *** set (maxSize &mx) of t
 
 $ *** set (size n, minSize b) of t
-$     ~~> (sum i : int(1..mx) . refn[i][0]) = n
+$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
 $     letting mx be domSize(t)
 
 $ *** set (size n, maxSize mx) of t
-$     ~~> (sum i : int(1..mx) . refn[i][0]) = n
+$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
 
 *** set (minSize &mn, maxSize &mx) of &t
-    ~~> (sum i : int(1..&mx) . refn[i][0]) >= &mn
+    ~~> (sum i : int(1..&mx) . refn[i][1]) >= &mn
 
 $ *** set (size n, minSize mn, maxSize mx) of t
-$     ~~> (sum i : int(1..mx) . refn[i][0]) = n
+$     ~~> (sum i : int(1..mx) . refn[i][1]) = n

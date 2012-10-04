@@ -8,10 +8,10 @@
 
 *** set (size &n, ..) of &t
 
-$ *** set (size n) of t
+$ *** set (size &n) of &t
 $ 
-$ *** set (size n, minSize _) of t
+$ *** set (size &n, minSize &_) of &t
 $ 
-$ *** set (size n, maxSize _) of t
+$ *** set (size &n, maxSize &_) of &t
 $ 
-$ *** set (size n, minSize _, maxSize _) of t
+$ *** set (size &n, minSize &_, maxSize &_) of &t

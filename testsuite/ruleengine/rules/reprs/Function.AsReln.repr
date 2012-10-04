@@ -23,7 +23,7 @@
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])
 
-*** function (total, bijective, _) &fr --> &to
+*** function (total, bijective, ..) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) = 1)
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])
@@ -45,7 +45,7 @@
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])
 
-*** function (partial, bijective, _) &fr --> &to
+*** function (partial, bijective, ..) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])
