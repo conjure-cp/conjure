@@ -41,6 +41,13 @@ traverseSpecNoFindGiven mpre func mpost (Spec v xs) = do
             _ -> traverse mpre func mpost x
     return $ Spec v xs'
 
+universeSpecNoFindGiven :: Spec -> [E]
+universeSpecNoFindGiven (Spec _ is) = concatMap f is
+    where
+        f [xMatch| _ := topLevel.declaration.find  |] = []
+        f [xMatch| _ := topLevel.declaration.given |] = []
+        f t@(Tagged _ xs) = t : concatMap universe xs
+        f t               = [t]
 
 traverse :: (Monad m)
     => Maybe (E -> CompE m E)
