@@ -21,9 +21,7 @@ quick-prof-install:
 	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="+RTS -M4G"
 
 prof-install:
-	time cabal configure --enable-library-profiling --enable-executable-profiling --ghc-options="+RTS -M4G"
-	time cabal build
-	time cabal install --disable-documentation
+	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="+RTS -M4G"
 
 prof-buildtests:
 	time cabal configure --enable-library-profiling --enable-executable-profiling --enable-tests -O2 --ghc-options="+RTS -M4G"
