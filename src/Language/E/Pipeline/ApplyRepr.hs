@@ -1,16 +1,18 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.E.Pipeline.ApplyRepr where
+module Language.E.Pipeline.ApplyRepr ( applyRepr ) where
 
 import Language.E
 import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
-import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 
+import qualified Data.Map as M
 
-applyRepr :: (Functor m, Monad m) => Spec -> [RuleRepr] -> CompE m Spec
-applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
+
+applyRepr :: (Functor m, Monad m) => [RuleRepr] -> Spec -> CompE m Spec
+applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
     Left es     -> err ErrFatal $ prettyErrors "There were errors." es
     Right func' -> do
 
@@ -26,55 +28,76 @@ applyRepr spec rules = let mfunc = ruleReprToFunction rules in case mfunc of
                                               | [d]          := topLevel.declaration.given.domain |] <- statements ]
         let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
 
-        candidates <- forM topLevels $ \ (x,n,d) -> do
-            ys <- func (n,d)
+        candidates :: [(String,[RuleReprResult])]
+            <- forM topLevels $ \ (x,n,d) -> do
+            ys <- func (n,d,x)
             case ys of
                 [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
                 _  -> do
-                    let ysNames = flip map ys $ \ (_ruleName, reprName, _newDom, _cons) -> reprName
+                    let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
                     mkLog "representation" $ vcat [ pretty x
                                                   , "(#" <> pretty (length ys) <> ")" <+> prettyList id "," ysNames
                                                   ] 
-                    -- forM_ ys $ \ (ruleName, reprName, newDom, cons) -> do
-                    --     mkLog "newDom" $ pretty newDom
-                    --     forM_ cons $ \ con -> mkLog "cons" $ pretty con
-                    return (n,(x,ys))
+                    return (n,ys)
 
-        if null candidates
-            then returns []
-            else do
-                let f p@[xMatch| [Prim (S nm)] := reference |] = case lookup nm candidates of
-                        Nothing     -> return p
-                        Just (originalDecl,ys) -> do
-                            (_ruleName, reprName, newDom, cons) <- returns ys
-                            modifyLocal $ \ st -> st { representationLog = (nm, reprName, originalDecl, newDom) : representationLog st }
-                            modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
-                            return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
+        let
+            nbOccurrence :: String -> Int
+            nbOccurrence nm = length [ ()
+                                     | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
+                                     , nm == nm'
+                                     ]
 
-                            -- news <- forM ys $ \ (ruleName, reprName, newDom, cons) -> do
-                            --             modifyLocal $ \ st -> st { representationLog = (nm,reprName, newDom) : representationLog st }
-                            --             modifyLocal $ \ st -> st { structuralConsLog = cons ++ structuralConsLog st }
-                            --             return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
-                            -- returns news
-                    f p = return p
+            foo :: [(a,[b])] -> [[(a,b)]]
+            foo [] = [[]]
+            foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
 
-                spec' <- traverseSpecNoFindGiven Nothing f Nothing spec
+            lookupTables :: [ M.Map String [RuleReprResult] ]
+            lookupTables = map M.fromList $ foo $
+                [ (nm, allCombs)
+                | (nm, results) <- candidates
+                , let cnt = nbOccurrence nm
+                , cnt > 0
+                , let allCombs = replicateM cnt results
+                ]
 
-                let pipeline = addStructuralFromLog  >=>
-                               addChannellingFromLog >=>
-                               return . atMostOneSuchThat
-                pipeline spec'
+        mkLog "representation" $ "Number of outputs will be:" <+> pretty (length lookupTables)
+        table <- returns lookupTables
+        applyCongfigToSpec spec table
 
 
-addStructuralFromLog :: Monad m => Spec -> CompE m Spec
+applyCongfigToSpec :: (Functor m, Monad m) => Spec -> M.Map String [RuleReprResult] -> CompE m Spec
+applyCongfigToSpec spec initConfig = do
+    let
+        f p@[xMatch| [Prim (S nm)] := reference |] = do
+            config <- getsLocal representationConfig
+            case M.lookup nm config of
+                Nothing -> return p
+                Just [] -> err ErrFatal "applyCongfigToSpec.f -- empty list"
+                Just ((origDecl, _ruleName, reprName, newDom, cons):rest) -> do
+                    modifyLocal $ \ st -> st { representationLog = (nm, reprName, origDecl, newDom) : representationLog st
+                                             , structuralConsLog = cons ++ structuralConsLog st
+                                             , representationConfig = M.insert nm rest config
+                                             }
+                    return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
+        f p = return p
+    modifyLocal $ \ st -> st { representationConfig = initConfig }
+    spec' <- traverseSpecNoFindGiven Nothing f Nothing spec
+    modifyLocal $ \ st -> st { representationConfig = def }
+    let pipeline = addStructuralFromLog >=>
+                   addChannellingFromLog
+    pipeline spec'
+
+
+addStructuralFromLog :: (Functor m, Monad m) => Spec -> CompE m Spec
 addStructuralFromLog (Spec v xs) = do
-    cs <- getsLocal structuralConsLog
+    cs' <- getsLocal structuralConsLog
+    cs  <- mapM trySimplifyE cs'
     modifyLocal $ \ st -> st { structuralConsLog = [] }
     let mk i = [xMake| topLevel.suchThat := [i] |]
     return $ Spec v $ xs ++ map mk cs
 
 
-addChannellingFromLog :: Monad m => Spec -> CompE m Spec
+addChannellingFromLog :: (Functor m, Monad m) => Spec -> CompE m Spec
 addChannellingFromLog (Spec v xs) = do
     rlogs <- getsLocal representationLog
     modifyLocal $ \ st -> st { representationLog = [] }
@@ -114,7 +137,10 @@ addChannellingFromLog (Spec v xs) = do
     let
         newDecls = nub $ map mk rlogs
 
-    return $ Spec v $ insertBeforeSuchThat newDecls xs ++ concat newCons
+    newDecls' <- mapM trySimplifyE newDecls
+    newCons'  <- mapM trySimplifyE (concat newCons)
+
+    return $ Spec v $ insertBeforeSuchThat newDecls' xs ++ newCons'
 
 
 domainNeedsRepresentation :: E -> Bool
