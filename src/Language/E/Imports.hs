@@ -1,7 +1,7 @@
 -- mostly for library dependencies.
 -- defines a specialised prelude. kind-of.
--- things in Language.Core.* should import this.
--- also see "Language.Core"
+-- things in Language.E.* should import this.
+-- also see "Language.E", which imports and re-exports this module.
 
 module Language.E.Imports
     ( module X
@@ -20,12 +20,11 @@ module Language.E.Imports
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
 import Control.Arrow             as X ( first, second )
 
-import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap )
+import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM )
 import Control.Monad.Trans.Class as X ( MonadTrans, lift )
 import Control.Monad.Identity    as X ( Identity, runIdentity )
 import Control.Monad.Reader      as X ( MonadReader(..) )
 import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT )
--- import Control.Monad.State       as X ( MonadState, gets, modify )
 import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT )
 import Control.Monad.IO.Class    as X ( MonadIO, liftIO )
 import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )

@@ -5,14 +5,11 @@ module Language.E.BuiltIn ( builtInRepr, builtInRefn, mergeReprFunc ) where
 import Language.E
 
 type ReprFunc m =
-    ( String                                -- original name of the variable
-    , E                                     -- original domain
+    ( String                                -- input: name of the variable
+    , E                                     -- input: domain
+    , E                                     -- input: decl
     )
-    -> CompE m [ ( String                   -- rule name
-                 , String                   -- name of the representation
-                 , E                        -- replacement domain
-                 , [E]                      -- structural constraints
-                 ) ]
+    -> CompE m [RuleReprResult]
 
 
 
@@ -25,9 +22,10 @@ builtInRepr :: (Functor m, Monad m) => [ReprFunc m]
 builtInRepr = [relationRepr]
 
 relationRepr :: (Functor m, Monad m) => ReprFunc m
-relationRepr ( _name, [xMatch| ts := domain.relation.inners |]) = do
+relationRepr ( _name, [xMatch| ts := domain.relation.inners |], decl) = do
     let t = [xMake| domain.tuple.inners := ts |]
-    return [( "builtIn.relationRepr"
+    return [( decl
+            , "builtIn.relationRepr"
             , "RelationAsSet"
             , [xMake| domain.set.attributes.attrCollection := []
                     | domain.set.inner := [t]
@@ -35,8 +33,8 @@ relationRepr ( _name, [xMatch| ts := domain.relation.inners |]) = do
             , []
             )]
 
-relationRepr ( _, [xMatch| _ := domain.function |] ) = return []
-relationRepr ( _name, _dom ) = do
+relationRepr ( _, [xMatch| _ := domain.function |], _ ) = return []
+relationRepr ( _name, _dom, _ ) = do
     mkLog "missing:relationRepr" $ vcat [ pretty _name
                                         , prettyAsPaths _dom
                                         ]

@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction ) where
+module Language.E.Pipeline.RuleReprToFunction ( RuleReprResult, ruleReprToFunction ) where
 
 import Language.E
 import Language.E.Pipeline.FreshNames
@@ -14,14 +14,11 @@ ruleReprToFunction :: (Functor m, Monad m)
     => [RuleRepr]
     -> Either
         [CompError]                   -- static errors
-        ( ( String                    -- original name of the variable
-          , E                         -- original domain
+        ( ( String                    -- input: name of the variable
+          , E                         -- input: domain
+          , E                         -- input: declaration
           )
-          -> CompE m [ ( String       -- rule name
-                       , String       -- name of the representation
-                       , E            -- replacement domain
-                       , [E]          -- structural constraints
-                       ) ]
+          -> CompE m [RuleReprResult]
         )
 ruleReprToFunction fs =
     let
@@ -37,12 +34,8 @@ one :: (Functor m, Monad m)
     => RuleRepr
     -> Either
         [CompError]
-        ( (String, E)
-          -> CompE m [ ( String       -- rule name
-                       , String       -- name of the representation
-                       , E            -- replacement domain
-                       , [E]          -- structural constraints
-                       ) ]
+        ( (String, E, E)
+          -> CompE m [RuleReprResult]
         )
 one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
     let
@@ -59,12 +52,8 @@ oneCase :: (Functor m, Monad m)
     -> RuleReprCase
     -> Either
         [CompError]
-        ( (String, E)                 -- original variable's name
-          -> CompE m [ ( String       -- rule name
-                       , String       -- name of the representation
-                       , E            -- replacement domain
-                       , [E]          -- structural constraints
-                       ) ]
+        ( (String, E, E)
+          -> CompE m [RuleReprResult]
         )
 oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         (domPattern, mcons2, locals2) =
@@ -72,7 +61,7 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         mcons  = maybeToList mcons1 ++ maybeToList mcons2
         locals = locals1 ++ locals2
     in
-        Right $ \ (origName, x) -> do
+        Right $ \ (origName, x, origDecl) -> do
             bindersBefore <- getsLocal binders
             let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
             case x of
@@ -111,7 +100,7 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                                 case maybeCon of
                                                     Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con''
                                                     Just c  -> return c
-                                            restoreState >> return [(ruleName, reprName, resInMatrix, mcons')]
+                                            restoreState >> return [(origDecl, ruleName, reprName, resInMatrix, mcons')]
                                 else restoreState >> errRuleFail
                         else restoreState >> errRuleFail
                 _ -> do
@@ -134,7 +123,7 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                                 case maybeCon of
                                                     Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con'
                                                     Just c  -> return c
-                                            restoreState >> return [(ruleName, reprName, res, mcons')]
+                                            restoreState >> return [(origDecl, ruleName, reprName, res, mcons')]
                                 else restoreState >> errRuleFail
                         else restoreState >> errRuleFail
 

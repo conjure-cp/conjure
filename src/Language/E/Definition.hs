@@ -8,7 +8,7 @@ module Language.E.Definition
     ( module Stuff.Generic
 
     , Spec(..), Version, E, BuiltIn(..)
-    , RuleRefn, RuleRepr, RuleReprCase
+    , RuleRefn, RuleRepr, RuleReprCase, RuleReprResult
 
     , CompE, runCompE, runCompEIO
 
@@ -31,6 +31,7 @@ import Language.E.Imports
 
 import Data.Generics ( Data, Typeable )
 import qualified Data.Set as S
+import qualified Data.Map as M
 import qualified Data.DList as DList
 
 
@@ -51,6 +52,13 @@ type RuleReprCase = ( E         -- domain in.
                     , Maybe E   -- structural constraints
                     , [E]       -- locals
                     )
+
+type RuleReprResult = ( E            -- original declaration
+                      , String       -- rule name
+                      , String       -- name of the representation
+                      , E            -- replacement domain
+                      , [E]          -- structural constraints
+                      )
 
 type E = Generic BuiltIn
 
@@ -107,6 +115,7 @@ prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
 data LocalState = LocalState
         { binders       :: [Binder]
         , uniqueNameInt :: Integer
+        , representationConfig :: M.Map String [RuleReprResult]
         , representationLog :: [ ( String   -- original name
                                  , String   -- representation name
                                  , E        -- original full declaration
@@ -120,7 +129,7 @@ data Binder = Binder String E
     deriving (Show)
 
 instance Default LocalState where
-    def = LocalState def 1 def def
+    def = LocalState def 1 def def def
 
 data GlobalState = GlobalState
         { logs               :: DList.DList NamedLog        -- logs about execution
