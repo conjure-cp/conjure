@@ -11,5 +11,7 @@ conjureRepr :: (Monad m, Functor m)
     -> [RuleRepr]
     -> CompE m Spec
 conjureRepr isFinal spec rules =
-    applyRepr rules spec >>=
-    (if isFinal then groomSpec else return)
+    let pipeline = trySimplifySpec      -- to remove any unnecessary occurrences of variables
+                >=> applyRepr rules
+                >=> (if isFinal then groomSpec else return)
+    in  pipeline spec
