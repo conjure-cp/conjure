@@ -345,12 +345,8 @@ typeOf p@[eMatch| max(&a) |] = do
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| max(&a,&b) |] = do
-    mkLog "in (max/2)" $ pretty a $$ pretty b
-    
     ta <- typeOf a
-    mkLog "ta" $ pretty ta
     tb <- typeOf b
-    mkLog "ta" $ pretty tb
     case (ta,tb) of
         ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
         _ -> typeErrorIn p
@@ -395,11 +391,8 @@ typeOf p@[xMatch| [f] := operator.range |] = do
 typeOf p@[xMatch| [m] := operator.index.left
                 | [i] := operator.index.right
                 |] = do
-    -- mkLog "debug:typeOf p" $ pretty p
     tyM <- typeOf m
     tyI <- typeOf i
-    -- mkLog "debug:typeOf tyM" $ pretty tyM
-    -- mkLog "debug:typeOf tyI" $ pretty tyI
     ret <- case tyM of
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
@@ -410,7 +403,6 @@ typeOf p@[xMatch| [m] := operator.index.left
                 Just int | int >= 1 && int <= genericLength ts -> return $ ts `genericIndex` (int - 1)
                 _ -> typeErrorIn p
         _ -> typeErrorIn p
-    -- mkLog "debug:typeOf ret" $ pretty ret
     return ret
 
 typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
