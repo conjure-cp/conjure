@@ -4,6 +4,7 @@ module Main where
 
 import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
+import System.IO.Unsafe ( unsafeInterleaveIO )
 
 import Language.E
 import Language.E.Pipeline.ReadIn
@@ -48,18 +49,19 @@ data Phase
 loop :: [RuleRepr] -> [RuleRefn] -> Spec -> IO [Spec]
 loop reprs refns = go Repr
     where
+        go :: Phase -> Spec -> IO [Spec]
         go Repr s = do
-            putStrLn "starting Repr"
             generateds <- runCompEIO (conjureRepr False s reprs)
-            putStrLn $ "Repr: returning " ++ show (length generateds)
+            let lgenerateds = length generateds
+            when (lgenerateds > 1) $ putStrLn $ "multiple alternatives after repr: " ++ show lgenerateds
             if null generateds
                 then runCompEIO (groomSpec s)
-                else concat <$> mapM (go Refn) generateds
+                else concatMapM (unsafeInterleaveIO . go Refn) generateds
         go Refn s = do
-            putStrLn "starting Refn"
             generateds <- runCompEIO (conjureRefn False s refns)
-            putStrLn $ "Refn: returning " ++ show (length generateds)
+            let lgenerateds = length generateds
+            when (lgenerateds > 1) $ putStrLn $ "multiple alternatives after refn: " ++ show lgenerateds
             if null generateds
                 then runCompEIO (groomSpec s)
-                else concat <$> mapM (go Repr) generateds
+                else concatMapM (unsafeInterleaveIO . go Repr) generateds
 
