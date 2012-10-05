@@ -6,12 +6,3 @@
 
     where &a hasType `mset of _`
     where &b hasType `mset of _`
-
-$ [1000]
-$ 
-$ &a subsetEq &b ~~> forAll i : &dom . freq(&a,i) <= freq(&b,i)
-$ 
-$     where &a hasType `mset of _`
-$     where &b hasType `mset of _`
-$ 
-$     where &a hasDomain `mset (..) of &dom`

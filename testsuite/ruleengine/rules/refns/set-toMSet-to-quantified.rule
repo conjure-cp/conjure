@@ -1,6 +1,8 @@
 
 [1000]
 
-&quan &i in toMSet(&a) , &guard . &body ~~> &quan &i in &a, &guard . &body
+&quan &i in toMSet(&a) , &guard . &body
+    ~~>
+&quan &i in &a, &guard . &body
 
     where &a hasType `set of _`
