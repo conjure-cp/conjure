@@ -26,8 +26,5 @@ toSuchThat [] = []
 toSuchThat xs = [ [xMake| topLevel.suchThat := nub $ concatMap conjunctOut xs |] ]
     where
         conjunctOut :: E -> [E]
-        conjunctOut [xMatch| [Prim (S "/\\")] := binOp.operator
-                           | [a]              := binOp.left
-                           | [b]              := binOp.right
-                           |] = conjunctOut a ++ conjunctOut b
+        conjunctOut [eMatch| &a /\ &b |] = conjunctOut a ++ conjunctOut b
         conjunctOut a = [a]
