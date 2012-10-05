@@ -8,6 +8,7 @@ import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.Groom ( groomSpec )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
 import Language.E.Pipeline.RemoveUnused ( removeUnused )
+import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
 
 
 
@@ -23,5 +24,6 @@ conjureRefn isFinal spec rules =
             let pipeline =  applyRefn fs
                         >=> removeUnused
                         >=> makeIdempotent noTuplesSpec
+                        >=> checkIfAllRefined
                         >=> (if isFinal then groomSpec else return)
             in  pipeline spec
