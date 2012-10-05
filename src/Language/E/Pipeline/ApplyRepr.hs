@@ -60,7 +60,6 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
                 , let allCombs = replicateM cnt results
                 ]
 
-        mkLog "representation" $ "Number of outputs will be:" <+> pretty (length lookupTables)
         table <- returns lookupTables
         applyCongfigToSpec spec table
 
