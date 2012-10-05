@@ -198,7 +198,7 @@ loadAndApply specFilename refnFilenames = do
     [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
     let
-        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn True spec refns)
+        (mresults, GlobalState{logs}) = runIdentity $ runCompE (conjureRefn False spec refns >>= return . atMostOneSuchThat)
         errors   =         [ x  | (Left  x, _ ) <- mresults ]
         results  =         [ x  | (Right x, _ ) <- mresults ]
     printLogs logs
@@ -225,7 +225,7 @@ buildTests params = describe "rule engine" $
             [expecteds] <- runCompEIO (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
 
             let
-                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn True spec rules)
+                (mgenerateds, GlobalState{logs=logsG}) = runIdentity $ runCompE (conjureRefn False spec rules >>= return . atMostOneSuchThat)
                 errorsG     =         [ x  | (Left  x, _ ) <- mgenerateds ]
                 generateds  =         [ x  | (Right x, _ ) <- mgenerateds ]
             printLogs logsG
@@ -748,6 +748,12 @@ testData =
     , ( "sets-chris10"
       , "testsuite/ruleengine/specs/sets-chris10.essence"
       , [ "testsuite/ruleengine/specs/sets-chris10.expected.essence" ]
+      , allrules
+      )
+
+    , ( "sets-chris11"
+      , "testsuite/ruleengine/specs/sets-chris11.essence"
+      , [ "testsuite/ruleengine/specs/sets-chris11.expected.essence" ]
       , allrules
       )
 
