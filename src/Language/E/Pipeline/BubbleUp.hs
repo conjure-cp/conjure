@@ -4,18 +4,15 @@ module Language.E.Pipeline.BubbleUp where
 
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Language.E.Pipeline.ReadIn
 
 
 conjureBubbleUp :: (Monad m, Functor m)
-    => (FilePath, Text)
+    => Spec
     -> CompE m Spec
-conjureBubbleUp spectobe = do
-    spec  <- readSpec spectobe
-    (bubbleUpSpec >=> return . atMostOneSuchThat) spec
-
-
-
+conjureBubbleUp spec = pipeline spec
+    where
+        pipeline = bubbleUpSpec
+                >=> return . atMostOneSuchThat
 
 
 bubbleUpSpec :: (Functor m, Monad m) => Spec -> CompE m Spec
