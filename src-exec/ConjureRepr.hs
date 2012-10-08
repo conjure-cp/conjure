@@ -20,7 +20,7 @@ main = do
 
     let reprFilenames = filter (".repr" `isSuffixOf`) args
     when (null reprFilenames)
-        $ error "Warning: no *.repr file is given."
+        $ putStrLn "Warning: no *.repr file is given."
 
     specPair  <- pairWithContents specFilename
     reprPairs <- mapM pairWithContents reprFilenames

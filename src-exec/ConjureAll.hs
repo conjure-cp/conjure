@@ -23,11 +23,11 @@ main = do
 
     let refnFilenames = filter (".rule" `isSuffixOf`) args
     when (null refnFilenames)
-        $ error "Warning: no *.rule file is given."
+        $ putStrLn "Warning: no *.rule file is given."
 
     let reprFilenames = filter (".repr" `isSuffixOf`) args
     when (null reprFilenames)
-        $ error "Warning: no *.repr file is given."
+        $ putStrLn "Warning: no *.repr file is given."
 
     specPair  <- pairWithContents specFilename
     reprPairs <- mapM pairWithContents reprFilenames

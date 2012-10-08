@@ -19,8 +19,8 @@ main = do
                         _   -> error "Only 1 *.essence file."
 
     let refnFilenames = filter (".rule" `isSuffixOf`) args
-    -- when (null refnFilenames)
-    --     $ error "Warning: no *.rule file is given."
+    when (null refnFilenames)
+        $ putStrLn "Warning: no *.rule file is given."
 
     specPair  <- pairWithContents specFilename
     refnPairs <- mapM pairWithContents refnFilenames
