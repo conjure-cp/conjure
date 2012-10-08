@@ -1,0 +1,5 @@
+# cabal install hasktags
+# ctag bundle for textmate https://github.com/sbenhaim/tm-ctags-tmbundle
+# run script from top level directory
+# use ctrl-] on function name
+hasktags --ctags --ignore-close-implementation . && cat tags | sed -E 's/([0-9]+)$/line:\1/g'  > .tmtags && echo "Done"
