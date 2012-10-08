@@ -96,7 +96,7 @@ xMatch = qq {
                 let [patternS, tag] = splitOn ":=" i
                 let tags = splitOn "." $ strip tag
                 case parsePat patternS of
-                    Left  e -> error e
+                    Left  e -> error $ "Malformed expression: " ++ e
                     Right p -> do
                         tags' <- [e| tags |]
                         return (tags', p)
@@ -118,7 +118,7 @@ xMake = qq {
                 let stripped = strip lhs
                 let tags = map strip $ splitOn "." stripped
                 case parseExp rhs of
-                    Left  e -> error  $ "Malformed expression: " ++ e
+                    Left  e -> error $ "Malformed expression: " ++ e
                     Right x ->
                         -- runIO $ appendFile "tags.txt" $ stripped ++ "\n"
                         return $ mkTaggedTH tags x
