@@ -15,7 +15,7 @@ buildtests:
 	time cabal build
 
 runtests:
-	time dist/build/conjure-tests/conjure-tests
+	time dist/build/conjure-tests/conjure-tests +RTS -s
 
 quick-prof-install:
 	time cabal install --enable-library-profiling --enable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="+RTS -M4G"
@@ -47,5 +47,5 @@ clean:
 	-cabal clean
 	-ghc-pkg unregister conjure-cp
 
-mate:
+edit:
 	mate *.cabal *.sh Makefile src src-exec test testsuite EssenceCatalog bundles scripts
