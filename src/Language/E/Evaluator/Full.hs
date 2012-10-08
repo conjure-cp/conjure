@@ -3,8 +3,10 @@
 module Language.E.Evaluator.Full where
 
 import Stuff.FunkyT
+
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.CompE
 import Language.E.DomainOf
 import Language.E.MatchBind
 import Language.E.TH

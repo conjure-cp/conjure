@@ -6,6 +6,7 @@ import Stuff.Generic
 import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.CompE
 import Language.E.Pretty
 
 

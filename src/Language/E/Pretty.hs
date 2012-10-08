@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Language.E.Pretty ( module Stuff.Pretty ) where
+module Language.E.Pretty ( module Stuff.Pretty, prettySpecDebug ) where
 
 import Stuff.Generic
 import Stuff.Pretty
@@ -17,6 +17,9 @@ import Data.List ( intersperse )
 import Text.PrettyPrint as Pr
 import qualified Data.Text as T
 
+
+prettySpecDebug :: Spec -> Doc
+prettySpecDebug sp@(Spec _ xs) = vcat $ pretty sp : map prettyAsPaths xs
 
 instance Pretty Spec where
     pretty (Spec (language,version) cs) = vcat

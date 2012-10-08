@@ -12,9 +12,10 @@ module Language.E.Imports
     , withRest, withRestToR, withRestToL
     , T.Text
     , ppShow, ppPrint
-    , replace
+    , replace, replaceAll
     , sameLength
     , concatMapM
+    , parMapM
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -34,7 +35,7 @@ import Data.Default      as X ( Default, def )
 import Data.Either       as X ( lefts, rights )
 import Data.Foldable     as X ( forM_, fold, foldMap, toList )
 import Data.Function     as X ( on )
-import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, groupBy, sortBy, partition, genericLength, genericIndex )
+import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, groupBy, sortBy, partition, genericLength, genericIndex, isSuffixOf )
 import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( catMaybes, listToMaybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
@@ -53,6 +54,11 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
 import qualified Data.Set as S
+
+import Control.Concurrent ( getNumCapabilities )
+import Control.Concurrent.ParallelIO.Local ( withPool, parallel )
+import System.Directory
+import System.FilePath
 
 
 stringToDoc :: String -> Doc
@@ -104,6 +110,10 @@ ppPrint = putStrLn . ppShow
 replace :: (Uniplate a, Eq a) => a -> a -> a -> a
 replace old new = transform $ \ i -> if i == old then new else i
 
+replaceAll :: (Uniplate a, Eq a) => [(a,a)] -> a -> a
+replaceAll [] x = x
+replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
+
 sameLength :: [a] -> [b] -> Bool
 sameLength [] [] = True
 sameLength (_:xs) (_:ys) = sameLength xs ys
@@ -111,3 +121,21 @@ sameLength _ _ = False
 
 concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
 concatMapM f xs = fmap concat $ mapM f xs
+
+parMapM :: (a -> IO b) -> [a] -> IO [b]
+parMapM f xs = do
+   n <- getNumCapabilities
+   withPool n $ \pool -> parallel pool (map f xs)
+
+allFiles :: FilePath -> IO [FilePath]
+allFiles x = do
+    let dots i = not $ or [ i == "." , i == ".." ]
+    ys' <- getDirectoryContents x `catchError` (const $ return [])
+    let ys = filter dots ys'
+    if null ys
+        then return [x]
+        else (x :) <$> concatMapM allFiles (map (x </>) ys)
+
+allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
+allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
+

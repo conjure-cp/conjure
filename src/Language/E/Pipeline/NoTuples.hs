@@ -21,6 +21,7 @@ conjureNoTuples spectobe = do
 
 
 noTuplesSpec :: (Functor m, Monad m) => Spec -> CompE m (Spec, Bool)
+-- noTuplesSpec spec = return (spec, False)
 noTuplesSpec specIn@(Spec v statements) = do
     (statements',(tuplesToExplode,matrixOfTuplesToExplode)) <-
         runWriterT $ forM statements $ \ statement ->
@@ -28,7 +29,8 @@ noTuplesSpec specIn@(Spec v statements) = do
                 Nothing      -> return [statement]
                 Just (f,n,d) ->
                     case checkTupleDomain d of
-                        Just ts -> 
+                        Just ts -> do
+                            lift $ mkLog "removed" $ pretty n
                             -- returning newDecls:
                             forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
                                 tell ([n],[])
@@ -37,6 +39,7 @@ noTuplesSpec specIn@(Spec v statements) = do
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
+                                    lift $ mkLog "removed" $ pretty n
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
                                     forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
@@ -107,13 +110,17 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
                                            |]
 
 renameMatrixOfTupleIndexes :: Monad m => M.Map String Int -> Spec -> CompE m Spec
-renameMatrixOfTupleIndexes identifiers = traverseSpec Nothing f Nothing
+renameMatrixOfTupleIndexes identifiers sp = do
+    -- mkLog "renameMatrixOfTupleIndexes" $ prettyList id "," $ map fst (M.toList identifiers)
+    traverseSpec Nothing f Nothing sp
     where
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
                           , js
                           )
-            ) = case i `M.lookup` identifiers of
+            ) = do
+                case i `M.lookup` identifiers of
                     Just num | length js > num -> do
+                        -- mkLog "renameMatrixOfTupleIndexes.f" $ pretty p
                         let indicesBefore = take num js
                         (tupleIndex, indicesAfter) <- case drop num js of
                                                         ([xMatch| [Prim (I a)] := value.literal |]:as) -> return (a,as)

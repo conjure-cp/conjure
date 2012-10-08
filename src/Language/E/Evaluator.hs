@@ -5,11 +5,12 @@ module Language.E.Evaluator ( simplify, trySimplifySpec, trySimplifyE, test_Simp
 import Stuff.Pretty
 import Stuff.FunkyT
 import Stuff.NamedLog
+
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.CompE
 import Language.E.Lexer
 import Language.E.Parser
-
 import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalHasType, evalHasDomain
                                     , evalHasRepr, evalDomSize
@@ -42,17 +43,20 @@ test_Simplify t = do
 
 trySimplifySpec :: (Functor m, Monad m) => Spec -> CompE m Spec
 trySimplifySpec (Spec v xs) = do
-    (xs', Any flag) <- runWriterT (mapM simplify xs)
-    if flag
-        then trySimplifySpec (Spec v xs')
-        else return $ Spec v xs'
+    let
+        loggedSimplify i = do
+            (i', Any b) <- listen (simplify i)
+            when b $ lift $ mkLog "simplified" $ vcat [pretty i, "~~>", pretty i']
+            return i'
+    (xs', Any flag) <- runWriterT (mapM loggedSimplify xs)
+    (if flag then trySimplifySpec else return) (Spec v xs')
 
 trySimplifyE :: (Functor m, Monad m) => E -> CompE m E
 trySimplifyE x = do
     (x', Any flag) <- runWriterT (simplify x)
     (if flag then trySimplifyE else return) x'
 
-simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalState CompError m) E
+simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) E
 simplify =
     rewriteM (\ i -> firstJust $ map ($ i) [ loggedFullEvaluator
                                            , loggedEvalHasRepr

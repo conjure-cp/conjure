@@ -243,20 +243,21 @@ buildTests params = describe "rule engine" $
                        ]
 
             forM_ (zip3 [(1::Int) ..] generateds expecteds) $ \ (i,generated,expected) ->
-                unless (generated == expected)
-                    $ assertFailure
-                    $ renderPretty
-                        $ "specs not equal"
-                            <+> Pr.parens (stringToDoc $ show i)
-                                -- $$ vcat [ " == generated ==" $$ prettyAsPaths (generated :: Spec)
-                                --         , " == expected  ==" $$ prettyAsPaths expected
-                                --         ]
-                                -- $$ vcat [ " == generated ==" $$ (stringToDoc $ show generated)
-                                --         , " == expected  ==" $$ (stringToDoc $ show expected)
-                                --         ]
-                                $$ vcat [ " == generated ==" $$ pretty generated
-                                        , " == expected  ==" $$ pretty expected
-                                        ]
+                case (renderPretty generated == renderPretty expected, generated == expected) of
+                    (True, True ) -> return ()
+                    (True, False) -> 
+                        assertFailure
+                            $ renderPretty
+                                $ "internal representations differ"
+                                    <+> Pr.parens (stringToDoc $ show i)
+                    (False, _   ) ->
+                        assertFailure
+                            $ renderPretty
+                                $ "specs not equal"
+                                    <+> Pr.parens (stringToDoc $ show i)
+                                        $$ vcat [ " == generated ==" $$ prettySpecDebug generated
+                                                , " == expected  ==" $$ prettySpecDebug expected
+                                                ]
 
 
 runInteractively :: String -> IO ()

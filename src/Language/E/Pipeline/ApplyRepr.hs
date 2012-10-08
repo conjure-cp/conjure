@@ -13,7 +13,7 @@ import qualified Data.Map as M
 
 applyRepr :: (Functor m, Monad m) => [RuleRepr] -> Spec -> CompE m Spec
 applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
-    Left es     -> err ErrFatal $ prettyErrors "There were errors." es
+    Left es     -> err ErrFatal $ prettyErrors "There were errors." $ map (,Nothing) es
     Right func' -> do
 
         let func = mergeReprFunc (func' : builtInRepr)

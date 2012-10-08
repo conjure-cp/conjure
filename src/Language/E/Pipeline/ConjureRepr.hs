@@ -12,8 +12,9 @@ conjureRepr :: (Monad m, Functor m)
     -> [RuleRepr]
     -> CompE m Spec
 conjureRepr isFinal spec rules =
-    let pipeline = trySimplifySpec      -- to remove any unnecessary occurrences of variables
-                >=> removeUnused        -- and remove the declarations from the model too
-                >=> applyRepr rules
-                >=> (if isFinal then groomSpec else return)
+    let pipeline =  recordSpec >=> trySimplifySpec      -- to remove any unnecessary occurrences of variables
+                >=> recordSpec >=> removeUnused         -- and remove the declarations from the model too
+                >=> recordSpec >=> applyRepr rules
+                >=> recordSpec >=> (if isFinal then groomSpec else return)
+                >=> recordSpec
     in  pipeline spec

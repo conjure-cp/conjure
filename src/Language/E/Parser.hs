@@ -28,6 +28,8 @@ import Text.Parsec.Pos ( incSourceLine, incSourceColumn, setSourceColumn )
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
 
+import Data.Generics.Uniplate.Data ( universe )
+
 
 -- instance Pretty [Either Lexeme E] where
 --     pretty xs = Pr.vcat $ flip map xs $ \ x -> case x of Left l -> Pr.text $ show l
@@ -747,24 +749,38 @@ parseQuantifiedExpr parseBody = do
             _ -> return ()
         qnGuard <- optionMaybe (comma *> parseExpr)
         qnBody  <- dot *> parseBody <?> "expecting body of a quantified expression"
+
         let emptyGuard = [ [xMake| emptyGuard := [] |] ]
+
+        let
+            singleStructurals = [ i | [xMatch| [i] := structural.single |] <- concatMap universe qnVars ]
+
+            idenToSingleStructural i | i `elem` singleStructurals = [xMake| structural.single := [i] |]
+            idenToSingleStructural (Tagged t xs) = Tagged t $ map idenToSingleStructural xs
+            idenToSingleStructural i = i
+
+        let
+            fixedQuanDoms  = map idenToSingleStructural $ case qnDom  of Just a     -> [a]; _ -> []
+            fixedQuanOps   = map idenToSingleStructural $ case qnExpr of Just (a,_) -> [a]; _ -> []
+            fixedQuanExprs = map idenToSingleStructural $ case qnExpr of Just (_,a) -> [a]; _ -> []
+            fixedGuards    = map idenToSingleStructural $ case qnGuard of Nothing -> emptyGuard ; Just g  -> [g]
+            fixedBodys     = map idenToSingleStructural $ [qnBody]
+
         let
             f []     = error "The Impossible has happenned. in parseQuantifiedExpr.f"
             f [i]    = [xMake| quantified.quantifier   := [qnName]
                              | quantified.quanVar      := [i]
-                             | quantified.quanOverDom  := case qnDom  of Just a     -> [a]; _ -> []
-                             | quantified.quanOverOp   := case qnExpr of Just (a,_) -> [a]; _ -> []
-                             | quantified.quanOverExpr := case qnExpr of Just (_,a) -> [a]; _ -> []
-                             | quantified.guard        := case qnGuard of
-                                                                    Nothing -> emptyGuard
-                                                                    Just g  -> [g]
-                             | quantified.body         := [qnBody]
+                             | quantified.quanOverDom  := fixedQuanDoms
+                             | quantified.quanOverOp   := fixedQuanOps
+                             | quantified.quanOverExpr := fixedQuanExprs
+                             | quantified.guard        := fixedGuards
+                             | quantified.body         := fixedBodys
                              |]
             f (i:is) = [xMake| quantified.quantifier   := [qnName]
                              | quantified.quanVar      := [i]
-                             | quantified.quanOverDom  := case qnDom  of Just a     -> [a]; _ -> []
-                             | quantified.quanOverOp   := case qnExpr of Just (a,_) -> [a]; _ -> []
-                             | quantified.quanOverExpr := case qnExpr of Just (_,a) -> [a]; _ -> []
+                             | quantified.quanOverDom  := fixedQuanDoms
+                             | quantified.quanOverOp   := fixedQuanOps
+                             | quantified.quanOverExpr := fixedQuanExprs
                              | quantified.guard        := emptyGuard
                              | quantified.body         := [f is]
                              |]
@@ -772,9 +788,7 @@ parseQuantifiedExpr parseBody = do
 
 parseStructural :: Parser E
 parseStructural = msum
-    [ do
-        x <- parseMetaVariable
-        return [xMake| structural.single := [x] |]
+    [ parseMetaVariable
     , do
         x <- parseReference
         return [xMake| structural.single := [x] |]

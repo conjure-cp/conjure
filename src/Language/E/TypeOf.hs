@@ -5,8 +5,10 @@ module Language.E.TypeOf where
 import Stuff.Generic
 import Stuff.NamedLog
 import Stuff.FunkyT
+
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.CompE
 import Language.E.TH
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import Language.E.Lexer ( runLexer )
@@ -97,13 +99,15 @@ typeOf [xMatch| [Prim (S i')] := reference |] = do
                     err ErrFatal $ "(typeOf) Undefined reference:" <+> pretty i
                                  $$ nest 4 ("Current bindings:" <+> bsText)
 
-typeOf p@[xMatch| [Prim (S i)] := metavar |] = do
+typeOf [xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
     bs <- getsLocal binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> typeOf x
-        _   -> return p
-        -- _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
+        -- _   -> return p
+        _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
+
+typeOf [xMatch| [i] := structural.single |] = typeOf i
 
 typeOf [xMatch| [d] := topLevel.declaration.find .domain |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.given.domain |] = typeOf d

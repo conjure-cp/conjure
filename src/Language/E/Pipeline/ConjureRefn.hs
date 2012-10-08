@@ -21,9 +21,10 @@ conjureRefn isFinal spec rules =
     case ruleRefnToFunction rules of
         Left  es -> err ErrFatal $ vcat $ map snd es
         Right fs ->
-            let pipeline =  applyRefn fs
-                        >=> removeUnused
-                        >=> makeIdempotent noTuplesSpec
-                        >=> checkIfAllRefined
-                        >=> (if isFinal then groomSpec else return)
+            let pipeline =  recordSpec >=> applyRefn fs
+                        >=> recordSpec >=> makeIdempotent noTuplesSpec
+                        >=> recordSpec >=> removeUnused
+                        >=> recordSpec >=> checkIfAllRefined
+                        >=> recordSpec >=> (if isFinal then groomSpec else return)
+                        >=> recordSpec
             in  pipeline spec

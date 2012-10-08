@@ -2,17 +2,17 @@
 
 module Language.E.MatchBind where
 
-import Stuff.Pretty
 import Stuff.Generic
 import Stuff.MetaVariable
 import Stuff.FunkyT
+
 import Language.E.Imports
 import Language.E.Definition
-import Language.E.Pretty ()
+import Language.E.CompE
+import Language.E.Pretty
 import Language.E.Parser ( lexAndParseIO, parseExpr, inCompleteFile )
 
 import Data.Set as S ( fromList, toList )
-
 import qualified Data.Text as T
 
 
@@ -118,7 +118,7 @@ patternMatch pattern actual = do
 
 
 -- if this returns nothing, that means there is some unbound reference.
-patternBind :: (Functor m, Monad m) => E -> MaybeT (FunkyT LocalState GlobalState CompError m) E
+patternBind :: (Functor m, Monad m) => E -> MaybeT (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) E
 patternBind x | Just nm <- namedMV x = do
     res <- lookupBinder ('&':nm)
     patternBind res
@@ -140,54 +140,3 @@ test_Match patternText actualText = do
         if flag
             then liftIO $ putStrLn "Matched."
             else liftIO $ putStrLn "Not matched."
-
-
--- mkFunction :: (Functor m, Monad m) => E -> [E] -> CompE m (E -> MaybeT (CompE m) [E])
--- mkFunction pattern templates = do
---     let patternMetaVars  = S.fromList [ r | Expr ":metavar" [R r] <- universe pattern  ]
---     let templateMetaVars = S.unions [ S.fromList [ r | Expr ":metavar" [R r] <- universe template ]
---                                     | template <- templates
---                                     ]
---     unless (templateMetaVars `S.isSubsetOf` patternMetaVars)
---         $ err undefined
---         $ singletonNested
---         $ vcat [ "Pattern meta variables:"  <+> prettyListDoc id Pr.comma (map showAST $ S.toList patternMetaVars)
---                      , "Template meta variables:" <+> prettyListDoc id Pr.comma (map showAST $ S.toList templateMetaVars)
---                      ]
---     return $ \ x -> do
---         bindersBefore <- gets binders
---         b <- lift $ patternMatch pattern x
---         if b
---             then do
---                 ys <- mapM bind templates
---                 modify $ \ st -> st { binders = bindersBefore }
---                 return ys
---             else do
---                 modify $ \ st -> st { binders = bindersBefore }
---                 mzero
--- 
--- testAsAFunc :: String -> String -> String -> IO ()
--- testAsAFunc pattern' template' x' = do
---     pattern  <- headNote "parsing pattern"  <$> lexAndParseIO (parseExpr <* eof) (T.pack pattern')
---     template <- headNote "parsing template" <$> lexAndParseIO (parseExpr <* eof) (T.pack template')
---     x        <- headNote "parsing x"        <$> lexAndParseIO (parseExpr <* eof) (T.pack x')
---     void $ runCompE $ do
---         f  <- mkFunction pattern [template]
---         my <- runMaybeT (f x)
---         case my of
---             Nothing -> do
---                 error "function returns Nothing"
---             Just ys -> forM_ ys $ \ y -> do
---                 liftIO $ print $ pretty y
---                 -- mkLog "testAsAFunc" (showAST y)
---                 -- return $ showAST y
---                 -- return $ pretty y
-
-
-
-
-
-
--- [x] <- lexAndParseIO (parseDomain <* eof) "set of int(1..9)" 
--- [p] <- lexAndParseIO (parseDomain <* eof) "set of int(@a..9)" 
--- [t] <- lexAndParseIO (parseExpr <* eof) "a*2**a" 

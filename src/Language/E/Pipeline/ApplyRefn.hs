@@ -38,7 +38,7 @@ tryAgain fs spec = do
 onSpec :: (Functor m, Monad m)
     => RulesDB m
     -> Spec
-    -> WriterT Any (FunkyT LocalState GlobalState CompError m) Spec
+    -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) Spec
 onSpec fs (Spec lang statements) = do
     lift $ mapM_ processStatement statements
     statements' <- sequence <$> mapM (onE fs) statements
@@ -48,7 +48,7 @@ onSpec fs (Spec lang statements) = do
 onE :: (Functor m, Monad m)
     => RulesDB m
     -> E
-    -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
+    -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) [E]
 onE fs x@(Prim {}) = tryApply fs x
 onE fs x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference
                 | xs           := quantified
@@ -101,7 +101,7 @@ onEGeneric :: (Functor m, Monad m)
     -> E
     -> T.Text
     -> [E]
-    -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
+    -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) [E]
 onEGeneric fs x t xs = do
     (results, Any flag) <- listen $ do
         yss <- sequence <$> mapM (onE fs) xs
@@ -115,7 +115,7 @@ onEGeneric fs x t xs = do
 tryApply :: (Functor m, Monad m)
     => RulesDB m
     -> E
-    -> WriterT Any (FunkyT LocalState GlobalState CompError m) [E]
+    -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) [E]
 tryApply fs x = do
     let
         -- returns a pair, first component: True if a modification has been made.
@@ -126,19 +126,20 @@ tryApply fs x = do
             case mys of
                 Nothing -> go gs
                 Just [] ->
-                    throwError (ErrFatal, "Rewrites to nothing.")
+                    err ErrFatal $ "Rewrites to nothing."
                 Just ys -> do
-                    ys' <- forM ys $ \ (n,y) -> do (y',_) <- runWriterT (simplify y) ; return (n,y')
+                    ys' <- forM ys $ \ (n,y) -> do y' <- trySimplifyE y ; return (n,y')
                     mkLog "applied"
                         $ vcat $ pretty x
                                : [ Pr.braces (stringToDoc n) $$ nest 4 (pretty y) | (n,y) <- ys' ]
 
                     return (True, map snd ys')
     (x', Any flag) <- listen (simplify x)
+    x'' <- lift $ trySimplifyE x'
     if flag
         then do
-            lift $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x']
-            return [x']
+            lift $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x'']
+            return [x'']
         else do
             (b,zs) <- lift $ go fs
             tell (Any b)
