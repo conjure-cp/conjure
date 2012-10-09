@@ -10,6 +10,8 @@ $
 $ 30 July 2007
 $
 
+given n_upper : int(1..)
+
 $ n_places: the number of positions to place words
 $ n_words: the number of words in the dictionary
 given n_places, n_words : int(1..)
@@ -25,9 +27,9 @@ letting Place be domain int(1..n_places),
 $ length: the length of each place
 $ inter: the indicies at which two places intersect
 $ dict: the dictionary. maps word identifiers to alphabet elements
-given length : function (total) Place --> int(1..),
-      inter : function tuple (Place,Place) --> tuple (int(1..),int(1..)),
-      dict : function (total) Word --> function int(1..) --> Alphabet
+given length : function (total) Place --> int(1..n_upper),
+      inter : function tuple (Place,Place) --> tuple (int(1..n_upper),int(1..n_upper)),
+      dict : function (total) Word --> function int(1..n_upper) --> Alphabet
 
 where
 $ intersections should be symmetric
@@ -42,8 +44,8 @@ such that
 $ lengths of words and places match up
     forAll p : Place . |dict(crossword(p))| = length(p),
 $ the letters at intersections match up
-    forAll ((p1,p2),(i1,i2)) in inter . dict(crossword(p1))(i1) =
-                                        dict(crossword(p2))(i2),
+    forAll ((p1,p2),(i1,i2)) in toSet(inter) .
+        dict(crossword(p1))(i1) = dict(crossword(p2))(i2),
 $ no word in the dictionary is used more than once
     forAll p1,p2 : Place . crossword(p1) =  crossword(p2) -> p1 = p2
 
