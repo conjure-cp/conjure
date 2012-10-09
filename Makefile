@@ -4,7 +4,10 @@ quick-install:
 	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O0 --ghc-options="+RTS -M4G"
 
 install:
-	time cabal install --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="+RTS -M4G"
+	time cabal install -j --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="+RTS -M4G"
+
+install-llvm:
+	time cabal install -j --disable-library-profiling --disable-executable-profiling --disable-documentation --force-reinstalls -O2 --ghc-options="+RTS -M4G -fllvm"
 
 quick-buildtests:
 	time cabal configure --enable-tests --disable-library-profiling --disable-executable-profiling -O0 --ghc-options="+RTS -M4G"
@@ -34,9 +37,6 @@ prof-runtests:
 	dist/build/conjure-tests/conjure-tests +RTS -hm && mv conjure-tests.hp debugging/conjure-tests-hm.hp && cd debugging && hp2ps -c conjure-tests-hm.hp && ps2pdf conjure-tests-hm.ps && rm conjure-tests-hm.aux
 	dist/build/conjure-tests/conjure-tests +RTS -hr && mv conjure-tests.hp debugging/conjure-tests-hr.hp && cd debugging && hp2ps -c conjure-tests-hr.hp && ps2pdf conjure-tests-hr.ps && rm conjure-tests-hr.aux
 	dist/build/conjure-tests/conjure-tests +RTS -hy && mv conjure-tests.hp debugging/conjure-tests-hy.hp && cd debugging && hp2ps -c conjure-tests-hy.hp && ps2pdf conjure-tests-hy.ps && rm conjure-tests-hy.aux
-
-deps:
-	cabal install --only-dependencies --enable-library-profiling --disable-executable-profiling -O2 --enable-documentation
 
 clean:
 	-find . -name "*.prof" -delete
