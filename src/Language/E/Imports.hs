@@ -16,6 +16,7 @@ module Language.E.Imports
     , sameLength
     , concatMapM
     , parMapM
+    , allFiles, allFilesWithSuffix
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -57,8 +58,8 @@ import qualified Data.Set as S
 
 import Control.Concurrent ( getNumCapabilities )
 import Control.Concurrent.ParallelIO.Local ( withPool, parallel )
-import System.Directory
-import System.FilePath
+import System.Directory ( getDirectoryContents )
+import System.FilePath ( (</>) )
 
 
 stringToDoc :: String -> Doc
