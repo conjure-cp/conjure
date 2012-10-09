@@ -1,17 +1,8 @@
 
 ~~> Explicit
 ~~> matrix indexed by [int(1..&n)] of &t
-$ ~~> allDiff(refn)
-~~> forAll i,j : &t , i !=j . refn[i] != refn[j]
+$ ~~> forAll i,j : int(1..&n) , i !=j . refn[i] != refn[j]
 
     where !(&t hasType `int`)
 
 *** set (size &n, ..) of &t
-
-$ *** set (size &n) of &t
-$ 
-$ *** set (size &n, minSize &_) of &t
-$ 
-$ *** set (size &n, maxSize &_) of &t
-$ 
-$ *** set (size &n, minSize &_, maxSize &_) of &t
