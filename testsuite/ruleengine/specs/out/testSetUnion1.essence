@@ -1,9 +1,0 @@
-language Essence 1.3
-
-find a: set (size 3) of int(1..10)
-find b: set (size 3) of int(1..10)
-find c: set (size 3) of int(1..10)
-such that
-    forAll __1 in a . (exists __2 in c . __2 = __1),
-    forAll __1 in b . (exists __2 in c . __2 = __1),
-    forAll __3 in c . (exists __4 in a . __4 = __3) \/ (exists __4 in b . __4 = __3)

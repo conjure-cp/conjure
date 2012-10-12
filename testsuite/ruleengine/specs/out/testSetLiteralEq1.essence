@@ -1,8 +1,0 @@
-language Essence 2.0
-
-find x: set of int(0..9)
-such that
-    exists __2 in x . __2 = 1,
-    exists __3 in x . __3 = 2,
-    exists __4 in x . __4 = 3,
-    forAll __5 in x . 1 = __5 \/ 2 = __5 \/ 3 = __5
