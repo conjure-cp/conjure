@@ -22,18 +22,21 @@ type CompE m a = FunkyT LocalState GlobalState (CompError, Maybe Spec) m a
 runCompE :: Monad m => CompE m a -> m ([(Either (CompError, Maybe Spec) a, LocalState)], GlobalState)
 runCompE = runFunkyT def def
 
-runCompEIO :: CompE Identity a -> IO [a]
-runCompEIO comp = do
+runCompEIdentity :: CompE Identity a -> ([a], [(CompError, Maybe Spec)], DList.DList NamedLog)
+runCompEIdentity comp =
     let
         (mgenerateds, glo) = runIdentity $ runCompE comp
-        errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
-        generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    printLogs $ logs glo
-    -- unless (null errors) $ putStrLn $ renderPretty $ prettyErrors "There were errors." errors
-    -- mapM (unsafeInterleaveIO . return) generateds
+        errors     = [ x | (Left  x, _) <- mgenerateds ]
+        generateds = [ x | (Right x, _) <- mgenerateds ]
+    in  (generateds, errors, getLogs glo)
+
+runCompEIO :: CompE Identity a -> IO [a]
+runCompEIO comp = do
+    let (generateds, errors, logs) = runCompEIdentity comp
+    printLogs logs
     if null errors
         then mapM (unsafeInterleaveIO . return) generateds
-        else error $ show $ prettyErrors "There were errors." errors
+        else error $ renderPretty $ prettyErrors "There were errors." errors
 
 
 
@@ -54,8 +57,8 @@ prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
     where
         one ((e,d), Nothing) = stringToDoc (show e) <+> d
         one ((e,d), Just sp) = vcat [ stringToDoc (show e) <+> d
-                                    -- , pretty sp
-                                    , prettySpecDebug sp
+                                    , pretty sp
+                                    -- , prettySpecDebug sp
                                     ]
 
 recordSpec :: Monad m => Spec -> CompE m Spec
@@ -87,7 +90,7 @@ instance Default LocalState where
     def = LocalState def 1 def def def def
 
 data GlobalState = GlobalState
-        { logs               :: DList.DList NamedLog        -- logs about execution
+        { getLogs            :: DList.DList NamedLog        -- logs about execution
         , allNamesPreConjure :: S.Set String                -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
@@ -97,7 +100,7 @@ instance Default GlobalState where
 mkLog :: Monad m => String -> Doc -> CompE m ()
 mkLog nm doc = case buildLog nm doc of
     Nothing -> return ()
-    Just l  -> modifyGlobal $ \ st -> st { logs = logs st `DList.snoc` l }
+    Just l  -> modifyGlobal $ \ st -> st { getLogs = getLogs st `DList.snoc` l }
 
 addBinder :: Monad m => String -> E -> CompE m ()
 addBinder nm val = modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
@@ -113,7 +116,7 @@ nextUniqueName :: Monad m => CompE m String
 nextUniqueName = do
     i <- getsLocal uniqueNameInt
     modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
-    let nm = "__" ++ show i
+    let nm = "v__" ++ show i
     nms <- getsGlobal allNamesPreConjure
     if nm `S.member` nms
         then nextUniqueName
