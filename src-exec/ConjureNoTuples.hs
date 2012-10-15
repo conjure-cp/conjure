@@ -2,7 +2,6 @@
 
 module Main where
 
-import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
 import Language.E
@@ -18,21 +17,8 @@ main = do
                         [t] -> return t
                         _   -> error "Only 1 *.essence file."
 
-    spec    <- pairWithContents specFilename
+    specPair <- pairWithContents specFilename
+    [spec]   <- runCompEIO (readSpec specPair)
+    outSpecs <- runCompEIO (conjureNoTuples spec)
+    writeSpecs specFilename "notuples" outSpecs
 
-    let
-        (mgenerateds, glo) = runIdentity $ runCompE (conjureNoTuples spec)
-        errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
-        generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    printLogs $ logs glo
-    unless (null errors)
-        $ error
-        $ show
-        $ prettyErrors "There were errors in at least one branch." errors
-
-    -- putStrLn ""
-    -- putStrLn "[ === Generated === ]"
-    -- putStrLn ""
-    -- mapM_ (putStrLn . renderPretty) generateds
-
-    writeSpecs (dropExtEssence specFilename) "notuples" generateds

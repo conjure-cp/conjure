@@ -2,7 +2,6 @@
 
 module Main where
 
-import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
 import Language.E
@@ -30,9 +29,5 @@ main = do
 
     outSpecs <- runCompEIO (conjureRepr True spec reprs)
 
-    -- putStrLn "[ === Generated === ]"
-    -- putStrLn ""
-    -- mapM_ (putStrLn . renderPretty) outSpecs
-
-    -- writeSpecs (dropExtEssence specFilename) "repr" outSpecs
     writeSpecs specFilename "repr" outSpecs
+

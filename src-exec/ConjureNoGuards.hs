@@ -2,7 +2,6 @@
 
 module Main where
 
-import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 
 import Language.E
@@ -20,20 +19,6 @@ main = do
 
     specPair <- pairWithContents specFilename
     [spec]   <- runCompEIO (readSpec specPair)
+    outSpecs <- runCompEIO (conjureNoGuards spec)
+    writeSpecs specFilename "noguards" outSpecs
 
-    let
-        (mgenerateds, glo) = runIdentity $ runCompE (conjureNoGuards spec)
-        errors     = [ x  | (Left  x, _ ) <- mgenerateds ]
-        generateds = [ x  | (Right x, _ ) <- mgenerateds ]
-    printLogs $ logs glo
-    unless (null errors)
-        $ error
-        $ show
-        $ prettyErrors "There were errors in at least one branch." errors
-
-    -- putStrLn ""
-    -- putStrLn "[ === Generated === ]"
-    -- putStrLn ""
-    -- mapM_ (putStrLn . renderPretty) generateds
-
-    writeSpecs (dropExtEssence specFilename) "noguards" generateds

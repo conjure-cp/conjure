@@ -2,7 +2,6 @@
 
 module Main where
 
-import Data.List ( isSuffixOf )
 import System.Environment ( getArgs )
 import System.IO.Unsafe ( unsafeInterleaveIO )
 
