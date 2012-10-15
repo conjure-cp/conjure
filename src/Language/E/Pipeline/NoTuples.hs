@@ -4,24 +4,21 @@ module Language.E.Pipeline.NoTuples where
 
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Language.E.Pipeline.ReadIn
 
 import qualified Data.Set as S
 import qualified Data.Map as M
 
 
 conjureNoTuples :: (Monad m, Functor m)
-    => (FilePath, Text)
+    => Spec
     -> CompE m Spec
-conjureNoTuples spectobe = do
-    spec  <- readSpec spectobe
-    ( makeIdempotent noTuplesSpec    >=>
-      trySimplifySpec                >=>
-      return . atMostOneSuchThat ) spec
+conjureNoTuples =
+    makeIdempotent noTuplesSpec >=>
+    trySimplifySpec             >=>
+    return . atMostOneSuchThat
 
 
 noTuplesSpec :: (Functor m, Monad m) => Spec -> CompE m (Spec, Bool)
--- noTuplesSpec spec = return (spec, False)
 noTuplesSpec specIn@(Spec v statements) = do
     (statements',(tuplesToExplode,matrixOfTuplesToExplode)) <-
         runWriterT $ forM statements $ \ statement ->
