@@ -12,6 +12,8 @@ module Stuff.Pretty ( Pretty(..)
 import qualified Data.Text as T
 import Text.PrettyPrint
 
+import Text.Printf (printf)
+
 
 class Pretty a where
     pretty :: a -> Doc
@@ -20,9 +22,10 @@ instance Pretty Doc     where pretty = id
 instance Pretty T.Text  where pretty = pretty . T.unpack
 instance Pretty String  where pretty = text
 instance Pretty ()      where pretty = pretty . show
+instance Pretty Bool    where pretty = pretty . show
 instance Pretty Int     where pretty = pretty . show
 instance Pretty Integer where pretty = pretty . show
-instance Pretty Bool    where pretty = pretty . show
+instance Pretty Double  where pretty x = pretty (printf "%.2f" x :: String)
 
 instance (Pretty a, Pretty b) => Pretty (a,b) where
     pretty (a,b) = prettyListDoc parens "," [pretty a, pretty b]
@@ -46,3 +49,4 @@ parensIf = wrapIf parens
 
 renderPretty :: Pretty a => a -> String
 renderPretty = renderStyle (style { lineLength = 120 }) . pretty
+
