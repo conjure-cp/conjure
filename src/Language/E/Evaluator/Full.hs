@@ -132,6 +132,8 @@ evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
             retSum xs
         domSize [xMatch| [fr,to] := range.fromTo |] =
             return [eMake| &to - &fr + 1 |]
+        domSize [xMatch| [_] := range.single |] =
+            return [eMake| 1 |]
 
         domSize [xMatch| rs := domain.tuple.inners |] = do
             xs <- mapM domSize rs
