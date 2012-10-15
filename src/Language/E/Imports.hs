@@ -22,11 +22,11 @@ module Language.E.Imports
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
 import Control.Arrow             as X ( first, second )
 
-import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM )
+import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM, liftM )
 import Control.Monad.Trans.Class as X ( MonadTrans, lift )
 import Control.Monad.Identity    as X ( Identity, runIdentity )
 import Control.Monad.Reader      as X ( MonadReader(..) )
-import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT )
+import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT, runWriter )
 import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT )
 import Control.Monad.IO.Class    as X ( MonadIO, liftIO )
 import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )
@@ -126,7 +126,7 @@ concatMapM f xs = fmap concat $ mapM f xs
 parMapM :: (a -> IO b) -> [a] -> IO [b]
 parMapM f xs = do
    n <- getNumCapabilities
-   withPool n $ \pool -> parallel pool (map f xs)
+   withPool n $ \ pool -> parallel pool (map f xs)
 
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do
