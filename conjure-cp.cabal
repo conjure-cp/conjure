@@ -58,6 +58,8 @@ Library
                      , Language.E.Pipeline.RemoveUnused
                      , Language.E.Pipeline.CheckIfAllRefined
 
+                     , Language.E.Pipeline.ConjureAll
+
                      , Language.E.Pipeline.ConjureRefn
                      , Language.E.Pipeline.RuleRefnToFunction
                      , Language.E.Pipeline.ApplyRefn
@@ -72,12 +74,13 @@ Library
 
                      , Language.E.Testing.ParsePrintSpec
                      , Language.E.Testing.RuleEngine
+                     , Language.E.Testing.TopToBottom
 
 
     build-depends    : base
-                     , containers == 0.5.0.0
+                     , containers == 0.5.1.0
                      , data-default == 0.5.0
-                     , directory == 1.2.0.0
+                     , directory == 1.2.0.1
                      , dlist == 0.5
                      , filepath == 1.3.0.1
                      , hashable == 1.1.2.5
@@ -106,8 +109,6 @@ Library
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
 
 
@@ -129,14 +130,8 @@ Test-Suite conjure-tests
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -eventlog
-        -- -ddump-rule-firings
-        -- -threaded
-        -- -with-rtsopts=-N3
 
 
 Executable conjure-refn
@@ -156,12 +151,8 @@ Executable conjure-refn
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -threaded
-        -- -with-rtsopts=-N3
 
 
 Executable conjure-repr
@@ -181,12 +172,8 @@ Executable conjure-repr
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -threaded
-        -- -with-rtsopts=-N3
 
 
 Executable conjure-bubble
@@ -206,12 +193,8 @@ Executable conjure-bubble
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -threaded
-        -- -with-rtsopts=-N3
 
 
 Executable conjure-noguards
@@ -231,12 +214,8 @@ Executable conjure-noguards
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -threaded
-        -- -with-rtsopts=-N3
 
 
 Executable conjure-notuples
@@ -256,12 +235,8 @@ Executable conjure-notuples
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -threaded
-        -- -with-rtsopts=-N3
 
 
 Executable conjure-all
@@ -281,10 +256,28 @@ Executable conjure-all
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -- -fno-spec-constr-count
-        -- -funfolding-use-threshold=256
         -fprof-auto-calls
         -rtsopts
-        -- -threaded
-        -- -with-rtsopts=-N3
+
+
+Executable conjure-all-silent
+    default-language : Haskell2010
+    hs-source-dirs   : src-exec
+    main-is          : ConjureAllSilent.hs
+    build-depends    : conjure-cp
+                     , base
+
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -fprof-auto-calls
+        -rtsopts
+
 
