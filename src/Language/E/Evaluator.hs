@@ -31,7 +31,7 @@ test_Simplify t = do
             print $ pretty x
             -- print $ prettyAsTree x
             let (results, globalSt) = runIdentity $ runCompE $ runWriterT $ simplify x
-            printLogs $ logs globalSt
+            printLogs $ getLogs globalSt
             forM_ results $ \ (result, _) ->
                 case result of
                     Left e -> error (show e)

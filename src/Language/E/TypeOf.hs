@@ -67,7 +67,7 @@ test_TypeOf t = do
             print $ pretty x
             -- print $ prettyAsTree x
             let (results, globalSt) = runIdentity $ runCompE $ typeOf x
-            printLogs $ logs globalSt
+            printLogs $ getLogs globalSt
             forM_ results $ \ (result, _) ->
                 case result of
                     Left  e -> error (show e)
@@ -345,10 +345,25 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
 typeOf p@[eMatch| max(&a) |] = do
     ta <- typeOf a
     case ta of
-        [xMatch| [] := type.set.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| max(&a,&b) |] = do
+    ta <- typeOf a
+    tb <- typeOf b
+    case (ta,tb) of
+        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
+        _ -> typeErrorIn p
+
+typeOf p@[eMatch| min(&a) |] = do
+    ta <- typeOf a
+    case ta of
+        [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
+        _ -> typeErrorIn p
+
+typeOf p@[eMatch| min(&a,&b) |] = do
     ta <- typeOf a
     tb <- typeOf b
     case (ta,tb) of
