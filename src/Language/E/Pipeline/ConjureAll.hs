@@ -12,6 +12,9 @@ import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
 
 import qualified Data.DList as DList
+import System.CPUTime (getCPUTime)
+import System.Directory (createDirectoryIfMissing)
+
 
 
 data Phase
@@ -67,7 +70,7 @@ conjureAllDriver baseFilename reprs refns spec = do
     end   <- getCPUTime
     let
         diff :: Double
-        diff = fromIntegral (end - start) / (10^12)
+        diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
 
     let logs' = case buildLog "TotalTime" $ pretty diff of
                     Nothing -> logs
