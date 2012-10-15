@@ -4,7 +4,6 @@ module Language.E.Testing.ParsePrintSpec where
 
 import Language.E
 
-import Data.List ( isSuffixOf )
 import System.Directory ( getDirectoryContents )
 
 import Test.Hspec.Monadic
@@ -22,10 +21,7 @@ getSpecs fp = do
     return [ fp ++ "/"  ++ f | f <- ys ]
 
 specs :: IO [FilePath]
-specs = concat <$> sequence [ getSpecs "testsuite/valid/essence"
-                            , getSpecs "testsuite/ruleengine/specs"
-                            , getSpecs "EssenceCatalog/fromAlan"
-                            ]
+specs = allFilesWithSuffix ".essence" "files/testdata"
 
 tests :: IO Test.Hspec.Monadic.Spec
 tests = do
