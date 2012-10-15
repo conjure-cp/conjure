@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Stuff.NamedLog ( NamedLog, buildLog, printLogs ) where
+module Stuff.NamedLog ( NamedLog, buildLog, prettyLogs, printLogs ) where
 
 import Control.Monad ( unless )
 import Data.Hashable
