@@ -2,8 +2,8 @@
 repeats=$1
 timeout=$2
 
-# echo $repeats
-# echo $timeout
+echo "repeats: $repeats"
+echo "timeout: $timeout"
 
 if (ls *.param > /dev/null 2> /dev/null ) then
     parallel -j3 runsavilerow                           \
