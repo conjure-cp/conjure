@@ -26,7 +26,7 @@ ruleReprToFunction fs =
         errors   = concat $ lefts mresults
         results  = rights mresults
     in  if null errors
-            then Right $ \ e -> concat <$> mapM ($ e) results
+            then Right $ \ e -> concatMapM ($ e) results
             else Left errors
 
 
@@ -43,7 +43,7 @@ one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
         errors   = concat $ lefts mresults
         results  = rights mresults
     in  if null errors
-            then Right $ \ x -> concat <$> mapM ($ x) results
+            then Right $ \ x -> concatMapM ($ x) results
             else Left errors
 
 
