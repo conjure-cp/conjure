@@ -14,7 +14,7 @@ OptionParser.new do |opts|
     opts.banner = "Usage: scripts/build/make [options]"
 
     opts.on("-jMANDATORY", "--jobs=MANDATORY", "Build in parallel.") do |v|
-        options.jobs = v
+        options.jobs = Integer(v)
     end
 
     opts.on("-d", "--[no-]documentation", "Enable/disable building documentation.") do |v|
