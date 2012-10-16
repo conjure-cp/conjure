@@ -1,1 +1,2 @@
-set wildignore+=tags
+set wildignore+=tags,dist
+
