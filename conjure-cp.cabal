@@ -114,7 +114,7 @@ Library
 
 Test-Suite conjure-tests
     default-language : Haskell2010
-    hs-source-dirs   : test
+    hs-source-dirs   : src/exec
     type             : exitcode-stdio-1.0
     main-is          : AllTests.hs
     build-depends    : conjure-cp
@@ -136,7 +136,7 @@ Test-Suite conjure-tests
 
 Executable conjure-refn
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureRefn.hs
     build-depends    : conjure-cp
                      , base
@@ -157,7 +157,7 @@ Executable conjure-refn
 
 Executable conjure-repr
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureRepr.hs
     build-depends    : conjure-cp
                      , base
@@ -178,7 +178,7 @@ Executable conjure-repr
 
 Executable conjure-bubble
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureBubbleUp.hs
     build-depends    : conjure-cp
                      , base
@@ -199,7 +199,7 @@ Executable conjure-bubble
 
 Executable conjure-noguards
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureNoGuards.hs
     build-depends    : conjure-cp
                      , base
@@ -220,7 +220,7 @@ Executable conjure-noguards
 
 Executable conjure-notuples
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureNoTuples.hs
     build-depends    : conjure-cp
                      , base
@@ -241,7 +241,7 @@ Executable conjure-notuples
 
 Executable conjure-all
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureAll.hs
     build-depends    : conjure-cp
                      , base
@@ -262,7 +262,7 @@ Executable conjure-all
 
 Executable conjure-all-silent
     default-language : Haskell2010
-    hs-source-dirs   : src-exec
+    hs-source-dirs   : src/exec
     main-is          : ConjureAllSilent.hs
     build-depends    : conjure-cp
                      , base
