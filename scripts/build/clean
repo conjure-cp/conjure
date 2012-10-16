@@ -1,0 +1,10 @@
+#/bin/sh
+
+find . -name "*.prof" -delete
+find . -name "*.hi" -delete
+find . -name "*.o" -delete
+find . -name "*.hi-boot" -delete
+find . -name "*.o-boot" -delete
+cabal clean
+ghc-pkg unregister conjure-cp
+
