@@ -1,0 +1,53 @@
+language ESSENCE 1.2.0
+$ prob115.essence: Tail Assignment
+$ Problem details available in:
+$   A Constraint Programming Model for Tail Assignment
+$   M. Gronkvist
+$   Proc. First International Conference on Integration of AI and OR Techniques
+$   in Constraint Programming for Combinatorial Optimization Problems (CPAIOR
+$   2004), LNCS 3011, pp. 287-301, 2004.
+$
+$ 06 August 2007
+$
+
+$ n_flights: the number of flights
+$ n_planes: the number of aircraft
+$ maint_freq: how many flights an aircraft may make before needing maintenance
+given n_flights, n_planes, maint_freq : int(1..)
+
+$ Flight: flight identifiers
+$ Plane: aircraft identifiers
+letting Flight be domain int(1..n_flights),
+        Plane be domain int(1..n_planes)
+
+$ network: the flight network. which flights can follow from which other flights
+$ can_fly: which aircraft can make which flights
+$ carry_in: the last flight made by each aircraft
+$ maint: the set of flights that have a maintenance facility at their
+$        destination
+given network : relation of (Flight*Flight),
+      can_fly : relation of (Plane*Flight),
+      carry_in : function (total) Plane --> Flight,
+      maint : set of Flight
+
+$ route: the route for each aircraft
+find route : function (total) Plane --> function int(1..n_flights) --> Flight
+
+such that
+$ all elements of the range of the function 'route' are valid sequences
+    forAll s in range(route) . forAll i : int(1..|s|) . i in defined(s),
+$ the route for each aircraft begins with a flight that may follow on from the
+$ last flight that it made
+    forAll p : Plane . (carry_in(p), route(p)(1)) in network,
+$ each aircraft is able to make the flights on its route
+    forAll p : Plane . forAll a in range(route(p)) . (a) in can_fly(p,_),
+$ flights are made in the correct order
+    forAll s in range(route) . forAll i : int(1..|s|-1) .
+        (s(i),s(i+1)) in network,
+$ every flight is made exactly once
+    forAll f : Flight . exists p : Plane . f in range(route(p)),
+    forAll p1,p2 : Plane . |range(route(p1)) intersect range(route(p2))| = 0,
+$ every aircraft visits a maintenance depot frequently enough
+    forAll s in range(route) . forAll i : int(1..|s|-maint_freq) .
+        exists j : int(i..i+maint_freq) . s(j) in maint
+
