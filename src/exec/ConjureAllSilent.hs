@@ -4,7 +4,7 @@ import System.Environment (getArgs)
 
 import Language.E
 import Language.E.Pipeline.ReadIn
-import Language.E.Pipeline.ConjureAll (conjureAllDriver)
+import Language.E.Pipeline.ConjureAll
 
 
 main :: IO ()
@@ -31,5 +31,5 @@ main = do
     [refns]   <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
     [reprs]   <- runCompEIO (mapM readRuleRepr reprPairs)
 
-    conjureAllDriver (dropExtEssence specFilename) reprs refns spec
+    driverConjureAllSilent (dropExtEssence specFilename) reprs refns spec
 

@@ -1,15 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Main where
 
 import System.Environment ( getArgs )
-import System.IO.Unsafe ( unsafeInterleaveIO )
 
 import Language.E
 import Language.E.Pipeline.ReadIn
-import Language.E.Pipeline.ConjureRepr ( conjureRepr )
-import Language.E.Pipeline.ConjureRefn ( conjureRefn )
-import Language.E.Pipeline.Groom ( groomSpec )
+import Language.E.Pipeline.ConjureAll
 
 
 main :: IO ()
@@ -36,31 +31,5 @@ main = do
     [refns]   <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
     [reprs]   <- runCompEIO (mapM readRuleRepr reprPairs)
 
-    outSpecs  <- loop reprs refns spec
-
-    writeSpecs (dropExtEssence specFilename) "conjure" outSpecs
-
-
-data Phase
-    = Repr
-    | Refn
-
-loop :: [RuleRepr] -> [RuleRefn] -> Spec -> IO [Spec]
-loop reprs refns = go Repr
-    where
-        go :: Phase -> Spec -> IO [Spec]
-        go Repr s = do
-            generateds <- runCompEIO (conjureRepr False s reprs)
-            let lgenerateds = length generateds
-            when (lgenerateds > 1) $ putStrLn $ "multiple alternatives after repr: " ++ show lgenerateds
-            if null generateds
-                then runCompEIO (groomSpec s)
-                else concatMapM (unsafeInterleaveIO . go Refn) generateds
-        go Refn s = do
-            generateds <- runCompEIO (conjureRefn False s refns)
-            let lgenerateds = length generateds
-            when (lgenerateds > 1) $ putStrLn $ "multiple alternatives after refn: " ++ show lgenerateds
-            if null generateds
-                then runCompEIO (groomSpec s)
-                else concatMapM (unsafeInterleaveIO . go Repr) generateds
+    driverConjureAll (dropExtEssence specFilename) reprs refns spec
 
