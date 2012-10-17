@@ -17,6 +17,7 @@ module Language.E.Imports
     , concatMapM
     , parMapM
     , allFiles, allFilesWithSuffix
+    , timedIO
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -27,6 +28,7 @@ import Control.Monad.Trans.Class as X ( MonadTrans, lift )
 import Control.Monad.Identity    as X ( Identity, runIdentity )
 import Control.Monad.Reader      as X ( MonadReader(..) )
 import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT, runWriter )
+import Control.Monad.State       as X ( MonadState, get, put, evalStateT )
 import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT )
 import Control.Monad.IO.Class    as X ( MonadIO, liftIO )
 import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )
@@ -45,7 +47,9 @@ import Data.Traversable  as X ( forM )
 
 import Data.Generics.Uniplate.Data as X ( Uniplate, universe, transform )
 
-import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, vcat, (<+>), ($$) )
+import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$) )
+
+import System.Random as X ( StdGen, getStdGen )
 
 import Debug.Trace as X ( trace )
 
@@ -60,6 +64,7 @@ import Control.Concurrent ( getNumCapabilities )
 import Control.Concurrent.ParallelIO.Local ( withPool, parallel )
 import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
+import System.CPUTime ( getCPUTime )
 
 
 stringToDoc :: String -> Doc
@@ -131,7 +136,7 @@ parMapM f xs = do
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do
     let dots i = not $ or [ i == "." , i == ".." ]
-    ys' <- getDirectoryContents x `catchError` (const $ return [])
+    ys' <- getDirectoryContents x `catchError` const (return [])
     let ys = filter dots ys'
     if null ys
         then return [x]
@@ -139,4 +144,12 @@ allFiles x = do
 
 allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
 allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
+
+timedIO :: IO a -> IO (a, Double)
+timedIO io = do
+    start <- getCPUTime
+    a <- io
+    end   <- getCPUTime
+    let diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
+    return (a, diff)
 

@@ -1,6 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Stuff.NamedLog ( NamedLog, buildLog, prettyLogs, printLogs ) where
+module Stuff.NamedLog
+    ( NamedLog, buildLog
+    , prettyLog, prettyLogs, printLogs
+    ) where
 
 import Control.Monad ( unless )
 import Data.Hashable
@@ -49,10 +52,13 @@ buildLog :: String -> Doc -> Maybe NamedLog
 buildLog nm _ | nm `S.member` suppress = Nothing
 buildLog nm doc = Just (NamedLog nm doc)
 
+prettyLog :: NamedLog -> Doc
+prettyLog (NamedLog nm doc) = brackets (text nm) <+> doc
+
 prettyLogs :: DList.DList NamedLog -> Doc
 prettyLogs = id
     . vcat
-    . map (\ (NamedLog nm doc) -> brackets (text nm) <+> doc )
+    . map prettyLog
     . nubKeepOrder
     . DList.toList
 

@@ -130,7 +130,8 @@ test_Match :: String -> String -> IO ()
 test_Match patternText actualText = do
     pattern <- lexAndParseIO (inCompleteFile parseExpr) (T.pack patternText)
     actual  <- lexAndParseIO (inCompleteFile parseExpr) (T.pack actualText)
-    void $ runCompE $ do
+    gen <- getStdGen
+    void $ runCompE gen $ do
         flag <- patternMatch pattern actual
         bs   <- getsLocal binders
         forM_ bs $ \ (Binder nm val) -> liftIO $ do

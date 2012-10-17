@@ -43,10 +43,11 @@ getAllRefns
     :: (MonadWriter [(String, Bool)] m, MonadIO m)
     => m [RuleRefn]
 getAllRefns = do
+    gen      <- liftIO getStdGen
     files    <- liftIO $ allFilesWithSuffix ".rule" "files/rules"
     contents <- liftIO $ mapM pairWithContents files
     liftM (concat . catMaybes) $ forM contents $ \ pair@(fp,_) ->
-        case runCompEIdentity (readRuleRefn pair) of
+        case runCompEIdentity gen (readRuleRefn pair) of
             ([a], _     , _) -> testSuccess a $ "parsing -- " ++ fp
             (_  , errors, _) -> testFail $ "parsing -- " ++ fp ++ " -- "
                                         ++ renderPretty (prettyErrors "Parsing." errors)
@@ -56,10 +57,11 @@ getAllReprs
     :: (MonadWriter [(String, Bool)] m, MonadIO m)
     => m [RuleRepr]
 getAllReprs = do
+    gen      <- liftIO getStdGen
     files    <- liftIO $ allFilesWithSuffix ".repr" "files/rules"
     contents <- liftIO $ mapM pairWithContents files
     liftM catMaybes $ forM contents $ \ pair@(fp,_) ->
-        case runCompEIdentity (readRuleRepr pair) of
+        case runCompEIdentity gen (readRuleRepr pair) of
             ([a], _     , _) -> testSuccess a $ "parsing -- " ++ fp
             (_  , errors, _) -> testFail $ "parsing -- " ++ fp ++ " -- "
                                         ++ renderPretty (prettyErrors "Parsing." errors)
@@ -69,10 +71,11 @@ getAllSpecs
     :: (MonadWriter [(String, Bool)] m, MonadIO m)
     => m [(FilePath, Spec)]
 getAllSpecs = do
+    gen      <- liftIO getStdGen
     files    <- liftIO $ allFilesWithSuffix ".essence" "files/testdata"
     contents <- liftIO $ mapM pairWithContents files
     liftM catMaybes $ forM contents $ \ pair@(fp,_) ->
-        case runCompEIdentity (readSpec pair) of
+        case runCompEIdentity gen (readSpec pair) of
             ([a], _     , _) -> testSuccess (fp,a) $ "parsing -- " ++ fp
             (_  , errors, _) -> testFail $ "parsing -- " ++ fp ++ " -- "
                                         ++ renderPretty (prettyErrors "Parsing." errors)

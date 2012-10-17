@@ -11,14 +11,15 @@ import Control.Monad.Error         ( MonadError(..) )
 import Control.Monad.Identity      ( Identity(..) )
 import Control.Monad.IO.Class      ( MonadIO, liftIO )
 import Control.Monad.Trans.Class   ( MonadTrans, lift )
+import System.Random               ( StdGen )
 
 
-newtype FunkyT localSt globalSt err m a = FunkyT ( localSt -> globalSt -> m ([(Either err a, localSt)], globalSt) )
+newtype FunkyT localSt globalSt err m a = FunkyT ( localSt -> (globalSt, StdGen) -> m ([(Either err a, localSt)], (globalSt, StdGen)) )
 
-runFunkyT :: localSt -> globalSt -> FunkyT localSt globalSt err m a -> m ([(Either err a, localSt)], globalSt)
+runFunkyT :: localSt -> (globalSt, StdGen) -> FunkyT localSt globalSt err m a -> m ([(Either err a, localSt)], (globalSt, StdGen))
 runFunkyT local global (FunkyT f) = f local global
 
-runFunky :: localSt -> globalSt -> FunkyT localSt globalSt err Identity a -> ([(Either err a, localSt)], globalSt)
+runFunky :: localSt -> (globalSt, StdGen) -> FunkyT localSt globalSt err Identity a -> ([(Either err a, localSt)], (globalSt, StdGen))
 runFunky local global ma = runIdentity $ runFunkyT local global ma
 
 instance Monad m => MonadList (FunkyT localSt globalSt err m) where
@@ -50,7 +51,7 @@ instance Monad m => Monad (FunkyT localSt globalSt err m) where
         (results, global') <- g local global
         let
             {-# INLINE doOne #-}
-            -- doOne :: Monad m => (a -> FunkyT localSt globalSt err m b) -> [(Either err a, localSt)] -> globalSt -> m ([(Either err b, localSt)], globalSt)
+--            doOne :: Monad m => (a -> FunkyT localSt globalSt err m b) -> [(Either err a, localSt)] -> globalSt -> m ([(Either err b, localSt)], globalSt)
             doOne [] gl = return ([], gl)
             doOne ((Left  e, l) : rest) gl = do
                 (rest', gl') <- doOne rest gl
@@ -89,10 +90,13 @@ getsGlobal   :: Monad m => (globalSt -> a) -> FunkyT localSt globalSt err m a
 modifyLocal  :: Monad m => (localSt  -> localSt ) -> FunkyT localSt globalSt err m ()
 modifyGlobal :: Monad m => (globalSt -> globalSt) -> FunkyT localSt globalSt err m ()
 
-getsLocal    f = FunkyT $ \ local global -> return ([(Right (f local ), local)], global)
-getsGlobal   f = FunkyT $ \ local global -> return ([(Right (f global), local)], global)
-modifyLocal  f = FunkyT $ \ local global -> return ([(Right (), f local)],   global)
-modifyGlobal f = FunkyT $ \ local global -> return ([(Right (),   local)], f global)
+getsLocal    f = FunkyT $ \ local global        -> return ([(Right (f local ),   local)],    global      )
+getsGlobal   f = FunkyT $ \ local (global, gen) -> return ([(Right (f global),   local)], (  global, gen))
+modifyLocal  f = FunkyT $ \ local global        -> return ([(Right ()        , f local)],    global      )
+modifyGlobal f = FunkyT $ \ local (global, gen) -> return ([(Right ()        ,   local)], (f global, gen))
+
+getGen :: Monad m => FunkyT localSt globalSt err m StdGen
+getGen = FunkyT $ \ local (global, gen) -> return ([(Right gen, local)], (global, gen))
 
 instance MonadIO m => MonadIO (FunkyT localSt globalSt err m) where
     {-# INLINE liftIO #-}

@@ -60,13 +60,14 @@ mostKnown x y = do
 
 test_TypeOf :: T.Text -> IO ()
 test_TypeOf t = do
+    gen <- getStdGen
     let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
     case res of
         Left  e -> print e
         Right x -> do
             print $ pretty x
             -- print $ prettyAsTree x
-            let (results, globalSt) = runIdentity $ runCompE $ typeOf x
+            let (results, (globalSt,_)) = runIdentity $ runCompE gen $ typeOf x
             printLogs $ getLogs globalSt
             forM_ results $ \ (result, _) ->
                 case result of

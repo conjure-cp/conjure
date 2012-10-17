@@ -19,20 +19,21 @@ import System.IO.Unsafe ( unsafeInterleaveIO )
 
 type CompE m a = FunkyT LocalState GlobalState (CompError, Maybe Spec) m a
 
-runCompE :: Monad m => CompE m a -> m ([(Either (CompError, Maybe Spec) a, LocalState)], GlobalState)
-runCompE = runFunkyT def def
+runCompE :: Monad m => StdGen -> CompE m a -> m ([(Either (CompError, Maybe Spec) a, LocalState)], (GlobalState, StdGen))
+runCompE gen = runFunkyT def (def, gen)
 
-runCompEIdentity :: CompE Identity a -> ([a], [(CompError, Maybe Spec)], DList.DList NamedLog)
-runCompEIdentity comp =
+runCompEIdentity :: StdGen -> CompE Identity a -> ([a], [(CompError, Maybe Spec)], (DList.DList NamedLog, StdGen))
+runCompEIdentity gen comp =
     let
-        (mgenerateds, glo) = runIdentity $ runCompE comp
+        (mgenerateds, (glo, gen')) = runIdentity $ runCompE gen comp
         errors     = [ x | (Left  x, _) <- mgenerateds ]
         generateds = [ x | (Right x, _) <- mgenerateds ]
-    in  (generateds, errors, getLogs glo)
+    in  (generateds, errors, (getLogs glo, gen'))
 
 runCompEIO :: CompE Identity a -> IO [a]
 runCompEIO comp = do
-    let (generateds, errors, logs) = runCompEIdentity comp
+    gen <- getStdGen
+    let (generateds, errors, (logs,_)) = runCompEIdentity gen comp
     printLogs logs
     if null errors
         then mapM (unsafeInterleaveIO . return) generateds

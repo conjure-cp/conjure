@@ -24,13 +24,14 @@ import Data.Generics.Uniplate.Data ( rewriteM )
 
 test_Simplify :: T.Text -> IO ()
 test_Simplify t = do
+    gen <- getStdGen
     let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
     case res of
         Left  e -> print e
         Right x -> do
             print $ pretty x
             -- print $ prettyAsTree x
-            let (results, globalSt) = runIdentity $ runCompE $ runWriterT $ simplify x
+            let (results, (globalSt, _)) = runIdentity $ runCompE gen $ runWriterT $ simplify x
             printLogs $ getLogs globalSt
             forM_ results $ \ (result, _) ->
                 case result of

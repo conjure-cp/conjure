@@ -197,7 +197,8 @@ loadAndApply specFilename refnFilenames = do
     [spec]  <- runCompEIO (readSpec specPair)
     [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
-    let (results, errors, logs) = runCompEIdentity $ liftM atMostOneSuchThat $ conjureRefn False spec refns
+    gen <- getStdGen
+    let (results, errors, (logs, _)) = runCompEIdentity gen $ liftM atMostOneSuchThat $ conjureRefn False spec refns
     printLogs logs
     if null errors
         then
@@ -221,7 +222,8 @@ buildTests params = describe "rule engine" $
             [rules]     <- runCompEIO (concat <$> mapM readRuleRefn rulePairs)
             [expecteds] <- runCompEIO (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
 
-            let (generateds, errorsG, logs) = runCompEIdentity $ liftM atMostOneSuchThat $ conjureRefn False spec rules
+            gen <- getStdGen
+            let (generateds, errorsG, (logs, _)) = runCompEIdentity gen $ liftM atMostOneSuchThat $ conjureRefn False spec rules
             printLogs logs
             unless (null errorsG)
                 $ assertFailure
