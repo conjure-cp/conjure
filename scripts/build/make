@@ -13,7 +13,7 @@ options.documentation = false
 OptionParser.new do |opts|
     opts.banner = "Usage: scripts/build/make [options]"
 
-    opts.on("-jMANDATORY", "--jobs=MANDATORY", "Build in parallel.") do |v|
+    opts.on("-j[OPTIONAL]", "--jobs[=OPTIONAL]", "Build in parallel.") do |v|
         options.jobs = Integer(v)
     end
 
@@ -40,6 +40,8 @@ paramsBuild << "cabal" << "install"
 
 if options.jobs > 1
     paramsBuild << "-j#{options.jobs}"
+elsif options.jobs == 0
+    paramsBuild << "-j"
 end
 
 if options.documentation
