@@ -6,7 +6,7 @@ echo "repeats: $repeats"
 echo "timeout: $timeout"
 
 if (ls *.param > /dev/null 2> /dev/null ) then
-    parallel -j3 runsavilerow                           \
+    parallel -j3 savilerow                              \
         -in-eprime {2}                                  \
         -in-param {1}                                   \
         -out-minion {1.}-{2.}-run{3}.minion             \
@@ -16,7 +16,7 @@ if (ls *.param > /dev/null 2> /dev/null ) then
         ::: *.eprime                                    \
         ::: `seq 1 $repeats`
 else
-    parallel -j3 runsavilerow                           \
+    parallel -j3 savilerow                              \
         -in-eprime {1}                                  \
         -out-minion {1.}-run{2.}.minion                 \
         -out-solution {1.}-run{2.}.solution             \
