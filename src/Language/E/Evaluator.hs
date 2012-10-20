@@ -4,7 +4,6 @@ module Language.E.Evaluator ( simplify, trySimplifySpec, trySimplifyE, test_Simp
 
 import Stuff.Pretty
 import Stuff.FunkyT
-import Stuff.NamedLog
 
 import Language.E.Imports
 import Language.E.Definition
@@ -24,22 +23,13 @@ import Data.Generics.Uniplate.Data ( rewriteM )
 
 test_Simplify :: T.Text -> IO ()
 test_Simplify t = do
-    gen <- getStdGen
     let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
     case res of
         Left  e -> print e
         Right x -> do
             print $ pretty x
-            -- print $ prettyAsTree x
-            let (results, (globalSt, _)) = runIdentity $ runCompE gen $ runWriterT $ simplify x
-            printLogs $ getLogs globalSt
-            forM_ results $ \ (result, _) ->
-                case result of
-                    Left e -> error (show e)
-                    Right (y, Any flag) ->
-                        when flag $ do
-                            print $ pretty y
-                            print $ prettyAsTree y
+            ys <- runCompEIO $ runWriterT $ simplify x
+            mapM_ (print . pretty . fst) ys
 
 
 trySimplifySpec :: (Functor m, Monad m) => Spec -> CompE m Spec

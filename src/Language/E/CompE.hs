@@ -19,25 +19,24 @@ import System.IO.Unsafe ( unsafeInterleaveIO )
 
 type CompE m a = FunkyT LocalState GlobalState (CompError, Maybe Spec) m a
 
-runCompE :: Monad m => StdGen -> CompE m a -> m ([(Either (CompError, Maybe Spec) a, LocalState)], (GlobalState, StdGen))
+runCompE
+    :: Monad m
+    => StdGen
+    -> CompE m a
+    -> m ([(Either (CompError, Maybe Spec) a, LocalState)], (GlobalState, StdGen))
 runCompE gen = runFunkyT def (def, gen)
-
-runCompEIdentity :: StdGen -> CompE Identity a -> ([a], [(CompError, Maybe Spec)], (DList.DList NamedLog, StdGen))
-runCompEIdentity gen comp =
-    let
-        (mgenerateds, (glo, gen')) = runIdentity $ runCompE gen comp
-        errors     = [ x | (Left  x, _) <- mgenerateds ]
-        generateds = [ x | (Right x, _) <- mgenerateds ]
-    in  (generateds, errors, (getLogs glo, gen'))
 
 runCompEIO :: CompE Identity a -> IO [a]
 runCompEIO comp = do
     gen <- getStdGen
-    let (generateds, errors, (logs,_)) = runCompEIdentity gen comp
-    printLogs logs
-    if null errors
-        then mapM (unsafeInterleaveIO . return) generateds
-        else error $ renderPretty $ prettyErrors "There were errors." errors
+    let (mgenerateds, _) = runIdentity $ runCompE gen comp
+    forM mgenerateds $ \ mgenerated -> case mgenerated of
+        (Left  x, locSt) -> do
+            printLogs (localLogs locSt)
+            error $ renderPretty $ prettyErrors "There were errors." [x]
+        (Right x, locSt) -> do
+            printLogs (localLogs locSt)
+            unsafeInterleaveIO $ return x
 
 
 
@@ -81,27 +80,26 @@ data LocalState = LocalState
                                  ) ]
         , structuralConsLog :: [E]
         , lastSpec :: Maybe Spec  -- record the spec after changes, to report in case of an error.
+        , localLogs :: DList.DList NamedLog
         }
-    deriving ( Show )
 
 data Binder = Binder String E
     deriving (Show)
 
 instance Default LocalState where
-    def = LocalState def 1 def def def def
+    def = LocalState def 1 def def def def DList.empty
 
 data GlobalState = GlobalState
-        { getLogs            :: DList.DList NamedLog        -- logs about execution
-        , allNamesPreConjure :: S.Set String                -- all identifiers used in the spec, pre conjure. to avoid name clashes.
+        { allNamesPreConjure :: S.Set String  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 instance Default GlobalState where
-    def = GlobalState DList.empty def
+    def = GlobalState def
 
 mkLog :: Monad m => String -> Doc -> CompE m ()
 mkLog nm doc = case buildLog nm doc of
     Nothing -> return ()
-    Just l  -> modifyGlobal $ \ st -> st { getLogs = getLogs st `DList.snoc` l }
+    Just l  -> modifyLocal $ \ st -> st { localLogs = localLogs st `DList.snoc` l }
 
 addBinder :: Monad m => String -> E -> CompE m ()
 addBinder nm val = modifyLocal $ \ st -> st { binders = Binder nm val : binders st }

@@ -197,16 +197,9 @@ loadAndApply specFilename refnFilenames = do
     [spec]  <- runCompEIO (readSpec specPair)
     [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
 
-    gen <- getStdGen
-    let (results, errors, (logs, _)) = runCompEIdentity gen $ liftM atMostOneSuchThat $ conjureRefn False spec refns
-    printLogs logs
-    if null errors
-        then
-            if null results
-                then error "null results"
-                else mapM_ (print . pretty) results
-        else error $ show
-                   $ prettyErrors "There were errors in at least one branch." errors
+    results <- runCompEIO $ liftM atMostOneSuchThat $ conjureRefn False spec refns
+    mapM_ (print . pretty) results
+
 
 buildTests :: [(String, FilePath, [FilePath], [FilePath])] -> Test.Hspec.Monadic.Spec
 -- buildTests = undefined
@@ -222,13 +215,7 @@ buildTests params = describe "rule engine" $
             [rules]     <- runCompEIO (concat <$> mapM readRuleRefn rulePairs)
             [expecteds] <- runCompEIO (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
 
-            gen <- getStdGen
-            let (generateds, errorsG, (logs, _)) = runCompEIdentity gen $ liftM atMostOneSuchThat $ conjureRefn False spec rules
-            printLogs logs
-            unless (null errorsG)
-                $ assertFailure
-                $ show
-                $ prettyErrors "There were errors in at least one branch." errorsG
+            generateds <- runCompEIO $ liftM atMostOneSuchThat $ conjureRefn False spec rules
 
             unless (length generateds == length expecteds)
                 $ assertFailure

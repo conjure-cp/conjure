@@ -261,24 +261,3 @@ Executable conjure-all
         -rtsopts
 
 
-Executable conjure-all-silent
-    default-language : Haskell2010
-    hs-source-dirs   : src/exec
-    main-is          : ConjureAllSilent.hs
-    build-depends    : conjure-cp
-                     , base
-
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -fprof-auto-calls
-        -rtsopts
-
-

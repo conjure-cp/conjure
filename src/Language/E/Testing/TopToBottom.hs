@@ -47,10 +47,13 @@ getAllRefns = do
     files    <- liftIO $ allFilesWithSuffix ".rule" "files/rules"
     contents <- liftIO $ mapM pairWithContents files
     liftM (concat . catMaybes) $ forM contents $ \ pair@(fp,_) ->
-        case runCompEIdentity gen (readRuleRefn pair) of
-            ([a], _     , _) -> testSuccess a $ "parsing -- " ++ fp
-            (_  , errors, _) -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                        ++ renderPretty (prettyErrors "Parsing." errors)
+        let
+            (mxs, _) = runIdentity $ runCompE gen (readRuleRefn pair)
+            errors   = lefts $ map fst mxs
+        in  case mxs of
+                [(Right a, _)] -> testSuccess a $ "parsing -- " ++ fp
+                _              -> testFail $ "parsing -- " ++ fp ++ " -- "
+                                          ++ renderPretty (prettyErrors "Parsing." errors)
 
 
 getAllReprs
@@ -61,10 +64,13 @@ getAllReprs = do
     files    <- liftIO $ allFilesWithSuffix ".repr" "files/rules"
     contents <- liftIO $ mapM pairWithContents files
     liftM catMaybes $ forM contents $ \ pair@(fp,_) ->
-        case runCompEIdentity gen (readRuleRepr pair) of
-            ([a], _     , _) -> testSuccess a $ "parsing -- " ++ fp
-            (_  , errors, _) -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                        ++ renderPretty (prettyErrors "Parsing." errors)
+        let
+            (mxs, _) = runIdentity $ runCompE gen (readRuleRepr pair)
+            errors   = lefts $ map fst mxs
+        in  case mxs of
+                [(Right a, _)] -> testSuccess a $ "parsing -- " ++ fp
+                _              -> testFail $ "parsing -- " ++ fp ++ " -- "
+                                          ++ renderPretty (prettyErrors "Parsing." errors)
 
 
 getAllSpecs
@@ -75,10 +81,13 @@ getAllSpecs = do
     files    <- liftIO $ allFilesWithSuffix ".essence" "files/testdata"
     contents <- liftIO $ mapM pairWithContents files
     liftM catMaybes $ forM contents $ \ pair@(fp,_) ->
-        case runCompEIdentity gen (readSpec pair) of
-            ([a], _     , _) -> testSuccess (fp,a) $ "parsing -- " ++ fp
-            (_  , errors, _) -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                        ++ renderPretty (prettyErrors "Parsing." errors)
+        let
+            (mxs, _) = runIdentity $ runCompE gen (readSpec pair)
+            errors   = lefts $ map fst mxs
+        in  case mxs of
+                [(Right a, _)] -> testSuccess (fp,a) $ "parsing -- " ++ fp
+                _              -> testFail $ "parsing -- " ++ fp ++ " -- "
+                                          ++ renderPretty (prettyErrors "Parsing." errors)
 
 
 testSuccess :: (MonadWriter [(String, Bool)] m, MonadIO m) => a -> String -> m (Maybe a)

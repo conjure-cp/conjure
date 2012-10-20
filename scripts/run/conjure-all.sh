@@ -1,4 +1,9 @@
 #!/bin/sh
 
-conjure-all `find files/rules -type f | grep -e ".rule$" -e ".repr$"` $@
+filename=$1
+filename_noext=${filename%\.*}
+
+conjure-all \
+    `find files/rules -type f | grep -e ".rule$" -e ".repr$"` \
+        $filename +RTS -s 2> $filename_noext.rts
 

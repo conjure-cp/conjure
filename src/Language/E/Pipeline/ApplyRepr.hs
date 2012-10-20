@@ -35,9 +35,9 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
                 [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
                 _  -> do
                     let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
-                    mkLog "representation" $ vcat [ pretty x
-                                                  , "(#" <> pretty (length ys) <> ")" <+> prettyList id "," ysNames
-                                                  ] 
+                    mkLog "representation" $ sep [ pretty x
+                                                 , "(#" <> pretty (length ys) <> ")" <+> prettyList id "," ysNames
+                                                 ] 
                     return (n,ys)
 
         let
@@ -52,7 +52,7 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
             foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
 
             lookupTables :: [ M.Map String [RuleReprResult] ]
-            lookupTables = map M.fromList $ foo $
+            lookupTables = map M.fromList $ foo
                 [ (nm, allCombs)
                 | (nm, results) <- candidates
                 , let cnt = nbOccurrence nm
@@ -61,7 +61,15 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
                 ]
 
         table <- returns lookupTables
-        applyCongfigToSpec spec table
+        if M.null table
+            then returns []
+            else do
+                let configStr = hsep $ concat [ map (\ i -> pretty nm <> "#" <> i ) nms
+                                              | (nm, rs) <- M.toList table
+                                              , let nms = map (\ (_,_,i,_,_) -> pretty i ) rs
+                                              ]
+                mkLog "configuration" configStr
+                applyCongfigToSpec spec table
 
 
 applyCongfigToSpec :: (Functor m, Monad m) => Spec -> M.Map String [RuleReprResult] -> CompE m Spec

@@ -3,7 +3,6 @@
 module Language.E.TypeOf where
 
 import Stuff.Generic
-import Stuff.NamedLog
 import Stuff.FunkyT
 
 import Language.E.Imports
@@ -60,19 +59,13 @@ mostKnown x y = do
 
 test_TypeOf :: T.Text -> IO ()
 test_TypeOf t = do
-    gen <- getStdGen
     let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
     case res of
         Left  e -> print e
         Right x -> do
             print $ pretty x
-            -- print $ prettyAsTree x
-            let (results, (globalSt,_)) = runIdentity $ runCompE gen $ typeOf x
-            printLogs $ getLogs globalSt
-            forM_ results $ \ (result, _) ->
-                case result of
-                    Left  e -> error (show e)
-                    Right y -> print $ pretty y
+            ys <- runCompEIO $ typeOf x
+            mapM_ (print . pretty) ys
 
 
 typeErrorIn :: Monad m => E -> CompE m a
