@@ -7,8 +7,9 @@ options = OpenStruct.new
 options.jobs = 1                # nil means pass -j to cabal. otherwise -jNUMBER
 options.profiling = false
 options.tests = false
-options.optimisation = true
+options.optimisation = false
 options.documentation = false
+options.llvm = false
 
 OptionParser.new do |opts|
     opts.banner = "Usage: scripts/build/make [options]"
@@ -31,6 +32,10 @@ OptionParser.new do |opts|
 
     opts.on("-O", "--[no-]optimisation", "Enable/disable optimisation.") do |v|
         options.optimisation = v
+    end
+
+    opts.on("-l", "--[no-]llvm", "Enable/disable llvm.") do |v|
+        options.llvm = v
     end
 
 end.parse!
@@ -62,6 +67,10 @@ if options.optimisation
     paramsBuild << "-O2"
 else
     paramsBuild << "-O0"
+end
+
+if options.llvm
+    paramsBuild << '--ghc-options="-fllvm"'
 end
 
 system(*paramsBuild)
