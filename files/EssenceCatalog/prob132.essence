@@ -38,8 +38,8 @@ $ this is long and complicated because we need the minimum x and y coordinates
 $ (min(sx) and min(sy)) that map to each shape, and i can't think of a nicer way
 $ of getting them...
     forAll s : Shape . exists sx : set of X . exists sy : set of Y .
-        (forAll (x,y) : Cell . x in sx /\ y in sy <-> (x,y) in preimage(layout,s)) /\
+        (forAll (x,y) : Cell . x in sx /\ y in sy <-> (x,y) in preImage(layout,s)) /\
         forAll (x,y) in form(s) . layout((min(sx) + x,min(sy) + y)) = s,
 $ a shape has exactly the right number of cells mapping to it
-    forAll s : Shape . |form(s)| = |preimage(layout,s)|
+    forAll s : Shape . |form(s)| = |preImage(layout,s)|
 

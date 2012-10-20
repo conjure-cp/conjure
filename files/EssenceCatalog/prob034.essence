@@ -16,5 +16,5 @@ find open : function (total) Store --> WHouse
 
 minimising fixed_cost * |range(open)| + sum s : Store . cost((s,open(s)))
 
-such that forAll w : WHouse . |preimage(open,w)| <= capacity(w)
+such that forAll w : WHouse . |preImage(open,w)| <= capacity(w)
 

@@ -18,7 +18,7 @@ minimising |hosts|
 such that
     forAll p in sched . range(p) subsetEq hosts,
     forAll p in sched . forAll h in hosts . p(h) = h,
-    forAll p in sched . forAll h in hosts . (sum b in preimage(p,h) . crew(b))
+    forAll p in sched . forAll h in hosts . (sum b in preImage(p,h) . crew(b))
                                             <= capacity(h),
     forAll b1,b2 : Boat . b1 != b2 -> (sum p in sched . (p(b1) = p(b2)))
                                             <= 1

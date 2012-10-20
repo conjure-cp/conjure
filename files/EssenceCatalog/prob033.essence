@@ -12,7 +12,7 @@ find words : set of function (total) Index --> Base
 maximising |words|
 
 such that
-    forAll w in words . |preimage(w,C)| + |preimage(w,G)| = 4,
+    forAll w in words . |preImage(w,C)| + |preImage(w,G)| = 4,
     $ forAll {w1,w2} subsetEq words . sum i : Index . (w1(i) = w2(i)) <= 4,
     forAll w1,w2 in words . sum i : Index . (w1(i) = A /\ w2(9-i) = T \/
                                              w1(i) = C /\ w2(9-i) = G \/

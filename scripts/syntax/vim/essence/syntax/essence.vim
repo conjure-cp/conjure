@@ -14,7 +14,7 @@ syn keyword essenceTypes int bool enum true false total injective bijective surj
 syn match essenceNumber '\([a-zA-Z]\)\@<!\d\+' 
 syn match essenceComment "$.*$"
 
-syn keyword essenceFunc preimage parts max min range
+syn keyword essenceFunc preImage parts max min range
 syn keyword essenceKind matrix tuple set mset partition
 
 

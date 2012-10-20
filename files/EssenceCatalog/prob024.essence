@@ -13,6 +13,6 @@ find seq : function (total) Index --> Num
 
 such that forAll m : Num .
     exists s : function (total, injective) int(1..k) --> Index .
-        (forAll i : Index . i in range(s) <-> i in preimage(seq,m)) /\
+        (forAll i : Index . i in range(s) <-> i in preImage(seq,m)) /\
         (forAll j : int(1..k-1) . s(j+1) - s(j) = m)
 

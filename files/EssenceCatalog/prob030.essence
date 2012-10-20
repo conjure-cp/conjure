@@ -16,7 +16,7 @@ find curr : function (total) Course --> Period
 
 such that
     forAll c1,c2 : Course . prereq(c1,c2) -> curr(c1) < curr(c2),
-    forAll p : Period . (sum c in preimage(curr,p) . credits(c)) <= maxl /\
-                        (sum c in preimage(curr,p) . credits(c)) >= minl,
-    forAll p : Period . |preimage(curr,p)| <= maxc /\ |preimage(curr,p)| >= minc
+    forAll p : Period . (sum c in preImage(curr,p) . credits(c)) <= maxl /\
+                        (sum c in preImage(curr,p) . credits(c)) >= minl,
+    forAll p : Period . |preImage(curr,p)| <= maxc /\ |preImage(curr,p)| >= minc
 
