@@ -36,7 +36,8 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
                 _  -> do
                     let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
                     mkLog "representation" $ sep [ pretty x
-                                                 , "(#" <> pretty (length ys) <> ")" <+> prettyList id "," ysNames
+                                                 , "(#" <> pretty (length ys) <> ")"
+                                                 , prettyList id "," ysNames
                                                  ] 
                     return (n,ys)
 
