@@ -5,6 +5,7 @@ module Language.E.Pipeline.SavileRowCompat where
 import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 
 
 savilerowCompat :: (Monad m, Functor m)
@@ -13,6 +14,7 @@ savilerowCompat :: (Monad m, Functor m)
 savilerowCompat
      =  traverseSpec Nothing toIntIsNoOp Nothing
     >=> conjureNoGuards
+    >=> bubbleUpSpec
     >=> return . atMostOneSuchThat
     >=> return . langEPrime
 
