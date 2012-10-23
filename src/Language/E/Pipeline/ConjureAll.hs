@@ -64,12 +64,11 @@ driverConjureAll baseFilename reprs refns spec = do
     let nats = map (padShow 4) [ (1 :: Int) .. ]
     let mouts = conjureAllPure gen reprs refns spec
     createDirectoryIfMissing True baseFilename
-    forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> case mout of
-        Left  x -> do
-            writeFile (baseFilename ++ "/" ++ i ++ ".essence.err") (renderPretty x)
-            writeFile (baseFilename ++ "/" ++ i ++ ".essence.log") (renderPretty $ prettyLogs logs)
-        Right x -> do
-            writeFile (baseFilename ++ "/" ++ i ++ ".essence.out") (renderPretty x)
-            writeFile (baseFilename ++ "/" ++ i ++ ".essence.log") (renderPretty $ prettyLogs logs)
+    forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> do
+        let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ".essence" ++ ext
+        writeFile (mkOutFilename ".log") (renderPretty $ prettyLogs logs)
+        case mout of
+            Left  x -> writeFile (mkOutFilename ".err") (renderPretty x)
+            Right x -> writeFile (mkOutFilename ".out") (renderPretty x)
 
 
