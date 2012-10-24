@@ -1,11 +1,12 @@
 
 [1000]
 
-&quan &i in preImage(&f, &x), &g . &b
+&quan &i in preImage(&f, &y), &g . &b
 
     ~~>
 
-&quan j : &domTo , &g { &i --> &f(j) } /\ &f(j) = &x
-                 . &b { &i --> &f(j) }
+&quan j : &domFrom , &g { &i --> j } /\ &f(j) = &y
+                   . &b { &i --> j }
 
     where &f hasDomain `function (..) &domFrom --> &domTo`
+
