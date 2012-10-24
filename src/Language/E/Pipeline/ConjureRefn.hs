@@ -3,6 +3,7 @@
 module Language.E.Pipeline.ConjureRefn where
 
 import Language.E
+import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.Groom ( groomSpec )
@@ -17,7 +18,8 @@ conjureRefn :: (Functor m, Monad m)
     -> Spec
     -> [RuleRefn]
     -> CompE m Spec
-conjureRefn isFinal spec rules =
+conjureRefn isFinal spec rules = do
+    initialiseSpecState spec
     case ruleRefnToFunction rules of
         Left  es -> err ErrFatal $ vcat $ map snd es
         Right fs ->
@@ -28,3 +30,4 @@ conjureRefn isFinal spec rules =
                         >=> recordSpec >=> (if isFinal then groomSpec else return)
                         >=> recordSpec
             in  pipeline spec
+
