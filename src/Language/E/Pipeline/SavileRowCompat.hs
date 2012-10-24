@@ -12,16 +12,20 @@ savilerowCompat :: (Monad m, Functor m)
     => Spec
     -> CompE m Spec
 savilerowCompat
-     =  traverseSpec Nothing toIntIsNoOp Nothing
+     =  return . onSpec toIntIsNoOp
     >=> conjureNoGuards
     >=> bubbleUpSpec
     >=> return . atMostOneSuchThat
     >=> return . langEPrime
 
 
-toIntIsNoOp :: (Functor m, Monad m) => E -> CompE m E
-toIntIsNoOp [eMatch| toInt(&x) |] = return x
-toIntIsNoOp p = return p
+onSpec :: (E -> E) -> Spec -> Spec
+onSpec f (Spec v xs) = Spec v $ map (transform f) xs
+
+
+toIntIsNoOp :: E -> E
+toIntIsNoOp [eMatch| toInt(&x) |] = x
+toIntIsNoOp p = p
 
 
 langEPrime :: Spec -> Spec
