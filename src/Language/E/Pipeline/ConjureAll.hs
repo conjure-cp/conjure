@@ -65,10 +65,10 @@ driverConjureAll baseFilename reprs refns spec = do
     let mouts = conjureAllPure gen reprs refns spec
     createDirectoryIfMissing True baseFilename
     forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> do
-        let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ".essence" ++ ext
+        let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ext
         writeFile (mkOutFilename ".log") (renderPretty $ prettyLogs logs)
         case mout of
             Left  x -> writeFile (mkOutFilename ".err") (renderPretty x)
-            Right x -> writeFile (mkOutFilename ".out") (renderPretty x)
+            Right x -> writeFile (mkOutFilename ".eprime") (renderPretty x)
 
 
