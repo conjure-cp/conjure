@@ -245,7 +245,7 @@ typeOf p@[xMatch| [m,i'] := operator.indices |] = do
 
     getIndex i tm
 
-typeOf p@[xMatch| [x] := operator.toSet |] = do
+typeOf p@[eMatch| toSet(&x) |] = do
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.mset.inner |] -> return [xMake| type.set.inner := [innerTy] |]
@@ -256,7 +256,7 @@ typeOf p@[xMatch| [x] := operator.toSet |] = do
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> typeErrorIn p
 
-typeOf p@[xMatch| [x] := operator.toMSet |] = do
+typeOf p@[eMatch| toMSet(&x) |] = do
     tx <- typeOf x
     case tx of
         [xMatch| [innerTy] := type.set.inner |] -> return [xMake| type.mset.inner := [innerTy] |]
@@ -265,6 +265,14 @@ typeOf p@[xMatch| [x] := operator.toMSet |] = do
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.mset.inner.type.tuple.inners := [innerFr,innerTo] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
+        _ -> typeErrorIn p
+
+typeOf p@[eMatch| toRelation(&x) |] = do
+    tx <- typeOf x
+    case tx of
+        [xMatch| [innerFr] := type.function.innerFrom
+               | [innerTo] := type.function.innerTo
+               |] -> return [xMake| type.relation.inners := [innerFr,innerTo] |]
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a intersect &b |] = do
