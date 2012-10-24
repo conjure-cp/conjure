@@ -237,8 +237,9 @@ instance Pretty E where
     pretty [xMatch| xs  := value.tuple.values |]
         = (if length xs < 2 then "tuple" else Pr.empty)
         <+> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := value.set.values  |] =           prettyList Pr.braces "," xs
-    pretty [xMatch| xs := value.mset.values |] = "mset" <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := value.matrix.values |] =           prettyList Pr.brackets "," xs
+    pretty [xMatch| xs := value.set   .values |] =           prettyList Pr.braces   "," xs
+    pretty [xMatch| xs := value.mset  .values |] = "mset" <> prettyList Pr.parens   "," xs
 
     pretty [xMatch| [app] := quantifierDecl.append
                  | [gua] := quantifierDecl.guard
