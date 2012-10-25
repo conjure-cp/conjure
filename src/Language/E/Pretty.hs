@@ -39,6 +39,9 @@ instance Pretty E where
 
     pretty [xMatch| [] := emptyGuard |] = "emptyGuard"
 
+    -- slicers
+    pretty [xMatch| [] := slicer     |] = ".."
+
     pretty [xMatch| [Prim (S x)] := metavar       |] = "&" <> pretty x
     pretty [xMatch| [Prim (S x)] := reference     |] = pretty x
 
