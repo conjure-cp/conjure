@@ -1,6 +1,7 @@
 " Vim syntax file
 " Language: Essence
 " Maintainer: Bilal Syed Hussain
-" Latest Revision: Wed 17 Oct 2012
+" Latest Revision: Thu 25 Oct 2012 
 
-au BufRead,BufNewFile *.essence,*.eprime,*.param,*.rule,*.repr setfiletype essence
+autocmd BufRead,BufNewFile *.essence,*.eprime,*.param,*.rule,*.repr,*.essence.out,*.essence.log,*.essence.err,*.solution setfiletype essence
+autocmd FileType essence set commentstring=$\ %s
