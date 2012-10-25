@@ -58,84 +58,110 @@ oneCase :: (Functor m, Monad m)
 oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         (domPattern, mcons2, locals2) =
     let
+        -- mcons: list of all structural constraints
         mcons  = maybeToList mcons1 ++ maybeToList mcons2
+
+        -- locals: list of all local lettings, wheres and finds
         locals = locals1 ++ locals2
+
+        -- applyToInnerDomain: tries to apply this rule-case to an inner domain.
+        -- an inner domain is a domain which isn't a matrix.
+        applyToInnerDomain restoreState origName origDecl is x = do
+            let errReturn = restoreState >> errRuleFail
+            flagMatch <- patternMatch domPattern x
+            if not flagMatch
+                then errReturn
+                else do
+                    bs <- mapM (localHandler ruleName domPattern) locals
+                    if not $ and bs
+                        then errReturn
+                        else do
+                            domTemplate' <- freshNames domTemplate
+                            mres         <- runMaybeT $ patternBind domTemplate'
+                            case mres of
+                                Nothing -> errReturn
+                                Just res -> do
+                                    -- at this point, res is the refinement of the innerDomain
+                                    -- mcons is the list of structural constraints
+                                    -- if is /= []
+                                    --      res needs to be lifted (using is)
+                                    --      mcons needs to be lifted (using forAlls)
+                                    -- also, mcons are the structural constraints, but they need to be lifted
+                                    let
+                                        liftedRes = mkMatrixDomain is res
+                                    mcons' <- forM mcons $ \ con -> do
+                                        -- con' is the constraint, but all "refn"s replaced
+                                        con' <- case is of
+                                            [] -> do
+                                                let renameTo = [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
+                                                return $ renRefn renameTo con
+                                            _  -> do
+                                                let renameTo = [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
+                                                loopVars <- map (Prim . S) <$> replicateM (length is) nextUniqueName
+                                                let renameToIndexed = mkIndexedExpr loopVars renameTo
+                                                return $ inForAlls (zip loopVars is) $ renRefn renameToIndexed con
+
+                                        -- renaming identifiers before we return the constraint
+                                        con''    <- freshNames con'
+                                        maybeCon <- runMaybeT $ patternBind con''
+                                        maybe (err ErrFatal $ "Unbound reference in" <+> pretty con'')
+                                              return
+                                              maybeCon
+                                    restoreState >> return [(origDecl, ruleName, reprName, liftedRes, mcons')]
+
     in
         Right $ \ (origName, x, origDecl) -> do
             bindersBefore <- getsLocal binders
             let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
-            case x of
-                [xMatch| [xIndex] := domain.matrix.index
-                       | [xInner] := domain.matrix.inner |] -> do
-                    flagMatch <- patternMatch domPattern xInner
-                    if flagMatch
-                        then do
-                            bs <- mapM (localHandler ruleName domPattern) locals
-                            if and bs
-                                then do
-                                    domTemplate' <- freshNames domTemplate
-                                    mres         <- runMaybeT $ patternBind domTemplate'
-                                    case mres of
-                                        Nothing -> restoreState >> errRuleFail
-                                        Just res -> do
-                                            let resInMatrix = [xMake| domain.matrix.index := [xIndex]
-                                                                    | domain.matrix.inner := [res]
-                                                                    |]
-                                            loopVarName <- nextUniqueName
-                                            mcons' <- forM mcons $ \ con -> do
-                                                con' <- (freshNames <=<
-                                                        renRefn [xMake| operator.index.left .reference := [Prim $ S $ origName ++ "_" ++ reprName]
-                                                                      | operator.index.right.reference := [Prim $ S loopVarName]
-                                                                      |]
-                                                        ) con
-                                                let con'' = [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
-                                                                  | quantified.quanVar.structural.single.reference := [Prim $ S loopVarName]
-                                                                  | quantified.quanOverDom                         := [xIndex]
-                                                                  | quantified.quanOverOp                          := []
-                                                                  | quantified.quanOverExpr                        := []
-                                                                  | quantified.guard.emptyGuard                    := []
-                                                                  | quantified.body                                := [con']
-                                                                  |]
-                                                maybeCon <- runMaybeT $ patternBind con''
-                                                case maybeCon of
-                                                    Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con''
-                                                    Just c  -> return c
-                                            restoreState >> return [(origDecl, ruleName, reprName, resInMatrix, mcons')]
-                                else restoreState >> errRuleFail
-                        else restoreState >> errRuleFail
-                _ -> do
-                    flagMatch <- patternMatch domPattern x
-                    if flagMatch
-                        then do
-                            bs <- mapM (localHandler ruleName domPattern) locals
-                            if and bs
-                                then do
-                                    domTemplate' <- freshNames domTemplate
-                                    mres         <- runMaybeT $ patternBind domTemplate'
-                                    case mres of
-                                        Nothing  -> restoreState >> errRuleFail
-                                        Just res -> do
-                                            mcons' <- forM mcons $ \ con -> do
-                                                con' <- (freshNames <=<
-                                                         renRefn [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
-                                                        ) con
-                                                maybeCon <- runMaybeT $ patternBind con'
-                                                case maybeCon of
-                                                    Nothing -> err ErrFatal $ "Unbound reference in" <+> pretty con'
-                                                    Just c  -> return c
-                                            restoreState >> return [(origDecl, ruleName, reprName, res, mcons')]
-                                else restoreState >> errRuleFail
-                        else restoreState >> errRuleFail
+            let (is,j) = splitMatrixDomain x
+            applyToInnerDomain restoreState origName origDecl is j
 
-renRefn :: Monad m => E -> E -> CompE m E
-renRefn newName [xMatch| [Prim (S "refn")] := reference |] = return newName
-renRefn newName (Tagged t xs) = Tagged t <$> mapM (renRefn newName) xs
-renRefn _ x = return x
+
+
+splitMatrixDomain :: E -> ([E], E)
+splitMatrixDomain [xMatch| [xIndex] := domain.matrix.index
+                         | [xInner] := domain.matrix.inner
+                         |] = first (xIndex:) (splitMatrixDomain xInner)
+splitMatrixDomain x = ([], x)
+
+
+mkMatrixDomain :: [E] -> E -> E
+mkMatrixDomain []     j = j
+mkMatrixDomain (i:is) j = [xMake| domain.matrix.index := [i]
+                                | domain.matrix.inner := [mkMatrixDomain is j]
+                                |]
+
+
+mkIndexedExpr :: [E] -> E -> E
+mkIndexedExpr = go . reverse
+    where
+        go []     x = x
+        go (i:is) x = let y = go is x in [eMake| &y[&i] |]
+
+
+inForAll :: E -> E -> E -> E
+inForAll quanVar quanOverDom body =
+    [xMake| quantified.quantifier.reference      := [Prim $ S "forAll"]
+          | quantified.quanVar.structural.single := [quanVar]
+          | quantified.quanOverDom               := [quanOverDom]
+          | quantified.quanOverOp                := []
+          | quantified.quanOverExpr              := []
+          | quantified.guard.emptyGuard          := []
+          | quantified.body                      := [body]
+          |]
+
+inForAlls :: [(E,E)] -> E -> E
+inForAlls = go . reverse
+    where
+        go []         body = body
+        go ((i,j):ks) body = go ks $ inForAll i j body
+
+
+renRefn :: E -> E -> E
+renRefn newName [xMatch| [Prim (S "refn")] := reference |] = newName
+renRefn newName (Tagged t xs) = Tagged t $ map (renRefn newName) xs
+renRefn _ x = x
 
 errRuleFail :: Monad m => CompE m [a]
 errRuleFail = return []
-
-
-
-
 
