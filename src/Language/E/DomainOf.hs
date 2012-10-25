@@ -10,6 +10,11 @@ import Language.E.CompE
 import Language.E.Pretty
 
 
+
+errDomainOf :: (Monad m, Pretty p) => p -> CompE m a
+errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
+
+
 domainOf :: Monad m => E -> CompE m E
 
 domainOf [xMatch| [Prim (S i')] := reference |] = do
@@ -35,4 +40,11 @@ domainOf [xMatch| [x] := topLevel.declaration.given.domain |] = domainOf x
 
 domainOf [xMatch| [x] := domainInExpr |] = domainOf x
 
+domainOf p@[xMatch| [x] := operator.index.left |] = do
+    xDom <- domainOf x
+    case xDom of
+        [xMatch| [innerDom] := domain.matrix.inner |] -> return innerDom
+        _ -> errDomainOf p
+
 domainOf x = return x
+
