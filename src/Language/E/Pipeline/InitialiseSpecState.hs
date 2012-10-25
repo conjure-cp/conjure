@@ -13,3 +13,5 @@ initialiseSpecState (Spec _ statements) = do
                 , [xMatch| [Prim (S nm)] := reference |] <- universe statement
                 ]
     modifyGlobal $ \ st -> st { allNamesPreConjure = S.fromList names }
+    mapM_ processStatement statements
+

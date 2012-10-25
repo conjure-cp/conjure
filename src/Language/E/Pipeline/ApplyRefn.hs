@@ -4,6 +4,7 @@ module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
 import Language.E
 import Language.E.BuiltIn ( builtInRefn )
+import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
@@ -29,6 +30,7 @@ tryAgain :: (Functor m, Monad m)
     -> CompE m Spec
 tryAgain fs spec = do
     modifyLocal $ \ st -> st { binders = [] }
+    initialiseSpecState spec
     (result, Any flag) <- runWriterT $ onSpec fs spec
     if flag
         then tryAgain fs result
@@ -40,7 +42,6 @@ onSpec :: (Functor m, Monad m)
     -> Spec
     -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) Spec
 onSpec fs (Spec lang statements) = do
-    lift $ mapM_ processStatement statements
     statements' <- sequence <$> mapM (onE fs) statements
     lift $ returns [ Spec lang s | s <- statements' ]
 
