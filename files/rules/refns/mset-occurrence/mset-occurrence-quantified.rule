@@ -3,7 +3,7 @@
 
 &quan &i in &s , &g . &k
     ~~>
-&quan j : &t , &g { &i --> j } /\ &m[j]
+&quan j : &t , &g { &i --> j } /\ (&m[j] > 0)
              . &k { &i --> j }
 
     where &s hasRepr Occurrence
