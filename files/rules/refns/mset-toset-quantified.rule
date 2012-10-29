@@ -1,0 +1,19 @@
+
+
+[2000]
+
+&quan &i in toSet(&m), &g . &b
+
+~~>
+
+( &quan j in s , &g { &i --> j } . &b { &i --> j }
+@
+  find s : &mDom
+  such that forAll k in s . freq(s, k) = 1
+  such that &m = s
+)
+
+    where &m hasType `mset of _`
+    where &m hasRepr Explicit
+    where &m hasDomain `&mDom`
+

@@ -1,0 +1,9 @@
+
+[900]
+
+&quan &i in toSet(&a intersect &b) , &guard . &body
+    ~~>
+&quan &i in toSet(&a) , &guard /\ &i in &b
+                      . &body
+
+    where &a hasType `mset of _`
