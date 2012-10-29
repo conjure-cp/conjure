@@ -82,7 +82,7 @@ evalHasType [eMatch| &s hasType &dom |] = do
     returnBool b
 evalHasType _ = return Nothing
 
-evalHasDomain :: Monad m => E -> CompE m (Maybe E)
+evalHasDomain :: (Functor m, Monad m) => E -> CompE m (Maybe E)
 evalHasDomain [eMatch| &x hasDomain &y |] = do
     dx <- domainOf x
     dy <- domainOf y

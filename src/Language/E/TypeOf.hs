@@ -149,6 +149,10 @@ typeOf [xMatch| xs := domain.relation.inners |] = do
     txs <- mapM typeOf xs
     return [xMake| type.relation.inners := txs |]
 
+typeOf [xMatch| [i] := domain.partition.inner |] = do
+    ti <- typeOf i
+    return [xMake| type.partition.inner := [ti] |]
+
 -- value.*
 
 typeOf [xMatch| [i] := value.literal |] = typeOf i
@@ -273,6 +277,17 @@ typeOf p@[eMatch| toRelation(&x) |] = do
         [xMatch| [innerFr] := type.function.innerFrom
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.relation.inners := [innerFr,innerTo] |]
+        _ -> typeErrorIn p
+
+typeOf p@[eMatch| freq(&m,&i) |]  = do
+    tm <- typeOf m
+    ti <- typeOf i
+    case tm of
+        [xMatch| [tmInner] := type.mset.inner |] -> do
+            res <- typeUnify tmInner ti
+            if res
+                then return [xMake| type.int := [] |]
+                else typeErrorIn p
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a intersect &b |] = do
