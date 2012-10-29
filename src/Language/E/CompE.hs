@@ -157,9 +157,18 @@ processStatement   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
                           | [ val ]         := topLevel.letting.domain
                           |] = addBinder ('&':name) val
 
+processStatement s@[xMatch| [Prim (S name)] := topLevel.letting.name.reference
+                          |] = addBinder name s
+processStatement s@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar
+                          |] = addBinder ('&':name) s
+
 processStatement   [xMatch| _ := topLevel.suchThat  |] = return ()
 processStatement   [xMatch| _ := topLevel.objective |] = return ()
 processStatement   [xMatch| _ := topLevel.where     |] = return ()
 
-processStatement s@[xMatch| _ := topLevel           |] = mkLog "missing:processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
-processStatement s = mkLog "missing:processStatement" $ "not handled in processStatement" <+> prettyAsPaths s
+processStatement s@[xMatch| _ := topLevel |]
+    = err ErrFatal $ "not handled in processStatement" <+> prettyAsPaths s
+
+processStatement _ = return ()
+
+
