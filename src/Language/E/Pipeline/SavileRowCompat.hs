@@ -4,9 +4,9 @@ module Language.E.Pipeline.SavileRowCompat where
 
 import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
+import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
-import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 
 
 savilerowCompat :: (Monad m, Functor m)
@@ -15,8 +15,8 @@ savilerowCompat :: (Monad m, Functor m)
 savilerowCompat
      =  return . onSpec toIntIsNoOp
     >=> onSpecM sliceIfTooFewIndices
+    >=> conjureNoTuples
     >=> conjureNoGuards
-    >=> bubbleUpSpec
     >=> return . atMostOneSuchThat
     >=> return . langEPrime
 

@@ -3,13 +3,14 @@
 module Language.E.Pipeline.ConjureRefn where
 
 import Language.E
-import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
-import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 import Language.E.Pipeline.ApplyRefn ( applyRefn )
+import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
+import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
 import Language.E.Pipeline.Groom ( groomSpec )
+import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
 import Language.E.Pipeline.RemoveUnused ( removeUnused )
-import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
+import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 
 
 
@@ -28,6 +29,7 @@ conjureRefn isFinal spec rules = do
                         >=> recordSpec >=> removeUnused
                         >=> recordSpec >=> checkIfAllRefined
                         >=> recordSpec >=> (if isFinal then groomSpec else return)
+                        >=> recordSpec >=> bubbleUpSpec
                         >=> recordSpec
             in  pipeline spec
 
