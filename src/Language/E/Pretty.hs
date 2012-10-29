@@ -49,27 +49,27 @@ instance Pretty E where
     pretty [xMatch| [ name ] := topLevel.declaration.given.name
                   | [domain] := topLevel.declaration.given.domain
                   |]
-        = "given" <+> pretty name <> ":" <+> pretty domain
+        = hang ("given" <+> pretty name <> ":") 8 (pretty domain)
 
     pretty [xMatch| [ name ] := topLevel.declaration.find.name
                   | [domain] := topLevel.declaration.find.domain
                   |]
-        = "find" <+> pretty name <> ":" <+> pretty domain
+        = hang ("find"  <+> pretty name <> ":") 8 (pretty domain)
 
     pretty [xMatch| [ name ] := topLevel.declaration.dim.name
                   | [domain] := topLevel.declaration.dim.domain
                   |]
-        = "dim" <+> pretty name <> ":" <+> pretty domain
+        = hang ("dim"   <+> pretty name <> ":") 8 (pretty domain)
 
     pretty [xMatch| [ name ] := topLevel.declaration.given.name
                   | [      ] := topLevel.declaration.given.typeEnum
                   |]
-        = "given" <+> pretty name <+> "new type enum"
+        = hang ("given" <+> pretty name <> ":") 8 "new type enum"
 
     pretty [xMatch| [ name ] := dimFind.name
                   | [domain] := dimFind.domain
                   |]
-        = "find" <+> pretty name <> ":" <+> pretty domain
+        = hang ("find"  <+> pretty name <> ":") 8 (pretty domain)
 
     pretty [xMatch| [x] := topLevel.declaration.nestedDimFind |]
         = pretty [xMake| atTopLevel := [x] |]
@@ -77,35 +77,34 @@ instance Pretty E where
     pretty [xMatch| [ name ] := topLevel.letting.name
                   | [thingy] := topLevel.letting.expr
                   |]
-        = "letting" <+> pretty name <+> "be" <+> pretty thingy
+        = hang ("letting" <+> pretty name <+> "be") 8 (pretty thingy)
 
     pretty [xMatch| [ name ] := topLevel.letting.name
                   | [thingy] := topLevel.letting.domain
                   |]
-        = "letting" <+> pretty name <+> "be domain" <+> pretty thingy
+        = hang ("letting" <+> pretty name <+> "be domain") 8 (pretty thingy)
 
     pretty [xMatch| [ name ] := topLevel.letting.name
                   | [thingy] := topLevel.letting.lambda
                   |]
-        = "letting" <+> pretty name <+> "be lambda" <+> pretty thingy
+        = hang ("letting" <+> pretty name <+> "be lambda") 8 (pretty thingy)
 
     pretty [xMatch| [ name ] := topLevel.letting.name
                   | [thingy] := topLevel.letting.quantifier
                   |]
-        = "letting" <+> pretty name <+> "be" <+> pretty thingy
+        = hang ("letting" <+> pretty name <+> "be") 8 (pretty thingy)
 
     pretty [xMatch| [ name ] := topLevel.letting.name
                   |  values  := topLevel.letting.typeEnum.values
                   |]
-        = "letting" <+> pretty name <+> "be new type enum" <+> prettyList Pr.braces "," values
+        = hang ("letting" <+> pretty name <+> "be new type enum") 8
+               (prettyList Pr.braces "," values)
 
     pretty [xMatch| [ name ] := topLevel.letting.name
                   | [thingy] := topLevel.letting.typeUnnamed
                   |]
-        = "letting" <+> pretty name <+> "be new type of size" <+> pretty thingy
-
-    -- pretty ( viewDeep [":type-enum-values"] -> Just xs )
-    --     = prettyListDoc Pr.braces Pr.comma (map pretty xs)
+        = hang ("letting" <+> pretty name <+> "be new type of size") 8
+               (pretty thingy)
 
     pretty [xMatch| [x] := topLevel.objective.minimising |]
         = "minimising" <+> pretty [xMake| atTopLevel := [x] |]
@@ -122,8 +121,8 @@ instance Pretty E where
             "such that" <++> vcat (punctuate comma $ map pretty xs')
 
     pretty [xMatch| [actual] := withLocals.actual 
-                 | locals   := withLocals.locals
-                 |]
+                  | locals   := withLocals.locals
+                  |]
         = let locals' = [ [xMake| atTopLevel := [x] |] | x <- locals ] in
             Pr.parens $ pretty actual <+> "@" <+> vcat (map pretty locals')
 
@@ -136,6 +135,7 @@ instance Pretty E where
                  |]
         = "`" <> pretty d <> "`"
 
+    -- type.*
     pretty [xMatch| [ ] := type.bool       |] = "bool"
     pretty [xMatch| [ ] := type.int        |] = "int"
     pretty [xMatch| [x] := type.set.inner  |] = "set of"  <+> pretty x
@@ -161,7 +161,7 @@ instance Pretty E where
                                                                    else "tuple" <+> prettyList Pr.parens "," ts
 
 
--- domain.*
+    -- domain.*
     pretty [xMatch| [Prim (S x)] := domain.reference   |] = pretty x
 
     pretty [xMatch|      []      := domain.bool        |] = "bool"
@@ -170,9 +170,9 @@ instance Pretty E where
     pretty [xMatch|    ranges    := domain.int.ranges  |] = "int" <> prettyList Pr.parens "," ranges
 
     pretty [xMatch|    [name]    := domain.enum.name
-                 |      []      := domain.enum.ranges |] = pretty name
+                  |      []      := domain.enum.ranges |] = pretty name
     pretty [xMatch|    [name]    := domain.enum.name
-                 |    ranges    := domain.enum.ranges |] = pretty name <> prettyList Pr.parens "," ranges
+                  |    ranges    := domain.enum.ranges |] = pretty name <> prettyList Pr.parens "," ranges
 
     pretty [xMatch| inners := domain.tuple.inners |]
         = (if length inners < 2 then "tuple" else Pr.empty)
@@ -186,8 +186,8 @@ instance Pretty E where
         where
             (indices,inner) = first (index:) $ collect innerNested
             collect [xMatch| [i] := domain.matrix.index
-                          | [j] := domain.matrix.inner
-                          |] = first (i:) $ collect j
+                           | [j] := domain.matrix.inner
+                           |] = first (i:) $ collect j
             collect x = ([],x)
 
     pretty [xMatch| attrs       := domain.function.attributes
