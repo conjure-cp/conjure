@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 -- mostly for library dependencies.
 -- defines a specialised prelude. kind-of.
 -- things in Language.E.* should import this.
@@ -29,7 +31,7 @@ import Control.Monad.Identity    as X ( Identity, runIdentity )
 import Control.Monad.Reader      as X ( MonadReader(..) )
 import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT, runWriter )
 import Control.Monad.State       as X ( MonadState, get, put, evalStateT )
-import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT )
+import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT, Error(..) )
 import Control.Monad.IO.Class    as X ( MonadIO, liftIO )
 import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )
 
@@ -135,7 +137,7 @@ parMapM f xs = do
 
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do
-    let dots i = not $ or [ i == "." , i == ".." ]
+    let dots i = not ( i == "." || i == ".." )
     ys' <- getDirectoryContents x `catchError` const (return [])
     let ys = filter dots ys'
     if null ys
@@ -152,4 +154,6 @@ timedIO io = do
     end   <- getCPUTime
     let diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
     return (a, diff)
+
+instance Error Doc where strMsg = Pr.text
 

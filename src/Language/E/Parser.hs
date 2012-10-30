@@ -6,7 +6,6 @@ module Language.E.Parser where
 
 import Stuff.Generic
 import Stuff.Pretty
-import Stuff.CompT ()
 import Language.E.Definition ( E, BuiltIn(..), Spec(..), RuleRefn, RuleRepr, RuleReprCase )
 import Language.E.Data ( Fixity(..), operators, functionals )
 import Language.E.Lexer ( Lexeme(..), lexemeFace, lexemeText, lexemeWidth, runLexer )
