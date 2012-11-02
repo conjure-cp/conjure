@@ -68,7 +68,7 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         -- an inner domain is a domain which isn't a matrix.
         applyToInnerDomain restoreState origName origDecl is x = do
             let errReturn = restoreState >> errRuleFail
-            flagMatch <- patternMatch domPattern x
+            (flagMatch, _) <- patternMatch domPattern x
             if not flagMatch
                 then errReturn
                 else do
@@ -97,9 +97,9 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                                 return $ renRefn renameTo con
                                             _  -> do
                                                 let renameTo = [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
-                                                loopVars <- map (Prim . S) <$> replicateM (length is) nextUniqueName
+                                                (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
                                                 let renameToIndexed = mkIndexedExpr loopVars renameTo
-                                                return $ inForAlls (zip loopVars is) $ renRefn renameToIndexed con
+                                                return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con
 
                                         -- renaming identifiers before we return the constraint
                                         con''    <- freshNames con'
@@ -137,24 +137,6 @@ mkIndexedExpr = go . reverse
     where
         go []     x = x
         go (i:is) x = let y = go is x in [eMake| &y[&i] |]
-
-
-inForAll :: E -> E -> E -> E
-inForAll quanVar quanOverDom body =
-    [xMake| quantified.quantifier.reference      := [Prim $ S "forAll"]
-          | quantified.quanVar.structural.single := [quanVar]
-          | quantified.quanOverDom               := [quanOverDom]
-          | quantified.quanOverOp                := []
-          | quantified.quanOverExpr              := []
-          | quantified.guard.emptyGuard          := []
-          | quantified.body                      := [body]
-          |]
-
-inForAlls :: [(E,E)] -> E -> E
-inForAlls = go . reverse
-    where
-        go []         body = body
-        go ((i,j):ks) body = go ks $ inForAll i j body
 
 
 renRefn :: E -> E -> E

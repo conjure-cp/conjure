@@ -110,10 +110,10 @@ single ( name
     return $ \ x -> do
         bindersBefore <- getsLocal binders
         let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
-        flagMatch <- patternMatch pattern x
+        (flagMatch, _) <- patternMatch pattern x
         if flagMatch
             then do
-                bs        <- mapM (localHandler name x) locals
+                bs <- mapM (localHandler name x) locals
                 if and bs
                     then do
                         template  <- returns templates
@@ -154,11 +154,12 @@ localHandler :: (Functor m, Monad m)
     -> E
     -> CompE m Bool
 localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
-    -- mkLog "localHandler" $ pretty x
     xBool <- toBool y
     case xBool of
-        Just True  -> return True
-        Just False -> do
+        Just (True, newBindings) -> do
+            modifyLocal $ \ st -> st { binders = newBindings ++ binders st }
+            return True
+        Just (False, _) -> do
             mkLog "rule-fail"
                 $ "where statement evaluated to false: " <++> vcat [ pretty lokal
                                                                    , "in rule" <+> stringToDoc name
@@ -170,4 +171,5 @@ localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
                                                                           , "in rule" <+> stringToDoc name
                                                                           , "at expression" <+> pretty x
                                                                           ]
-localHandler _ _ lokal = processStatement lokal >> return True
+localHandler _ _ lokal = introduceStuff lokal >> return True
+
