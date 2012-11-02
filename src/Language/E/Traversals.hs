@@ -83,7 +83,8 @@ traverseSpecNoFindGiven
     => (E -> t (CompEMOnly m) E)
     -> Spec
     -> t (CompEMOnly m) Spec
-traverseSpecNoFindGiven func (Spec v xs) = do
+traverseSpecNoFindGiven func spec@(Spec v xs) = do
+    lift $ initialiseSpecState spec
     lift $ mapM_ introduceStuff xs
     xs' <- mapM (\ x -> case x of
                     [xMatch| _ := topLevel.declaration.find  |] -> return x
