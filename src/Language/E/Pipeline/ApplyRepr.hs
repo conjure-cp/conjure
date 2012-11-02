@@ -91,8 +91,8 @@ applyCongfigToSpec spec initConfig = do
     modifyLocal $ \ st -> st { representationConfig = initConfig }
     spec' <- traverseSpecNoFindGiven' f spec
     modifyLocal $ \ st -> st { representationConfig = def }
-    let pipeline = addStructuralFromLog >=>
-                   addChannellingFromLog
+    let pipeline = addChannellingFromLog >=>
+				   addStructuralFromLog
     pipeline spec'
 
 
@@ -126,26 +126,29 @@ addChannellingFromLog (Spec v xs) = do
                   ]
 
     let
-        mk (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
-            [xMake| topLevel.declaration.find.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
-                  | topLevel.declaration.find.domain         := [newDom]
-                  |]
-        mk (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
-            [xMake| topLevel.declaration.given.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
-                  | topLevel.declaration.given.domain         := [newDom]
-                  |]
-        mk _ = error "Impossible: addChannellingFromLog.mk"
-
-    let
         insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest
         insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.objective |] : _) = toInsert ++ rest
         insertBeforeSuchThat toInsert (i:is) = i : insertBeforeSuchThat toInsert is
         insertBeforeSuchThat toInsert []     = toInsert
 
     let
-        newDecls = nub $ map mk rlogs
+        mkWithNewDom :: (String, String, E, E) -> E
+        mkWithNewDom (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
+            [xMake| topLevel.declaration.find.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
+                  | topLevel.declaration.find.domain         := [newDom]
+                  |]
+        mkWithNewDom (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
+            [xMake| topLevel.declaration.given.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
+                  | topLevel.declaration.given.domain         := [newDom]
+                  |]
+        mkWithNewDom _ = error "Impossible: addChannellingFromLog.mkWithNewDom"
+
+    let newDecls = nub $ map mkWithNewDom rlogs
+    mapM_ introduceStuff newDecls
 
     newDecls' <- (fst . unzip) <$> mapM trySimplifyE newDecls
+    mapM_ introduceStuff newDecls'
+
     newCons'  <- (fst . unzip) <$> mapM trySimplifyE (concat newCons)
 
     return $ Spec v $ insertBeforeSuchThat newDecls' xs ++ newCons'
