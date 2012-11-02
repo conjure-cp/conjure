@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.TypeOf where
+module Language.E.TypeOf ( typeOf, innerTypeOf ) where
 
 import Stuff.Generic
 import Stuff.FunkyT
@@ -9,6 +9,7 @@ import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.TH
+import Language.E.Traversals
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import Language.E.Lexer ( runLexer )
 import Language.E.Parser ( runParser, inCompleteFile, parseExpr )
@@ -57,8 +58,8 @@ mostKnown x y = do
     return x
 
 
-test_TypeOf :: T.Text -> IO ()
-test_TypeOf t = do
+_testTypeOf :: T.Text -> IO ()
+_testTypeOf t = do
     let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
     case res of
         Left  e -> print e
@@ -81,17 +82,16 @@ typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
 typeOf p@[xMatch| _ := type |] = return p
 
-typeOf [xMatch| [Prim (S i')] := reference |] = do
+typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
+typeOf [xMatch| [Prim (S i' )] := reference |] = do
     let i = head $ splitOn "#" i'
     bs <- getsLocal binders
-    if i == "_"
-        then return [xMake| type.unknown := [] |]
-        else case [ x | Binder nm x <- bs, nm == i ] of
-                (x:_) -> typeOf x
-                _   -> do
-                    let bsText = prettyList id "," [ nm | Binder nm _ <- bs ]
-                    err ErrFatal $ "(typeOf) Undefined reference:" <+> pretty i
-                                 $$ nest 4 ("Current bindings:" <+> bsText)
+    case [ x | Binder nm x <- bs, nm == i ] of
+        (x:_) -> typeOf x
+        _   -> do
+            let bsText = prettyList id "," [ nm | Binder nm _ <- bs ]
+            err ErrFatal $ "(typeOf) Undefined reference:" <+> pretty i
+                         $$ nest 4 ("Current bindings:" <+> bsText)
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
@@ -105,6 +105,7 @@ typeOf [xMatch| [i] := structural.single |] = typeOf i
 
 typeOf [xMatch| [d] := topLevel.declaration.find .domain |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.given.domain |] = typeOf d
+typeOf [xMatch| [d] := topLevel.declaration.dim  .domain |] = typeOf d
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
 
@@ -388,7 +389,7 @@ typeOf p@[eMatch| min(&a,&b) |] = do
         _ -> typeErrorIn p
 
 typeOf [xMatch| [i] := withLocals.actual
-              | js  := withLocals.locals |] = mapM_ processStatement js >> typeOf i
+              | js  := withLocals.locals |] = mapM_ introduceStuff js >> typeOf i
 
 typeOf p@[xMatch| [f] := functionApply.actual
                 | [x] := functionApply.args
@@ -424,6 +425,9 @@ typeOf p@[xMatch| [f] := operator.range |] = do
                |] -> return [xMake| type.set.inner := [to] |]
         _ -> typeErrorIn p
 
+typeOf   [xMatch| [m] := operator.index.left
+                | [ ] := operator.index.right.slicer
+                |] = typeOf m
 typeOf p@[xMatch| [m] := operator.index.left
                 | [i] := operator.index.right
                 |] = do
@@ -436,13 +440,13 @@ typeOf p@[xMatch| [m] := operator.index.left
         [xMatch| ts := type.tuple.inners |] -> do
             mint <- toInt i
             case mint of
-                Just int | int >= 1 && int <= genericLength ts -> return $ ts `genericIndex` (int - 1)
+                Just (int, _) | int >= 1 && int <= genericLength ts -> return $ ts `genericIndex` (int - 1)
                 _ -> typeErrorIn p
         _ -> typeErrorIn p
     return ret
 
-typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> prettyAsPaths e
--- typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
+-- typeOf p = typeErrorIn p
+typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
 
 
 

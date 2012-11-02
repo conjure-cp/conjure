@@ -50,7 +50,7 @@ domainOf p@[xMatch| [x] := operator.index.left
         [xMatch|  innerDoms := domain.tuple.inners |] -> do
             yInt <- toInt y
             case yInt of
-                Just int
+                Just (int, _)
                     | int >= 1 && int <= genericLength innerDoms
                     -> return $ innerDoms `genericIndex` (int - 1)
                 _ -> errDomainOf p
