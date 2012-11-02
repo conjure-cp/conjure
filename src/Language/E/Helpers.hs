@@ -2,8 +2,36 @@
 
 module Language.E.Helpers where
 
+import Stuff.FunkyT
+import Language.E.Imports
 import Language.E.Definition
+import Language.E.CompE
 import Language.E.TH
+
+
+withBindingScope'
+    :: Monad m
+    => CompE m a
+    -> CompE m a
+withBindingScope' comp = do
+    bindersBefore <- getsLocal binders
+    result <- comp
+    modifyLocal $ \ st -> st { binders = bindersBefore }
+    return result
+
+
+withBindingScope
+    :: ( Monad (t (CompEMOnly m))
+       , Monad m
+       , MonadTrans t
+       )
+    => t (CompEMOnly m) a
+    -> t (CompEMOnly m) a
+withBindingScope comp = do
+    bindersBefore <- lift $ getsLocal binders
+    result <- comp
+    lift $ modifyLocal $ \ st -> st { binders = bindersBefore }
+    return result
 
 
 conjunct :: [E] -> E
@@ -16,6 +44,13 @@ disjunct :: [E] -> E
 disjunct []     = [eMake| false |]
 disjunct [x]    = x
 disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
+
+
+freshQuanVar :: Monad m => CompE m (String, E)
+freshQuanVar = do
+    quanVarStr <- nextUniqueName
+    let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
+    return (quanVarStr, quanVar)
 
 
 inForAll :: String -> E -> E -> E
