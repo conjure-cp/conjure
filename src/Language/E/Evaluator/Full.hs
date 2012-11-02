@@ -237,11 +237,7 @@ matrixEq :: (Functor m, Monad m) => E -> CompE m (Maybe (E, [Binder]))
 matrixEq [eMatch| &a = &b |] = do
     da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
     case da of
-        Just [xMatch| _ := domain |] -> mkLog "matrixEq da" $ pretty da
-        _ -> return ()
-    case da of
         Just [xMatch| [ia] := domain.matrix.index |] -> do
-            mkLog "matrixEq" $ pretty ia
             (quanVarStr, quanVar) <- freshQuanVar
             ret $ inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
         _ -> return Nothing
