@@ -106,8 +106,7 @@ tryApply fs x = do
                     let msg = vcat $ pretty x
                                : [ Pr.braces (stringToDoc n) $$ nest 4 (pretty y) | (n,y) <- ys' ]
                     mkLog "applied" msg
-                    trace (show $ "applied" <+> msg) $ return (True, map snd ys')
-                    -- return (True, map snd ys')
+                    return (True, map snd ys')
     (x', (Any flag, _)) <- listen (simplify x)
     (x'', _) <- lift $ trySimplifyE x'
     if flag
