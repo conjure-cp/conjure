@@ -6,7 +6,6 @@ import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 
 
 savilerowCompat :: (Monad m, Functor m)
@@ -25,8 +24,8 @@ onSpec :: (E -> E) -> Spec -> Spec
 onSpec f (Spec v xs) = Spec v $ map f xs
 
 onSpecM :: Monad m => (E -> CompE m E) -> Spec -> CompE m Spec
-onSpecM f sp@(Spec v xs) = do
-    initialiseSpecState sp
+onSpecM f (Spec v xs) = do
+    mapM_ introduceStuff xs
     Spec v <$> mapM f xs
 
 
@@ -44,15 +43,20 @@ sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
         Just d@[xMatch| _ := domain.matrix |] -> do
             let nb = matrixDomainNbDims d
             let nbSlicers = nb - length is
-            let is' = is ++ replicate nbSlicers [xMake| slicer := [] |]
-            return $ mkIndexedExpr is' j
+            if nbSlicers == 0
+                then return p
+                else do
+                    let is' = is ++ replicate nbSlicers [xMake| slicer := [] |]
+                    let result = mkIndexedExpr is' j
+                    mkLog "addSlicing" $ sep [pretty p, pretty result]
+                    return result
         _ -> return p
     where
         breakIndices = first reverse . go
             where
                 go [xMatch| [left ] := operator.index.left
                           | [right] := operator.index.right
-                          |] = first (right:) (breakIndices left)
+                          |] = first (right:) (go left)
                 go m = ([], m)
 
         mkIndexedExpr = go . reverse
