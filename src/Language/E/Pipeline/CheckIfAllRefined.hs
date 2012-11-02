@@ -8,11 +8,14 @@ import Language.E
 
 checkIfAllRefined :: Monad m => Spec -> CompE m Spec
 checkIfAllRefined spec@(Spec _ statements) = do
-    let taggedIdentifiers = [ nm
-                            | statement <- statements
-                            , [xMatch| [Prim (S nm)] := reference |] <- universe statement
-                            , '#' `elem` nm
-                            ]
+    let taggedIdentifiers = nub [ nm
+                                | statement <- statements
+                                , [xMatch| [Prim (S nm)] := reference |] <- universe statement
+                                , '#' `elem` nm
+                                ]
+    void $ recordSpec spec
     let msg = "Some identifiers are not refined:" <+> prettyList id "," taggedIdentifiers
-    unless (null taggedIdentifiers) $ mkLog "checkIfAllRefined" msg
-    return spec
+    if null taggedIdentifiers
+        then return spec
+        else err ErrFatal msg
+
