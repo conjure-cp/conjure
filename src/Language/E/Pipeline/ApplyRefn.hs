@@ -4,7 +4,6 @@ module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
 import Language.E
 import Language.E.BuiltIn ( builtInRefn )
-import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
@@ -42,59 +41,26 @@ onSpec :: (Functor m, Monad m)
     -> Spec
     -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) Spec
 onSpec fs (Spec lang statements) = do
+    bindersBefore <- lift $ getsLocal binders
+    lift $ mapM_ introduceStuff statements
     statements' <- sequence <$> mapM (onE fs) statements
+    lift $ modifyLocal $ \ st -> st { binders = bindersBefore }
     lift $ returns [ Spec lang s | s <- statements' ]
+
 
 
 onE :: (Functor m, Monad m)
     => RulesDB m
     -> E
-    -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) [E]
-onE fs x@(Prim {}) = tryApply fs x
-onE fs x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference
-                | xs           := quantified
-                |] = do
-            bindersBefore <- lift $ getsLocal binders
-            let
-                restoreState = do
-                    bs1 <- getsLocal binders
-                    modifyLocal $ \ st -> st { binders = bindersBefore }
-                    bs2 <- getsLocal binders
-                    mkLog "restoreState" $ vcat [ "before:" <+> prettyList id "," [ a | Binder a _ <- bs1 ]
-                                                , "after :" <+> prettyList id "," [ a | Binder a _ <- bs2 ]
-                                                ]
-            -- lift $ mkLog " ------------ adding   quanVar ------------ " $ pretty r
-            lift $ addBinder r
-                    [xMake| quanVar.name   := [Prim (S r)]
-                          | quanVar.within := [x]
-                          |]
-            result <- onEGeneric fs x "quantified" xs
-            lift restoreState
-            -- lift $ mkLog " ------------ removing quanVar ------------ " $ pretty r
-            return result
-onE fs [xMatch| [actual] := withLocals.actual
-              | locals   := withLocals.locals
-              |] = do
+    -> WriterT Any (CompEMOnly m) [E]
+-- onE _ x | trace (show $ "onE" <+> pretty x) False = undefined
+onE fs x@(Prim {}) = tryApply' fs x
+onE fs x@(Tagged t xs) = do
     bindersBefore <- lift $ getsLocal binders
-    let
-        restoreState = do
-            bs1 <- getsLocal binders
-            modifyLocal $ \ st -> st { binders = bindersBefore }
-            bs2 <- getsLocal binders
-            mkLog "restoreState" $ vcat [ "before:" <+> prettyList id "," [ a | Binder a _ <- bs1 ]
-                                        , "after :" <+> prettyList id "," [ a | Binder a _ <- bs2 ]
-                                        ]
-    lift $ mapM_ processStatement locals
-    results    <- onE fs actual
-    outLocalss <- sequence <$> mapM (onE fs) locals 
-    lift restoreState
-    return [ [xMake| withLocals.actual := [result]
-                   | withLocals.locals := outLocals
-                   |]
-           | result <- results
-           , outLocals <- outLocalss
-           ]
-onE fs x@(Tagged t xs) = onEGeneric fs x t xs
+    lift $ introduceStuff x
+    results <- onEGeneric fs x t xs
+    lift $ modifyLocal $ \ st -> st { binders = bindersBefore }
+    return results
 
 
 onEGeneric :: (Functor m, Monad m)
@@ -107,16 +73,24 @@ onEGeneric fs x t xs = do
     (results, Any flag) <- listen $ do
         yss <- sequence <$> mapM (onE fs) xs
         let zs = map (Tagged t) yss
-        concat <$> mapM (tryApply fs) zs
+        concat <$> mapM (tryApply' fs) zs
     if flag
         then concat <$> mapM (onE fs) results
         else return [x]
 
+tryApply' :: (Functor m, Monad m)
+    => RulesDB m
+    -> E
+    -> WriterT Any (CompEMOnly m) [E]
+tryApply' fx x = do
+    (y, (z, _)) <- lift $ runWriterT (tryApply fx x)
+    tell z
+    return y
 
 tryApply :: (Functor m, Monad m)
     => RulesDB m
     -> E
-    -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) [E]
+    -> WriterT (Any, [Binder]) (CompEMOnly m) [E]
 tryApply fs x = do
     let
         -- returns a pair, first component: True if a modification has been made.
@@ -126,22 +100,24 @@ tryApply fs x = do
             mys <- g x
             case mys of
                 Nothing -> go gs
-                Just [] ->
-                    err ErrFatal $ "Rewrites to nothing."
+                Just [] -> err ErrFatal "Rewrites to nothing."
                 Just ys -> do
-                    ys' <- forM ys $ \ (n,y) -> do y' <- trySimplifyE y ; return (n,y')
-                    mkLog "applied"
-                        $ vcat $ pretty x
+                    ys' <- forM ys $ \ (n,y) -> do (y', _) <- trySimplifyE y ; return (n,y')
+                    let msg = vcat $ pretty x
                                : [ Pr.braces (stringToDoc n) $$ nest 4 (pretty y) | (n,y) <- ys' ]
-
-                    return (True, map snd ys')
-    (x', Any flag) <- listen (simplify x)
-    x'' <- lift $ trySimplifyE x'
+                    mkLog "applied" msg
+                    trace (show $ "applied" <+> msg) $ return (True, map snd ys')
+                    -- return (True, map snd ys')
+    (x', (Any flag, _)) <- listen (simplify x)
+    (x'', _) <- lift $ trySimplifyE x'
     if flag
         then do
             lift $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x'']
+            tell (Any True, [])
             return [x'']
         else do
             (b,zs) <- lift $ go fs
-            tell (Any b)
+            tell (Any b, [])
             return zs
+
+
