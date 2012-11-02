@@ -10,6 +10,7 @@ import Language.E
 import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
+import Language.E.Pipeline.InlineLettings
 
 import qualified Data.DList as DList
 import System.Directory ( createDirectoryIfMissing )
@@ -32,7 +33,7 @@ conjureAllPure gen reprs refns = runIdentity . flip evalStateT gen . go Repr
             -> m [(Either Doc Spec, DList.DList NamedLog)]
         go Repr s = do
             g <- get
-            let (mouts, (_, g')) = runIdentity $ runCompE g $ conjureRepr False s reprs
+            let (mouts, (_, g')) = runIdentity $ runCompE g $ inlineLettings s >>= \ s' -> conjureRepr False s' reprs
             put g'
             if null mouts
                 then go Groom s
