@@ -6,6 +6,7 @@ import Stuff.Generic
 
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Helpers
 import Language.E.CompE
 import Language.E.TypeOf
 import Language.E.TH ( eMatch, eMake )
@@ -87,48 +88,16 @@ partialEvaluator
              | vs           := quantified.quanOverExpr.value.set.values
              | qnGuards     := quantified.guard
              | [qnBody]     := quantified.body
-             |] = do
-    let
-        qnGuards' = case qnGuards of
-                        [ [xMatch| [] := emptyGuard |] ] -> []
-                        _ -> qnGuards
-    identity   <- identityOp quantifier
-    tyOverExpr <- typeOf qnOverExpr
-    tyInner    <- innerTypeOf "in simplify" tyOverExpr
-    case quantifier of
-        "sum" -> do
-            vs' <- sequence [ guardOp quantifier
-                                      (map (replace qnVar v) theGuard)
-                                      (replace qnVar v qnBody)
-                            | (v, rest) <- withRestToL vs
-                            , let theGuard =
-                                    if not $ null $ vs \\ [v]
-                                        then let 
-                                                 typed = case rest of
-                                                     [] -> [xMake| typed.left.value.mset.values := rest
-                                                                 | typed.right.domainInExpr.type.mset.inner  := [tyInner]
-                                                                 |]
-                                                     _  -> [xMake| value.mset.values := rest
-                                                                 |]
-                                                 g =
-                                                    [eMake| toInt(!(&v in &typed)) |]
-                                                    -- [xMake| operator.toInt.unaryOp.not.binOp.operator := [Prim (S "in")]
-                                                    --       | operator.toInt.unaryOp.not.binOp.left  := [v]
-                                                    --       | operator.toInt.unaryOp.not.binOp.right := [typed]
-                                                    --       |]
-                                             in  g : qnGuards'
-                                        else qnGuards'
-                            ]
-            Just <$> foldM (glueOp quantifier) identity vs'
-        _ ->
-            case vs of
-                [] -> ret identity
-                _  -> do
-                    vs' <- sequence [ guardOp quantifier
-                                              (map (replace qnVar v) qnGuards')
-                                              (replace qnVar v qnBody)
-                                    | v <- vs ]
-                    Just <$> foldM (glueOp quantifier) identity vs'
+             |] = partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody
+partialEvaluator
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+             | _            := quantified.quanOverOp.binOp.in
+             | [qnVar]      := quantified.quanVar.structural.single
+             | [qnOverExpr] := quantified.quanOverExpr
+             | vs           := quantified.quanOverExpr.structural.single.value.set.values
+             | qnGuards     := quantified.guard
+             | [qnBody]     := quantified.body
+             |] = partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody
 
 partialEvaluator
    _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
@@ -137,20 +106,7 @@ partialEvaluator
              | vs                    := quantified.quanOverExpr.value.mset.values
              | qnGuards              := quantified.guard
              | [qnBody]              := quantified.body
-             |] = do
-    let
-        qnGuards' = case qnGuards of
-                        [ [xMatch| [] := emptyGuard |] ] -> []
-                        _ -> qnGuards
-    identity <- identityOp quantifier
-    case vs of
-        [] -> ret identity
-        _  -> do
-            vs' <- sequence [ guardOp quantifier
-                                      (map (replace qnVar v) qnGuards')
-                                      (replace qnVar v qnBody)
-                            | v <- vs ]
-            Just <$> foldM (glueOp quantifier) identity vs'
+             |] = partialEvaluatorValueMSet quantifier qnVar vs qnGuards qnBody
 
 -- inlining a structural variable, tuple here.
 
@@ -191,6 +147,80 @@ partialEvaluator
 partialEvaluator _ = return Nothing
 
 
+partialEvaluatorValueSet
+    :: (Monad m, Functor m)
+    => String
+    -> E
+    -> E
+    -> [E]
+    -> [E]
+    -> E
+    -> CompE m (Maybe E)
+partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody = do
+    let
+        qnGuards' = case qnGuards of
+                        [ [xMatch| [] := emptyGuard |] ] -> []
+                        _ -> qnGuards
+    identity   <- identityOp quantifier
+    tyOverExpr <- typeOf qnOverExpr
+    tyInner    <- innerTypeOf "in simplify" tyOverExpr
+    case quantifier of
+        "sum" -> do
+            vs' <- sequence [ guardOp quantifier
+                                      (map (replace qnVar v) theGuard)
+                                      (replace qnVar v qnBody)
+                            | (v, rest) <- withRestToL vs
+                            , let theGuard =
+                                    if not $ null $ vs \\ [v]
+                                        then let 
+                                                 typed = case rest of
+                                                     [] -> [xMake| typed.left.value.mset.values := rest
+                                                                 | typed.right.domainInExpr.type.mset.inner  := [tyInner]
+                                                                 |]
+                                                     _  -> [xMake| value.mset.values := rest
+                                                                 |]
+                                                 g =
+                                                    [eMake| toInt(!(&v in &typed)) |]
+                                             in  g : qnGuards'
+                                        else qnGuards'
+                            ]
+            Just <$> foldM (glueOp quantifier) identity vs'
+        _ ->
+            case vs of
+                [] -> ret identity
+                _  -> do
+                    vs' <- sequence [ guardOp quantifier
+                                              (map (replace qnVar v) qnGuards')
+                                              (replace qnVar v qnBody)
+                                    | v <- vs ]
+                    Just <$> foldM (glueOp quantifier) identity vs'
+
+
+partialEvaluatorValueMSet
+    :: Monad m
+    => String
+    -> E
+    -> [E]
+    -> [E]
+    -> E
+    -> CompE m (Maybe E)
+partialEvaluatorValueMSet quantifier qnVar vs qnGuards qnBody = do
+
+    let
+        qnGuards' = case qnGuards of
+                        [ [xMatch| [] := emptyGuard |] ] -> []
+                        _ -> qnGuards
+    identity <- identityOp quantifier
+    case vs of
+        [] -> ret identity
+        _  -> do
+            vs' <- sequence [ guardOp quantifier
+                                      (map (replace qnVar v) qnGuards')
+                                      (replace qnVar v qnBody)
+                            | v <- vs ]
+            Just <$> foldM (glueOp quantifier) identity vs'
+
+
 ret :: Monad m => E -> CompE m (Maybe E)
 ret = return . Just
 
@@ -222,7 +252,4 @@ glueOp quantifier a b = case quantifier of
             _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
 
 
-conjunct :: [E] -> E
-conjunct [] = error "Impossible."
-conjunct xs = let f a b = [eMake| &a /\ &b |] in foldr1 f xs
 

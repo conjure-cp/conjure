@@ -1,28 +1,29 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Language.E.Evaluator ( simplify, trySimplifySpec, trySimplifyE, test_Simplify ) where
+module Language.E.Evaluator ( simplify, trySimplifySpec, trySimplifyE ) where
 
 import Stuff.Pretty
-import Stuff.FunkyT
 
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
+import Language.E.Helpers
+import Language.E.Traversals
 import Language.E.Lexer
 import Language.E.Parser
 import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalHasType, evalHasDomain
                                     , evalHasRepr, evalDomSize
                                     , evalIndices, evalReplace
+                                    , tupleEq, matrixEq
                                     )
 import Language.E.Evaluator.Partial ( partialEvaluator )
 
 import qualified Data.Text as T
-import Data.Generics.Uniplate.Data ( rewriteM )
 
 
-test_Simplify :: T.Text -> IO ()
-test_Simplify t = do
+_testSimplify :: T.Text -> IO ()
+_testSimplify t = do
     let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
     case res of
         Left  e -> print e
@@ -33,33 +34,44 @@ test_Simplify t = do
 
 
 trySimplifySpec :: (Functor m, Monad m) => Spec -> CompE m Spec
-trySimplifySpec (Spec v xs) = do
+trySimplifySpec (Spec v xs) = withBindingScope' $ do
+    mapM_ introduceStuff xs
     let
         loggedSimplify i = do
-            (i', Any b) <- listen (simplify i)
+            (i', (Any b, _)) <- listen (simplify i)
             when b $ lift $ mkLog "simplified" $ vcat [pretty i, "~~>", pretty i']
             return i'
-    (xs', Any flag) <- runWriterT (mapM loggedSimplify xs)
+    (xs', (Any flag, _)) <- runWriterT (mapM loggedSimplify xs)
     (if flag then trySimplifySpec else return) (Spec v xs')
 
-trySimplifyE :: (Functor m, Monad m) => E -> CompE m E
+trySimplifyE :: (Functor m, Monad m) => E -> CompE m (E, [Binder])
 trySimplifyE x = do
-    (x', Any flag) <- runWriterT (simplify x)
-    (if flag then trySimplifyE else return) x'
+    (x', (Any flag, bs)) <- runWriterT (simplify x)
+    if flag
+        then do
+            (x'', bs2) <- trySimplifyE x'
+            return (x'', bs ++ bs2)
+        else
+            return (x', bs)
 
-simplify :: (Functor m, Monad m) => E -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) E
-simplify =
-    rewriteM (\ i -> firstJust $ map ($ i) [ loggedFullEvaluator
-                                           , loggedEvalHasRepr
-                                           , loggedEvalHasType
-                                           , loggedEvalHasDomain
-                                           , loggedEvalDomSize
-                                           , loggedEvalIndices
-                                           , loggedEvalReplace
-                                           , loggedPartialEvaluator
-                                           ]
-             )
+
+simplify :: (Functor m, Monad m) => E -> WriterT (Any, [Binder]) (CompEMOnly m) E
+simplify = traverseE allCombined
     where
+        allCombined i =
+            firstJustOr i
+                $ map ($ i) [ loggedFullEvaluator
+                            , loggedEvalHasRepr
+                            , loggedEvalHasType
+                            , loggedEvalHasDomain
+                            , loggedEvalDomSize
+                            , loggedEvalIndices
+                            , loggedEvalReplace
+                            , loggedPartialEvaluator
+                            , logged "Evaluator.tupleEq"  tupleEq
+                            , logged "Evaluator.matrixEq" matrixEq
+                            ]
+
         loggedFullEvaluator    = logged "Evaluator"                 fullEvaluator
         loggedEvalHasRepr      = logged "Evaluator.hasRepr"         evalHasRepr
         loggedEvalHasType      = logged "Evaluator.hasType"         evalHasType
@@ -67,20 +79,32 @@ simplify =
         loggedEvalDomSize      = logged "Evaluator.domSize"         evalDomSize
         loggedEvalIndices      = logged "Evaluator.indices"         evalIndices
         loggedEvalReplace      = logged "Evaluator.replace"         evalReplace
-        loggedPartialEvaluator = logged "Simplify"                  partialEvaluator
+        loggedPartialEvaluator = logged "Simplify"                  (adapter partialEvaluator)
 
+        adapter comp x = do
+            y <- comp x
+            case y of
+                Nothing -> return Nothing
+                Just z  -> return (Just (z, []))
+
+        logged :: (Functor m, Monad m)
+               => String
+               -> (E -> CompE m (Maybe (E,[Binder])))
+               -> E
+               -> WriterT (Any, [Binder]) (CompEMOnly m) (Maybe E)
         logged str act inp = do
             moutp <- lift $ act inp
             case moutp of
-                Nothing   -> return Nothing
-                Just outp -> do
+                Nothing         -> return Nothing
+                Just (outp, bs) -> do
                     lift $ mkLog str $ pretty inp <+> "~~>" <+> pretty outp
-                    tell (Any True)
-                    return moutp
+                    tell (Any True, bs)
+                    return (Just outp)
 
-        firstJust []     = return Nothing
-        firstJust (a:as) = do
+        firstJustOr i []     = return i
+        firstJustOr i (a:as) = do
             mr <- a
             case mr of
-                Nothing -> firstJust as
-                Just _  -> return mr
+                Nothing -> firstJustOr i as
+                Just r  -> return r
+

@@ -6,6 +6,7 @@ import Stuff.FunkyT
 
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Helpers
 import Language.E.CompE
 import Language.E.DomainOf
 import Language.E.MatchBind
@@ -15,7 +16,7 @@ import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 
 
-fullEvaluator :: Monad m => E -> CompE m (Maybe E)
+fullEvaluator :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
                      | [Prim (I a)  ] := binOp.left .value.literal
                      | [Prim (I b)  ] := binOp.right.value.literal
@@ -64,33 +65,40 @@ fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
 fullEvaluator _ = return Nothing
 
 
-returnBool :: Monad m => Bool -> CompE m (Maybe E)
+returnBool :: (Functor m, Monad m) => Bool -> CompE m (Maybe (E,[Binder]))
 returnBool i = ret [xMake| value.literal := [Prim (B i)] |]
 
-returnInt :: Monad m => Integer -> CompE m (Maybe E)
+returnBool' :: (Functor m, Monad m) => Bool -> [Binder] -> CompE m (Maybe (E,[Binder]))
+returnBool' i bs = return $ Just ([xMake| value.literal := [Prim (B i)] |], bs)
+
+returnInt :: (Functor m, Monad m) => Integer -> CompE m (Maybe (E,[Binder]))
 returnInt i = ret [xMake| value.literal := [Prim (I i)] |]
 
-ret :: Monad m => E -> CompE m (Maybe E)
-ret = return . Just
+returnInt' :: (Functor m, Monad m) => Integer -> [Binder] -> CompE m (Maybe (E,[Binder]))
+returnInt' i bs = return $ Just ([xMake| value.literal := [Prim (I i)] |], bs)
+
+ret :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+ret i = return $ Just (i, [])
 
 
-evalHasType :: (Functor m, Monad m) => E -> CompE m (Maybe E)
+evalHasType :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
 evalHasType [eMatch| &s hasType &dom |] = do
     ts <- typeOf s
     td <- typeOf dom
-    b  <- patternMatch td ts
-    returnBool b
+    (flag, bs) <- patternMatch td ts
+    modifyLocal $ \ st -> st { binders = bs ++ binders st }
+    returnBool' flag bs
 evalHasType _ = return Nothing
 
-evalHasDomain :: (Functor m, Monad m) => E -> CompE m (Maybe E)
+evalHasDomain :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
 evalHasDomain [eMatch| &x hasDomain &y |] = do
     dx <- domainOf x
     dy <- domainOf y
-    b  <- patternMatch dy dx
-    returnBool b
+    (flag, bs) <- patternMatch dy dx
+    returnBool' flag bs
 evalHasDomain _ = return Nothing
 
-evalHasRepr :: Monad m => E -> CompE m (Maybe E)
+evalHasRepr :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
 evalHasRepr [eMatch| &x hasRepr &y |] =
     case x of
         [eMatch| &m[&_] |] ->
@@ -112,8 +120,8 @@ evalHasRepr [eMatch| &x hasRepr &y |] =
         _ -> returnBool False
 evalHasRepr _ = return Nothing
 
-evalDomSize :: Monad m => E -> CompE m (Maybe E)
-evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
+evalDomSize :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
     where
         sumE []     = [eMake| 0 |]
         sumE [x]    = x
@@ -155,15 +163,15 @@ evalDomSize [eMatch| domSize(&i) |] = Just <$> domSize i
 
 evalDomSize _ = return Nothing
 
-evalIndices :: (Functor m, Monad m) => E -> CompE m (Maybe E)
+evalIndices :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
 evalIndices p@[xMatch| [a,b] := operator.indices |] = do
     bInt <- toInt b
     case bInt of
-        Nothing    -> err ErrFatal $ "Second argument is not an integer:" <+> pretty p
-        Just bInt' -> indices a bInt'
+        Nothing         -> err ErrFatal $ "Second argument is not an integer:" <+> pretty p
+        Just (bInt', _) -> indices a bInt'
     where
         -- indices (matrix) (integer)
-        indices :: (Functor m, Monad m) => E -> Integer -> CompE m (Maybe E)
+        indices :: (Functor m, Monad m) => E -> Integer -> CompE m (Maybe (E,[Binder]))
         indices [xMatch| [Prim (S iden)] := reference |] i = do
             mres <- runMaybeT $ lookupBinder iden
             case mres of
@@ -171,7 +179,7 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
                 Just res -> indices res i
         indices [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
         indices [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
-        indices [xMatch| [index] := domain.matrix.index |] 0 = return $ Just index
+        indices [xMatch| [index] := domain.matrix.index |] 0 = ret index
         indices [xMatch| [inner] := domain.matrix.inner |] i = indices inner (i-1)
         indices [eMatch| &m[&_]                         |] i = indices m (i+1)
         indices m i = do
@@ -182,7 +190,7 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
             return Nothing
 evalIndices _ = return Nothing
 
-evalReplace :: Monad m => E -> CompE m (Maybe E)
+evalReplace :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
 evalReplace
     [xMatch| [a] := operator.replace.arg1
            | [b] := operator.replace.old
@@ -194,4 +202,48 @@ evalReplace
         helper _old _new other = other
     in  ret $ helper b c a
 evalReplace _ = return Nothing
+
+tupleEq :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+tupleEq [eMatch| &a = &b |] = do
+    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
+    case ta of
+        [xMatch| is := type.tuple.inners |] ->
+            ret $ conjunct [ [eMake| &a[&i] = &b[&i] |]
+                           | j <- [1..genericLength is]
+                           , let i = [xMake| value.literal := [Prim (I j)] |]
+                           ]
+        _ -> return Nothing
+tupleEq [eMatch| &a != &b |] = do
+    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
+    case ta of
+        [xMatch| is := type.tuple.inners |] ->
+            ret $ disjunct [ [eMake| &a[&i] != &b[&i] |]
+                           | j <- [1..genericLength is]
+                           , let i = [xMake| value.literal := [Prim (I j)] |]
+                           ]
+        _ -> return Nothing
+tupleEq [eMatch| &a[&i] |] = do
+    miInt <- toInt i
+    case miInt of
+        Nothing        -> return Nothing
+        Just (iInt, _) ->
+            case a of
+                [xMatch| vs := value.tuple.values |] -> ret $ vs `genericIndex` (iInt - 1)
+                _ -> return Nothing
+tupleEq _ = return Nothing
+
+
+matrixEq :: (Functor m, Monad m) => E -> CompE m (Maybe (E, [Binder]))
+matrixEq [eMatch| &a = &b |] = do
+    da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
+    case da of
+        Just [xMatch| _ := domain |] -> mkLog "matrixEq da" $ pretty da
+        _ -> return ()
+    case da of
+        Just [xMatch| [ia] := domain.matrix.index |] -> do
+            mkLog "matrixEq" $ pretty ia
+            (quanVarStr, quanVar) <- freshQuanVar
+            ret $ inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
+        _ -> return Nothing
+matrixEq _ = return Nothing
 
