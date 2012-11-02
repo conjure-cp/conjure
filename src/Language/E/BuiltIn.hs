@@ -102,18 +102,3 @@ tupleExplode _ = return Nothing
 
 
 
-
-
-
-
-
-
-conjunct :: [E] -> E
-conjunct []     = [eMake| true |]
-conjunct [x]    = x
-conjunct (x:xs) = let y = conjunct xs in [eMake| &x /\ &y |]
-
-disjunct :: [E] -> E
-disjunct []     = [eMake| false |]
-disjunct [x]    = x
-disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
