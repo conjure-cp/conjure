@@ -20,7 +20,7 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
 
         let Spec _ statements = spec
 
-        mapM_ processStatement statements
+        mapM_ introduceStuff statements
 
         let topLevels' = [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
                                               | [d]          := topLevel.declaration.find .domain |] <- statements ]
@@ -89,7 +89,7 @@ applyCongfigToSpec spec initConfig = do
                     return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
         f p = return p
     modifyLocal $ \ st -> st { representationConfig = initConfig }
-    spec' <- traverseSpecNoFindGiven Nothing f Nothing spec
+    spec' <- traverseSpecNoFindGiven' f spec
     modifyLocal $ \ st -> st { representationConfig = def }
     let pipeline = addStructuralFromLog >=>
                    addChannellingFromLog
@@ -99,7 +99,7 @@ applyCongfigToSpec spec initConfig = do
 addStructuralFromLog :: (Functor m, Monad m) => Spec -> CompE m Spec
 addStructuralFromLog (Spec v xs) = do
     cs' <- getsLocal structuralConsLog
-    cs  <- mapM trySimplifyE cs'
+    cs  <- (fst . unzip) <$> mapM trySimplifyE cs'
     modifyLocal $ \ st -> st { structuralConsLog = [] }
     let mk i = [xMake| topLevel.suchThat := [i] |]
     return $ Spec v $ xs ++ map mk cs
@@ -145,8 +145,8 @@ addChannellingFromLog (Spec v xs) = do
     let
         newDecls = nub $ map mk rlogs
 
-    newDecls' <- mapM trySimplifyE newDecls
-    newCons'  <- mapM trySimplifyE (concat newCons)
+    newDecls' <- (fst . unzip) <$> mapM trySimplifyE newDecls
+    newCons'  <- (fst . unzip) <$> mapM trySimplifyE (concat newCons)
 
     return $ Spec v $ insertBeforeSuchThat newDecls' xs ++ newCons'
 
