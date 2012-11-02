@@ -3,7 +3,6 @@
 module Language.E.Pipeline.ReadIn where
 
 import Language.E
-import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 
 import System.Directory ( createDirectoryIfMissing )
 

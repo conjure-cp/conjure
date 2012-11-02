@@ -1,7 +1,6 @@
 module Language.E.Pipeline.ConjureRepr where
 
 import Language.E
-import Language.E.Pipeline.InitialiseSpecState ( initialiseSpecState )
 import Language.E.Pipeline.ApplyRepr ( applyRepr )
 -- import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.Groom ( groomSpec )

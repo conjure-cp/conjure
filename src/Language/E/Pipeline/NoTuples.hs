@@ -76,7 +76,7 @@ checkTupleDomain [xMatch| is := domain.tuple.inners |] = Just is
 checkTupleDomain _ = Nothing
 
 renameTupleIndexes :: Monad m => S.Set String -> Spec -> CompE m Spec
-renameTupleIndexes identifiers = traverseSpec Nothing f Nothing
+renameTupleIndexes identifiers = traverseSpec' f
     where
         f [xMatch| [Prim (S i)] := operator.index.left.reference
                  | [Prim (I j)] := operator.index.right.value.literal
@@ -107,9 +107,7 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
                                            |]
 
 renameMatrixOfTupleIndexes :: Monad m => M.Map String Int -> Spec -> CompE m Spec
-renameMatrixOfTupleIndexes identifiers sp = do
-    -- mkLog "renameMatrixOfTupleIndexes" $ prettyList id "," $ map fst (M.toList identifiers)
-    traverseSpec Nothing f Nothing sp
+renameMatrixOfTupleIndexes identifiers = traverseSpec' f
     where
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
                           , js

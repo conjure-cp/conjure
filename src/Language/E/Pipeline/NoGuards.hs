@@ -13,7 +13,7 @@ conjureNoGuards = noGuardsSpec
 
 
 noGuardsSpec :: (Functor m, Monad m) => Spec -> CompE m Spec
-noGuardsSpec = traverseSpec Nothing noGuardsE Nothing
+noGuardsSpec = traverseSpec' noGuardsE
 
 
 noGuardsE :: (Functor m, Monad m) => E -> CompE m E
