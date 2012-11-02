@@ -20,15 +20,14 @@ disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
 
 inForAll :: String -> E -> E -> E
 inForAll quanVar quanOverDom body =
-    [xMake| quantified.quantifier.reference      := [Prim $ S "forAll"]
-          | quantified.quanVar.structural.single := [Prim $ S quanVar ]
-          | quantified.quanOverDom               := [quanOverDom]
-          | quantified.quanOverOp                := []
-          | quantified.quanOverExpr              := []
-          | quantified.guard.emptyGuard          := []
-          | quantified.body                      := [body]
+    [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
+          | quantified.quanVar.structural.single.reference := [Prim $ S quanVar ]
+          | quantified.quanOverDom                         := [quanOverDom]
+          | quantified.quanOverOp                          := []
+          | quantified.quanOverExpr                        := []
+          | quantified.guard.emptyGuard                    := []
+          | quantified.body                                := [body]
           |]
-
 
 inForAlls :: [(String,E)] -> E -> E
 inForAlls = go . reverse
