@@ -2,7 +2,6 @@
 
 module Language.E.CompE where
 
-import Stuff.Generic
 import Stuff.FunkyT
 import Stuff.NamedLog
 
@@ -16,8 +15,8 @@ import qualified Data.DList as DList
 import System.IO.Unsafe ( unsafeInterleaveIO )
 
 
-
-type CompE m a = FunkyT LocalState GlobalState (CompError, Maybe Spec) m a
+type CompEMOnly m = FunkyT LocalState GlobalState (CompError, Maybe Spec) m
+type CompE m a = CompEMOnly m a
 
 runCompE
     :: Monad m
@@ -81,20 +80,19 @@ data LocalState = LocalState
         , structuralConsLog :: [E]
         , lastSpec :: Maybe Spec  -- record the spec after changes, to report in case of an error.
         , localLogs :: DList.DList NamedLog
+        , allNamesPreConjure :: S.Set String  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 data Binder = Binder String E
     deriving (Show)
 
 instance Default LocalState where
-    def = LocalState def 1 def def def def DList.empty
+    def = LocalState def 1 def def def def DList.empty def
 
 data GlobalState = GlobalState
-        { allNamesPreConjure :: S.Set String  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
-        }
 
 instance Default GlobalState where
-    def = GlobalState def
+    def = GlobalState
 
 mkLog :: Monad m => String -> Doc -> CompE m ()
 mkLog nm doc = case buildLog nm doc of
@@ -116,7 +114,7 @@ nextUniqueName = do
     i <- getsLocal uniqueNameInt
     modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
     let nm = "v__" ++ show i
-    nms <- getsGlobal allNamesPreConjure
+    nms <- getsLocal allNamesPreConjure
     if nm `S.member` nms
         then nextUniqueName
         else return nm
