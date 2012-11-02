@@ -7,6 +7,7 @@ import Stuff.MonadList as X
 
 import Language.E.Imports as X
 import Language.E.Definition as X
+import Language.E.Helpers as X
 import Language.E.CompE as X
 import Language.E.TH as X
 import Language.E.Lexer as X
