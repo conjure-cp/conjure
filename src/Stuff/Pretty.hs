@@ -30,6 +30,9 @@ instance Pretty Double  where pretty x = pretty (printf "%.2f" x :: String)
 instance (Pretty a, Pretty b) => Pretty (a,b) where
     pretty (a,b) = prettyListDoc parens "," [pretty a, pretty b]
 
+instance Pretty a => Pretty (Maybe a) where
+    pretty Nothing  = "Nothing"
+    pretty (Just x) = "Just" <+> parens (pretty x)
 
 
 (<++>) :: Doc -> Doc -> Doc
