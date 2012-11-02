@@ -24,7 +24,8 @@ suppress :: S.Set String
 suppress = S.fromList
     [ "restoreState"
     , "patternMatch.core"
-    , "patternMatch"
+    , "patternMatch-fail"
+    , "patternMatch-success"
     , "rule-fail"
     , "Simplify"
     , "Evaluator"
