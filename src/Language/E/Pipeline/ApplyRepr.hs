@@ -92,7 +92,7 @@ applyCongfigToSpec spec initConfig = do
     spec' <- traverseSpecNoFindGiven' f spec
     modifyLocal $ \ st -> st { representationConfig = def }
     let pipeline = addChannellingFromLog >=>
-				   addStructuralFromLog
+                   addStructuralFromLog
     pipeline spec'
 
 
