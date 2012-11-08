@@ -23,8 +23,15 @@ data Phase = Repr | Refn | Groom
 conjureAllPure
     :: StdGen -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, DList.DList NamedLog)]
-conjureAllPure gen reprs refns = runIdentity . flip evalStateT gen . go Repr
+conjureAllPure gen reprs refns
+    = onlyOneError
+    . runIdentity . flip evalStateT gen . go Repr
     where
+        onlyOneError [] = []
+        onlyOneError (x:xs)
+            | isLeft (fst x) = [x]
+            | otherwise      = x : onlyOneError xs
+
         toError :: String -> (CompError, Maybe Spec) -> Either Doc Spec
         toError msg = Left . prettyErrors (pretty $ "Error in phase: " ++ msg) . return
 
