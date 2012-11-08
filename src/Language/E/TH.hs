@@ -1,5 +1,4 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Language.E.TH where
 
@@ -16,44 +15,16 @@ import qualified Data.Text as T
 
 -- match by parsing an expression
 eMatch :: QuasiQuoter
-eMatch = qq {
-    quotePat = \ inp -> do
-        let
-            buildP' :: BuiltIn -> Pat
-            buildP' (B False)
-                = ConP (mkName "B")
-                    [ ConP (mkName "False") [] ]
-            buildP' (B True)
-                = ConP (mkName "B")
-                    [ ConP (mkName "True") [] ]
-            buildP' (I i)
-                = ConP (mkName "I")
-                    [ LitP (IntegerL i) ]
-            buildP' (S s)
-                = ConP (mkName "S")
-                    [ LitP (StringL s) ]
-
-            buildP :: E -> Q Pat
-            buildP (Prim p) =
-                return $ ConP (mkName "Prim") [buildP' p]
-            buildP (Tagged "metavar" [Prim (S s)]) =
-                return $ VarP (mkName s)
-            buildP (Tagged t xs) = do
-                ys <- mapM buildP xs
-                return $ ConP (mkName "Tagged")
-                              [ LitP (StringL $ T.unpack t)
-                              , ListP ys
-                              ]
-
-        case runLexerAndParser (inCompleteFile parseExpr) "" (T.pack inp) of
-            Left  e -> error $ show e
-            Right x -> buildP x
-    }
+eMatch = mkMatchLike parseExpr
 
 
 -- match by parsing a domain
 dMatch :: QuasiQuoter
-dMatch = qq {
+dMatch = mkMatchLike parseDomain
+
+
+mkMatchLike :: Parser E -> QuasiQuoter
+mkMatchLike parser = qq {
     quotePat = \ inp -> do
         let
             buildP' :: BuiltIn -> Pat
@@ -82,7 +53,7 @@ dMatch = qq {
                               , ListP ys
                               ]
 
-        case runLexerAndParser (inCompleteFile parseDomain) "" (T.pack inp) of
+        case runLexerAndParser (inCompleteFile parser) "" (T.pack inp) of
             Left  e -> error $ show e
             Right x -> buildP x
     }
