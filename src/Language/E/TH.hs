@@ -44,8 +44,10 @@ mkMatchLike parser = qq {
             buildP :: E -> Q Pat
             buildP (Prim p) =
                 return $ ConP (mkName "Prim") [buildP' p]
-            buildP (Tagged "metavar" [Prim (S s)]) =
-                return $ VarP (mkName s)
+            buildP (Tagged "metavar" [Prim (S s)]) = return $
+                if s == "_"
+                    then WildP
+                    else VarP (mkName s)
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
