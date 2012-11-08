@@ -18,12 +18,12 @@ module Language.E.Testing.TopToBottom where
 import Language.E
 import Language.E.Pipeline.ReadIn
 
-import Test.Hspec.Monadic (describe, it)
-import qualified Test.Hspec.Monadic (Spec)
+import Test.Hspec (describe, it)
+import qualified Test.Hspec (Spec)
 
 
 
-tests :: IO Test.Hspec.Monadic.Spec
+tests :: IO Test.Hspec.Spec
 tests = do
     ts <- iotests
     return $ describe "top to bottom" $ mapM_ (uncurry it) ts

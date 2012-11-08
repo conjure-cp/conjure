@@ -14,8 +14,8 @@ import Data.Traversable ( mapM )
 
 import qualified Text.PrettyPrint as Pr
 
-import qualified Test.Hspec.Monadic
-import Test.Hspec.Monadic ( describe, it )
+import qualified Test.Hspec
+import Test.Hspec ( describe, it )
 import Test.Hspec.HUnit ()
 import Test.HUnit ( assertFailure )
 
@@ -201,7 +201,7 @@ loadAndApply specFilename refnFilenames = do
     mapM_ (print . pretty) results
 
 
-buildTests :: [(String, FilePath, [FilePath], [FilePath])] -> Test.Hspec.Monadic.Spec
+buildTests :: [(String, FilePath, [FilePath], [FilePath])] -> Test.Hspec.Spec
 -- buildTests = undefined
 buildTests params = describe "rule engine" $
     forM_ params $ \ (name, spec', outputs', rules') ->
@@ -248,7 +248,7 @@ runInteractively name = case [ (input,rules) | (name',input,_,rules) <- testData
     [(input,rules)] -> void $ loadAndApply input rules
     _               -> error $ "not found " ++ name
 
-tests :: Test.Hspec.Monadic.Spec
+tests :: Test.Hspec.Spec
 tests = buildTests testData
 
 testData :: [ ( String              -- a name for the test case

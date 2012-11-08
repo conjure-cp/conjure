@@ -6,7 +6,7 @@ import Language.E
 
 import System.Directory ( getDirectoryContents )
 
-import Test.Hspec.Monadic
+import Test.Hspec
 import Test.Hspec.HUnit ()
 import Test.HUnit
 
@@ -23,7 +23,7 @@ getSpecs fp = do
 specs :: IO [FilePath]
 specs = allFilesWithSuffix ".essence" "files/testdata"
 
-tests :: IO Test.Hspec.Monadic.Spec
+tests :: IO Test.Hspec.Spec
 tests = do
     xs <- specs
     return $
