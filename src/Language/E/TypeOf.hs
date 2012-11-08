@@ -229,9 +229,10 @@ typeOf [xMatch| [Prim (S "sum")] := quantified.quantifier.reference |] =
 typeOf p@[xMatch| [x] := operator.twoBars |] = do
     tx <- typeOf x
     case tx of
-        [xMatch| [] := type.int |]                 -> return [xMake| type.int := [] |]
-        [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
-        [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.int      |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.set      |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.mset     |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.function |] -> return [xMake| type.int := [] |]
         -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> typeErrorIn p
 
