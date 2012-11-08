@@ -14,6 +14,7 @@ import Language.E.TH
 import Language.E.TypeOf
 import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
+import                Language.E.Evaluator.DataAboutQuantifiers
 
 
 fullEvaluator :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
@@ -48,12 +49,15 @@ fullEvaluator [eMatch| !true  |] = ret [eMake| false |]
 fullEvaluator [eMatch| toInt(false) |] = ret [eMake| 0 |]
 fullEvaluator [eMatch| toInt(true)  |] = ret [eMake| 1 |]
 
-fullEvaluator [xMatch| [Prim (S "=")] := binOp.operator
-                     | [Prim x] := binOp.left .value.literal
-                     | [Prim y] := binOp.right.value.literal
-                     |]
-                     | x == y
-                     = ret [eMake| true |]
+fullEvaluator [eMatch| &a = &b |]
+    | [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    = returnBool (a' == b')
+
+fullEvaluator [eMatch| &a != &b |]
+    | [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    = returnBool (a' /= b')
 
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.left.emptyGuard
@@ -65,6 +69,33 @@ fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.right.emptyGuard
                      |] = ret x
 
+-- fullEvaluator p@[eMatch| &quan &i : int(&a..&b) , &guard . &body |]
+    -- | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    -- , [xMatch| [Prim (I a')] := value.literal |] <- a
+    -- , [xMatch| [Prim (I b')] := value.literal |] <- b
+    -- , a' == b'
+    -- = do
+    -- res1 <- guardOp quanStr [guard] body
+    -- let res2 = [eMake| &res1 { &i --> &a } |]
+    -- mres3 <- evalReplace res2
+    -- case mres3 of
+        -- Just (res3, _) -> do
+            -- mkLog "fullEvaluator 1" $ pretty p
+            -- mkLog "fullEvaluator 2" $ pretty res3
+            -- return mres3
+        -- Nothing -> do
+            -- mkLog "fullEvaluator Nothing" $ pretty p
+            -- return Nothing
+
+fullEvaluator p@[eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    , [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    , a' > b'
+    = do
+        mkLog "fullEvaluator empty range" $ pretty p
+        res <- identityOp quanStr
+        ret res
 
 fullEvaluator _ = return Nothing
 
