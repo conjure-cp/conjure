@@ -20,6 +20,7 @@ module Language.E.Imports
     , parMapM
     , allFiles, allFilesWithSuffix
     , timedIO
+    , isLeft, isRight
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -155,6 +156,14 @@ timedIO io = do
     end   <- getCPUTime
     let diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
     return (a, diff)
+
+isLeft :: Either a b -> Bool
+isLeft (Left {}) = True
+isLeft _         = False
+
+isRight :: Either a b -> Bool
+isRight (Right {}) = True
+isRight _          = False
 
 instance Error Doc where strMsg = Pr.text
 
