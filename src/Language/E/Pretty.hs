@@ -194,29 +194,29 @@ instance Pretty E where
                   | [innerFrom] := domain.function.innerFrom
                   | [innerTo]   := domain.function.innerTo
                   |]
-        = "function" <+> pretty attrs
-                     <+> pretty innerFrom <+> "-->"
-                     <+> pretty innerTo
+        = hang ("function" <+> pretty attrs) 4 $
+            hang (pretty innerFrom) 4 $
+                "-->" <+> pretty innerTo
 
     pretty [xMatch| [attrs] := domain.set.attributes
                   | [inner] := domain.set.inner
                   |]
-        = "set" <+> pretty attrs <+> "of" <+> pretty inner
+        = hang ("set" <+> pretty attrs <+> "of") 4 (pretty inner)
 
     pretty [xMatch| [attrs] := domain.mset.attributes
                   | [inner] := domain.mset.inner
                   |]
-        = "mset" <+> pretty attrs <+> "of" <+> pretty inner
+        = hang ("mset" <+> pretty attrs <+> "of") 4 (pretty inner)
 
     pretty [xMatch| [attrs] := domain.relation.attributes
                   | inners  := domain.relation.inners
                   |]
-        = "relation" <+> pretty attrs <+> "of" <+> prettyList Pr.parens " *" inners
+        = hang ("relation" <+> pretty attrs <+> "of") 4 (prettyList Pr.parens " *" inners)
 
     pretty [xMatch| [attrs] := domain.partition.attributes
                   | [inner]  := domain.partition.inner
                   |]
-        = "partition" <+> pretty attrs <+> "from" <+> pretty inner
+        = hang ("partition" <+> pretty attrs <+> "from") 4 (pretty inner)
 
 
     pretty [xMatch| []    := attrCollection |] = empty
@@ -269,15 +269,6 @@ instance Pretty E where
 
     pretty x@[xMatch| _ := quantified |] = Pr.parens $ prettyQuantified x
 
---     -- pretty (Expr ":operator-=" xs) = vcat $ map pretty xs
---     -- pretty (Expr ":operator-index" xs) = vcat $ map pretty xs
--- 
---     pretty ( viewDeep [":function-apply"]
---               -> Just [ Expr ":function-apply-actual" [x]
---                       , Expr ":function-apply-args"   xs
---                       ]
---            ) = pretty x <> prettyListDoc Pr.parens Pr.comma (map pretty xs)
-
     pretty [xMatch| [x] := unaryOp.negate |]
         = "-" <> prettyPrec 10000 x
 
@@ -297,15 +288,6 @@ instance Pretty E where
             collect [xMatch| [a] := operator.index.left
                            | [b] := operator.index.right |] = second (b:) $ collect a
             collect b = (b,[])
--- 
---     pretty (viewDeep [":operator-replace"] -> Just [a,b,c])
---         = pretty a <+> Pr.braces (pretty b <+> "-->" <+> pretty c)
--- 
---     pretty (Expr (Tag t) args)
---         | Just rest <- T.stripPrefix ":operator-" t
---         , let lexeme = textToLexeme rest
---         , lexeme `elem` map Just functionals
---         = textToDoc rest <> prettyListDoc Pr.parens Pr.comma (map pretty args)
 
     pretty [xMatch| [ a ] := operator.replace.arg1
                   | [old] := operator.replace.old
