@@ -54,8 +54,8 @@ err e d = do
 prettyErrors :: Doc -> [(CompError, Maybe Spec)] -> Doc
 prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
     where
-        one ((e,d), Nothing) = stringToDoc (show e) <+> d
-        one ((e,d), Just sp) = vcat [ stringToDoc (show e) <+> d
+        one ((_,d), Nothing) = d
+        one ((_,d), Just sp) = vcat [ d
                                     , pretty sp
                                     -- , prettySpecDebug sp
                                     ]
