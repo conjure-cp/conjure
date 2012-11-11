@@ -5,7 +5,6 @@ module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 import Language.E
 import Language.E.BuiltIn ( builtInRefn )
 
-import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
 
 type RulesDB m = [E -> CompE m (Maybe [(String,E)])]
@@ -66,7 +65,7 @@ onE fs x@(Tagged t xs) = do
 onEGeneric :: (Functor m, Monad m)
     => RulesDB m
     -> E
-    -> T.Text
+    -> Tag
     -> [E]
     -> WriterT Any (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) [E]
 onEGeneric fs x t xs = do

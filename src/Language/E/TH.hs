@@ -51,7 +51,7 @@ mkMatchLike parser = qq {
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
-                              [ LitP (StringL $ T.unpack t)
+                              [ ConP (mkName $ show t) []
                               , ListP ys
                               ]
 
@@ -88,11 +88,11 @@ eMake = qq {
                 return $ ConE (mkName "Prim") `AppE` build' p
             build (Tagged "metavar" [Prim (S s)]) =
                 return $ VarE (mkName s)
-            build (Tagged s xs) = do
+            build (Tagged t xs) = do
                 ys <- mapM build xs
-                return $ ConE (mkName "Tagged")
+                return $ (ConE $ mkName "Tagged")
                             `AppE`
-                         LitE (StringL $ T.unpack s)
+                         (ConE $ mkName $ show t)
                             `AppE`
                          ListE ys
 
