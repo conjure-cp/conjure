@@ -31,7 +31,8 @@ main = interact $ \ inp ->
             , "import Data.String ( IsString(..) )"
             , "data Tag = " ++ constructors
             , "    deriving (Eq, Ord, Read, Show, Data, Typeable)"
-            , "instance Pretty Tag where pretty = pretty . show"
+            , "instance Pretty Tag where"
+            , "    pretty = pretty . drop 1 . show"
             , "instance IsString Tag where"
             , "    fromString = fromString' . filter (not . isSpace)"
             , "        where"

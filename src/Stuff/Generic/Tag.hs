@@ -114,7 +114,8 @@ data Tag = Tactual
     | Twithin
     | TwithLocals
     deriving (Eq, Ord, Read, Show, Data, Typeable)
-instance Pretty Tag where pretty = pretty . show
+instance Pretty Tag where
+    pretty = pretty . drop 1 . show
 instance IsString Tag where
     fromString = fromString' . filter (not . isSpace)
         where
