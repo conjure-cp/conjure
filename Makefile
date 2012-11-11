@@ -1,7 +1,7 @@
 .PHONY: install clean
 
 install:
-	time scripts/build/make -j4 -O
+	time scripts/build/make -O
 
 clean:
 	scripts/build/clean
