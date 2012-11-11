@@ -11,8 +11,7 @@ import Language.E.CompE
 import Language.E.TH
 import Language.E.Traversals
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
-import Language.E.Lexer ( runLexer )
-import Language.E.Parser ( runParser, inCompleteFile, parseExpr )
+import Language.E.Parser ( inCompleteFile, parseExpr, runLexerAndParser )
 import Language.E.Pretty
 
 import qualified Data.Text as T
@@ -60,7 +59,7 @@ mostKnown x y = do
 
 _testTypeOf :: T.Text -> IO ()
 _testTypeOf t = do
-    let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
+    let res = runLexerAndParser (inCompleteFile parseExpr) "" t
     case res of
         Left  e -> print e
         Right x -> do

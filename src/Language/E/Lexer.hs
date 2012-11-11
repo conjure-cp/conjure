@@ -15,6 +15,10 @@ import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
 
+import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+
+
+type LexemePos = (Lexeme, SourcePos)
 
 data Lexeme
     = LIntLiteral Integer
@@ -211,8 +215,6 @@ data Lexeme
     | L_HasDomain
     | L_indices
 
-    | L_HsTerm T.Text
-
     deriving (Eq,Ord,Read,Show)
 
 lexemeText :: Lexeme -> T.Text
@@ -237,7 +239,6 @@ lexemeWidth L_Tab = 4
 lexemeWidth (LIntLiteral i) = length (show i)
 lexemeWidth (LIdentifier i) = T.length i
 lexemeWidth (LComment    i) = T.length i
-lexemeWidth (L_HsTerm    i) = T.length i + 4
 lexemeWidth l = case lookup l (map swap lexemes) of
     Nothing -> 0
     Just t  -> T.length t
@@ -384,22 +385,39 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
 
     ]
 
-runLexer :: (Applicative m, MonadError Pr.Doc m) => T.Text -> m [Lexeme]
-runLexer t =
-    let results = catMaybes $  [ tryHsTerm t
-                               , tryLexMetaVar t
-                               ]
-                            ++ map (tryLex t) lexemes
-                            ++ [ tryLexIntLiteral t
-                               , tryLexIden t
-                               , tryLexComment t
-                               ]
-    in  if T.null t
-            then return []
-            else case results of
-                    [] -> throwError $ "Lexing error:" Pr.<+> Pr.text (T.unpack t)
-                    ((rest,lexeme):_) -> (lexeme:) <$> runLexer rest
-                    -- several -> throwError $ Pr.vcat $ "Ambigious lexing" : map (Pr.text . show) several
+runLexer :: (Applicative m, MonadError Pr.Doc m) => T.Text -> m [LexemePos]
+runLexer text = do
+    ls <- go text
+    let lsPaired = calcPos (initialPos "") ls
+    return $ removeSpaces lsPaired
+    where
+        go t = do
+            let results = catMaybes $  tryLexMetaVar t
+                                    :  map (tryLex t) lexemes
+                                    ++ [ tryLexIntLiteral t
+                                       , tryLexIden t
+                                       , tryLexComment t
+                                       ]
+            if T.null t
+                then return []
+                else case results of
+                        [] -> throwError $ "Lexing error:" Pr.<+> Pr.text (T.unpack t)
+                        ((rest,lexeme):_) -> (lexeme:) <$> go rest
+
+        calcPos _   []     = []
+        calcPos pos (x:xs) = (x, pos) : calcPos (nextPos pos x) xs
+
+        nextPos pos L_Newline = incSourceLine (setSourceColumn pos 1) 1
+        nextPos pos l         = incSourceColumn pos (lexemeWidth l)
+
+removeSpaces :: [LexemePos] -> [LexemePos]
+removeSpaces = filter (not . isSpace . fst)
+    where
+        isSpace L_Newline {} = True
+        isSpace L_Tab     {} = True
+        isSpace L_Space   {} = True
+        isSpace LComment  {} = True
+        isSpace _            = False
 
 tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
 tryLex running (face,lexeme) = case T.stripPrefix face running of
@@ -446,18 +464,3 @@ tryLexComment running = let (dollar,rest1) = T.span (=='$') running
                                 else let (commentLine,rest2) = T.span (/='\n') rest1
                                      in  Just (rest2, LComment commentLine)
 
-tryHsTerm :: T.Text -> Maybe (T.Text, Lexeme)
-tryHsTerm running = do
-    rest1 <- T.stripPrefix "#{" running
-    let (inner,rest2) = T.breakOn "}#" rest1
-    return (T.drop 2 rest2, L_HsTerm inner)
-
--- main :: IO ()
--- main = do
---     contents <- T.getContents
---     case runLexer contents of
---         Left err -> error $ show err
---         Right ls -> do
---             mapM_ print ls
---             T.putStrLn " === { Identifiers } === "
---             mapM_ T.putStrLn $ nub [ i | LIdentifier i <- ls ]

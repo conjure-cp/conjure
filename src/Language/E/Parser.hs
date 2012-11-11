@@ -1,15 +1,19 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fprof-auto #-}
 
-module Language.E.Parser where
+module Language.E.Parser ( runLexerAndParser, lexAndParseIO
+                         , parseExpr, parseDomain
+                         , parseRuleRepr, parseRuleRefn, parseSpec
+                         , Parser, inCompleteFile
+                         ) where
 
 import Stuff.Generic
-import Stuff.Pretty
 import Language.E.Definition ( E, BuiltIn(..), Spec(..), RuleRefn, RuleRepr, RuleReprCase )
 import Language.E.Data ( Fixity(..), operators, functionals )
-import Language.E.Lexer ( Lexeme(..), lexemeFace, lexemeText, lexemeWidth, runLexer )
-import Language.E.Pretty ()
+import Language.E.Lexer ( LexemePos, Lexeme(..), lexemeFace, lexemeText, runLexer )
+import Language.E.Pretty ( Pretty, pretty )
 
 import Control.Applicative ( Applicative, (<$>), (<$), (<*), (*>), (<*>), (<|>), some, many )
 import Control.Monad ( (>=>), msum, void )
@@ -19,10 +23,10 @@ import Control.Monad.Identity ( Identity(..) )
 import Data.List ( minimumBy )
 import Data.Maybe ( fromMaybe )
 import Data.Ord ( comparing )
+import Data.String ( fromString )
 
 import Text.Parsec ( ParsecT, (<?>), tokenPrim, try, parse )
 import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
-import Text.Parsec.Pos ( incSourceLine, incSourceColumn, setSourceColumn )
 
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
@@ -34,14 +38,14 @@ import Data.Generics.Uniplate.Data ( universe )
 --     pretty xs = Pr.vcat $ flip map xs $ \ x -> case x of Left l -> Pr.text $ show l
 --                                                          Right i -> pretty i
 
-type Parser a = ParsecT [Lexeme] () Identity a
+type Parser a = ParsecT [LexemePos] () Identity a
 
-test_ParsePrint' ::
+_testParsePrint' ::
     ( Pretty primitive
     , Pretty (Generic primitive)
     ) => Parser (Generic primitive) -> T.Text -> IO ()
-test_ParsePrint' p t = do
-    let res = (runLexer >=> runParser p "") t
+_testParsePrint' p t = do
+    let res = runLexerAndParser p "" t
     case res of
         Left  e -> print e
         Right x -> do
@@ -50,20 +54,20 @@ test_ParsePrint' p t = do
             print $ prettyAsPaths x
             print $ pretty x
 
-test_ParsePrint :: T.Text -> IO ()
-test_ParsePrint = test_ParsePrint' (inCompleteFile parseExpr)
+_testParsePrint :: T.Text -> IO ()
+_testParsePrint = _testParsePrint' (inCompleteFile parseExpr)
 
 runLexerAndParser :: (MonadError Pr.Doc m, Applicative m) => Parser a -> String -> T.Text -> m a
 runLexerAndParser p s = runLexer >=> runParser p s
 
 lexAndParseIO :: Parser a -> T.Text -> IO a
 lexAndParseIO p t = do
-    let res = (runLexer >=> runParser p "") t
+    let res = runLexerAndParser p "" t
     case res of
         Left  e -> error $ show e
         Right x -> return x
 
-runParser :: (MonadError Pr.Doc m) => Parser a -> String -> [Lexeme] -> m a
+runParser :: (MonadError Pr.Doc m) => Parser a -> String -> [LexemePos] -> m a
 runParser p s ls =
     -- error $ unlines $ map show ls
     case parse p s ls of
@@ -74,24 +78,21 @@ runParser p s ls =
 satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
 satisfyT predicate = tokenPrim showTok nextPos testTok
     where
-      showTok     = show . lexemeFace
-      testTok tok = if predicate tok then Just tok else Nothing
-      nextPos pos L_Newline _ = incSourceLine (setSourceColumn pos 1) 1
-      nextPos pos l         _ = incSourceColumn pos (lexemeWidth l)
+        showTok              = show . lexemeFace . fst
+        testTok (tok, _)     = if predicate tok then Just tok else Nothing
+        nextPos _ (_, pos) _ = pos
 
 
 parseSpec :: Parser Spec
-parseSpec = do
+parseSpec = inCompleteFile $ do
     let
         pLanguage :: Parser (String,[Int])
         pLanguage = do
             l  <- lexeme L_language *> identifier
             is <- sepBy1 integer dot
             return (l, map fromInteger is)
-    whiteSpace
     l  <- pLanguage
     xs <- many parseTopLevels
-    eof
     return $ Spec l $ concat xs
 
 
@@ -100,7 +101,6 @@ parseMetaVariable = do
     let isMeta LMetaVar {} = True
         isMeta _           = False
     LMetaVar iden <- satisfyT isMeta
-    whiteSpace
     let idenStr = T.unpack iden
     return [xMake| metavar := [Prim (S idenStr)]
                  |]
@@ -196,12 +196,11 @@ parseAtomicExpr = do
         withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
         withPostfix x = do i <- x; mf <- optionMaybe postfixes; return $ case mf of Nothing -> i
                                                                                     Just f  -> f i
-    withPrefix (withPostfix parseAtomicExpr_NoPrePost) <?> "expression"
+    withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
 
-parseAtomicExpr_NoPrePost :: Parser E
-parseAtomicExpr_NoPrePost = msum $ map try
-    $ parseHsTerm
-    : parseOthers ++ 
+parseAtomicExprNoPrePost :: Parser E
+parseAtomicExprNoPrePost = msum $ map try
+    $ parseOthers ++
     [ parseQuantifiedExpr parseExpr
     , parseMetaVariable
     , parseReference
@@ -210,15 +209,6 @@ parseAtomicExpr_NoPrePost = msum $ map try
     , parseWithLocals
     , parens parseExpr
     ]
-
-parseHsTerm :: Parser E
-parseHsTerm = do
-    let isHsTerm L_HsTerm {} = True
-        isHsTerm _ = False
-    L_HsTerm t <- satisfyT isHsTerm
-    whiteSpace
-    let s = T.unpack t
-    return [xMake| hsTerm := [Prim (S s)] |]
 
 parseDomainAsExpr :: Parser E
 parseDomainAsExpr = do
@@ -305,7 +295,7 @@ parseOthers = [ parseFunctional l
                 (L_image, y:ys) -> [xMake| functionApply.actual := [y]
                                          | functionApply.args   := ys
                                          |]
-                _ -> Tagged "operator" [Tagged (lexemeText l) xs]
+                _ -> Tagged "operator" [Tagged (fromString $ show $ lexemeFace l) xs]
 
 parseWithLocals :: Parser E
 parseWithLocals = parens $ do
@@ -385,9 +375,7 @@ parseValue = msum ( map try
             return [xMake| value.function.values := xs |]
             where
                 inner = do
-                    i <- parseExpr
-                    lexeme L_LongArrow
-                    j <- parseExpr
+                    (i,j) <- arrowedPair parseExpr
                     return [xMake| mapping := [i,j] |]
 
         pRelation = do
@@ -475,8 +463,7 @@ parseDomain = msum $ map try
         pSet = do
             lexeme L_set
             x <- parseAttributes
-            lexeme L_of
-            y <- parseDomain
+            y <- lexeme L_of >> parseDomain
             return [xMake| domain.set.attributes := [x]
                          | domain.set.inner      := [y]
                          |]
@@ -484,17 +471,14 @@ parseDomain = msum $ map try
         pMSet = do
             lexeme L_mset
             x <- parseAttributes
-            lexeme L_of
-            y <- parseDomain
+            y <- lexeme L_of >> parseDomain
             return [xMake| domain.mset.attributes := [x]
                          | domain.mset.inner      := [y]
                          |]
 
         pFunction = do
             lexeme L_function
-            y <- parseDomain
-            lexeme L_LongArrow
-            z <- parseDomain
+            (y,z) <- arrowedPair parseDomain
             return [xMake| domain.function.attributes.attrCollection := []
                          | domain.function.innerFrom  := [y]
                          | domain.function.innerTo    := [z]
@@ -569,8 +553,7 @@ parseTopLevels = do
                     lexeme L_find
                     decls <- flip sepBy1 comma $ do
                         is <- parseReference `sepBy1` comma
-                        colon
-                        j  <- parseDomain
+                        j  <- colon >> parseDomain
                         return [ [xMake| topLevel.declaration.find.name   := [i]
                                        | topLevel.declaration.find.domain := [j]
                                        |]
@@ -663,8 +646,7 @@ parseTopLevels = do
                 , do
                     lexeme L_dim
                     is <- parseReference `sepBy1` comma
-                    colon
-                    j  <- parseDomain
+                    j  <- colon >> parseDomain
                     return [ [xMake| topLevel.declaration.dim.name   := [i]
                                    | topLevel.declaration.dim.domain := [j]
                                    |]
@@ -763,7 +745,7 @@ parseQuantifiedExpr parseBody = do
             fixedQuanOps   = map idenToSingleStructural $ case qnExpr of Just (a,_) -> [a]; _ -> []
             fixedQuanExprs = map idenToSingleStructural $ case qnExpr of Just (_,a) -> [a]; _ -> []
             fixedGuards    = map idenToSingleStructural $ case qnGuard of Nothing -> emptyGuard ; Just g  -> [g]
-            fixedBodys     = map idenToSingleStructural $ [qnBody]
+            fixedBodys     = map idenToSingleStructural [qnBody]
 
         let
             f []     = error "The Impossible has happenned. in parseQuantifiedExpr.f"
@@ -842,144 +824,15 @@ parseRuleRepr t = inCompleteFile $ do
            )
 
 
-
--- type Stream = [Lexeme]
--- 
--- 
--- 
--- data Pos = Pos (Maybe FilePath) Integer Integer deriving Show
--- 
--- showPos :: Pos -> Doc
--- showPos (Pos  Nothing  line col) = "(at line" <+> P.integer line <+>
---                                     "column"  <+> P.integer col  <> ")"
--- showPos (Pos (Just fp) line col) = "(in file" <+> text fp        <+>
---                                     "at line" <+> P.integer line <+>
---                                     "column"  <+> P.integer col  <> ")"
--- 
--- 
--- 
--- newtype Parser a = Parser { runParser :: Pos -> Stream -> Either (Nested Doc) [(a, Pos, Stream)] }
--- 
--- fail :: Doc -> Parser a
--- fail msg = Parser $ \ pos _ -> Left (addToTop (showPos pos <+> msg) [])
--- 
--- failUnexpected :: Lexeme -> Doc -> Parser a
--- failUnexpected l msg = fail ("parsing error in" <+> lexemeFace l <> ", expecting" <+> msg <> ".")
--- 
--- instance Functor Parser where
---     fmap f parser = Parser $ \ pos stream ->
---         case runParser parser pos stream of
---             Left  msg     -> Left msg
---             Right results -> Right [ (f a, p, s) | (a, p, s) <- results ]
--- 
--- instance Applicative Parser where
---     pure  = return
---     (<*>) = ap
--- 
--- instance Alternative Parser where
---     empty = mzero
---     (<|>) = mplus
---     some p = (:) <$> p <*> many p
---     many p = some p <|> return []
--- 
--- instance Monad Parser where
---     fail msg = fail (text msg)
---     return a = Parser $ \ pos stream -> Right [(a, pos, stream)]
---     parser >>= f = Parser $ \ pos stream ->
---         case runParser parser pos stream of
---             Left  msg      -> Left msg
---             Right results' ->
---                 let
---                     applied = [ runParser (f a) p s | (a, p, s) <- results' ]
---                     msgs    = lefts  applied
---                     results = rights applied
---                 in  case results of
---                         [] -> Left $ Nested Nothing msgs
---                         _  -> Right (concat results)
--- 
--- instance MonadPlus Parser where
---     mzero = fail "mzero"
---     mplus a b = Parser $ \ pos stream ->
---         let
---             applied = [ runParser a pos stream, runParser b pos stream ]
---             msgs    = lefts  applied
---             results = rights applied
---         in  case results of
---                 [] -> Left $ Nested Nothing msgs
---                 _  -> Right (concat results)
--- 
--- 
--- 
--- infix 0 <?>
--- (<?>) :: Parser a -> Doc -> Parser a
--- -- parser <?> msg = trace (show msg) $ Parser $ \ pos stream ->
--- parser <?> msg = Parser $ \ pos stream ->
---     case runParser parser pos stream of
---         Left  err     -> Left $ addToTop (showPos pos <+> msg) [err]
---         Right results -> Right results
--- 
--- infix 0 <?>
--- (<?>) :: Parser a -> Doc -> Parser a
--- -- parser <?> msg = trace (show msg) $ Parser $ \ pos stream ->
--- parser <?> msg = Parser $ \ pos stream ->
---     case runParser parser pos stream of
---         Left  _       -> Left $ addToTop (showPos pos <+> msg) []
---         Right results -> Right results
--- 
--- infixl 3 <|>
--- (<|>) :: Parser a -> Parser a -> Parser a
--- a <|> b = Parser $ \ pos stream ->
---     case runParser a pos stream of
---         Left  err1    -> case runParser b pos stream of
---             Left  err2    -> Left $ Nested Nothing [err1, err2]
---             Right results -> Right results
---         Right results -> Right results
--- 
--- 
--- msum :: [Parser a] -> Parser a
--- msum = foldr1 (<|>)
--- 
--- next :: Parser Lexeme
--- next = satisfy (const True) <?> "next"
--- 
--- putBack :: Pos -> Lexeme -> Parser ()
--- putBack pos l = Parser $ \ _ stream -> Right [((),pos,(l:stream))]
--- 
--- satisfy :: (Lexeme -> Bool) -> Parser Lexeme
--- satisfy f = core <* (whiteSpace <|> eof)
---     where
---         core = Parser $ \ pos stream ->
---                     case stream of
---                         (x:xs) ->
---                             if f x
---                                 then Right [(x, advancePos x pos, xs)]
---                                 else
---                                     let msg = "parsing error in \"" <> lexemeFace x <> "\"."
---                                     in  Left $ addToTop msg []
---                         _ -> Left $ Nested Nothing []
-
 inCompleteFile :: Parser a -> Parser a
 inCompleteFile parser = do
-    whiteSpace
     result <- parser
     eof
     return result
 
-whiteSpace :: Parser ()
-whiteSpace = void $ many $ satisfyT isWhiteSpace
-    where
-        isWhiteSpace :: Lexeme -> Bool
-        isWhiteSpace L_Space     = True
-        isWhiteSpace L_Tab       = True
-        isWhiteSpace L_Newline   = True
-        isWhiteSpace LComment {} = True
-        isWhiteSpace _           = False
 
 lexeme :: Lexeme -> Parser ()
-lexeme l = void (satisfyT (l==) <* whiteSpace) <?> show (lexemeFace l)
-
-lexeme' :: Lexeme -> Parser Lexeme
-lexeme' l = l <$ lexeme l
+lexeme l = void (satisfyT (l==)) <?> show (lexemeFace l)
 
 identifier :: Parser String
 identifier = T.unpack <$> identifierText
@@ -987,7 +840,6 @@ identifier = T.unpack <$> identifierText
 identifierText :: Parser T.Text
 identifierText = do
     LIdentifier i <- satisfyT isIdentifier
-    whiteSpace
     return i
     where isIdentifier LIdentifier {} = True
           isIdentifier _ = False
@@ -995,7 +847,6 @@ identifierText = do
 integer :: Parser Integer
 integer = do
     LIntLiteral i <- satisfyT isInt
-    whiteSpace
     return i
     where isInt LIntLiteral {} = True
           isInt _ = False
@@ -1009,15 +860,6 @@ dot = lexeme L_Dot <?> "dot"
 colon :: Parser ()
 colon = lexeme L_Colon <?> "colon"
 
--- sepBy :: Parser a -> Parser () -> Parser [a]
--- -- sepBy a sep = many (a <* sep)
--- sepBy a sep = sepBy1 a sep <|> return []
--- 
--- sepBy1 :: Parser a -> Parser () -> Parser [a]
--- -- sepBy1 a sep = some (a <* sep)
--- sepBy1 a sep = do
---     x <- a
---     ( do sep; xs <- sepBy a sep; return (x:xs) ) <|> return [x]
 
 -- parses a specified number of elements separated by the given separator
 countSep :: Int -> Parser a -> Parser sep -> Parser [a]
@@ -1028,17 +870,6 @@ countSep _ _ _   = return []
 -- parses at least a given number of elements separated by the given separator
 countSepAtLeast :: Int -> Parser a -> Parser sep -> Parser [a]
 countSepAtLeast i p sep = (++) <$> countSep i p sep <*> many (sep *> p)
-
-
--- optionMaybe :: Parser a -> Parser (Maybe a)
--- optionMaybe p = Just <$> p <|> return Nothing
--- 
--- between :: Parser () -> Parser () -> Parser a -> Parser a
--- between before after inner = do
---     before
---     result <- inner
---     after
---     return result
 
 betweenTicks :: Parser a -> Parser a
 betweenTicks = between (lexeme L_BackTick) (lexeme L_BackTick)
@@ -1052,123 +883,10 @@ braces = between (lexeme L_OpenCurly) (lexeme L_CloseCurly)
 brackets :: Parser a -> Parser a
 brackets = between (lexeme L_OpenBracket) (lexeme L_CloseBracket)
 
--- chainL :: Parser (a -> a -> a) -> Parser a -> Parser a
--- chainL op p = do x <- p; rest x
---     where
---         rest x = ( do f <- op; y <- p; rest (f x y) )
---                <|> return x
--- 
--- chainR :: Parser (a -> a -> a) -> Parser a -> Parser a
--- chainR op p = scan
---     where
---         scan = do x <- p; rest x
--- 
---         rest x = ( do f <- op; y <- scan; return (f x y) )
---                <|> return x
--- 
--- chainN :: Parser (a -> a -> a) -> Parser a -> Parser a
--- chainN op p = do
---     a <- p
---     o <- op
---     b <- p
---     return (o a b)
--- 
--- test :: Parser [Lexeme]
--- test = do
---     let one = do
---             whiteSpace
---             lexeme' L_allDiff <|> lexeme' L_defined
---     is <- some one
---     eof
---     return is
---     -- whiteSpace
---     -- 
---     -- -- whiteSpace
---     -- lexeme L_allDiff <|> lexeme L_defined                               <?> "second"
---     -- whiteSpace
---     -- lexeme L_allDiff <|> lexeme L_defined                               <?> "third"
---     -- eof
--- 
--- next2 :: Parser [Lexeme]
--- next2 = do
---     i <- next
---     j <- next
---     return [i,j]
--- 
--- next3 :: Parser [Lexeme]
--- next3 = do
---     i <- next
---     j <- next
---     k <- next
---     return [i,j,k]
--- 
--- lexAndParse ::
---     ( Applicative m
---     , MonadError (Nested Doc) m
---     ) => Maybe FilePath -> Parser a -> T.Text -> m [a]
--- lexAndParse mfp parser string = do
---     lexemes <- runLexer string
---     results <- case runParser parser (Pos mfp 1 1) lexemes of
---                     Left err -> case mfp of
---                                     Just "<memory>" -> throwError $ Nested Nothing [ err
---                                                                                    , singletonNested $ textToDoc string
---                                                                                    ]
---                                     _ -> throwError err
---                     Right r  -> return r
---     return [ a | (a,_,_) <- results ]
--- 
--- parseEither :: Show a => Parser a -> String -> Either (Nested Doc) a
--- parseEither p s = case lexAndParse Nothing p (T.pack s) of
---     Left msg  -> Left msg
---     Right [a] -> Right a
---     Right as  -> Left $ addToTop "Unknown parsing error." (map (flip addToTop [] . text . show) as)
--- 
--- unsafeParse :: Show a => Parser a -> String -> a
--- unsafeParse p s = case parseEither p s of
---     Left  msg -> error $ show msg
---     Right a   -> a
--- 
--- lexAndParseIO :: Show a => Parser a -> T.Text -> IO [a]
--- lexAndParseIO parser string = case lexAndParse Nothing parser string of
---     Left msg -> do
---         putStrLn $ renderDoc $ nestedToDoc msg
---         return []
---     Right as -> do
---         -- mapM_ ppPrint as
---         return as
--- 
--- 
--- -- -- runParser :: MonadError (Nested Doc) m => Parser a -> Stream -> m [a]
--- -- -- runParser p ls = case P.papply' p () ls of
--- -- --     Left msg -> throwError msg
--- -- --     Right rs -> return [ r
--- -- --                        | (r,(),rest) <- rs
--- -- --                        -- , null rest
--- -- --                        ]
--- -- -- 
--- -- -- reserved :: Lexeme -> Parser ()
--- -- -- reserved l = do
--- -- --     i <- P.item
--- -- --     if i == l
--- -- --         then return ()
--- -- --         else failMsg $ "Expecting lexeme: " ++ show l
--- -- -- 
--- -- -- lexeme :: Parser Lexeme
--- -- -- lexeme = P.item
--- -- -- 
--- -- -- pTwo :: Parser (Lexeme, Lexeme)
--- -- -- pTwo = do
--- -- --     i <- lexeme
--- -- --     j <- lexeme
--- -- --     return (i,j)
--- -- -- 
--- -- -- pOne :: Parser (Lexeme, Lexeme)
--- -- -- pOne = do
--- -- --     i <- lexeme
--- -- --     return (i,i)
--- -- -- 
--- -- -- 
--- -- -- -- test :: Parser (Lexeme, Lexeme) -> T.Text -> IO ()
--- -- -- -- test p t = case lexAndParse p t of
--- -- -- --         Left msg -> error $ show msg
--- -- -- --         Right r  -> ppPrint r
+arrowedPair :: Parser a -> Parser (a,a)
+arrowedPair p = do
+    i <- p
+    lexeme L_LongArrow
+    j <- p
+    return (i,j)
+

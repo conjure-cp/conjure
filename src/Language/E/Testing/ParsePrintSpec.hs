@@ -37,12 +37,12 @@ one filepath = do
     result  <- runErrorT $ do
         -- liftIO $ putStrLn "content"
         -- liftIO $ putStrLn $ T.unpack content
-        parsed1 <- (runLexer >=> runParser parseSpec filepath) content
+        parsed1 <- runLexerAndParser parseSpec filepath content
         let printed = T.pack $ show $ pretty parsed1
         -- liftIO $ putStrLn "parse 1"
         -- liftIO $ print $ pretty parsed1
         -- liftIO $ T.writeFile "last.essence" $ printed
-        parsed2 <- (runLexer >=> runParser parseSpec "<memory>") printed
+        parsed2 <- runLexerAndParser parseSpec "<memory>" printed
         -- liftIO $ putStrLn "parse 2"
         -- liftIO $ print $ pretty parsed2
         -- liftIO $ writeFile "last2.essence" $ show $ pretty parsed2

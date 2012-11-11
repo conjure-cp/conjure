@@ -9,7 +9,6 @@ import Language.E.Definition
 import Language.E.CompE
 import Language.E.Helpers
 import Language.E.Traversals
-import Language.E.Lexer
 import Language.E.Parser
 import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalHasType, evalHasDomain
@@ -24,7 +23,7 @@ import qualified Data.Text as T
 
 _testSimplify :: T.Text -> IO ()
 _testSimplify t = do
-    let res = (runLexer >=> runParser (inCompleteFile parseExpr) "") t
+    let res = runLexerAndParser (inCompleteFile parseExpr) "" t
     case res of
         Left  e -> print e
         Right x -> do
