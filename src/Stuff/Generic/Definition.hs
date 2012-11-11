@@ -10,6 +10,8 @@ module Stuff.Generic.Definition
     , qq
     ) where
 
+import Stuff.Generic.Tag
+
 import Control.Arrow ( first )
 import Data.List ( intersperse )
 import Data.Maybe ( fromJust, isJust )
@@ -29,13 +31,10 @@ import Language.Haskell.Meta.Parse.Careful
 import Stuff.Pretty ( Pretty(..) )
 import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
 
--- text
-import qualified Data.Text as T
-
 
 data Generic primitive
     = Prim primitive
-    | Tagged T.Text [Generic primitive]
+    | Tagged !Tag [Generic primitive]
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 prettyAsTree :: Pretty primitive => Generic primitive -> Doc
@@ -45,10 +44,10 @@ prettyAsTree (Tagged tag xs) = pretty tag $+$ vcat (map (nest 4 . prettyAsTree) 
 prettyAsPaths :: Pretty primitive => Generic primitive -> Doc
 prettyAsPaths = vcat . map pOne . toPaths
     where
-        pOne (ts,Nothing) = hcat (map pretty $ intersperse "." ts) <+> ":= []"
-        pOne (ts,Just p ) = hcat (map pretty $ intersperse "." ts) <+> ":=" <+> pretty p
+        pOne (ts,Nothing) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":= []"
+        pOne (ts,Just p ) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":=" <+> pretty p
 
-        toPaths :: Generic primitive -> [([T.Text],Maybe primitive)]
+        toPaths :: Generic primitive -> [([Tag],Maybe primitive)]
         toPaths (Prim p) = [([], Just p)]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
@@ -119,16 +118,14 @@ xMake = qq {
                 let tags = map strip $ splitOn "." stripped
                 case parseExp rhs of
                     Left  e -> error $ "Malformed expression: " ++ e
-                    Right x ->
-                        -- runIO $ appendFile "tags.txt" $ stripped ++ "\n"
-                        return $ mkTaggedTH tags x
+                    Right x -> return $ mkTaggedTH tags x
         xs <- mapM each inps
         case mergeTaggedTH xs of
             [x] -> return x
             _   -> error "These do not seem to have a commmon root."
     }
 
-viewTagged :: Show primitive => [T.Text] -> Generic primitive -> Maybe [Generic primitive]
+viewTagged :: Show primitive => [Tag] -> Generic primitive -> Maybe [Generic primitive]
 viewTagged [] g = Just [g]
 viewTagged [t] (Tagged i []) | t == i = Just []
 viewTagged (t:ts) (Tagged i xs) | t == i = do
@@ -138,5 +135,5 @@ viewTagged (t:ts) (Tagged i xs) | t == i = do
         else return (concatMap fromJust justs)
 viewTagged _ _ = Nothing
 
-viewTaggeds :: Show primitive => [[T.Text]] -> Generic primitive -> [Maybe [Generic primitive]]
+viewTaggeds :: Show primitive => [[Tag]] -> Generic primitive -> [Maybe [Generic primitive]]
 viewTaggeds as g = map (`viewTagged` g) as
