@@ -74,7 +74,6 @@ runParser p s ls =
         Left  e -> throwError $ Pr.text $ show e
         Right x -> return x
 
--- consume white space after this yourself!
 satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
 satisfyT predicate = tokenPrim showTok nextPos testTok
     where
