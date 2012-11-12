@@ -112,10 +112,8 @@ renameMatrixOfTupleIndexes identifiers = traverseSpec' f
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
                           , js
                           )
-            ) = do
-                case i `M.lookup` identifiers of
+            ) = case i `M.lookup` identifiers of
                     Just num | length js > num -> do
-                        -- mkLog "renameMatrixOfTupleIndexes.f" $ pretty p
                         let indicesBefore = take num js
                         (tupleIndex, indicesAfter) <- case drop num js of
                                                         ([xMatch| [Prim (I a)] := value.literal |]:as) -> return (a,as)
