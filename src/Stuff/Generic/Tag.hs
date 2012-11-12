@@ -5,6 +5,7 @@ import Data.Char ( isSpace )
 import Data.Data ( Data, Typeable )
 import Data.String ( IsString(..) )
 data Tag = Tactual
+    | TallDiff
     | Tappend
     | Targ1
     | Targs
@@ -122,6 +123,7 @@ instance IsString Tag where
     fromString = fromString' . filter (not . isSpace)
         where
             fromString' "actual" = Tactual
+            fromString' "allDiff" = TallDiff
             fromString' "append" = Tappend
             fromString' "arg1" = Targ1
             fromString' "args" = Targs
