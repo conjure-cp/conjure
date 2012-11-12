@@ -16,6 +16,7 @@ data Tag = Tactual
     | Tbody
     | Tbool
     | Tdeclaration
+    | Tdefined
     | Tdim
     | TdimFind
     | Tdomain
@@ -43,6 +44,7 @@ data Tag = Tactual
     | Tinners
     | TinnerTo
     | Tint
+    | Tinverse
     | Tlambda
     | Tleft
     | Tletting
@@ -131,6 +133,7 @@ instance IsString Tag where
             fromString' "body" = Tbody
             fromString' "bool" = Tbool
             fromString' "declaration" = Tdeclaration
+            fromString' "defined" = Tdefined
             fromString' "dim" = Tdim
             fromString' "dimFind" = TdimFind
             fromString' "domain" = Tdomain
@@ -158,6 +161,7 @@ instance IsString Tag where
             fromString' "inners" = Tinners
             fromString' "innerTo" = TinnerTo
             fromString' "int" = Tint
+            fromString' "inverse" = Tinverse
             fromString' "lambda" = Tlambda
             fromString' "left" = Tleft
             fromString' "letting" = Tletting
