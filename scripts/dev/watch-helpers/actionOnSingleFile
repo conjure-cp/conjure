@@ -1,0 +1,9 @@
+#/bin/sh
+
+echo ""
+echo "[ ===== $1 ===== ]"
+echo ""
+scripts/dev/watch-helpers/hlintOnSingleFile $1
+scripts/dev/watch-helpers/ghcOnSingleFile   $1
+echo "[Finished] $1"
+

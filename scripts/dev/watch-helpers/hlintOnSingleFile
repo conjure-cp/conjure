@@ -1,0 +1,17 @@
+#/bin/sh
+
+pragmas=$(cat <<EOF
+-i 'Unused LANGUAGE pragma'
+EOF
+)
+
+hlintCommand="hlint $pragmas $1"
+hlintCommandC="hlint -c $pragmas $1"
+
+if [[ $(eval $hlintCommand) = "No suggestions"* ]]
+then
+    echo "[hlint OK] $1"
+else
+    eval $hlintCommandC
+fi
+

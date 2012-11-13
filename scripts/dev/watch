@@ -1,0 +1,10 @@
+#/bin/sh
+
+# had to 'set backupcopy=yes' in ~/.vimrc to make vim happy
+
+watchmedo shell-command src \
+    --patterns="*.hs" \
+    --ignore-directories \
+    --recursive \
+    --command='scripts/dev/watch-helpers/actionOnSingleFile "${watch_src_path}"'
+
