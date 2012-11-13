@@ -1,8 +1,8 @@
 #/bin/sh
 
-echo ""
+echo "\033[36m"                 # set the colour to cyan
 echo "[ ===== $1 ===== ]"
-echo ""
+echo "\033[0m"                  # reset the colour
 scripts/dev/watch-helpers/hlintOnSingleFile $1
 scripts/dev/watch-helpers/ghcOnSingleFile   $1
 echo "[Finished] $1"
