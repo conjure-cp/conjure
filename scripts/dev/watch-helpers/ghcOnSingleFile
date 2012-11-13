@@ -1,8 +1,8 @@
 #/bin/sh
 
-ghc -odir  dist/build \
-    -hidir dist/build \
-    -isrc             \
-    -Wall             \
+ghc -odir  dist/watchbuild \
+    -hidir dist/watchbuild \
+    -isrc                  \
+    -Wall                  \
     $1 | grep --invert-match "Loading package"
 
