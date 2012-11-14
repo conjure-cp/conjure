@@ -2,9 +2,12 @@
 
 # had to 'set backupcopy=yes' in ~/.vimrc to make vim happy
 
+command='scripts/dev/watch-helpers/actionOnSingleFile "${watch_src_path}"'
+command="$command $1" # optional first argument, limiting the number of lines displayed
+
 watchmedo shell-command src \
     --patterns="*.hs" \
     --ignore-directories \
     --recursive \
-    --command='scripts/dev/watch-helpers/actionOnSingleFile "${watch_src_path}"'
+    --command="$command"
 
