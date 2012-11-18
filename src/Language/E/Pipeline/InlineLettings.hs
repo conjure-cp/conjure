@@ -7,7 +7,7 @@ import Language.E
 import qualified Data.Map as M
 
 
-inlineLettings :: (Functor m, Monad m) => Spec -> CompE m Spec
+inlineLettings :: MonadConjure m => Spec -> m Spec
 inlineLettings (Spec v statements) =
     let
 
@@ -16,7 +16,7 @@ inlineLettings (Spec v statements) =
                                  |] = ( [(nm,x)] , [] )
         splitLettingOrNot x         = ( []       , [x] )
 
-        (lettings, others) = mconcat $ map splitLettingOrNot statements
+        (lettings, others) = mconcat $ map splitLettingOrNot $ statementAsList statements
 
         lettingsMap = M.fromList lettings
 
@@ -25,6 +25,6 @@ inlineLettings (Spec v statements) =
         f x = x
 
     in
-        return $ Spec v (map f others)
+        return $ Spec v (f $ listAsStatement others)
 
 

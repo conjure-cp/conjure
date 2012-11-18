@@ -2,8 +2,6 @@
 
 module Language.E.Evaluator.Full where
 
-import Stuff.FunkyT
-
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Helpers
@@ -17,7 +15,7 @@ import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import                Language.E.Evaluator.DataAboutQuantifiers
 
 
-fullEvaluator :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
                      | [Prim (I a)  ] := binOp.left .value.literal
                      | [Prim (I b)  ] := binOp.right.value.literal
@@ -100,32 +98,32 @@ fullEvaluator p@[eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
 fullEvaluator _ = return Nothing
 
 
-returnBool :: (Functor m, Monad m) => Bool -> CompE m (Maybe (E,[Binder]))
+returnBool :: MonadConjure m => Bool -> m (Maybe (E,[Binder]))
 returnBool i = ret [xMake| value.literal := [Prim (B i)] |]
 
-returnBool' :: (Functor m, Monad m) => Bool -> [Binder] -> CompE m (Maybe (E,[Binder]))
+returnBool' :: MonadConjure m => Bool -> [Binder] -> m (Maybe (E,[Binder]))
 returnBool' i bs = return $ Just ([xMake| value.literal := [Prim (B i)] |], bs)
 
-returnInt :: (Functor m, Monad m) => Integer -> CompE m (Maybe (E,[Binder]))
+returnInt :: MonadConjure m => Integer -> m (Maybe (E,[Binder]))
 returnInt i = ret [xMake| value.literal := [Prim (I i)] |]
 
-returnInt' :: (Functor m, Monad m) => Integer -> [Binder] -> CompE m (Maybe (E,[Binder]))
+returnInt' :: MonadConjure m => Integer -> [Binder] -> m (Maybe (E,[Binder]))
 returnInt' i bs = return $ Just ([xMake| value.literal := [Prim (I i)] |], bs)
 
-ret :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+ret :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 ret i = return $ Just (i, [])
 
 
-evalHasType :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalHasType :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalHasType [eMatch| &s hasType &dom |] = do
     ts <- typeOf s
     td <- typeOf dom
     (flag, bs) <- patternMatch td ts
-    modifyLocal $ \ st -> st { binders = bs ++ binders st }
+    modify $ \ st -> st { binders = bs ++ binders st }
     returnBool' flag bs
 evalHasType _ = return Nothing
 
-evalHasDomain :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalHasDomain :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalHasDomain [eMatch| &x hasDomain &y |] = do
     dx <- domainOf x
     dy <- domainOf y
@@ -133,14 +131,14 @@ evalHasDomain [eMatch| &x hasDomain &y |] = do
     returnBool' flag bs
 evalHasDomain _ = return Nothing
 
-evalHasRepr :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalHasRepr :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalHasRepr [eMatch| &x hasRepr &y |] =
     case x of
         [eMatch| &m[&_] |] ->
             evalHasRepr [eMake| &m hasRepr &y |]
         [xMatch| [Prim (S iden')] := metavar   |] -> do
             let iden = '&' : iden'
-            bs <- getsLocal binders
+            bs <- gets binders
             case [ a | Binder nm a <- bs, nm == iden ] of
                 [a] -> evalHasRepr [eMake| &a hasRepr &y |]
                 _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
@@ -155,7 +153,7 @@ evalHasRepr [eMatch| &x hasRepr &y |] =
         _ -> returnBool False
 evalHasRepr _ = return Nothing
 
-evalDomSize :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalDomSize :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
     where
         sumE []     = [eMake| 0 |]
@@ -198,7 +196,7 @@ evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
 
 evalDomSize _ = return Nothing
 
-evalIndices :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalIndices p@[xMatch| [a,b] := operator.indices |] = do
     bInt <- toInt b
     case bInt of
@@ -206,7 +204,7 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
         Just (bInt', _) -> indices a bInt'
     where
         -- indices (matrix) (integer)
-        indices :: (Functor m, Monad m) => E -> Integer -> CompE m (Maybe (E,[Binder]))
+        indices :: MonadConjure m => E -> Integer -> m (Maybe (E,[Binder]))
         indices [xMatch| [Prim (S iden)] := reference |] i = do
             mres <- runMaybeT $ lookupBinder iden
             case mres of
@@ -225,7 +223,7 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
             return Nothing
 evalIndices _ = return Nothing
 
-evalReplace :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+evalReplace :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalReplace
     [xMatch| [a] := operator.replace.arg1
            | [b] := operator.replace.old
@@ -238,7 +236,7 @@ evalReplace
     in  ret $ helper b c a
 evalReplace _ = return Nothing
 
-tupleEq :: (Functor m, Monad m) => E -> CompE m (Maybe (E,[Binder]))
+tupleEq :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 tupleEq [eMatch| &a = &b |] = do
     ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
     case ta of
@@ -268,13 +266,18 @@ tupleEq [eMatch| &a[&i] |] = do
 tupleEq _ = return Nothing
 
 
-matrixEq :: (Functor m, Monad m) => E -> CompE m (Maybe (E, [Binder]))
+matrixEq :: MonadConjure m => E -> m (Maybe (E, [Binder]))
 matrixEq [eMatch| &a = &b |] = do
     da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
-    case da of
-        Just [xMatch| [ia] := domain.matrix.index |] -> do
+    db <- (Just <$> domainOf b) `catchError` (\ _ -> return Nothing )
+    case (da,db) of
+        (Just [xMatch| [ia] := domain.matrix.index |],_) -> do
+            (quanVarStr, quanVar) <- freshQuanVar
+            ret $ inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
+        (_,Just [xMatch| [ia] := domain.matrix.index |]) -> do
             (quanVarStr, quanVar) <- freshQuanVar
             ret $ inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
         _ -> return Nothing
 matrixEq _ = return Nothing
+
 

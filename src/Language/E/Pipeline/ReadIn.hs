@@ -7,9 +7,9 @@ import Language.E
 import System.Directory ( createDirectoryIfMissing )
 
 
-readSpec :: (Functor m, Monad m)
+readSpec :: MonadConjure m
     => (FilePath, Text)
-    -> CompE m Spec
+    -> m Spec
 readSpec (fp,con) =
     case runLexerAndParser parseSpec fp con of
         Left  e -> err ErrFatal e
@@ -20,18 +20,18 @@ fixRulename :: String -> String
 fixRulename = intercalate "/" . dropWhile (/="rules") . splitOn "/"
 
 
-readRuleRefn :: (Functor m, Monad m)
+readRuleRefn :: MonadConjure m
     => (FilePath, Text)
-    -> CompE m [RuleRefn]
+    -> m [RuleRefn]
 readRuleRefn (fp,con) =
     case runLexerAndParser (parseRuleRefn $ fixRulename fp) fp con of
         Left  e -> err ErrFatal e
         Right x -> return x
 
 
-readRuleRepr :: (Functor m, Monad m)
+readRuleRepr :: MonadConjure m
     => (FilePath, Text)
-    -> CompE m RuleRepr
+    -> m RuleRepr
 readRuleRepr (fp,con) =
     case runLexerAndParser (parseRuleRepr $ fixRulename fp) fp con of
         Left  e -> err ErrFatal e

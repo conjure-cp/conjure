@@ -6,24 +6,25 @@ import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
 
-conjureBubbleUp :: (Monad m, Functor m)
+conjureBubbleUp
+    :: MonadConjure m
     => Spec
-    -> CompE m Spec
-conjureBubbleUp spec = pipeline spec
+    -> m Spec
+conjureBubbleUp = pipeline
     where
         pipeline = bubbleUpSpec
                 >=> return . atMostOneSuchThat
 
 
-bubbleUpSpec :: (Functor m, Monad m) => Spec -> CompE m Spec
-bubbleUpSpec (Spec v xs) = do
-    mapM_ introduceStuff xs
+bubbleUpSpec :: MonadConjure m => Spec -> m Spec
+bubbleUpSpec (Spec v xsOrig) = withBindingScope' $ do
+    let xs = statementAsList xsOrig
     (xs', locals) <- unzip <$> mapM bubbleUpE xs
     let (newDecls, newCons) = partition isDeclaration $ concat locals
-    return $ Spec v $ insertBeforeSuchThat newDecls xs' ++ newCons
+    return $ Spec v $ listAsStatement $ insertBeforeSuchThat newDecls xs' ++ newCons
 
 
-bubbleUpE :: (Functor m, Monad m) => E -> CompE m (E, [E])
+bubbleUpE :: MonadConjure m => E -> m (E, [E])
 bubbleUpE [xMatch| [a] := withLocals.actual
                  | ls  := withLocals.locals
                  |] = do

@@ -19,20 +19,31 @@ import qualified Data.Text as T
 
 
 prettySpecDebug :: Spec -> Doc
-prettySpecDebug sp@(Spec _ xs) = vcat $ pretty sp : map prettyAsPaths xs
+prettySpecDebug sp@(Spec _ st) = vcat $ pretty sp : map prettyAsPaths (statementAsList st)
 
 instance Pretty Spec where
-    pretty (Spec (language,version) cs) = vcat
-        $  ("language" <+> text language <+> Pr.hcat (intersperse "." (map Pr.int version)))
-        : ""
-        : map pretty cs
-        ++ [""]
+    pretty (Spec (language,version) statements)
+        = vcat [ "language" <+> text language
+                            <+> Pr.hcat (intersperse "." (map Pr.int version))
+               , ""
+               , pretty statements
+               , ""
+               ]
 
 instance Pretty [E] where
     pretty = vcat . map pretty
 
 instance Pretty E where
+
     -- pretty x | trace (show $ "pretty: " $+$ prettyAsPaths x) False = undefined
+
+    pretty [xMatch| [this] := statement.this
+                  | [next] := statement.next
+                  |]
+        = pretty this $$ pretty next
+
+    pretty [xMatch| _ := statementEOF |] = empty
+
     pretty (Prim (B False)) = "false"
     pretty (Prim (B True )) = "true"
     pretty (Prim x) = pretty x

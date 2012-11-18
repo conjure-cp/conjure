@@ -10,7 +10,7 @@ import Language.E.TH
 
 
 
-identityOp :: Monad m => String -> CompE m E
+identityOp :: MonadConjure m => String -> m E
 identityOp quantifier = case quantifier of
                 "forAll" -> return [eMake| true  |]
                 "exists" -> return [eMake| false |]
@@ -18,7 +18,7 @@ identityOp quantifier = case quantifier of
                 _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
 
 
-guardOp :: Monad m => String -> [E] -> E -> CompE m E
+guardOp :: MonadConjure m => String -> [E] -> E -> m E
 guardOp _ [] b = return b
 guardOp _ [ [xMatch| [] := emptyGuard |] ] b = return b
 guardOp quantifier as b =
@@ -30,7 +30,7 @@ guardOp quantifier as b =
             _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
 
 
-glueOp :: Monad m => String -> E -> E -> CompE m E
+glueOp :: MonadConjure m => String -> E -> E -> m E
 glueOp quantifier a b = case quantifier of
             "forAll" -> return [eMake| &a /\ &b |]
             "exists" -> return [eMake| &a \/ &b |]

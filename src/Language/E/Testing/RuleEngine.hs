@@ -194,10 +194,10 @@ loadAndApply specFilename refnFilenames = do
     specPair  <- pairWithContents specFilename
     refnPairs <- mapM pairWithContents refnFilenames
 
-    [spec]  <- runCompEIO (readSpec specPair)
-    [refns] <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
+    spec      <- handleInIOSingle =<< runCompEIOSingle "loadAndApply" (readSpec specPair)
+    refns     <- handleInIOSingle =<< runCompEIOSingle "loadAndApply" (concat <$> mapM readRuleRefn refnPairs)
 
-    results <- runCompEIO $ liftM atMostOneSuchThat $ conjureRefn False spec refns
+    results   <- handleInIO =<< runCompEIO "loadAndApply" (liftM atMostOneSuchThat $ conjureRefn False spec refns)
     mapM_ (print . pretty) results
 
 
@@ -211,11 +211,11 @@ buildTests params = describe "rule engine" $
             rulePairs   <- mapM pairWithContents rules'
             outputPairs <- mapM pairWithContents outputs'
 
-            [spec]      <- runCompEIO (readSpec specPair)
-            [rules]     <- runCompEIO (concat <$> mapM readRuleRefn rulePairs)
-            [expecteds] <- runCompEIO (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
+            spec        <- handleInIOSingle =<< runCompEIOSingle "buildTests" (readSpec specPair)
+            rules       <- handleInIOSingle =<< runCompEIOSingle "buildTests" (concat <$> mapM readRuleRefn rulePairs)
+            expecteds   <- handleInIOSingle =<< runCompEIOSingle "buildTests" (mapM (readSpec >=> return . atMostOneSuchThat) outputPairs)
 
-            generateds <- runCompEIO $ liftM atMostOneSuchThat $ conjureRefn False spec rules
+            generateds  <- handleInIO =<< runCompEIO "buildTests" (liftM atMostOneSuchThat $ conjureRefn False spec rules)
 
             unless (length generateds == length expecteds)
                 $ assertFailure

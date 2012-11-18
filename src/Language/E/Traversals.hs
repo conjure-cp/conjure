@@ -3,13 +3,12 @@
 
 module Language.E.Traversals where
 
-import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.Pretty
 
-import Data.Set as S
+import qualified Data.Set as S
 
 
 
@@ -19,147 +18,210 @@ labelOf (Tagged s _) = pretty s
 
 
 
-universeSpecNoFindGiven :: Spec -> [E]
-universeSpecNoFindGiven (Spec _ is) = concatMap f is
+universeExcept :: (E -> Bool) -> Spec -> [E]
+universeExcept p (Spec _ s) = f s
     where
-        f [xMatch| _ := topLevel.declaration.find  |] = []
-        f [xMatch| _ := topLevel.declaration.given |] = []
-        f t = g t
+        f t | p t         = []
+        f t@(Tagged _ xs) = t : concatMap f xs
+        f t               = [t]
 
-        g t@(Tagged _ xs) = t : concatMap g xs
-        g t               = [t]
-
-
-
-traverseSpec'
-    :: Monad m
-    => (E -> CompE m E)
-    -> Spec
-    -> CompE m Spec
-traverseSpec' func spec = runIdentityT $ traverseSpec (lift . func) spec
+universeSpecNoFindGiven :: Spec -> [E]
+universeSpecNoFindGiven = universeExcept p
+    where
+        p [xMatch| _ := topLevel.declaration.find  |] = True
+        p [xMatch| _ := topLevel.declaration.given |] = True
+        p _ = False
 
 
 
-traverseSpec
-    :: ( Monad (t (CompEMOnly m))
-       , Monad m
+withBindingScope'
+    :: MonadConjure m
+    => m a
+    -> m a
+withBindingScope' = runIdentityT . withBindingScope . lift
+
+
+
+withBindingScope
+    :: ( Monad m
        , MonadTrans t
+       , Monad (t m)
+       , MonadState ConjureState m
        )
-    => (E -> t (CompEMOnly m) E)
-    -> Spec
-    -> t (CompEMOnly m) Spec
-traverseSpec func spec@(Spec v xs) = do
-    lift $ initialiseSpecState spec
-    lift $ mapM_ introduceStuff xs
-    xs' <- mapM (traverseE func) xs
-    return $ Spec v xs'
-
-
-
-initialiseSpecState :: Monad m => Spec -> CompE m ()
-initialiseSpecState (Spec _ statements) = do
-    let names = [ nm
-                | statement <- statements
-                , [xMatch| [Prim (S nm)] := reference |] <- universe statement
-                , "v__" `isPrefixOf` nm
-                ]
-    modifyLocal $ \ st -> st { allNamesPreConjure = S.fromList names }
-
-
-traverseSpecNoFindGiven'
-    :: Monad m
-    => (E -> CompE m E)
-    -> Spec
-    -> CompE m Spec
-traverseSpecNoFindGiven' func spec = runIdentityT $ traverseSpecNoFindGiven (lift . func) spec
-
-
-
-traverseSpecNoFindGiven
-    :: ( Monad (t (CompEMOnly m))
-       , Monad m
-       , MonadTrans t
-       )
-    => (E -> t (CompEMOnly m) E)
-    -> Spec
-    -> t (CompEMOnly m) Spec
-traverseSpecNoFindGiven func spec@(Spec v xs) = do
-    lift $ initialiseSpecState spec
-    lift $ mapM_ introduceStuff xs
-    xs' <- mapM (\ x -> case x of
-                    [xMatch| _ := topLevel.declaration.find  |] -> return x
-                    [xMatch| _ := topLevel.declaration.given |] -> return x
-                    _                                           -> traverseE func x
-                ) xs
-    return $ Spec v xs'
-
-
-
-traverseE
-    :: ( Monad (t (CompEMOnly m))
-       , Monad m
-       , MonadTrans t
-       )
-    => (E -> t (CompEMOnly m) E)
-    -> E
-    -> t (CompEMOnly m) E
-traverseE func t = do
-    bindersBefore <- lift $ getsLocal binders
-    lift $ introduceStuff t
-    result <- case t of
-        Tagged s xs -> do xs' <- mapM (traverseE func) xs ; func (Tagged s xs')
-        _           ->                                      func t
-    lift $ modifyLocal $ \ st -> st { binders = bindersBefore }
+    => t m a
+    -> t m a
+withBindingScope comp = do
+    bindersBefore <- lift $ gets binders
+    result <- comp
+    -- bindersAfter  <- lift $ gets binders
+    -- lift $ modify $ \ st -> st { binders = bindersBefore }
+    -- let removed = nub [ nm | Binder nm _ <- bindersAfter  , head nm /= '&' ] \\
+                  -- nub [ nm | Binder nm _ <- bindersBefore ]
+    -- case removed of
+        -- [] -> return result
+        -- _  -> trace ("removed: " ++ show removed) $ return result
+    lift $ modify $ \ st -> st { binders = bindersBefore }
     return result
 
 
 
-introduceStuff :: Monad m => E -> CompE m ()
+bottomUpSpec'
+    :: MonadConjure m
+    => (E -> m E)
+    -> Spec
+    -> m Spec
+bottomUpSpec' = bottomUpSpecExcept' (const False)
 
-introduceStuff x@[xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference |] = addBinder name x
 
-introduceStuff x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] = addBinder name x
 
-introduceStuff   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
+bottomUpSpecExcept'
+    :: MonadConjure m
+    => (E -> Bool)
+    -> (E -> m E)
+    -> Spec
+    -> m Spec
+bottomUpSpecExcept' p func spec = runIdentityT $ bottomUpSpecExcept p (lift . func) spec
+
+
+
+bottomUpSpec
+    :: ( MonadConjure m
+       , MonadTrans t
+       , Monad (t m)
+       )
+    => (E -> t m E)
+    -> Spec
+    -> t m Spec
+bottomUpSpec = bottomUpSpecExcept (const False)
+
+
+
+bottomUpSpecExcept
+    :: ( MonadConjure m
+       , MonadTrans t
+       , Monad (t m)
+       )
+    => (E -> Bool)
+    -> (E -> t m E)
+    -> Spec
+    -> t m Spec
+bottomUpSpecExcept p func spec@(Spec v xs) = withBindingScope $ do
+    lift $ initialiseSpecState spec
+    xs' <- bottomUpEExcept p func xs
+    return $ Spec v xs'
+
+
+
+bottomUpE'
+    :: MonadConjure m
+    => (E -> m E)
+    -> E
+    -> m E
+bottomUpE' = bottomUpEExcept' (const False)
+
+
+
+bottomUpEExcept'
+    :: MonadConjure m
+    => (E -> Bool)
+    -> (E -> m E)
+    -> E
+    -> m E
+bottomUpEExcept' p func x = runIdentityT $ bottomUpEExcept p (lift . func) x
+
+
+
+bottomUpE
+    :: ( MonadConjure m
+       , MonadTrans t
+       , Monad (t m)
+       )
+    => (E -> t m E)
+    -> E
+    -> t m E
+bottomUpE = bottomUpEExcept (const False)
+
+
+
+bottomUpEExcept
+    :: ( MonadConjure m
+       , MonadTrans t
+       , Monad (t m)
+       )
+    => (E -> Bool)
+    -> (E -> t m E)
+    -> E
+    -> t m E
+bottomUpEExcept p func x = withBindingScope $ helper x
+    where
+        helper [xMatch| [this] := statement.this
+                      | [next] := statement.next
+                      |] = do
+            lift $ introduceStuff this
+            this' <- func =<< bottomUpEExcept p func this
+            lift $ introduceStuff this'
+            next' <- func =<< bottomUpEExcept p func next
+            return [xMake| statement.this := [this']
+                         | statement.next := [next']
+                         |]
+        helper t | p t = return t
+        helper t = do
+            lift $ introduceStuff t
+            case t of
+                Tagged s xs -> do
+                    xs' <- mapM helper xs
+                    let t' = Tagged s xs'
+                    lift $ introduceStuff t'
+                    func t'
+                _           -> func t
+
+
+
+initialiseSpecState :: MonadConjure m => Spec -> m ()
+initialiseSpecState (Spec _ statements) = do
+    let names = [ nm
+                | [xMatch| [Prim (S nm)] := reference |] <- universe statements
+                , "v__" `isPrefixOf` nm
+                ]
+    modify $ \ st -> st { allNamesPreConjure = S.fromList names }
+
+introduceStuff :: MonadConjure m => E -> m ()
+introduceStuff = helper
+    where
+
+        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference |] = addBinder name x
+
+        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] = addBinder name x
+
+        helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.expr           |] = addBinder name x
-introduceStuff   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
+        helper   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
                         | [ x ]           := topLevel.letting.expr           |] = addBinder ('&':name) x
 
-introduceStuff   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
+        helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.domain         |] = addBinder name x
-introduceStuff   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
+        helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.domain         |] = addBinder ('&':name) x
 
-introduceStuff x@[xMatch| [Prim (S name)] := topLevel.letting.name.reference |] = addBinder name x
-introduceStuff x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addBinder ('&':name) x
+        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.reference |] = addBinder name x
+        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addBinder ('&':name) x
 
-introduceStuff   [xMatch| _ := topLevel.suchThat  |] = return ()
-introduceStuff   [xMatch| _ := topLevel.objective |] = return ()
-introduceStuff   [xMatch| _ := topLevel.where     |] = return ()
+        helper   [xMatch| _ := topLevel.suchThat  |] = return ()
+        helper   [xMatch| _ := topLevel.objective |] = return ()
+        helper   [xMatch| _ := topLevel.where     |] = return ()
 
-introduceStuff x@[xMatch| [Prim (S name)] := topLevel.declaration.dim  .name.reference |] = addBinder name x
-introduceStuff   [xMatch| _  := topLevel.declaration.nestedDimFind |] = return ()
+        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.dim  .name.reference |] = addBinder name x
+        helper   [xMatch| _  := topLevel.declaration.nestedDimFind |] = return ()
 
-introduceStuff x@[xMatch| _ := topLevel |]
-    = err ErrFatal $ "not handled in processStatement" <+> prettyAsPaths x
+        helper x@[xMatch| _ := topLevel |]
+            = err ErrFatal $ "not handled in processStatement" <+> prettyAsPaths x
 
-introduceStuff   [xMatch| ls := withLocals.locals |] = mapM_ introduceStuff ls
+        helper   [xMatch| ls := withLocals.locals |] = mapM_ introduceStuff ls
 
-introduceStuff x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference |]
-    = addBinder r [xMake| quanVar.name   := [Prim (S r)]
-                        | quanVar.within := [x]
-                        |]
+        helper x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference |]
+            = addBinder r [xMake| quanVar.name   := [Prim (S r)]
+                                | quanVar.within := [x]
+                                |]
 
-introduceStuff _ = return ()
-
-
-
-printAllBound :: Monad m => String -> CompE m ()
-printAllBound s = do
-    bs <- getsLocal binders
-    let names = [ i | Binder i _ <- bs ]
-    mkLog ("----- ----- ----- ----- " ++ s) $ prettyList id "," names
-    return ()
-
-
+        helper _ = return ()
 

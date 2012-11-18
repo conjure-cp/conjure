@@ -12,7 +12,7 @@ import Language.E.TypeOf
 import Language.E.TH ( eMatch, eMake )
 
 
-partialEvaluator :: (Functor m, Monad m) => E -> CompE m (Maybe E)
+partialEvaluator :: MonadConjure m => E -> m (Maybe E)
 
 partialEvaluator [eMatch| &x + 0 |] = ret x
 partialEvaluator [eMatch| 0 + &x |] = ret x
@@ -148,14 +148,14 @@ partialEvaluator _ = return Nothing
 
 
 partialEvaluatorValueSet
-    :: (Monad m, Functor m)
+    :: MonadConjure m
     => String
     -> E
     -> E
     -> [E]
     -> [E]
     -> E
-    -> CompE m (Maybe E)
+    -> m (Maybe E)
 partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody = do
     let
         qnGuards' = case qnGuards of
@@ -197,13 +197,13 @@ partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody = do
 
 
 partialEvaluatorValueMSet
-    :: Monad m
+    :: MonadConjure m
     => String
     -> E
     -> [E]
     -> [E]
     -> E
-    -> CompE m (Maybe E)
+    -> m (Maybe E)
 partialEvaluatorValueMSet quantifier qnVar vs qnGuards qnBody = do
 
     let
@@ -221,11 +221,11 @@ partialEvaluatorValueMSet quantifier qnVar vs qnGuards qnBody = do
             Just <$> foldM (glueOp quantifier) identity vs'
 
 
-ret :: Monad m => E -> CompE m (Maybe E)
+ret :: Monad m => E -> m (Maybe E)
 ret = return . Just
 
 
-identityOp :: Monad m => String -> CompE m E
+identityOp :: MonadConjure m => String -> m E
 identityOp quantifier = case quantifier of
                 "forAll" -> return [eMake| true  |]
                 "exists" -> return [eMake| false |]
@@ -233,7 +233,7 @@ identityOp quantifier = case quantifier of
                 _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
 
 
-guardOp :: Monad m => String -> [E] -> E -> CompE m E
+guardOp :: MonadConjure m => String -> [E] -> E -> m E
 guardOp _ [] b = return b
 guardOp quantifier as b =
     let a = conjunct as
@@ -244,7 +244,7 @@ guardOp quantifier as b =
             _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
 
 
-glueOp :: Monad m => String -> E -> E -> CompE m E
+glueOp :: MonadConjure m => String -> E -> E -> m E
 glueOp quantifier a b = case quantifier of
             "forAll" -> return [eMake| &a /\ &b |]
             "exists" -> return [eMake| &a \/ &b |]

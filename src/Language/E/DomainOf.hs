@@ -3,7 +3,6 @@
 module Language.E.DomainOf where
 
 import Stuff.Generic
-import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
@@ -11,16 +10,15 @@ import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 
 
-
-errDomainOf :: (Monad m, Pretty p) => p -> CompE m a
+errDomainOf :: (MonadConjure m, Pretty p) => p -> m a
 errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
 
 
-domainOf :: (Functor m, Monad m) => E -> CompE m E
+domainOf :: MonadConjure m => E -> m E
 
 domainOf [xMatch| [Prim (S i')] := reference |] = do
     let i = head $ splitOn "#" i'
-    bs <- getsLocal binders
+    bs <- gets binders
     if i == "_"
         then return [xMake| type.unknown := [] |]
         else case [ x | Binder nm x <- bs, nm == i ] of
@@ -31,7 +29,7 @@ domainOf [xMatch| [Prim (S i')] := reference |] = do
 
 domainOf p@[xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
-    bs <- getsLocal binders
+    bs <- gets binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> domainOf x
         _   -> return p -- this is for hasDomain pattern matching in rules to work

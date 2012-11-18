@@ -43,51 +43,48 @@ getAllRefns
     :: (MonadWriter [(String, Bool)] m, MonadIO m)
     => m [RuleRefn]
 getAllRefns = do
-    gen      <- liftIO getStdGen
     files    <- liftIO $ allFilesWithSuffix ".rule" "files/rules"
     contents <- liftIO $ mapM pairWithContents files
     liftM (concat . catMaybes) $ forM contents $ \ pair@(fp,_) ->
         let
-            (mxs, _) = runIdentity $ runCompE gen (readRuleRefn pair)
+            mxs      = runCompE "getAllRefns" $ readRuleRefn pair
             errors   = lefts $ map fst mxs
         in  case mxs of
                 [(Right a, _)] -> testSuccess a $ "parsing -- " ++ fp
                 _              -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                          ++ renderPretty (prettyErrors "Parsing." errors)
+                                          ++ renderPretty (vcat errors)
 
 
 getAllReprs
     :: (MonadWriter [(String, Bool)] m, MonadIO m)
     => m [RuleRepr]
 getAllReprs = do
-    gen      <- liftIO getStdGen
     files    <- liftIO $ allFilesWithSuffix ".repr" "files/rules"
     contents <- liftIO $ mapM pairWithContents files
     liftM catMaybes $ forM contents $ \ pair@(fp,_) ->
         let
-            (mxs, _) = runIdentity $ runCompE gen (readRuleRepr pair)
+            mxs      = runCompE "getAllReprs" $ readRuleRepr pair
             errors   = lefts $ map fst mxs
         in  case mxs of
                 [(Right a, _)] -> testSuccess a $ "parsing -- " ++ fp
                 _              -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                          ++ renderPretty (prettyErrors "Parsing." errors)
+                                          ++ renderPretty (vcat errors)
 
 
 getAllSpecs
     :: (MonadWriter [(String, Bool)] m, MonadIO m)
     => m [(FilePath, Spec)]
 getAllSpecs = do
-    gen      <- liftIO getStdGen
     files    <- liftIO $ allFilesWithSuffix ".essence" "files/testdata"
     contents <- liftIO $ mapM pairWithContents files
     liftM catMaybes $ forM contents $ \ pair@(fp,_) ->
         let
-            (mxs, _) = runIdentity $ runCompE gen (readSpec pair)
+            mxs      = runCompE "getAllSpecs" $ readSpec pair
             errors   = lefts $ map fst mxs
         in  case mxs of
                 [(Right a, _)] -> testSuccess (fp,a) $ "parsing -- " ++ fp
                 _              -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                          ++ renderPretty (prettyErrors "Parsing." errors)
+                                          ++ renderPretty (vcat errors)
 
 
 testSuccess :: (MonadWriter [(String, Bool)] m, MonadIO m) => a -> String -> m (Maybe a)

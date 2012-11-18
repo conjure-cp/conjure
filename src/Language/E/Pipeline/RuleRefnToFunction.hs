@@ -11,11 +11,12 @@ import qualified Data.Set as S
 
 -- does the grouping depending on levels and such.
 -- for a description on the params and return type see combineRuleRefns
-ruleRefnToFunction :: (Functor m, Monad m)
+ruleRefnToFunction
+    :: MonadConjure m
     => [RuleRefn]
     -> Either
-        [CompError]
-        [E -> CompE m (Maybe [(String, E)])]
+        [ConjureError]
+        [E -> m (Maybe [(String, E)])]
 ruleRefnToFunction fs =
     let
         justsFirst :: Ord a => Maybe a -> Maybe a -> Ordering
@@ -29,13 +30,13 @@ ruleRefnToFunction fs =
                   $ sortBy  (\ (_,a,_) (_,b,_) -> justsFirst a b )
                     fs
 
-        -- mresults :: (Functor m, Monad m) => [Either [CompError] (E -> CompE m E)]
+        -- mresults :: MonadConjure m => [Either [ConjureError] (E -> m E)]
         mresults = map combineRuleRefns fsGrouped
 
-        -- errors :: [CompError]
+        -- errors :: [ConjureError]
         errors = concat $ lefts mresults
 
-        -- funcs :: (Functor m, Monad m) => [E -> CompE m E]
+        -- funcs :: MonadConjure m => [E -> m E]
         funcs = rights mresults
     in
         if null errors
@@ -43,37 +44,40 @@ ruleRefnToFunction fs =
             else Left  errors
 
 
-combineRuleRefns :: (Functor m, Monad m)
+combineRuleRefns
+    :: MonadConjure m
     => [RuleRefn]                                       -- given a list of RuleRefns
     -> Either                                           -- return
-        [CompError]                                     -- either a list of errors (due to static checking a RuleRefn)
-        (E -> CompE m (Maybe [(String, E)]))            -- or a (Just list) of functions. the return type contains the rule name in the string.
+        [ConjureError]                                     -- either a list of errors (due to static checking a RuleRefn)
+        (E -> m (Maybe [(String, E)]))                  -- or a (Just list) of functions. the return type contains the rule name in the string.
                                                         --    a Nothing means no rule applications at that level.
 combineRuleRefns fs =
     let
-        -- mresults :: (Functor m, Monad m) => [Either CompError (E -> CompE m (Maybe E))]
+        -- mresults :: MonadConjure m => [Either ConjureError (E -> m (Maybe [(String, E)]))]
         mresults = map single fs
 
-        -- errors   :: [CompError]
+        -- errors   :: [ConjureError]
         errors   = lefts  mresults
 
-        -- funcs    :: (Functor m, Monad m) => [E -> CompE m (Maybe E)]
+        -- funcs    :: MonadConjure m => [E -> m (Maybe [(String, E)])]
         funcs    = rights mresults
     in  if null errors
             then Right $ \ x -> do
                 mys <- mapM ($ x) funcs
-                let ys = catMaybes mys
-                if null ys
-                    then return Nothing
-                    else return (Just ys)
+                let ys = concat $ catMaybes mys
+                return $ if null ys
+                            then Nothing
+                            else Just ys
             else Left errors
 
 
-single :: forall m . (Functor m, Monad m)
+single
+    :: forall m
+    .  MonadConjure m
     => RuleRefn
     -> Either
-        CompError                                       -- static errors in the rule
-        (E -> CompE m (Maybe (String, E)))                 -- the rule as a function.
+        ConjureError                                       -- static errors in the rule
+        (E -> m (Maybe [(String, E)]))                     -- the rule as a function.
 single ( name
        , _
        , [xMatch| [pattern] := rulerefn.pattern
@@ -82,9 +86,9 @@ single ( name
                 |]
        ) = do
     let
-        staticCheck :: Either CompError ()
+        staticCheck :: Either ConjureError ()
         staticCheck = do
-            let metaVarsIn p = S.fromList [ r | [xMatch| [Prim (S r)] := metavar |] <- universe p ]
+            let metaVarsIn p      = S.fromList [ r | [xMatch| [Prim (S r)] := metavar |] <- universe p ]
             let patternMetaVars   = metaVarsIn pattern
             let templateMetaVars  = S.unions [ metaVarsIn template
                                              | template <- templates ]
@@ -104,33 +108,37 @@ single ( name
                               , "Pattern meta variables:"  <+> prettyListDoc id "," (map stringToDoc $ S.toList patternMetaVars)
                               , "Template meta variables:" <+> prettyListDoc id "," (map stringToDoc $ S.toList templateMetaVars)
                               ]
+                       , Nothing
                        )
     staticCheck
 
-    return $ \ x -> do
-        bindersBefore <- getsLocal binders
-        let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
+    return $ \ x -> withBindingScope' $ do
         (flagMatch, _) <- patternMatch pattern x
         if flagMatch
             then do
                 bs <- mapM (localHandler name x) locals
                 if and bs
                     then do
-                        template  <- returns templates
-                        template' <- freshNames template
-                        mres      <- runMaybeT $ patternBind template'
-                        case mres of
-                            Nothing  -> restoreState >> errRuleFail
-                            Just res -> do
-                                res' <- renRefn res
-                                restoreState
-                                return (Just (name, res'))
-                    else restoreState >> errRuleFail
-            else restoreState >> errRuleFail
-single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.worker)")
+                        mxs <- forM templates $ \ template -> do
+                            template' <- freshNames template
+                            mres      <- runMaybeT $ patternBind template'
+                            case mres of
+                                Nothing  -> errRuleFail
+                                Just res -> do
+                                    res' <- renRefn res
+                                    return (Just (name, res'))
+                        case catMaybes mxs of
+                            [] -> errRuleFail
+                            xs ->
+                                case [ nm | (nm, x') <- xs, x == x' ] of
+                                    (nm:_) -> err ErrFatal $ "Rule returns the same expression:" <+> pretty nm
+                                    _      -> return (Just xs)
+                    else errRuleFail
+            else errRuleFail
+single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.worker)", Nothing)
 
 
-renRefn :: Monad m => E -> CompE m E
+renRefn :: MonadConjure m => E -> m E
 renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
                  | [Prim (S i'    )] := functionApply.args.reference
                  |] =
@@ -144,20 +152,20 @@ renRefn (Tagged t xs) = Tagged t <$> mapM renRefn xs
 renRefn x = return x
 
 
-errRuleFail :: Monad m => CompE m (Maybe a)
+errRuleFail :: Monad m => m (Maybe a)
 errRuleFail = return Nothing
 
 
-localHandler :: (Functor m, Monad m)
+localHandler :: MonadConjure m
     => String           -- rule name
     -> E                -- containing expression
     -> E
-    -> CompE m Bool
+    -> m Bool
 localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
     xBool <- toBool y
     case xBool of
         Just (True, newBindings) -> do
-            modifyLocal $ \ st -> st { binders = newBindings ++ binders st }
+            modify $ \ st -> st { binders = newBindings ++ binders st }
             return True
         Just (False, _) -> do
             mkLog "rule-fail"

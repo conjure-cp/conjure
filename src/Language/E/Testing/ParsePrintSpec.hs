@@ -56,5 +56,9 @@ one filepath = do
             unless (p1 == p2) $
                 -- assertFailure $ show $ vcat [ "==> Expecting:", pretty p1, "==> But got:", pretty p2]
                 -- assertFailure $ show $ vcat [ "==> Expecting:", prettyAsPaths p1, "==> But got:", prettyAsPaths p2]
-                let out = vcat $ concat $ take 1 [ [prettyAsPaths x, "", prettyAsPaths y] | (x,y) <- zip s1 s2, x /= y ]
+                let out = vcat $ concat $ take 1 [ [prettyAsPaths x, "", prettyAsPaths y]
+                                                 | (x,y) <- zip (statementAsList s1) (statementAsList s2)
+                                                 , x /= y
+                                                 ]
                 in assertFailure $ show out
+

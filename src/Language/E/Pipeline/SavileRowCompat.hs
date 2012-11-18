@@ -8,12 +8,14 @@ import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
 
-savilerowCompat :: (Monad m, Functor m)
+savilerowCompat
+    :: MonadConjure m
     => Spec
-    -> CompE m Spec
+    -> m Spec
 savilerowCompat
      =  return . onSpec toIntIsNoOp
-    >=> onSpecM sliceIfTooFewIndices
+    >=> ( \ (Spec v xs) -> withBindingScope' $ Spec v <$> sliceIfTooFewIndices xs )
+    >=> valueMatrixToLetting
     >=> conjureNoTuples
     >=> conjureNoGuards
     >=> return . atMostOneSuchThat
@@ -21,12 +23,7 @@ savilerowCompat
 
 
 onSpec :: (E -> E) -> Spec -> Spec
-onSpec f (Spec v xs) = Spec v $ map f xs
-
-onSpecM :: Monad m => (E -> CompE m E) -> Spec -> CompE m Spec
-onSpecM f (Spec v xs) = do
-    mapM_ introduceStuff xs
-    Spec v <$> mapM f xs
+onSpec f (Spec v xs) = Spec v $ f xs
 
 
 toIntIsNoOp :: E -> E
@@ -35,7 +32,7 @@ toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
 
 
-sliceIfTooFewIndices :: (Monad m) => E -> CompE m E
+sliceIfTooFewIndices :: MonadConjure m => E -> m E
 sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
     let (is,j) = breakIndices p
     jDom <- lookupDomain j
@@ -78,7 +75,9 @@ sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
         matrixDomainNbDims :: E -> Int
         matrixDomainNbDims [xMatch| [inner] := domain.matrix.inner |] = 1 + matrixDomainNbDims inner
         matrixDomainNbDims _ = 0
-sliceIfTooFewIndices (Tagged t xs) = Tagged t <$> mapM sliceIfTooFewIndices xs
+sliceIfTooFewIndices p@(Tagged t xs) = do
+    introduceStuff p
+    Tagged t <$> mapM sliceIfTooFewIndices xs
 sliceIfTooFewIndices p = return p
 
 

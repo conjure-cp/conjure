@@ -5,11 +5,14 @@ module Language.E.Pipeline.RemoveUnused where
 import Language.E
 
 
-removeUnused :: (Monad m, Functor m)
+-- TODO: do this better with the new single statement setting!
+
+removeUnused
+    :: MonadConjure m
     => Spec
-    -> CompE m Spec
+    -> m Spec
 removeUnused (Spec v statements) = do
-    statements' <- forM (withRestToR statements) $ \ (this, afterThis) -> do
+    statements' <- forM (withRestToR $ statementAsList statements) $ \ (this, afterThis) -> do
         let maybeName = case this of
                             [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference |] -> Just nm
                             [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference |] -> Just nm
@@ -23,11 +26,12 @@ removeUnused (Spec v statements) = do
                     then
                         return (Just this)
                     else do
-                        mkLog "removed" $ pretty this
+                        mkLog "removedDecl" $ pretty this
                         return Nothing
-    return (Spec v $ catMaybes statements')
+    return (Spec v $ listAsStatement $ catMaybes statements')
 
 identifiersIn :: E -> [String]
 identifiersIn e = [ head (splitOn "#" s)
                   | [xMatch| [Prim (S s)] := reference |] <- universe e
                   ]
+

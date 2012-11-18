@@ -10,15 +10,16 @@ import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
 
 -- given a list of RuleReprs, returns a function which
 -- accepts a domain and returns a list of domains
-ruleReprToFunction :: (Functor m, Monad m)
+ruleReprToFunction
+    :: MonadConjure m
     => [RuleRepr]
     -> Either
-        [CompError]                   -- static errors
+        [ConjureError]                   -- static errors
         ( ( String                    -- input: name of the variable
           , E                         -- input: domain
           , E                         -- input: declaration
           )
-          -> CompE m [RuleReprResult]
+          -> m [RuleReprResult]
         )
 ruleReprToFunction fs =
     let
@@ -30,12 +31,12 @@ ruleReprToFunction fs =
             else Left errors
 
 
-one :: (Functor m, Monad m)
+one :: MonadConjure m
     => RuleRepr
     -> Either
-        [CompError]
+        [ConjureError]
         ( (String, E, E)
-          -> CompE m [RuleReprResult]
+          -> m [RuleReprResult]
         )
 one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
     let
@@ -47,13 +48,14 @@ one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
             else Left errors
 
 
-oneCase :: (Functor m, Monad m)
+oneCase
+    :: MonadConjure m
     => RuleRepr
     -> RuleReprCase
     -> Either
-        [CompError]
+        [ConjureError]
         ( (String, E, E)
-          -> CompE m [RuleReprResult]
+          -> m [RuleReprResult]
         )
 oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         (domPattern, mcons2, locals2) =
@@ -66,20 +68,19 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
 
         -- applyToInnerDomain: tries to apply this rule-case to an inner domain.
         -- an inner domain is a domain which isn't a matrix.
-        applyToInnerDomain restoreState origName origDecl is x = do
-            let errReturn = restoreState >> errRuleFail
+        applyToInnerDomain origName origDecl is x = do
             (flagMatch, _) <- patternMatch domPattern x
             if not flagMatch
-                then errReturn
+                then errRuleFail
                 else do
                     bs <- mapM (localHandler ruleName domPattern) locals
                     if not $ and bs
-                        then errReturn
+                        then errRuleFail
                         else do
                             domTemplate' <- freshNames domTemplate
                             mres         <- runMaybeT $ patternBind domTemplate'
                             case mres of
-                                Nothing -> errReturn
+                                Nothing -> errRuleFail
                                 Just res -> do
                                     -- at this point, res is the refinement of the innerDomain
                                     -- mcons is the list of structural constraints
@@ -107,14 +108,12 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                         maybe (err ErrFatal $ "Unbound reference in" <+> pretty con'')
                                               return
                                               maybeCon
-                                    restoreState >> return [(origDecl, ruleName, reprName, liftedRes, mcons')]
+                                    return [(origDecl, ruleName, reprName, liftedRes, mcons')]
 
     in
-        Right $ \ (origName, x, origDecl) -> do
-            bindersBefore <- getsLocal binders
-            let restoreState = modifyLocal $ \ st -> st { binders = bindersBefore }
+        Right $ \ (origName, x, origDecl) -> withBindingScope' $ do
             let (is,j) = splitMatrixDomain x
-            applyToInnerDomain restoreState origName origDecl is j
+            applyToInnerDomain origName origDecl is j
 
 
 
@@ -144,6 +143,6 @@ renRefn newName [xMatch| [Prim (S "refn")] := reference |] = newName
 renRefn newName (Tagged t xs) = Tagged t $ map (renRefn newName) xs
 renRefn _ x = x
 
-errRuleFail :: Monad m => CompE m [a]
+errRuleFail :: Monad m => m [a]
 errRuleFail = return []
 

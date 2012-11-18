@@ -10,7 +10,7 @@ module Language.E.Parser ( runLexerAndParser, lexAndParseIO
                          ) where
 
 import Stuff.Generic
-import Language.E.Definition ( E, BuiltIn(..), Spec(..), RuleRefn, RuleRepr, RuleReprCase )
+import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators, functionals )
 import Language.E.Lexer ( LexemePos, Lexeme(..), lexemeFace, lexemeText, runLexer )
 import Language.E.Pretty ( Pretty, pretty )
@@ -31,12 +31,7 @@ import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, 
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
 
-import Data.Generics.Uniplate.Data ( universe )
 
-
--- instance Pretty [Either Lexeme E] where
---     pretty xs = Pr.vcat $ flip map xs $ \ x -> case x of Left l -> Pr.text $ show l
---                                                          Right i -> pretty i
 
 type Parser a = ParsecT [LexemePos] () Identity a
 
@@ -92,7 +87,7 @@ parseSpec = inCompleteFile $ do
             return (l, map fromInteger is)
     l  <- pLanguage
     xs <- many parseTopLevels
-    return $ Spec l $ concat xs
+    return $ Spec l $ listAsStatement $ concat xs
 
 
 parseMetaVariable :: Parser E

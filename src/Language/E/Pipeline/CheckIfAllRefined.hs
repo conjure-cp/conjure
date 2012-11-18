@@ -6,11 +6,10 @@ import Language.E
 
 -- see https://bitbucket.org/ozgurakgun/conjure/issue/6
 
-checkIfAllRefined :: Monad m => Spec -> CompE m Spec
+checkIfAllRefined :: MonadConjure m => Spec -> m Spec
 checkIfAllRefined spec@(Spec _ statements) = do
     let taggedIdentifiers = nub [ nm
-                                | statement <- statements
-                                , [xMatch| [Prim (S nm)] := reference |] <- universe statement
+                                | [xMatch| [Prim (S nm)] := reference |] <- universe statements
                                 , '#' `elem` nm
                                 ]
     void $ recordSpec spec

@@ -3,7 +3,6 @@
 module Language.E.TypeOf ( typeOf, innerTypeOf ) where
 
 import Stuff.Generic
-import Stuff.FunkyT
 
 import Language.E.Imports
 import Language.E.Definition
@@ -11,13 +10,13 @@ import Language.E.CompE
 import Language.E.TH
 import Language.E.Traversals
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
-import Language.E.Parser ( inCompleteFile, parseExpr, runLexerAndParser )
 import Language.E.Pretty
+import Language.E.Parser
 
-import qualified Data.Text as T
+import Data.Text as T ( Text )
 
 
-typeUnify :: Monad m => E -> E -> CompE m Bool
+typeUnify :: MonadConjure m => E -> E -> m Bool
 typeUnify [xMatch| _ := type.unknown |] _ = return True
 typeUnify _ [xMatch| _ := type.unknown |] = return True
 typeUnify
@@ -40,7 +39,7 @@ typeUnify x y = do
     mkLog "missing:typeUnify" $ pretty x <+> "~~" <+> pretty y
     return (x == y)
 
-mostKnown :: Monad m => E -> E -> CompE m E
+mostKnown :: MonadConjure m => E -> E -> m E
 mostKnown [xMatch| _ := type.unknown |] x = return x
 mostKnown x [xMatch| _ := type.unknown |] = return x
 mostKnown [xMatch| [a] := type.set.inner |]
@@ -64,15 +63,15 @@ _testTypeOf t = do
         Left  e -> print e
         Right x -> do
             print $ pretty x
-            ys <- runCompEIO $ typeOf x
-            mapM_ (print . pretty) ys
+            y <- (handleInIOSingle <=< runCompEIOSingle "testTypeOf") (typeOf x)
+            print $ pretty y
 
 
-typeErrorIn :: Monad m => E -> CompE m a
+typeErrorIn :: MonadConjure m => E -> m a
 typeErrorIn p = err ErrFatal $ "Type error in: " <+> prettyAsPaths p
 
 
-typeOf :: (Functor m, Monad m) => E -> CompE m E
+typeOf :: MonadConjure m => E -> m E
 
 -- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
 
@@ -84,7 +83,7 @@ typeOf p@[xMatch| _ := type |] = return p
 typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
 typeOf [xMatch| [Prim (S i' )] := reference |] = do
     let i = head $ splitOn "#" i'
-    bs <- getsLocal binders
+    bs <- gets binders
     case [ x | Binder nm x <- bs, nm == i ] of
         (x:_) -> typeOf x
         _   -> do
@@ -94,7 +93,7 @@ typeOf [xMatch| [Prim (S i' )] := reference |] = do
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
     let j = '&' : i
-    bs <- getsLocal binders
+    bs <- gets binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> typeOf x
         -- _   -> return p
@@ -160,6 +159,13 @@ typeOf [xMatch| [i] := value.literal |] = typeOf i
 typeOf [xMatch| xs := value.tuple.values |] = do
     txs <- mapM typeOf xs
     return [xMake| type.tuple.inners := txs |]
+
+typeOf [xMatch| xs := value.matrix.values |] = do
+    let tInt = [xMake| type.int := [] |]
+    txs <- mapM typeOf xs
+    return [xMake| type.matrix.index := [tInt]
+                 | type.matrix.inner := [head txs]
+                 |]
 
 typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.unknown := [] |]
 typeOf p@[xMatch| xs := value.set.values |] = do
@@ -450,7 +456,7 @@ typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
 
 
 
-innerTypeOf :: Monad m => Doc -> E -> CompE m E
+innerTypeOf :: MonadConjure m => Doc -> E -> m E
 innerTypeOf _ [xMatch| [ty] := type. set.inner |] = return ty
 innerTypeOf _ [xMatch| [ty] := type.mset.inner |] = return ty
 innerTypeOf doc p = err ErrFatal $ vcat [ "innerTypeOf", pretty p, doc ]

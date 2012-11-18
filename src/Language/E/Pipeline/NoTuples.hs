@@ -9,17 +9,19 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 
 
-conjureNoTuples :: (Monad m, Functor m)
+conjureNoTuples
+    :: MonadConjure m
     => Spec
-    -> CompE m Spec
+    -> m Spec
 conjureNoTuples =
     makeIdempotent noTuplesSpec >=>
-    trySimplifySpec             >=>
+    simplifySpec >=>
     return . atMostOneSuchThat
 
 
-noTuplesSpec :: (Functor m, Monad m) => Spec -> CompE m (Spec, Bool)
-noTuplesSpec specIn@(Spec v statements) = do
+noTuplesSpec :: MonadConjure m => Spec -> m (Spec, Bool)
+noTuplesSpec specIn@(Spec v statementsOrig) = do
+    let statements = statementAsList statementsOrig
     (statements',(tuplesToExplode,matrixOfTuplesToExplode)) <-
         runWriterT $ forM statements $ \ statement ->
             case checkTopLevel statement of
@@ -27,7 +29,7 @@ noTuplesSpec specIn@(Spec v statements) = do
                 Just (f,n,d) ->
                     case checkTupleDomain d of
                         Just ts -> do
-                            lift $ mkLog "removed" $ pretty n
+                            lift $ mkLog "removedDecl" $ pretty n
                             -- returning newDecls:
                             forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
                                 tell ([n],[])
@@ -36,7 +38,7 @@ noTuplesSpec specIn@(Spec v statements) = do
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
-                                    lift $ mkLog "removed" $ pretty n
+                                    lift $ mkLog "removedDecl" $ pretty n
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
                                     forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
@@ -49,7 +51,8 @@ noTuplesSpec specIn@(Spec v statements) = do
         then return (specIn, False)
         else do
             s' <- ( renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
-                    renameTupleIndexes (S.fromList tuplesToExplode) ) (Spec v statementsOut)
+                    renameTupleIndexes (S.fromList tuplesToExplode) )
+                  (Spec v $ listAsStatement statementsOut)
             return (s', True)
 
 checkTopLevel :: E -> Maybe (String -> E -> E, String, E)
@@ -75,8 +78,8 @@ checkTupleDomain :: E -> Maybe [E]
 checkTupleDomain [xMatch| is := domain.tuple.inners |] = Just is
 checkTupleDomain _ = Nothing
 
-renameTupleIndexes :: Monad m => S.Set String -> Spec -> CompE m Spec
-renameTupleIndexes identifiers = traverseSpec' f
+renameTupleIndexes :: MonadConjure m => S.Set String -> Spec -> m Spec
+renameTupleIndexes identifiers = bottomUpSpec' f
     where
         f [xMatch| [Prim (S i)] := operator.index.left.reference
                  | [Prim (I j)] := operator.index.right.value.literal
@@ -106,8 +109,8 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
                                            | domain.matrix.inner := [y]
                                            |]
 
-renameMatrixOfTupleIndexes :: Monad m => M.Map String Int -> Spec -> CompE m Spec
-renameMatrixOfTupleIndexes identifiers = traverseSpec' f
+renameMatrixOfTupleIndexes :: MonadConjure m => M.Map String Int -> Spec -> m Spec
+renameMatrixOfTupleIndexes identifiers = bottomUpSpec' f
     where
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
                           , js

@@ -11,7 +11,7 @@ import qualified Data.Map as M
 
 
 -- if a rewrite rule introduces new names, those names need to be unique.
-freshNames :: Monad m => E -> CompE m E
+freshNames :: MonadConjure m => E -> m E
 freshNames param = do
     let
         quanVars :: [E]
@@ -55,59 +55,3 @@ freshNames param = do
         f p = p
     return $ transform f param
 
-
-
-
--- -- if a rewrite rule introduces new names, those names need to be unique.
--- freshNames :: Monad m => E -> CompE m E
--- freshNames param = do
--- 
--- 
---     -- new quanVars
---     let
---         quanVars :: [E]
---         quanVars = [ s | [xMatch| [s] := quantified.quanVar |] <- universe param ]
--- 
---         collectSingles :: [E] -> [String]
---         collectSingles i = [ r | [xMatch| [Prim (S r)] := structural.single.reference |] <- i ]
--- 
---         collectTuples :: [E] -> [E]
---         collectTuples  i = [ r | [xMatch| rs := structural.tuple |] <- i , r <- rs ]
--- 
---         newvarsInQuanVar :: S.Set String
---         newvarsInQuanVar = S.fromList
---                          $ collectSingles quanVars
---                         ++ collectSingles (collectTuples quanVars)
--- 
---     uniqueNamesInQuanVar <- fmap M.fromList $ forM (S.toList newvarsInQuanVar) $ \ a -> do b <- nextUniqueName; return (a, Prim (S b))
---     
---     let
---         renameQuanVars p@[xMatch| [Prim (S r)] := reference |] =
---             case M.lookup r uniqueNamesInQuanVar of
---                 Nothing -> p
---                 Just t  -> [xMake| reference := [t] |]
---         renameQuanVars p = p
--- 
--- 
---     -- new vars in bubbles
---     let
---         newvarsInBubbles :: S.Set String
---         newvarsInBubbles = S.fromList $ concat
---                                 [ r | [xMatch| ls := withLocals.locals |] <- universe param
---                                     , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find .name.reference |] = Just s
---                                           nameOut [xMatch| [Prim (S s)] := topLevel.declaration.given.name.reference |] = Just s
---                                           nameOut _ = Nothing
---                                     , let r = mapMaybe nameOut ls
---                                 ]
---     uniqueNamesInBubbles <- fmap M.fromList $ forM (S.toList newvarsInBubbles) $ \ a -> do b <- nextUniqueName; return (a, Prim (S b))
---     let
---         renameBubbleVars p@[xMatch| [Prim (S r)] := reference |]
---             = case M.lookup r uniqueNamesInBubbles of
---                 Nothing -> p
---                 Just t  -> [xMake| reference := [t] |]
---         renameBubbleVars p = p
--- 
--- 
---     -- apply the renamings
---     return $ transform renameBubbleVars $ transform renameQuanVars param
--- 

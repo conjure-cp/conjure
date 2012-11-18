@@ -8,14 +8,15 @@ import Language.E
 
 
 atMostOneSuchThat :: Spec -> Spec
-atMostOneSuchThat (Spec lang statements) = Spec lang $ others ++ toSuchThat suchthats
+atMostOneSuchThat (Spec lang statements)
+    = Spec lang $ listAsStatement $ others ++ toSuchThat suchthats
     where
         f [] = ([],[])
         f (x:xs) = case isSuchThat x of
                     Nothing -> ([x],[]) `mappend` f xs
                     Just ys -> ([], ys) `mappend` f xs
 
-        (others,suchthats) = f statements
+        (others,suchthats) = f (statementAsList statements)
 
 isSuchThat :: E -> Maybe [E]
 isSuchThat [xMatch| xs := topLevel.suchThat |] = Just xs

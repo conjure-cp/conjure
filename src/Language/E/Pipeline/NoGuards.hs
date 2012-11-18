@@ -6,17 +6,18 @@ import Language.E
 import Language.E.Evaluator.Partial ( guardOp )
 
 
-conjureNoGuards :: (Monad m, Functor m)
+conjureNoGuards
+    :: MonadConjure m
     => Spec
-    -> CompE m Spec
+    -> m Spec
 conjureNoGuards = noGuardsSpec
 
 
-noGuardsSpec :: (Functor m, Monad m) => Spec -> CompE m Spec
-noGuardsSpec = traverseSpec' noGuardsE
+noGuardsSpec :: MonadConjure m => Spec -> m Spec
+noGuardsSpec = bottomUpSpec' noGuardsE
 
 
-noGuardsE :: (Functor m, Monad m) => E -> CompE m E
+noGuardsE :: MonadConjure m => E -> m E
 noGuardsE
     [xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
            | [quanVar]             := quantified.quanVar
