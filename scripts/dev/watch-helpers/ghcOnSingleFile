@@ -3,6 +3,7 @@
 ghc -odir  dist/watchbuild \
     -hidir dist/watchbuild \
     -isrc                  \
+    -isrc/exec             \
     -Wall                  \
     $1 | grep --invert-match "Loading package"
 
