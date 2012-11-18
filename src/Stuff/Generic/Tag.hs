@@ -1,8 +1,6 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 module Stuff.Generic.Tag where
 import Stuff.Pretty
 import Data.Char ( isSpace )
-import Data.Data ( Data, Typeable )
 import Data.String ( IsString(..) )
 data Tag = Tactual
     | TallDiff
@@ -64,6 +62,7 @@ data Tag = Tactual
     | Tnegate
     | TnestedDimFind
     | Tnew
+    | Tnext
     | Tnot
     | TnowOrdered
     | Tobjective
@@ -92,11 +91,14 @@ data Tag = Tactual
     | Tset
     | Tsingle
     | Tslicer
+    | Tstatement
+    | TstatementEOF
     | Tstructural
     | Tsubset
     | TsubsetEq
     | TsuchThat
     | Ttemplates
+    | Tthis
     | Tto
     | TtoInt
     | TtoMSet
@@ -116,7 +118,7 @@ data Tag = Tactual
     | Twhere
     | Twithin
     | TwithLocals
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Show)
 instance Pretty Tag where
     pretty = pretty . drop 1 . show
 instance IsString Tag where
@@ -182,6 +184,7 @@ instance IsString Tag where
             fromString' "negate" = Tnegate
             fromString' "nestedDimFind" = TnestedDimFind
             fromString' "new" = Tnew
+            fromString' "next" = Tnext
             fromString' "not" = Tnot
             fromString' "nowOrdered" = TnowOrdered
             fromString' "objective" = Tobjective
@@ -210,11 +213,14 @@ instance IsString Tag where
             fromString' "set" = Tset
             fromString' "single" = Tsingle
             fromString' "slicer" = Tslicer
+            fromString' "statement" = Tstatement
+            fromString' "statementEOF" = TstatementEOF
             fromString' "structural" = Tstructural
             fromString' "subset" = Tsubset
             fromString' "subsetEq" = TsubsetEq
             fromString' "suchThat" = TsuchThat
             fromString' "templates" = Ttemplates
+            fromString' "this" = Tthis
             fromString' "to" = Tto
             fromString' "toInt" = TtoInt
             fromString' "toMSet" = TtoMSet
