@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.E.Pipeline.ConjureRefn where
 
@@ -13,15 +14,20 @@ import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 
 
 
-conjureRefn :: (Functor m, Monad m)
+conjureRefn
+    :: forall m
+    .  ( MonadConjure m
+       , MonadList m
+       )
     => Bool
     -> Spec
     -> [RuleRefn]
-    -> CompE m Spec
-conjureRefn isFinal spec rules = do
-    initialiseSpecState spec
-    case ruleRefnToFunction rules of
-        Left  es -> err ErrFatal $ vcat $ map snd es
+    -> m Spec
+conjureRefn isFinal spec rules = {-# SCC "conjureRefn" #-} withBindingScope' $
+    case ( ruleRefnToFunction rules :: Either [ConjureError]
+                                              [E -> m (Maybe [(String, E)])]
+         ) of
+        Left  es -> err ErrFatal $ prettyErrors "refn" es
         Right fs ->
             let pipeline =  recordSpec >=> applyRefn fs
                         >=> recordSpec >=> makeIdempotent noTuplesSpec
