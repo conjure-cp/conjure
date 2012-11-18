@@ -11,21 +11,29 @@ import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 import qualified Data.Map as M
 
 
-applyRepr :: (Functor m, Monad m) => [RuleRepr] -> Spec -> CompE m Spec
-applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
-    Left es     -> err ErrFatal $ prettyErrors "There were errors." $ map (,Nothing) es
+applyRepr
+    :: ( MonadConjure m
+       , MonadList m
+       )
+    => [RuleRepr]
+    -> Spec
+    -> m Spec
+applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules in case mfunc of
+    Left es     -> err ErrFatal $ prettyErrors "repr" es
     Right func' -> do
 
         let func = mergeReprFunc (func' : builtInRepr)
 
         let Spec _ statements = spec
 
-        mapM_ introduceStuff statements
+        let topLevels'
+                =  [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
+                                       | [d]          := topLevel.declaration.find .domain
+                                       |] <- statementAsList statements ]
+                ++ [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
+                                        | [d]          := topLevel.declaration.given.domain
+                                        |] <- statementAsList statements ]
 
-        let topLevels' = [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
-                                              | [d]          := topLevel.declaration.find .domain |] <- statements ]
-                      ++ [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
-                                              | [d]          := topLevel.declaration.given.domain |] <- statements ]
         let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
 
         candidates :: [(String,[RuleReprResult])]
@@ -70,45 +78,64 @@ applyRepr rules spec = let mfunc = ruleReprToFunction rules in case mfunc of
                                               , let nms = map (\ (_,_,i,_,_) -> pretty i ) rs
                                               ]
                 mkLog "configuration" configStr
-                applyCongfigToSpec spec table
+                catchError
+                    (applyCongfigToSpec spec table)
+                    (\ (eu, em, _) ->
+                        throwError ( eu
+                                   , vcat [ "Error in applyConfigToSpec", pretty em ]
+                                   , Just spec
+                                   )
+                    )
 
 
-applyCongfigToSpec :: (Functor m, Monad m) => Spec -> M.Map String [RuleReprResult] -> CompE m Spec
-applyCongfigToSpec spec initConfig = do
+applyCongfigToSpec
+    :: MonadConjure m
+    => Spec
+    -> M.Map String [RuleReprResult]
+    -> m Spec
+applyCongfigToSpec spec initConfig = withBindingScope' $ do
+    void $ recordSpec spec
+    initialiseSpecState spec
     let
+        isFindOrGiven [xMatch| _ := topLevel.declaration.find  |] = True
+        isFindOrGiven [xMatch| _ := topLevel.declaration.given |] = True
+        isFindOrGiven _ = False
+
         f p@[xMatch| [Prim (S nm)] := reference |] = do
-            config <- getsLocal representationConfig
+            config <- gets representationConfig
             case M.lookup nm config of
                 Nothing -> return p
                 Just [] -> err ErrFatal "applyCongfigToSpec.f -- empty list"
                 Just ((origDecl, _ruleName, reprName, newDom, cons):rest) -> do
-                    modifyLocal $ \ st -> st { representationLog = (nm, reprName, origDecl, newDom) : representationLog st
-                                             , structuralConsLog = cons ++ structuralConsLog st
-                                             , representationConfig = M.insert nm rest config
-                                             }
+                    modify $ \ st -> st { representationLog = (nm, reprName, origDecl, newDom)
+                                                            : representationLog st
+                                        , structuralConsLog = cons ++ structuralConsLog st
+                                        , representationConfig = M.insert nm rest config
+                                        }
                     return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
         f p = return p
-    modifyLocal $ \ st -> st { representationConfig = initConfig }
-    spec' <- traverseSpecNoFindGiven' f spec
-    modifyLocal $ \ st -> st { representationConfig = def }
+    modify $ \ st -> st { representationConfig = initConfig }
+    spec' <- bottomUpSpecExcept' isFindOrGiven f spec
+    modify $ \ st -> st { representationConfig = def }
     let pipeline = addChannellingFromLog >=>
                    addStructuralFromLog
     pipeline spec'
 
 
-addStructuralFromLog :: (Functor m, Monad m) => Spec -> CompE m Spec
+addStructuralFromLog :: MonadConjure m => Spec -> m Spec
 addStructuralFromLog (Spec v xs) = do
-    cs' <- getsLocal structuralConsLog
-    cs  <- (fst . unzip) <$> mapM trySimplifyE cs'
-    modifyLocal $ \ st -> st { structuralConsLog = [] }
+    cs' <- gets structuralConsLog
+    cs  <- mapM (liftM fst . runWriterT . simplify) cs'
+    modify $ \ st -> st { structuralConsLog = [] }
     let mk i = [xMake| topLevel.suchThat := [i] |]
-    return $ Spec v $ xs ++ map mk cs
+    return $ Spec v $ listAsStatement $ statementAsList xs ++ map mk cs
 
 
-addChannellingFromLog :: (Functor m, Monad m) => Spec -> CompE m Spec
+addChannellingFromLog :: MonadConjure m => Spec -> m Spec
 addChannellingFromLog (Spec v xs) = do
-    rlogs <- getsLocal representationLog
-    modifyLocal $ \ st -> st { representationLog = [] }
+    mapM_ introduceStuff (statementAsList xs)
+    rlogs <- gets representationLog
+    modify $ \ st -> st { representationLog = [] }
 
     let grouped = filter ( (>1) . length )
                 $ groupBy ((==) `on` fst)
@@ -116,11 +143,11 @@ addChannellingFromLog (Spec v xs) = do
                 $ nub
                   [ (nm, reprName) | (nm, reprName, _, _) <- rlogs ]
 
-    let newCons = [ [ [xMake| topLevel.suchThat.binOp.operator        := [Prim (S "=")]
-                            | topLevel.suchThat.binOp.left .reference := [ Prim $ S $ nm1 ++ "#" ++ r1 ]
-                            | topLevel.suchThat.binOp.right.reference := [ Prim $ S $ nm2 ++ "#" ++ r2 ]
-                            |]
+    let newCons = [ [ [xMake| topLevel.suchThat := [theCons] |]
                     | ((nm1,r1),(nm2,r2)) <- allPairs one
+                    , let x1 = [xMake| reference := [ Prim $ S $ nm1 ++ "#" ++ r1 ] |]
+                    , let x2 = [xMake| reference := [ Prim $ S $ nm2 ++ "#" ++ r2 ] |]
+                    , let theCons = [eMake| &x1 = &x2 |]
                     ]
                   | one <- grouped
                   ]
@@ -146,12 +173,14 @@ addChannellingFromLog (Spec v xs) = do
     let newDecls = nub $ map mkWithNewDom rlogs
     mapM_ introduceStuff newDecls
 
-    newDecls' <- (fst . unzip) <$> mapM trySimplifyE newDecls
+    newDecls' <- mapM (liftM fst . runWriterT . simplify) newDecls
     mapM_ introduceStuff newDecls'
 
-    newCons'  <- (fst . unzip) <$> mapM trySimplifyE (concat newCons)
+    newCons'  <- mapM (liftM fst . runWriterT . simplify) (concat newCons)
 
-    return $ Spec v $ insertBeforeSuchThat newDecls' xs ++ newCons'
+    mapM_ (mkLog "addedDecl" . pretty) newDecls'
+
+    return $ Spec v $ listAsStatement $ insertBeforeSuchThat newDecls' (statementAsList xs) ++ newCons'
 
 
 domainNeedsRepresentation :: E -> Bool
@@ -168,3 +197,4 @@ allPairs :: [a] -> [(a,a)]
 allPairs [ ] = []
 allPairs [_] = []
 allPairs (x:xs) = map (x,) xs ++ allPairs xs
+
