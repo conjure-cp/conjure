@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.BuiltIn ( builtInRepr, builtInRefn, mergeReprFunc ) where
+module Language.E.BuiltIn
+    ( ReprFunc, builtInRepr, mergeReprFunc
+    , RefnFunc, builtInRefn
+    ) where
 
 import Language.E
 
@@ -99,36 +102,4 @@ tupleExplode [eMatch| &a != &b |] = do
             ret "builtIn.tupleExplode" result
         _ -> return Nothing
 tupleExplode _ = return Nothing
-
-
-_plusminus1 :: MonadConjure m => RefnFunc m
-_plusminus1 [xMatch| [Prim (I i)] := value.literal |]
-    = return $ Just [ ("_plusminus1-", [xMake| value.literal := [Prim (I $ i - 1)] |] )
-                    , ("_plusminus1+", [xMake| value.literal := [Prim (I $ i + 1)] |] )
-                    ]
-_plusminus1 _ = return Nothing
-
-_aEqtoFoo :: MonadConjure m => RefnFunc m
-_aEqtoFoo [eMatch| blah(&a,&b) |]
-    = return $ Just $ map (\ i -> ("_aEqtoFoo", i) ) [ [eMake| foo(&a,&b) |]
-                                                     , [eMake| bar(&a,&b) |]
-                                                     ]
-_aEqtoFoo _ = return Nothing
-
-
-_aFooTo12 :: MonadConjure m => RefnFunc m
-_aFooTo12 [eMatch| foo(&a,&b) |]
-    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| foo1(&a,&b) |]
-                                                     , [eMake| foo2(&a,&b) |]
-                                                     ]
-_aFooTo12 _ = return Nothing
-
-
-_aBarTo12 :: MonadConjure m => RefnFunc m
-_aBarTo12 [eMatch| bar(&a,&b) |]
-    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| bar1(&a,&b) |]
-                                                     , [eMake| bar2(&a,&b) |]
-                                                     ]
-_aBarTo12 _ = return Nothing
-
 

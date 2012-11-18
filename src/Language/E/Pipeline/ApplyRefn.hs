@@ -4,7 +4,7 @@
 module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
 import Language.E
-import Language.E.BuiltIn ( builtInRefn )
+import Language.E.BuiltIn
 
 import qualified Text.PrettyPrint as Pr
 
@@ -142,5 +142,101 @@ tryApply db x = do
             mkLog "simplified" $ sep [pretty x, "~~>", pretty x']
             return ([x'], flag)
         else go db
+
+
+
+
+_applyRefnTest2 :: Text -> IO ()
+_applyRefnTest2 inp =
+    case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
+        Left  x -> error $ show x
+        Right x -> do
+            print $ prettyAsPaths x
+            let (mys, _logs)
+                    = afterCompERun "foo"
+                    $ runIdentity
+                    $ runFunkySingle def
+                    $ tryApply [_plusminus1] x
+            -- printLogs logs
+            case mys of
+                Left  y -> error $ renderPretty y
+                Right (ys,flag) -> do
+                    print flag
+                    forM_ ys $ \ y -> do
+                        print $ prettyAsPaths y
+                        print $ pretty y
+
+_applyRefnTest3 :: Text -> IO ()
+_applyRefnTest3 inp =
+    case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
+        Left  x -> error $ show x
+        Right x -> do
+            -- print $ prettyAsPaths x
+            let mys
+                    = map (afterCompERun "foo")
+                    $ runIdentity
+                    $ runFunkyMulti def
+                    $ runWriterT (onE [_aEqtoFoo, _aFooTo12] x)
+            forM_ mys $ \ (my, _logs) -> do
+                -- printLogs logs
+                case my of
+                    Left  y -> error $ renderPretty y
+                    Right (y, _flag) -> do
+                        -- print flag
+                        -- print $ prettyAsPaths y
+                        print $ pretty y
+
+_applyRefnTest4 :: Text -> IO ()
+_applyRefnTest4 inp =
+    case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
+        Left  x -> error $ show x
+        Right x -> do
+            -- print $ prettyAsPaths x
+            let mys
+                    = map (afterCompERun "foo")
+                    $ runIdentity
+                    $ runFunkyMulti def
+                    $ runWriterT (onE [_aBarTo12, _aEqtoFoo, _aFooTo12] x)
+            forM_ mys $ \ (my, _logs) -> do
+                -- printLogs logs
+                case my of
+                    Left  y -> error $ renderPretty y
+                    Right (y, _flag) -> do
+                        -- print flag
+                        -- print $ prettyAsPaths y
+                        print $ pretty y
+
+_applyRefnMain :: IO ()
+_applyRefnMain = _applyRefnTest4 "blah(blah(blah(a,b),blah(c,d)),e)"
+
+_plusminus1 :: MonadConjure m => RefnFunc m
+_plusminus1 [xMatch| [Prim (I i)] := value.literal |]
+    = return $ Just [ ("_plusminus1-", [xMake| value.literal := [Prim (I $ i - 1)] |] )
+                    , ("_plusminus1+", [xMake| value.literal := [Prim (I $ i + 1)] |] )
+                    ]
+_plusminus1 _ = return Nothing
+
+_aEqtoFoo :: MonadConjure m => RefnFunc m
+_aEqtoFoo [eMatch| blah(&a,&b) |]
+    = return $ Just $ map (\ i -> ("_aEqtoFoo", i) ) [ [eMake| foo(&a,&b) |]
+                                                     , [eMake| bar(&a,&b) |]
+                                                     ]
+_aEqtoFoo _ = return Nothing
+
+
+_aFooTo12 :: MonadConjure m => RefnFunc m
+_aFooTo12 [eMatch| foo(&a,&b) |]
+    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| foo1(&a,&b) |]
+                                                     , [eMake| foo2(&a,&b) |]
+                                                     ]
+_aFooTo12 _ = return Nothing
+
+
+_aBarTo12 :: MonadConjure m => RefnFunc m
+_aBarTo12 [eMatch| bar(&a,&b) |]
+    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| bar1(&a,&b) |]
+                                                     , [eMake| bar2(&a,&b) |]
+                                                     ]
+_aBarTo12 _ = return Nothing
 
 
