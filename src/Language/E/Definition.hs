@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -10,6 +9,8 @@ module Language.E.Definition
     , Spec(..), Version, E, BuiltIn(..)
     , RuleRefn, RuleRepr, RuleReprCase, RuleReprResult
 
+    , listAsStatement, statementAsList
+
     ) where
 
 import Stuff.Generic
@@ -18,15 +19,13 @@ import Stuff.MetaVariable
 
 import Language.E.Imports
 
-import Data.Generics ( Data, Typeable )
 
 
-
-data Spec = Spec Version [E]
+data Spec = Spec Version E
     deriving (Eq, Show)
 
 instance Default Spec where
-    def = Spec ("Essence", [1,3]) []
+    def = Spec ("Essence", [1,3]) (Tagged TstatementEOF [])
 
 type Version = (String,[Int])
 
@@ -52,8 +51,8 @@ type RuleReprResult = ( E            -- original declaration
 
 type E = Generic BuiltIn
 
-data BuiltIn = B Bool | I Integer | S String
-    deriving (Eq, Ord, Show, Data, Typeable)
+data BuiltIn = B !Bool | I !Integer | S String
+    deriving (Eq, Ord, Show)
 
 instance Pretty BuiltIn where
     pretty (B x) = pretty x
@@ -65,3 +64,19 @@ instance MetaVariable E where
     unnamedMV _ = False
     namedMV   [xMatch| [Prim (S  s )] := metavar   |] = Just s
     namedMV   _ = Nothing
+
+
+
+listAsStatement :: [E] -> E
+listAsStatement []     = [xMake| statementEOF   := [] |]
+listAsStatement (x:xs) = [xMake| statement.this := [x]
+                               | statement.next := [listAsStatement xs]
+                               |]
+
+statementAsList :: E -> [E]
+statementAsList [xMatch| _ := statementEOF |] = []
+statementAsList [xMatch| [this] := statement.this
+                       | [next] := statement.next
+                       |] = this : statementAsList next
+statementAsList x = [x]
+
