@@ -81,6 +81,35 @@ sliceIfTooFewIndices p@(Tagged t xs) = do
 sliceIfTooFewIndices p = return p
 
 
+-- savilerow doesn't support inline value matrices.
+-- this transformation may not always be valid, but will leave it in anyway.
+-- conjure generates value matrices, especially in a deref form.
+-- lift them to lettings, a temp solution.
+valueMatrixToLetting :: MonadConjure m => Spec -> m Spec
+valueMatrixToLetting (Spec v statement) = do
+    let valueMatrices = nub [ m
+                            | [eMatch| &m[&_] |] <- universe statement
+                            , case m of
+                                [xMatch| _ := value.matrix |] -> True
+                                [xMatch| _ := structural.single.value.matrix |] -> True
+                                _ -> False
+                            ]
+    paired <- forM valueMatrices $ \ m -> do
+        s <- nextUniqueName
+        return (m, s)
+    let newLettings = [ [xMake| topLevel.letting.name.reference := [Prim (S s)]
+                              | topLevel.letting.expr           := [m]
+                              |]
+                      | (m,s) <- paired
+                      ]
+    let f i = case i `lookup` paired of
+                Just j  -> [xMake| reference := [Prim (S j)] |]
+                Nothing -> i
+
+    let statement' = transform f statement
+    return $ Spec v $ listAsStatement $ newLettings ++ statementAsList statement'
+
+
 langEPrime :: Spec -> Spec
 langEPrime (Spec _ xs) = Spec ("ESSENCE'", [1,0]) xs
 
