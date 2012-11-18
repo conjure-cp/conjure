@@ -23,14 +23,12 @@ main = interact $ \ inp ->
 
     in
         unlines
-            [ "{-# LANGUAGE DeriveDataTypeable #-}"
-            , "module Stuff.Generic.Tag where"
+            [ "module Stuff.Generic.Tag where"
             , "import Stuff.Pretty"
             , "import Data.Char ( isSpace )"
-            , "import Data.Data ( Data, Typeable )"
             , "import Data.String ( IsString(..) )"
             , "data Tag = " ++ constructors
-            , "    deriving (Eq, Ord, Read, Show, Data, Typeable)"
+            , "    deriving (Eq, Ord, Show)"
             , "instance Pretty Tag where"
             , "    pretty = pretty . drop 1 . show"
             , "instance IsString Tag where"
