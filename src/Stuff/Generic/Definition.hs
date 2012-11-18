@@ -1,10 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE DeriveFoldable #-}
 
 module Stuff.Generic.Definition
     ( Generic(..)
+    , universe, transform, replace, replaceAll
     , xMake, xMatch, viewTaggeds, viewTagged
     , prettyAsTree, prettyAsPaths
     , qq
@@ -15,7 +14,6 @@ import Stuff.Generic.Tag
 import Control.Arrow ( first )
 import Data.List ( intersperse )
 import Data.Maybe ( fromJust, isJust )
-import Data.Generics ( Data, Typeable )
 
 -- split
 import Data.List.Split ( splitOn )
@@ -35,7 +33,23 @@ import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
 data Generic primitive
     = Prim primitive
     | Tagged !Tag [Generic primitive]
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Show)
+
+
+universe :: Generic p -> [Generic p]
+universe t@(Tagged _ xs) = t : concatMap universe xs
+universe t = [t]
+
+transform :: (Generic p -> Generic p) -> Generic p -> Generic p
+transform f (Tagged t xs) = f $ Tagged t (map (transform f) xs)
+transform f t = f t
+
+replace :: Eq p => Generic p -> Generic p -> Generic p -> Generic p
+replace old new = transform $ \ i -> if i == old then new else i
+
+replaceAll :: Eq p => [(Generic p, Generic p)] -> Generic p -> Generic p
+replaceAll [] x = x
+replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 
 prettyAsTree :: Pretty primitive => Generic primitive -> Doc
 prettyAsTree (Prim p) = pretty p
