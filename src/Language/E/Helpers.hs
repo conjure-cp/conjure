@@ -1,37 +1,13 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Language.E.Helpers where
 
-import Stuff.FunkyT
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.TH
 
-
-withBindingScope'
-    :: Monad m
-    => CompE m a
-    -> CompE m a
-withBindingScope' comp = do
-    bindersBefore <- getsLocal binders
-    result <- comp
-    modifyLocal $ \ st -> st { binders = bindersBefore }
-    return result
-
-
-withBindingScope
-    :: ( Monad (t (CompEMOnly m))
-       , Monad m
-       , MonadTrans t
-       )
-    => t (CompEMOnly m) a
-    -> t (CompEMOnly m) a
-withBindingScope comp = do
-    bindersBefore <- lift $ getsLocal binders
-    result <- comp
-    lift $ modifyLocal $ \ st -> st { binders = bindersBefore }
-    return result
 
 
 conjunct :: [E] -> E
@@ -46,12 +22,17 @@ disjunct [x]    = x
 disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
 
 
-freshQuanVar :: Monad m => CompE m (String, E)
+traceBindings :: MonadConjure m => String -> m ()
+traceBindings msg = do
+    bs <- gets binders
+    trace (msg ++ " " ++ show [ nm | Binder nm _ <- bs ]) (return ())
+
+
+freshQuanVar :: MonadConjure m => m (String, E)
 freshQuanVar = do
     quanVarStr <- nextUniqueName
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
-
 
 inForAll :: String -> E -> E -> E
 inForAll quanVar quanOverDom body =
