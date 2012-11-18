@@ -9,19 +9,19 @@ type ReprFunc m =
     , E                                     -- input: domain
     , E                                     -- input: decl
     )
-    -> CompE m [RuleReprResult]
+    -> m [RuleReprResult]
 
 
 
-mergeReprFunc :: (Functor m, Monad m) => [ReprFunc m] -> ReprFunc m
+mergeReprFunc :: MonadConjure m => [ReprFunc m] -> ReprFunc m
 mergeReprFunc [ ] =  error "mergeReprFunc []"
 mergeReprFunc [f] = f
 mergeReprFunc fs = \ param -> concat <$> mapM ($ param) fs
 
-builtInRepr :: (Functor m, Monad m) => [ReprFunc m]
+builtInRepr :: MonadConjure m => [ReprFunc m]
 builtInRepr = [relationRepr]
 
-relationRepr :: (Functor m, Monad m) => ReprFunc m
+relationRepr :: MonadConjure m => ReprFunc m
 relationRepr ( _name, [xMatch| ts := domain.relation.inners |], decl) = do
     let t = [xMake| domain.tuple.inners := ts |]
     return [( decl
@@ -44,17 +44,17 @@ relationRepr ( _name, _dom, _ ) = do
 
 type RefnFunc m =
     E                                   -- the expression
-    -> CompE m (Maybe [(String, E)])    -- Nothing if rule doesn't apply
+    -> m (Maybe [(String, E)])    -- Nothing if rule doesn't apply
                                         -- returns a list of rewrites, fst being rulename
                                         --                           , snd being E
 
-ret :: Monad m => String -> E -> CompE m (Maybe [(String, E)])
+ret :: Monad m => String -> E -> m (Maybe [(String, E)])
 ret name result = return $ Just [(name, result)]
 
-builtInRefn :: (Functor m, Monad m) => [RefnFunc m]
+builtInRefn :: MonadConjure m => [RefnFunc m]
 builtInRefn = [relationApply, tupleExplode]
 
-relationApply :: (Functor m, Monad m) => RefnFunc m
+relationApply :: MonadConjure m => RefnFunc m
 relationApply [xMatch| [actual]             := functionApply.actual
                      | [Prim (S actualRef)] := functionApply.actual.reference
                      |  args                := functionApply.args
@@ -72,7 +72,7 @@ relationApply [xMatch| [actual]             := functionApply.actual
         _ -> return Nothing
 relationApply _ = return Nothing
 
-tupleExplode :: (Functor m, Monad m) => RefnFunc m
+tupleExplode :: MonadConjure m => RefnFunc m
 tupleExplode [xMatch| values       := operator.index.left .value.tuple.values
                     | [Prim (I i)] := operator.index.right.value.literal
                     |]
@@ -100,5 +100,35 @@ tupleExplode [eMatch| &a != &b |] = do
         _ -> return Nothing
 tupleExplode _ = return Nothing
 
+
+_plusminus1 :: MonadConjure m => RefnFunc m
+_plusminus1 [xMatch| [Prim (I i)] := value.literal |]
+    = return $ Just [ ("_plusminus1-", [xMake| value.literal := [Prim (I $ i - 1)] |] )
+                    , ("_plusminus1+", [xMake| value.literal := [Prim (I $ i + 1)] |] )
+                    ]
+_plusminus1 _ = return Nothing
+
+_aEqtoFoo :: MonadConjure m => RefnFunc m
+_aEqtoFoo [eMatch| blah(&a,&b) |]
+    = return $ Just $ map (\ i -> ("_aEqtoFoo", i) ) [ [eMake| foo(&a,&b) |]
+                                                     , [eMake| bar(&a,&b) |]
+                                                     ]
+_aEqtoFoo _ = return Nothing
+
+
+_aFooTo12 :: MonadConjure m => RefnFunc m
+_aFooTo12 [eMatch| foo(&a,&b) |]
+    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| foo1(&a,&b) |]
+                                                     , [eMake| foo2(&a,&b) |]
+                                                     ]
+_aFooTo12 _ = return Nothing
+
+
+_aBarTo12 :: MonadConjure m => RefnFunc m
+_aBarTo12 [eMatch| bar(&a,&b) |]
+    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| bar1(&a,&b) |]
+                                                     , [eMake| bar2(&a,&b) |]
+                                                     ]
+_aBarTo12 _ = return Nothing
 
 
