@@ -5,6 +5,7 @@ import System.Environment ( getArgs )
 import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureAll
+import Language.E.Pipeline.Driver
 
 
 main :: IO ()
@@ -27,9 +28,17 @@ main = do
     reprPairs <- mapM pairWithContents reprFilenames
     refnPairs <- mapM pairWithContents refnFilenames
 
-    [spec ]   <- runCompEIO (readSpec specPair)
-    [refns]   <- runCompEIO (concat <$> mapM readRuleRefn refnPairs)
-    [reprs]   <- runCompEIO (mapM readRuleRepr reprPairs)
+    spec  <- handleInIOSingle =<< runCompEIOSingle
+                "Parsing problem specification"
+                (readSpec specPair)
+    refns <- handleInIOSingle =<< runCompEIOSingle
+                "Parsing rules"
+                (concat <$> mapM readRuleRefn refnPairs)
+    reprs <- handleInIOSingle =<< runCompEIOSingle
+                "Parsing rules"
+                (mapM readRuleRepr reprPairs)
 
-    driverConjureAll (dropExtEssence specFilename) reprs refns spec
+    driverConjure
+        conjureAllPure (dropExtEssence specFilename)
+        reprs refns spec
 
