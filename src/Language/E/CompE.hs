@@ -1,8 +1,12 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Language.E.CompE where
 
-import Stuff.FunkyT
+import Stuff.Funky.FunkySingle
+import Stuff.Funky.FunkyMulti
 import Stuff.NamedLog
 
 import Language.E.Imports
@@ -11,64 +15,124 @@ import Language.E.Pretty
 
 import qualified Data.Set as S
 import qualified Data.Map as M
-import qualified Data.DList as DList
-import System.IO.Unsafe ( unsafeInterleaveIO )
 
 
-type CompEMOnly m = FunkyT LocalState GlobalState (CompError, Maybe Spec) m
-type CompE m a = CompEMOnly m a
+class ( Functor m
+      , Applicative m
+      , Monad m
+      , MonadState ConjureState m
+      , MonadError ConjureError m
+      ) => MonadConjure m where
+    type ResultF m a
+    runFunky :: ConjureState -> m a -> ResultF m (Either ConjureError a, ConjureState)
+
+
+instance MonadConjure (FunkySingle ConjureState ConjureError Identity) where
+    type ResultF    (FunkySingle ConjureState ConjureError Identity) a = a
+    runFunky st ma = runIdentity $ runFunkySingle st ma
+
+instance MonadConjure (FunkyMulti  ConjureState ConjureError Identity) where
+    type ResultF    (FunkyMulti  ConjureState ConjureError Identity) a = [a]
+    runFunky st ma = runIdentity $ runFunkyMulti st ma
+
+
+instance MonadConjure (FunkySingle ConjureState ConjureError IO) where
+    type ResultF    (FunkySingle ConjureState ConjureError IO) a = IO a
+    runFunky = runFunkySingle
+
+instance MonadConjure (FunkyMulti  ConjureState ConjureError IO) where
+    type ResultF    (FunkyMulti  ConjureState ConjureError IO) a = IO [a]
+    runFunky = runFunkyMulti
+
 
 runCompE
-    :: Monad m
-    => StdGen
-    -> CompE m a
-    -> m ([(Either (CompError, Maybe Spec) a, LocalState)], (GlobalState, StdGen))
-runCompE gen = runFunkyT def (def, gen)
+    :: String
+    -> FunkyMulti ConjureState ConjureError Identity a
+    -> [(Either Doc a, LogTree)]
+runCompE d ma = map (afterCompERun d) (runIdentity $ runFunkyMulti def ma)
 
-runCompEIO :: CompE Identity a -> IO [a]
-runCompEIO comp = do
-    gen <- getStdGen
-    let (mgenerateds, _) = runIdentity $ runCompE gen comp
-    forM mgenerateds $ \ mgenerated -> case mgenerated of
-        (Left  x, locSt) -> do
-            printLogs (localLogs locSt)
-            error $ renderPretty $ prettyErrors "There were errors." [x]
-        (Right x, locSt) -> do
-            printLogs (localLogs locSt)
-            unsafeInterleaveIO $ return x
+
+runCompEIO
+    :: String
+    -> FunkyMulti ConjureState ConjureError IO a
+    -> IO [(Either Doc a, LogTree)]
+runCompEIO d ma = map (afterCompERun d) <$> runFunkyMulti def ma
+
+
+runCompESingle
+    :: String
+    -> FunkySingle ConjureState ConjureError Identity a
+    -> (Either Doc a, LogTree)
+runCompESingle d ma = afterCompERun d $ runIdentity $ runFunkySingle def ma
+
+
+runCompEIOSingle
+    :: String
+    -> FunkySingle ConjureState ConjureError IO a
+    -> IO (Either Doc a, LogTree)
+runCompEIOSingle d ma = afterCompERun d <$> runFunkySingle def ma
+
+
+afterCompERun
+    :: String
+    -> (Either ConjureError a, ConjureState)
+    -> (Either Doc a, LogTree)
+afterCompERun d = first (either (toError d) Right) . second localLogs
+
+
+handleInIO
+    :: [(Either Doc a, LogTree)]
+    -> IO [a]
+handleInIO = mapM handleInIOSingle
+
+
+handleInIOSingle
+    :: (Either Doc a, LogTree)
+    -> IO a
+handleInIOSingle (mx, logs) = do
+    printLogs logs
+    case mx of
+        Left  x -> error $ renderPretty x
+        Right x -> return x
+
+toError :: String -> ConjureError -> Either Doc a
+toError msg
+    = Left
+    . prettyErrors (pretty $ "Error in phase: " ++ msg)
+    . return
 
 
 
 -- errors
 
-type CompError = (ErrEnum, Doc)
+type ConjureError = (ErrEnum, Doc, Maybe Spec)
 
 data ErrEnum = ErrFatal        -- means execution cannot continue.
     deriving (Eq, Show)
 
-err :: Monad m => ErrEnum -> Doc -> CompE m a
+err :: MonadConjure m => ErrEnum -> Doc -> m a
 err e d = do
-    sp <- getsLocal lastSpec
-    throwError ((e,d), sp)
+    sp <- gets lastSpec
+    throwError (e,d,sp)
 
-prettyErrors :: Doc -> [(CompError, Maybe Spec)] -> Doc
+prettyErrors :: Doc -> [ConjureError] -> Doc
 prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
     where
-        one ((_,d), Nothing) = d
-        one ((_,d), Just sp) = vcat [ d
-                                    , pretty sp
-                                    -- , prettySpecDebug sp
-                                    ]
+        one (_, d, Nothing) = d
+        one (_, d, Just sp) = vcat [ d
+                                   , pretty sp
+                                   -- , prettySpecDebug sp
+                                   ]
 
-recordSpec :: Monad m => Spec -> CompE m Spec
+recordSpec :: MonadConjure m => Spec -> m Spec
 recordSpec sp = do
-    modifyLocal $ \ st -> st { lastSpec = Just sp }
+    modify $ \ st -> st { lastSpec = Just sp }
     return sp
 
 
 -- state
 
-data LocalState = LocalState
+data ConjureState = ConjureState
         { binders       :: [Binder]
         , uniqueNameInt :: Integer
         , representationConfig :: M.Map String [RuleReprResult]
@@ -79,48 +143,46 @@ data LocalState = LocalState
                                  ) ]
         , structuralConsLog :: [E]
         , lastSpec :: Maybe Spec  -- record the spec after changes, to report in case of an error.
-        , localLogs :: DList.DList NamedLog
+        , localLogs :: LogTree
         , allNamesPreConjure :: S.Set String  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 data Binder = Binder String E
     deriving (Show)
 
-instance Default LocalState where
-    def = LocalState def 1 def def def def DList.empty def
+instance Default ConjureState where
+    def = ConjureState def 1 def def def def def def
 
-data GlobalState = GlobalState
 
-instance Default GlobalState where
-    def = GlobalState
-
-mkLog :: Monad m => String -> Doc -> CompE m ()
+mkLog :: MonadConjure m => String -> Doc -> m ()
 mkLog nm doc = case buildLog nm doc of
     Nothing -> return ()
-    Just l  -> modifyLocal $ \ st -> st { localLogs = localLogs st `DList.snoc` l }
+    Just l  -> modify $ \ st -> st {
+        localLogs = LTMultiple (localLogs st) (LTSingle l)
+        }
 
-addBinder :: Monad m => String -> E -> CompE m ()
-addBinder nm val = modifyLocal $ \ st -> st { binders = Binder nm val : binders st }
+addBinder :: MonadConjure m => String -> E -> m ()
+addBinder nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
 
-lookupBinder :: Monad m => String -> MaybeT (FunkyT LocalState GlobalState (CompError, Maybe Spec) m) E
+lookupBinder :: MonadConjure m => String -> MaybeT m E
 lookupBinder nm = do
-    bs <- lift $ getsLocal binders
+    bs <- lift $ gets binders
     case listToMaybe [ x | Binder nm' x <- bs, nm == nm' ] of
         Nothing -> mzero
         Just x  -> return x
 
-nextUniqueName :: Monad m => CompE m String
+nextUniqueName :: MonadConjure m => m String
 nextUniqueName = do
-    i <- getsLocal uniqueNameInt
-    modifyLocal $ \ st -> st { uniqueNameInt = i + 1 }
+    i <- gets uniqueNameInt
+    modify $ \ st -> st { uniqueNameInt = i + 1 }
     let nm = "v__" ++ show i
-    nms <- getsLocal allNamesPreConjure
+    nms <- gets allNamesPreConjure
     if nm `S.member` nms
         then nextUniqueName
         else return nm
 
 
-makeIdempotent :: Monad m => (a -> CompE m (a,Bool)) -> a -> CompE m a
+makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
     (y,flag) <- f x
     if flag
