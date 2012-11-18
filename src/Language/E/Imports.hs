@@ -13,8 +13,6 @@ module Language.E.Imports
     , pairWithContents
     , withRest, withRestToR, withRestToL
     , T.Text
-    , ppShow, ppPrint
-    , replace, replaceAll
     , sameLength
     , concatMapM
     , parMapM
@@ -28,10 +26,10 @@ import Control.Arrow             as X ( first, second )
 
 import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM, liftM )
 import Control.Monad.Trans.Class as X ( MonadTrans, lift )
-import Control.Monad.Identity    as X ( Identity, runIdentity )
+import Control.Monad.Identity    as X ( Identity(..), runIdentity )
 import Control.Monad.Reader      as X ( MonadReader(..) )
 import Control.Monad.Writer      as X ( MonadWriter(..), WriterT, runWriterT, execWriterT, runWriter )
-import Control.Monad.State       as X ( MonadState, get, put, evalStateT )
+import Control.Monad.State       as X ( MonadState, gets, modify, evalStateT )
 import Control.Monad.Error       as X ( MonadError(..), ErrorT, runErrorT, Error(..) )
 import Control.Monad.IO.Class    as X ( MonadIO, liftIO )
 import Control.Monad.Trans.Maybe as X ( MaybeT(..), runMaybeT )
@@ -49,15 +47,11 @@ import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
 
-import Data.Generics.Uniplate.Data as X ( Uniplate, universe, transform )
-
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$) )
 
 import System.Random as X ( StdGen, getStdGen )
 
 import Debug.Trace as X ( trace )
-
-import Text.Show.Pretty ( ppDoc )
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -110,19 +104,6 @@ withRestToR (x:xs) = (x,xs) : withRestToR xs
 withRestToL :: [a] -> [(a,[a])]
 withRestToL = reverse . withRestToR . reverse
 
-ppShow :: Show a => a -> String
-ppShow = Pr.renderStyle Pr.style { Pr.lineLength = 200 } . ppDoc
-
-ppPrint :: Show a => a -> IO ()
-ppPrint = putStrLn . ppShow
-
-
-replace :: (Uniplate a, Eq a) => a -> a -> a -> a
-replace old new = transform $ \ i -> if i == old then new else i
-
-replaceAll :: (Uniplate a, Eq a) => [(a,a)] -> a -> a
-replaceAll [] x = x
-replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 
 sameLength :: [a] -> [b] -> Bool
 sameLength [] [] = True
