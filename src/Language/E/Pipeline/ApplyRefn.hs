@@ -174,8 +174,9 @@ _applyRefnTest3 inp =
             -- print $ prettyAsPaths x
             let mys
                     = map (afterCompERun "foo")
+                    $ fst
                     $ runIdentity
-                    $ runFunkyMulti def
+                    $ runFunkyMulti () def
                     $ runWriterT (onE [_aEqtoFoo, _aFooTo12] x)
             forM_ mys $ \ (my, _logs) -> do
                 -- printLogs logs
@@ -194,8 +195,9 @@ _applyRefnTest4 inp =
             -- print $ prettyAsPaths x
             let mys
                     = map (afterCompERun "foo")
+                    $ fst
                     $ runIdentity
-                    $ runFunkyMulti def
+                    $ runFunkyMulti () def
                     $ runWriterT (onE [_aBarTo12, _aEqtoFoo, _aFooTo12] x)
             forM_ mys $ \ (my, _logs) -> do
                 -- printLogs logs

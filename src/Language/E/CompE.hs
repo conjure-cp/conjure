@@ -28,35 +28,35 @@ class ( Functor m
 
 
 instance MonadConjure (FunkySingle ConjureState ConjureError Identity) where
-    type ResultF    (FunkySingle ConjureState ConjureError Identity) a = a
+    type ResultF      (FunkySingle ConjureState ConjureError Identity) a = a
     runFunky st ma = runIdentity $ runFunkySingle st ma
 
-instance MonadConjure (FunkyMulti  ConjureState ConjureError Identity) where
-    type ResultF    (FunkyMulti  ConjureState ConjureError Identity) a = [a]
-    runFunky st ma = runIdentity $ runFunkyMulti st ma
+instance MonadConjure (FunkyMulti  () ConjureState ConjureError Identity) where
+    type ResultF      (FunkyMulti  () ConjureState ConjureError Identity) a = [a]
+    runFunky st ma = fst $ runIdentity $ runFunkyMulti () st ma
 
 
 instance MonadConjure (FunkySingle ConjureState ConjureError IO) where
     type ResultF    (FunkySingle ConjureState ConjureError IO) a = IO a
     runFunky = runFunkySingle
 
-instance MonadConjure (FunkyMulti  ConjureState ConjureError IO) where
-    type ResultF    (FunkyMulti  ConjureState ConjureError IO) a = IO [a]
-    runFunky = runFunkyMulti
+instance MonadConjure (FunkyMulti  () ConjureState ConjureError IO) where
+    type ResultF      (FunkyMulti  () ConjureState ConjureError IO) a = IO [a]
+    runFunky st ma = liftM fst $ runFunkyMulti () st ma
 
 
 runCompE
     :: String
-    -> FunkyMulti ConjureState ConjureError Identity a
+    -> FunkyMulti () ConjureState ConjureError Identity a
     -> [(Either Doc a, LogTree)]
-runCompE d ma = map (afterCompERun d) (runIdentity $ runFunkyMulti def ma)
+runCompE d ma = map (afterCompERun d) (fst $ runIdentity $ runFunkyMulti () def ma)
 
 
 runCompEIO
     :: String
-    -> FunkyMulti ConjureState ConjureError IO a
+    -> FunkyMulti () ConjureState ConjureError IO a
     -> IO [(Either Doc a, LogTree)]
-runCompEIO d ma = map (afterCompERun d) <$> runFunkyMulti def ma
+runCompEIO d ma = map (afterCompERun d) . fst <$> runFunkyMulti () def ma
 
 
 runCompESingle
