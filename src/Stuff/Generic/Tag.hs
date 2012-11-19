@@ -32,7 +32,7 @@ data Tag = Tactual
     | TfunctionApply
     | Tgiven
     | Tguard
-    | ThsTerm
+    | Thist
     | Tidentity
     | Tin
     | Tindex
@@ -154,7 +154,7 @@ instance IsString Tag where
             fromString' "functionApply" = TfunctionApply
             fromString' "given" = Tgiven
             fromString' "guard" = Tguard
-            fromString' "hsTerm" = ThsTerm
+            fromString' "hist" = Thist
             fromString' "identity" = Tidentity
             fromString' "in" = Tin
             fromString' "index" = Tindex
