@@ -19,7 +19,7 @@ applyRepr
     -> Spec
     -> m Spec
 applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules in case mfunc of
-    Left es     -> err ErrFatal $ prettyErrors "repr" es
+    Left es     -> err ErrFatal $ vcat $ map (prettyError "repr") es
     Right func' -> do
 
         let func = mergeReprFunc (func' : builtInRepr)

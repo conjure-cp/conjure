@@ -98,8 +98,7 @@ handleInIOSingle (mx, logs) = do
 toError :: String -> ConjureError -> Either Doc a
 toError msg
     = Left
-    . prettyErrors (pretty $ "Error in phase: " ++ msg)
-    . return
+    . prettyError (pretty $ "Error in phase: " ++ msg)
 
 
 
@@ -115,14 +114,9 @@ err e d = do
     sp <- gets lastSpec
     throwError (e,d,sp)
 
-prettyErrors :: Doc -> [ConjureError] -> Doc
-prettyErrors msg es = vcat $ msg : map (nest 4 . one) es
-    where
-        one (_, d, Nothing) = d
-        one (_, d, Just sp) = vcat [ d
-                                   , pretty sp
-                                   -- , prettySpecDebug sp
-                                   ]
+prettyError :: Doc -> ConjureError -> Doc
+prettyError msg (_, d, Nothing) = vcat [msg, nest 4 d, ""]
+prettyError msg (_, d, Just sp) = vcat [msg, nest 4 d, nest 4 (pretty sp), ""] 
 
 recordSpec :: MonadConjure m => Spec -> m Spec
 recordSpec sp = do
