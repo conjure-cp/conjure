@@ -279,6 +279,9 @@ instance Pretty E where
     pretty [xMatch| [x] := atTopLevel |] = prettyAtTopLevel x
 
     pretty x@[xMatch| _ := quantified |] = Pr.parens $ prettyQuantified x
+    pretty [xMatch| [n] := quanVar.name
+                  | [w] := quanVar.within
+                  |] = braces (pretty n <+> "|" <+> pretty w)
 
     pretty [xMatch| [x] := unaryOp.negate |]
         = "-" <> prettyPrec 10000 x
