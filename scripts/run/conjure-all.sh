@@ -7,5 +7,5 @@ mkdir -p $filename_noext
 
 conjure-all \
     `find files/rules -type f | grep -e ".rule$" -e ".repr$"` \
-        $filename +RTS -s -K100M -M1G 2> $filename_noext/conjure_stats.rts
+        $filename +RTS -s -K100M -M2G 2> $filename_noext/conjure_stats.rts
 
