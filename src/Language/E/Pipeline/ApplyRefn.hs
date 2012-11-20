@@ -110,22 +110,29 @@ tryApply
     -> E
     -> m ([E], Bool)
 tryApply db x = do
-    let
+    (x' , b1) <- simply x
+    (x'', b2) <- go db x'
+    return (x'', b1 || b2)
+
+    where
+
         simply :: MonadConjure m => E -> m (E, Bool)
         simply i = do
             (j, (Any flag, _)) <- runWriterT $ simplify i
+            when flag $ mkLog "simplified" $ vcat [pretty i, "~~>", pretty j]
             return (j, flag)
-    let
-        -- returns a pair, first component: True if a modification has been made.
-        --               , second component: list of results. should always be non-empty.
+
+        -- returns a pair, first component: list of results. will always be non-empty.
+        --               , second component: True if a modification has been made.
         go  :: MonadConjure m
             => RulesDB m
+            -> E
             -> m ([E], Bool)
-        go [] = return ([x], False)
-        go (g:gs) = do
-            mys <- g x
+        go []     i = return ([i], False)
+        go (g:gs) i = do
+            mys <- g i
             case mys of
-                Nothing -> go gs
+                Nothing -> go gs i
                 Just [] -> err ErrFatal "Rewrites to nothing."
                 Just ys -> do
                     ys' <- forM ys $ \ (n,y) -> do (y', _) <- simply y ; return (n,y')
@@ -136,13 +143,6 @@ tryApply db x = do
                     mkLog "applied" msg
                     -- trace (show $ "applied:" <+> msg) $ return (map snd ys', True)
                     return (map snd ys', True)
-    (x', flag) <- simply x
-    if flag
-        then do
-            mkLog "simplified" $ sep [pretty x, "~~>", pretty x']
-            return ([x'], flag)
-        else go db
-
 
 
 
