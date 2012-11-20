@@ -70,6 +70,9 @@ _testTypeOf t = do
 typeErrorIn :: MonadConjure m => E -> m a
 typeErrorIn p = err ErrFatal $ "Type error in: " <+> prettyAsPaths p
 
+typeErrorIn' :: MonadConjure m => E -> Doc -> m a
+typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [prettyAsPaths p, d]
+
 
 typeOf :: MonadConjure m => E -> m E
 
@@ -235,10 +238,9 @@ typeOf p@[xMatch| [x] := operator.twoBars |] = do
     tx <- typeOf x
     case tx of
         [xMatch| [] := type.int      |] -> return [xMake| type.int := [] |]
-        [xMatch| [] := type.set      |] -> return [xMake| type.int := [] |]
-        [xMatch| [] := type.mset     |] -> return [xMake| type.int := [] |]
-        [xMatch| [] := type.function |] -> return [xMake| type.int := [] |]
-        -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
+        [xMatch| _  := type.set      |] -> return [xMake| type.int := [] |]
+        [xMatch| _  := type.mset     |] -> return [xMake| type.int := [] |]
+        [xMatch| _  := type.function |] -> return [xMake| type.int := [] |]
         _ -> typeErrorIn p
 
 typeOf p@[xMatch| [m,i'] := operator.indices |] = do
@@ -264,7 +266,6 @@ typeOf p@[eMatch| toSet(&x) |] = do
         [xMatch| [innerFr] := type.function.innerFrom
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.set.inner.type.tuple.inners := [innerFr,innerTo] |]
-        -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| toMSet(&x) |] = do
@@ -275,7 +276,6 @@ typeOf p@[eMatch| toMSet(&x) |] = do
         [xMatch| [innerFr] := type.function.innerFrom
                | [innerTo] := type.function.innerTo
                |] -> return [xMake| type.mset.inner.type.tuple.inners := [innerFr,innerTo] |]
-        -- _ -> err ErrFatal $ "Type error in:" <+> prettyAsPaths tx
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| toRelation(&x) |] = do
@@ -439,7 +439,7 @@ typeOf p@[xMatch| [m] := operator.index.left
                 |] = do
     tyM <- typeOf m
     tyI <- typeOf i
-    ret <- case tyM of
+    case tyM of
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
                |] | ind == tyI -> return inn
@@ -449,10 +449,8 @@ typeOf p@[xMatch| [m] := operator.index.left
                 Just (int, _) | int >= 1 && int <= genericLength ts -> return $ ts `genericIndex` (int - 1)
                 _ -> typeErrorIn p
         _ -> typeErrorIn p
-    return ret
 
--- typeOf p = typeErrorIn p
-typeOf e = err ErrFatal $ "Cannot determine the type of:" <+> pretty e
+typeOf p = typeErrorIn' p "default case"
 
 
 
