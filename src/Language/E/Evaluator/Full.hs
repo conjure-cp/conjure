@@ -105,6 +105,7 @@ returnBool' :: MonadConjure m => Bool -> [Binder] -> m (Maybe (E,[Binder]))
 returnBool' i bs = return $ Just ([xMake| value.literal := [Prim (B i)] |], bs)
 
 returnInt :: MonadConjure m => Integer -> m (Maybe (E,[Binder]))
+returnInt i | i > 1000 = return Nothing
 returnInt i = ret [xMake| value.literal := [Prim (I i)] |]
 
 returnInt' :: MonadConjure m => Integer -> [Binder] -> m (Maybe (E,[Binder]))
