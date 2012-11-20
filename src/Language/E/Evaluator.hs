@@ -34,56 +34,69 @@ simplifySpec = liftM fst . runWriterT . bottomUpSpec simplify
 
 
 simplify :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
-simplify = bottomUpE allIdempotent
-    where
-        allCombined i =
-            firstJustOr i
-                $ map ($ i) [ logged "Evaluator"           fullEvaluator
-                            , logged "Evaluator.hasRepr"   evalHasRepr
-                            , logged "Evaluator.hasType"   evalHasType
-                            , logged "Evaluator.hasDomain" evalHasDomain
-                            , logged "Evaluator.domSize"   evalDomSize
-                            , logged "Evaluator.indices"   evalIndices
-                            , logged "Evaluator.replace"   evalReplace
-                            , logged "Evaluator.tupleEq"   tupleEq
-                            , logged "Evaluator.matrixEq"  matrixEq
-                            , logged "Simplify"            (adapter partialEvaluator)
-                            ]
+simplify =  bottomUpE (mkIdempotent allCombinedDoFirst)
+        >=> bottomUpE (mkIdempotent allCombined)
 
-        allIdempotent i = do
-            (i', (Any flag, _)) <- listen $ allCombined i
-            if flag
-                then do
-                    lift $ mkLog "simplified" $ vcat [pretty i, "~~>", pretty i']
-                    tell (Any True, [])
-                    allIdempotent i'
-                else return i'
 
-        adapter
-            :: MonadConjure m
-            => (E -> m (Maybe E))
-            -> E
-            -> m (Maybe (E, [Binder]))
-        adapter comp x = do
-            y <- comp x
-            case y of
-                Nothing -> return Nothing
-                Just z  -> return (Just (z, []))
+allCombined :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+allCombined i =
+    firstJustOr i
+        $ map ($ i) [ logged "Evaluator"           fullEvaluator
+                    , logged "Evaluator.hasRepr"   evalHasRepr
+                    , logged "Evaluator.hasType"   evalHasType
+                    , logged "Evaluator.hasDomain" evalHasDomain
+                    , logged "Evaluator.domSize"   evalDomSize
+                    , logged "Evaluator.indices"   evalIndices
+                    , logged "Evaluator.replace"   evalReplace
+                    , logged "Evaluator.tupleEq"   tupleEq
+                    , logged "Evaluator.matrixEq"  matrixEq
+                    , logged "Simplify"            (adapter partialEvaluator)
+                    ]
 
-        logged
-            :: MonadConjure m
-            => String
-            -> (E -> m (Maybe (E,[Binder])))
-            -> E
-            -> WriterT (Any, [Binder]) m (Maybe E)
-        logged str act inp = do
-            moutp <- lift $ act inp
-            case moutp of
-                Nothing         -> return Nothing
-                Just (outp, bs) -> do
-                    lift $ mkLog str $ sep [pretty inp, "~~>", pretty outp]
-                    tell (Any True, bs)
-                    return (Just outp)
+-- these transformations should be applied first. others might depend on them.
+allCombinedDoFirst :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+allCombinedDoFirst i =
+    firstJustOr i
+        $ map ($ i) [ logged "Evaluator"           fullEvaluator
+                    , logged "Evaluator.replace"   evalReplace
+                    ]
+
+mkIdempotent :: MonadConjure m
+             => (E -> WriterT (Any, [Binder]) m E)
+             ->  E -> WriterT (Any, [Binder]) m E
+mkIdempotent f i = do
+    (i', (Any flag, _)) <- listen $ f i
+    if flag
+        then do
+            tell (Any True, [])
+            mkIdempotent f i'
+        else return i'
+
+adapter
+    :: MonadConjure m
+    => (E -> m (Maybe E))
+    -> E
+    -> m (Maybe (E, [Binder]))
+adapter comp x = do
+    y <- comp x
+    case y of
+        Nothing -> return Nothing
+        Just z  -> return (Just (z, []))
+
+logged
+    :: MonadConjure m
+    => String
+    -> (E -> m (Maybe (E,[Binder])))
+    -> E
+    -> WriterT (Any, [Binder]) m (Maybe E)
+logged str act inp = do
+    moutp <- lift $ act inp
+    case moutp of
+        Nothing         -> return Nothing
+        Just (outp, bs) -> do
+            lift $ mkLog str $ sep [pretty inp, "~~>", pretty outp]
+            tell (Any True, bs)
+            return (Just outp)
 
 
 firstJustOr
