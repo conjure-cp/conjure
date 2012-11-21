@@ -50,8 +50,13 @@ fullEvaluator [eMatch| toInt(false) |] = ret [eMake| 0 |]
 fullEvaluator [eMatch| toInt(true)  |] = ret [eMake| 1 |]
 
 fullEvaluator [eMatch| &a = &b |]
-    | [xMatch| [Prim (I a')] := value.literal |] <- a
-    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    | [xMatch| [Prim a'] := value.literal |] <- a
+    , [xMatch| [Prim b'] := value.literal |] <- b
+    = returnBool (a' == b')
+
+fullEvaluator [eMatch| &a = &b |]
+    | [xMatch| [Prim a'] := structural.single.value.literal |] <- a
+    , [xMatch| [Prim b'] := structural.single.value.literal |] <- b
     = returnBool (a' == b')
 
 fullEvaluator [eMatch| &a != &b |]
