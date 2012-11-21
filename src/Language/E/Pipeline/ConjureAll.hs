@@ -35,7 +35,7 @@ conjureAllPure reprs refns = {-# SCC "conjureAllPure" #-} onlyOneError . go Repr
             in
                 if null mouts
                     then do
-                        let mouts2 = runCompE "Refn2" $ inlineLettings s >>= \ s' -> conjureRefn False s' refns
+                        let mouts2 = trace "Refn2" $ runCompE "Refn2" $ inlineLettings s >>= \ s' -> conjureRefn False s' refns
                         let f2 (Left  x, logs) = [(Left x, logs)]
                             f2 (Right x, logs) = map (second (logTreeAppend logs)) (go Groom x)
                         concatMap f2 mouts2
