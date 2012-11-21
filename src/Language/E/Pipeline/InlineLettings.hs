@@ -20,7 +20,7 @@ inlineLettings (Spec v statements) =
 
         lettingsMap = M.fromList lettings
 
-        f x | Just y <- M.lookup x lettingsMap = y
+        f x | Just y <- M.lookup x lettingsMap = f y
         f (Tagged t xs) = Tagged t (map f xs)
         f x = x
 
