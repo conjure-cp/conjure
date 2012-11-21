@@ -17,19 +17,19 @@ freshNames param = do
         quanVars :: [E]
         quanVars = [ s | [xMatch| [s] := quantified.quanVar |] <- universe param ]
 
-        collectSingles :: [E] -> [String]
+        collectSingles :: [E] -> [Text]
         collectSingles i = [ r | [xMatch| [Prim (S r)] := structural.single.reference |] <- i ]
 
         collectTuples :: [E] -> [E]
         collectTuples  i = [ r | [xMatch| rs := structural.tuple |] <- i , r <- rs ]
 
-        newvarsInQuanVar :: S.Set String
+        newvarsInQuanVar :: S.Set Text
         newvarsInQuanVar = S.fromList
                          $ collectSingles quanVars
                         ++ collectSingles (collectTuples quanVars)
 
     let
-        newvarsInBubbles :: S.Set String
+        newvarsInBubbles :: S.Set Text
         newvarsInBubbles = S.fromList $ concat
                                 [ r | [xMatch| ls := withLocals.locals |] <- universe param
                                     , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find .name.reference |] = Just s
@@ -38,7 +38,7 @@ freshNames param = do
                                     , let r = mapMaybe nameOut ls
                                 ]
     let
-        newvars :: S.Set String
+        newvars :: S.Set Text
         newvars = newvarsInQuanVar `S.union` newvarsInBubbles
     -- let
     --     newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param

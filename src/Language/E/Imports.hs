@@ -12,7 +12,7 @@ module Language.E.Imports
     , padRight, padLeft, padCenter
     , pairWithContents
     , withRest, withRestToR, withRestToL
-    , T.Text
+    , T.Text, stringToText
     , sameLength
     , concatMapM
     , parMapM
@@ -64,6 +64,9 @@ import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
 import System.CPUTime ( getCPUTime )
 
+
+stringToText :: String -> T.Text
+stringToText = T.pack
 
 stringToDoc :: String -> Doc
 stringToDoc = Pr.text

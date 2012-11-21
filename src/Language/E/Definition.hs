@@ -27,11 +27,11 @@ data Spec = Spec Version E
 instance Default Spec where
     def = Spec ("Essence", [1,3]) (Tagged TstatementEOF [])
 
-type Version = (String,[Int])
+type Version = (Text,[Int])
 
-type RuleRefn = (String, Maybe Int, E)
-type RuleRepr = ( String        -- name of the rule
-                , String        -- name of the representation
+type RuleRefn = (Text, Maybe Int, E)
+type RuleRepr = ( Text          -- name of the rule
+                , Text          -- name of the representation
                 , E             -- domain out.
                 , Maybe E       -- structural constraints
                 , [E]           -- locals
@@ -43,15 +43,15 @@ type RuleReprCase = ( E         -- domain in.
                     )
 
 type RuleReprResult = ( E            -- original declaration
-                      , String       -- rule name
-                      , String       -- name of the representation
+                      , Text         -- rule name
+                      , Text         -- name of the representation
                       , E            -- replacement domain
                       , [E]          -- structural constraints
                       )
 
 type E = Generic BuiltIn
 
-data BuiltIn = B !Bool | I !Integer | S String
+data BuiltIn = B !Bool | I !Integer | S !Text
     deriving (Eq, Ord, Show)
 
 instance Pretty BuiltIn where

@@ -6,9 +6,9 @@ import Stuff.Generic
 
 import Language.E.Imports
 import Language.E.Definition
-import Language.E.Helpers
 import Language.E.CompE
 import Language.E.TypeOf
+import Language.E.Evaluator.DataAboutQuantifiers
 import Language.E.TH ( eMatch, eMake )
 
 
@@ -149,7 +149,7 @@ partialEvaluator _ = return Nothing
 
 partialEvaluatorValueSet
     :: MonadConjure m
-    => String
+    => Text
     -> E
     -> E
     -> [E]
@@ -198,7 +198,7 @@ partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody = do
 
 partialEvaluatorValueMSet
     :: MonadConjure m
-    => String
+    => Text
     -> E
     -> [E]
     -> [E]
@@ -223,33 +223,4 @@ partialEvaluatorValueMSet quantifier qnVar vs qnGuards qnBody = do
 
 ret :: Monad m => E -> m (Maybe E)
 ret = return . Just
-
-
-identityOp :: MonadConjure m => String -> m E
-identityOp quantifier = case quantifier of
-                "forAll" -> return [eMake| true  |]
-                "exists" -> return [eMake| false |]
-                "sum"    -> return [eMake| 0     |]
-                _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-
-
-guardOp :: MonadConjure m => String -> [E] -> E -> m E
-guardOp _ [] b = return b
-guardOp quantifier as b =
-    let a = conjunct as
-    in  case quantifier of
-            "forAll" -> return [eMake| &a -> &b |]
-            "exists" -> return [eMake| &a /\ &b |]
-            "sum"    -> return [eMake| &a *  &b |]
-            _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-
-
-glueOp :: MonadConjure m => String -> E -> E -> m E
-glueOp quantifier a b = case quantifier of
-            "forAll" -> return [eMake| &a /\ &b |]
-            "exists" -> return [eMake| &a \/ &b |]
-            "sum"    -> return [eMake| &a +  &b |]
-            _        -> err ErrFatal $ "Unknown quantifier: " <+> stringToDoc quantifier
-
-
 

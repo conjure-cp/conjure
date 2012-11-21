@@ -28,13 +28,13 @@ traceBindings msg = do
     trace (msg ++ " " ++ show [ nm | Binder nm _ <- bs ]) (return ())
 
 
-freshQuanVar :: MonadConjure m => m (String, E)
+freshQuanVar :: MonadConjure m => m (Text, E)
 freshQuanVar = do
     quanVarStr <- nextUniqueName
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
 
-inForAll :: String -> E -> E -> E
+inForAll :: Text -> E -> E -> E
 inForAll quanVar quanOverDom body =
     [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
           | quantified.quanVar.structural.single.reference := [Prim $ S quanVar ]
@@ -45,7 +45,7 @@ inForAll quanVar quanOverDom body =
           | quantified.body                                := [body]
           |]
 
-inForAlls :: [(String,E)] -> E -> E
+inForAlls :: [(Text,E)] -> E -> E
 inForAlls = go . reverse
     where
         go []         body = body

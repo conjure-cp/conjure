@@ -8,7 +8,7 @@ import Language.E.BuiltIn
 
 import qualified Text.PrettyPrint as Pr
 
-type RulesDB m = [E -> m (Maybe [(String,E)])]
+type RulesDB m = [E -> m (Maybe [(Text, E)])]
 
 
 applyRefn
@@ -137,7 +137,7 @@ tryApply db x = do
                 Just ys -> do
                     ys' <- forM ys $ \ (n,y) -> do (y', _) <- simply y ; return (n,y')
                     let msg = vcat $ pretty x
-                               : [ Pr.braces (stringToDoc n) $$ nest 4 (pretty y)
+                               : [ Pr.braces (pretty n) $$ nest 4 (pretty y)
                                  | (n,y) <- ys'
                                  ]
                     mkLog "applied" msg

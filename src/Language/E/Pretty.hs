@@ -15,7 +15,6 @@ import Language.E.Lexer ( textToLexeme )
 import Control.Arrow ( first, second )
 import Data.List ( intersperse )
 import Text.PrettyPrint as Pr
-import qualified Data.Text as T
 
 
 prettySpecDebug :: Spec -> Doc
@@ -23,7 +22,7 @@ prettySpecDebug sp@(Spec _ st) = vcat $ pretty sp : map prettyAsPaths (statement
 
 instance Pretty Spec where
     pretty (Spec (language,version) statements)
-        = vcat [ "language" <+> text language
+        = vcat [ "language" <+> pretty language
                             <+> Pr.hcat (intersperse "." (map Pr.int version))
                , ""
                , pretty statements
@@ -316,7 +315,7 @@ instance Pretty E where
                     | [_] := binOp.left
                     | [_] := binOp.right
                     |]
-        | let lexeme = textToLexeme (T.pack t)
+        | let lexeme = textToLexeme t
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
         = prettyPrec 0 x
 
@@ -383,7 +382,7 @@ prettyPrec envPrec x@([xMatch| [Prim (S t)] := binOp.operator
                              | [a]          := binOp.left
                              | [b]          := binOp.right
                              |])
-    | let lexeme = textToLexeme (T.pack t)
+    | let lexeme = textToLexeme t
     , lexeme `elem` [ Just l | (l,_,_) <- operators ]
     = case lexeme of
         Nothing -> prettyAsTree x

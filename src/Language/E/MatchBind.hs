@@ -11,8 +11,8 @@ import Language.E.CompE
 import Language.E.Pretty
 import Language.E.Parser
 
-import Data.Set as S ( fromList, toList )
-import Data.Text as T ( pack )
+import qualified Data.Set as S
+import qualified Data.Text as T
 
 
 sort :: Ord a => [a] -> [a]
@@ -54,7 +54,7 @@ patternMatch pattern actual = do
         core p _ | unnamedMV p =
             return True
         core p x | Just nm <- namedMV p = do
-            addBinder ('&':nm) x
+            addBinder ("&" `mappend` nm) x
             return True
         core [xMatch| xs := attrCollection |]
              [xMatch| ys := attrCollection |]
@@ -121,7 +121,7 @@ patternMatch pattern actual = do
 -- if this returns nothing, that means there is some unbound reference.
 patternBind :: MonadConjure m => E -> MaybeT m E
 patternBind x | Just nm <- namedMV x = do
-    res <- lookupBinder ('&':nm)
+    res <- lookupBinder ("&" `mappend` nm)
     patternBind res
 patternBind (Tagged xTag xArgs) = Tagged xTag <$> mapM patternBind xArgs
 patternBind x = return x
@@ -135,7 +135,7 @@ _testMatch patternText actualText = do
         (flag, _) <- patternMatch pattern actual
         bs        <- gets binders
         forM_ bs $ \ (Binder nm val) -> liftIO $ do
-            putStr nm
+            putStr $ T.unpack nm
             putStr " : "
             putStrLn $ renderPretty val
         liftIO . putStrLn $

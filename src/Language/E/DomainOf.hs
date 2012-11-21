@@ -9,6 +9,8 @@ import Language.E.CompE
 import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 
+import qualified Data.Text as T
+
 
 errDomainOf :: (MonadConjure m, Pretty p) => p -> m a
 errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
@@ -17,18 +19,18 @@ errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
 domainOf :: MonadConjure m => E -> m E
 
 domainOf [xMatch| [Prim (S i')] := reference |] = do
-    let i = head $ splitOn "#" i'
+    let i = head $ T.splitOn "#" i'
     bs <- gets binders
     if i == "_"
         then return [xMake| type.unknown := [] |]
         else case [ x | Binder nm x <- bs, nm == i ] of
                 (x:_) -> domainOf x
                 _   -> do
-                    let bsText = sep $ map (\ (Binder nm _) -> stringToDoc nm ) bs
+                    let bsText = sep $ map (\ (Binder nm _) -> pretty nm ) bs
                     err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
 
 domainOf p@[xMatch| [Prim (S i)] := metavar |] = do
-    let j = '&' : i
+    let j = "&" `mappend` i
     bs <- gets binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> domainOf x

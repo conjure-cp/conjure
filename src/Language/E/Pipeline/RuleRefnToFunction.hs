@@ -7,6 +7,7 @@ import Language.E
 import Language.E.Pipeline.FreshNames
 
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 
 -- does the grouping depending on levels and such.
@@ -16,7 +17,7 @@ ruleRefnToFunction
     => [RuleRefn]
     -> Either
         [ConjureError]
-        [E -> m (Maybe [(String, E)])]
+        [E -> m (Maybe [(Text, E)])]
 ruleRefnToFunction fs =
     let
         justsFirst :: Ord a => Maybe a -> Maybe a -> Ordering
@@ -49,7 +50,7 @@ combineRuleRefns
     => [RuleRefn]                                       -- given a list of RuleRefns
     -> Either                                           -- return
         [ConjureError]                                     -- either a list of errors (due to static checking a RuleRefn)
-        (E -> m (Maybe [(String, E)]))                  -- or a (Just list) of functions. the return type contains the rule name in the string.
+        (E -> m (Maybe [(Text, E)]))                    -- or a (Just list) of functions. the return type contains the rule name in the string.
                                                         --    a Nothing means no rule applications at that level.
 combineRuleRefns fs =
     let
@@ -77,7 +78,7 @@ single
     => RuleRefn
     -> Either
         ConjureError                                       -- static errors in the rule
-        (E -> m (Maybe [(String, E)]))                     -- the rule as a function.
+        (E -> m (Maybe [(Text, E)]))                       -- the rule as a function.
 single ( name
        , _
        , [xMatch| [pattern] := rulerefn.pattern
@@ -105,8 +106,8 @@ single ( name
             unless (templateMetaVars `S.isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars,lettingMetaVars])
                 $ Left ( ErrFatal
                        , vcat [ "in rule:" <+> pretty name
-                              , "Pattern meta variables:"  <+> prettyListDoc id "," (map stringToDoc $ S.toList patternMetaVars)
-                              , "Template meta variables:" <+> prettyListDoc id "," (map stringToDoc $ S.toList templateMetaVars)
+                              , "Pattern meta variables:"  <+> prettyListDoc id "," (map pretty $ S.toList patternMetaVars)
+                              , "Template meta variables:" <+> prettyListDoc id "," (map pretty $ S.toList templateMetaVars)
                               ]
                        , Nothing
                        )
@@ -142,8 +143,8 @@ renRefn :: MonadConjure m => E -> m E
 renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
                  | [Prim (S i'    )] := functionApply.args.reference
                  |] =
-    case splitOn "#" i' of
-        [i,j] -> return [xMake| reference := [Prim (S $ i ++ "_" ++ j)] |]
+    case T.splitOn "#" i' of
+        [i,j] -> return [xMake| reference := [Prim (S $ mconcat [i, "_", j])] |]
         _     -> err ErrFatal $ "{renRefn} Problem here:" <+> pretty p
 renRefn [eMatch| refn(&m[&j]) |] = do
     n <- renRefn [eMake| refn(&m) |]
@@ -157,7 +158,7 @@ errRuleFail = return Nothing
 
 
 localHandler :: MonadConjure m
-    => String           -- rule name
+    => Text             -- rule name
     -> E                -- containing expression
     -> E
     -> m Bool
@@ -170,13 +171,13 @@ localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
         Just (False, _) -> do
             mkLog "rule-fail"
                 $ "where statement evaluated to false: " <++> vcat [ pretty lokal
-                                                                   , "in rule" <+> stringToDoc name
+                                                                   , "in rule" <+> pretty name
                                                                    , "at expression" <+> pretty x
                                                                    ]
             return False
         Nothing    -> err ErrFatal
                 $ "where statement cannot be fully evaluated: " <++> vcat [ pretty lokal
-                                                                          , "in rule" <+> stringToDoc name
+                                                                          , "in rule" <+> pretty name
                                                                           , "at expression" <+> pretty x
                                                                           ]
 localHandler _ _ lokal = introduceStuff lokal >> return True

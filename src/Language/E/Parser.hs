@@ -80,9 +80,9 @@ satisfyT predicate = tokenPrim showTok nextPos testTok
 parseSpec :: Parser Spec
 parseSpec = inCompleteFile $ do
     let
-        pLanguage :: Parser (String,[Int])
+        pLanguage :: Parser Version
         pLanguage = do
-            l  <- lexeme L_language *> identifier
+            l  <- lexeme L_language *> identifierText
             is <- sepBy1 integer dot
             return (l, map fromInteger is)
     l  <- pLanguage
@@ -95,9 +95,7 @@ parseMetaVariable = do
     let isMeta LMetaVar {} = True
         isMeta _           = False
     LMetaVar iden <- satisfyT isMeta
-    let idenStr = T.unpack iden
-    return [xMake| metavar := [Prim (S idenStr)]
-                 |]
+    return [xMake| metavar := [Prim (S iden)] |]
 
 parseExpr :: Parser E
 parseExpr = do
@@ -128,11 +126,7 @@ parseExpr = do
                 Right (before, op, after) -> do
                     b <- shunt before
                     a <- shunt after
-                    -- return $ Tagged "binOp" [
-                    --          Tagged (T.unpack $ lexemeText op)
-                    --          [b,a]
-                    --          ]
-                    return [xMake| binOp.operator := [Prim (S $ T.unpack $ lexemeText op)]
+                    return [xMake| binOp.operator := [Prim (S $ lexemeText op)]
                                  | binOp.left     := [b]
                                  | binOp.right    := [a]
                                  |]
@@ -302,7 +296,7 @@ parseWithLocals = parens $ do
 
 parseReference :: Parser E
 parseReference = do
-    x <- identifier
+    x <- identifierText
     return [xMake| reference := [Prim (S x)]
                  |]
 
@@ -775,9 +769,9 @@ parseStructural = msum
         return [xMake| structural.matrix := xs |]
     ]
 
-parseRuleRefn :: String -> Parser [RuleRefn]
+parseRuleRefn :: T.Text -> Parser [RuleRefn]
 parseRuleRefn t = inCompleteFile $ do
-    level     <- optionMaybe (brackets (fromInteger <$> integer))
+    level <- optionMaybe (brackets (fromInteger <$> integer))
     let
         one = do
             pattern   <- parseExpr
@@ -801,10 +795,10 @@ parseRuleReprCase = do
     return (dom, mcons, locals)
 
 
-parseRuleRepr :: String -> Parser RuleRepr
+parseRuleRepr :: T.Text -> Parser RuleRepr
 parseRuleRepr t = inCompleteFile $ do
     let arr i = lexeme L_SquigglyArrow >> i
-    nmRepr <- arr identifier
+    nmRepr <- arr identifierText
     domOut <- arr parseDomain
     mcons  <- optionMaybe $ arr parseExpr
     locals <- concat <$> many parseTopLevels
@@ -827,9 +821,6 @@ inCompleteFile parser = do
 
 lexeme :: Lexeme -> Parser ()
 lexeme l = void (satisfyT (l==)) <?> show (lexemeFace l)
-
-identifier :: Parser String
-identifier = T.unpack <$> identifierText
 
 identifierText :: Parser T.Text
 identifierText = do

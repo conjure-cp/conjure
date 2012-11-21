@@ -25,7 +25,7 @@ conjureRefn
     -> m Spec
 conjureRefn isFinal spec rules = {-# SCC "conjureRefn" #-} withBindingScope' $
     case ( ruleRefnToFunction rules :: Either [ConjureError]
-                                              [E -> m (Maybe [(String, E)])]
+                                              [E -> m (Maybe [(Text, E)])]
          ) of
         Left  es -> err ErrFatal $ vcat $ map (prettyError "refn") es
         Right fs ->

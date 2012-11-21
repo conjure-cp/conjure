@@ -36,7 +36,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
 
         let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
 
-        candidates :: [(String,[RuleReprResult])]
+        candidates :: [(Text,[RuleReprResult])]
             <- forM topLevels $ \ (x,n,d) -> do
             ys <- func (n,d,x)
             case ys of
@@ -50,7 +50,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
                     return (n,ys)
 
         let
-            nbOccurrence :: String -> Int
+            nbOccurrence :: Text -> Int
             nbOccurrence nm = length [ ()
                                      | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
                                      , nm == nm'
@@ -60,7 +60,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
             foo [] = [[]]
             foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
 
-            lookupTables :: [ M.Map String [RuleReprResult] ]
+            lookupTables :: [ M.Map Text [RuleReprResult] ]
             lookupTables = map M.fromList $ foo
                 [ (nm, allCombs)
                 | (nm, results) <- candidates
@@ -91,7 +91,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
 applyCongfigToSpec
     :: MonadConjure m
     => Spec
-    -> M.Map String [RuleReprResult]
+    -> M.Map Text [RuleReprResult]
     -> m Spec
 applyCongfigToSpec spec initConfig = withBindingScope' $ do
     void $ recordSpec spec
@@ -112,7 +112,7 @@ applyCongfigToSpec spec initConfig = withBindingScope' $ do
                                         , structuralConsLog = cons ++ structuralConsLog st
                                         , representationConfig = M.insert nm rest config
                                         }
-                    return [xMake| reference := [Prim (S $ nm ++ "#" ++ reprName)] |]
+                    return [xMake| reference := [Prim (S $ mconcat [nm, "#", reprName])] |]
         f p = return p
     modify $ \ st -> st { representationConfig = initConfig }
     spec' <- bottomUpSpecExcept' isFindOrGiven f spec
@@ -145,8 +145,8 @@ addChannellingFromLog (Spec v xs) = do
 
     let newCons = [ [ [xMake| topLevel.suchThat := [theCons] |]
                     | ((nm1,r1),(nm2,r2)) <- allPairs one
-                    , let x1 = [xMake| reference := [ Prim $ S $ nm1 ++ "#" ++ r1 ] |]
-                    , let x2 = [xMake| reference := [ Prim $ S $ nm2 ++ "#" ++ r2 ] |]
+                    , let x1 = [xMake| reference := [ Prim $ S $ mconcat [nm1, "#", r1] ] |]
+                    , let x2 = [xMake| reference := [ Prim $ S $ mconcat [nm2, "#", r2] ] |]
                     , let theCons = [eMake| &x1 = &x2 |]
                     ]
                   | one <- grouped
@@ -159,13 +159,13 @@ addChannellingFromLog (Spec v xs) = do
         insertBeforeSuchThat toInsert []     = toInsert
 
     let
-        mkWithNewDom :: (String, String, E, E) -> E
+        mkWithNewDom :: (Text, Text, E, E) -> E
         mkWithNewDom (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
-            [xMake| topLevel.declaration.find.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
+            [xMake| topLevel.declaration.find.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
                   | topLevel.declaration.find.domain         := [newDom]
                   |]
         mkWithNewDom (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
-            [xMake| topLevel.declaration.given.name.reference := [Prim (S $ origName ++ "_" ++ reprName)]
+            [xMake| topLevel.declaration.given.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
                   | topLevel.declaration.given.domain         := [newDom]
                   |]
         mkWithNewDom _ = error "Impossible: addChannellingFromLog.mkWithNewDom"

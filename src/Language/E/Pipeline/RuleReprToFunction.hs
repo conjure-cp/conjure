@@ -14,8 +14,8 @@ ruleReprToFunction
     :: MonadConjure m
     => [RuleRepr]
     -> Either
-        [ConjureError]                   -- static errors
-        ( ( String                    -- input: name of the variable
+        [ConjureError]                -- static errors
+        ( ( Text                      -- input: name of the variable
           , E                         -- input: domain
           , E                         -- input: declaration
           )
@@ -35,7 +35,7 @@ one :: MonadConjure m
     => RuleRepr
     -> Either
         [ConjureError]
-        ( (String, E, E)
+        ( (Text, E, E)
           -> m [RuleReprResult]
         )
 one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
@@ -54,7 +54,7 @@ oneCase
     -> RuleReprCase
     -> Either
         [ConjureError]
-        ( (String, E, E)
+        ( (Text, E, E)
           -> m [RuleReprResult]
         )
 oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
@@ -94,10 +94,10 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                         -- con' is the constraint, but all "refn"s replaced
                                         con' <- case is of
                                             [] -> do
-                                                let renameTo = [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
+                                                let renameTo = [xMake| reference := [Prim $ S $ mconcat [origName, "_", reprName]] |]
                                                 return $ renRefn renameTo con
                                             _  -> do
-                                                let renameTo = [xMake| reference := [Prim $ S $ origName ++ "_" ++ reprName] |]
+                                                let renameTo = [xMake| reference := [Prim $ S $ mconcat [origName, "_", reprName]] |]
                                                 (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
                                                 let renameToIndexed = mkIndexedExpr loopVars renameTo
                                                 return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con

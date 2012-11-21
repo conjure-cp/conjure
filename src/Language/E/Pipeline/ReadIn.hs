@@ -24,7 +24,7 @@ readRuleRefn :: MonadConjure m
     => (FilePath, Text)
     -> m [RuleRefn]
 readRuleRefn (fp,con) =
-    case runLexerAndParser (parseRuleRefn $ fixRulename fp) fp con of
+    case runLexerAndParser (parseRuleRefn $ stringToText $ fixRulename fp) fp con of
         Left  e -> err ErrFatal e
         Right x -> return x
 
@@ -33,7 +33,7 @@ readRuleRepr :: MonadConjure m
     => (FilePath, Text)
     -> m RuleRepr
 readRuleRepr (fp,con) =
-    case runLexerAndParser (parseRuleRepr $ fixRulename fp) fp con of
+    case runLexerAndParser (parseRuleRepr $ stringToText $ fixRulename fp) fp con of
         Left  e -> err ErrFatal e
         Right x -> return x
 

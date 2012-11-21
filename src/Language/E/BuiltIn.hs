@@ -7,8 +7,11 @@ module Language.E.BuiltIn
 
 import Language.E
 
+import qualified Data.Text as T
+
+
 type ReprFunc m =
-    ( String                                -- input: name of the variable
+    ( Text                                  -- input: name of the variable
     , E                                     -- input: domain
     , E                                     -- input: decl
     )
@@ -47,11 +50,11 @@ relationRepr ( _name, _dom, _ ) = do
 
 type RefnFunc m =
     E                                   -- the expression
-    -> m (Maybe [(String, E)])    -- Nothing if rule doesn't apply
+    -> m (Maybe [(Text, E)])            -- Nothing if rule doesn't apply
                                         -- returns a list of rewrites, fst being rulename
                                         --                           , snd being E
 
-ret :: Monad m => String -> E -> m (Maybe [(String, E)])
+ret :: Monad m => Text -> E -> m (Maybe [(Text, E)])
 ret name result = return $ Just [(name, result)]
 
 builtInRefn :: MonadConjure m => [RefnFunc m]
@@ -62,14 +65,14 @@ relationApply [xMatch| [actual]             := functionApply.actual
                      | [Prim (S actualRef)] := functionApply.actual.reference
                      |  args                := functionApply.args
                      |] =
-    case splitOn "#" actualRef of
+    case T.splitOn "#" actualRef of
         [actualName, "RelationAsSet"] -> do
             actualTy <- typeOf actual
             argsTy   <- mapM typeOf args
             case actualTy of
                 [xMatch| actualInners := type.relation.inners |] | actualInners == argsTy -> do
                     let theTuple = [xMake| value.tuple.values := args |]
-                    let theSet   = [xMake| reference := [Prim $ S $ actualName ++ "_RelationAsSet" ] |]
+                    let theSet   = [xMake| reference := [Prim $ S $ actualName `mappend` "_RelationAsSet" ] |]
                     ret "builtIn.relationApply" [eMake| &theTuple in &theSet |]
                 _ -> return Nothing
         _ -> return Nothing

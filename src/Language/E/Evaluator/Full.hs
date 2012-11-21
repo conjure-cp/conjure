@@ -14,6 +14,8 @@ import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import                Language.E.Evaluator.DataAboutQuantifiers
 
+import qualified Data.Text as T
+
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
@@ -138,13 +140,13 @@ evalHasRepr [eMatch| &x hasRepr &y |] =
         [eMatch| &m[&_] |] ->
             evalHasRepr [eMake| &m hasRepr &y |]
         [xMatch| [Prim (S iden')] := metavar   |] -> do
-            let iden = '&' : iden'
+            let iden = "&" `mappend` iden'
             bs <- gets binders
             case [ a | Binder nm a <- bs, nm == iden ] of
                 [a] -> evalHasRepr [eMake| &a hasRepr &y |]
                 _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
         [xMatch| [Prim (S iden )] := reference |] ->
-            case splitOn "#" iden of
+            case T.splitOn "#" iden of
                 [_,idenReprName] ->
                     case y of
                         [xMatch| [Prim (S reprName)] := reference |] ->

@@ -33,7 +33,7 @@ noTuplesSpec specIn@(Spec v statementsOrig) = do
                             -- returning newDecls:
                             forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
                                 tell ([n],[])
-                                let n' = n ++ "_tuple" ++ show i
+                                let n' = mconcat [ n, "_tuple", stringToText (show i) ]
                                 return $ f n' t
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
@@ -42,7 +42,7 @@ noTuplesSpec specIn@(Spec v statementsOrig) = do
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
                                     forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
-                                        let n' = n ++ "_tuple" ++ show i
+                                        let n' = mconcat [ n, "_tuple", stringToText (show i) ]
                                         let t' = constructMatrixDomain indices t
                                         return $ f n' t'
                                 Nothing -> return [statement]
@@ -55,7 +55,7 @@ noTuplesSpec specIn@(Spec v statementsOrig) = do
                   (Spec v $ listAsStatement statementsOut)
             return (s', True)
 
-checkTopLevel :: E -> Maybe (String -> E -> E, String, E)
+checkTopLevel :: E -> Maybe (Text -> E -> E, Text, E)
 checkTopLevel [xMatch| [Prim (S n)] := topLevel.declaration.find.name.reference
                      | [d]          := topLevel.declaration.find.domain |] =
     let
@@ -78,12 +78,16 @@ checkTupleDomain :: E -> Maybe [E]
 checkTupleDomain [xMatch| is := domain.tuple.inners |] = Just is
 checkTupleDomain _ = Nothing
 
-renameTupleIndexes :: MonadConjure m => S.Set String -> Spec -> m Spec
+renameTupleIndexes :: MonadConjure m => S.Set Text -> Spec -> m Spec
 renameTupleIndexes identifiers = bottomUpSpec' f
     where
         f [xMatch| [Prim (S i)] := operator.index.left.reference
                  | [Prim (I j)] := operator.index.right.value.literal
-                 |] | i `S.member` identifiers = return [xMake| reference := [Prim $ S $ i ++ "_tuple" ++ show j ] |]
+                 |] | i `S.member` identifiers = return [xMake| reference := [ Prim $ S $ mconcat [ i
+                                                                                                  , "_tuple"
+                                                                                                  , stringToText (show j)
+                                                                                                  ]
+                                                                             ] |]
         f p = return p
 
 
@@ -109,20 +113,24 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
                                            | domain.matrix.inner := [y]
                                            |]
 
-renameMatrixOfTupleIndexes :: MonadConjure m => M.Map String Int -> Spec -> m Spec
+renameMatrixOfTupleIndexes :: MonadConjure m => M.Map Text Int -> Spec -> m Spec
 renameMatrixOfTupleIndexes identifiers = bottomUpSpec' f
     where
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
-                          , js
-                          )
+                            , js
+                            )
             ) = case i `M.lookup` identifiers of
                     Just num | length js > num -> do
                         let indicesBefore = take num js
                         (tupleIndex, indicesAfter) <- case drop num js of
                                                         ([xMatch| [Prim (I a)] := value.literal |]:as) -> return (a,as)
                                                         _ -> err ErrFatal $ "in renameMatrixOfTupleIndexes at:" <+> pretty p
-                        return $ mkIndexed [xMake| reference := [Prim $ S $ i ++ "_tuple" ++ show tupleIndex] |]
-                                           (indicesBefore ++ indicesAfter)
+                        return $ mkIndexed [xMake| reference := [ Prim $ S $ mconcat [ i
+                                                                                     , "_tuple"
+                                                                                     , stringToText (show tupleIndex)
+                                                                                     ]
+                                                                ] |]
+                                           (indicesBefore `mappend` indicesAfter)
                     _ -> return p
         f p = return p
 
@@ -130,7 +138,7 @@ viewIndexed :: E -> (E,[E])
 viewIndexed [xMatch| [i] := operator.index.left
                    | [j] := operator.index.right
                    |] = let (i',js) = viewIndexed i
-                        in  (i',js ++ [j])
+                        in  (i',js `mappend` [j])
 viewIndexed p = (p,[])
 
 -- given an expression and a list of indexers, producers an indexed expression.

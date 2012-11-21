@@ -129,19 +129,19 @@ recordSpec sp = do
 data ConjureState = ConjureState
         { binders       :: [Binder]
         , uniqueNameInt :: Integer
-        , representationConfig :: M.Map String [RuleReprResult]
-        , representationLog :: [ ( String   -- original name
-                                 , String   -- representation name
+        , representationConfig :: M.Map Text [RuleReprResult]
+        , representationLog :: [ ( Text     -- original name
+                                 , Text     -- representation name
                                  , E        -- original full declaration
                                  , E        -- new domain
                                  ) ]
         , structuralConsLog :: [E]
         , lastSpec :: Maybe Spec  -- record the spec after changes, to report in case of an error.
         , localLogs :: LogTree
-        , allNamesPreConjure :: S.Set String  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
+        , allNamesPreConjure :: S.Set Text  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
-data Binder = Binder String E
+data Binder = Binder Text E
     deriving (Show)
 
 instance Default ConjureState where
@@ -155,21 +155,21 @@ mkLog nm doc = case buildLog nm doc of
         localLogs = LTMultiple (localLogs st) (LTSingle l)
         }
 
-addBinder :: MonadConjure m => String -> E -> m ()
+addBinder :: MonadConjure m => Text -> E -> m ()
 addBinder nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
 
-lookupBinder :: MonadConjure m => String -> MaybeT m E
+lookupBinder :: MonadConjure m => Text -> MaybeT m E
 lookupBinder nm = do
     bs <- lift $ gets binders
     case listToMaybe [ x | Binder nm' x <- bs, nm == nm' ] of
         Nothing -> mzero
         Just x  -> return x
 
-nextUniqueName :: MonadConjure m => m String
+nextUniqueName :: MonadConjure m => m Text
 nextUniqueName = do
     i <- gets uniqueNameInt
     modify $ \ st -> st { uniqueNameInt = i + 1 }
-    let nm = "v__" ++ show i
+    let nm = stringToText ("v__" ++ show i)
     nms <- gets allNamesPreConjure
     if nm `S.member` nms
         then nextUniqueName

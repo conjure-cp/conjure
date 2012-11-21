@@ -4,6 +4,8 @@ module Language.E.Pipeline.RemoveUnused where
 
 import Language.E
 
+import qualified Data.Text as T
+
 
 -- TODO: do this better with the new single statement setting!
 
@@ -30,8 +32,8 @@ removeUnused (Spec v statements) = do
                         return Nothing
     return (Spec v $ listAsStatement $ catMaybes statements')
 
-identifiersIn :: E -> [String]
-identifiersIn e = [ head (splitOn "#" s)
+identifiersIn :: E -> [Text]
+identifiersIn e = [ head (T.splitOn "#" s)
                   | [xMatch| [Prim (S s)] := reference |] <- universe e
                   ]
 

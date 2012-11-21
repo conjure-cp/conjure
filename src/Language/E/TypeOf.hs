@@ -13,7 +13,7 @@ import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import Language.E.Pretty
 import Language.E.Parser
 
-import Data.Text as T ( Text )
+import qualified Data.Text as T
 
 
 typeUnify :: MonadConjure m => E -> E -> m Bool
@@ -85,7 +85,7 @@ typeOf p@[xMatch| _ := type |] = return p
 
 typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
 typeOf [xMatch| [Prim (S i' )] := reference |] = do
-    let i = head $ splitOn "#" i'
+    let i = head $ T.splitOn "#" i'
     bs <- gets binders
     case [ x | Binder nm x <- bs, nm == i ] of
         (x:_) -> typeOf x
@@ -95,7 +95,7 @@ typeOf [xMatch| [Prim (S i' )] := reference |] = do
                          $$ nest 4 ("Current bindings:" <+> bsText)
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
-    let j = '&' : i
+    let j = "&" `mappend` i
     bs <- gets binders
     case [ x | Binder nm x <- bs, nm == j ] of
         [x] -> typeOf x
@@ -349,7 +349,7 @@ typeOf p@[eMatch| &a - &b |] = do
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
-                |] | operator `elem` words "+ - * / %" = do
+                |] | operator `elem` T.words "+ - * / %" = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
@@ -359,7 +359,7 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
-                |] | operator `elem` words "/\\ \\/ => <=>" = do
+                |] | operator `elem` T.words "/\\ \\/ => <=>" = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of

@@ -10,7 +10,7 @@ import Language.E.Parser
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 
-import qualified Data.Text as T
+import Data.Text as T
 
 
 -- match by parsing an expression
@@ -39,7 +39,7 @@ mkMatchLike parser = qq {
                     [ LitP (IntegerL i) ]
             buildP' (S s)
                 = ConP (mkName "S")
-                    [ LitP (StringL s) ]
+                    [ LitP (StringL $ T.unpack s) ]
 
             buildP :: E -> Q Pat
             buildP (Prim p) =
@@ -47,7 +47,7 @@ mkMatchLike parser = qq {
             buildP (Tagged "metavar" [Prim (S s)]) = return $
                 if s == "_"
                     then WildP
-                    else VarP (mkName s)
+                    else VarP (mkName $ T.unpack s)
             buildP (Tagged t xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
@@ -81,13 +81,16 @@ eMake = qq {
             build' (S s)
                 = ConE (mkName "S")
                     `AppE`
-                  LitE (StringL s)
+                  ( VarE (mkName "stringToText")
+                    `AppE`
+                    LitE (StringL $ T.unpack s)
+                  )
 
             build :: E -> Q Exp
             build (Prim p) =
                 return $ ConE (mkName "Prim") `AppE` build' p
             build (Tagged "metavar" [Prim (S s)]) =
-                return $ VarE (mkName s)
+                return $ VarE (mkName $ T.unpack s)
             build (Tagged t xs) = do
                 ys <- mapM build xs
                 return $ (ConE $ mkName "Tagged")

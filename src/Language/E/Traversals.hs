@@ -9,6 +9,7 @@ import Language.E.CompE
 import Language.E.Pretty
 
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 
 
@@ -181,7 +182,7 @@ initialiseSpecState :: MonadConjure m => Spec -> m ()
 initialiseSpecState (Spec _ statements) = do
     let names = [ nm
                 | [xMatch| [Prim (S nm)] := reference |] <- universe statements
-                , "v__" `isPrefixOf` nm
+                , "v__" `T.isPrefixOf` nm
                 ]
     modify $ \ st -> st { allNamesPreConjure = S.fromList names }
 
@@ -196,15 +197,15 @@ introduceStuff = helper
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.expr           |] = addBinder name x
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
-                        | [ x ]           := topLevel.letting.expr           |] = addBinder ('&':name) x
+                        | [ x ]           := topLevel.letting.expr           |] = addBinder ("&" `mappend` name) x
 
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.domain         |] = addBinder name x
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                        | [ x ]           := topLevel.letting.domain         |] = addBinder ('&':name) x
+                        | [ x ]           := topLevel.letting.domain         |] = addBinder ("&" `mappend` name) x
 
         helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.reference |] = addBinder name x
-        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addBinder ('&':name) x
+        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addBinder ("&" `mappend` name) x
 
         helper   [xMatch| _ := topLevel.suchThat  |] = return ()
         helper   [xMatch| _ := topLevel.objective |] = return ()
