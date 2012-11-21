@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.Pipeline.NoTuples where
+module Language.E.Pipeline.NoTuples ( conjureNoTuples ) where
 
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
