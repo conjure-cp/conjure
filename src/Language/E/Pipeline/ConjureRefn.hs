@@ -28,7 +28,8 @@ conjureRefn isFinal spec rules = {-# SCC "conjureRefn" #-} withBindingScope' $
                                               [E -> m (Maybe [(Text, E)])]
          ) of
         Left  es -> err ErrFatal $ vcat $ map (prettyError "refn") es
-        Right fs ->
+        Right fs -> do
+            initialiseSpecState spec
             let pipeline =  recordSpec >=> applyRefn fs
                         >=> recordSpec >=> makeIdempotent noTuplesSpec
                         >=> recordSpec >=> removeUnused
@@ -36,5 +37,5 @@ conjureRefn isFinal spec rules = {-# SCC "conjureRefn" #-} withBindingScope' $
                         >=> recordSpec >=> (if isFinal then groomSpec else return)
                         >=> recordSpec >=> bubbleUpSpec
                         >=> recordSpec
-            in  pipeline spec
+            pipeline spec
 

@@ -16,6 +16,7 @@ conjureRepr
     -> [RuleRepr]
     -> m Spec
 conjureRepr isFinal spec rules = {-# SCC "conjureRepr" #-} withBindingScope' $ do
+    initialiseSpecState spec
     let pipeline =  recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
 --                >=> recordSpec >=> removeUnused         -- and remove the declarations from the model too
                 >=> recordSpec >=> applyRepr rules
