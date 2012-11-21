@@ -7,7 +7,6 @@ import Language.E
 import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
-import Language.E.Pipeline.InlineLettings
 
 
 data Phase = Repr | Refn | Groom
@@ -27,7 +26,7 @@ conjureAllPure reprs refns = {-# SCC "conjureAllPure" #-} onlyOneError . go Repr
         go Repr s = {-# SCC "gRepr" #-} trace "Repr" $
             let
                 mouts :: [(Either Doc Spec, LogTree)]
-                mouts = runCompE "Repr" $ inlineLettings s >>= \ s' -> conjureRepr False s' reprs
+                mouts = runCompE "Repr" $ conjureRepr False s reprs
 
                 f :: (Either Doc Spec, LogTree) -> [(Either Doc Spec, LogTree)]
                 f (Left  x, logs) = [(Left x, logs)]
@@ -35,7 +34,7 @@ conjureAllPure reprs refns = {-# SCC "conjureAllPure" #-} onlyOneError . go Repr
             in
                 if null mouts
                     then do
-                        let mouts2 = trace "Refn2" $ runCompE "Refn2" $ inlineLettings s >>= \ s' -> conjureRefn False s' refns
+                        let mouts2 = trace "Refn2" $ runCompE "Refn2" $ conjureRefn False s refns
                         let f2 (Left  x, logs) = [(Left x, logs)]
                             f2 (Right x, logs) = map (second (logTreeAppend logs)) (go Groom x)
                         concatMap f2 mouts2

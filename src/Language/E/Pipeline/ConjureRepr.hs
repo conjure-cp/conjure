@@ -2,9 +2,9 @@ module Language.E.Pipeline.ConjureRepr where
 
 import Language.E
 import Language.E.Pipeline.ApplyRepr ( applyRepr )
-import Language.E.Pipeline.InlineLettings
--- import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.Groom ( groomSpec )
+import Language.E.Pipeline.InlineLettings
+import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 
 
 conjureRepr
@@ -17,8 +17,9 @@ conjureRepr
     -> m Spec
 conjureRepr isFinal spec rules = {-# SCC "conjureRepr" #-} withBindingScope' $ do
     initialiseSpecState spec
-    let pipeline =  recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
---                >=> recordSpec >=> removeUnused         -- and remove the declarations from the model too
+    let pipeline =  recordSpec >=> inlineLettings
+                >=> recordSpec >=> conjureNoTuples
+                >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
                 >=> recordSpec >=> applyRepr rules
                 >=> recordSpec >=> (if isFinal then groomSpec else return)
                 >=> recordSpec

@@ -8,7 +8,8 @@ import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
 import Language.E.Pipeline.Groom ( groomSpec )
-import Language.E.Pipeline.NoTuples ( noTuplesSpec )
+import Language.E.Pipeline.InlineLettings ( inlineLettings )
+import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 
@@ -30,8 +31,9 @@ conjureRefn isFinal spec rules = {-# SCC "conjureRefn" #-} withBindingScope' $
         Left  es -> err ErrFatal $ vcat $ map (prettyError "refn") es
         Right fs -> do
             initialiseSpecState spec
-            let pipeline =  recordSpec >=> applyRefn fs
-                        >=> recordSpec >=> makeIdempotent noTuplesSpec
+            let pipeline =  recordSpec >=> inlineLettings
+                        >=> recordSpec >=> applyRefn fs
+                        >=> recordSpec >=> conjureNoTuples
                         >=> recordSpec >=> removeUnused
                         >=> recordSpec >=> checkIfAllRefined
                         >=> recordSpec >=> (if isFinal then groomSpec else return)
