@@ -28,15 +28,17 @@ conjureAllPure reprs refns = {-# SCC "conjureAllPure" #-} onlyOneError . go Repr
             let
                 mouts :: [(Either Doc Spec, LogTree)]
                 mouts = runCompE "Repr" $ inlineLettings s >>= \ s' -> conjureRepr False s' reprs
-                -- mouts = runCompE "Repr" $ inlineLettings s
 
                 f :: (Either Doc Spec, LogTree) -> [(Either Doc Spec, LogTree)]
                 f (Left  x, logs) = [(Left x, logs)]
                 f (Right x, logs) = map (second (logTreeAppend logs)) (go Refn x)
-                -- f (Right x, logs) = map (second (logTreeAppend logs)) (go Groom x)
             in
                 if null mouts
-                    then go Groom s
+                    then do
+                        let mouts2 = runCompE "Refn2" $ inlineLettings s >>= \ s' -> conjureRefn False s' refns
+                        let f2 (Left  x, logs) = [(Left x, logs)]
+                            f2 (Right x, logs) = map (second (logTreeAppend logs)) (go Groom x)
+                        concatMap f2 mouts2
                     else concatMap f mouts
         go Refn s = {-# SCC "gRefn" #-} trace "Refn" $
             let
@@ -46,7 +48,6 @@ conjureAllPure reprs refns = {-# SCC "conjureAllPure" #-} onlyOneError . go Repr
                 f :: (Either Doc Spec, LogTree) -> [(Either Doc Spec, LogTree)]
                 f (Left  x, logs) = [(Left x, logs)]
                 f (Right x, logs) = map (second (logTreeAppend logs)) (go Repr x)
-                -- f (Right x, logs) = map (second (logTreeAppend logs)) (go Groom x)
             in
                 if null mouts
                     then go Groom s
