@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- mostly for library dependencies.
@@ -19,6 +20,7 @@ module Language.E.Imports
     , allFiles, allFilesWithSuffix
     , timedIO
     , isLeft, isRight
+    , trace
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -51,8 +53,6 @@ import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$
 
 import System.Random as X ( StdGen, getStdGen )
 
-import Debug.Trace as X ( trace )
-
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
@@ -64,6 +64,15 @@ import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
 import System.CPUTime ( getCPUTime )
 
+
+#ifdef TRACELOGS
+import qualified Debug.Trace ( trace )
+trace :: String -> a -> a
+trace = Debug.Trace.trace
+#else
+trace :: String -> a -> a
+trace = const id
+#endif
 
 stringToText :: String -> T.Text
 stringToText = T.pack

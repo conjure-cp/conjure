@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Stuff.NamedLog
     ( LogTree(..), logTreeAppend
     , NamedLog, buildLog
@@ -6,12 +8,15 @@ module Stuff.NamedLog
 
 import Data.Default
 import Data.Hashable
-import Text.PrettyPrint ( Doc, (<+>), vcat, brackets, text )
+import Text.PrettyPrint
 import qualified Data.Set as S
 import qualified Data.DList as DList
 
-import Stuff.Pretty ( renderPretty )
+import Stuff.Pretty
 
+#ifdef TRACELOGS
+import Debug.Trace ( trace ) 
+#endif
 
 
 data LogTree = LTEmpty | LTSingle NamedLog | LTMultiple LogTree LogTree
@@ -66,7 +71,11 @@ suppress = S.fromList
 
 buildLog :: String -> Doc -> Maybe NamedLog
 buildLog nm _ | nm `S.member` suppress = Nothing
+#ifdef TRACELOGS
+buildLog nm doc = trace (show $ pretty nm <+> doc) $ Just (NamedLog nm doc)
+#else
 buildLog nm doc = Just (NamedLog nm doc)
+#endif
 
 prettyLog :: NamedLog -> Doc
 prettyLog (NamedLog nm doc) = brackets (text nm) <+> doc

@@ -38,6 +38,10 @@ OptionParser.new do |opts|
         options.llvm = v
     end
 
+    opts.on("--[no-]trace-logs", "If enabled, logs are printed to stderr as they are cretaed. They will also be in the log file.") do |v|
+        options.traceLogs = v
+    end
+
 end.parse!
 
 paramsBuild = []
@@ -71,6 +75,10 @@ end
 
 if options.llvm
     paramsBuild << '--ghc-options="-fllvm"'
+end
+
+if options.traceLogs
+    paramsBuild << '--ghc-options="-DTRACELOGS"'
 end
 
 system(*paramsBuild)
