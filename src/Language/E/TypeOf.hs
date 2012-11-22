@@ -90,8 +90,8 @@ typeOf [xMatch| [Prim (S i' )] := reference |] = do
     case [ x | Binder nm x <- bs, nm == i ] of
         (x:_) -> typeOf x
         _   -> do
-            let bsText = prettyList id "," [ nm | Binder nm _ <- bs ]
-            err ErrFatal $ "(typeOf) Undefined reference:" <+> pretty i
+            let bsText = prettyList id "," $ nub [ nm | Binder nm _ <- bs ]
+            err ErrFatal $ "Undefined reference:" <+> pretty i
                          $$ nest 4 ("Current bindings:" <+> bsText)
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
