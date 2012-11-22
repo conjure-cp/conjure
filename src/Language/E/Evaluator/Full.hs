@@ -245,6 +245,7 @@ evalReplace
 evalReplace _ = return Nothing
 
 tupleEq :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+-- tupleEq x | trace (show $ "tupleEq:" <+> pretty x) False = undefined
 tupleEq [eMatch| &a = &b |] = do
     ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
     case ta of

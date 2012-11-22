@@ -109,6 +109,7 @@ tryApply
     => RulesDB m
     -> E
     -> m ([E], Bool)
+-- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do
 tryApply db x = do
     (x' , b1) <- simply x
     (x'', b2) <- go db x'
@@ -141,7 +142,6 @@ tryApply db x = do
                                  | (n,y) <- ys'
                                  ]
                     mkLog "applied" msg
-                    -- trace (show $ "applied:" <+> msg) $ return (map snd ys', True)
                     return (map snd ys', True)
 
 

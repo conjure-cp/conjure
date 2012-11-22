@@ -39,6 +39,7 @@ simplify =  bottomUpE (mkIdempotent allCombinedDoFirst)
 
 
 allCombined :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+-- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
 allCombined i =
     firstJustOr i
         $ map ($ i) [ logged "Evaluator"           fullEvaluator
@@ -55,6 +56,7 @@ allCombined i =
 
 -- these transformations should be applied first. others might depend on them.
 allCombinedDoFirst :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+-- allCombinedDoFirst i = trace (show $ "allCombinedDoFirst:" <+> pretty i)
 allCombinedDoFirst i =
     firstJustOr i
         $ map ($ i) [ logged "Evaluator"           fullEvaluator
@@ -89,6 +91,7 @@ logged
     -> (E -> m (Maybe (E,[Binder])))
     -> E
     -> WriterT (Any, [Binder]) m (Maybe E)
+-- logged str act inp = trace (show $ pretty str <+> pretty inp) $ do
 logged str act inp = do
     moutp <- lift $ act inp
     case moutp of
