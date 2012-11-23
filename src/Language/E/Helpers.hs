@@ -29,6 +29,16 @@ bindersDoc = do
     return $ prettyList id "," $ nub [ nm | Binder nm _ <- bs ]
 
 
+domainNeedsRepresentation :: E -> Bool
+domainNeedsRepresentation [xMatch|  _  := domain.set          |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.mset         |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.function     |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.relation     |] = True
+domainNeedsRepresentation [xMatch|  _  := domain.partition    |] = True
+domainNeedsRepresentation [xMatch| [i] := domain.matrix.inner |] = domainNeedsRepresentation i
+domainNeedsRepresentation _ = False
+
+
 freshQuanVar :: MonadConjure m => m (Text, E)
 freshQuanVar = do
     quanVarStr <- nextUniqueName

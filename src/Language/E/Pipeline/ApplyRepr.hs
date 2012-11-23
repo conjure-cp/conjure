@@ -81,18 +81,6 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
                 , cnt > 0
                 ]
 
-            lookupTablesDoc = vcat $ flip map lookupTables $ \ t ->
-                vcat $ "--------" : [ pretty (k1,k2) <+> ":" <+> pretty vs
-                | ((k1,k2),v) <- M.toList t
-                , let vs = (\ (_,_,w,_,_) -> w) v
-                ]
-
-        -- trace (show lookupTablesDoc) $ return spec
-        -- trace ("huh " ++ show (length (show lookupTables))) $ err ErrFatal "boo"
-        -- return spec
-
-        -- trace (show allRegioned) $ trace ("huh " ++ show (length (show allRegioned))) $ return spec
-
         table <- returns lookupTables
         if M.null table
             then returns []
@@ -203,16 +191,6 @@ addChannellingFromLog (Spec v xs) = do
     mapM_ (mkLog "addedDecl" . pretty) newDecls'
 
     return $ Spec v $ listAsStatement $ insertBeforeSuchThat newDecls' (statementAsList xs) ++ newCons'
-
-
-domainNeedsRepresentation :: E -> Bool
-domainNeedsRepresentation [xMatch|  _  := domain.set          |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.mset         |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.function     |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.relation     |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.partition    |] = True
-domainNeedsRepresentation [xMatch| [i] := domain.matrix.inner |] = domainNeedsRepresentation i
-domainNeedsRepresentation _ = False
 
 
 allPairs :: [a] -> [(a,a)]
