@@ -143,8 +143,10 @@ renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
                  | [Prim (S i'    )] := functionApply.args.reference
                  |] =
     case identifierSplit i' of
-        (i,_,Just j) -> return [xMake| reference := [Prim (S $ mconcat [i, "_", j])] |]
-        _            -> err ErrFatal $ "{renRefn} Problem here:" <+> pretty p
+        (i,mregion,Just j) ->
+            let name = identifierConstruct (mconcat [i,"_",j]) mregion Nothing
+            in  return [xMake| reference := [Prim (S name)] |]
+        _ -> err ErrFatal $ "{renRefn} Problem here:" <+> pretty p
 renRefn [eMatch| refn(&m[&j]) |] = do
     n <- renRefn [eMake| refn(&m) |]
     return [eMake| &n[&j] |]

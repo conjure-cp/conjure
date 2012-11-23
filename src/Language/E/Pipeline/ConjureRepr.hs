@@ -3,7 +3,8 @@ module Language.E.Pipeline.ConjureRepr where
 import Language.E
 import Language.E.Pipeline.ApplyRepr ( applyRepr )
 import Language.E.Pipeline.Groom ( groomSpec )
-import Language.E.Pipeline.InlineLettings
+import Language.E.Pipeline.InlineLettings ( inlineLettings )
+import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 
 
@@ -17,7 +18,9 @@ conjureRepr
     -> m Spec
 conjureRepr isFinal spec rules = {-# SCC "conjureRepr" #-} withBindingScope' $ do
     initialiseSpecState spec
-    let pipeline =  recordSpec >=> inlineLettings
+    let pipeline =  return
+                >=> recordSpec >=> inlineLettings
+                >=> recordSpec >=> introduceRegions
                 >=> recordSpec >=> conjureNoTuples
                 >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
                 >=> recordSpec >=> applyRepr rules

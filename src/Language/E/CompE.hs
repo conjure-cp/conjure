@@ -14,7 +14,6 @@ import Language.E.Definition
 import Language.E.Pretty
 
 import qualified Data.Set as S
-import qualified Data.Map as M
 
 
 class ( Functor m
@@ -129,7 +128,6 @@ recordSpec sp = do
 data ConjureState = ConjureState
         { binders       :: [Binder]
         , uniqueNameInt :: Integer
-        , representationConfig :: M.Map Text [RuleReprResult]
         , representationLog :: [ ( Text     -- original name
                                  , Text     -- representation name
                                  , E        -- original full declaration
@@ -145,7 +143,7 @@ data Binder = Binder Text E
     deriving (Show)
 
 instance Default ConjureState where
-    def = ConjureState def 1 def def def def def def
+    def = ConjureState def 1 def def def def def
 
 
 mkLog :: MonadConjure m => String -> Doc -> m ()
@@ -160,8 +158,9 @@ addBinder nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
 
 lookupBinder :: MonadConjure m => Text -> MaybeT m E
 lookupBinder nm = do
+    let (base,_,_) = identifierSplit nm
     bs <- lift $ gets binders
-    case listToMaybe [ x | Binder nm' x <- bs, nm == nm' ] of
+    case listToMaybe [ x | Binder nm' x <- bs, base == nm' ] of
         Nothing -> mzero
         Just x  -> return x
 

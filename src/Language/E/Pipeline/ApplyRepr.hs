@@ -9,6 +9,7 @@ import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
 import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 
 applyRepr
@@ -28,8 +29,8 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
 
         let topLevels'
                 =  [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
-                                       | [d]          := topLevel.declaration.find .domain
-                                       |] <- statementAsList statements ]
+                                        | [d]          := topLevel.declaration.find .domain
+                                        |] <- statementAsList statements ]
                 ++ [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
                                         | [d]          := topLevel.declaration.given.domain
                                         |] <- statementAsList statements ]
@@ -50,33 +51,55 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
                     return (n,ys)
 
         let
-            nbOccurrence :: Text -> Int
-            nbOccurrence nm = length [ ()
-                                     | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
-                                     , nm == nm'
-                                     ]
+            allRegioned :: [(Text,Text)]
+            allRegioned =
+                let
+                    findsandgivens = S.fromList $ map fst candidates
+                in
+                    nub [ (base, reg)
+                        | [xMatch| [Prim (S nm)] := reference |] <- universeSpecNoFindGiven spec
+                        , (base, Just reg, _) <- [identifierSplit nm]
+                        , base `S.member` findsandgivens
+                        ]
 
-            foo :: [(a,[b])] -> [[(a,b)]]
-            foo [] = [[]]
-            foo ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] |  ws <- foo qs ]
+            nbOccurrence :: (Text, Text) -> Int
+            nbOccurrence (base,reg) =
+                let n = length [ ()
+                               | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
+                               , (base', Just reg', _) <- [identifierSplit nm']
+                               , base == base'
+                               , reg  == reg'
+                               ]
+                in  trace (show $ pretty base <+> pretty reg <+> pretty n) n
 
-            lookupTables :: [ M.Map Text [RuleReprResult] ]
-            lookupTables = map M.fromList $ foo
-                [ (nm, allCombs)
-                | (nm, results) <- candidates
-                , let cnt = nbOccurrence nm
+            lookupTables :: [ M.Map (Text,Text) RuleReprResult ]
+            lookupTables = map M.fromList $ allCombinations
+                [ ((nm,region), results)
+                | (nm, region) <- allRegioned
+                , let Just results = lookup nm candidates
+                , let cnt = nbOccurrence (nm, region)
                 , cnt > 0
-                , let allCombs = replicateM cnt results
                 ]
+
+            lookupTablesDoc = vcat $ flip map lookupTables $ \ t ->
+                vcat $ "--------" : [ pretty (k1,k2) <+> ":" <+> pretty vs
+                | ((k1,k2),v) <- M.toList t
+                , let vs = (\ (_,_,w,_,_) -> w) v
+                ]
+
+        -- trace (show lookupTablesDoc) $ return spec
+        -- trace ("huh " ++ show (length (show lookupTables))) $ err ErrFatal "boo"
+        -- return spec
+
+        -- trace (show allRegioned) $ trace ("huh " ++ show (length (show allRegioned))) $ return spec
 
         table <- returns lookupTables
         if M.null table
             then returns []
             else do
-                let configStr = hsep $ concat [ map (\ i -> pretty nm <> "#" <> i ) nms
-                                              | (nm, rs) <- M.toList table
-                                              , let nms = map (\ (_,_,i,_,_) -> pretty i ) rs
-                                              ]
+                let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just rName))
+                                     | ((nm, region), (_,_,rName,_,_)) <- M.toList table
+                                     ]
                 mkLog "configuration" configStr
                 catchError
                     (applyCongfigToSpec spec table)
@@ -91,9 +114,9 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
 applyCongfigToSpec
     :: MonadConjure m
     => Spec
-    -> M.Map Text [RuleReprResult]
+    -> M.Map (Text,Text) RuleReprResult
     -> m Spec
-applyCongfigToSpec spec initConfig = withBindingScope' $ do
+applyCongfigToSpec spec config = withBindingScope' $ do
     void $ recordSpec spec
     initialiseSpecState spec
     let
@@ -101,22 +124,21 @@ applyCongfigToSpec spec initConfig = withBindingScope' $ do
         isFindOrGiven [xMatch| _ := topLevel.declaration.given |] = True
         isFindOrGiven _ = False
 
-        f p@[xMatch| [Prim (S nm)] := reference |] = do
-            config <- gets representationConfig
-            case M.lookup nm config of
-                Nothing -> return p
-                Just [] -> err ErrFatal "applyCongfigToSpec.f -- empty list"
-                Just ((origDecl, _ruleName, reprName, newDom, cons):rest) -> do
-                    modify $ \ st -> st { representationLog = (nm, reprName, origDecl, newDom)
-                                                            : representationLog st
-                                        , structuralConsLog = cons ++ structuralConsLog st
-                                        , representationConfig = M.insert nm rest config
-                                        }
-                    return [xMake| reference := [Prim (S $ mconcat [nm, "#", reprName])] |]
+        f p@[xMatch| [Prim (S nm)] := reference |] =
+            case identifierSplit nm of
+                (base, Just region, Nothing) ->
+                    case M.lookup (base,region) config of
+                        Nothing -> return p
+                        Just (origDecl, _ruleName, reprName, newDom, cons) -> do
+                            modify $ \ st -> st { representationLog = (base, reprName, origDecl, newDom)
+                                                                    : representationLog st
+                                                , structuralConsLog = cons ++ structuralConsLog st
+                                                }
+                            let nm' = identifierConstruct base (Just region) (Just reprName)
+                            return [xMake| reference := [Prim (S nm')] |]
+                _ -> return p
         f p = return p
-    modify $ \ st -> st { representationConfig = initConfig }
     spec' <- bottomUpSpecExcept' isFindOrGiven f spec
-    modify $ \ st -> st { representationConfig = def }
     let pipeline = addChannellingFromLog >=>
                    addStructuralFromLog
     pipeline spec'
