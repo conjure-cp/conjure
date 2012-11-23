@@ -85,23 +85,21 @@ typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 typeOf p@[xMatch| _ := type |] = return p
 
 typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
-typeOf [xMatch| [Prim (S i' )] := reference |] = do
-    let (i,_,_) = identifierSplit i'
-    bs <- gets binders
-    case [ x | Binder nm x <- bs, nm == i ] of
-        (x:_) -> typeOf x
-        _   -> do
-            let bsText = prettyList id "," $ nub [ nm | Binder nm _ <- bs ]
+typeOf [xMatch| [Prim (S i  )] := reference |] = do
+    mx <- runMaybeT $ lookupBinder i
+    case mx of
+        Just x -> typeOf x
+        _      -> do
+            bsText <- bindersDoc
             err ErrFatal $ "Undefined reference:" <+> pretty i
                          $$ nest 4 ("Current bindings:" <+> bsText)
 
-typeOf [xMatch| [Prim (S i)] := metavar |] = do
-    let j = "&" `mappend` i
-    bs <- gets binders
-    case [ x | Binder nm x <- bs, nm == j ] of
-        [x] -> typeOf x
-        -- _   -> return p
-        _   -> err ErrFatal $ "Undefined reference: " <+> pretty j
+typeOf [xMatch| [Prim (S i')] := metavar |] = do
+    let i = "&" `mappend` i'
+    mx <- runMaybeT $ lookupBinder i
+    case mx of
+        Just x -> typeOf x
+        _      -> err ErrFatal $ "Undefined reference: " <+> pretty i
 
 typeOf [xMatch| [i] := structural.single |] = typeOf i
 

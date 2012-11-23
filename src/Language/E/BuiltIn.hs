@@ -65,13 +65,16 @@ relationApply [xMatch| [actual]             := functionApply.actual
                      |  args                := functionApply.args
                      |] =
     case identifierSplit actualRef of
-        (actualName, _, Just "RelationAsSet") -> do
+        (actualName, mregion, Just "RelationAsSet") -> do
             actualTy <- typeOf actual
             argsTy   <- mapM typeOf args
             case actualTy of
                 [xMatch| actualInners := type.relation.inners |] | actualInners == argsTy -> do
                     let theTuple = [xMake| value.tuple.values := args |]
-                    let theSet   = [xMake| reference := [Prim $ S $ actualName `mappend` "_RelationAsSet" ] |]
+                    let theSet   = [xMake| reference := [Prim $ S $ identifierConstruct (actualName `mappend` "_RelationAsSet")
+                                                                                        mregion
+                                                                                        Nothing
+                                                        ] |]
                     ret "builtIn.relationApply" [eMake| &theTuple in &theSet |]
                 _ -> return Nothing
         _ -> return Nothing

@@ -17,15 +17,15 @@ errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
 
 domainOf :: MonadConjure m => E -> m E
 
-domainOf [xMatch| [Prim (S i')] := reference |] = do
-    let (i,_,_) = identifierSplit i'
-    bs <- gets binders
+domainOf [xMatch| [Prim (S i)] := reference |] =
     if i == "_"
         then return [xMake| type.unknown := [] |]
-        else case [ x | Binder nm x <- bs, nm == i ] of
-                (x:_) -> domainOf x
-                _   -> do
-                    let bsText = sep $ map (\ (Binder nm _) -> pretty nm ) bs
+        else do
+            mx <- runMaybeT $ lookupBinder i
+            case mx of
+                Just x -> domainOf x
+                _      -> do
+                    bsText <- bindersDoc
                     err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
 
 domainOf p@[xMatch| [Prim (S i)] := metavar |] = do
