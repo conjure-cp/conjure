@@ -20,7 +20,8 @@ module Language.E.Imports
     , allFiles, allFilesWithSuffix
     , timedIO
     , isLeft, isRight
-    , trace
+    , trace, tracing
+    , allCombinations
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
@@ -73,6 +74,9 @@ trace = Debug.Trace.trace
 trace :: String -> a -> a
 trace = const id
 #endif
+
+tracing :: Show a => a -> a
+tracing a = trace (show a) a
 
 stringToText :: String -> T.Text
 stringToText = T.pack
@@ -159,4 +163,8 @@ isRight (Right {}) = True
 isRight _          = False
 
 instance Error Doc where strMsg = Pr.text
+
+allCombinations :: [(a,[b])] -> [[(a,b)]]
+allCombinations [] = [[]]
+allCombinations ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] | ws <- allCombinations qs ]
 
