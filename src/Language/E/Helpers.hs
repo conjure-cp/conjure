@@ -8,6 +8,26 @@ import Language.E.Definition
 import Language.E.CompE
 import Language.E.TH
 
+import qualified Data.Text as T
+
+
+
+identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)
+identifierSplit t =
+    case T.splitOn "§" t of
+        [base, rest] -> case T.splitOn "#" rest of
+            [region, repr] -> (base, Just region, Just repr)
+            _              -> (base, Just rest  , Nothing  )
+        _            -> case T.splitOn "#" t of
+            [base  , repr] -> (base, Nothing    , Just repr)
+            _              -> (t   , Nothing    , Nothing  )
+
+identifierConstruct :: Text -> Maybe Text -> Maybe Text -> Text
+identifierConstruct base mregion mrepr =
+    mconcat [ base
+            , maybe mempty ("§" `mappend`) mregion
+            , maybe mempty ("#" `mappend`) mrepr
+            ]
 
 
 conjunct :: [E] -> E
