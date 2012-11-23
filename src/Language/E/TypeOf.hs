@@ -7,6 +7,7 @@ import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
+import Language.E.Helpers
 import Language.E.TH
 import Language.E.Traversals
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
@@ -85,7 +86,7 @@ typeOf p@[xMatch| _ := type |] = return p
 
 typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
 typeOf [xMatch| [Prim (S i' )] := reference |] = do
-    let i = head $ T.splitOn "#" i'
+    let (i,_,_) = identifierSplit i'
     bs <- gets binders
     case [ x | Binder nm x <- bs, nm == i ] of
         (x:_) -> typeOf x

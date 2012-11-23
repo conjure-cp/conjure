@@ -7,7 +7,6 @@ import Language.E
 import Language.E.Pipeline.FreshNames
 
 import qualified Data.Set as S
-import qualified Data.Text as T
 
 
 -- does the grouping depending on levels and such.
@@ -143,9 +142,9 @@ renRefn :: MonadConjure m => E -> m E
 renRefn p@[xMatch| [Prim (S "refn")] := functionApply.actual.reference
                  | [Prim (S i'    )] := functionApply.args.reference
                  |] =
-    case T.splitOn "#" i' of
-        [i,j] -> return [xMake| reference := [Prim (S $ mconcat [i, "_", j])] |]
-        _     -> err ErrFatal $ "{renRefn} Problem here:" <+> pretty p
+    case identifierSplit i' of
+        (i,_,Just j) -> return [xMake| reference := [Prim (S $ mconcat [i, "_", j])] |]
+        _            -> err ErrFatal $ "{renRefn} Problem here:" <+> pretty p
 renRefn [eMatch| refn(&m[&j]) |] = do
     n <- renRefn [eMake| refn(&m) |]
     return [eMake| &n[&j] |]

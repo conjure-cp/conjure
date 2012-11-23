@@ -7,7 +7,6 @@ module Language.E.BuiltIn
 
 import Language.E
 
-import qualified Data.Text as T
 
 
 type ReprFunc m =
@@ -65,8 +64,8 @@ relationApply [xMatch| [actual]             := functionApply.actual
                      | [Prim (S actualRef)] := functionApply.actual.reference
                      |  args                := functionApply.args
                      |] =
-    case T.splitOn "#" actualRef of
-        [actualName, "RelationAsSet"] -> do
+    case identifierSplit actualRef of
+        (actualName, _, Just "RelationAsSet") -> do
             actualTy <- typeOf actual
             argsTy   <- mapM typeOf args
             case actualTy of

@@ -14,8 +14,6 @@ import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 import                Language.E.Evaluator.DataAboutQuantifiers
 
-import qualified Data.Text as T
-
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
@@ -151,8 +149,8 @@ evalHasRepr [eMatch| &x hasRepr &y |] =
                 [a] -> evalHasRepr [eMake| &a hasRepr &y |]
                 _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
         [xMatch| [Prim (S iden )] := reference |] ->
-            case T.splitOn "#" iden of
-                [_,idenReprName] ->
+            case identifierSplit iden of
+                (_,_,Just idenReprName) ->
                     case y of
                         [xMatch| [Prim (S reprName)] := reference |] ->
                             returnBool $ idenReprName == reprName

@@ -6,10 +6,9 @@ import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
+import Language.E.Helpers
 import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
-
-import qualified Data.Text as T
 
 
 errDomainOf :: (MonadConjure m, Pretty p) => p -> m a
@@ -19,7 +18,7 @@ errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
 domainOf :: MonadConjure m => E -> m E
 
 domainOf [xMatch| [Prim (S i')] := reference |] = do
-    let i = head $ T.splitOn "#" i'
+    let (i,_,_) = identifierSplit i'
     bs <- gets binders
     if i == "_"
         then return [xMake| type.unknown := [] |]
