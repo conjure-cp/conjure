@@ -20,7 +20,6 @@ applyRefn
     -> m Spec
 applyRefn db' spec = withBindingScope' $ do
     let db = db' ++ builtInRefn
-    -- (spec', _) <- runWriterT $ (onSpec db >=> onSpec db) spec
     (spec', _) <- runWriterT $ onSpec db spec
     return spec'
 
@@ -112,6 +111,7 @@ tryApply
 -- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do
 tryApply db x = do
     (x' , b1) <- simply x
+    when b1 $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x']
     (x'', b2) <- go db x'
     return (x'', b1 || b2)
 
@@ -120,7 +120,6 @@ tryApply db x = do
         simply :: MonadConjure m => E -> m (E, Bool)
         simply i = do
             (j, (Any flag, _)) <- runWriterT $ simplify i
-            when flag $ mkLog "simplified" $ vcat [pretty i, "~~>", pretty j]
             return (j, flag)
 
         -- returns a pair, first component: list of results. will always be non-empty.
