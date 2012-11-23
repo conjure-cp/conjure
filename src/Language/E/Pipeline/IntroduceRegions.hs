@@ -30,10 +30,11 @@ introduceRegions spec = withBindingScope' $
             (base, Nothing, repr) -> do
                 mx <- lift $ runMaybeT $ lookupBinder s
                 case mx of
-                    Nothing -> return p
-                    Just [xMatch| _ := topLevel.declaration.find  |] -> addRegion base repr
-                    Just [xMatch| _ := topLevel.declaration.given |] -> addRegion base repr
-                    Just _ -> return p
+                    Just [xMatch| [d] := topLevel.declaration.find .domain |]
+                        | domainNeedsRepresentation d -> addRegion base repr
+                    Just [xMatch| [d] := topLevel.declaration.given.domain |]
+                        | domainNeedsRepresentation d -> addRegion base repr
+                    _ -> return p
         op p = return p
 
         addRegion base repr = do
