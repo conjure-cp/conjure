@@ -1,0 +1,12 @@
+language Essence 2.0
+
+find x,y : set of int(0..9)
+
+$such that
+    $x§region1 subsetEq y§region2,
+    $y§region3 subsetEq x§region1
+
+such that
+    x subsetEq y,
+    y subsetEq x
+
