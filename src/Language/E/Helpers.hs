@@ -5,29 +5,10 @@ module Language.E.Helpers where
 
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Pretty
 import Language.E.CompE
 import Language.E.TH
 
-import qualified Data.Text as T
-
-
-
-identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)
-identifierSplit t =
-    case T.splitOn "§" t of
-        [base, rest] -> case T.splitOn "#" rest of
-            [region, repr] -> (base, Just region, Just repr)
-            _              -> (base, Just rest  , Nothing  )
-        _            -> case T.splitOn "#" t of
-            [base  , repr] -> (base, Nothing    , Just repr)
-            _              -> (t   , Nothing    , Nothing  )
-
-identifierConstruct :: Text -> Maybe Text -> Maybe Text -> Text
-identifierConstruct base mregion mrepr =
-    mconcat [ base
-            , maybe mempty ("§" `mappend`) mregion
-            , maybe mempty ("#" `mappend`) mrepr
-            ]
 
 
 conjunct :: [E] -> E
@@ -42,10 +23,10 @@ disjunct [x]    = x
 disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
 
 
-traceBindings :: MonadConjure m => String -> m ()
-traceBindings msg = do
+bindersDoc :: MonadConjure m => m Doc
+bindersDoc = do
     bs <- gets binders
-    trace (msg ++ " " ++ show [ nm | Binder nm _ <- bs ]) (return ())
+    return $ prettyList id "," $ nub [ nm | Binder nm _ <- bs ]
 
 
 freshQuanVar :: MonadConjure m => m (Text, E)

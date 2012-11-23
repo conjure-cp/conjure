@@ -11,6 +11,8 @@ module Language.E.Definition
 
     , listAsStatement, statementAsList
 
+    , identifierSplit, identifierConstruct
+
     ) where
 
 import Stuff.Generic
@@ -18,6 +20,8 @@ import Stuff.Pretty
 import Stuff.MetaVariable
 
 import Language.E.Imports
+
+import qualified Data.Text as T
 
 
 
@@ -79,4 +83,21 @@ statementAsList [xMatch| [this] := statement.this
                        | [next] := statement.next
                        |] = this : statementAsList next
 statementAsList x = [x]
+
+identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)
+identifierSplit t =
+    case T.splitOn "§" t of
+        [base, rest] -> case T.splitOn "#" rest of
+            [region, repr] -> (base, Just region, Just repr)
+            _              -> (base, Just rest  , Nothing  )
+        _            -> case T.splitOn "#" t of
+            [base  , repr] -> (base, Nothing    , Just repr)
+            _              -> (t   , Nothing    , Nothing  )
+
+identifierConstruct :: Text -> Maybe Text -> Maybe Text -> Text
+identifierConstruct base mregion mrepr =
+    mconcat [ base
+            , maybe mempty ("§" `mappend`) mregion
+            , maybe mempty ("#" `mappend`) mrepr
+            ]
 
