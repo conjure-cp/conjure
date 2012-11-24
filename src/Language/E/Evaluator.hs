@@ -14,6 +14,7 @@ import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalHasRepr, evalDomSize
                                     , evalIndices, evalReplace
                                     , tupleEq, matrixEq
+                                    , stripStructuralSingle
                                     )
 import Language.E.Evaluator.Partial ( partialEvaluator )
 
@@ -42,16 +43,17 @@ allCombined :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
 -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
 allCombined i =
     firstJustOr i
-        $ map ($ i) [ logged "Evaluator"           fullEvaluator
-                    , logged "Evaluator.hasRepr"   evalHasRepr
-                    , logged "Evaluator.hasType"   evalHasType
-                    , logged "Evaluator.hasDomain" evalHasDomain
-                    , logged "Evaluator.domSize"   evalDomSize
-                    , logged "Evaluator.indices"   evalIndices
-                    , logged "Evaluator.replace"   evalReplace
-                    , logged "Evaluator.tupleEq"   tupleEq
-                    , logged "Evaluator.matrixEq"  matrixEq
-                    , logged "Simplify"            (adapter partialEvaluator)
+        $ map ($ i) [ logged "Evaluator"                        fullEvaluator
+                    , logged "Evaluator.hasRepr"                evalHasRepr
+                    , logged "Evaluator.hasType"                evalHasType
+                    , logged "Evaluator.hasDomain"              evalHasDomain
+                    , logged "Evaluator.domSize"                evalDomSize
+                    , logged "Evaluator.indices"                evalIndices
+                    , logged "Evaluator.replace"                evalReplace
+                    , logged "Evaluator.tupleEq"                tupleEq
+                    , logged "Evaluator.matrixEq"               matrixEq
+                    , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
+                    , logged "Simplify"                         (adapter partialEvaluator)
                     ]
 
 -- these transformations should be applied first. others might depend on them.

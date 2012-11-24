@@ -53,6 +53,7 @@ suppress = S.fromList
     , "Evaluator.replace"
     , "Evaluator.tupleEq"
     , "Evaluator.matrixEq"
+    , "Evaluator.stripStructuralSingle"
     , "Simplify"
     , "missing:relationRepr"
     , "missing:typeUnify"

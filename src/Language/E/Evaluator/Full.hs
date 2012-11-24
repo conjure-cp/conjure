@@ -288,3 +288,12 @@ matrixEq [eMatch| &a = &b |] = do
 matrixEq _ = return Nothing
 
 
+stripStructuralSingle :: MonadConjure m => E -> m (Maybe (E, [Binder]))
+stripStructuralSingle [xMatch| [Prim (S nm)] := structural.single.reference |] = do
+    mx <- runMaybeT $ lookupBinder nm
+    case mx of
+        Just [xMatch| [Prim (S nm')] := quanVar.name |] | nm == nm' -> return Nothing
+        _ -> ret [xMake| reference := [Prim (S nm)] |]
+stripStructuralSingle [xMatch| [x] := structural.single |] = ret x
+stripStructuralSingle _ = return Nothing
+
