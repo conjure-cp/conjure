@@ -94,10 +94,16 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                         -- con' is the constraint, but all "refn"s replaced
                                         con' <- case is of
                                             [] -> do
-                                                let renameTo = [xMake| reference := [Prim $ S $ mconcat [origName, "_", reprName]] |]
+                                                let newName  = identifierConstruct (mconcat [origName, "_", reprName])
+                                                                                   (Just "regionS")
+                                                                                   Nothing
+                                                let renameTo = [xMake| reference := [Prim (S newName)] |]
                                                 return $ renRefn renameTo con
                                             _  -> do
-                                                let renameTo = [xMake| reference := [Prim $ S $ mconcat [origName, "_", reprName]] |]
+                                                let newName  = identifierConstruct (mconcat [origName, "_", reprName])
+                                                                                   (Just "regionS")
+                                                                                   Nothing
+                                                let renameTo = [xMake| reference := [Prim (S newName)] |]
                                                 (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
                                                 let renameToIndexed = mkIndexedExpr loopVars renameTo
                                                 return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con
