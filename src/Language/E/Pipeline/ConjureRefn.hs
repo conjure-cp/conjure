@@ -33,9 +33,9 @@ conjureRefn isFinal spec rules = {-# SCC "conjureRefn" #-} withBindingScope' $
             initialiseSpecState spec
             let pipeline =  recordSpec >=> inlineLettings
                         >=> recordSpec >=> applyRefn fs
+                        >=> recordSpec >=> checkIfAllRefined
                         >=> recordSpec >=> conjureNoTuples
                         >=> recordSpec >=> removeUnused
-                        >=> recordSpec >=> checkIfAllRefined
                         >=> recordSpec >=> (if isFinal then groomSpec else return)
                         >=> recordSpec >=> bubbleUpSpec
                         >=> recordSpec

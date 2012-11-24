@@ -69,10 +69,10 @@ _testTypeOf t = do
 
 
 typeErrorIn :: MonadConjure m => E -> m a
-typeErrorIn p = err ErrFatal $ "Type error in: " <+> prettyAsPaths p
+typeErrorIn p = err ErrFatal $ "Type error in: " <+> pretty p
 
 typeErrorIn' :: MonadConjure m => E -> Doc -> m a
-typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [prettyAsPaths p, d]
+typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [pretty p, d]
 
 
 typeOf :: MonadConjure m => E -> m E
@@ -364,6 +364,15 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
     case (tya, tyb) of
         ( [xMatch| [] := type.bool |] , [xMatch| [] := type.bool |] ) -> return [xMake| type.bool := [] |]
         _ -> typeErrorIn p
+
+typeOf p@[eMatch| &a in &b |] = do
+    tya <- typeOf a
+    tyb <- typeOf b
+    tybInner <- innerTypeOf "in" tyb
+    flag <- typeUnify tya tybInner
+    if flag
+        then return [xMake| type.bool := [] |]
+        else typeErrorIn p
 
 typeOf p@[eMatch| max(&a) |] = do
     ta <- typeOf a

@@ -63,14 +63,13 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
                         ]
 
             nbOccurrence :: (Text, Text) -> Int
-            nbOccurrence (base,reg) =
-                let n = length [ ()
-                               | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
-                               , (base', Just reg', _) <- [identifierSplit nm']
-                               , base == base'
-                               , reg  == reg'
-                               ]
-                in  trace (show $ pretty base <+> pretty reg <+> pretty n) n
+            nbOccurrence (base,reg) = length
+                [ ()
+                | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
+                , (base', Just reg', _) <- [identifierSplit nm']
+                , base == base'
+                , reg  == reg'
+                ]
 
             lookupTables :: [ M.Map (Text,Text) RuleReprResult ]
             lookupTables = map M.fromList $ allCombinations

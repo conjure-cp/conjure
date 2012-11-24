@@ -13,13 +13,14 @@ savilerowCompat
     => Spec
     -> m Spec
 savilerowCompat
-     =  return . onSpec toIntIsNoOp
-    >=> ( \ (Spec v xs) -> withBindingScope' $ Spec v <$> sliceIfTooFewIndices xs )
-    >=> valueMatrixToLetting
-    >=> conjureNoTuples
-    >=> conjureNoGuards
-    >=> return . atMostOneSuchThat
-    >=> return . langEPrime
+     =  recordSpec >=> ( \ (Spec v xs) -> withBindingScope' $ Spec v <$> sliceIfTooFewIndices xs )
+    >=> recordSpec >=> valueMatrixToLetting
+    >=> recordSpec >=> conjureNoTuples
+    >=> recordSpec >=> conjureNoGuards
+    >=> recordSpec >=> (return . onSpec toIntIsNoOp)
+    >=> recordSpec >=> (return . atMostOneSuchThat)
+    >=> recordSpec >=> (return . langEPrime)
+    >=> recordSpec
 
 
 onSpec :: (E -> E) -> Spec -> Spec

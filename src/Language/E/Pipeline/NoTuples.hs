@@ -83,11 +83,12 @@ renameTupleIndexes identifiers = bottomUpSpec' f
     where
         f [xMatch| [Prim (S i)] := operator.index.left.reference
                  | [Prim (I j)] := operator.index.right.value.literal
-                 |] | i `S.member` identifiers = return [xMake| reference := [ Prim $ S $ mconcat [ i
-                                                                                                  , "_tuple"
-                                                                                                  , stringToText (show j)
-                                                                                                  ]
-                                                                             ] |]
+                 |] | let (base,mregion,mrepr) = identifierSplit i
+                    , base `S.member` identifiers
+                    = let i' = identifierConstruct (mconcat [base, "_tuple", stringToText (show j)])
+                                                   mregion
+                                                   mrepr
+                      in  return [xMake| reference := [Prim (S i')] |]
         f p = return p
 
 
@@ -119,19 +120,20 @@ renameMatrixOfTupleIndexes identifiers = bottomUpSpec' f
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
                             , js
                             )
-            ) = case i `M.lookup` identifiers of
-                    Just num | length js > num -> do
-                        let indicesBefore = take num js
-                        (tupleIndex, indicesAfter) <- case drop num js of
-                                                        ([xMatch| [Prim (I a)] := value.literal |]:as) -> return (a,as)
-                                                        _ -> err ErrFatal $ "in renameMatrixOfTupleIndexes at:" <+> pretty p
-                        return $ mkIndexed [xMake| reference := [ Prim $ S $ mconcat [ i
-                                                                                     , "_tuple"
-                                                                                     , stringToText (show tupleIndex)
-                                                                                     ]
-                                                                ] |]
-                                           (indicesBefore `mappend` indicesAfter)
-                    _ -> return p
+            ) = do
+            let (base, mregion, mrepr) = identifierSplit i
+            case base `M.lookup` identifiers of
+                Just num | length js > num -> do
+                    let indicesBefore = take num js
+                    (tupleIndex, indicesAfter) <- case drop num js of
+                        ([xMatch| [Prim (I a)] := value.literal |] : as) -> return (a,as)
+                        _ -> err ErrFatal $ "in renameMatrixOfTupleIndexes at:" <+> pretty p
+                    let i' = identifierConstruct (mconcat [base, "_tuple", stringToText (show tupleIndex)])
+                                                 mregion
+                                                 mrepr
+                    return $ mkIndexed [xMake| reference := [Prim (S i')] |]
+                                       (indicesBefore `mappend` indicesAfter)
+                _ -> return p
         f p = return p
 
 viewIndexed :: E -> (E,[E])

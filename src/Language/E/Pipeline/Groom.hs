@@ -6,6 +6,7 @@ import Language.E.Pipeline.IntroduceRegions ( removeRegions )
 
 
 groomSpec :: MonadConjure m => Spec -> m Spec
-groomSpec =  removeRegions
-         >=> savilerowCompat
+groomSpec =  recordSpec >=> removeRegions
+         >=> recordSpec >=> savilerowCompat
+         >=> recordSpec
 

@@ -4,6 +4,8 @@ module Language.E.Pipeline.RemoveUnused where
 
 import Language.E
 
+import qualified Data.Set as S
+
 
 -- TODO: do this better with the new single statement setting!
 
@@ -11,28 +13,37 @@ removeUnused
     :: MonadConjure m
     => Spec
     -> m Spec
-removeUnused (Spec v statements) = do
-    statements' <- forM (withRestToR $ statementAsList statements) $ \ (this, afterThis) -> do
-        let maybeName = case this of
-                            [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference |] -> Just nm
-                            [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference |] -> Just nm
-                            [xMatch| [Prim (S nm)] := topLevel.letting          .name.reference |] -> Just nm
-                            _ -> Nothing
-        case maybeName of
-            Nothing   -> return (Just this)
-            Just name -> do
-                let identifiersAfterThis = concatMap identifiersIn afterThis
-                if name `elem` identifiersAfterThis
-                    then
-                        return (Just this)
-                    else do
-                        mkLog "removedDecl" $ pretty this
-                        return Nothing
-    return (Spec v $ listAsStatement $ catMaybes statements')
+removeUnused (Spec v statements) = Spec v <$> go statements
+    where
+        go [xMatch| [this] := statement.this
+                  | [next] := statement.next
+                  |] = do
+            let maybeName = case this of
+                    [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference |] -> Just nm
+                    [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference |] -> Just nm
+                    [xMatch| [Prim (S nm)] := topLevel.letting          .name.reference |] -> Just nm
+                    _ -> Nothing
+            case maybeName of
+                Nothing -> do
+                    next' <- go next
+                    return [xMake| statement.this := [this]
+                                 | statement.next := [next']
+                                 |]
+                Just name -> do
+                    next' <- go next
+                    if name `S.member` identifiersIn next
+                        then return [xMake| statement.this := [this]
+                                          | statement.next := [next']
+                                          |]
+                        else do
+                            mkLog "removedDecl" (pretty this)
+                            return next'
+        go p = return p
 
-identifiersIn :: E -> [Text]
-identifiersIn e = [ i
-                  | [xMatch| [Prim (S s)] := reference |] <- universe e
-                  , let (i,_,_) = identifierSplit s
-                  ]
+identifiersIn :: E -> S.Set Text
+identifiersIn e =
+    S.fromList [ base
+               | [xMatch| [Prim (S s)] := reference |] <- universe e
+               , let (base, _, _) = identifierSplit s
+               ]
 
