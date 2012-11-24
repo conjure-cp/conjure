@@ -20,9 +20,9 @@ conjureRepr isFinal spec rules = {-# SCC "conjureRepr" #-} withBindingScope' $ d
     initialiseSpecState spec
     let pipeline =  return
                 >=> recordSpec >=> inlineLettings
+                >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
                 >=> recordSpec >=> conjureNoTuples
                 >=> recordSpec >=> introduceRegions
-                >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
                 >=> recordSpec >=> applyRepr rules
                 >=> recordSpec >=> (if isFinal then groomSpec else return)
                 >=> recordSpec
