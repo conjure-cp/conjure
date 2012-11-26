@@ -285,6 +285,19 @@ matrixEq [eMatch| &a = &b |] = do
             (quanVarStr, quanVar) <- freshQuanVar
             ret $ inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
         _ -> return Nothing
+matrixEq [eMatch| &a != &b |] = do
+    da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
+    db <- (Just <$> domainOf b) `catchError` (\ _ -> return Nothing )
+    case (da,db) of
+        (Just [xMatch| [ia] := domain.matrix.index |],_) -> do
+            (quanVarStr, quanVar) <- freshQuanVar
+            let res = inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
+            ret [eMake| !&res |]
+        (_,Just [xMatch| [ia] := domain.matrix.index |]) -> do
+            (quanVarStr, quanVar) <- freshQuanVar
+            let res = inForAll quanVarStr ia [eMake| &a[&quanVar] = &b[&quanVar] |]
+            ret [eMake| !&res |]
+        _ -> return Nothing
 matrixEq _ = return Nothing
 
 
