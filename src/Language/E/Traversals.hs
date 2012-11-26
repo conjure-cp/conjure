@@ -222,9 +222,9 @@ checkingMemo
     -> (E -> t m E)
     -> t m E
 checkingMemo x f = do
+    -- let hashX = hash x
     bsX <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
     let hashX = hash (x, bsX)
-    -- let hashX = hash x
     memoSame <- lift $ getsGlobal memoRefnStaysTheSame
     if IntSet.member hashX memoSame
         then do
@@ -234,17 +234,15 @@ checkingMemo x f = do
             memoChanged <- lift $ getsGlobal memoRefnChanged
             case IntMap.lookup hashX memoChanged of
                 Just y  -> do
-                    lift $ mkLog "reuse-memo-diff" $ pretty x <+> "~~>" <+> pretty y
+                    -- lift $ mkLog "reuse-memo-diff" $ pretty x <+> "~~>" <+> pretty y
                     return y
                 Nothing -> do
                     y <- f x
+                    -- let hashY = hash y
                     bsY <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
                     let hashY = hash (y, bsY)
-                    -- let hashY = hash y
-                    lift $ if hashX == hashY
-                        -- then mkLog "add-memo-same" $ pretty x
-                        then return ()
-                        else mkLog "add-memo-diff" $ pretty x <+> "~~>" <+> pretty y
+                    -- when (hashX == hashY) $ lift $ mkLog "add-memo-same" $ pretty x
+                    -- when (hashX /= hashY) $ lift $ mkLog "add-memo-diff" $ pretty x <+> "~~>" <+> pretty y
                     lift $ modifyGlobal $ \ st ->
                         if hashX == hashY
                             then st { memoRefnStaysTheSame = IntSet.insert hashY   memoSame    }
