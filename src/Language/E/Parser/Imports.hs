@@ -8,13 +8,8 @@ import Language.E.Lexer ( Lexeme(..), LexemePos, lexemeFace, runLexer )
 import Language.E.Imports
 import Language.E.Pretty ( Pretty, pretty )
 
-import Control.Applicative ( Applicative )
-import Control.Monad ( (>=>) )
-import Control.Monad.Error ( MonadError(..) )
-import Control.Monad.Identity ( Identity(..) )
-
 import Text.Parsec ( ParsecT, parse, tokenPrim, (<?>) )
-import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
+import Text.Parsec.Combinator ( between )
 
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
@@ -79,13 +74,13 @@ colon = lexeme L_Colon <?> "colon"
 
 -- parses a specified number of elements separated by the given separator
 countSep :: Int -> Parser a -> Parser sep -> Parser [a]
-countSep 1 p _   = (:[]) <$> p
-countSep i p sep | i > 1 = (:) <$> (p <* sep) <*> countSep (i-1) p sep
-countSep _ _ _   = return []
+countSep 1 p _ = (:[]) <$> p
+countSep i p separator | i > 1 = (:) <$> (p <* separator) <*> countSep (i-1) p separator
+countSep _ _ _ = return []
 
 -- parses at least a given number of elements separated by the given separator
 countSepAtLeast :: Int -> Parser a -> Parser sep -> Parser [a]
-countSepAtLeast i p sep = (++) <$> countSep i p sep <*> many (sep *> p)
+countSepAtLeast i p separator = (++) <$> countSep i p separator <*> many (separator *> p)
 
 betweenTicks :: Parser a -> Parser a
 betweenTicks = between (lexeme L_BackTick) (lexeme L_BackTick)
