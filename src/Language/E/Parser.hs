@@ -16,7 +16,7 @@ import Language.E.Lexer ( LexemePos, Lexeme(..), lexemeFace, lexemeText, runLexe
 import Language.E.Pretty ( Pretty, pretty )
 
 import Control.Applicative ( Applicative, (<$>), (<$), (<*), (*>), (<*>), (<|>), some, many )
-import Control.Monad ( (>=>), msum, void )
+import Control.Monad ( (>=>), msum, void, unless )
 import Control.Monad.Error ( MonadError(..) )
 import Control.Monad.Identity ( Identity(..) )
 
@@ -533,6 +533,15 @@ parseAttributes = do
                 , [xMake| attribute.dontCare := []
                         |]
                 )
+
+parseLogRemovedDecl :: Parser E
+parseLogRemovedDecl = do
+    identifier <- brackets identifierText
+    unless (identifier == "removedDecl") $ fail "fail!"
+    tl <- parseTopLevels
+    case tl of
+        [i] -> return i
+        _   -> fail "multiple top levels here, unexpected"
 
 parseTopLevels :: Parser [E]
 parseTopLevels = do
