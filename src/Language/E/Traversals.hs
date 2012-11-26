@@ -3,6 +3,8 @@
 
 module Language.E.Traversals where
 
+import Stuff.NamedLog ( nubKeepOrderBy )
+
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
@@ -10,6 +12,8 @@ import Language.E.Pretty
 
 import qualified Data.Set as S
 import qualified Data.Text as T
+import qualified Data.IntSet as IntSet ( insert, member )
+import qualified Data.IntMap as IntMap ( insert, lookup )
 
 
 
@@ -176,6 +180,76 @@ bottomUpEExcept p func x = withBindingScope $ helper x
                     func t'
                 _           -> func t
 
+
+bottomUpERefn
+    :: ( MonadConjureList m
+       , MonadTrans t
+       , Monad (t m)
+       )
+    => (E -> t m E)
+    -> E
+    -> t m E
+bottomUpERefn func = withBindingScope . helper
+    where
+        helper [xMatch| [this] := statement.this
+                      | [next] := statement.next
+                      |] = do
+            lift $ introduceStuff this
+            this' <- func =<< bottomUpERefn func this
+            lift $ introduceStuff this'
+            next' <- func =<< bottomUpERefn func next
+            return [xMake| statement.this := [this']
+                         | statement.next := [next']
+                         |]
+        helper i = do
+            lift $ introduceStuff i
+            checkingMemo i $ \ t ->
+                case t of
+                    Tagged s xs -> do
+                        xs' <- mapM helper xs
+                        let t' = Tagged s xs'
+                        lift $ introduceStuff t'
+                        checkingMemo t' func
+                    _           -> func t
+
+
+checkingMemo
+    :: ( MonadConjureList m
+       , MonadTrans t
+       , Monad (t m)
+       )
+    => E
+    -> (E -> t m E)
+    -> t m E
+checkingMemo x f = do
+    bsX <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
+    let hashX = hash (x, bsX)
+    -- let hashX = hash x
+    memoSame <- lift $ getsGlobal memoRefnStaysTheSame
+    if IntSet.member hashX memoSame
+        then do
+            -- lift $ mkLog "reuse-memo-same" $ pretty x
+            return x
+        else do
+            memoChanged <- lift $ getsGlobal memoRefnChanged
+            case IntMap.lookup hashX memoChanged of
+                Just y  -> do
+                    lift $ mkLog "reuse-memo-diff" $ pretty x <+> "~~>" <+> pretty y
+                    return y
+                Nothing -> do
+                    y <- f x
+                    bsY <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
+                    let hashY = hash (y, bsY)
+                    -- let hashY = hash y
+                    lift $ if hashX == hashY
+                        -- then mkLog "add-memo-same" $ pretty x
+                        then return ()
+                        else mkLog "add-memo-diff" $ pretty x <+> "~~>" <+> pretty y
+                    lift $ modifyGlobal $ \ st ->
+                        if hashX == hashY
+                            then st { memoRefnStaysTheSame = IntSet.insert hashY   memoSame    }
+                            else st { memoRefnChanged      = IntMap.insert hashY y memoChanged }
+                    return y
 
 
 initialiseSpecState :: MonadConjure m => Spec -> m ()
