@@ -23,7 +23,7 @@ runFunkySingle st (FunkySingle f) = f st
 instance Monad m => Functor (FunkySingle st err m) where
     {-# SPECIALIZE instance Functor (FunkySingle st err Identity) #-}
     {-# INLINE fmap #-}
-    fmap f (FunkySingle g) = {-# SCC "FSfmap" #-} FunkySingle $ \ st -> do
+    fmap f (FunkySingle g) = FunkySingle $ \ st -> do
         (mx, st') <- g st
         return $ case mx of
             Left  x -> (Left  x    , st')
@@ -43,7 +43,7 @@ instance Monad m => Monad (FunkySingle st err m) where
     {-# INLINE (>>=) #-}
     fail = error
     return = pure
-    FunkySingle g >>= f = {-# SCC "FSbind" #-} FunkySingle $ \ st -> do
+    FunkySingle g >>= f = FunkySingle $ \ st -> do
         (mx, st') <- g st
         case mx of
             Left  x -> return (Left x, st')
