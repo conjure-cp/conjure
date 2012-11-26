@@ -80,9 +80,10 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
                 , cnt > 0
                 ]
 
+        when (null lookupTables) $ err ErrGeneratesNone "repr0"
         table <- returns lookupTables
         if M.null table
-            then returns []
+            then err ErrGeneratesNone "repr1"
             else do
                 let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just rName))
                                      | ((nm, region), (_,_,rName,_,_)) <- M.toList table
