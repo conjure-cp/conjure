@@ -9,64 +9,32 @@ import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
 
 
-data Phase = Repr0 | Repr | Refn | Groom
 
 conjureAllPure
     :: [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureAllPure reprs refns = {-# SCC "conjureAllPure" #-} onlyOneError . go Repr0
+conjureAllPure reprs refns spec = runCompE "conjure" $ conjureAll reprs refns spec
+
+
+conjureAll
+    :: MonadConjureList m
+    => [RuleRepr] -> [RuleRefn] -> Spec -> m Spec
+conjureAll reprs refns = phaseRepr0
     where
+        ifNone ma mb = catchError ma $ \ e ->
+            case e of
+                (ErrGeneratesNone,_,_) -> mb
+                _                      -> throwError e
 
-        onlyOneError [] = []
-        onlyOneError (x:xs)
-            | isLeft (fst x) = [x]
-            | otherwise      = x : onlyOneError xs
+        phaseRepr0 s =
+            (conjureRepr reprs s >>= phaseRefn) `ifNone` phaseRefn s
 
-        go :: Phase -> Spec -> [(Either Doc Spec, LogTree)]
-        go Repr0 s = {-# SCC "gRepr0" #-} trace "Repr0" $
-            let
-                mouts :: [(Either Doc Spec, LogTree)]
-                mouts = runCompE "Repr" $ conjureRepr False s reprs
+        phaseRepr s =
+            (conjureRepr reprs s >>= phaseRefn) `ifNone` phaseGroom s
 
-                f :: (Either Doc Spec, LogTree) -> [(Either Doc Spec, LogTree)]
-                f (Left  x, logs) = [(Left x, logs)]
-                f (Right x, logs) = map (second (logTreeAppend logs)) (go Refn x)
-            in
-                if null mouts
-                    then do
-                        let mouts2 = trace "Refn2" $ runCompE "Refn2" $ conjureRefn False s refns
-                        let f2 (Left  x, logs) = [(Left x, logs)]
-                            f2 (Right x, logs) = map (second (logTreeAppend logs)) (go Groom x)
-                        concatMap f2 mouts2
-                    else concatMap f mouts
-        go Repr s = {-# SCC "gRepr" #-} trace "Repr" $
-            let
-                mouts :: [(Either Doc Spec, LogTree)]
-                mouts = runCompE "Repr" $ conjureRepr False s reprs
+        phaseRefn s =
+            (conjureRefn refns s >>= phaseRepr) `ifNone` phaseGroom s
 
-                f :: (Either Doc Spec, LogTree) -> [(Either Doc Spec, LogTree)]
-                f (Left  x, logs) = [(Left x, logs)]
-                f (Right x, logs) = map (second (logTreeAppend logs)) (go Refn x)
-            in
-                if null mouts
-                    then go Groom s
-                    else concatMap f mouts
-        go Refn s = {-# SCC "gRefn" #-} trace "Refn" $
-            let
-                mouts :: [(Either Doc Spec, LogTree)]
-                mouts = runCompE "Refn" $ conjureRefn False s refns
-
-                f :: (Either Doc Spec, LogTree) -> [(Either Doc Spec, LogTree)]
-                f (Left  x, logs) = [(Left x, logs)]
-                f (Right x, logs) = map (second (logTreeAppend logs)) (go Repr x)
-            in
-                if null mouts
-                    then go Groom s
-                    else concatMap f mouts
-        go Groom s = {-# SCC "gGroom" #-} trace "Groom" $
-            let
-                mout :: (Either Doc Spec, LogTree)
-                mout = runCompESingle "Groom" $ groomSpec s
-            in
-                [mout]
+        phaseGroom s =
+            groomSpec s
 
