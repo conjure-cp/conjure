@@ -22,10 +22,16 @@ newtype FunkyMulti g st err m a = FunkyMulti (g -> st -> m ([(Either err a, st)]
 runFunkyMulti :: Monad m => g -> st -> FunkyMulti g st err m a -> m ([(Either err a, st)], g)
 runFunkyMulti g st (FunkyMulti f) = f g st
 
+fmGetsGlobal :: Monad m => (g -> a) -> FunkyMulti g st err m a
+fmGetsGlobal f = FunkyMulti $ \ g st -> return ([(Right (f g), st)], g)
+
+fmModifyGlobal :: Monad m => (g -> g) -> FunkyMulti g st err m ()
+fmModifyGlobal f = FunkyMulti $ \ g st -> return ([(Right (), st)], f g)
+
 instance (Functor m, Monad m) => Functor (FunkyMulti g st err m) where
     {-# SPECIALIZE instance Functor (FunkyMulti g st err Identity) #-}
     {-# INLINE fmap #-}
-    fmap f m = {-# SCC "FMfmap" #-} FunkyMulti $ \ glob st ->
+    fmap f m = FunkyMulti $ \ glob st ->
         let
             g (Left  x) = Left x
             g (Right x) = Right (f x)
@@ -46,9 +52,10 @@ instance (Functor m, Monad m) => Monad (FunkyMulti g st err m) where
     {-# INLINE (>>=) #-}
     fail = error
     return = pure
-    FunkyMulti g >>= f = {-# SCC "FMbind" #-} FunkyMulti $ \ glob st -> do
+    FunkyMulti g >>= f = FunkyMulti $ \ glob st -> do
         (results, global') <- g glob st
-        let
+        doOne results global'
+        where
             {-# INLINE doOne #-}
             doOne [] gl = return ([], gl)
             doOne ((Left  e, l) : rest) gl = do
@@ -58,15 +65,15 @@ instance (Functor m, Monad m) => Monad (FunkyMulti g st err m) where
                 (rest' , gl' ) <- runFunkyMulti gl l (f x)
                 (rest'', gl'') <- doOne rest gl'
                 return (rest' ++ rest'', gl'')
-        doOne results global'
 
 instance (Functor m, Monad m) => MonadError err (FunkyMulti g st err m) where
     {-# INLINE throwError #-}
     {-# INLINE catchError #-}
     throwError e = FunkyMulti $ \ g st -> return ([(Left e, st)], g)
-    catchError (FunkyMulti g) f = {-# SCC "FMcatch" #-} FunkyMulti $ \ glob st -> do
+    catchError (FunkyMulti g) f = FunkyMulti $ \ glob st -> do
         (results, global') <- g glob st
-        let
+        doOne results global'
+        where
             {-# INLINE doOne #-}
             doOne [] gl = return ([], gl)
             doOne ((Left  x, l) : rest) gl = do
@@ -76,7 +83,6 @@ instance (Functor m, Monad m) => MonadError err (FunkyMulti g st err m) where
             doOne ((Right x, l) : rest) gl = do
                 (rest', gl') <- doOne rest gl
                 return ((Right x, l) : rest', gl')
-        doOne results global'
 
 instance (Functor m, Monad m) => MonadState st (FunkyMulti g st err m) where
     {-# INLINE get #-}
