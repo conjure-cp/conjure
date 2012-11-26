@@ -29,7 +29,7 @@ noTuplesSpec specIn@(Spec v statementsOrig) = do
                 Just (f,n,d) ->
                     case checkTupleDomain d of
                         Just ts -> do
-                            lift $ mkLog "removedDecl" $ pretty n
+                            lift $ mkLog "removedDecl" $ pretty statement
                             -- returning newDecls:
                             forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
                                 tell ([n],[])
@@ -38,7 +38,7 @@ noTuplesSpec specIn@(Spec v statementsOrig) = do
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
-                                    lift $ mkLog "removedDecl" $ pretty n
+                                    lift $ mkLog "removedDecl" $ pretty statement
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
                                     forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
