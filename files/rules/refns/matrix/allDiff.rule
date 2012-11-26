@@ -1,0 +1,6 @@
+
+allDiff(&m) ~~> forAll i,j : &r, i < j . &m[i] != &m[j]
+
+    where !(&m hasType   `matrix indexed by [_] of int`)
+    where   &m hasDomain `matrix indexed by [&r] of _`
+
