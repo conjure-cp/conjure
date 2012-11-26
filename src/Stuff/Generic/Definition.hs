@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Stuff.Generic.Definition
     ( Generic(..)
@@ -11,9 +12,15 @@ module Stuff.Generic.Definition
 
 import Stuff.Generic.Tag
 
+import qualified GHC.Generics ( Generic )
+
 import Control.Arrow ( first )
 import Data.List ( intersperse )
 import Data.Maybe ( fromJust, isJust )
+
+-- hashable & hashable-generics
+import Data.Hashable
+import Data.Hashable.Generic
 
 -- split
 import Data.List.Split ( splitOn )
@@ -33,8 +40,11 @@ import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
 data Generic primitive
     = Prim primitive
     | Tagged !Tag [Generic primitive]
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
 
+instance Hashable primitive => Hashable (Generic primitive) where
+    hashWithSalt s x = gHashWithSalt s x
+    {-# INLINEABLE hashWithSalt #-}
 
 universe :: Generic p -> [Generic p]
 universe t@(Tagged _ xs) = t : concatMap universe xs

@@ -22,10 +22,12 @@ module Language.E.Imports
     , isLeft, isRight
     , trace, tracing
     , allCombinations
+    , sortOn
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
-import Control.Arrow             as X ( first, second )
+import Control.Arrow             as X ( first, second, (***) )
+import Control.Category          as X ( (<<<), (>>>) )
 
 import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM, liftM )
 import Control.Monad.Trans.Class as X ( MonadTrans, lift )
@@ -49,6 +51,9 @@ import Data.Maybe        as X ( catMaybes, listToMaybe, maybe, maybeToList, mapM
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
+
+import Data.Hashable         as X ( Hashable(..), hash )
+import Data.Hashable.Generic as X ( gHashWithSalt )
 
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$) )
 
@@ -167,4 +172,7 @@ instance Error Doc where strMsg = Pr.text
 allCombinations :: [(a,[b])] -> [[(a,b)]]
 allCombinations [] = [[]]
 allCombinations ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] | ws <- allCombinations qs ]
+
+sortOn :: Ord b => (a -> b) -> [a] -> [a]
+sortOn f = sortBy (comparing f)
 

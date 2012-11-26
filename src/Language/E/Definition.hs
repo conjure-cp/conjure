@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Language.E.Definition
     ( module Stuff.Generic
@@ -22,6 +23,7 @@ import Stuff.MetaVariable
 import Language.E.Imports
 
 import qualified Data.Text as T
+import qualified GHC.Generics ( Generic )
 
 
 
@@ -56,7 +58,11 @@ type RuleReprResult = ( E            -- original declaration
 type E = Generic BuiltIn
 
 data BuiltIn = B !Bool | I !Integer | S !Text
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Hashable BuiltIn where
+    hashWithSalt s x = gHashWithSalt s x
+    {-# INLINEABLE hashWithSalt #-}
 
 instance Pretty BuiltIn where
     pretty (B x) = pretty x
