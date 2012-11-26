@@ -8,13 +8,12 @@ import Language.E.BuiltIn
 
 import qualified Text.PrettyPrint as Pr
 
+
 type RulesDB m = [E -> m (Maybe [(Text, E)])]
 
 
 applyRefn
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => RulesDB m
     -> Spec
     -> m Spec
@@ -26,9 +25,7 @@ applyRefn db' spec = withBindingScope' $ do
 
 {-# INLINE onSpec #-}
 onSpec
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => RulesDB m
     -> Spec
     -> WriterT Any m Spec
@@ -38,9 +35,7 @@ onSpec db (Spec lang statements) = Spec lang <$> onE db statements
 
 {-# INLINE onE #-}
 onE
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => RulesDB m
     -> E
     -> WriterT Any m E
@@ -51,9 +46,7 @@ onE = applyToTree
 
 {-# INLINE applyIdempotent #-}
 applyIdempotent
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => RulesDB m
     -> E
     -> WriterT Any m E
@@ -68,14 +61,12 @@ applyIdempotent db x = do
 
 {-# INLINE applyToTree #-}
 applyToTree
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => RulesDB m
     -> E
     -> WriterT Any m E
 -- applyToTree _  x | trace (show $ "applyToTree" <+> pretty x) False = undefined
-applyToTree db = bottomUpE (applyIdempotent db)
+applyToTree db = bottomUpERefn (applyIdempotent db)
 
 
 
@@ -171,11 +162,7 @@ _applyRefnTest3 inp =
         Left  x -> error $ show x
         Right x -> do
             -- print $ prettyAsPaths x
-            let mys
-                    = map (afterCompERun "foo")
-                    $ fst
-                    $ runIdentity
-                    $ runFunkyMulti () def
+            let mys = runCompE "foo"
                     $ runWriterT (onE [_aEqtoFoo, _aFooTo12] x)
             forM_ mys $ \ (my, _logs) -> do
                 -- printLogs logs
@@ -192,11 +179,7 @@ _applyRefnTest4 inp =
         Left  x -> error $ show x
         Right x -> do
             -- print $ prettyAsPaths x
-            let mys
-                    = map (afterCompERun "foo")
-                    $ fst
-                    $ runIdentity
-                    $ runFunkyMulti () def
+            let mys = runCompE "foo"
                     $ runWriterT (onE [_aBarTo12, _aEqtoFoo, _aFooTo12] x)
             forM_ mys $ \ (my, _logs) -> do
                 -- printLogs logs
