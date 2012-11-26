@@ -23,12 +23,19 @@ main = interact $ \ inp ->
 
     in
         unlines
-            [ "module Stuff.Generic.Tag where"
+            [ "{-# LANGUAGE DeriveGeneric #-}"
+            , "module Stuff.Generic.Tag where"
             , "import Stuff.Pretty"
             , "import Data.Char ( isSpace )"
             , "import Data.String ( IsString(..) )"
+            , "import GHC.Generics ( Generic )"
+            , "import Data.Hashable ( Hashable(..) )"
+            , "import Data.Hashable.Generic ( gHashWithSalt )"
             , "data Tag = " ++ constructors
-            , "    deriving (Eq, Ord, Show)"
+            , "    deriving (Eq, Ord, Show, Generic)"
+            , "instance Hashable Tag where"
+            , "    hashWithSalt s x = gHashWithSalt s x"
+            , "    {-# INLINEABLE hashWithSalt #-}"
             , "instance Pretty Tag where"
             , "    pretty = pretty . drop 1 . show"
             , "instance IsString Tag where"

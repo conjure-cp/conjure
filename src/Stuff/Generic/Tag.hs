@@ -1,9 +1,14 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Stuff.Generic.Tag where
 import Stuff.Pretty
 import Data.Char ( isSpace )
 import Data.String ( IsString(..) )
+import GHC.Generics ( Generic )
+import Data.Hashable ( Hashable(..) )
+import Data.Hashable.Generic ( gHashWithSalt )
 data Tag = Tactual
     | TallDiff
+    | Tapart
     | Tappend
     | Targ1
     | Targs
@@ -72,6 +77,7 @@ data Tag = Tactual
     | Tparam
     | Tpart
     | Tpartition
+    | Tparts
     | Tpattern
     | TpreImage
     | TquanOverDom
@@ -100,6 +106,7 @@ data Tag = Tactual
     | Ttemplates
     | Tthis
     | Tto
+    | Ttogether
     | TtoInt
     | TtoMSet
     | TtopLevel
@@ -118,7 +125,10 @@ data Tag = Tactual
     | Twhere
     | Twithin
     | TwithLocals
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
+instance Hashable Tag where
+    hashWithSalt s x = gHashWithSalt s x
+    {-# INLINEABLE hashWithSalt #-}
 instance Pretty Tag where
     pretty = pretty . drop 1 . show
 instance IsString Tag where
@@ -126,6 +136,7 @@ instance IsString Tag where
         where
             fromString' "actual" = Tactual
             fromString' "allDiff" = TallDiff
+            fromString' "apart" = Tapart
             fromString' "append" = Tappend
             fromString' "arg1" = Targ1
             fromString' "args" = Targs
@@ -194,6 +205,7 @@ instance IsString Tag where
             fromString' "param" = Tparam
             fromString' "part" = Tpart
             fromString' "partition" = Tpartition
+            fromString' "parts" = Tparts
             fromString' "pattern" = Tpattern
             fromString' "preImage" = TpreImage
             fromString' "quanOverDom" = TquanOverDom
@@ -222,6 +234,7 @@ instance IsString Tag where
             fromString' "templates" = Ttemplates
             fromString' "this" = Tthis
             fromString' "to" = Tto
+            fromString' "together" = Ttogether
             fromString' "toInt" = TtoInt
             fromString' "toMSet" = TtoMSet
             fromString' "topLevel" = TtopLevel
