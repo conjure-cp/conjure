@@ -348,33 +348,9 @@ instance Pretty E where
                   |]
         = pretty actual <> prettyList Pr.parens "," args
 
---     pretty (Expr (Tag t) [])
---         | Just rest <- T.stripPrefix ":operator-" t
---         = textToDoc rest
-
-    -- pretty [xMatch| [x] := hsTerm |]
-    --     = "#{" <> pretty x <> "}#"
-
-    -- pretty x = prettyNotImplemented x
     -- pretty x = "catch all case" <++> vcat [prettyAsPaths x, prettyAsTree x]
-    pretty x = "catch all case" <++> prettyAsPaths x
-
-    -- pretty x = Pr.text $ show x
-
---     pretty x = showAST x
---     -- pretty x = Pr.braces $ "from showAST" <+> stringToDoc (show x)
---     -- pretty _ = "foo"
---     -- pretty ( view -> ( []
---     --                  , []
---     --                  )
---     --        ) = undefined
--- 
--- 
--- instance Pretty Reference where
---     pretty (Reference t) = textToDoc t
--- 
--- instance Pretty Literal where
---     pretty = showAST
+    -- pretty x = "catch all case" <++> prettyAsPaths x
+    pretty x = "catch all case" <+> pretty (show x)
 
 
 prettyPrec :: Int -> E -> Doc
