@@ -4,6 +4,7 @@ module Stuff.NamedLog
     ( LogTree(..), logTreeAppend
     , NamedLog, buildLog
     , prettyLog, prettyLogs, printLogs
+    , nubKeepOrder, nubKeepOrderBy
     ) where
 
 import Data.Default
@@ -94,11 +95,13 @@ printLogs LTEmpty = return ()
 printLogs logs = putStrLn $ renderPretty $ prettyLogs logs
 
 nubKeepOrder :: Hashable a => [a] -> [a]
-nubKeepOrder = go []
+nubKeepOrder = nubKeepOrderBy id
+
+nubKeepOrderBy :: Hashable b => (a -> b) -> [a] -> [a]
+nubKeepOrderBy f = go []
     where
-        go :: Hashable a => [Int] -> [a] -> [a]
         go _ [] = []
-        go seen (x:xs) = let hashx = hash x in
+        go seen (x:xs) = let hashx = hash (f x) in
             if hashx `elem` seen
                 then go seen xs
                 else x : go (hashx : seen) xs
