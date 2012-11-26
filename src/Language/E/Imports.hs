@@ -25,7 +25,7 @@ module Language.E.Imports
     , sortOn
     ) where
 
-import Control.Applicative       as X ( Applicative(..), (<$>), (<*), (*>) )
+import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
 import Control.Arrow             as X ( first, second, (***) )
 import Control.Category          as X ( (<<<), (>>>) )
 
