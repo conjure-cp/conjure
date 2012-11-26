@@ -2,18 +2,24 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Language.E.CompE where
 
 import Stuff.Funky.FunkySingle
 import Stuff.Funky.FunkyMulti
 import Stuff.NamedLog
+import Stuff.MonadList
 
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
 
 import qualified Data.Set as S
+import Data.IntMap ( IntMap )
+import Data.IntSet ( IntSet )
+
+import qualified GHC.Generics ( Generic )
 
 
 class ( Functor m
@@ -30,32 +36,48 @@ instance MonadConjure (FunkySingle ConjureState ConjureError Identity) where
     type ResultF      (FunkySingle ConjureState ConjureError Identity) a = a
     runFunky st ma = runIdentity $ runFunkySingle st ma
 
-instance MonadConjure (FunkyMulti  () ConjureState ConjureError Identity) where
-    type ResultF      (FunkyMulti  () ConjureState ConjureError Identity) a = [a]
-    runFunky st ma = fst $ runIdentity $ runFunkyMulti () st ma
+instance MonadConjure (FunkyMulti  GlobalState ConjureState ConjureError Identity) where
+    type ResultF      (FunkyMulti  GlobalState ConjureState ConjureError Identity) a = [a]
+    runFunky st ma = fst $ runIdentity $ runFunkyMulti def st ma
 
 
 instance MonadConjure (FunkySingle ConjureState ConjureError IO) where
-    type ResultF    (FunkySingle ConjureState ConjureError IO) a = IO a
+    type ResultF      (FunkySingle ConjureState ConjureError IO) a = IO a
     runFunky = runFunkySingle
 
-instance MonadConjure (FunkyMulti  () ConjureState ConjureError IO) where
-    type ResultF      (FunkyMulti  () ConjureState ConjureError IO) a = IO [a]
-    runFunky st ma = liftM fst $ runFunkyMulti () st ma
+instance MonadConjure (FunkyMulti  GlobalState ConjureState ConjureError IO) where
+    type ResultF      (FunkyMulti  GlobalState ConjureState ConjureError IO) a = IO [a]
+    runFunky st ma = liftM fst $ runFunkyMulti def st ma
+
+
+class ( MonadConjure m
+      , MonadList m
+      ) => MonadConjureList m where
+    getsGlobal :: (GlobalState -> a) -> m a
+    modifyGlobal :: (GlobalState -> GlobalState) -> m ()
+
+
+instance MonadConjureList (FunkyMulti GlobalState ConjureState ConjureError Identity) where
+    getsGlobal = fmGetsGlobal
+    modifyGlobal = fmModifyGlobal
+
+instance MonadConjureList (FunkyMulti GlobalState ConjureState ConjureError IO) where
+    getsGlobal = fmGetsGlobal
+    modifyGlobal = fmModifyGlobal
 
 
 runCompE
     :: String
-    -> FunkyMulti () ConjureState ConjureError Identity a
+    -> FunkyMulti GlobalState ConjureState ConjureError Identity a
     -> [(Either Doc a, LogTree)]
-runCompE d ma = map (afterCompERun d) (fst $ runIdentity $ runFunkyMulti () def ma)
+runCompE d ma = map (afterCompERun d) (fst $ runIdentity $ runFunkyMulti def def ma)
 
 
 runCompEIO
     :: String
-    -> FunkyMulti () ConjureState ConjureError IO a
+    -> FunkyMulti GlobalState ConjureState ConjureError IO a
     -> IO [(Either Doc a, LogTree)]
-runCompEIO d ma = map (afterCompERun d) . fst <$> runFunkyMulti () def ma
+runCompEIO d ma = map (afterCompERun d) . fst <$> runFunkyMulti def def ma
 
 
 runCompESingle
@@ -76,7 +98,7 @@ afterCompERun
     :: String
     -> (Either ConjureError a, ConjureState)
     -> (Either Doc a, LogTree)
-afterCompERun d = first (either (toError d) Right) . second localLogs
+afterCompERun d = either (toError d) Right *** localLogs
 
 
 handleInIO
@@ -106,6 +128,7 @@ toError msg
 type ConjureError = (ErrEnum, Doc, Maybe Spec)
 
 data ErrEnum = ErrFatal        -- means execution cannot continue.
+             | ErrGeneratesNone
     deriving (Eq, Show)
 
 err :: MonadConjure m => ErrEnum -> Doc -> m a
@@ -140,7 +163,14 @@ data ConjureState = ConjureState
         }
 
 data Binder = Binder Text E
-    deriving (Show)
+    deriving (Show, GHC.Generics.Generic)
+
+binderName :: Binder -> Text
+binderName (Binder nm _) = nm
+
+instance Hashable Binder where
+    hashWithSalt s x = gHashWithSalt s x
+    {-# INLINEABLE hashWithSalt #-}
 
 instance Default ConjureState where
     def = ConjureState def 1 def def def def def
@@ -174,6 +204,14 @@ nextUniqueName = do
         then nextUniqueName
         else return nm
 
+
+data GlobalState = GlobalState
+        { memoRefnChanged      :: IntMap E
+        , memoRefnStaysTheSame :: IntSet
+        }
+
+instance Default GlobalState where
+    def = GlobalState def def
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
