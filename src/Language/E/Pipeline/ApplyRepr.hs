@@ -118,9 +118,16 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                     case M.lookup (base,region) config of
                         Nothing -> return p
                         Just (origDecl, _ruleName, reprName, newDom, cons) -> do
+                            let
+                                reregion e@[xMatch| [Prim (S i)] := reference |] = case identifierSplit i of
+                                    (iBase, Just "regionS", mrepr) | iBase == base ->
+                                        let i' = identifierConstruct iBase (Just region) mrepr
+                                        in  [xMake| reference := [Prim (S i')] |]
+                                    _ -> e
+                                reregion e = e
                             modify $ \ st -> st { representationLog = (base, reprName, origDecl, newDom)
                                                                     : representationLog st
-                                                , structuralConsLog = cons ++ structuralConsLog st
+                                                , structuralConsLog = map (transform reregion) cons ++ structuralConsLog st
                                                 }
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
