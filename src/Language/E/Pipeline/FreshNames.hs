@@ -32,26 +32,34 @@ freshNames param = do
         newvarsInBubbles :: S.Set Text
         newvarsInBubbles = S.fromList $ concat
                                 [ r | [xMatch| ls := withLocals.locals |] <- universe param
-                                    , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find .name.reference |] = Just s
-                                          nameOut [xMatch| [Prim (S s)] := topLevel.declaration.given.name.reference |] = Just s
+                                    , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find.name.reference |] = Just s
                                           nameOut _ = Nothing
                                     , let r = mapMaybe nameOut ls
                                 ]
-    let
-        newvars :: S.Set Text
-        newvars = newvarsInQuanVar `S.union` newvarsInBubbles
-    -- let
-    --     newvars  = S.fromList [ r | [xMatch| [Prim (S r)] := reference |] <- universe param
-    --                               , r `notElem` ["forAll","exists","sum"]           -- don't rename these
-    --                               , '#' `notElem` r                                 -- and if it has a # in it
-    --                               ]
-    uniqueNames <- forM (S.toList newvars) $ \ a -> do b <- nextUniqueName; return (a, Prim (S b))
-    let uniqueNamesMap = M.fromList uniqueNames
+
+    uniqueNamesInQuanVar <- forM (S.toList newvarsInQuanVar) $ \ a -> do
+        b <- nextUniqueName
+        return (a, b)
+    uniqueNamesInBubbles <- forM (S.toList newvarsInBubbles) $ \ a -> do
+        b <- nextUniqueName
+        return (a, identifierConstruct b (Just "regionF") Nothing)
+    let uniqueNamesMap = M.fromList (uniqueNamesInQuanVar ++ uniqueNamesInBubbles)
+
     let
         f p@[xMatch| [Prim (S r)] := reference |]
             = case M.lookup r uniqueNamesMap of
                 Nothing -> p
-                Just t  -> [xMake| reference := [t] |]
+                Just t  -> [xMake| reference := [Prim (S t)] |]
+        f p@[xMatch| [Prim (S r)] := topLevel.declaration.find.name.reference
+                   | [d]          := topLevel.declaration.find.domain
+                   |] = case identifierSplit r of
+                            (base, Just "regionF", mrepr) ->
+                                let r' = identifierConstruct base Nothing mrepr
+                                in  [xMake| topLevel.declaration.find.name.reference := [Prim (S r')]
+                                          | topLevel.declaration.find.domain         := [d]
+                                          |]
+                            _ -> p
         f p = p
+
     return $ transform f param
 
