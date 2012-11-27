@@ -34,7 +34,7 @@ import Language.Haskell.Meta.Parse.Careful
 
 -- pretty printing
 import Stuff.Pretty ( Pretty(..) )
-import Text.PrettyPrint ( Doc, ($+$), (<+>), hcat, vcat, nest )
+import Text.PrettyPrint ( Doc, (<+>), hang, hcat, vcat, nest )
 
 
 data Generic primitive
@@ -63,7 +63,7 @@ replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 
 prettyAsTree :: Pretty primitive => Generic primitive -> Doc
 prettyAsTree (Prim p) = pretty p
-prettyAsTree (Tagged tag xs) = pretty tag $+$ vcat (map (nest 4 . prettyAsTree) xs)
+prettyAsTree (Tagged tag xs) = pretty tag `hang` 4 $ vcat (map (nest 4 . prettyAsTree) xs)
 
 prettyAsPaths :: Pretty primitive => Generic primitive -> Doc
 prettyAsPaths = vcat . map pOne . toPaths
