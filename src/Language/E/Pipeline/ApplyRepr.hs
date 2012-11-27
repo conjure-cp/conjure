@@ -170,11 +170,7 @@ addChannellingFromLog (Spec v xs) = do
                   | one <- grouped
                   ]
 
-    let
-        insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest
-        insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.objective |] : _) = toInsert ++ rest
-        insertBeforeSuchThat toInsert (i:is) = i : insertBeforeSuchThat toInsert is
-        insertBeforeSuchThat toInsert []     = toInsert
+    let insertNewDecls toInsert rest = toInsert ++ rest
 
     let
         mkWithNewDom :: (Text, Text, E, E) -> E
@@ -198,7 +194,7 @@ addChannellingFromLog (Spec v xs) = do
 
     mapM_ (mkLog "addedDecl" . pretty) newDecls'
 
-    return $ Spec v $ listAsStatement $ insertBeforeSuchThat newDecls' (statementAsList xs) ++ newCons'
+    return $ Spec v $ listAsStatement $ insertNewDecls newDecls' (statementAsList xs) ++ newCons'
 
 
 allPairs :: [a] -> [(a,a)]
