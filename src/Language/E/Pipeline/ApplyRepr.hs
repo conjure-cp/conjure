@@ -26,6 +26,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
         let func = mergeReprFunc (func' : builtInRepr)
 
         let Spec _ statements = spec
+        mapM_ introduceStuff (statementAsList statements)
 
         let topLevels'
                 =  [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
