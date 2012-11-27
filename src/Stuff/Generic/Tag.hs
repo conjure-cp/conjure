@@ -78,6 +78,7 @@ data Tag = Tactual
     | Tpart
     | Tpartition
     | Tparts
+    | Tparty
     | Tpattern
     | TpreImage
     | TquanOverDom
@@ -206,6 +207,7 @@ instance IsString Tag where
             fromString' "part" = Tpart
             fromString' "partition" = Tpartition
             fromString' "parts" = Tparts
+            fromString' "party" = Tparty
             fromString' "pattern" = Tpattern
             fromString' "preImage" = TpreImage
             fromString' "quanOverDom" = TquanOverDom
