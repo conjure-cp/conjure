@@ -19,9 +19,12 @@ removeUnused (Spec v statements) = Spec v <$> go statements
                   | [next] := statement.next
                   |] = do
             let maybeName = case this of
-                    [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference |] -> Just nm
-                    [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference |] -> Just nm
-                    [xMatch| [Prim (S nm)] := topLevel.letting          .name.reference |] -> Just nm
+                    [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference
+                           | [d]           := topLevel.declaration.find .domain
+                           |] | domainNeedsRepresentation d -> Just nm
+                    [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+                           | [d]           := topLevel.declaration.given.domain
+                           |] | domainNeedsRepresentation d -> Just nm
                     _ -> Nothing
             case maybeName of
                 Nothing -> do
