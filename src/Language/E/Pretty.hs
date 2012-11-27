@@ -348,9 +348,7 @@ instance Pretty E where
                   |]
         = pretty actual <> prettyList Pr.parens "," args
 
-    -- pretty x = "catch all case" <++> vcat [prettyAsPaths x, prettyAsTree x]
-    -- pretty x = "catch all case" <++> prettyAsPaths x
-    pretty x = "catch all case" <+> pretty (show x)
+    pretty x = "{-#" <+> prettyAsTree x <+> "#-}"
 
 
 prettyPrec :: Int -> E -> Doc
