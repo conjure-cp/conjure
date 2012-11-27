@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Language.E.Pipeline.ReadIn where
 

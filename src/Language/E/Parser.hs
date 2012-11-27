@@ -1,7 +1,3 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-
 module Language.E.Parser
     ( Parser
     , inCompleteFile
