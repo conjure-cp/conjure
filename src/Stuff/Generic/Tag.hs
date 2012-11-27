@@ -76,6 +76,7 @@ data Tag = Tactual
     | Toperator
     | Tparam
     | Tpart
+    | Tparticipants
     | Tpartition
     | Tparts
     | Tparty
@@ -205,6 +206,7 @@ instance IsString Tag where
             fromString' "operator" = Toperator
             fromString' "param" = Tparam
             fromString' "part" = Tpart
+            fromString' "participants" = Tparticipants
             fromString' "partition" = Tpartition
             fromString' "parts" = Tparts
             fromString' "party" = Tparty
