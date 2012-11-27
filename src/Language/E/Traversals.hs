@@ -262,9 +262,11 @@ introduceStuff :: MonadConjure m => E -> m ()
 introduceStuff = helper
     where
 
-        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference |] = addBinder name x
+        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference |] =
+            let (base, _, _) = identifierSplit name in addBinder base x
 
-        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] = addBinder name x
+        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] =
+            let (base, _, _) = identifierSplit name in addBinder base x
 
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.expr           |] = addBinder name x
