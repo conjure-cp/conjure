@@ -348,7 +348,7 @@ typeOf p@[eMatch| &a - &b |] = do
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
-                |] | operator `elem` T.words "+ - * / %" = do
+                |] | operator `elem` T.words "+ - * / % **" = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
