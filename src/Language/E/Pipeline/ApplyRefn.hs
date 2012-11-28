@@ -142,53 +142,31 @@ _applyRefnTest2 inp =
         Left  x -> error $ show x
         Right x -> do
             print $ prettyAsPaths x
-            let (mys, _logs)
-                    = afterCompERun "foo"
-                    $ runIdentity
-                    $ runFunkySingle def
-                    $ tryApply [_plusminus1] x
-            -- printLogs logs
-            case mys of
-                Left  y -> error $ renderPretty y
-                Right (ys,flag) -> do
-                    print flag
-                    forM_ ys $ \ y -> do
-                        print $ prettyAsPaths y
-                        print $ pretty y
+            (ys,flag) <- handleInIOSingle =<< runCompEIOSingle "foo" (tryApply [_plusminus1] x)
+            print flag
+            forM_ ys $ \ y -> do
+                print $ prettyAsPaths y
+                print $ pretty y
 
 _applyRefnTest3 :: Text -> IO ()
 _applyRefnTest3 inp =
     case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
         Left  x -> error $ show x
         Right x -> do
-            -- print $ prettyAsPaths x
-            let mys = runCompE "foo"
-                    $ runWriterT (onE [_aEqtoFoo, _aFooTo12] x)
-            forM_ mys $ \ (my, _logs) -> do
-                -- printLogs logs
-                case my of
-                    Left  y -> error $ renderPretty y
-                    Right (y, _flag) -> do
-                        -- print flag
-                        -- print $ prettyAsPaths y
-                        print $ pretty y
+            print $ prettyAsPaths x
+            ys <- handleInIO =<< runCompEIO "foo" (runWriterT (onE [_aEqtoFoo, _aFooTo12] x))
+            forM_ ys $ \ (y,_) ->
+                print $ pretty y
 
 _applyRefnTest4 :: Text -> IO ()
 _applyRefnTest4 inp =
     case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
         Left  x -> error $ show x
         Right x -> do
-            -- print $ prettyAsPaths x
-            let mys = runCompE "foo"
-                    $ runWriterT (onE [_aBarTo12, _aEqtoFoo, _aFooTo12] x)
-            forM_ mys $ \ (my, _logs) -> do
-                -- printLogs logs
-                case my of
-                    Left  y -> error $ renderPretty y
-                    Right (y, _flag) -> do
-                        -- print flag
-                        -- print $ prettyAsPaths y
-                        print $ pretty y
+            print $ prettyAsPaths x
+            ys <- handleInIO =<< runCompEIO "foo" (runWriterT (onE [_aBarTo12, _aEqtoFoo, _aFooTo12] x))
+            forM_ ys $ \ (y,_) ->
+                print $ pretty y
 
 _applyRefnMain :: IO ()
 _applyRefnMain = _applyRefnTest4 "blah(blah(blah(a,b),blah(c,d)),e)"
