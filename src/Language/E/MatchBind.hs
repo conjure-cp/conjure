@@ -54,7 +54,7 @@ patternMatch pattern actual = do
         core p _ | unnamedMV p =
             return True
         core p x | Just nm <- namedMV p = do
-            addBinder ("&" `mappend` nm) x
+            addMetaVar nm x
             return True
         core [xMatch| xs := attrCollection |]
              [xMatch| ys := attrCollection |]
@@ -121,7 +121,7 @@ patternMatch pattern actual = do
 -- if this returns nothing, that means there is some unbound reference.
 patternBind :: MonadConjure m => E -> MaybeT m E
 patternBind x | Just nm <- namedMV x = do
-    res <- lookupBinder ("&" `mappend` nm)
+    res <- lookupMetaVar nm
     patternBind res
 patternBind (Tagged xTag xArgs) = Tagged xTag <$> mapM patternBind xArgs
 patternBind x = return x

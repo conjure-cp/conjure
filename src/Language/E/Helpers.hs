@@ -5,7 +5,6 @@ module Language.E.Helpers where
 
 import Language.E.Imports
 import Language.E.Definition
-import Language.E.Pretty
 import Language.E.CompE
 import Language.E.TH
 
@@ -21,12 +20,6 @@ disjunct :: [E] -> E
 disjunct []     = [eMake| false |]
 disjunct [x]    = x
 disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
-
-
-bindersDoc :: MonadConjure m => m Doc
-bindersDoc = do
-    bs <- gets binders
-    return $ prettyList id "," $ nub [ nm | Binder nm _ <- bs ]
 
 
 domainNeedsRepresentation :: E -> Bool

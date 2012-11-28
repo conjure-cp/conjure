@@ -142,12 +142,9 @@ evalHasRepr [eMatch| &x hasRepr &y |] =
     case x of
         [eMatch| &m[&_] |] ->
             evalHasRepr [eMake| &m hasRepr &y |]
-        [xMatch| [Prim (S iden')] := metavar   |] -> do
-            let iden = "&" `mappend` iden'
-            bs <- gets binders
-            case [ a | Binder nm a <- bs, nm == iden ] of
-                [a] -> evalHasRepr [eMake| &a hasRepr &y |]
-                _   -> err ErrFatal $ "Undefined reference: " <+> pretty iden'
+        [xMatch| [Prim (S iden)] := metavar   |] -> do
+            a <- errMaybeT "hasRepr" lookupMetaVar iden
+            evalHasRepr [eMake| &a hasRepr &y |]
         [xMatch| [Prim (S iden )] := reference |] ->
             case identifierSplit iden of
                 (_,_,Just idenReprName) ->
@@ -170,10 +167,8 @@ evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
         retSum = return . sumE
 
         domSize [xMatch| [Prim (S s)] := reference |] = do
-            mx <- runMaybeT $ lookupBinder s
-            case mx of
-                Nothing -> err ErrFatal $ "identifier not bound:" <+> pretty s
-                Just x  -> domSize x
+            x <- errMaybeT "domSize" lookupReference s
+            domSize x
         domSize [xMatch| rs := domain.int.ranges |] = do
             xs <- mapM domSize rs
             retSum xs
@@ -212,10 +207,8 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
         -- indices (matrix) (integer)
         indices :: MonadConjure m => E -> Integer -> m (Maybe (E,[Binder]))
         indices [xMatch| [Prim (S iden)] := reference |] i = do
-            mres <- runMaybeT $ lookupBinder iden
-            case mres of
-                Nothing  -> err ErrFatal $ "(evalIndices) Undefined reference:" <+> pretty iden
-                Just res -> indices res i
+            res <- errMaybeT "indices" lookupReference iden
+            indices res i
         indices [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
         indices [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
         indices [xMatch| [index] := domain.matrix.index |] 0 = ret index
@@ -303,7 +296,7 @@ matrixEq _ = return Nothing
 
 stripStructuralSingle :: MonadConjure m => E -> m (Maybe (E, [Binder]))
 stripStructuralSingle [xMatch| [Prim (S nm)] := structural.single.reference |] = do
-    mx <- runMaybeT $ lookupBinder nm
+    mx <- runMaybeT $ lookupReference nm
     case mx of
         Just [xMatch| [Prim (S nm')] := quanVar.name |] | nm == nm' -> return Nothing
         _ -> ret [xMake| reference := [Prim (S nm)] |]

@@ -111,7 +111,7 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
                                         -- renaming identifiers before we return the constraint
                                         con''    <- freshNames con'
                                         maybeCon <- runMaybeT $ patternBind con''
-                                        maybe (err ErrFatal $ "Unbound reference in" <+> pretty con'')
+                                        maybe (errUndefinedRef "ruleReprCompile" $ pretty con'')
                                               return
                                               maybeCon
                                     return [(origDecl, ruleName, reprName, liftedRes, mcons')]

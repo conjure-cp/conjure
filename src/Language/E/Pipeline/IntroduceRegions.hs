@@ -28,7 +28,7 @@ introduceRegions spec = withBindingScope' $
         op p@[xMatch| [Prim (S s)] := reference |] = case identifierSplit s of
             (_, Just _, _) -> return p
             (base, Nothing, repr) -> do
-                mx <- lift $ runMaybeT $ lookupBinder s
+                mx <- lift $ runMaybeT $ lookupReference s
                 case mx of
                     Just [xMatch| [d] := topLevel.declaration.find .domain |]
                         | domainNeedsRepresentation d -> addRegion base repr

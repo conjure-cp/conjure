@@ -263,29 +263,29 @@ introduceStuff = helper
     where
 
         helper x@[xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference |] =
-            let (base, _, _) = identifierSplit name in addBinder base x
+            let (base, _, _) = identifierSplit name in addReference base x
 
         helper x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] =
-            let (base, _, _) = identifierSplit name in addBinder base x
+            let (base, _, _) = identifierSplit name in addReference base x
 
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                        | [ x ]           := topLevel.letting.expr           |] = addBinder name x
+                        | [ x ]           := topLevel.letting.expr           |] = addReference name x
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar
-                        | [ x ]           := topLevel.letting.expr           |] = addBinder ("&" `mappend` name) x
+                        | [ x ]           := topLevel.letting.expr           |] = addMetaVar name x
 
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                        | [ x ]           := topLevel.letting.domain         |] = addBinder name x
+                        | [ x ]           := topLevel.letting.domain         |] = addReference name x
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                        | [ x ]           := topLevel.letting.domain         |] = addBinder ("&" `mappend` name) x
+                        | [ x ]           := topLevel.letting.domain         |] = addMetaVar name x
 
-        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.reference |] = addBinder name x
-        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addBinder ("&" `mappend` name) x
+        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.reference |] = addReference name x
+        helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addMetaVar name x
 
         helper   [xMatch| _ := topLevel.suchThat  |] = return ()
         helper   [xMatch| _ := topLevel.objective |] = return ()
         helper   [xMatch| _ := topLevel.where     |] = return ()
 
-        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.dim  .name.reference |] = addBinder name x
+        helper x@[xMatch| [Prim (S name)] := topLevel.declaration.dim  .name.reference |] = addReference name x
         helper   [xMatch| _  := topLevel.declaration.nestedDimFind |] = return ()
 
         helper x@[xMatch| _ := topLevel |]
@@ -294,7 +294,7 @@ introduceStuff = helper
         helper   [xMatch| ls := withLocals.locals |] = mapM_ introduceStuff ls
 
         helper x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference |]
-            = addBinder r [xMake| quanVar.name   := [Prim (S r)]
+            = addReference r [xMake| quanVar.name   := [Prim (S r)]
                                 | quanVar.within := [x]
                                 |]
 

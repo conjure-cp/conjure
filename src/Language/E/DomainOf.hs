@@ -6,13 +6,15 @@ import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
-import Language.E.Helpers
-import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 
 
-errDomainOf :: (MonadConjure m, Pretty p) => p -> m a
-errDomainOf p = err ErrFatal $ "Cannot calculate the domain of" <+> pretty p
+errDomainOf :: MonadConjure m => E -> m E
+errDomainOf p = do
+    bsText <- bindersDoc
+    err ErrFatal $ vcat [ "Cannot calculate the domain of" <+> prettyAsPaths p
+                        , bsText
+                        ]
 
 
 domainOf :: MonadConjure m => E -> m E
@@ -21,19 +23,14 @@ domainOf [xMatch| [Prim (S i)] := reference |] =
     if i == "_"
         then return [xMake| type.unknown := [] |]
         else do
-            mx <- runMaybeT $ lookupBinder i
-            case mx of
-                Just x -> domainOf x
-                _      -> do
-                    bsText <- bindersDoc
-                    err ErrFatal $ "Undefined reference: " <+> pretty i $$ bsText
+            x <- errMaybeT "domainOf" lookupReference i
+            domainOf x
 
 domainOf p@[xMatch| [Prim (S i)] := metavar |] = do
-    let j = "&" `mappend` i
-    bs <- gets binders
-    case [ x | Binder nm x <- bs, nm == j ] of
-        [x] -> domainOf x
-        _   -> return p -- this is for hasDomain pattern matching in rules to work
+    mx <- runMaybeT $ lookupMetaVar i
+    case mx of
+        Just x  -> domainOf x
+        Nothing -> return p -- this is for hasDomain pattern matching in rules to work
 
 domainOf [xMatch| [x] := topLevel.declaration.find .domain |] = domainOf x
 domainOf [xMatch| [x] := topLevel.declaration.given.domain |] = domainOf x

@@ -64,10 +64,8 @@ sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
 
         lookupDomain d@[xMatch| _ := domain |] = return $ Just d
         lookupDomain [xMatch| [Prim (S nm)] := reference |] = do
-            mres <- runMaybeT $ lookupBinder nm
-            case mres of
-                Nothing  -> return Nothing
-                Just res -> lookupDomain res
+            res <- errMaybeT "lookupDomain" lookupReference nm
+            lookupDomain res
         lookupDomain [xMatch| [d] := topLevel.declaration.find .domain |] = return $ Just d
         lookupDomain [xMatch| [d] := topLevel.declaration.given.domain |] = return $ Just d
         lookupDomain [xMatch| [d] := topLevel.letting          .domain |] = return $ Just d

@@ -162,6 +162,14 @@ data ConjureState = ConjureState
         , allNamesPreConjure :: S.Set Text  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
+bindersDoc :: MonadConjure m => m Doc
+bindersDoc = do
+    bs <- gets binders
+    return $
+        "Current bindings: " <+>
+        prettyList id "," (nub $ map binderName bs)
+
+
 data Binder = Binder Text E
     deriving (Show, GHC.Generics.Generic)
 
@@ -183,16 +191,37 @@ mkLog nm doc = case buildLog nm doc of
         localLogs = LTMultiple (localLogs st) (LTSingle l)
         }
 
-addBinder :: MonadConjure m => Text -> E -> m ()
-addBinder nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
+addReference :: MonadConjure m => Text -> E -> m ()
+addReference nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
 
-lookupBinder :: MonadConjure m => Text -> MaybeT m E
-lookupBinder nm = do
+addMetaVar :: MonadConjure m => Text -> E -> m ()
+addMetaVar nm = addReference ("&" `mappend` nm)
+
+lookupReference :: MonadConjure m => Text -> MaybeT m E
+lookupReference nm = do
     let (base,_,_) = identifierSplit nm
     bs <- lift $ gets binders
     case listToMaybe [ x | Binder nm' x <- bs, base == nm' ] of
         Nothing -> mzero
         Just x  -> return x
+
+lookupMetaVar :: MonadConjure m => Text -> MaybeT m E
+lookupMetaVar nm = lookupReference ("&" `mappend` nm)
+
+errUndefinedRef :: (MonadConjure m, Pretty p) => Doc -> p -> m a
+errUndefinedRef place t = do
+    bsText <- bindersDoc
+    err ErrFatal $ vcat [ "(in" <+> place <> ")"
+                        , "Undefined reference:" <+> pretty t
+                        , nest 4 ("Current bindings:" <+> bsText)
+                        ]
+
+errMaybeT :: MonadConjure m => Doc -> (Text -> MaybeT m E) -> Text -> m E
+errMaybeT place comp t = do
+    ma <- runMaybeT (comp t)
+    case ma of
+        Just i  -> return i
+        Nothing -> errUndefinedRef place t
 
 nextUniqueName :: MonadConjure m => m Text
 nextUniqueName = do

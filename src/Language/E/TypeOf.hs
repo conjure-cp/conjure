@@ -7,7 +7,6 @@ import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
-import Language.E.Helpers
 import Language.E.TH
 import Language.E.Traversals
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
@@ -86,20 +85,12 @@ typeOf p@[xMatch| _ := type |] = return p
 
 typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
 typeOf [xMatch| [Prim (S i  )] := reference |] = do
-    mx <- runMaybeT $ lookupBinder i
-    case mx of
-        Just x -> typeOf x
-        _      -> do
-            bsText <- bindersDoc
-            err ErrFatal $ "Undefined reference:" <+> pretty i
-                         $$ nest 4 ("Current bindings:" <+> bsText)
+    x <- errMaybeT "typeOf" lookupReference i
+    typeOf x
 
-typeOf [xMatch| [Prim (S i')] := metavar |] = do
-    let i = "&" `mappend` i'
-    mx <- runMaybeT $ lookupBinder i
-    case mx of
-        Just x -> typeOf x
-        _      -> err ErrFatal $ "Undefined reference: " <+> pretty i
+typeOf [xMatch| [Prim (S i)] := metavar |] = do
+    x <- errMaybeT "typeOf" lookupMetaVar i
+    typeOf x
 
 typeOf [xMatch| [i] := structural.single |] = typeOf i
 
