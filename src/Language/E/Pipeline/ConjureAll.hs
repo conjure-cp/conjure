@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.E.Pipeline.ConjureAll ( conjureAllPure ) where
 
@@ -8,33 +9,56 @@ import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
 
+import Control.Monad.State ( get, put )
 
 
 conjureAllPure
     :: [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureAllPure reprs refns spec = runCompE "conjure" $ conjureAll reprs refns spec
+conjureAllPure reprs refns spec = onlyOneError $ runCompE "conjure" $ conjureAll reprs refns spec
 
+onlyOneError :: [(Either a b, c)] -> [(Either a b, c)]
+onlyOneError [] = []
+onlyOneError (x:xs)
+    | isLeft (fst x) = [x]
+    | otherwise      = x : onlyOneError xs
+
+data Which = GeneratesNone | GeneratesSome
 
 conjureAll
-    :: MonadConjureList m
+    :: forall m
+    .  MonadConjureList m
     => [RuleRepr] -> [RuleRefn] -> Spec -> m Spec
 conjureAll reprs refns = phaseRepr0
     where
-        ifNone ma mb = catchError ma $ \ e ->
-            case e of
-                (ErrGeneratesNone,_,_) -> mb
-                _                      -> throwError e
+        ifNone
+            :: (Spec -> m Spec)
+            -> (Spec -> m Spec)
+            -> (Spec -> m Spec)
+            -> Spec -> m Spec
+        ifNone ma mIf mElse s = flip evalStateT GeneratesSome $ do
+            s' <- catchError (lift $ ma s) $ \ e ->
+                    case e of
+                        (ErrGeneratesNone,_,_) -> do put GeneratesNone ; lift $ mIf s
+                        _                      -> throwError e
+            w <- get
+            case w of
+                GeneratesNone -> return s'
+                GeneratesSome -> lift $ mElse s'
 
-        phaseRepr0 s =
-            (conjureRepr reprs s >>= phaseRefn) `ifNone` phaseRefn s
+        -- conjure phases, these run only once
+        repr, refn, groom :: Spec -> m Spec
+        -- never returns [], might raise ErrGeneratesNone, that is when we groom and go home.
+        repr  s = trace "repr"  $ conjureRepr reprs s
+        -- never returns [], neither raises ErrGeneratesNone. always go to repr after this.
+        refn  s = trace "refn"  $ conjureRefn refns s
+        -- prepare the spec for outputting.
+        groom s = trace "groom" $ groomSpec s
 
-        phaseRepr s =
-            (conjureRepr reprs s >>= phaseRefn) `ifNone` phaseGroom s
-
-        phaseRefn s =
-            (conjureRefn refns s >>= phaseRepr) `ifNone` phaseGroom s
-
-        phaseGroom s =
-            groomSpec s
+        -- conjure phases, these call the appropriate phase following them.
+        -- calling phaseRepr0 will run the whole of conjure.
+        phaseRepr0, phaseRepr, phaseRefn :: Spec -> m Spec
+        phaseRepr0 = ifNone repr (refn >=> groom) phaseRefn
+        phaseRepr  = ifNone repr groom            phaseRefn
+        phaseRefn  = refn >=> phaseRepr
 
