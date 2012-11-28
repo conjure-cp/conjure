@@ -8,6 +8,7 @@ import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.TypeOf
+import Language.E.Pretty
 import Language.E.Evaluator.DataAboutQuantifiers
 import Language.E.TH ( eMatch, eMake )
 
@@ -40,9 +41,6 @@ partialEvaluator [eMatch| &_ \/ true |] = ret [eMake| true |]
 partialEvaluator [eMatch| false -> &_ |] = ret [eMake| true |]
 partialEvaluator [eMatch| true  -> &a |] = ret a
 
-partialEvaluator [eMatch| max({&a}) |] = ret a
-partialEvaluator [eMatch| min({&a}) |] = ret a
-
 partialEvaluator [eMatch| &a + &b - &c |]
     | [xMatch| [Prim (I bInt)] := value.literal |] <- b
     , [xMatch| [Prim (I cInt)] := value.literal |] <- c
@@ -58,6 +56,16 @@ partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
 partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
                         | [Prim (B False)]     := quantified.guard.value.literal
                         |] = ret [eMake| true |]
+
+partialEvaluator   [eMatch| max({&a}) |] = ret a
+partialEvaluator p@[xMatch| [] := operator.max.args.value.set.values |] = err ErrFatal (pretty p <+> "is undefined.")
+partialEvaluator   [xMatch| xs := operator.max.args.value.set.values |] =
+    ret $ foldr1 (\ a b -> [xMake| operator.max.args := [a,b] |] ) xs
+
+partialEvaluator   [eMatch| min({&a}) |] = ret a
+partialEvaluator p@[xMatch| [] := operator.min.args.value.set.values |] = err ErrFatal (pretty p <+> "is undefined.")
+partialEvaluator   [xMatch| xs := operator.min.args.value.set.values |] =
+    ret $ foldr1 (\ a b -> [xMake| operator.min.args := [a,b] |] ) xs
 
 -- quantification over an empty set or mset constant.
 partialEvaluator
