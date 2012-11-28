@@ -29,25 +29,29 @@ class ( Functor m
       , MonadError ConjureError m
       ) => MonadConjure m where
     type ResultF m a
-    runFunky :: ConjureState -> m a -> ResultF m (Either ConjureError a, ConjureState)
+    runFunky :: m a -> ResultF m a
 
 
 instance MonadConjure (FunkySingle ConjureState ConjureError Identity) where
-    type ResultF      (FunkySingle ConjureState ConjureError Identity) a = a
-    runFunky st ma = runIdentity $ runFunkySingle st ma
+    type ResultF      (FunkySingle ConjureState ConjureError Identity) a =
+                      (Either ConjureError a, ConjureState)
+    runFunky ma = runIdentity $ runFunkySingle def ma
 
 instance MonadConjure (FunkyMulti  GlobalState ConjureState ConjureError Identity) where
-    type ResultF      (FunkyMulti  GlobalState ConjureState ConjureError Identity) a = [a]
-    runFunky st ma = fst $ runIdentity $ runFunkyMulti def st ma
+    type ResultF      (FunkyMulti  GlobalState ConjureState ConjureError Identity) a =
+                      [(Either ConjureError a, ConjureState)]
+    runFunky ma = fst $ runIdentity $ runFunkyMulti def def ma
 
 
 instance MonadConjure (FunkySingle ConjureState ConjureError IO) where
-    type ResultF      (FunkySingle ConjureState ConjureError IO) a = IO a
-    runFunky = runFunkySingle
+    type ResultF      (FunkySingle ConjureState ConjureError IO) a =
+                      IO (Either ConjureError a, ConjureState)
+    runFunky = runFunkySingle def
 
 instance MonadConjure (FunkyMulti  GlobalState ConjureState ConjureError IO) where
-    type ResultF      (FunkyMulti  GlobalState ConjureState ConjureError IO) a = IO [a]
-    runFunky st ma = liftM fst $ runFunkyMulti def st ma
+    type ResultF      (FunkyMulti  GlobalState ConjureState ConjureError IO) a =
+                      IO [(Either ConjureError a, ConjureState)]
+    runFunky ma = liftM fst $ runFunkyMulti def def ma
 
 
 class ( MonadConjure m
@@ -70,42 +74,47 @@ runCompE
     :: String
     -> FunkyMulti GlobalState ConjureState ConjureError Identity a
     -> [(Either Doc a, LogTree)]
-runCompE d ma = map (afterCompERun d) (fst $ runIdentity $ runFunkyMulti def def ma)
+runCompE d ma = afterCompERun d $ runFunky ma
 
 
 runCompEIO
     :: String
     -> FunkyMulti GlobalState ConjureState ConjureError IO a
     -> IO [(Either Doc a, LogTree)]
-runCompEIO d ma = map (afterCompERun d) . fst <$> runFunkyMulti def def ma
+runCompEIO d ma = afterCompERun d <$> runFunky ma
 
 
 runCompESingle
     :: String
     -> FunkySingle ConjureState ConjureError Identity a
     -> (Either Doc a, LogTree)
-runCompESingle d ma = afterCompERun d $ runIdentity $ runFunkySingle def ma
+runCompESingle d ma = afterCompERunSingle d $ runFunky ma
 
 
 runCompEIOSingle
     :: String
     -> FunkySingle ConjureState ConjureError IO a
     -> IO (Either Doc a, LogTree)
-runCompEIOSingle d ma = afterCompERun d <$> runFunkySingle def ma
+runCompEIOSingle d ma = afterCompERunSingle d <$> runFunky ma
 
 
 afterCompERun
     :: String
-    -> (Either ConjureError a, ConjureState)
-    -> (Either Doc a, LogTree)
-afterCompERun d = either (toError d) Right *** localLogs
+    -> [(Either ConjureError a, ConjureState)]
+    -> [(Either Doc          a, LogTree     )]
+afterCompERun d = map (afterCompERunSingle d)
 
+afterCompERunSingle
+    :: String
+    -> (Either ConjureError a, ConjureState)
+    -> (Either Doc          a, LogTree     )
+afterCompERunSingle d (Left  x, st) = (Left $ toError d x, localLogs st)
+afterCompERunSingle _ (Right x, st) = (Right x           , localLogs st)
 
 handleInIO
     :: [(Either Doc a, LogTree)]
     -> IO [a]
 handleInIO = mapM handleInIOSingle
-
 
 handleInIOSingle
     :: (Either Doc a, LogTree)
@@ -116,10 +125,8 @@ handleInIOSingle (mx, logs) = do
         Left  x -> error $ renderPretty x
         Right x -> return x
 
-toError :: String -> ConjureError -> Either Doc a
-toError msg
-    = Left
-    . prettyError (pretty $ "Error in phase: " ++ msg)
+toError :: String -> ConjureError -> Doc
+toError msg = prettyError (pretty $ "Error in phase: " ++ msg)
 
 
 
