@@ -30,6 +30,7 @@ data Tag = Tactual
     | Tenum
     | Texpr
     | Tfind
+    | Tflatten
     | Tfreq
     | Tfrom
     | TfromTo
@@ -68,6 +69,7 @@ data Tag = Tactual
     | TnestedDimFind
     | Tnew
     | Tnext
+    | TnormIndices
     | Tnot
     | TnowOrdered
     | Tobjective
@@ -160,6 +162,7 @@ instance IsString Tag where
             fromString' "enum" = Tenum
             fromString' "expr" = Texpr
             fromString' "find" = Tfind
+            fromString' "flatten" = Tflatten
             fromString' "freq" = Tfreq
             fromString' "from" = Tfrom
             fromString' "fromTo" = TfromTo
@@ -198,6 +201,7 @@ instance IsString Tag where
             fromString' "nestedDimFind" = TnestedDimFind
             fromString' "new" = Tnew
             fromString' "next" = Tnext
+            fromString' "normIndices" = TnormIndices
             fromString' "not" = Tnot
             fromString' "nowOrdered" = TnowOrdered
             fromString' "objective" = Tobjective
