@@ -15,12 +15,17 @@ driverConjure conj baseFilename reprs refns spec = do
     createDirectoryIfMissing True baseFilename
     forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> do
         let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ext
-        writeFile (mkOutFilename ".log") (renderPretty $ prettyLogs logs)
+        toFile (mkOutFilename ".log") (prettyLogs logs)
         case mout of
-            Left  x -> writeFile (mkOutFilename ".err") (renderPretty x)
-            Right x -> writeFile (mkOutFilename ".eprime") (renderPretty x)
+            Left  x -> toFile (mkOutFilename ".err"   ) x
+            Right x -> toFile (mkOutFilename ".eprime") x
         -- performGC
         -- putStrLn "preformGC"
+
+toFile :: Pretty p => FilePath -> p -> IO ()
+toFile fp con = do
+    -- putStrLn $ "Created: " ++ fp
+    writeFile fp (renderPretty con)
 
 padShow :: Show a => Int -> a -> String
 padShow n i = let s = show i in replicate (n - length s) '0' ++ s
