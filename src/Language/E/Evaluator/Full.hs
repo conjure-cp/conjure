@@ -52,11 +52,6 @@ fullEvaluator [eMatch| &a = &b |]
     , [xMatch| [Prim b'] := value.literal |] <- b
     = returnBool (a' == b')
 
-fullEvaluator [eMatch| &a = &b |]
-    | [xMatch| [Prim a'] := structural.single.value.literal |] <- a
-    , [xMatch| [Prim b'] := structural.single.value.literal |] <- b
-    = returnBool (a' == b')
-
 fullEvaluator [eMatch| &a != &b |]
     | [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
@@ -71,6 +66,20 @@ fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [x] := binOp.left
                      | [ ] := binOp.right.emptyGuard
                      |] = ret x
+
+fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
+                     | xs := binOp.left.value.set.values
+                     | ys := binOp.left.value.set.values
+                     |] = ret $ [xMake| value.set.values := nub (xs ++ ys) |]
+
+fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
+                     | xs := binOp.left.value.mset.values
+                     | ys := binOp.left.value.mset.values
+                     |] = ret $ [xMake| value.mset.values := xs ++ ys |]
+
+fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
+    = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
+      in  ret [xMake| domain.int.ranges := ys |]
 
 -- fullEvaluator p@[eMatch| &quan &i : int(&a..&b) , &guard . &body |]
     -- | [xMatch| [Prim (S quanStr)] := reference |] <- quan
