@@ -2,7 +2,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Stuff.Funky.FunkyMulti where
+module Stuff.Funky.FunkyMulti
+    ( FunkyMulti(..), runFunkyMulti
+    , fmGetsGlobal, fmModifyGlobal
+    ) where
 
 import Control.Applicative       ( Applicative(..) )
 import Control.Arrow             ( first )

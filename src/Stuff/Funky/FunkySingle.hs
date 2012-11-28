@@ -2,7 +2,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Stuff.Funky.FunkySingle where
+module Stuff.Funky.FunkySingle
+    ( FunkySingle(..), runFunkySingle
+    ) where
 
 import Control.Applicative       ( Applicative(..) )
 import Control.Monad             ( ap )
