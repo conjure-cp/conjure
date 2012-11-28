@@ -37,6 +37,10 @@ domainOf [xMatch| [x] := topLevel.declaration.given.domain |] = domainOf x
 
 domainOf [xMatch| [x] := domainInExpr |] = domainOf x
 
+domainOf [xMatch| [x] := structural.single |] = domainOf x
+
+domainOf p@[xMatch| [] := quanVar |] = return p
+
 domainOf p@[xMatch| [x] := operator.index.left
                   | [y] := operator.index.right
                   |] = do
@@ -49,8 +53,8 @@ domainOf p@[xMatch| [x] := operator.index.left
                 Just (int, _)
                     | int >= 1 && int <= genericLength innerDoms
                     -> return $ innerDoms `genericIndex` (int - 1)
-                _ -> errDomainOf p
-        _ -> errDomainOf p
+                _ -> return p
+        _ -> return p
 
 domainOf x = return x
 
