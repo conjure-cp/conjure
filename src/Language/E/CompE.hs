@@ -174,7 +174,7 @@ bindersDoc = do
     bs <- gets binders
     return $
         "Current bindings: " <+>
-        prettyList id "," (nub $ map binderName bs)
+        prettyList id "," (nubBy ((==) `on` binderName) bs)
 
 
 data Binder = Binder Text E
@@ -190,6 +190,8 @@ instance Hashable Binder where
 instance Default ConjureState where
     def = ConjureState def 1 def def def def def
 
+instance Pretty Binder where
+    pretty (Binder nm val) = pretty nm <+> ":" <+> pretty val
 
 mkLog :: MonadConjure m => String -> Doc -> m ()
 mkLog nm doc = case buildLog nm doc of
