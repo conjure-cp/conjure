@@ -29,6 +29,8 @@ main = interact $ \ inp ->
             , "import Data.Char ( isSpace )"
             , "import Data.String ( IsString(..) )"
             , "import GHC.Generics ( Generic )"
+            , "import Control.DeepSeq ( NFData(..) )"
+            , "import Control.DeepSeq.Generics ( genericRnf )"
             , "import Data.Hashable ( Hashable(..) )"
             , "import Data.Hashable.Generic ( gHashWithSalt )"
             , "data Tag = " ++ constructors
@@ -36,6 +38,9 @@ main = interact $ \ inp ->
             , "instance Hashable Tag where"
             , "    hashWithSalt s x = gHashWithSalt s x"
             , "    {-# INLINEABLE hashWithSalt #-}"
+            , "instance NFData Tag where"
+            , "    rnf x = genericRnf x"
+            , "    {-# INLINEABLE rnf #-}"
             , "instance Pretty Tag where"
             , "    pretty = pretty . drop 1 . show"
             , "instance IsString Tag where"

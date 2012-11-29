@@ -28,7 +28,11 @@ import qualified GHC.Generics ( Generic )
 
 
 data Spec = Spec Version E
-    deriving (Eq, Show)
+    deriving (Eq, Show, GHC.Generics.Generic)
+
+instance NFData Spec where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
 
 instance Default Spec where
     def = Spec ("Essence", [1,3]) (Tagged TstatementEOF [])
@@ -63,6 +67,10 @@ data BuiltIn = B !Bool | I !Integer | S !Text
 instance Hashable BuiltIn where
     hashWithSalt s x = gHashWithSalt s x
     {-# INLINEABLE hashWithSalt #-}
+
+instance NFData BuiltIn where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
 
 instance Pretty BuiltIn where
     pretty (B x) = pretty x

@@ -22,6 +22,10 @@ import Data.Maybe ( fromJust, isJust )
 import Data.Hashable
 import Data.Hashable.Generic
 
+-- deepseq & deepseq-generics
+import Control.DeepSeq ( NFData(..) )
+import Control.DeepSeq.Generics ( genericRnf )
+
 -- split
 import Data.List.Split ( splitOn )
 
@@ -45,6 +49,10 @@ data Generic primitive
 instance Hashable primitive => Hashable (Generic primitive) where
     hashWithSalt s x = gHashWithSalt s x
     {-# INLINEABLE hashWithSalt #-}
+
+instance NFData primitive => NFData (Generic primitive) where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
 
 universe :: Generic p -> [Generic p]
 universe t@(Tagged _ xs) = t : concatMap universe xs

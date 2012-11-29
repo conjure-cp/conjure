@@ -24,23 +24,23 @@ newtype FunkyMulti g st err m a = FunkyMulti (g -> st -> m ([(Either err a, st)]
 
 runFunkyMulti :: Monad m => g -> st -> FunkyMulti g st err m a -> m ([(Either err a, st)], g)
 runFunkyMulti g st (FunkyMulti f) = f g st
-{-# INLINE runFunkyMulti #-}
+{-# INLINEABLE runFunkyMulti #-}
 
 fmGetsGlobal :: Monad m => (g -> a) -> FunkyMulti g st err m a
 fmGetsGlobal f = FunkyMulti $ \ g st -> return ([(Right (f g), st)], g)
-{-# INLINE fmGetsGlobal #-}
+{-# INLINEABLE fmGetsGlobal #-}
 
 fmModifyGlobal :: Monad m => (g -> g) -> FunkyMulti g st err m ()
 fmModifyGlobal f = FunkyMulti $ \ g st -> return ([(Right (), st)], f g)
-{-# INLINE fmModifyGlobal #-}
+{-# INLINEABLE fmModifyGlobal #-}
 
 instance (Functor m, Monad m) => Functor (FunkyMulti g st err m) where
     {-# SPECIALISE instance Functor (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance Functor (FunkyMulti g st err IO      ) #-}
-    {-# INLINE fmap #-}
+    {-# INLINEABLE fmap #-}
     fmap f m = FunkyMulti $ \ glob st ->
         let
-            {-# INLINE g #-}
+            {-# INLINEABLE g #-}
             g (Left  x) = Left x
             g (Right x) = Right (f x)
         in
@@ -49,24 +49,24 @@ instance (Functor m, Monad m) => Functor (FunkyMulti g st err m) where
 instance (Functor m, Monad m) => Applicative (FunkyMulti g st err m) where
     {-# SPECIALISE instance Applicative (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance Applicative (FunkyMulti g st err IO      ) #-}
-    {-# INLINE pure #-}
-    {-# INLINE (<*>) #-}
+    {-# INLINEABLE pure #-}
+    {-# INLINEABLE (<*>) #-}
     pure x = FunkyMulti $ \ g st -> return ([(Right x, st)], g)
     (<*>) = ap
 
 instance (Functor m, Monad m) => Monad (FunkyMulti g st err m) where
     {-# SPECIALISE instance Monad (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance Monad (FunkyMulti g st err IO      ) #-}
-    {-# INLINE fail #-}
-    {-# INLINE return #-}
-    {-# INLINE (>>=) #-}
+    {-# INLINEABLE fail #-}
+    {-# INLINEABLE return #-}
+    {-# INLINEABLE (>>=) #-}
     fail = error
     return = pure
     FunkyMulti g >>= f = FunkyMulti $ \ glob st -> do
         (results, global') <- g glob st
         doOne results global'
         where
-            {-# INLINE doOne #-}
+            {-# INLINEABLE doOne #-}
             doOne [] gl = return ([], gl)
             doOne ((Left  e, l) : rest) gl = do
                 (rest', gl') <- doOne rest gl
@@ -79,14 +79,14 @@ instance (Functor m, Monad m) => Monad (FunkyMulti g st err m) where
 instance (Functor m, Monad m) => MonadError err (FunkyMulti g st err m) where
     {-# SPECIALISE instance MonadError err (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance MonadError err (FunkyMulti g st err IO      ) #-}
-    {-# INLINE throwError #-}
-    {-# INLINE catchError #-}
+    {-# INLINEABLE throwError #-}
+    {-# INLINEABLE catchError #-}
     throwError e = FunkyMulti $ \ g st -> return ([(Left e, st)], g)
     catchError (FunkyMulti g) f = FunkyMulti $ \ glob st -> do
         (results, global') <- g glob st
         doOne results global'
         where
-            {-# INLINE doOne #-}
+            {-# INLINEABLE doOne #-}
             doOne [] gl = return ([], gl)
             doOne ((Left  x, l) : rest) gl = do
                 (rest' , gl' ) <- runFunkyMulti gl l (f x)
@@ -99,20 +99,20 @@ instance (Functor m, Monad m) => MonadError err (FunkyMulti g st err m) where
 instance (Functor m, Monad m) => MonadState st (FunkyMulti g st err m) where
     {-# SPECIALISE instance MonadState st (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance MonadState st (FunkyMulti g st err IO      ) #-}
-    {-# INLINE get #-}
-    {-# INLINE put #-}
+    {-# INLINEABLE get #-}
+    {-# INLINEABLE put #-}
     get = FunkyMulti $ \ g st -> return ([(Right st, st)], g)
     put st = FunkyMulti $ \ g _ -> return ([(Right (), st)], g)
 
 instance (Functor m, MonadIO m) => MonadIO (FunkyMulti g st err m) where
     {-# SPECIALISE instance MonadIO (FunkyMulti g st err IO) #-}
-    {-# INLINE liftIO #-}
+    {-# INLINEABLE liftIO #-}
     liftIO io = FunkyMulti $ \ g st -> do
         a <- liftIO io
         return ([(Right a, st)], g)
 
 instance MonadTrans (FunkyMulti g st err) where
-    {-# INLINE lift #-}
+    {-# INLINEABLE lift #-}
     lift ma = FunkyMulti $ \ g st -> do
         x <- ma
         return ([(Right x, st)], g)

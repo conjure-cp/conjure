@@ -20,12 +20,12 @@ newtype FunkySingle st err m a = FunkySingle (st -> m (Either err a, st))
 
 runFunkySingle :: Monad m => st -> FunkySingle st err m a -> m (Either err a, st)
 runFunkySingle st (FunkySingle f) = f st
-{-# INLINE runFunkySingle #-}
+{-# INLINEABLE runFunkySingle #-}
 
 instance Monad m => Functor (FunkySingle st err m) where
     {-# SPECIALISE instance Functor (FunkySingle st err Identity) #-}
     {-# SPECIALISE instance Functor (FunkySingle st err IO      ) #-}
-    {-# INLINE fmap #-}
+    {-# INLINEABLE fmap #-}
     fmap f (FunkySingle g) = FunkySingle $ \ st -> do
         (mx, st') <- g st
         return $ case mx of
@@ -35,17 +35,17 @@ instance Monad m => Functor (FunkySingle st err m) where
 instance Monad m => Applicative (FunkySingle st err m) where
     {-# SPECIALISE instance Applicative (FunkySingle st err Identity) #-}
     {-# SPECIALISE instance Applicative (FunkySingle st err IO      ) #-}
-    {-# INLINE pure #-}
-    {-# INLINE (<*>) #-}
+    {-# INLINEABLE pure #-}
+    {-# INLINEABLE (<*>) #-}
     pure x = FunkySingle $ \ st -> return (Right x, st)
     (<*>) = ap
 
 instance Monad m => Monad (FunkySingle st err m) where
     {-# SPECIALISE instance Monad (FunkySingle st err Identity) #-}
     {-# SPECIALISE instance Monad (FunkySingle st err IO      ) #-}
-    {-# INLINE fail #-}
-    {-# INLINE return #-}
-    {-# INLINE (>>=) #-}
+    {-# INLINEABLE fail #-}
+    {-# INLINEABLE return #-}
+    {-# INLINEABLE (>>=) #-}
     fail = error
     return = pure
     FunkySingle g >>= f = FunkySingle $ \ st -> do
@@ -57,8 +57,8 @@ instance Monad m => Monad (FunkySingle st err m) where
 instance Monad m => MonadError err (FunkySingle st err m) where
     {-# SPECIALISE instance MonadError err (FunkySingle st err Identity) #-}
     {-# SPECIALISE instance MonadError err (FunkySingle st err IO      ) #-}
-    {-# INLINE throwError #-}
-    {-# INLINE catchError #-}
+    {-# INLINEABLE throwError #-}
+    {-# INLINEABLE catchError #-}
     throwError e = FunkySingle $ \ st -> return (Left e, st)
     catchError ma f = FunkySingle $ \ st -> do
         (mx, st') <- runFunkySingle st ma
@@ -69,20 +69,20 @@ instance Monad m => MonadError err (FunkySingle st err m) where
 instance Monad m => MonadState st (FunkySingle st err m) where
     {-# SPECIALISE instance MonadState st (FunkySingle st err Identity) #-}
     {-# SPECIALISE instance MonadState st (FunkySingle st err IO      ) #-}
-    {-# INLINE get #-}
-    {-# INLINE put #-}
+    {-# INLINEABLE get #-}
+    {-# INLINEABLE put #-}
     get = FunkySingle $ \ st -> return (Right st, st)
     put st = FunkySingle $ \ _ -> return (Right (), st)
 
 instance MonadIO m => MonadIO (FunkySingle st err m) where
     {-# SPECIALISE instance MonadIO (FunkySingle st err IO) #-}
-    {-# INLINE liftIO #-}
+    {-# INLINEABLE liftIO #-}
     liftIO io = FunkySingle $ \ st -> do
         a <- liftIO io
         return (Right a, st)
 
 instance MonadTrans (FunkySingle st err) where
-    {-# INLINE lift #-}
+    {-# INLINEABLE lift #-}
     lift ma = FunkySingle $ \ st -> do
         x <- ma
         return (Right x, st)

@@ -52,6 +52,9 @@ import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
 
+import Control.DeepSeq          as X ( NFData(..), force )
+import Control.DeepSeq.Generics as X ( genericRnf )
+
 import Data.Hashable         as X ( Hashable(..), hash )
 import Data.Hashable.Generic as X ( gHashWithSalt )
 
