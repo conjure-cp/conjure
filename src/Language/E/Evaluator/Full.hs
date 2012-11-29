@@ -173,14 +173,17 @@ evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
         sumE [x,y]  = [eMake| &x + &y |]
         sumE (x:xs) = let sumxs = sumE xs in [eMake| &x + &sumxs |]
 
-        retSum = return . sumE
+        mulE []     = [eMake| 1 |]
+        mulE [x]    = x
+        mulE [x,y]  = [eMake| &x * &y |]
+        mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
 
         domSize [xMatch| [Prim (S s)] := reference |] = do
             x <- errMaybeT "domSize" lookupReference s
             domSize x
         domSize [xMatch| rs := domain.int.ranges |] = do
             xs <- mapM domSize rs
-            retSum xs
+            return $ sumE xs
         domSize [xMatch| [fr,to] := range.fromTo |] =
             return [eMake| &to - &fr + 1 |]
         domSize [xMatch| [_] := range.single |] =
@@ -188,7 +191,7 @@ evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
 
         domSize [xMatch| rs := domain.tuple.inners |] = do
             xs <- mapM domSize rs
-            retSum xs
+            return $ mulE xs
 
         domSize [xMatch| [t] := domain.set.inner |] = do
             x <- domSize t
