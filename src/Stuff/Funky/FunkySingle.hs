@@ -20,10 +20,11 @@ newtype FunkySingle st err m a = FunkySingle (st -> m (Either err a, st))
 
 runFunkySingle :: Monad m => st -> FunkySingle st err m a -> m (Either err a, st)
 runFunkySingle st (FunkySingle f) = f st
-
+{-# INLINE runFunkySingle #-}
 
 instance Monad m => Functor (FunkySingle st err m) where
-    {-# SPECIALIZE instance Functor (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance Functor (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance Functor (FunkySingle st err IO      ) #-}
     {-# INLINE fmap #-}
     fmap f (FunkySingle g) = FunkySingle $ \ st -> do
         (mx, st') <- g st
@@ -32,14 +33,16 @@ instance Monad m => Functor (FunkySingle st err m) where
             Right x -> (Right (f x), st')
 
 instance Monad m => Applicative (FunkySingle st err m) where
-    {-# SPECIALIZE instance Applicative (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance Applicative (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance Applicative (FunkySingle st err IO      ) #-}
     {-# INLINE pure #-}
     {-# INLINE (<*>) #-}
     pure x = FunkySingle $ \ st -> return (Right x, st)
     (<*>) = ap
 
 instance Monad m => Monad (FunkySingle st err m) where
-    {-# SPECIALIZE instance Monad (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance Monad (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance Monad (FunkySingle st err IO      ) #-}
     {-# INLINE fail #-}
     {-# INLINE return #-}
     {-# INLINE (>>=) #-}
@@ -52,6 +55,8 @@ instance Monad m => Monad (FunkySingle st err m) where
             Right x -> runFunkySingle st' (f x)
 
 instance Monad m => MonadError err (FunkySingle st err m) where
+    {-# SPECIALISE instance MonadError err (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance MonadError err (FunkySingle st err IO      ) #-}
     {-# INLINE throwError #-}
     {-# INLINE catchError #-}
     throwError e = FunkySingle $ \ st -> return (Left e, st)
@@ -62,12 +67,15 @@ instance Monad m => MonadError err (FunkySingle st err m) where
             Right x -> return (Right x, st')
 
 instance Monad m => MonadState st (FunkySingle st err m) where
+    {-# SPECIALISE instance MonadState st (FunkySingle st err Identity) #-}
+    {-# SPECIALISE instance MonadState st (FunkySingle st err IO      ) #-}
     {-# INLINE get #-}
     {-# INLINE put #-}
     get = FunkySingle $ \ st -> return (Right st, st)
     put st = FunkySingle $ \ _ -> return (Right (), st)
 
 instance MonadIO m => MonadIO (FunkySingle st err m) where
+    {-# SPECIALISE instance MonadIO (FunkySingle st err IO) #-}
     {-# INLINE liftIO #-}
     liftIO io = FunkySingle $ \ st -> do
         a <- liftIO io
