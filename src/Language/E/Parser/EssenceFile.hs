@@ -236,9 +236,7 @@ parseOthers = [ parseFunctional l
                 (L_image, y:ys) -> [xMake| functionApply.actual := [y]
                                          | functionApply.args   := ys
                                          |]
-                _ -> Tagged "operator" [
-                     Tagged (fromString $ show $ lexemeFace l) [
-                     Tagged "args" xs ]]
+                _ -> Tagged "operator" [Tagged (fromString $ show $ lexemeFace l) xs]
 
 parseWithLocals :: Parser E
 parseWithLocals = parens $ do
@@ -290,7 +288,7 @@ parseValue = msum ( map try
         pMatrix' = brackets $ do
             xs <- sepBy parseExpr comma
             lexeme L_SemiColon
-            r <- parseDomain
+            r <- parseRange
             return [xMake| value.matrix.values     := xs
                          | value.matrix.indexrange := [r]
                          |]

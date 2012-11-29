@@ -250,9 +250,6 @@ instance Pretty E where
     pretty [xMatch| xs  := value.tuple.values |]
         = (if length xs < 2 then "tuple" else Pr.empty)
         <+> prettyList Pr.parens "," xs
-    pretty [xMatch| xs  := value.matrix.values
-                  | [r] := value.matrix.indexrange
-                  |] = Pr.brackets $ prettyList id "," xs <+> ";" <+> pretty r
     pretty [xMatch| xs := value.matrix.values |] =           prettyList Pr.brackets "," xs
     pretty [xMatch| xs := value.set   .values |] =           prettyList Pr.braces   "," xs
     pretty [xMatch| xs := value.mset  .values |] = "mset" <> prettyList Pr.parens   "," xs
@@ -322,29 +319,29 @@ instance Pretty E where
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
         = prettyPrec 0 x
 
-    pretty [xMatch| xs := operator.toInt.args        |] = "toInt"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.min.args          |] = "min"          <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.max.args          |] = "max"          <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.allDiff.args      |] = "allDiff"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.hist.args         |] = "hist"         <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toSet.args        |] = "toSet"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toMSet.args       |] = "toMSet"       <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toRelation.args   |] = "toRelation"   <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.defined.args      |] = "defined"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.range.args        |] = "range"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.preImage.args     |] = "preImage"     <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.inverse.args      |] = "inverse"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.together.args     |] = "together"     <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.apart.args        |] = "apart"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.party.args        |] = "party"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.participants.args |] = "participants" <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.parts.args        |] = "parts"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.freq.args         |] = "freq"         <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.hist.args         |] = "hist"         <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.allDiff.args      |] = "allDiff"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toInt.args        |] = "toInt"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.flatten.args      |] = "flatten"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.normIndices.args  |] = "normIndices"  <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.toInt        |] = "toInt"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.min          |] = "min"          <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.max          |] = "max"          <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.allDiff      |] = "allDiff"      <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.hist         |] = "hist"         <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.toSet        |] = "toSet"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.toMSet       |] = "toMSet"       <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.toRelation   |] = "toRelation"   <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.defined      |] = "defined"      <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.range        |] = "range"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.preImage     |] = "preImage"     <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.inverse      |] = "inverse"      <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.together     |] = "together"     <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.apart        |] = "apart"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.party        |] = "party"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.participants |] = "participants" <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.parts        |] = "parts"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.freq         |] = "freq"         <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.hist         |] = "hist"         <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.allDiff      |] = "allDiff"      <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.toInt        |] = "toInt"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.flatten      |] = "flatten"      <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.normIndices  |] = "normIndices"  <> prettyList Pr.parens "," xs
 
     pretty [xMatch| [actual] := functionApply.actual
                   |   args   := functionApply.args
