@@ -23,7 +23,7 @@ applyRefn db' spec = withBindingScope' $ do
     return spec'
 
 
-{-# INLINE onSpec #-}
+{-# INLINEABLE onSpec #-}
 onSpec
     :: MonadConjureList m
     => RulesDB m
@@ -33,7 +33,7 @@ onSpec db (Spec lang statements) = Spec lang <$> onE db statements
 
 
 
-{-# INLINE onE #-}
+{-# INLINEABLE onE #-}
 onE
     :: MonadConjureList m
     => RulesDB m
@@ -44,7 +44,7 @@ onE = applyToTree
 
 
 
-{-# INLINE applyIdempotent #-}
+{-# INLINEABLE applyIdempotent #-}
 applyIdempotent
     :: MonadConjureList m
     => RulesDB m
@@ -59,7 +59,7 @@ applyIdempotent db x = do
 
 
 
-{-# INLINE applyToTree #-}
+{-# INLINEABLE applyToTree #-}
 applyToTree
     :: MonadConjureList m
     => RulesDB m
@@ -73,7 +73,7 @@ applyToTree db = bottomUpERefn (applyIdempotent db)
 -- apply refinement rules to x
 -- doesn't bind or remove any bindings
 -- modification (or not) info is carried in the writer state
-{-# INLINE apply #-}
+{-# INLINEABLE apply #-}
 apply
     :: ( MonadConjure m
        , MonadList m
@@ -93,7 +93,7 @@ apply db x = do
 -- x is simplified first
 -- doesn't descend or anything
 -- results are simplified again after rule applications
-{-# INLINE tryApply #-}
+{-# INLINEABLE tryApply #-}
 tryApply
     :: MonadConjure m
     => RulesDB m
