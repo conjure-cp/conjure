@@ -20,7 +20,7 @@ import Debug.Trace ( trace )
 #endif
 
 
-data LogTree = LTEmpty | LTSingle NamedLog | LTMultiple LogTree LogTree
+data LogTree = LTEmpty | LTSingle !NamedLog | LTMultiple !LogTree !LogTree
 
 logTreeToList :: LogTree -> DList.DList NamedLog
 logTreeToList LTEmpty          = DList.empty

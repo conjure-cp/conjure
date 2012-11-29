@@ -156,17 +156,17 @@ recordSpec sp = do
 -- state
 
 data ConjureState = ConjureState
-        { binders       :: [Binder]
-        , uniqueNameInt :: Integer
-        , representationLog :: [ ( Text     -- original name
-                                 , Text     -- representation name
-                                 , E        -- original full declaration
-                                 , E        -- new domain
-                                 ) ]
-        , structuralConsLog :: [E]
-        , lastSpec :: Maybe Spec  -- record the spec after changes, to report in case of an error.
-        , localLogs :: LogTree
-        , allNamesPreConjure :: S.Set Text  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
+        { binders       :: ![Binder]
+        , uniqueNameInt :: !Integer
+        , representationLog :: ![ ( Text     -- original name
+                                  , Text     -- representation name
+                                  , E        -- original full declaration
+                                  , E        -- new domain
+                                  ) ]
+        , structuralConsLog :: ![E]
+        , lastSpec :: !(Maybe Spec) -- record the spec after changes, to report in case of an error.
+        , localLogs :: !LogTree
+        , allNamesPreConjure :: !(S.Set Text)  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 bindersDoc :: MonadConjure m => m Doc
@@ -177,7 +177,7 @@ bindersDoc = do
         prettyList id "," (nubBy ((==) `on` binderName) bs)
 
 
-data Binder = Binder Text E
+data Binder = Binder !Text !E
     deriving (Show, GHC.Generics.Generic)
 
 binderName :: Binder -> Text
@@ -244,8 +244,8 @@ nextUniqueName = do
 
 
 data GlobalState = GlobalState
-        { memoRefnChanged      :: IntMap E
-        , memoRefnStaysTheSame :: IntSet
+        { memoRefnChanged      :: !(IntMap E)
+        , memoRefnStaysTheSame :: !IntSet
         }
 
 instance Default GlobalState where

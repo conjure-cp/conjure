@@ -7,7 +7,6 @@ module Language.E.Pipeline.IntroduceRegions
 
 import Language.E
 
-import Control.Monad.State
 import Data.Text ( pack )
 
 

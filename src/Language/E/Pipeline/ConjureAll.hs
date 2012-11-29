@@ -9,8 +9,6 @@ import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
 
-import Control.Monad.State ( get, put )
-
 
 conjureAllPure
     :: [RuleRepr] -> [RuleRefn] -> Spec
