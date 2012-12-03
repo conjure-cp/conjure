@@ -115,6 +115,9 @@ Library
                      , text == 0.11.2.3
                      , transformers == 0.3.0.0
                      , transformers-base == 0.4.1
+    ghc-prof-options:
+        -auto-all
+        -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -125,7 +128,6 @@ Library
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -fprof-auto-calls
 
 
 Test-Suite conjure-tests
@@ -136,6 +138,9 @@ Test-Suite conjure-tests
     build-depends    : conjure-cp
                      , base
                      , hspec == 1.4.2
+    ghc-prof-options:
+        -auto-all
+        -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -146,7 +151,6 @@ Test-Suite conjure-tests
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -fprof-auto-calls
         -rtsopts
 
 
@@ -156,7 +160,9 @@ Executable conjure-all
     main-is          : ConjureAll.hs
     build-depends    : conjure-cp
                      , base
-
+    ghc-prof-options:
+        -auto-all
+        -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-missing-signatures
@@ -167,7 +173,5 @@ Executable conjure-all
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -fprof-auto-calls
         -rtsopts
-
 
