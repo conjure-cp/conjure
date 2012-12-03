@@ -55,7 +55,7 @@ applyIdempotent db x = do
     (y, Any flag) <- listen $ apply db x
     if flag
         then applyToTree db y
-        else return y
+        else return x
 
 
 
