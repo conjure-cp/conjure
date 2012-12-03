@@ -34,6 +34,11 @@ fmModifyGlobal :: Monad m => (g -> g) -> FunkyMulti g st err m ()
 fmModifyGlobal f = FunkyMulti $ \ g st -> return ([(Right (), st)], f g)
 {-# INLINEABLE fmModifyGlobal #-}
 
+seqListSpine :: [a] -> b -> b
+seqListSpine []     b = b
+seqListSpine (_:as) b = seqListSpine as b
+{-# INLINEABLE seqListSpine #-}
+
 instance (Functor m, Monad m) => Functor (FunkyMulti g st err m) where
     {-# SPECIALISE instance Functor (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance Functor (FunkyMulti g st err IO      ) #-}
@@ -69,12 +74,12 @@ instance (Functor m, Monad m) => Monad (FunkyMulti g st err m) where
             {-# INLINEABLE doOne #-}
             doOne [] gl = return ([], gl)
             doOne ((Left  e, l) : rest) gl = do
-                (rest', gl') <- doOne rest gl
+                ~(rest', gl') <- doOne rest gl
                 return ((Left e, l) : rest', gl')
             doOne ((Right x, l) : rest) gl = do
-                (rest' , gl' ) <- runFunkyMulti gl l (f x)
-                (rest'', gl'') <- doOne rest gl'
-                return (rest' ++ rest'', gl'')
+                ~(rest' , gl' ) <- runFunkyMulti gl l (f x)
+                ~(rest'', gl'') <- doOne rest gl'
+                rest' `seqListSpine` return (rest' ++ rest'', gl'')
 
 instance (Functor m, Monad m) => MonadError err (FunkyMulti g st err m) where
     {-# SPECIALISE instance MonadError err (FunkyMulti g st err Identity) #-}
@@ -89,11 +94,11 @@ instance (Functor m, Monad m) => MonadError err (FunkyMulti g st err m) where
             {-# INLINEABLE doOne #-}
             doOne [] gl = return ([], gl)
             doOne ((Left  x, l) : rest) gl = do
-                (rest' , gl' ) <- runFunkyMulti gl l (f x)
-                (rest'', gl'') <- doOne rest gl'
-                return (rest' ++ rest'', gl'')
+                ~(rest' , gl' ) <- runFunkyMulti gl l (f x)
+                ~(rest'', gl'') <- doOne rest gl'
+                rest' `seqListSpine` return (rest' ++ rest'', gl'')
             doOne ((Right x, l) : rest) gl = do
-                (rest', gl') <- doOne rest gl
+                ~(rest', gl') <- doOne rest gl
                 return ((Right x, l) : rest', gl')
 
 instance (Functor m, Monad m) => MonadState st (FunkyMulti g st err m) where
