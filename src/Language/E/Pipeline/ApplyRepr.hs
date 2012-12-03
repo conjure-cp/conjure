@@ -165,7 +165,8 @@ addChannellingFromLog (Spec v xs) = do
                     | ((nm1,r1),(nm2,r2)) <- allPairs one
                     , let x1 = [xMake| reference := [ Prim $ S $ mconcat [nm1, "#", r1] ] |]
                     , let x2 = [xMake| reference := [ Prim $ S $ mconcat [nm2, "#", r2] ] |]
-                    , let theCons = [eMake| &x1 = &x2 |]
+                    , let [y1,y2] = sort [x1,x2]
+                    , let theCons = [eMake| &y1 = &y2 |]
                     ]
                   | one <- grouped
                   ]
