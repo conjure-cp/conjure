@@ -182,13 +182,10 @@ bottomUpEExcept p func x = withBindingScope $ helper x
 
 
 bottomUpERefn
-    :: ( MonadConjureList m
-       , MonadTrans t
-       , Monad (t m)
-       )
-    => (E -> t m E)
+    :: MonadConjureList m
+    => (E -> WriterT Any m E)
     -> E
-    -> t m E
+    -> WriterT Any m E
 bottomUpERefn func = withBindingScope . helper
     where
         helper [xMatch| [this] := statement.this
@@ -214,40 +211,35 @@ bottomUpERefn func = withBindingScope . helper
 
 
 checkingMemo
-    :: ( MonadConjureList m
-       , MonadTrans t
-       , Monad (t m)
-       )
+    :: MonadConjureList m
     => E
-    -> (E -> t m E)
-    -> t m E
+    -> (E -> WriterT Any m E)
+    -> WriterT Any m E
 checkingMemo x f = do
-    -- let hashX = hash x
-    bsX <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
-    let hashX = hash (x, bsX)
-    memoSame <- lift $ getsGlobal memoRefnStaysTheSame
-    if IntSet.member hashX memoSame
-        then do
+    bs <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
+    let hashX = hash (x, bs) -- hash x
+    memoSame    <- lift $ getsGlobal memoRefnStaysTheSame
+    memoChanged <- lift $ getsGlobal memoRefnChanged
+    case (IntSet.member hashX memoSame, IntMap.lookup hashX memoChanged) of
+        (True, _  ) -> do
             -- lift $ mkLog "reuse-memo-same" $ pretty x
             return x
-        else do
-            memoChanged <- lift $ getsGlobal memoRefnChanged
-            case IntMap.lookup hashX memoChanged of
-                Just y  -> do
-                    -- lift $ mkLog "reuse-memo-diff" $ pretty x <+> "~~>" <+> pretty y
-                    return y
-                Nothing -> do
-                    y <- f x
-                    -- let hashY = hash y
-                    bsY <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
-                    let hashY = hash (y, bsY)
-                    -- when (hashX == hashY) $ lift $ mkLog "add-memo-same" $ pretty x
-                    -- when (hashX /= hashY) $ lift $ mkLog "add-memo-diff" $ pretty x <+> "~~>" <+> pretty y
+        (_, Just y) -> do
+            -- lift $ mkLog "reuse-memo-diff" $ vcat [pretty x, "~~>", pretty y]
+            return y
+        _ -> do
+            (y, Any flag) <- listen $ withBindingScope $ f x
+            if flag
+                then do
+                    -- lift $ mkLog "add-memo-diff" $ vcat [pretty x, "~~>", pretty y]
                     lift $ modifyGlobal $ \ st ->
-                        if hashX == hashY
-                            then st { memoRefnStaysTheSame = IntSet.insert hashY   memoSame    }
-                            else st { memoRefnChanged      = IntMap.insert hashY y memoChanged }
+                        st { memoRefnChanged      = IntMap.insert hashX y memoChanged }
                     return y
+                else do
+                    -- lift $ mkLog "add-memo-same" $ pretty x
+                    lift $ modifyGlobal $ \ st ->
+                        st { memoRefnStaysTheSame = IntSet.insert hashX   memoSame    }
+                    return x
 
 
 initialiseSpecState :: MonadConjure m => Spec -> m ()
