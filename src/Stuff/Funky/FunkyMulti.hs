@@ -27,11 +27,11 @@ runFunkyMulti g st (FunkyMulti f) = f g st
 {-# INLINEABLE runFunkyMulti #-}
 
 fmGetsGlobal :: Monad m => (g -> a) -> FunkyMulti g st err m a
-fmGetsGlobal f = FunkyMulti $ \ g st -> return ([(Right (f g), st)], g)
+fmGetsGlobal f = FunkyMulti $ \ g st -> let res = f g in res `seq` return ([(Right res, st)], g)
 {-# INLINEABLE fmGetsGlobal #-}
 
 fmModifyGlobal :: Monad m => (g -> g) -> FunkyMulti g st err m ()
-fmModifyGlobal f = FunkyMulti $ \ g st -> return ([(Right (), st)], f g)
+fmModifyGlobal f = FunkyMulti $ \ g st -> let res = f g in res `seq` return ([(Right (), st)], res)
 {-# INLINEABLE fmModifyGlobal #-}
 
 seqListSpine :: [a] -> b -> b
