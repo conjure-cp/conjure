@@ -225,13 +225,14 @@ checkingMemo x f = do
             -- lift $ mkLog "reuse-memo-same" $ pretty x
             return x
         (_, Just y) -> do
-            -- lift $ mkLog "reuse-memo-diff" $ vcat [pretty x, "~~>", pretty y]
+            -- lift $ mkLog "reuse-memo-diff" $ sep [pretty x, "~~>", pretty y]
+            lift $ mkLog "from-cached" $ sep [pretty x, "~~>", pretty y]
             return y
         _ -> do
             (y, Any flag) <- listen $ withBindingScope $ f x
             if flag
                 then do
-                    -- lift $ mkLog "add-memo-diff" $ vcat [pretty x, "~~>", pretty y]
+                    -- lift $ mkLog "add-memo-diff" $ sep [pretty x, "~~>", pretty y]
                     lift $ modifyGlobal $ \ st ->
                         st { memoRefnChanged      = IntMap.insert hashX y memoChanged }
                     return y
