@@ -9,9 +9,9 @@ outputFilename="debugging/$titleForFilename.hp"
 mkdir -p "debugging"
 
 echo "will create: $outputFilename"
-conjure-all "$spec" `find files/rules -type f | grep -e ".rule$" -e ".repr$"` +RTS "-$mode" -L100
+conjure "$spec" `find files/rules -type f | grep -e ".rule$" -e ".repr$"` +RTS "-$mode" -L100
 echo "JOB \"$title\""      >  "$outputFilename"
-tail -n +2 conjure-all.hp  >> "$outputFilename"
-rm conjure-all.hp
+tail -n +2 conjure.hp      >> "$outputFilename"
+rm conjure.hp
 echo "created: $outputFilename"
 

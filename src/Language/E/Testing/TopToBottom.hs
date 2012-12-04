@@ -13,7 +13,7 @@ module Language.E.Testing.TopToBottom where
 --                  compare with the original.
 -- 
 -- for each essence specification
---       run conjure-all
+--       run conjure
 
 import Language.E
 import Language.E.Pipeline.ReadIn
