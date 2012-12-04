@@ -14,6 +14,9 @@ inlineLettings (Spec v statements) =
         splitLettingOrNot [xMatch| [nm] := topLevel.letting.name 
                                  | [x]  := topLevel.letting.expr
                                  |] = ( [(nm,x)] , [] )
+        splitLettingOrNot [xMatch| [nm] := topLevel.letting.name
+                                 | [x]  := topLevel.letting.domain
+                                 |] = ( [(nm,x)] , [] )
         splitLettingOrNot x         = ( []       , [x] )
 
         (lettings, others) = mconcat $ map splitLettingOrNot $ statementAsList statements
