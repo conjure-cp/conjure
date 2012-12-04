@@ -206,7 +206,7 @@ bottomUpERefn func = withBindingScope . helper
                         xs' <- mapM helper xs
                         let t' = Tagged s xs'
                         lift $ introduceStuff t'
-                        checkingMemo t' func
+                        func t'
                     _           -> func t
 
 
