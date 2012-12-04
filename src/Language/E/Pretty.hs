@@ -250,14 +250,18 @@ instance Pretty E where
     pretty [xMatch| xs  := value.tuple.values |]
         = (if length xs < 2 then "tuple" else Pr.empty)
         <+> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := value.matrix.values |] =           prettyList Pr.brackets "," xs
-    pretty [xMatch| xs := value.set   .values |] =           prettyList Pr.braces   "," xs
-    pretty [xMatch| xs := value.mset  .values |] = "mset" <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.matrix  .values |] =               prettyList Pr.brackets "," xs
+    pretty [xMatch| xs := value.set     .values |] =               prettyList Pr.braces   "," xs
+    pretty [xMatch| xs := value.mset    .values |] = "mset"     <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.function.values |] = "function" <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.relation.values |] = "relation" <> prettyList Pr.parens   "," xs
+
+    pretty [xMatch| [a,b] := mapping |] = pretty a <+> "-->" <+> pretty b
 
     pretty [xMatch| [app] := quantifierDecl.append
-                 | [gua] := quantifierDecl.guard
-                 | [ide] := quantifierDecl.identity
-                 |]
+                  | [gua] := quantifierDecl.guard
+                  | [ide] := quantifierDecl.identity
+                  |]
         = "quantifier" Pr.$$ Pr.braces (
                     Pr.nest 4 ("append  " <+> pretty app) Pr.$$
                     Pr.nest 4 ("guard   " <+> pretty gua) Pr.$$
