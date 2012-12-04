@@ -171,31 +171,40 @@ addChannellingFromLog (Spec v xs) = do
                   | one <- grouped
                   ]
 
-    let insertNewDecls toInsert rest = toInsert ++ rest
+    let
+        insertAfter _         [] = []
+        insertAfter (old,new) (s:ss) | old == s  = old : new : ss
+                                     | otherwise = s : insertAfter (old,new) ss
+
+        insertNewDecls = foldr insertAfter
 
     let
-        mkWithNewDom :: (Text, Text, E, E) -> E
-        mkWithNewDom (origName, reprName, [xMatch| _ := topLevel.declaration.find |], newDom ) =
-            [xMake| topLevel.declaration.find.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
-                  | topLevel.declaration.find.domain         := [newDom]
-                  |]
-        mkWithNewDom (origName, reprName, [xMatch| _ := topLevel.declaration.given |], newDom ) =
-            [xMake| topLevel.declaration.given.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
-                  | topLevel.declaration.given.domain         := [newDom]
-                  |]
+        mkWithNewDom :: (Text, Text, E, E) -> (E, E)
+        mkWithNewDom (origName, reprName, oldDecl@[xMatch| _ := topLevel.declaration.find |], newDom ) =
+            ( oldDecl
+            , [xMake| topLevel.declaration.find.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
+                    | topLevel.declaration.find.domain         := [newDom]
+                    |]
+            )
+        mkWithNewDom (origName, reprName, oldDecl@[xMatch| _ := topLevel.declaration.given |], newDom ) =
+            ( oldDecl
+            , [xMake| topLevel.declaration.given.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
+                    | topLevel.declaration.given.domain         := [newDom]
+                    |]
+            )
         mkWithNewDom _ = error "Impossible: addChannellingFromLog.mkWithNewDom"
 
     let newDecls = nub $ map mkWithNewDom rlogs
-    mapM_ introduceStuff newDecls
+    mapM_ (introduceStuff . snd) newDecls
 
-    newDecls' <- mapM (liftM fst . runWriterT . simplify) newDecls
-    mapM_ introduceStuff newDecls'
+    newDecls' <- mapM (\ (i,j) -> do j' <- liftM fst $ runWriterT $ simplify j ; return (i,j')) newDecls
+    mapM_ (introduceStuff . snd) newDecls'
 
     newCons'  <- mapM (liftM fst . runWriterT . simplify) (concat newCons)
 
     mapM_ (mkLog "addedDecl" . pretty) newDecls'
 
-    return $ Spec v $ listAsStatement $ insertNewDecls newDecls' (statementAsList xs) ++ newCons'
+    return $ Spec v $ listAsStatement $ insertNewDecls (statementAsList xs) newDecls' ++ newCons'
 
 
 allPairs :: [a] -> [(a,a)]
