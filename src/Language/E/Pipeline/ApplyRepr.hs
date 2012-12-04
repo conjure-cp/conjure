@@ -202,7 +202,7 @@ addChannellingFromLog (Spec v xs) = do
 
     newCons'  <- mapM (liftM fst . runWriterT . simplify) (concat newCons)
 
-    mapM_ (mkLog "addedDecl" . pretty) newDecls'
+    mapM_ (mkLog "addedDecl" . pretty . snd) newDecls'
 
     return $ Spec v $ listAsStatement $ insertNewDecls (statementAsList xs) newDecls' ++ newCons'
 
