@@ -4,6 +4,8 @@ $ Problem details available at http://www.csplib.org/prob/prob008/
 $ 25 July 2007
 $
 
+given n_upper : int
+
 $ deck_width: the width of the ship deck
 $ deck_length: the length of the ship deck
 $ n_containers: the number of containers
@@ -30,7 +32,7 @@ $ separation: the minimum allowed separation between two container classes
 given width : function (total) Container --> Width,
       length : function (total) Container --> Length,
       class : function (total) Container --> Class,
-      separation : function (total) set (size 2) of Class --> int(0..)
+      separation : function (total) set (size 2) of Class --> int(0..n_upper)
 
 $ west: the x coordinate of a container's western edge
 $ north: the y coordinate of a container's northern edge
