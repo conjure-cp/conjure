@@ -6,7 +6,6 @@ import Stuff.MonadList as X
 
 import Stuff.Funky.FunkySingle as X
 import Stuff.Funky.FunkyMulti as X
-import Stuff.Funky.Convert as X
 
 import Language.E.Imports as X
 import Language.E.Definition as X
