@@ -56,6 +56,9 @@ import Control.DeepSeq.Generics as X ( genericRnf )
 import Data.Hashable         as X ( Hashable(..), hash )
 import Data.Hashable.Generic as X ( gHashWithSalt )
 
+import Data.Serialize as X ( Serialize, encode, decode )
+import qualified Data.Serialize
+
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$) )
 
 import System.Random as X ( StdGen, getStdGen )
@@ -176,4 +179,8 @@ allCombinations ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] | ws <- allCombi
 
 sortOn :: Ord b => (a -> b) -> [a] -> [a]
 sortOn f = sortBy (comparing f)
+
+instance Serialize T.Text where
+    put = Data.Serialize.put . T.unpack
+    get = T.pack <$> Data.Serialize.get
 

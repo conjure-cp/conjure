@@ -6,6 +6,7 @@ import Data.String ( IsString(..) )
 import GHC.Generics ( Generic )
 import Control.DeepSeq ( NFData(..) )
 import Control.DeepSeq.Generics ( genericRnf )
+import Data.Serialize ( Serialize(..) )
 import Data.Hashable ( Hashable(..) )
 import Data.Hashable.Generic ( gHashWithSalt )
 data Tag = Tactual
@@ -132,6 +133,7 @@ data Tag = Tactual
     | Twithin
     | TwithLocals
     deriving (Eq, Ord, Show, Generic)
+instance Serialize Tag
 instance Hashable Tag where
     hashWithSalt s x = gHashWithSalt s x
     {-# INLINEABLE hashWithSalt #-}

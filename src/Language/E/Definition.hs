@@ -30,6 +30,8 @@ import qualified GHC.Generics ( Generic )
 data Spec = Spec Version E
     deriving (Eq, Show, GHC.Generics.Generic)
 
+instance Serialize Spec
+
 instance NFData Spec where
     rnf x = genericRnf x
     {-# INLINEABLE rnf #-}
@@ -63,6 +65,8 @@ type E = Generic BuiltIn
 
 data BuiltIn = B !Bool | I !Integer | S !Text
     deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize BuiltIn
 
 instance Hashable BuiltIn where
     hashWithSalt s x = gHashWithSalt s x

@@ -18,6 +18,9 @@ import Control.Arrow ( first )
 import Data.List ( intersperse )
 import Data.Maybe ( fromJust, isJust )
 
+-- cereal
+import Data.Serialize
+
 -- hashable & hashable-generics
 import Data.Hashable
 import Data.Hashable.Generic
@@ -45,6 +48,8 @@ data Generic primitive
     = Prim primitive
     | Tagged !Tag [Generic primitive]
     deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize primitive => Serialize (Generic primitive)
 
 instance Hashable primitive => Hashable (Generic primitive) where
     hashWithSalt s x = gHashWithSalt s x
