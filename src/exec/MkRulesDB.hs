@@ -12,6 +12,9 @@ import qualified Data.ByteString as ByteString
 main :: IO ()
 main = do
     args <- getArgs
+    outfile <- case filter (".rulesdb" `isSuffixOf`) args of
+                [x] -> return x
+                _   -> error "Provide a single *.rulesdb file for the output"
     rulesdb <- liftM mconcat $ forM args $ \ arg -> case fileType arg of
             RuleRefn -> do
                 pair <- pairWithContents arg
@@ -26,7 +29,7 @@ main = do
                         (readRuleRepr pair)
                 return ([x],[])
             None -> return ([],[])
-    ByteString.writeFile "conjure.rulesdb" (encode (rulesdb :: RulesDB))
+    ByteString.writeFile outfile (encode (rulesdb :: RulesDB))
 
 
 data FileType = RuleRefn | RuleRepr | None
