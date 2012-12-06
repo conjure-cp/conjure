@@ -9,12 +9,12 @@ import Language.E.BuiltIn
 import qualified Text.PrettyPrint as Pr
 
 
-type RulesDB m = [E -> m (Maybe [(Text, E)])]
+type RuleRefnDB m = [E -> m (Maybe [(Text, E)])]
 
 
 applyRefn
     :: MonadConjureList m
-    => RulesDB m
+    => RuleRefnDB m
     -> Spec
     -> m Spec
 applyRefn db' spec = withBindingScope' $ do
@@ -26,7 +26,7 @@ applyRefn db' spec = withBindingScope' $ do
 {-# INLINEABLE onSpec #-}
 onSpec
     :: MonadConjureList m
-    => RulesDB m
+    => RuleRefnDB m
     -> Spec
     -> WriterT Any m Spec
 onSpec db (Spec lang statements) = Spec lang <$> onE db statements
@@ -36,7 +36,7 @@ onSpec db (Spec lang statements) = Spec lang <$> onE db statements
 {-# INLINEABLE onE #-}
 onE
     :: MonadConjureList m
-    => RulesDB m
+    => RuleRefnDB m
     -> E
     -> WriterT Any m E
 -- onE _ x | trace (show $ "onE" <+> pretty x) False = undefined
@@ -47,7 +47,7 @@ onE = applyToTree
 {-# INLINEABLE applyIdempotent #-}
 applyIdempotent
     :: MonadConjureList m
-    => RulesDB m
+    => RuleRefnDB m
     -> E
     -> WriterT Any m E
 -- applyIdempotent _  x | trace (show $ "applyIdempotent" <+> pretty x) False = undefined
@@ -62,7 +62,7 @@ applyIdempotent db x = do
 {-# INLINEABLE applyToTree #-}
 applyToTree
     :: MonadConjureList m
-    => RulesDB m
+    => RuleRefnDB m
     -> E
     -> WriterT Any m E
 -- applyToTree _  x | trace (show $ "applyToTree" <+> pretty x) False = undefined
@@ -78,7 +78,7 @@ apply
     :: ( MonadConjure m
        , MonadList m
        )
-    => RulesDB m
+    => RuleRefnDB m
     -> E
     -> WriterT Any m E
 -- apply _  x | trace (show $ "apply" <+> pretty x) False = undefined
@@ -96,7 +96,7 @@ apply db x = do
 {-# INLINEABLE tryApply #-}
 tryApply
     :: MonadConjure m
-    => RulesDB m
+    => RuleRefnDB m
     -> E
     -> m ([E], Bool)
 -- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do
@@ -116,7 +116,7 @@ tryApply db x = do
         -- returns a pair, first component: list of results. will always be non-empty.
         --               , second component: True if a modification has been made.
         go  :: MonadConjure m
-            => RulesDB m
+            => RuleRefnDB m
             -> E
             -> m ([E], Bool)
         go []     i = return ([i], False)

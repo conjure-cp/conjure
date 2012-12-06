@@ -8,7 +8,7 @@ module Language.E.Definition
     ( module Stuff.Generic
 
     , Spec(..), Version, E, BuiltIn(..)
-    , RuleRefn, RuleRepr, RuleReprCase, RuleReprResult
+    , RulesDB, RuleRefn, RuleRepr, RuleReprCase, RuleReprResult
 
     , listAsStatement, statementAsList
 
@@ -40,6 +40,8 @@ instance Default Spec where
     def = Spec ("Essence", [1,3]) (Tagged TstatementEOF [])
 
 type Version = (Text,[Int])
+
+type RulesDB = ([RuleRepr], [RuleRefn])
 
 type RuleRefn = (Text, Maybe Int, E)
 type RuleRepr = ( Text          -- name of the rule
