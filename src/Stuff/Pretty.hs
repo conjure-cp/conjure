@@ -7,6 +7,7 @@ module Stuff.Pretty ( Pretty(..)
                     , prettyList, prettyListDoc
                     , parensIf
                     , renderPretty
+                    , printPretty
                     ) where
 
 import qualified Data.Text as T
@@ -52,4 +53,7 @@ parensIf = wrapIf parens
 
 renderPretty :: Pretty a => a -> String
 renderPretty = renderStyle (style { lineLength = 120 }) . pretty
+
+printPretty :: Pretty a => a -> IO ()
+printPretty = putStrLn . renderPretty
 

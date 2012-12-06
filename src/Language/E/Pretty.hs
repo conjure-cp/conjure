@@ -20,6 +20,24 @@ import Text.PrettyPrint as Pr
 prettySpecDebug :: Spec -> Doc
 prettySpecDebug sp@(Spec _ st) = vcat $ pretty sp : map prettyAsPaths (statementAsList st)
 
+instance Pretty RuleRefn where
+    pretty (_, Nothing , x) = pretty x
+    pretty (_, Just lvl, x) = vcat [Pr.brackets (pretty lvl), pretty x]
+
+instance Pretty RuleRepr where
+    pretty (_, reprName, domOut, mcons, lcls, cases) =
+        vcat $ [ "~~>" <+> pretty reprName
+               , "~~>" <+> pretty domOut
+               , maybe Pr.empty (\ x -> "~~>" <+> pretty x) mcons
+               ] ++ map (nest 4 . pretty) lcls
+                 ++ map pretty cases
+
+instance Pretty RuleReprCase where
+    pretty (domIn, mcons, lcls) =
+        vcat $ [ "***" <+> pretty domIn
+               , maybe Pr.empty (\ x -> "~~>" <+> pretty x) mcons
+               ] ++ map (nest 4 . pretty) lcls
+
 instance Pretty Spec where
     pretty (Spec (language,version) statements)
         = vcat [ "language" <+> pretty language

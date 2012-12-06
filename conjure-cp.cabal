@@ -175,3 +175,49 @@ Executable conjure
         -Wall
         -rtsopts
 
+
+Executable conjure-tobinary
+    default-language : Haskell2010
+    hs-source-dirs   : src/exec
+    main-is          : ConjureToBinary.hs
+    build-depends    : conjure-cp
+                     , base
+                     , bytestring == 0.10.2.0
+    ghc-prof-options:
+        -auto-all
+        -caf-all
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -rtsopts
+
+
+Executable conjure-viewbinary
+    default-language : Haskell2010
+    hs-source-dirs   : src/exec
+    main-is          : ConjureViewBinary.hs
+    build-depends    : conjure-cp
+                     , base
+                     , bytestring == 0.10.2.0
+    ghc-prof-options:
+        -auto-all
+        -caf-all
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -rtsopts
+
