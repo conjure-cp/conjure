@@ -26,18 +26,39 @@ mergeReprFunc fs = \ param -> concat <$> mapM ($ param) fs
 builtInRepr :: MonadConjure m => [ReprFunc m]
 builtInRepr = [relationRepr]
 
+
 relationRepr :: MonadConjure m => ReprFunc m
-relationRepr ( _name, [xMatch| ts := domain.relation.inners |], decl) = do
+relationRepr ( name
+             , [xMatch| ts := domain.relation.inners
+                      | as := domain.relation.attributes.attrCollection
+                      |]
+             , decl) = do
     let t = [xMake| domain.tuple.inners := ts |]
+    let domOut = [xMake| domain.set.attributes.attrCollection := []
+                       | domain.set.inner := [t]
+                       |]
+    let refn = [xMake| reference := [Prim (S $ identifierConstruct
+                                                    name
+                                                    (Just "regionS")
+                                                    (Just "RelationAsSet")
+                                          )] |]
+    let structurals = flip mapMaybe as $ \ a -> case a of
+            [xMatch| [Prim (S "size")]    := attribute.nameValue.name.reference
+                   | [num]                := attribute.nameValue.value
+                   |] -> Just [eMake| |toSet(&refn)| = &num |]
+            [xMatch| [Prim (S "minSize")] := attribute.nameValue.name.reference
+                   | [num]                := attribute.nameValue.value
+                   |] -> Just [eMake| |toSet(&refn)| >= &num |]
+            [xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference
+                   | [num]                := attribute.nameValue.value
+                   |] -> Just [eMake| |toSet(&refn)| <= &num |]
+            _ -> Nothing
     return [( decl
             , "builtIn.relationRepr"
             , "RelationAsSet"
-            , [xMake| domain.set.attributes.attrCollection := []
-                    | domain.set.inner := [t]
-                    |]
-            , []
+            , domOut
+            , structurals
             )]
-
 relationRepr ( _, [xMatch| _ := domain.function |], _ ) = return []
 relationRepr ( _name, _dom, _ ) = do
     mkLog "missing:relationRepr" $ vcat [ pretty _name
