@@ -24,6 +24,7 @@ module Language.E.Imports
     , sortOn
     , maybeRead
     , padShowInt
+    , decodeFromFile
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -64,6 +65,7 @@ import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$
 
 import System.Random as X ( StdGen, getStdGen )
 
+import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
@@ -183,4 +185,9 @@ maybeRead = fmap fst . listToMaybe . reads
 
 padShowInt :: Show a => Int -> a -> String
 padShowInt n i = let s = show i in replicate (n - length s) '0' ++ s
+
+decodeFromFile :: Serialize a => FilePath -> IO a
+decodeFromFile path = do
+    con <- ByteString.readFile path
+    either error return (decode con)
 

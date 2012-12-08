@@ -298,11 +298,6 @@ essenceBinFileOut base x logs pipePath pre = do
     ByteString.writeFile path (encode (x, logs))
     appendFile pipePath $ unwords [pre, path] ++ "\n"
 
-decodeFromFile :: Serialize a => FilePath -> IO a
-decodeFromFile path = do
-    con <- ByteString.readFile path
-    either error return (decode con)
-
 runComp
     :: LogTree
     -> FunkyMulti GlobalState ConjureState ConjureError Identity a
