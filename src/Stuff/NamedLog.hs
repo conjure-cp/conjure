@@ -1,17 +1,21 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Stuff.NamedLog
     ( LogTree(..), logTreeAppend
     , NamedLog, buildLog
-    , prettyLog, prettyLogs, printLogs
+    , printLogs
     , nubKeepOrder, nubKeepOrderBy
     ) where
 
 import Data.Default
 import Data.Hashable
+import Data.Serialize
 import Text.PrettyPrint
 import qualified Data.Set as S
 import qualified Data.DList as DList
+import qualified GHC.Generics
 
 import Stuff.Pretty
 
@@ -21,6 +25,9 @@ import Debug.Trace ( trace )
 
 
 data LogTree = LTEmpty | LTSingle !NamedLog | LTMultiple !LogTree !LogTree
+    deriving GHC.Generics.Generic
+
+instance Serialize LogTree
 
 logTreeToList :: LogTree -> DList.DList NamedLog
 logTreeToList LTEmpty          = DList.empty
@@ -34,6 +41,9 @@ instance Default LogTree where
     def = LTEmpty
 
 data NamedLog = NamedLog String Doc
+    deriving GHC.Generics.Generic
+
+instance Serialize NamedLog
 
 instance Hashable NamedLog where
     hash (NamedLog a b) = hash (a, show b)
@@ -79,20 +89,20 @@ buildLog nm doc = trace (show $ pretty nm <+> doc) $ Just (NamedLog nm doc)
 buildLog nm doc = Just (NamedLog nm doc)
 #endif
 
-prettyLog :: NamedLog -> Doc
-prettyLog (NamedLog nm doc) = brackets (text nm) <+> doc
+instance Pretty NamedLog where
+    pretty (NamedLog nm doc) = brackets (text nm) <+> doc
 
-prettyLogs :: LogTree -> Doc
-prettyLogs = id
-    . vcat
-    . map prettyLog
-    . nubKeepOrder
-    . DList.toList
-    . logTreeToList
+instance Pretty LogTree where
+    pretty = id
+           . vcat
+           . map pretty
+           . nubKeepOrder
+           . DList.toList
+           . logTreeToList
 
 printLogs :: LogTree -> IO ()
 printLogs LTEmpty = return ()
-printLogs logs = putStrLn $ renderPretty $ prettyLogs logs
+printLogs logs = printPretty $ pretty logs
 
 nubKeepOrder :: Hashable a => [a] -> [a]
 nubKeepOrder = nubKeepOrderBy id
@@ -105,4 +115,8 @@ nubKeepOrderBy f = go []
             if hashx `elem` seen
                 then go seen xs
                 else x : go (hashx : seen) xs
+
+instance Serialize Doc where
+    put = Data.Serialize.put . renderPretty
+    get = do s <- Data.Serialize.get ; return $ pretty (s :: String)
 
