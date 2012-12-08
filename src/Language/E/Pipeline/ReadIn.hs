@@ -40,8 +40,7 @@ readRuleRepr (fp,con) =
 
 writeSpecs :: FilePath -> String -> [Spec] -> IO ()
 writeSpecs base tag specs = do
-    let padShow n i = let s = show i in replicate (n - length s) '0' ++ s
-    let numbers = map (padShow 4) [ (1 :: Int) .. ]
+    let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
     forM_ (zip numbers specs) $ \ (i, spec) -> do
         let outDirname  = base ++ "-" ++ tag
         let outFilename = base ++ "-" ++ tag ++ "/" ++ i ++ ".essence"

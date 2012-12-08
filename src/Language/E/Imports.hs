@@ -16,13 +16,14 @@ module Language.E.Imports
     , T.Text, stringToText
     , sameLength
     , concatMapM
-    , parMapM
     , allFiles, allFilesWithSuffix
     , timedIO
     , isLeft, isRight
     , trace, tracing
     , allCombinations
     , sortOn
+    , maybeRead
+    , padShowInt
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -45,7 +46,7 @@ import Data.Foldable     as X ( forM_, fold, foldMap, toList )
 import Data.Function     as X ( on )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy, groupBy, sortBy, partition, genericLength, genericIndex, isSuffixOf, isPrefixOf )
 import Data.List.Split   as X ( splitOn )
-import Data.Maybe        as X ( catMaybes, listToMaybe, maybe, maybeToList, mapMaybe, isJust )
+import Data.Maybe        as X ( catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
@@ -68,8 +69,6 @@ import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
 import qualified Data.Set as S
 
-import Control.Concurrent ( getNumCapabilities )
-import Control.Concurrent.ParallelIO.Local ( withPool, parallel )
 import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
 import System.CPUTime ( getCPUTime )
@@ -138,11 +137,6 @@ sameLength _ _ = False
 concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
 concatMapM f xs = fmap concat $ mapM f xs
 
-parMapM :: (a -> IO b) -> [a] -> IO [b]
-parMapM f xs = do
-   n <- getNumCapabilities
-   withPool n $ \ pool -> parallel pool (map f xs)
-
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do
     let dots i = not ( i == "." || i == ".." )
@@ -183,4 +177,10 @@ sortOn f = sortBy (comparing f)
 instance Serialize T.Text where
     put = Data.Serialize.put . T.unpack
     get = T.pack <$> Data.Serialize.get
+
+maybeRead :: Read a => String -> Maybe a
+maybeRead = fmap fst . listToMaybe . reads
+
+padShowInt :: Show a => Int -> a -> String
+padShowInt n i = let s = show i in replicate (n - length s) '0' ++ s
 

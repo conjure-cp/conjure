@@ -147,6 +147,10 @@ prettyError :: Doc -> ConjureError -> Doc
 prettyError msg (_, d, Nothing) = vcat [msg, nest 4 d, ""]
 prettyError msg (_, d, Just sp) = vcat [msg, nest 4 d, nest 4 (pretty sp), ""] 
 
+instance Pretty ConjureError where
+    pretty (_, d, Nothing) = vcat [ nest 4 d,                     "" ]
+    pretty (_, d, Just sp) = vcat [ nest 4 d, nest 4 (pretty sp), "" ]
+
 recordSpec :: MonadConjure m => Spec -> m Spec
 recordSpec sp = do
     modify $ \ st -> st { lastSpec = Just sp }

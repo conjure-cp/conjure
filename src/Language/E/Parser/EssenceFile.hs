@@ -10,7 +10,6 @@ import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators, functionals )
 import Language.E.Lexer ( Lexeme(..), lexemeFace, lexemeText )
 
-import Data.Maybe ( fromMaybe )
 import Data.String ( fromString )
 
 import Text.Parsec ( (<?>), try )
