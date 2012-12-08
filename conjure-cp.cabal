@@ -100,11 +100,9 @@ Library
                      , hashable == 1.1.2.5
                      , hashable-generics == 1.1.8
                      , haskell-src-meta == 0.6.0.1
-                     , hspec == 1.4.2.3
+                     , hspec == 1.4.3
                      , HUnit == 1.2.5.1
                      , mtl == 2.1.2
-                     , parallel == 3.2.0.3
-                     , parallel-io == 0.3.2.1
                      , parsec == 3.1.3
                      , pretty == 1.1.1.0
                      , pretty-show == 1.2
@@ -137,7 +135,7 @@ Test-Suite conjure-tests
     main-is          : ConjureTests.hs
     build-depends    : conjure-cp
                      , base
-                     , hspec == 1.4.2.3
+                     , hspec == 1.4.3
     ghc-prof-options:
         -auto-all
         -caf-all
@@ -160,6 +158,8 @@ Executable conjure
     main-is          : ConjureMain.hs
     build-depends    : conjure-cp
                      , base
+                     , bytestring == 0.10.0.0
+                     , directory == 1.2.0.1
     ghc-prof-options:
         -auto-all
         -caf-all
@@ -175,72 +175,4 @@ Executable conjure
         -Wall
         -rtsopts
 
-
-Executable conjure-tobinary
-    default-language : Haskell2010
-    hs-source-dirs   : src/exec
-    main-is          : ToBinary.hs
-    build-depends    : conjure-cp
-                     , base
-                     , bytestring
-    ghc-prof-options:
-        -auto-all
-        -caf-all
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -rtsopts
-
-
-Executable conjure-viewbinary
-    default-language : Haskell2010
-    hs-source-dirs   : src/exec
-    main-is          : ViewBinary.hs
-    build-depends    : conjure-cp
-                     , base
-                     , bytestring == 0.10.2.0
-    ghc-prof-options:
-        -auto-all
-        -caf-all
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -rtsopts
-
-
-Executable conjure-mkrulesdb
-    default-language : Haskell2010
-    hs-source-dirs   : src/exec
-    main-is          : MkRulesDB.hs
-    build-depends    : conjure-cp
-                     , base
-                     , bytestring == 0.10.2.0
-    ghc-prof-options:
-        -auto-all
-        -caf-all
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -rtsopts
 
