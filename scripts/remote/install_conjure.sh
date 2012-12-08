@@ -26,5 +26,5 @@ cabal install --disable-documentation \
               --force-reinstalls \
               -O2
 scripts/build/make -O
-conjure-mkrulesdb `find files/rules -type f | grep -e ".rule$" -e ".repr$"`
+conjure makeRulesDB `find files/rules -type f | grep -e ".rule$" -e ".repr$"`
 
