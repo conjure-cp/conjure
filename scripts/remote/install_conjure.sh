@@ -19,6 +19,7 @@ else
 fi
 cd ~/repos/conjure
 cabal update
+cabal install --dry-run -v
 cabal install --disable-documentation \
               --enable-library-profiling \
               --disable-executable-profiling \
