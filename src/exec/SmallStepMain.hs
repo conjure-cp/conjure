@@ -300,8 +300,8 @@ nextPhaseCmd :: String -> FilePath -> FilePath -> String
 nextPhaseCmd ph outDirPath queuePath
     = unwords [ "conjure"
               , ph
-              , "--outDir", outDirPath
               , "--queue" , queuePath
+              , "--outDir", outDirPath
               ]
 
 dropExts :: FilePath -> FilePath
