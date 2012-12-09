@@ -235,7 +235,7 @@ phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
             forM_ results2 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut   outDirPath x logs
                 (Right x, logs) -> essenceFileOut outDirPath x logs
-            printPretty $ nest 4 ("{ HALT " <> pretty (length results2) <> "}")
+            printPretty $ nest 4 ("{HALT " <> pretty (length results2) <> "}")
 
         else do -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of

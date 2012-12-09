@@ -8,6 +8,7 @@ import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
+import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
@@ -27,7 +28,9 @@ conjureRefn refns spec = withBindingScope' $
         Left  es -> err ErrFatal $ vcat $ map (prettyError "refn") es
         Right fs -> do
             initialiseSpecState spec
-            let pipeline =  recordSpec >=> inlineLettings
+            let pipeline =  return
+                        >=> recordSpec >=> handleEnums
+                        >=> recordSpec >=> inlineLettings
                         >=> recordSpec >=> applyRefn fs
                         >=> recordSpec >=> checkIfAllRefined
                         >=> recordSpec >=> conjureNoTuples
