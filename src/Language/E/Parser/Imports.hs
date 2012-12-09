@@ -31,6 +31,20 @@ _testParsePrint' p t = do
             print $ prettyAsPaths x
             print $ pretty x
 
+_testParsePrint'' ::
+    ( Pretty primitive
+    , Pretty (Generic primitive)
+    ) => Parser [Generic primitive] -> T.Text -> IO ()
+_testParsePrint'' p t = do
+    let res = runLexerAndParser p "" t
+    case res of
+        Left  e  -> print e
+        Right xs -> forM_ xs $ \ x -> do
+            -- print x
+            -- print $ prettyAsTree x
+            print $ prettyAsPaths x
+            print $ pretty x
+
 runLexerAndParser :: (MonadError Pr.Doc m, Applicative m) => Parser a -> String -> T.Text -> m a
 runLexerAndParser p s = runLexer >=> runParser p s
 
