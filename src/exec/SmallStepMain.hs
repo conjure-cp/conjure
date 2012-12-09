@@ -5,6 +5,7 @@
 module Main where
 
 import Paths_conjure_cp ( getBinDir )
+import Data.Char ( toLower )
 import System.Environment ( getArgs )
 import System.Directory ( createDirectoryIfMissing, getDirectoryContents, removeFile )
 import qualified Data.ByteString as ByteString
@@ -19,30 +20,41 @@ import Language.E.Pipeline.Groom
 rulesdbLoc :: IO FilePath
 rulesdbLoc = liftM (++ "/conjure.rulesdb") getBinDir
 
+queueLoc :: IO FilePath
+queueLoc = liftM (++ "/conjure.queue") getBinDir
+
 data ConjureMode
     = MakeBinary
     | ViewBinary
     | MakeRulesDB
     | Start
+    | PhaseRepr0
     | PhaseRepr
     | PhaseRefn
+    | PathOfRulesDB
+    | PathOfQueueFile
     deriving Show
 
 toConjureMode :: String -> Maybe ConjureMode
-toConjureMode "makeBinary"   = Just MakeBinary
-toConjureMode "viewBinary"   = Just ViewBinary
-toConjureMode "makeRulesDB"  = Just MakeRulesDB
-toConjureMode "start"        = Just Start
-toConjureMode "phaseRefn"    = Just PhaseRefn
-toConjureMode "phaseRepr"    = Just PhaseRepr
-toConjureMode _ = Nothing
+toConjureMode  = helper . map toLower
+    where
+        helper "makebinary"      = Just MakeBinary
+        helper "viewbinary"      = Just ViewBinary
+        helper "makerulesdb"     = Just MakeRulesDB
+        helper "start"           = Just Start
+        helper "phaserepr0"      = Just PhaseRepr0
+        helper "phaserepr"       = Just PhaseRepr
+        helper "phaserefn"       = Just PhaseRefn
+        helper "pathofrulesdb"   = Just PathOfRulesDB
+        helper "pathofqueuefile" = Just PathOfQueueFile
+        helper _ = Nothing
 
 data ConjureFilePath
-    = EssencePath     FilePath
-    | EssenceBinPath  FilePath
-    | RuleRefnPath    FilePath
-    | RuleReprPath    FilePath
-    | RulesDBPath     FilePath
+    = EssencePath     { filePath :: FilePath }
+    | EssenceBinPath  { filePath :: FilePath }
+    | RuleRefnPath    { filePath :: FilePath }
+    | RuleReprPath    { filePath :: FilePath }
+    | RulesDBPath     { filePath :: FilePath }
     deriving Show
 
 toConjureFilePath :: String -> Maybe ConjureFilePath
@@ -74,25 +86,37 @@ data ConjureArgs =
 
 toConjureArgs :: [String] -> ConjureArgs
 toConjureArgs xs =
-    let ys        = mapMaybe toConjureArg xs
-        modes     = lefts ys
-        filepaths = rights ys
-        dirPath   = listToMaybe [ p | ("-o",p) <- zip xs (tail xs) ]
-        pipePath  = listToMaybe [ p | ("-p",p) <- zip xs (tail xs) ]
+    let ys         = mapMaybe toConjureArg xs
+        modes      = lefts ys
+        filepaths  = rights ys
+        outDirPath = listToMaybe [ p | ("--outDir", p) <- zip xs (tail xs) ]
+        queuePath  = listToMaybe [ p | ("--queue" , p) <- zip xs (tail xs) ]
     in  case modes of
-            [mode] -> ConjureArgs mode  filepaths dirPath pipePath
-            _      -> ConjureArgs Start filepaths dirPath pipePath
+            [mode] -> ConjureArgs mode  filepaths outDirPath queuePath
+            _      -> ConjureArgs Start filepaths outDirPath queuePath
 
 main :: IO ()
 main = do
     args <- toConjureArgs <$> getArgs
     case args of
-        ConjureArgs MakeBinary  paths _ _      -> mapM_ makeBinary  paths
-        ConjureArgs ViewBinary  paths _ _      -> mapM_ viewBinary  paths
-        ConjureArgs MakeRulesDB paths _ _      -> makeRulesDB paths
-        ConjureArgs Start       paths dirPath pipePath -> start     dirPath pipePath paths
-        ConjureArgs PhaseRepr   paths dirPath pipePath -> phaseRepr dirPath pipePath paths
-        ConjureArgs PhaseRefn   paths dirPath pipePath -> phaseRefn dirPath pipePath paths
+        ConjureArgs MakeBinary  paths _ _ -> mapM_ makeBinary  paths
+        ConjureArgs ViewBinary  paths _ _ -> mapM_ viewBinary  paths
+        ConjureArgs MakeRulesDB paths _ _ -> makeRulesDB paths
+        ConjureArgs Start       paths outDirPath queuePath -> start      outDirPath queuePath paths
+        ConjureArgs PhaseRepr0  paths outDirPath queuePath -> do reportArgs args
+                                                                 phaseRepr0 outDirPath queuePath paths
+        ConjureArgs PhaseRepr   paths outDirPath queuePath -> do reportArgs args
+                                                                 phaseRepr  outDirPath queuePath paths
+        ConjureArgs PhaseRefn   paths outDirPath queuePath -> do reportArgs args
+                                                                 phaseRefn  outDirPath queuePath paths
+        ConjureArgs PathOfRulesDB   _ _ _ -> putStrLn =<< rulesdbLoc
+        ConjureArgs PathOfQueueFile _ _ _ -> putStrLn =<< queueLoc
+
+reportArgs :: ConjureArgs -> IO ()
+reportArgs (ConjureArgs mode paths _ _)
+    = putStrLn
+    $ unwords
+    $ "conjure" : show mode : map filePath paths
 
 makeBinary :: ConjureFilePath -> IO ()
 makeBinary arg = case arg of
@@ -151,14 +175,12 @@ makeRulesDB args = do
 
 -- this is the entry point of conjure.
 -- input is a single problem specification, an essence file
--- runs the repr phase once.
---  if ErrGeneratesNone --> runs refn once and outputs a *.eprime file
---  else                --> outputs each (Spec,LogFile) to a binary file
+-- next phase is phaseRepr0
 start :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-start mdirPath mpipePath [EssencePath path] = do
+start moutDirPath mqueuePath [EssencePath path] = do
 
-    let dirPath  = fromMaybe (dropExts path) mdirPath
-    let pipePath = fromMaybe (dirPath ++ "/queue") mpipePath
+    let outDirPath = fromMaybe (dropExts path) moutDirPath
+    queuePath <- maybe queueLoc return mqueuePath
 
     essenceInp
         :: Spec
@@ -167,11 +189,26 @@ start mdirPath mpipePath [EssencePath path] = do
                 "Parsing problem specification"
                 (readSpec con)
 
+    essenceBinFileOut outDirPath essenceInp def
+        queuePath
+        (nextPhaseCmd "phaseRepr0" outDirPath queuePath)
+start _ _ _ = error "Provide a single *.essence file and nothing else"
+
+-- special case for the very first repr phase
+-- runs the repr phase once.
+--  if ErrGeneratesNone --> runs refn once and outputs a *.eprime file
+--  else                --> outputs each (Spec,LogFile) to a binary file
+-- next phase is phaseRefn
+phaseRepr0 :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
+phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+
+    (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
+
     (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]
-        results1 = runComp def $ conjureRepr ruleReprs essenceInp
+        results1 = runComp logsInp $ conjureRepr ruleReprs essenceInp
 
         final1 :: Bool
         final1 = not $ null [ () | (Left (ErrGeneratesNone, _, _), _) <- results1 ]
@@ -181,26 +218,27 @@ start mdirPath mpipePath [EssencePath path] = do
         then do -- run refn and groom and output an *.eprime file
             let
                 results2 :: [(Either ConjureError Spec, LogTree)]
-                results2 = runComp def $ conjureRefn ruleRefns essenceInp >>= groomSpec
+                results2 = runComp logsInp $ conjureRefn ruleRefns essenceInp >>= groomSpec
 
             forM_ results2 $ \ result -> case result of
-                (Left  x, logs) -> errorFileOut   dirPath x logs
-                (Right x, logs) -> essenceFileOut dirPath x logs
+                (Left  x, logs) -> errorFileOut   outDirPath x logs
+                (Right x, logs) -> essenceFileOut outDirPath x logs
 
         else -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
-                (Left  x, logs) -> errorFileOut      dirPath x logs
-                (Right x, logs) -> essenceBinFileOut dirPath x logs
-                                    pipePath
-                                    $ unwords [ "conjure"
-                                              , "phaseRefn"
-                                              , "-o", dirPath
-                                              , "-p", pipePath
-                                              ]
-start _ _ _ = error "Provide a single *.essence file and nothing else"
+                (Left  x, logs) -> errorFileOut      outDirPath x logs
+                (Right x, logs) -> essenceBinFileOut outDirPath x logs
+                                    queuePath
+                                    (nextPhaseCmd "phaseRefn" outDirPath queuePath)
+    removeFile path
+phaseRepr0 _ _ _ = error "Argument error in phaseRepr0"
 
+-- runs the repr phase once.
+--  if ErrGeneratesNone --> outputs a *.eprime file
+--  else                --> outputs each (Spec,LogFile) to a binary file
+-- next phase is phaseRefn
 phaseRepr :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-phaseRepr (Just dirPath) (Just pipePath) [EssenceBinPath path] = do
+phaseRepr (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
@@ -220,24 +258,22 @@ phaseRepr (Just dirPath) (Just pipePath) [EssenceBinPath path] = do
                 result2 :: (Either ConjureError Spec, LogTree)
                 result2 = runComp1 logsInp $ groomSpec essenceInp
             case result2 of
-                (Left  x2, logs2) -> errorFileOut   dirPath x2 logs2
-                (Right x2, logs2) -> essenceFileOut dirPath x2 logs2
+                (Left  x2, logs2) -> errorFileOut   outDirPath x2 logs2
+                (Right x2, logs2) -> essenceFileOut outDirPath x2 logs2
 
         else -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
-                (Left  x, logs) -> errorFileOut      dirPath x logs
-                (Right x, logs) -> essenceBinFileOut dirPath x logs
-                                    pipePath
-                                    $ unwords [ "conjure"
-                                              , "phaseRefn"
-                                              , "-o", dirPath
-                                              , "-p", pipePath
-                                              ]
+                (Left  x, logs) -> errorFileOut      outDirPath x logs
+                (Right x, logs) -> essenceBinFileOut outDirPath x logs
+                                    queuePath
+                                    (nextPhaseCmd "phaseRefn" outDirPath queuePath)
     removeFile path
 phaseRepr _ _ _ = error "Argument error in phaseRepr"
 
+-- runs the refn phase once.
+-- next phase is phaseRepr
 phaseRefn :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-phaseRefn (Just dirPath) (Just pipePath) [EssenceBinPath path] = do
+phaseRefn (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
@@ -249,16 +285,20 @@ phaseRefn (Just dirPath) (Just pipePath) [EssenceBinPath path] = do
 
     -- create the binary file, and output the command to run next to stdout
     forM_ results1 $ \ result -> case result of
-        (Left  x, logs) -> errorFileOut      dirPath x logs
-        (Right x, logs) -> essenceBinFileOut dirPath x logs
-                                    pipePath
-                                    $ unwords [ "conjure"
-                                              , "phaseRepr"
-                                              , "-o", dirPath
-                                              , "-p", pipePath
-                                              ]
+        (Left  x, logs) -> errorFileOut      outDirPath x logs
+        (Right x, logs) -> essenceBinFileOut outDirPath x logs
+                                    queuePath
+                                    (nextPhaseCmd "phaseRepr" outDirPath queuePath)
     removeFile path
 phaseRefn _ _ _ = error "Argument error in phaseRefn"
+
+nextPhaseCmd :: String -> FilePath -> FilePath -> String
+nextPhaseCmd ph outDirPath queuePath
+    = unwords [ "conjure"
+              , ph
+              , "--outDir", outDirPath
+              , "--queue" , queuePath
+              ]
 
 dropExts :: FilePath -> FilePath
 dropExts x =
@@ -292,11 +332,11 @@ essenceFileOut base x logs = do
     writeFile (path ++ ".logs") (renderPretty logs)
 
 essenceBinFileOut :: FilePath -> Spec -> LogTree -> FilePath -> String -> IO ()
-essenceBinFileOut base x logs pipePath pre = do
+essenceBinFileOut base x logs queuePath pre = do
     createDirectoryIfMissing True base
     path <- nextFilePathWithExt base ".essence.binary"
     ByteString.writeFile path (encode (x, logs))
-    appendFile pipePath $ unwords [pre, path] ++ "\n"
+    appendFile queuePath $ unwords [pre, path] ++ "\n"
 
 runComp
     :: LogTree
