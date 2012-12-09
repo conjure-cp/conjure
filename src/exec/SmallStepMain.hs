@@ -7,7 +7,7 @@ module Main where
 import Paths_conjure_cp ( getBinDir )
 import Data.Char ( toLower )
 import System.Environment ( getArgs )
-import System.Directory ( createDirectoryIfMissing, getDirectoryContents, removeFile )
+import System.Directory
 import qualified Data.ByteString as ByteString
 
 import Language.E
@@ -180,6 +180,10 @@ start :: Maybe FilePath -> Maybe FilePath -> ConjureFilePath -> IO ()
 start moutDirPath mqueuePath (EssencePath path) = do
 
     let outDirPath = fromMaybe (dropExts path) moutDirPath
+    b <- doesDirectoryExist outDirPath
+    when b $ removeDirectoryRecursive outDirPath
+    createDirectoryIfMissing True outDirPath
+
     queuePath <- maybe queueLoc return mqueuePath
 
     essenceInp
@@ -319,21 +323,18 @@ nextFilePathWithExt base ext = do
 
 errorFileOut :: FilePath -> ConjureError -> LogTree -> IO ()
 errorFileOut base x logs = do
-    createDirectoryIfMissing True base
     path <- nextFilePathWithExt base ".error"
     writeFile path              (renderPretty x)
     writeFile (path ++ ".logs") (renderPretty logs)
 
 essenceFileOut :: FilePath -> Spec -> LogTree -> IO ()
 essenceFileOut base x logs = do
-    createDirectoryIfMissing True base
     path <- nextFilePathWithExt base ".essence"
     writeFile path              (renderPretty x)
     writeFile (path ++ ".logs") (renderPretty logs)
 
 essenceBinFileOut :: FilePath -> Spec -> LogTree -> FilePath -> String -> IO ()
 essenceBinFileOut base x logs queuePath pre = do
-    createDirectoryIfMissing True base
     path <- nextFilePathWithExt base ".essence.binary"
     ByteString.writeFile path (encode (x, logs))
     appendFile queuePath $ unwords [pre, path] ++ "\n"
