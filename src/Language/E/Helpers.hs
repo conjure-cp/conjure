@@ -40,18 +40,53 @@ freshQuanVar = do
 
 inForAll :: Text -> E -> E -> E
 inForAll quanVar quanOverDom body =
-    [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
-          | quantified.quanVar.structural.single.reference := [Prim $ S quanVar ]
-          | quantified.quanOverDom                         := [quanOverDom]
-          | quantified.quanOverOp                          := []
-          | quantified.quanOverExpr                        := []
-          | quantified.guard.emptyGuard                    := []
-          | quantified.body                                := [body]
-          |]
+    let
+        out = 
+            [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
+                  | quantified.quanVar.structural.single.reference := [Prim $ S quanVar ]
+                  | quantified.quanOverDom                         := [quanOverDom]
+                  | quantified.quanOverOp                          := []
+                  | quantified.quanOverExpr                        := []
+                  | quantified.guard.emptyGuard                    := []
+                  | quantified.body                                := [body]
+                  |]
+    in  fromMaybe out (tryUnrollForAll out)
 
 inForAlls :: [(Text,E)] -> E -> E
 inForAlls = go . reverse
     where
         go []         body = body
         go ((i,j):ks) body = go ks $ inForAll i j body
+
+tryUnrollForAll :: E -> Maybe E
+tryUnrollForAll
+    [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
+           | [Prim (S quanVar)]  := quantified.quanVar.structural.single.reference
+           | ranges              := quantified.quanOverDom.domain.int.ranges
+           | []                  := quantified.quanOverOp
+           | []                  := quantified.quanOverExpr
+           | []                  := quantified.guard.emptyGuard
+           | [body]              := quantified.body
+           |] = do
+    let
+        valueIntFrom [xMatch| [Prim (I i)] := value.literal |] = Just i
+        valueIntFrom _ = Nothing
+
+        collectInts [xMatch| [ i ] := range.single |] = Just [i]
+        collectInts [xMatch| [i,j] := range.fromTo |] = do
+            iInt <- valueIntFrom i
+            jInt <- valueIntFrom j
+            return $ map (\ x -> [xMake| value.literal := [Prim (I x)] |] )
+                     [iInt .. jInt]
+        collectInts _ = Nothing
+
+    ints <- concatMapM collectInts ranges
+    return $ conjunct
+        [ replace
+            [xMake| structural.single.reference := [Prim (S quanVar)] |]
+            x
+            body
+        | x <- ints
+        ]
+tryUnrollForAll _ = Nothing
 

@@ -14,7 +14,7 @@ savilerowCompat
     -> m Spec
 savilerowCompat
      =  recordSpec >=> ( \ (Spec v xs) -> withBindingScope' $ Spec v <$> sliceIfTooFewIndices xs )
-    >=> recordSpec >=> valueMatrixToLetting
+    -- >=> recordSpec >=> valueMatrixToLetting
     >=> recordSpec >=> conjureNoTuples
     >=> recordSpec >=> conjureNoGuards
     >=> recordSpec >=> (return . onSpec toIntIsNoOp)

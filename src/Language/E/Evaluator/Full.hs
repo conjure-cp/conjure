@@ -99,6 +99,15 @@ fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
             -- mkLog "fullEvaluator Nothing" $ pretty p
             -- return Nothing
 
+fullEvaluator [xMatch| vs           := operator.index.left .value.matrix.values
+                     | [Prim (I i)] := operator.index.right.value.literal
+                     |] | i >= 1 && i <= genericLength vs
+                        = ret (vs `genericIndex` (i-1))
+fullEvaluator [xMatch| vs           := operator.index.left .value.tuple.values
+                     | [Prim (I i)] := operator.index.right.value.literal
+                     |] | i >= 1 && i <= genericLength vs
+                        = ret (vs `genericIndex` (i-1))
+
 fullEvaluator p@[eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
     | [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
