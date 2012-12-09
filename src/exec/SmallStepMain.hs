@@ -114,7 +114,7 @@ main = do
 
 reportArgs :: ConjureArgs -> IO ()
 reportArgs (ConjureArgs mode paths _ _)
-    = putStrLn
+    = putStr
     $ unwords
     $ "conjure" : show mode : map filePath paths
 
@@ -181,7 +181,12 @@ start moutDirPath mqueuePath (EssencePath path) = do
 
     let outDirPath = fromMaybe (dropExts path) moutDirPath
     b <- doesDirectoryExist outDirPath
-    when b $ removeDirectoryRecursive outDirPath
+    when b $ do
+        let exts = [".eprime", ".eprime.logs", ".essence.binary"]
+        cons <- getDirectoryContents outDirPath
+        forM_ cons $ \ con ->
+            when (any (`isSuffixOf` con) exts)
+                 (removeFile $ outDirPath ++ "/" ++ con)
     createDirectoryIfMissing True outDirPath
 
     queuePath <- maybe queueLoc return mqueuePath
@@ -227,13 +232,15 @@ phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
             forM_ results2 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut   outDirPath x logs
                 (Right x, logs) -> essenceFileOut outDirPath x logs
+            printPretty $ nest 4 ("{ HALT " <> pretty (length results2) <> "}")
 
-        else -- create the binary file, and output the command to run next to stdout
+        else do -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut      outDirPath x logs
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRefn" outDirPath queuePath)
+            printPretty $ ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRepr0 _ _ _ = error "Argument error in phaseRepr0"
 
@@ -265,12 +272,14 @@ phaseRepr (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Left  x2, logs2) -> errorFileOut   outDirPath x2 logs2
                 (Right x2, logs2) -> essenceFileOut outDirPath x2 logs2
 
-        else -- create the binary file, and output the command to run next to stdout
+            printPretty $ ("\t{" <> "HALT" <> "}")
+        else do -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut      outDirPath x logs
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRefn" outDirPath queuePath)
+            printPretty $ ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRepr _ _ _ = error "Argument error in phaseRepr"
 
@@ -293,6 +302,7 @@ phaseRefn (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRepr" outDirPath queuePath)
+    printPretty $ ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRefn _ _ _ = error "Argument error in phaseRefn"
 
@@ -329,7 +339,7 @@ errorFileOut base x logs = do
 
 essenceFileOut :: FilePath -> Spec -> LogTree -> IO ()
 essenceFileOut base x logs = do
-    path <- nextFilePathWithExt base ".essence"
+    path <- nextFilePathWithExt base ".eprime"
     writeFile path              (renderPretty x)
     writeFile (path ++ ".logs") (renderPretty logs)
 
