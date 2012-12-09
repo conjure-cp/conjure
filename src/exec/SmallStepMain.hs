@@ -182,7 +182,10 @@ start moutDirPath mqueuePath (EssencePath path) = do
     let outDirPath = fromMaybe (dropExts path) moutDirPath
     b <- doesDirectoryExist outDirPath
     when b $ do
-        let exts = [".eprime", ".eprime.logs", ".essence.binary"]
+        let exts = [ ".eprime", ".eprime.logs"
+                   , ".error" , ".error.logs"
+                   , ".essence.binary"
+                   ]
         cons <- getDirectoryContents outDirPath
         forM_ cons $ \ con ->
             when (any (`isSuffixOf` con) exts)
@@ -240,7 +243,7 @@ phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRefn" outDirPath queuePath)
-            printPretty $ ("\t{" <> pretty (length results1) <> "}")
+            printPretty ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRepr0 _ _ _ = error "Argument error in phaseRepr0"
 
@@ -272,14 +275,14 @@ phaseRepr (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Left  x2, logs2) -> errorFileOut   outDirPath x2 logs2
                 (Right x2, logs2) -> essenceFileOut outDirPath x2 logs2
 
-            printPretty $ ("\t{" <> "HALT" <> "}")
+            printPretty ("\t{" <> "HALT" <> "}")
         else do -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut      outDirPath x logs
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRefn" outDirPath queuePath)
-            printPretty $ ("\t{" <> pretty (length results1) <> "}")
+            printPretty ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRepr _ _ _ = error "Argument error in phaseRepr"
 
@@ -302,7 +305,7 @@ phaseRefn (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRepr" outDirPath queuePath)
-    printPretty $ ("\t{" <> pretty (length results1) <> "}")
+    printPretty ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRefn _ _ _ = error "Argument error in phaseRefn"
 
