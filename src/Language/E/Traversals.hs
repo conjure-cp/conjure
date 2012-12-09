@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.E.Traversals where
 
@@ -242,6 +243,29 @@ checkingMemo x f = do
                         st { memoRefnStaysTheSame = IntSet.insert hashX   memoSame    }
                     return x
 
+
+foreachStatement
+    :: forall t m
+    .  ( MonadConjure m
+       , MonadTrans t
+       , Monad (t m)
+       , Functor (t m)
+       )
+    => (E -> t m [E])
+    -> Spec
+    -> t m Spec
+foreachStatement f (Spec v s) = Spec v . listAsStatement <$> helper s
+    where
+        helper :: E -> t m [E]
+        helper [xMatch| [this] := statement.this
+                      | [next] := statement.next
+                      |] = do
+            lift $ introduceStuff this
+            this' <- f this
+            lift $ mapM_ introduceStuff this'
+            next' <- withBindingScope $ helper next
+            return $ this' ++ next'
+        helper this = f this
 
 initialiseSpecState :: MonadConjure m => Spec -> m ()
 initialiseSpecState (Spec _ statements) = do
