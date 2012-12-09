@@ -9,6 +9,7 @@ import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
+import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
@@ -30,6 +31,7 @@ conjureRefn refns spec = withBindingScope' $
             initialiseSpecState spec
             let pipeline =  return
                         >=> recordSpec >=> handleEnums
+                        >=> recordSpec >=> handleUnnameds
                         >=> recordSpec >=> inlineLettings
                         >=> recordSpec >=> applyRefn fs
                         >=> recordSpec >=> checkIfAllRefined

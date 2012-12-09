@@ -5,6 +5,7 @@ import Language.E.Pipeline.ApplyRepr ( applyRepr )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
+import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 
 
@@ -19,6 +20,7 @@ conjureRepr reprs spec = withBindingScope' $ do
     initialiseSpecState spec
     let pipeline =  return
                 >=> recordSpec >=> handleEnums
+                >=> recordSpec >=> handleUnnameds
                 >=> recordSpec >=> inlineLettings
                 >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
                 >=> recordSpec >=> conjureNoTuples
