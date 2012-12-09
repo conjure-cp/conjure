@@ -102,7 +102,7 @@ main = do
         ConjureArgs MakeBinary  paths _ _ -> mapM_ makeBinary  paths
         ConjureArgs ViewBinary  paths _ _ -> mapM_ viewBinary  paths
         ConjureArgs MakeRulesDB paths _ _ -> makeRulesDB paths
-        ConjureArgs Start       paths outDirPath queuePath -> start      outDirPath queuePath paths
+        ConjureArgs Start       paths outDirPath queuePath -> mapM_ (start outDirPath queuePath) paths
         ConjureArgs PhaseRepr0  paths outDirPath queuePath -> do reportArgs args
                                                                  phaseRepr0 outDirPath queuePath paths
         ConjureArgs PhaseRepr   paths outDirPath queuePath -> do reportArgs args
@@ -176,8 +176,8 @@ makeRulesDB args = do
 -- this is the entry point of conjure.
 -- input is a single problem specification, an essence file
 -- next phase is phaseRepr0
-start :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-start moutDirPath mqueuePath [EssencePath path] = do
+start :: Maybe FilePath -> Maybe FilePath -> ConjureFilePath -> IO ()
+start moutDirPath mqueuePath (EssencePath path) = do
 
     let outDirPath = fromMaybe (dropExts path) moutDirPath
     queuePath <- maybe queueLoc return mqueuePath
@@ -192,7 +192,7 @@ start moutDirPath mqueuePath [EssencePath path] = do
     essenceBinFileOut outDirPath essenceInp def
         queuePath
         (nextPhaseCmd "phaseRepr0" outDirPath queuePath)
-start _ _ _ = error "Provide a single *.essence file and nothing else"
+start _ _ _ = error "Provide a *.essence files only"
 
 -- special case for the very first repr phase
 -- runs the repr phase once.
