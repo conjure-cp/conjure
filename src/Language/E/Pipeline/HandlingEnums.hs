@@ -45,12 +45,20 @@ doReplacements (Spec v s, mapping) = Spec v $ replaceAll mapping s
 updateGivenFinds :: MonadConjure m => Spec -> m Spec
 updateGivenFinds spec = runIdentityT $ flip foreachStatement spec $ \ statement ->
     case statement of
-        [xMatch| [findName] := topLevel.declaration.find.name
+        [xMatch| [declName] := topLevel.declaration.find.name
                | enumRanges := topLevel.declaration.find.domain.domain.enum.ranges
                |] -> do
             let newDom = [xMake| domain.int.ranges := enumRanges |]
-            let newDecl = [xMake| topLevel.declaration.find.name   := [findName]
+            let newDecl = [xMake| topLevel.declaration.find.name   := [declName]
                                 | topLevel.declaration.find.domain := [newDom]
+                                |]
+            return [newDecl]
+        [xMatch| [declName] := topLevel.declaration.given.name
+               | enumRanges := topLevel.declaration.given.domain.domain.enum.ranges
+               |] -> do
+            let newDom = [xMake| domain.int.ranges := enumRanges |]
+            let newDecl = [xMake| topLevel.declaration.given.name   := [declName]
+                                | topLevel.declaration.given.domain := [newDom]
                                 |]
             return [newDecl]
         _ -> return [statement]
