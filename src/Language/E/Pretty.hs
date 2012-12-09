@@ -92,7 +92,7 @@ instance Pretty E where
     pretty [xMatch| [ name ] := topLevel.declaration.given.name
                   | [      ] := topLevel.declaration.given.typeEnum
                   |]
-        = hang ("given" <+> pretty name <> ":") 8 "new type enum"
+        = hang ("given" <+> pretty name) 8 "new type enum"
 
     pretty [xMatch| [ name ] := dimFind.name
                   | [domain] := dimFind.domain
