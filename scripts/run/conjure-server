@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# run this script on a terminal.
+# then, from another terminal run `conjure {problemname}.essence`
+# conjure will submit task to this script
+
+qFile=`conjure pathOfQueueFile`
+
+if [ -f $qFile ];
+then
+    echo "Only one instance of conjure-server can run at a time"
+    echo "    $qFile must be a left-over from previous runs,"
+    echo "    remove that file and try again"
+else
+    echo "You can now run conjure on a different terminal"
+    echo "    Usage: conjure {problem-name}.essence"
+    touch $qFile
+    tail -f $qFile | parallel -u
+fi
+
+
