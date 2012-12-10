@@ -213,6 +213,13 @@ evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
             x <- domSize t
             return [eMake| 2 ** &x |]
 
+        domSize [xMatch| [a] := domain.function.innerFrom
+                       | [b] := domain.function.innerTo
+                       |] = do
+            aSize <- domSize a
+            bSize <- domSize b
+            return [eMake| &aSize * &bSize |]
+
         domSize p =
             err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
