@@ -32,6 +32,10 @@ data Spec = Spec Version E
 
 instance Serialize Spec
 
+instance Hashable Spec where
+    hashWithSalt s x = gHashWithSalt s x
+    {-# INLINEABLE hashWithSalt #-}
+
 instance NFData Spec where
     rnf x = genericRnf x
     {-# INLINEABLE rnf #-}

@@ -348,7 +348,7 @@ essenceFileOut base x logs = do
 
 essenceBinFileOut :: FilePath -> Spec -> LogTree -> FilePath -> String -> IO ()
 essenceBinFileOut base x logs queuePath pre = do
-    path <- nextFilePathWithExt base ".essence.binary"
+    let path = base ++ "/" ++ show (hash x) ++ ".essence.binary"
     ByteString.writeFile path (encode (x, logs))
     appendFile queuePath $ unwords [pre, path] ++ "\n"
 
