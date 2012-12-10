@@ -174,8 +174,24 @@ typeOf p@[xMatch| xs := value.mset.values |] = do
         then return [xMake| type.mset.inner := [tx] |]
         else typeErrorIn p
 
+typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.unknown := [] |]
+typeOf p@[xMatch| xs := value.function.values |] = do
+    (tx:txs) <- mapM typeOf xs
+    if all (tx==) txs
+        then case tx of
+            [xMatch| [i,j] := mapping |] ->
+                return [xMake| type.function.innerFrom := [i]
+                             | type.function.innerTo   := [j]
+                             |]
+            _ -> typeErrorIn p
+        else typeErrorIn p
 
 -- expressions
+
+typeOf [xMatch| [i,j] := mapping |] = do
+    iType <- typeOf i
+    jType <- typeOf j
+    return [xMake| mapping := [iType, jType] |]
 
 typeOf p@[eMatch| &a = &b |] = do
     tya <- typeOf a
