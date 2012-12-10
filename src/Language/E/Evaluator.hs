@@ -37,9 +37,9 @@ simplifySpec = liftM fst . runWriterT . bottomUpSpec simplify
 simplify :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
 simplify x = do
     (y, (Any flag, _)) <- listen $ pipeline x
-    return $! if flag
-                then y
-                else x
+    if flag
+        then simplify y
+        else return x
     where
         pipeline =  bottomUpE (mkIdempotent allCombinedDoFirst)
                 >=> bottomUpE (mkIdempotent allCombined)
