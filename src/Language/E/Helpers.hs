@@ -21,6 +21,11 @@ disjunct []     = [eMake| false |]
 disjunct [x]    = x
 disjunct (x:xs) = let y = disjunct xs in [eMake| &x \/ &y |]
 
+summation :: [E] -> E
+summation []     = [eMake| 0 |]
+summation [x]    = x
+summation (x:xs) = let y = summation xs in [eMake| &x + &y |]
+
 
 domainNeedsRepresentation :: E -> Bool
 domainNeedsRepresentation [xMatch|  _  := domain.set          |] = True
