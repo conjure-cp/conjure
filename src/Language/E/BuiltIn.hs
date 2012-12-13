@@ -6,6 +6,7 @@ module Language.E.BuiltIn
     ) where
 
 import Language.E
+import Language.E.Pipeline.FreshNames
 
 
 
@@ -24,7 +25,7 @@ mergeReprFunc [f] = f
 mergeReprFunc fs = \ param -> concat <$> mapM ($ param) fs
 
 builtInRepr :: MonadConjure m => [ReprFunc m]
-builtInRepr = [relationRepr]
+builtInRepr = [applyToInnerDomain' relationRepr]
 
 
 relationRepr :: MonadConjure m => ReprFunc m
@@ -65,6 +66,56 @@ relationRepr ( _name, _dom, _ ) = do
                                         , prettyAsPaths _dom
                                         ]
     return []
+
+
+
+applyToInnerDomain'
+    :: MonadConjure m
+    => ((Text, E, E) -> m [RuleReprResult])
+    -> (Text, E, E)
+    -> m [RuleReprResult]
+applyToInnerDomain' f (origName, origDomain, origDecl) = do
+    let (is,x) = splitMatrixDomain origDomain
+    results <- f (origName, x, origDecl)
+    liftM concat $ forM results $ \ (_, ruleName, reprName, res, mcons) -> do
+        -- at this point, res is the refinement of the innerDomain
+        -- mcons is the list of structural constraints
+        -- if is /= []
+        --      res needs to be lifted (using is)
+        --      mcons needs to be lifted (using forAlls)
+        -- also, mcons are the structural constraints, but they need to be lifted
+        let
+            liftedRes = mkMatrixDomain is res
+        mcons' <- forM mcons $ \ con -> do
+            -- con' is the constraint, but all "refn"s replaced
+            con' <- case is of
+                [] -> do
+                    let newName  = identifierConstruct (mconcat [origName, "_", reprName])
+                                                       (Just "regionS")
+                                                       Nothing
+                    let renameTo = [xMake| reference := [Prim (S newName)] |]
+                    return $ renRefn renameTo con
+                _  -> do
+                    let newName  = identifierConstruct (mconcat [origName, "_", reprName])
+                                                       (Just "regionS")
+                                                       Nothing
+                    let renameTo = [xMake| reference := [Prim (S newName)] |]
+                    (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
+                    let renameToIndexed = mkIndexedExpr loopVars renameTo
+                    return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con
+
+            -- renaming identifiers before we return the constraint
+            con''    <- freshNames con'
+            maybeCon <- runMaybeT $ patternBind con''
+            maybe (errUndefinedRef "builtIn.ruleReprCompile" $ pretty con'')
+                  return
+                  maybeCon
+        return [(origDecl, ruleName, reprName, liftedRes, mcons')]
+
+renRefn :: E -> E -> E
+renRefn newName [xMatch| [Prim (S "refn")] := reference |] = newName
+renRefn newName (Tagged t xs) = Tagged t $ map (renRefn newName) xs
+renRefn _ x = x
 
 
 

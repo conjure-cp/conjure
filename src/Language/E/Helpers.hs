@@ -95,3 +95,30 @@ tryUnrollForAll
         ]
 tryUnrollForAll _ = Nothing
 
+
+
+-- given a matrix domain, split it to its indices and the inner domain
+splitMatrixDomain :: E -> ([E], E)
+splitMatrixDomain [xMatch| [xIndex] := domain.matrix.index
+                         | [xInner] := domain.matrix.inner
+                         |] = first (xIndex:) (splitMatrixDomain xInner)
+splitMatrixDomain x = ([], x)
+
+
+-- given a list of index domains an and inner domain, construct a matrix
+-- domain
+mkMatrixDomain :: [E] -> E -> E
+mkMatrixDomain []     j = j
+mkMatrixDomain (i:is) j = [xMake| domain.matrix.index := [i]
+                                | domain.matrix.inner := [mkMatrixDomain is j]
+                                |]
+
+
+-- given indixers and an expression, create an indexed expression.
+-- given [1,2,3] and m --> m[1,2,3]
+mkIndexedExpr :: [E] -> E -> E
+mkIndexedExpr = go . reverse
+    where
+        go []     x = x
+        go (i:is) x = let y = go is x in [eMake| &y[&i] |]
+

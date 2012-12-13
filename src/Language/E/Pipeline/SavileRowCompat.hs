@@ -57,11 +57,6 @@ sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
                           |] = first (right:) (go left)
                 go m = ([], m)
 
-        mkIndexedExpr = go . reverse
-            where
-                go []     x = x
-                go (i:is) x = let y = go is x in [eMake| &y[&i] |]
-
         lookupDomain d@[xMatch| _ := domain |] = return $ Just d
         lookupDomain [xMatch| [Prim (S nm)] := reference |] = do
             res <- errMaybeT "lookupDomain" lookupReference nm

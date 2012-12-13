@@ -66,82 +66,73 @@ oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
         -- locals: list of all local lettings, wheres and finds
         locals = locals1 ++ locals2
 
-        -- applyToInnerDomain: tries to apply this rule-case to an inner domain.
-        -- an inner domain is a domain which isn't a matrix.
-        applyToInnerDomain origName origDecl is x = do
-            (flagMatch, _) <- patternMatch domPattern x
-            if not flagMatch
-                then errRuleFail
-                else do
-                    bs <- mapM (localHandler ruleName domPattern) locals
-                    if not $ and bs
-                        then errRuleFail
-                        else do
-                            domTemplate' <- freshNames domTemplate
-                            mres         <- runMaybeT $ patternBind domTemplate'
-                            case mres of
-                                Nothing -> errRuleFail
-                                Just res -> do
-                                    -- at this point, res is the refinement of the innerDomain
-                                    -- mcons is the list of structural constraints
-                                    -- if is /= []
-                                    --      res needs to be lifted (using is)
-                                    --      mcons needs to be lifted (using forAlls)
-                                    -- also, mcons are the structural constraints, but they need to be lifted
-                                    let
-                                        liftedRes = mkMatrixDomain is res
-                                    mcons' <- forM mcons $ \ con -> do
-                                        -- con' is the constraint, but all "refn"s replaced
-                                        con' <- case is of
-                                            [] -> do
-                                                let newName  = identifierConstruct (mconcat [origName, "_", reprName])
-                                                                                   (Just "regionS")
-                                                                                   Nothing
-                                                let renameTo = [xMake| reference := [Prim (S newName)] |]
-                                                return $ renRefn renameTo con
-                                            _  -> do
-                                                let newName  = identifierConstruct (mconcat [origName, "_", reprName])
-                                                                                   (Just "regionS")
-                                                                                   Nothing
-                                                let renameTo = [xMake| reference := [Prim (S newName)] |]
-                                                (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
-                                                let renameToIndexed = mkIndexedExpr loopVars renameTo
-                                                return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con
-
-                                        -- renaming identifiers before we return the constraint
-                                        con''    <- freshNames con'
-                                        maybeCon <- runMaybeT $ patternBind con''
-                                        maybe (errUndefinedRef "ruleReprCompile" $ pretty con'')
-                                              return
-                                              maybeCon
-                                    return [(origDecl, ruleName, reprName, liftedRes, mcons')]
-
     in
         Right $ \ (origName, x, origDecl) -> withBindingScope' $ do
             let (is,j) = splitMatrixDomain x
-            applyToInnerDomain origName origDecl is j
+            applyToInnerDomain
+                ruleName reprName domPattern domTemplate
+                mcons locals
+                origName origDecl is j
 
 
 
-splitMatrixDomain :: E -> ([E], E)
-splitMatrixDomain [xMatch| [xIndex] := domain.matrix.index
-                         | [xInner] := domain.matrix.inner
-                         |] = first (xIndex:) (splitMatrixDomain xInner)
-splitMatrixDomain x = ([], x)
+-- applyToInnerDomain: tries to apply this rule-case to an inner domain.
+-- an inner domain is a domain which isn't a matrix.
+applyToInnerDomain
+    :: MonadConjure m
+    => Text -> Text -> E -> E
+    -> [E] -> [E]
+    -> Text -> E
+    -> [E] -> E
+    -> m [RuleReprResult]
+applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origName origDecl is x = do
+    (flagMatch, _) <- patternMatch domPattern x
+    if not flagMatch
+        then errRuleFail
+        else do
+            bs <- mapM (localHandler ruleName domPattern) locals
+            if not $ and bs
+                then errRuleFail
+                else do
+                    domTemplate' <- freshNames domTemplate
+                    mres         <- runMaybeT $ patternBind domTemplate'
+                    case mres of
+                        Nothing -> errRuleFail
+                        Just res -> do
+                            -- at this point, res is the refinement of the innerDomain
+                            -- mcons is the list of structural constraints
+                            -- if is /= []
+                            --      res needs to be lifted (using is)
+                            --      mcons needs to be lifted (using forAlls)
+                            -- also, mcons are the structural constraints, but they need to be lifted
+                            let
+                                liftedRes = mkMatrixDomain is res
+                            mcons' <- forM mcons $ \ con -> do
+                                -- con' is the constraint, but all "refn"s replaced
+                                con' <- case is of
+                                    [] -> do
+                                        let newName  = identifierConstruct (mconcat [origName, "_", reprName])
+                                                                           (Just "regionS")
+                                                                           Nothing
+                                        let renameTo = [xMake| reference := [Prim (S newName)] |]
+                                        return $ renRefn renameTo con
+                                    _  -> do
+                                        let newName  = identifierConstruct (mconcat [origName, "_", reprName])
+                                                                           (Just "regionS")
+                                                                           Nothing
+                                        let renameTo = [xMake| reference := [Prim (S newName)] |]
+                                        (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
+                                        let renameToIndexed = mkIndexedExpr loopVars renameTo
+                                        return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con
 
+                                -- renaming identifiers before we return the constraint
+                                con''    <- freshNames con'
+                                maybeCon <- runMaybeT $ patternBind con''
+                                maybe (errUndefinedRef "ruleReprCompile" $ pretty con'')
+                                      return
+                                      maybeCon
+                            return [(origDecl, ruleName, reprName, liftedRes, mcons')]
 
-mkMatrixDomain :: [E] -> E -> E
-mkMatrixDomain []     j = j
-mkMatrixDomain (i:is) j = [xMake| domain.matrix.index := [i]
-                                | domain.matrix.inner := [mkMatrixDomain is j]
-                                |]
-
-
-mkIndexedExpr :: [E] -> E -> E
-mkIndexedExpr = go . reverse
-    where
-        go []     x = x
-        go (i:is) x = let y = go is x in [eMake| &y[&i] |]
 
 
 renRefn :: E -> E -> E
