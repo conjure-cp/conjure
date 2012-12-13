@@ -188,7 +188,7 @@ partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody = do
                                                      _  -> [xMake| value.mset.values := rest
                                                                  |]
                                                  g =
-                                                    [eMake| toInt(!(&v in &typed)) |]
+                                                    [eMake| !(&v in &typed) |]
                                              in  g : qnGuards'
                                         else qnGuards'
                             ]

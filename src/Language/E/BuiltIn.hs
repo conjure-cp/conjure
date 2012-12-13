@@ -74,17 +74,19 @@ type RefnFunc m =
                                         -- returns a list of rewrites, fst being rulename
                                         --                           , snd being E
 
-ret :: Monad m => Text -> E -> m (Maybe [(Text, E)])
-ret name result = return $ Just [(name, result)]
+ret :: MonadConjure m => E -> String -> E -> m (Maybe [(Text, E)])
+ret orig name result = do
+    mkLog name $ vcat [pretty orig, "~~>", pretty result]
+    return $ Just [(stringToText name, result)]
 
 builtInRefn :: MonadConjure m => [RefnFunc m]
-builtInRefn = [relationApply, tupleExplode]
+builtInRefn = [relationApply, tupleExplode, functionLiteralApply]
 
 relationApply :: MonadConjure m => RefnFunc m
-relationApply [xMatch| [actual]             := functionApply.actual
-                     | [Prim (S actualRef)] := functionApply.actual.reference
-                     |  args                := functionApply.args
-                     |] =
+relationApply p@[xMatch| [actual]             := functionApply.actual
+                       | [Prim (S actualRef)] := functionApply.actual.reference
+                       |  args                := functionApply.args
+                       |] =
     case identifierSplit actualRef of
         (actualName, mregion, Just "RelationAsSet") -> do
             actualTy <- typeOf actual
@@ -96,18 +98,18 @@ relationApply [xMatch| [actual]             := functionApply.actual
                                                                                         mregion
                                                                                         Nothing
                                                         ] |]
-                    ret "builtIn.relationApply" [eMake| &theTuple in &theSet |]
+                    ret p "builtIn.relationApply" [eMake| &theTuple in &theSet |]
                 _ -> return Nothing
         _ -> return Nothing
 relationApply _ = return Nothing
 
 tupleExplode :: MonadConjure m => RefnFunc m
-tupleExplode [xMatch| values       := operator.index.left .value.tuple.values
-                    | [Prim (I i)] := operator.index.right.value.literal
-                    |]
-                    | i >= 1 && i <= genericLength values
-                    = ret "builtIn.tupleExplode" $ values `genericIndex` (i - 1)
-tupleExplode [eMatch| &a = &b |] = do
+tupleExplode p@[xMatch| values       := operator.index.left .value.tuple.values
+                      | [Prim (I i)] := operator.index.right.value.literal
+                      |]
+                      | i >= 1 && i <= genericLength values
+                      = ret p "builtIn.tupleExplode" $ values `genericIndex` (i - 1)
+tupleExplode p@[eMatch| &a = &b |] = do
     aTy <- typeOf a
     case aTy of
         [xMatch| is := type.tuple.inners |] -> do
@@ -115,9 +117,9 @@ tupleExplode [eMatch| &a = &b |] = do
                                   | i <- [1 .. genericLength is]
                                   , let j = [xMake| value.literal := [Prim (I i)] |]
                                   ]
-            ret "builtIn.tupleExplode" result
+            ret p "builtIn.tupleExplode" result
         _ -> return Nothing
-tupleExplode [eMatch| &a != &b |] = do
+tupleExplode p@[eMatch| &a != &b |] = do
     aTy <- typeOf a
     case aTy of
         [xMatch| is := type.tuple.inners |] -> do
@@ -125,7 +127,30 @@ tupleExplode [eMatch| &a != &b |] = do
                                   | i <- [1 .. genericLength is]
                                   , let j = [xMake| value.literal := [Prim (I i)] |]
                                   ]
-            ret "builtIn.tupleExplode" result
+            ret p "builtIn.tupleExplode" result
         _ -> return Nothing
 tupleExplode _ = return Nothing
+
+functionLiteralApply :: MonadConjure m => RefnFunc m
+functionLiteralApply
+    p@[xMatch| mappings := functionApply.actual.value.function.values
+             | [arg]    := functionApply.args
+             |] = do
+    (quanVarStr, quanVar) <- freshQuanVar
+    let overs = [ [xMake| value.tuple.values := [i,j] |]
+                | [xMatch| [i,j] := mapping |] <- mappings
+                ]
+    let over  = [xMake| value.set.values := overs |]
+    let guard = [eMake| &quanVar[1] = &arg |]
+    let body  = [eMake| &quanVar[2] |]
+    let out   = [xMake| quantified.quantifier.reference                := [Prim $ S "sum" ]
+                      | quantified.quanVar.structural.single.reference := [Prim $ S quanVarStr ]
+                      | quantified.quanOverDom                         := []
+                      | quantified.quanOverOp.binOp.in                 := []
+                      | quantified.quanOverExpr                        := [over]
+                      | quantified.guard                               := [guard]
+                      | quantified.body                                := [body]
+                      |]
+    ret p "builtIn.functionLiteralApply" out
+functionLiteralApply _ = return Nothing
 

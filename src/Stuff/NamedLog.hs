@@ -70,6 +70,11 @@ suppress = S.fromList
     , "missing:typeUnify"
     , "missing:mostKnown"
 
+    , "builtIn.relationRepr"
+    , "builtIn.relationApply"
+    , "builtIn.tupleExplode"
+    , "builtIn.functionLiteralApply"
+
     -- process indicators for conjure-repr, uncomment if you want to suppress
     -- , "representation"
     -- , "addedDecl

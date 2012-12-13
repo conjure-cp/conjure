@@ -25,9 +25,9 @@ guardOp _ [ [xMatch| [] := emptyGuard |] ] b = return b
 guardOp quantifier as b =
     let a = conjunct as
     in  case quantifier of
-            "forAll" -> return [eMake| &a -> &b |]
-            "exists" -> return [eMake| &a /\ &b |]
-            "sum"    -> return [eMake| &a *  &b |]
+            "forAll" -> return [eMake|       &a  -> &b |]
+            "exists" -> return [eMake|       &a  /\ &b |]
+            "sum"    -> return [eMake| toInt(&a) *  &b |]
             _        -> err ErrFatal $ "Unknown quantifier: " <+> pretty quantifier
 
 
