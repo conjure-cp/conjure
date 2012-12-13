@@ -10,6 +10,7 @@ import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 
 applyRepr
@@ -121,14 +122,16 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                         Just (origDecl, _ruleName, reprName, newDom, cons) -> do
                             let
                                 reregion e@[xMatch| [Prim (S i)] := reference |] = case identifierSplit i of
-                                    (iBase, Just "regionS", mrepr) | iBase == base ->
-                                        let i' = identifierConstruct iBase (Just region) mrepr
-                                        in  [xMake| reference := [Prim (S i')] |]
+                                    (iBase, Just "regionS", mrepr)
+                                        | (base `mappend` "_") `T.isPrefixOf` iBase ->
+                                            let i' = identifierConstruct iBase (Just region) mrepr
+                                            in  [xMake| reference := [Prim (S i')] |]
                                     _ -> e
                                 reregion e = e
                             modify $ \ st -> st { representationLog = (base, reprName, origDecl, newDom)
-                                                                    : representationLog st
-                                                , structuralConsLog = map (transform reregion) cons ++ structuralConsLog st
+                                                                    :  representationLog st
+                                                , structuralConsLog = map (transform reregion) cons
+                                                                    ++ structuralConsLog st
                                                 }
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
