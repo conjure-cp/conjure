@@ -312,8 +312,8 @@ introduceStuff = helper
 
         helper x@[xMatch| [Prim (S r)] := quantified.quanVar.structural.single.reference |]
             = addReference r [xMake| quanVar.name   := [Prim (S r)]
-                                | quanVar.within := [x]
-                                |]
+                                   | quanVar.within := [x]
+                                   |]
 
         helper _ = return ()
 
