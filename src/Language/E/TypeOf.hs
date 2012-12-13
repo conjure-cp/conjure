@@ -188,6 +188,8 @@ typeOf p@[xMatch| xs := value.function.values |] = do
 
 -- expressions
 
+typeOf [xMatch| [x] := unaryOp.negate |] = typeOf x
+
 typeOf [xMatch| [i,j] := mapping |] = do
     iType <- typeOf i
     jType <- typeOf j
