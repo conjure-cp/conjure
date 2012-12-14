@@ -33,8 +33,6 @@ data Spec = Spec Version E
 instance Serialize Spec
 
 instance Hashable Spec where
-    hashWithSalt s x = gHashWithSalt s x
-    {-# INLINEABLE hashWithSalt #-}
 
 instance NFData Spec where
     rnf x = genericRnf x
@@ -75,8 +73,6 @@ data BuiltIn = B !Bool | I !Integer | S !Text
 instance Serialize BuiltIn
 
 instance Hashable BuiltIn where
-    hashWithSalt s x = gHashWithSalt s x
-    {-# INLINEABLE hashWithSalt #-}
 
 instance NFData BuiltIn where
     rnf x = genericRnf x

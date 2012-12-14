@@ -8,7 +8,6 @@ import Control.DeepSeq ( NFData(..) )
 import Control.DeepSeq.Generics ( genericRnf )
 import Data.Serialize ( Serialize(..) )
 import Data.Hashable ( Hashable(..) )
-import Data.Hashable.Generic ( gHashWithSalt )
 data Tag = Tactual
     | TallDiff
     | Tapart
@@ -135,8 +134,6 @@ data Tag = Tactual
     deriving (Eq, Ord, Show, Generic)
 instance Serialize Tag
 instance Hashable Tag where
-    hashWithSalt s x = gHashWithSalt s x
-    {-# INLINEABLE hashWithSalt #-}
 instance NFData Tag where
     rnf x = genericRnf x
     {-# INLINEABLE rnf #-}

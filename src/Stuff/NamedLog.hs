@@ -46,7 +46,6 @@ data NamedLog = NamedLog String Doc
 instance Serialize NamedLog
 
 instance Hashable NamedLog where
-    hash (NamedLog a b) = hash (a, show b)
 
 suppress :: S.Set String
 suppress = S.fromList
@@ -124,4 +123,7 @@ nubKeepOrderBy f = go []
 instance Serialize Doc where
     put = Data.Serialize.put . renderPretty
     get = do s <- Data.Serialize.get ; return $ pretty (s :: String)
+
+instance Hashable Doc where
+    hashWithSalt salt d = hashWithSalt salt (show d)
 

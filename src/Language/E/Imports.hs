@@ -56,7 +56,6 @@ import Control.DeepSeq          as X ( NFData(..), force, ($!!) )
 import Control.DeepSeq.Generics as X ( genericRnf )
 
 import Data.Hashable         as X ( Hashable(..), hash )
-import Data.Hashable.Generic as X ( gHashWithSalt )
 
 import Data.Serialize as X ( Serialize, encode, decode )
 import qualified Data.Serialize

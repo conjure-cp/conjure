@@ -188,8 +188,6 @@ binderName :: Binder -> Text
 binderName (Binder nm _) = nm
 
 instance Hashable Binder where
-    hashWithSalt s x = gHashWithSalt s x
-    {-# INLINEABLE hashWithSalt #-}
 
 instance Default ConjureState where
     def = ConjureState def 1 def def def def def

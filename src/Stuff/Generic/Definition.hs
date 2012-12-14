@@ -23,7 +23,6 @@ import Data.Serialize
 
 -- hashable & hashable-generics
 import Data.Hashable
-import Data.Hashable.Generic
 
 -- deepseq & deepseq-generics
 import Control.DeepSeq ( NFData(..) )
@@ -52,8 +51,6 @@ data Generic primitive
 instance Serialize primitive => Serialize (Generic primitive)
 
 instance Hashable primitive => Hashable (Generic primitive) where
-    hashWithSalt s x = gHashWithSalt s x
-    {-# INLINEABLE hashWithSalt #-}
 
 instance NFData primitive => NFData (Generic primitive) where
     rnf x = genericRnf x
