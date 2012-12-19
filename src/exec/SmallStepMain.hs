@@ -204,7 +204,7 @@ start moutDirPath mqueuePath (EssencePath path) = do
     essenceBinFileOut outDirPath essenceInp def
         queuePath
         (nextPhaseCmd "phaseRepr0" outDirPath queuePath)
-start _ _ _ = error "Provide a *.essence files only"
+start _ _ _ = error "Provide *.essence files only"
 
 -- special case for the very first repr phase
 -- runs the repr phase once.
