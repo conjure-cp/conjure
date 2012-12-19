@@ -6,7 +6,7 @@ module Main where
 
 import Paths_conjure_cp ( getBinDir )
 import Data.Char ( toLower )
-import System.Environment ( getArgs )
+import System.Environment ( getArgs, getProgName )
 import System.Directory
 import qualified Data.ByteString as ByteString
 
@@ -113,10 +113,10 @@ main = do
         ConjureArgs PathOfQueueFile _ _ _ -> putStrLn =<< queueLoc
 
 reportArgs :: ConjureArgs -> IO ()
-reportArgs (ConjureArgs mode paths _ _)
-    = putStr
-    $ unwords
-    $ "conjure" : show mode : map filePath paths
+reportArgs (ConjureArgs mode paths _ _) = do
+    progName <- getProgName
+    putStr $ unwords
+           $ progName : show mode : map filePath paths
 
 makeBinary :: ConjureFilePath -> IO ()
 makeBinary arg = case arg of
@@ -309,13 +309,15 @@ phaseRefn (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
     removeFile path
 phaseRefn _ _ _ = error "Argument error in phaseRefn"
 
-nextPhaseCmd :: String -> FilePath -> FilePath -> String
-nextPhaseCmd ph outDirPath queuePath
-    = unwords [ "conjure"
-              , ph
-              , "--queue" , queuePath
-              , "--outDir", outDirPath
-              ]
+nextPhaseCmd :: String -> FilePath -> FilePath -> IO String
+nextPhaseCmd ph outDirPath queuePath = do
+    progName <- getProgName
+    return $ unwords
+        [ progName
+        , ph
+        , "--queue" , queuePath
+        , "--outDir", outDirPath
+        ]
 
 dropExts :: FilePath -> FilePath
 dropExts x =
@@ -346,11 +348,12 @@ essenceFileOut base x logs = do
     writeFile path              (renderPretty x)
     writeFile (path ++ ".logs") (renderPretty logs)
 
-essenceBinFileOut :: FilePath -> Spec -> LogTree -> FilePath -> String -> IO ()
-essenceBinFileOut base x logs queuePath pre = do
+essenceBinFileOut :: FilePath -> Spec -> LogTree -> FilePath -> IO String -> IO ()
+essenceBinFileOut base x logs queuePath mCommand = do
+    command <- mCommand
     let path = base ++ "/." ++ show (hash x) ++ ".essence.binary"
     ByteString.writeFile path (encode (x, logs))
-    appendFile queuePath $ unwords [pre, path] ++ "\n"
+    appendFile queuePath $ unwords [command, path] ++ "\n"
 
 runComp
     :: LogTree

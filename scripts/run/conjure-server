@@ -4,7 +4,16 @@
 # then, from another terminal run `conjure {problemname}.essence`
 # conjure will submit task to this script
 
-qFile=`conjure pathOfQueueFile`
+qFile=`conjureBF pathOfQueueFile`
+
+on_die()
+{
+    echo "Stopping server..."
+    rm $qFile
+    exit 0
+}
+
+trap 'on_die' SIGHUP SIGINT SIGTERM
 
 if [ -f $qFile ];
 then

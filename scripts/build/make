@@ -68,18 +68,14 @@ else
 end
 
 if options.optimisation
-    paramsBuild << "-O2"
+    paramsBuild << "-O2" << "-funbox-strict-fields"
+    paramsBuild << "-fexpose-all-unfoldings"
 else
     paramsBuild << "-O0"
 end
 
-if options.llvm
-    paramsBuild << '--ghc-options="-fllvm"'
-end
-
-if options.traceLogs
-    paramsBuild << '--ghc-options="-DTRACELOGS"'
-end
+paramsBuild << '--ghc-options="-fllvm"'      if options.llvm
+paramsBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
 
 system(*paramsBuild)
 

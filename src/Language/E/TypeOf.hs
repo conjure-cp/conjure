@@ -214,6 +214,21 @@ typeOf p@[eMatch| toInt(&a) |] = do
         [xMatch| [] := type.bool |] -> return [xMake| type.int := [] |]
         _ -> typeErrorIn p
 
+typeOf p@[eMatch| hist(&m, &n) |] = do
+    tym <- typeOf m
+    tyn <- typeOf n
+    case (tym, tyn) of
+        ( [xMatch| [mInner] := type.matrix.inner |]
+         , [xMatch| [nIndex] := type.matrix.index
+                  | [nInner] := type.matrix.inner
+                  |]
+          ) | mInner == nInner -> let tInt = [xMake| type.int := [] |]
+                                  in  return [xMake| type.matrix.index := [ nIndex ]
+                                                   | type.matrix.inner := [ tInt   ]
+                                                   |]
+        _ -> typeErrorIn p
+
+
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverDom |] = typeOf i
 
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
