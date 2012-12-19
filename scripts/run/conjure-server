@@ -22,7 +22,7 @@ then
     echo "    remove that file and try again"
 else
     echo "You can now run conjure on a different terminal"
-    echo "    Usage: conjure {problem-name}.essence"
+    echo "    Usage: conjureBF {problem-name}.essence"
     touch $qFile
     (
         for i in `seq 1 256`
