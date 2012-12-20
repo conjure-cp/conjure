@@ -214,6 +214,13 @@ typeOf p@[eMatch| toInt(&a) |] = do
         [xMatch| [] := type.bool |] -> return [xMake| type.int := [] |]
         _ -> typeErrorIn p
 
+typeOf p@[eMatch| parts(&x) |] = do
+    tyx <- typeOf x
+    case tyx of
+        [xMatch| [i] := type.partition.inner |] ->
+            return [xMake| type.set.inner.type.set.inner := [i] |]
+        _ -> typeErrorIn p
+
 typeOf p@[eMatch| hist(&m, &n) |] = do
     tym <- typeOf m
     tyn <- typeOf n
