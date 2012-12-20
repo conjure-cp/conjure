@@ -8,6 +8,7 @@ import Paths_conjure_cp ( getBinDir )
 import Data.Char ( toLower )
 import System.Environment ( getArgs, getProgName )
 import System.Directory
+import System.FilePath ( (</>) )
 import qualified Data.ByteString as ByteString
 
 import Language.E
@@ -95,9 +96,25 @@ toConjureArgs xs =
             [mode] -> ConjureArgs mode  filepaths outDirPath queuePath
             _      -> ConjureArgs Start filepaths outDirPath queuePath
 
+mkAbsolute :: ConjureArgs -> IO ConjureArgs
+mkAbsolute (ConjureArgs mode xs ys zs) =
+    ConjureArgs mode <$> forM xs mkArg
+                     <*> forM ys mkFP
+                     <*> forM zs mkFP
+    where
+        mkFP p@('/':_) = return p
+        mkFP p = do
+            curr <- getCurrentDirectory
+            return (curr </> p)
+
+        mkArg p = do
+            let fp = filePath p
+            fp' <- mkFP fp
+            return p { filePath = fp' }
+
 main :: IO ()
 main = do
-    args <- toConjureArgs <$> getArgs
+    args <- mkAbsolute =<< toConjureArgs <$> getArgs
     case args of
         ConjureArgs MakeBinary  paths _ _ -> mapM_ makeBinary  paths
         ConjureArgs ViewBinary  paths _ _ -> mapM_ viewBinary  paths
