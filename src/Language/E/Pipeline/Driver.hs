@@ -15,10 +15,13 @@ driverConjure conj baseFilename reprs refns spec = do
     createDirectoryIfMissing True baseFilename
     forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> do
         let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ext
-        toFile (mkOutFilename ".log") logs
         case mout of
-            Left  x -> toFile (mkOutFilename ".err"   ) x
-            Right x -> toFile (mkOutFilename ".eprime") x
+            Left  x -> do
+                toFile (mkOutFilename ".error"      ) x
+                toFile (mkOutFilename ".error.logs" ) logs
+            Right x -> do
+                toFile (mkOutFilename ".eprime"     ) x
+                toFile (mkOutFilename ".eprime.logs") logs
         -- performGC
         -- putStrLn "preformGC"
 
