@@ -12,7 +12,8 @@ import qualified Data.Text as T
 checkIfAllRefined :: MonadConjure m => Spec -> m Spec
 checkIfAllRefined spec@(Spec _ statements) = do
     let taggedIdentifiers = nub [ nm
-                                | [xMatch| [Prim (S nm)] := reference |] <- universe statements
+                                | [xMatch| [Prim (S nm)] := reference |]
+                                    <- universe statements
                                 , '#' `elem` T.unpack nm
                                 ]
     void $ recordSpec spec
