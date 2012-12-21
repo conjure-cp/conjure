@@ -11,6 +11,9 @@ Category:       Constraint Programming
 Build-type:     Custom
 Cabal-version:  >= 1.10
 
+flag use-ekg
+    description: Make conjureDF use EKG, see ekg on hackage.
+    default: False
 
 Library
     default-language : Haskell2010
@@ -189,6 +192,9 @@ Executable conjureDF
                      , base
                      , bytestring
                      , directory
+    if flag(use-ekg)
+        build-depends: ekg
+        cpp-options: -USE_EKG
     ghc-prof-options:
         -auto-all
         -caf-all
