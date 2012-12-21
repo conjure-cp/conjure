@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Language.E.Lexer where
 
@@ -10,10 +11,13 @@ import Data.List ( sortBy )
 import Data.Maybe ( catMaybes )
 import Data.Ord ( comparing )
 import Data.Tuple ( swap )
-import qualified Data.Map as M
+import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
+
+import GHC.Generics ( Generic )
+import Data.Hashable ( Hashable(..) )
 
 import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
 
@@ -215,7 +219,9 @@ data Lexeme
     | L_HasDomain
     | L_indices
 
-    deriving (Eq,Ord,Read,Show)
+    deriving (Eq, Ord, Show, Generic)
+
+instance Hashable Lexeme
 
 lexemeText :: Lexeme -> T.Text
 lexemeText l = T.pack $ show (lexemeFace l)
@@ -243,10 +249,10 @@ lexemeWidth l = case lookup l (map swap lexemes) of
     Nothing -> 0
     Just t  -> T.length t
 
-mapTextToLexeme :: M.Map T.Text Lexeme
+mapTextToLexeme :: M.HashMap T.Text Lexeme
 mapTextToLexeme = M.fromList lexemes
 
-mapLexemeToText :: M.Map Lexeme T.Text
+mapLexemeToText :: M.HashMap Lexeme T.Text
 mapLexemeToText = M.fromList $ map swap lexemes
 
 lexemes :: [(T.Text, Lexeme)]

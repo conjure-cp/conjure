@@ -4,7 +4,7 @@ module Language.E.Pipeline.InlineLettings where
 
 import Language.E
 
-import qualified Data.Map as M
+import qualified Data.HashMap.Strict as M
 
 
 inlineLettings :: MonadConjure m => Spec -> m Spec

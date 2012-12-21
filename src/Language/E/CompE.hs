@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -15,7 +16,7 @@ import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
 
-import qualified Data.Set as S
+import qualified Data.HashSet as S
 import Data.IntMap ( IntMap )
 import Data.IntSet ( IntSet )
 
@@ -170,7 +171,7 @@ data ConjureState = ConjureState
         , structuralConsLog :: ![E]
         , lastSpec :: !(Maybe Spec) -- record the spec after changes, to report in case of an error.
         , localLogs :: !LogTree
-        , allNamesPreConjure :: !(S.Set Text)  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
+        , allNamesPreConjure :: !(S.HashSet Text)  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
         }
 
 bindersDoc :: MonadConjure m => m Doc
@@ -188,6 +189,9 @@ binderName :: Binder -> Text
 binderName (Binder nm _) = nm
 
 instance Hashable Binder where
+
+instance Default (S.HashSet a) where
+    def = S.empty
 
 instance Default ConjureState where
     def = ConjureState def 1 def def def def def

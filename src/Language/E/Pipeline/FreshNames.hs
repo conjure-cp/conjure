@@ -6,8 +6,8 @@ import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 
-import qualified Data.Set as S
-import qualified Data.Map as M
+import qualified Data.HashSet as S
+import qualified Data.HashMap.Strict as M
 
 
 -- if a rewrite rule introduces new names, those names need to be unique.
@@ -23,13 +23,13 @@ freshNames param = do
         collectTuples :: [E] -> [E]
         collectTuples  i = [ r | [xMatch| rs := structural.tuple |] <- i , r <- rs ]
 
-        newvarsInQuanVar :: S.Set Text
+        newvarsInQuanVar :: S.HashSet Text
         newvarsInQuanVar = S.fromList
                          $ collectSingles quanVars
                         ++ collectSingles (collectTuples quanVars)
 
     let
-        newvarsInBubbles :: S.Set Text
+        newvarsInBubbles :: S.HashSet Text
         newvarsInBubbles = S.fromList $ concat
                                 [ r | [xMatch| ls := withLocals.locals |] <- universe param
                                     , let nameOut [xMatch| [Prim (S s)] := topLevel.declaration.find.name.reference |] = Just s

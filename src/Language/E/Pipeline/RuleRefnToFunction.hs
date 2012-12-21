@@ -6,7 +6,7 @@ module Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction, localHandler
 import Language.E
 import Language.E.Pipeline.FreshNames
 
-import qualified Data.Set as S
+import qualified Data.HashSet as S
 
 
 -- does the grouping depending on levels and such.
@@ -102,7 +102,8 @@ single ( name
             let lettingMetaVars   = S.unions [ metaVarsIn n
                                              | [xMatch| [n] := topLevel.letting.name |] <- locals
                                              ]
-            unless (templateMetaVars `S.isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars,lettingMetaVars])
+            let i `isSubsetOf` j = S.null (i `S.difference` j)
+            unless (templateMetaVars `isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars,lettingMetaVars])
                 $ Left ( ErrFatal
                        , vcat [ "in rule:" <+> pretty name
                               , "Pattern meta variables:"  <+> prettyListDoc id "," (map pretty $ S.toList patternMetaVars)

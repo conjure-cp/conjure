@@ -9,7 +9,6 @@
 module Language.E.Imports
     ( module X
     , stringToDoc
-    , setEq
     , padRight, padLeft, padCenter
     , pairWithContents
     , withRest, withRestToR, withRestToL
@@ -68,7 +67,6 @@ import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
-import qualified Data.Set as S
 
 import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
@@ -92,9 +90,6 @@ stringToText = T.pack
 
 stringToDoc :: String -> Doc
 stringToDoc = Pr.text
-
-setEq :: Ord a => [a] -> [a] -> Bool
-setEq xs ys = S.fromList xs == S.fromList ys
 
 padRight :: Int -> Char -> String -> String
 padRight n ch s = s ++ replicate (n - length s) ch

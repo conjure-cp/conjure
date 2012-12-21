@@ -8,8 +8,8 @@ import Language.E
 import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
 import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 
-import qualified Data.Map as M
-import qualified Data.Set as S
+import qualified Data.HashMap.Strict as M
+import qualified Data.HashSet as S
 import qualified Data.Text as T
 
 
@@ -73,7 +73,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
                 , reg  == reg'
                 ]
 
-            lookupTables :: [ M.Map (Text,Text) RuleReprResult ]
+            lookupTables :: [ M.HashMap (Text,Text) RuleReprResult ]
             lookupTables = map M.fromList $ allCombinations
                 [ ((nm,region), results)
                 | (nm, region) <- allRegioned
@@ -104,7 +104,7 @@ applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules 
 applyCongfigToSpec
     :: MonadConjure m
     => Spec
-    -> M.Map (Text,Text) RuleReprResult
+    -> M.HashMap (Text,Text) RuleReprResult
     -> m Spec
 applyCongfigToSpec spec config = withBindingScope' $ do
     void $ recordSpec spec

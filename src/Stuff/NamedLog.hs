@@ -13,7 +13,7 @@ import Data.Default
 import Data.Hashable
 import Data.Serialize
 import Text.PrettyPrint
-import qualified Data.Set as S
+import qualified Data.HashSet as S
 import qualified Data.DList as DList
 import qualified GHC.Generics
 
@@ -47,7 +47,7 @@ instance Serialize NamedLog
 
 instance Hashable NamedLog where
 
-suppress :: S.Set String
+suppress :: S.HashSet String
 suppress = S.fromList
     [ "restoreState"
     , "patternMatch.core"

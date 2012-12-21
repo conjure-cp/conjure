@@ -4,7 +4,7 @@ module Language.E.Pipeline.RemoveUnused where
 
 import Language.E
 
-import qualified Data.Set as S
+import qualified Data.HashSet as S
 
 
 -- TODO: do this better with the new single statement setting!
@@ -43,7 +43,7 @@ removeUnused (Spec v statements) = Spec v <$> go statements
                             return next'
         go p = return p
 
-identifiersIn :: E -> S.Set Text
+identifiersIn :: E -> S.HashSet Text
 identifiersIn e =
     S.fromList [ base
                | [xMatch| [Prim (S s)] := reference |] <- universe e

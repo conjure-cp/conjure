@@ -11,7 +11,7 @@ import Language.E.Definition
 import Language.E.CompE
 import Language.E.Pretty
 
-import qualified Data.Set as S
+import qualified Data.HashSet as S
 import qualified Data.Text as T
 import qualified Data.IntSet as IntSet ( insert, member )
 import qualified Data.IntMap as IntMap ( insert, lookup )

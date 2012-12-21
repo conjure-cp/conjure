@@ -5,8 +5,8 @@ module Language.E.Pipeline.NoTuples ( conjureNoTuples ) where
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
-import qualified Data.Set as S
-import qualified Data.Map as M
+import qualified Data.HashSet as S
+import qualified Data.HashMap.Strict as M
 
 
 conjureNoTuples
@@ -78,7 +78,7 @@ checkTupleDomain :: E -> Maybe [E]
 checkTupleDomain [xMatch| is := domain.tuple.inners |] = Just is
 checkTupleDomain _ = Nothing
 
-renameTupleIndexes :: MonadConjure m => S.Set Text -> Spec -> m Spec
+renameTupleIndexes :: MonadConjure m => S.HashSet Text -> Spec -> m Spec
 renameTupleIndexes identifiers = bottomUpSpec' f
     where
         f [xMatch| [Prim (S i)] := operator.index.left.reference
@@ -114,7 +114,7 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
                                            | domain.matrix.inner := [y]
                                            |]
 
-renameMatrixOfTupleIndexes :: MonadConjure m => M.Map Text Int -> Spec -> m Spec
+renameMatrixOfTupleIndexes :: MonadConjure m => M.HashMap Text Int -> Spec -> m Spec
 renameMatrixOfTupleIndexes identifiers = bottomUpSpec' f
     where
         f p@(viewIndexed -> ( [xMatch| [Prim (S i)] := reference |]
