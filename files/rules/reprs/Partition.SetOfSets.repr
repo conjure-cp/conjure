@@ -1,0 +1,8 @@
+
+~~> SetOfSets
+~~> set (size &n) of set of &tau
+
+*** partition (size &n) from &tau
+    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
+    /\  ( forAll i : &tau . exists s in refn . i in s )
+
