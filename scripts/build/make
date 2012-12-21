@@ -82,7 +82,7 @@ end
 
 paramsBuild << '--ghc-options="-fllvm"'      if options.llvm
 paramsBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
-paramsBuild << '--ghc-options="-DUSE_EKG"'   if options.useEKG
+paramsBuild << '-fuse_ekg'                   if options.useEKG
 
 system(*paramsBuild)
 

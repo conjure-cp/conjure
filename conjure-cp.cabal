@@ -194,7 +194,7 @@ Executable conjureDF
                      , directory
     if flag(use-ekg)
         build-depends: ekg
-        cpp-options: -USE_EKG
+        cpp-options: -DUSE_EKG
     ghc-prof-options:
         -auto-all
         -caf-all
