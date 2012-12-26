@@ -4,6 +4,7 @@ require 'optparse'
 require 'ostruct'
 
 options = OpenStruct.new
+options.dryRun = false
 options.jobs = 1                # nil means pass -j to cabal. otherwise -jNUMBER
 options.profiling = false
 options.tests = false
@@ -15,6 +16,10 @@ options.useEKG = false
 
 OptionParser.new do |opts|
     opts.banner = "Usage: scripts/build/make [options]"
+
+    opts.on("--[no-]dry-run", "If enabled, calls cabal with --dry-run") do |v|
+        options.dryRun = v
+    end
 
     opts.on("-j[OPTIONAL]", "--jobs[=OPTIONAL]", "Build in parallel.") do |v|
         options.jobs = Integer(v)
@@ -82,9 +87,20 @@ end
 
 paramsBuild << '--ghc-options="-fllvm"'      if options.llvm
 paramsBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
-paramsBuild << '-fuse_ekg'                   if options.useEKG
 
-system(*paramsBuild)
+if options.useEKG
+    paramsBuild << '-fuse-ekg'
+else
+    paramsBuild << '-f-use-ekg'
+end
+
+if options.dryRun
+    paramsBuild << "--dry-run"
+    puts paramsBuild.join(" ")
+    system(*paramsBuild)
+else
+    system(*paramsBuild)
+end
 
 if options.tests
     paramsTestBuild = paramsBuild
