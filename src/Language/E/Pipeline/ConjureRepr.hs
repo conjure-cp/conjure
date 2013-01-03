@@ -2,6 +2,7 @@ module Language.E.Pipeline.ConjureRepr where
 
 import Language.E
 import Language.E.Pipeline.ApplyRepr ( applyRepr )
+import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.IntroduceFakeConstraints
 import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
@@ -20,6 +21,7 @@ conjureRepr
 conjureRepr reprs spec = withBindingScope' $ do
     initialiseSpecState spec
     let pipeline =  return
+                >=> recordSpec >=> explodeStructuralVars
                 >=> recordSpec >=> handleEnums
                 >=> recordSpec >=> handleUnnameds
                 >=> recordSpec >=> inlineLettings

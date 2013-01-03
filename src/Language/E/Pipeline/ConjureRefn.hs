@@ -7,6 +7,7 @@ import Language.E
 import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
+import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
@@ -30,6 +31,7 @@ conjureRefn refns spec = withBindingScope' $
         Right fs -> do
             initialiseSpecState spec
             let pipeline =  return
+                        >=> recordSpec >=> explodeStructuralVars
                         >=> recordSpec >=> handleEnums
                         >=> recordSpec >=> handleUnnameds
                         >=> recordSpec >=> inlineLettings
