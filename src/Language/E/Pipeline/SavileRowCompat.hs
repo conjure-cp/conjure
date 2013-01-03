@@ -13,7 +13,8 @@ savilerowCompat
     => Spec
     -> m Spec
 savilerowCompat
-     =  recordSpec >=> ( \ (Spec v xs) -> withBindingScope' $ Spec v <$> sliceIfTooFewIndices xs )
+     =  return
+    >=> recordSpec >=> sliceIfTooFewIndices
     -- >=> recordSpec >=> valueMatrixToLetting
     >=> recordSpec >=> conjureNoTuples
     >=> recordSpec >=> conjureNoGuards
@@ -32,9 +33,11 @@ toIntIsNoOp [eMatch| toInt(&x) |] = x
 toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
 
+sliceIfTooFewIndices :: MonadConjure m => Spec -> m Spec
+sliceIfTooFewIndices (Spec v xs) = withBindingScope' $ Spec v <$> sliceIfTooFewIndicesE xs
 
-sliceIfTooFewIndices :: MonadConjure m => E -> m E
-sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
+sliceIfTooFewIndicesE :: MonadConjure m => E -> m E
+sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
     let (is,j) = breakIndices p
     jDom <- lookupDomain j
     case jDom of
@@ -69,10 +72,10 @@ sliceIfTooFewIndices p@[xMatch| _ := operator.index |] = do
         matrixDomainNbDims :: E -> Int
         matrixDomainNbDims [xMatch| [inner] := domain.matrix.inner |] = 1 + matrixDomainNbDims inner
         matrixDomainNbDims _ = 0
-sliceIfTooFewIndices p@(Tagged t xs) = do
+sliceIfTooFewIndicesE p@(Tagged t xs) = do
     introduceStuff p
-    Tagged t <$> mapM sliceIfTooFewIndices xs
-sliceIfTooFewIndices p = return p
+    Tagged t <$> mapM sliceIfTooFewIndicesE xs
+sliceIfTooFewIndicesE p = return p
 
 
 -- savilerow doesn't support inline value matrices.
