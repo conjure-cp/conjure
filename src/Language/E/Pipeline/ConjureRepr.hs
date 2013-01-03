@@ -3,6 +3,7 @@ module Language.E.Pipeline.ConjureRepr where
 import Language.E
 import Language.E.Pipeline.ApplyRepr ( applyRepr )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
+import Language.E.Pipeline.IntroduceFakeConstraints
 import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
@@ -24,8 +25,10 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> recordSpec >=> inlineLettings
                 >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
                 >=> recordSpec >=> conjureNoTuples
+                >=> recordSpec >=> introduceFakeConstraints
                 >=> recordSpec >=> introduceRegions
                 >=> recordSpec >=> applyRepr reprs
+                >=> recordSpec >=> return . removeFakeConstraints
                 >=> recordSpec
     pipeline spec
 
