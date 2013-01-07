@@ -325,6 +325,11 @@ typeOf p@[eMatch| freq(&m,&i) |]  = do
             if res
                 then return [xMake| type.int := [] |]
                 else typeErrorIn p
+        [xMatch| [tmInner] := type.matrix.inner |] -> do
+            res <- typeUnify tmInner ti
+            if res
+                then return [xMake| type.int := [] |]
+                else typeErrorIn p
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a intersect &b |] = do

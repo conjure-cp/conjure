@@ -1,0 +1,7 @@
+
+[1000]
+
+freq(&m, &x) ~~> sum i : &mIndex . toInt(&m[i] = &x)
+
+    where &m hasDomain `matrix indexed by [&mIndex] of &mInner`
+
