@@ -60,6 +60,8 @@ relationRepr ( name
             , domOut
             , structurals
             )]
+relationRepr ( _, [xMatch| _ := domain.set      |], _ ) = return []
+relationRepr ( _, [xMatch| _ := domain.mset     |], _ ) = return []
 relationRepr ( _, [xMatch| _ := domain.function |], _ ) = return []
 relationRepr ( _name, _dom, _ ) = do
     mkLog "missing:relationRepr" $ vcat [ pretty _name
