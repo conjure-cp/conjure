@@ -54,7 +54,7 @@ partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
                         | [Prim (B True)]     := quantified.body.value.literal
                         |] = ret [eMake| true |]
 partialEvaluator [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference
-                        | [Prim (B False)]     := quantified.guard.value.literal
+                        | [Prim (B False)]    := quantified.guard.value.literal
                         |] = ret [eMake| true |]
 
 partialEvaluator p@[eMatch| max({})   |] = err ErrFatal (pretty p <+> "is undefined.")
