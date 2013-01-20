@@ -16,6 +16,13 @@ import Language.E.Pipeline.Driver
 import System.Remote.Monitoring
 #endif
 
+forkEKG :: IO ()
+forkEKG = do
+#if USE_EKG
+    _ <- forkServer "localhost" 8000
+#endif
+    return ()
+
 
 rulesdbLoc :: IO FilePath
 rulesdbLoc = liftM (++ "/conjure.rulesdb") getBinDir
@@ -23,9 +30,7 @@ rulesdbLoc = liftM (++ "/conjure.rulesdb") getBinDir
 main :: IO ()
 main = do
 
-#if USE_EKG
-    _ <- forkServer "localhost" 8000
-#endif
+    forkEKG
 
     args <- getArgs
 
