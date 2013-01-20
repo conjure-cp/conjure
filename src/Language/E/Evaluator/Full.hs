@@ -127,6 +127,10 @@ fullEvaluator [eMatch| sum &i : int(&a..&b) , &guard . &body |]
                       , let j = [xMake| value.literal := [Prim (I j')] |]
                       ]
 
+fullEvaluator [eMatch| &_ &i : int(&a..&b) . &body |]
+    | a == b
+    = ret $ replace i a body
+
 fullEvaluator _ = return Nothing
 
 
@@ -251,6 +255,7 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
         indices [xMatch| [index] := domain.matrix.index |] 0 = ret index
         indices [xMatch| [inner] := domain.matrix.inner |] i = indices inner (i-1)
         indices [eMatch| &m[&_]                         |] i = indices m (i+1)
+        indices [xMatch| [d] := quanVar.within.quantified.quanOverDom |] i = indices d i
         indices m i = do
             mkLog "missing:indices" $ vcat [ pretty m
                                            , prettyAsPaths m
@@ -276,8 +281,14 @@ tupleEq :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 -- tupleEq x | trace (show $ "tupleEq:" <+> pretty x) False = undefined
 tupleEq [eMatch| &a = &b |] = do
     ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
-    case ta of
-        [xMatch| is := type.tuple.inners |] ->
+    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    case (ta,tb) of
+        ([xMatch| is := type.tuple.inners |], _) ->
+            ret $ conjunct [ [eMake| &a[&i] = &b[&i] |]
+                           | j <- [1..genericLength is]
+                           , let i = [xMake| value.literal := [Prim (I j)] |]
+                           ]
+        (_, [xMatch| is := type.tuple.inners |]) ->
             ret $ conjunct [ [eMake| &a[&i] = &b[&i] |]
                            | j <- [1..genericLength is]
                            , let i = [xMake| value.literal := [Prim (I j)] |]
@@ -285,8 +296,14 @@ tupleEq [eMatch| &a = &b |] = do
         _ -> return Nothing
 tupleEq [eMatch| &a != &b |] = do
     ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
-    case ta of
-        [xMatch| is := type.tuple.inners |] ->
+    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    case (ta,tb) of
+        ([xMatch| is := type.tuple.inners |], _) ->
+            ret $ disjunct [ [eMake| &a[&i] != &b[&i] |]
+                           | j <- [1..genericLength is]
+                           , let i = [xMake| value.literal := [Prim (I j)] |]
+                           ]
+        (_, [xMatch| is := type.tuple.inners |]) ->
             ret $ disjunct [ [eMake| &a[&i] != &b[&i] |]
                            | j <- [1..genericLength is]
                            , let i = [xMake| value.literal := [Prim (I j)] |]
