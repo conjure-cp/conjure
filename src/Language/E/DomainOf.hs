@@ -6,6 +6,7 @@ import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
+import Language.E.Pretty
 import {-# SOURCE #-} Language.E.Evaluator.ToInt
 
 
@@ -18,6 +19,8 @@ errDomainOf p = do
 
 
 domainOf :: MonadConjure m => E -> m E
+
+domainOf x@[xMatch| _ := domain |] = return x
 
 domainOf [xMatch| [Prim (S i)] := reference |] =
     if i == "_"
@@ -39,6 +42,11 @@ domainOf [xMatch| [x] := domainInExpr |] = domainOf x
 
 domainOf [xMatch| [x] := structural.single |] = domainOf x
 
+domainOf [xMatch| [Prim (S n1)] := quanVar.name
+                | [Prim (S n2)] := quanVar.within.quantified.quanVar.structural.single.reference
+                | [d]           := quanVar.within.quantified.quanOverDom
+                |] | n1 == n2 = return d
+
 domainOf p@[xMatch| [] := quanVar |] = return p
 
 domainOf p@[xMatch| [x] := operator.index.left
@@ -56,5 +64,7 @@ domainOf p@[xMatch| [x] := operator.index.left
                 _ -> return p
         _ -> return p
 
-domainOf x = return x
+domainOf x = do
+    mkLog "missing:domainOf" (pretty x)
+    return x
 

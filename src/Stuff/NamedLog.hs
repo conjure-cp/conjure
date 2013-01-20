@@ -68,6 +68,7 @@ suppress = S.fromList
     , "missing:relationRepr"
     , "missing:typeUnify"
     , "missing:mostKnown"
+    , "missing:domainOf"
 
     , "builtIn.relationRepr"
     , "builtIn.relationApply"
