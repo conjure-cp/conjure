@@ -80,6 +80,7 @@ toConjureArg x =  Left  <$> toConjureMode x
 data ConjureArgs =
      ConjureArgs
         ConjureMode
+        Bool              -- --1 or not
         [ConjureFilePath]
         (Maybe FilePath)  -- output directory
         (Maybe FilePath)  -- named pipe to write commands for next jobs
@@ -92,15 +93,17 @@ toConjureArgs xs =
         filepaths  = rights ys
         outDirPath = listToMaybe [ p | ("--outDir", p) <- zip xs (tail xs) ]
         queuePath  = listToMaybe [ p | ("--queue" , p) <- zip xs (tail xs) ]
+        genOne     = not $ null  [ p | ("--1"     , p) <- zip xs (tail xs) ]
     in  case modes of
-            [mode] -> ConjureArgs mode  filepaths outDirPath queuePath
-            _      -> ConjureArgs Start filepaths outDirPath queuePath
+            [mode] -> ConjureArgs mode  genOne filepaths outDirPath queuePath
+            _      -> ConjureArgs Start genOne filepaths outDirPath queuePath
 
 mkAbsolute :: ConjureArgs -> IO ConjureArgs
-mkAbsolute (ConjureArgs mode xs ys zs) =
-    ConjureArgs mode <$> forM xs mkArg
-                     <*> forM ys mkFP
-                     <*> forM zs mkFP
+mkAbsolute (ConjureArgs mode genOne xs ys zs) =
+    ConjureArgs mode genOne
+        <$> forM xs mkArg
+        <*> forM ys mkFP
+        <*> forM zs mkFP
     where
         mkFP p@('/':_) = return p
         mkFP p = do
@@ -116,24 +119,27 @@ main :: IO ()
 main = do
     args <- mkAbsolute =<< toConjureArgs <$> getArgs
     case args of
-        ConjureArgs MakeBinary  paths _ _ -> mapM_ makeBinary  paths
-        ConjureArgs ViewBinary  paths _ _ -> mapM_ viewBinary  paths
-        ConjureArgs MakeRulesDB paths _ _ -> makeRulesDB paths
-        ConjureArgs Start       paths outDirPath queuePath -> mapM_ (start outDirPath queuePath) paths
-        ConjureArgs PhaseRepr0  paths outDirPath queuePath -> do reportArgs args
-                                                                 phaseRepr0 outDirPath queuePath paths
-        ConjureArgs PhaseRepr   paths outDirPath queuePath -> do reportArgs args
-                                                                 phaseRepr  outDirPath queuePath paths
-        ConjureArgs PhaseRefn   paths outDirPath queuePath -> do reportArgs args
-                                                                 phaseRefn  outDirPath queuePath paths
-        ConjureArgs PathOfRulesDB   _ _ _ -> putStrLn =<< rulesdbLoc
-        ConjureArgs PathOfQueueFile _ _ _ -> putStrLn =<< queueLoc
+        ConjureArgs MakeBinary  _   paths _ _ -> mapM_ makeBinary  paths
+        ConjureArgs ViewBinary  _   paths _ _ -> mapM_ viewBinary  paths
+        ConjureArgs MakeRulesDB _   paths _ _ -> makeRulesDB paths
+        ConjureArgs Start       one paths outDirPath queuePath -> mapM_ (start one outDirPath queuePath) paths
+        ConjureArgs PhaseRepr0  one paths outDirPath queuePath -> do reportArgs args
+                                                                     phaseRepr0 one outDirPath queuePath paths
+        ConjureArgs PhaseRepr   one paths outDirPath queuePath -> do reportArgs args
+                                                                     phaseRepr  one outDirPath queuePath paths
+        ConjureArgs PhaseRefn   one paths outDirPath queuePath -> do reportArgs args
+                                                                     phaseRefn  one outDirPath queuePath paths
+        ConjureArgs PathOfRulesDB   _ _ _ _ -> putStrLn =<< rulesdbLoc
+        ConjureArgs PathOfQueueFile _ _ _ _ -> putStrLn =<< queueLoc
 
 reportArgs :: ConjureArgs -> IO ()
-reportArgs (ConjureArgs mode paths _ _) = do
+reportArgs (ConjureArgs mode one paths _ _) = do
     progName <- getProgName
     putStr $ unwords
-           $ progName : show mode : map filePath paths
+           $ progName
+           : show mode
+           : (if one then "--1" else "")
+           : map filePath paths
 
 makeBinary :: ConjureFilePath -> IO ()
 makeBinary arg = case arg of
@@ -193,8 +199,8 @@ makeRulesDB args = do
 -- this is the entry point of conjure.
 -- input is a single problem specification, an essence file
 -- next phase is phaseRepr0
-start :: Maybe FilePath -> Maybe FilePath -> ConjureFilePath -> IO ()
-start moutDirPath mqueuePath (EssencePath path) = do
+start :: Bool -> Maybe FilePath -> Maybe FilePath -> ConjureFilePath -> IO ()
+start one moutDirPath mqueuePath (EssencePath path) = do
 
     let outDirPath = fromMaybe (dropExts path) moutDirPath
     b <- doesDirectoryExist outDirPath
@@ -220,16 +226,17 @@ start moutDirPath mqueuePath (EssencePath path) = do
 
     essenceBinFileOut outDirPath essenceInp def
         queuePath
-        (nextPhaseCmd "phaseRepr0" outDirPath queuePath)
-start _ _ _ = error "Provide *.essence files only"
+        (nextPhaseCmd "phaseRepr0" one outDirPath queuePath)
+start _ _ _ _ = error "Provide *.essence files only"
 
 -- special case for the very first repr phase
 -- runs the repr phase once.
 --  if ErrGeneratesNone --> runs refn once and outputs a *.eprime file
 --  else                --> outputs each (Spec,LogFile) to a binary file
 -- next phase is phaseRefn
-phaseRepr0 :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+phaseRepr0 :: Bool -> Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
+phaseRepr0 one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+    let takeOne = if one then take 1 else id
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
@@ -237,7 +244,7 @@ phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]
-        results1 = runComp logsInp $ conjureRepr ruleReprs essenceInp
+        results1 = takeOne $ runComp logsInp $ conjureRepr ruleReprs essenceInp
 
         final1 :: Bool
         final1 = not $ null [ () | (Left (ErrGeneratesNone, _, _), _) <- results1 ]
@@ -247,7 +254,7 @@ phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         then do -- run refn and groom and output an *.eprime file
             let
                 results2 :: [(Either ConjureError Spec, LogTree)]
-                results2 = runComp logsInp $ conjureRefn ruleRefns essenceInp >>= groomSpec
+                results2 = takeOne $ runComp logsInp $ conjureRefn ruleReprs ruleRefns essenceInp >>= groomSpec
 
             forM_ results2 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut   outDirPath x logs
@@ -259,17 +266,18 @@ phaseRepr0 (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Left  x, logs) -> errorFileOut      outDirPath x logs
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
-                                    (nextPhaseCmd "phaseRefn" outDirPath queuePath)
+                                    (nextPhaseCmd "phaseRefn" one outDirPath queuePath)
             printPretty ("\t{" <> pretty (length results1) <> "}")
     removeFile path
-phaseRepr0 _ _ _ = error "Argument error in phaseRepr0"
+phaseRepr0 _ _ _ _ = error "Argument error in phaseRepr0"
 
 -- runs the repr phase once.
 --  if ErrGeneratesNone --> outputs a *.eprime file
 --  else                --> outputs each (Spec,LogFile) to a binary file
 -- next phase is phaseRefn
-phaseRepr :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-phaseRepr (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+phaseRepr :: Bool -> Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
+phaseRepr one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+    let takeOne = if one then take 1 else id
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
@@ -277,7 +285,7 @@ phaseRepr (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]
-        results1 = runComp logsInp $ conjureRepr ruleReprs essenceInp
+        results1 = takeOne $ runComp logsInp $ conjureRepr ruleReprs essenceInp
 
         final1 :: Bool
         final1 = not $ null [ () | (Left (ErrGeneratesNone, _, _), _) <- results1 ]
@@ -298,40 +306,42 @@ phaseRepr (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Left  x, logs) -> errorFileOut      outDirPath x logs
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
-                                    (nextPhaseCmd "phaseRefn" outDirPath queuePath)
+                                    (nextPhaseCmd "phaseRefn" one outDirPath queuePath)
             printPretty ("\t{" <> pretty (length results1) <> "}")
     removeFile path
-phaseRepr _ _ _ = error "Argument error in phaseRepr"
+phaseRepr _ _ _ _ = error "Argument error in phaseRepr"
 
 -- runs the refn phase once.
 -- next phase is phaseRepr
-phaseRefn :: Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
-phaseRefn (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+phaseRefn :: Bool -> Maybe FilePath -> Maybe FilePath -> [ConjureFilePath] -> IO ()
+phaseRefn one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
+    let takeOne = if one then take 1 else id
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
-    (_, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]
-        results1 = runComp logsInp $ conjureRefn ruleRefns essenceInp
+        results1 = takeOne $ runComp logsInp $ conjureRefn ruleReprs ruleRefns essenceInp
 
     -- create the binary file, and output the command to run next to stdout
     forM_ results1 $ \ result -> case result of
         (Left  x, logs) -> errorFileOut      outDirPath x logs
         (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
-                                    (nextPhaseCmd "phaseRepr" outDirPath queuePath)
+                                    (nextPhaseCmd "phaseRepr" one outDirPath queuePath)
     printPretty ("\t{" <> pretty (length results1) <> "}")
     removeFile path
-phaseRefn _ _ _ = error "Argument error in phaseRefn"
+phaseRefn _ _ _ _ = error "Argument error in phaseRefn"
 
-nextPhaseCmd :: String -> FilePath -> FilePath -> IO String
-nextPhaseCmd ph outDirPath queuePath = do
+nextPhaseCmd :: String -> Bool -> FilePath -> FilePath -> IO String
+nextPhaseCmd ph one outDirPath queuePath = do
     progName <- getProgName
     return $ unwords
         [ progName
         , ph
+        , if one then "--1" else ""
         , "--queue" , queuePath
         , "--outDir", outDirPath
         ]
