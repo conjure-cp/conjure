@@ -49,7 +49,7 @@ conjureAll reprs refns = phaseRepr0
         -- never returns [], might raise ErrGeneratesNone, that is when we groom and go home.
         repr  s = trace "repr"  $ conjureRepr reprs s
         -- never returns [], neither raises ErrGeneratesNone. always go to repr after this.
-        refn  s = trace "refn"  $ conjureRefn refns s
+        refn  s = trace "refn"  $ conjureRefn reprs refns s
         -- prepare the spec for outputting.
         groom s = trace "groom" $ groomSpec s
 

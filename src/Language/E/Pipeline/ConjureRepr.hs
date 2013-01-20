@@ -9,6 +9,7 @@ import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
+import Language.E.Pipeline.RemoveDuplicateCons ( removeDuplicateCons )
 
 
 conjureRepr
@@ -31,6 +32,7 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> recordSpec >=> introduceRegions
                 >=> recordSpec >=> applyRepr reprs
                 >=> recordSpec >=> return . removeFakeConstraints
+                >=> recordSpec >=> removeDuplicateCons
                 >=> recordSpec
     pipeline spec
 
