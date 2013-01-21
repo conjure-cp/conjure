@@ -1,12 +1,12 @@
 
 [1000]
 
-&quan i in parts(&p), &g . &k
+&quan &i in parts(&p), &g . &k
 
 ~~>
 
-&quan j in refn(&p), &g {i --> j} . &k {i --> j}
+&quan &i in refn(&p), &g . &k
 
-    $where p hasType `partition from _`
-    $where p hasRepr SetOfSets
+    where &p hasType `partition from _`
+    where &p hasRepr SetOfSets
 
