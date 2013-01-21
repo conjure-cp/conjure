@@ -83,3 +83,12 @@ abstractDomsInQuans
             return $ Just outs
 abstractDomsInQuans _ _ = return Nothing
 
+quanDomAndSubsetEq :: MonadConjure m => E -> m (Maybe [(Text, E)])
+quanDomAndSubsetEq x = return $ case go x of
+    Nothing -> Nothing
+    Just y  -> Just [("builtIn.quanDomAndSubsetEq", y)]
+    where
+        go [eMatch| &quan &i : &dom subsetEq &blah , &guard . &body |] = Just
+           [eMake|  &quan &i : &dom , &i subsetEq &blah /\ &guard . &body |]
+        go _ = Nothing
+
