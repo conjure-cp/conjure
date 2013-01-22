@@ -5,7 +5,6 @@ module Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat ) where
 -- transform a spec so that it contains only one "such that" statement.
 
 import Language.E
-import Language.E.Pipeline.RemoveDuplicateCons ( renameQuantifiedVarsTopLevel ) 
 
 
 atMostOneSuchThat :: Spec -> Spec
@@ -28,7 +27,6 @@ toSuchThat xs =
     let
         constraints' = sort
                      $ nubKeepOrder
-                     $ map renameQuantifiedVarsTopLevel
                      $ concatMap conjunctOut xs
         trueCons = [eMake| true |]
         constraints = if null constraints' then [trueCons] else constraints'

@@ -15,7 +15,6 @@ import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
-import Language.E.Pipeline.RemoveDuplicateCons ( removeDuplicateCons )
 
 
 
@@ -46,7 +45,6 @@ conjureRefn reprs refns spec = withBindingScope' $
                         >=> recordSpec >=> conjureNoTuples
                         >=> recordSpec >=> removeUnused
                         >=> recordSpec >=> bubbleUpSpec
-                        >=> recordSpec >=> removeDuplicateCons
                         >=> recordSpec
             pipeline spec
 

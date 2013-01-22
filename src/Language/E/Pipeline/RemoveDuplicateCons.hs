@@ -12,7 +12,7 @@ import qualified Data.Text as T
 removeDuplicateCons :: MonadConjure m => Spec -> m Spec
 removeDuplicateCons (Spec v x) = do
     let statements  = statementAsList x
-    let statements' = nubKeepOrder $ map (renameQuantifiedVars newQs) statements
+    let statements' = nubKeepOrder $ map renameQuantifiedVarsTopLevel statements
     return $ Spec v $ listAsStatement statements'
 
 newQs :: [Text]
