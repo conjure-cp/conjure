@@ -27,6 +27,7 @@ toSuchThat xs =
     let
         constraints' = sort
                      $ nubKeepOrder
+                     $ filter (/= trueCons)
                      $ concatMap conjunctOut xs
         trueCons = [eMake| true |]
         constraints = if null constraints' then [trueCons] else constraints'
