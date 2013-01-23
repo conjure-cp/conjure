@@ -287,7 +287,7 @@ parseValue = msum ( map try
         pMatrix' = brackets $ do
             xs <- sepBy parseExpr comma
             lexeme L_SemiColon
-            r <- parseRange
+            r <- parseDomain
             return [xMake| value.matrix.values     := xs
                          | value.matrix.indexrange := [r]
                          |]

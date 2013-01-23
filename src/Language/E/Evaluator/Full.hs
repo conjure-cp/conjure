@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE PatternGuards #-}
 
 module Language.E.Evaluator.Full where
 
@@ -99,6 +100,21 @@ fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
             -- mkLog "fullEvaluator Nothing" $ pretty p
             -- return Nothing
 
+fullEvaluator [xMatch| vs           := operator.index.left .value.matrix.values
+                     | ranges       := operator.index.left .value.matrix.indexrange.domain.int.ranges
+                     | [Prim (I a)] := operator.index.right.value.literal
+                     |] | a `elem` vals
+                        , Just x <- listToMaybe [ x | (x,y) <- zip vs vals , y == a ]
+                        = ret x
+                        where
+                            valsFromRange [xMatch| [Prim (I j)] := range.single.value.literal |] = [j]
+                            valsFromRange [xMatch| [i',j'] := range.fromTo |] =
+                                case (i',j') of
+                                    ([xMatch| [Prim (I i)] := value.literal |], [xMatch| [Prim (I j)] := value.literal |]) -> [i..j]
+                                    _ -> []
+                            valsFromRange [xMatch| [Prim (I j)] := range.from.value.literal |] = [j..]
+                            valsFromRange _ = []
+                            vals = concatMap valsFromRange ranges
 fullEvaluator [xMatch| vs           := operator.index.left .value.matrix.values
                      | [Prim (I i)] := operator.index.right.value.literal
                      |] | i >= 1 && i <= genericLength vs
