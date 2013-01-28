@@ -22,12 +22,9 @@ handleInfiniteGivenDoms spec
             [xMatch| [name]   := topLevel.declaration.given.name
                    | [domain] := topLevel.declaration.given.domain
                    |] -> do
-                lift $ mkLog "handleInfDom" "here"
                 let (domain', supps) = runWriter $ onDom domain
                 if null supps
-                    then do
-                        lift $ mkLog "handleInfDom" "null supps"
-                        return [statement]
+                    then return [statement]
                     else do
                         let newDecl = [xMake| topLevel.declaration.given.name := [name]
                                             | topLevel.declaration.given.domain := [domain']
