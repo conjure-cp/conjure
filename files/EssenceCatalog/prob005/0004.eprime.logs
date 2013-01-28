@@ -1,0 +1,15 @@
+[handleInfDom] given n: int(1..)
+               ~~>
+               given n: int(1..MAXINT)
+[representation] find s: function (total) int(1..n) --> int(-1, 1)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] s§region2#Matrix1D s§region1#Matrix1D
+[addedDecl] find s_Matrix1D: matrix indexed by [int(1..n)] of int(-1, 1)
+[applied] s§region1#Matrix1D(i)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§region1[i]
+[applied] s§region2#Matrix1D(i + k)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§region2[i + k]
+[removedDecl] find s: function (total) int(1..n) --> int(-1, 1)
