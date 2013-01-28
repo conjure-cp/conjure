@@ -1,0 +1,50 @@
+[handleInfDom] given s: function (total) U --> int(1..)
+~~>
+given s: function (total) U --> int(1..MAXINT)
+[handleInfDom] given v: function (total) U --> int(1..)
+~~>
+given v: function (total) U --> int(1..MAXINT)
+[handleInfDom] given B: int(1..)
+~~>
+given B: int(1..MAXINT)
+[handleInfDom] given K: int(1..)
+~~>
+given K: int(1..MAXINT)
+[handleEnums] given U new type enum
+~~>
+given U_fromEnumSize: int(1..)
+letting U_fromEnum be domain int(1..U_fromEnumSize)
+[handleInfDom] given U_fromEnumSize: int(1..)
+~~>
+given U_fromEnumSize: int(1..MAXINT)
+[representation] find U': set of int(1..U_fromEnumSize) (#2) ExplicitVarSize, Occurrence
+[representation] given s: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
+(#2)
+AsReln, Matrix1D
+[representation] given v: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
+(#2)
+AsReln, Matrix1D
+[configuration] U'§region3#ExplicitVarSize s§region2#Matrix1D v§region4#Matrix1D U'§region1#ExplicitVarSize
+[addedDecl] given v_Matrix1D: matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
+[addedDecl] find U'_ExplicitVarSize:
+        matrix indexed by [int(1..U_fromEnumSize)] of (bool, int(1..U_fromEnumSize))
+[addedDecl] given s_Matrix1D: matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
+[applied] s§region2#Matrix1D(u)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    s_Matrix1D§region2[u]
+[applied] (sum u in U'§region1#ExplicitVarSize . s_Matrix1D§region2[u] <= B)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__3 : int(1..U_fromEnumSize) , U'_ExplicitVarSize§region1[v__3, 1]
+         . s_Matrix1D§region2[U'_ExplicitVarSize§region1[v__3, 2]] <= B)
+[applied] v§region4#Matrix1D(u)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    v_Matrix1D§region4[u]
+[applied] (sum u in U'§region3#ExplicitVarSize . v_Matrix1D§region4[u] >= K)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__4 : int(1..U_fromEnumSize) , U'_ExplicitVarSize§region3[v__4, 1]
+         . v_Matrix1D§region4[U'_ExplicitVarSize§region3[v__4, 2]] >= K)
+[removedDecl] find U'_ExplicitVarSize:
+        matrix indexed by [int(1..U_fromEnumSize)] of (bool, int(1..U_fromEnumSize))
+[removedDecl] find U': set of int(1..U_fromEnumSize)
+[removedDecl] given v: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
+[removedDecl] given s: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
