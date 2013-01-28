@@ -66,9 +66,11 @@ abstractDomsInQuans
                         qnVar'Hash       = identifierConstruct qnVar (Just "regionS") (Just reprName)
                         qnVar'Underscore = qnVar `mappend` "_" `mappend` reprName
                         qnVarReplacer :: E -> E
-                        qnVarReplacer = replace
-                            [xMake| reference := [Prim (S qnVar     )] |]
-                            [xMake| reference := [Prim (S qnVar'Hash)] |]
+                        qnVarReplacer = transform f
+                            where f p@[xMatch| [Prim (S fullname)] := reference |] = case identifierSplit fullname of
+                                    (basename, _, Nothing) | basename == qnVar -> [xMake| reference := [Prim (S qnVar'Hash)] |]
+                                    _ -> p
+                                  f p = p
                     in
                         ( "builtIn.abstractDomsInQuans"
                         , mkOut

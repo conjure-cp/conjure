@@ -7,7 +7,7 @@
 *** function (total) &fr --> &to
 
 *** function (total, injective) &fr --> &to
-    ~~> allDiff(&refn)
+    ~~> allDiff(refn)
 
 *** function (total, surjective) &fr --> &to
     ~~> forAll i : &to . exists j : &fr . refn[j] = i
