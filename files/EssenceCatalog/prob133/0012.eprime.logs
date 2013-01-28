@@ -1,87 +1,100 @@
 [handleInfDom] given s: function (total) U --> int(1..)
-~~>
-given s: function (total) U --> int(1..MAXINT)
+               ~~>
+               given s: function (total) U --> int(1..MAXINT)
 [handleInfDom] given v: function (total) U --> int(1..)
-~~>
-given v: function (total) U --> int(1..MAXINT)
+               ~~>
+               given v: function (total) U --> int(1..MAXINT)
 [handleInfDom] given B: int(1..)
-~~>
-given B: int(1..MAXINT)
+               ~~>
+               given B: int(1..MAXINT)
 [handleInfDom] given K: int(1..)
-~~>
-given K: int(1..MAXINT)
+               ~~>
+               given K: int(1..MAXINT)
 [handleEnums] given U new type enum
-~~>
-given U_fromEnumSize: int(1..)
-letting U_fromEnum be domain int(1..U_fromEnumSize)
+              ~~>
+              given U_fromEnumSize: int(1..)
+              letting U_fromEnum be domain int(1..U_fromEnumSize)
 [handleInfDom] given U_fromEnumSize: int(1..)
-~~>
-given U_fromEnumSize: int(1..MAXINT)
-[representation] find U': set of int(1..U_fromEnumSize) (#2) ExplicitVarSize, Occurrence
-[representation] given s: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
-(#2)
-AsReln, Matrix1D
-[representation] given v: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
-(#2)
-AsReln, Matrix1D
-[configuration] U'§region3#Occurrence s§region2#AsReln v§region4#Matrix1D U'§region1#Occurrence
-[addedDecl] given v_Matrix1D: matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
-[addedDecl] find U'_Occurrence: matrix indexed by [int(1..U_fromEnumSize)] of bool
-[addedDecl] given s_AsReln: relation of (int(1..U_fromEnumSize) * int(1..MAXINT))
-[applied] s§region2#AsReln(u)
-{rules/refns/function-asreln/function-asreln-image.rule}
-    (sum v__1 in toSet(s_AsReln§region2) , v__1[1] = u . v__1[2])
-[applied] (sum u in U'§region1#Occurrence
-     . (sum v__1 in toSet(s_AsReln§region2) , v__1[1] = u . v__1[2]) <= B)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (sum v__2 : int(1..U_fromEnumSize) , U'_Occurrence§region1[v__2]
-         . (sum v__1 in toSet(s_AsReln§region2) , v__1[1] = v__2 . v__1[2]) <= B)
+               ~~>
+               given U_fromEnumSize: int(1..MAXINT)
+[representation] find U': set of int(1..U_fromEnumSize)
+                 (#2)
+                 ExplicitVarSize, Occurrence
+[representation] given s:
+                         function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given v:
+                         function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] U'§region3#ExplicitVarSize s§region2#Matrix1D v§region4#Matrix1D U'§region1#Occurrence
+[addedDecl] given v_Matrix1D:
+                    matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
+[addedDecl] find U'_ExplicitVarSize:
+                    matrix indexed by [int(1..U_fromEnumSize)] of (bool, int(1..U_fromEnumSize))
+[addedDecl] given s_Matrix1D:
+                    matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
+[addedDecl] find U'_Occurrence:
+                    matrix indexed by [int(1..U_fromEnumSize)] of bool
+[applied] s§region2#Matrix1D(u)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§region2[u]
+[applied] (sum u in U'§region1#Occurrence . s_Matrix1D§region2[u] <= B)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (sum v__7 : int(1..U_fromEnumSize) , U'_Occurrence§region1[v__7]
+                   . s_Matrix1D§region2[v__7] <= B)
 [applied] v§region4#Matrix1D(u)
-{rules/refns/function-matrix1d/function-matrix1d-image.rule}
-    v_Matrix1D§region4[u]
-[applied] (sum u in U'§region3#Occurrence . v_Matrix1D§region4[u] >= K)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (sum v__5 : int(1..U_fromEnumSize) , U'_Occurrence§region3[v__5]
-         . v_Matrix1D§region4[v__5] >= K)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              v_Matrix1D§region4[u]
+[applied] (sum u in U'§region3#ExplicitVarSize . v_Matrix1D§region4[u] >= K)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__8 : int(1..U_fromEnumSize) , U'_ExplicitVarSize§region3[v__8, 1]
+                   . v_Matrix1D§region4[U'_ExplicitVarSize§region3[v__8, 2]] >= K)
+[applied] U'#ExplicitVarSize = U'#Occurrence
+          {rules/refns/set-eq-to-subsets.rule}
+              U'#ExplicitVarSize subsetEq U'#Occurrence
+              /\
+              U'#ExplicitVarSize supsetEq U'#Occurrence
+[applied] U'#ExplicitVarSize subsetEq U'#Occurrence
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__9 in U'#ExplicitVarSize . v__9 in U'#Occurrence)
+[applied] v__9 in U'#Occurrence
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__10 in U'#Occurrence . v__10 = v__9)
+[applied] (exists v__10 in U'#Occurrence . v__10 = v__9)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__11 : int(1..U_fromEnumSize) , U'_Occurrence[v__11] . v__11 = v__9)
+[applied] (forAll v__9 in U'#ExplicitVarSize
+               . (exists v__11 : int(1..U_fromEnumSize) , U'_Occurrence[v__11] . v__11 = v__9))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__12 : int(1..U_fromEnumSize) , U'_ExplicitVarSize[v__12, 1]
+                   . (exists v__11 : int(1..U_fromEnumSize) , U'_Occurrence[v__11]
+                          . v__11 = U'_ExplicitVarSize[v__12, 2]))
+[applied] U'#ExplicitVarSize supsetEq U'#Occurrence
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              U'#Occurrence subsetEq U'#ExplicitVarSize
+[applied] U'#Occurrence subsetEq U'#ExplicitVarSize
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__13 in U'#Occurrence . v__13 in U'#ExplicitVarSize)
+[applied] v__13 in U'#ExplicitVarSize
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__14 in U'#ExplicitVarSize . v__14 = v__13)
+[applied] (exists v__14 in U'#ExplicitVarSize . v__14 = v__13)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__15 : int(1..U_fromEnumSize) , U'_ExplicitVarSize[v__15, 1]
+                   . U'_ExplicitVarSize[v__15, 2] = v__13)
+[applied] (forAll v__13 in U'#Occurrence
+               . (exists v__15 : int(1..U_fromEnumSize) , U'_ExplicitVarSize[v__15, 1]
+                      . U'_ExplicitVarSize[v__15, 2] = v__13))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__16 : int(1..U_fromEnumSize) , U'_Occurrence[v__16]
+                   . (exists v__15 : int(1..U_fromEnumSize) , U'_ExplicitVarSize[v__15, 1]
+                          . U'_ExplicitVarSize[v__15, 2] = v__16))
+[removedDecl] find U'_ExplicitVarSize:
+                      matrix indexed by [int(1..U_fromEnumSize)] of (bool, int(1..U_fromEnumSize))
 [removedDecl] find U': set of int(1..U_fromEnumSize)
-[removedDecl] given v: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
-[removedDecl] given s: function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
-[representation] given s_AsReln: relation of (int(1..U_fromEnumSize) * int(1..MAXINT))
-(#1)
-RelationAsSet
-[configuration] s_AsReln§region1#RelationAsSet s_AsReln§region2#RelationAsSet
-[addedDecl] given s_AsReln_RelationAsSet: set of (int(1..U_fromEnumSize), int(1..MAXINT))
-[applied] (sum v__4 in toSet(s_AsReln§region2#RelationAsSet) . v__3 = v__4[1])
-{rules/refns/relation-asset/relation-asset-toSet.rule}
-    (sum v__4 in s_AsReln_RelationAsSet§region2 . v__3 = v__4[1])
-[applied] (sum v__1 in toSet(s_AsReln§region2#RelationAsSet) , v__1[1] = v__2 . v__1[2])
-{rules/refns/relation-asset/relation-asset-toSet.rule}
-    (sum v__1 in s_AsReln_RelationAsSet§region2 , v__1[1] = v__2 . v__1[2])
-[removedDecl] given s_AsReln: relation of (int(1..U_fromEnumSize) * int(1..MAXINT))
-[representation] given s_AsReln_RelationAsSet: set of (int(1..U_fromEnumSize), int(1..MAXINT))
-(#1)
-ExplicitVarSize
-[configuration] s_AsReln_RelationAsSet§region2#ExplicitVarSize s_AsReln_RelationAsSet§region1#ExplicitVarSize
-[addedDecl] given s_AsReln_RelationAsSet_ExplicitVarSize:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of (bool,
-                                                                (int(1..U_fromEnumSize), int(1..MAXINT)))
-[applied] (sum v__4 in s_AsReln_RelationAsSet§region2#ExplicitVarSize . v__3 = v__4[1])
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (sum v__8 : int(1..U_fromEnumSize * MAXINT)
-         , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__8, 1]
-         . v__3 = s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__8, 2, 1])
-[applied] (sum v__1 in s_AsReln_RelationAsSet§region2#ExplicitVarSize , v__1[1] = v__2
-     . v__1[2])
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (sum v__9 : int(1..U_fromEnumSize * MAXINT)
-         , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__9, 2, 1] = v__2
-           /\
-           s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__9, 1]
-         . s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__9, 2, 2])
-[removedDecl] given s_AsReln_RelationAsSet_ExplicitVarSize:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of (bool,
-                                                                (int(1..U_fromEnumSize), int(1..MAXINT)))
-[removedDecl] given s_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of (int(1..U_fromEnumSize),
-                                                                int(1..MAXINT))
-[removedDecl] given s_AsReln_RelationAsSet: set of (int(1..U_fromEnumSize), int(1..MAXINT))
+[removedDecl] given v:
+                      function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)
+[removedDecl] given s:
+                      function (total) int(1..U_fromEnumSize) --> int(1..MAXINT)

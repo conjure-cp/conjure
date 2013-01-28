@@ -2,114 +2,13 @@ language ESSENCE' 1.0
 
 given MAXINT: int
 given U_fromEnumSize: int(1..MAXINT)
-given s_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of bool
-given s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of int(1..U_fromEnumSize)
-given s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of int(1..MAXINT)
-given v_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of bool
-given v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of int(1..U_fromEnumSize)
-given v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
-        matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of int(1..MAXINT)
+given s_Matrix1D: matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
+given v_Matrix1D: matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
 given B: int(1..MAXINT)
 given K: int(1..MAXINT)
 find U'_Occurrence: matrix indexed by [int(1..U_fromEnumSize)] of bool
-find U'_ExplicitVarSize_tuple1:
-        matrix indexed by [int(1..U_fromEnumSize)] of bool
-find U'_ExplicitVarSize_tuple2:
-        matrix indexed by [int(1..U_fromEnumSize)] of int(1..U_fromEnumSize)
 such that
-    forAll v__0 : int(1..U_fromEnumSize * MAXINT)
-        . (forAll v__1 : int(1..U_fromEnumSize * MAXINT)
-               . v__0 < v__1 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
-                 /\
-                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
-                 ->
-                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
-                 !=
-                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
-                 \/
-                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
-                 !=
-                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
-    forAll v__0 : int(1..U_fromEnumSize * MAXINT)
-        . (forAll v__1 : int(1..U_fromEnumSize * MAXINT)
-               . v__0 < v__1 /\ v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
-                 /\
-                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
-                 ->
-                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
-                 !=
-                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
-                 \/
-                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
-                 !=
-                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
-    forAll v__0 : int(1..U_fromEnumSize * MAXINT - 1)
-        . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
-          <=
-          s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
-    forAll v__0 : int(1..U_fromEnumSize * MAXINT - 1)
-        . v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
-          <=
-          v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
-    forAll v__0 : int(1..U_fromEnumSize - 1)
-        . U'_ExplicitVarSize_tuple1[v__0] <= U'_ExplicitVarSize_tuple1[v__0 + 1],
-    forAll v__0 : int(1..U_fromEnumSize)
-        . U'_ExplicitVarSize_tuple1[v__0]
-          ->
-          (exists v__1 : int(1..U_fromEnumSize)
-               . U'_Occurrence[v__1] /\ v__1 = U'_ExplicitVarSize_tuple2[v__0]),
-    forAll v__0 : int(1..U_fromEnumSize)
-        . U'_Occurrence[v__0]
-          ->
-          (exists v__1 : int(1..U_fromEnumSize)
-               . U'_ExplicitVarSize_tuple1[v__1] /\ U'_ExplicitVarSize_tuple2[v__1] = v__0),
-    forAll v__0 : int(1..U_fromEnumSize)
-        . (sum v__1 : int(1..U_fromEnumSize * MAXINT)
-               . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
-                 *
-                 (v__0 = s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
-          =
-          1,
-    forAll v__0 : int(1..U_fromEnumSize)
-        . (sum v__1 : int(1..U_fromEnumSize * MAXINT)
-               . v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
-                 *
-                 (v__0 = v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
-          =
-          1,
-    forAll v__0 : int(1..U_fromEnumSize)
-        . (forAll v__1 : int(1..U_fromEnumSize)
-               . v__0 < v__1 /\ U'_ExplicitVarSize_tuple1[v__0]
-                 /\
-                 U'_ExplicitVarSize_tuple1[v__1]
-                 ->
-                 U'_ExplicitVarSize_tuple2[v__0] < U'_ExplicitVarSize_tuple2[v__1]),
     sum v__0 : int(1..U_fromEnumSize)
-        . U'_ExplicitVarSize_tuple1[v__0]
-          *
-          ((sum v__1 : int(1..U_fromEnumSize * MAXINT)
-                . (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
-                   =
-                   U'_ExplicitVarSize_tuple2[v__0]
-                   /\
-                   s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
-                  *
-                  s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
-           <=
-           B),
+        . U'_Occurrence[v__0] * (s_Matrix1D[v__0] <= B),
     sum v__0 : int(1..U_fromEnumSize)
-        . U'_Occurrence[v__0]
-          *
-          ((sum v__1 : int(1..U_fromEnumSize * MAXINT)
-                . (v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1] = v__0
-                   /\
-                   v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
-                  *
-                  v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
-           >=
-           K)
+        . U'_Occurrence[v__0] * (v_Matrix1D[v__0] >= K)

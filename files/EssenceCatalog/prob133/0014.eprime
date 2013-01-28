@@ -11,10 +11,6 @@ given s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
 given v_Matrix1D: matrix indexed by [int(1..U_fromEnumSize)] of int(1..MAXINT)
 given B: int(1..MAXINT)
 given K: int(1..MAXINT)
-find U'_ExplicitVarSize_tuple1:
-        matrix indexed by [int(1..U_fromEnumSize)] of bool
-find U'_ExplicitVarSize_tuple2:
-        matrix indexed by [int(1..U_fromEnumSize)] of int(1..U_fromEnumSize)
 find U'_Occurrence: matrix indexed by [int(1..U_fromEnumSize)] of bool
 such that
     forAll v__0 : int(1..U_fromEnumSize * MAXINT)
@@ -34,18 +30,6 @@ such that
         . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
           <=
           s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
-    forAll v__0 : int(1..U_fromEnumSize - 1)
-        . U'_ExplicitVarSize_tuple1[v__0] <= U'_ExplicitVarSize_tuple1[v__0 + 1],
-    forAll v__0 : int(1..U_fromEnumSize)
-        . U'_ExplicitVarSize_tuple1[v__0]
-          ->
-          (exists v__1 : int(1..U_fromEnumSize)
-               . U'_Occurrence[v__1] /\ v__1 = U'_ExplicitVarSize_tuple2[v__0]),
-    forAll v__0 : int(1..U_fromEnumSize)
-        . U'_Occurrence[v__0]
-          ->
-          (exists v__1 : int(1..U_fromEnumSize)
-               . U'_ExplicitVarSize_tuple1[v__1] /\ U'_ExplicitVarSize_tuple2[v__1] = v__0),
     forAll v__0 : int(1..U_fromEnumSize)
         . (sum v__1 : int(1..U_fromEnumSize * MAXINT)
                . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
@@ -53,17 +37,6 @@ such that
                  (v__0 = s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
           =
           1,
-    forAll v__0 : int(1..U_fromEnumSize)
-        . (forAll v__1 : int(1..U_fromEnumSize)
-               . v__0 < v__1 /\ U'_ExplicitVarSize_tuple1[v__0]
-                 /\
-                 U'_ExplicitVarSize_tuple1[v__1]
-                 ->
-                 U'_ExplicitVarSize_tuple2[v__0] < U'_ExplicitVarSize_tuple2[v__1]),
-    sum v__0 : int(1..U_fromEnumSize)
-        . U'_ExplicitVarSize_tuple1[v__0]
-          *
-          (v_Matrix1D[U'_ExplicitVarSize_tuple2[v__0]] >= K),
     sum v__0 : int(1..U_fromEnumSize)
         . U'_Occurrence[v__0]
           *
@@ -74,4 +47,6 @@ such that
                   *
                   s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
            <=
-           B)
+           B),
+    sum v__0 : int(1..U_fromEnumSize)
+        . U'_Occurrence[v__0] * (v_Matrix1D[v__0] >= K)
