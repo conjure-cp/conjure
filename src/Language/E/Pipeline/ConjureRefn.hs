@@ -10,6 +10,7 @@ import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
 import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
+import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
@@ -36,6 +37,7 @@ conjureRefn reprs refns spec = withBindingScope' $
                     : fs
             initialiseSpecState spec
             let pipeline =  return
+                        >=> recordSpec >=> implicitWheres
                         >=> recordSpec >=> explodeStructuralVars
                         >=> recordSpec >=> handleEnums
                         >=> recordSpec >=> handleUnnameds

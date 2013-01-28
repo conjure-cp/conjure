@@ -6,6 +6,7 @@ import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.IntroduceFakeConstraints
 import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
+import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( conjureNoTuples )
@@ -21,6 +22,7 @@ conjureRepr
 conjureRepr reprs spec = withBindingScope' $ do
     initialiseSpecState spec
     let pipeline =  return
+                >=> recordSpec >=> implicitWheres
                 >=> recordSpec >=> explodeStructuralVars
                 >=> recordSpec >=> handleEnums
                 >=> recordSpec >=> handleUnnameds
