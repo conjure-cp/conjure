@@ -1,0 +1,224 @@
+[handleInfDom] given n_balls: int(1..)
+               ~~>
+               given n_balls: int(1..MAXINT)
+[handleInfDom] given n_boxes: int(1..)
+               ~~>
+               given n_boxes: int(1..MAXINT)
+[representation] find schur: partition (size n_boxes) from int(1..n_balls)
+                 (#1)
+                 SetOfSets
+[configuration] schur§region1#SetOfSets
+[addedDecl] find schur_SetOfSets: set (size n_boxes) of set of int(1..n_balls)
+[applied] {b1, b2, b3} subsetEq s
+          {rules/refns/set-subseteq-to-quantified.rule}
+              b1 in s /\ b2 in s /\ b3 in s
+[applied] b1 in s
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__5 in s . v__5 = b1)
+[applied] b2 in s
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__6 in s . v__6 = b2)
+[applied] b3 in s
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__7 in s . v__7 = b3)
+[applied] (forAll s in parts(schur§region1#SetOfSets)
+               . b1 != b2 /\ b1 + b2 = b3
+                 ->
+                 !((exists v__5 in s . v__5 = b1) /\ (exists v__6 in s . v__6 = b2)
+                   /\
+                   (exists v__7 in s . v__7 = b3)))
+          {rules/refns/partition-SetOfSets/partition-SetOfSets-part.rule}
+              (forAll s in schur_SetOfSets§region1
+                   . b1 != b2 /\ b1 + b2 = b3
+                     ->
+                     !((exists v__5 in s . v__5 = b1) /\ (exists v__6 in s . v__6 = b2)
+                       /\
+                       (exists v__7 in s . v__7 = b3)))
+[applied] v__1 != v__2
+          {rules/refns/set-neq-to-eq.rule}
+              !(v__1 = v__2)
+[applied] v__1 = v__2
+          {rules/refns/set-eq-to-subsets.rule}
+              v__1 subsetEq v__2 /\ v__1 supsetEq v__2
+[applied] v__1 subsetEq v__2
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__8 in v__1 . v__8 in v__2)
+[applied] v__8 in v__2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__9 in v__2 . v__9 = v__8)
+[applied] v__1 supsetEq v__2
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__2 subsetEq v__1
+[applied] v__2 subsetEq v__1
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__10 in v__2 . v__10 in v__1)
+[applied] v__10 in v__1
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__11 in v__1 . v__11 = v__10)
+[applied] |v__1 intersect v__2|
+          {rules/refns/set-card.rule}
+              (sum v__12 in v__1 intersect v__2 . 1)
+[applied] (sum v__12 in v__1 intersect v__2 . 1)
+          {rules/refns/set-intersect-quantifier.rule}
+              (sum v__12 in v__1 , v__12 in v__2 . 1)
+[applied] v__12 in v__2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__13 in v__2 . v__13 = v__12)
+[applied] v__1 in v__3
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__14 in v__3 . v__14 = v__1)
+[removedDecl] find schur: partition (size n_boxes) from int(1..n_balls)
+[representation] find schur_SetOfSets:
+                         set (size n_boxes) of set of int(1..n_balls)
+                 (#1)
+                 Explicit
+[configuration] schur_SetOfSets§region1#Explicit
+[addedDecl] find schur_SetOfSets_Explicit:
+                    matrix indexed by [int(1..n_boxes)] of set of int(1..n_balls)
+[applied] (forAll s in schur_SetOfSets§region1#Explicit
+               . b1 != b2 /\ b1 + b2 = b3
+                 ->
+                 !((exists v__5 in s . v__5 = b1) /\ (exists v__6 in s . v__6 = b2)
+                   /\
+                   (exists v__7 in s . v__7 = b3)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__15 : int(1..n_boxes)
+                   . b1 != b2 /\ b1 + b2 = b3
+                     ->
+                     !((exists v__5 in schur_SetOfSets_Explicit§region1[v__15] . v__5 = b1)
+                       /\
+                       (exists v__6 in schur_SetOfSets_Explicit§region1[v__15] . v__6 = b2)
+                       /\
+                       (exists v__7 in schur_SetOfSets_Explicit§region1[v__15] . v__7 = b3)))
+[applied] (forAll v__2 in schur_SetOfSets§region1#Explicit
+               , !((forAll v__8 in v__1 . (exists v__9 in v__2 . v__9 = v__8))
+                   /\
+                   (forAll v__10 in v__2 . (exists v__11 in v__1 . v__11 = v__10)))
+               . (sum v__12 in v__1 , (exists v__13 in v__2 . v__13 = v__12) . 1) = 0)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__16 : int(1..n_boxes)
+                   , !((forAll v__8 in v__1
+                            . (exists v__9 in schur_SetOfSets_Explicit§region1[v__16] . v__9 = v__8))
+                       /\
+                       (forAll v__10 in schur_SetOfSets_Explicit§region1[v__16]
+                            . (exists v__11 in v__1 . v__11 = v__10)))
+                   . (sum v__12 in v__1
+                          , (exists v__13 in schur_SetOfSets_Explicit§region1[v__16] . v__13 = v__12)
+                          . 1)
+                     =
+                     0)
+[applied] (forAll v__1 in schur_SetOfSets§region1#Explicit
+               . (forAll v__16 : int(1..n_boxes)
+                      , !((forAll v__8 in v__1
+                               . (exists v__9 in schur_SetOfSets_Explicit§region1[v__16] . v__9 = v__8))
+                          /\
+                          (forAll v__10 in schur_SetOfSets_Explicit§region1[v__16]
+                               . (exists v__11 in v__1 . v__11 = v__10)))
+                      . (sum v__12 in v__1
+                             , (exists v__13 in schur_SetOfSets_Explicit§region1[v__16] . v__13 = v__12)
+                             . 1)
+                        =
+                        0))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__17 : int(1..n_boxes)
+                   . (forAll v__16 : int(1..n_boxes)
+                          , !((forAll v__8 in schur_SetOfSets_Explicit§region1[v__17]
+                                   . (exists v__9 in schur_SetOfSets_Explicit§region1[v__16] . v__9 = v__8))
+                              /\
+                              (forAll v__10 in schur_SetOfSets_Explicit§region1[v__16]
+                                   . (exists v__11 in schur_SetOfSets_Explicit§region1[v__17] . v__11 = v__10)))
+                          . (sum v__12 in schur_SetOfSets_Explicit§region1[v__17]
+                                 , (exists v__13 in schur_SetOfSets_Explicit§region1[v__16] . v__13 = v__12)
+                                 . 1)
+                            =
+                            0))
+[applied] (exists v__3 in schur_SetOfSets§region1#Explicit
+               . (exists v__14 in v__3 . v__14 = v__1))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (exists v__18 : int(1..n_boxes)
+                   . (exists v__14 in schur_SetOfSets_Explicit§region1[v__18] . v__14 = v__1))
+[removedDecl] find schur_SetOfSets: set (size n_boxes) of set of int(1..n_balls)
+[representation] find schur_SetOfSets_Explicit:
+                         matrix indexed by [int(1..n_boxes)] of set of int(1..n_balls)
+                 (#2)
+                 ExplicitVarSize, Occurrence
+[configuration] schur_SetOfSets_Explicit§region1#Occurrence
+[addedDecl] find schur_SetOfSets_Explicit_Occurrence:
+                    matrix indexed by [int(1..n_boxes), int(1..n_balls)] of bool
+[applied] (exists v__5 in schur_SetOfSets_Explicit§region1#Occurrence[v__15]
+               . v__5 = b1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__23 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__15, v__23]
+                   . v__23 = b1)
+[applied] (exists v__6 in schur_SetOfSets_Explicit§region1#Occurrence[v__15]
+               . v__6 = b2)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__24 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__15, v__24]
+                   . v__24 = b2)
+[applied] (exists v__7 in schur_SetOfSets_Explicit§region1#Occurrence[v__15]
+               . v__7 = b3)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__25 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__15, v__25]
+                   . v__25 = b3)
+[applied] (exists v__14 in schur_SetOfSets_Explicit§region1#Occurrence[v__18]
+               . v__14 = v__1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__26 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__18, v__26]
+                   . v__26 = v__1)
+[applied] (exists v__9 in schur_SetOfSets_Explicit§region1#Occurrence[v__16]
+               . v__9 = v__8)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__27 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__27]
+                   . v__27 = v__8)
+[applied] (forAll v__8 in schur_SetOfSets_Explicit§region1#Occurrence[v__17]
+               . (exists v__27 : int(1..n_balls)
+                      , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__27]
+                      . v__27 = v__8))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__28 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__17, v__28]
+                   . (exists v__27 : int(1..n_balls)
+                          , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__27]
+                          . v__27 = v__28))
+[applied] (exists v__11 in schur_SetOfSets_Explicit§region1#Occurrence[v__17]
+               . v__11 = v__10)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__29 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__17, v__29]
+                   . v__29 = v__10)
+[applied] (forAll v__10 in schur_SetOfSets_Explicit§region1#Occurrence[v__16]
+               . (exists v__29 : int(1..n_balls)
+                      , schur_SetOfSets_Explicit_Occurrence§region1[v__17, v__29]
+                      . v__29 = v__10))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__30 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__30]
+                   . (exists v__29 : int(1..n_balls)
+                          , schur_SetOfSets_Explicit_Occurrence§region1[v__17, v__29]
+                          . v__29 = v__30))
+[applied] (exists v__13 in schur_SetOfSets_Explicit§region1#Occurrence[v__16]
+               . v__13 = v__12)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__31 : int(1..n_balls)
+                   , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__31]
+                   . v__31 = v__12)
+[applied] (sum v__12 in schur_SetOfSets_Explicit§region1#Occurrence[v__17]
+               , (exists v__31 : int(1..n_balls)
+                      , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__31]
+                      . v__31 = v__12)
+               . 1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (sum v__32 : int(1..n_balls)
+                   , (exists v__31 : int(1..n_balls)
+                          , schur_SetOfSets_Explicit_Occurrence§region1[v__16, v__31]
+                          . v__31 = v__32)
+                     /\
+                     schur_SetOfSets_Explicit_Occurrence§region1[v__17, v__32]
+                   . 1)
+[removedDecl] find schur_SetOfSets_Explicit:
+                      matrix indexed by [int(1..n_boxes)] of set of int(1..n_balls)
