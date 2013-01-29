@@ -16,6 +16,23 @@ find U'_ExplicitVarSize_tuple1:
 find U'_ExplicitVarSize_tuple2:
         matrix indexed by [int(1..U_fromEnumSize)] of int(1..U_fromEnumSize)
 such that
+    (sum v__0 : int(1..U_fromEnumSize)
+         . U'_ExplicitVarSize_tuple1[v__0] * s_Matrix1D[U'_ExplicitVarSize_tuple2[v__0]])
+    <=
+    B,
+    (sum v__0 : int(1..U_fromEnumSize)
+         . U'_ExplicitVarSize_tuple1[v__0]
+           *
+           (sum v__1 : int(1..U_fromEnumSize * MAXINT)
+                . (v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                   =
+                   U'_ExplicitVarSize_tuple2[v__0]
+                   /\
+                   v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
+                  *
+                  v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]))
+    >=
+    K,
     forAll v__0 : int(1..U_fromEnumSize * MAXINT)
         . (forAll v__1 : int(1..U_fromEnumSize * MAXINT)
                . v__0 < v__1 /\ v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
@@ -48,21 +65,4 @@ such that
                  /\
                  U'_ExplicitVarSize_tuple1[v__1]
                  ->
-                 U'_ExplicitVarSize_tuple2[v__0] < U'_ExplicitVarSize_tuple2[v__1]),
-    sum v__0 : int(1..U_fromEnumSize)
-        . U'_ExplicitVarSize_tuple1[v__0]
-          *
-          (s_Matrix1D[U'_ExplicitVarSize_tuple2[v__0]] <= B),
-    sum v__0 : int(1..U_fromEnumSize)
-        . U'_ExplicitVarSize_tuple1[v__0]
-          *
-          ((sum v__1 : int(1..U_fromEnumSize * MAXINT)
-                . (v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
-                   =
-                   U'_ExplicitVarSize_tuple2[v__0]
-                   /\
-                   v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
-                  *
-                  v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
-           >=
-           K)
+                 U'_ExplicitVarSize_tuple2[v__0] < U'_ExplicitVarSize_tuple2[v__1])

@@ -40,17 +40,17 @@
 [applied] s§region2#Matrix1D(u)
           {rules/refns/function-matrix1d/function-matrix1d-image.rule}
               s_Matrix1D§region2[u]
-[applied] (sum u in U'§region1#Occurrence . s_Matrix1D§region2[u] <= B)
+[applied] (sum u in U'§region1#Occurrence . s_Matrix1D§region2[u])
           {rules/refns/set-occurrence/set-occurrence-quantified.rule}
               (sum v__7 : int(1..U_fromEnumSize) , U'_Occurrence§region1[v__7]
-                   . s_Matrix1D§region2[v__7] <= B)
+                   . s_Matrix1D§region2[v__7])
 [applied] v§region4#Matrix1D(u)
           {rules/refns/function-matrix1d/function-matrix1d-image.rule}
               v_Matrix1D§region4[u]
-[applied] (sum u in U'§region3#ExplicitVarSize . v_Matrix1D§region4[u] >= K)
+[applied] (sum u in U'§region3#ExplicitVarSize . v_Matrix1D§region4[u])
           {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
               (sum v__8 : int(1..U_fromEnumSize) , U'_ExplicitVarSize§region3[v__8, 1]
-                   . v_Matrix1D§region4[U'_ExplicitVarSize§region3[v__8, 2]] >= K)
+                   . v_Matrix1D§region4[U'_ExplicitVarSize§region3[v__8, 2]])
 [applied] U'#ExplicitVarSize = U'#Occurrence
           {rules/refns/set-eq-to-subsets.rule}
               U'#ExplicitVarSize subsetEq U'#Occurrence

@@ -40,17 +40,17 @@
 [applied] s§region2#Matrix1D(u)
           {rules/refns/function-matrix1d/function-matrix1d-image.rule}
               s_Matrix1D§region2[u]
-[applied] (sum u in U'§region1#ExplicitVarSize . s_Matrix1D§region2[u] <= B)
+[applied] (sum u in U'§region1#ExplicitVarSize . s_Matrix1D§region2[u])
           {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
               (sum v__7 : int(1..U_fromEnumSize) , U'_ExplicitVarSize§region1[v__7, 1]
-                   . s_Matrix1D§region2[U'_ExplicitVarSize§region1[v__7, 2]] <= B)
+                   . s_Matrix1D§region2[U'_ExplicitVarSize§region1[v__7, 2]])
 [applied] v§region4#Matrix1D(u)
           {rules/refns/function-matrix1d/function-matrix1d-image.rule}
               v_Matrix1D§region4[u]
-[applied] (sum u in U'§region3#Occurrence . v_Matrix1D§region4[u] >= K)
+[applied] (sum u in U'§region3#Occurrence . v_Matrix1D§region4[u])
           {rules/refns/set-occurrence/set-occurrence-quantified.rule}
               (sum v__8 : int(1..U_fromEnumSize) , U'_Occurrence§region3[v__8]
-                   . v_Matrix1D§region4[v__8] >= K)
+                   . v_Matrix1D§region4[v__8])
 [from-cached] such that U'#ExplicitVarSize = U'#Occurrence
               ~~>
               such that

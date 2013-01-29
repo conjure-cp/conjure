@@ -41,21 +41,19 @@
           {rules/refns/function-asreln/function-asreln-image.rule}
               (sum v__7 in toSet(s_AsReln§region2) , v__7[1] = u . v__7[2])
 [applied] (sum u in U'§region1#ExplicitVarSize
-               . (sum v__7 in toSet(s_AsReln§region2) , v__7[1] = u . v__7[2]) <= B)
+               . (sum v__7 in toSet(s_AsReln§region2) , v__7[1] = u . v__7[2]))
           {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
               (sum v__8 : int(1..U_fromEnumSize) , U'_ExplicitVarSize§region1[v__8, 1]
                    . (sum v__7 in toSet(s_AsReln§region2)
                           , v__7[1] = U'_ExplicitVarSize§region1[v__8, 2]
-                          . v__7[2])
-                     <=
-                     B)
+                          . v__7[2]))
 [applied] v§region4#Matrix1D(u)
           {rules/refns/function-matrix1d/function-matrix1d-image.rule}
               v_Matrix1D§region4[u]
-[applied] (sum u in U'§region3#Occurrence . v_Matrix1D§region4[u] >= K)
+[applied] (sum u in U'§region3#Occurrence . v_Matrix1D§region4[u])
           {rules/refns/set-occurrence/set-occurrence-quantified.rule}
               (sum v__9 : int(1..U_fromEnumSize) , U'_Occurrence§region3[v__9]
-                   . v_Matrix1D§region4[v__9] >= K)
+                   . v_Matrix1D§region4[v__9])
 [from-cached] such that U'#ExplicitVarSize = U'#Occurrence
               ~~>
               such that
@@ -80,9 +78,6 @@
 [configuration] s_AsReln§region1#RelationAsSet s_AsReln§region2#RelationAsSet
 [addedDecl] given s_AsReln_RelationAsSet:
                     set of (int(1..U_fromEnumSize), int(1..MAXINT))
-[applied] (sum v__4 in toSet(s_AsReln§region2#RelationAsSet) . v__3 = v__4[1])
-          {rules/refns/relation-asset/relation-asset-toSet.rule}
-              (sum v__4 in s_AsReln_RelationAsSet§region2 . v__3 = v__4[1])
 [applied] (sum v__7 in toSet(s_AsReln§region2#RelationAsSet)
                , v__7[1] = U'_ExplicitVarSize_tuple2§region1[v__8]
                . v__7[2])
@@ -90,6 +85,9 @@
               (sum v__7 in s_AsReln_RelationAsSet§region2
                    , v__7[1] = U'_ExplicitVarSize_tuple2§region1[v__8]
                    . v__7[2])
+[applied] (sum v__4 in toSet(s_AsReln§region2#RelationAsSet) . v__3 = v__4[1])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__4 in s_AsReln_RelationAsSet§region2 . v__3 = v__4[1])
 [removedDecl] given s_AsReln:
                       relation of (int(1..U_fromEnumSize) * int(1..MAXINT))
 [representation] given s_AsReln_RelationAsSet:
@@ -100,23 +98,23 @@
 [addedDecl] given s_AsReln_RelationAsSet_ExplicitVarSize:
                     matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of (bool,
                                                                             (int(1..U_fromEnumSize), int(1..MAXINT)))
-[applied] (sum v__4 in s_AsReln_RelationAsSet§region2#ExplicitVarSize
-               . v__3 = v__4[1])
-          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-              (sum v__14 : int(1..U_fromEnumSize * MAXINT)
-                   , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__14, 1]
-                   . v__3 = s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__14, 2, 1])
 [applied] (sum v__7 in s_AsReln_RelationAsSet§region2#ExplicitVarSize
                , v__7[1] = U'_ExplicitVarSize_tuple2§region1[v__8]
                . v__7[2])
           {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-              (sum v__15 : int(1..U_fromEnumSize * MAXINT)
-                   , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__15, 2, 1]
+              (sum v__14 : int(1..U_fromEnumSize * MAXINT)
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__14, 2, 1]
                      =
                      U'_ExplicitVarSize_tuple2§region1[v__8]
                      /\
-                     s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__15, 1]
-                   . s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__15, 2, 2])
+                     s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__14, 1]
+                   . s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__14, 2, 2])
+[applied] (sum v__4 in s_AsReln_RelationAsSet§region2#ExplicitVarSize
+               . v__3 = v__4[1])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__15 : int(1..U_fromEnumSize * MAXINT)
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__15, 1]
+                   . v__3 = s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__15, 2, 1])
 [removedDecl] given s_AsReln_RelationAsSet_ExplicitVarSize:
                       matrix indexed by [int(1..U_fromEnumSize * MAXINT)] of (bool,
                                                                               (int(1..U_fromEnumSize), int(1..MAXINT)))

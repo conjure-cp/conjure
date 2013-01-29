@@ -11,5 +11,6 @@ given U new type enum,
 find U' : set of U
 
 such that
-    sum u in U' . s(u) <= B,
-    sum u in U' . v(u) >= K
+    (sum u in U' . s(u)) <= B,
+    (sum u in U' . v(u)) >= K
+
