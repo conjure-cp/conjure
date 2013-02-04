@@ -25,7 +25,7 @@ else
     echo "    Usage: conjureBF {problem-name}.essence"
     touch $qFile
     (
-        for i in `seq 1 256`
+        for i in {1..256}
         do
             echo " true " >> $qFile
         done
