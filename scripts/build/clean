@@ -5,6 +5,6 @@ find . -name "*.hi" -delete
 find . -name "*.o" -delete
 find . -name "*.hi-boot" -delete
 find . -name "*.o-boot" -delete
-cabal clean
-ghc-pkg unregister conjure-cp
+cabal clean                   && echo "cabal clean successful"  || echo "cabal clean failed"
+ghc-pkg unregister conjure-cp && echo "conjure-cp unregistered" || echo "no need to unregister conjure-cp"
 
