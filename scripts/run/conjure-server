@@ -24,12 +24,10 @@ else
     echo "You can now run conjure on a different terminal"
     echo "    Usage: conjureBF {problem-name}.essence"
     touch $qFile
-    (
-        for i in {1..256}
-        do
-            echo " true " >> $qFile
-        done
-    )
-    tail -f $qFile | parallel -u
+    for i in {1..256}
+    do
+        echo " true " >> $qFile
+    done
+    tail -n 1024 -f $qFile | parallel -u
 fi
 
