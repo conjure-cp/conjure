@@ -5,9 +5,9 @@ inverse(&f, &g)
 
     ~~>
 
-(forAll (i,j) in toSet(&f) . (j,i) in toSet(&g))
+(forAll i in toSet(&f) . (i[2],i[1]) in toSet(&g))
     /\
-(forAll (i,j) in toSet(&g) . (j,i) in toSet(&f))
+(forAll i in toSet(&g) . (i[2],i[1]) in toSet(&f))
 
     where &f hasType `function _ --> _`
     where &g hasType `function _ --> _`
