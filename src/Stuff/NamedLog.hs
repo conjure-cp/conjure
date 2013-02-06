@@ -54,6 +54,7 @@ suppress = S.fromList
     , "patternMatch-fail"
     , "patternMatch-success"
     , "rule-fail"
+    , "trying-rule"
     , "Evaluator"
     , "Evaluator.hasRepr"
     , "Evaluator.hasType"

@@ -117,6 +117,7 @@ single ( name
         (flagMatch, _) <- patternMatch pattern x
         if flagMatch
             then do
+                mkLog "trying-rule" $ pretty name <+> "on" $$ pretty x
                 bs <- mapM (localHandler name x) locals
                 if and bs
                     then do
