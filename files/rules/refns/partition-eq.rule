@@ -1,0 +1,8 @@
+
+[1000]
+
+&a = &b ~~> ( forAll i in parts(&a) . i in parts(&b) ) /\
+            ( forAll i in parts(&b) . i in parts(&a) )
+    where &a hasType `partition from _`
+    where &b hasType `partition from _`
+
