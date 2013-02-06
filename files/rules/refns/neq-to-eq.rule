@@ -1,0 +1,9 @@
+
+[1000]
+
+&a != &b ~~> !(&a = &b)
+
+    where ( ( &a hasType `set of _`         ) /\ ( &b hasType `set of _`         ) ) \/
+          ( ( &a hasType `mset of _`        ) /\ ( &b hasType `mset of _`        ) ) \/
+          ( ( &a hasType `function _ --> _` ) /\ ( &b hasType `function _ --> _` ) ) \/
+          ( ( &a hasType `partition from _` ) /\ ( &b hasType `partition from _` ) )
