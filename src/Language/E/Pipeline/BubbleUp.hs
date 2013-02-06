@@ -1,19 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.Pipeline.BubbleUp where
+module Language.E.Pipeline.BubbleUp ( bubbleUpSpec ) where
 
 import Language.E
-import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
-
-conjureBubbleUp
-    :: MonadConjure m
-    => Spec
-    -> m Spec
-conjureBubbleUp = pipeline
-    where
-        pipeline = bubbleUpSpec
-                >=> return . atMostOneSuchThat
 
 
 bubbleUpSpec :: MonadConjure m => Spec -> m Spec
