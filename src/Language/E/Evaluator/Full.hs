@@ -169,9 +169,20 @@ ret i = return $ Just (i, [])
 
 evalHasType :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalHasType [eMatch| &s hasType &dom |] = do
+    let replacerActual  [xMatch| [Prim (S "_")] := reference |] =
+                        [xMake| type.unknown := [] |]
+        replacerActual  i = i
+        replacerPattern [xMatch| [Prim (S "_")] := reference |] =
+                        [xMake| metavar := [Prim (S "_")] |]
+        replacerPattern i = i
+
     ts <- typeOf s
+    let ts' = transform replacerActual  ts
     td <- typeOf dom
-    (flag, bs) <- patternMatch td ts
+    let td' = transform replacerPattern td
+
+    (flag, bs) <- patternMatch td' ts'
+
     modify $ \ st -> st { binders = bs ++ binders st }
     returnBool' flag bs
 evalHasType _ = return Nothing
