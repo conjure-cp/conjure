@@ -133,7 +133,9 @@ ret orig name result = do
     return $ Just [(stringToText name, result)]
 
 builtInRefn :: MonadConjure m => [RefnFunc m]
-builtInRefn = [relationApply, tupleExplode, functionLiteralApply]
+builtInRefn = [ relationApply, tupleExplode, functionLiteralApply
+              , tupleDomInQuantification
+              ]
 
 relationApply :: MonadConjure m => RefnFunc m
 relationApply p@[xMatch| [actual]             := functionApply.actual
@@ -183,6 +185,24 @@ tupleExplode p@[eMatch| &a != &b |] = do
             ret p "builtIn.tupleExplode" result
         _ -> return Nothing
 tupleExplode _ = return Nothing
+
+tupleDomInQuantification :: MonadConjure m => RefnFunc m
+tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] =
+    case dom of
+        [xMatch| xs := domain.tuple.inners |] -> do
+            ys <- forM xs $ \ x -> do
+                (_, quanvar) <- freshQuanVar
+                return (quanvar, x)
+            let quanvars = [xMake| value.tuple.values := map fst ys |]
+            ret p "builtIn.tupleDomInQuantification" (helper quanvars ys)
+        _ -> return Nothing
+    where
+        helper _ [] = error "this should never happen, tupleDomInQuantification"
+        helper allQuanVars [(quanvar,quandom)] = replace i allQuanVars [eMake| &quan &quanvar : &quandom , &guard . &body |]
+        helper allQuanVars ((quanvar,quandom):rest) =
+            let body' = helper allQuanVars rest
+            in  [eMake| &quan &quanvar : &quandom . &body' |]
+tupleDomInQuantification _ = return Nothing
 
 functionLiteralApply :: MonadConjure m => RefnFunc m
 functionLiteralApply
