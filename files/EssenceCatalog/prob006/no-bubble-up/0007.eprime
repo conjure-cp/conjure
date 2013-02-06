@@ -1,0 +1,57 @@
+language ESSENCE' 1.0
+
+given n: int
+where n >= 0
+find Ticks_Explicit: matrix indexed by [int(1..n)] of int(0..2 ** n)
+find Ticks_Occurrence: matrix indexed by [int(0..2 ** n)] of bool
+minimising (v__4 @ find v__4: int(0..2 ** n)
+                   such that forAll v__0 : int(0..2 ** n) . Ticks_Occurrence[v__0] -> v__0 <= v__4
+                   such that exists v__0 : int(0..2 ** n) . Ticks_Occurrence[v__0] /\ v__0 = v__4)
+such that
+    (sum v__0 : int(0..2 ** n) . Ticks_Occurrence[v__0]) = n,
+    allDiff(Ticks_Explicit),
+    forAll pair1_Explicit : matrix indexed by [int(1..2)] of int
+        . (forAll v__0 : int(1..2)
+               . (exists v__1 : int(1..n) . Ticks_Explicit[v__1] = pair1_Explicit[v__0]))
+          /\
+          (allDiff(pair1_Explicit) /\ pair1_Explicit[1] < pair1_Explicit[2])
+          ->
+          (forAll pair2_Occurrence : matrix indexed by [int] of bool
+               . (forAll v__0 : int
+                      . pair2_Occurrence[v__0]
+                        ->
+                        (exists v__1 : int(1..n) . Ticks_Explicit[v__1] = v__0))
+                 /\
+                 !((forAll v__0 : int(1..2)
+                        . (exists v__1 : int . pair2_Occurrence[v__1] /\ v__1 = pair1_Explicit[v__0]))
+                   /\
+                   (forAll v__0 : int
+                        . pair2_Occurrence[v__0]
+                          ->
+                          (exists v__1 : int(1..2) . pair1_Explicit[v__1] = v__0)))
+                 /\
+                 (sum v__0 : int . pair2_Occurrence[v__0]) = 2
+                 ->
+                 (v__13 @ find v__13: int
+                          such that forAll v__0 : int(1..2) . pair1_Explicit[v__0] <= v__13
+                          such that exists v__0 : int(1..2) . pair1_Explicit[v__0] = v__13)
+                 -
+                 (v__16 @ find v__16: int
+                          such that forAll v__0 : int(1..2) . pair1_Explicit[v__0] >= v__16
+                          such that exists v__0 : int(1..2) . pair1_Explicit[v__0] = v__16)
+                 !=
+                 (v__19 @ find v__19: int
+                          such that forAll v__0 : int . pair2_Occurrence[v__0] -> v__0 <= v__19
+                          such that exists v__0 : int . pair2_Occurrence[v__0] /\ v__0 = v__19)
+                 -
+                 (v__22 @ find v__22: int
+                          such that forAll v__0 : int . pair2_Occurrence[v__0] -> v__0 >= v__22
+                          such that exists v__0 : int . pair2_Occurrence[v__0] /\ v__0 = v__22)),
+    forAll v__0 : int(0..2 ** n)
+        . Ticks_Occurrence[v__0]
+          ->
+          (exists v__1 : int(1..n) . Ticks_Explicit[v__1] = v__0),
+    forAll v__0 : int(1..n - 1) . Ticks_Explicit[v__0] < Ticks_Explicit[v__0 + 1],
+    forAll v__0 : int(1..n)
+        . (exists v__1 : int(0..2 ** n)
+               . Ticks_Occurrence[v__1] /\ v__1 = Ticks_Explicit[v__0])

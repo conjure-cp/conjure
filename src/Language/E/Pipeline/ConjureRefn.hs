@@ -46,7 +46,7 @@ conjureRefn reprs refns spec = withBindingScope' $
                         >=> recordSpec >=> checkIfAllRefined
                         >=> recordSpec >=> conjureNoTuples
                         >=> recordSpec >=> removeUnused
-                        >=> recordSpec >=> bubbleUpSpec
+                        -- >=> recordSpec >=> bubbleUpSpec
                         >=> recordSpec
             pipeline spec
 
