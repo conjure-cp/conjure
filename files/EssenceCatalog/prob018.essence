@@ -35,28 +35,32 @@ $ the partial function 'plan' maps integers between 1 and |plan| to values, to
 $ ensure a correct sequence representation
     forAll i : int(1..|plan|) . i in defined(plan),
 
-$ the sequence of states starts with the initial state
-    plan(1) = init,
-
-$ the sequence of states ends with the goal state
-    plan(|plan|) = goal,
-
 $ there is always the same amount of water in total
     forAll s in range(plan) . (sum b : Bucket . s(b)) = total_water,
 
 $ no bucket ever has more water than its maximum limit
     forAll s in range(plan) . forAll b : Bucket . s(b) <= capacity(b),
 
-$ each transition changes the amount of water in exactly 2 buckets
-    forAll i : int(1..|plan|-1) . |plan(i) intersect plan(i+1)| = 1,
+$ TODO: Constraints after this point aren't type correct.
 
-$ in state i+1, the 2 involved buckets containt the same total amount of water
-$ as in state i
-    forAll i : int(1..|plan|-1) .
-        (sum w in range(plan(i) - (plan(i) intersect plan(i+1))) . w) =
-        (sum w in range(plan(i+1) - (plan(i) intersect plan(i+1))) . w),
+$ $ the sequence of states starts with the initial state
+$     plan(1) = init,
 
-$ in state i+1, at least 1 of the involved buckets must be either empty or full
-    forAll i : int(1..|plan|-1) .
-        exists (b,w) in toSet(plan(i+1) - (plan(i) intersect plan(i+1))) .
-            w in {0,capacity(b)}
+$ $ the sequence of states ends with the goal state
+$     plan(|plan|) = goal,
+
+$ $ each transition changes the amount of water in exactly 2 buckets
+$     forAll i : int(1..|plan|-1) . |plan(i) intersect plan(i+1)| = 1,
+
+$ $ in state i+1, the 2 involved buckets containt the same total amount of water
+$ $ as in state i
+$     forAll i : int(1..|plan|-1) .
+$         (sum w in range(plan(i) - (plan(i) intersect plan(i+1))) . w) =
+$         (sum w in range(plan(i+1) - (plan(i) intersect plan(i+1))) . w),
+
+$ $ in state i+1, at least 1 of the involved buckets must be either empty or full
+$     forAll i : int(1..|plan|-1) .
+$         exists (b,w) in toSet(plan(i+1) - (plan(i) intersect plan(i+1))) .
+$             w in {0,capacity(b)},
+
+    true

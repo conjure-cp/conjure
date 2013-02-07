@@ -1,0 +1,312 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given n_buckets: int(1..MAXINT)
+given total_water: int(1..MAXINT)
+given capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of bool
+given capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of int(1..n_buckets)
+given capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of int(0..total_water)
+given init_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of bool
+given init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of int(1..n_buckets)
+given init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of int(0..total_water)
+given goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of bool
+given goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of int(1..n_buckets)
+given goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_buckets * (total_water + 1))] of int(0..total_water)
+where
+    forAll b : int(1..n_buckets)
+        . (sum v__0 : int(1..n_buckets * (total_water + 1))
+               . (init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = b
+                  /\
+                  init_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                 *
+                 init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+          <=
+          (sum v__0 : int(1..n_buckets * (total_water + 1))
+               . (capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = b
+                  /\
+                  capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                 *
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+          /\
+          (sum v__0 : int(1..n_buckets * (total_water + 1))
+               . (goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = b
+                  /\
+                  goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                 *
+                 goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+          <=
+          (sum v__0 : int(1..n_buckets * (total_water + 1))
+               . (capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = b
+                  /\
+                  capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                 *
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+find plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..(total_water + 1) ** n_buckets
+                                  *
+                                  (n_buckets * (total_water + 1)))] of bool
+find plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..(total_water + 1) ** n_buckets
+                                  *
+                                  (n_buckets * (total_water + 1)))] of int(1..(total_water + 1) ** n_buckets)
+find plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..(total_water + 1) ** n_buckets
+                                  *
+                                  (n_buckets * (total_water + 1))),
+                           int(1..n_buckets * (total_water + 1))] of bool
+find plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..(total_water + 1) ** n_buckets
+                                  *
+                                  (n_buckets * (total_water + 1))),
+                           int(1..n_buckets * (total_water + 1))] of int(1..n_buckets)
+find plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..(total_water + 1) ** n_buckets
+                                  *
+                                  (n_buckets * (total_water + 1))),
+                           int(1..n_buckets * (total_water + 1))] of int(0..total_water)
+minimising sum v__0 : int(1..(total_water + 1) ** n_buckets
+                             *
+                             (n_buckets * (total_water + 1)))
+               . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0] * 1
+such that
+    forAll i : int(1..(sum v__0 : int(1..(total_water + 1) ** n_buckets
+                                         *
+                                         (n_buckets * (total_water + 1)))
+                           . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0] * 1))
+        . (exists v__0 : int(1..(total_water + 1) ** n_buckets
+                                *
+                                (n_buckets * (total_water + 1)))
+               . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = i),
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets
+                         *
+                         (n_buckets * (total_water + 1)))
+        . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          ->
+          (sum b : int(1..n_buckets)
+               . (sum v__1 : int(1..n_buckets * (total_water + 1))
+                      . (plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                    v__1]
+                         =
+                         b
+                         /\
+                         plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                             v__1])
+                        *
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                                                   v__1]))
+          =
+          total_water,
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets
+                         *
+                         (n_buckets * (total_water + 1)))
+        . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          ->
+          (forAll b : int(1..n_buckets)
+               . (sum v__1 : int(1..n_buckets * (total_water + 1))
+                      . (plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                    v__1]
+                         =
+                         b
+                         /\
+                         plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                             v__1])
+                        *
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                                                   v__1])
+                 <=
+                 (sum v__1 : int(1..n_buckets * (total_water + 1))
+                      . (capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1] = b
+                         /\
+                         capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
+                        *
+                        capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])),
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets
+                         *
+                         (n_buckets * (total_water + 1)))
+        . (forAll v__1 : int(1..n_buckets * (total_water + 1))
+               . (forAll v__2 : int(1..n_buckets * (total_water + 1))
+                      . v__1 < v__2
+                        /\
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                            v__1]
+                        /\
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                            v__2]
+                        ->
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                   v__1]
+                        !=
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                   v__2]
+                        \/
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                                                   v__1]
+                        !=
+                        plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                                                   v__2]))
+          /\
+          (forAll v__1 : int(1..n_buckets * (total_water + 1) - 1)
+               . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                     v__1]
+                 <=
+                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                     v__1
+                                                                                                                     +
+                                                                                                                     1]),
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets
+                         *
+                         (n_buckets * (total_water + 1)))
+        . (forAll v__1 : int(1..(total_water + 1) ** n_buckets
+                                *
+                                (n_buckets * (total_water + 1)))
+               . v__0 < v__1 /\ plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 !(forAll v__2 : int(1..n_buckets * (total_water + 1))
+                       . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                             v__2]
+                         ->
+                         (sum v__3 : int(1..n_buckets * (total_water + 1))
+                              . (plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                            v__3]
+                                 =
+                                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                            v__2]
+                                 /\
+                                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                                     v__3])
+                                *
+                                plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                                                           v__3])
+                         =
+                         (sum v__3 : int(1..n_buckets * (total_water + 1))
+                              . (plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1,
+                                                                                                                                            v__3]
+                                 =
+                                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                            v__2]
+                                 /\
+                                 plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1,
+                                                                                                                                     v__3])
+                                *
+                                plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1,
+                                                                                                                                           v__3]))),
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets
+                         *
+                         (n_buckets * (total_water + 1)))
+        . (forAll v__1 : int(1..n_buckets)
+               . (sum v__2 : int(1..n_buckets * (total_water + 1))
+                      . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                            v__2]
+                        *
+                        (v__1
+                         =
+                         plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                    v__2]))
+                 =
+                 1),
+    forAll v__0 : int(1..n_buckets * (total_water + 1))
+        . (forAll v__1 : int(1..n_buckets * (total_water + 1))
+               . v__0 < v__1 /\ capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n_buckets * (total_water + 1))
+        . (forAll v__1 : int(1..n_buckets * (total_water + 1))
+               . v__0 < v__1 /\ goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n_buckets * (total_water + 1))
+        . (forAll v__1 : int(1..n_buckets * (total_water + 1))
+               . v__0 < v__1 /\ init_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 init_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets)
+        . (sum v__1 : int(1..(total_water + 1) ** n_buckets
+                             *
+                             (n_buckets * (total_water + 1)))
+               . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = plan_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          <=
+          1,
+    forAll v__0 : int(1..(total_water + 1) ** n_buckets
+                         *
+                         (n_buckets * (total_water + 1))
+                         -
+                         1)
+        . plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          plan_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_buckets * (total_water + 1) - 1)
+        . capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_buckets * (total_water + 1) - 1)
+        . goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_buckets * (total_water + 1) - 1)
+        . init_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          init_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_buckets)
+        . (sum v__1 : int(1..n_buckets * (total_water + 1))
+               . capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1,
+    forAll v__0 : int(1..n_buckets)
+        . (sum v__1 : int(1..n_buckets * (total_water + 1))
+               . goal_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = goal_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1,
+    forAll v__0 : int(1..n_buckets)
+        . (sum v__1 : int(1..n_buckets * (total_water + 1))
+               . init_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = init_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1
