@@ -1,0 +1,159 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given n_stores: int(1..MAXINT)
+given n_warehouses: int(1..MAXINT)
+given fixed_cost: int(1..MAXINT)
+given capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_warehouses * MAXINT)] of bool
+given capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_warehouses * MAXINT)] of int(1..n_warehouses)
+given capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_warehouses * MAXINT)] of int(1..MAXINT)
+given cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_stores * n_warehouses * MAXINT)] of bool
+given cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1:
+        matrix indexed by [int(1..n_stores * n_warehouses * MAXINT)] of int(1..n_stores)
+given cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2:
+        matrix indexed by [int(1..n_stores * n_warehouses
+                                  *
+                                  MAXINT)] of int(1..n_warehouses)
+given cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_stores * n_warehouses * MAXINT)] of int(1..MAXINT)
+find open_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_stores * n_warehouses)] of bool
+find open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_stores * n_warehouses)] of int(1..n_stores)
+find open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_stores * n_warehouses)] of int(1..n_warehouses)
+find open_Matrix1D: matrix indexed by [int(1..n_stores)] of int(1..n_warehouses)
+minimising fixed_cost * (sum v__0 : int(1..n_stores) . 1)
+           +
+           (sum s : int(1..n_stores)
+                . (sum v__0 : int(1..n_stores * n_warehouses * MAXINT)
+                       . (cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1[v__0] = s
+                          /\
+                          cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2[v__0]
+                          =
+                          (sum v__1 : int(1..n_stores * n_warehouses)
+                               . toInt(open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1] = s
+                                       /\
+                                       open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
+                                 *
+                                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
+                          /\
+                          cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                         *
+                         cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]))
+such that
+    forAll v__0 : int(1..n_stores * n_warehouses * MAXINT)
+        . (forAll v__1 : int(1..n_stores * n_warehouses * MAXINT)
+               . v__0 < v__1 /\ cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1[v__0]
+                 !=
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1[v__1]
+                 \/
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2[v__0]
+                 !=
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2[v__1]
+                 \/
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n_stores * n_warehouses)
+        . open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          ->
+          (sum v__1 : int(1..n_stores * n_warehouses)
+               . (open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                  =
+                  open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                  /\
+                  open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
+                 *
+                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
+          =
+          open_Matrix1D[open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]],
+    forAll v__0 : int(1..n_stores * n_warehouses)
+        . (forAll v__1 : int(1..n_stores * n_warehouses)
+               . v__0 < v__1 /\ open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n_warehouses * MAXINT)
+        . (forAll v__1 : int(1..n_warehouses * MAXINT)
+               . v__0 < v__1 /\ capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n_stores * n_warehouses * MAXINT - 1)
+        . cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_stores * n_warehouses - 1)
+        . open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_warehouses * MAXINT - 1)
+        . capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_stores)
+        . (sum v__1 : int(1..n_stores * n_warehouses)
+               . open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1,
+    forAll v__0 : int(1..n_stores)
+        . (forAll v__1 : int(1..n_warehouses)
+               . (sum v__2 : int(1..n_stores * n_warehouses * MAXINT)
+                      . cost_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2]
+                        *
+                        (v__0 = cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1[v__2]
+                         /\
+                         v__1 = cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2[v__2]))
+                 =
+                 1),
+    forAll v__0 : int(1..n_warehouses)
+        . (sum v__1 : int(1..n_warehouses * MAXINT)
+               . capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1,
+    forAll w : int(1..n_warehouses)
+        . (sum v__0 : int(1..n_stores)
+               . ((sum v__1 : int(1..n_stores * n_warehouses)
+                       . toInt(open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1] = v__0
+                               /\
+                               open_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
+                         *
+                         open_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
+                  =
+                  w)
+                 *
+                 1)
+          <=
+          (sum v__0 : int(1..n_warehouses * MAXINT)
+               . (capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = w
+                  /\
+                  capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                 *
+                 capacity_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])

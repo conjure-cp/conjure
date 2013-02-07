@@ -1,0 +1,153 @@
+[handleInfDom] given n_stores: int(1..)
+~~>
+given n_stores: int(1..MAXINT)
+[handleInfDom] given n_warehouses: int(1..)
+~~>
+given n_warehouses: int(1..MAXINT)
+[handleInfDom] given fixed_cost: int(1..)
+~~>
+given fixed_cost: int(1..MAXINT)
+[handleInfDom] given capacity: function (total) WHouse --> int(1..)
+~~>
+given capacity: function (total) WHouse --> int(1..MAXINT)
+[handleInfDom] given cost: function (total) (Store, WHouse) --> int(1..)
+~~>
+given cost: function (total) (Store, WHouse) --> int(1..MAXINT)
+[representation] find open: function (total) int(1..n_stores) --> int(1..n_warehouses)
+(#2)
+AsReln, Matrix1D
+[representation] given capacity: function (total) int(1..n_warehouses) --> int(1..MAXINT)
+(#2)
+AsReln, Matrix1D
+[representation] given cost:
+        function (total) (int(1..n_stores), int(1..n_warehouses)) --> int(1..MAXINT)
+(#1)
+AsReln
+[configuration] open§region3#Matrix1D open§region4#Matrix1D capacity§region5#Matrix1D cost§region2#AsReln open§region1#Matrix1D
+[addedDecl] given capacity_Matrix1D:
+        matrix indexed by [int(1..n_warehouses)] of int(1..MAXINT)
+[addedDecl] find open_Matrix1D: matrix indexed by [int(1..n_stores)] of int(1..n_warehouses)
+[addedDecl] given cost_AsReln:
+        relation of ((int(1..n_stores), int(1..n_warehouses)) * int(1..MAXINT))
+[applied] |range(open§region1#Matrix1D)|
+{rules/refns/set-card.rule}
+    (sum v__1 in range(open§region1#Matrix1D) . 1)
+[applied] (sum v__1 in range(open§region1#Matrix1D) . 1)
+{rules/refns/function-range-quantified.rule}
+    (sum v__2 in toSet(open§region1#Matrix1D) . 1)
+[applied] (sum v__2 in toSet(open§region1#Matrix1D) . 1)
+{rules/refns/function-matrix1d/function-toSet-quantified.rule}
+    (sum v__3 : int(1..n_stores) . 1)
+[applied] open§region3#Matrix1D(s)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    open_Matrix1D§region3[s]
+[applied] cost§region2#AsReln((s, open_Matrix1D§region3[s]))
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__4 in toSet(cost_AsReln§region2)
+         , v__4[1, 1] = s /\ v__4[1, 2] = open_Matrix1D§region3[s]
+         . v__4[2])
+[applied] |preImage(open§region4#Matrix1D, w)|
+{rules/refns/set-card.rule}
+    (sum v__7 in preImage(open§region4#Matrix1D, w) . 1)
+[applied] (sum v__7 in preImage(open§region4#Matrix1D, w) . 1)
+{rules/refns/function-preImage-quantified.rule}
+    (sum v__8 : int(1..n_stores) , open§region4#Matrix1D(v__8) = w . 1)
+[applied] open§region4#Matrix1D(v__8)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    open_Matrix1D§region4[v__8]
+[applied] capacity§region5#Matrix1D(w)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    capacity_Matrix1D§region5[w]
+[builtIn.tupleDomInQuantification] (forAll v__6 : (int(1..n_stores), int(1..n_warehouses))
+     . (sum v__5 in toSet(cost_AsReln§region2)
+            . v__6[1] = v__5[1, 1] /\ v__6[2] = v__5[1, 2])
+       =
+       1)
+~~>
+(forAll v__9 : int(1..n_stores)
+     . (forAll v__10 : int(1..n_warehouses)
+            . (sum v__5 in toSet(cost_AsReln§region2)
+                   . (v__9, v__10)[1] = v__5[1, 1] /\ (v__9, v__10)[2] = v__5[1, 2])
+              =
+              1))
+[applied] (forAll v__6 : (int(1..n_stores), int(1..n_warehouses))
+     . (sum v__5 in toSet(cost_AsReln§region2)
+            . v__6[1] = v__5[1, 1] /\ v__6[2] = v__5[1, 2])
+       =
+       1)
+{builtIn.tupleDomInQuantification}
+    (forAll v__9 : int(1..n_stores)
+         . (forAll v__10 : int(1..n_warehouses)
+                . (sum v__5 in toSet(cost_AsReln§region2)
+                       . v__9 = v__5[1, 1] /\ v__10 = v__5[1, 2])
+                  =
+                  1))
+[removedDecl] find open: function (total) int(1..n_stores) --> int(1..n_warehouses)
+[removedDecl] given cost:
+        function (total) (int(1..n_stores), int(1..n_warehouses)) --> int(1..MAXINT)
+[removedDecl] given capacity: function (total) int(1..n_warehouses) --> int(1..MAXINT)
+[representation] given cost_AsReln:
+        relation of ((int(1..n_stores), int(1..n_warehouses)) * int(1..MAXINT))
+(#1)
+RelationAsSet
+[configuration] cost_AsReln§region2#RelationAsSet cost_AsReln§region1#RelationAsSet
+[addedDecl] given cost_AsReln_RelationAsSet:
+        set of ((int(1..n_stores), int(1..n_warehouses)), int(1..MAXINT))
+[applied] (sum v__4 in toSet(cost_AsReln§region2#RelationAsSet)
+     , v__4[1, 1] = s /\ v__4[1, 2] = open_Matrix1D§region3[s]
+     . v__4[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__4 in cost_AsReln_RelationAsSet§region2
+         , v__4[1, 1] = s /\ v__4[1, 2] = open_Matrix1D§region3[s]
+         . v__4[2])
+[applied] (sum v__5 in toSet(cost_AsReln§region2#RelationAsSet)
+     . v__9 = v__5[1, 1] /\ v__10 = v__5[1, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__5 in cost_AsReln_RelationAsSet§region2
+         . v__9 = v__5[1, 1] /\ v__10 = v__5[1, 2])
+[removedDecl] given cost_AsReln:
+        relation of ((int(1..n_stores), int(1..n_warehouses)) * int(1..MAXINT))
+[representation] given cost_AsReln_RelationAsSet:
+        set of ((int(1..n_stores), int(1..n_warehouses)), int(1..MAXINT))
+(#1)
+ExplicitVarSize
+[configuration] cost_AsReln_RelationAsSet§region2#ExplicitVarSize cost_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] given cost_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_stores * n_warehouses * MAXINT)] of (bool,
+                                                                         ((int(1..n_stores), int(1..n_warehouses)),
+                                                                          int(1..MAXINT)))
+[applied] (sum v__4 in cost_AsReln_RelationAsSet§region2#ExplicitVarSize
+     , v__4[1, 1] = s /\ v__4[1, 2] = open_Matrix1D§region3[s]
+     . v__4[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__6 : int(1..n_stores * n_warehouses * MAXINT)
+         , cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__6, 2, 1, 1] = s
+           /\
+           cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__6, 2, 1, 2]
+           =
+           open_Matrix1D§region3[s]
+           /\
+           cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__6, 1]
+         . cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__6, 2, 2])
+[applied] (sum v__5 in cost_AsReln_RelationAsSet§region2#ExplicitVarSize
+     . v__9 = v__5[1, 1] /\ v__10 = v__5[1, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__7 : int(1..n_stores * n_warehouses * MAXINT)
+         , cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__7, 1]
+         . v__9 = cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__7, 2, 1, 1]
+           /\
+           v__10 = cost_AsReln_RelationAsSet_ExplicitVarSize§region2[v__7, 2, 1, 2])
+[removedDecl] given cost_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_stores * n_warehouses * MAXINT)] of (bool,
+                                                                         ((int(1..n_stores), int(1..n_warehouses)),
+                                                                          int(1..MAXINT)))
+[removedDecl] given cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_stores * n_warehouses
+                                  *
+                                  MAXINT)] of ((int(1..n_stores), int(1..n_warehouses)), int(1..MAXINT))
+[removedDecl] given cost_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_stores * n_warehouses
+                                  *
+                                  MAXINT)] of (int(1..n_stores), int(1..n_warehouses))
+[removedDecl] given cost_AsReln_RelationAsSet:
+        set of ((int(1..n_stores), int(1..n_warehouses)), int(1..MAXINT))
