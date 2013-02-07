@@ -1,8 +1,0 @@
-
-[1000]
-
-&f(&x) ~~> sum i in toSet(refn(&f)) , i[1] = &x . i[2]
-
-    where &f hasType   `function _ --> int`
-    where &f hasDomain `function (..) _ --> &fTo`
-    where &f hasRepr    AsReln
