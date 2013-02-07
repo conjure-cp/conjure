@@ -27,7 +27,7 @@ given small, large : set of Farm,
 where
 $ all farms are either small or large, and the depot is not a farm
     forAll f : Farm . f != 1 <-> (f in small \/ f in large /\
-                                   not (f in small /\ f in large)),
+                                   !(f in small /\ f in large)),
 $ the depot does not produce any milk
     milk(1) = 0
 
@@ -43,22 +43,23 @@ minimising (sum i : int(1..|odd|-1) . distance({odd(i),odd(i+1)}))
 such that
 $ the partial functions 'odd' and 'even' map integers between 1 and |odd| or
 $ |even| to values, to ensure a correct sequence representation
-    forAll i : int(1..|odd|) . i in defined(odd),
-    forAll i : int(1..|even|) . i in defined(even),
+    $forAll i : int(1..|odd|) . i in defined(odd),
+    $forAll i : int(1..|even|) . i in defined(even),
 $ the first and last stops in both sequences are the depot
     odd(1) = 1,
     even(1) = 1,
-    odd(|odd|) = 1,
-    even(|even|) = 1,
+    $odd(|odd|) = 1,
+    $even(|even|) = 1,
 $ all large farms are visited on both odd and even days
-    forAll f in large . f in range(odd) intersect range(even),
+    $forAll f in large . f in range(odd) intersect range(even),
 $ all small farms are visited only every other day
-    forAll f in small . f in range(odd) union range(even) /\
-                        !(f in range(odd) intersect range(even)),
+    $forAll f in small . f in range(odd) union range(even) /\
+                        $!(f in range(odd) intersect range(even)),
 $ no farm is visited more than once a day
-    forAll i,j : int(2..|odd|-1) . odd(i) = odd(j) -> i = j,
-    forAll i,j : int(2..|even|-1) . even(i) = even(j) -> i = j,
+    $forAll i,j : int(2..|odd|-1) . odd(i) = odd(j) -> i = j,
+    $forAll i,j : int(2..|even|-1) . even(i) = even(j) -> i = j,
 $ the amount of milk collected cannot exceed the tanker's capacity
-    (sum f in range(odd) . milk(f)) <= capacity,
-    (sum f in range(even) . milk(f)) <= capacity
+    $(sum f in range(odd) . milk(f)) <= capacity,
+    $(sum f in range(even) . milk(f)) <= capacity,
+    true
 
