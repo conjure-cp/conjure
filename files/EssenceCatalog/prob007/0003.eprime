@@ -1,0 +1,122 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given n: int(1..MAXINT)
+find s_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n * n)] of bool
+find s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n * n)] of int(1..n)
+find s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n * n)] of int(0..n - 1)
+find v_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..(n - 1) * (n - 1))] of bool
+find v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..(n - 1) * (n - 1))] of int(1..n - 1)
+find v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..(n - 1) * (n - 1))] of int(1..n - 1)
+such that
+    forAll i : int(1..n - 1)
+        . (sum v__0 : int(1..(n - 1) * (n - 1))
+               . (v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = i
+                  /\
+                  v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                 *
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+          =
+          |(sum v__0 : int(1..n * n)
+                . (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = i + 1
+                   /\
+                   s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                  *
+                  s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+           -
+           (sum v__0 : int(1..n * n)
+                . (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = i
+                   /\
+                   s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                  *
+                  s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])|,
+    forAll v__0 : int(0..n - 1)
+        . (exists v__1 : int(1..n * n)
+               . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 /\
+                 v__0 = s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..(n - 1) * (n - 1))
+        . v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          ->
+          (forAll v__1 : int(1..(n - 1) * (n - 1))
+               . v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 /\
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..(n - 1) * (n - 1))
+        . (forAll v__1 : int(1..(n - 1) * (n - 1))
+               . v__0 < v__1 /\ v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n * n)
+        . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          ->
+          (forAll v__1 : int(1..n * n)
+               . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 /\
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n * n)
+        . (forAll v__1 : int(1..n * n)
+               . v__0 < v__1 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..(n - 1) * (n - 1) - 1)
+        . v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n * n - 1)
+        . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n - 1)
+        . (sum v__1 : int(1..(n - 1) * (n - 1))
+               . v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1,
+    forAll v__0 : int(1..n - 1)
+        . (exists v__1 : int(1..(n - 1) * (n - 1))
+               . v_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 /\
+                 v__0 = v_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n)
+        . (sum v__1 : int(1..n * n)
+               . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1

@@ -1,0 +1,106 @@
+[handleInfDom] given n: int(1..)
+~~>
+given n: int(1..MAXINT)
+[representation] find s: function (total, bijective) int(1..n) --> int(0..n - 1)
+(#2)
+AsReln, Matrix1D
+[representation] find v: function (total, bijective) int(1..n - 1) --> int(1..n - 1)
+(#2)
+AsReln, Matrix1D
+[configuration] s§region3#Matrix1D v§region1#AsReln s§region2#Matrix1D
+[addedDecl] find s_Matrix1D: matrix indexed by [int(1..n)] of int(0..n - 1)
+[addedDecl] find v_AsReln: relation of (int(1..n - 1) * int(1..n - 1))
+[applied] v§region1#AsReln(i)
+{rules/refns/function-asreln/function-asreln-image.rule}
+    (sum v__1 in toSet(v_AsReln§region1) , v__1[1] = i . v__1[2])
+[applied] s§region2#Matrix1D(i + 1)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    s_Matrix1D§region2[i + 1]
+[applied] s§region3#Matrix1D(i)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    s_Matrix1D§region3[i]
+[removedDecl] find v: function (total, bijective) int(1..n - 1) --> int(1..n - 1)
+[removedDecl] find s: function (total, bijective) int(1..n) --> int(0..n - 1)
+[representation] find v_AsReln: relation of (int(1..n - 1) * int(1..n - 1)) (#1) RelationAsSet
+[configuration] v_AsReln§region1#RelationAsSet
+[addedDecl] find v_AsReln_RelationAsSet: set of (int(1..n - 1), int(1..n - 1))
+[applied] (sum v__1 in toSet(v_AsReln§region1#RelationAsSet) , v__1[1] = i . v__1[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in v_AsReln_RelationAsSet§region1 , v__1[1] = i . v__1[2])
+[applied] (forAll v__6 in toSet(v_AsReln§region1#RelationAsSet) , v__5[1] != v__6[1]
+     . v__5[2] != v__6[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (forAll v__6 in v_AsReln_RelationAsSet§region1 , v__5[1] != v__6[1]
+         . v__5[2] != v__6[2])
+[applied] (forAll v__5 in toSet(v_AsReln§region1#RelationAsSet)
+     . (forAll v__6 in v_AsReln_RelationAsSet§region1 , v__5[1] != v__6[1]
+            . v__5[2] != v__6[2]))
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (forAll v__5 in v_AsReln_RelationAsSet§region1
+         . (forAll v__6 in v_AsReln_RelationAsSet§region1 , v__5[1] != v__6[1]
+                . v__5[2] != v__6[2]))
+[applied] (sum v__6 in toSet(v_AsReln§region1#RelationAsSet) . v__5 = v__6[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__6 in v_AsReln_RelationAsSet§region1 . v__5 = v__6[1])
+[applied] (exists v__6 in toSet(v_AsReln§region1#RelationAsSet) . v__5 = v__6[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (exists v__6 in v_AsReln_RelationAsSet§region1 . v__5 = v__6[2])
+[removedDecl] find v_AsReln: relation of (int(1..n - 1) * int(1..n - 1))
+[representation] find v_AsReln_RelationAsSet: set of (int(1..n - 1), int(1..n - 1))
+(#1)
+ExplicitVarSize
+[configuration] v_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] find v_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n - 1) * (n - 1))] of (bool,
+                                                          (int(1..n - 1), int(1..n - 1)))
+[applied] (sum v__1 in v_AsReln_RelationAsSet§region1#ExplicitVarSize , v__1[1] = i
+     . v__1[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__8 : int(1..(n - 1) * (n - 1))
+         , v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__8, 2, 1] = i
+           /\
+           v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__8, 1]
+         . v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__8, 2, 2])
+[applied] (forAll v__6 in v_AsReln_RelationAsSet§region1#ExplicitVarSize
+     , v__5[1] != v__6[1]
+     . v__5[2] != v__6[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__9 : int(1..(n - 1) * (n - 1))
+         , v__5[1] != v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 2, 1]
+           /\
+           v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 1]
+         . v__5[2] != v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 2, 2])
+[applied] (forAll v__5 in v_AsReln_RelationAsSet§region1#ExplicitVarSize
+     . (forAll v__9 : int(1..(n - 1) * (n - 1))
+            , v__5[1] != v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 2, 1]
+              /\
+              v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 1]
+            . v__5[2] != v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 2, 2]))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__10 : int(1..(n - 1) * (n - 1))
+         , v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__10, 1]
+         . (forAll v__9 : int(1..(n - 1) * (n - 1))
+                , v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__10, 2, 1]
+                  !=
+                  v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 2, 1]
+                  /\
+                  v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 1]
+                . v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__10, 2, 2]
+                  !=
+                  v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__9, 2, 2]))
+[applied] (sum v__6 in v_AsReln_RelationAsSet§region1#ExplicitVarSize . v__5 = v__6[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__11 : int(1..(n - 1) * (n - 1))
+         , v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 1]
+         . v__5 = v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1])
+[applied] (exists v__6 in v_AsReln_RelationAsSet§region1#ExplicitVarSize . v__5 = v__6[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (exists v__12 : int(1..(n - 1) * (n - 1))
+         , v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 1]
+         . v__5 = v_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 2])
+[removedDecl] find v_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n - 1) * (n - 1))] of (bool,
+                                                          (int(1..n - 1), int(1..n - 1)))
+[removedDecl] find v_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..(n - 1) * (n - 1))] of (int(1..n - 1), int(1..n - 1))
+[removedDecl] find v_AsReln_RelationAsSet: set of (int(1..n - 1), int(1..n - 1))
