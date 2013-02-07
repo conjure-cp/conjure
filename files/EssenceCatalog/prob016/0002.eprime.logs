@@ -1,0 +1,1649 @@
+[handleInfDom] given n_roads: int(1..)
+~~>
+given n_roads: int(1..MAXINT)
+[handleEnums] letting VCol be new type enum {r, ry, g, y}
+~~>
+letting VCol_fromEnum be domain int(1..4)
+[handleEnums] letting PCol be new type enum {pr, pg}
+~~>
+letting PCol_fromEnum be domain int(1..2)
+[representation] find valid: set of function (total) int(1..n_roads) --> (int(1..4), int(1..2))
+(#1)
+ExplicitVarSize
+[configuration] valid§region1#ExplicitVarSize
+[addedDecl] find valid_ExplicitVarSize:
+        matrix indexed by [int(1..n_roads * 8)] of (bool,
+                                                    function (total) int(1..n_roads) --> (int(1..4), int(1..2)))
+[applied] {c(rd), c(rd % n_roads + 1)} in {{(1, 1), (3, 2)}, {(2, 1), (4, 1)}}
+{rules/refns/set-in-to-quantified.rule}
+    {(1, 1), (3, 2)} = {c(rd), c(rd % n_roads + 1)}
+    \/
+    {(2, 1), (4, 1)} = {c(rd), c(rd % n_roads + 1)}
+[applied] {(1, 1), (3, 2)} = {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-eq-to-subsets.rule}
+    {(1, 1), (3, 2)} subsetEq {c(rd), c(rd % n_roads + 1)}
+    /\
+    {(1, 1), (3, 2)} supsetEq {c(rd), c(rd % n_roads + 1)}
+[applied] {(1, 1), (3, 2)} subsetEq {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (1, 1) in {c(rd), c(rd % n_roads + 1)} /\ (3, 2) in {c(rd), c(rd % n_roads + 1)}
+[applied] (1, 1) in {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-in-to-quantified.rule}
+    c(rd)[1] = 1 /\ c(rd)[2] = 1
+    \/
+    c(rd % n_roads + 1)[1] = 1 /\ c(rd % n_roads + 1)[2] = 1
+[applied] (3, 2) in {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-in-to-quantified.rule}
+    c(rd)[1] = 3 /\ c(rd)[2] = 2
+    \/
+    c(rd % n_roads + 1)[1] = 3 /\ c(rd % n_roads + 1)[2] = 2
+[applied] {(1, 1), (3, 2)} supsetEq {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {c(rd), c(rd % n_roads + 1)} subsetEq {(1, 1), (3, 2)}
+[applied] {c(rd), c(rd % n_roads + 1)} subsetEq {(1, 1), (3, 2)}
+{rules/refns/set-subseteq-to-quantified.rule}
+    c(rd) in {(1, 1), (3, 2)} /\ c(rd % n_roads + 1) in {(1, 1), (3, 2)}
+[applied] c(rd) in {(1, 1), (3, 2)}
+{rules/refns/set-in-to-quantified.rule}
+    1 = c(rd)[1] /\ 1 = c(rd)[2] \/ 3 = c(rd)[1] /\ 2 = c(rd)[2]
+[applied] c(rd % n_roads + 1) in {(1, 1), (3, 2)}
+{rules/refns/set-in-to-quantified.rule}
+    1 = c(rd % n_roads + 1)[1] /\ 1 = c(rd % n_roads + 1)[2]
+    \/
+    3 = c(rd % n_roads + 1)[1] /\ 2 = c(rd % n_roads + 1)[2]
+[applied] {(2, 1), (4, 1)} = {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-eq-to-subsets.rule}
+    {(2, 1), (4, 1)} subsetEq {c(rd), c(rd % n_roads + 1)}
+    /\
+    {(2, 1), (4, 1)} supsetEq {c(rd), c(rd % n_roads + 1)}
+[applied] {(2, 1), (4, 1)} subsetEq {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (2, 1) in {c(rd), c(rd % n_roads + 1)} /\ (4, 1) in {c(rd), c(rd % n_roads + 1)}
+[applied] (2, 1) in {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-in-to-quantified.rule}
+    c(rd)[1] = 2 /\ c(rd)[2] = 1
+    \/
+    c(rd % n_roads + 1)[1] = 2 /\ c(rd % n_roads + 1)[2] = 1
+[applied] (4, 1) in {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-in-to-quantified.rule}
+    c(rd)[1] = 4 /\ c(rd)[2] = 1
+    \/
+    c(rd % n_roads + 1)[1] = 4 /\ c(rd % n_roads + 1)[2] = 1
+[applied] {(2, 1), (4, 1)} supsetEq {c(rd), c(rd % n_roads + 1)}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {c(rd), c(rd % n_roads + 1)} subsetEq {(2, 1), (4, 1)}
+[applied] {c(rd), c(rd % n_roads + 1)} subsetEq {(2, 1), (4, 1)}
+{rules/refns/set-subseteq-to-quantified.rule}
+    c(rd) in {(2, 1), (4, 1)} /\ c(rd % n_roads + 1) in {(2, 1), (4, 1)}
+[applied] c(rd) in {(2, 1), (4, 1)}
+{rules/refns/set-in-to-quantified.rule}
+    2 = c(rd)[1] /\ 1 = c(rd)[2] \/ 4 = c(rd)[1] /\ 1 = c(rd)[2]
+[applied] c(rd % n_roads + 1) in {(2, 1), (4, 1)}
+{rules/refns/set-in-to-quantified.rule}
+    2 = c(rd % n_roads + 1)[1] /\ 1 = c(rd % n_roads + 1)[2]
+    \/
+    4 = c(rd % n_roads + 1)[1] /\ 1 = c(rd % n_roads + 1)[2]
+[applied] (forAll c in valid§region1#ExplicitVarSize
+     . (forAll rd : int(1..n_roads)
+            . (c(rd)[1] = 1 /\ c(rd)[2] = 1
+               \/
+               c(rd % n_roads + 1)[1] = 1 /\ c(rd % n_roads + 1)[2] = 1)
+              /\
+              (c(rd)[1] = 3 /\ c(rd)[2] = 2
+               \/
+               c(rd % n_roads + 1)[1] = 3 /\ c(rd % n_roads + 1)[2] = 2)
+              /\
+              ((1 = c(rd)[1] /\ 1 = c(rd)[2] \/ 3 = c(rd)[1] /\ 2 = c(rd)[2])
+               /\
+               (1 = c(rd % n_roads + 1)[1] /\ 1 = c(rd % n_roads + 1)[2]
+                \/
+                3 = c(rd % n_roads + 1)[1] /\ 2 = c(rd % n_roads + 1)[2]))
+              \/
+              (c(rd)[1] = 2 /\ c(rd)[2] = 1
+               \/
+               c(rd % n_roads + 1)[1] = 2 /\ c(rd % n_roads + 1)[2] = 1)
+              /\
+              (c(rd)[1] = 4 /\ c(rd)[2] = 1
+               \/
+               c(rd % n_roads + 1)[1] = 4 /\ c(rd % n_roads + 1)[2] = 1)
+              /\
+              ((2 = c(rd)[1] /\ 1 = c(rd)[2] \/ 4 = c(rd)[1] /\ 1 = c(rd)[2])
+               /\
+               (2 = c(rd % n_roads + 1)[1] /\ 1 = c(rd % n_roads + 1)[2]
+                \/
+                4 = c(rd % n_roads + 1)[1] /\ 1 = c(rd % n_roads + 1)[2]))))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__16 : int(1..n_roads * 8) , valid_ExplicitVarSize§region1[v__16, 1]
+         . (forAll rd : int(1..n_roads)
+                . (valid_ExplicitVarSize§region1[v__16, 2](rd)[1] = 1
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd)[2] = 1
+                   \/
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1] = 1
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2] = 1)
+                  /\
+                  (valid_ExplicitVarSize§region1[v__16, 2](rd)[1] = 3
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd)[2] = 2
+                   \/
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1] = 3
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2] = 2)
+                  /\
+                  ((1 = valid_ExplicitVarSize§region1[v__16, 2](rd)[1]
+                    /\
+                    1 = valid_ExplicitVarSize§region1[v__16, 2](rd)[2]
+                    \/
+                    3 = valid_ExplicitVarSize§region1[v__16, 2](rd)[1]
+                    /\
+                    2 = valid_ExplicitVarSize§region1[v__16, 2](rd)[2])
+                   /\
+                   (1 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1]
+                    /\
+                    1 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2]
+                    \/
+                    3 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1]
+                    /\
+                    2 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2]))
+                  \/
+                  (valid_ExplicitVarSize§region1[v__16, 2](rd)[1] = 2
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd)[2] = 1
+                   \/
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1] = 2
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2] = 1)
+                  /\
+                  (valid_ExplicitVarSize§region1[v__16, 2](rd)[1] = 4
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd)[2] = 1
+                   \/
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1] = 4
+                   /\
+                   valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2] = 1)
+                  /\
+                  ((2 = valid_ExplicitVarSize§region1[v__16, 2](rd)[1]
+                    /\
+                    1 = valid_ExplicitVarSize§region1[v__16, 2](rd)[2]
+                    \/
+                    4 = valid_ExplicitVarSize§region1[v__16, 2](rd)[1]
+                    /\
+                    1 = valid_ExplicitVarSize§region1[v__16, 2](rd)[2])
+                   /\
+                   (2 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1]
+                    /\
+                    1 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2]
+                    \/
+                    4 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[1]
+                    /\
+                    1 = valid_ExplicitVarSize§region1[v__16, 2](rd % n_roads + 1)[2]))))
+[applied] valid_ExplicitVarSize§region1[v__1, 2] != valid_ExplicitVarSize§region1[v__2, 2]
+{rules/refns/neq-to-eq.rule}
+    !(valid_ExplicitVarSize§region1[v__1, 2]
+      =
+      valid_ExplicitVarSize§region1[v__2, 2])
+[applied] valid_ExplicitVarSize§region1[v__1, 2] = valid_ExplicitVarSize§region1[v__2, 2]
+{rules/refns/function-eq.rule}
+    (forAll v__17 in defined(valid_ExplicitVarSize§region1[v__1, 2])
+         . valid_ExplicitVarSize§region1[v__1, 2](v__17)[1]
+           =
+           valid_ExplicitVarSize§region1[v__2, 2](v__17)[1]
+           /\
+           valid_ExplicitVarSize§region1[v__1, 2](v__17)[2]
+           =
+           valid_ExplicitVarSize§region1[v__2, 2](v__17)[2])
+[applied] (forAll v__17 in defined(valid_ExplicitVarSize§region1[v__1, 2])
+     . valid_ExplicitVarSize§region1[v__1, 2](v__17)[1]
+       =
+       valid_ExplicitVarSize§region1[v__2, 2](v__17)[1]
+       /\
+       valid_ExplicitVarSize§region1[v__1, 2](v__17)[2]
+       =
+       valid_ExplicitVarSize§region1[v__2, 2](v__17)[2])
+{rules/refns/function-defined-quantified.rule}
+    (forAll v__18 in toSet(valid_ExplicitVarSize§region1[v__1, 2])
+         . valid_ExplicitVarSize§region1[v__1, 2](v__18[1])[1]
+           =
+           valid_ExplicitVarSize§region1[v__2, 2](v__18[1])[1]
+           /\
+           valid_ExplicitVarSize§region1[v__1, 2](v__18[1])[2]
+           =
+           valid_ExplicitVarSize§region1[v__2, 2](v__18[1])[2])
+[removedDecl] find valid_ExplicitVarSize:
+        matrix indexed by [int(1..n_roads * 8)] of (bool,
+                                                    function (total) int(1..n_roads) --> (int(1..4), int(1..2)))
+[removedDecl] find valid: set of function (total) int(1..n_roads) --> (int(1..4), int(1..2))
+[representation] find valid_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_roads * 8)] of function (total)
+                                                       int(1..n_roads) --> (int(1..4), int(1..2))
+(#2)
+AsReln, Matrix1D
+[configuration] valid_ExplicitVarSize_tuple2§region1#AsReln
+[addedDecl] find valid_ExplicitVarSize_tuple2_AsReln:
+        matrix indexed by [int(1..n_roads * 8)] of relation of
+                                                       (int(1..n_roads) * (int(1..4), int(1..2)))
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__1](v__18[1])[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__3 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+         , v__3[1] = v__18[1]
+         . v__3[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__2](v__18[1])[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__7 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__2])
+         , v__7[1] = v__18[1]
+         . v__7[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__1](v__18[1])[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__8 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+         , v__8[1] = v__18[1]
+         . v__8[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__2](v__18[1])[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__9 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__2])
+         , v__9[1] = v__18[1]
+         . v__9[2, 2])
+[applied] (forAll v__18 in toSet(valid_ExplicitVarSize_tuple2§region1#AsReln[v__1])
+     . (sum v__3 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+            , v__3[1] = v__18[1]
+            . v__3[2, 1])
+       =
+       (sum v__7 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__2])
+            , v__7[1] = v__18[1]
+            . v__7[2, 1])
+       /\
+       (sum v__8 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+            , v__8[1] = v__18[1]
+            . v__8[2, 2])
+       =
+       (sum v__9 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__2])
+            , v__9[1] = v__18[1]
+            . v__9[2, 2]))
+{rules/refns/function-asreln/function-toSet-quantified.rule}
+    (forAll v__18 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+         . (sum v__3 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+                , v__3[1] = v__18[1]
+                . v__3[2, 1])
+           =
+           (sum v__7 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__2])
+                , v__7[1] = v__18[1]
+                . v__7[2, 1])
+           /\
+           (sum v__8 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__1])
+                , v__8[1] = v__18[1]
+                . v__8[2, 2])
+           =
+           (sum v__9 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__2])
+                , v__9[1] = v__18[1]
+                . v__9[2, 2]))
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__10 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__10[1] = rd
+         . v__10[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__11 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__11[1] = rd
+         . v__11[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__12 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__12[1] = rd % n_roads + 1
+         . v__12[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__13 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__13[1] = rd % n_roads + 1
+         . v__13[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__14 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__14[1] = rd
+         . v__14[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__15 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__15[1] = rd
+         . v__15[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__17 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__17[1] = rd % n_roads + 1
+         . v__17[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__19 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__19[1] = rd % n_roads + 1
+         . v__19[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__20 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__20[1] = rd
+         . v__20[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__21 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__21[1] = rd
+         . v__21[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__22 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__22[1] = rd
+         . v__22[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__23 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__23[1] = rd
+         . v__23[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__24 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__24[1] = rd % n_roads + 1
+         . v__24[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__25 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__25[1] = rd % n_roads + 1
+         . v__25[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__26 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__26[1] = rd % n_roads + 1
+         . v__26[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__27 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__27[1] = rd % n_roads + 1
+         . v__27[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__28 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__28[1] = rd
+         . v__28[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__29 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__29[1] = rd
+         . v__29[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__30 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__30[1] = rd % n_roads + 1
+         . v__30[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__31 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__31[1] = rd % n_roads + 1
+         . v__31[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__32 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__32[1] = rd
+         . v__32[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__33 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__33[1] = rd
+         . v__33[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__34 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__34[1] = rd % n_roads + 1
+         . v__34[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__35 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__35[1] = rd % n_roads + 1
+         . v__35[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__36 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__36[1] = rd
+         . v__36[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__37 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__37[1] = rd
+         . v__37[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__38 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__38[1] = rd
+         . v__38[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__39 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__39[1] = rd
+         . v__39[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__40 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__40[1] = rd % n_roads + 1
+         . v__40[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__41 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__41[1] = rd % n_roads + 1
+         . v__41[2, 2])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[1]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__42 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__42[1] = rd % n_roads + 1
+         . v__42[2, 1])
+[applied] valid_ExplicitVarSize_tuple2§region1#AsReln[v__16](rd % n_roads + 1)[2]
+{rules/refns/function-asreln/function-asreln-image-tuple.rule}
+    (sum v__43 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1[v__16])
+         , v__43[1] = rd % n_roads + 1
+         . v__43[2, 2])
+[removedDecl] find valid_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_roads * 8)] of function (total)
+                                                       int(1..n_roads) --> (int(1..4), int(1..2))
+[representation] find valid_ExplicitVarSize_tuple2_AsReln:
+        matrix indexed by [int(1..n_roads * 8)] of relation of
+                                                       (int(1..n_roads) * (int(1..4), int(1..2)))
+(#1)
+RelationAsSet
+[configuration] valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet
+[addedDecl] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet:
+        matrix indexed by [int(1..n_roads * 8)] of set of
+                                                       (int(1..n_roads), (int(1..4), int(1..2)))
+[applied] (sum v__3 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__1])
+     , v__3[1] = v__18[1]
+     . v__3[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__3 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+         , v__3[1] = v__18[1]
+         . v__3[2, 1])
+[applied] (sum v__7 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__2])
+     , v__7[1] = v__18[1]
+     . v__7[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__7 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__2]
+         , v__7[1] = v__18[1]
+         . v__7[2, 1])
+[applied] (sum v__8 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__1])
+     , v__8[1] = v__18[1]
+     . v__8[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__8 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+         , v__8[1] = v__18[1]
+         . v__8[2, 2])
+[applied] (sum v__9 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__2])
+     , v__9[1] = v__18[1]
+     . v__9[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__9 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__2]
+         , v__9[1] = v__18[1]
+         . v__9[2, 2])
+[applied] (forAll v__18 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__1])
+     . (sum v__3 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+            , v__3[1] = v__18[1]
+            . v__3[2, 1])
+       =
+       (sum v__7 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__2]
+            , v__7[1] = v__18[1]
+            . v__7[2, 1])
+       /\
+       (sum v__8 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+            , v__8[1] = v__18[1]
+            . v__8[2, 2])
+       =
+       (sum v__9 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__2]
+            , v__9[1] = v__18[1]
+            . v__9[2, 2]))
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (forAll v__18 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+         . (sum v__3 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+                , v__3[1] = v__18[1]
+                . v__3[2, 1])
+           =
+           (sum v__7 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__2]
+                , v__7[1] = v__18[1]
+                . v__7[2, 1])
+           /\
+           (sum v__8 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__1]
+                , v__8[1] = v__18[1]
+                . v__8[2, 2])
+           =
+           (sum v__9 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__2]
+                , v__9[1] = v__18[1]
+                . v__9[2, 2]))
+[applied] (sum v__10 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__10[1] = rd
+     . v__10[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__10 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__10[1] = rd
+         . v__10[2, 1])
+[applied] (sum v__11 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__11[1] = rd
+     . v__11[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__11 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__11[1] = rd
+         . v__11[2, 2])
+[applied] (sum v__12 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__12[1] = rd % n_roads + 1
+     . v__12[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__12 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__12[1] = rd % n_roads + 1
+         . v__12[2, 1])
+[applied] (sum v__13 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__13[1] = rd % n_roads + 1
+     . v__13[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__13 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__13[1] = rd % n_roads + 1
+         . v__13[2, 2])
+[applied] (sum v__14 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__14[1] = rd
+     . v__14[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__14 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__14[1] = rd
+         . v__14[2, 1])
+[applied] (sum v__15 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__15[1] = rd
+     . v__15[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__15 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__15[1] = rd
+         . v__15[2, 2])
+[applied] (sum v__17 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__17[1] = rd % n_roads + 1
+     . v__17[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__17 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__17[1] = rd % n_roads + 1
+         . v__17[2, 1])
+[applied] (sum v__19 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__19[1] = rd % n_roads + 1
+     . v__19[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__19 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__19[1] = rd % n_roads + 1
+         . v__19[2, 2])
+[applied] (sum v__20 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__20[1] = rd
+     . v__20[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__20 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__20[1] = rd
+         . v__20[2, 1])
+[applied] (sum v__21 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__21[1] = rd
+     . v__21[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__21 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__21[1] = rd
+         . v__21[2, 2])
+[applied] (sum v__22 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__22[1] = rd
+     . v__22[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__22 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__22[1] = rd
+         . v__22[2, 1])
+[applied] (sum v__23 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__23[1] = rd
+     . v__23[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__23 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__23[1] = rd
+         . v__23[2, 2])
+[applied] (sum v__24 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__24[1] = rd % n_roads + 1
+     . v__24[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__24 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__24[1] = rd % n_roads + 1
+         . v__24[2, 1])
+[applied] (sum v__25 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__25[1] = rd % n_roads + 1
+     . v__25[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__25 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__25[1] = rd % n_roads + 1
+         . v__25[2, 2])
+[applied] (sum v__26 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__26[1] = rd % n_roads + 1
+     . v__26[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__26 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__26[1] = rd % n_roads + 1
+         . v__26[2, 1])
+[applied] (sum v__27 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__27[1] = rd % n_roads + 1
+     . v__27[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__27 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__27[1] = rd % n_roads + 1
+         . v__27[2, 2])
+[applied] (sum v__28 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__28[1] = rd
+     . v__28[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__28 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__28[1] = rd
+         . v__28[2, 1])
+[applied] (sum v__29 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__29[1] = rd
+     . v__29[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__29 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__29[1] = rd
+         . v__29[2, 2])
+[applied] (sum v__30 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__30[1] = rd % n_roads + 1
+     . v__30[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__30 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__30[1] = rd % n_roads + 1
+         . v__30[2, 1])
+[applied] (sum v__31 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__31[1] = rd % n_roads + 1
+     . v__31[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__31 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__31[1] = rd % n_roads + 1
+         . v__31[2, 2])
+[applied] (sum v__32 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__32[1] = rd
+     . v__32[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__32 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__32[1] = rd
+         . v__32[2, 1])
+[applied] (sum v__33 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__33[1] = rd
+     . v__33[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__33 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__33[1] = rd
+         . v__33[2, 2])
+[applied] (sum v__34 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__34[1] = rd % n_roads + 1
+     . v__34[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__34 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__34[1] = rd % n_roads + 1
+         . v__34[2, 1])
+[applied] (sum v__35 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__35[1] = rd % n_roads + 1
+     . v__35[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__35 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__35[1] = rd % n_roads + 1
+         . v__35[2, 2])
+[applied] (sum v__36 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__36[1] = rd
+     . v__36[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__36 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__36[1] = rd
+         . v__36[2, 1])
+[applied] (sum v__37 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__37[1] = rd
+     . v__37[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__37 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__37[1] = rd
+         . v__37[2, 2])
+[applied] (sum v__38 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__38[1] = rd
+     . v__38[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__38 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__38[1] = rd
+         . v__38[2, 1])
+[applied] (sum v__39 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__39[1] = rd
+     . v__39[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__39 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__39[1] = rd
+         . v__39[2, 2])
+[applied] (sum v__40 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__40[1] = rd % n_roads + 1
+     . v__40[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__40 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__40[1] = rd % n_roads + 1
+         . v__40[2, 1])
+[applied] (sum v__41 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__41[1] = rd % n_roads + 1
+     . v__41[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__41 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__41[1] = rd % n_roads + 1
+         . v__41[2, 2])
+[applied] (sum v__42 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__42[1] = rd % n_roads + 1
+     . v__42[2, 1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__42 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__42[1] = rd % n_roads + 1
+         . v__42[2, 1])
+[applied] (sum v__43 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__16])
+     , v__43[1] = rd % n_roads + 1
+     . v__43[2, 2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__43 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__16]
+         , v__43[1] = rd % n_roads + 1
+         . v__43[2, 2])
+[applied] (sum v__6 in toSet(valid_ExplicitVarSize_tuple2_AsReln§region1#RelationAsSet[v__4])
+     . v__5 = v__6[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__6 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1[v__4]
+         . v__5 = v__6[1])
+[removedDecl] find valid_ExplicitVarSize_tuple2_AsReln:
+        matrix indexed by [int(1..n_roads * 8)] of relation of
+                                                       (int(1..n_roads) * (int(1..4), int(1..2)))
+[representation] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet:
+        matrix indexed by [int(1..n_roads * 8)] of set of
+                                                       (int(1..n_roads), (int(1..4), int(1..2)))
+(#1)
+ExplicitVarSize
+[configuration] valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_roads * 8), int(1..n_roads * 8)] of (bool,
+                                                                         (int(1..n_roads), (int(1..4), int(1..2))))
+[applied] (sum v__3 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__1]
+     , v__3[1] = v__18[1]
+     . v__3[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__44 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__44,
+                                                                                     2,
+                                                                                     1]
+           =
+           v__18[1]
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__44,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__44,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__7 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__2]
+     , v__7[1] = v__18[1]
+     . v__7[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__48 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                     v__48,
+                                                                                     2,
+                                                                                     1]
+           =
+           v__18[1]
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                     v__48,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                     v__48,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__8 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__1]
+     , v__8[1] = v__18[1]
+     . v__8[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__49 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__49,
+                                                                                     2,
+                                                                                     1]
+           =
+           v__18[1]
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__49,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__49,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__9 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__2]
+     , v__9[1] = v__18[1]
+     . v__9[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__50 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                     v__50,
+                                                                                     2,
+                                                                                     1]
+           =
+           v__18[1]
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                     v__50,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                     v__50,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (forAll v__18 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__1]
+     . (sum v__44 : int(1..n_roads * 8)
+            , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                        v__44,
+                                                                                        2,
+                                                                                        1]
+              =
+              v__18[1]
+              /\
+              valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                        v__44,
+                                                                                        1]
+            . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                        v__44,
+                                                                                        2,
+                                                                                        2,
+                                                                                        1])
+       =
+       (sum v__48 : int(1..n_roads * 8)
+            , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                        v__48,
+                                                                                        2,
+                                                                                        1]
+              =
+              v__18[1]
+              /\
+              valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                        v__48,
+                                                                                        1]
+            . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                        v__48,
+                                                                                        2,
+                                                                                        2,
+                                                                                        1])
+       /\
+       (sum v__49 : int(1..n_roads * 8)
+            , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                        v__49,
+                                                                                        2,
+                                                                                        1]
+              =
+              v__18[1]
+              /\
+              valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                        v__49,
+                                                                                        1]
+            . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                        v__49,
+                                                                                        2,
+                                                                                        2,
+                                                                                        2])
+       =
+       (sum v__50 : int(1..n_roads * 8)
+            , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                        v__50,
+                                                                                        2,
+                                                                                        1]
+              =
+              v__18[1]
+              /\
+              valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                        v__50,
+                                                                                        1]
+            . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                        v__50,
+                                                                                        2,
+                                                                                        2,
+                                                                                        2]))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__51 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                     v__51,
+                                                                                     1]
+         . (sum v__44 : int(1..n_roads * 8)
+                , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__44,
+                                                                                            2,
+                                                                                            1]
+                  =
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__51,
+                                                                                            2,
+                                                                                            1]
+                  /\
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__44,
+                                                                                            1]
+                . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__44,
+                                                                                            2,
+                                                                                            2,
+                                                                                            1])
+           =
+           (sum v__48 : int(1..n_roads * 8)
+                , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                            v__48,
+                                                                                            2,
+                                                                                            1]
+                  =
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__51,
+                                                                                            2,
+                                                                                            1]
+                  /\
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                            v__48,
+                                                                                            1]
+                . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                            v__48,
+                                                                                            2,
+                                                                                            2,
+                                                                                            1])
+           /\
+           (sum v__49 : int(1..n_roads * 8)
+                , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__49,
+                                                                                            2,
+                                                                                            1]
+                  =
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__51,
+                                                                                            2,
+                                                                                            1]
+                  /\
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__49,
+                                                                                            1]
+                . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__49,
+                                                                                            2,
+                                                                                            2,
+                                                                                            2])
+           =
+           (sum v__50 : int(1..n_roads * 8)
+                , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                            v__50,
+                                                                                            2,
+                                                                                            1]
+                  =
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__1,
+                                                                                            v__51,
+                                                                                            2,
+                                                                                            1]
+                  /\
+                  valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                            v__50,
+                                                                                            1]
+                . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__2,
+                                                                                            v__50,
+                                                                                            2,
+                                                                                            2,
+                                                                                            2]))
+[applied] (sum v__10 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__10[1] = rd
+     . v__10[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__52 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__52,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__52,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__52,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__11 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__11[1] = rd
+     . v__11[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__53 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__53,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__53,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__53,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__12 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__12[1] = rd % n_roads + 1
+     . v__12[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__54 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__54,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__54,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__54,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__13 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__13[1] = rd % n_roads + 1
+     . v__13[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__55 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__55,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__55,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__55,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__14 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__14[1] = rd
+     . v__14[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__56 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__56,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__56,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__56,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__15 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__15[1] = rd
+     . v__15[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__57 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__57,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__57,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__57,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__17 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__17[1] = rd % n_roads + 1
+     . v__17[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__58 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__58,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__58,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__58,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__19 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__19[1] = rd % n_roads + 1
+     . v__19[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__59 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__59,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__59,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__59,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__20 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__20[1] = rd
+     . v__20[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__60 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__60,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__60,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__60,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__21 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__21[1] = rd
+     . v__21[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__61 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__61,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__61,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__61,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__22 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__22[1] = rd
+     . v__22[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__62 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__62,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__62,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__62,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__23 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__23[1] = rd
+     . v__23[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__63 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__63,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__63,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__63,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__24 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__24[1] = rd % n_roads + 1
+     . v__24[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__64 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__64,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__64,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__64,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__25 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__25[1] = rd % n_roads + 1
+     . v__25[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__65 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__65,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__65,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__65,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__26 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__26[1] = rd % n_roads + 1
+     . v__26[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__66 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__66,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__66,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__66,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__27 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__27[1] = rd % n_roads + 1
+     . v__27[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__67 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__67,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__67,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__67,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__28 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__28[1] = rd
+     . v__28[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__68 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__68,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__68,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__68,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__29 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__29[1] = rd
+     . v__29[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__69 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__69,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__69,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__69,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__30 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__30[1] = rd % n_roads + 1
+     . v__30[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__70 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__70,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__70,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__70,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__31 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__31[1] = rd % n_roads + 1
+     . v__31[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__71 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__71,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__71,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__71,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__32 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__32[1] = rd
+     . v__32[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__72 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__72,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__72,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__72,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__33 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__33[1] = rd
+     . v__33[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__73 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__73,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__73,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__73,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__34 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__34[1] = rd % n_roads + 1
+     . v__34[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__74 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__74,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__74,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__74,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__35 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__35[1] = rd % n_roads + 1
+     . v__35[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__75 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__75,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__75,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__75,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__36 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__36[1] = rd
+     . v__36[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__76 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__76,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__76,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__76,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__37 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__37[1] = rd
+     . v__37[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__77 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__77,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__77,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__77,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__38 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__38[1] = rd
+     . v__38[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__78 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__78,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__78,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__78,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__39 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__39[1] = rd
+     . v__39[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__79 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__79,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__79,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__79,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__40 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__40[1] = rd % n_roads + 1
+     . v__40[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__80 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__80,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__80,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__80,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__41 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__41[1] = rd % n_roads + 1
+     . v__41[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__81 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__81,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__81,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__81,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__42 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__42[1] = rd % n_roads + 1
+     . v__42[2, 1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__82 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__82,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__82,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__82,
+                                                                                     2,
+                                                                                     2,
+                                                                                     1])
+[applied] (sum v__43 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__16]
+     , v__43[1] = rd % n_roads + 1
+     . v__43[2, 2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__83 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__83,
+                                                                                     2,
+                                                                                     1]
+           =
+           rd % n_roads + 1
+           /\
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__83,
+                                                                                     1]
+         . valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__16,
+                                                                                     v__83,
+                                                                                     2,
+                                                                                     2,
+                                                                                     2])
+[applied] (sum v__6 in valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region1#ExplicitVarSize[v__4]
+     . v__5 = v__6[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__84 : int(1..n_roads * 8)
+         , valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__4,
+                                                                                     v__84,
+                                                                                     1]
+         . v__5
+           =
+           valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region1[v__4,
+                                                                                     v__84,
+                                                                                     2,
+                                                                                     1])
+[removedDecl] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_roads * 8), int(1..n_roads * 8)] of (bool,
+                                                                         (int(1..n_roads), (int(1..4), int(1..2))))
+[removedDecl] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_roads * 8),
+                           int(1..n_roads * 8)] of (int(1..n_roads), (int(1..4), int(1..2)))
+[removedDecl] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_roads * 8), int(1..n_roads * 8)] of (int(1..4),
+                                                                         int(1..2))
+[removedDecl] find valid_ExplicitVarSize_tuple2_AsReln_RelationAsSet:
+        matrix indexed by [int(1..n_roads * 8)] of set of
+                                                       (int(1..n_roads), (int(1..4), int(1..2)))
