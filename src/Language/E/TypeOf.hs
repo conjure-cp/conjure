@@ -50,7 +50,17 @@ mostKnown [xMatch| [a] := type.mset.inner |]
           [xMatch| [b] := type.mset.inner |] = do
               x <- mostKnown a b
               return [xMake| type.mset.inner := [x] |]
-
+mostKnown [xMatch| [aF] := type.function.innerFrom
+                 | [aT] := type.function.innerTo
+                 |]
+          [xMatch| [bF] := type.function.innerFrom
+                 | [bT] := type.function.innerTo
+                 |] = do
+              xF <- mostKnown aF bF
+              xT <- mostKnown aT bT
+              return [xMake| type.function.innerFrom := [xF]
+                           | type.function.innerTo   := [xT]
+                           |]
 mostKnown x y = do
     mkLog "missing:mostKnown" $ pretty x <+> "~~" <+> pretty y
     return x
@@ -344,6 +354,16 @@ typeOf p@[eMatch| &a intersect &b |] = do
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
             res <- typeUnify ia ib
             if res
+                then mostKnown ta tb
+                else typeErrorIn p
+        ([xMatch| [iaF] := type.function.innerFrom
+                | [iaT] := type.function.innerTo
+                |], [xMatch| [ibF] := type.function.innerFrom
+                           | [ibT] := type.function.innerTo
+                           |]) -> do
+            resF <- typeUnify iaF ibF
+            resT <- typeUnify iaT ibT
+            if resF && resT
                 then mostKnown ta tb
                 else typeErrorIn p
         _ -> typeErrorIn p
