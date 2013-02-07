@@ -1,0 +1,370 @@
+[handleInfDom] given n_periods: int(1..)
+~~>
+given n_periods: int(1..MAXINT)
+[handleInfDom] given maxl: int(1..)
+~~>
+given maxl: int(1..MAXINT)
+[handleInfDom] given minl: int(1..)
+~~>
+given minl: int(1..MAXINT)
+[handleInfDom] given n_courses: int(1..)
+~~>
+given n_courses: int(1..MAXINT)
+[handleInfDom] given maxc: int(1..)
+~~>
+given maxc: int(1..MAXINT)
+[handleInfDom] given minc: int(1..)
+~~>
+given minc: int(1..MAXINT)
+[handleInfDom] given credits: function (total) Course --> int(1..)
+~~>
+given credits: function (total) Course --> int(1..MAXINT)
+[representation] find curr: function (total) int(1..n_courses) --> int(1..n_periods)
+(#2)
+AsReln, Matrix1D
+[representation] given prereq: relation of (int(1..n_courses) * int(1..n_courses))
+(#1)
+RelationAsSet
+[representation] given credits: function (total) int(1..n_courses) --> int(1..MAXINT)
+(#2)
+AsReln, Matrix1D
+[configuration] curr§region5#AsReln curr§region8#AsReln curr§region4#AsReln curr§region3#AsReln credits§region7#AsReln curr§region6#AsReln credits§region9#AsReln prereq§region1#RelationAsSet curr§region2#Matrix1D
+[addedDecl] given credits_AsReln: relation of (int(1..n_courses) * int(1..MAXINT))
+[addedDecl] find curr_AsReln: relation of (int(1..n_courses) * int(1..n_periods))
+[addedDecl] find curr_Matrix1D: matrix indexed by [int(1..n_courses)] of int(1..n_periods)
+[addedDecl] given prereq_RelationAsSet: set of (int(1..n_courses), int(1..n_courses))
+[applied] prereq§region1#RelationAsSet(c1, c2)
+{builtIn.relationApply}
+    (c1, c2) in prereq_RelationAsSet§region1
+[applied] (c1, c2) in prereq_RelationAsSet§region1
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__5 in prereq_RelationAsSet§region1 . v__5[1] = c1 /\ v__5[2] = c2)
+[applied] curr§region2#Matrix1D(c1)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    curr_Matrix1D§region2[c1]
+[applied] curr§region3#AsReln(c2)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__6 in toSet(curr_AsReln§region3) , v__6[1] = c2 . v__6[2])
+[applied] |preImage(curr§region4#AsReln, p)|
+{rules/refns/set-card.rule}
+    (sum v__7 in preImage(curr§region4#AsReln, p) . 1)
+[applied] (sum v__7 in preImage(curr§region4#AsReln, p) . 1)
+{rules/refns/function-preImage-quantified.rule}
+    (sum v__8 : int(1..n_courses) , curr§region4#AsReln(v__8) = p . 1)
+[applied] curr§region4#AsReln(v__8)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__9 in toSet(curr_AsReln§region4) , v__9[1] = v__8 . v__9[2])
+[applied] |preImage(curr§region5#AsReln, p)|
+{rules/refns/set-card.rule}
+    (sum v__10 in preImage(curr§region5#AsReln, p) . 1)
+[applied] (sum v__10 in preImage(curr§region5#AsReln, p) . 1)
+{rules/refns/function-preImage-quantified.rule}
+    (sum v__11 : int(1..n_courses) , curr§region5#AsReln(v__11) = p . 1)
+[applied] curr§region5#AsReln(v__11)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__12 in toSet(curr_AsReln§region5) , v__12[1] = v__11 . v__12[2])
+[applied] credits§region7#AsReln(c)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__13 in toSet(credits_AsReln§region7) , v__13[1] = c . v__13[2])
+[applied] (sum c in preImage(curr§region6#AsReln, p)
+     . (sum v__13 in toSet(credits_AsReln§region7) , v__13[1] = c . v__13[2]))
+{rules/refns/function-preImage-quantified.rule}
+    (sum v__14 : int(1..n_courses) , curr§region6#AsReln(v__14) = p
+         . (sum v__13 in toSet(credits_AsReln§region7) , v__13[1] = v__14 . v__13[2]))
+[applied] curr§region6#AsReln(v__14)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__15 in toSet(curr_AsReln§region6) , v__15[1] = v__14 . v__15[2])
+[applied] credits§region9#AsReln(c)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__16 in toSet(credits_AsReln§region9) , v__16[1] = c . v__16[2])
+[applied] (sum c in preImage(curr§region8#AsReln, p)
+     . (sum v__16 in toSet(credits_AsReln§region9) , v__16[1] = c . v__16[2]))
+{rules/refns/function-preImage-quantified.rule}
+    (sum v__17 : int(1..n_courses) , curr§region8#AsReln(v__17) = p
+         . (sum v__16 in toSet(credits_AsReln§region9) , v__16[1] = v__17 . v__16[2]))
+[applied] curr§region8#AsReln(v__17)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__18 in toSet(curr_AsReln§region8) , v__18[1] = v__17 . v__18[2])
+[applied] curr#AsReln = curr#Matrix1D
+{rules/refns/function-eq.rule}
+    (forAll v__19 in defined(curr#AsReln)
+         . curr#AsReln(v__19) = curr#Matrix1D(v__19))
+[applied] curr#AsReln(v__19)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__20 in toSet(curr_AsReln) , v__20[1] = v__19 . v__20[2])
+[applied] curr#Matrix1D(v__19)
+{rules/refns/function-matrix1d/function-matrix1d-image.rule}
+    curr_Matrix1D[v__19]
+[applied] (forAll v__19 in defined(curr#AsReln)
+     . (sum v__20 in toSet(curr_AsReln) , v__20[1] = v__19 . v__20[2])
+       =
+       curr_Matrix1D[v__19])
+{rules/refns/function-defined-quantified.rule}
+    (forAll v__21 in toSet(curr#AsReln)
+         . (sum v__20 in toSet(curr_AsReln) , v__20[1] = v__21[1] . v__20[2])
+           =
+           curr_Matrix1D[v__21[1]])
+[applied] (forAll v__21 in toSet(curr#AsReln)
+     . (sum v__20 in toSet(curr_AsReln) , v__20[1] = v__21[1] . v__20[2])
+       =
+       curr_Matrix1D[v__21[1]])
+{rules/refns/function-asreln/function-toSet-quantified.rule}
+    (forAll v__21 in toSet(curr_AsReln)
+         . (sum v__20 in toSet(curr_AsReln) , v__20[1] = v__21[1] . v__20[2])
+           =
+           curr_Matrix1D[v__21[1]])
+[removedDecl] find curr: function (total) int(1..n_courses) --> int(1..n_periods)
+[removedDecl] given credits: function (total) int(1..n_courses) --> int(1..MAXINT)
+[removedDecl] given prereq: relation of (int(1..n_courses) * int(1..n_courses))
+[representation] find curr_AsReln: relation of (int(1..n_courses) * int(1..n_periods))
+(#1)
+RelationAsSet
+[representation] given prereq_RelationAsSet: set of (int(1..n_courses), int(1..n_courses))
+(#1)
+ExplicitVarSize
+[representation] given credits_AsReln: relation of (int(1..n_courses) * int(1..MAXINT))
+(#1)
+RelationAsSet
+[configuration] prereq_RelationAsSet§region1#ExplicitVarSize curr_AsReln§region4#RelationAsSet curr_AsReln§region2#RelationAsSet curr_AsReln§region3#RelationAsSet credits_AsReln§region7#RelationAsSet curr_AsReln§region8#RelationAsSet credits_AsReln§region9#RelationAsSet curr_AsReln§region1#RelationAsSet credits_AsReln§region4#RelationAsSet curr_AsReln§region5#RelationAsSet prereq_RelationAsSet§region3#ExplicitVarSize curr_AsReln§region6#RelationAsSet
+[addedDecl] given credits_AsReln_RelationAsSet: set of (int(1..n_courses), int(1..MAXINT))
+[addedDecl] given prereq_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_courses * n_courses)] of (bool,
+                                                              (int(1..n_courses), int(1..n_courses)))
+[addedDecl] find curr_AsReln_RelationAsSet: set of (int(1..n_courses), int(1..n_periods))
+[applied] (exists v__5 in prereq_RelationAsSet§region1#ExplicitVarSize
+     . v__5[1] = c1 /\ v__5[2] = c2)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (exists v__19 : int(1..n_courses * n_courses)
+         , prereq_RelationAsSet_ExplicitVarSize§region1[v__19, 1]
+         . prereq_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1] = c1
+           /\
+           prereq_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 2] = c2)
+[applied] (sum v__6 in toSet(curr_AsReln§region3#RelationAsSet) , v__6[1] = c2 . v__6[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__6 in curr_AsReln_RelationAsSet§region3 , v__6[1] = c2 . v__6[2])
+[applied] (sum v__15 in toSet(curr_AsReln§region6#RelationAsSet) , v__15[1] = v__14
+     . v__15[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__15 in curr_AsReln_RelationAsSet§region6 , v__15[1] = v__14 . v__15[2])
+[applied] (sum v__13 in toSet(credits_AsReln§region7#RelationAsSet) , v__13[1] = v__14
+     . v__13[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__13 in credits_AsReln_RelationAsSet§region7 , v__13[1] = v__14
+         . v__13[2])
+[applied] (sum v__18 in toSet(curr_AsReln§region8#RelationAsSet) , v__18[1] = v__17
+     . v__18[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__18 in curr_AsReln_RelationAsSet§region8 , v__18[1] = v__17 . v__18[2])
+[applied] (sum v__16 in toSet(credits_AsReln§region9#RelationAsSet) , v__16[1] = v__17
+     . v__16[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__16 in credits_AsReln_RelationAsSet§region9 , v__16[1] = v__17
+         . v__16[2])
+[applied] (sum v__9 in toSet(curr_AsReln§region4#RelationAsSet) , v__9[1] = v__8
+     . v__9[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__9 in curr_AsReln_RelationAsSet§region4 , v__9[1] = v__8 . v__9[2])
+[applied] (sum v__12 in toSet(curr_AsReln§region5#RelationAsSet) , v__12[1] = v__11
+     . v__12[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__12 in curr_AsReln_RelationAsSet§region5 , v__12[1] = v__11 . v__12[2])
+[applied] (sum v__1 in toSet(curr_AsReln§region3#RelationAsSet) . v__2 = v__1[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in curr_AsReln_RelationAsSet§region3 . v__2 = v__1[1])
+[applied] (sum v__1 in toSet(curr_AsReln§region4#RelationAsSet) . v__2 = v__1[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in curr_AsReln_RelationAsSet§region4 . v__2 = v__1[1])
+[applied] (sum v__1 in toSet(curr_AsReln§region5#RelationAsSet) . v__2 = v__1[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in curr_AsReln_RelationAsSet§region5 . v__2 = v__1[1])
+[applied] (sum v__1 in toSet(curr_AsReln§region6#RelationAsSet) . v__2 = v__1[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in curr_AsReln_RelationAsSet§region6 . v__2 = v__1[1])
+[applied] (sum v__1 in toSet(curr_AsReln§region8#RelationAsSet) . v__2 = v__1[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in curr_AsReln_RelationAsSet§region8 . v__2 = v__1[1])
+[applied] (sum v__20 in toSet(curr_AsReln§region2#RelationAsSet) , v__20[1] = v__21[1]
+     . v__20[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__20 in curr_AsReln_RelationAsSet§region2 , v__20[1] = v__21[1]
+         . v__20[2])
+[applied] (forAll v__21 in toSet(curr_AsReln§region1#RelationAsSet)
+     . (sum v__20 in curr_AsReln_RelationAsSet§region2 , v__20[1] = v__21[1]
+            . v__20[2])
+       =
+       curr_Matrix1D[v__21[1]])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (forAll v__21 in curr_AsReln_RelationAsSet§region1
+         . (sum v__20 in curr_AsReln_RelationAsSet§region2 , v__20[1] = v__21[1]
+                . v__20[2])
+           =
+           curr_Matrix1D[v__21[1]])
+[applied] (sum v__3 in toSet(credits_AsReln§region7#RelationAsSet) . v__4 = v__3[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__3 in credits_AsReln_RelationAsSet§region7 . v__4 = v__3[1])
+[applied] (sum v__3 in toSet(credits_AsReln§region9#RelationAsSet) . v__4 = v__3[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__3 in credits_AsReln_RelationAsSet§region9 . v__4 = v__3[1])
+[removedDecl] given prereq_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_courses * n_courses)] of (bool,
+                                                              (int(1..n_courses), int(1..n_courses)))
+[removedDecl] given prereq_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_courses * n_courses)] of (int(1..n_courses),
+                                                              int(1..n_courses))
+[removedDecl] find curr_AsReln: relation of (int(1..n_courses) * int(1..n_periods))
+[removedDecl] given credits_AsReln: relation of (int(1..n_courses) * int(1..MAXINT))
+[removedDecl] given prereq_RelationAsSet: set of (int(1..n_courses), int(1..n_courses))
+[representation] find curr_AsReln_RelationAsSet: set of (int(1..n_courses), int(1..n_periods))
+(#1)
+ExplicitVarSize
+[representation] given credits_AsReln_RelationAsSet: set of (int(1..n_courses), int(1..MAXINT))
+(#1)
+ExplicitVarSize
+[configuration] credits_AsReln_RelationAsSet§region7#ExplicitVarSize credits_AsReln_RelationAsSet§region1#ExplicitVarSize credits_AsReln_RelationAsSet§region9#ExplicitVarSize curr_AsReln_RelationAsSet§region4#ExplicitVarSize curr_AsReln_RelationAsSet§region5#ExplicitVarSize curr_AsReln_RelationAsSet§region2#ExplicitVarSize curr_AsReln_RelationAsSet§region6#ExplicitVarSize curr_AsReln_RelationAsSet§region8#ExplicitVarSize curr_AsReln_RelationAsSet§region1#ExplicitVarSize curr_AsReln_RelationAsSet§region3#ExplicitVarSize
+[addedDecl] find curr_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_courses * n_periods)] of (bool,
+                                                              (int(1..n_courses), int(1..n_periods)))
+[addedDecl] given credits_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_courses * MAXINT)] of (bool,
+                                                           (int(1..n_courses), int(1..MAXINT)))
+[applied] (sum v__6 in curr_AsReln_RelationAsSet§region3#ExplicitVarSize , v__6[1] = c2
+     . v__6[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__25 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region3[v__25, 2, 1] = c2
+           /\
+           curr_AsReln_RelationAsSet_ExplicitVarSize§region3[v__25, 1]
+         . curr_AsReln_RelationAsSet_ExplicitVarSize§region3[v__25, 2, 2])
+[applied] (sum v__15 in curr_AsReln_RelationAsSet§region6#ExplicitVarSize
+     , v__15[1] = v__14
+     . v__15[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__26 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region6[v__26, 2, 1] = v__14
+           /\
+           curr_AsReln_RelationAsSet_ExplicitVarSize§region6[v__26, 1]
+         . curr_AsReln_RelationAsSet_ExplicitVarSize§region6[v__26, 2, 2])
+[applied] (sum v__13 in credits_AsReln_RelationAsSet§region7#ExplicitVarSize
+     , v__13[1] = v__14
+     . v__13[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__27 : int(1..n_courses * MAXINT)
+         , credits_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1] = v__14
+           /\
+           credits_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 1]
+         . credits_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 2])
+[applied] (sum v__18 in curr_AsReln_RelationAsSet§region8#ExplicitVarSize
+     , v__18[1] = v__17
+     . v__18[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__28 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region8[v__28, 2, 1] = v__17
+           /\
+           curr_AsReln_RelationAsSet_ExplicitVarSize§region8[v__28, 1]
+         . curr_AsReln_RelationAsSet_ExplicitVarSize§region8[v__28, 2, 2])
+[applied] (sum v__16 in credits_AsReln_RelationAsSet§region9#ExplicitVarSize
+     , v__16[1] = v__17
+     . v__16[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__29 : int(1..n_courses * MAXINT)
+         , credits_AsReln_RelationAsSet_ExplicitVarSize§region9[v__29, 2, 1] = v__17
+           /\
+           credits_AsReln_RelationAsSet_ExplicitVarSize§region9[v__29, 1]
+         . credits_AsReln_RelationAsSet_ExplicitVarSize§region9[v__29, 2, 2])
+[applied] (sum v__9 in curr_AsReln_RelationAsSet§region4#ExplicitVarSize , v__9[1] = v__8
+     . v__9[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__30 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region4[v__30, 2, 1] = v__8
+           /\
+           curr_AsReln_RelationAsSet_ExplicitVarSize§region4[v__30, 1]
+         . curr_AsReln_RelationAsSet_ExplicitVarSize§region4[v__30, 2, 2])
+[applied] (sum v__12 in curr_AsReln_RelationAsSet§region5#ExplicitVarSize
+     , v__12[1] = v__11
+     . v__12[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__31 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region5[v__31, 2, 1] = v__11
+           /\
+           curr_AsReln_RelationAsSet_ExplicitVarSize§region5[v__31, 1]
+         . curr_AsReln_RelationAsSet_ExplicitVarSize§region5[v__31, 2, 2])
+[applied] (sum v__1 in curr_AsReln_RelationAsSet§region3#ExplicitVarSize . v__2 = v__1[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__32 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region3[v__32, 1]
+         . v__2 = curr_AsReln_RelationAsSet_ExplicitVarSize§region3[v__32, 2, 1])
+[applied] (sum v__1 in curr_AsReln_RelationAsSet§region4#ExplicitVarSize . v__2 = v__1[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__33 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region4[v__33, 1]
+         . v__2 = curr_AsReln_RelationAsSet_ExplicitVarSize§region4[v__33, 2, 1])
+[applied] (sum v__1 in curr_AsReln_RelationAsSet§region5#ExplicitVarSize . v__2 = v__1[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__34 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region5[v__34, 1]
+         . v__2 = curr_AsReln_RelationAsSet_ExplicitVarSize§region5[v__34, 2, 1])
+[applied] (sum v__1 in curr_AsReln_RelationAsSet§region6#ExplicitVarSize . v__2 = v__1[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__35 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region6[v__35, 1]
+         . v__2 = curr_AsReln_RelationAsSet_ExplicitVarSize§region6[v__35, 2, 1])
+[applied] (sum v__1 in curr_AsReln_RelationAsSet§region8#ExplicitVarSize . v__2 = v__1[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__36 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region8[v__36, 1]
+         . v__2 = curr_AsReln_RelationAsSet_ExplicitVarSize§region8[v__36, 2, 1])
+[applied] (sum v__20 in curr_AsReln_RelationAsSet§region2#ExplicitVarSize
+     , v__20[1] = v__21[1]
+     . v__20[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__37 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 2, 1] = v__21[1]
+           /\
+           curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 1]
+         . curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 2, 2])
+[applied] (forAll v__21 in curr_AsReln_RelationAsSet§region1#ExplicitVarSize
+     . (sum v__37 : int(1..n_courses * n_periods)
+            , curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 2, 1] = v__21[1]
+              /\
+              curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 1]
+            . curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 2, 2])
+       =
+       curr_Matrix1D[v__21[1]])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__38 : int(1..n_courses * n_periods)
+         , curr_AsReln_RelationAsSet_ExplicitVarSize§region1[v__38, 1]
+         . (sum v__37 : int(1..n_courses * n_periods)
+                , curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 2, 1]
+                  =
+                  curr_AsReln_RelationAsSet_ExplicitVarSize§region1[v__38, 2, 1]
+                  /\
+                  curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 1]
+                . curr_AsReln_RelationAsSet_ExplicitVarSize§region2[v__37, 2, 2])
+           =
+           curr_Matrix1D[curr_AsReln_RelationAsSet_ExplicitVarSize§region1[v__38, 2, 1]])
+[applied] (sum v__3 in credits_AsReln_RelationAsSet§region7#ExplicitVarSize
+     . v__4 = v__3[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__39 : int(1..n_courses * MAXINT)
+         , credits_AsReln_RelationAsSet_ExplicitVarSize§region7[v__39, 1]
+         . v__4 = credits_AsReln_RelationAsSet_ExplicitVarSize§region7[v__39, 2, 1])
+[applied] (sum v__3 in credits_AsReln_RelationAsSet§region9#ExplicitVarSize
+     . v__4 = v__3[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__40 : int(1..n_courses * MAXINT)
+         , credits_AsReln_RelationAsSet_ExplicitVarSize§region9[v__40, 1]
+         . v__4 = credits_AsReln_RelationAsSet_ExplicitVarSize§region9[v__40, 2, 1])
+[removedDecl] given credits_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_courses * MAXINT)] of (bool,
+                                                           (int(1..n_courses), int(1..MAXINT)))
+[removedDecl] find curr_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..n_courses * n_periods)] of (bool,
+                                                              (int(1..n_courses), int(1..n_periods)))
+[removedDecl] given credits_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_courses * MAXINT)] of (int(1..n_courses),
+                                                           int(1..MAXINT))
+[removedDecl] find curr_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_courses * n_periods)] of (int(1..n_courses),
+                                                              int(1..n_periods))
+[removedDecl] find curr_AsReln_RelationAsSet: set of (int(1..n_courses), int(1..n_periods))
+[removedDecl] given credits_AsReln_RelationAsSet: set of (int(1..n_courses), int(1..MAXINT))
