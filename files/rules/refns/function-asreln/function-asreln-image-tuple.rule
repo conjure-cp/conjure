@@ -1,0 +1,7 @@
+
+[1000]
+
+&f(&x)[&y] ~~> sum i in toSet(refn(&f)) , i[1] = &x . i[2][&y]
+
+    where &f hasType   `function _ --> tuple (_,_)`
+    where &f hasRepr    AsReln
