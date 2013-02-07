@@ -382,6 +382,16 @@ typeOf p@[eMatch| &a union &b |] = do
             if res
                 then mostKnown ta tb
                 else typeErrorIn p
+        ([xMatch| [iaF] := type.function.innerFrom
+                | [iaT] := type.function.innerTo
+                |], [xMatch| [ibF] := type.function.innerFrom
+                           | [ibT] := type.function.innerTo
+                           |]) -> do
+            resF <- typeUnify iaF ibF
+            resT <- typeUnify iaT ibT
+            if resF && resT
+                then mostKnown ta tb
+                else typeErrorIn p
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a - &b |] = do
@@ -397,6 +407,16 @@ typeOf p@[eMatch| &a - &b |] = do
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
             res <- typeUnify ia ib
             if res
+                then mostKnown ta tb
+                else typeErrorIn p
+        ([xMatch| [iaF] := type.function.innerFrom
+                | [iaT] := type.function.innerTo
+                |], [xMatch| [ibF] := type.function.innerFrom
+                           | [ibT] := type.function.innerTo
+                           |]) -> do
+            resF <- typeUnify iaF ibF
+            resT <- typeUnify iaT ibT
+            if resF && resT
                 then mostKnown ta tb
                 else typeErrorIn p
         _ -> typeErrorIn p
