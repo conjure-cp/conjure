@@ -2,7 +2,7 @@ module Language.E.Pipeline.Driver where
 
 import Language.E
 
-import System.Directory ( createDirectoryIfMissing )
+import System.Directory
 -- import System.Mem ( performGC )
 
 
@@ -12,7 +12,20 @@ driverConjure
 driverConjure conj baseFilename reprs refns spec = do
     let nats = map (padShowInt 4) [ (1 :: Int) .. ]
     let mouts = conj reprs refns spec
-    createDirectoryIfMissing True baseFilename
+
+    let outDirPath = baseFilename
+    b <- doesDirectoryExist outDirPath
+    when b $ do
+        let exts = [ ".eprime", ".eprime.logs"
+                   , ".error" , ".error.logs"
+                   , ".essence.binary"
+                   ]
+        cons <- getDirectoryContents outDirPath
+        forM_ cons $ \ con ->
+            when (any (`isSuffixOf` con) exts)
+                 (removeFile $ outDirPath ++ "/" ++ con)
+    createDirectoryIfMissing True outDirPath
+
     forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> do
         let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ext
         case mout of
