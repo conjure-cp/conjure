@@ -79,8 +79,9 @@ else
 end
 
 if options.optimisation
-    paramsBuild << "-O2" << "-funbox-strict-fields"
-    paramsBuild << "-fexpose-all-unfoldings"
+    paramsBuild << "-O2"
+    paramsBuild << "--ghc-options=\"-funbox-strict-fields\""
+    paramsBuild << "--ghc-options=\"-fexpose-all-unfoldings\""
 else
     paramsBuild << "-O0"
 end
