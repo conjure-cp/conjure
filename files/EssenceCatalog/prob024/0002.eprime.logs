@@ -1,0 +1,116 @@
+[handleInfDom] given k: int(1..)
+               ~~>
+               given k: int(1..MAXINT)
+[handleInfDom] given n: int(1..)
+               ~~>
+               given n: int(1..MAXINT)
+[representation] find seq: function (total) int(1..k * n) --> int(1..n)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] seq§region1#AsReln
+[addedDecl] find seq_AsReln: relation of (int(1..k * n) * int(1..n))
+[applied] i in range(s)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__3 in range(s) . v__3 = i)
+[applied] (exists v__3 in range(s) . v__3 = i)
+          {rules/refns/function-range-quantified.rule}
+              (exists v__4 in toSet(s) . v__4[2] = i)
+[applied] i in preImage(seq§region1#AsReln, m)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__5 in preImage(seq§region1#AsReln, m) . v__5 = i)
+[applied] (exists v__5 in preImage(seq§region1#AsReln, m) . v__5 = i)
+          {rules/refns/function-preImage-quantified.rule}
+              (exists v__6 : int(1..k * n) , seq§region1#AsReln(v__6) = m . v__6 = i)
+[applied] seq§region1#AsReln(v__6)
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__7 in toSet(seq_AsReln§region1) , v__7[1] = v__6 . v__7[2])
+[representation] function (total, injective) int(1..k) --> int(1..k * n)
+                 (#2)
+                 AsReln, Matrix1D
+[applied] (exists s : function (total, injective) int(1..k) --> int(1..k * n)
+               . (forAll i : int(1..k * n)
+                      . (exists v__4 in toSet(s) . v__4[2] = i)
+                        <->
+                        (exists v__6 : int(1..k * n)
+                             , (sum v__7 in toSet(seq_AsReln§region1) , v__7[1] = v__6 . v__7[2]) = m
+                             . v__6 = i))
+                 /\
+                 (forAll j : int(1..k - 1) . s(j + 1) - s(j) = m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_AsReln : relation of (int(1..k) * int(1..k * n))
+                   , (forAll v__8 : int(1..k)
+                          . (sum v__9 in toSet(s_AsReln§regionS) . v__8 = v__9[1]) = 1)
+                     /\
+                     (forAll v__8 in toSet(s_AsReln§regionS)
+                          . (forAll v__9 in toSet(s_AsReln§regionS) , v__8[1] != v__9[1]
+                                 . v__8[2] != v__9[2]))
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s§regionS#AsReln) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n)
+                                 , (sum v__7 in toSet(seq_AsReln§region1) , v__7[1] = v__6 . v__7[2]) = m
+                                 . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1) . s§regionS#AsReln(j + 1) - s§regionS#AsReln(j) = m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_Matrix1D : matrix indexed by [int(1..k)] of int(1..k * n)
+                   , allDiff(s_Matrix1D§regionS)
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s§regionS#Matrix1D) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n)
+                                 , (sum v__7 in toSet(seq_AsReln§region1) , v__7[1] = v__6 . v__7[2]) = m
+                                 . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1)
+                          . s§regionS#Matrix1D(j + 1) - s§regionS#Matrix1D(j) = m))
+[applied] (exists v__4 in toSet(s§regionS#Matrix1D) . v__4[2] = i)
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (exists v__10 : int(1..k) . s_Matrix1D§regionS[v__10] = i)
+[applied] s§regionS#Matrix1D(j + 1)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§regionS[j + 1]
+[applied] s§regionS#Matrix1D(j)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§regionS[j]
+[removedDecl] find seq: function (total) int(1..k * n) --> int(1..n)
+[representation] find seq_AsReln: relation of (int(1..k * n) * int(1..n))
+                 (#1)
+                 RelationAsSet
+[configuration] seq_AsReln§region1#RelationAsSet
+[addedDecl] find seq_AsReln_RelationAsSet: set of (int(1..k * n), int(1..n))
+[applied] (sum v__7 in toSet(seq_AsReln§region1#RelationAsSet) , v__7[1] = v__6
+               . v__7[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__7 in seq_AsReln_RelationAsSet§region1 , v__7[1] = v__6 . v__7[2])
+[applied] (sum v__2 in toSet(seq_AsReln§region1#RelationAsSet) . v__1 = v__2[1])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__2 in seq_AsReln_RelationAsSet§region1 . v__1 = v__2[1])
+[removedDecl] find seq_AsReln: relation of (int(1..k * n) * int(1..n))
+[representation] find seq_AsReln_RelationAsSet:
+                         set of (int(1..k * n), int(1..n))
+                 (#1)
+                 ExplicitVarSize
+[configuration] seq_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] find seq_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..k * n * n)] of (bool, (int(1..k * n), int(1..n)))
+[applied] (sum v__7 in seq_AsReln_RelationAsSet§region1#ExplicitVarSize
+               , v__7[1] = v__6
+               . v__7[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__13 : int(1..k * n * n)
+                   , seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 2, 1] = v__6
+                     /\
+                     seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 1]
+                   . seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 2, 2])
+[applied] (sum v__2 in seq_AsReln_RelationAsSet§region1#ExplicitVarSize
+               . v__1 = v__2[1])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__14 : int(1..k * n * n)
+                   , seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__14, 1]
+                   . v__1 = seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__14, 2, 1])
+[removedDecl] find seq_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..k * n * n)] of (bool, (int(1..k * n), int(1..n)))
+[removedDecl] find seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..k * n * n)] of (int(1..k * n), int(1..n))
+[removedDecl] find seq_AsReln_RelationAsSet: set of (int(1..k * n), int(1..n))

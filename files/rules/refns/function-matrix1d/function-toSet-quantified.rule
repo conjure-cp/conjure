@@ -9,7 +9,7 @@
                    . &b { &i[1] --> k, &i[2] --> &m[k] }
 
     where &f hasType   `function int --> _`
-    where &f hasDomain `function (total) &domFrom --> _`
+    where &f hasDomain `function (total, ..) &domFrom --> _`
     where &f hasRepr    Matrix1D
 
     letting &m be refn(&f)

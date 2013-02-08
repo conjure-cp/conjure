@@ -1,0 +1,56 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given k: int(1..MAXINT)
+given n: int(1..MAXINT)
+find seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..k * n * n)] of bool
+find seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..k * n * n)] of int(1..k * n)
+find seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..k * n * n)] of int(1..n)
+such that
+    forAll m : int(1..n)
+        . (exists s_Matrix1D : matrix indexed by [int(1..k)] of int(1..k * n)
+               . allDiff(s_Matrix1D)
+                 /\
+                 ((forAll i : int(1..k * n)
+                       . (exists v__0 : int(1..k) . s_Matrix1D[v__0] = i)
+                         <->
+                         (exists v__0 : int(1..k * n)
+                              . (sum v__1 : int(1..k * n * n)
+                                     . (seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1] = v__0
+                                        /\
+                                        seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1])
+                                       *
+                                       seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1])
+                                =
+                                m
+                                /\
+                                v__0 = i))
+                  /\
+                  (forAll j : int(1..k - 1) . s_Matrix1D[j + 1] - s_Matrix1D[j] = m))),
+    forAll v__0 : int(1..k * n * n)
+        . (forAll v__1 : int(1..k * n * n)
+               . v__0 < v__1 /\ seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..k * n)
+        . (sum v__1 : int(1..k * n * n)
+               . seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          =
+          1,
+    forAll v__0 : int(1..k * n * n - 1)
+        . seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1]

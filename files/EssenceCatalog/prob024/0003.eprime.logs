@@ -1,0 +1,258 @@
+[handleInfDom] given k: int(1..)
+               ~~>
+               given k: int(1..MAXINT)
+[handleInfDom] given n: int(1..)
+               ~~>
+               given n: int(1..MAXINT)
+[representation] find seq: function (total) int(1..k * n) --> int(1..n)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] seq§region1#Matrix1D
+[addedDecl] find seq_Matrix1D: matrix indexed by [int(1..k * n)] of int(1..n)
+[applied] i in range(s)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__3 in range(s) . v__3 = i)
+[applied] (exists v__3 in range(s) . v__3 = i)
+          {rules/refns/function-range-quantified.rule}
+              (exists v__4 in toSet(s) . v__4[2] = i)
+[applied] i in preImage(seq§region1#Matrix1D, m)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__5 in preImage(seq§region1#Matrix1D, m) . v__5 = i)
+[applied] (exists v__5 in preImage(seq§region1#Matrix1D, m) . v__5 = i)
+          {rules/refns/function-preImage-quantified.rule}
+              (exists v__6 : int(1..k * n) , seq§region1#Matrix1D(v__6) = m . v__6 = i)
+[applied] seq§region1#Matrix1D(v__6)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              seq_Matrix1D§region1[v__6]
+[representation] function (total, injective) int(1..k) --> int(1..k * n)
+                 (#2)
+                 AsReln, Matrix1D
+[applied] (exists s : function (total, injective) int(1..k) --> int(1..k * n)
+               . (forAll i : int(1..k * n)
+                      . (exists v__4 in toSet(s) . v__4[2] = i)
+                        <->
+                        (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                 /\
+                 (forAll j : int(1..k - 1) . s(j + 1) - s(j) = m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_AsReln : relation of (int(1..k) * int(1..k * n))
+                   , (forAll v__7 : int(1..k)
+                          . (sum v__8 in toSet(s_AsReln§regionS) . v__7 = v__8[1]) = 1)
+                     /\
+                     (forAll v__7 in toSet(s_AsReln§regionS)
+                          . (forAll v__8 in toSet(s_AsReln§regionS) , v__7[1] != v__8[1]
+                                 . v__7[2] != v__8[2]))
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s§regionS#AsReln) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1) . s§regionS#AsReln(j + 1) - s§regionS#AsReln(j) = m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_Matrix1D : matrix indexed by [int(1..k)] of int(1..k * n)
+                   , allDiff(s_Matrix1D§regionS)
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s§regionS#Matrix1D) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1)
+                          . s§regionS#Matrix1D(j + 1) - s§regionS#Matrix1D(j) = m))
+[applied] (exists v__4 in toSet(s§regionS#AsReln) . v__4[2] = i)
+          {rules/refns/function-asreln/function-toSet-quantified.rule}
+              (exists v__4 in toSet(s_AsReln§regionS) . v__4[2] = i)
+[applied] s§regionS#AsReln(j + 1)
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__9 in toSet(s_AsReln§regionS) , v__9[1] = j + 1 . v__9[2])
+[applied] s§regionS#AsReln(j)
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__10 in toSet(s_AsReln§regionS) , v__10[1] = j . v__10[2])
+[representation] relation of (int(1..k) * int(1..k * n)) (#1) RelationAsSet
+[applied] (exists s_AsReln : relation of (int(1..k) * int(1..k * n))
+               , (forAll v__7 : int(1..k)
+                      . (sum v__8 in toSet(s_AsReln§regionS) . v__7 = v__8[1]) = 1)
+                 /\
+                 (forAll v__7 in toSet(s_AsReln§regionS)
+                      . (forAll v__8 in toSet(s_AsReln§regionS) , v__7[1] != v__8[1]
+                             . v__7[2] != v__8[2]))
+               . (forAll i : int(1..k * n)
+                      . (exists v__4 in toSet(s_AsReln§regionS) . v__4[2] = i)
+                        <->
+                        (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                 /\
+                 (forAll j : int(1..k - 1)
+                      . (sum v__9 in toSet(s_AsReln§regionS) , v__9[1] = j + 1 . v__9[2])
+                        -
+                        (sum v__10 in toSet(s_AsReln§regionS) , v__10[1] = j . v__10[2])
+                        =
+                        m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_AsReln_RelationAsSet : set of (int(1..k), int(1..k * n))
+                   , (forAll v__7 : int(1..k)
+                          . (sum v__8 in toSet(s_AsReln§regionS#RelationAsSet) . v__7 = v__8[1]) = 1)
+                     /\
+                     (forAll v__7 in toSet(s_AsReln§regionS#RelationAsSet)
+                          . (forAll v__8 in toSet(s_AsReln§regionS#RelationAsSet) , v__7[1] != v__8[1]
+                                 . v__7[2] != v__8[2]))
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s_AsReln§regionS#RelationAsSet) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1)
+                          . (sum v__9 in toSet(s_AsReln§regionS#RelationAsSet) , v__9[1] = j + 1
+                                 . v__9[2])
+                            -
+                            (sum v__10 in toSet(s_AsReln§regionS#RelationAsSet) , v__10[1] = j . v__10[2])
+                            =
+                            m))
+[applied] (sum v__8 in toSet(s_AsReln§regionS#RelationAsSet) . v__7 = v__8[1])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__8 in s_AsReln_RelationAsSet§regionS . v__7 = v__8[1])
+[applied] (forAll v__8 in toSet(s_AsReln§regionS#RelationAsSet)
+               , v__7[1] != v__8[1]
+               . v__7[2] != v__8[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (forAll v__8 in s_AsReln_RelationAsSet§regionS , v__7[1] != v__8[1]
+                   . v__7[2] != v__8[2])
+[applied] (forAll v__7 in toSet(s_AsReln§regionS#RelationAsSet)
+               . (forAll v__8 in s_AsReln_RelationAsSet§regionS , v__7[1] != v__8[1]
+                      . v__7[2] != v__8[2]))
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (forAll v__7 in s_AsReln_RelationAsSet§regionS
+                   . (forAll v__8 in s_AsReln_RelationAsSet§regionS , v__7[1] != v__8[1]
+                          . v__7[2] != v__8[2]))
+[applied] (exists v__4 in toSet(s_AsReln§regionS#RelationAsSet) . v__4[2] = i)
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (exists v__4 in s_AsReln_RelationAsSet§regionS . v__4[2] = i)
+[applied] (sum v__9 in toSet(s_AsReln§regionS#RelationAsSet) , v__9[1] = j + 1
+               . v__9[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__9 in s_AsReln_RelationAsSet§regionS , v__9[1] = j + 1 . v__9[2])
+[applied] (sum v__10 in toSet(s_AsReln§regionS#RelationAsSet) , v__10[1] = j
+               . v__10[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__10 in s_AsReln_RelationAsSet§regionS , v__10[1] = j . v__10[2])
+[representation] set of (int(1..k), int(1..k * n)) (#1) ExplicitVarSize
+[applied] (exists s_AsReln_RelationAsSet : set of (int(1..k), int(1..k * n))
+               , (forAll v__7 : int(1..k)
+                      . (sum v__8 in s_AsReln_RelationAsSet§regionS . v__7 = v__8[1]) = 1)
+                 /\
+                 (forAll v__7 in s_AsReln_RelationAsSet§regionS
+                      . (forAll v__8 in s_AsReln_RelationAsSet§regionS , v__7[1] != v__8[1]
+                             . v__7[2] != v__8[2]))
+               . (forAll i : int(1..k * n)
+                      . (exists v__4 in s_AsReln_RelationAsSet§regionS . v__4[2] = i)
+                        <->
+                        (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                 /\
+                 (forAll j : int(1..k - 1)
+                      . (sum v__9 in s_AsReln_RelationAsSet§regionS , v__9[1] = j + 1 . v__9[2])
+                        -
+                        (sum v__10 in s_AsReln_RelationAsSet§regionS , v__10[1] = j . v__10[2])
+                        =
+                        m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_AsReln_RelationAsSet_ExplicitVarSize : matrix indexed by [int(1..k
+                                                                                         *
+                                                                                         (k * n))] of (bool,
+                                                                                                       (int(1..k),
+                                                                                                        int(1..k * n)))
+                   , (forAll v__7 : int(1..k)
+                          . (sum v__8 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize . v__7 = v__8[1])
+                            =
+                            1)
+                     /\
+                     (forAll v__7 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+                          . (forAll v__8 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+                                 , v__7[1] != v__8[1]
+                                 . v__7[2] != v__8[2]))
+                     /\
+                     ((forAll v__11 : int(1..k * (k * n))
+                           . (forAll v__12 : int(1..k * (k * n))
+                                  , v__11 < v__12 /\ s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 1]
+                                    /\
+                                    s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__12, 1]
+                                  . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 2, 1]
+                                    !=
+                                    s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__12, 2, 1]
+                                    \/
+                                    s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 2, 2]
+                                    !=
+                                    s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__12, 2, 2]))
+                      /\
+                      (forAll v__11 : int(1..k * (k * n) - 1)
+                           . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 1]
+                             <=
+                             s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11 + 1, 1]))
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1)
+                          . (sum v__9 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize , v__9[1] = j + 1
+                                 . v__9[2])
+                            -
+                            (sum v__10 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize , v__10[1] = j
+                                 . v__10[2])
+                            =
+                            m))
+[applied] (sum v__8 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+               . v__7 = v__8[1])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__13 : int(1..k * (k * n))
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__13, 1]
+                   . v__7 = s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__13, 2, 1])
+[applied] (forAll v__8 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+               , v__7[1] != v__8[1]
+               . v__7[2] != v__8[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__14 : int(1..k * (k * n))
+                   , v__7[1] != s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 1]
+                     /\
+                     s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 1]
+                   . v__7[2] != s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 2])
+[applied] (forAll v__7 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+               . (forAll v__14 : int(1..k * (k * n))
+                      , v__7[1] != s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 1]
+                        /\
+                        s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 1]
+                      . v__7[2] != s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 2]))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__15 : int(1..k * (k * n))
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__15, 1]
+                   . (forAll v__14 : int(1..k * (k * n))
+                          , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__15, 2, 1]
+                            !=
+                            s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 1]
+                            /\
+                            s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 1]
+                          . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__15, 2, 2]
+                            !=
+                            s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 2]))
+[applied] (exists v__4 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+               . v__4[2] = i)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__16 : int(1..k * (k * n))
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__16, 1]
+                   . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__16, 2, 2] = i)
+[applied] (sum v__9 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+               , v__9[1] = j + 1
+               . v__9[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__17 : int(1..k * (k * n))
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__17, 2, 1] = j + 1
+                     /\
+                     s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__17, 1]
+                   . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__17, 2, 2])
+[applied] (sum v__10 in s_AsReln_RelationAsSet§regionS#ExplicitVarSize
+               , v__10[1] = j
+               . v__10[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__18 : int(1..k * (k * n))
+                   , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 2, 1] = j
+                     /\
+                     s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 1]
+                   . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 2, 2])
+[removedDecl] find seq: function (total) int(1..k * n) --> int(1..n)

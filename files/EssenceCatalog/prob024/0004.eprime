@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given k: int(1..MAXINT)
+given n: int(1..MAXINT)
+find seq_Matrix1D: matrix indexed by [int(1..k * n)] of int(1..n)
+such that
+    forAll m : int(1..n)
+        . (exists s_Matrix1D : matrix indexed by [int(1..k)] of int(1..k * n)
+               . allDiff(s_Matrix1D)
+                 /\
+                 ((forAll i : int(1..k * n)
+                       . (exists v__0 : int(1..k) . s_Matrix1D[v__0] = i)
+                         <->
+                         (exists v__0 : int(1..k * n) . seq_Matrix1D[v__0] = m /\ v__0 = i))
+                  /\
+                  (forAll j : int(1..k - 1) . s_Matrix1D[j + 1] - s_Matrix1D[j] = m)))

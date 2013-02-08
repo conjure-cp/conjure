@@ -1,0 +1,70 @@
+[handleInfDom] given k: int(1..)
+               ~~>
+               given k: int(1..MAXINT)
+[handleInfDom] given n: int(1..)
+               ~~>
+               given n: int(1..MAXINT)
+[representation] find seq: function (total) int(1..k * n) --> int(1..n)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] seq§region1#Matrix1D
+[addedDecl] find seq_Matrix1D: matrix indexed by [int(1..k * n)] of int(1..n)
+[applied] i in range(s)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__3 in range(s) . v__3 = i)
+[applied] (exists v__3 in range(s) . v__3 = i)
+          {rules/refns/function-range-quantified.rule}
+              (exists v__4 in toSet(s) . v__4[2] = i)
+[applied] i in preImage(seq§region1#Matrix1D, m)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__5 in preImage(seq§region1#Matrix1D, m) . v__5 = i)
+[applied] (exists v__5 in preImage(seq§region1#Matrix1D, m) . v__5 = i)
+          {rules/refns/function-preImage-quantified.rule}
+              (exists v__6 : int(1..k * n) , seq§region1#Matrix1D(v__6) = m . v__6 = i)
+[applied] seq§region1#Matrix1D(v__6)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              seq_Matrix1D§region1[v__6]
+[representation] function (total, injective) int(1..k) --> int(1..k * n)
+                 (#2)
+                 AsReln, Matrix1D
+[applied] (exists s : function (total, injective) int(1..k) --> int(1..k * n)
+               . (forAll i : int(1..k * n)
+                      . (exists v__4 in toSet(s) . v__4[2] = i)
+                        <->
+                        (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                 /\
+                 (forAll j : int(1..k - 1) . s(j + 1) - s(j) = m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_AsReln : relation of (int(1..k) * int(1..k * n))
+                   , (forAll v__7 : int(1..k)
+                          . (sum v__8 in toSet(s_AsReln§regionS) . v__7 = v__8[1]) = 1)
+                     /\
+                     (forAll v__7 in toSet(s_AsReln§regionS)
+                          . (forAll v__8 in toSet(s_AsReln§regionS) , v__7[1] != v__8[1]
+                                 . v__7[2] != v__8[2]))
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s§regionS#AsReln) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1) . s§regionS#AsReln(j + 1) - s§regionS#AsReln(j) = m))
+          {builtIn.abstractDomsInQuans}
+              (exists s_Matrix1D : matrix indexed by [int(1..k)] of int(1..k * n)
+                   , allDiff(s_Matrix1D§regionS)
+                   . (forAll i : int(1..k * n)
+                          . (exists v__4 in toSet(s§regionS#Matrix1D) . v__4[2] = i)
+                            <->
+                            (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                     /\
+                     (forAll j : int(1..k - 1)
+                          . s§regionS#Matrix1D(j + 1) - s§regionS#Matrix1D(j) = m))
+[applied] (exists v__4 in toSet(s§regionS#Matrix1D) . v__4[2] = i)
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (exists v__9 : int(1..k) . s_Matrix1D§regionS[v__9] = i)
+[applied] s§regionS#Matrix1D(j + 1)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§regionS[j + 1]
+[applied] s§regionS#Matrix1D(j)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              s_Matrix1D§regionS[j]
+[removedDecl] find seq: function (total) int(1..k * n) --> int(1..n)
