@@ -20,13 +20,17 @@ maximising |alive|
 
 such that
 $ all border cells are dead
-    forAll (a,b) : Cell , |{a,b} intersect {1,n+2}| = 0 . !(c in alive),
+    forAll (a,b) : Cell
+    	, |{a,b} intersect {1,n+2}| = 0
+    	. !((a,b) in alive),
     
 $ alive cells have between 2 and 3 alive neighbours (between 3 and 4, when
 $ including the cell itself)
     forAll (a,b) in alive .
         3 <= ( sum i,j : int(-1..1) . (a+i,b+j) in alive ) /\
         (sum i,j : int(-1..1) . (a+i,b+j) in alive) <= 4,
+
 $ dead cells must not have 3 alive neighbours
-    forAll (a,b) in Cell, !((a,b) in alive) .
-        (sum i,j : int(-1..1) . (a+i,b+j) in alive) != 3
+    forAll (a,b) : Cell
+    	, !((a,b) in alive)
+    	. (sum i,j : int(-1..1) . (a+i,b+j) in alive) != 3
