@@ -1,0 +1,132 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given n_boats: int(1..MAXINT)
+given n_periods: int(1..MAXINT)
+given capacity_Matrix1D: matrix indexed by [int(1..n_boats)] of int(1..MAXINT)
+given crew_Matrix1D: matrix indexed by [int(1..n_boats)] of int(1..MAXINT)
+find hosts_Occurrence: matrix indexed by [int(1..n_boats)] of bool
+find hosts_ExplicitVarSize_tuple1: matrix indexed by [int(1..n_boats)] of bool
+find hosts_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_boats)] of int(1..n_boats)
+find sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_periods), int(1..n_boats * n_boats)] of bool
+find sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n_periods),
+                           int(1..n_boats * n_boats)] of int(1..n_boats)
+find sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n_periods),
+                           int(1..n_boats * n_boats)] of int(1..n_boats)
+find sched_Explicit_Matrix1D:
+        matrix indexed by [int(1..n_periods), int(1..n_boats)] of int(1..n_boats)
+minimising sum v__0 : int(1..n_boats) . hosts_Occurrence[v__0] * 1
+such that
+    forAll b1 : int(1..n_boats)
+        . (forAll b2 : int(1..n_boats)
+               . b1 != b2
+                 ->
+                 (sum v__0 : int(1..n_periods)
+                      . sched_Explicit_Matrix1D[v__0, b1] = sched_Explicit_Matrix1D[v__0, b2])
+                 <=
+                 1),
+    forAll v__0 : int(1..n_boats - 1)
+        . hosts_ExplicitVarSize_tuple1[v__0] <= hosts_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_boats)
+        . hosts_ExplicitVarSize_tuple1[v__0]
+          ->
+          (exists v__1 : int(1..n_boats)
+               . hosts_Occurrence[v__1] /\ v__1 = hosts_ExplicitVarSize_tuple2[v__0]),
+    forAll v__0 : int(1..n_boats)
+        . hosts_Occurrence[v__0]
+          ->
+          (exists v__1 : int(1..n_boats)
+               . hosts_ExplicitVarSize_tuple1[v__1]
+                 /\
+                 hosts_ExplicitVarSize_tuple2[v__1] = v__0),
+    forAll v__0 : int(1..n_boats)
+        . (forAll v__1 : int(1..n_boats)
+               . v__0 < v__1 /\ hosts_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 hosts_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 hosts_ExplicitVarSize_tuple2[v__0] < hosts_ExplicitVarSize_tuple2[v__1]),
+    forAll v__0 : int(1..n_periods)
+        . (forAll v__1 : int(1..n_boats * n_boats)
+               . (forAll v__2 : int(1..n_boats * n_boats)
+                      . v__1 < v__2
+                        /\
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__1]
+                        /\
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__2]
+                        ->
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0, v__1]
+                        !=
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0, v__2]
+                        \/
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0, v__1]
+                        !=
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0, v__2]))
+          /\
+          (forAll v__1 : int(1..n_boats * n_boats - 1)
+               . sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__1]
+                 <=
+                 sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__1 + 1]),
+    forAll v__0 : int(1..n_periods)
+        . (forAll v__1 : int(1..n_boats * n_boats)
+               . sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__1]
+                 ->
+                 (sum v__2 : int(1..n_boats * n_boats)
+                      . (sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0, v__2]
+                         =
+                         sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0, v__1]
+                         /\
+                         sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__2])
+                        *
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0, v__2])
+                 =
+                 sched_Explicit_Matrix1D[v__0,
+                                         sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                           v__1]]),
+    forAll v__0 : int(1..n_periods)
+        . (forAll v__1 : int(1..n_boats * n_boats)
+               . sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__1]
+                 ->
+                 (exists v__2 : int(1..n_boats)
+                      . hosts_ExplicitVarSize_tuple1[v__2]
+                        /\
+                        hosts_ExplicitVarSize_tuple2[v__2]
+                        =
+                        sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0, v__1])),
+    forAll v__0 : int(1..n_periods)
+        . (forAll v__1 : int(1..n_boats)
+               . hosts_Occurrence[v__1]
+                 ->
+                 (sum v__2 : int(1..n_boats)
+                      . ((sum v__3 : int(1..n_boats * n_boats)
+                              . toInt(sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                        v__3]
+                                      =
+                                      v__2
+                                      /\
+                                      sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__3])
+                                *
+                                sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0, v__3])
+                         =
+                         v__1)
+                        *
+                        crew_Matrix1D[v__2])
+                 <=
+                 capacity_Matrix1D[v__1]),
+    forAll v__0 : int(1..n_periods)
+        . (forAll v__1 : int(1..n_boats)
+               . hosts_Occurrence[v__1] -> sched_Explicit_Matrix1D[v__0, v__1] = v__1),
+    forAll v__0 : int(1..n_periods)
+        . (forAll v__1 : int(1..n_boats)
+               . (sum v__2 : int(1..n_boats * n_boats)
+                      . sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__2]
+                        *
+                        (v__1
+                         =
+                         sched_Explicit_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0, v__2]))
+                 =
+                 1)
