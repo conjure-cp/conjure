@@ -1,0 +1,230 @@
+[handleInfDom] given nrings: int(1..)
+~~>
+given nrings: int(1..MAXINT)
+[handleInfDom] given nnodes: int(1..)
+~~>
+given nnodes: int(1..MAXINT)
+[handleInfDom] given capacity: int(1..)
+~~>
+given capacity: int(1..MAXINT)
+[representation] find network: mset (size nrings) of set (maxSize capacity) of int(1..nnodes)
+(#1)
+Explicit
+[representation] given demand: set of set (size 2) of int(1..nnodes) (#1) ExplicitVarSize
+[configuration] demand§region2#ExplicitVarSize network§region3#Explicit network§region1#Explicit
+[addedDecl] find network_Explicit:
+        matrix indexed by [int(1..nrings)] of set (maxSize capacity) of int(1..nnodes)
+[addedDecl] given demand_ExplicitVarSize:
+        matrix indexed by [int(1..2 ** nnodes)] of (bool,
+                                                    set (size 2) of int(1..nnodes))
+[applied] |ring|
+{rules/refns/set-card.rule}
+    (sum v__3 in ring . 1)
+[applied] (sum ring in network§region1#Explicit . (sum v__3 in ring . 1))
+{rules/refns/mset-explicit/mset-explicit-quantified.rule}
+    (sum v__4 : int(1..nrings) . (sum v__3 in network_Explicit§region1[v__4] . 1))
+[applied] pair subsetEq ring
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__5 in pair . v__5 in ring)
+[applied] v__5 in ring
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__6 in ring . v__6 = v__5)
+[applied] (exists ring in network§region3#Explicit
+     . (forAll v__5 in pair . (exists v__6 in ring . v__6 = v__5)))
+{rules/refns/mset-explicit/mset-explicit-quantified.rule}
+    (exists v__7 : int(1..nrings)
+         . (forAll v__5 in pair
+                . (exists v__6 in network_Explicit§region3[v__7] . v__6 = v__5)))
+[applied] (forAll pair in demand§region2#ExplicitVarSize
+     . (exists v__7 : int(1..nrings)
+            . (forAll v__5 in pair
+                   . (exists v__6 in network_Explicit§region3[v__7] . v__6 = v__5))))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__8 : int(1..2 ** nnodes) , demand_ExplicitVarSize§region2[v__8, 1]
+         . (exists v__7 : int(1..nrings)
+                . (forAll v__5 in demand_ExplicitVarSize§region2[v__8, 2]
+                       . (exists v__6 in network_Explicit§region3[v__7] . v__6 = v__5))))
+[applied] demand_ExplicitVarSize§region2[v__2, 2]
+!=
+demand_ExplicitVarSize§region2[v__1, 2]
+{rules/refns/neq-to-eq.rule}
+    !(demand_ExplicitVarSize§region2[v__2, 2]
+      =
+      demand_ExplicitVarSize§region2[v__1, 2])
+[applied] demand_ExplicitVarSize§region2[v__2, 2]
+=
+demand_ExplicitVarSize§region2[v__1, 2]
+{rules/refns/set-eq-to-subsets.rule}
+    demand_ExplicitVarSize§region2[v__2, 2]
+    subsetEq
+    demand_ExplicitVarSize§region2[v__1, 2]
+    /\
+    demand_ExplicitVarSize§region2[v__2, 2]
+    supsetEq
+    demand_ExplicitVarSize§region2[v__1, 2]
+[applied] demand_ExplicitVarSize§region2[v__2, 2]
+subsetEq
+demand_ExplicitVarSize§region2[v__1, 2]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__9 in demand_ExplicitVarSize§region2[v__2, 2]
+         . v__9 in demand_ExplicitVarSize§region2[v__1, 2])
+[applied] v__9 in demand_ExplicitVarSize§region2[v__1, 2]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__10 in demand_ExplicitVarSize§region2[v__1, 2] . v__10 = v__9)
+[applied] demand_ExplicitVarSize§region2[v__2, 2]
+supsetEq
+demand_ExplicitVarSize§region2[v__1, 2]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    demand_ExplicitVarSize§region2[v__1, 2]
+    subsetEq
+    demand_ExplicitVarSize§region2[v__2, 2]
+[applied] demand_ExplicitVarSize§region2[v__1, 2]
+subsetEq
+demand_ExplicitVarSize§region2[v__2, 2]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__11 in demand_ExplicitVarSize§region2[v__1, 2]
+         . v__11 in demand_ExplicitVarSize§region2[v__2, 2])
+[applied] v__11 in demand_ExplicitVarSize§region2[v__2, 2]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__12 in demand_ExplicitVarSize§region2[v__2, 2] . v__12 = v__11)
+[removedDecl] given demand_ExplicitVarSize:
+        matrix indexed by [int(1..2 ** nnodes)] of (bool,
+                                                    set (size 2) of int(1..nnodes))
+[removedDecl] find network: mset (size nrings) of set (maxSize capacity) of int(1..nnodes)
+[removedDecl] given demand: set of set (size 2) of int(1..nnodes)
+[representation] find network_Explicit:
+        matrix indexed by [int(1..nrings)] of set (maxSize capacity) of int(1..nnodes)
+(#1)
+Occurrence
+[representation] given demand_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..2 ** nnodes)] of set (size 2) of int(1..nnodes)
+(#2)
+Occurrence, Explicit
+[configuration] demand_ExplicitVarSize_tuple2§region2#Occurrence demand_ExplicitVarSize_tuple2§region1#Explicit network_Explicit§region3#Occurrence network_Explicit§region2#Occurrence network_Explicit§region1#Occurrence
+[addedDecl] find network_Explicit_Occurrence:
+        matrix indexed by [int(1..nrings), int(1..nnodes)] of bool
+[addedDecl] given demand_ExplicitVarSize_tuple2_Explicit:
+        matrix indexed by [int(1..2 ** nnodes), int(1..2)] of int(1..nnodes)
+[addedDecl] given demand_ExplicitVarSize_tuple2_Occurrence:
+        matrix indexed by [int(1..2 ** nnodes), int(1..nnodes)] of bool
+[applied] (sum v__3 in network_Explicit§region1#Occurrence[v__4] . 1)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (sum v__13 : int(1..nnodes) , network_Explicit_Occurrence§region1[v__4, v__13]
+         . 1)
+[applied] (exists v__10 in demand_ExplicitVarSize_tuple2§region2#Occurrence[v__1]
+     . v__10 = v__9)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__16 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__1, v__16]
+         . v__16 = v__9)
+[applied] (forAll v__9 in demand_ExplicitVarSize_tuple2§region2#Occurrence[v__2]
+     . (exists v__16 : int(1..nnodes)
+            , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__1, v__16]
+            . v__16 = v__9))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__19 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__2, v__19]
+         . (exists v__16 : int(1..nnodes)
+                , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__1, v__16]
+                . v__16 = v__19))
+[applied] (exists v__12 in demand_ExplicitVarSize_tuple2§region2#Occurrence[v__2]
+     . v__12 = v__11)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__21 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__2, v__21]
+         . v__21 = v__11)
+[applied] (forAll v__11 in demand_ExplicitVarSize_tuple2§region2#Occurrence[v__1]
+     . (exists v__21 : int(1..nnodes)
+            , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__2, v__21]
+            . v__21 = v__11))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__23 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__1, v__23]
+         . (exists v__21 : int(1..nnodes)
+                , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__2, v__21]
+                . v__21 = v__23))
+[applied] (exists v__6 in network_Explicit§region3#Occurrence[v__7] . v__6 = v__5)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__24 : int(1..nnodes)
+         , network_Explicit_Occurrence§region3[v__7, v__24]
+         . v__24 = v__5)
+[applied] (forAll v__5 in demand_ExplicitVarSize_tuple2§region2#Occurrence[v__8]
+     . (exists v__24 : int(1..nnodes)
+            , network_Explicit_Occurrence§region3[v__7, v__24]
+            . v__24 = v__5))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__25 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence§region2[v__8, v__25]
+         . (exists v__24 : int(1..nnodes)
+                , network_Explicit_Occurrence§region3[v__7, v__24]
+                . v__24 = v__25))
+[applied] demand_ExplicitVarSize_tuple2#Explicit[v__22]
+=
+demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+{rules/refns/set-eq-to-subsets.rule}
+    demand_ExplicitVarSize_tuple2#Explicit[v__22]
+    subsetEq
+    demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+    /\
+    demand_ExplicitVarSize_tuple2#Explicit[v__22]
+    supsetEq
+    demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+[applied] demand_ExplicitVarSize_tuple2#Explicit[v__22]
+subsetEq
+demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__26 in demand_ExplicitVarSize_tuple2#Explicit[v__22]
+         . v__26 in demand_ExplicitVarSize_tuple2#Occurrence[v__22])
+[applied] v__26 in demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__27 in demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+         . v__27 = v__26)
+[applied] (exists v__27 in demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+     . v__27 = v__26)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__28 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence[v__22, v__28]
+         . v__28 = v__26)
+[applied] (forAll v__26 in demand_ExplicitVarSize_tuple2#Explicit[v__22]
+     . (exists v__28 : int(1..nnodes)
+            , demand_ExplicitVarSize_tuple2_Occurrence[v__22, v__28]
+            . v__28 = v__26))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__29 : int(1..2)
+         . (exists v__28 : int(1..nnodes)
+                , demand_ExplicitVarSize_tuple2_Occurrence[v__22, v__28]
+                . v__28 = demand_ExplicitVarSize_tuple2_Explicit[v__22, v__29]))
+[applied] demand_ExplicitVarSize_tuple2#Explicit[v__22]
+supsetEq
+demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+    subsetEq
+    demand_ExplicitVarSize_tuple2#Explicit[v__22]
+[applied] demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+subsetEq
+demand_ExplicitVarSize_tuple2#Explicit[v__22]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__30 in demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+         . v__30 in demand_ExplicitVarSize_tuple2#Explicit[v__22])
+[applied] v__30 in demand_ExplicitVarSize_tuple2#Explicit[v__22]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__31 in demand_ExplicitVarSize_tuple2#Explicit[v__22] . v__31 = v__30)
+[applied] (exists v__31 in demand_ExplicitVarSize_tuple2#Explicit[v__22] . v__31 = v__30)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__32 : int(1..2)
+         . demand_ExplicitVarSize_tuple2_Explicit[v__22, v__32] = v__30)
+[applied] (forAll v__30 in demand_ExplicitVarSize_tuple2#Occurrence[v__22]
+     . (exists v__32 : int(1..2)
+            . demand_ExplicitVarSize_tuple2_Explicit[v__22, v__32] = v__30))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__33 : int(1..nnodes)
+         , demand_ExplicitVarSize_tuple2_Occurrence[v__22, v__33]
+         . (exists v__32 : int(1..2)
+                . demand_ExplicitVarSize_tuple2_Explicit[v__22, v__32] = v__33))
+[removedDecl] find network_Explicit:
+        matrix indexed by [int(1..nrings)] of set (maxSize capacity) of int(1..nnodes)
+[removedDecl] given demand_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..2 ** nnodes)] of set (size 2) of int(1..nnodes)
+[addSlicing] demand_ExplicitVarSize_tuple2_Explicit[v__0]
+             demand_ExplicitVarSize_tuple2_Explicit[v__0, ..]
