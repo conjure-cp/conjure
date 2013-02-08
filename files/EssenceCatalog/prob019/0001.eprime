@@ -1,0 +1,16 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given n: int(1..MAXINT)
+find square: matrix indexed by [int(1..n), int(1..n)] of int(1..n ** 2)
+find s: int(1..(sum i : int(n ** 2 + 1 - n..n ** 2) . i))
+such that
+    (sum d : int(1..n) . square[d, n + 1 - d]) = s,
+    (sum d : int(1..n) . square[d, d]) = s,
+    forAll c : int(1..n) . (sum r : int(1..n) . square[r, c]) = s,
+    forAll r : int(1..n) . (sum c : int(1..n) . square[r, c]) = s,
+    forAll v__0 : int(1..n)
+        . (forAll v__1 : int(1..n)
+               . v__0 < v__1
+                 ->
+                 !(forAll v__2 : int(1..n) . square[v__0, v__2] = square[v__1, v__2]))
