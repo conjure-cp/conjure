@@ -19,6 +19,8 @@ handleInfiniteGivenDoms spec
     $ runWriterT
     $ flip foreachStatement spec $ \ statement ->
         case statement of
+            [xMatch| [Prim (S "MININT")] := topLevel.declaration.given.name.reference |] -> return [statement]
+            [xMatch| [Prim (S "MAXINT")] := topLevel.declaration.given.name.reference |] -> return [statement]
             [xMatch| [name]   := topLevel.declaration.given.name
                    | [domain] := topLevel.declaration.given.domain
                    |] -> do
@@ -50,6 +52,11 @@ handleInfiniteGivenDoms spec
         onRange [xMatch| [t] := range.to   |] = ([xMake| range.fromTo := [minint,t] |], Just minintDecl)
         onRange r = (r, Nothing)
 
+        onDom [xMatch| []  := domain.int.ranges |] = do
+            let newRange = [xMake| range.fromTo := [minint,maxint] |]
+            let newDom = [xMake| domain.int.ranges := [newRange] |]
+            tell [minintDecl, maxintDecl]
+            return newDom
         onDom d@[xMatch| [r] := domain.int.ranges |] = do
             let (r', maybeSuppDecl) = onRange r
             case maybeSuppDecl of
