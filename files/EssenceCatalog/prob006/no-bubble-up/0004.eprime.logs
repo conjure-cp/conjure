@@ -1,428 +1,453 @@
-[representation] find Ticks: set (size n) of int(0..2 ** n) (#2) Explicit, Occurrence
+[handleInfDom] given n: int
+               ~~>
+               given n: int(MININT..MAXINT)
+[representation] find Ticks: set (size n) of int(0..2 ** n)
+                 (#2)
+                 Explicit, Occurrence
 [configuration] Ticks§region3#Explicit Ticks§region1#Explicit Ticks§region2#Explicit
 [addedDecl] find Ticks_Explicit: matrix indexed by [int(1..n)] of int(0..2 ** n)
 [applied] max(Ticks§region1#Explicit)
-{rules/refns/set-max.rule}
-    (v__3§regionF @ find v__3: int(0..2 ** n)
-                    such that forAll v__2 in Ticks§region1#Explicit . v__2 <= v__3§regionF
-                    such that v__3§regionF in Ticks§region1#Explicit)
-[applied] (forAll v__2 in Ticks§region1#Explicit . v__2 <= v__3§regionF)
-{rules/refns/set-explicit/set-explicit-quantified.rule}
-    (forAll v__4 : int(1..n) . Ticks_Explicit§region1[v__4] <= v__3§regionF)
-[applied] v__3§regionF in Ticks§region1#Explicit
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__5 in Ticks§region1#Explicit . v__5 = v__3§regionF)
-[applied] (exists v__5 in Ticks§region1#Explicit . v__5 = v__3§regionF)
-{rules/refns/set-explicit/set-explicit-quantified.rule}
-    (exists v__6 : int(1..n) . Ticks_Explicit§region1[v__6] = v__3§regionF)
+          {rules/refns/set-max.rule}
+              (v__4§regionF @ find v__4: int(0..2 ** n)
+                              such that forAll v__3 in Ticks§region1#Explicit . v__3 <= v__4§regionF
+                              such that v__4§regionF in Ticks§region1#Explicit)
+[applied] (forAll v__3 in Ticks§region1#Explicit . v__3 <= v__4§regionF)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__5 : int(1..n) . Ticks_Explicit§region1[v__5] <= v__4§regionF)
+[applied] v__4§regionF in Ticks§region1#Explicit
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__6 in Ticks§region1#Explicit . v__6 = v__4§regionF)
+[applied] (exists v__6 in Ticks§region1#Explicit . v__6 = v__4§regionF)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (exists v__7 : int(1..n) . Ticks_Explicit§region1[v__7] = v__4§regionF)
 [applied] pair1 != pair2
-{rules/refns/neq-to-eq.rule}
-    !(pair1 = pair2)
+          {rules/refns/neq-to-eq.rule}
+              !(pair1 = pair2)
 [applied] pair1 = pair2
-{rules/refns/set-eq-to-subsets.rule}
-    pair1 subsetEq pair2 /\ pair1 supsetEq pair2
+          {rules/refns/set-eq-to-subsets.rule}
+              pair1 subsetEq pair2 /\ pair1 supsetEq pair2
 [applied] pair1 subsetEq pair2
-{rules/refns/set-subseteq-to-quantified.rule}
-    (forAll v__7 in pair1 . v__7 in pair2)
-[applied] v__7 in pair2
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__8 in pair2 . v__8 = v__7)
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__8 in pair1 . v__8 in pair2)
+[applied] v__8 in pair2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__9 in pair2 . v__9 = v__8)
 [applied] pair1 supsetEq pair2
-{rules/refns/set-supseteq-to-subseteq.rule}
-    pair2 subsetEq pair1
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              pair2 subsetEq pair1
 [applied] pair2 subsetEq pair1
-{rules/refns/set-subseteq-to-quantified.rule}
-    (forAll v__9 in pair2 . v__9 in pair1)
-[applied] v__9 in pair1
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__10 in pair1 . v__10 = v__9)
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__10 in pair2 . v__10 in pair1)
+[applied] v__10 in pair1
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__11 in pair1 . v__11 = v__10)
 [applied] max(pair1)
-{rules/refns/set-max.rule}
-    (v__12§regionF @ find v__12: int
-                     such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                     such that v__12§regionF in pair1)
-[applied] v__12§regionF in pair1
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__13 in pair1 . v__13 = v__12§regionF)
+          {rules/refns/set-max.rule}
+              (v__13§regionF @ find v__13: int
+                               such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                               such that v__13§regionF in pair1)
+[applied] v__13§regionF in pair1
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__14 in pair1 . v__14 = v__13§regionF)
 [applied] min(pair1)
-{rules/refns/set-min.rule}
-    (v__15§regionF @ find v__15: int
-                     such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                     such that v__15§regionF in pair1)
-[applied] v__15§regionF in pair1
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__16 in pair1 . v__16 = v__15§regionF)
+          {rules/refns/set-min.rule}
+              (v__16§regionF @ find v__16: int
+                               such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                               such that v__16§regionF in pair1)
+[applied] v__16§regionF in pair1
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__17 in pair1 . v__17 = v__16§regionF)
 [applied] max(pair2)
-{rules/refns/set-max.rule}
-    (v__18§regionF @ find v__18: int
-                     such that forAll v__17 in pair2 . v__17 <= v__18§regionF
-                     such that v__18§regionF in pair2)
-[applied] v__18§regionF in pair2
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__19 in pair2 . v__19 = v__18§regionF)
+          {rules/refns/set-max.rule}
+              (v__19§regionF @ find v__19: int
+                               such that forAll v__18 in pair2 . v__18 <= v__19§regionF
+                               such that v__19§regionF in pair2)
+[applied] v__19§regionF in pair2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__20 in pair2 . v__20 = v__19§regionF)
 [applied] min(pair2)
-{rules/refns/set-min.rule}
-    (v__21§regionF @ find v__21: int
-                     such that forAll v__20 in pair2 . v__20 >= v__21§regionF
-                     such that v__21§regionF in pair2)
-[applied] v__21§regionF in pair2
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__22 in pair2 . v__22 = v__21§regionF)
+          {rules/refns/set-min.rule}
+              (v__22§regionF @ find v__22: int
+                               such that forAll v__21 in pair2 . v__21 >= v__22§regionF
+                               such that v__22§regionF in pair2)
+[applied] v__22§regionF in pair2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__23 in pair2 . v__23 = v__22§regionF)
 [applied] (forAll pair2 : set (size 2) of int subsetEq Ticks§region3#Explicit
-     , !((forAll v__7 in pair1 . (exists v__8 in pair2 . v__8 = v__7))
-         /\
-         (forAll v__9 in pair2 . (exists v__10 in pair1 . v__10 = v__9)))
-     . (v__12§regionF @ find v__12: int
-                        such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                        such that exists v__13 in pair1 . v__13 = v__12§regionF)
-       -
-       (v__15§regionF @ find v__15: int
-                        such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                        such that exists v__16 in pair1 . v__16 = v__15§regionF)
-       !=
-       (v__18§regionF @ find v__18: int
-                        such that forAll v__17 in pair2 . v__17 <= v__18§regionF
-                        such that exists v__19 in pair2 . v__19 = v__18§regionF)
-       -
-       (v__21§regionF @ find v__21: int
-                        such that forAll v__20 in pair2 . v__20 >= v__21§regionF
-                        such that exists v__22 in pair2 . v__22 = v__21§regionF))
-{builtIn.quanDomAndSubsetEq}
-    (forAll pair2 : set (size 2) of int
-         , pair2 subsetEq Ticks§region3#Explicit
-           /\
-           !((forAll v__7 in pair1 . (exists v__8 in pair2 . v__8 = v__7))
-             /\
-             (forAll v__9 in pair2 . (exists v__10 in pair1 . v__10 = v__9)))
-         . (v__12§regionF @ find v__12: int
-                            such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                            such that exists v__13 in pair1 . v__13 = v__12§regionF)
-           -
-           (v__15§regionF @ find v__15: int
-                            such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                            such that exists v__16 in pair1 . v__16 = v__15§regionF)
-           !=
-           (v__18§regionF @ find v__18: int
-                            such that forAll v__17 in pair2 . v__17 <= v__18§regionF
-                            such that exists v__19 in pair2 . v__19 = v__18§regionF)
-           -
-           (v__21§regionF @ find v__21: int
-                            such that forAll v__20 in pair2 . v__20 >= v__21§regionF
-                            such that exists v__22 in pair2 . v__22 = v__21§regionF))
+               , !((forAll v__8 in pair1 . (exists v__9 in pair2 . v__9 = v__8))
+                   /\
+                   (forAll v__10 in pair2 . (exists v__11 in pair1 . v__11 = v__10)))
+               . (v__13§regionF @ find v__13: int
+                                  such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                  such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                 -
+                 (v__16§regionF @ find v__16: int
+                                  such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                  such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                 !=
+                 (v__19§regionF @ find v__19: int
+                                  such that forAll v__18 in pair2 . v__18 <= v__19§regionF
+                                  such that exists v__20 in pair2 . v__20 = v__19§regionF)
+                 -
+                 (v__22§regionF @ find v__22: int
+                                  such that forAll v__21 in pair2 . v__21 >= v__22§regionF
+                                  such that exists v__23 in pair2 . v__23 = v__22§regionF))
+          {builtIn.quanDomAndSubsetEq}
+              (forAll pair2 : set (size 2) of int
+                   , pair2 subsetEq Ticks§region3#Explicit
+                     /\
+                     !((forAll v__8 in pair1 . (exists v__9 in pair2 . v__9 = v__8))
+                       /\
+                       (forAll v__10 in pair2 . (exists v__11 in pair1 . v__11 = v__10)))
+                   . (v__13§regionF @ find v__13: int
+                                      such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                      such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                     -
+                     (v__16§regionF @ find v__16: int
+                                      such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                      such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                     !=
+                     (v__19§regionF @ find v__19: int
+                                      such that forAll v__18 in pair2 . v__18 <= v__19§regionF
+                                      such that exists v__20 in pair2 . v__20 = v__19§regionF)
+                     -
+                     (v__22§regionF @ find v__22: int
+                                      such that forAll v__21 in pair2 . v__21 >= v__22§regionF
+                                      such that exists v__23 in pair2 . v__23 = v__22§regionF))
 [applied] pair2 subsetEq Ticks§region3#Explicit
-{rules/refns/set-subseteq-to-quantified.rule}
-    (forAll v__23 in pair2 . v__23 in Ticks§region3#Explicit)
-[applied] v__23 in Ticks§region3#Explicit
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__24 in Ticks§region3#Explicit . v__24 = v__23)
-[applied] (exists v__24 in Ticks§region3#Explicit . v__24 = v__23)
-{rules/refns/set-explicit/set-explicit-quantified.rule}
-    (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__23)
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__24 in pair2 . v__24 in Ticks§region3#Explicit)
+[applied] v__24 in Ticks§region3#Explicit
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__25 in Ticks§region3#Explicit . v__25 = v__24)
+[applied] (exists v__25 in Ticks§region3#Explicit . v__25 = v__24)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__24)
 [representation] set (size 2) of int (#2) Explicit, Occurrence
 [applied] (forAll pair2 : set (size 2) of int
-     , (forAll v__23 in pair2
-            . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__23))
-       /\
-       !((forAll v__7 in pair1 . (exists v__8 in pair2 . v__8 = v__7))
-         /\
-         (forAll v__9 in pair2 . (exists v__10 in pair1 . v__10 = v__9)))
-     . (v__12§regionF @ find v__12: int
-                        such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                        such that exists v__13 in pair1 . v__13 = v__12§regionF)
-       -
-       (v__15§regionF @ find v__15: int
-                        such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                        such that exists v__16 in pair1 . v__16 = v__15§regionF)
-       !=
-       (v__18§regionF @ find v__18: int
-                        such that forAll v__17 in pair2 . v__17 <= v__18§regionF
-                        such that exists v__19 in pair2 . v__19 = v__18§regionF)
-       -
-       (v__21§regionF @ find v__21: int
-                        such that forAll v__20 in pair2 . v__20 >= v__21§regionF
-                        such that exists v__22 in pair2 . v__22 = v__21§regionF))
-{builtIn.abstractDomsInQuans}
-    (forAll pair2_Explicit : matrix indexed by [int(1..2)] of int
-         , (forAll v__23 in pair2§regionS#Explicit
-                . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__23))
-           /\
-           !((forAll v__7 in pair1 . (exists v__8 in pair2§regionS#Explicit . v__8 = v__7))
-             /\
-             (forAll v__9 in pair2§regionS#Explicit
-                  . (exists v__10 in pair1 . v__10 = v__9)))
-           /\
-           (allDiff(pair2_Explicit§regionS)
-            /\
-            pair2_Explicit§regionS[1] < pair2_Explicit§regionS[2])
-         . (v__12§regionF @ find v__12: int
-                            such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                            such that exists v__13 in pair1 . v__13 = v__12§regionF)
-           -
-           (v__15§regionF @ find v__15: int
-                            such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                            such that exists v__16 in pair1 . v__16 = v__15§regionF)
-           !=
-           (v__18§regionF @ find v__18: int
-                            such that forAll v__17 in pair2§regionS#Explicit . v__17 <= v__18§regionF
-                            such that exists v__19 in pair2§regionS#Explicit . v__19 = v__18§regionF)
-           -
-           (v__21§regionF @ find v__21: int
-                            such that forAll v__20 in pair2§regionS#Explicit . v__20 >= v__21§regionF
-                            such that exists v__22 in pair2§regionS#Explicit . v__22 = v__21§regionF))
-{builtIn.abstractDomsInQuans}
-    (forAll pair2_Occurrence : matrix indexed by [int] of bool
-         , (forAll v__23 in pair2§regionS#Occurrence
-                . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__23))
-           /\
-           !((forAll v__7 in pair1
-                  . (exists v__8 in pair2§regionS#Occurrence . v__8 = v__7))
-             /\
-             (forAll v__9 in pair2§regionS#Occurrence
-                  . (exists v__10 in pair1 . v__10 = v__9)))
-           /\
-           (sum v__27 : int . toInt(pair2_Occurrence§regionS[v__27])) = 2
-         . (v__12§regionF @ find v__12: int
-                            such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                            such that exists v__13 in pair1 . v__13 = v__12§regionF)
-           -
-           (v__15§regionF @ find v__15: int
-                            such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                            such that exists v__16 in pair1 . v__16 = v__15§regionF)
-           !=
-           (v__18§regionF @ find v__18: int
-                            such that forAll v__17 in pair2§regionS#Occurrence . v__17 <= v__18§regionF
-                            such that exists v__19 in pair2§regionS#Occurrence . v__19 = v__18§regionF)
-           -
-           (v__21§regionF @ find v__21: int
-                            such that forAll v__20 in pair2§regionS#Occurrence . v__20 >= v__21§regionF
-                            such that exists v__22 in pair2§regionS#Occurrence . v__22 = v__21§regionF))
-[applied] (forAll v__23 in pair2§regionS#Occurrence
-     . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__23))
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__28 : int , pair2_Occurrence§regionS[v__28]
-         . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__28))
-[applied] (exists v__8 in pair2§regionS#Occurrence . v__8 = v__7)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7)
-[applied] (forAll v__9 in pair2§regionS#Occurrence
-     . (exists v__10 in pair1 . v__10 = v__9))
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__30 : int , pair2_Occurrence§regionS[v__30]
-         . (exists v__10 in pair1 . v__10 = v__30))
-[applied] (forAll v__17 in pair2§regionS#Occurrence . v__17 <= v__18§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__31 : int , pair2_Occurrence§regionS[v__31] . v__31 <= v__18§regionF)
-[applied] (exists v__19 in pair2§regionS#Occurrence . v__19 = v__18§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 = v__18§regionF)
-[applied] (forAll v__20 in pair2§regionS#Occurrence . v__20 >= v__21§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 >= v__21§regionF)
-[applied] (exists v__22 in pair2§regionS#Occurrence . v__22 = v__21§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 = v__21§regionF)
+               , (forAll v__24 in pair2
+                      . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__24))
+                 /\
+                 !((forAll v__8 in pair1 . (exists v__9 in pair2 . v__9 = v__8))
+                   /\
+                   (forAll v__10 in pair2 . (exists v__11 in pair1 . v__11 = v__10)))
+               . (v__13§regionF @ find v__13: int
+                                  such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                  such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                 -
+                 (v__16§regionF @ find v__16: int
+                                  such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                  such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                 !=
+                 (v__19§regionF @ find v__19: int
+                                  such that forAll v__18 in pair2 . v__18 <= v__19§regionF
+                                  such that exists v__20 in pair2 . v__20 = v__19§regionF)
+                 -
+                 (v__22§regionF @ find v__22: int
+                                  such that forAll v__21 in pair2 . v__21 >= v__22§regionF
+                                  such that exists v__23 in pair2 . v__23 = v__22§regionF))
+          {builtIn.abstractDomsInQuans}
+              (forAll pair2_Explicit : matrix indexed by [int(1..2)] of int
+                   , (forAll v__24 in pair2§regionS#Explicit
+                          . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__24))
+                     /\
+                     !((forAll v__8 in pair1 . (exists v__9 in pair2§regionS#Explicit . v__9 = v__8))
+                       /\
+                       (forAll v__10 in pair2§regionS#Explicit
+                            . (exists v__11 in pair1 . v__11 = v__10)))
+                     /\
+                     (allDiff(pair2_Explicit§regionS)
+                      /\
+                      pair2_Explicit§regionS[1] < pair2_Explicit§regionS[2])
+                   . (v__13§regionF @ find v__13: int
+                                      such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                      such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                     -
+                     (v__16§regionF @ find v__16: int
+                                      such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                      such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                     !=
+                     (v__19§regionF @ find v__19: int
+                                      such that forAll v__18 in pair2§regionS#Explicit . v__18 <= v__19§regionF
+                                      such that exists v__20 in pair2§regionS#Explicit . v__20 = v__19§regionF)
+                     -
+                     (v__22§regionF @ find v__22: int
+                                      such that forAll v__21 in pair2§regionS#Explicit . v__21 >= v__22§regionF
+                                      such that exists v__23 in pair2§regionS#Explicit . v__23 = v__22§regionF))
+          {builtIn.abstractDomsInQuans}
+              (forAll pair2_Occurrence : matrix indexed by [int] of bool
+                   , (forAll v__24 in pair2§regionS#Occurrence
+                          . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__24))
+                     /\
+                     !((forAll v__8 in pair1
+                            . (exists v__9 in pair2§regionS#Occurrence . v__9 = v__8))
+                       /\
+                       (forAll v__10 in pair2§regionS#Occurrence
+                            . (exists v__11 in pair1 . v__11 = v__10)))
+                     /\
+                     (sum v__28 : int . toInt(pair2_Occurrence§regionS[v__28])) = 2
+                   . (v__13§regionF @ find v__13: int
+                                      such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                      such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                     -
+                     (v__16§regionF @ find v__16: int
+                                      such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                      such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                     !=
+                     (v__19§regionF @ find v__19: int
+                                      such that forAll v__18 in pair2§regionS#Occurrence . v__18 <= v__19§regionF
+                                      such that exists v__20 in pair2§regionS#Occurrence . v__20 = v__19§regionF)
+                     -
+                     (v__22§regionF @ find v__22: int
+                                      such that forAll v__21 in pair2§regionS#Occurrence . v__21 >= v__22§regionF
+                                      such that exists v__23 in pair2§regionS#Occurrence . v__23 = v__22§regionF))
+[applied] (forAll v__24 in pair2§regionS#Occurrence
+               . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__24))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__29 : int , pair2_Occurrence§regionS[v__29]
+                   . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__29))
+[applied] (exists v__9 in pair2§regionS#Occurrence . v__9 = v__8)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8)
+[applied] (forAll v__10 in pair2§regionS#Occurrence
+               . (exists v__11 in pair1 . v__11 = v__10))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__31 : int , pair2_Occurrence§regionS[v__31]
+                   . (exists v__11 in pair1 . v__11 = v__31))
+[applied] (forAll v__18 in pair2§regionS#Occurrence . v__18 <= v__19§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 <= v__19§regionF)
+[applied] (exists v__20 in pair2§regionS#Occurrence . v__20 = v__19§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 = v__19§regionF)
+[applied] (forAll v__21 in pair2§regionS#Occurrence . v__21 >= v__22§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 >= v__22§regionF)
+[applied] (exists v__23 in pair2§regionS#Occurrence . v__23 = v__22§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__35 : int , pair2_Occurrence§regionS[v__35] . v__35 = v__22§regionF)
 [applied] (forAll pair1 : set (size 2) of int subsetEq Ticks§region2#Explicit
-     . (forAll pair2_Occurrence : matrix indexed by [int] of bool
-            , (forAll v__28 : int , pair2_Occurrence§regionS[v__28]
-                   . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__28))
-              /\
-              !((forAll v__7 in pair1
-                     . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7))
-                /\
-                (forAll v__30 : int , pair2_Occurrence§regionS[v__30]
-                     . (exists v__10 in pair1 . v__10 = v__30)))
-              /\
-              (sum v__27 : int . toInt(pair2_Occurrence§regionS[v__27])) = 2
-            . (v__12§regionF @ find v__12: int
-                               such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                               such that exists v__13 in pair1 . v__13 = v__12§regionF)
-              -
-              (v__15§regionF @ find v__15: int
-                               such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                               such that exists v__16 in pair1 . v__16 = v__15§regionF)
-              !=
-              (v__18§regionF @ find v__18: int
-                               such that
-                                   forAll v__31 : int , pair2_Occurrence§regionS[v__31] . v__31 <= v__18§regionF
-                               such that
-                                   exists v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 = v__18§regionF)
-              -
-              (v__21§regionF @ find v__21: int
-                               such that
-                                   forAll v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 >= v__21§regionF
-                               such that
-                                   exists v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 = v__21§regionF)))
-{builtIn.quanDomAndSubsetEq}
-    (forAll pair1 : set (size 2) of int , pair1 subsetEq Ticks§region2#Explicit
-         . (forAll pair2_Occurrence : matrix indexed by [int] of bool
-                , (forAll v__28 : int , pair2_Occurrence§regionS[v__28]
-                       . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__28))
-                  /\
-                  !((forAll v__7 in pair1
-                         . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7))
-                    /\
-                    (forAll v__30 : int , pair2_Occurrence§regionS[v__30]
-                         . (exists v__10 in pair1 . v__10 = v__30)))
-                  /\
-                  (sum v__27 : int . toInt(pair2_Occurrence§regionS[v__27])) = 2
-                . (v__12§regionF @ find v__12: int
-                                   such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                                   such that exists v__13 in pair1 . v__13 = v__12§regionF)
-                  -
-                  (v__15§regionF @ find v__15: int
-                                   such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                                   such that exists v__16 in pair1 . v__16 = v__15§regionF)
-                  !=
-                  (v__18§regionF @ find v__18: int
-                                   such that
-                                       forAll v__31 : int , pair2_Occurrence§regionS[v__31] . v__31 <= v__18§regionF
-                                   such that
-                                       exists v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 = v__18§regionF)
-                  -
-                  (v__21§regionF @ find v__21: int
-                                   such that
-                                       forAll v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 >= v__21§regionF
-                                   such that
-                                       exists v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 = v__21§regionF)))
+               . (forAll pair2_Occurrence : matrix indexed by [int] of bool
+                      , (forAll v__29 : int , pair2_Occurrence§regionS[v__29]
+                             . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__29))
+                        /\
+                        !((forAll v__8 in pair1
+                               . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8))
+                          /\
+                          (forAll v__31 : int , pair2_Occurrence§regionS[v__31]
+                               . (exists v__11 in pair1 . v__11 = v__31)))
+                        /\
+                        (sum v__28 : int . toInt(pair2_Occurrence§regionS[v__28])) = 2
+                      . (v__13§regionF @ find v__13: int
+                                         such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                         such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                        -
+                        (v__16§regionF @ find v__16: int
+                                         such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                         such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                        !=
+                        (v__19§regionF @ find v__19: int
+                                         such that
+                                             forAll v__32 : int , pair2_Occurrence§regionS[v__32]
+                                                 . v__32 <= v__19§regionF
+                                         such that
+                                             exists v__33 : int , pair2_Occurrence§regionS[v__33]
+                                                 . v__33 = v__19§regionF)
+                        -
+                        (v__22§regionF @ find v__22: int
+                                         such that
+                                             forAll v__34 : int , pair2_Occurrence§regionS[v__34]
+                                                 . v__34 >= v__22§regionF
+                                         such that
+                                             exists v__35 : int , pair2_Occurrence§regionS[v__35]
+                                                 . v__35 = v__22§regionF)))
+          {builtIn.quanDomAndSubsetEq}
+              (forAll pair1 : set (size 2) of int , pair1 subsetEq Ticks§region2#Explicit
+                   . (forAll pair2_Occurrence : matrix indexed by [int] of bool
+                          , (forAll v__29 : int , pair2_Occurrence§regionS[v__29]
+                                 . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__29))
+                            /\
+                            !((forAll v__8 in pair1
+                                   . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8))
+                              /\
+                              (forAll v__31 : int , pair2_Occurrence§regionS[v__31]
+                                   . (exists v__11 in pair1 . v__11 = v__31)))
+                            /\
+                            (sum v__28 : int . toInt(pair2_Occurrence§regionS[v__28])) = 2
+                          . (v__13§regionF @ find v__13: int
+                                             such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                             such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                            -
+                            (v__16§regionF @ find v__16: int
+                                             such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                             such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                            !=
+                            (v__19§regionF @ find v__19: int
+                                             such that
+                                                 forAll v__32 : int , pair2_Occurrence§regionS[v__32]
+                                                     . v__32 <= v__19§regionF
+                                             such that
+                                                 exists v__33 : int , pair2_Occurrence§regionS[v__33]
+                                                     . v__33 = v__19§regionF)
+                            -
+                            (v__22§regionF @ find v__22: int
+                                             such that
+                                                 forAll v__34 : int , pair2_Occurrence§regionS[v__34]
+                                                     . v__34 >= v__22§regionF
+                                             such that
+                                                 exists v__35 : int , pair2_Occurrence§regionS[v__35]
+                                                     . v__35 = v__22§regionF)))
 [applied] pair1 subsetEq Ticks§region2#Explicit
-{rules/refns/set-subseteq-to-quantified.rule}
-    (forAll v__35 in pair1 . v__35 in Ticks§region2#Explicit)
-[applied] v__35 in Ticks§region2#Explicit
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__36 in Ticks§region2#Explicit . v__36 = v__35)
-[applied] (exists v__36 in Ticks§region2#Explicit . v__36 = v__35)
-{rules/refns/set-explicit/set-explicit-quantified.rule}
-    (exists v__37 : int(1..n) . Ticks_Explicit§region2[v__37] = v__35)
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__36 in pair1 . v__36 in Ticks§region2#Explicit)
+[applied] v__36 in Ticks§region2#Explicit
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__37 in Ticks§region2#Explicit . v__37 = v__36)
+[applied] (exists v__37 in Ticks§region2#Explicit . v__37 = v__36)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (exists v__38 : int(1..n) . Ticks_Explicit§region2[v__38] = v__36)
 [applied] (forAll pair1 : set (size 2) of int
-     , (forAll v__35 in pair1
-            . (exists v__37 : int(1..n) . Ticks_Explicit§region2[v__37] = v__35))
-     . (forAll pair2_Occurrence : matrix indexed by [int] of bool
-            , (forAll v__28 : int , pair2_Occurrence§regionS[v__28]
-                   . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__28))
-              /\
-              !((forAll v__7 in pair1
-                     . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7))
-                /\
-                (forAll v__30 : int , pair2_Occurrence§regionS[v__30]
-                     . (exists v__10 in pair1 . v__10 = v__30)))
-              /\
-              (sum v__27 : int . toInt(pair2_Occurrence§regionS[v__27])) = 2
-            . (v__12§regionF @ find v__12: int
-                               such that forAll v__11 in pair1 . v__11 <= v__12§regionF
-                               such that exists v__13 in pair1 . v__13 = v__12§regionF)
-              -
-              (v__15§regionF @ find v__15: int
-                               such that forAll v__14 in pair1 . v__14 >= v__15§regionF
-                               such that exists v__16 in pair1 . v__16 = v__15§regionF)
-              !=
-              (v__18§regionF @ find v__18: int
-                               such that
-                                   forAll v__31 : int , pair2_Occurrence§regionS[v__31] . v__31 <= v__18§regionF
-                               such that
-                                   exists v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 = v__18§regionF)
-              -
-              (v__21§regionF @ find v__21: int
-                               such that
-                                   forAll v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 >= v__21§regionF
-                               such that
-                                   exists v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 = v__21§regionF)))
-{builtIn.abstractDomsInQuans}
-    (forAll pair1_Explicit : matrix indexed by [int(1..2)] of int
-         , (forAll v__35 in pair1§regionS#Explicit
-                . (exists v__37 : int(1..n) . Ticks_Explicit§region2[v__37] = v__35))
-           /\
-           (allDiff(pair1_Explicit§regionS)
-            /\
-            pair1_Explicit§regionS[1] < pair1_Explicit§regionS[2])
-         . (forAll pair2_Occurrence : matrix indexed by [int] of bool
-                , (forAll v__28 : int , pair2_Occurrence§regionS[v__28]
-                       . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__28))
-                  /\
-                  !((forAll v__7 in pair1§regionS#Explicit
-                         . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7))
-                    /\
-                    (forAll v__30 : int , pair2_Occurrence§regionS[v__30]
-                         . (exists v__10 in pair1§regionS#Explicit . v__10 = v__30)))
-                  /\
-                  (sum v__27 : int . toInt(pair2_Occurrence§regionS[v__27])) = 2
-                . (v__12§regionF @ find v__12: int
-                                   such that forAll v__11 in pair1§regionS#Explicit . v__11 <= v__12§regionF
-                                   such that exists v__13 in pair1§regionS#Explicit . v__13 = v__12§regionF)
-                  -
-                  (v__15§regionF @ find v__15: int
-                                   such that forAll v__14 in pair1§regionS#Explicit . v__14 >= v__15§regionF
-                                   such that exists v__16 in pair1§regionS#Explicit . v__16 = v__15§regionF)
-                  !=
-                  (v__18§regionF @ find v__18: int
-                                   such that
-                                       forAll v__31 : int , pair2_Occurrence§regionS[v__31] . v__31 <= v__18§regionF
-                                   such that
-                                       exists v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 = v__18§regionF)
-                  -
-                  (v__21§regionF @ find v__21: int
-                                   such that
-                                       forAll v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 >= v__21§regionF
-                                   such that
-                                       exists v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 = v__21§regionF)))
-{builtIn.abstractDomsInQuans}
-    (forAll pair1_Occurrence : matrix indexed by [int] of bool
-         , (forAll v__35 in pair1§regionS#Occurrence
-                . (exists v__37 : int(1..n) . Ticks_Explicit§region2[v__37] = v__35))
-           /\
-           (sum v__39 : int . toInt(pair1_Occurrence§regionS[v__39])) = 2
-         . (forAll pair2_Occurrence : matrix indexed by [int] of bool
-                , (forAll v__28 : int , pair2_Occurrence§regionS[v__28]
-                       . (exists v__25 : int(1..n) . Ticks_Explicit§region3[v__25] = v__28))
-                  /\
-                  !((forAll v__7 in pair1§regionS#Occurrence
-                         . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7))
-                    /\
-                    (forAll v__30 : int , pair2_Occurrence§regionS[v__30]
-                         . (exists v__10 in pair1§regionS#Occurrence . v__10 = v__30)))
-                  /\
-                  (sum v__27 : int . toInt(pair2_Occurrence§regionS[v__27])) = 2
-                . (v__12§regionF @ find v__12: int
-                                   such that forAll v__11 in pair1§regionS#Occurrence . v__11 <= v__12§regionF
-                                   such that exists v__13 in pair1§regionS#Occurrence . v__13 = v__12§regionF)
-                  -
-                  (v__15§regionF @ find v__15: int
-                                   such that forAll v__14 in pair1§regionS#Occurrence . v__14 >= v__15§regionF
-                                   such that exists v__16 in pair1§regionS#Occurrence . v__16 = v__15§regionF)
-                  !=
-                  (v__18§regionF @ find v__18: int
-                                   such that
-                                       forAll v__31 : int , pair2_Occurrence§regionS[v__31] . v__31 <= v__18§regionF
-                                   such that
-                                       exists v__32 : int , pair2_Occurrence§regionS[v__32] . v__32 = v__18§regionF)
-                  -
-                  (v__21§regionF @ find v__21: int
-                                   such that
-                                       forAll v__33 : int , pair2_Occurrence§regionS[v__33] . v__33 >= v__21§regionF
-                                   such that
-                                       exists v__34 : int , pair2_Occurrence§regionS[v__34] . v__34 = v__21§regionF)))
-[applied] (forAll v__35 in pair1§regionS#Occurrence
-     . (exists v__37 : int(1..n) . Ticks_Explicit§region2[v__37] = v__35))
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__40 : int , pair1_Occurrence§regionS[v__40]
-         . (exists v__37 : int(1..n) . Ticks_Explicit§region2[v__37] = v__40))
-[applied] (forAll v__7 in pair1§regionS#Occurrence
-     . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__7))
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__41 : int , pair1_Occurrence§regionS[v__41]
-         . (exists v__29 : int , pair2_Occurrence§regionS[v__29] . v__29 = v__41))
-[applied] (exists v__10 in pair1§regionS#Occurrence . v__10 = v__30)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__42 : int , pair1_Occurrence§regionS[v__42] . v__42 = v__30)
-[applied] (forAll v__11 in pair1§regionS#Occurrence . v__11 <= v__12§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__43 : int , pair1_Occurrence§regionS[v__43] . v__43 <= v__12§regionF)
-[applied] (exists v__13 in pair1§regionS#Occurrence . v__13 = v__12§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__44 : int , pair1_Occurrence§regionS[v__44] . v__44 = v__12§regionF)
-[applied] (forAll v__14 in pair1§regionS#Occurrence . v__14 >= v__15§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__45 : int , pair1_Occurrence§regionS[v__45] . v__45 >= v__15§regionF)
-[applied] (exists v__16 in pair1§regionS#Occurrence . v__16 = v__15§regionF)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__46 : int , pair1_Occurrence§regionS[v__46] . v__46 = v__15§regionF)
+               , (forAll v__36 in pair1
+                      . (exists v__38 : int(1..n) . Ticks_Explicit§region2[v__38] = v__36))
+               . (forAll pair2_Occurrence : matrix indexed by [int] of bool
+                      , (forAll v__29 : int , pair2_Occurrence§regionS[v__29]
+                             . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__29))
+                        /\
+                        !((forAll v__8 in pair1
+                               . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8))
+                          /\
+                          (forAll v__31 : int , pair2_Occurrence§regionS[v__31]
+                               . (exists v__11 in pair1 . v__11 = v__31)))
+                        /\
+                        (sum v__28 : int . toInt(pair2_Occurrence§regionS[v__28])) = 2
+                      . (v__13§regionF @ find v__13: int
+                                         such that forAll v__12 in pair1 . v__12 <= v__13§regionF
+                                         such that exists v__14 in pair1 . v__14 = v__13§regionF)
+                        -
+                        (v__16§regionF @ find v__16: int
+                                         such that forAll v__15 in pair1 . v__15 >= v__16§regionF
+                                         such that exists v__17 in pair1 . v__17 = v__16§regionF)
+                        !=
+                        (v__19§regionF @ find v__19: int
+                                         such that
+                                             forAll v__32 : int , pair2_Occurrence§regionS[v__32]
+                                                 . v__32 <= v__19§regionF
+                                         such that
+                                             exists v__33 : int , pair2_Occurrence§regionS[v__33]
+                                                 . v__33 = v__19§regionF)
+                        -
+                        (v__22§regionF @ find v__22: int
+                                         such that
+                                             forAll v__34 : int , pair2_Occurrence§regionS[v__34]
+                                                 . v__34 >= v__22§regionF
+                                         such that
+                                             exists v__35 : int , pair2_Occurrence§regionS[v__35]
+                                                 . v__35 = v__22§regionF)))
+          {builtIn.abstractDomsInQuans}
+              (forAll pair1_Explicit : matrix indexed by [int(1..2)] of int
+                   , (forAll v__36 in pair1§regionS#Explicit
+                          . (exists v__38 : int(1..n) . Ticks_Explicit§region2[v__38] = v__36))
+                     /\
+                     (allDiff(pair1_Explicit§regionS)
+                      /\
+                      pair1_Explicit§regionS[1] < pair1_Explicit§regionS[2])
+                   . (forAll pair2_Occurrence : matrix indexed by [int] of bool
+                          , (forAll v__29 : int , pair2_Occurrence§regionS[v__29]
+                                 . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__29))
+                            /\
+                            !((forAll v__8 in pair1§regionS#Explicit
+                                   . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8))
+                              /\
+                              (forAll v__31 : int , pair2_Occurrence§regionS[v__31]
+                                   . (exists v__11 in pair1§regionS#Explicit . v__11 = v__31)))
+                            /\
+                            (sum v__28 : int . toInt(pair2_Occurrence§regionS[v__28])) = 2
+                          . (v__13§regionF @ find v__13: int
+                                             such that forAll v__12 in pair1§regionS#Explicit . v__12 <= v__13§regionF
+                                             such that exists v__14 in pair1§regionS#Explicit . v__14 = v__13§regionF)
+                            -
+                            (v__16§regionF @ find v__16: int
+                                             such that forAll v__15 in pair1§regionS#Explicit . v__15 >= v__16§regionF
+                                             such that exists v__17 in pair1§regionS#Explicit . v__17 = v__16§regionF)
+                            !=
+                            (v__19§regionF @ find v__19: int
+                                             such that
+                                                 forAll v__32 : int , pair2_Occurrence§regionS[v__32]
+                                                     . v__32 <= v__19§regionF
+                                             such that
+                                                 exists v__33 : int , pair2_Occurrence§regionS[v__33]
+                                                     . v__33 = v__19§regionF)
+                            -
+                            (v__22§regionF @ find v__22: int
+                                             such that
+                                                 forAll v__34 : int , pair2_Occurrence§regionS[v__34]
+                                                     . v__34 >= v__22§regionF
+                                             such that
+                                                 exists v__35 : int , pair2_Occurrence§regionS[v__35]
+                                                     . v__35 = v__22§regionF)))
+          {builtIn.abstractDomsInQuans}
+              (forAll pair1_Occurrence : matrix indexed by [int] of bool
+                   , (forAll v__36 in pair1§regionS#Occurrence
+                          . (exists v__38 : int(1..n) . Ticks_Explicit§region2[v__38] = v__36))
+                     /\
+                     (sum v__40 : int . toInt(pair1_Occurrence§regionS[v__40])) = 2
+                   . (forAll pair2_Occurrence : matrix indexed by [int] of bool
+                          , (forAll v__29 : int , pair2_Occurrence§regionS[v__29]
+                                 . (exists v__26 : int(1..n) . Ticks_Explicit§region3[v__26] = v__29))
+                            /\
+                            !((forAll v__8 in pair1§regionS#Occurrence
+                                   . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8))
+                              /\
+                              (forAll v__31 : int , pair2_Occurrence§regionS[v__31]
+                                   . (exists v__11 in pair1§regionS#Occurrence . v__11 = v__31)))
+                            /\
+                            (sum v__28 : int . toInt(pair2_Occurrence§regionS[v__28])) = 2
+                          . (v__13§regionF @ find v__13: int
+                                             such that forAll v__12 in pair1§regionS#Occurrence . v__12 <= v__13§regionF
+                                             such that exists v__14 in pair1§regionS#Occurrence . v__14 = v__13§regionF)
+                            -
+                            (v__16§regionF @ find v__16: int
+                                             such that forAll v__15 in pair1§regionS#Occurrence . v__15 >= v__16§regionF
+                                             such that exists v__17 in pair1§regionS#Occurrence . v__17 = v__16§regionF)
+                            !=
+                            (v__19§regionF @ find v__19: int
+                                             such that
+                                                 forAll v__32 : int , pair2_Occurrence§regionS[v__32]
+                                                     . v__32 <= v__19§regionF
+                                             such that
+                                                 exists v__33 : int , pair2_Occurrence§regionS[v__33]
+                                                     . v__33 = v__19§regionF)
+                            -
+                            (v__22§regionF @ find v__22: int
+                                             such that
+                                                 forAll v__34 : int , pair2_Occurrence§regionS[v__34]
+                                                     . v__34 >= v__22§regionF
+                                             such that
+                                                 exists v__35 : int , pair2_Occurrence§regionS[v__35]
+                                                     . v__35 = v__22§regionF)))
+[applied] (forAll v__36 in pair1§regionS#Occurrence
+               . (exists v__38 : int(1..n) . Ticks_Explicit§region2[v__38] = v__36))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__41 : int , pair1_Occurrence§regionS[v__41]
+                   . (exists v__38 : int(1..n) . Ticks_Explicit§region2[v__38] = v__41))
+[applied] (forAll v__8 in pair1§regionS#Occurrence
+               . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__8))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__42 : int , pair1_Occurrence§regionS[v__42]
+                   . (exists v__30 : int , pair2_Occurrence§regionS[v__30] . v__30 = v__42))
+[applied] (exists v__11 in pair1§regionS#Occurrence . v__11 = v__31)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__43 : int , pair1_Occurrence§regionS[v__43] . v__43 = v__31)
+[applied] (forAll v__12 in pair1§regionS#Occurrence . v__12 <= v__13§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__44 : int , pair1_Occurrence§regionS[v__44] . v__44 <= v__13§regionF)
+[applied] (exists v__14 in pair1§regionS#Occurrence . v__14 = v__13§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__45 : int , pair1_Occurrence§regionS[v__45] . v__45 = v__13§regionF)
+[applied] (forAll v__15 in pair1§regionS#Occurrence . v__15 >= v__16§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__46 : int , pair1_Occurrence§regionS[v__46] . v__46 >= v__16§regionF)
+[applied] (exists v__17 in pair1§regionS#Occurrence . v__17 = v__16§regionF)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__47 : int , pair1_Occurrence§regionS[v__47] . v__47 = v__16§regionF)
 [removedDecl] find Ticks: set (size n) of int(0..2 ** n)
