@@ -110,9 +110,14 @@ applyCongfigToSpec spec config = withBindingScope' $ do
     void $ recordSpec spec
     initialiseSpecState spec
     let
-        isFindOrGiven [xMatch| _ := topLevel.declaration.find  |] = True
-        isFindOrGiven [xMatch| _ := topLevel.declaration.given |] = True
-        isFindOrGiven _ = False
+
+        isGiven [xMatch| _ := topLevel.declaration.given  |] = True
+        isGiven _ = False
+
+        isFind [xMatch| _  := topLevel.declaration.find   |] = True
+        isFind  _ = False
+
+        isFindOrGiven x = isFind x || isGiven x
 
         f p@[xMatch| [Prim (S nm)] := reference |] =
             case identifierSplit nm of
@@ -130,8 +135,11 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                 reregion e = e
                             modify $ \ st -> st { representationLog = (base, reprName, origDecl, newDom)
                                                                     :  representationLog st
-                                                , structuralConsLog = map (transform reregion) cons
-                                                                    ++ structuralConsLog st
+                                                , structuralConsLog =
+                                                    if isGiven origDecl
+                                                        then structuralConsLog st
+                                                        else map (transform reregion) cons
+                                                                ++ structuralConsLog st
                                                 }
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
