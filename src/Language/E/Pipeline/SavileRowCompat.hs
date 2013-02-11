@@ -20,6 +20,7 @@ savilerowCompat
     >=> recordSpec >=> conjureNoGuards
     >=> recordSpec >=> (return . onSpec toIntIsNoOp)
     >=> recordSpec >=> (return . atMostOneSuchThat)
+    >=> recordSpec >=> (return . removeMinMaxInt)
     >=> recordSpec >=> (return . langEPrime)
     >=> recordSpec
 
@@ -109,5 +110,32 @@ valueMatrixToLetting (Spec v statement) = do
 
 langEPrime :: Spec -> Spec
 langEPrime (Spec _ xs) = Spec ("ESSENCE'", [1,0]) xs
+
+
+removeMinMaxInt :: Spec -> Spec
+removeMinMaxInt (Spec v x) =
+    let
+
+        isMinMaxIntDecl [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+                               | [] := topLevel.declaration.given.domain.domain.int.ranges
+                               |]
+            | nm `elem` ["MININT", "MAXINT"] = True
+        isMinMaxIntDecl _ = False
+
+        xs = filter (not . isMinMaxIntDecl) (statementAsList x)
+
+        minIntRef = [xMake| reference := [Prim (S "MININT")] |]
+        maxIntRef = [xMake| reference := [Prim (S "MAXINT")] |]
+
+        stripFromRanges p@[xMatch| [fr,to] := domain.int.ranges.range.fromTo |]
+            | fr == minIntRef && to == maxIntRef = [xMake| domain.int.ranges := [] |]
+            | fr == minIntRef                    = [xMake| domain.int.ranges.range.to   := [to] |]
+            |                    to == maxIntRef = [xMake| domain.int.ranges.range.from := [fr] |]
+            | otherwise                          = p
+        stripFromRanges p = p
+
+    in
+
+        Spec v $ transform stripFromRanges $ listAsStatement xs
 
 
