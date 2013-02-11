@@ -13,6 +13,7 @@ module Language.E.Definition
     , listAsStatement, statementAsList
 
     , identifierSplit, identifierConstruct
+    , identifierStripRegion
 
     ) where
 
@@ -120,4 +121,10 @@ identifierConstruct base mregion mrepr =
             , maybe mempty ("§" `mappend`) mregion
             , maybe mempty ("#" `mappend`) mrepr
             ]
+
+identifierStripRegion :: Text -> Text
+identifierStripRegion t =
+    let (base, _, refn) = identifierSplit t
+    in  identifierConstruct base Nothing refn
+
 

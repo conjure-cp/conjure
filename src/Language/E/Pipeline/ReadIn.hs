@@ -7,6 +7,14 @@ import Language.E
 import System.Directory ( createDirectoryIfMissing )
 
 
+readSpecFromFile :: FilePath -> IO Spec
+readSpecFromFile fp = do
+    let errorMsg = "Error while parsing file."
+    pair <- pairWithContents fp
+    spec <- handleInIOSingle =<< runCompEIOSingle errorMsg (readSpec pair)
+    return spec
+
+
 readSpec :: MonadConjure m
     => (FilePath, Text)
     -> m Spec
@@ -38,6 +46,10 @@ readRuleRepr (fp,con) =
         Right x -> return x
 
 
+writeSpec :: FilePath -> Spec -> IO ()
+writeSpec fp spec = writeFile fp (renderPretty spec)
+
+
 writeSpecs :: FilePath -> String -> [Spec] -> IO ()
 writeSpecs base tag specs = do
     let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
@@ -45,7 +57,7 @@ writeSpecs base tag specs = do
         let outDirname  = base ++ "-" ++ tag
         let outFilename = base ++ "-" ++ tag ++ "/" ++ i ++ ".essence"
         createDirectoryIfMissing True outDirname
-        writeFile outFilename $ renderPretty spec
+        writeSpec outFilename spec
         putStrLn $ "[created file] " ++ outFilename
 
 
