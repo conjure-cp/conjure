@@ -21,6 +21,8 @@ import Language.E.Pipeline.ConjureAll
     )
 import Language.E.Pipeline.Driver ( driverConjure )
 
+-- for prettify
+import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
 rulesdbLoc :: IO FilePath
 rulesdbLoc = liftM (++ "/conjure.rulesdb") getBinDir
@@ -41,7 +43,7 @@ runConjureMode (ModeRefineParam inEssence' inParam' inEprime' outParam') = do
     writeSpec outParam' outParam
 runConjureMode (ModePrettify inp out) = do
     inp' <- readSpecFromFile inp
-    writeSpec out inp'
+    writeSpec out (atMostOneSuchThat inp')
 runConjureMode mode@(ModeDFAll inEssence') = do
     (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
     inEssence <- readSpecFromFile inEssence'
