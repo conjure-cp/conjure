@@ -97,6 +97,7 @@ end
 
 if options.dryRun
     paramsBuild << "--dry-run"
+    paramsBuild << "-v"
     puts paramsBuild.join(" ")
 end
 
