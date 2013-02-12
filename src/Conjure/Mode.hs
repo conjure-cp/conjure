@@ -66,9 +66,9 @@ parseArgs (pairs, _flags, _rest) = msum
             mode      <- key "--mode"
             guard (mode =~= words "refineparam")
             inEssence <- key "--in-essence"
-            inParam   <- key "--in-param"
+            inParam   <- key "--in-essence-param"
             outEprime <- key "--in-eprime"
-            outParam  <- key "--out-param"
+            outParam  <- key "--out-eprime-param"
             return $ ModeRefineParam inEssence inParam outEprime outParam
 
         modePrettify = do
@@ -80,7 +80,7 @@ parseArgs (pairs, _flags, _rest) = msum
 
         modeDFAll = do
             mode <- key "--mode"
-            guard (mode =~= words "df depthfirst")
+            guard (mode =~= words "df depthfirst depth-first")
             inEssence <- key "--in-essence"
             return $ ModeDFAll inEssence
 
