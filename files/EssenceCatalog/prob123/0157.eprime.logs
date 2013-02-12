@@ -1,0 +1,1749 @@
+[handleInfDom] given n_farms: int(1..)
+~~>
+given n_farms: int(1..MAXINT)
+[handleInfDom] given capacity: int(1..)
+~~>
+given capacity: int(1..MAXINT)
+[handleInfDom] given distance: function (total) set (size 2) of Farm --> int(0..)
+~~>
+given distance: function (total) set (size 2) of Farm --> int(0..MAXINT)
+[handleInfDom] given milk: function (total) Farm --> int(0..)
+~~>
+given milk: function (total) Farm --> int(0..MAXINT)
+[representation] find odd: function int(1..n_farms + 2) --> int(1..n_farms + 1) (#1) AsReln
+[representation] find even: function int(1..n_farms + 2) --> int(1..n_farms + 1) (#1) AsReln
+[representation] given small: set of int(1..n_farms + 1) (#2) ExplicitVarSize, Occurrence
+[representation] given large: set of int(1..n_farms + 1) (#2) ExplicitVarSize, Occurrence
+[representation] given distance:
+        function (total) set (size 2) of int(1..n_farms + 1) --> int(0..MAXINT)
+(#1)
+AsReln
+[representation] given milk: function (total) int(1..n_farms + 1) --> int(0..MAXINT)
+(#2)
+AsReln, Matrix1D
+[configuration] milk§region5#AsReln odd§region15#AsReln small§region3#Occurrence even§region10#AsReln large§region2#Occurrence even§region14#AsReln distance§region7#AsReln even§region12#AsReln odd§region8#AsReln odd§region9#AsReln large§region4#ExplicitVarSize distance§region11#AsReln even§region13#AsReln small§region1#ExplicitVarSize odd§region6#AsReln
+[addedDecl] find odd_AsReln: relation of (int(1..n_farms + 2) * int(1..n_farms + 1))
+[addedDecl] find even_AsReln: relation of (int(1..n_farms + 2) * int(1..n_farms + 1))
+[addedDecl] given distance_AsReln:
+        relation of (set (size 2) of int(1..n_farms + 1) * int(0..MAXINT))
+[addedDecl] given milk_AsReln: relation of (int(1..n_farms + 1) * int(0..MAXINT))
+[addedDecl] given large_ExplicitVarSize:
+        matrix indexed by [int(1..n_farms + 1)] of (bool, int(1..n_farms + 1))
+[addedDecl] given small_Occurrence: matrix indexed by [int(1..n_farms + 1)] of bool
+[addedDecl] given large_Occurrence: matrix indexed by [int(1..n_farms + 1)] of bool
+[addedDecl] given small_ExplicitVarSize:
+        matrix indexed by [int(1..n_farms + 1)] of (bool, int(1..n_farms + 1))
+[applied] f in small§region1#ExplicitVarSize
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__13 in small§region1#ExplicitVarSize . v__13 = f)
+[applied] (exists v__13 in small§region1#ExplicitVarSize . v__13 = f)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (exists v__14 : int(1..n_farms + 1) , small_ExplicitVarSize§region1[v__14, 1]
+         . small_ExplicitVarSize§region1[v__14, 2] = f)
+[applied] f in large§region2#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__15 in large§region2#Occurrence . v__15 = f)
+[applied] (exists v__15 in large§region2#Occurrence . v__15 = f)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__16 : int(1..n_farms + 1) , large_Occurrence§region2[v__16]
+         . v__16 = f)
+[applied] f in small§region3#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__17 in small§region3#Occurrence . v__17 = f)
+[applied] (exists v__17 in small§region3#Occurrence . v__17 = f)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__18 : int(1..n_farms + 1) , small_Occurrence§region3[v__18]
+         . v__18 = f)
+[applied] f in large§region4#ExplicitVarSize
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__19 in large§region4#ExplicitVarSize . v__19 = f)
+[applied] (exists v__19 in large§region4#ExplicitVarSize . v__19 = f)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (exists v__20 : int(1..n_farms + 1) , large_ExplicitVarSize§region4[v__20, 1]
+         . large_ExplicitVarSize§region4[v__20, 2] = f)
+[applied] milk§region5#AsReln(1)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__21 in toSet(milk_AsReln§region5) , v__21[1] = 1 . v__21[2])
+[applied] |odd§region6#AsReln|
+{rules/refns/function-card.rule}
+    |toSet(odd§region6#AsReln)|
+[applied] |toSet(odd§region6#AsReln)|
+{rules/refns/set-card.rule}
+    (sum v__22 in toSet(odd§region6#AsReln) . 1)
+[applied] (sum v__22 in toSet(odd§region6#AsReln) . 1)
+{rules/refns/function-asreln/function-toSet-quantified.rule}
+    (sum v__22 in toSet(odd_AsReln§region6) . 1)
+[applied] odd§region8#AsReln(i)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2])
+[applied] odd§region9#AsReln(i + 1)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])
+[applied] distance§region7#AsReln({(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i
+                              . v__23[2]),
+                         (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])})
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__25 in toSet(distance_AsReln§region7)
+         , v__25[1]
+           =
+           {(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+            (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+         . v__25[2])
+[applied] v__25[1]
+=
+{(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+ (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+{rules/refns/set-eq-to-subsets.rule}
+    v__25[1]
+    subsetEq
+    {(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+     (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+    /\
+    v__25[1]
+    supsetEq
+    {(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+     (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+[applied] v__25[1]
+subsetEq
+{(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+ (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__26 in v__25[1]
+         . v__26
+           in
+           {(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+            (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])})
+[applied] v__26
+in
+{(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+ (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+{rules/refns/set-in-to-quantified.rule}
+    (sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]) = v__26
+    \/
+    (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2]) = v__26
+[applied] v__25[1]
+supsetEq
+{(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+ (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+     (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+    subsetEq
+    v__25[1]
+[applied] {(sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]),
+ (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])}
+subsetEq
+v__25[1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]) in v__25[1]
+    /\
+    (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])
+    in
+    v__25[1]
+[applied] (sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]) in v__25[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__29 in v__25[1]
+         . v__29 = (sum v__23 in toSet(odd_AsReln§region8) , v__23[1] = i . v__23[2]))
+[applied] (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2])
+in
+v__25[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__30 in v__25[1]
+         . v__30
+           =
+           (sum v__24 in toSet(odd_AsReln§region9) , v__24[1] = i + 1 . v__24[2]))
+[applied] |even§region10#AsReln|
+{rules/refns/function-card.rule}
+    |toSet(even§region10#AsReln)|
+[applied] |toSet(even§region10#AsReln)|
+{rules/refns/set-card.rule}
+    (sum v__31 in toSet(even§region10#AsReln) . 1)
+[applied] (sum v__31 in toSet(even§region10#AsReln) . 1)
+{rules/refns/function-asreln/function-toSet-quantified.rule}
+    (sum v__31 in toSet(even_AsReln§region10) . 1)
+[applied] even§region12#AsReln(i)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2])
+[applied] even§region13#AsReln(i + 1)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])
+[applied] distance§region11#AsReln({(sum v__32 in toSet(even_AsReln§region12)
+                               , v__32[1] = i
+                               . v__32[2]),
+                          (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])})
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__34 in toSet(distance_AsReln§region11)
+         , v__34[1]
+           =
+           {(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+            (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+         . v__34[2])
+[applied] v__34[1]
+=
+{(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+ (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+{rules/refns/set-eq-to-subsets.rule}
+    v__34[1]
+    subsetEq
+    {(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+     (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+    /\
+    v__34[1]
+    supsetEq
+    {(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+     (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+[applied] v__34[1]
+subsetEq
+{(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+ (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__35 in v__34[1]
+         . v__35
+           in
+           {(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+            (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])})
+[applied] v__35
+in
+{(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+ (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+{rules/refns/set-in-to-quantified.rule}
+    (sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]) = v__35
+    \/
+    (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2]) = v__35
+[applied] v__34[1]
+supsetEq
+{(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+ (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+     (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+    subsetEq
+    v__34[1]
+[applied] {(sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]),
+ (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])}
+subsetEq
+v__34[1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]) in v__34[1]
+    /\
+    (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])
+    in
+    v__34[1]
+[applied] (sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]) in v__34[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__38 in v__34[1]
+         . v__38 = (sum v__32 in toSet(even_AsReln§region12) , v__32[1] = i . v__32[2]))
+[applied] (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2])
+in
+v__34[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__39 in v__34[1]
+         . v__39
+           =
+           (sum v__33 in toSet(even_AsReln§region13) , v__33[1] = i + 1 . v__33[2]))
+[applied] even§region14#AsReln(1)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__40 in toSet(even_AsReln§region14) , v__40[1] = 1 . v__40[2])
+[applied] odd§region15#AsReln(1)
+{rules/refns/function-asreln/function-asreln-image-int.rule}
+    (sum v__41 in toSet(odd_AsReln§region15) , v__41[1] = 1 . v__41[2])
+[applied] large#ExplicitVarSize = large#Occurrence
+{rules/refns/set-eq-to-subsets.rule}
+    large#ExplicitVarSize subsetEq large#Occurrence
+    /\
+    large#ExplicitVarSize supsetEq large#Occurrence
+[applied] large#ExplicitVarSize subsetEq large#Occurrence
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__42 in large#ExplicitVarSize . v__42 in large#Occurrence)
+[applied] v__42 in large#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__43 in large#Occurrence . v__43 = v__42)
+[applied] (exists v__43 in large#Occurrence . v__43 = v__42)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__44 : int(1..n_farms + 1) , large_Occurrence[v__44] . v__44 = v__42)
+[applied] (forAll v__42 in large#ExplicitVarSize
+     . (exists v__44 : int(1..n_farms + 1) , large_Occurrence[v__44]
+            . v__44 = v__42))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__45 : int(1..n_farms + 1) , large_ExplicitVarSize[v__45, 1]
+         . (exists v__44 : int(1..n_farms + 1) , large_Occurrence[v__44]
+                . v__44 = large_ExplicitVarSize[v__45, 2]))
+[applied] large#ExplicitVarSize supsetEq large#Occurrence
+{rules/refns/set-supseteq-to-subseteq.rule}
+    large#Occurrence subsetEq large#ExplicitVarSize
+[applied] large#Occurrence subsetEq large#ExplicitVarSize
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__46 in large#Occurrence . v__46 in large#ExplicitVarSize)
+[applied] v__46 in large#ExplicitVarSize
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__47 in large#ExplicitVarSize . v__47 = v__46)
+[applied] (exists v__47 in large#ExplicitVarSize . v__47 = v__46)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (exists v__48 : int(1..n_farms + 1) , large_ExplicitVarSize[v__48, 1]
+         . large_ExplicitVarSize[v__48, 2] = v__46)
+[applied] (forAll v__46 in large#Occurrence
+     . (exists v__48 : int(1..n_farms + 1) , large_ExplicitVarSize[v__48, 1]
+            . large_ExplicitVarSize[v__48, 2] = v__46))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__49 : int(1..n_farms + 1) , large_Occurrence[v__49]
+         . (exists v__48 : int(1..n_farms + 1) , large_ExplicitVarSize[v__48, 1]
+                . large_ExplicitVarSize[v__48, 2] = v__49))
+[applied] small#ExplicitVarSize = small#Occurrence
+{rules/refns/set-eq-to-subsets.rule}
+    small#ExplicitVarSize subsetEq small#Occurrence
+    /\
+    small#ExplicitVarSize supsetEq small#Occurrence
+[applied] small#ExplicitVarSize subsetEq small#Occurrence
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__50 in small#ExplicitVarSize . v__50 in small#Occurrence)
+[applied] v__50 in small#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__51 in small#Occurrence . v__51 = v__50)
+[applied] (exists v__51 in small#Occurrence . v__51 = v__50)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__52 : int(1..n_farms + 1) , small_Occurrence[v__52] . v__52 = v__50)
+[applied] (forAll v__50 in small#ExplicitVarSize
+     . (exists v__52 : int(1..n_farms + 1) , small_Occurrence[v__52]
+            . v__52 = v__50))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__53 : int(1..n_farms + 1) , small_ExplicitVarSize[v__53, 1]
+         . (exists v__52 : int(1..n_farms + 1) , small_Occurrence[v__52]
+                . v__52 = small_ExplicitVarSize[v__53, 2]))
+[applied] small#ExplicitVarSize supsetEq small#Occurrence
+{rules/refns/set-supseteq-to-subseteq.rule}
+    small#Occurrence subsetEq small#ExplicitVarSize
+[applied] small#Occurrence subsetEq small#ExplicitVarSize
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__54 in small#Occurrence . v__54 in small#ExplicitVarSize)
+[applied] v__54 in small#ExplicitVarSize
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__55 in small#ExplicitVarSize . v__55 = v__54)
+[applied] (exists v__55 in small#ExplicitVarSize . v__55 = v__54)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (exists v__56 : int(1..n_farms + 1) , small_ExplicitVarSize[v__56, 1]
+         . small_ExplicitVarSize[v__56, 2] = v__54)
+[applied] (forAll v__54 in small#Occurrence
+     . (exists v__56 : int(1..n_farms + 1) , small_ExplicitVarSize[v__56, 1]
+            . small_ExplicitVarSize[v__56, 2] = v__54))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__57 : int(1..n_farms + 1) , small_Occurrence[v__57]
+         . (exists v__56 : int(1..n_farms + 1) , small_ExplicitVarSize[v__56, 1]
+                . small_ExplicitVarSize[v__56, 2] = v__57))
+[applied] v__9 = v__10[1]
+{rules/refns/set-eq-to-subsets.rule}
+    v__9 subsetEq v__10[1] /\ v__9 supsetEq v__10[1]
+[applied] v__9 subsetEq v__10[1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__58 in v__9 . v__58 in v__10[1])
+[applied] v__58 in v__10[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__59 in v__10[1] . v__59 = v__58)
+[applied] v__9 supsetEq v__10[1]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    v__10[1] subsetEq v__9
+[applied] v__10[1] subsetEq v__9
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__60 in v__10[1] . v__60 in v__9)
+[applied] v__60 in v__9
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__61 in v__9 . v__61 = v__60)
+[representation] set (size 2) of int(1..n_farms + 1) (#2) Occurrence, Explicit
+[applied] (forAll v__9 : set (size 2) of int(1..n_farms + 1)
+     . (sum v__10 in toSet(distance_AsReln§region11)
+            . (forAll v__58 in v__9 . (exists v__59 in v__10[1] . v__59 = v__58))
+              /\
+              (forAll v__60 in v__10[1] . (exists v__61 in v__9 . v__61 = v__60)))
+       =
+       1)
+{builtIn.abstractDomsInQuans}
+    (forAll v__9_Occurrence : matrix indexed by [int(1..n_farms + 1)] of bool
+         , (sum v__62 : int(1..n_farms + 1) . toInt(v__9_Occurrence§regionS[v__62])) = 2
+         . (sum v__10 in toSet(distance_AsReln§region11)
+                . (forAll v__58 in v__9§regionS#Occurrence
+                       . (exists v__59 in v__10[1] . v__59 = v__58))
+                  /\
+                  (forAll v__60 in v__10[1]
+                       . (exists v__61 in v__9§regionS#Occurrence . v__61 = v__60)))
+           =
+           1)
+{builtIn.abstractDomsInQuans}
+    (forAll v__9_Explicit : matrix indexed by [int(1..2)] of int(1..n_farms + 1)
+         , allDiff(v__9_Explicit§regionS)
+           /\
+           v__9_Explicit§regionS[1] < v__9_Explicit§regionS[2]
+         . (sum v__10 in toSet(distance_AsReln§region11)
+                . (forAll v__58 in v__9§regionS#Explicit
+                       . (exists v__59 in v__10[1] . v__59 = v__58))
+                  /\
+                  (forAll v__60 in v__10[1]
+                       . (exists v__61 in v__9§regionS#Explicit . v__61 = v__60)))
+           =
+           1)
+[applied] (forAll v__58 in v__9§regionS#Occurrence
+     . (exists v__59 in v__10[1] . v__59 = v__58))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__64 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__64]
+         . (exists v__59 in v__10[1] . v__59 = v__64))
+[applied] (exists v__61 in v__9§regionS#Occurrence . v__61 = v__60)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+         . v__65 = v__60)
+[applied] v__9 subsetEq v__10[1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__66 in v__9 . v__66 in v__10[1])
+[applied] v__66 in v__10[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__67 in v__10[1] . v__67 = v__66)
+[applied] v__10[1] subsetEq v__9
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__68 in v__10[1] . v__68 in v__9)
+[applied] v__68 in v__9
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__69 in v__9 . v__69 = v__68)
+[applied] (forAll v__9 : set (size 2) of int(1..n_farms + 1)
+     . (sum v__10 in toSet(distance_AsReln§region7)
+            . (forAll v__66 in v__9 . (exists v__67 in v__10[1] . v__67 = v__66))
+              /\
+              (forAll v__68 in v__10[1] . (exists v__69 in v__9 . v__69 = v__68)))
+       =
+       1)
+{builtIn.abstractDomsInQuans}
+    (forAll v__9_Occurrence : matrix indexed by [int(1..n_farms + 1)] of bool
+         , (sum v__70 : int(1..n_farms + 1) . toInt(v__9_Occurrence§regionS[v__70])) = 2
+         . (sum v__10 in toSet(distance_AsReln§region7)
+                . (forAll v__66 in v__9§regionS#Occurrence
+                       . (exists v__67 in v__10[1] . v__67 = v__66))
+                  /\
+                  (forAll v__68 in v__10[1]
+                       . (exists v__69 in v__9§regionS#Occurrence . v__69 = v__68)))
+           =
+           1)
+{builtIn.abstractDomsInQuans}
+    (forAll v__9_Explicit : matrix indexed by [int(1..2)] of int(1..n_farms + 1)
+         , allDiff(v__9_Explicit§regionS)
+           /\
+           v__9_Explicit§regionS[1] < v__9_Explicit§regionS[2]
+         . (sum v__10 in toSet(distance_AsReln§region7)
+                . (forAll v__66 in v__9§regionS#Explicit
+                       . (exists v__67 in v__10[1] . v__67 = v__66))
+                  /\
+                  (forAll v__68 in v__10[1]
+                       . (exists v__69 in v__9§regionS#Explicit . v__69 = v__68)))
+           =
+           1)
+[applied] (forAll v__66 in v__9§regionS#Explicit
+     . (exists v__67 in v__10[1] . v__67 = v__66))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__72 : int(1..2)
+         . (exists v__67 in v__10[1] . v__67 = v__9_Explicit§regionS[v__72]))
+[applied] (exists v__69 in v__9§regionS#Explicit . v__69 = v__68)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__68)
+[removedDecl] given small_ExplicitVarSize:
+        matrix indexed by [int(1..n_farms + 1)] of (bool, int(1..n_farms + 1))
+[removedDecl] given large_ExplicitVarSize:
+        matrix indexed by [int(1..n_farms + 1)] of (bool, int(1..n_farms + 1))
+[removedDecl] find even: function int(1..n_farms + 2) --> int(1..n_farms + 1)
+[removedDecl] find odd: function int(1..n_farms + 2) --> int(1..n_farms + 1)
+[removedDecl] given milk: function (total) int(1..n_farms + 1) --> int(0..MAXINT)
+[removedDecl] given distance:
+        function (total) set (size 2) of int(1..n_farms + 1) --> int(0..MAXINT)
+[removedDecl] given large: set of int(1..n_farms + 1)
+[removedDecl] given small: set of int(1..n_farms + 1)
+[representation] find odd_AsReln: relation of (int(1..n_farms + 2) * int(1..n_farms + 1))
+(#1)
+RelationAsSet
+[representation] find even_AsReln: relation of (int(1..n_farms + 2) * int(1..n_farms + 1))
+(#1)
+RelationAsSet
+[representation] given distance_AsReln:
+        relation of (set (size 2) of int(1..n_farms + 1) * int(0..MAXINT))
+(#1)
+RelationAsSet
+[representation] given milk_AsReln: relation of (int(1..n_farms + 1) * int(0..MAXINT))
+(#1)
+RelationAsSet
+[configuration] distance_AsReln§region7#RelationAsSet milk_AsReln§region5#RelationAsSet distance_AsReln§region11#RelationAsSet distance_AsReln§region1#RelationAsSet milk_AsReln§region2#RelationAsSet odd_AsReln§region9#RelationAsSet even_AsReln§region12#RelationAsSet even_AsReln§region10#RelationAsSet odd_AsReln§region15#RelationAsSet odd_AsReln§region6#RelationAsSet even_AsReln§region13#RelationAsSet even_AsReln§region14#RelationAsSet odd_AsReln§region8#RelationAsSet odd_AsReln§region3#RelationAsSet even_AsReln§region4#RelationAsSet
+[addedDecl] find even_AsReln_RelationAsSet:
+        set of (int(1..n_farms + 2), int(1..n_farms + 1))
+[addedDecl] find odd_AsReln_RelationAsSet: set of (int(1..n_farms + 2), int(1..n_farms + 1))
+[addedDecl] given milk_AsReln_RelationAsSet: set of (int(1..n_farms + 1), int(0..MAXINT))
+[addedDecl] given distance_AsReln_RelationAsSet:
+        set of (set (size 2) of int(1..n_farms + 1), int(0..MAXINT))
+[applied] (sum v__21 in toSet(milk_AsReln§region5#RelationAsSet) , v__21[1] = 1
+     . v__21[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__21 in milk_AsReln_RelationAsSet§region5 , v__21[1] = 1 . v__21[2])
+[applied] (sum v__22 in toSet(odd_AsReln§region6#RelationAsSet) . 1)
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__22 in odd_AsReln_RelationAsSet§region6 . 1)
+[applied] (sum v__23 in toSet(odd_AsReln§region8#RelationAsSet) , v__23[1] = i . v__23[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__23 in odd_AsReln_RelationAsSet§region8 , v__23[1] = i . v__23[2])
+[applied] (sum v__24 in toSet(odd_AsReln§region9#RelationAsSet) , v__24[1] = i + 1
+     . v__24[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__24 in odd_AsReln_RelationAsSet§region9 , v__24[1] = i + 1 . v__24[2])
+[applied] (sum v__25 in toSet(distance_AsReln§region7#RelationAsSet)
+     , (forAll v__26 in v__25[1]
+            . (sum v__23 in odd_AsReln_RelationAsSet§region8 , v__23[1] = i . v__23[2])
+              =
+              v__26
+              \/
+              (sum v__24 in odd_AsReln_RelationAsSet§region9 , v__24[1] = i + 1 . v__24[2])
+              =
+              v__26)
+       /\
+       ((exists v__29 in v__25[1]
+             . v__29
+               =
+               (sum v__23 in odd_AsReln_RelationAsSet§region8 , v__23[1] = i . v__23[2]))
+        /\
+        (exists v__30 in v__25[1]
+             . v__30
+               =
+               (sum v__24 in odd_AsReln_RelationAsSet§region9 , v__24[1] = i + 1 . v__24[2])))
+     . v__25[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__25 in distance_AsReln_RelationAsSet§region7
+         , (forAll v__26 in v__25[1]
+                . (sum v__23 in odd_AsReln_RelationAsSet§region8 , v__23[1] = i . v__23[2])
+                  =
+                  v__26
+                  \/
+                  (sum v__24 in odd_AsReln_RelationAsSet§region9 , v__24[1] = i + 1 . v__24[2])
+                  =
+                  v__26)
+           /\
+           ((exists v__29 in v__25[1]
+                 . v__29
+                   =
+                   (sum v__23 in odd_AsReln_RelationAsSet§region8 , v__23[1] = i . v__23[2]))
+            /\
+            (exists v__30 in v__25[1]
+                 . v__30
+                   =
+                   (sum v__24 in odd_AsReln_RelationAsSet§region9 , v__24[1] = i + 1 . v__24[2])))
+         . v__25[2])
+[applied] (sum v__31 in toSet(even_AsReln§region10#RelationAsSet) . 1)
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__31 in even_AsReln_RelationAsSet§region10 . 1)
+[applied] (sum v__32 in toSet(even_AsReln§region12#RelationAsSet) , v__32[1] = i
+     . v__32[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__32 in even_AsReln_RelationAsSet§region12 , v__32[1] = i . v__32[2])
+[applied] (sum v__33 in toSet(even_AsReln§region13#RelationAsSet) , v__33[1] = i + 1
+     . v__33[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__33 in even_AsReln_RelationAsSet§region13 , v__33[1] = i + 1 . v__33[2])
+[applied] (sum v__34 in toSet(distance_AsReln§region11#RelationAsSet)
+     , (forAll v__35 in v__34[1]
+            . (sum v__32 in even_AsReln_RelationAsSet§region12 , v__32[1] = i . v__32[2])
+              =
+              v__35
+              \/
+              (sum v__33 in even_AsReln_RelationAsSet§region13 , v__33[1] = i + 1 . v__33[2])
+              =
+              v__35)
+       /\
+       ((exists v__38 in v__34[1]
+             . v__38
+               =
+               (sum v__32 in even_AsReln_RelationAsSet§region12 , v__32[1] = i . v__32[2]))
+        /\
+        (exists v__39 in v__34[1]
+             . v__39
+               =
+               (sum v__33 in even_AsReln_RelationAsSet§region13 , v__33[1] = i + 1
+                    . v__33[2])))
+     . v__34[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__34 in distance_AsReln_RelationAsSet§region11
+         , (forAll v__35 in v__34[1]
+                . (sum v__32 in even_AsReln_RelationAsSet§region12 , v__32[1] = i . v__32[2])
+                  =
+                  v__35
+                  \/
+                  (sum v__33 in even_AsReln_RelationAsSet§region13 , v__33[1] = i + 1 . v__33[2])
+                  =
+                  v__35)
+           /\
+           ((exists v__38 in v__34[1]
+                 . v__38
+                   =
+                   (sum v__32 in even_AsReln_RelationAsSet§region12 , v__32[1] = i . v__32[2]))
+            /\
+            (exists v__39 in v__34[1]
+                 . v__39
+                   =
+                   (sum v__33 in even_AsReln_RelationAsSet§region13 , v__33[1] = i + 1
+                        . v__33[2])))
+         . v__34[2])
+[applied] (sum v__40 in toSet(even_AsReln§region14#RelationAsSet) , v__40[1] = 1
+     . v__40[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__40 in even_AsReln_RelationAsSet§region14 , v__40[1] = 1 . v__40[2])
+[applied] (sum v__41 in toSet(odd_AsReln§region15#RelationAsSet) , v__41[1] = 1
+     . v__41[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__41 in odd_AsReln_RelationAsSet§region15 , v__41[1] = 1 . v__41[2])
+[applied] (sum v__2 in toSet(odd_AsReln§region15#RelationAsSet) . v__1 = v__2[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__2 in odd_AsReln_RelationAsSet§region15 . v__1 = v__2[1])
+[applied] (sum v__2 in toSet(odd_AsReln§region6#RelationAsSet) . v__1 = v__2[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__2 in odd_AsReln_RelationAsSet§region6 . v__1 = v__2[1])
+[applied] (sum v__2 in toSet(odd_AsReln§region8#RelationAsSet) . v__1 = v__2[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__2 in odd_AsReln_RelationAsSet§region8 . v__1 = v__2[1])
+[applied] (sum v__2 in toSet(odd_AsReln§region9#RelationAsSet) . v__1 = v__2[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__2 in odd_AsReln_RelationAsSet§region9 . v__1 = v__2[1])
+[applied] (sum v__12 in toSet(milk_AsReln§region5#RelationAsSet) . v__11 = v__12[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__12 in milk_AsReln_RelationAsSet§region5 . v__11 = v__12[1])
+[applied] (sum v__4 in toSet(even_AsReln§region10#RelationAsSet) . v__3 = v__4[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__4 in even_AsReln_RelationAsSet§region10 . v__3 = v__4[1])
+[applied] (sum v__4 in toSet(even_AsReln§region12#RelationAsSet) . v__3 = v__4[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__4 in even_AsReln_RelationAsSet§region12 . v__3 = v__4[1])
+[applied] (sum v__4 in toSet(even_AsReln§region13#RelationAsSet) . v__3 = v__4[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__4 in even_AsReln_RelationAsSet§region13 . v__3 = v__4[1])
+[applied] (sum v__4 in toSet(even_AsReln§region14#RelationAsSet) . v__3 = v__4[1])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__4 in even_AsReln_RelationAsSet§region14 . v__3 = v__4[1])
+[applied] (sum v__10 in toSet(distance_AsReln§region7#RelationAsSet)
+     . (forAll v__72 : int(1..2)
+            . (exists v__67 in v__10[1] . v__67 = v__9_Explicit§regionS[v__72]))
+       /\
+       (forAll v__68 in v__10[1]
+            . (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__68)))
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__10 in distance_AsReln_RelationAsSet§region7
+         . (forAll v__72 : int(1..2)
+                . (exists v__67 in v__10[1] . v__67 = v__9_Explicit§regionS[v__72]))
+           /\
+           (forAll v__68 in v__10[1]
+                . (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__68)))
+[applied] (sum v__10 in toSet(distance_AsReln§region11#RelationAsSet)
+     . (forAll v__64 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__64]
+            . (exists v__59 in v__10[1] . v__59 = v__64))
+       /\
+       (forAll v__60 in v__10[1]
+            . (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+                   . v__65 = v__60)))
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__10 in distance_AsReln_RelationAsSet§region11
+         . (forAll v__64 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__64]
+                . (exists v__59 in v__10[1] . v__59 = v__64))
+           /\
+           (forAll v__60 in v__10[1]
+                . (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+                       . v__65 = v__60)))
+[removedDecl] find even_AsReln: relation of (int(1..n_farms + 2) * int(1..n_farms + 1))
+[removedDecl] find odd_AsReln: relation of (int(1..n_farms + 2) * int(1..n_farms + 1))
+[removedDecl] given milk_AsReln: relation of (int(1..n_farms + 1) * int(0..MAXINT))
+[removedDecl] given distance_AsReln:
+        relation of (set (size 2) of int(1..n_farms + 1) * int(0..MAXINT))
+[representation] find odd_AsReln_RelationAsSet: set of (int(1..n_farms + 2), int(1..n_farms + 1))
+(#1)
+ExplicitVarSize
+[representation] find even_AsReln_RelationAsSet:
+        set of (int(1..n_farms + 2), int(1..n_farms + 1))
+(#1)
+ExplicitVarSize
+[representation] given distance_AsReln_RelationAsSet:
+        set of (set (size 2) of int(1..n_farms + 1), int(0..MAXINT))
+(#1)
+ExplicitVarSize
+[representation] given milk_AsReln_RelationAsSet: set of (int(1..n_farms + 1), int(0..MAXINT))
+(#1)
+ExplicitVarSize
+[configuration] odd_AsReln_RelationAsSet§region8#ExplicitVarSize milk_AsReln_RelationAsSet§region2#ExplicitVarSize even_AsReln_RelationAsSet§region13#ExplicitVarSize even_AsReln_RelationAsSet§region10#ExplicitVarSize distance_AsReln_RelationAsSet§region7#ExplicitVarSize odd_AsReln_RelationAsSet§region15#ExplicitVarSize even_AsReln_RelationAsSet§region4#ExplicitVarSize even_AsReln_RelationAsSet§region14#ExplicitVarSize distance_AsReln_RelationAsSet§region11#ExplicitVarSize even_AsReln_RelationAsSet§region12#ExplicitVarSize odd_AsReln_RelationAsSet§region6#ExplicitVarSize milk_AsReln_RelationAsSet§region5#ExplicitVarSize odd_AsReln_RelationAsSet§region3#ExplicitVarSize odd_AsReln_RelationAsSet§region9#ExplicitVarSize distance_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] find even_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of (bool,
+                                                                      (int(1..n_farms + 2), int(1..n_farms + 1)))
+[addedDecl] find odd_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of (bool,
+                                                                      (int(1..n_farms + 2), int(1..n_farms + 1)))
+[addedDecl] given milk_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n_farms + 1) * (MAXINT + 1))] of (bool,
+                                                                     (int(1..n_farms + 1), int(0..MAXINT)))
+[addedDecl] given distance_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1))] of (bool,
+                                                                          (set (size 2) of int(1..n_farms + 1),
+                                                                           int(0..MAXINT)))
+[applied] (sum v__21 in milk_AsReln_RelationAsSet§region5#ExplicitVarSize , v__21[1] = 1
+     . v__21[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__37 : int(1..(n_farms + 1) * (MAXINT + 1))
+         , milk_AsReln_RelationAsSet_ExplicitVarSize§region5[v__37, 2, 1] = 1
+           /\
+           milk_AsReln_RelationAsSet_ExplicitVarSize§region5[v__37, 1]
+         . milk_AsReln_RelationAsSet_ExplicitVarSize§region5[v__37, 2, 2])
+[applied] (sum v__22 in odd_AsReln_RelationAsSet§region6#ExplicitVarSize . 1)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__42 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region6[v__42, 1]
+         . 1)
+[applied] (sum v__23 in odd_AsReln_RelationAsSet§region8#ExplicitVarSize , v__23[1] = i
+     . v__23[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__43 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 2, 1] = i
+           /\
+           odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 1]
+         . odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 2, 2])
+[applied] (sum v__24 in odd_AsReln_RelationAsSet§region9#ExplicitVarSize
+     , v__24[1] = i + 1
+     . v__24[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__46 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 2, 1] = i + 1
+           /\
+           odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 1]
+         . odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 2, 2])
+[applied] (sum v__23 in odd_AsReln_RelationAsSet§region8#ExplicitVarSize , v__23[1] = i
+     . v__23[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__47 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 2, 1] = i
+           /\
+           odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 1]
+         . odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 2, 2])
+[applied] (sum v__24 in odd_AsReln_RelationAsSet§region9#ExplicitVarSize
+     , v__24[1] = i + 1
+     . v__24[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__50 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 2, 1] = i + 1
+           /\
+           odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 1]
+         . odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 2, 2])
+[applied] (sum v__25 in distance_AsReln_RelationAsSet§region7#ExplicitVarSize
+     , (forAll v__26 in v__25[1]
+            . (sum v__43 : int(1..(n_farms + 2) * (n_farms + 1))
+                   , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 2, 1] = i
+                     /\
+                     odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 1]
+                   . odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 2, 2])
+              =
+              v__26
+              \/
+              (sum v__46 : int(1..(n_farms + 2) * (n_farms + 1))
+                   , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 2, 1] = i + 1
+                     /\
+                     odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 1]
+                   . odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 2, 2])
+              =
+              v__26)
+       /\
+       ((exists v__29 in v__25[1]
+             . v__29
+               =
+               (sum v__47 : int(1..(n_farms + 2) * (n_farms + 1))
+                    , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 2, 1] = i
+                      /\
+                      odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 1]
+                    . odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 2, 2]))
+        /\
+        (exists v__30 in v__25[1]
+             . v__30
+               =
+               (sum v__50 : int(1..(n_farms + 2) * (n_farms + 1))
+                    , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 2, 1] = i + 1
+                      /\
+                      odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 1]
+                    . odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 2, 2])))
+     . v__25[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__51 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         , (forAll v__26 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__51,
+                                                                                  2,
+                                                                                  1]
+                . (sum v__43 : int(1..(n_farms + 2) * (n_farms + 1))
+                       , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 2, 1] = i
+                         /\
+                         odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 1]
+                       . odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__43, 2, 2])
+                  =
+                  v__26
+                  \/
+                  (sum v__46 : int(1..(n_farms + 2) * (n_farms + 1))
+                       , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 2, 1] = i + 1
+                         /\
+                         odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 1]
+                       . odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__46, 2, 2])
+                  =
+                  v__26)
+           /\
+           ((exists v__29 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__51,
+                                                                                   2,
+                                                                                   1]
+                 . v__29
+                   =
+                   (sum v__47 : int(1..(n_farms + 2) * (n_farms + 1))
+                        , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 2, 1] = i
+                          /\
+                          odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 1]
+                        . odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__47, 2, 2]))
+            /\
+            (exists v__30 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__51,
+                                                                                   2,
+                                                                                   1]
+                 . v__30
+                   =
+                   (sum v__50 : int(1..(n_farms + 2) * (n_farms + 1))
+                        , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 2, 1] = i + 1
+                          /\
+                          odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 1]
+                        . odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__50, 2, 2])))
+           /\
+           distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__51, 1]
+         . distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__51, 2, 2])
+[applied] (sum v__31 in even_AsReln_RelationAsSet§region10#ExplicitVarSize . 1)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__54 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region10[v__54, 1]
+         . 1)
+[applied] (sum v__32 in even_AsReln_RelationAsSet§region12#ExplicitVarSize , v__32[1] = i
+     . v__32[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__55 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 2, 1] = i
+           /\
+           even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 1]
+         . even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 2, 2])
+[applied] (sum v__33 in even_AsReln_RelationAsSet§region13#ExplicitVarSize
+     , v__33[1] = i + 1
+     . v__33[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__58 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 2, 1] = i + 1
+           /\
+           even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 1]
+         . even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 2, 2])
+[applied] (sum v__32 in even_AsReln_RelationAsSet§region12#ExplicitVarSize , v__32[1] = i
+     . v__32[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__61 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 2, 1] = i
+           /\
+           even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 1]
+         . even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 2, 2])
+[applied] (sum v__33 in even_AsReln_RelationAsSet§region13#ExplicitVarSize
+     , v__33[1] = i + 1
+     . v__33[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__63 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 2, 1] = i + 1
+           /\
+           even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 1]
+         . even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 2, 2])
+[applied] (sum v__34 in distance_AsReln_RelationAsSet§region11#ExplicitVarSize
+     , (forAll v__35 in v__34[1]
+            . (sum v__55 : int(1..(n_farms + 2) * (n_farms + 1))
+                   , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 2, 1] = i
+                     /\
+                     even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 1]
+                   . even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 2, 2])
+              =
+              v__35
+              \/
+              (sum v__58 : int(1..(n_farms + 2) * (n_farms + 1))
+                   , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 2, 1] = i + 1
+                     /\
+                     even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 1]
+                   . even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 2, 2])
+              =
+              v__35)
+       /\
+       ((exists v__38 in v__34[1]
+             . v__38
+               =
+               (sum v__61 : int(1..(n_farms + 2) * (n_farms + 1))
+                    , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 2, 1] = i
+                      /\
+                      even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 1]
+                    . even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 2, 2]))
+        /\
+        (exists v__39 in v__34[1]
+             . v__39
+               =
+               (sum v__63 : int(1..(n_farms + 2) * (n_farms + 1))
+                    , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 2, 1] = i + 1
+                      /\
+                      even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 1]
+                    . even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 2, 2])))
+     . v__34[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__66 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         , (forAll v__35 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__66,
+                                                                                   2,
+                                                                                   1]
+                . (sum v__55 : int(1..(n_farms + 2) * (n_farms + 1))
+                       , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 2, 1] = i
+                         /\
+                         even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 1]
+                       . even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__55, 2, 2])
+                  =
+                  v__35
+                  \/
+                  (sum v__58 : int(1..(n_farms + 2) * (n_farms + 1))
+                       , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 2, 1] = i + 1
+                         /\
+                         even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 1]
+                       . even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__58, 2, 2])
+                  =
+                  v__35)
+           /\
+           ((exists v__38 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__66,
+                                                                                    2,
+                                                                                    1]
+                 . v__38
+                   =
+                   (sum v__61 : int(1..(n_farms + 2) * (n_farms + 1))
+                        , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 2, 1] = i
+                          /\
+                          even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 1]
+                        . even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__61, 2, 2]))
+            /\
+            (exists v__39 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__66,
+                                                                                    2,
+                                                                                    1]
+                 . v__39
+                   =
+                   (sum v__63 : int(1..(n_farms + 2) * (n_farms + 1))
+                        , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 2, 1] = i + 1
+                          /\
+                          even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 1]
+                        . even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__63, 2, 2])))
+           /\
+           distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__66, 1]
+         . distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__66, 2, 2])
+[applied] (sum v__40 in even_AsReln_RelationAsSet§region14#ExplicitVarSize , v__40[1] = 1
+     . v__40[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__69 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region14[v__69, 2, 1] = 1
+           /\
+           even_AsReln_RelationAsSet_ExplicitVarSize§region14[v__69, 1]
+         . even_AsReln_RelationAsSet_ExplicitVarSize§region14[v__69, 2, 2])
+[applied] (sum v__41 in odd_AsReln_RelationAsSet§region15#ExplicitVarSize , v__41[1] = 1
+     . v__41[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__70 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region15[v__70, 2, 1] = 1
+           /\
+           odd_AsReln_RelationAsSet_ExplicitVarSize§region15[v__70, 1]
+         . odd_AsReln_RelationAsSet_ExplicitVarSize§region15[v__70, 2, 2])
+[applied] (sum v__2 in odd_AsReln_RelationAsSet§region15#ExplicitVarSize . v__1 = v__2[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__71 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region15[v__71, 1]
+         . v__1 = odd_AsReln_RelationAsSet_ExplicitVarSize§region15[v__71, 2, 1])
+[applied] (sum v__2 in odd_AsReln_RelationAsSet§region6#ExplicitVarSize . v__1 = v__2[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__74 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region6[v__74, 1]
+         . v__1 = odd_AsReln_RelationAsSet_ExplicitVarSize§region6[v__74, 2, 1])
+[applied] (sum v__2 in odd_AsReln_RelationAsSet§region8#ExplicitVarSize . v__1 = v__2[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__75 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__75, 1]
+         . v__1 = odd_AsReln_RelationAsSet_ExplicitVarSize§region8[v__75, 2, 1])
+[applied] (sum v__2 in odd_AsReln_RelationAsSet§region9#ExplicitVarSize . v__1 = v__2[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__76 : int(1..(n_farms + 2) * (n_farms + 1))
+         , odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__76, 1]
+         . v__1 = odd_AsReln_RelationAsSet_ExplicitVarSize§region9[v__76, 2, 1])
+[applied] (sum v__12 in milk_AsReln_RelationAsSet§region5#ExplicitVarSize
+     . v__11 = v__12[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__77 : int(1..(n_farms + 1) * (MAXINT + 1))
+         , milk_AsReln_RelationAsSet_ExplicitVarSize§region5[v__77, 1]
+         . v__11 = milk_AsReln_RelationAsSet_ExplicitVarSize§region5[v__77, 2, 1])
+[applied] (sum v__4 in even_AsReln_RelationAsSet§region10#ExplicitVarSize
+     . v__3 = v__4[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__78 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region10[v__78, 1]
+         . v__3 = even_AsReln_RelationAsSet_ExplicitVarSize§region10[v__78, 2, 1])
+[applied] (sum v__4 in even_AsReln_RelationAsSet§region12#ExplicitVarSize
+     . v__3 = v__4[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__79 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__79, 1]
+         . v__3 = even_AsReln_RelationAsSet_ExplicitVarSize§region12[v__79, 2, 1])
+[applied] (sum v__4 in even_AsReln_RelationAsSet§region13#ExplicitVarSize
+     . v__3 = v__4[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__80 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__80, 1]
+         . v__3 = even_AsReln_RelationAsSet_ExplicitVarSize§region13[v__80, 2, 1])
+[applied] (sum v__4 in even_AsReln_RelationAsSet§region14#ExplicitVarSize
+     . v__3 = v__4[1])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__81 : int(1..(n_farms + 2) * (n_farms + 1))
+         , even_AsReln_RelationAsSet_ExplicitVarSize§region14[v__81, 1]
+         . v__3 = even_AsReln_RelationAsSet_ExplicitVarSize§region14[v__81, 2, 1])
+[applied] (sum v__10 in distance_AsReln_RelationAsSet§region7#ExplicitVarSize
+     . (forAll v__72 : int(1..2)
+            . (exists v__67 in v__10[1] . v__67 = v__9_Explicit§regionS[v__72]))
+       /\
+       (forAll v__68 in v__10[1]
+            . (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__68)))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__82 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         , distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__82, 1]
+         . (forAll v__72 : int(1..2)
+                . (exists v__67 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__82,
+                                                                                         2,
+                                                                                         1]
+                       . v__67 = v__9_Explicit§regionS[v__72]))
+           /\
+           (forAll v__68 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__82,
+                                                                                  2,
+                                                                                  1]
+                . (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__68)))
+[applied] (sum v__10 in distance_AsReln_RelationAsSet§region11#ExplicitVarSize
+     . (forAll v__64 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__64]
+            . (exists v__59 in v__10[1] . v__59 = v__64))
+       /\
+       (forAll v__60 in v__10[1]
+            . (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+                   . v__65 = v__60)))
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__83 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         , distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__83, 1]
+         . (forAll v__64 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__64]
+                . (exists v__59 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__83,
+                                                                                          2,
+                                                                                          1]
+                       . v__59 = v__64))
+           /\
+           (forAll v__60 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__83,
+                                                                                   2,
+                                                                                   1]
+                . (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+                       . v__65 = v__60)))
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+!=
+distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+{rules/refns/neq-to-eq.rule}
+    !(distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+      =
+      distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1])
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+=
+distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+{rules/refns/set-eq-to-subsets.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+    /\
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+    supsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__84 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19,
+                                                                           2,
+                                                                           1]
+         . v__84 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1])
+[applied] v__84 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__85 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27,
+                                                                           2,
+                                                                           1]
+         . v__85 = v__84)
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+supsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27, 2, 1]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__86 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__27,
+                                                                           2,
+                                                                           1]
+         . v__86 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1])
+[applied] v__86 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19, 2, 1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__87 in distance_AsReln_RelationAsSet_ExplicitVarSize§region1[v__19,
+                                                                           2,
+                                                                           1]
+         . v__87 = v__86)
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+!=
+distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+{rules/refns/neq-to-eq.rule}
+    !(distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+      =
+      distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1])
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+=
+distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+{rules/refns/set-eq-to-subsets.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+    /\
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+    supsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__88 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19,
+                                                                            2,
+                                                                            1]
+         . v__88 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1])
+[applied] v__88 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__89 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27,
+                                                                            2,
+                                                                            1]
+         . v__89 = v__88)
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+supsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__90 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27,
+                                                                            2,
+                                                                            1]
+         . v__90 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1])
+[applied] v__90 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__91 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19,
+                                                                            2,
+                                                                            1]
+         . v__91 = v__90)
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+!=
+distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+{rules/refns/neq-to-eq.rule}
+    !(distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+      =
+      distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1])
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+=
+distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+{rules/refns/set-eq-to-subsets.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+    /\
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+    supsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__92 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19,
+                                                                           2,
+                                                                           1]
+         . v__92 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1])
+[applied] v__92 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__93 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27,
+                                                                           2,
+                                                                           1]
+         . v__93 = v__92)
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+supsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__94 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27,
+                                                                           2,
+                                                                           1]
+         . v__94 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1])
+[applied] v__94 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__95 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19,
+                                                                           2,
+                                                                           1]
+         . v__95 = v__94)
+[from-cached] such that
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         . (forAll v__27 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+                , v__19 < v__27
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 1]
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 1]
+                . distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 1]
+                  !=
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 1]
+                  \/
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 2]
+                  !=
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 2]))
+    /\
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1) - 1)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 1]
+           <=
+           distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19 + 1, 1])
+~~>
+such that
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         . (forAll v__27 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+                , v__19 < v__27
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 1]
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 1]
+                . !((forAll v__88 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19,
+                                                                                            2,
+                                                                                            1]
+                         . (exists v__89 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27,
+                                                                                                   2,
+                                                                                                   1]
+                                . v__89 = v__88))
+                    /\
+                    (forAll v__90 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27,
+                                                                                            2,
+                                                                                            1]
+                         . (exists v__91 in distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19,
+                                                                                                   2,
+                                                                                                   1]
+                                . v__91 = v__90)))
+                  \/
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 2, 2]
+                  !=
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__27, 2, 2]))
+    /\
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1) - 1)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19, 1]
+           <=
+           distance_AsReln_RelationAsSet_ExplicitVarSize§region11[v__19 + 1, 1])
+[from-cached] such that
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         . (forAll v__27 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+                , v__19 < v__27
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 1]
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 1]
+                . distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 1]
+                  !=
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 1]
+                  \/
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 2]
+                  !=
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 2]))
+    /\
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1) - 1)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 1]
+           <=
+           distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19 + 1, 1])
+~~>
+such that
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+         . (forAll v__27 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+                , v__19 < v__27
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 1]
+                  /\
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 1]
+                . !((forAll v__92 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19,
+                                                                                           2,
+                                                                                           1]
+                         . (exists v__93 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27,
+                                                                                                  2,
+                                                                                                  1]
+                                . v__93 = v__92))
+                    /\
+                    (forAll v__94 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27,
+                                                                                           2,
+                                                                                           1]
+                         . (exists v__95 in distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19,
+                                                                                                  2,
+                                                                                                  1]
+                                . v__95 = v__94)))
+                  \/
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 2, 2]
+                  !=
+                  distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__27, 2, 2]))
+    /\
+    (forAll v__19 : int(1..2 ** (n_farms + 1) * (MAXINT + 1) - 1)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19, 1]
+           <=
+           distance_AsReln_RelationAsSet_ExplicitVarSize§region7[v__19 + 1, 1])
+[removedDecl] given distance_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1))] of (bool,
+                                                                          (set (size 2) of int(1..n_farms + 1),
+                                                                           int(0..MAXINT)))
+[removedDecl] given milk_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n_farms + 1) * (MAXINT + 1))] of (bool,
+                                                                     (int(1..n_farms + 1), int(0..MAXINT)))
+[removedDecl] find odd_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of (bool,
+                                                                      (int(1..n_farms + 2), int(1..n_farms + 1)))
+[removedDecl] find even_AsReln_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of (bool,
+                                                                      (int(1..n_farms + 2), int(1..n_farms + 1)))
+[removedDecl] given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..2 ** (n_farms + 1)
+                                  *
+                                  (MAXINT + 1))] of (set (size 2) of int(1..n_farms + 1), int(0..MAXINT))
+[removedDecl] given milk_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..(n_farms + 1) * (MAXINT + 1))] of (int(1..n_farms
+                                                                            +
+                                                                            1),
+                                                                     int(0..MAXINT))
+[removedDecl] find odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of (int(1..n_farms
+                                                                             +
+                                                                             2),
+                                                                      int(1..n_farms + 1))
+[removedDecl] find even_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of (int(1..n_farms
+                                                                             +
+                                                                             2),
+                                                                      int(1..n_farms + 1))
+[removedDecl] find even_AsReln_RelationAsSet:
+        set of (int(1..n_farms + 2), int(1..n_farms + 1))
+[removedDecl] find odd_AsReln_RelationAsSet: set of (int(1..n_farms + 2), int(1..n_farms + 1))
+[removedDecl] given milk_AsReln_RelationAsSet: set of (int(1..n_farms + 1), int(0..MAXINT))
+[removedDecl] given distance_AsReln_RelationAsSet:
+        set of (set (size 2) of int(1..n_farms + 1), int(0..MAXINT))
+[representation] given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1))] of set (size 2) of
+                                                                             int(1..n_farms + 1)
+(#2)
+Occurrence, Explicit
+[configuration] distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence
+[addedDecl] given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1)),
+                           int(1..2)] of int(1..n_farms + 1)
+[addedDecl] given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1)),
+                           int(1..n_farms + 1)] of bool
+[applied] (forAll v__26 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__51]
+     . (sum v__43 : int(1..(n_farms + 2) * (n_farms + 1))
+            , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region8[v__43] = i
+              /\
+              odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region8[v__43]
+            . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region8[v__43])
+       =
+       v__26
+       \/
+       (sum v__46 : int(1..(n_farms + 2) * (n_farms + 1))
+            , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region9[v__46] = i + 1
+              /\
+              odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region9[v__46]
+            . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region9[v__46])
+       =
+       v__26)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__2 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__51,
+                                                                                          v__2]
+         . (sum v__43 : int(1..(n_farms + 2) * (n_farms + 1))
+                , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region8[v__43] = i
+                  /\
+                  odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region8[v__43]
+                . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region8[v__43])
+           =
+           v__2
+           \/
+           (sum v__46 : int(1..(n_farms + 2) * (n_farms + 1))
+                , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region9[v__46] = i + 1
+                  /\
+                  odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region9[v__46]
+                . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region9[v__46])
+           =
+           v__2)
+[applied] (exists v__29 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__51]
+     . v__29
+       =
+       (sum v__47 : int(1..(n_farms + 2) * (n_farms + 1))
+            , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region8[v__47] = i
+              /\
+              odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region8[v__47]
+            . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region8[v__47]))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__12 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__51,
+                                                                                          v__12]
+         . v__12
+           =
+           (sum v__47 : int(1..(n_farms + 2) * (n_farms + 1))
+                , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region8[v__47] = i
+                  /\
+                  odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region8[v__47]
+                . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region8[v__47]))
+[applied] (exists v__30 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__51]
+     . v__30
+       =
+       (sum v__50 : int(1..(n_farms + 2) * (n_farms + 1))
+            , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region9[v__50] = i + 1
+              /\
+              odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region9[v__50]
+            . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region9[v__50]))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__22 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__51,
+                                                                                          v__22]
+         . v__22
+           =
+           (sum v__50 : int(1..(n_farms + 2) * (n_farms + 1))
+                , odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region9[v__50] = i + 1
+                  /\
+                  odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region9[v__50]
+                . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region9[v__50]))
+[applied] (forAll v__35 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__66]
+     . (sum v__55 : int(1..(n_farms + 2) * (n_farms + 1))
+            , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region12[v__55] = i
+              /\
+              even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region12[v__55]
+            . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region12[v__55])
+       =
+       v__35
+       \/
+       (sum v__58 : int(1..(n_farms + 2) * (n_farms + 1))
+            , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region13[v__58]
+              =
+              i + 1
+              /\
+              even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region13[v__58]
+            . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region13[v__58])
+       =
+       v__35)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__24 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__66,
+                                                                                           v__24]
+         . (sum v__55 : int(1..(n_farms + 2) * (n_farms + 1))
+                , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region12[v__55] = i
+                  /\
+                  even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region12[v__55]
+                . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region12[v__55])
+           =
+           v__24
+           \/
+           (sum v__58 : int(1..(n_farms + 2) * (n_farms + 1))
+                , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region13[v__58]
+                  =
+                  i + 1
+                  /\
+                  even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region13[v__58]
+                . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region13[v__58])
+           =
+           v__24)
+[applied] (exists v__38 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__66]
+     . v__38
+       =
+       (sum v__61 : int(1..(n_farms + 2) * (n_farms + 1))
+            , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region12[v__61] = i
+              /\
+              even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region12[v__61]
+            . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region12[v__61]))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__25 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__66,
+                                                                                           v__25]
+         . v__25
+           =
+           (sum v__61 : int(1..(n_farms + 2) * (n_farms + 1))
+                , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region12[v__61] = i
+                  /\
+                  even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region12[v__61]
+                . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region12[v__61]))
+[applied] (exists v__39 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__66]
+     . v__39
+       =
+       (sum v__63 : int(1..(n_farms + 2) * (n_farms + 1))
+            , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region13[v__63]
+              =
+              i + 1
+              /\
+              even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region13[v__63]
+            . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region13[v__63]))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__31 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__66,
+                                                                                           v__31]
+         . v__31
+           =
+           (sum v__63 : int(1..(n_farms + 2) * (n_farms + 1))
+                , even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region13[v__63]
+                  =
+                  i + 1
+                  /\
+                  even_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region13[v__63]
+                . even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§region13[v__63]))
+[applied] (exists v__85 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__27]
+     . v__85 = v__84)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__32 : int(1..2)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__27,
+                                                                                        v__32]
+           =
+           v__84)
+[applied] (forAll v__84 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__19]
+     . (exists v__32 : int(1..2)
+            . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__27,
+                                                                                           v__32]
+              =
+              v__84))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__33 : int(1..2)
+         . (exists v__32 : int(1..2)
+                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__27,
+                                                                                               v__32]
+                  =
+                  distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__19,
+                                                                                               v__33]))
+[applied] (exists v__87 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__19]
+     . v__87 = v__86)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__34 : int(1..2)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__19,
+                                                                                        v__34]
+           =
+           v__86)
+[applied] (forAll v__86 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__27]
+     . (exists v__34 : int(1..2)
+            . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__19,
+                                                                                           v__34]
+              =
+              v__86))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__40 : int(1..2)
+         . (exists v__34 : int(1..2)
+                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__19,
+                                                                                               v__34]
+                  =
+                  distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__27,
+                                                                                               v__40]))
+[applied] (exists v__89 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__27]
+     . v__89 = v__88)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__41 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__27,
+                                                                                           v__41]
+         . v__41 = v__88)
+[applied] (forAll v__88 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__19]
+     . (exists v__41 : int(1..n_farms + 1)
+            , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__27,
+                                                                                              v__41]
+            . v__41 = v__88))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__96 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__19,
+                                                                                           v__96]
+         . (exists v__41 : int(1..n_farms + 1)
+                , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__27,
+                                                                                                  v__41]
+                . v__41 = v__96))
+[applied] (exists v__91 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__19]
+     . v__91 = v__90)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__97 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__19,
+                                                                                           v__97]
+         . v__97 = v__90)
+[applied] (forAll v__90 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__27]
+     . (exists v__97 : int(1..n_farms + 1)
+            , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__19,
+                                                                                              v__97]
+            . v__97 = v__90))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__98 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__27,
+                                                                                           v__98]
+         . (exists v__97 : int(1..n_farms + 1)
+                , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__19,
+                                                                                                  v__97]
+                . v__97 = v__98))
+[applied] (exists v__93 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__27]
+     . v__93 = v__92)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__99 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__27,
+                                                                                          v__99]
+         . v__99 = v__92)
+[applied] (forAll v__92 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__19]
+     . (exists v__99 : int(1..n_farms + 1)
+            , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__27,
+                                                                                             v__99]
+            . v__99 = v__92))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__100 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__19,
+                                                                                          v__100]
+         . (exists v__99 : int(1..n_farms + 1)
+                , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__27,
+                                                                                                 v__99]
+                . v__99 = v__100))
+[applied] (exists v__95 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__19]
+     . v__95 = v__94)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__101 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__19,
+                                                                                          v__101]
+         . v__101 = v__94)
+[applied] (forAll v__94 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__27]
+     . (exists v__101 : int(1..n_farms + 1)
+            , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__19,
+                                                                                             v__101]
+            . v__101 = v__94))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__102 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__27,
+                                                                                          v__102]
+         . (exists v__101 : int(1..n_farms + 1)
+                , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__19,
+                                                                                                 v__101]
+                . v__101 = v__102))
+[applied] (exists v__67 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__82]
+     . v__67 = v__9_Explicit§regionS[v__72])
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__103 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__82,
+                                                                                          v__103]
+         . v__103 = v__9_Explicit§regionS[v__72])
+[applied] (forAll v__68 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region7#Occurrence[v__82]
+     . (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__68))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__104 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region7[v__82,
+                                                                                          v__104]
+         . (exists v__73 : int(1..2) . v__9_Explicit§regionS[v__73] = v__104))
+[applied] (exists v__59 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__83]
+     . v__59 = v__64)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__105 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__83,
+                                                                                           v__105]
+         . v__105 = v__64)
+[applied] (forAll v__60 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region11#Occurrence[v__83]
+     . (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+            . v__65 = v__60))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__106 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence§region11[v__83,
+                                                                                           v__106]
+         . (exists v__65 : int(1..n_farms + 1) , v__9_Occurrence§regionS[v__65]
+                . v__65 = v__106))
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+=
+distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+{rules/refns/set-eq-to-subsets.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+    /\
+    distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+    supsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__107 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+         . v__107
+           in
+           distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23])
+[applied] v__107
+in
+distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__108 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+         . v__108 = v__107)
+[applied] (exists v__108 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+     . v__108 = v__107)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__109 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__23,
+                                                                                  v__109]
+         . v__109 = v__107)
+[applied] (forAll v__107 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+     . (exists v__109 : int(1..n_farms + 1)
+            , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__23,
+                                                                                     v__109]
+            . v__109 = v__107))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__110 : int(1..2)
+         . (exists v__109 : int(1..n_farms + 1)
+                , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__23,
+                                                                                         v__109]
+                . v__109
+                  =
+                  distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__23,
+                                                                                       v__110]))
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+supsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+{rules/refns/set-supseteq-to-subseteq.rule}
+    distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+    subsetEq
+    distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+[applied] distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+subsetEq
+distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__111 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+         . v__111
+           in
+           distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23])
+[applied] v__111
+in
+distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__112 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+         . v__112 = v__111)
+[applied] (exists v__112 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Explicit[v__23]
+     . v__112 = v__111)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__113 : int(1..2)
+         . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__23,
+                                                                                v__113]
+           =
+           v__111)
+[applied] (forAll v__111 in distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1#Occurrence[v__23]
+     . (exists v__113 : int(1..2)
+            . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__23,
+                                                                                   v__113]
+              =
+              v__111))
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__114 : int(1..n_farms + 1)
+         , distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__23,
+                                                                                  v__114]
+         . (exists v__113 : int(1..2)
+                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__23,
+                                                                                       v__113]
+                  =
+                  v__114))
+[removedDecl] given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1))] of set (size 2) of
+                                                                             int(1..n_farms + 1)
+[addSlicing] distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0]
+             distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0, ..]

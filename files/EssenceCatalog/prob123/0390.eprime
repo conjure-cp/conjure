@@ -1,0 +1,380 @@
+language ESSENCE' 1.0
+
+given MAXINT: int
+given n_farms: int(1..MAXINT)
+given capacity: int(1..MAXINT)
+given small_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_farms + 1)] of bool
+given small_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_farms + 1)] of int(1..n_farms + 1)
+given large_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_farms + 1)] of bool
+given large_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_farms + 1)] of int(1..n_farms + 1)
+given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1))] of bool
+given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1)),
+                           int(1..2)] of int(1..n_farms + 1)
+given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1)),
+                           int(1..n_farms + 1)] of bool
+given distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..2 ** (n_farms + 1) * (MAXINT + 1))] of int(0..MAXINT)
+given milk_Matrix1D: matrix indexed by [int(1..n_farms + 1)] of int(0..MAXINT)
+where
+    forAll f : int(1..n_farms + 1)
+        . f != 1
+          <->
+          (exists v__0 : int(1..n_farms + 1)
+               . small_ExplicitVarSize_tuple1[v__0] /\ small_ExplicitVarSize_tuple2[v__0] = f)
+          \/
+          (exists v__0 : int(1..n_farms + 1)
+               . large_ExplicitVarSize_tuple1[v__0] /\ large_ExplicitVarSize_tuple2[v__0] = f)
+          /\
+          !((exists v__0 : int(1..n_farms + 1)
+                 . small_ExplicitVarSize_tuple1[v__0] /\ small_ExplicitVarSize_tuple2[v__0] = f)
+            /\
+            (exists v__0 : int(1..n_farms + 1)
+                 . large_ExplicitVarSize_tuple1[v__0] /\ large_ExplicitVarSize_tuple2[v__0] = f))
+where milk_Matrix1D[1] = 0
+find odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of bool
+find odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of int(1..n_farms + 2)
+find odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of int(1..n_farms + 1)
+find even_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of bool
+find even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of int(1..n_farms + 2)
+find even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..(n_farms + 2) * (n_farms + 1))] of int(1..n_farms + 1)
+minimising (sum i : int(1..(sum v__0 : int(1..(n_farms + 2) * (n_farms + 1))
+                                . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0] * 1)
+                           -
+                           1)
+                . (sum v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+                       . ((forAll v__1 : int(1..n_farms + 1)
+                               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                                        v__1]
+                                 ->
+                                 (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                      . toInt(odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i
+                                              /\
+                                              odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                        *
+                                        odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])
+                                 =
+                                 v__1
+                                 \/
+                                 (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                      . toInt(odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i + 1
+                                              /\
+                                              odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                        *
+                                        odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])
+                                 =
+                                 v__1)
+                          /\
+                          ((exists v__1 : int(1..n_farms + 1)
+                                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                                         v__1]
+                                  /\
+                                  v__1
+                                  =
+                                  (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                       . toInt(odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i
+                                               /\
+                                               odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                         *
+                                         odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2]))
+                           /\
+                           (exists v__1 : int(1..n_farms + 1)
+                                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                                         v__1]
+                                  /\
+                                  v__1
+                                  =
+                                  (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                       . toInt(odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i + 1
+                                               /\
+                                               odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                         *
+                                         odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])))
+                          /\
+                          distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                         *
+                         distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]))
+           +
+           (sum i : int(1..(sum v__0 : int(1..(n_farms + 2) * (n_farms + 1))
+                                . even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0] * 1)
+                           -
+                           1)
+                . (sum v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+                       . ((forAll v__1 : int(1..2)
+                               . (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                      . toInt(even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i
+                                              /\
+                                              even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                        *
+                                        even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])
+                                 =
+                                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0, v__1]
+                                 \/
+                                 (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                      . toInt(even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i + 1
+                                              /\
+                                              even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                        *
+                                        even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])
+                                 =
+                                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                                      v__1])
+                          /\
+                          ((exists v__1 : int(1..2)
+                                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                                       v__1]
+                                  =
+                                  (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                       . toInt(even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i
+                                               /\
+                                               even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                         *
+                                         even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2]))
+                           /\
+                           (exists v__1 : int(1..2)
+                                . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                                       v__1]
+                                  =
+                                  (sum v__2 : int(1..(n_farms + 2) * (n_farms + 1))
+                                       . toInt(even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2] = i + 1
+                                               /\
+                                               even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                                         *
+                                         even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])))
+                          /\
+                          distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+                         *
+                         distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]))
+such that
+    (sum v__0 : int(1..(n_farms + 2) * (n_farms + 1))
+         . (even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = 1
+            /\
+            even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+           *
+           even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+    =
+    1,
+    (sum v__0 : int(1..(n_farms + 2) * (n_farms + 1))
+         . (odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0] = 1
+            /\
+            odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0])
+           *
+           odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0])
+    =
+    1,
+    forAll v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+        . allDiff(distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                       ..])
+          /\
+          distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0, 1]
+          <
+          distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0, 2],
+    forAll v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+        . (forAll v__1 : int(1..2)
+               . (exists v__2 : int(1..n_farms + 1)
+                      . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                               v__2]
+                        /\
+                        v__2
+                        =
+                        distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                             v__1]))
+          /\
+          (forAll v__1 : int(1..n_farms + 1)
+               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                        v__1]
+                 ->
+                 (exists v__2 : int(1..2)
+                      . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                             v__2]
+                        =
+                        v__1)),
+    forAll v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+        . (sum v__1 : int(1..n_farms + 1)
+               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                        v__1])
+          =
+          2,
+    forAll v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+        . (forAll v__1 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+               . v__0 < v__1 /\ distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 !((forAll v__2 : int(1..n_farms + 1)
+                        . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                                 v__2]
+                          ->
+                          (exists v__3 : int(1..n_farms + 1)
+                               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__1,
+                                                                                                        v__3]
+                                 /\
+                                 v__3 = v__2))
+                   /\
+                   (forAll v__2 : int(1..n_farms + 1)
+                        . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__1,
+                                                                                                 v__2]
+                          ->
+                          (exists v__3 : int(1..n_farms + 1)
+                               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__0,
+                                                                                                        v__3]
+                                 /\
+                                 v__3 = v__2)))
+                 \/
+                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+        . (forAll v__1 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+               . v__0 < v__1 /\ distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 !((forAll v__2 : int(1..2)
+                        . (exists v__3 : int(1..2)
+                               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__1,
+                                                                                                      v__3]
+                                 =
+                                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                                      v__2]))
+                   /\
+                   (forAll v__2 : int(1..2)
+                        . (exists v__3 : int(1..2)
+                               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__0,
+                                                                                                      v__3]
+                                 =
+                                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__1,
+                                                                                                      v__2])))
+                 \/
+                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..(n_farms + 2) * (n_farms + 1))
+        . (forAll v__1 : int(1..(n_farms + 2) * (n_farms + 1))
+               . v__0 < v__1 /\ even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..(n_farms + 2) * (n_farms + 1))
+        . (forAll v__1 : int(1..(n_farms + 2) * (n_farms + 1))
+               . v__0 < v__1 /\ odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0]
+                 !=
+                 odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 \/
+                 odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0]
+                 !=
+                 odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]),
+    forAll v__0 : int(1..n_farms + 1)
+        . (forAll v__1 : int(1..n_farms + 1)
+               . v__0 < v__1 /\ large_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 large_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 large_ExplicitVarSize_tuple2[v__0] < large_ExplicitVarSize_tuple2[v__1]),
+    forAll v__0 : int(1..n_farms + 1)
+        . (forAll v__1 : int(1..n_farms + 1)
+               . v__0 < v__1 /\ small_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 small_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 small_ExplicitVarSize_tuple2[v__0] < small_ExplicitVarSize_tuple2[v__1]),
+    forAll v__0 : int(1..n_farms + 2)
+        . (sum v__1 : int(1..(n_farms + 2) * (n_farms + 1))
+               . even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = even_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          <=
+          1,
+    forAll v__0 : int(1..n_farms + 2)
+        . (sum v__1 : int(1..(n_farms + 2) * (n_farms + 1))
+               . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 (v__0 = odd_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]))
+          <=
+          1,
+    forAll v__0 : int(1..2 ** (n_farms + 1) * (MAXINT + 1) - 1)
+        . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..(n_farms + 2) * (n_farms + 1) - 1)
+        . even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          even_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..(n_farms + 2) * (n_farms + 1) - 1)
+        . odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
+          <=
+          odd_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_farms)
+        . large_ExplicitVarSize_tuple1[v__0] <= large_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : int(1..n_farms)
+        . small_ExplicitVarSize_tuple1[v__0] <= small_ExplicitVarSize_tuple1[v__0 + 1],
+    forAll v__0 : matrix indexed by [int(1..n_farms + 1)] of bool
+        . (sum v__1 : int(1..n_farms + 1) . v__0[v__1]) = 2
+          ->
+          (sum v__1 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 ((forAll v__2 : int(1..n_farms + 1)
+                       . v__0[v__2]
+                         ->
+                         (exists v__3 : int(1..n_farms + 1)
+                              . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__1,
+                                                                                                       v__3]
+                                /\
+                                v__3 = v__2))
+                  /\
+                  (forAll v__2 : int(1..n_farms + 1)
+                       . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Occurrence[v__1,
+                                                                                                v__2]
+                         ->
+                         (exists v__3 : int(1..n_farms + 1) . v__0[v__3] /\ v__3 = v__2))))
+          =
+          1,
+    forAll v__0 : matrix indexed by [int(1..n_farms + 1)] of bool
+        . (sum v__1 : int(1..n_farms + 1) . v__0[v__1]) = 2
+          ->
+          (sum v__1 : int(1..2 ** (n_farms + 1) * (MAXINT + 1))
+               . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 *
+                 ((forAll v__2 : int(1..n_farms + 1)
+                       . v__0[v__2]
+                         ->
+                         (exists v__3 : int(1..2)
+                              . distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__1,
+                                                                                                     v__3]
+                                =
+                                v__2))
+                  /\
+                  (forAll v__2 : int(1..2)
+                       . (exists v__3 : int(1..n_farms + 1)
+                              . v__0[v__3]
+                                /\
+                                v__3
+                                =
+                                distance_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[v__1,
+                                                                                                     v__2]))))
+          =
+          1
