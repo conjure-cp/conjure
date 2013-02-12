@@ -3,6 +3,8 @@
 
 module Language.E.Pipeline.RuleReprToFunction ( RuleReprResult, ruleReprToFunction ) where
 
+import Conjure.Mode
+
 import Language.E
 import Language.E.Pipeline.FreshNames
 import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
@@ -11,8 +13,11 @@ import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
 -- given a list of RuleReprs, returns a function which
 -- accepts a domain and returns a list of domains
 ruleReprToFunction
-    :: MonadConjure m
-    => [RuleRepr]
+    :: ( MonadConjure m
+       , RandomM m
+       )
+    => ConjureMode
+    -> [RuleRepr]
     -> Either
         [ConjureError]                -- static errors
         ( ( Text                      -- input: name of the variable
@@ -21,13 +26,13 @@ ruleReprToFunction
           )
           -> m [RuleReprResult]
         )
-ruleReprToFunction fs =
+ruleReprToFunction mode fs =
     let
         mresults = map one fs
         errors   = concat $ lefts mresults
         results  = rights mresults
     in  if null errors
-            then Right $ \ e -> concatMapM ($ e) results
+            then Right $ \ e -> concatMapM ($ e) results >>= selectByMode mode
             else Left errors
 
 

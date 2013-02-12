@@ -13,9 +13,7 @@ import Language.E.Pipeline.NoTuples ( conjureNoTuples )
 
 
 conjureRepr
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => [RuleRepr]
     -> Spec
     -> m Spec

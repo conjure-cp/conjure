@@ -3,6 +3,8 @@
 
 module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
 
+import Conjure.Mode
+
 import Language.E
 import Language.E.BuiltIn
 
@@ -75,15 +77,14 @@ applyToTree db = bottomUpERefn (applyIdempotent db)
 -- modification (or not) info is carried in the writer state
 {-# INLINEABLE apply #-}
 apply
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => RuleRefnDB m
     -> E
     -> WriterT Any m E
 -- apply _  x | trace (show $ "apply" <+> pretty x) False = undefined
 apply db x = do
-    (ys, flag) <- lift $ tryApply db x
+    mode <- lift $ getsGlobal conjureMode
+    (ys, flag) <- lift $ tryApply db mode x
     tell (Any flag)
     lift $ returns ys
 
@@ -95,16 +96,20 @@ apply db x = do
 -- results are simplified again after rule applications
 {-# INLINEABLE tryApply #-}
 tryApply
-    :: MonadConjure m
+    :: ( MonadConjure m
+       , RandomM m
+       )
     => RuleRefnDB m
+    -> ConjureMode
     -> E
     -> m ([E], Bool)
 -- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do
-tryApply db x = do
+tryApply db mode x = do
     (x' , b1) <- simply x
     when b1 $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x']
     (x'', b2) <- go db x'
-    return (x'', b1 || b2)
+    x''' <- selectByMode mode x''
+    return (x''', b1 || b2)
 
     where
 
@@ -133,72 +138,5 @@ tryApply db x = do
                                  ]
                     mkLog "applied" msg
                     return (map snd ys', True)
-
-
-
-_applyRefnTest2 :: Text -> IO ()
-_applyRefnTest2 inp =
-    case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
-        Left  x -> error $ show x
-        Right x -> do
-            print $ prettyAsPaths x
-            (ys,flag) <- handleInIOSingle =<< runCompEIOSingle "foo" (tryApply [_plusminus1] x)
-            print flag
-            forM_ ys $ \ y -> do
-                print $ prettyAsPaths y
-                print $ pretty y
-
-_applyRefnTest3 :: Text -> IO ()
-_applyRefnTest3 inp =
-    case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
-        Left  x -> error $ show x
-        Right x -> do
-            print $ prettyAsPaths x
-            ys <- handleInIO =<< runCompEIO "foo" (runWriterT (onE [_aEqtoFoo, _aFooTo12] x))
-            forM_ ys $ \ (y,_) ->
-                print $ pretty y
-
-_applyRefnTest4 :: Text -> IO ()
-_applyRefnTest4 inp =
-    case runLexerAndParser (inCompleteFile parseExpr) "in memory" inp of
-        Left  x -> error $ show x
-        Right x -> do
-            print $ prettyAsPaths x
-            ys <- handleInIO =<< runCompEIO "foo" (runWriterT (onE [_aBarTo12, _aEqtoFoo, _aFooTo12] x))
-            forM_ ys $ \ (y,_) ->
-                print $ pretty y
-
-_applyRefnMain :: IO ()
-_applyRefnMain = _applyRefnTest4 "blah(blah(blah(a,b),blah(c,d)),e)"
-
-_plusminus1 :: MonadConjure m => RefnFunc m
-_plusminus1 [xMatch| [Prim (I i)] := value.literal |]
-    = return $ Just [ ("_plusminus1-", [xMake| value.literal := [Prim (I $ i - 1)] |] )
-                    , ("_plusminus1+", [xMake| value.literal := [Prim (I $ i + 1)] |] )
-                    ]
-_plusminus1 _ = return Nothing
-
-_aEqtoFoo :: MonadConjure m => RefnFunc m
-_aEqtoFoo [eMatch| blah(&a,&b) |]
-    = return $ Just $ map (\ i -> ("_aEqtoFoo", i) ) [ [eMake| foo(&a,&b) |]
-                                                     , [eMake| bar(&a,&b) |]
-                                                     ]
-_aEqtoFoo _ = return Nothing
-
-
-_aFooTo12 :: MonadConjure m => RefnFunc m
-_aFooTo12 [eMatch| foo(&a,&b) |]
-    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| foo1(&a,&b) |]
-                                                     , [eMake| foo2(&a,&b) |]
-                                                     ]
-_aFooTo12 _ = return Nothing
-
-
-_aBarTo12 :: MonadConjure m => RefnFunc m
-_aBarTo12 [eMatch| bar(&a,&b) |]
-    = return $ Just $ map (\ i -> ("_aFooTo12", i) ) [ [eMake| bar1(&a,&b) |]
-                                                     , [eMake| bar2(&a,&b) |]
-                                                     ]
-_aBarTo12 _ = return Nothing
 
 

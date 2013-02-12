@@ -2,7 +2,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.E.Pipeline.ConjureAll ( conjureAllPure ) where
+module Language.E.Pipeline.ConjureAll
+    ( conjureAllPure
+    , conjureRandomPure
+    ) where
+
+import Conjure.Mode
 
 import Language.E
 import Language.E.Pipeline.ConjureRepr
@@ -11,9 +16,21 @@ import Language.E.Pipeline.Groom ( groomSpec )
 
 
 conjureAllPure
-    :: [RuleRepr] -> [RuleRefn] -> Spec
+    :: ConjureMode
+    -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureAllPure reprs refns spec = onlyOneError $ runCompE "conjure" $ conjureAll reprs refns spec
+conjureAllPure mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
+    modifyGlobal $ \ gl -> gl { conjureMode = mode }
+    conjureAll reprs refns spec
+
+conjureRandomPure
+    :: StdGen -> ConjureMode
+    -> [RuleRepr] -> [RuleRefn] -> Spec
+    -> [(Either Doc Spec, LogTree)]
+conjureRandomPure seed mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
+    set_stdgen seed
+    modifyGlobal $ \ gl -> gl { conjureMode = mode }
+    conjureAll reprs refns spec
 
 onlyOneError :: [(Either a b, c)] -> [(Either a b, c)]
 onlyOneError [] = []

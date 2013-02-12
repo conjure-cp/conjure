@@ -14,91 +14,91 @@ import qualified Data.Text as T
 
 
 applyRepr
-    :: ( MonadConjure m
-       , MonadList m
-       )
+    :: MonadConjureList m
     => [RuleRepr]
     -> Spec
     -> m Spec
-applyRepr rules spec = withBindingScope' $ let mfunc = ruleReprToFunction rules in case mfunc of
-    Left es     -> err ErrFatal $ vcat $ map (prettyError "repr") es
-    Right func' -> do
+applyRepr rules spec = do
+    theMode <- getsGlobal conjureMode
+    withBindingScope' $ let mfunc = ruleReprToFunction theMode rules in case mfunc of
+        Left es     -> err ErrFatal $ vcat $ map (prettyError "repr") es
+        Right func' -> do
 
-        let func = mergeReprFunc (func' : builtInRepr)
+            let func = mergeReprFunc (func' : builtInRepr)
 
-        let Spec _ statements = spec
-        mapM_ introduceStuff (statementAsList statements)
+            let Spec _ statements = spec
+            mapM_ introduceStuff (statementAsList statements)
 
-        let topLevels'
-                =  [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
-                                        | [d]          := topLevel.declaration.find .domain
-                                        |] <- statementAsList statements ]
-                ++ [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
-                                        | [d]          := topLevel.declaration.given.domain
-                                        |] <- statementAsList statements ]
+            let topLevels'
+                    =  [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
+                                            | [d]          := topLevel.declaration.find .domain
+                                            |] <- statementAsList statements ]
+                    ++ [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
+                                            | [d]          := topLevel.declaration.given.domain
+                                            |] <- statementAsList statements ]
 
-        let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
+            let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
 
-        candidates :: [(Text,[RuleReprResult])]
-            <- forM topLevels $ \ (x,n,d) -> do
-            ys <- func (n,d,x)
-            case ys of
-                [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
-                _  -> do
-                    let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
-                    mkLog "representation" $ sep [ pretty x
-                                                 , "(#" <> pretty (length ys) <> ")"
-                                                 , prettyList id "," ysNames
-                                                 ] 
-                    return (n,ys)
+            candidates :: [(Text,[RuleReprResult])]
+                <- forM topLevels $ \ (x,n,d) -> do
+                ys <- func (n,d,x)
+                case ys of
+                    [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
+                    _  -> do
+                        let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
+                        mkLog "representation" $ sep [ pretty x
+                                                     , "(#" <> pretty (length ys) <> ")"
+                                                     , prettyList id "," ysNames
+                                                     ] 
+                        return (n,ys)
 
-        let
-            allRegioned :: [(Text,Text)]
-            allRegioned =
-                let
-                    findsandgivens = S.fromList $ map fst candidates
-                in
-                    nub [ (base, reg)
-                        | [xMatch| [Prim (S nm)] := reference |] <- universeSpecNoFindGiven spec
-                        , (base, Just reg, _) <- [identifierSplit nm]
-                        , base `S.member` findsandgivens
-                        ]
+            let
+                allRegioned :: [(Text,Text)]
+                allRegioned =
+                    let
+                        findsandgivens = S.fromList $ map fst candidates
+                    in
+                        nub [ (base, reg)
+                            | [xMatch| [Prim (S nm)] := reference |] <- universeSpecNoFindGiven spec
+                            , (base, Just reg, _) <- [identifierSplit nm]
+                            , base `S.member` findsandgivens
+                            ]
 
-            nbOccurrence :: (Text, Text) -> Int
-            nbOccurrence (base,reg) = length
-                [ ()
-                | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
-                , (base', Just reg', _) <- [identifierSplit nm']
-                , base == base'
-                , reg  == reg'
-                ]
+                nbOccurrence :: (Text, Text) -> Int
+                nbOccurrence (base,reg) = length
+                    [ ()
+                    | [xMatch| [Prim (S nm')] := reference |] <- universeSpecNoFindGiven spec
+                    , (base', Just reg', _) <- [identifierSplit nm']
+                    , base == base'
+                    , reg  == reg'
+                    ]
 
-            lookupTables :: [ M.HashMap (Text,Text) RuleReprResult ]
-            lookupTables = map M.fromList $ allCombinations
-                [ ((nm,region), results)
-                | (nm, region) <- allRegioned
-                , let Just results = lookup nm candidates
-                , let cnt = nbOccurrence (nm, region)
-                , cnt > 0
-                ]
+                lookupTables :: [ M.HashMap (Text,Text) RuleReprResult ]
+                lookupTables = map M.fromList $ allCombinations
+                    [ ((nm,region), results)
+                    | (nm, region) <- allRegioned
+                    , let Just results = lookup nm candidates
+                    , let cnt = nbOccurrence (nm, region)
+                    , cnt > 0
+                    ]
 
-        when (null lookupTables) $ err ErrGeneratesNone "repr0"
-        table <- returns lookupTables
-        if M.null table
-            then err ErrGeneratesNone "repr1"
-            else do
-                let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just rName))
-                                     | ((nm, region), (_,_,rName,_,_)) <- M.toList table
-                                     ]
-                mkLog "configuration" configStr
-                catchError
-                    (applyCongfigToSpec spec table)
-                    (\ (eu, em, _) ->
-                        throwError ( eu
-                                   , vcat [ "Error in applyConfigToSpec", pretty em ]
-                                   , Just spec
-                                   )
-                    )
+            when (null lookupTables) $ err ErrGeneratesNone "repr0"
+            table <- returns lookupTables
+            if M.null table
+                then err ErrGeneratesNone "repr1"
+                else do
+                    let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just rName))
+                                         | ((nm, region), (_,_,rName,_,_)) <- M.toList table
+                                         ]
+                    mkLog "configuration" configStr
+                    catchError
+                        (applyCongfigToSpec spec table)
+                        (\ (eu, em, _) ->
+                            throwError ( eu
+                                       , vcat [ "Error in applyConfigToSpec", pretty em ]
+                                       , Just spec
+                                       )
+                        )
 
 
 applyCongfigToSpec

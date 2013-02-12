@@ -12,6 +12,8 @@ import Stuff.Funky.FunkyMulti
 import Stuff.NamedLog
 import Stuff.MonadList
 
+import Conjure.Mode
+
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
@@ -21,6 +23,7 @@ import Data.IntMap ( IntMap )
 import Data.IntSet ( IntSet )
 
 import qualified GHC.Generics ( Generic )
+
 
 
 class ( Functor m
@@ -57,6 +60,7 @@ instance MonadConjure (FunkyMulti  GlobalState ConjureState ConjureError IO) whe
 
 class ( MonadConjure m
       , MonadList m
+      , RandomM m
       ) => MonadConjureList m where
     getsGlobal :: (GlobalState -> a) -> m a
     modifyGlobal :: (GlobalState -> GlobalState) -> m ()
@@ -252,10 +256,24 @@ nextUniqueName = do
 data GlobalState = GlobalState
         { memoRefnChanged      :: !(IntMap E)
         , memoRefnStaysTheSame :: !IntSet
+        , conjureMode          :: ConjureMode
+        , conjureSeed          :: StdGen
         }
 
+instance (Functor m, Monad m) => RandomM (FunkyMulti GlobalState st err m) where
+    get_stdgen = fmGetsGlobal conjureSeed
+    set_stdgen x = fmModifyGlobal $ \ gl -> gl { conjureSeed = x }
+
+rangeRandomM :: RandomM m => (Int, Int) -> m Int
+rangeRandomM range = do
+    gen <- get_stdgen
+    let (x, gen') = randomR range gen
+    set_stdgen gen'
+    return x
+
+
 instance Default GlobalState where
-    def = GlobalState def def
+    def = GlobalState def def (error "Unknown mode") (error "Seed not initialised")
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
@@ -264,5 +282,13 @@ makeIdempotent f x = do
         then makeIdempotent f y
         else return y
 
+
+selectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
+selectByMode _ [] = return []
+selectByMode (RefineParam {}) _  = error "selectByMode: Shouldn't be used in this mode"
+selectByMode (DFAll       {}) xs = return xs
+selectByMode (Random      {}) xs = do
+    i <- rangeRandomM (0, length xs - 1)
+    return [xs !! i]
 
 
