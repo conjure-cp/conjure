@@ -4,6 +4,7 @@ module Language.E.Pipeline.ReadIn where
 
 import Language.E
 
+import Data.Text ( breakOn )
 import System.Directory ( createDirectoryIfMissing )
 
 
@@ -22,6 +23,22 @@ readSpec (fp,con) =
     case runLexerAndParser parseSpec fp con of
         Left  e -> err ErrFatal e
         Right x -> initialiseSpecState x >> return x
+
+readSpecPreamble :: MonadConjure m
+    => (FilePath, Text)
+    -> m Spec
+readSpecPreamble (fp,con) =
+    case runLexerAndParser parseSpec fp (onlyPreamble con) of
+        Left  e -> err ErrFatal e
+        Right x -> initialiseSpecState x >> return x
+    where
+        discardAfter t = fst . breakOn t
+        onlyPreamble
+            = discardAfter "maximising"
+            . discardAfter "maximizing"
+            . discardAfter "minimising"
+            . discardAfter "minimizing"
+            . discardAfter "such that"
 
 
 fixRulename :: String -> String
