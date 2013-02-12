@@ -283,12 +283,39 @@ makeIdempotent f x = do
         else return y
 
 
-selectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
-selectByMode _ [] = return []
-selectByMode (RefineParam {}) _  = error "selectByMode: Shouldn't be used in this mode"
-selectByMode (DFAll       {}) xs = return xs
-selectByMode (Random      {}) xs = do
+class SelectByMode a where
+    selectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
+    selectByMode = defSelectByMode
+
+defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
+defSelectByMode (ModeRefineParam {}) _  = error "selectByMode: Shouldn't be used in this mode"
+defSelectByMode (ModePrettify    {}) _  = error "selectByMode: Shouldn't be used in this mode"
+defSelectByMode _                    [] = return []
+defSelectByMode (ModeDFAll       {}) xs = return xs
+defSelectByMode (ModeRandom      {}) xs = do
     i <- rangeRandomM (0, length xs - 1)
     return [xs !! i]
+defSelectByMode (ModeBest        fp) xs    = defSelectByMode (ModeSmallest fp) xs
+defSelectByMode (ModeFirst       {}) (x:_) = return [x]
+defSelectByMode (ModeSmallest    {}) (x:_) = return [x]
 
+instance SelectByMode E where
+    selectByMode _ [] = return []
+    selectByMode (ModeSmallest {}) xs = return [minimumBy (comparing eDepth) xs]
+    selectByMode mode xs = defSelectByMode mode xs
+
+eDepth :: E -> Int
+eDepth (Tagged _ []) = 1
+eDepth (Tagged _ ys) = 1 + maximum (map eDepth ys)
+eDepth _ = 1
+
+instance SelectByMode RuleReprResult where
+    selectByMode _ [] = return []
+    selectByMode (ModeSmallest {}) xs = return [minimumBy comparer xs]
+        where
+            comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
+                     ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
+                compare (length structuralCons1, eDepth newDom1)
+                        (length structuralCons2, eDepth newDom2)
+    selectByMode mode xs = defSelectByMode mode xs
 

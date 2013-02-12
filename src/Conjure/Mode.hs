@@ -28,56 +28,91 @@ parseGenericArgs xs =
 
 
 data ConjureMode
-    = RefineParam
+    = ModeRefineParam
         FilePath    -- Essence
         FilePath    -- Essence Param
         FilePath    -- Essence'
         FilePath    -- Essence' Param
-    | DFAll
+    | ModePrettify
+        FilePath    -- input
+        FilePath    -- output
+    | ModeDFAll
         FilePath    -- Essence
-    | Random
+    | ModeBest
+        FilePath    -- Essence
+    | ModeRandom
+        FilePath    -- Essence
+    | ModeFirst
+        FilePath    -- Essence
+    | ModeSmallest
         FilePath    -- Essence
     deriving ( Show )
 
 parseArgs :: GenericArgs -> Maybe ConjureMode
 parseArgs (pairs, _flags, _rest) = msum
-    [ refineParam
-    , dfAll
-    , random
+    [ modeRefineParam
+    , modePrettify
+    , modeDFAll
+    , modeRandom
+    , modeFirst
+    , modeSmallest
     ]
     where
         key = (`lookup` pairs)
         -- flag = (`elem` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
 
-        refineParam = do
+        modeRefineParam = do
             mode      <- key "--mode"
             guard (mode =~= words "refineparam")
             inEssence <- key "--in-essence"
             inParam   <- key "--in-param"
             outEprime <- key "--in-eprime"
             outParam  <- key "--out-param"
-            return $ RefineParam inEssence inParam outEprime outParam
+            return $ ModeRefineParam inEssence inParam outEprime outParam
 
-        dfAll = do
+        modePrettify = do
+            mode <- key "--mode"
+            guard (mode =~= words "pretty prettify")
+            inp <- key "--in"
+            out <- key "--out"
+            return $ ModePrettify inp out
+
+        modeDFAll = do
             mode <- key "--mode"
             guard (mode =~= words "df depthfirst")
             inEssence <- key "--in-essence"
-            return $ DFAll inEssence
+            return $ ModeDFAll inEssence
 
-        random = do
+        modeRandom = do
             mode <- key "--mode"
             guard (mode =~= words "rand random")
             inEssence <- key "--in-essence"
-            return $ Random inEssence
+            return $ ModeRandom inEssence
+
+        modeFirst = do
+            mode <- key "--mode"
+            guard (mode =~= words "first")
+            inEssence <- key "--in-essence"
+            return $ ModeSmallest inEssence
+
+        modeSmallest = do
+            mode <- key "--mode"
+            guard (mode =~= words "small smallest")
+            inEssence <- key "--in-essence"
+            return $ ModeSmallest inEssence
 
 allKeys :: [String]
 allKeys =
     [ "--mode"
-    , "--in-essence"
-    , "--in-param"
+    , "--in"
+    , "--in-eprime-solution"
     , "--in-eprime"
-    , "--out-param"
+    , "--in-essence"
+    , "--in-essence-param"
+    , "--out"
+    , "--out-eprime-param"
+    , "--out-essence-solution"
     ]
 
 allFlags :: [String]

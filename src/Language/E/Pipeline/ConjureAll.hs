@@ -5,6 +5,7 @@
 module Language.E.Pipeline.ConjureAll
     ( conjureAllPure
     , conjureRandomPure
+    , conjureWithMode
     ) where
 
 import Conjure.Mode
@@ -31,6 +32,15 @@ conjureRandomPure seed mode reprs refns spec = onlyOneError $ runCompE "conjure"
     set_stdgen seed
     modifyGlobal $ \ gl -> gl { conjureMode = mode }
     conjureAll reprs refns spec
+
+conjureWithMode
+    :: ConjureMode
+    -> [RuleRepr] -> [RuleRefn] -> Spec
+    -> [(Either Doc Spec, LogTree)]
+conjureWithMode mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
+    modifyGlobal $ \ gl -> gl { conjureMode = mode }
+    conjureAll reprs refns spec
+
 
 onlyOneError :: [(Either a b, c)] -> [(Either a b, c)]
 onlyOneError [] = []

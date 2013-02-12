@@ -15,6 +15,10 @@ import Language.E.Pipeline.RedArrow ( redArrow )
 
 -- for DFAll
 import Language.E.Pipeline.ConjureAll
+    ( conjureAllPure
+    , conjureRandomPure
+    , conjureWithMode
+    )
 import Language.E.Pipeline.Driver ( driverConjure )
 
 
@@ -25,7 +29,7 @@ getConjureMode :: IO (Maybe ConjureMode)
 getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
 
 runConjureMode :: ConjureMode -> IO ()
-runConjureMode (RefineParam inEssence' inParam' inEprime' outParam') = do
+runConjureMode (ModeRefineParam inEssence' inParam' inEprime' outParam') = do
     inEssence <- readSpecFromFile inEssence'
     inParam   <- readSpecFromFile inParam'
     inEprime  <- readSpecFromFile inEprime'
@@ -35,14 +39,24 @@ runConjureMode (RefineParam inEssence' inParam' inEprime' outParam') = do
                     $ redArrow inEssence inParam inEprime inLogs
     putStrLn $ "Generating file: " ++ outParam'
     writeSpec outParam' outParam
-runConjureMode mode@(DFAll inEssence') = do
+runConjureMode (ModePrettify inp out) = do
+    inp' <- readSpecFromFile inp
+    writeSpec out inp'
+runConjureMode mode@(ModeDFAll inEssence') = do
     (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
     inEssence <- readSpecFromFile inEssence'
     driverConjure
         (conjureAllPure mode)
         (dropExtEssence inEssence')
         ruleReprs ruleRefns inEssence
-runConjureMode mode@(Random inEssence') = do
+runConjureMode mode@(ModeBest inEssence') = do
+    (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    inEssence <- readSpecFromFile inEssence'
+    driverConjure
+        (conjureWithMode mode)
+        (dropExtEssence inEssence')
+        ruleReprs ruleRefns inEssence
+runConjureMode mode@(ModeRandom inEssence') = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
     inEssence <- readSpecFromFile inEssence'
@@ -50,4 +64,19 @@ runConjureMode mode@(Random inEssence') = do
         (conjureRandomPure seed mode)
         (dropExtEssence inEssence')
         ruleReprs ruleRefns inEssence
+runConjureMode mode@(ModeFirst inEssence') = do
+    (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    inEssence <- readSpecFromFile inEssence'
+    driverConjure
+        (conjureWithMode mode)
+        (dropExtEssence inEssence')
+        ruleReprs ruleRefns inEssence
+runConjureMode mode@(ModeSmallest inEssence') = do
+    (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    inEssence <- readSpecFromFile inEssence'
+    driverConjure
+        (conjureWithMode mode)
+        (dropExtEssence inEssence')
+        ruleReprs ruleRefns inEssence
+
 
