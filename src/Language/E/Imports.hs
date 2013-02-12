@@ -24,6 +24,7 @@ module Language.E.Imports
     , maybeRead
     , padShowInt
     , decodeFromFile
+    , RandomM(..)
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -61,7 +62,7 @@ import qualified Data.Serialize
 
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$) )
 
-import System.Random as X ( StdGen, getStdGen )
+import System.Random as X ( StdGen, getStdGen, randomR )
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
@@ -184,4 +185,8 @@ decodeFromFile :: Serialize a => FilePath -> IO a
 decodeFromFile path = do
     con <- ByteString.readFile path
     either error return (decode con)
+
+class Monad m => RandomM m where
+    get_stdgen :: m StdGen
+    set_stdgen :: StdGen -> m ()
 
