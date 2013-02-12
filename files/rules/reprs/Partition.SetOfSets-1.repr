@@ -11,4 +11,3 @@
     ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
     /\  ( forAll i : &tau . exists s in refn . i in s )
     /\  ( forAll i,j in refn . |i| = |j| )                      $ every part has the same number of elements in it
-
