@@ -101,6 +101,17 @@ applyRepr rules spec = do
                         )
 
 
+isGiven :: E -> Bool
+isGiven [xMatch| _ := topLevel.declaration.given  |] = True
+isGiven _ = False
+
+isFind :: E -> Bool
+isFind [xMatch| _  := topLevel.declaration.find   |] = True
+isFind  _ = False
+
+isFindOrGiven :: E -> Bool
+isFindOrGiven x = isFind x || isGiven x
+
 applyCongfigToSpec
     :: MonadConjure m
     => Spec
@@ -110,15 +121,6 @@ applyCongfigToSpec spec config = withBindingScope' $ do
     void $ recordSpec spec
     initialiseSpecState spec
     let
-
-        isGiven [xMatch| _ := topLevel.declaration.given  |] = True
-        isGiven _ = False
-
-        isFind [xMatch| _  := topLevel.declaration.find   |] = True
-        isFind  _ = False
-
-        isFindOrGiven x = isFind x || isGiven x
-
         f p@[xMatch| [Prim (S nm)] := reference |] =
             case identifierSplit nm of
                 (base, Just region, Nothing) ->
@@ -170,7 +172,9 @@ addChannellingFromLog (Spec v xs) = do
                 $ groupBy ((==) `on` fst)
                 $ sortBy (comparing fst)
                 $ nub
-                  [ (nm, reprName) | (nm, reprName, _, _) <- rlogs ]
+                  [ (nm, reprName) | (nm, reprName, origDecl, _) <- rlogs
+                                   , isGiven origDecl
+                                   ]
 
     let newCons = [ [ [xMake| topLevel.suchThat := [theCons] |]
                     | ((nm1,r1),(nm2,r2)) <- allPairs one
