@@ -34,7 +34,10 @@ explodeStructuralVars = bottomUpSpec' helper
                 -- list of indexed quanVars, instead of the input ts
                 indexeds = map indexIt [1 .. genericLength ts]
 
-                replacerFunc = replaceAll (zip ts indexeds)
+                replacerFunc = replaceAll [ (old, new)
+                                          | (old, new) <- zip ts indexeds
+                                          , old /= [eMake| _ |]
+                                          ]
 
             let
                 result = [xMake| quantified.quantifier   := quantifiers
