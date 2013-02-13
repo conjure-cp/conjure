@@ -123,6 +123,7 @@ data Tag = Tactual
     | Ttype
     | Ttyped
     | TtypeEnum
+    | TtypeInt
     | TtypeUnnamed
     | TunaryOp
     | Tunknown
@@ -257,6 +258,7 @@ instance IsString Tag where
             fromString' "type" = Ttype
             fromString' "typed" = Ttyped
             fromString' "typeEnum" = TtypeEnum
+            fromString' "typeInt" = TtypeInt
             fromString' "typeUnnamed" = TtypeUnnamed
             fromString' "unaryOp" = TunaryOp
             fromString' "unknown" = Tunknown

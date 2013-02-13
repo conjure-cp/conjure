@@ -514,12 +514,22 @@ parseTopLevels = do
                                        | i <- is ]
                             , do
                                 lexeme L_new
-                                lexeme L_type
-                                lexeme L_enum
-                                return [ [xMake| topLevel.declaration.given.name     := [i]
-                                               | topLevel.declaration.given.typeEnum := []
-                                               |]
-                                       | i <- is ]
+                                msum
+                                    [ do
+                                        lexeme L_type
+                                        lexeme L_enum
+                                        return [ [xMake| topLevel.declaration.given.name     := [i]
+                                                       | topLevel.declaration.given.typeEnum := []
+                                                       |]
+                                               | i <- is ]
+                                    , do
+                                        lexeme L_domain
+                                        lexeme L_int
+                                        return [ [xMake| topLevel.declaration.given.name    := [i]
+                                                       | topLevel.declaration.given.typeInt := []
+                                                       |]
+                                               | i <- is ]
+                                    ]
                             ]
                     return $ concat decls
                     <?> "given statement"
