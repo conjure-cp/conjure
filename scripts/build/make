@@ -12,7 +12,6 @@ options.optimisation = false
 options.documentation = false
 options.llvm = false
 options.traceLogs = false
-options.useEKG = false
 
 OptionParser.new do |opts|
     opts.banner = "Usage: scripts/build/make [options]"
@@ -47,10 +46,6 @@ OptionParser.new do |opts|
 
     opts.on("--[no-]trace-logs", "If enabled, logs are printed to stderr as they are cretaed. They will also be in the log file.") do |v|
         options.traceLogs = v
-    end
-
-    opts.on("--[no-]use-ekg", "If enabled, conjureDF will use EKG to report metrics.") do |v|
-        options.useEKG = v
     end
 
 end.parse!
@@ -88,12 +83,6 @@ end
 
 paramsBuild << '--ghc-options="-fllvm"'      if options.llvm
 paramsBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
-
-if options.useEKG
-    paramsBuild << '-fuse-ekg'
-else
-    paramsBuild << '-f-use-ekg'
-end
 
 if options.dryRun
     paramsBuild << "--dry-run"
