@@ -31,6 +31,7 @@ getConjureMode :: IO (Maybe ConjureMode)
 getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
 
 runConjureMode :: ConjureMode -> IO ()
+runConjureMode ModeUnknown = error "Unknown mode"
 runConjureMode (ModeRefineParam inEssence' inParam' inEprime' outParam') = do
     inEssence <- readSpecFromFile inEssence'
     inParam   <- readSpecFromFile inParam'

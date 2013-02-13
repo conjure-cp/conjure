@@ -273,7 +273,7 @@ rangeRandomM range = do
 
 
 instance Default GlobalState where
-    def = GlobalState def def (error "Unknown mode") (error "Seed not initialised")
+    def = GlobalState def def ModeUnknown (error "Seed not initialised")
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
@@ -288,6 +288,7 @@ class SelectByMode a where
     selectByMode = defSelectByMode
 
 defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
+defSelectByMode (ModeUnknown     {}) _  = error "selectByMode: Shouldn't be used in this mode"
 defSelectByMode (ModeRefineParam {}) _  = error "selectByMode: Shouldn't be used in this mode"
 defSelectByMode (ModePrettify    {}) _  = error "selectByMode: Shouldn't be used in this mode"
 defSelectByMode _                    [] = return []

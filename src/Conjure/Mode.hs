@@ -28,7 +28,8 @@ parseGenericArgs xs =
 
 
 data ConjureMode
-    = ModeRefineParam
+    = ModeUnknown
+    | ModeRefineParam
         FilePath    -- Essence
         FilePath    -- Essence Param
         FilePath    -- Essence'
