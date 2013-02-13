@@ -7,8 +7,6 @@ import Language.E
 import qualified Data.HashSet as S
 
 
--- TODO: do this better with the new single statement setting!
-
 removeUnused
     :: MonadConjure m
     => Spec
@@ -26,18 +24,18 @@ removeUnused (Spec v statements) = Spec v <$> go statements
                            | [d]           := topLevel.declaration.given.domain
                            |] | domainNeedsRepresentation d -> Just nm
                     _ -> Nothing
+            next' <- go next
             case maybeName of
                 Nothing -> do
-                    next' <- go next
                     return [xMake| statement.this := [this]
                                  | statement.next := [next']
                                  |]
                 Just name -> do
-                    next' <- go next
                     if name `S.member` identifiersIn next
-                        then return [xMake| statement.this := [this]
-                                          | statement.next := [next']
-                                          |]
+                        then do
+                            return [xMake| statement.this := [this]
+                                         | statement.next := [next']
+                                         |]
                         else do
                             mkLog "removedDecl" (pretty this)
                             return next'
