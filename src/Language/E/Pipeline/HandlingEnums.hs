@@ -8,11 +8,10 @@ import Language.E.Pipeline.ImplicitWheres
 
 handleEnums :: MonadConjure m => Spec -> m Spec
 handleEnums =
-    handleEnumsLetting >=>
-    return . doReplacements >=>
-    handleEnumsGiven >=>
-    return . doReplacements >=>
-    updateGivenFinds >=>
+    handleEnumsLetting >=> return . doReplacements >=>
+    handleEnumsGiven   >=> return . doReplacements >=>
+    updateGivenFinds   >=>
+    handleGivenIntDom  >=>
     handleInfiniteGivenDoms
 
 -- replaces letting e be new type enum {a, b, c}
@@ -111,4 +110,38 @@ handleEnumsGiven spec
                                                   ]
                 return [newDecl1,newDecl2]
             _ -> return [statement]
+
+
+
+-- for each     given e new domain int
+-- adds a       given e_size : int(0..)
+-- returns      the new spec
+handleGivenIntDom :: MonadConjure m => Spec -> m Spec
+handleGivenIntDom spec
+    = runIdentityT
+    $ flip foreachStatement spec $ \ statement ->
+        case statement of
+            [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
+                   | []              := topLevel.declaration.given.typeInt
+                   |] -> do
+                let lb = [eMake| 1 |]
+                let newName = name `mappend` "_size"
+                flag <- lift $ runMaybeT $ lookupReference newName
+                case flag of
+                    Nothing -> do
+                        -- only add this new given if it isn't alreay in the spec.
+                        let newDom  = [xMake| domain.int.ranges.range.from := [lb] |]
+                        let newDecl = [xMake| topLevel.declaration.given.name.reference := [Prim (S newName)]
+                                            | topLevel.declaration.given.domain         := [newDom]
+                                            |]
+
+                        lift $ mkLog "handleGivenIntDom"
+                             $ vcat [ pretty statement
+                                    , "~~>"
+                                    , pretty newDecl
+                                    ]
+                        return [newDecl, statement]
+                    Just _ -> return [statement]
+            _ -> return [statement]
+
 

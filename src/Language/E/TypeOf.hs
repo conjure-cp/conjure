@@ -104,9 +104,10 @@ typeOf [xMatch| [Prim (S i)] := metavar |] = do
 
 typeOf [xMatch| [i] := structural.single |] = typeOf i
 
-typeOf [xMatch| [d] := topLevel.declaration.find .domain |] = typeOf d
-typeOf [xMatch| [d] := topLevel.declaration.given.domain |] = typeOf d
-typeOf [xMatch| [d] := topLevel.declaration.dim  .domain |] = typeOf d
+typeOf [xMatch| [d] := topLevel.declaration.find .domain  |] = typeOf d
+typeOf [xMatch| [d] := topLevel.declaration.given.domain  |] = typeOf d
+typeOf [xMatch| [d] := topLevel.declaration.dim  .domain  |] = typeOf d
+typeOf [xMatch| [ ] := topLevel.declaration.given.typeInt |] = return [xMake| type.int := [] |]
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
 
