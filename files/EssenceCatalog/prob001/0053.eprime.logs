@@ -1,0 +1,287 @@
+[handleInfDom] given n_cars: int(1..)
+               ~~>
+               given n_cars: int(1..MAXINT)
+[handleInfDom] given n_classes: int(1..)
+               ~~>
+               given n_classes: int(1..MAXINT)
+[handleInfDom] given n_options: int(1..)
+               ~~>
+               given n_options: int(1..MAXINT)
+[handleInfDom] given n_upperBound: int(1..)
+               ~~>
+               given n_upperBound: int(1..MAXINT)
+[representation] find car: function (total) int(1..n_cars) --> int(1..n_classes)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given quantity:
+                         function (total) int(1..n_classes) --> int(1..n_upperBound)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given maxcars:
+                         function (total) int(1..n_options) --> int(1..n_upperBound)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given blksize:
+                         function (total) int(1..n_options) --> int(1..n_upperBound)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given usage:
+                         relation of (int(1..n_classes) * int(1..n_options))
+                 (#1)
+                 RelationAsSet
+[configuration] quantity§region2#AsReln usage§region5#RelationAsSet car§region1#AsReln blksize§region4#AsReln blksize§region3#Matrix1D maxcars§region7#Matrix1D car§region6#Matrix1D
+[addedDecl] given maxcars_Matrix1D:
+                    matrix indexed by [int(1..n_options)] of int(1..n_upperBound)
+[addedDecl] find car_Matrix1D:
+                    matrix indexed by [int(1..n_cars)] of int(1..n_classes)
+[addedDecl] given usage_RelationAsSet:
+                    set of (int(1..n_classes), int(1..n_options))
+[addedDecl] given blksize_AsReln:
+                    relation of (int(1..n_options) * int(1..n_upperBound))
+[addedDecl] given blksize_Matrix1D:
+                    matrix indexed by [int(1..n_options)] of int(1..n_upperBound)
+[addedDecl] given quantity_AsReln:
+                    relation of (int(1..n_classes) * int(1..n_upperBound))
+[addedDecl] find car_AsReln: relation of (int(1..n_cars) * int(1..n_classes))
+[applied] |preImage(car§region1#AsReln, c)|
+          {rules/refns/set-card.rule}
+              (sum v__9 in preImage(car§region1#AsReln, c) . 1)
+[applied] (sum v__9 in preImage(car§region1#AsReln, c) . 1)
+          {rules/refns/function-preImage-quantified.rule}
+              (sum v__10 : int(1..n_cars) , car§region1#AsReln(v__10) = c . 1)
+[applied] car§region1#AsReln(v__10)
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__11 in toSet(car_AsReln§region1) , v__11[1] = v__10 . v__11[2])
+[applied] quantity§region2#AsReln(c)
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__12 in toSet(quantity_AsReln§region2) , v__12[1] = c . v__12[2])
+[applied] blksize§region3#Matrix1D(opt)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              blksize_Matrix1D§region3[opt]
+[applied] blksize§region4#AsReln(opt)
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__13 in toSet(blksize_AsReln§region4) , v__13[1] = opt . v__13[2])
+[applied] car§region6#Matrix1D(i)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              car_Matrix1D§region6[i]
+[applied] usage§region5#RelationAsSet(car_Matrix1D§region6[i], opt)
+          {builtIn.relationApply}
+              (car_Matrix1D§region6[i], opt) in usage_RelationAsSet§region5
+[applied] (car_Matrix1D§region6[i], opt) in usage_RelationAsSet§region5
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__14 in usage_RelationAsSet§region5
+                   . v__14[1] = car_Matrix1D§region6[i] /\ v__14[2] = opt)
+[applied] maxcars§region7#Matrix1D(opt)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              maxcars_Matrix1D§region7[opt]
+[from-cached] such that blksize#AsReln = blksize#Matrix1D
+              ~~>
+              such that
+                  forAll v__17 in toSet(blksize_AsReln)
+                      . (sum v__16 in toSet(blksize_AsReln) , v__16[1] = v__17[1] . v__16[2])
+                        =
+                        blksize_Matrix1D[v__17[1]]
+[removedDecl] find car: function (total) int(1..n_cars) --> int(1..n_classes)
+[removedDecl] given usage: relation of (int(1..n_classes) * int(1..n_options))
+[removedDecl] given blksize:
+                      function (total) int(1..n_options) --> int(1..n_upperBound)
+[removedDecl] given maxcars:
+                      function (total) int(1..n_options) --> int(1..n_upperBound)
+[removedDecl] given quantity:
+                      function (total) int(1..n_classes) --> int(1..n_upperBound)
+[representation] find car_AsReln:
+                         relation of (int(1..n_cars) * int(1..n_classes))
+                 (#1)
+                 RelationAsSet
+[representation] given quantity_AsReln:
+                         relation of (int(1..n_classes) * int(1..n_upperBound))
+                 (#1)
+                 RelationAsSet
+[representation] given blksize_AsReln:
+                         relation of (int(1..n_options) * int(1..n_upperBound))
+                 (#1)
+                 RelationAsSet
+[representation] given usage_RelationAsSet:
+                         set of (int(1..n_classes), int(1..n_options))
+                 (#1)
+                 ExplicitVarSize
+[configuration] quantity_AsReln§region3#RelationAsSet usage_RelationAsSet§region4#ExplicitVarSize blksize_AsReln§region2#RelationAsSet quantity_AsReln§region2#RelationAsSet usage_RelationAsSet§region5#ExplicitVarSize blksize_AsReln§region1#RelationAsSet blksize_AsReln§region4#RelationAsSet car_AsReln§region1#RelationAsSet car_AsReln§region5#RelationAsSet
+[addedDecl] find car_AsReln_RelationAsSet:
+                    set of (int(1..n_cars), int(1..n_classes))
+[addedDecl] given usage_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n_classes * n_options)] of (bool,
+                                                                          (int(1..n_classes), int(1..n_options)))
+[addedDecl] given quantity_AsReln_RelationAsSet:
+                    set of (int(1..n_classes), int(1..n_upperBound))
+[addedDecl] given blksize_AsReln_RelationAsSet:
+                    set of (int(1..n_options), int(1..n_upperBound))
+[applied] (sum v__11 in toSet(car_AsReln§region1#RelationAsSet)
+               , v__11[1] = v__10
+               . v__11[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__11 in car_AsReln_RelationAsSet§region1 , v__11[1] = v__10 . v__11[2])
+[applied] (sum v__12 in toSet(quantity_AsReln§region2#RelationAsSet)
+               , v__12[1] = c
+               . v__12[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__12 in quantity_AsReln_RelationAsSet§region2 , v__12[1] = c . v__12[2])
+[applied] (sum v__13 in toSet(blksize_AsReln§region4#RelationAsSet)
+               , v__13[1] = opt
+               . v__13[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__13 in blksize_AsReln_RelationAsSet§region4 , v__13[1] = opt . v__13[2])
+[applied] (exists v__14 in usage_RelationAsSet§region5#ExplicitVarSize
+               . v__14[1] = car_Matrix1D§region6[i] /\ v__14[2] = opt)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__19 : int(1..n_classes * n_options)
+                   , usage_RelationAsSet_ExplicitVarSize§region5[v__19, 1]
+                   . usage_RelationAsSet_ExplicitVarSize§region5[v__19, 2, 1]
+                     =
+                     car_Matrix1D§region6[i]
+                     /\
+                     usage_RelationAsSet_ExplicitVarSize§region5[v__19, 2, 2] = opt)
+[applied] (sum v__2 in toSet(car_AsReln§region1#RelationAsSet) . v__1 = v__2[1])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__2 in car_AsReln_RelationAsSet§region1 . v__1 = v__2[1])
+[applied] (sum v__16 in toSet(blksize_AsReln§region2#RelationAsSet)
+               , v__16[1] = v__17[1]
+               . v__16[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__16 in blksize_AsReln_RelationAsSet§region2 , v__16[1] = v__17[1]
+                   . v__16[2])
+[applied] (forAll v__17 in toSet(blksize_AsReln§region1#RelationAsSet)
+               . (sum v__16 in blksize_AsReln_RelationAsSet§region2 , v__16[1] = v__17[1]
+                      . v__16[2])
+                 =
+                 blksize_Matrix1D[v__17[1]])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (forAll v__17 in blksize_AsReln_RelationAsSet§region1
+                   . (sum v__16 in blksize_AsReln_RelationAsSet§region2 , v__16[1] = v__17[1]
+                          . v__16[2])
+                     =
+                     blksize_Matrix1D[v__17[1]])
+[removedDecl] given usage_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n_classes * n_options)] of (bool,
+                                                                            (int(1..n_classes), int(1..n_options)))
+[removedDecl] given usage_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n_classes * n_options)] of (int(1..n_classes),
+                                                                            int(1..n_options))
+[removedDecl] find car_AsReln: relation of (int(1..n_cars) * int(1..n_classes))
+[removedDecl] given usage_RelationAsSet:
+                      set of (int(1..n_classes), int(1..n_options))
+[removedDecl] given blksize_AsReln:
+                      relation of (int(1..n_options) * int(1..n_upperBound))
+[removedDecl] given quantity_AsReln:
+                      relation of (int(1..n_classes) * int(1..n_upperBound))
+[representation] find car_AsReln_RelationAsSet:
+                         set of (int(1..n_cars), int(1..n_classes))
+                 (#1)
+                 ExplicitVarSize
+[representation] given quantity_AsReln_RelationAsSet:
+                         set of (int(1..n_classes), int(1..n_upperBound))
+                 (#1)
+                 ExplicitVarSize
+[representation] given blksize_AsReln_RelationAsSet:
+                         set of (int(1..n_options), int(1..n_upperBound))
+                 (#1)
+                 ExplicitVarSize
+[configuration] car_AsReln_RelationAsSet§region1#ExplicitVarSize blksize_AsReln_RelationAsSet§region1#ExplicitVarSize blksize_AsReln_RelationAsSet§region2#ExplicitVarSize blksize_AsReln_RelationAsSet§region4#ExplicitVarSize car_AsReln_RelationAsSet§region3#ExplicitVarSize quantity_AsReln_RelationAsSet§region1#ExplicitVarSize quantity_AsReln_RelationAsSet§region2#ExplicitVarSize
+[addedDecl] find car_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n_cars * n_classes)] of (bool,
+                                                                       (int(1..n_cars), int(1..n_classes)))
+[addedDecl] given blksize_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n_options * n_upperBound)] of (bool,
+                                                                             (int(1..n_options), int(1..n_upperBound)))
+[addedDecl] given quantity_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n_classes * n_upperBound)] of (bool,
+                                                                             (int(1..n_classes), int(1..n_upperBound)))
+[applied] (sum v__11 in car_AsReln_RelationAsSet§region1#ExplicitVarSize
+               , v__11[1] = v__10
+               . v__11[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__26 : int(1..n_cars * n_classes)
+                   , car_AsReln_RelationAsSet_ExplicitVarSize§region1[v__26, 2, 1] = v__10
+                     /\
+                     car_AsReln_RelationAsSet_ExplicitVarSize§region1[v__26, 1]
+                   . car_AsReln_RelationAsSet_ExplicitVarSize§region1[v__26, 2, 2])
+[applied] (sum v__12 in quantity_AsReln_RelationAsSet§region2#ExplicitVarSize
+               , v__12[1] = c
+               . v__12[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__27 : int(1..n_classes * n_upperBound)
+                   , quantity_AsReln_RelationAsSet_ExplicitVarSize§region2[v__27, 2, 1] = c
+                     /\
+                     quantity_AsReln_RelationAsSet_ExplicitVarSize§region2[v__27, 1]
+                   . quantity_AsReln_RelationAsSet_ExplicitVarSize§region2[v__27, 2, 2])
+[applied] (sum v__13 in blksize_AsReln_RelationAsSet§region4#ExplicitVarSize
+               , v__13[1] = opt
+               . v__13[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__28 : int(1..n_options * n_upperBound)
+                   , blksize_AsReln_RelationAsSet_ExplicitVarSize§region4[v__28, 2, 1] = opt
+                     /\
+                     blksize_AsReln_RelationAsSet_ExplicitVarSize§region4[v__28, 1]
+                   . blksize_AsReln_RelationAsSet_ExplicitVarSize§region4[v__28, 2, 2])
+[applied] (sum v__2 in car_AsReln_RelationAsSet§region1#ExplicitVarSize
+               . v__1 = v__2[1])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__29 : int(1..n_cars * n_classes)
+                   , car_AsReln_RelationAsSet_ExplicitVarSize§region1[v__29, 1]
+                   . v__1 = car_AsReln_RelationAsSet_ExplicitVarSize§region1[v__29, 2, 1])
+[applied] (sum v__16 in blksize_AsReln_RelationAsSet§region2#ExplicitVarSize
+               , v__16[1] = v__17[1]
+               . v__16[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__30 : int(1..n_options * n_upperBound)
+                   , blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 2, 1] = v__17[1]
+                     /\
+                     blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 1]
+                   . blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 2, 2])
+[applied] (forAll v__17 in blksize_AsReln_RelationAsSet§region1#ExplicitVarSize
+               . (sum v__30 : int(1..n_options * n_upperBound)
+                      , blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 2, 1] = v__17[1]
+                        /\
+                        blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 1]
+                      . blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 2, 2])
+                 =
+                 blksize_Matrix1D[v__17[1]])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__31 : int(1..n_options * n_upperBound)
+                   , blksize_AsReln_RelationAsSet_ExplicitVarSize§region1[v__31, 1]
+                   . (sum v__30 : int(1..n_options * n_upperBound)
+                          , blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 2, 1]
+                            =
+                            blksize_AsReln_RelationAsSet_ExplicitVarSize§region1[v__31, 2, 1]
+                            /\
+                            blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 1]
+                          . blksize_AsReln_RelationAsSet_ExplicitVarSize§region2[v__30, 2, 2])
+                     =
+                     blksize_Matrix1D[blksize_AsReln_RelationAsSet_ExplicitVarSize§region1[v__31,
+                                                                                           2,
+                                                                                           1]])
+[removedDecl] given quantity_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n_classes * n_upperBound)] of (bool,
+                                                                               (int(1..n_classes),
+                                                                                int(1..n_upperBound)))
+[removedDecl] given blksize_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n_options * n_upperBound)] of (bool,
+                                                                               (int(1..n_options),
+                                                                                int(1..n_upperBound)))
+[removedDecl] find car_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n_cars * n_classes)] of (bool,
+                                                                         (int(1..n_cars), int(1..n_classes)))
+[removedDecl] given quantity_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n_classes * n_upperBound)] of (int(1..n_classes),
+                                                                               int(1..n_upperBound))
+[removedDecl] given blksize_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n_options * n_upperBound)] of (int(1..n_options),
+                                                                               int(1..n_upperBound))
+[removedDecl] find car_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n_cars * n_classes)] of (int(1..n_cars),
+                                                                         int(1..n_classes))
+[removedDecl] find car_AsReln_RelationAsSet:
+                      set of (int(1..n_cars), int(1..n_classes))
+[removedDecl] given blksize_AsReln_RelationAsSet:
+                      set of (int(1..n_options), int(1..n_upperBound))
+[removedDecl] given quantity_AsReln_RelationAsSet:
+                      set of (int(1..n_classes), int(1..n_upperBound))
