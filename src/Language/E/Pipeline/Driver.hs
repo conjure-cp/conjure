@@ -6,6 +6,19 @@ import System.Directory
 -- import System.Mem ( performGC )
 
 
+driverConjureSingle
+    :: FilePath -- the output filepath
+    -> [(Either Doc Spec, LogTree)]
+    -> IO ()
+driverConjureSingle pathOut [(Right x, logs)] = do
+    toFile  pathOut              x
+    toFile (pathOut ++ ".logs" ) logs
+driverConjureSingle pathOut [(Left  x, logs)] = do
+    toFile (pathOut ++ ".error") x
+    toFile (pathOut ++ ".logs" ) logs
+driverConjureSingle _ _ = error "Generates multiple outputs, must be a bug. Sorry."
+
+
 driverConjure
     :: ([RuleRepr] -> [RuleRefn] -> Spec -> [(Either Doc Spec, LogTree)])
     -> FilePath -> [RuleRepr] -> [RuleRefn] -> Spec -> IO ()

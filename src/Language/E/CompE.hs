@@ -293,16 +293,15 @@ defSelectByMode (ModePrettify    {}) _  = error "selectByMode: Shouldn't be used
 defSelectByMode _                    [] = return []
 defSelectByMode (ModeUnknown     {}) xs = return xs
 defSelectByMode (ModeDFAll       {}) xs = return xs
-defSelectByMode (ModeRandom      {}) xs = do
+defSelectByMode (ModeSingleOutput ModeRandom _ _) xs = do
     i <- rangeRandomM (0, length xs - 1)
     return [xs !! i]
-defSelectByMode (ModeBest        fp) xs    = defSelectByMode (ModeSmallest fp) xs
-defSelectByMode (ModeFirst       {}) (x:_) = return [x]
-defSelectByMode (ModeSmallest    {}) (x:_) = return [x]
+defSelectByMode (ModeSingleOutput {}) (x:_) = return [x]
 
 instance SelectByMode E where
     selectByMode _ [] = return []
-    selectByMode (ModeSmallest {}) xs = return [minimumBy (comparing eDepth) xs]
+    selectByMode (ModeSingleOutput ModeSmallest _ _) xs = return [minimumBy (comparing eDepth) xs]
+    selectByMode (ModeSingleOutput ModeBest     _ _) xs = return [minimumBy (comparing eDepth) xs]
     selectByMode mode xs = defSelectByMode mode xs
 
 eDepth :: E -> Int
@@ -312,7 +311,7 @@ eDepth _ = 1
 
 instance SelectByMode RuleReprResult where
     selectByMode _ [] = return []
-    selectByMode (ModeSmallest {}) xs = return [minimumBy comparer xs]
+    selectByMode (ModeSingleOutput ModeSmallest _ _) xs = return [minimumBy comparer xs]
         where
             comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
                      ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =

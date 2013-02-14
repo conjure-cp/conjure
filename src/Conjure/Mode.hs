@@ -4,6 +4,7 @@ import Control.Arrow ( first, second )
 import Control.Monad ( guard, msum )
 import Data.Char ( toLower )
 import Data.List ( partition )
+import Data.Maybe ( listToMaybe, mapMaybe )
 
 
 type GenericArgs
@@ -26,6 +27,12 @@ parseGenericArgs xs =
     in
         ( pairs , flags , xs2 )
 
+data ConjureModeSingle
+    = ModeRandom
+    | ModeFirst
+    | ModeSmallest
+    | ModeBest
+    deriving (Show)
 
 data ConjureMode
     = ModeUnknown
@@ -39,15 +46,11 @@ data ConjureMode
         FilePath    -- output
     | ModeDFAll
         FilePath    -- Essence
-    | ModeBest
+    | ModeSingleOutput
+        ConjureModeSingle
         FilePath    -- Essence
-    | ModeRandom
-        FilePath    -- Essence
-    | ModeFirst
-        FilePath    -- Essence
-    | ModeSmallest
-        FilePath    -- Essence
-    deriving ( Show )
+        FilePath    -- Essence'
+    deriving (Show)
 
 parseArgs :: GenericArgs -> Maybe ConjureMode
 parseArgs (pairs, _flags, _rest) = msum
@@ -57,12 +60,9 @@ parseArgs (pairs, _flags, _rest) = msum
     , modeRandom
     , modeFirst
     , modeSmallest
+    , modeBest
     ]
     where
-        key = (`lookup` pairs)
-        -- flag = (`elem` flags)
-        x =~= ys = map toLower x `elem` map (map toLower) ys
-
         modeRefineParam = do
             mode      <- key "--mode"
             guard (mode =~= words "refineparam")
@@ -75,9 +75,7 @@ parseArgs (pairs, _flags, _rest) = msum
         modePrettify = do
             mode <- key "--mode"
             guard (mode =~= words "pretty prettify")
-            inp <- key "--in"
-            out <- key "--out"
-            return $ ModePrettify inp out
+            modeSingleOutput ModePrettify
 
         modeDFAll = do
             mode <- key "--mode"
@@ -88,20 +86,34 @@ parseArgs (pairs, _flags, _rest) = msum
         modeRandom = do
             mode <- key "--mode"
             guard (mode =~= words "rand random")
-            inEssence <- key "--in-essence"
-            return $ ModeRandom inEssence
+            modeSingleOutput $ ModeSingleOutput ModeRandom
 
         modeFirst = do
             mode <- key "--mode"
             guard (mode =~= words "first")
-            inEssence <- key "--in-essence"
-            return $ ModeSmallest inEssence
+            modeSingleOutput $ ModeSingleOutput ModeFirst
 
         modeSmallest = do
             mode <- key "--mode"
             guard (mode =~= words "small smallest")
-            inEssence <- key "--in-essence"
-            return $ ModeSmallest inEssence
+            modeSingleOutput $ ModeSingleOutput ModeSmallest
+
+        modeBest = do
+            mode <- key "--mode"
+            guard (mode =~= words "best")
+            modeSingleOutput $ ModeSingleOutput ModeBest
+
+        -- helper functions for the above
+        anyKey = listToMaybe . mapMaybe key
+        key = (`lookup` pairs)
+        -- flag = (`elem` flags)
+        x =~= ys = map toLower x `elem` map (map toLower) ys
+
+        modeSingleOutput mk = do
+            inEssence <- anyKey $ words "--in --in-essence"
+            outEprime <- key "--out --out-eprime"
+            return $ mk inEssence outEprime
+
 
 allKeys :: [String]
 allKeys =
