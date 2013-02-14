@@ -118,7 +118,8 @@ handleEnumsGiven spec
 -- returns      the new spec
 handleGivenIntDom :: MonadConjure m => Spec -> m Spec
 handleGivenIntDom spec
-    = runIdentityT
+    = withBindingScope'
+    $ flip evalStateT []
     $ flip foreachStatement spec $ \ statement ->
         case statement of
             [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
@@ -126,22 +127,29 @@ handleGivenIntDom spec
                    |] -> do
                 let lb = [eMake| 1 |]
                 let newName = name `mappend` "_size"
-                flag <- lift $ runMaybeT $ lookupReference newName
-                case flag of
-                    Nothing -> do
-                        -- only add this new given if it isn't alreay in the spec.
-                        let newDom  = [xMake| domain.int.ranges.range.from := [lb] |]
-                        let newDecl = [xMake| topLevel.declaration.given.name.reference := [Prim (S newName)]
-                                            | topLevel.declaration.given.domain         := [newDom]
-                                            |]
-
+                let newDom  = [xMake| domain.int.ranges.range.from := [lb] |]
+                let newDecl = [xMake| topLevel.declaration.given.name.reference := [Prim (S newName)]
+                                    | topLevel.declaration.given.domain         := [newDom]
+                                    |]
+                befores <- get
+                -- only add this new given if this is the first time we are seeing it.
+                if statement `elem` befores || newDecl `elem` befores
+                    then do
+                        lift $ mkLog "debug"
+                             $ vcat [ "not adding"
+                                    , pretty statement
+                                    ]
+                        return [statement]
+                    else do
                         lift $ mkLog "handleGivenIntDom"
                              $ vcat [ pretty statement
                                     , "~~>"
                                     , pretty newDecl
                                     ]
+                        modify ([newDecl, statement] ++) -- add these statements as seen.
                         return [newDecl, statement]
-                    Just _ -> return [statement]
-            _ -> return [statement]
+            _ -> do
+                modify (statement :)
+                return [statement]
 
 
