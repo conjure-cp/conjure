@@ -57,9 +57,9 @@ conjureAll
 conjureAll reprs refns = phaseRepr0
     where
         ifNone
-            :: (Spec -> m Spec)
-            -> (Spec -> m Spec)
-            -> (Spec -> m Spec)
+            :: (Spec -> m Spec)     -- run this
+            -> (Spec -> m Spec)     -- run this with the result if no errors
+            -> (Spec -> m Spec)     -- run this instead if ErrGeneratesNone
             -> Spec -> m Spec
         ifNone ma mIf mElse s = flip evalStateT GeneratesSome $ do
             s' <- catchError (lift $ ma s) $ \ e ->
