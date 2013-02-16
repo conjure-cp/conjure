@@ -80,7 +80,7 @@ parseArgs (pairs, _flags, _rest) = msum
         modeDFAll = do
             mode <- key "--mode"
             guard (mode =~= words "df depthfirst depth-first")
-            inEssence <- key "--in-essence"
+            inEssence <- anyKey $ words "--in --in-essence"
             return $ ModeDFAll inEssence
 
         modeRandom = do
