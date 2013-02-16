@@ -4,7 +4,7 @@ module Language.E.Pipeline.SavileRowCompat where
 
 import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
-import Language.E.Pipeline.NoTuples ( conjureNoTuples )
+import Language.E.Pipeline.NoTuples ( noTuplesSpec )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
 
@@ -16,7 +16,7 @@ savilerowCompat
      =  return
     >=> recordSpec >=> sliceIfTooFewIndices
     -- >=> recordSpec >=> valueMatrixToLetting
-    >=> recordSpec >=> conjureNoTuples
+    >=> recordSpec >=> noTuplesSpec
     >=> recordSpec >=> conjureNoGuards
     >=> recordSpec >=> (return . onSpec toIntIsNoOp)
     >=> recordSpec >=> (return . atMostOneSuchThat)

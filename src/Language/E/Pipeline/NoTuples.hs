@@ -1,29 +1,21 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.Pipeline.NoTuples ( conjureNoTuples, noTupleDomsInQuan ) where
+module Language.E.Pipeline.NoTuples ( noTuplesSpec ) where
 
-import Language.E.Imports
-import Language.E.Definition
-import Language.E.CompE
-import Language.E.Pretty
-import Language.E.Helpers
-import Language.E.Traversals
-import Language.E.TH
+import Language.E
 
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
 
 
-conjureNoTuples
-    :: MonadConjure m
-    => Spec
-    -> m Spec
-conjureNoTuples = makeIdempotent noTuplesSpec
 
-noTuplesSpec :: MonadConjure m => Spec -> m (Spec, Bool)
-noTuplesSpec (Spec v s) = do
-    (s',b) <- noTuplesE s
-    return (Spec v s', b)
+noTuplesSpec :: MonadConjure m => Spec -> m Spec
+noTuplesSpec = makeIdempotent helper
+    where helper (Spec v s) = do
+            (s' , b1) <- noTuplesE s
+            (s'', b2) <- noTupleDomsInQuanEs s'
+            return (Spec v s'', b1 || b2)
+
 
 noTuplesE :: MonadConjure m => E -> m (E, Bool)
 noTuplesE statementIn = do
@@ -62,16 +54,32 @@ noTuplesE statementIn = do
             return (s', True)
 
 
-noTupleDomsInQuan :: MonadConjure m => E -> m (Maybe (E, [Binder]))
-noTupleDomsInQuan inp = do
+noTupleDomsInQuanEs :: MonadConjure m => E -> m (E, Bool)
+noTupleDomsInQuanEs inp@(Tagged t xs) = do
+    (inp', flag) <- noTupleDomsInQuanE inp
+    if flag
+        then return (inp', True)
+        else do
+            (ys, bools) <- unzip <$> mapM noTupleDomsInQuanEs xs
+            return $ if or bools
+                        then (Tagged t ys, True)
+                        else (inp, False)
+noTupleDomsInQuanEs x = return (x, False)
+
+noTupleDomsInQuanE :: MonadConjure m => E -> m (E, Bool)
+noTupleDomsInQuanE inp = do
     (mout, (tuplesToExplode, matrixOfTuplesToExplode)) <- runWriterT (helper inp)
     case mout of
-        Nothing -> return Nothing
-        Just (out, bs) -> do
+        Nothing  -> return (inp, False)
+        Just out -> do
             out' <- ( renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
                       renameTupleIndexes (S.fromList tuplesToExplode)
                     ) out
-            return (Just (out', bs))
+            mkLog "noTupleDomsInQuan" $ vcat [ pretty inp
+                                             , "~~>"
+                                             , pretty out'
+                                             ]
+            return (out', True)
     where
         helper
             [xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
@@ -84,18 +92,16 @@ noTupleDomsInQuan inp = do
                    |] =
             case checkTupleDomain domain of
                 Just tuples -> do
-                    lift $ mkLog "noTupleDomsInQuan" $ pretty quanVar
                     let quanVars = [ (n, t)
                                    | (i,t) <- zip [ (1::Int) .. ] tuples
                                    , let n  = mconcat [ quanVar, "_tuple", stringToText (show i) ]
                                    ]
                     forM_ quanVars $ \ (n,_) -> tell ([n],[])
                     let out = inQuans quantifier quanVars (guard, body)
-                    return (Just (out, []))
+                    return (Just out)
                 Nothing ->
                     case checkMatrixOfTupleDomain domain of
                         Just (indices,tuples) -> do
-                            lift $ mkLog "noTupleDomsInQuan" $ pretty quanVar
                             let quanVars = [ (n, t')
                                            | (i,t) <- zip [ (1::Int) .. ] tuples
                                            , let n  = mconcat [ quanVar, "_tuple", stringToText (show i) ]
@@ -103,7 +109,7 @@ noTupleDomsInQuan inp = do
                                            ]
                             tell ([], [(quanVar, length indices)])
                             let out = inQuans quantifier quanVars (guard, body)
-                            return (Just (out, []))
+                            return (Just out)
                         Nothing -> return Nothing
         helper _ = return Nothing
 

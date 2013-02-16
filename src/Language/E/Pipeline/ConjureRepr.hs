@@ -9,7 +9,7 @@ import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
 import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
-import Language.E.Pipeline.NoTuples ( conjureNoTuples )
+import Language.E.Pipeline.NoTuples ( noTuplesSpec )
 
 
 conjureRepr
@@ -26,7 +26,7 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> recordSpec >=> handleUnnameds
                 >=> recordSpec >=> inlineLettings
                 >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
-                >=> recordSpec >=> conjureNoTuples
+                >=> recordSpec >=> noTuplesSpec
                 >=> recordSpec >=> introduceFakeConstraints
                 >=> recordSpec >=> introduceRegions
                 >=> recordSpec >=> applyRepr reprs
