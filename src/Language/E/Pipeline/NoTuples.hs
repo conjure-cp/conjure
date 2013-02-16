@@ -81,7 +81,7 @@ noTupleDomsInQuan inp = do
                    | []                    := quantified.quanOverExpr
                    | [guard]               := quantified.guard
                    | [body]                := quantified.body
-                   |] = do
+                   |] =
             case checkTupleDomain domain of
                 Just tuples -> do
                     lift $ mkLog "noTupleDomsInQuan" $ pretty quanVar
