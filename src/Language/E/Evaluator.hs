@@ -17,6 +17,7 @@ import Language.E.Evaluator.Full    ( fullEvaluator
                                     , stripStructuralSingle
                                     )
 import Language.E.Evaluator.Partial ( partialEvaluator )
+import Language.E.Pipeline.NoTuples ( noTupleDomsInQuan )
 
 
 -- _testSimplify :: T.Text -> IO ()
@@ -60,6 +61,7 @@ allCombined i =
                     , logged "Evaluator.matrixEq"               matrixEq
                     , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
                     , logged "Simplify"                         (adapter partialEvaluator)
+                    , logged "Evaluator.noTupleDomsInQuan"      noTupleDomsInQuan
                     ]
 
 -- these transformations should be applied first. others might depend on them.

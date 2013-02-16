@@ -43,25 +43,34 @@ freshQuanVar = do
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
 
-inForAll :: Text -> E -> E -> E
-inForAll quanVar quanOverDom body =
+inForAll :: Text -> E -> (E,E) -> E
+inForAll = inQuan "forAll"
+
+inQuan :: Text -> Text -> E -> (E,E) -> E
+inQuan quan quanVar quanOverDom (guard,body) =
     let
         out = 
-            [xMake| quantified.quantifier.reference                := [Prim $ S "forAll"]
+            [xMake| quantified.quantifier.reference                := [Prim $ S quan]
                   | quantified.quanVar.structural.single.reference := [Prim $ S quanVar ]
                   | quantified.quanOverDom                         := [quanOverDom]
                   | quantified.quanOverOp                          := []
                   | quantified.quanOverExpr                        := []
-                  | quantified.guard.emptyGuard                    := []
+                  | quantified.guard                               := [guard]
                   | quantified.body                                := [body]
                   |]
     in  fromMaybe out (tryUnrollForAll out)
 
-inForAlls :: [(Text,E)] -> E -> E
-inForAlls = go . reverse
+inForAlls :: [(Text,E)] -> (E,E) -> E
+inForAlls = inQuans "forAll"
+
+inQuans :: Text -> [(Text,E)] -> (E,E) -> E
+inQuans quan = go . reverse
     where
-        go []         body = body
-        go ((i,j):ks) body = go ks $ inForAll i j body
+        go [] _ = error "inQuans.go"
+        go [(i,j)]    this         = inQuan quan i j this
+        go ((i,j):ks) (guard,body) = go ks ( [xMake| emptyGuard := [] |]
+                                           , inQuan quan i j (guard, body)
+                                           )
 
 tryUnrollForAll :: E -> Maybe E
 tryUnrollForAll

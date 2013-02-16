@@ -128,7 +128,10 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                         let renameTo = [xMake| reference := [Prim (S newName)] |]
                                         (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
                                         let renameToIndexed = mkIndexedExpr loopVars renameTo
-                                        return $ inForAlls (zip loopVarStrs is) $ renRefn renameToIndexed con
+                                        return $ inForAlls (zip loopVarStrs is) 
+                                                           ( [xMake| emptyGuard := [] |]
+                                                           , renRefn renameToIndexed con
+                                                           )
 
                                 -- renaming identifiers before we return the constraint
                                 con''    <- freshNames con'
