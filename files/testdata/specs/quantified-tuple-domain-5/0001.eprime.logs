@@ -22,21 +22,11 @@
 [handleInfDom] given DOM4_size: int(1..)
                ~~>
                given DOM4_size: int(1..MAXINT)
-[noTupleDomsInQuan] m
-[Evaluator.noTupleDomsInQuan] (forAll m : matrix indexed by [DOM1] of (DOM2,
-                                                                       DOM3)
-                                   , m[i, 1] > m[i, 2]
-                                   . x >= m[i, 1])
-                              ~~>
-                              (forAll m_tuple1 : matrix indexed by [DOM1] of DOM2
-                                   . (forAll m_tuple2 : matrix indexed by [DOM1] of DOM3
-                                          , m_tuple1[i] > m_tuple2[i]
-                                          . x >= m_tuple1[i]))
-[simplified] (forAll m : matrix indexed by [DOM1] of (DOM2, DOM3)
-                  , m[i, 1] > m[i, 2]
-                  . x >= m[i, 1])
-             ~~>
-             (forAll m_tuple1 : matrix indexed by [DOM1] of DOM2
-                  . (forAll m_tuple2 : matrix indexed by [DOM1] of DOM3
-                         , m_tuple1[i] > m_tuple2[i]
-                         . x >= m_tuple1[i]))
+[noTupleDomsInQuan] (forAll m : matrix indexed by [DOM1] of (DOM2, DOM3)
+                         , m[i, 1] > m[i, 2]
+                         . x >= m[i, 1])
+                    ~~>
+                    (forAll m_tuple1 : matrix indexed by [DOM1] of DOM2
+                         . (forAll m_tuple2 : matrix indexed by [DOM1] of DOM3
+                                , m_tuple1[i] > m_tuple2[i]
+                                . x >= m_tuple1[i]))
