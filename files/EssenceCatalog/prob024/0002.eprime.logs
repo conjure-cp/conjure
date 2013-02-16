@@ -83,9 +83,13 @@
                . v__7[2])
           {rules/refns/relation-asset/relation-asset-toSet.rule}
               (sum v__7 in seq_AsReln_RelationAsSet§region1 , v__7[1] = v__6 . v__7[2])
-[applied] (sum v__2 in toSet(seq_AsReln§region1#RelationAsSet) . v__1 = v__2[1])
-          {rules/refns/relation-asset/relation-asset-toSet.rule}
-              (sum v__2 in seq_AsReln_RelationAsSet§region1 . v__1 = v__2[1])
+[from-cached] such that
+                  forAll v__1 : int(1..k * n)
+                      . (sum v__2 in toSet(seq_AsReln§region1#RelationAsSet) . v__1 = v__2[1]) = 1
+              ~~>
+              such that
+                  forAll v__1 : int(1..k * n)
+                      . (sum v__2 in seq_AsReln_RelationAsSet§region1 . v__1 = v__2[1]) = 1
 [removedDecl] find seq_AsReln: relation of (int(1..k * n) * int(1..n))
 [representation] find seq_AsReln_RelationAsSet:
                          set of (int(1..k * n), int(1..n))
@@ -103,12 +107,20 @@
                      /\
                      seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 1]
                    . seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 2, 2])
-[applied] (sum v__2 in seq_AsReln_RelationAsSet§region1#ExplicitVarSize
-               . v__1 = v__2[1])
-          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-              (sum v__14 : int(1..k * n * n)
-                   , seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__14, 1]
-                   . v__1 = seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__14, 2, 1])
+[from-cached] such that
+                  forAll v__1 : int(1..k * n)
+                      . (sum v__2 in seq_AsReln_RelationAsSet§region1#ExplicitVarSize
+                             . v__1 = v__2[1])
+                        =
+                        1
+              ~~>
+              such that
+                  forAll v__1 : int(1..k * n)
+                      . (sum v__23 : int(1..k * n * n)
+                             , seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__23, 1]
+                             . v__1 = seq_AsReln_RelationAsSet_ExplicitVarSize§region1[v__23, 2, 1])
+                        =
+                        1
 [removedDecl] find seq_AsReln_RelationAsSet_ExplicitVarSize:
                       matrix indexed by [int(1..k * n * n)] of (bool, (int(1..k * n), int(1..n)))
 [removedDecl] find seq_AsReln_RelationAsSet_ExplicitVarSize_tuple2:

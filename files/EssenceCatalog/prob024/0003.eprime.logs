@@ -255,4 +255,280 @@
                      /\
                      s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 1]
                    . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 2, 2])
+[noTupleDomsInQuan] (exists s_AsReln_RelationAsSet_ExplicitVarSize : matrix indexed by [int(1..k
+                                                                                               *
+                                                                                               (k * n))] of (bool,
+                                                                                                             (int(1..k),
+                                                                                                              int(1..k
+                                                                                                                     *
+                                                                                                                     n)))
+                         , (forAll v__7 : int(1..k)
+                                . (sum v__13 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__13, 1]
+                                       . v__7 = s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__13, 2, 1])
+                                  =
+                                  1)
+                           /\
+                           (forAll v__15 : int(1..k * (k * n))
+                                , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__15, 1]
+                                . (forAll v__14 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__15, 2, 1]
+                                         !=
+                                         s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 1]
+                                         /\
+                                         s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 1]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__15, 2, 2]
+                                         !=
+                                         s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__14, 2, 2]))
+                           /\
+                           ((forAll v__11 : int(1..k * (k * n))
+                                 . (forAll v__12 : int(1..k * (k * n))
+                                        , v__11 < v__12 /\ s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 1]
+                                          /\
+                                          s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__12, 1]
+                                        . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 2, 1]
+                                          !=
+                                          s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__12, 2, 1]
+                                          \/
+                                          s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 2, 2]
+                                          !=
+                                          s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__12, 2, 2]))
+                            /\
+                            (forAll v__11 : int(1..k * (k * n) - 1)
+                                 . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11, 1]
+                                   <=
+                                   s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__11 + 1, 1]))
+                         . (forAll i : int(1..k * n)
+                                . (exists v__16 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__16, 1]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__16, 2, 2] = i)
+                                  <->
+                                  (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                           /\
+                           (forAll j : int(1..k - 1)
+                                . (sum v__17 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__17, 2, 1] = j + 1
+                                         /\
+                                         s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__17, 1]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__17, 2, 2])
+                                  -
+                                  (sum v__18 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 2, 1] = j
+                                         /\
+                                         s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 1]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize§regionS[v__18, 2, 2])
+                                  =
+                                  m))
+                    ~~>
+                    (exists s_AsReln_RelationAsSet_ExplicitVarSize_tuple1 : matrix indexed by [int(1..k
+                                                                                                      *
+                                                                                                      (k * n))] of bool
+                         . (exists s_AsReln_RelationAsSet_ExplicitVarSize_tuple2 : matrix indexed by [int(1..k
+                                                                                                             *
+                                                                                                             (k
+                                                                                                              *
+                                                                                                              n))] of (int(1..k),
+                                                                                                                       int(1..k
+                                                                                                                              *
+                                                                                                                              n))
+                                , (forAll v__7 : int(1..k)
+                                       . (sum v__13 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__13]
+                                              . v__7 = s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__13, 1])
+                                         =
+                                         1)
+                                  /\
+                                  (forAll v__15 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__15]
+                                       . (forAll v__14 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__15, 1]
+                                                !=
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__14, 1]
+                                                /\
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__14]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__15, 2]
+                                                !=
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__14, 2]))
+                                  /\
+                                  ((forAll v__11 : int(1..k * (k * n))
+                                        . (forAll v__12 : int(1..k * (k * n))
+                                               , v__11 < v__12
+                                                 /\
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11]
+                                                 /\
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__12]
+                                               . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__11, 1]
+                                                 !=
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__12, 1]
+                                                 \/
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__11, 2]
+                                                 !=
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__12, 2]))
+                                   /\
+                                   (forAll v__11 : int(1..k * (k * n) - 1)
+                                        . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11]
+                                          <=
+                                          s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11 + 1]))
+                                . (forAll i : int(1..k * n)
+                                       . (exists v__16 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__16]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__16, 2] = i)
+                                         <->
+                                         (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                                  /\
+                                  (forAll j : int(1..k - 1)
+                                       . (sum v__17 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__17, 1] = j + 1
+                                                /\
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__17]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__17, 2])
+                                         -
+                                         (sum v__18 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__18, 1] = j
+                                                /\
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__18]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__18, 2])
+                                         =
+                                         m)))
+[noTupleDomsInQuan] (exists s_AsReln_RelationAsSet_ExplicitVarSize_tuple2 : matrix indexed by [int(1..k
+                                                                                                      *
+                                                                                                      (k
+                                                                                                       *
+                                                                                                       n))] of (int(1..k),
+                                                                                                                int(1..k
+                                                                                                                       *
+                                                                                                                       n))
+                         , (forAll v__7 : int(1..k)
+                                . (sum v__13 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__13]
+                                       . v__7 = s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__13, 1])
+                                  =
+                                  1)
+                           /\
+                           (forAll v__15 : int(1..k * (k * n))
+                                , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__15]
+                                . (forAll v__14 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__15, 1]
+                                         !=
+                                         s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__14, 1]
+                                         /\
+                                         s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__14]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__15, 2]
+                                         !=
+                                         s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__14, 2]))
+                           /\
+                           ((forAll v__11 : int(1..k * (k * n))
+                                 . (forAll v__12 : int(1..k * (k * n))
+                                        , v__11 < v__12 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11]
+                                          /\
+                                          s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__12]
+                                        . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__11, 1]
+                                          !=
+                                          s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__12, 1]
+                                          \/
+                                          s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__11, 2]
+                                          !=
+                                          s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__12, 2]))
+                            /\
+                            (forAll v__11 : int(1..k * (k * n) - 1)
+                                 . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11]
+                                   <=
+                                   s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11 + 1]))
+                         . (forAll i : int(1..k * n)
+                                . (exists v__16 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__16]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__16, 2] = i)
+                                  <->
+                                  (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                           /\
+                           (forAll j : int(1..k - 1)
+                                . (sum v__17 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__17, 1] = j + 1
+                                         /\
+                                         s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__17]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__17, 2])
+                                  -
+                                  (sum v__18 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__18, 1] = j
+                                         /\
+                                         s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__18]
+                                       . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2§regionS[v__18, 2])
+                                  =
+                                  m))
+                    ~~>
+                    (exists s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1 : matrix indexed by [int(1..k
+                                                                                                             *
+                                                                                                             (k
+                                                                                                              *
+                                                                                                              n))] of int(1..k)
+                         . (exists s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2 : matrix indexed by [int(1..k
+                                                                                                                    *
+                                                                                                                    (k
+                                                                                                                     *
+                                                                                                                     n))] of int(1..k
+                                                                                                                                    *
+                                                                                                                                    n)
+                                , (forAll v__7 : int(1..k)
+                                       . (sum v__13 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__13]
+                                              . v__7
+                                                =
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__13])
+                                         =
+                                         1)
+                                  /\
+                                  (forAll v__15 : int(1..k * (k * n))
+                                       , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__15]
+                                       . (forAll v__14 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__15]
+                                                !=
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__14]
+                                                /\
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__14]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__15]
+                                                !=
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__14]))
+                                  /\
+                                  ((forAll v__11 : int(1..k * (k * n))
+                                        . (forAll v__12 : int(1..k * (k * n))
+                                               , v__11 < v__12
+                                                 /\
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11]
+                                                 /\
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__12]
+                                               . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__11]
+                                                 !=
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__12]
+                                                 \/
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__11]
+                                                 !=
+                                                 s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__12]))
+                                   /\
+                                   (forAll v__11 : int(1..k * (k * n) - 1)
+                                        . s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11]
+                                          <=
+                                          s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__11 + 1]))
+                                . (forAll i : int(1..k * n)
+                                       . (exists v__16 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__16]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__16] = i)
+                                         <->
+                                         (exists v__6 : int(1..k * n) , seq_Matrix1D§region1[v__6] = m . v__6 = i))
+                                  /\
+                                  (forAll j : int(1..k - 1)
+                                       . (sum v__17 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__17]
+                                                =
+                                                j + 1
+                                                /\
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__17]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__17])
+                                         -
+                                         (sum v__18 : int(1..k * (k * n))
+                                              , s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§regionS[v__18] = j
+                                                /\
+                                                s_AsReln_RelationAsSet_ExplicitVarSize_tuple1§regionS[v__18]
+                                              . s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2§regionS[v__18])
+                                         =
+                                         m)))
 [removedDecl] find seq: function (total) int(1..k * n) --> int(1..n)
