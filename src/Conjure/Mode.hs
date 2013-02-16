@@ -111,7 +111,7 @@ parseArgs (pairs, _flags, _rest) = msum
 
         modeSingleOutput mk = do
             inEssence <- anyKey $ words "--in --in-essence"
-            outEprime <- key "--out --out-eprime"
+            outEprime <- anyKey $ words "--out --out-eprime"
             return $ mk inEssence outEprime
 
 
