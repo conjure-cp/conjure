@@ -5,6 +5,11 @@ if (( $(ls -1 *.essence 2> /dev/null | wc -l) != 1 )); then
     exit 1
 fi
 
+if (( $(ls -1 *.param 2> /dev/null | wc -l) == 0 )); then
+    echo "ERROR: At least 1 *.param file should be in this directory."
+    exit 1
+fi
+
 if (( $# != 1 )); then
     echo "ERROR: Give a single parameter, mode to be used by conjure."
     echo "       Options: {df, best, random}"
