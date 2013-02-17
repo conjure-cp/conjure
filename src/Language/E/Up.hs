@@ -1,17 +1,10 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
-module Language.E.Up where
+{-# LANGUAGE OverloadedStrings  #-}
+module Language.E.Up(translateSolution) where
 
 import Language.E
 
 import Language.E.Up.EprimeToEssence
-import Language.E.Up.Data
-import Language.E.Up.ReduceSpec
-import Language.E.Up.GatherInfomation
-import Language.E.Up.RepresentationTree
-import Language.E.Up.EvaluateTree
-import Language.E.Up.AddEssenceTypes
 import Language.E.Up.IO
-import Language.E.Up.Debug
 
 
 translateSolution
@@ -23,8 +16,17 @@ translateSolution
     -> FilePath         -- Output: Essence solution
     -> IO ()
 translateSolution
-    pathInEssence pathInParam
-    pathInEprime pathInEprimeParam pathInEprimeSolution
-    pathOutSolution = do
+    essence param eprime eprimeParam eprimeSolution outSolution= do
+    (spec, sol, org) <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
+    unalteredOrg     <- getSpec essence
+
+    let resultEssence = mainPure(spec,sol,org,unalteredOrg)
+    writeEssence outSolution resultEssence
+
     return ()
+
+
+writeEssence ::  FilePath -> [E] -> IO ()
+writeEssence outFilename es = writeFile outFilename $ renderPretty
+    (Spec ("ESSENCE",[1,3])  (listAsStatement es))
 
