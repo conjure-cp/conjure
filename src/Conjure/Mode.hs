@@ -60,7 +60,7 @@ data ConjureMode
     deriving (Show)
 
 parseArgs :: GenericArgs -> Maybe ConjureMode
-parseArgs (pairs, _flags, _rest) = msum
+parseArgs (pairs, flags, _rest) = msum
     [ modeRefineParam
     , modeTranslateSolution
     , modePrettify
@@ -125,7 +125,7 @@ parseArgs (pairs, _flags, _rest) = msum
         -- helper functions for the above
         anyKey = listToMaybe . mapMaybe key
         key = (`lookup` pairs)
-        -- flag = (`elem` flags)
+        _flag = (`elem` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
 
         modeSingleOutput mk = do
@@ -138,13 +138,23 @@ allKeys :: [String]
 allKeys =
     [ "--mode"
     , "--in"
-    , "--in-eprime-solution"
-    , "--in-eprime"
     , "--in-essence"
     , "--in-essence-param"
+    , "--in-essence-solution"
+    , "--in-eprime"
+    , "--in-eprime-param"
+    , "--in-eprime-solution"
+    , "--in-param"
+    , "--in-solution"
     , "--out"
-    , "--out-eprime-param"
+    , "--out-essence"
+    , "--out-essence-param"
     , "--out-essence-solution"
+    , "--out-eprime"
+    , "--out-eprime-param"
+    , "--out-eprime-solution"
+    , "--out-param"
+    , "--out-solution"
     ]
 
 allFlags :: [String]
