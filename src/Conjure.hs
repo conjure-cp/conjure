@@ -38,6 +38,12 @@ runConjureMode (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutPa
     inLogs    <- T.readFile (pathInEprime ++ ".logs")
     driverConjureSingle pathOutParam
         [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
+runConjureMode (ModeTranslateSolution pathInEssence pathInParam
+                                      pathInEprime pathInEprimeParam pathInEprimeSolution
+                                      pathOutSolution) = do
+    translateSolution pathInEssence pathInParam
+                      pathInEprime pathInEprimeParam pathInEprimeSolution
+                      pathOutSolution
 runConjureMode (ModePrettify pathInp pathOut) = do
     inp <- readSpecFromFile pathInp
     writeSpec pathOut (atMostOneSuchThat inp)

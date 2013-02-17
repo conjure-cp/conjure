@@ -41,6 +41,13 @@ data ConjureMode
         FilePath    -- Essence Param
         FilePath    -- Essence'
         FilePath    -- Essence' Param
+    | ModeTranslateSolution
+        FilePath    -- Input:  Essence
+        FilePath    -- Input:  Essence Param
+        FilePath    -- Input:  Essence'
+        FilePath    -- Input:  Essence' Param
+        FilePath    -- Input:  Essence' Solution
+        FilePath    -- Output: Essence  Solution
     | ModePrettify
         FilePath    -- input
         FilePath    -- output
@@ -55,6 +62,7 @@ data ConjureMode
 parseArgs :: GenericArgs -> Maybe ConjureMode
 parseArgs (pairs, _flags, _rest) = msum
     [ modeRefineParam
+    , modeTranslateSolution
     , modePrettify
     , modeDFAll
     , modeRandom
@@ -65,12 +73,23 @@ parseArgs (pairs, _flags, _rest) = msum
     where
         modeRefineParam = do
             mode      <- key "--mode"
-            guard (mode =~= words "refineparam")
+            guard (mode =~= words "refineParam")
             inEssence <- key "--in-essence"
             inParam   <- key "--in-essence-param"
-            outEprime <- key "--in-eprime"
+            inEprime  <- key "--in-eprime"
             outParam  <- key "--out-eprime-param"
-            return $ ModeRefineParam inEssence inParam outEprime outParam
+            return $ ModeRefineParam inEssence inParam inEprime outParam
+
+        modeTranslateSolution = do
+            mode             <- key "--mode"
+            guard (mode =~= words "transSol translateSol translateSolution")
+            inEssence        <- key "--in-essence"              -- Input:  Essence specification
+            inParam          <- key "--in-essence-param"        -- Input:  Essence parameters
+            inEprime         <- key "--in-eprime"               -- Input:  Essence' model
+            inEprimeParam    <- key "--in-eprime-param"         -- Input:  Essence' parameters
+            inEprimeSolution <- key "--in-eprime-solution"      -- Input:  Essence' solution
+            outSolution      <- key "--out-solution"            -- Output: Essence solution
+            return $ ModeTranslateSolution inEssence inParam inEprime inEprimeParam inEprimeSolution outSolution
 
         modePrettify = do
             mode <- key "--mode"

@@ -14,7 +14,17 @@ import Language.E.Up.IO
 import Language.E.Up.Debug
 
 
-
-translateSolution :: Text -> Text -> Text -> Text -> Text -> Spec
-translateSolution specF solF orgF param orgParam = undefined 
+translateSolution
+    :: FilePath         -- Input:  Essence
+    -> FilePath         -- Input:  Essence param
+    -> FilePath         -- Input:  Essence' model
+    -> FilePath         -- Input:  Essence' param
+    -> FilePath         -- Input:  Essence' solution
+    -> FilePath         -- Output: Essence solution
+    -> IO ()
+translateSolution
+    pathInEssence pathInParam
+    pathInEprime pathInEprimeParam pathInEprimeSolution
+    pathOutSolution = do
+    return ()
 
