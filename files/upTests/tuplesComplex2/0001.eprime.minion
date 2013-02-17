@@ -1,0 +1,108 @@
+MINION 3
+**VARIABLES**
+BOOL pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000 #
+BOOL pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001 #
+DISCRETE pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000 #
+{1..3}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000,2)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001 #
+{1..3}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001,2)
+**VARIABLES**
+BOOL pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000 #
+BOOL pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001 #
+DISCRETE pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000 #
+{1..2}
+DISCRETE pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001 #
+{1..2}
+DISCRETE pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000 #
+{5..5}
+DISCRETE pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001 #
+{5..5}
+BOOL pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000 #
+BOOL pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001 #
+DISCRETE pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000 #
+{1..3}
+**CONSTRAINTS**
+diseq(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000,2)
+**VARIABLES**
+DISCRETE pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001 #
+{1..3}
+**CONSTRAINTS**
+diseq(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001,2)
+**VARIABLES**
+BOOL pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000 #
+BOOL pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001 #
+DISCRETE pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000 #
+{1..2}
+DISCRETE pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001 #
+{1..2}
+DISCRETE pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000 #
+{6..6}
+DISCRETE pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001 #
+{6..6}
+BOOL aux0 #(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001 /\ pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000)
+BOOL aux1 #(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000<pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001)
+BOOL aux2 #(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001 /\ pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000)
+BOOL aux3 #((pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000 != pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001) \/ (pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000 != pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001))
+BOOL aux4 #(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001 /\ pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000)
+BOOL aux5 #(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000<pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001)
+BOOL aux6 #(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001 /\ pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000)
+BOOL aux7 #((pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000 != pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001) \/ (pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000 != pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001))
+BOOL aux8 #((2=pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000) /\ (6=pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000))
+BOOL aux9 #((2=pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001) /\ (6=pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001))
+BOOL aux10 #(1=pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000)
+BOOL aux11 #(1=pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001)
+BOOL aux12 #((1=pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000) /\ (5=pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000))
+BOOL aux13 #((1=pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001) /\ (5=pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001))
+BOOL aux14 #(3=pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000)
+BOOL aux15 #(3=pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001)
+**SEARCH**
+PRINT[[pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000],[pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001],[pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000],[pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001],[pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000],[pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001],[pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000],[pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001],[pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000],[pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001],[pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000],[pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001],[pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000],[pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001],[pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000],[pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001],[pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000],[pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001],[pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000],[pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001]]
+VARORDER STATIC [pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000,pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001,pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000,pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001,pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000,pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001,pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000,pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001,pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000,pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001,pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000,pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001,pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000,pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001,pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000,pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001,pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000,pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001,pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000,pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001]
+VARORDER AUX [aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7,aux8,aux9,aux10,aux11,aux12,aux13,aux14,aux15]
+**CONSTRAINTS**
+reify(watched-and({w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000,1)}), aux0)
+reify(ineq(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000, pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001, -1), aux1)
+reify(watched-and({w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000,1)}), aux2)
+reify(watched-or({diseq(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000,pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001),diseq(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000,pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001)}), aux3)
+reify(watched-and({w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000,1)}), aux4)
+reify(ineq(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000, pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001, -1), aux5)
+reify(watched-and({w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000,1)}), aux6)
+reify(watched-or({diseq(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000,pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001),diseq(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000,pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001)}), aux7)
+reify(watched-and({w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000,2),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000,6)}), aux8)
+reify(watched-and({w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001,2),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001,6)}), aux9)
+reify(w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000,1), aux10)
+reify(w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001,1), aux11)
+reify(watched-and({w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000,5)}), aux12)
+reify(watched-and({w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001,5)}), aux13)
+reify(w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000,3), aux14)
+reify(w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001,3), aux15)
+sumgeq([pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000,pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001],1)
+ineq(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000, pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux0, aux1, 0)
+sumgeq([pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000,pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001],1)
+ineq(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000, pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux2, aux3, 0)
+sumgeq([pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000,pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001],1)
+ineq(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000, pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux4, aux5, 0)
+sumgeq([pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000,pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001],1)
+ineq(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000, pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux6, aux7, 0)
+watched-or({watched-and({w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000,1),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00000,2),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00000,6)}),watched-and({w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple1_00001,2),w-literal(pain_tuple2_tuple2_ExplicitVarSize_tuple2_tuple2_00001,6)})})
+watched-or({watched-and({w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000,1),w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00000,1)}),watched-and({w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple2_tuple1_ExplicitVarSize_tuple2_00001,1)})})
+watched-or({watched-and({w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00000,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00000,5)}),watched-and({w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple1_00001,1),w-literal(pain_tuple1_tuple2_ExplicitVarSize_tuple2_tuple2_00001,5)})})
+watched-or({watched-and({w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000,1),w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00000,3)}),watched-and({w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(pain_tuple1_tuple1_ExplicitVarSize_tuple2_00001,3)})})
+ineq(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00000, aux8, 0)
+ineq(pain_tuple2_tuple2_ExplicitVarSize_tuple1_00001, aux9, 0)
+ineq(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00000, aux10, 0)
+ineq(pain_tuple2_tuple1_ExplicitVarSize_tuple1_00001, aux11, 0)
+ineq(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00000, aux12, 0)
+ineq(pain_tuple1_tuple2_ExplicitVarSize_tuple1_00001, aux13, 0)
+ineq(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00000, aux14, 0)
+ineq(pain_tuple1_tuple1_ExplicitVarSize_tuple1_00001, aux15, 0)
+**EOF**

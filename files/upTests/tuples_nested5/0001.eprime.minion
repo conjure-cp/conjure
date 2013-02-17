@@ -1,0 +1,39 @@
+MINION 3
+**VARIABLES**
+DISCRETE y_tuple1 #
+{1..1}
+DISCRETE y_tuple2_Explicit_tuple1_00000 #
+{10..11}
+DISCRETE y_tuple2_Explicit_tuple1_00001 #
+{10..11}
+DISCRETE y_tuple2_Explicit_tuple2_00000 #
+{12..13}
+DISCRETE y_tuple2_Explicit_tuple2_00001 #
+{12..13}
+DISCRETE y_tuple3 #
+{4..4}
+DISCRETE y_tuple4_tuple1 #
+{5..5}
+DISCRETE y_tuple4_tuple2 #
+{6..6}
+BOOL y_tuple4_tuple3_Occurrence_00000 #
+BOOL y_tuple4_tuple3_Occurrence_00001 #
+BOOL y_tuple4_tuple3_Occurrence_00002 #
+**SEARCH**
+PRINT[[y_tuple1],[y_tuple2_Explicit_tuple1_00000],[y_tuple2_Explicit_tuple1_00001],[y_tuple2_Explicit_tuple2_00000],[y_tuple2_Explicit_tuple2_00001],[y_tuple3],[y_tuple4_tuple1],[y_tuple4_tuple2],[y_tuple4_tuple3_Occurrence_00000],[y_tuple4_tuple3_Occurrence_00001],[y_tuple4_tuple3_Occurrence_00002]]
+VARORDER STATIC [y_tuple1,y_tuple2_Explicit_tuple1_00000,y_tuple2_Explicit_tuple1_00001,y_tuple2_Explicit_tuple2_00000,y_tuple2_Explicit_tuple2_00001,y_tuple3,y_tuple4_tuple1,y_tuple4_tuple2,y_tuple4_tuple3_Occurrence_00000,y_tuple4_tuple3_Occurrence_00001,y_tuple4_tuple3_Occurrence_00002]
+VARORDER AUX []
+**CONSTRAINTS**
+sumgeq([y_tuple4_tuple3_Occurrence_00000,y_tuple4_tuple3_Occurrence_00001,y_tuple4_tuple3_Occurrence_00002],3)
+w-literal(y_tuple4_tuple3_Occurrence_00002,1)
+w-literal(y_tuple4_tuple3_Occurrence_00001,1)
+w-literal(y_tuple4_tuple3_Occurrence_00000,1)
+w-literal(y_tuple4_tuple2,6)
+w-literal(y_tuple4_tuple1,5)
+w-literal(y_tuple3,4)
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,11),w-literal(y_tuple2_Explicit_tuple2_00000,13)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,11),w-literal(y_tuple2_Explicit_tuple2_00001,13)})})
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,10),w-literal(y_tuple2_Explicit_tuple2_00000,12)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,10),w-literal(y_tuple2_Explicit_tuple2_00001,12)})})
+w-literal(y_tuple1,1)
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,10),w-literal(y_tuple2_Explicit_tuple2_00000,12)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,11),w-literal(y_tuple2_Explicit_tuple2_00000,13)})})
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,10),w-literal(y_tuple2_Explicit_tuple2_00001,12)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,11),w-literal(y_tuple2_Explicit_tuple2_00001,13)})})
+**EOF**

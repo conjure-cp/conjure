@@ -1,0 +1,10 @@
+MINION 3
+**VARIABLES**
+BOOL b #
+BOOL c #
+**SEARCH**
+PRINT[[b],[c]]
+VARORDER STATIC [b,c]
+VARORDER AUX []
+**CONSTRAINTS**
+diseq(b,c)**EOF**

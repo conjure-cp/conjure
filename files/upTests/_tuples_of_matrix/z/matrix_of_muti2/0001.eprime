@@ -1,0 +1,15 @@
+language ESSENCE' 1.0
+
+find y_tuple1_tuple1: matrix indexed by [int(1), int(1, 2)] of int(10, 11)
+find y_tuple1_tuple2_tuple1: matrix indexed by [int(1), int(1, 2)] of int(43)
+find y_tuple1_tuple2_tuple2: matrix indexed by [int(1), int(1, 2)] of int(64)
+find y_tuple1_tuple3: matrix indexed by [int(1), int(1, 2)] of int(12, 13)
+such that
+    y_tuple1_tuple1[1, 1] = 10,
+    y_tuple1_tuple1[1, 2] = 11,
+    y_tuple1_tuple2_tuple1[1, 1] = 43,
+    y_tuple1_tuple2_tuple1[1, 2] = 43,
+    y_tuple1_tuple2_tuple2[1, 1] = 64,
+    y_tuple1_tuple2_tuple2[1, 2] = 64,
+    y_tuple1_tuple3[1, 1] = 12,
+    y_tuple1_tuple3[1, 2] = 13

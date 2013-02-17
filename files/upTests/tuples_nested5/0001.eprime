@@ -1,0 +1,28 @@
+language ESSENCE' 1.0
+
+find y_tuple1: int(1)
+find y_tuple2_Explicit_tuple1: matrix indexed by [int(1..2)] of int(10, 11)
+find y_tuple2_Explicit_tuple2: matrix indexed by [int(1..2)] of int(12, 13)
+find y_tuple3: int(4)
+find y_tuple4_tuple1: int(5)
+find y_tuple4_tuple2: int(6)
+find y_tuple4_tuple3_Occurrence: matrix indexed by [int(7, 8, 9)] of bool
+such that
+    y_tuple1 = 1,
+    forAll v__4 : int(1..2)
+        . 10 = y_tuple2_Explicit_tuple1[v__4] /\ 12 = y_tuple2_Explicit_tuple2[v__4]
+          \/
+          11 = y_tuple2_Explicit_tuple1[v__4] /\ 13 = y_tuple2_Explicit_tuple2[v__4],
+    exists v__7 : int(1..2)
+        . y_tuple2_Explicit_tuple1[v__7] = 10 /\ y_tuple2_Explicit_tuple2[v__7] = 12,
+    exists v__9 : int(1..2)
+        . y_tuple2_Explicit_tuple1[v__9] = 11 /\ y_tuple2_Explicit_tuple2[v__9] = 13,
+    y_tuple3 = 4,
+    y_tuple4_tuple1 = 5,
+    y_tuple4_tuple2 = 6,
+    forAll v__12 : int(7, 8, 9)
+        . y_tuple4_tuple3_Occurrence[v__12] -> 7 = v__12 \/ 8 = v__12 \/ 9 = v__12,
+    exists v__15 : int(7, 8, 9) . y_tuple4_tuple3_Occurrence[v__15] /\ v__15 = 7,
+    exists v__17 : int(7, 8, 9) . y_tuple4_tuple3_Occurrence[v__17] /\ v__17 = 8,
+    exists v__19 : int(7, 8, 9) . y_tuple4_tuple3_Occurrence[v__19] /\ v__19 = 9,
+    (sum v__2 : int(7, 8, 9) . y_tuple4_tuple3_Occurrence[v__2]) = 3

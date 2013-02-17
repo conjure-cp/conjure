@@ -1,0 +1,31 @@
+[representation] find y: set (size 1) of tuple (int(12, 13)) (#1) Explicit
+[configuration] y§region1#Explicit
+[addedDecl] find y_Explicit: matrix indexed by [int(1..1)] of tuple (int(12, 13))
+[applied] y§region1#Explicit = {tuple (12)}
+{rules/refns/set-eq-to-subsets.rule}
+    y§region1#Explicit subsetEq {tuple (12)}
+    /\
+    y§region1#Explicit supsetEq {tuple (12)}
+[applied] y§region1#Explicit subsetEq {tuple (12)}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__1 in y§region1#Explicit . v__1 in {tuple (12)})
+[applied] v__1 in {tuple (12)}
+{rules/refns/set-in-to-quantified.rule}
+    12 = v__1[1]
+[applied] (forAll v__1 in y§region1#Explicit . 12 = v__1[1])
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__3 : int(1..1) . 12 = y_Explicit§region1[v__3, 1])
+[applied] y§region1#Explicit supsetEq {tuple (12)}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {tuple (12)} subsetEq y§region1#Explicit
+[applied] {tuple (12)} subsetEq y§region1#Explicit
+{rules/refns/set-subseteq-to-quantified.rule}
+    tuple (12) in y§region1#Explicit
+[applied] tuple (12) in y§region1#Explicit
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__5 in y§region1#Explicit . v__5[1] = 12)
+[applied] (exists v__5 in y§region1#Explicit . v__5[1] = 12)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__6 : int(1..1) . y_Explicit§region1[v__6, 1] = 12)
+[removedDecl] find y_Explicit: matrix indexed by [int(1..1)] of tuple (int(12, 13))
+[removedDecl] find y: set (size 1) of tuple (int(12, 13))

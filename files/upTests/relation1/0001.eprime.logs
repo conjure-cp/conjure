@@ -1,0 +1,39 @@
+[representation] find x: relation (size 1) of (int(1) * int(1)) (#1) RelationAsSet
+[configuration] x§region1#RelationAsSet
+[addedDecl] find x_RelationAsSet: set of (int(1), int(1))
+[applied] (forAll i in toSet(x§region1#RelationAsSet) . i[1] = i[2])
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (forAll i in x_RelationAsSet§region1 . i[1] = i[2])
+[applied] |toSet(x§regionS#RelationAsSet)|
+{rules/refns/set-card.rule}
+    (sum v__1 in toSet(x§regionS#RelationAsSet) . 1)
+[applied] (sum v__1 in toSet(x§regionS#RelationAsSet) . 1)
+{rules/refns/relation-asset/relation-asset-toSet.rule}
+    (sum v__1 in x_RelationAsSet§regionS . 1)
+[removedDecl] find x: relation (size 1) of (int(1) * int(1))
+[representation] find x_RelationAsSet: set of (int(1), int(1)) (#1) ExplicitVarSize
+[configuration] x_RelationAsSet§region1#ExplicitVarSize x_RelationAsSet§regionS#ExplicitVarSize
+[addedDecl] find x_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..1)] of (bool, (int(1), int(1)))
+[fullEvaluator empty range] (forAll v__2 : int(1..0)
+     . x_RelationAsSet_ExplicitVarSize§regionS[v__2, 1]
+       <=
+       x_RelationAsSet_ExplicitVarSize§regionS[v__2 + 1, 1])
+[fullEvaluator empty range] (forAll v__2 : int(1..0)
+     . x_RelationAsSet_ExplicitVarSize§region1[v__2, 1]
+       <=
+       x_RelationAsSet_ExplicitVarSize§region1[v__2 + 1, 1])
+[applied] (forAll i in x_RelationAsSet§region1#ExplicitVarSize . i[1] = i[2])
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (forAll v__4 : int(1..1) , x_RelationAsSet_ExplicitVarSize§region1[v__4, 1]
+         . x_RelationAsSet_ExplicitVarSize§region1[v__4, 2, 1]
+           =
+           x_RelationAsSet_ExplicitVarSize§region1[v__4, 2, 2])
+[applied] (sum v__1 in x_RelationAsSet§regionS#ExplicitVarSize . 1)
+{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+    (sum v__5 : int(1..1) , x_RelationAsSet_ExplicitVarSize§regionS[v__5, 1] . 1)
+[removedDecl] find x_RelationAsSet_ExplicitVarSize:
+        matrix indexed by [int(1..1)] of (bool, (int(1), int(1)))
+[removedDecl] find x_RelationAsSet_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..1)] of (int(1), int(1))
+[removedDecl] find x_RelationAsSet: set of (int(1), int(1))

@@ -1,0 +1,32 @@
+language ESSENCE' 1.0
+
+find x_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..14)] of bool
+find x_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..14)] of int(1..9)
+find x_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..14)] of int(3..7)
+such that
+    forAll v__3 : int(1..14)
+        . x_RelationAsSet_ExplicitVarSize_tuple1[v__3]
+          ->
+          x_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__3]
+          =
+          x_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__3],
+    forAll v__1 : int(1..14)
+        . (forAll v__2 : int(1..14)
+               . v__1 < v__2 /\ x_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+                 /\
+                 x_RelationAsSet_ExplicitVarSize_tuple1[v__2]
+                 ->
+                 x_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1]
+                 !=
+                 x_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__2]
+                 \/
+                 x_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1]
+                 !=
+                 x_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2]),
+    forAll v__1 : int(1..13)
+        . x_RelationAsSet_ExplicitVarSize_tuple1[v__1]
+          <=
+          x_RelationAsSet_ExplicitVarSize_tuple1[v__1 + 1]

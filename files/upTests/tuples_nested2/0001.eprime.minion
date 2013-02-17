@@ -1,0 +1,20 @@
+MINION 3
+**VARIABLES**
+DISCRETE y_tuple1 #
+{1..1}
+DISCRETE y_tuple2_tuple1 #
+{2..2}
+DISCRETE y_tuple2_tuple2_tuple1 #
+{3..3}
+DISCRETE y_tuple2_tuple2_tuple2 #
+{4..4}
+**SEARCH**
+PRINT[[y_tuple1],[y_tuple2_tuple1],[y_tuple2_tuple2_tuple1],[y_tuple2_tuple2_tuple2]]
+VARORDER STATIC [y_tuple1,y_tuple2_tuple1,y_tuple2_tuple2_tuple1,y_tuple2_tuple2_tuple2]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(y_tuple2_tuple2_tuple2,4)
+w-literal(y_tuple2_tuple2_tuple1,3)
+w-literal(y_tuple1,1)
+w-literal(y_tuple2_tuple1,2)
+**EOF**

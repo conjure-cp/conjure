@@ -1,0 +1,12 @@
+[simplified] pain[1, 1, 1] = [6, 8]
+             ~~>
+             pain[1, 1, 1, 1] = 6 /\ pain[1, 1, 1, 2] = 8
+[simplified] pain[2, 1, 1] = [8, 6]
+             ~~>
+             pain[2, 1, 1, 1] = 8 /\ pain[2, 1, 1, 2] = 6
+[removedDecl] find pain:
+                      matrix indexed by [int(1..2)] of tuple (tuple (matrix indexed by [int(1..2)] of int(6,
+                                                                                                          8)))
+[removedDecl] find pain_tuple1:
+                      matrix indexed by [int(1..2)] of tuple (matrix indexed by [int(1..2)] of int(6,
+                                                                                                   8))

@@ -1,0 +1,31 @@
+MINION 3
+**VARIABLES**
+DISCRETE x_tuple1_00000 #
+{3..5}
+**CONSTRAINTS**
+diseq(x_tuple1_00000,4)
+**VARIABLES**
+DISCRETE x_tuple1_00001 #
+{3..5}
+**CONSTRAINTS**
+diseq(x_tuple1_00001,4)
+**VARIABLES**
+DISCRETE x_tuple2_00000 #
+{6..7}
+DISCRETE x_tuple2_00001 #
+{6..7}
+DISCRETE x_tuple3_00000 #
+{9..9}
+DISCRETE x_tuple3_00001 #
+{9..9}
+**SEARCH**
+PRINT[[x_tuple1_00000],[x_tuple1_00001],[x_tuple2_00000],[x_tuple2_00001],[x_tuple3_00000],[x_tuple3_00001]]
+VARORDER STATIC [x_tuple1_00000,x_tuple1_00001,x_tuple2_00000,x_tuple2_00001,x_tuple3_00000,x_tuple3_00001]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(x_tuple2_00000,6)
+w-literal(x_tuple3_00001,9)
+w-literal(x_tuple2_00001,7)
+w-literal(x_tuple1_00000,3)
+w-literal(x_tuple1_00001,5)
+**EOF**

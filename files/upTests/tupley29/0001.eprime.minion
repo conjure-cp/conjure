@@ -1,0 +1,14 @@
+MINION 3
+**VARIABLES**
+DISCRETE pain_tuple1 #
+{1..2}
+DISCRETE pain_tuple2_tuple1 #
+{4..5}
+**SEARCH**
+PRINT[[pain_tuple1],[pain_tuple2_tuple1]]
+VARORDER STATIC [pain_tuple1,pain_tuple2_tuple1]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(pain_tuple1,2)
+w-literal(pain_tuple2_tuple1,5)
+**EOF**

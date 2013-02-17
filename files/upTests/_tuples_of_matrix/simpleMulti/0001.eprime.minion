@@ -1,0 +1,72 @@
+MINION 3
+**VARIABLES**
+DISCRETE y_tuple1_tuple1_00000 #
+{10..11}
+DISCRETE y_tuple1_tuple1_00001 #
+{10..11}
+DISCRETE y_tuple1_tuple2_00000 #
+{12..13}
+DISCRETE y_tuple1_tuple2_00001 #
+{12..13}
+DISCRETE y_tuple1_tuple3_00000 #
+{33..55}
+**CONSTRAINTS**
+diseq(y_tuple1_tuple3_00000,34)
+diseq(y_tuple1_tuple3_00000,35)
+diseq(y_tuple1_tuple3_00000,36)
+diseq(y_tuple1_tuple3_00000,37)
+diseq(y_tuple1_tuple3_00000,38)
+diseq(y_tuple1_tuple3_00000,39)
+diseq(y_tuple1_tuple3_00000,40)
+diseq(y_tuple1_tuple3_00000,41)
+diseq(y_tuple1_tuple3_00000,42)
+diseq(y_tuple1_tuple3_00000,43)
+diseq(y_tuple1_tuple3_00000,44)
+diseq(y_tuple1_tuple3_00000,45)
+diseq(y_tuple1_tuple3_00000,46)
+diseq(y_tuple1_tuple3_00000,47)
+diseq(y_tuple1_tuple3_00000,48)
+diseq(y_tuple1_tuple3_00000,49)
+diseq(y_tuple1_tuple3_00000,50)
+diseq(y_tuple1_tuple3_00000,51)
+diseq(y_tuple1_tuple3_00000,52)
+diseq(y_tuple1_tuple3_00000,53)
+diseq(y_tuple1_tuple3_00000,54)
+**VARIABLES**
+DISCRETE y_tuple1_tuple3_00001 #
+{33..55}
+**CONSTRAINTS**
+diseq(y_tuple1_tuple3_00001,34)
+diseq(y_tuple1_tuple3_00001,35)
+diseq(y_tuple1_tuple3_00001,36)
+diseq(y_tuple1_tuple3_00001,37)
+diseq(y_tuple1_tuple3_00001,38)
+diseq(y_tuple1_tuple3_00001,39)
+diseq(y_tuple1_tuple3_00001,40)
+diseq(y_tuple1_tuple3_00001,41)
+diseq(y_tuple1_tuple3_00001,42)
+diseq(y_tuple1_tuple3_00001,43)
+diseq(y_tuple1_tuple3_00001,44)
+diseq(y_tuple1_tuple3_00001,45)
+diseq(y_tuple1_tuple3_00001,46)
+diseq(y_tuple1_tuple3_00001,47)
+diseq(y_tuple1_tuple3_00001,48)
+diseq(y_tuple1_tuple3_00001,49)
+diseq(y_tuple1_tuple3_00001,50)
+diseq(y_tuple1_tuple3_00001,51)
+diseq(y_tuple1_tuple3_00001,52)
+diseq(y_tuple1_tuple3_00001,53)
+diseq(y_tuple1_tuple3_00001,54)
+**VARIABLES**
+**SEARCH**
+PRINT[[y_tuple1_tuple1_00000],[y_tuple1_tuple1_00001],[y_tuple1_tuple2_00000],[y_tuple1_tuple2_00001],[y_tuple1_tuple3_00000],[y_tuple1_tuple3_00001]]
+VARORDER STATIC [y_tuple1_tuple1_00000,y_tuple1_tuple1_00001,y_tuple1_tuple2_00000,y_tuple1_tuple2_00001,y_tuple1_tuple3_00000,y_tuple1_tuple3_00001]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(y_tuple1_tuple3_00001,55)
+w-literal(y_tuple1_tuple3_00000,33)
+w-literal(y_tuple1_tuple2_00001,13)
+w-literal(y_tuple1_tuple2_00000,12)
+w-literal(y_tuple1_tuple1_00000,10)
+w-literal(y_tuple1_tuple1_00001,11)
+**EOF**

@@ -1,0 +1,26 @@
+[representation] find x: set (maxSize 2) of int(0..10 + n) (#1) Occurrence
+[configuration] x§region1#Occurrence x§region2#Occurrence
+[addedDecl] find x_Occurrence: matrix indexed by [int(0..10 + n)] of bool
+[applied] 2 in x§region1#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__2 in x§region1#Occurrence . v__2 = 2)
+[applied] (exists v__2 in x§region1#Occurrence . v__2 = 2)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__3 : int(0..10 + n) , x_Occurrence§region1[v__3] . v__3 = 2)
+[applied] max(x§region2#Occurrence)
+{rules/refns/set-max.rule}
+    (v__5§regionF @ find v__5: int(0..10 + n)
+                    such that forAll v__4 in x§region2#Occurrence . v__4 <= v__5§regionF
+                    such that v__5§regionF in x§region2#Occurrence)
+[applied] (forAll v__4 in x§region2#Occurrence . v__4 <= v__5§regionF)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__6 : int(0..10 + n) , x_Occurrence§region2[v__6]
+         . v__6 <= v__5§regionF)
+[applied] v__5§regionF in x§region2#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__7 in x§region2#Occurrence . v__7 = v__5§regionF)
+[applied] (exists v__7 in x§region2#Occurrence . v__7 = v__5§regionF)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__8 : int(0..10 + n) , x_Occurrence§region2[v__8]
+         . v__8 = v__5§regionF)
+[removedDecl] find x: set (maxSize 2) of int(0..10 + n)

@@ -1,0 +1,12 @@
+language ESSENCE' 1.0
+
+find x_Explicit: matrix indexed by [int(1..5)] of int(4..9)
+find y_Explicit: matrix indexed by [int(1..3)] of int(3..7)
+such that
+    exists v__4 : int(1..5) . x_Explicit[v__4] = 4,
+    forAll v__8 : int(1..3)
+        . (exists v__7 : int(1..5) . x_Explicit[v__7] = y_Explicit[v__8]),
+    allDiff(x_Explicit),
+    forAll v__1 : int(1..4) . x_Explicit[v__1] < x_Explicit[v__1 + 1],
+    allDiff(y_Explicit),
+    forAll v__3 : int(1..2) . y_Explicit[v__3] < y_Explicit[v__3 + 1]

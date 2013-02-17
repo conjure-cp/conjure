@@ -1,0 +1,93 @@
+MINION 3
+**VARIABLES**
+DISCRETE x_Explicit_Explicit_00000_00000 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00000_00001 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00000_00002 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00000_00003 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00001_00000 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00001_00001 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00001_00002 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00001_00003 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00002_00000 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00002_00001 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00002_00002 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00002_00003 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00003_00000 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00003_00001 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00003_00002 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00003_00003 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00004_00000 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00004_00001 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00004_00002 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00004_00003 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00005_00000 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00005_00001 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00005_00002 #
+{0..9}
+DISCRETE x_Explicit_Explicit_00005_00003 #
+{0..9}
+DISCRETE y_Explicit_00000 #
+{2..7}
+DISCRETE y_Explicit_00001 #
+{2..7}
+DISCRETE y_Explicit_00002 #
+{2..7}
+DISCRETE y_Explicit_00003 #
+{2..7}
+**SEARCH**
+PRINT[[x_Explicit_Explicit_00000_00000],[x_Explicit_Explicit_00000_00001],[x_Explicit_Explicit_00000_00002],[x_Explicit_Explicit_00000_00003],[x_Explicit_Explicit_00001_00000],[x_Explicit_Explicit_00001_00001],[x_Explicit_Explicit_00001_00002],[x_Explicit_Explicit_00001_00003],[x_Explicit_Explicit_00002_00000],[x_Explicit_Explicit_00002_00001],[x_Explicit_Explicit_00002_00002],[x_Explicit_Explicit_00002_00003],[x_Explicit_Explicit_00003_00000],[x_Explicit_Explicit_00003_00001],[x_Explicit_Explicit_00003_00002],[x_Explicit_Explicit_00003_00003],[x_Explicit_Explicit_00004_00000],[x_Explicit_Explicit_00004_00001],[x_Explicit_Explicit_00004_00002],[x_Explicit_Explicit_00004_00003],[x_Explicit_Explicit_00005_00000],[x_Explicit_Explicit_00005_00001],[x_Explicit_Explicit_00005_00002],[x_Explicit_Explicit_00005_00003],[y_Explicit_00000],[y_Explicit_00001],[y_Explicit_00002],[y_Explicit_00003]]
+VARORDER STATIC [x_Explicit_Explicit_00000_00000,x_Explicit_Explicit_00000_00001,x_Explicit_Explicit_00000_00002,x_Explicit_Explicit_00000_00003,x_Explicit_Explicit_00001_00000,x_Explicit_Explicit_00001_00001,x_Explicit_Explicit_00001_00002,x_Explicit_Explicit_00001_00003,x_Explicit_Explicit_00002_00000,x_Explicit_Explicit_00002_00001,x_Explicit_Explicit_00002_00002,x_Explicit_Explicit_00002_00003,x_Explicit_Explicit_00003_00000,x_Explicit_Explicit_00003_00001,x_Explicit_Explicit_00003_00002,x_Explicit_Explicit_00003_00003,x_Explicit_Explicit_00004_00000,x_Explicit_Explicit_00004_00001,x_Explicit_Explicit_00004_00002,x_Explicit_Explicit_00004_00003,x_Explicit_Explicit_00005_00000,x_Explicit_Explicit_00005_00001,x_Explicit_Explicit_00005_00002,x_Explicit_Explicit_00005_00003,y_Explicit_00000,y_Explicit_00001,y_Explicit_00002,y_Explicit_00003]
+VARORDER AUX []
+**CONSTRAINTS**
+watched-or({watched-and({watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00000_00000),eq(y_Explicit_00001,x_Explicit_Explicit_00000_00000),eq(y_Explicit_00002,x_Explicit_Explicit_00000_00000),eq(y_Explicit_00003,x_Explicit_Explicit_00000_00000)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00000_00001),eq(y_Explicit_00001,x_Explicit_Explicit_00000_00001),eq(y_Explicit_00002,x_Explicit_Explicit_00000_00001),eq(y_Explicit_00003,x_Explicit_Explicit_00000_00001)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00000_00002),eq(y_Explicit_00001,x_Explicit_Explicit_00000_00002),eq(y_Explicit_00002,x_Explicit_Explicit_00000_00002),eq(y_Explicit_00003,x_Explicit_Explicit_00000_00002)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00000_00003),eq(y_Explicit_00001,x_Explicit_Explicit_00000_00003),eq(y_Explicit_00002,x_Explicit_Explicit_00000_00003),eq(y_Explicit_00003,x_Explicit_Explicit_00000_00003)}),watched-or({eq(x_Explicit_Explicit_00000_00000,y_Explicit_00000),eq(x_Explicit_Explicit_00000_00001,y_Explicit_00000),eq(x_Explicit_Explicit_00000_00002,y_Explicit_00000),eq(x_Explicit_Explicit_00000_00003,y_Explicit_00000)}),watched-or({eq(x_Explicit_Explicit_00000_00000,y_Explicit_00001),eq(x_Explicit_Explicit_00000_00001,y_Explicit_00001),eq(x_Explicit_Explicit_00000_00002,y_Explicit_00001),eq(x_Explicit_Explicit_00000_00003,y_Explicit_00001)}),watched-or({eq(x_Explicit_Explicit_00000_00000,y_Explicit_00002),eq(x_Explicit_Explicit_00000_00001,y_Explicit_00002),eq(x_Explicit_Explicit_00000_00002,y_Explicit_00002),eq(x_Explicit_Explicit_00000_00003,y_Explicit_00002)}),watched-or({eq(x_Explicit_Explicit_00000_00000,y_Explicit_00003),eq(x_Explicit_Explicit_00000_00001,y_Explicit_00003),eq(x_Explicit_Explicit_00000_00002,y_Explicit_00003),eq(x_Explicit_Explicit_00000_00003,y_Explicit_00003)})}),watched-and({watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00001_00000),eq(y_Explicit_00001,x_Explicit_Explicit_00001_00000),eq(y_Explicit_00002,x_Explicit_Explicit_00001_00000),eq(y_Explicit_00003,x_Explicit_Explicit_00001_00000)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00001_00001),eq(y_Explicit_00001,x_Explicit_Explicit_00001_00001),eq(y_Explicit_00002,x_Explicit_Explicit_00001_00001),eq(y_Explicit_00003,x_Explicit_Explicit_00001_00001)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00001_00002),eq(y_Explicit_00001,x_Explicit_Explicit_00001_00002),eq(y_Explicit_00002,x_Explicit_Explicit_00001_00002),eq(y_Explicit_00003,x_Explicit_Explicit_00001_00002)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00001_00003),eq(y_Explicit_00001,x_Explicit_Explicit_00001_00003),eq(y_Explicit_00002,x_Explicit_Explicit_00001_00003),eq(y_Explicit_00003,x_Explicit_Explicit_00001_00003)}),watched-or({eq(x_Explicit_Explicit_00001_00000,y_Explicit_00000),eq(x_Explicit_Explicit_00001_00001,y_Explicit_00000),eq(x_Explicit_Explicit_00001_00002,y_Explicit_00000),eq(x_Explicit_Explicit_00001_00003,y_Explicit_00000)}),watched-or({eq(x_Explicit_Explicit_00001_00000,y_Explicit_00001),eq(x_Explicit_Explicit_00001_00001,y_Explicit_00001),eq(x_Explicit_Explicit_00001_00002,y_Explicit_00001),eq(x_Explicit_Explicit_00001_00003,y_Explicit_00001)}),watched-or({eq(x_Explicit_Explicit_00001_00000,y_Explicit_00002),eq(x_Explicit_Explicit_00001_00001,y_Explicit_00002),eq(x_Explicit_Explicit_00001_00002,y_Explicit_00002),eq(x_Explicit_Explicit_00001_00003,y_Explicit_00002)}),watched-or({eq(x_Explicit_Explicit_00001_00000,y_Explicit_00003),eq(x_Explicit_Explicit_00001_00001,y_Explicit_00003),eq(x_Explicit_Explicit_00001_00002,y_Explicit_00003),eq(x_Explicit_Explicit_00001_00003,y_Explicit_00003)})}),watched-and({watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00002_00000),eq(y_Explicit_00001,x_Explicit_Explicit_00002_00000),eq(y_Explicit_00002,x_Explicit_Explicit_00002_00000),eq(y_Explicit_00003,x_Explicit_Explicit_00002_00000)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00002_00001),eq(y_Explicit_00001,x_Explicit_Explicit_00002_00001),eq(y_Explicit_00002,x_Explicit_Explicit_00002_00001),eq(y_Explicit_00003,x_Explicit_Explicit_00002_00001)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00002_00002),eq(y_Explicit_00001,x_Explicit_Explicit_00002_00002),eq(y_Explicit_00002,x_Explicit_Explicit_00002_00002),eq(y_Explicit_00003,x_Explicit_Explicit_00002_00002)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00002_00003),eq(y_Explicit_00001,x_Explicit_Explicit_00002_00003),eq(y_Explicit_00002,x_Explicit_Explicit_00002_00003),eq(y_Explicit_00003,x_Explicit_Explicit_00002_00003)}),watched-or({eq(x_Explicit_Explicit_00002_00000,y_Explicit_00000),eq(x_Explicit_Explicit_00002_00001,y_Explicit_00000),eq(x_Explicit_Explicit_00002_00002,y_Explicit_00000),eq(x_Explicit_Explicit_00002_00003,y_Explicit_00000)}),watched-or({eq(x_Explicit_Explicit_00002_00000,y_Explicit_00001),eq(x_Explicit_Explicit_00002_00001,y_Explicit_00001),eq(x_Explicit_Explicit_00002_00002,y_Explicit_00001),eq(x_Explicit_Explicit_00002_00003,y_Explicit_00001)}),watched-or({eq(x_Explicit_Explicit_00002_00000,y_Explicit_00002),eq(x_Explicit_Explicit_00002_00001,y_Explicit_00002),eq(x_Explicit_Explicit_00002_00002,y_Explicit_00002),eq(x_Explicit_Explicit_00002_00003,y_Explicit_00002)}),watched-or({eq(x_Explicit_Explicit_00002_00000,y_Explicit_00003),eq(x_Explicit_Explicit_00002_00001,y_Explicit_00003),eq(x_Explicit_Explicit_00002_00002,y_Explicit_00003),eq(x_Explicit_Explicit_00002_00003,y_Explicit_00003)})}),watched-and({watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00003_00000),eq(y_Explicit_00001,x_Explicit_Explicit_00003_00000),eq(y_Explicit_00002,x_Explicit_Explicit_00003_00000),eq(y_Explicit_00003,x_Explicit_Explicit_00003_00000)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00003_00001),eq(y_Explicit_00001,x_Explicit_Explicit_00003_00001),eq(y_Explicit_00002,x_Explicit_Explicit_00003_00001),eq(y_Explicit_00003,x_Explicit_Explicit_00003_00001)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00003_00002),eq(y_Explicit_00001,x_Explicit_Explicit_00003_00002),eq(y_Explicit_00002,x_Explicit_Explicit_00003_00002),eq(y_Explicit_00003,x_Explicit_Explicit_00003_00002)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00003_00003),eq(y_Explicit_00001,x_Explicit_Explicit_00003_00003),eq(y_Explicit_00002,x_Explicit_Explicit_00003_00003),eq(y_Explicit_00003,x_Explicit_Explicit_00003_00003)}),watched-or({eq(x_Explicit_Explicit_00003_00000,y_Explicit_00000),eq(x_Explicit_Explicit_00003_00001,y_Explicit_00000),eq(x_Explicit_Explicit_00003_00002,y_Explicit_00000),eq(x_Explicit_Explicit_00003_00003,y_Explicit_00000)}),watched-or({eq(x_Explicit_Explicit_00003_00000,y_Explicit_00001),eq(x_Explicit_Explicit_00003_00001,y_Explicit_00001),eq(x_Explicit_Explicit_00003_00002,y_Explicit_00001),eq(x_Explicit_Explicit_00003_00003,y_Explicit_00001)}),watched-or({eq(x_Explicit_Explicit_00003_00000,y_Explicit_00002),eq(x_Explicit_Explicit_00003_00001,y_Explicit_00002),eq(x_Explicit_Explicit_00003_00002,y_Explicit_00002),eq(x_Explicit_Explicit_00003_00003,y_Explicit_00002)}),watched-or({eq(x_Explicit_Explicit_00003_00000,y_Explicit_00003),eq(x_Explicit_Explicit_00003_00001,y_Explicit_00003),eq(x_Explicit_Explicit_00003_00002,y_Explicit_00003),eq(x_Explicit_Explicit_00003_00003,y_Explicit_00003)})}),watched-and({watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00004_00000),eq(y_Explicit_00001,x_Explicit_Explicit_00004_00000),eq(y_Explicit_00002,x_Explicit_Explicit_00004_00000),eq(y_Explicit_00003,x_Explicit_Explicit_00004_00000)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00004_00001),eq(y_Explicit_00001,x_Explicit_Explicit_00004_00001),eq(y_Explicit_00002,x_Explicit_Explicit_00004_00001),eq(y_Explicit_00003,x_Explicit_Explicit_00004_00001)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00004_00002),eq(y_Explicit_00001,x_Explicit_Explicit_00004_00002),eq(y_Explicit_00002,x_Explicit_Explicit_00004_00002),eq(y_Explicit_00003,x_Explicit_Explicit_00004_00002)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00004_00003),eq(y_Explicit_00001,x_Explicit_Explicit_00004_00003),eq(y_Explicit_00002,x_Explicit_Explicit_00004_00003),eq(y_Explicit_00003,x_Explicit_Explicit_00004_00003)}),watched-or({eq(x_Explicit_Explicit_00004_00000,y_Explicit_00000),eq(x_Explicit_Explicit_00004_00001,y_Explicit_00000),eq(x_Explicit_Explicit_00004_00002,y_Explicit_00000),eq(x_Explicit_Explicit_00004_00003,y_Explicit_00000)}),watched-or({eq(x_Explicit_Explicit_00004_00000,y_Explicit_00001),eq(x_Explicit_Explicit_00004_00001,y_Explicit_00001),eq(x_Explicit_Explicit_00004_00002,y_Explicit_00001),eq(x_Explicit_Explicit_00004_00003,y_Explicit_00001)}),watched-or({eq(x_Explicit_Explicit_00004_00000,y_Explicit_00002),eq(x_Explicit_Explicit_00004_00001,y_Explicit_00002),eq(x_Explicit_Explicit_00004_00002,y_Explicit_00002),eq(x_Explicit_Explicit_00004_00003,y_Explicit_00002)}),watched-or({eq(x_Explicit_Explicit_00004_00000,y_Explicit_00003),eq(x_Explicit_Explicit_00004_00001,y_Explicit_00003),eq(x_Explicit_Explicit_00004_00002,y_Explicit_00003),eq(x_Explicit_Explicit_00004_00003,y_Explicit_00003)})}),watched-and({watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00005_00000),eq(y_Explicit_00001,x_Explicit_Explicit_00005_00000),eq(y_Explicit_00002,x_Explicit_Explicit_00005_00000),eq(y_Explicit_00003,x_Explicit_Explicit_00005_00000)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00005_00001),eq(y_Explicit_00001,x_Explicit_Explicit_00005_00001),eq(y_Explicit_00002,x_Explicit_Explicit_00005_00001),eq(y_Explicit_00003,x_Explicit_Explicit_00005_00001)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00005_00002),eq(y_Explicit_00001,x_Explicit_Explicit_00005_00002),eq(y_Explicit_00002,x_Explicit_Explicit_00005_00002),eq(y_Explicit_00003,x_Explicit_Explicit_00005_00002)}),watched-or({eq(y_Explicit_00000,x_Explicit_Explicit_00005_00003),eq(y_Explicit_00001,x_Explicit_Explicit_00005_00003),eq(y_Explicit_00002,x_Explicit_Explicit_00005_00003),eq(y_Explicit_00003,x_Explicit_Explicit_00005_00003)}),watched-or({eq(x_Explicit_Explicit_00005_00000,y_Explicit_00000),eq(x_Explicit_Explicit_00005_00001,y_Explicit_00000),eq(x_Explicit_Explicit_00005_00002,y_Explicit_00000),eq(x_Explicit_Explicit_00005_00003,y_Explicit_00000)}),watched-or({eq(x_Explicit_Explicit_00005_00000,y_Explicit_00001),eq(x_Explicit_Explicit_00005_00001,y_Explicit_00001),eq(x_Explicit_Explicit_00005_00002,y_Explicit_00001),eq(x_Explicit_Explicit_00005_00003,y_Explicit_00001)}),watched-or({eq(x_Explicit_Explicit_00005_00000,y_Explicit_00002),eq(x_Explicit_Explicit_00005_00001,y_Explicit_00002),eq(x_Explicit_Explicit_00005_00002,y_Explicit_00002),eq(x_Explicit_Explicit_00005_00003,y_Explicit_00002)}),watched-or({eq(x_Explicit_Explicit_00005_00000,y_Explicit_00003),eq(x_Explicit_Explicit_00005_00001,y_Explicit_00003),eq(x_Explicit_Explicit_00005_00002,y_Explicit_00003),eq(x_Explicit_Explicit_00005_00003,y_Explicit_00003)})})})
+gacalldiff([y_Explicit_00000, y_Explicit_00001, y_Explicit_00002, y_Explicit_00003])
+gacalldiff([x_Explicit_Explicit_00000_00000, x_Explicit_Explicit_00000_00001, x_Explicit_Explicit_00000_00002, x_Explicit_Explicit_00000_00003])
+gacalldiff([x_Explicit_Explicit_00001_00000, x_Explicit_Explicit_00001_00001, x_Explicit_Explicit_00001_00002, x_Explicit_Explicit_00001_00003])
+gacalldiff([x_Explicit_Explicit_00002_00000, x_Explicit_Explicit_00002_00001, x_Explicit_Explicit_00002_00002, x_Explicit_Explicit_00002_00003])
+gacalldiff([x_Explicit_Explicit_00003_00000, x_Explicit_Explicit_00003_00001, x_Explicit_Explicit_00003_00002, x_Explicit_Explicit_00003_00003])
+gacalldiff([x_Explicit_Explicit_00004_00000, x_Explicit_Explicit_00004_00001, x_Explicit_Explicit_00004_00002, x_Explicit_Explicit_00004_00003])
+gacalldiff([x_Explicit_Explicit_00005_00000, x_Explicit_Explicit_00005_00001, x_Explicit_Explicit_00005_00002, x_Explicit_Explicit_00005_00003])
+ineq(x_Explicit_Explicit_00000_00000, x_Explicit_Explicit_00000_00001, -1)
+ineq(x_Explicit_Explicit_00000_00001, x_Explicit_Explicit_00000_00002, -1)
+ineq(x_Explicit_Explicit_00000_00002, x_Explicit_Explicit_00000_00003, -1)
+ineq(x_Explicit_Explicit_00001_00000, x_Explicit_Explicit_00001_00001, -1)
+ineq(x_Explicit_Explicit_00001_00001, x_Explicit_Explicit_00001_00002, -1)
+ineq(x_Explicit_Explicit_00001_00002, x_Explicit_Explicit_00001_00003, -1)
+ineq(x_Explicit_Explicit_00002_00000, x_Explicit_Explicit_00002_00001, -1)
+ineq(x_Explicit_Explicit_00002_00001, x_Explicit_Explicit_00002_00002, -1)
+ineq(x_Explicit_Explicit_00002_00002, x_Explicit_Explicit_00002_00003, -1)
+ineq(x_Explicit_Explicit_00003_00000, x_Explicit_Explicit_00003_00001, -1)
+ineq(x_Explicit_Explicit_00003_00001, x_Explicit_Explicit_00003_00002, -1)
+ineq(x_Explicit_Explicit_00003_00002, x_Explicit_Explicit_00003_00003, -1)
+ineq(x_Explicit_Explicit_00004_00000, x_Explicit_Explicit_00004_00001, -1)
+ineq(x_Explicit_Explicit_00004_00001, x_Explicit_Explicit_00004_00002, -1)
+ineq(x_Explicit_Explicit_00004_00002, x_Explicit_Explicit_00004_00003, -1)
+ineq(x_Explicit_Explicit_00005_00000, x_Explicit_Explicit_00005_00001, -1)
+ineq(x_Explicit_Explicit_00005_00001, x_Explicit_Explicit_00005_00002, -1)
+ineq(x_Explicit_Explicit_00005_00002, x_Explicit_Explicit_00005_00003, -1)
+ineq(y_Explicit_00000, y_Explicit_00001, -1)
+ineq(y_Explicit_00001, y_Explicit_00002, -1)
+ineq(y_Explicit_00002, y_Explicit_00003, -1)
+**EOF**

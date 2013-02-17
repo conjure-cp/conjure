@@ -1,0 +1,30 @@
+MINION 3
+**VARIABLES**
+DISCRETE pain_Explicit_00000_00000_00000 #
+{6..8}
+**CONSTRAINTS**
+diseq(pain_Explicit_00000_00000_00000,7)
+**VARIABLES**
+DISCRETE pain_Explicit_00000_00001_00000 #
+{6..8}
+**CONSTRAINTS**
+diseq(pain_Explicit_00000_00001_00000,7)
+**VARIABLES**
+DISCRETE pain_Explicit_00001_00000_00000 #
+{6..8}
+**CONSTRAINTS**
+diseq(pain_Explicit_00001_00000_00000,7)
+**VARIABLES**
+DISCRETE pain_Explicit_00001_00001_00000 #
+{6..8}
+**CONSTRAINTS**
+diseq(pain_Explicit_00001_00001_00000,7)
+**VARIABLES**
+**SEARCH**
+PRINT[[pain_Explicit_00000_00000_00000],[pain_Explicit_00000_00001_00000],[pain_Explicit_00001_00000_00000],[pain_Explicit_00001_00001_00000]]
+VARORDER STATIC [pain_Explicit_00000_00000_00000,pain_Explicit_00000_00001_00000,pain_Explicit_00001_00000_00000,pain_Explicit_00001_00001_00000]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(pain_Explicit_00000_00000_00000,6)
+w-literal(pain_Explicit_00000_00001_00000,8)
+**EOF**

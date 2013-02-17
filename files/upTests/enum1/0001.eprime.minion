@@ -1,0 +1,14 @@
+MINION 3
+**VARIABLES**
+DISCRETE x #
+{1..3}
+DISCRETE y #
+{2..3}
+**SEARCH**
+PRINT[[x],[y]]
+VARORDER STATIC [x,y]
+VARORDER AUX []
+**CONSTRAINTS**
+diseq(x,y)
+w-literal(x,1)
+**EOF**

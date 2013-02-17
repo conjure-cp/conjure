@@ -1,0 +1,12 @@
+[simplified] pain[1, 1] = [(12, 13)]
+             ~~>
+             pain[1, 1, 1, 1] = 12 /\ pain[1, 1, 1, 2] = 13
+[simplified] pain[1, 2] = (14, 15)
+             ~~>
+             pain[1, 2, 1] = 14 /\ pain[1, 2, 2] = 15
+[removedDecl] find pain:
+                      matrix indexed by [int(1)] of (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                     (int(14), int(15)))
+[removedDecl] find pain_tuple1:
+                      matrix indexed by [int(1), int(1)] of (int(12), int(13))
+[removedDecl] find pain_tuple2: matrix indexed by [int(1)] of (int(14), int(15))

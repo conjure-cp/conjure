@@ -1,0 +1,81 @@
+language ESSENCE' 1.0
+
+given n: int
+given a: int
+given b: int
+find s_Explicit_Explicit_Explicit_Occurrence:
+        matrix indexed by [int(1..n), int(1..n), int(1..n), int(a..b)] of bool
+such that
+    exists v__34 : int(1..n)
+        . (forAll v__1 : int(1..n)
+               . (exists v__2 : int(1..n)
+                      . (forAll v__5 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__1, v__2, v__5]
+                               ->
+                               1 = v__5 \/ 2 = v__5)
+                        /\
+                        ((exists v__11 : int(a..b)
+                              . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__1, v__2, v__11]
+                                /\
+                                v__11 = 1)
+                         /\
+                         (exists v__12 : int(a..b)
+                              . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__1, v__2, v__12]
+                                /\
+                                v__12 = 2)))
+                 /\
+                 (forAll v__4 : int(1..n)
+                      . (exists v__13 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__1, v__4, v__13]
+                               /\
+                               v__13 = 1)
+                        /\
+                        (exists v__17 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__1, v__4, v__17]
+                               /\
+                               v__17 = 2)
+                        /\
+                        (forAll v__18 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__1, v__4, v__18]
+                               ->
+                               1 = v__18 \/ 2 = v__18)))
+          /\
+          (exists v__3 : int(1..n)
+               . (forAll v__7 : int(1..n)
+                      . (exists v__19 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__3, v__7, v__19]
+                               /\
+                               v__19 = 1)
+                        /\
+                        (exists v__20 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__3, v__7, v__20]
+                               /\
+                               v__20 = 2)
+                        /\
+                        (forAll v__21 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__3, v__7, v__21]
+                               ->
+                               1 = v__21 \/ 2 = v__21))
+                 /\
+                 (exists v__8 : int(1..n)
+                      . (forAll v__22 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__3, v__8, v__22]
+                               ->
+                               1 = v__22 \/ 2 = v__22)
+                        /\
+                        ((exists v__31 : int(a..b)
+                              . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__3, v__8, v__31]
+                                /\
+                                v__31 = 1)
+                         /\
+                         (exists v__35 : int(a..b)
+                              . s_Explicit_Explicit_Explicit_Occurrence[v__34, v__3, v__8, v__35]
+                                /\
+                                v__35 = 2)))),
+    forAll v__27 : int(1..n)
+        . (forAll v__28 : int(1..n)
+               . (forAll v__30 : int(1..n)
+                      . (sum v__26 : int(a..b)
+                             . s_Explicit_Explicit_Explicit_Occurrence[v__27, v__28, v__30, v__26])
+                        =
+                        n))

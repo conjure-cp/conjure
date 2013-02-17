@@ -1,0 +1,87 @@
+[removedDecl] find pain:
+        matrix indexed by [int(1..2)] of ((set (size 1) of int(1, 2),
+                                           (int(4, 5), int(6, 7))),
+                                          int(8, 9))
+[removedDecl] find pain_tuple1:
+        matrix indexed by [int(1..2)] of (set (size 1) of int(1, 2),
+                                          (int(4, 5), int(6, 7)))
+[removedDecl] find pain_tuple1_tuple2: matrix indexed by [int(1..2)] of (int(4, 5), int(6, 7))
+[representation] find pain_tuple1_tuple1:
+        matrix indexed by [int(1..2)] of set (size 1) of int(1, 2)
+(#2)
+Explicit, Occurrence
+[configuration] pain_tuple1_tuple1§region2#Explicit pain_tuple1_tuple1§region1#Explicit
+[addedDecl] find pain_tuple1_tuple1_Explicit:
+        matrix indexed by [int(1..2), int(1..1)] of int(1, 2)
+[fullEvaluator empty range] (forAll v__2 : int(1..0)
+     . pain_tuple1_tuple1_Explicit§region2[1, v__2]
+       <
+       pain_tuple1_tuple1_Explicit§region2[1, v__2 + 1])
+[fullEvaluator empty range] (forAll v__2 : int(1..0)
+     . pain_tuple1_tuple1_Explicit§region2[2, v__2]
+       <
+       pain_tuple1_tuple1_Explicit§region2[2, v__2 + 1])
+[fullEvaluator empty range] (forAll v__2 : int(1..0)
+     . pain_tuple1_tuple1_Explicit§region1[1, v__2]
+       <
+       pain_tuple1_tuple1_Explicit§region1[1, v__2 + 1])
+[fullEvaluator empty range] (forAll v__2 : int(1..0)
+     . pain_tuple1_tuple1_Explicit§region1[2, v__2]
+       <
+       pain_tuple1_tuple1_Explicit§region1[2, v__2 + 1])
+[applied] pain_tuple1_tuple1§region1#Explicit[1] = {2}
+{rules/refns/set-eq-to-subsets.rule}
+    pain_tuple1_tuple1§region1#Explicit[1] subsetEq {2}
+    /\
+    pain_tuple1_tuple1§region1#Explicit[1] supsetEq {2}
+[applied] pain_tuple1_tuple1§region1#Explicit[1] subsetEq {2}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__1 in pain_tuple1_tuple1§region1#Explicit[1] . v__1 in {2})
+[applied] v__1 in {2}
+{rules/refns/set-in-to-quantified.rule}
+    2 = v__1
+[applied] (forAll v__1 in pain_tuple1_tuple1§region1#Explicit[1] . 2 = v__1)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    2 = pain_tuple1_tuple1_Explicit§region1[1, 1]
+[applied] pain_tuple1_tuple1§region1#Explicit[1] supsetEq {2}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {2} subsetEq pain_tuple1_tuple1§region1#Explicit[1]
+[applied] {2} subsetEq pain_tuple1_tuple1§region1#Explicit[1]
+{rules/refns/set-subseteq-to-quantified.rule}
+    2 in pain_tuple1_tuple1§region1#Explicit[1]
+[applied] 2 in pain_tuple1_tuple1§region1#Explicit[1]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__5 in pain_tuple1_tuple1§region1#Explicit[1] . v__5 = 2)
+[applied] (exists v__5 in pain_tuple1_tuple1§region1#Explicit[1] . v__5 = 2)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    pain_tuple1_tuple1_Explicit§region1[1, 1] = 2
+[applied] pain_tuple1_tuple1§region2#Explicit[2] = {1}
+{rules/refns/set-eq-to-subsets.rule}
+    pain_tuple1_tuple1§region2#Explicit[2] subsetEq {1}
+    /\
+    pain_tuple1_tuple1§region2#Explicit[2] supsetEq {1}
+[applied] pain_tuple1_tuple1§region2#Explicit[2] subsetEq {1}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__7 in pain_tuple1_tuple1§region2#Explicit[2] . v__7 in {1})
+[applied] v__7 in {1}
+{rules/refns/set-in-to-quantified.rule}
+    1 = v__7
+[applied] (forAll v__7 in pain_tuple1_tuple1§region2#Explicit[2] . 1 = v__7)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    1 = pain_tuple1_tuple1_Explicit§region2[2, 1]
+[applied] pain_tuple1_tuple1§region2#Explicit[2] supsetEq {1}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {1} subsetEq pain_tuple1_tuple1§region2#Explicit[2]
+[applied] {1} subsetEq pain_tuple1_tuple1§region2#Explicit[2]
+{rules/refns/set-subseteq-to-quantified.rule}
+    1 in pain_tuple1_tuple1§region2#Explicit[2]
+[applied] 1 in pain_tuple1_tuple1§region2#Explicit[2]
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__11 in pain_tuple1_tuple1§region2#Explicit[2] . v__11 = 1)
+[applied] (exists v__11 in pain_tuple1_tuple1§region2#Explicit[2] . v__11 = 1)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    pain_tuple1_tuple1_Explicit§region2[2, 1] = 1
+[removedDecl] find pain_tuple1_tuple1:
+        matrix indexed by [int(1..2)] of set (size 1) of int(1, 2)
+[addSlicing] pain_tuple1_tuple1_Explicit[1] pain_tuple1_tuple1_Explicit[1, ..]
+[addSlicing] pain_tuple1_tuple1_Explicit[2] pain_tuple1_tuple1_Explicit[2, ..]

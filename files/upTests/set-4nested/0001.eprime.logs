@@ -1,0 +1,422 @@
+[representation] find s: set (size n) of
+            set (size n) of set (size n) of set (size n) of int(a..b)
+(#1)
+Explicit
+[configuration] s§region1#Explicit
+[addedDecl] find s_Explicit:
+        matrix indexed by [int(1..n)] of set (size n) of
+                                             set (size n) of set (size n) of int(a..b)
+[applied] {{{1, 2}}} in s§region1#Explicit
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__1 in s§region1#Explicit . v__1 = {{{1, 2}}})
+[applied] v__1 = {{{1, 2}}}
+{rules/refns/set-eq-to-subsets.rule}
+    v__1 subsetEq {{{1, 2}}} /\ v__1 supsetEq {{{1, 2}}}
+[applied] v__1 subsetEq {{{1, 2}}}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__2 in v__1 . v__2 in {{{1, 2}}})
+[applied] v__2 in {{{1, 2}}}
+{rules/refns/set-in-to-quantified.rule}
+    {{1, 2}} = v__2
+[applied] {{1, 2}} = v__2
+{rules/refns/set-eq-to-subsets.rule}
+    {{1, 2}} subsetEq v__2 /\ {{1, 2}} supsetEq v__2
+[applied] {{1, 2}} subsetEq v__2
+{rules/refns/set-subseteq-to-quantified.rule}
+    {1, 2} in v__2
+[applied] {1, 2} in v__2
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__5 in v__2 . v__5 = {1, 2})
+[applied] v__5 = {1, 2}
+{rules/refns/set-eq-to-subsets.rule}
+    v__5 subsetEq {1, 2} /\ v__5 supsetEq {1, 2}
+[applied] v__5 subsetEq {1, 2}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__6 in v__5 . v__6 in {1, 2})
+[applied] v__6 in {1, 2}
+{rules/refns/set-in-to-quantified.rule}
+    1 = v__6 \/ 2 = v__6
+[applied] v__5 supsetEq {1, 2}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {1, 2} subsetEq v__5
+[applied] {1, 2} subsetEq v__5
+{rules/refns/set-subseteq-to-quantified.rule}
+    1 in v__5 /\ 2 in v__5
+[applied] 1 in v__5
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__9 in v__5 . v__9 = 1)
+[applied] 2 in v__5
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__10 in v__5 . v__10 = 2)
+[applied] {{1, 2}} supsetEq v__2
+{rules/refns/set-supseteq-to-subseteq.rule}
+    v__2 subsetEq {{1, 2}}
+[applied] v__2 subsetEq {{1, 2}}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__11 in v__2 . v__11 in {{1, 2}})
+[applied] v__11 in {{1, 2}}
+{rules/refns/set-in-to-quantified.rule}
+    {1, 2} = v__11
+[applied] {1, 2} = v__11
+{rules/refns/set-eq-to-subsets.rule}
+    {1, 2} subsetEq v__11 /\ {1, 2} supsetEq v__11
+[applied] {1, 2} subsetEq v__11
+{rules/refns/set-subseteq-to-quantified.rule}
+    1 in v__11 /\ 2 in v__11
+[applied] 1 in v__11
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__14 in v__11 . v__14 = 1)
+[applied] 2 in v__11
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__15 in v__11 . v__15 = 2)
+[applied] {1, 2} supsetEq v__11
+{rules/refns/set-supseteq-to-subseteq.rule}
+    v__11 subsetEq {1, 2}
+[applied] v__11 subsetEq {1, 2}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__16 in v__11 . v__16 in {1, 2})
+[applied] v__16 in {1, 2}
+{rules/refns/set-in-to-quantified.rule}
+    1 = v__16 \/ 2 = v__16
+[applied] v__1 supsetEq {{{1, 2}}}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {{{1, 2}}} subsetEq v__1
+[applied] {{{1, 2}}} subsetEq v__1
+{rules/refns/set-subseteq-to-quantified.rule}
+    {{1, 2}} in v__1
+[applied] {{1, 2}} in v__1
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__19 in v__1 . v__19 = {{1, 2}})
+[applied] v__19 = {{1, 2}}
+{rules/refns/set-eq-to-subsets.rule}
+    v__19 subsetEq {{1, 2}} /\ v__19 supsetEq {{1, 2}}
+[applied] v__19 subsetEq {{1, 2}}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__20 in v__19 . v__20 in {{1, 2}})
+[applied] v__20 in {{1, 2}}
+{rules/refns/set-in-to-quantified.rule}
+    {1, 2} = v__20
+[applied] {1, 2} = v__20
+{rules/refns/set-eq-to-subsets.rule}
+    {1, 2} subsetEq v__20 /\ {1, 2} supsetEq v__20
+[applied] {1, 2} subsetEq v__20
+{rules/refns/set-subseteq-to-quantified.rule}
+    1 in v__20 /\ 2 in v__20
+[applied] 1 in v__20
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__23 in v__20 . v__23 = 1)
+[applied] 2 in v__20
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__24 in v__20 . v__24 = 2)
+[applied] {1, 2} supsetEq v__20
+{rules/refns/set-supseteq-to-subseteq.rule}
+    v__20 subsetEq {1, 2}
+[applied] v__20 subsetEq {1, 2}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__25 in v__20 . v__25 in {1, 2})
+[applied] v__25 in {1, 2}
+{rules/refns/set-in-to-quantified.rule}
+    1 = v__25 \/ 2 = v__25
+[applied] v__19 supsetEq {{1, 2}}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {{1, 2}} subsetEq v__19
+[applied] {{1, 2}} subsetEq v__19
+{rules/refns/set-subseteq-to-quantified.rule}
+    {1, 2} in v__19
+[applied] {1, 2} in v__19
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__28 in v__19 . v__28 = {1, 2})
+[applied] v__28 = {1, 2}
+{rules/refns/set-eq-to-subsets.rule}
+    v__28 subsetEq {1, 2} /\ v__28 supsetEq {1, 2}
+[applied] v__28 subsetEq {1, 2}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__29 in v__28 . v__29 in {1, 2})
+[applied] v__29 in {1, 2}
+{rules/refns/set-in-to-quantified.rule}
+    1 = v__29 \/ 2 = v__29
+[applied] v__28 supsetEq {1, 2}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {1, 2} subsetEq v__28
+[applied] {1, 2} subsetEq v__28
+{rules/refns/set-subseteq-to-quantified.rule}
+    1 in v__28 /\ 2 in v__28
+[applied] 1 in v__28
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__32 in v__28 . v__32 = 1)
+[applied] 2 in v__28
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__33 in v__28 . v__33 = 2)
+[applied] (exists v__1 in s§region1#Explicit
+     . (forAll v__2 in v__1
+            . (exists v__5 in v__2
+                   . (forAll v__6 in v__5 . 1 = v__6 \/ 2 = v__6)
+                     /\
+                     ((exists v__9 in v__5 . v__9 = 1) /\ (exists v__10 in v__5 . v__10 = 2)))
+              /\
+              (forAll v__11 in v__2
+                   . (exists v__14 in v__11 . v__14 = 1) /\ (exists v__15 in v__11 . v__15 = 2)
+                     /\
+                     (forAll v__16 in v__11 . 1 = v__16 \/ 2 = v__16)))
+       /\
+       (exists v__19 in v__1
+            . (forAll v__20 in v__19
+                   . (exists v__23 in v__20 . v__23 = 1) /\ (exists v__24 in v__20 . v__24 = 2)
+                     /\
+                     (forAll v__25 in v__20 . 1 = v__25 \/ 2 = v__25))
+              /\
+              (exists v__28 in v__19
+                   . (forAll v__29 in v__28 . 1 = v__29 \/ 2 = v__29)
+                     /\
+                     ((exists v__32 in v__28 . v__32 = 1) /\ (exists v__33 in v__28 . v__33 = 2)))))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__34 : int(1..n)
+         . (forAll v__2 in s_Explicit§region1[v__34]
+                . (exists v__5 in v__2
+                       . (forAll v__6 in v__5 . 1 = v__6 \/ 2 = v__6)
+                         /\
+                         ((exists v__9 in v__5 . v__9 = 1) /\ (exists v__10 in v__5 . v__10 = 2)))
+                  /\
+                  (forAll v__11 in v__2
+                       . (exists v__14 in v__11 . v__14 = 1) /\ (exists v__15 in v__11 . v__15 = 2)
+                         /\
+                         (forAll v__16 in v__11 . 1 = v__16 \/ 2 = v__16)))
+           /\
+           (exists v__19 in s_Explicit§region1[v__34]
+                . (forAll v__20 in v__19
+                       . (exists v__23 in v__20 . v__23 = 1) /\ (exists v__24 in v__20 . v__24 = 2)
+                         /\
+                         (forAll v__25 in v__20 . 1 = v__25 \/ 2 = v__25))
+                  /\
+                  (exists v__28 in v__19
+                       . (forAll v__29 in v__28 . 1 = v__29 \/ 2 = v__29)
+                         /\
+                         ((exists v__32 in v__28 . v__32 = 1) /\ (exists v__33 in v__28 . v__33 = 2)))))
+[removedDecl] find s: set (size n) of
+            set (size n) of set (size n) of set (size n) of int(a..b)
+[representation] find s_Explicit:
+        matrix indexed by [int(1..n)] of set (size n) of
+                                             set (size n) of set (size n) of int(a..b)
+(#1)
+Explicit
+[configuration] s_Explicit§region1#Explicit
+[addedDecl] find s_Explicit_Explicit:
+        matrix indexed by [int(1..n), int(1..n)] of set (size n) of
+                                                        set (size n) of int(a..b)
+[applied] (forAll v__2 in s_Explicit§region1#Explicit[v__34]
+     . (exists v__5 in v__2
+            . (forAll v__6 in v__5 . 1 = v__6 \/ 2 = v__6)
+              /\
+              ((exists v__9 in v__5 . v__9 = 1) /\ (exists v__10 in v__5 . v__10 = 2)))
+       /\
+       (forAll v__11 in v__2
+            . (exists v__14 in v__11 . v__14 = 1) /\ (exists v__15 in v__11 . v__15 = 2)
+              /\
+              (forAll v__16 in v__11 . 1 = v__16 \/ 2 = v__16)))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__1 : int(1..n)
+         . (exists v__5 in s_Explicit_Explicit§region1[v__34, v__1]
+                . (forAll v__6 in v__5 . 1 = v__6 \/ 2 = v__6)
+                  /\
+                  ((exists v__9 in v__5 . v__9 = 1) /\ (exists v__10 in v__5 . v__10 = 2)))
+           /\
+           (forAll v__11 in s_Explicit_Explicit§region1[v__34, v__1]
+                . (exists v__14 in v__11 . v__14 = 1) /\ (exists v__15 in v__11 . v__15 = 2)
+                  /\
+                  (forAll v__16 in v__11 . 1 = v__16 \/ 2 = v__16)))
+[applied] (exists v__19 in s_Explicit§region1#Explicit[v__34]
+     . (forAll v__20 in v__19
+            . (exists v__23 in v__20 . v__23 = 1) /\ (exists v__24 in v__20 . v__24 = 2)
+              /\
+              (forAll v__25 in v__20 . 1 = v__25 \/ 2 = v__25))
+       /\
+       (exists v__28 in v__19
+            . (forAll v__29 in v__28 . 1 = v__29 \/ 2 = v__29)
+              /\
+              ((exists v__32 in v__28 . v__32 = 1) /\ (exists v__33 in v__28 . v__33 = 2))))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__3 : int(1..n)
+         . (forAll v__20 in s_Explicit_Explicit§region1[v__34, v__3]
+                . (exists v__23 in v__20 . v__23 = 1) /\ (exists v__24 in v__20 . v__24 = 2)
+                  /\
+                  (forAll v__25 in v__20 . 1 = v__25 \/ 2 = v__25))
+           /\
+           (exists v__28 in s_Explicit_Explicit§region1[v__34, v__3]
+                . (forAll v__29 in v__28 . 1 = v__29 \/ 2 = v__29)
+                  /\
+                  ((exists v__32 in v__28 . v__32 = 1) /\ (exists v__33 in v__28 . v__33 = 2))))
+[removedDecl] find s_Explicit:
+        matrix indexed by [int(1..n)] of set (size n) of
+                                             set (size n) of set (size n) of int(a..b)
+[representation] find s_Explicit_Explicit:
+        matrix indexed by [int(1..n), int(1..n)] of set (size n) of
+                                                        set (size n) of int(a..b)
+(#1)
+Explicit
+[configuration] s_Explicit_Explicit§region1#Explicit
+[addedDecl] find s_Explicit_Explicit_Explicit:
+        matrix indexed by [int(1..n), int(1..n), int(1..n)] of set (size n) of int(a..b)
+[applied] (exists v__5 in s_Explicit_Explicit§region1#Explicit[v__34, v__1]
+     . (forAll v__6 in v__5 . 1 = v__6 \/ 2 = v__6)
+       /\
+       ((exists v__9 in v__5 . v__9 = 1) /\ (exists v__10 in v__5 . v__10 = 2)))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__2 : int(1..n)
+         . (forAll v__6 in s_Explicit_Explicit_Explicit§region1[v__34, v__1, v__2]
+                . 1 = v__6 \/ 2 = v__6)
+           /\
+           ((exists v__9 in s_Explicit_Explicit_Explicit§region1[v__34, v__1, v__2]
+                 . v__9 = 1)
+            /\
+            (exists v__10 in s_Explicit_Explicit_Explicit§region1[v__34, v__1, v__2]
+                 . v__10 = 2)))
+[applied] (forAll v__11 in s_Explicit_Explicit§region1#Explicit[v__34, v__1]
+     . (exists v__14 in v__11 . v__14 = 1) /\ (exists v__15 in v__11 . v__15 = 2)
+       /\
+       (forAll v__16 in v__11 . 1 = v__16 \/ 2 = v__16))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__4 : int(1..n)
+         . (exists v__14 in s_Explicit_Explicit_Explicit§region1[v__34, v__1, v__4]
+                . v__14 = 1)
+           /\
+           (exists v__15 in s_Explicit_Explicit_Explicit§region1[v__34, v__1, v__4]
+                . v__15 = 2)
+           /\
+           (forAll v__16 in s_Explicit_Explicit_Explicit§region1[v__34, v__1, v__4]
+                . 1 = v__16 \/ 2 = v__16))
+[applied] (forAll v__20 in s_Explicit_Explicit§region1#Explicit[v__34, v__3]
+     . (exists v__23 in v__20 . v__23 = 1) /\ (exists v__24 in v__20 . v__24 = 2)
+       /\
+       (forAll v__25 in v__20 . 1 = v__25 \/ 2 = v__25))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (forAll v__7 : int(1..n)
+         . (exists v__23 in s_Explicit_Explicit_Explicit§region1[v__34, v__3, v__7]
+                . v__23 = 1)
+           /\
+           (exists v__24 in s_Explicit_Explicit_Explicit§region1[v__34, v__3, v__7]
+                . v__24 = 2)
+           /\
+           (forAll v__25 in s_Explicit_Explicit_Explicit§region1[v__34, v__3, v__7]
+                . 1 = v__25 \/ 2 = v__25))
+[applied] (exists v__28 in s_Explicit_Explicit§region1#Explicit[v__34, v__3]
+     . (forAll v__29 in v__28 . 1 = v__29 \/ 2 = v__29)
+       /\
+       ((exists v__32 in v__28 . v__32 = 1) /\ (exists v__33 in v__28 . v__33 = 2)))
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__8 : int(1..n)
+         . (forAll v__29 in s_Explicit_Explicit_Explicit§region1[v__34, v__3, v__8]
+                . 1 = v__29 \/ 2 = v__29)
+           /\
+           ((exists v__32 in s_Explicit_Explicit_Explicit§region1[v__34, v__3, v__8]
+                 . v__32 = 1)
+            /\
+            (exists v__33 in s_Explicit_Explicit_Explicit§region1[v__34, v__3, v__8]
+                 . v__33 = 2)))
+[removedDecl] find s_Explicit_Explicit:
+        matrix indexed by [int(1..n), int(1..n)] of set (size n) of
+                                                        set (size n) of int(a..b)
+[representation] find s_Explicit_Explicit_Explicit:
+        matrix indexed by [int(1..n), int(1..n), int(1..n)] of set (size n) of int(a..b)
+(#2)
+Explicit, Occurrence
+[configuration] s_Explicit_Explicit_Explicit§region1#Occurrence
+[addedDecl] find s_Explicit_Explicit_Explicit_Occurrence:
+        matrix indexed by [int(1..n), int(1..n), int(1..n), int(a..b)] of bool
+[applied] (forAll v__6 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                v__1,
+                                                                v__2]
+     . 1 = v__6 \/ 2 = v__6)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__5 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__1, v__2, v__5]
+         . 1 = v__5 \/ 2 = v__5)
+[applied] (exists v__9 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                v__1,
+                                                                v__2]
+     . v__9 = 1)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__11 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__1, v__2, v__11]
+         . v__11 = 1)
+[applied] (exists v__10 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__1,
+                                                                 v__2]
+     . v__10 = 2)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__12 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__1, v__2, v__12]
+         . v__12 = 2)
+[applied] (exists v__14 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__1,
+                                                                 v__4]
+     . v__14 = 1)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__13 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__1, v__4, v__13]
+         . v__13 = 1)
+[applied] (exists v__15 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__1,
+                                                                 v__4]
+     . v__15 = 2)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__17 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__1, v__4, v__17]
+         . v__17 = 2)
+[applied] (forAll v__16 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__1,
+                                                                 v__4]
+     . 1 = v__16 \/ 2 = v__16)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__18 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__1, v__4, v__18]
+         . 1 = v__18 \/ 2 = v__18)
+[applied] (exists v__23 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__3,
+                                                                 v__7]
+     . v__23 = 1)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__19 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__3, v__7, v__19]
+         . v__19 = 1)
+[applied] (exists v__24 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__3,
+                                                                 v__7]
+     . v__24 = 2)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__20 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__3, v__7, v__20]
+         . v__20 = 2)
+[applied] (forAll v__25 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__3,
+                                                                 v__7]
+     . 1 = v__25 \/ 2 = v__25)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__21 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__3, v__7, v__21]
+         . 1 = v__21 \/ 2 = v__21)
+[applied] (forAll v__29 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__3,
+                                                                 v__8]
+     . 1 = v__29 \/ 2 = v__29)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__22 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__3, v__8, v__22]
+         . 1 = v__22 \/ 2 = v__22)
+[applied] (exists v__32 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__3,
+                                                                 v__8]
+     . v__32 = 1)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__31 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__3, v__8, v__31]
+         . v__31 = 1)
+[applied] (exists v__33 in s_Explicit_Explicit_Explicit§region1#Occurrence[v__34,
+                                                                 v__3,
+                                                                 v__8]
+     . v__33 = 2)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__35 : int(a..b)
+         , s_Explicit_Explicit_Explicit_Occurrence§region1[v__34, v__3, v__8, v__35]
+         . v__35 = 2)
+[removedDecl] find s_Explicit_Explicit_Explicit:
+        matrix indexed by [int(1..n), int(1..n), int(1..n)] of set (size n) of int(a..b)

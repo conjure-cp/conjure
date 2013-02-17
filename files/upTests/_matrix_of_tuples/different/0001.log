@@ -1,0 +1,10 @@
+[removedDecl] find x: matrix indexed by [int(1..2)] of (int(3, 5), int(6, 7))
+[simplified] x[2] = (5, 7)
+             ~~>
+             x[2, 1] = (5, 7)[1] /\ x[2, 2] = (5, 7)[2]
+[simplified] (5, 7)[1]
+             ~~>
+             5
+[simplified] (5, 7)[2]
+             ~~>
+             7

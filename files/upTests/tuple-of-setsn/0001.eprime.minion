@@ -1,0 +1,56 @@
+MINION 3
+**VARIABLES**
+DISCRETE c_tuple1 #
+{0..9}
+BOOL c_tuple2_ExplicitVarSize_tuple1_00000 #
+BOOL c_tuple2_ExplicitVarSize_tuple1_00001 #
+DISCRETE c_tuple2_ExplicitVarSize_tuple2_00000 #
+{3..4}
+DISCRETE c_tuple2_ExplicitVarSize_tuple2_00001 #
+{3..4}
+BOOL c_tuple3_tuple1_ExplicitVarSize_tuple1_00000 #
+BOOL c_tuple3_tuple1_ExplicitVarSize_tuple1_00001 #
+DISCRETE c_tuple3_tuple1_ExplicitVarSize_tuple2_00000 #
+{3..4}
+DISCRETE c_tuple3_tuple1_ExplicitVarSize_tuple2_00001 #
+{3..4}
+DISCRETE c_tuple3_tuple2_tuple1 #
+{3..4}
+BOOL c_tuple3_tuple2_tuple2 #
+BOOL aux0 #(c_tuple2_ExplicitVarSize_tuple1_00001 /\ c_tuple2_ExplicitVarSize_tuple1_00000)
+BOOL aux1 #(c_tuple2_ExplicitVarSize_tuple2_00000<c_tuple2_ExplicitVarSize_tuple2_00001)
+BOOL aux2 #(c_tuple3_tuple1_ExplicitVarSize_tuple1_00001 /\ c_tuple3_tuple1_ExplicitVarSize_tuple1_00000)
+BOOL aux3 #(c_tuple3_tuple1_ExplicitVarSize_tuple2_00000<c_tuple3_tuple1_ExplicitVarSize_tuple2_00001)
+BOOL aux4 #((3=c_tuple3_tuple1_ExplicitVarSize_tuple2_00000) \/ (4=c_tuple3_tuple1_ExplicitVarSize_tuple2_00000))
+BOOL aux5 #((3=c_tuple3_tuple1_ExplicitVarSize_tuple2_00001) \/ (4=c_tuple3_tuple1_ExplicitVarSize_tuple2_00001))
+BOOL aux6 #((3=c_tuple2_ExplicitVarSize_tuple2_00000) \/ (4=c_tuple2_ExplicitVarSize_tuple2_00000))
+BOOL aux7 #((3=c_tuple2_ExplicitVarSize_tuple2_00001) \/ (4=c_tuple2_ExplicitVarSize_tuple2_00001))
+**SEARCH**
+PRINT[[c_tuple1],[c_tuple2_ExplicitVarSize_tuple1_00000],[c_tuple2_ExplicitVarSize_tuple1_00001],[c_tuple2_ExplicitVarSize_tuple2_00000],[c_tuple2_ExplicitVarSize_tuple2_00001],[c_tuple3_tuple1_ExplicitVarSize_tuple1_00000],[c_tuple3_tuple1_ExplicitVarSize_tuple1_00001],[c_tuple3_tuple1_ExplicitVarSize_tuple2_00000],[c_tuple3_tuple1_ExplicitVarSize_tuple2_00001],[c_tuple3_tuple2_tuple1],[c_tuple3_tuple2_tuple2]]
+VARORDER STATIC [c_tuple1,c_tuple2_ExplicitVarSize_tuple1_00000,c_tuple2_ExplicitVarSize_tuple1_00001,c_tuple2_ExplicitVarSize_tuple2_00000,c_tuple2_ExplicitVarSize_tuple2_00001,c_tuple3_tuple1_ExplicitVarSize_tuple1_00000,c_tuple3_tuple1_ExplicitVarSize_tuple1_00001,c_tuple3_tuple1_ExplicitVarSize_tuple2_00000,c_tuple3_tuple1_ExplicitVarSize_tuple2_00001,c_tuple3_tuple2_tuple1,c_tuple3_tuple2_tuple2]
+VARORDER AUX [aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7]
+**CONSTRAINTS**
+reify(watched-and({w-literal(c_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(c_tuple2_ExplicitVarSize_tuple1_00000,1)}), aux0)
+reify(ineq(c_tuple2_ExplicitVarSize_tuple2_00000, c_tuple2_ExplicitVarSize_tuple2_00001, -1), aux1)
+reify(watched-and({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple1_00000,1)}), aux2)
+reify(ineq(c_tuple3_tuple1_ExplicitVarSize_tuple2_00000, c_tuple3_tuple1_ExplicitVarSize_tuple2_00001, -1), aux3)
+reify(watched-or({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00000,3),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00000,4)}), aux4)
+reify(watched-or({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00001,3),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00001,4)}), aux5)
+reify(watched-or({w-literal(c_tuple2_ExplicitVarSize_tuple2_00000,3),w-literal(c_tuple2_ExplicitVarSize_tuple2_00000,4)}), aux6)
+reify(watched-or({w-literal(c_tuple2_ExplicitVarSize_tuple2_00001,3),w-literal(c_tuple2_ExplicitVarSize_tuple2_00001,4)}), aux7)
+ineq(c_tuple2_ExplicitVarSize_tuple1_00000, c_tuple2_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux0, aux1, 0)
+ineq(c_tuple3_tuple1_ExplicitVarSize_tuple1_00000, c_tuple3_tuple1_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux2, aux3, 0)
+w-literal(c_tuple3_tuple2_tuple2,1)
+w-literal(c_tuple3_tuple2_tuple1,3)
+watched-or({watched-and({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple1_00000,1),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00000,4)}),watched-and({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00001,4)})})
+watched-or({watched-and({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple1_00000,1),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00000,3)}),watched-and({w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple1_00001,1),w-literal(c_tuple3_tuple1_ExplicitVarSize_tuple2_00001,3)})})
+watched-or({watched-and({w-literal(c_tuple2_ExplicitVarSize_tuple1_00000,1),w-literal(c_tuple2_ExplicitVarSize_tuple2_00000,4)}),watched-and({w-literal(c_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(c_tuple2_ExplicitVarSize_tuple2_00001,4)})})
+watched-or({watched-and({w-literal(c_tuple2_ExplicitVarSize_tuple1_00000,1),w-literal(c_tuple2_ExplicitVarSize_tuple2_00000,3)}),watched-and({w-literal(c_tuple2_ExplicitVarSize_tuple1_00001,1),w-literal(c_tuple2_ExplicitVarSize_tuple2_00001,3)})})
+w-literal(c_tuple1,1)
+ineq(c_tuple3_tuple1_ExplicitVarSize_tuple1_00000, aux4, 0)
+ineq(c_tuple3_tuple1_ExplicitVarSize_tuple1_00001, aux5, 0)
+ineq(c_tuple2_ExplicitVarSize_tuple1_00000, aux6, 0)
+ineq(c_tuple2_ExplicitVarSize_tuple1_00001, aux7, 0)
+**EOF**

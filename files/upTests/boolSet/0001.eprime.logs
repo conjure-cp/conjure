@@ -1,0 +1,10 @@
+[representation] find s: set (size 2) of bool (#1) Explicit
+[configuration] s§region1#Explicit
+[addedDecl] find s_Explicit: matrix indexed by [int(1..2)] of bool
+[applied] true in s§region1#Explicit
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__1 in s§region1#Explicit . v__1 = true)
+[applied] (exists v__1 in s§region1#Explicit . v__1 = true)
+{rules/refns/set-explicit/set-explicit-quantified.rule}
+    (exists v__2 : int(1..2) . s_Explicit§region1[v__2] = true)
+[removedDecl] find s: set (size 2) of bool

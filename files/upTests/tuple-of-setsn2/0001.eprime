@@ -1,0 +1,68 @@
+language ESSENCE' 1.0
+
+find a_tuple1: int(0..9)
+find c_tuple1: int(0..9)
+find c_tuple2_ExplicitVarSize_tuple1: matrix indexed by [int(1..2)] of bool
+find c_tuple2_ExplicitVarSize_tuple2: matrix indexed by [int(1..2)] of int(3..4)
+find c_tuple3_tuple1_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..2)] of bool
+find c_tuple3_tuple1_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..2)] of int(3..4)
+find c_tuple3_tuple2_tuple1: int(3..4)
+find c_tuple3_tuple2_tuple2: bool
+such that
+    c_tuple1 = a_tuple1,
+    forAll v__7 : int(1..2)
+        . c_tuple2_ExplicitVarSize_tuple1[v__7]
+          ->
+          3 = c_tuple2_ExplicitVarSize_tuple2[v__7]
+          \/
+          4 = c_tuple2_ExplicitVarSize_tuple2[v__7],
+    exists v__10 : int(1..2)
+        . c_tuple2_ExplicitVarSize_tuple1[v__10]
+          /\
+          c_tuple2_ExplicitVarSize_tuple2[v__10] = 3,
+    exists v__12 : int(1..2)
+        . c_tuple2_ExplicitVarSize_tuple1[v__12]
+          /\
+          c_tuple2_ExplicitVarSize_tuple2[v__12] = 4,
+    forAll v__15 : int(1..2)
+        . c_tuple3_tuple1_ExplicitVarSize_tuple1[v__15]
+          ->
+          3 = c_tuple3_tuple1_ExplicitVarSize_tuple2[v__15]
+          \/
+          4 = c_tuple3_tuple1_ExplicitVarSize_tuple2[v__15],
+    exists v__18 : int(1..2)
+        . c_tuple3_tuple1_ExplicitVarSize_tuple1[v__18]
+          /\
+          c_tuple3_tuple1_ExplicitVarSize_tuple2[v__18] = 3,
+    exists v__20 : int(1..2)
+        . c_tuple3_tuple1_ExplicitVarSize_tuple1[v__20]
+          /\
+          c_tuple3_tuple1_ExplicitVarSize_tuple2[v__20] = 4,
+    c_tuple3_tuple2_tuple1 = 3,
+    c_tuple3_tuple2_tuple2 = true,
+    forAll v__3 : int(1..2)
+        . (forAll v__4 : int(1..2)
+               . v__3 < v__4 /\ c_tuple3_tuple1_ExplicitVarSize_tuple1[v__3]
+                 /\
+                 c_tuple3_tuple1_ExplicitVarSize_tuple1[v__4]
+                 ->
+                 c_tuple3_tuple1_ExplicitVarSize_tuple2[v__3]
+                 <
+                 c_tuple3_tuple1_ExplicitVarSize_tuple2[v__4]),
+    forAll v__3 : int(1..1)
+        . c_tuple3_tuple1_ExplicitVarSize_tuple1[v__3]
+          <=
+          c_tuple3_tuple1_ExplicitVarSize_tuple1[v__3 + 1],
+    forAll v__1 : int(1..2)
+        . (forAll v__2 : int(1..2)
+               . v__1 < v__2 /\ c_tuple2_ExplicitVarSize_tuple1[v__1]
+                 /\
+                 c_tuple2_ExplicitVarSize_tuple1[v__2]
+                 ->
+                 c_tuple2_ExplicitVarSize_tuple2[v__1] < c_tuple2_ExplicitVarSize_tuple2[v__2]),
+    forAll v__1 : int(1..1)
+        . c_tuple2_ExplicitVarSize_tuple1[v__1]
+          <=
+          c_tuple2_ExplicitVarSize_tuple1[v__1 + 1]

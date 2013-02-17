@@ -1,0 +1,50 @@
+[simplified] pain[1, 2]
+             =
+             [(12, [(55, 28), (99, 31)]), (12, [(55, 28), (99, 32)])]
+             ~~>
+             pain[1, 2, 1, 1] = 12
+             /\
+             (pain[1, 2, 1, 2, 1, 1] = 55 /\ pain[1, 2, 1, 2, 1, 2] = 28
+              /\
+              (pain[1, 2, 1, 2, 2, 1] = 99 /\ pain[1, 2, 1, 2, 2, 2] = 31))
+             /\
+             (pain[1, 2, 2, 1] = 12
+              /\
+              (pain[1, 2, 2, 2, 1, 1] = 55 /\ pain[1, 2, 2, 2, 1, 2] = 28
+               /\
+               (pain[1, 2, 2, 2, 2, 1] = 99 /\ pain[1, 2, 2, 2, 2, 2] = 32)))
+[simplified] pain[2, 2]
+             =
+             [(12, [(55, 28), (99, 31)]), (12, [(55, 28), (99, 33)])]
+             ~~>
+             pain[2, 2, 1, 1] = 12
+             /\
+             (pain[2, 2, 1, 2, 1, 1] = 55 /\ pain[2, 2, 1, 2, 1, 2] = 28
+              /\
+              (pain[2, 2, 1, 2, 2, 1] = 99 /\ pain[2, 2, 1, 2, 2, 2] = 31))
+             /\
+             (pain[2, 2, 2, 1] = 12
+              /\
+              (pain[2, 2, 2, 2, 1, 1] = 55 /\ pain[2, 2, 2, 2, 1, 2] = 28
+               /\
+               (pain[2, 2, 2, 2, 2, 1] = 99 /\ pain[2, 2, 2, 2, 2, 2] = 33)))
+[removedDecl] find pain:
+                      matrix indexed by [int(1, 2)] of (int(1),
+                                                        matrix indexed by [int(1, 2)] of (int(12),
+                                                                                          matrix indexed by [int(1,
+                                                                                                                 2)] of (int(55,
+                                                                                                                             99),
+                                                                                                                         int(28,
+                                                                                                                             31,
+                                                                                                                             32,
+                                                                                                                             33))))
+[removedDecl] find pain_tuple2:
+                      matrix indexed by [int(1, 2), int(1, 2)] of (int(12),
+                                                                   matrix indexed by [int(1, 2)] of (int(55, 99),
+                                                                                                     int(28,
+                                                                                                         31,
+                                                                                                         32,
+                                                                                                         33)))
+[removedDecl] find pain_tuple2_tuple2:
+                      matrix indexed by [int(1, 2), int(1, 2), int(1, 2)] of (int(55, 99),
+                                                                              int(28, 31, 32, 33))

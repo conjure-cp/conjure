@@ -1,0 +1,289 @@
+MINION 3
+**VARIABLES**
+BOOL s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000 #
+BOOL s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001 #
+BOOL s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002 #
+BOOL s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003 #
+BOOL s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004 #
+BOOL s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005 #
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 #
+{1..3}
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001 #
+{1..3}
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002 #
+{1..3}
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003 #
+{1..3}
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004 #
+{1..3}
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005 #
+{1..3}
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 #
+{-1..1}
+**CONSTRAINTS**
+diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,0)
+**VARIABLES**
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001 #
+{-1..1}
+**CONSTRAINTS**
+diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001,0)
+**VARIABLES**
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002 #
+{-1..1}
+**CONSTRAINTS**
+diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002,0)
+**VARIABLES**
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003 #
+{-1..1}
+**CONSTRAINTS**
+diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003,0)
+**VARIABLES**
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004 #
+{-1..1}
+**CONSTRAINTS**
+diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004,0)
+**VARIABLES**
+DISCRETE s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005 #
+{-1..1}
+**CONSTRAINTS**
+diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005,0)
+**VARIABLES**
+DISCRETE aux0 #((((((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[0]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[0])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[0]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[1]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[1])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[1]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[2]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[2])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[2]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[3]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[3])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[3]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[4]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[4])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[4]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[5]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[5])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[5]))*((((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[0]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[0])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[0]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[1]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[1])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[1]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[2]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[2])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[2]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[3]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[3])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[3]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[4]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[4])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[4]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[5]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[5])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[5])))*(((((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[0]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[0])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[0]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[1]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[1])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[1]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[2]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[2])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[2]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[3]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[3])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[3]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[4]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[4])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[4]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[5]=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[5])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[5]))*((((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[0]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[0])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[0]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[1]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[1])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[1]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[2]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[2])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[2]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[3]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[3])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[3]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[4]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[4])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[4]) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[5]=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1[5])*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[5]))))
+{-1296..1296}
+DISCRETE aux1 #CSE: 2 occurrences of: (((((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005))*((((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004) + (((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005)*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)))
+{-36..36}
+BOOL aux2 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+DISCRETE aux3 #(aux2*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000)
+{-1..1}
+BOOL aux4 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)
+DISCRETE aux5 #(aux4*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001)
+{-1..1}
+BOOL aux6 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)
+DISCRETE aux7 #(aux6*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002)
+{-1..1}
+BOOL aux8 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003)
+DISCRETE aux9 #(aux8*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003)
+{-1..1}
+BOOL aux10 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004)
+DISCRETE aux11 #(aux10*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004)
+{-1..1}
+BOOL aux12 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005=1) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005)
+DISCRETE aux13 #(aux12*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)
+{-1..1}
+DISCRETE aux14 #(aux3 + aux5 + aux7 + aux9 + aux11 + aux13)
+{-6..6}
+BOOL aux15 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+DISCRETE aux16 #(aux15*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000)
+{-1..1}
+BOOL aux17 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)
+DISCRETE aux18 #(aux17*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001)
+{-1..1}
+BOOL aux19 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)
+DISCRETE aux20 #(aux19*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002)
+{-1..1}
+BOOL aux21 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003)
+DISCRETE aux22 #(aux21*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003)
+{-1..1}
+BOOL aux23 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004)
+DISCRETE aux24 #(aux23*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004)
+{-1..1}
+BOOL aux25 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005=2) /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005)
+DISCRETE aux26 #(aux25*s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)
+{-1..1}
+DISCRETE aux27 #(aux16 + aux18 + aux20 + aux22 + aux24 + aux26)
+{-6..6}
+BOOL aux28 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)
+BOOL aux29 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005))
+BOOL aux30 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)
+BOOL aux31 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003))
+BOOL aux32 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)
+BOOL aux33 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005))
+BOOL aux34 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)
+BOOL aux35 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003))
+BOOL aux36 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+BOOL aux37 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004))
+BOOL aux38 #(2=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000)
+BOOL aux39 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000*aux38)
+BOOL aux40 #(2=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001)
+BOOL aux41 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001*aux40)
+BOOL aux42 #(2=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002)
+BOOL aux43 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002*aux42)
+BOOL aux44 #(2=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003)
+BOOL aux45 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003*aux44)
+BOOL aux46 #(2=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004)
+BOOL aux47 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004*aux46)
+BOOL aux48 #(2=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005)
+BOOL aux49 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005*aux48)
+BOOL aux50 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003)
+BOOL aux51 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004))
+BOOL aux52 #(3=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000)
+BOOL aux53 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000*aux52)
+BOOL aux54 #(3=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001)
+BOOL aux55 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001*aux54)
+BOOL aux56 #(3=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002)
+BOOL aux57 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002*aux56)
+BOOL aux58 #(3=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003)
+BOOL aux59 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003*aux58)
+BOOL aux60 #(3=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004)
+BOOL aux61 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004*aux60)
+BOOL aux62 #(3=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005)
+BOOL aux63 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005*aux62)
+BOOL aux64 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)
+BOOL aux65 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004))
+BOOL aux66 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002)
+BOOL aux67 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004))
+BOOL aux68 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004)
+BOOL aux69 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005))
+BOOL aux70 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003)
+BOOL aux71 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005))
+BOOL aux72 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+BOOL aux73 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003))
+BOOL aux74 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001)
+BOOL aux75 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002))
+BOOL aux76 #(1=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000)
+BOOL aux77 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000*aux76)
+BOOL aux78 #(1=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001)
+BOOL aux79 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001*aux78)
+BOOL aux80 #(1=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002)
+BOOL aux81 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002*aux80)
+BOOL aux82 #(1=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003)
+BOOL aux83 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003*aux82)
+BOOL aux84 #(1=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004)
+BOOL aux85 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004*aux84)
+BOOL aux86 #(1=s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005)
+BOOL aux87 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005*aux86)
+BOOL aux88 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+BOOL aux89 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005))
+BOOL aux90 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+BOOL aux91 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002))
+BOOL aux92 #(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001 /\ s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000)
+BOOL aux93 #((s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001) \/ (s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 != s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001))
+**SEARCH**
+PRINT[[s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004],[s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005]]
+MINIMISING aux0
+VARORDER STATIC [s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005]
+VARORDER AUX [aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7,aux8,aux9,aux10,aux11,aux12,aux13,aux14,aux15,aux16,aux17,aux18,aux19,aux20,aux21,aux22,aux23,aux24,aux25,aux26,aux27,aux28,aux29,aux30,aux31,aux32,aux33,aux34,aux35,aux36,aux37,aux38,aux39,aux40,aux41,aux42,aux43,aux44,aux45,aux46,aux47,aux48,aux49,aux50,aux51,aux52,aux53,aux54,aux55,aux56,aux57,aux58,aux59,aux60,aux61,aux62,aux63,aux64,aux65,aux66,aux67,aux68,aux69,aux70,aux71,aux72,aux73,aux74,aux75,aux76,aux77,aux78,aux79,aux80,aux81,aux82,aux83,aux84,aux85,aux86,aux87,aux88,aux89,aux90,aux91,aux92,aux93]
+**CONSTRAINTS**
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux2)
+product(aux2, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000, aux3)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1)}), aux4)
+product(aux4, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001, aux5)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1)}), aux6)
+product(aux6, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002, aux7)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1)}), aux8)
+product(aux8, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003, aux9)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1)}), aux10)
+product(aux10, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004, aux11)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1)}), aux12)
+product(aux12, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005, aux13)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,2),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux15)
+product(aux15, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000, aux16)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,2),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1)}), aux17)
+product(aux17, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001, aux18)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,2),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1)}), aux19)
+product(aux19, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002, aux20)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,2),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1)}), aux21)
+product(aux21, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003, aux22)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,2),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1)}), aux23)
+product(aux23, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004, aux24)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005,2),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1)}), aux25)
+product(aux25, s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005, aux26)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1)}), aux28)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)}), aux29)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1)}), aux30)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003)}), aux31)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1)}), aux32)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)}), aux33)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1)}), aux34)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003)}), aux35)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux36)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004)}), aux37)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,2), aux38)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000, aux38, aux39)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,2), aux40)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001, aux40, aux41)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,2), aux42)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002, aux42, aux43)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,2), aux44)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003, aux44, aux45)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,2), aux46)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004, aux46, aux47)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005,2), aux48)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005, aux48, aux49)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1)}), aux50)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004)}), aux51)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,3), aux52)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000, aux52, aux53)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,3), aux54)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001, aux54, aux55)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,3), aux56)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002, aux56, aux57)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,3), aux58)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003, aux58, aux59)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,3), aux60)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004, aux60, aux61)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005,3), aux62)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005, aux62, aux63)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1)}), aux64)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004)}), aux65)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1)}), aux66)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004)}), aux67)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004,1)}), aux68)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00004,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)}), aux69)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1)}), aux70)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)}), aux71)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux72)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00003)}), aux73)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1)}), aux74)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002)}), aux75)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,1), aux76)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000, aux76, aux77)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001,1), aux78)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001, aux78, aux79)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002,1), aux80)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002, aux80, aux81)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00003,1), aux82)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003, aux82, aux83)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00004,1), aux84)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004, aux84, aux85)
+reify(w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005,1), aux86)
+product(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005, aux86, aux87)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux88)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00005),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00005)}), aux89)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux90)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00002),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00002)}), aux91)
+reify(watched-and({w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001,1),w-literal(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000,1)}), aux92)
+reify(watched-or({diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00001),diseq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000,s_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00001)}), aux93)
+product(aux14, aux27, aux1)
+product(aux1, aux1, aux0)
+ineq(aux28, aux29, 0)
+ineq(aux30, aux31, 0)
+ineq(aux32, aux33, 0)
+ineq(aux34, aux35, 0)
+ineq(aux36, aux37, 0)
+ineq(aux50, aux51, 0)
+ineq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001, s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002, 0)
+ineq(aux64, aux65, 0)
+ineq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003, s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004, 0)
+ineq(aux66, aux67, 0)
+ineq(aux68, aux69, 0)
+ineq(aux70, aux71, 0)
+ineq(aux72, aux73, 0)
+ineq(aux74, aux75, 0)
+ineq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00004, s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00005, 0)
+ineq(aux88, aux89, 0)
+ineq(aux90, aux91, 0)
+ineq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00000, s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00001, 0)
+ineq(aux92, aux93, 0)
+ineq(s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00002, s_AsReln_RelationAsSet_ExplicitVarSize_tuple1_00003, 0)
+sumleq([aux3,aux5,aux7,aux9,aux11,aux13],aux14)
+sumgeq([aux3,aux5,aux7,aux9,aux11,aux13],aux14)
+sumleq([aux16,aux18,aux20,aux22,aux24,aux26],aux27)
+sumgeq([aux16,aux18,aux20,aux22,aux24,aux26],aux27)
+sumleq([aux39,aux41,aux43,aux45,aux47,aux49],1)
+sumgeq([aux39,aux41,aux43,aux45,aux47,aux49],1)
+sumleq([aux53,aux55,aux57,aux59,aux61,aux63],1)
+sumgeq([aux53,aux55,aux57,aux59,aux61,aux63],1)
+sumleq([aux77,aux79,aux81,aux83,aux85,aux87],1)
+sumgeq([aux77,aux79,aux81,aux83,aux85,aux87],1)
+**EOF**

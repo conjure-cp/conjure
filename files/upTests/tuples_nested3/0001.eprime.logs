@@ -1,0 +1,92 @@
+[removedDecl] find y: (int(1),
+         set (size 2) of int(2, 3),
+         int(4),
+         (int(5), int(6), set (size 3) of int(7, 8, 9)))
+[removedDecl] find y_tuple4: (int(5), int(6), set (size 3) of int(7, 8, 9))
+[representation] find y_tuple2: set (size 2) of int(2, 3) (#2) Explicit, Occurrence
+[representation] find y_tuple4_tuple3: set (size 3) of int(7, 8, 9) (#2) Explicit, Occurrence
+[configuration] y_tuple2§region1#Occurrence y_tuple4_tuple3§region2#Occurrence
+[addedDecl] find y_tuple4_tuple3_Occurrence: matrix indexed by [int(7, 8, 9)] of bool
+[addedDecl] find y_tuple2_Occurrence: matrix indexed by [int(2, 3)] of bool
+[applied] y_tuple2§region1#Occurrence = {2, 3}
+{rules/refns/set-eq-to-subsets.rule}
+    y_tuple2§region1#Occurrence subsetEq {2, 3}
+    /\
+    y_tuple2§region1#Occurrence supsetEq {2, 3}
+[applied] y_tuple2§region1#Occurrence subsetEq {2, 3}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__1 in y_tuple2§region1#Occurrence . v__1 in {2, 3})
+[applied] v__1 in {2, 3}
+{rules/refns/set-in-to-quantified.rule}
+    2 = v__1 \/ 3 = v__1
+[applied] (forAll v__1 in y_tuple2§region1#Occurrence . 2 = v__1 \/ 3 = v__1)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__5 : int(2, 3) , y_tuple2_Occurrence§region1[v__5]
+         . 2 = v__5 \/ 3 = v__5)
+[applied] y_tuple2§region1#Occurrence supsetEq {2, 3}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {2, 3} subsetEq y_tuple2§region1#Occurrence
+[applied] {2, 3} subsetEq y_tuple2§region1#Occurrence
+{rules/refns/set-subseteq-to-quantified.rule}
+    2 in y_tuple2§region1#Occurrence /\ 3 in y_tuple2§region1#Occurrence
+[applied] 2 in y_tuple2§region1#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__7 in y_tuple2§region1#Occurrence . v__7 = 2)
+[applied] (exists v__7 in y_tuple2§region1#Occurrence . v__7 = 2)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__8 : int(2, 3) , y_tuple2_Occurrence§region1[v__8] . v__8 = 2)
+[applied] 3 in y_tuple2§region1#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__9 in y_tuple2§region1#Occurrence . v__9 = 3)
+[applied] (exists v__9 in y_tuple2§region1#Occurrence . v__9 = 3)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__10 : int(2, 3) , y_tuple2_Occurrence§region1[v__10] . v__10 = 3)
+[applied] y_tuple4_tuple3§region2#Occurrence = {7, 8, 9}
+{rules/refns/set-eq-to-subsets.rule}
+    y_tuple4_tuple3§region2#Occurrence subsetEq {7, 8, 9}
+    /\
+    y_tuple4_tuple3§region2#Occurrence supsetEq {7, 8, 9}
+[applied] y_tuple4_tuple3§region2#Occurrence subsetEq {7, 8, 9}
+{rules/refns/set-subseteq-to-quantified.rule}
+    (forAll v__11 in y_tuple4_tuple3§region2#Occurrence . v__11 in {7, 8, 9})
+[applied] v__11 in {7, 8, 9}
+{rules/refns/set-in-to-quantified.rule}
+    7 = v__11 \/ 8 = v__11 \/ 9 = v__11
+[applied] (forAll v__11 in y_tuple4_tuple3§region2#Occurrence
+     . 7 = v__11 \/ 8 = v__11 \/ 9 = v__11)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (forAll v__13 : int(7, 8, 9) , y_tuple4_tuple3_Occurrence§region2[v__13]
+         . 7 = v__13 \/ 8 = v__13 \/ 9 = v__13)
+[applied] y_tuple4_tuple3§region2#Occurrence supsetEq {7, 8, 9}
+{rules/refns/set-supseteq-to-subseteq.rule}
+    {7, 8, 9} subsetEq y_tuple4_tuple3§region2#Occurrence
+[applied] {7, 8, 9} subsetEq y_tuple4_tuple3§region2#Occurrence
+{rules/refns/set-subseteq-to-quantified.rule}
+    7 in y_tuple4_tuple3§region2#Occurrence
+    /\
+    8 in y_tuple4_tuple3§region2#Occurrence
+    /\
+    9 in y_tuple4_tuple3§region2#Occurrence
+[applied] 7 in y_tuple4_tuple3§region2#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__15 in y_tuple4_tuple3§region2#Occurrence . v__15 = 7)
+[applied] (exists v__15 in y_tuple4_tuple3§region2#Occurrence . v__15 = 7)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__16 : int(7, 8, 9) , y_tuple4_tuple3_Occurrence§region2[v__16]
+         . v__16 = 7)
+[applied] 8 in y_tuple4_tuple3§region2#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__17 in y_tuple4_tuple3§region2#Occurrence . v__17 = 8)
+[applied] (exists v__17 in y_tuple4_tuple3§region2#Occurrence . v__17 = 8)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__18 : int(7, 8, 9) , y_tuple4_tuple3_Occurrence§region2[v__18]
+         . v__18 = 8)
+[applied] 9 in y_tuple4_tuple3§region2#Occurrence
+{rules/refns/set-in-to-quantified.rule}
+    (exists v__19 in y_tuple4_tuple3§region2#Occurrence . v__19 = 9)
+[applied] (exists v__19 in y_tuple4_tuple3§region2#Occurrence . v__19 = 9)
+{rules/refns/set-occurrence/set-occurrence-quantified.rule}
+    (exists v__20 : int(7, 8, 9) , y_tuple4_tuple3_Occurrence§region2[v__20]
+         . v__20 = 9)
+[removedDecl] find y_tuple4_tuple3: set (size 3) of int(7, 8, 9)
+[removedDecl] find y_tuple2: set (size 2) of int(2, 3)

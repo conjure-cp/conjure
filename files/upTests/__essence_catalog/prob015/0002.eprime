@@ -1,0 +1,86 @@
+language ESSENCE' 1.0
+
+given n_balls: int(1..)
+given n_boxes: int(1..)
+find schur_SetOfSets_Explicit_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n_boxes), int(1..n_balls)] of bool
+find schur_SetOfSets_Explicit_ExplicitVarSize_tuple2:
+        matrix indexed by [int(1..n_boxes), int(1..n_balls)] of int(1..n_balls)
+such that
+    forAll b1 : int(1..n_balls)
+        . (forAll b2 : int(1..n_balls)
+               . (forAll b3 : int(1..n_balls)
+                      . (forAll v__0 : int(1..n_boxes)
+                             . b1 != b2 /\ b1 + b2 = b3
+                               ->
+                               !((exists v__1 : int(1..n_balls)
+                                      . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__1]
+                                        /\
+                                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__1] = b1)
+                                 /\
+                                 (exists v__1 : int(1..n_balls)
+                                      . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__1]
+                                        /\
+                                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__1] = b2)
+                                 /\
+                                 (exists v__1 : int(1..n_balls)
+                                      . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__1]
+                                        /\
+                                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__1] = b3))))),
+    forAll v__0 : int(1..n_balls)
+        . (exists v__1 : int(1..n_boxes)
+               . (exists v__2 : int(1..n_balls)
+                      . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__1, v__2]
+                        /\
+                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__1, v__2] = v__0)),
+    forAll v__0 : int(1..n_boxes)
+        . (forAll v__1 : int(1..n_balls)
+               . (forAll v__2 : int(1..n_balls)
+                      . v__1 < v__2 /\ schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__1]
+                        /\
+                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__2]
+                        ->
+                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__1]
+                        <
+                        schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__2]))
+          /\
+          (forAll v__1 : int(1..n_balls - 1)
+               . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__1]
+                 <=
+                 schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__1 + 1]),
+    forAll v__0 : int(1..n_boxes)
+        . (forAll v__1 : int(1..n_boxes)
+               . !((forAll v__2 : int(1..n_balls)
+                        . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__2]
+                          ->
+                          (exists v__3 : int(1..n_balls)
+                               . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__1, v__3]
+                                 /\
+                                 schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__1, v__3]
+                                 =
+                                 schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__2]))
+                   /\
+                   (forAll v__2 : int(1..n_balls)
+                        . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__1, v__2]
+                          ->
+                          (exists v__3 : int(1..n_balls)
+                               . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__3]
+                                 /\
+                                 schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__3]
+                                 =
+                                 schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__1, v__2])))
+                 ->
+                 (sum v__2 : int(1..n_balls)
+                      . ((exists v__3 : int(1..n_balls)
+                              . schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__1, v__3]
+                                /\
+                                schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__1, v__3]
+                                =
+                                schur_SetOfSets_Explicit_ExplicitVarSize_tuple2[v__0, v__2])
+                         /\
+                         schur_SetOfSets_Explicit_ExplicitVarSize_tuple1[v__0, v__2])
+                        *
+                        1)
+                 =
+                 0),
+    true

@@ -1,0 +1,13 @@
+language ESSENCE' 1.0
+
+find pain_tuple1_Explicit: matrix indexed by [int(1..2), int(1..1)] of int(5)
+find pain_tuple2_Explicit: matrix indexed by [int(1..2), int(1..1)] of int(9)
+such that
+    forAll v__3 : int(1..1) . 5 = pain_tuple1_Explicit[1, v__3],
+    exists v__6 : int(1..1) . pain_tuple1_Explicit[1, v__6] = 5,
+    forAll v__9 : int(1..1) . 9 = pain_tuple2_Explicit[1, v__9],
+    exists v__12 : int(1..1) . pain_tuple2_Explicit[1, v__12] = 9,
+    allDiff(pain_tuple2_Explicit[1, ..]),
+    allDiff(pain_tuple2_Explicit[2, ..]),
+    allDiff(pain_tuple1_Explicit[1, ..]),
+    allDiff(pain_tuple1_Explicit[2, ..])

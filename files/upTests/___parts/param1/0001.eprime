@@ -1,0 +1,37 @@
+language ESSENCE' 1.0
+
+given n: int(1..5)
+find x_ExplicitVarSize_tuple1: matrix indexed by [int(1..2 ** n)] of bool
+find x_ExplicitVarSize_tuple2_Occurrence:
+        matrix indexed by [int(1..2 ** n), int(1..n)] of bool
+such that
+    forAll v__4 : int(1..2 ** n)
+        . x_ExplicitVarSize_tuple1[v__4]
+          ->
+          (sum v__9 : int(1..n) . x_ExplicitVarSize_tuple2_Occurrence[v__4, v__9] * v__9)
+          <
+          n + 3,
+    forAll v__1 : int(1..2 ** n)
+        . (forAll v__2 : int(1..2 ** n)
+               . v__1 < v__2 /\ x_ExplicitVarSize_tuple1[v__1]
+                 /\
+                 x_ExplicitVarSize_tuple1[v__2]
+                 ->
+                 !((forAll v__11 : int(1..n)
+                        . x_ExplicitVarSize_tuple2_Occurrence[v__1, v__11]
+                          ->
+                          (exists v__10 : int(1..n)
+                               . x_ExplicitVarSize_tuple2_Occurrence[v__2, v__10] /\ v__10 = v__11))
+                   /\
+                   (forAll v__13 : int(1..n)
+                        . x_ExplicitVarSize_tuple2_Occurrence[v__2, v__13]
+                          ->
+                          (exists v__12 : int(1..n)
+                               . x_ExplicitVarSize_tuple2_Occurrence[v__1, v__12] /\ v__12 = v__13)))),
+    forAll v__1 : int(1..2 ** n - 1)
+        . x_ExplicitVarSize_tuple1[v__1] <= x_ExplicitVarSize_tuple1[v__1 + 1],
+    (sum v__3 : int(1..2 ** n) . x_ExplicitVarSize_tuple1[v__3]) >= n,
+    forAll v__18 : int(1..2 ** n)
+        . (sum v__17 : int(1..n) . x_ExplicitVarSize_tuple2_Occurrence[v__18, v__17])
+          >=
+          1

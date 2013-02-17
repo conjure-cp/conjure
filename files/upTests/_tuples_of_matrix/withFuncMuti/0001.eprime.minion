@@ -1,0 +1,59 @@
+MINION 3
+**VARIABLES**
+DISCRETE pain_tuple1_tuple1_00000 #
+{1..2}
+DISCRETE pain_tuple1_tuple1_00001 #
+{1..2}
+DISCRETE pain_tuple1_tuple1_00002 #
+{1..2}
+DISCRETE pain_tuple1_tuple2_Matrix1D_00000_00000 #
+{-1..1}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple2_Matrix1D_00000_00000,0)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple2_Matrix1D_00000_00001 #
+{-1..1}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple2_Matrix1D_00000_00001,0)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple2_Matrix1D_00001_00000 #
+{-1..1}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple2_Matrix1D_00001_00000,0)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple2_Matrix1D_00001_00001 #
+{-1..1}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple2_Matrix1D_00001_00001,0)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple2_Matrix1D_00002_00000 #
+{-1..1}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple2_Matrix1D_00002_00000,0)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple2_Matrix1D_00002_00001 #
+{-1..1}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple2_Matrix1D_00002_00001,0)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple3_00000 #
+{4..5}
+DISCRETE pain_tuple1_tuple3_00001 #
+{4..5}
+DISCRETE pain_tuple1_tuple3_00002 #
+{4..5}
+**SEARCH**
+PRINT[[pain_tuple1_tuple1_00000],[pain_tuple1_tuple1_00001],[pain_tuple1_tuple1_00002],[pain_tuple1_tuple2_Matrix1D_00000_00000],[pain_tuple1_tuple2_Matrix1D_00000_00001],[pain_tuple1_tuple2_Matrix1D_00001_00000],[pain_tuple1_tuple2_Matrix1D_00001_00001],[pain_tuple1_tuple2_Matrix1D_00002_00000],[pain_tuple1_tuple2_Matrix1D_00002_00001],[pain_tuple1_tuple3_00000],[pain_tuple1_tuple3_00001],[pain_tuple1_tuple3_00002]]
+VARORDER STATIC [pain_tuple1_tuple1_00000,pain_tuple1_tuple1_00001,pain_tuple1_tuple1_00002,pain_tuple1_tuple2_Matrix1D_00000_00000,pain_tuple1_tuple2_Matrix1D_00000_00001,pain_tuple1_tuple2_Matrix1D_00001_00000,pain_tuple1_tuple2_Matrix1D_00001_00001,pain_tuple1_tuple2_Matrix1D_00002_00000,pain_tuple1_tuple2_Matrix1D_00002_00001,pain_tuple1_tuple3_00000,pain_tuple1_tuple3_00001,pain_tuple1_tuple3_00002]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(pain_tuple1_tuple3_00002,4)
+w-literal(pain_tuple1_tuple3_00001,5)
+w-literal(pain_tuple1_tuple3_00000,4)
+w-literal(pain_tuple1_tuple1_00002,2)
+w-literal(pain_tuple1_tuple1_00001,1)
+w-literal(pain_tuple1_tuple1_00000,2)
+diseq(pain_tuple1_tuple2_Matrix1D_00002_00000,-1)
+diseq(pain_tuple1_tuple2_Matrix1D_00000_00000,-1)
+diseq(pain_tuple1_tuple2_Matrix1D_00001_00000,1)
+**EOF**

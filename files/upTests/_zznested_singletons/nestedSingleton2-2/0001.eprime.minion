@@ -1,0 +1,44 @@
+MINION 3
+**VARIABLES**
+DISCRETE pain_tuple1_00000 #
+{1..6}
+**CONSTRAINTS**
+diseq(pain_tuple1_00000,2)
+diseq(pain_tuple1_00000,3)
+diseq(pain_tuple1_00000,4)
+diseq(pain_tuple1_00000,5)
+**VARIABLES**
+DISCRETE pain_tuple1_00001 #
+{1..6}
+**CONSTRAINTS**
+diseq(pain_tuple1_00001,2)
+diseq(pain_tuple1_00001,3)
+diseq(pain_tuple1_00001,4)
+diseq(pain_tuple1_00001,5)
+**VARIABLES**
+DISCRETE pain_tuple2_00000 #
+{2..7}
+**CONSTRAINTS**
+diseq(pain_tuple2_00000,3)
+diseq(pain_tuple2_00000,4)
+diseq(pain_tuple2_00000,5)
+diseq(pain_tuple2_00000,6)
+**VARIABLES**
+DISCRETE pain_tuple2_00001 #
+{2..7}
+**CONSTRAINTS**
+diseq(pain_tuple2_00001,3)
+diseq(pain_tuple2_00001,4)
+diseq(pain_tuple2_00001,5)
+diseq(pain_tuple2_00001,6)
+**VARIABLES**
+**SEARCH**
+PRINT[[pain_tuple1_00000],[pain_tuple1_00001],[pain_tuple2_00000],[pain_tuple2_00001]]
+VARORDER STATIC [pain_tuple1_00000,pain_tuple1_00001,pain_tuple2_00000,pain_tuple2_00001]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(pain_tuple2_00001,7)
+w-literal(pain_tuple2_00000,2)
+w-literal(pain_tuple1_00000,1)
+w-literal(pain_tuple1_00001,6)
+**EOF**

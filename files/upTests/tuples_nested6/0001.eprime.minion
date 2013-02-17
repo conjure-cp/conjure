@@ -1,0 +1,26 @@
+MINION 3
+**VARIABLES**
+DISCRETE y_tuple1 #
+{1..1}
+DISCRETE y_tuple2_Explicit_tuple1_00000 #
+{10..11}
+DISCRETE y_tuple2_Explicit_tuple1_00001 #
+{10..11}
+DISCRETE y_tuple2_Explicit_tuple2_00000 #
+{12..13}
+DISCRETE y_tuple2_Explicit_tuple2_00001 #
+{12..13}
+DISCRETE y_tuple3 #
+{4..4}
+**SEARCH**
+PRINT[[y_tuple1],[y_tuple2_Explicit_tuple1_00000],[y_tuple2_Explicit_tuple1_00001],[y_tuple2_Explicit_tuple2_00000],[y_tuple2_Explicit_tuple2_00001],[y_tuple3]]
+VARORDER STATIC [y_tuple1,y_tuple2_Explicit_tuple1_00000,y_tuple2_Explicit_tuple1_00001,y_tuple2_Explicit_tuple2_00000,y_tuple2_Explicit_tuple2_00001,y_tuple3]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(y_tuple3,4)
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,11),w-literal(y_tuple2_Explicit_tuple2_00000,13)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,11),w-literal(y_tuple2_Explicit_tuple2_00001,13)})})
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,10),w-literal(y_tuple2_Explicit_tuple2_00000,12)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,10),w-literal(y_tuple2_Explicit_tuple2_00001,12)})})
+w-literal(y_tuple1,1)
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,10),w-literal(y_tuple2_Explicit_tuple2_00000,12)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00000,11),w-literal(y_tuple2_Explicit_tuple2_00000,13)})})
+watched-or({watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,10),w-literal(y_tuple2_Explicit_tuple2_00001,12)}),watched-and({w-literal(y_tuple2_Explicit_tuple1_00001,11),w-literal(y_tuple2_Explicit_tuple2_00001,13)})})
+**EOF**

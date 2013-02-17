@@ -1,0 +1,613 @@
+[representation] find x: set (size 1) of
+                             set (minSize 1, maxSize 2) of set (minSize 1, maxSize 2) of int(2..3)
+                 (#1)
+                 Explicit
+[configuration] x§region1#Explicit
+[addedDecl] (find x: set (size 1) of
+                         set (minSize 1, maxSize 2) of set (minSize 1, maxSize 2) of int(2..3),
+             find x_Explicit:
+                     matrix indexed by [int(1..1)] of set (minSize 1, maxSize 2) of
+                                                          set (minSize 1, maxSize 2) of int(2..3))
+[applied] {{{2, 3}, {2}}} subsetEq x§region1#Explicit
+          {rules/refns/set-subseteq-to-quantified.rule}
+              {{2, 3}, {2}} in x§region1#Explicit
+[simplified] {{2, 3}, {2}}
+             ~~>
+             {{2, 3}, {2}}
+[applied] {{2, 3}, {2}} in x§region1#Explicit
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__2 in x§region1#Explicit . v__2 = {{2, 3}, {2}})
+[applied] v__2 = {{2, 3}, {2}}
+          {rules/refns/set-eq-to-subsets.rule}
+              v__2 subsetEq {{2, 3}, {2}} /\ v__2 supsetEq {{2, 3}, {2}}
+[applied] v__2 subsetEq {{2, 3}, {2}}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__3 in v__2 . v__3 in {{2, 3}, {2}})
+[applied] v__3 in {{2, 3}, {2}}
+          {rules/refns/set-in-to-quantified.rule}
+              false \/ {2, 3} = v__3 \/ {2} = v__3
+[simplified] {2, 3}
+             ~~>
+             {2, 3}
+[applied] {2, 3} = v__3
+          {rules/refns/set-eq-to-subsets.rule}
+              {2, 3} subsetEq v__3 /\ {2, 3} supsetEq v__3
+[applied] {2, 3} subsetEq v__3
+          {rules/refns/set-subseteq-to-quantified.rule}
+              true /\ 2 in v__3 /\ 3 in v__3
+[simplified] 2
+             ~~>
+             2
+[applied] 2 in v__3
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__6 in v__3 . v__6 = 2)
+[simplified] true /\ (exists v__6 in v__3 . v__6 = 2)
+             ~~>
+             (exists v__6 in v__3 . v__6 = 2)
+[simplified] 3
+             ~~>
+             3
+[applied] 3 in v__3
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__7 in v__3 . v__7 = 3)
+[applied] {2, 3} supsetEq v__3
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__3 subsetEq {2, 3}
+[applied] v__3 subsetEq {2, 3}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__8 in v__3 . v__8 in {2, 3})
+[applied] v__8 in {2, 3}
+          {rules/refns/set-in-to-quantified.rule}
+              false \/ 2 = v__8 \/ 3 = v__8
+[simplified] false \/ 2 = v__8
+             ~~>
+             2 = v__8
+[simplified] false
+             \/
+             (exists v__6 in v__3 . v__6 = 2) /\ (exists v__7 in v__3 . v__7 = 3)
+             /\
+             (forAll v__8 in v__3 . 2 = v__8 \/ 3 = v__8)
+             ~~>
+             (exists v__6 in v__3 . v__6 = 2) /\ (exists v__7 in v__3 . v__7 = 3)
+             /\
+             (forAll v__8 in v__3 . 2 = v__8 \/ 3 = v__8)
+[simplified] {2}
+             ~~>
+             {2}
+[applied] {2} = v__3
+          {rules/refns/set-eq-to-subsets.rule}
+              {2} subsetEq v__3 /\ {2} supsetEq v__3
+[applied] {2} subsetEq v__3
+          {rules/refns/set-subseteq-to-quantified.rule}
+              2 in v__3
+[applied] 2 in v__3
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__11 in v__3 . v__11 = 2)
+[applied] {2} supsetEq v__3
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__3 subsetEq {2}
+[applied] v__3 subsetEq {2}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__12 in v__3 . v__12 in {2})
+[applied] v__12 in {2}
+          {rules/refns/set-in-to-quantified.rule}
+              2 = v__12
+[applied] v__2 supsetEq {{2, 3}, {2}}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {{2, 3}, {2}} subsetEq v__2
+[applied] {{2, 3}, {2}} subsetEq v__2
+          {rules/refns/set-subseteq-to-quantified.rule}
+              true /\ {2, 3} in v__2 /\ {2} in v__2
+[applied] {2, 3} in v__2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__15 in v__2 . v__15 = {2, 3})
+[applied] v__15 = {2, 3}
+          {rules/refns/set-eq-to-subsets.rule}
+              v__15 subsetEq {2, 3} /\ v__15 supsetEq {2, 3}
+[applied] v__15 subsetEq {2, 3}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__16 in v__15 . v__16 in {2, 3})
+[applied] v__16 in {2, 3}
+          {rules/refns/set-in-to-quantified.rule}
+              false \/ 2 = v__16 \/ 3 = v__16
+[simplified] false \/ 2 = v__16
+             ~~>
+             2 = v__16
+[applied] v__15 supsetEq {2, 3}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {2, 3} subsetEq v__15
+[applied] {2, 3} subsetEq v__15
+          {rules/refns/set-subseteq-to-quantified.rule}
+              true /\ 2 in v__15 /\ 3 in v__15
+[applied] 2 in v__15
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__19 in v__15 . v__19 = 2)
+[simplified] true /\ (exists v__19 in v__15 . v__19 = 2)
+             ~~>
+             (exists v__19 in v__15 . v__19 = 2)
+[applied] 3 in v__15
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__20 in v__15 . v__20 = 3)
+[simplified] true
+             /\
+             (exists v__15 in v__2
+                  . (forAll v__16 in v__15 . 2 = v__16 \/ 3 = v__16)
+                    /\
+                    ((exists v__19 in v__15 . v__19 = 2) /\ (exists v__20 in v__15 . v__20 = 3)))
+             ~~>
+             (exists v__15 in v__2
+                  . (forAll v__16 in v__15 . 2 = v__16 \/ 3 = v__16)
+                    /\
+                    ((exists v__19 in v__15 . v__19 = 2) /\ (exists v__20 in v__15 . v__20 = 3)))
+[applied] {2} in v__2
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__21 in v__2 . v__21 = {2})
+[applied] v__21 = {2}
+          {rules/refns/set-eq-to-subsets.rule}
+              v__21 subsetEq {2} /\ v__21 supsetEq {2}
+[applied] v__21 subsetEq {2}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__22 in v__21 . v__22 in {2})
+[applied] v__22 in {2}
+          {rules/refns/set-in-to-quantified.rule}
+              2 = v__22
+[applied] v__21 supsetEq {2}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {2} subsetEq v__21
+[applied] {2} subsetEq v__21
+          {rules/refns/set-subseteq-to-quantified.rule}
+              2 in v__21
+[applied] 2 in v__21
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__25 in v__21 . v__25 = 2)
+[applied] (exists v__2 in x§region1#Explicit
+               . (forAll v__3 in v__2
+                      . (exists v__6 in v__3 . v__6 = 2) /\ (exists v__7 in v__3 . v__7 = 3)
+                        /\
+                        (forAll v__8 in v__3 . 2 = v__8 \/ 3 = v__8)
+                        \/
+                        (exists v__11 in v__3 . v__11 = 2) /\ (forAll v__12 in v__3 . 2 = v__12))
+                 /\
+                 ((exists v__15 in v__2
+                       . (forAll v__16 in v__15 . 2 = v__16 \/ 3 = v__16)
+                         /\
+                         ((exists v__19 in v__15 . v__19 = 2) /\ (exists v__20 in v__15 . v__20 = 3)))
+                  /\
+                  (exists v__21 in v__2
+                       . (forAll v__22 in v__21 . 2 = v__22) /\ (exists v__25 in v__21 . v__25 = 2))))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (exists v__26 : int(1..1)
+                   . (forAll v__3 in x_Explicit§region1[v__26]
+                          . (exists v__6 in v__3 . v__6 = 2) /\ (exists v__7 in v__3 . v__7 = 3)
+                            /\
+                            (forAll v__8 in v__3 . 2 = v__8 \/ 3 = v__8)
+                            \/
+                            (exists v__11 in v__3 . v__11 = 2) /\ (forAll v__12 in v__3 . 2 = v__12))
+                     /\
+                     ((exists v__15 in x_Explicit§region1[v__26]
+                           . (forAll v__16 in v__15 . 2 = v__16 \/ 3 = v__16)
+                             /\
+                             ((exists v__19 in v__15 . v__19 = 2) /\ (exists v__20 in v__15 . v__20 = 3)))
+                      /\
+                      (exists v__21 in x_Explicit§region1[v__26]
+                           . (forAll v__22 in v__21 . 2 = v__22) /\ (exists v__25 in v__21 . v__25 = 2))))
+[removedDecl] find x: set (size 1) of
+                          set (minSize 1, maxSize 2) of set (minSize 1, maxSize 2) of int(2..3)
+[representation] find x_Explicit:
+                         matrix indexed by [int(1..1)] of set (minSize 1, maxSize 2) of
+                                                              set (minSize 1, maxSize 2) of int(2..3)
+                 (#1)
+                 ExplicitVarSize
+[configuration] x_Explicit§region1#ExplicitVarSize
+[addedDecl] (find x_Explicit:
+                     matrix indexed by [int(1..1)] of set (minSize 1, maxSize 2) of
+                                                          set (minSize 1, maxSize 2) of int(2..3),
+             find x_Explicit_ExplicitVarSize:
+                     matrix indexed by [int(1..1), int(1..2)] of (bool,
+                                                                  set (minSize 1, maxSize 2) of int(2..3)))
+[applied] (forAll v__3 in x_Explicit§region1#ExplicitVarSize[v__26]
+               . (exists v__6 in v__3 . v__6 = 2) /\ (exists v__7 in v__3 . v__7 = 3)
+                 /\
+                 (forAll v__8 in v__3 . 2 = v__8 \/ 3 = v__8)
+                 \/
+                 (exists v__11 in v__3 . v__11 = 2) /\ (forAll v__12 in v__3 . 2 = v__12))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__34 : int(1..2) , x_Explicit_ExplicitVarSize§region1[v__26, v__34, 1]
+                   . (exists v__6 in x_Explicit_ExplicitVarSize§region1[v__26, v__34, 2]
+                          . v__6 = 2)
+                     /\
+                     (exists v__7 in x_Explicit_ExplicitVarSize§region1[v__26, v__34, 2] . v__7 = 3)
+                     /\
+                     (forAll v__8 in x_Explicit_ExplicitVarSize§region1[v__26, v__34, 2]
+                          . 2 = v__8 \/ 3 = v__8)
+                     \/
+                     (exists v__11 in x_Explicit_ExplicitVarSize§region1[v__26, v__34, 2]
+                          . v__11 = 2)
+                     /\
+                     (forAll v__12 in x_Explicit_ExplicitVarSize§region1[v__26, v__34, 2]
+                          . 2 = v__12))
+[applied] (exists v__15 in x_Explicit§region1#ExplicitVarSize[v__26]
+               . (forAll v__16 in v__15 . 2 = v__16 \/ 3 = v__16)
+                 /\
+                 ((exists v__19 in v__15 . v__19 = 2) /\ (exists v__20 in v__15 . v__20 = 3)))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__35 : int(1..2) , x_Explicit_ExplicitVarSize§region1[v__26, v__35, 1]
+                   . (forAll v__16 in x_Explicit_ExplicitVarSize§region1[v__26, v__35, 2]
+                          . 2 = v__16 \/ 3 = v__16)
+                     /\
+                     ((exists v__19 in x_Explicit_ExplicitVarSize§region1[v__26, v__35, 2]
+                           . v__19 = 2)
+                      /\
+                      (exists v__20 in x_Explicit_ExplicitVarSize§region1[v__26, v__35, 2]
+                           . v__20 = 3)))
+[applied] (exists v__21 in x_Explicit§region1#ExplicitVarSize[v__26]
+               . (forAll v__22 in v__21 . 2 = v__22) /\ (exists v__25 in v__21 . v__25 = 2))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__36 : int(1..2) , x_Explicit_ExplicitVarSize§region1[v__26, v__36, 1]
+                   . (forAll v__22 in x_Explicit_ExplicitVarSize§region1[v__26, v__36, 2]
+                          . 2 = v__22)
+                     /\
+                     (exists v__25 in x_Explicit_ExplicitVarSize§region1[v__26, v__36, 2]
+                          . v__25 = 2))
+[applied] x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+          !=
+          x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+          {rules/refns/set-neq-to-eq.rule}
+              !(x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+                =
+                x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2])
+[applied] x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+          =
+          x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+          {rules/refns/set-eq-to-subsets.rule}
+              x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+              subsetEq
+              x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+              /\
+              x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+              supsetEq
+              x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+[applied] x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+          subsetEq
+          x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__37 in x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+                   . v__37 in x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2])
+[applied] v__37 in x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__38 in x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+                   . v__38 = v__37)
+[applied] x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+          supsetEq
+          x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+              subsetEq
+              x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+[applied] x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+          subsetEq
+          x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__39 in x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+                   . v__39 in x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2])
+[applied] v__39 in x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__40 in x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+                   . v__40 = v__39)
+[from-cached] such that
+                  forAll v__30 : int(1..1)
+                      . (forAll v__28 : int(1..2)
+                             . (forAll v__29 : int(1..2)
+                                    , v__28 < v__29 /\ x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 1]
+                                      /\
+                                      x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 1]
+                                    . x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+                                      !=
+                                      x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]))
+                        /\
+                        (forAll v__28 : int(1..1)
+                             . x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 1]
+                               <=
+                               x_Explicit_ExplicitVarSize§regionS[v__30, v__28 + 1, 1])
+              ~~>
+              such that
+                  forAll v__30 : int(1..1)
+                      . (forAll v__28 : int(1..2)
+                             . (forAll v__29 : int(1..2)
+                                    , v__28 < v__29 /\ x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 1]
+                                      /\
+                                      x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 1]
+                                    . !((forAll v__37 in x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+                                             . (exists v__38 in x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+                                                    . v__38 = v__37))
+                                        /\
+                                        (forAll v__39 in x_Explicit_ExplicitVarSize§regionS[v__30, v__29, 2]
+                                             . (exists v__40 in x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 2]
+                                                    . v__40 = v__39)))))
+                        /\
+                        (forAll v__28 : int(1..1)
+                             . x_Explicit_ExplicitVarSize§regionS[v__30, v__28, 1]
+                               <=
+                               x_Explicit_ExplicitVarSize§regionS[v__30, v__28 + 1, 1])
+[removedDecl] find x_Explicit_ExplicitVarSize:
+                      matrix indexed by [int(1..1), int(1..2)] of (bool,
+                                                                   set (minSize 1, maxSize 2) of int(2..3))
+[removedDecl] find x_Explicit:
+                      matrix indexed by [int(1..1)] of set (minSize 1, maxSize 2) of
+                                                           set (minSize 1, maxSize 2) of int(2..3)
+[representation] find x_Explicit_ExplicitVarSize_tuple2:
+                         matrix indexed by [int(1..1), int(1..2)] of set (minSize 1, maxSize 2) of
+                                                                         int(2..3)
+                 (#1)
+                 ExplicitVarSize
+[configuration] x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize x_Explicit_ExplicitVarSize_tuple2§regionS#ExplicitVarSize
+[addedDecl] (find x_Explicit_ExplicitVarSize_tuple2:
+                     matrix indexed by [int(1..1), int(1..2)] of set (minSize 1, maxSize 2) of
+                                                                     int(2..3),
+             find x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize:
+                     matrix indexed by [int(1..1), int(1..2), int(1..2)] of (bool, int(2..3)))
+[applied] (exists v__6 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                    v__34]
+               . v__6 = 2)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__52 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__52,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__52,
+                                                                               2]
+                     =
+                     2)
+[applied] (exists v__7 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                    v__34]
+               . v__7 = 3)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__53 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__53,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__53,
+                                                                               2]
+                     =
+                     3)
+[applied] (forAll v__8 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                    v__34]
+               . 2 = v__8 \/ 3 = v__8)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__54 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__54,
+                                                                               1]
+                   . 2
+                     =
+                     x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__54,
+                                                                               2]
+                     \/
+                     3
+                     =
+                     x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__54,
+                                                                               2])
+[applied] (exists v__11 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__34]
+               . v__11 = 2)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__55 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__55,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__55,
+                                                                               2]
+                     =
+                     2)
+[applied] (forAll v__12 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__34]
+               . 2 = v__12)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__56 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__56,
+                                                                               1]
+                   . 2
+                     =
+                     x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__34,
+                                                                               v__56,
+                                                                               2])
+[applied] (forAll v__16 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__35]
+               . 2 = v__16 \/ 3 = v__16)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__57 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__57,
+                                                                               1]
+                   . 2
+                     =
+                     x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__57,
+                                                                               2]
+                     \/
+                     3
+                     =
+                     x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__57,
+                                                                               2])
+[applied] (exists v__19 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__35]
+               . v__19 = 2)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__58 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__58,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__58,
+                                                                               2]
+                     =
+                     2)
+[applied] (exists v__20 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__35]
+               . v__20 = 3)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__59 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__59,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__35,
+                                                                               v__59,
+                                                                               2]
+                     =
+                     3)
+[applied] (forAll v__22 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__36]
+               . 2 = v__22)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__60 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__36,
+                                                                               v__60,
+                                                                               1]
+                   . 2
+                     =
+                     x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__36,
+                                                                               v__60,
+                                                                               2])
+[applied] (exists v__25 in x_Explicit_ExplicitVarSize_tuple2§region1#ExplicitVarSize[v__26,
+                                                                                     v__36]
+               . v__25 = 2)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__61 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__36,
+                                                                               v__61,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§region1[v__26,
+                                                                               v__36,
+                                                                               v__61,
+                                                                               2]
+                     =
+                     2)
+[applied] (exists v__38 in x_Explicit_ExplicitVarSize_tuple2§regionS#ExplicitVarSize[v__30,
+                                                                                     v__29]
+               . v__38 = v__37)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__62 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                               v__29,
+                                                                               v__62,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                               v__29,
+                                                                               v__62,
+                                                                               2]
+                     =
+                     v__37)
+[applied] (forAll v__37 in x_Explicit_ExplicitVarSize_tuple2§regionS#ExplicitVarSize[v__30,
+                                                                                     v__28]
+               . (exists v__62 : int(1..2)
+                      , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                  v__29,
+                                                                                  v__62,
+                                                                                  1]
+                      . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                  v__29,
+                                                                                  v__62,
+                                                                                  2]
+                        =
+                        v__37))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__63 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                               v__28,
+                                                                               v__63,
+                                                                               1]
+                   . (exists v__62 : int(1..2)
+                          , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                      v__29,
+                                                                                      v__62,
+                                                                                      1]
+                          . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                      v__29,
+                                                                                      v__62,
+                                                                                      2]
+                            =
+                            x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                      v__28,
+                                                                                      v__63,
+                                                                                      2]))
+[applied] (exists v__40 in x_Explicit_ExplicitVarSize_tuple2§regionS#ExplicitVarSize[v__30,
+                                                                                     v__28]
+               . v__40 = v__39)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (exists v__64 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                               v__28,
+                                                                               v__64,
+                                                                               1]
+                   . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                               v__28,
+                                                                               v__64,
+                                                                               2]
+                     =
+                     v__39)
+[applied] (forAll v__39 in x_Explicit_ExplicitVarSize_tuple2§regionS#ExplicitVarSize[v__30,
+                                                                                     v__29]
+               . (exists v__64 : int(1..2)
+                      , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                  v__28,
+                                                                                  v__64,
+                                                                                  1]
+                      . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                  v__28,
+                                                                                  v__64,
+                                                                                  2]
+                        =
+                        v__39))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__65 : int(1..2)
+                   , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                               v__29,
+                                                                               v__65,
+                                                                               1]
+                   . (exists v__64 : int(1..2)
+                          , x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                      v__28,
+                                                                                      v__64,
+                                                                                      1]
+                          . x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                      v__28,
+                                                                                      v__64,
+                                                                                      2]
+                            =
+                            x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize§regionS[v__30,
+                                                                                      v__29,
+                                                                                      v__65,
+                                                                                      2]))
+[removedDecl] find x_Explicit_ExplicitVarSize_tuple2_ExplicitVarSize:
+                      matrix indexed by [int(1..1), int(1..2), int(1..2)] of (bool, int(2..3))
+[removedDecl] find x_Explicit_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..1), int(1..2)] of set (minSize 1, maxSize 2) of
+                                                                      int(2..3)

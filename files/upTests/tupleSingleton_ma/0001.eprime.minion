@@ -1,0 +1,20 @@
+MINION 3
+**VARIABLES**
+DISCRETE pain_tuple1_tuple1_00000 #
+{6..8}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple1_00000,7)
+**VARIABLES**
+DISCRETE pain_tuple1_tuple1_00001 #
+{6..8}
+**CONSTRAINTS**
+diseq(pain_tuple1_tuple1_00001,7)
+**VARIABLES**
+**SEARCH**
+PRINT[[pain_tuple1_tuple1_00000],[pain_tuple1_tuple1_00001]]
+VARORDER STATIC [pain_tuple1_tuple1_00000,pain_tuple1_tuple1_00001]
+VARORDER AUX []
+**CONSTRAINTS**
+w-literal(pain_tuple1_tuple1_00000,6)
+w-literal(pain_tuple1_tuple1_00001,8)
+**EOF**

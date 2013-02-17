@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+find y_tuple1: int(1)
+find y_tuple2_Explicit_tuple1: matrix indexed by [int(1..2)] of int(10, 11)
+find y_tuple2_Explicit_tuple2: matrix indexed by [int(1..2)] of int(12, 13)
+find y_tuple3: int(4)
+such that
+    y_tuple1 = 1,
+    forAll v__3 : int(1..2)
+        . 10 = y_tuple2_Explicit_tuple1[v__3] /\ 12 = y_tuple2_Explicit_tuple2[v__3]
+          \/
+          11 = y_tuple2_Explicit_tuple1[v__3] /\ 13 = y_tuple2_Explicit_tuple2[v__3],
+    exists v__6 : int(1..2)
+        . y_tuple2_Explicit_tuple1[v__6] = 10 /\ y_tuple2_Explicit_tuple2[v__6] = 12,
+    exists v__8 : int(1..2)
+        . y_tuple2_Explicit_tuple1[v__8] = 11 /\ y_tuple2_Explicit_tuple2[v__8] = 13,
+    y_tuple3 = 4

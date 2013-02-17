@@ -1,0 +1,7 @@
+language ESSENCE' 1.0
+
+letting v__4 be [2, 3, 4]
+find x_Explicit: matrix indexed by [int(1..1), int(0..2)] of int(2..4)
+such that
+    exists v__2 : int(1..1)
+        . (forAll v__3 : int(0..2) . x_Explicit[v__2, v__3] = v__4[v__3])

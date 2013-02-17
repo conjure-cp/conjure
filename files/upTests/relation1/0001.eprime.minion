@@ -1,0 +1,17 @@
+MINION 3
+**VARIABLES**
+BOOL x_RelationAsSet_ExplicitVarSize_tuple1_00000 #
+DISCRETE x_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000 #
+{1..1}
+DISCRETE x_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000 #
+{1..1}
+BOOL aux0 #(x_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000=x_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000)
+**SEARCH**
+PRINT[[x_RelationAsSet_ExplicitVarSize_tuple1_00000],[x_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000],[x_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000]]
+VARORDER STATIC [x_RelationAsSet_ExplicitVarSize_tuple1_00000,x_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,x_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000]
+VARORDER AUX [aux0]
+**CONSTRAINTS**
+reify(eq(x_RelationAsSet_ExplicitVarSize_tuple2_tuple1_00000,x_RelationAsSet_ExplicitVarSize_tuple2_tuple2_00000), aux0)
+ineq(x_RelationAsSet_ExplicitVarSize_tuple1_00000, aux0, 0)
+w-literal(x_RelationAsSet_ExplicitVarSize_tuple1_00000,1)
+**EOF**
