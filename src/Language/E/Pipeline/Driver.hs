@@ -7,16 +7,17 @@ import System.Directory
 
 
 driverConjureSingle
-    :: FilePath -- the output filepath
+    :: Bool     -- generate the *.logs file or not
+    -> FilePath -- the output filepath
     -> [(Either Doc Spec, LogTree)]
     -> IO ()
-driverConjureSingle pathOut [(Right x, logs)] = do
+driverConjureSingle logsOut pathOut [(Right x, logs)] = do
     toFile  pathOut              x
-    toFile (pathOut ++ ".logs" ) logs
-driverConjureSingle pathOut [(Left  x, logs)] = do
+    when logsOut $ toFile (pathOut ++ ".logs" ) logs
+driverConjureSingle logsOut pathOut [(Left  x, logs)] = do
     toFile (pathOut ++ ".error") x
-    toFile (pathOut ++ ".logs" ) logs
-driverConjureSingle _ _ = error "Generates multiple outputs, must be a bug. Sorry."
+    when logsOut $ toFile (pathOut ++ ".logs" ) logs
+driverConjureSingle _ _ _ = error "Generates multiple outputs, must be a bug. Sorry."
 
 
 driverConjure

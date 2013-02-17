@@ -39,7 +39,7 @@ runConjureMode (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutPa
     inParam   <- readSpecFromFile pathInParam
     inEprime  <- readSpecFromFile pathInEprime
     inLogs    <- T.readFile (pathInEprime ++ ".logs")
-    driverConjureSingle pathOutParam
+    driverConjureSingle False pathOutParam
         [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
 runConjureMode (ModeTranslateSolution pathInEssence pathInParam
                                       pathInEprime pathInEprimeParam pathInEprimeSolution
@@ -62,7 +62,7 @@ runConjureMode mode@(ModeSingleOutput _ pathInEssence pathOutEprime) = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) <- getRulesDB
     inEssence <- readSpecFromFile pathInEssence
-    driverConjureSingle
+    driverConjureSingle True
         pathOutEprime
         (conjureWithMode seed mode ruleReprs ruleRefns inEssence)
 
