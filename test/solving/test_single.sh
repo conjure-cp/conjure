@@ -1,21 +1,32 @@
 #/bin/bash
 
+if (( $(ls -1 *.essence 2> /dev/null | wc -l) != 1 )); then
+    echo "ERROR: Only 1 *.essence file should be in this directory."
+    exit 1
+fi
+
+if (( $# != 1 )); then
+    echo "ERROR: Give a single parameter, mode to be used by conjure."
+    echo "       Options: {df, best, random}"
+    exit 1
+fi
+
+MODE=$1
+
 SPEC=$(ls -1 *.essence | head -n 1)
 SPEC=${SPEC%.essence}
 
 rm -rf "$SPEC"
 mkdir -p "$SPEC"
 
-#conjure --mode df   --in "$SPEC.essence"
-conjure --mode best --in "$SPEC.essence" --out "$SPEC/best.eprime"
+
+conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime"
 
 function perModelperParam {
 
     SPEC=$1
     MODEL=$2
     PARAM=$3
-
-    echo "$MODEL x $PARAM"
 
     conjure                                                                 \
         --mode       refineParam                                            \
@@ -30,12 +41,14 @@ function perModelperParam {
         -out-minion   $MODEL-$PARAM.eprime-minion                           \
         -out-solution $MODEL-$PARAM.eprime-solution
 
-    conjure-solution                                                        \
-        $MODEL.eprime                                                       \
-        $MODEL-$PARAM.eprime-solution                                       \
-        $SPEC.essence                                                       \
-        $PARAM.param                                                        \
-        $MODEL-$PARAM.eprime-param
+    conjure                                                                 \
+        --mode translateSolution                                            \
+        --in-essence            $SPEC.essence                               \
+        --in-essence-param      $PARAM.param                                \
+        --in-eprime             $MODEL.eprime                               \
+        --in-eprime-param       $MODEL-$PARAM.eprime-param                  \
+        --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
+        --out-essence-solution  $MODEL-$PARAM.solution
 
 }
 

@@ -11,6 +11,10 @@ For each test case, create a directory, put:
 
 To run an individual test:
  * cd DIR
- * bash ../test_single.sh
+ * bash ../test_single.sh CONJURE_MODE
+
+
+To run all tests:
+ * bash test_all.sh
 
 
