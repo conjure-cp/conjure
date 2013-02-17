@@ -1,0 +1,942 @@
+[handleInfDom] given n: int(1..)
+               ~~>
+               given n: int(1..MAXINT)
+[handleInfDom] given dist: function (String, String) --> int(1..)
+               ~~>
+               given dist: function (String, String) --> int(1..MAXINT)
+[handleInfDom] given mindist: int(1..)
+               ~~>
+               given mindist: int(1..MAXINT)
+[handleEnums] given Alphabet new type enum
+              ~~>
+              given Alphabet_fromEnumSize: int(1..)
+              letting Alphabet_fromEnum be domain int(1..Alphabet_fromEnumSize)
+[handleInfDom] given Alphabet_fromEnumSize: int(1..)
+               ~~>
+               given Alphabet_fromEnumSize: int(1..MAXINT)
+[representation] find c: set of
+                             function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)
+                 (#1)
+                 ExplicitVarSize
+[representation] given dist:
+                         function
+                             (function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                              function (total) int(1..n) --> int(1..Alphabet_fromEnumSize))
+                                 --> int(1..MAXINT)
+                 (#1)
+                 AsReln
+[configuration] c§region2#ExplicitVarSize dist§region3#AsReln c§region1#ExplicitVarSize
+[addedDecl] given dist_AsReln:
+                    relation of
+                        ((function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                          function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)) *
+                         int(1..MAXINT))
+[addedDecl] find c_ExplicitVarSize:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of (bool,
+                                                                              function (total)
+                                                                                  int(1..n)
+                                                                                      --> int(1..Alphabet_fromEnumSize))
+[applied] s1 != s2
+          {rules/refns/neq-to-eq.rule}
+              !(s1 = s2)
+[applied] s1 = s2
+          {rules/refns/function-eq.rule}
+              (forAll v__5 in defined(s1) . s1(v__5) = s2(v__5))
+[applied] (forAll v__5 in defined(s1) . s1(v__5) = s2(v__5))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__6 in toSet(s1) . s1(v__6[1]) = s2(v__6[1]))
+[applied] dist§region3#AsReln((s1, s2))
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__7 in toSet(dist_AsReln§region3) , v__7[1, 1] = s1 /\ v__7[1, 2] = s2
+                   . v__7[2])
+[applied] v__7[1, 1] = s1
+          {rules/refns/function-eq.rule}
+              (forAll v__8 in defined(v__7[1, 1]) . v__7[1, 1](v__8) = s1(v__8))
+[applied] (forAll v__8 in defined(v__7[1, 1]) . v__7[1, 1](v__8) = s1(v__8))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__9 in toSet(v__7[1, 1]) . v__7[1, 1](v__9[1]) = s1(v__9[1]))
+[applied] v__7[1, 2] = s2
+          {rules/refns/function-eq.rule}
+              (forAll v__10 in defined(v__7[1, 2]) . v__7[1, 2](v__10) = s2(v__10))
+[applied] (forAll v__10 in defined(v__7[1, 2]) . v__7[1, 2](v__10) = s2(v__10))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__11 in toSet(v__7[1, 2]) . v__7[1, 2](v__11[1]) = s2(v__11[1]))
+[applied] (forAll s2 in c§region2#ExplicitVarSize
+               . !(forAll v__6 in toSet(s1) . s1(v__6[1]) = s2(v__6[1]))
+                 ->
+                 (sum v__7 in toSet(dist_AsReln§region3)
+                      , (forAll v__9 in toSet(v__7[1, 1]) . v__7[1, 1](v__9[1]) = s1(v__9[1]))
+                        /\
+                        (forAll v__11 in toSet(v__7[1, 2]) . v__7[1, 2](v__11[1]) = s2(v__11[1]))
+                      . v__7[2])
+                 >=
+                 mindist)
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__12 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize§region2[v__12, 1]
+                   . !(forAll v__6 in toSet(s1)
+                           . s1(v__6[1]) = c_ExplicitVarSize§region2[v__12, 2](v__6[1]))
+                     ->
+                     (sum v__7 in toSet(dist_AsReln§region3)
+                          , (forAll v__9 in toSet(v__7[1, 1]) . v__7[1, 1](v__9[1]) = s1(v__9[1]))
+                            /\
+                            (forAll v__11 in toSet(v__7[1, 2])
+                                 . v__7[1, 2](v__11[1]) = c_ExplicitVarSize§region2[v__12, 2](v__11[1]))
+                          . v__7[2])
+                     >=
+                     mindist)
+[applied] (forAll s1 in c§region1#ExplicitVarSize
+               . (forAll v__12 : int(1..n * Alphabet_fromEnumSize)
+                      , c_ExplicitVarSize§region2[v__12, 1]
+                      . !(forAll v__6 in toSet(s1)
+                              . s1(v__6[1]) = c_ExplicitVarSize§region2[v__12, 2](v__6[1]))
+                        ->
+                        (sum v__7 in toSet(dist_AsReln§region3)
+                             , (forAll v__9 in toSet(v__7[1, 1]) . v__7[1, 1](v__9[1]) = s1(v__9[1]))
+                               /\
+                               (forAll v__11 in toSet(v__7[1, 2])
+                                    . v__7[1, 2](v__11[1]) = c_ExplicitVarSize§region2[v__12, 2](v__11[1]))
+                             . v__7[2])
+                        >=
+                        mindist))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__13 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize§region1[v__13, 1]
+                   . (forAll v__12 : int(1..n * Alphabet_fromEnumSize)
+                          , c_ExplicitVarSize§region2[v__12, 1]
+                          . !(forAll v__6 in toSet(c_ExplicitVarSize§region1[v__13, 2])
+                                  . c_ExplicitVarSize§region1[v__13, 2](v__6[1])
+                                    =
+                                    c_ExplicitVarSize§region2[v__12, 2](v__6[1]))
+                            ->
+                            (sum v__7 in toSet(dist_AsReln§region3)
+                                 , (forAll v__9 in toSet(v__7[1, 1])
+                                        . v__7[1, 1](v__9[1]) = c_ExplicitVarSize§region1[v__13, 2](v__9[1]))
+                                   /\
+                                   (forAll v__11 in toSet(v__7[1, 2])
+                                        . v__7[1, 2](v__11[1]) = c_ExplicitVarSize§region2[v__12, 2](v__11[1]))
+                                 . v__7[2])
+                            >=
+                            mindist))
+[applied] c_ExplicitVarSize§region2[v__1, 2]
+          !=
+          c_ExplicitVarSize§region2[v__2, 2]
+          {rules/refns/neq-to-eq.rule}
+              !(c_ExplicitVarSize§region2[v__1, 2] = c_ExplicitVarSize§region2[v__2, 2])
+[applied] c_ExplicitVarSize§region2[v__1, 2]
+          =
+          c_ExplicitVarSize§region2[v__2, 2]
+          {rules/refns/function-eq.rule}
+              (forAll v__14 in defined(c_ExplicitVarSize§region2[v__1, 2])
+                   . c_ExplicitVarSize§region2[v__1, 2](v__14)
+                     =
+                     c_ExplicitVarSize§region2[v__2, 2](v__14))
+[applied] (forAll v__14 in defined(c_ExplicitVarSize§region2[v__1, 2])
+               . c_ExplicitVarSize§region2[v__1, 2](v__14)
+                 =
+                 c_ExplicitVarSize§region2[v__2, 2](v__14))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__15 in toSet(c_ExplicitVarSize§region2[v__1, 2])
+                   . c_ExplicitVarSize§region2[v__1, 2](v__15[1])
+                     =
+                     c_ExplicitVarSize§region2[v__2, 2](v__15[1]))
+[applied] c_ExplicitVarSize§region1[v__1, 2]
+          !=
+          c_ExplicitVarSize§region1[v__2, 2]
+          {rules/refns/neq-to-eq.rule}
+              !(c_ExplicitVarSize§region1[v__1, 2] = c_ExplicitVarSize§region1[v__2, 2])
+[applied] c_ExplicitVarSize§region1[v__1, 2]
+          =
+          c_ExplicitVarSize§region1[v__2, 2]
+          {rules/refns/function-eq.rule}
+              (forAll v__16 in defined(c_ExplicitVarSize§region1[v__1, 2])
+                   . c_ExplicitVarSize§region1[v__1, 2](v__16)
+                     =
+                     c_ExplicitVarSize§region1[v__2, 2](v__16))
+[applied] (forAll v__16 in defined(c_ExplicitVarSize§region1[v__1, 2])
+               . c_ExplicitVarSize§region1[v__1, 2](v__16)
+                 =
+                 c_ExplicitVarSize§region1[v__2, 2](v__16))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__17 in toSet(c_ExplicitVarSize§region1[v__1, 2])
+                   . c_ExplicitVarSize§region1[v__1, 2](v__17[1])
+                     =
+                     c_ExplicitVarSize§region1[v__2, 2](v__17[1]))
+[removedDecl] find c_ExplicitVarSize:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of (bool,
+                                                                                function (total)
+                                                                                    int(1..n)
+                                                                                        --> int(1..Alphabet_fromEnumSize))
+[removedDecl] find c: set of
+                          function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)
+[removedDecl] given dist:
+                      function
+                          (function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                           function (total) int(1..n) --> int(1..Alphabet_fromEnumSize))
+                              --> int(1..MAXINT)
+[representation] find c_ExplicitVarSize_tuple2:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of function (total)
+                                                                                      int(1..n)
+                                                                                          --> int(1..Alphabet_fromEnumSize)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given dist_AsReln:
+                         relation of
+                             ((function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                               function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)) *
+                              int(1..MAXINT))
+                 (#1)
+                 RelationAsSet
+[configuration] dist_AsReln§region3#RelationAsSet dist_AsReln§region1#RelationAsSet c_ExplicitVarSize_tuple2§region2#AsReln c_ExplicitVarSize_tuple2§region1#Matrix1D
+[addedDecl] find c_ExplicitVarSize_tuple2_AsReln:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of relation of
+                                                                                 (int(1..n) *
+                                                                                  int(1..Alphabet_fromEnumSize))
+[addedDecl] given dist_AsReln_RelationAsSet:
+                    set of
+                        ((function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                          function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)),
+                         int(1..MAXINT))
+[addedDecl] find c_ExplicitVarSize_tuple2_Matrix1D:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                                       int(1..n)] of int(1..Alphabet_fromEnumSize)
+[applied] c_ExplicitVarSize_tuple2§region1#Matrix1D[v__13](v__6[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__6[1]]
+[applied] c_ExplicitVarSize_tuple2§region2#AsReln[v__12](v__6[1])
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__22 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__12])
+                   , v__22[1] = v__6[1]
+                   . v__22[2])
+[applied] (forAll v__6 in toSet(c_ExplicitVarSize_tuple2§region1#Matrix1D[v__13])
+               . c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__6[1]]
+                 =
+                 (sum v__22 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__12])
+                      , v__22[1] = v__6[1]
+                      . v__22[2]))
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (forAll v__23 : int(1..n)
+                   . c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__23]
+                     =
+                     (sum v__22 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__12])
+                          , v__22[1] = v__23
+                          . v__22[2]))
+[applied] c_ExplicitVarSize_tuple2§region1#Matrix1D[v__13](v__9[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]]
+[applied] c_ExplicitVarSize_tuple2§region2#AsReln[v__12](v__11[1])
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__24 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__12])
+                   , v__24[1] = v__11[1]
+                   . v__24[2])
+[applied] (sum v__7 in toSet(dist_AsReln§region3#RelationAsSet)
+               , (forAll v__9 in toSet(v__7[1, 1])
+                      . v__7[1, 1](v__9[1])
+                        =
+                        c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+                 /\
+                 (forAll v__11 in toSet(v__7[1, 2])
+                      . v__7[1, 2](v__11[1])
+                        =
+                        (sum v__24 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__12])
+                             , v__24[1] = v__11[1]
+                             . v__24[2]))
+               . v__7[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__7 in dist_AsReln_RelationAsSet§region3
+                   , (forAll v__9 in toSet(v__7[1, 1])
+                          . v__7[1, 1](v__9[1])
+                            =
+                            c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+                     /\
+                     (forAll v__11 in toSet(v__7[1, 2])
+                          . v__7[1, 2](v__11[1])
+                            =
+                            (sum v__24 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__12])
+                                 , v__24[1] = v__11[1]
+                                 . v__24[2]))
+                   . v__7[2])
+[applied] c_ExplicitVarSize_tuple2§region2#AsReln[v__1](v__15[1])
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__25 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__1])
+                   , v__25[1] = v__15[1]
+                   . v__25[2])
+[applied] c_ExplicitVarSize_tuple2§region2#AsReln[v__2](v__15[1])
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__26 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__2])
+                   , v__26[1] = v__15[1]
+                   . v__26[2])
+[applied] (forAll v__15 in toSet(c_ExplicitVarSize_tuple2§region2#AsReln[v__1])
+               . (sum v__25 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__1])
+                      , v__25[1] = v__15[1]
+                      . v__25[2])
+                 =
+                 (sum v__26 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__2])
+                      , v__26[1] = v__15[1]
+                      . v__26[2]))
+          {rules/refns/function-asreln/function-toSet-quantified.rule}
+              (forAll v__15 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__1])
+                   . (sum v__25 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__1])
+                          , v__25[1] = v__15[1]
+                          . v__25[2])
+                     =
+                     (sum v__26 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2[v__2])
+                          , v__26[1] = v__15[1]
+                          . v__26[2]))
+[applied] c_ExplicitVarSize_tuple2§region1#Matrix1D[v__1](v__17[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              c_ExplicitVarSize_tuple2_Matrix1D§region1[v__1, v__17[1]]
+[applied] c_ExplicitVarSize_tuple2§region1#Matrix1D[v__2](v__17[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              c_ExplicitVarSize_tuple2_Matrix1D§region1[v__2, v__17[1]]
+[applied] (forAll v__17 in toSet(c_ExplicitVarSize_tuple2§region1#Matrix1D[v__1])
+               . c_ExplicitVarSize_tuple2_Matrix1D§region1[v__1, v__17[1]]
+                 =
+                 c_ExplicitVarSize_tuple2_Matrix1D§region1[v__2, v__17[1]])
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (forAll v__27 : int(1..n)
+                   . c_ExplicitVarSize_tuple2_Matrix1D§region1[v__1, v__27]
+                     =
+                     c_ExplicitVarSize_tuple2_Matrix1D§region1[v__2, v__27])
+[removedDecl] find c_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of function (total)
+                                                                                   int(1..n)
+                                                                                       --> int(1..Alphabet_fromEnumSize)
+[removedDecl] given dist_AsReln:
+                      relation of
+                          ((function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                            function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)) *
+                           int(1..MAXINT))
+[representation] find c_ExplicitVarSize_tuple2_AsReln:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of relation of
+                                                                                      (int(1..n) *
+                                                                                       int(1..Alphabet_fromEnumSize))
+                 (#1)
+                 RelationAsSet
+[representation] given dist_AsReln_RelationAsSet:
+                         set of
+                             ((function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                               function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)),
+                              int(1..MAXINT))
+                 (#1)
+                 ExplicitVarSize
+[configuration] dist_AsReln_RelationAsSet§region3#ExplicitVarSize c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet dist_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of set of
+                                                                                 (int(1..n),
+                                                                                  int(1..Alphabet_fromEnumSize))
+[addedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                              *
+                                              (n * Alphabet_fromEnumSize)
+                                              *
+                                              MAXINT)] of (bool,
+                                                           ((function (total)
+                                                                 int(1..n) --> int(1..Alphabet_fromEnumSize),
+                                                             function (total)
+                                                                 int(1..n) --> int(1..Alphabet_fromEnumSize)),
+                                                            int(1..MAXINT)))
+[applied] (sum v__22 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__12])
+               , v__22[1] = v__23
+               . v__22[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__22 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__12]
+                   , v__22[1] = v__23
+                   . v__22[2])
+[applied] (sum v__24 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__12])
+               , v__24[1] = v__11[1]
+               . v__24[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__24 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__12]
+                   , v__24[1] = v__11[1]
+                   . v__24[2])
+[applied] (sum v__7 in dist_AsReln_RelationAsSet§region3#ExplicitVarSize
+               , (forAll v__9 in toSet(v__7[1, 1])
+                      . v__7[1, 1](v__9[1])
+                        =
+                        c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+                 /\
+                 (forAll v__11 in toSet(v__7[1, 2])
+                      . v__7[1, 2](v__11[1])
+                        =
+                        (sum v__24 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__12]
+                             , v__24[1] = v__11[1]
+                             . v__24[2]))
+               . v__7[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__30 : int(1..n * Alphabet_fromEnumSize * (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT)
+                   , (forAll v__9 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                             2,
+                                                                                             1,
+                                                                                             1])
+                          . dist_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30, 2, 1, 1](v__9[1])
+                            =
+                            c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+                     /\
+                     (forAll v__11 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                              2,
+                                                                                              1,
+                                                                                              2])
+                          . dist_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30, 2, 1, 2](v__11[1])
+                            =
+                            (sum v__24 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__12]
+                                 , v__24[1] = v__11[1]
+                                 . v__24[2]))
+                     /\
+                     dist_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30, 1]
+                   . dist_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30, 2, 2])
+[applied] (sum v__25 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__1])
+               , v__25[1] = v__15[1]
+               . v__25[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__25 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__1]
+                   , v__25[1] = v__15[1]
+                   . v__25[2])
+[applied] (sum v__26 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__2])
+               , v__26[1] = v__15[1]
+               . v__26[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__26 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__2]
+                   , v__26[1] = v__15[1]
+                   . v__26[2])
+[applied] (forAll v__15 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__1])
+               . (sum v__25 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__1]
+                      , v__25[1] = v__15[1]
+                      . v__25[2])
+                 =
+                 (sum v__26 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__2]
+                      , v__26[1] = v__15[1]
+                      . v__26[2]))
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (forAll v__15 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__1]
+                   . (sum v__25 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__1]
+                          , v__25[1] = v__15[1]
+                          . v__25[2])
+                     =
+                     (sum v__26 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__2]
+                          , v__26[1] = v__15[1]
+                          . v__26[2]))
+[applied] (sum v__21 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__19])
+               . v__20 = v__21[1])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__21 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__19]
+                   . v__20 = v__21[1])
+[from-cached] such that
+                  forAll v__19 : int(1..n * Alphabet_fromEnumSize)
+                      . (forAll v__20 : int(1..n)
+                             . (sum v__21 in toSet(c_ExplicitVarSize_tuple2_AsReln§region2#RelationAsSet[v__19])
+                                    . v__20 = v__21[1])
+                               =
+                               1)
+              ~~>
+              such that
+                  forAll v__19 : int(1..n * Alphabet_fromEnumSize)
+                      . (forAll v__20 : int(1..n)
+                             . (sum v__21 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2[v__19]
+                                    . v__20 = v__21[1])
+                               =
+                               1)
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of (bool,
+                                                             ((function (total)
+                                                                   int(1..n) --> int(1..Alphabet_fromEnumSize),
+                                                               function (total)
+                                                                   int(1..n) --> int(1..Alphabet_fromEnumSize)),
+                                                              int(1..MAXINT)))
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of ((function (total)
+                                                                  int(1..n) --> int(1..Alphabet_fromEnumSize),
+                                                              function (total)
+                                                                  int(1..n) --> int(1..Alphabet_fromEnumSize)),
+                                                             int(1..MAXINT))
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of (function (total)
+                                                                 int(1..n) --> int(1..Alphabet_fromEnumSize),
+                                                             function (total)
+                                                                 int(1..n) --> int(1..Alphabet_fromEnumSize))
+[removedDecl] find c_ExplicitVarSize_tuple2_AsReln:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of relation of
+                                                                                   (int(1..n) *
+                                                                                    int(1..Alphabet_fromEnumSize))
+[removedDecl] given dist_AsReln_RelationAsSet:
+                      set of
+                          ((function (total) int(1..n) --> int(1..Alphabet_fromEnumSize),
+                            function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)),
+                           int(1..MAXINT))
+[representation] find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of set of
+                                                                                      (int(1..n),
+                                                                                       int(1..Alphabet_fromEnumSize))
+                 (#1)
+                 ExplicitVarSize
+[representation] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                   *
+                                                   (n * Alphabet_fromEnumSize)
+                                                   *
+                                                   MAXINT)] of function (total)
+                                                                   int(1..n) --> int(1..Alphabet_fromEnumSize)
+                 (#2)
+                 AsReln, Matrix1D
+[representation] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                   *
+                                                   (n * Alphabet_fromEnumSize)
+                                                   *
+                                                   MAXINT)] of function (total)
+                                                                   int(1..n) --> int(1..Alphabet_fromEnumSize)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2§region3#Matrix1D dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1§region1#AsReln c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2§region2#Matrix1D dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1§region3#AsReln c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region3#ExplicitVarSize
+[addedDecl] find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                                       int(1..n * Alphabet_fromEnumSize)] of (bool,
+                                                                              (int(1..n),
+                                                                               int(1..Alphabet_fromEnumSize)))
+[addedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2_Matrix1D:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                              *
+                                              (n * Alphabet_fromEnumSize)
+                                              *
+                                              MAXINT),
+                                       int(1..n)] of int(1..Alphabet_fromEnumSize)
+[addedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                              *
+                                              (n * Alphabet_fromEnumSize)
+                                              *
+                                              MAXINT)] of relation of (int(1..n) * int(1..Alphabet_fromEnumSize))
+[applied] (sum v__22 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__12]
+               , v__22[1] = v__23
+               . v__22[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__43 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                           v__43,
+                                                                                           2,
+                                                                                           1]
+                     =
+                     v__23
+                     /\
+                     c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                           v__43,
+                                                                                           1]
+                   . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                           v__43,
+                                                                                           2,
+                                                                                           2])
+[applied] dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1§region3#AsReln[v__30](v__9[1])
+          {rules/refns/function-asreln/function-asreln-image-int.rule}
+              (sum v__44 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3[v__30])
+                   , v__44[1] = v__9[1]
+                   . v__44[2])
+[applied] (forAll v__9 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1§region3#AsReln[v__30])
+               . (sum v__44 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3[v__30])
+                      , v__44[1] = v__9[1]
+                      . v__44[2])
+                 =
+                 c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+          {rules/refns/function-asreln/function-toSet-quantified.rule}
+              (forAll v__9 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3[v__30])
+                   . (sum v__44 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3[v__30])
+                          , v__44[1] = v__9[1]
+                          . v__44[2])
+                     =
+                     c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+[applied] dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2§region3#Matrix1D[v__30](v__11[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2_Matrix1D§region3[v__30,
+                                                                                              v__11[1]]
+[applied] (sum v__24 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__12]
+               , v__24[1] = v__11[1]
+               . v__24[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__45 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                           v__45,
+                                                                                           2,
+                                                                                           1]
+                     =
+                     v__11[1]
+                     /\
+                     c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                           v__45,
+                                                                                           1]
+                   . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                           v__45,
+                                                                                           2,
+                                                                                           2])
+[applied] (forAll v__11 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2§region3#Matrix1D[v__30])
+               . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2_Matrix1D§region3[v__30,
+                                                                                                 v__11[1]]
+                 =
+                 (sum v__45 : int(1..n * Alphabet_fromEnumSize)
+                      , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                              v__45,
+                                                                                              2,
+                                                                                              1]
+                        =
+                        v__11[1]
+                        /\
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                              v__45,
+                                                                                              1]
+                      . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                              v__45,
+                                                                                              2,
+                                                                                              2]))
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (forAll v__46 : int(1..n)
+                   . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2_Matrix1D§region3[v__30,
+                                                                                                     v__46]
+                     =
+                     (sum v__45 : int(1..n * Alphabet_fromEnumSize)
+                          , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                                  v__45,
+                                                                                                  2,
+                                                                                                  1]
+                            =
+                            v__46
+                            /\
+                            c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                                  v__45,
+                                                                                                  1]
+                          . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__12,
+                                                                                                  v__45,
+                                                                                                  2,
+                                                                                                  2]))
+[applied] (sum v__25 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__1]
+               , v__25[1] = v__15[1]
+               . v__25[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__47 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                           v__47,
+                                                                                           2,
+                                                                                           1]
+                     =
+                     v__15[1]
+                     /\
+                     c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                           v__47,
+                                                                                           1]
+                   . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                           v__47,
+                                                                                           2,
+                                                                                           2])
+[applied] (sum v__26 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__2]
+               , v__26[1] = v__15[1]
+               . v__26[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__48 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                           v__48,
+                                                                                           2,
+                                                                                           1]
+                     =
+                     v__15[1]
+                     /\
+                     c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                           v__48,
+                                                                                           1]
+                   . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                           v__48,
+                                                                                           2,
+                                                                                           2])
+[applied] (forAll v__15 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__1]
+               . (sum v__47 : int(1..n * Alphabet_fromEnumSize)
+                      , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                              v__47,
+                                                                                              2,
+                                                                                              1]
+                        =
+                        v__15[1]
+                        /\
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                              v__47,
+                                                                                              1]
+                      . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                              v__47,
+                                                                                              2,
+                                                                                              2])
+                 =
+                 (sum v__48 : int(1..n * Alphabet_fromEnumSize)
+                      , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                              v__48,
+                                                                                              2,
+                                                                                              1]
+                        =
+                        v__15[1]
+                        /\
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                              v__48,
+                                                                                              1]
+                      . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                              v__48,
+                                                                                              2,
+                                                                                              2]))
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__49 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                           v__49,
+                                                                                           1]
+                   . (sum v__47 : int(1..n * Alphabet_fromEnumSize)
+                          , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                                  v__47,
+                                                                                                  2,
+                                                                                                  1]
+                            =
+                            c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                                  v__49,
+                                                                                                  2,
+                                                                                                  1]
+                            /\
+                            c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                                  v__47,
+                                                                                                  1]
+                          . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                                  v__47,
+                                                                                                  2,
+                                                                                                  2])
+                     =
+                     (sum v__48 : int(1..n * Alphabet_fromEnumSize)
+                          , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                                  v__48,
+                                                                                                  2,
+                                                                                                  1]
+                            =
+                            c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__1,
+                                                                                                  v__49,
+                                                                                                  2,
+                                                                                                  1]
+                            /\
+                            c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                                  v__48,
+                                                                                                  1]
+                          . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__2,
+                                                                                                  v__48,
+                                                                                                  2,
+                                                                                                  2]))
+[applied] (sum v__21 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__19]
+               . v__20 = v__21[1])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__50 : int(1..n * Alphabet_fromEnumSize)
+                   , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__19,
+                                                                                           v__50,
+                                                                                           1]
+                   . v__20
+                     =
+                     c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__19,
+                                                                                           v__50,
+                                                                                           2,
+                                                                                           1])
+[from-cached] such that
+                  forAll v__19 : int(1..n * Alphabet_fromEnumSize)
+                      . (forAll v__20 : int(1..n)
+                             . (sum v__21 in c_ExplicitVarSize_tuple2_AsReln_RelationAsSet§region2#ExplicitVarSize[v__19]
+                                    . v__20 = v__21[1])
+                               =
+                               1)
+              ~~>
+              such that
+                  forAll v__19 : int(1..n * Alphabet_fromEnumSize)
+                      . (forAll v__20 : int(1..n)
+                             . (sum v__50 : int(1..n * Alphabet_fromEnumSize)
+                                    , c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__19,
+                                                                                                            v__50,
+                                                                                                            1]
+                                    . v__20
+                                      =
+                                      c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize§region2[v__19,
+                                                                                                            v__50,
+                                                                                                            2,
+                                                                                                            1])
+                               =
+                               1)
+[removedDecl] find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                                         int(1..n * Alphabet_fromEnumSize)] of (bool,
+                                                                                (int(1..n),
+                                                                                 int(1..Alphabet_fromEnumSize)))
+[removedDecl] find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                                         int(1..n * Alphabet_fromEnumSize)] of (int(1..n),
+                                                                                int(1..Alphabet_fromEnumSize))
+[removedDecl] find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of set of
+                                                                                   (int(1..n),
+                                                                                    int(1..Alphabet_fromEnumSize))
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of function (total) int(1..n) --> int(1..Alphabet_fromEnumSize)
+[representation] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                   *
+                                                   (n * Alphabet_fromEnumSize)
+                                                   *
+                                                   MAXINT)] of relation of (int(1..n) * int(1..Alphabet_fromEnumSize))
+                 (#1)
+                 RelationAsSet
+[configuration] dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3#RelationAsSet dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region1#RelationAsSet
+[addedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                              *
+                                              (n * Alphabet_fromEnumSize)
+                                              *
+                                              MAXINT)] of set of (int(1..n), int(1..Alphabet_fromEnumSize))
+[applied] (sum v__44 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3#RelationAsSet[v__30])
+               , v__44[1] = v__9[1]
+               . v__44[2])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (sum v__44 in dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3[v__30]
+                   , v__44[1] = v__9[1]
+                   . v__44[2])
+[applied] (forAll v__9 in toSet(dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln§region3#RelationAsSet[v__30])
+               . (sum v__44 in dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3[v__30]
+                      , v__44[1] = v__9[1]
+                      . v__44[2])
+                 =
+                 c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+          {rules/refns/relation-asset/relation-asset-toSet.rule}
+              (forAll v__9 in dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3[v__30]
+                   . (sum v__44 in dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3[v__30]
+                          , v__44[1] = v__9[1]
+                          . v__44[2])
+                     =
+                     c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of relation of (int(1..n) * int(1..Alphabet_fromEnumSize))
+[representation] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet:
+                         matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                   *
+                                                   (n * Alphabet_fromEnumSize)
+                                                   *
+                                                   MAXINT)] of set of (int(1..n), int(1..Alphabet_fromEnumSize))
+                 (#1)
+                 ExplicitVarSize
+[configuration] dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3#ExplicitVarSize dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region1#ExplicitVarSize
+[addedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize:
+                    matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                              *
+                                              (n * Alphabet_fromEnumSize)
+                                              *
+                                              MAXINT),
+                                       int(1..n * Alphabet_fromEnumSize)] of (bool,
+                                                                              (int(1..n),
+                                                                               int(1..Alphabet_fromEnumSize)))
+[applied] (sum v__44 in dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3#ExplicitVarSize[v__30]
+               , v__44[1] = v__9[1]
+               . v__44[2])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (sum v__55 : int(1..n * Alphabet_fromEnumSize)
+                   , dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                 v__55,
+                                                                                                                                 2,
+                                                                                                                                 1]
+                     =
+                     v__9[1]
+                     /\
+                     dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                 v__55,
+                                                                                                                                 1]
+                   . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                 v__55,
+                                                                                                                                 2,
+                                                                                                                                 2])
+[applied] (forAll v__9 in dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet§region3#ExplicitVarSize[v__30]
+               . (sum v__55 : int(1..n * Alphabet_fromEnumSize)
+                      , dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                    v__55,
+                                                                                                                                    2,
+                                                                                                                                    1]
+                        =
+                        v__9[1]
+                        /\
+                        dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                    v__55,
+                                                                                                                                    1]
+                      . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                    v__55,
+                                                                                                                                    2,
+                                                                                                                                    2])
+                 =
+                 c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13, v__9[1]])
+          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
+              (forAll v__56 : int(1..n * Alphabet_fromEnumSize)
+                   , dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                 v__56,
+                                                                                                                                 1]
+                   . (sum v__55 : int(1..n * Alphabet_fromEnumSize)
+                          , dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                        v__55,
+                                                                                                                                        2,
+                                                                                                                                        1]
+                            =
+                            dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                        v__56,
+                                                                                                                                        2,
+                                                                                                                                        1]
+                            /\
+                            dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                        v__55,
+                                                                                                                                        1]
+                          . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                        v__55,
+                                                                                                                                        2,
+                                                                                                                                        2])
+                     =
+                     c_ExplicitVarSize_tuple2_Matrix1D§region1[v__13,
+                                                               dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize§region3[v__30,
+                                                                                                                                                                           v__56,
+                                                                                                                                                                           2,
+                                                                                                                                                                           1]])
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT),
+                                         int(1..n * Alphabet_fromEnumSize)] of (bool,
+                                                                                (int(1..n),
+                                                                                 int(1..Alphabet_fromEnumSize)))
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT),
+                                         int(1..n * Alphabet_fromEnumSize)] of (int(1..n),
+                                                                                int(1..Alphabet_fromEnumSize))
+[removedDecl] given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet:
+                      matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                                *
+                                                (n * Alphabet_fromEnumSize)
+                                                *
+                                                MAXINT)] of set of (int(1..n), int(1..Alphabet_fromEnumSize))

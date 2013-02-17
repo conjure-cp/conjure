@@ -1,0 +1,227 @@
+language ESSENCE' 1.0
+
+given Alphabet_fromEnumSize: int(1..)
+given n: int(1..)
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT)] of bool
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT),
+                           int(1..n * Alphabet_fromEnumSize)] of bool
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT),
+                           int(1..n * Alphabet_fromEnumSize)] of int(1..n)
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT),
+                           int(1..n * Alphabet_fromEnumSize)] of int(1..Alphabet_fromEnumSize)
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_Matrix1D:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT),
+                           int(1..n)] of int(1..Alphabet_fromEnumSize)
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2_Matrix1D:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT),
+                           int(1..n)] of int(1..Alphabet_fromEnumSize)
+given dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize
+                                  *
+                                  (n * Alphabet_fromEnumSize)
+                                  *
+                                  MAXINT)] of int(1..)
+given mindist: int(1..)
+find c_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize)] of bool
+find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                           int(1..n * Alphabet_fromEnumSize)] of bool
+find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                           int(1..n * Alphabet_fromEnumSize)] of int(1..n)
+find c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                           int(1..n * Alphabet_fromEnumSize)] of int(1..Alphabet_fromEnumSize)
+find c_ExplicitVarSize_tuple2_Matrix1D:
+        matrix indexed by [int(1..n * Alphabet_fromEnumSize),
+                           int(1..n)] of int(1..Alphabet_fromEnumSize)
+such that
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize * (n * Alphabet_fromEnumSize)
+                         *
+                         MAXINT)
+        . (forAll v__1 : int(1..n * Alphabet_fromEnumSize)
+               . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                            v__1]
+                 ->
+                 (sum v__2 : int(1..n * Alphabet_fromEnumSize)
+                      . (dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                           v__2]
+                         =
+                         dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                           v__1]
+                         /\
+                         dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                                                    v__2])
+                        *
+                        dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                                                          v__2])
+                 =
+                 dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_Matrix1D[v__0,
+                                                                                         dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                                                                                                                           v__1]]),
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize)
+        . c_ExplicitVarSize_tuple1[v__0]
+          ->
+          (forAll v__1 : int(1..n * Alphabet_fromEnumSize)
+               . c_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 (!(forAll v__2 : int(1..n)
+                        . c_ExplicitVarSize_tuple2_Matrix1D[v__0, v__2]
+                          =
+                          (sum v__3 : int(1..n * Alphabet_fromEnumSize)
+                               . (c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1,
+                                                                                                              v__3]
+                                  =
+                                  v__2
+                                  /\
+                                  c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1,
+                                                                                                       v__3])
+                                 *
+                                 c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1,
+                                                                                                             v__3]))
+                  ->
+                  (sum v__2 : int(1..n * Alphabet_fromEnumSize * (n * Alphabet_fromEnumSize)
+                                     *
+                                     MAXINT)
+                       . ((forAll v__3 : int(1..n)
+                               . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple1_Matrix1D[v__2,
+                                                                                                         v__3]
+                                 =
+                                 c_ExplicitVarSize_tuple2_Matrix1D[v__0, v__3])
+                          /\
+                          (forAll v__3 : int(1..n)
+                               . dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_tuple2_Matrix1D[v__2,
+                                                                                                         v__3]
+                                 =
+                                 (sum v__4 : int(1..n * Alphabet_fromEnumSize)
+                                      . toInt(c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1,
+                                                                                                                          v__4]
+                                              =
+                                              v__3
+                                              /\
+                                              c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1,
+                                                                                                                   v__4])
+                                        *
+                                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1,
+                                                                                                                    v__4]))
+                          /\
+                          dist_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__2])
+                         *
+                         dist_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__2])
+                  >=
+                  mindist)),
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize)
+        . (forAll v__1 : int(1..n * Alphabet_fromEnumSize)
+               . (forAll v__2 : int(1..n * Alphabet_fromEnumSize)
+                      . v__1 < v__2
+                        /\
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__1]
+                        /\
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0, v__2]
+                        ->
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                    v__1]
+                        !=
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                    v__2]
+                        \/
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                    v__1]
+                        !=
+                        c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                    v__2]))
+          /\
+          (forAll v__1 : int(1..n * Alphabet_fromEnumSize - 1)
+               . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                      v__1]
+                 <=
+                 c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                      v__1 + 1]),
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize)
+        . (forAll v__1 : int(1..n * Alphabet_fromEnumSize)
+               . v__0 < v__1 /\ c_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 c_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 !(forAll v__2 : int(1..n * Alphabet_fromEnumSize)
+                       . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                              v__2]
+                         ->
+                         (sum v__3 : int(1..n * Alphabet_fromEnumSize)
+                              . (c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                             v__3]
+                                 =
+                                 c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                             v__2]
+                                 /\
+                                 c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                                      v__3])
+                                *
+                                c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__0,
+                                                                                                            v__3])
+                         =
+                         (sum v__3 : int(1..n * Alphabet_fromEnumSize)
+                              . (c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__1,
+                                                                                                             v__3]
+                                 =
+                                 c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                             v__2]
+                                 /\
+                                 c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__1,
+                                                                                                      v__3])
+                                *
+                                c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2[v__1,
+                                                                                                            v__3]))),
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize)
+        . (forAll v__1 : int(1..n * Alphabet_fromEnumSize)
+               . v__0 < v__1 /\ c_ExplicitVarSize_tuple1[v__0]
+                 /\
+                 c_ExplicitVarSize_tuple1[v__1]
+                 ->
+                 !(forAll v__2 : int(1..n)
+                       . c_ExplicitVarSize_tuple2_Matrix1D[v__0, v__2]
+                         =
+                         c_ExplicitVarSize_tuple2_Matrix1D[v__1, v__2])),
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize)
+        . (forAll v__1 : int(1..n)
+               . (sum v__2 : int(1..n * Alphabet_fromEnumSize)
+                      . c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0,
+                                                                                             v__2]
+                        *
+                        (v__1
+                         =
+                         c_ExplicitVarSize_tuple2_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1[v__0,
+                                                                                                     v__2]))
+                 =
+                 1),
+    forAll v__0 : int(1..n * Alphabet_fromEnumSize - 1)
+        . c_ExplicitVarSize_tuple1[v__0] <= c_ExplicitVarSize_tuple1[v__0 + 1]
