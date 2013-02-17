@@ -42,12 +42,12 @@ data ConjureMode
         FilePath    -- Essence'
         FilePath    -- Essence' Param
     | ModeTranslateSolution
-        FilePath    -- Input:  Essence
-        FilePath    -- Input:  Essence Param
-        FilePath    -- Input:  Essence'
-        FilePath    -- Input:  Essence' Param
-        FilePath    -- Input:  Essence' Solution
-        FilePath    -- Output: Essence  Solution
+        FilePath            -- Input:  Essence
+        (Maybe FilePath)    -- Input:  Essence Param
+        FilePath            -- Input:  Essence'
+        (Maybe FilePath)    -- Input:  Essence' Param
+        FilePath            -- Input:  Essence' Solution
+        FilePath            -- Output: Essence  Solution
     | ModePrettify
         FilePath    -- input
         FilePath    -- output
@@ -83,12 +83,12 @@ parseArgs (pairs, flags, _rest) = msum
         modeTranslateSolution = do
             mode             <- key "--mode"
             guard (mode =~= words "transSol translateSol translateSolution")
-            inEssence        <- key "--in-essence"              -- Input:  Essence specification
-            inParam          <- key "--in-essence-param"        -- Input:  Essence parameters
-            inEprime         <- key "--in-eprime"               -- Input:  Essence' model
-            inEprimeParam    <- key "--in-eprime-param"         -- Input:  Essence' parameters
-            inEprimeSolution <- key "--in-eprime-solution"      -- Input:  Essence' solution
-            outSolution      <- key "--out-solution"            -- Output: Essence solution
+            inEssence        <- key "--in-essence"                          -- Input:  Essence specification
+            inParam          <- optional $ key "--in-essence-param"         -- Input:  Essence parameters
+            inEprime         <- key "--in-eprime"                           -- Input:  Essence' model
+            inEprimeParam    <- optional $ key "--in-eprime-param"          -- Input:  Essence' parameters
+            inEprimeSolution <- key "--in-eprime-solution"                  -- Input:  Essence' solution
+            outSolution      <- key "--out-solution"                        -- Output: Essence solution
             return $ ModeTranslateSolution inEssence inParam inEprime inEprimeParam inEprimeSolution outSolution
 
         modePrettify = do
@@ -125,6 +125,7 @@ parseArgs (pairs, flags, _rest) = msum
         -- helper functions for the above
         anyKey = listToMaybe . mapMaybe key
         key = (`lookup` pairs)
+        optional = return
         _flag = (`elem` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
 

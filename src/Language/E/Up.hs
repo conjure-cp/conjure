@@ -16,9 +16,9 @@ import Language.E.Up.Debug
 
 translateSolution
     :: FilePath         -- Input:  Essence
-    -> FilePath         -- Input:  Essence param
+    -> Maybe FilePath   -- Input:  Essence param
     -> FilePath         -- Input:  Essence' model
-    -> FilePath         -- Input:  Essence' param
+    -> Maybe FilePath   -- Input:  Essence' param
     -> FilePath         -- Input:  Essence' solution
     -> FilePath         -- Output: Essence solution
     -> IO ()

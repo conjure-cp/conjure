@@ -43,7 +43,7 @@ runConjureMode (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutPa
         [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
 runConjureMode (ModeTranslateSolution pathInEssence pathInParam
                                       pathInEprime pathInEprimeParam pathInEprimeSolution
-                                      pathOutSolution) = do
+                                      pathOutSolution) =
     translateSolution pathInEssence pathInParam
                       pathInEprime pathInEprimeParam pathInEprimeSolution
                       pathOutSolution
