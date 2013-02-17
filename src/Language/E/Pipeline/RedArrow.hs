@@ -32,25 +32,28 @@ redArrow
     => EssenceSpec -> EssenceParam
     -> Essence'Model -> Essence'Logs
     -> m Essence'Param
-redArrow spec specParam _model@(Spec langEprime _) modelLogs = do
-    -- mkLog "debug specGivens"    (vcat $ map pretty $ M.toList specGivens)
-    -- mkLog "debug paramLettings" (vcat $ map pretty $ M.toList paramLettings)
-    -- forM_ eprimeReprs $ \ x ->
-        -- mkLog "debug eprimeReprs"   (vcat $ map pretty x)
-
-    case eprimeReprs of
-        [] -> return specParam
-        [eprimeRepr] -> do
-            xs <- forM eprimeRepr $ \ (name, reprName) ->
-                if S.member name specFinds
-                    then return []
-                    else
+redArrow spec specParam@(Spec _ specParamStatements) _model@(Spec langEprime _) modelLogs = do
+    ints <- execWriterT $ forM_ (statementAsList specParamStatements) $ \ s -> case lettingOut s of
+        Nothing -> return ()
+        Just (nm, _) ->
+            if nm `elem` map fst (concat eprimeReprs)
+                then return ()
+                else tell [s]
+    xs <- execWriterT $ withBindingScope $ do
+        lift $ mapM_ introduceStuff (statementAsList specParamStatements)
+        case eprimeReprs of
+            [] -> return ()
+            [eprimeRepr] ->
+                forM_ eprimeRepr $ \ (name, reprName) ->
+                    unless (S.member name specFinds) $
                         case (M.lookup name specGivens, M.lookup name paramLettings) of
-                            (Just domain, Just value) -> onSingleDom reprName name domain value
-                            (_, Nothing) -> err ErrFatal $ "No value given for parameter:" <+> pretty name
-                            (Nothing, _) -> err ErrFatal $ "Unknown parameter in the configuration file:" <+> pretty name
-            return (Spec langEprime $ listAsStatement $ concat xs)
-        _ -> error "Don't know what to do with this logs file, sorry."
+                            (Just domain, Just value) -> do
+                                xs <- lift $ onSingleDom reprName name domain value
+                                tell xs
+                            (_, Nothing) -> lift $ err ErrFatal $ "No value given for parameter:" <+> pretty name
+                            (Nothing, _) -> lift $ err ErrFatal $ "Unknown parameter in the configuration file:" <+> pretty name
+            _ -> error "Don't know what to do with this logs file, sorry."
+    return (Spec langEprime $ listAsStatement $ ints ++ xs)
 
     where
 
@@ -137,22 +140,29 @@ onSingleDom "Occurrence"
     return [theLetting]
 onSingleDom "ExplicitVarSize"
     name
-    [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo 
-           | [innerDom] := domain.set.inner
+    [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo
+           | attrs      := domain.set.attributes.attrCollection
            |]
     [xMatch| values := value.set.values |] = do
     frInt <- valueIntOut fr
     toInt <- valueIntOut to
     intValues <- fmap sort $ mapM valueIntOut values
 
+    nbValues <- case attrs of
+        [] -> return (toInt - frInt + 1)
+        _  -> err ErrFatal "Error while refining parameters"
     let nbTrues  = genericLength intValues
-    let nbFalses = toInt - frInt + 1 - nbTrues
+    let nbFalses = nbValues - nbTrues
+
+    let indexOfMatrix_fr = [eMake| 1 |]
+    let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValues)] |]
+    let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
 
     let outTuple1_Name   = name `T.append` "_ExplicitVarSize_tuple1"
     let outTuple1_Values = replicate (fromInteger nbTrues ) [eMake| true  |]
                         ++ replicate (fromInteger nbFalses) [eMake| false |]
     let outTuple1_Value  = [xMake| value.matrix.values := outTuple1_Values
-                                 | value.matrix.indexrange := [innerDom]
+                                 | value.matrix.indexrange := [indexOfMatrix]
                                  |]
     let outTuple1        = [xMake| topLevel.letting.name.reference := [Prim (S outTuple1_Name)]
                                  | topLevel.letting.expr           := [outTuple1_Value]
@@ -160,9 +170,9 @@ onSingleDom "ExplicitVarSize"
 
     let outTuple2_Name   = name `T.append` "_ExplicitVarSize_tuple2"
     let outTuple2_Values = map (\ x -> [xMake| value.literal := [Prim (I x)] |] ) intValues
-                        ++ replicate (fromInteger nbFalses) [eMake| 0 |]
+                        ++ replicate (fromInteger nbFalses) [xMake| value.literal := [Prim (I frInt)] |]
     let outTuple2_Value  = [xMake| value.matrix.values := outTuple2_Values
-                                 | value.matrix.indexrange := [innerDom]
+                                 | value.matrix.indexrange := [indexOfMatrix]
                                  |]
     let outTuple2        = [xMake| topLevel.letting.name.reference := [Prim (S outTuple2_Name)]
                                  | topLevel.letting.expr           := [outTuple2_Value]
@@ -171,11 +181,21 @@ onSingleDom "ExplicitVarSize"
     return [outTuple1, outTuple2]
 onSingleDom "Explicit"
     name
-    [xMatch| [innerDom] := domain.set.inner |]
-    [xMatch| values := value.set.values |] = do
+    [xMatch| attrs := domain.set.attributes.attrCollection |]
+    [xMatch| values := value.set.values |]
+    | let Just size = listToMaybe
+                        [ s
+                        | [xMatch| [Prim (S "size")] := attribute.nameValue.name.reference
+                                 | [s]               := attribute.nameValue.value
+                                 |] <- attrs
+                        ]
+    = do
     let valuesInMatrix = sort values
+    let indexOfMatrix_fr = [eMake| 1 |]
+    let indexOfMatrix_to = [eMake| &size |]
+    let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
     let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
-                           | value.matrix.indexrange := [innerDom]
+                           | value.matrix.indexrange := [indexOfMatrix]
                            |]
     let outName = name `T.append` "_Explicit"
     let theLetting = [xMake| topLevel.letting.name.reference := [Prim (S outName)]
@@ -192,5 +212,10 @@ onSingleDom reprName name domain value
 
 valueIntOut :: MonadConjure m => E -> m Integer
 valueIntOut [xMatch| [Prim (I x)] := value.literal |] = return x
+valueIntOut [xMatch| [Prim (S nm)] := reference    |] = do
+    mx <- runMaybeT $ lookupReference nm
+    case mx of
+        Nothing -> err ErrFatal $ "Parameter value not given for:" <+> pretty nm
+        Just x  -> valueIntOut x
 valueIntOut p = err ErrFatal $ "Expecting integer literal, found:" <+> pretty p
 
