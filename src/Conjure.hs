@@ -13,6 +13,9 @@ import Language.E.Pipeline.ReadIn ( readSpecFromFile, writeSpec, dropExtEssence 
 -- for RefineParam
 import Language.E.Pipeline.RedArrow ( redArrow )
 
+-- for TranslateSolution
+import Language.E.Up ( translateSolution )
+
 -- for DFAll
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
