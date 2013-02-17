@@ -288,15 +288,16 @@ class SelectByMode a where
     selectByMode = defSelectByMode
 
 defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
-defSelectByMode (ModeRefineParam {}) _  = error "selectByMode: Shouldn't be used in this mode"
-defSelectByMode (ModePrettify    {}) _  = error "selectByMode: Shouldn't be used in this mode"
-defSelectByMode _                    [] = return []
-defSelectByMode (ModeUnknown     {}) xs = return xs
-defSelectByMode (ModeDFAll       {}) xs = return xs
-defSelectByMode (ModeSingleOutput ModeRandom _ _) xs = do
+defSelectByMode (ModeRefineParam                {}) _  = error "selectByMode: Shouldn't be used in this mode"
+defSelectByMode (ModeTranslateSolution          {}) _  = error "selectByMode: Shouldn't be used in this mode"
+defSelectByMode (ModePrettify                   {}) _  = error "selectByMode: Shouldn't be used in this mode"
+defSelectByMode _                                   [] = return []
+defSelectByMode (ModeUnknown                    {}) xs = return xs
+defSelectByMode (ModeDFAll                      {}) xs = return xs
+defSelectByMode (ModeSingleOutput ModeRandom _ _  ) xs = do
     i <- rangeRandomM (0, length xs - 1)
     return [xs !! i]
-defSelectByMode (ModeSingleOutput {}) (x:_) = return [x]
+defSelectByMode (ModeSingleOutput               {}) (x:_) = return [x]
 
 instance SelectByMode E where
     selectByMode _ [] = return []
