@@ -83,12 +83,12 @@ parseArgs (pairs, flags, _rest) = msum
         modeTranslateSolution = do
             mode             <- key "--mode"
             guard (mode =~= words "transSol translateSol translateSolution")
-            inEssence        <- key "--in-essence"                          -- Input:  Essence specification
-            inParam          <- optional $ key "--in-essence-param"         -- Input:  Essence parameters
-            inEprime         <- key "--in-eprime"                           -- Input:  Essence' model
-            inEprimeParam    <- optional $ key "--in-eprime-param"          -- Input:  Essence' parameters
-            inEprimeSolution <- key "--in-eprime-solution"                  -- Input:  Essence' solution
-            outSolution      <- key "--out-solution"                        -- Output: Essence solution
+            inEssence        <- key "--in-essence"
+            inParam          <- optional $ key "--in-essence-param"
+            inEprime         <- key "--in-eprime"
+            inEprimeParam    <- optional $ key "--in-eprime-param"
+            inEprimeSolution <- key "--in-eprime-solution"
+            outSolution      <- anyKey $ words "--out-solution --out-essence-solution"
             return $ ModeTranslateSolution inEssence inParam inEprime inEprimeParam inEprimeSolution outSolution
 
         modePrettify = do
