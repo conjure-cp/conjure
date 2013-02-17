@@ -14,13 +14,13 @@ import Test.Hspec.HUnit ()
 
 essences :: IO [FilePath]
 -- Every test
---essences = allFilesWithSuffix ".essence" "files/uptests/"
+essences = allFilesWithSuffix ".essence" "files/uptests/"
 
 -- Basic tests
 --essences = essencesDirs "files/uptests/" ["___parts","___simple","___types"]
 
 -- Tuples and matrixes
-essences = essencesDirs "files/uptests/" ["___simple", "_tuples_of_matrix", "_matrix_of_tuples","_zznested_singletons","_zothers"]
+--essences = essencesDirs "files/uptests/" ["___simple", "_tuples_of_matrix", "_matrix_of_tuples","_zznested_singletons","_zothers"]
 
 --essences = essencesDirs "files/uptests/" ["____"]
 
