@@ -1,0 +1,10 @@
+
+[1000]
+
+&quan &i in toMSet(&x), &g . &b
+
+    ~~>
+
+&quan &i in toMSet(refn(&x)) , &g . &b
+
+    where &x hasRepr RelationAsSet
