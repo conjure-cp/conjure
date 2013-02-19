@@ -34,6 +34,12 @@ getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
 
 runConjureMode :: ConjureMode -> IO ()
 runConjureMode ModeUnknown = error "Unknown mode"
+runConjureMode (ModeDiff pathIn1 pathIn2) = do
+    Spec _ in1 <- readSpecFromFile pathIn1
+    Spec _ in2 <- readSpecFromFile pathIn2
+    if sort (statementAsList in1) == sort (statementAsList in2)
+        then return ()
+        else error "Files differ."
 runConjureMode (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutParam) = do
     inEssence <- readSpecFromFile pathInEssence
     inParam   <- readSpecFromFile pathInParam

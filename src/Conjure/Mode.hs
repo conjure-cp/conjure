@@ -1,7 +1,7 @@
 module Conjure.Mode where
 
 import Control.Arrow ( first, second )
-import Control.Monad ( guard, msum )
+import Control.Monad ( guard, msum, mzero )
 import Data.Char ( toLower )
 import Data.List ( partition )
 import Data.Maybe ( listToMaybe, mapMaybe )
@@ -36,6 +36,7 @@ data ConjureModeSingle
 
 data ConjureMode
     = ModeUnknown
+    | ModeDiff FilePath FilePath
     | ModeRefineParam
         FilePath    -- Essence
         FilePath    -- Essence Param
@@ -60,8 +61,9 @@ data ConjureMode
     deriving (Show)
 
 parseArgs :: GenericArgs -> Maybe ConjureMode
-parseArgs (pairs, flags, _rest) = msum
-    [ modeRefineParam
+parseArgs (pairs, flags, rest) = msum
+    [ modeDiff
+    , modeRefineParam
     , modeTranslateSolution
     , modePrettify
     , modeDFAll
@@ -71,6 +73,13 @@ parseArgs (pairs, flags, _rest) = msum
     , modeBest
     ]
     where
+        modeDiff = do
+            mode <- key "--mode"
+            guard (mode =~= words "diff")
+            case rest of
+                [in1, in2] -> return $ ModeDiff in1 in2
+                _          -> mzero
+
         modeRefineParam = do
             mode      <- key "--mode"
             guard (mode =~= words "refineParam")

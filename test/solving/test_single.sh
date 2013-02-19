@@ -21,7 +21,7 @@ MODE=$1
 SPEC=$(ls -1 *.essence | head -n 1)
 SPEC=${SPEC%.essence}
 
-rm -rf "$SPEC"
+rm -rf "$SPEC" $SPEC.errors
 mkdir -p "$SPEC"
 
 
@@ -54,6 +54,15 @@ function perModelperParam {
         --in-eprime-param       $MODEL-$PARAM.eprime-param                  \
         --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
         --out-essence-solution  $MODEL-$PARAM.solution
+
+    conjure                                                                 \
+        --mode diff                                                         \
+        $PARAM.solution                                                     \
+        $MODEL-$PARAM.solution
+
+    if (( $? != 0 )); then
+        echo "$SPEC $MODEL $PARAM" >> $SPEC.errors
+    fi
 
 }
 
