@@ -16,5 +16,7 @@ To run an individual test:
 
 To run all tests:
  * bash test_all.sh
+ * by default, the above script will use all CPU cores.
+   (`export PARALLEL="-j2"` to control the number of parallel executions.)
 
 
