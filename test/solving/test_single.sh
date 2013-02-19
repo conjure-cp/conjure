@@ -64,12 +64,18 @@ function perModelperParam {
         $MODEL-$PARAM.solution
 
     if (( $? != 0 )); then
-        echo "$SPEC $MODEL $PARAM" >> $SPEC.errors
+        echo "$SPEC $MODEL $PARAM" >> fail.txt
+    else
+        echo "$SPEC $MODEL $PARAM" >> pass.txt
     fi
+    echo "$SPEC $MODEL $PARAM" >> all.txt
 
 }
 
 export -f perModelperParam;
+
+rm -f fail.txt pass.txt all.txt
+touch fail.txt pass.txt all.txt
 
 parallel -u -j1                                                             \
     perModelperParam "$SPEC" {1.} {2.}                                      \
