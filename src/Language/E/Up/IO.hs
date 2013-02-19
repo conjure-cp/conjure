@@ -39,28 +39,27 @@ getSpec' removeContraints filepath = do
     where 
         func t =  fst . T.breakOn t
 
+
 getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) -> IO (Spec, Spec, Spec)
 getSpecs (specF, solF, orgF,paramF,orgParamF) = do
     let param    = getSpecMaybe paramF
     let orgParam = getSpecMaybe orgParamF
 
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
-    sol   <- getSpec solF  >>= removeNegatives
+    sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     org   <- getSpec orgF  >>= introduceParams orgParam >>= reduceSpec 
     return (spec,sol,org)
 
-getFiles :: String -> String ->  Int -> (FilePath, FilePath, FilePath,Maybe FilePath,Maybe FilePath)
-getFiles base name n =
-   let spec = addExtension (joinPath [base,name, zeroPad n]) "eprime" in
-   (spec
-   ,addExtension spec "solution"
-   ,addExtension (joinPath [base,name]) "essence"
-   ,Just $ addExtension (joinPath [base,name,name]) "param"
-   ,Just $ addExtension (joinPath [base,name,name]) "param"
-   -- ,addExtension (joinPath [base,name]) "paramE" 
-   )
 
---TODO Add essence param
+getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath) -> IO (Spec, Spec, Spec)
+getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
+    param    <- getTestSpecMaybe paramF
+    orgParam <- getTestSpecMaybe orgParamF
+
+    spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
+    sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
+    org   <- getSpec orgF  >>= introduceParams orgParam >>= reduceSpec 
+    return (spec,sol,org)
 
 getTestSpecMaybe :: Maybe FilePath -> IO (Maybe (IO Spec))
 getTestSpecMaybe (Just f) = do 
@@ -72,21 +71,22 @@ getTestSpecMaybe (Just f) = do
 
 getTestSpecMaybe Nothing = return Nothing
 
-getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath) -> IO (Spec, Spec, Spec)
-getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
-    param    <- getTestSpecMaybe paramF
-    orgParam <- getTestSpecMaybe orgParamF
 
-    spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
-    sol   <- getSpec solF  >>= removeNegatives
-    org   <- getSpec orgF  >>= introduceParams orgParam >>= reduceSpec 
-    return (spec,sol,org)
+getFiles :: String -> String ->  Int -> (FilePath, FilePath, FilePath,Maybe FilePath,Maybe FilePath)
+getFiles base name n =
+   let spec = addExtension (joinPath [base,name, zeroPad n]) "eprime" in
+   (spec
+   ,addExtension spec "solution"
+   ,addExtension (joinPath [base,name]) "essence"
+   ,Just $ addExtension (joinPath [base,name,takeBaseName name]) "param"
+   ,Just $ addExtension (joinPath [base,name,takeBaseName name]) "essence-param"
+   )
+
 
 -- Only need to simplify the expressions if there are parameters in the expressions.
 simSpecMaybe :: Monad m => Maybe a -> Spec -> m Spec
 simSpecMaybe Nothing s = return s
 simSpecMaybe (Just _) s = simSpec s
-
 
 
 zeroPad :: Int -> String

@@ -44,7 +44,7 @@ specs = do
                  addExtension dir "eprime.solution",
                  f,
                  Just $ addExtension (joinPath [base,name]) "param",
-                 Just $ addExtension (joinPath [base,name]) "param"
+                 Just $ addExtension (joinPath [base,name,name]) "essence-param"
              ),
              addExtension dir "solution" 
             )

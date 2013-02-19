@@ -4,6 +4,7 @@ module Language.E.Up.ReduceSpec(
      reduceSpec
     ,simSpec
     ,removeNegatives
+    ,removeIndexRanges
     ,introduceParams
     ,toLst
 ) where
@@ -30,6 +31,31 @@ removeNegatives spec@(Spec _ _) = do
         return $ [xMake|  value.literal := [Prim (I (- n) )] |]
 
     convertNegatives x = return x
+
+removeIndexRanges :: Monad m => Spec -> m Spec
+removeIndexRanges spec@(Spec _ _) = do
+    let (s,_) = head $ removeIndexRanges' spec
+        ee    = (head .rights) [s]
+
+    return  ee
+
+    where 
+
+    removeIndexRanges' ::  Spec -> [(Either Doc Spec, LogTree)]
+    removeIndexRanges' spec1 = runCompE "removeIndexRanges'" $ bottomUpSpec' removeIndexRange spec1
+
+    removeIndexRange :: MonadConjure m => E -> m E
+    removeIndexRange [xMatch| v  := matrix.values
+                            | _  := matrix.indexrange|] =
+        return [xMake| matrix.values := v |]
+
+    removeIndexRange x = return x
+
+removeIndexRanges' :: Monad m => Spec -> m Spec
+removeIndexRanges' spec@(Spec ver _) = do
+    let ee = toLst spec
+        ef = filter removeIndexRange ee
+    return $ Spec ver (listAsStatement ef)
 
 introduceParams :: Monad m => Maybe (m Spec) -> Spec -> m Spec
 introduceParams (Just par) spec@(Spec ver _) = do
@@ -97,6 +123,9 @@ removeGiven :: E -> Bool
 removeGiven [xMatch| _ := topLevel.declaration.given |] = False
 removeGiven _ = True
 
+removeIndexRange :: E -> Bool
+removeIndexRange [xMatch| _ := indexrange|] = False
+removeIndexRange  _ = True
 
 exclude :: E -> Bool
 exclude [xMatch| _ := name.reference |] =  True
