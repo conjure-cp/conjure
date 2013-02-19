@@ -1,5 +1,8 @@
 #/bin/bash
 
+set -o nounset
+set -o errexit
+
 if (( $(ls -1 *.essence 2> /dev/null | wc -l) != 1 )); then
     echo "ERROR: Only 1 *.essence file should be in this directory."
     exit 1
