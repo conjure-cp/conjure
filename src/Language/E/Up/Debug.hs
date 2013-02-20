@@ -3,19 +3,23 @@
 
 module Language.E.Up.Debug where
 
-import Language.E
-import Language.E.Imports
 
 import Text.PrettyPrint
-import qualified Text.Groom
 
 #ifdef UP_DEBUG
+import Language.E hiding (trace)
 
+import qualified Debug.Trace ( trace )
 import qualified Text.Groom
+trace :: String -> a -> a
+trace = Debug.Trace.trace
+
+
 groom :: Show a => a -> String
 groom = Text.Groom.groom
 
 #else
+import Language.E
 groom :: Show a => a -> String
 groom = show
 
