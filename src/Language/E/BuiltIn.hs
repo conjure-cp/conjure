@@ -137,6 +137,7 @@ ret orig name result = do
 
 builtInRefn :: MonadConjure m => [RefnFunc m]
 builtInRefn = [ relationApply, tupleExplode, functionLiteralApply
+              , quanOverToSetRelationProject
               , tupleDomInQuantification
               ]
 
@@ -160,6 +161,69 @@ relationApply p@[xMatch| [actual]             := functionApply.actual
                 _ -> return Nothing
         _ -> return Nothing
 relationApply _ = return Nothing
+
+quanOverToSetRelationProject :: MonadConjure m => RefnFunc m
+quanOverToSetRelationProject
+  p@[xMatch| [Prim (S relationName)]    := quantified.quanOverExpr.operator.toSet.functionApply.actual.reference
+           | args                       := quantified.quanOverExpr.operator.toSet.functionApply.args
+           | []                         := quantified.quanOverDom
+           | []                         := quantified.quanOverOp.binOp.in
+           | [quantifier]               := quantified.quantifier
+           | [quanVar]                  := quantified.quanVar.structural.single
+           | [guard]                    := quantified.guard
+           | [body]                     := quantified.body
+           |] =
+    case identifierSplit relationName of
+        (relationBase, mregion, Just "RelationAsSet") -> do
+            let theSet   = [xMake| reference := [Prim $ S $ identifierConstruct (relationBase `mappend` "_RelationAsSet")
+                                                                                mregion
+                                                                                Nothing
+                                                ] |]
+            (_newQuanVarStr, newQuanVar) <- freshQuanVar
+
+            -- the rest of the items are available as output. sort of.
+            let projectedElems = catMaybes
+                    [ if arg == [eMake| _ |]
+                        then Just i
+                        else Nothing
+                    | (i,arg) <- zip [ 1::Integer .. ] args
+                    ]
+
+            let projectedElems_Values =
+                    [ [eMake| &newQuanVar[&i] |]
+                    | i' <- projectedElems
+                    , let i = [xMake| value.literal := [Prim (I i')] |]
+                    ]
+
+            let projectedElems_Expr =
+                    [xMake| value.tuple.values := projectedElems_Values |]
+
+            let newGuard = conjunct
+                    $ replace quanVar projectedElems_Expr guard
+                    : [ [eMake| &newQuanVar[&i] = &arg |]
+                      | (i',arg) <- zip [ 1::Integer .. ] args
+                      , arg /= [eMake| _ |]
+                      , let i = [xMake| value.literal := [Prim (I i')] |]
+                      ]
+                    -- : [ [eMake| &newQuanVar[&i] = &args_Expr[&i] |]
+                      -- | i' <- projectedEqs
+                      -- , let i = [xMake| value.literal := [Prim (I i')] |]
+                      -- ]
+            let newBody  = replace quanVar projectedElems_Expr body
+
+            ret p "builtIn.quanOverToSetRelationProject"
+                [xMake| quantified.quantifier           := [quantifier]
+                      | quantified.quanVar              := [newQuanVar]
+                      | quantified.quanOverDom          := []
+                      | quantified.quanOverOp.binOp.in  := []
+                      | quantified.quanOverExpr         := [theSet]
+                      | quantified.guard                := [newGuard]
+                      | quantified.body                 := [newBody]
+                      |]
+        _ -> return Nothing
+
+
+quanOverToSetRelationProject _ = return Nothing
 
 tupleExplode :: MonadConjure m => RefnFunc m
 tupleExplode p@[xMatch| values       := operator.index.left .value.tuple.values

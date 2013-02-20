@@ -19,7 +19,12 @@ identityOp quantifier = case quantifier of
                 _        -> err ErrFatal $ "Unknown quantifier: " <+> pretty quantifier
 
 
-guardOp :: MonadConjure m => Text -> [E] -> E -> m E
+guardOp
+    :: MonadConjure m
+    => Text             -- name of the quantifier
+    -> [E]              -- guards
+    -> E                -- body
+    -> m E              -- new body, guards inlined
 guardOp _ [] b = return b
 guardOp _ [ [xMatch| [] := emptyGuard |] ] b = return b
 guardOp quantifier as b =

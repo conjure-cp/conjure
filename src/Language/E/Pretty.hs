@@ -168,7 +168,8 @@ instance Pretty E where
                  |]
         = "`" <> pretty d <> "`"
 
-    -- type.*
+-- type.*
+    pretty [xMatch| [ ] := type.unknown    |] = "?"
     pretty [xMatch| [ ] := type.bool       |] = "bool"
     pretty [xMatch| [ ] := type.int        |] = "int"
     pretty [xMatch| [x] := type.set.inner  |] = "set of"  <+> pretty x
@@ -190,8 +191,13 @@ instance Pretty E where
                            |] = first (i:) $ collect j
             collect x = ([],x)
 
-    pretty [xMatch| ts := type.tuple.inners |] = if length ts >= 2 then prettyList Pr.parens "," ts
-                                                                   else "tuple" <+> prettyList Pr.parens "," ts
+    pretty [xMatch| ts := type.tuple.inners |] =
+        if length ts >= 2
+            then prettyList Pr.parens "," ts
+            else "tuple" <+> prettyList Pr.parens "," ts
+    pretty [xMatch| ts := type.relation.inners |] =
+        "relation" <+> prettyList Pr.parens "," ts
+    pretty [xMatch| [x] := type.partition.inner |] = "partition from" <+> pretty x
 
 
     -- domain.*
@@ -266,8 +272,7 @@ instance Pretty E where
     pretty [xMatch| [ x ] := range.to     |] = ".." <> pretty x
     pretty [xMatch| [x,y] := range.fromTo |] = pretty x <> ".." <> pretty y
 
--- type.*
-    pretty [xMatch| _ := type.unknown |] = "?"
+-- value.*
 
     pretty [xMatch| [x] := value.literal      |] = pretty x
     pretty [xMatch| xs  := value.tuple.values |]

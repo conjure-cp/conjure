@@ -52,7 +52,7 @@ redArrow spec specParam@(Spec _ specParamStatements) _model@(Spec langEprime _) 
                                 tell xs
                             (_, Nothing) -> lift $ err ErrFatal $ "No value given for parameter:" <+> pretty name
                             (Nothing, _) -> lift $ err ErrFatal $ "Unknown parameter in the configuration file:" <+> pretty name
-            _ -> error "Don't know what to do with this logs file, sorry."
+            _ -> lift $ mkLog "warning" "Don't know what to do with this logs file, sorry."
     return (Spec langEprime $ listAsStatement $ ints ++ xs)
 
     where
