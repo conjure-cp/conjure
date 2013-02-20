@@ -5,6 +5,9 @@
 command='scripts/dev/watch-helpers/actionOnSingleFile "${watch_src_path}"'
 command="$command $1" # optional first argument, limiting the number of lines displayed
 
+#command='time scripts/build/make --trace-logs'
+#command='time scripts/build/make'
+
 watchmedo shell-command src \
     --patterns="*.hs" \
     --ignore-directories \
