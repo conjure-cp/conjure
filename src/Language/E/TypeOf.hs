@@ -78,10 +78,10 @@ _testTypeOf t = do
 
 
 typeErrorIn :: MonadConjure m => E -> m a
-typeErrorIn p = err ErrFatal $ "Type error in: " <+> pretty p
+typeErrorIn p = typeErrorIn' p ""
 
 typeErrorIn' :: MonadConjure m => E -> Doc -> m a
-typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [pretty p, d]
+typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [pretty p, prettyAsPaths p, d]
 
 
 typeOf :: MonadConjure m => E -> m E
@@ -171,21 +171,23 @@ typeOf [xMatch| xs := value.matrix.values |] = do
                  | type.matrix.inner := [head txs]
                  |]
 
-typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.unknown := [] |]
+typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.set.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.set.values |] = do
     (tx:txs) <- mapM typeOf xs
     if all (tx==) txs
         then return [xMake| type.set.inner := [tx] |]
         else typeErrorIn p
 
-typeOf   [xMatch| [] := value.mset.values |] = return [xMake| type.unknown := [] |]
+typeOf   [xMatch| [] := value.mset.values |] = return [xMake| type.mset.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.mset.values |] = do
     (tx:txs) <- mapM typeOf xs
     if all (tx==) txs
         then return [xMake| type.mset.inner := [tx] |]
         else typeErrorIn p
 
-typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.unknown := [] |]
+typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.function.innerFrom.type.unknown := []
+                                                                | type.function.innerTo  .type.unknown := []
+                                                                |]
 typeOf p@[xMatch| xs := value.function.values |] = do
     (tx:txs) <- mapM typeOf xs
     if all (tx==) txs
@@ -194,6 +196,15 @@ typeOf p@[xMatch| xs := value.function.values |] = do
                 return [xMake| type.function.innerFrom := [i]
                              | type.function.innerTo   := [j]
                              |]
+            _ -> typeErrorIn p
+        else typeErrorIn p
+
+typeOf   [xMatch| [] := value.relation.values |] = return [xMake| type.relation.inners := [] |]
+typeOf p@[xMatch| xs := value.relation.values |] = do
+    (tx:txs) <- mapM typeOf xs
+    if all (tx==) txs
+        then case tx of
+            [xMatch| is := type.tuple.inners |] -> return [xMake| type.relation.inners := is |]
             _ -> typeErrorIn p
         else typeErrorIn p
 
@@ -491,6 +502,22 @@ typeOf p@[xMatch| [f] := functionApply.actual
         [xMatch| [fr] := type.function.innerFrom
                | [to] := type.function.innerTo
                |] | fr == tyX -> return to
+        _ -> typeErrorIn p
+
+typeOf p@[xMatch| [rel] := functionApply.actual
+                | args  := functionApply.args
+                |] = do
+    tyRel  <- typeOf rel
+    tyArgs <- mapM typeOf args
+    case tyRel of
+        [xMatch| tyRels := type.relation.inners |] -> do
+            outTypes <- forM (zip3 tyRels args tyArgs) $ \ (relType, arg, argType) ->
+                if arg == [eMake| _ |]
+                    then return (Just relType)
+                    else if relType == argType
+                            then return Nothing
+                            else typeErrorIn p
+            return [xMake| type.relation.inners := (catMaybes outTypes) |]
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| preImage(&f,&x) |] = do

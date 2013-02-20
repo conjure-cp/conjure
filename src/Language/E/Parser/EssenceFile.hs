@@ -353,7 +353,8 @@ parseDomain = msum $ map try
     [ pBool, pInt, pEnum
     , pMatrix, pTupleWithout, pTupleWith
     , pSet, pMSet, pFunction, pFunction'
-    , pRelation, pPartition
+    , pRelation, pRelation'
+    , pPartition
     , parseMetaVariable, pParens
     ]
     where
@@ -434,6 +435,10 @@ parseDomain = msum $ map try
                          | domain.function.innerFrom  := [y]
                          | domain.function.innerTo    := [z]
                          |]
+
+        pRelation' = do
+            lexeme L_relation
+            return [xMake| type.relation.inners.type.unknown := [] |]
 
         pRelation = do
             lexeme L_relation

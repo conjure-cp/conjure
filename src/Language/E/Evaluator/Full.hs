@@ -169,17 +169,37 @@ ret i = return $ Just (i, [])
 
 evalHasType :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalHasType [eMatch| &s hasType &dom |] = do
-    let replacerActual  [xMatch| [Prim (S "_")] := reference |] =
+    let
+        -- these two are for enabling the use of underscore as a wildcard
+        -- in hasType.
+        replacerActual  [xMatch| [Prim (S "_")] := reference |] =
                         [xMake| type.unknown := [] |]
         replacerActual  i = i
+
         replacerPattern [xMatch| [Prim (S "_")] := reference |] =
                         [xMake| metavar := [Prim (S "_")] |]
         replacerPattern i = i
 
+        typeUnknown = [xMake| type.unknown := [] |]
+
+        -- this one is a hack, `relation` should match any relation type.
+        patternHack
+            [xMatch| is := type.relation.inners |]
+            [xMatch| [] := type.relation.inners.type.unknown |] =
+            [xMake| type.relation.inners := (replicate (length is) typeUnknown) |]
+        patternHack _ x = x
+
+    -- mkLog "debug s" $ pretty s
     ts <- typeOf s
+    -- mkLog "debug ts" $ pretty ts
     let ts' = transform replacerActual  ts
+    -- mkLog "debug ts'" $ pretty ts'
+
+    -- mkLog "debug d" $ pretty dom
     td <- typeOf dom
-    let td' = transform replacerPattern td
+    -- mkLog "debug td" $ prettyAsPaths td
+    let td' = patternHack ts' $ transform replacerPattern td
+    -- mkLog "debug td'" $ prettyAsPaths td'
 
     (flag, bs) <- patternMatch td' ts'
 
