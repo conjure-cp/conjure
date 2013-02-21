@@ -1,5 +1,16 @@
 #/bin/bash
 
+# This script will install ghc + cabal + happy + conjure. 
+# It will only install these tools if they aren't already installed.
+#
+# Everything is installed locally. Except ~/.ghc and ~/.cabal and these
+# two are used by ghc and cabal for storing some metadata and data about
+# installed packages.
+#
+# To clean an installation:
+#     rm dist ~/.ghc ~/.cabal
+
+
 set -o errexit
 
 WD="$(pwd)"
