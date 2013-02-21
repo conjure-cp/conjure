@@ -274,23 +274,61 @@ tupleDomInQuantification _ = return Nothing
 functionLiteralApply :: MonadConjure m => RefnFunc m
 functionLiteralApply
     p@[xMatch| mappings := functionApply.actual.value.function.values
+             | [actual] := functionApply.actual
              | [arg]    := functionApply.args
              |] = do
-    (quanVarStr, quanVar) <- freshQuanVar
-    let overs = [ [xMake| value.tuple.values := [i,j] |]
-                | [xMatch| [i,j] := mapping |] <- mappings
-                ]
-    let over  = [xMake| value.set.values := overs |]
-    let guard = [eMake| &quanVar[1] = &arg |]
-    let body  = [eMake| &quanVar[2] |]
-    let out   = [xMake| quantified.quantifier.reference                := [Prim $ S "sum" ]
-                      | quantified.quanVar.structural.single.reference := [Prim $ S quanVarStr ]
-                      | quantified.quanOverDom                         := []
-                      | quantified.quanOverOp.binOp.in                 := []
-                      | quantified.quanOverExpr                        := [over]
-                      | quantified.guard                               := [guard]
-                      | quantified.body                                := [body]
-                      |]
-    ret p "builtIn.functionLiteralApply" out
+    tyActual <- typeOf actual
+    case tyActual of
+        [xMatch| [] := type.function.innerTo.type.int |] -> do
+            (quanVarStr, quanVar) <- freshQuanVar
+            let overs = [ [xMake| value.tuple.values := [i,j] |]
+                        | [xMatch| [i,j] := mapping |] <- mappings
+                        ]
+            let over  = [xMake| value.set.values := overs |]
+            let guard = [eMake| &quanVar[1] = &arg |]
+            let body  = [eMake| &quanVar[2] |]
+            let out   = [xMake| quantified.quantifier.reference                := [Prim $ S "sum" ]
+                              | quantified.quanVar.structural.single.reference := [Prim $ S quanVarStr ]
+                              | quantified.quanOverDom                         := []
+                              | quantified.quanOverOp.binOp.in                 := []
+                              | quantified.quanOverExpr                        := [over]
+                              | quantified.guard                               := [guard]
+                              | quantified.body                                := [body]
+                              |]
+            ret p "builtIn.functionLiteralApply" out
+        _ -> return Nothing
+functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guard . &body |] =
+    case quanOverExpr of
+        [xMatch| vsMappings := functionApply.actual.value.function.values
+               | [actual]   := functionApply.actual
+               | [arg]      := functionApply.args
+               |] -> do
+            tyActual <- typeOf actual
+            continue <- case tyActual of
+                [xMatch| _ := type.function.innerTo.type.set  |] -> return True
+                [xMatch| _ := type.function.innerTo.type.mset |] -> return True
+                _                          -> return False
+            if continue
+                then do
+                    vs <- forM vsMappings $ \ vsMapping -> case vsMapping of
+                        [xMatch| [a,b] := mapping |] -> return [xMake| value.tuple.values := [a,b] |]
+                        _ -> err ErrFatal "builtIn.functionLiteralApply"
+                    let newQuanOverExpr = [xMake| value.set.values := vs |]
+                    let newGuard = conjunct [ replace i [eMake| &i[2] |] guard
+                                            , [eMake| &i[1] = &arg |]
+                                            ]
+                    (_, j) <- freshQuanVar
+                    let newBody  = replace i j body
+                    let out = [eMake| &quan &i in &newQuanOverExpr
+                                        , &newGuard
+                                        . &quan &j in &i[2] . &newBody
+                                    |]
+                    mkLog "debug" $ pretty body
+                    mkLog "debug" $ pretty newBody
+                    mkLog "debug" $ pretty out
+                    ret p "builtIn.functionLiteralApply" out
+                else return Nothing
+        _ -> return Nothing
 functionLiteralApply _ = return Nothing
+
 

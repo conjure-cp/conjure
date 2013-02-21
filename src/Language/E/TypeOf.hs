@@ -19,6 +19,8 @@ import qualified Data.Text as T
 typeUnify :: MonadConjure m => E -> E -> m Bool
 typeUnify [xMatch| _ := type.unknown |] _ = return True
 typeUnify _ [xMatch| _ := type.unknown |] = return True
+typeUnify [xMatch| [] := type.bool |] [xMatch| [] := type.bool |] = return True
+typeUnify [xMatch| [] := type.int  |] [xMatch| [] := type.int  |] = return True
 typeUnify
     [xMatch| [a] := type.set.inner |]
     [xMatch| [b] := type.set.inner |]
@@ -35,8 +37,20 @@ typeUnify
            | [bTo] := type.function.innerTo
            |]
     = (&&) <$> typeUnify aFr bFr <*> typeUnify aTo bTo
+typeUnify
+    [xMatch| [a1,b1] := mapping |]
+    [xMatch| [a2,b2] := mapping |]
+    = (&&) <$> typeUnify a1 a2 <*> typeUnify b1 b2
+typeUnify
+    [xMatch| as := type.tuple.inners |]
+    [xMatch| bs := type.tuple.inners |]
+    = if length as == length bs
+        then fmap and $ sequence $ zipWith typeUnify as bs
+        else return False
 typeUnify x y = do
     mkLog "missing:typeUnify" $ pretty x <+> "~~" <+> pretty y
+    mkLog "missing:typeUnify" $ prettyAsPaths x
+    mkLog "missing:typeUnify" $ prettyAsPaths y
     return (x == y)
 
 mostKnown :: MonadConjure m => E -> E -> m E
@@ -174,14 +188,16 @@ typeOf [xMatch| xs := value.matrix.values |] = do
 typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.set.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.set.values |] = do
     (tx:txs) <- mapM typeOf xs
-    if all (tx==) txs
+    res <- and <$> mapM (tx `typeUnify`) txs
+    if res
         then return [xMake| type.set.inner := [tx] |]
         else typeErrorIn p
 
 typeOf   [xMatch| [] := value.mset.values |] = return [xMake| type.mset.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.mset.values |] = do
     (tx:txs) <- mapM typeOf xs
-    if all (tx==) txs
+    res <- and <$> mapM (tx `typeUnify`) txs
+    if res
         then return [xMake| type.mset.inner := [tx] |]
         else typeErrorIn p
 
@@ -190,7 +206,8 @@ typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.function.
                                                                 |]
 typeOf p@[xMatch| xs := value.function.values |] = do
     (tx:txs) <- mapM typeOf xs
-    if all (tx==) txs
+    res <- and <$> mapM (tx `typeUnify`) txs
+    if res
         then case tx of
             [xMatch| [i,j] := mapping |] ->
                 return [xMake| type.function.innerFrom := [i]
@@ -202,7 +219,8 @@ typeOf p@[xMatch| xs := value.function.values |] = do
 typeOf   [xMatch| [] := value.relation.values |] = return [xMake| type.relation.inners := [] |]
 typeOf p@[xMatch| xs := value.relation.values |] = do
     (tx:txs) <- mapM typeOf xs
-    if all (tx==) txs
+    res <- and <$> mapM (tx `typeUnify`) txs
+    if res
         then case tx of
             [xMatch| is := type.tuple.inners |] -> return [xMake| type.relation.inners := is |]
             _ -> typeErrorIn p
