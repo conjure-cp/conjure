@@ -57,9 +57,12 @@ runConjureMode (ModeTranslateSolution pathInEssence pathInParam
     translateSolution pathInEssence pathInParam
                       pathInEprime pathInEprimeParam pathInEprimeSolution
                       pathOutSolution
-runConjureMode (ModePrettify pathInp pathOut) = do
+runConjureMode (ModePrettifyFile pathInp pathOut) = do
     inp <- readSpecFromFile pathInp
     writeSpec pathOut (atMostOneSuchThat inp)
+runConjureMode (ModePrettify pathInp) = do 
+    inp <- readSpecFromFile pathInp
+    (print . pretty) inp
 runConjureMode mode@(ModeDFAll pathInEssence) = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) <- getRulesDB
