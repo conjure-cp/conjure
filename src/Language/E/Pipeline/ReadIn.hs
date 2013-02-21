@@ -4,7 +4,7 @@ module Language.E.Pipeline.ReadIn where
 
 import Language.E
 
-import Data.Text ( breakOn )
+import Data.Text ( breakOn, pack )
 import System.Directory ( createDirectoryIfMissing )
 
 
@@ -12,8 +12,16 @@ readSpecFromFile :: FilePath -> IO Spec
 readSpecFromFile fp = do
     let errorMsg = "Error while parsing file."
     pair <- pairWithContents fp
-    spec <- handleInIOSingle =<< runCompEIOSingle errorMsg (readSpec pair)
-    return spec
+    handleInIOSingle =<<
+        runCompEIOSingle errorMsg (readSpec pair)
+
+
+readSpecFromStdIn :: IO Spec
+readSpecFromStdIn = do
+    let errorMsg = "Error while parsing file."
+    stdin <- getContents
+    handleInIOSingle =<<
+        runCompEIOSingle errorMsg (readSpec ("<STDIN>", pack stdin))
 
 
 readSpec :: MonadConjure m

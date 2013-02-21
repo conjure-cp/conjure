@@ -49,11 +49,9 @@ data ConjureMode
         (Maybe FilePath)    -- Input:  Essence' Param
         FilePath            -- Input:  Essence' Solution
         FilePath            -- Output: Essence  Solution
-    | ModePrettifyFile
-        FilePath    -- input
-        FilePath    -- output
     | ModePrettify
-        FilePath    -- input
+        (Maybe FilePath)    -- input
+        (Maybe FilePath)    -- output
     | ModeDFAll
         FilePath    -- Essence
     | ModeSingleOutput
@@ -67,7 +65,6 @@ parseArgs (pairs, flags, rest) = msum
     [ modeDiff
     , modeRefineParam
     , modeTranslateSolution
-    , modePrettifyFile
     , modePrettify
     , modeDFAll
     , modeRandom
@@ -103,16 +100,12 @@ parseArgs (pairs, flags, rest) = msum
             outSolution      <- anyKey $ words "--out-solution --out-essence-solution"
             return $ ModeTranslateSolution inEssence inParam inEprime inEprimeParam inEprimeSolution outSolution
 
-        modePrettifyFile = do
-            mode <- key "--mode"
-            guard (mode =~= words "prettyFile prettifyFile")
-            modeSingleOutput ModePrettifyFile
-
         modePrettify = do
             mode <- key "--mode"
             guard (mode =~= words "pretty prettify")
-            inEssence <- anyKey $ words "--in --in-essence"
-            return $ ModePrettify inEssence
+            inp  <- optional $ key "--in"
+            out  <- optional $ key "--out"
+            return $ ModePrettify inp out
 
         modeDFAll = do
             mode <- key "--mode"

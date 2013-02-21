@@ -8,7 +8,7 @@ import qualified Data.Text.IO as T
 import Paths_conjure_cp ( getBinDir )
 import Conjure.Mode
 import Language.E
-import Language.E.Pipeline.ReadIn ( readSpecFromFile, writeSpec, dropExtEssence )
+import Language.E.Pipeline.ReadIn ( readSpecFromStdIn, readSpecFromFile, writeSpec, dropExtEssence )
 
 -- for RefineParam
 import Language.E.Pipeline.RedArrow ( redArrow )
@@ -43,7 +43,6 @@ runConjureMode (ModeDiff pathIn1 pathIn2) = do
     let Spec _ in2 = normaliseSolution s2
     unless ( sort (statementAsList in1) == sort (statementAsList in2) )
         $  error "Files differ."
-
 runConjureMode (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutParam) = do
     inEssence <- readSpecFromFile pathInEssence
     inParam   <- readSpecFromFile pathInParam
@@ -57,12 +56,13 @@ runConjureMode (ModeTranslateSolution pathInEssence pathInParam
     translateSolution pathInEssence pathInParam
                       pathInEprime pathInEprimeParam pathInEprimeSolution
                       pathOutSolution
-runConjureMode (ModePrettifyFile pathInp pathOut) = do
-    inp <- readSpecFromFile pathInp
-    writeSpec pathOut (atMostOneSuchThat inp)
-runConjureMode (ModePrettify pathInp) = do 
-    inp <- readSpecFromFile pathInp
-    (print . pretty) inp
+runConjureMode (ModePrettify pathInp pathOut) = do
+    inp <- case pathInp of
+        Nothing -> readSpecFromStdIn
+        Just fp -> readSpecFromFile fp
+    case pathOut of
+        Nothing -> printPretty  (atMostOneSuchThat inp)
+        Just fp -> writeSpec fp (atMostOneSuchThat inp)
 runConjureMode mode@(ModeDFAll pathInEssence) = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) <- getRulesDB
