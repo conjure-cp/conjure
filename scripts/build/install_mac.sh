@@ -53,34 +53,12 @@ cabal --version
 happy --version
 
 # install conjure, finally
-HAS_LLVM="$(which opt 2> /dev/null > /dev/null; echo $?)"
-if [ $AVOID_LLVM ] ; then
-    echo "Avoiding LLVM."
-    USE_LLVM="false";
-elif [ $HAS_LLVM ] ; then
-    echo "Using LLVM."
-    USE_LLVM="true";
-else
-    echo "LLVM not found, not using it."
-    USE_LLVM="false";
-fi
-
 cabal update
-if [ $USE_LLVM == "true" ] ; then
-    cabal install -O2 \
-        --force-reinstalls \
-        --disable-library-profiling \
-        --disable-executable-profiling \
-        --ghc-options="-funbox-strict-fields" \
-        --ghc-options="-fexpose-all-unfoldings" \
-        --ghc-options="-fllvm"
-else
-    cabal install -O2 \
-        --force-reinstalls \
-        --disable-library-profiling \
-        --disable-executable-profiling \
-        --ghc-options="-funbox-strict-fields" \
-        --ghc-options="-fexpose-all-unfoldings"
-fi
+cabal install -O2 \
+    --force-reinstalls \
+    --disable-library-profiling \
+    --disable-executable-profiling \
+    --ghc-options="-funbox-strict-fields" \
+    --ghc-options="-fexpose-all-unfoldings"
 
 
