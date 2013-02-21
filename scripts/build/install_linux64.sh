@@ -40,7 +40,7 @@ cd "$WD"
 
 # installing happy
 HAS_HAPPY="$(which happy 2> /dev/null > /dev/null ; echo $?)" 
-if [ ! $HAS_HAPPY ] ; then
+if [ $HAS_HAPPY != 0 ] ; then
     cabal install happy -O2 \
         --force-reinstalls \
         --disable-documentation \
