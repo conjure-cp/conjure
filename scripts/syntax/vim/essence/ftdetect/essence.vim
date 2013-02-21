@@ -6,3 +6,5 @@
 autocmd BufRead,BufNewFile *.essence,*.eprime,*.param,*.rule,*.repr,*.essence.out,*.essence.log,*.essence.err,*.solution,*.log setfiletype essence
 autocmd FileType essence set commentstring=$\ %s
 autocmd FileType essence set autoindent
+
+command PrettifyEssence execute ":%!conjure --mode pretty --in %"
