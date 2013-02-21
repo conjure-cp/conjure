@@ -3,13 +3,25 @@
 set -o nounset
 set -o errexit
 
-if (( $(ls -1 *.essence 2> /dev/null | wc -l) != 1 )); then
-    echo "ERROR: Only 1 *.essence file should be in this directory."
+COUNT_ESSENCE=$(ls -1 *.essence 2> /dev/null | wc -l)
+COUNT_PARAM=$(ls -1 *.param 2> /dev/null | wc -l)
+COUNT_SOLUTION=$(ls -1 *.solution 2> /dev/null | wc -l)
+
+if (( $COUNT_ESSENCE != 1 )); then
+    WD="$(pwd)"
+    echo "ERROR: Only 1 *.essence file should be in: $WD"
     exit 1
 fi
 
-if (( $(ls -1 *.param 2> /dev/null | wc -l) == 0 )); then
-    echo "ERROR: At least 1 *.param file should be in this directory."
+if (( $COUNT_PARAM == 0 )); then
+    WD="$(pwd)"
+    echo "ERROR: At least 1 *.param file should be in: $WD"
+    exit 1
+fi
+
+if (( $COUNT_PARAM != $COUNT_SOLUTION )); then
+    WD="$(pwd)"
+    echo "ERROR: Give 1 solution file per param file in: $WD"
     exit 1
 fi
 
@@ -24,6 +36,7 @@ MODE=$1
 SPEC=$(ls -1 *.essence | head -n 1)
 SPEC=${SPEC%.essence}
 
+
 rm -rf "$SPEC" $SPEC.errors
 mkdir -p "$SPEC"
 
@@ -31,7 +44,7 @@ mkdir -p "$SPEC"
 conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime"
 
 function perModelperParam {
-
+    WD="$(pwd)"
     SPEC=$1
     MODEL=$2
     PARAM=$3
@@ -64,11 +77,11 @@ function perModelperParam {
         $MODEL-$PARAM.solution
 
     if (( $? != 0 )); then
-        echo "$SPEC $MODEL $PARAM" >> fail.txt
+        echo "$WD $MODEL $PARAM" >> fail.txt
     else
-        echo "$SPEC $MODEL $PARAM" >> pass.txt
+        echo "$WD $MODEL $PARAM" >> pass.txt
     fi
-    echo "$SPEC $MODEL $PARAM" >> all.txt
+    echo "$WD $MODEL $PARAM" >> all.txt
 
 }
 
@@ -77,7 +90,7 @@ export -f perModelperParam;
 rm -f fail.txt pass.txt all.txt
 touch fail.txt pass.txt all.txt
 
-parallel -u -j1                                                             \
+parallel -j1                                                                \
     perModelperParam "$SPEC" {1.} {2.}                                      \
         ::: $(ls -1 "$SPEC"/*.eprime)                                       \
         ::: $(ls -1 *.param)
