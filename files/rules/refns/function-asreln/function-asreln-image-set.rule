@@ -1,0 +1,14 @@
+
+[1000]
+
+&quan &i in &f(&x) , &guard . &body
+
+    ~~>
+
+&quan j in toSet(refn(&f))
+    , &guard { &i --> j[2] } /\ &x = j[1]
+    . &body  { &i --> j[2] }
+
+    where &f hasType   `function _ --> set of _`
+    where &f hasRepr    AsReln
+
