@@ -124,23 +124,12 @@ repConverter  kind  vdata@VarData{vEssence = es} =
 
 
 matrix1DRep :: VarData -> E
+matrix1DRep vd@VarData{vEssence=[xMatch| [v] := expr |] } =
+    let res = matrix1DRep vd{vEssence = v}
+    in  [xMake| expr := [res] |]
+
 matrix1DRep VarData{vIndexes = [ix],
-              vEssence=[xMatch| _   := expr.value.matrix.values
-                              | [v] := expr |]} =
-    let res = matrix1DRep' ix v
-    in [xMake| expr := [res]|]
-
--- FIXME  deals with muti-dim matrixes 
-matrix1DRep VarData{vIndexes = [_,ix],
-             vEssence=[xMatch|    _ := expr.value.matrix.values.value.matrix
-                             | vals := expr.value.matrix.values |]}  =
-    let arr = map (matrix1DRep' ix) vals 
-    in [xMake| expr.value.matrix.values := arr |] 
-    -- in errb arr
-    -- in erri (ix,vals) 
-
-matrix1DRep' :: [Integer] -> E -> E 
-matrix1DRep' ix [xMatch| vals := value.matrix.values |] =
+              vEssence=[xMatch| vals := value.matrix.values |]} =
     let togther = zip ix vals
         result  = map (\(a,b) -> [xMake| mapping := [ func a,  b] |] ) togther
         result' = [xMake| value.function.values := result |]
@@ -148,6 +137,14 @@ matrix1DRep' ix [xMatch| vals := value.matrix.values |] =
     -- in erri (ix,vals) 
 
     where func a = [xMake| value.literal := [ Prim (I a) ] |]
+
+matrix1DRep vd@VarData{vIndexes = (x:xs),
+             vEssence=  [xMatch| vs := value.matrix.values |]}  =
+    let arr = map (\v -> matrix1DRep vd{vIndexes=xs,vEssence=v } ) vs
+    in [xMake| value.matrix.values := arr |] 
+
+matrix1DRep VarData{vIndexes = ix, vEssence= e} =  
+    erriM "Matrix1DRep not Handled (indexes, e):" (ix, [unwrapExpr e])
 
 
 occurrenceRep :: VarData -> E
