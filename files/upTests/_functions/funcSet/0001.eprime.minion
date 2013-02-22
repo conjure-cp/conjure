@@ -1,0 +1,17 @@
+MINION 3
+**VARIABLES**
+BOOL f_Matrix1D_Occurrence_00000_00000 #
+BOOL f_Matrix1D_Occurrence_00000_00001 #
+BOOL f_Matrix1D_Occurrence_00001_00000 #
+BOOL f_Matrix1D_Occurrence_00001_00001 #
+BOOL f_Matrix1D_Occurrence_00002_00000 #
+BOOL f_Matrix1D_Occurrence_00002_00001 #
+**SEARCH**
+PRINT[[f_Matrix1D_Occurrence_00000_00000],[f_Matrix1D_Occurrence_00000_00001],[f_Matrix1D_Occurrence_00001_00000],[f_Matrix1D_Occurrence_00001_00001],[f_Matrix1D_Occurrence_00002_00000],[f_Matrix1D_Occurrence_00002_00001]]
+VARORDER STATIC [f_Matrix1D_Occurrence_00000_00000,f_Matrix1D_Occurrence_00000_00001,f_Matrix1D_Occurrence_00001_00000,f_Matrix1D_Occurrence_00001_00001,f_Matrix1D_Occurrence_00002_00000,f_Matrix1D_Occurrence_00002_00001]
+VARORDER AUX []
+**CONSTRAINTS**
+sumgeq([f_Matrix1D_Occurrence_00000_00000,f_Matrix1D_Occurrence_00000_00001],2)
+sumgeq([f_Matrix1D_Occurrence_00001_00000,f_Matrix1D_Occurrence_00001_00001],2)
+sumgeq([f_Matrix1D_Occurrence_00002_00000,f_Matrix1D_Occurrence_00002_00001],2)
+**EOF**

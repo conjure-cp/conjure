@@ -1,0 +1,76 @@
+language ESSENCE' 1.0
+
+given a: int
+given b: int
+given c: int
+given d: int
+find fs_Explicit_Matrix1D_Explicit_Occurrence:
+        matrix indexed by [int(1..1), int(a..b), int(1..2), int(c..d)] of bool
+such that
+    forAll v__0 : int(a..b)
+        . (sum v__1 : int(c..d)
+               . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__0, 1, v__1])
+          =
+          3
+          /\
+          (sum v__1 : int(c..d)
+               . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__0, 2, v__1])
+          =
+          3,
+    forAll v__0 : int(a..b)
+        . (forAll v__1 : int(1..2)
+               . (forAll v__2 : int(1..2)
+                      . v__1 < v__2
+                        ->
+                        !((forAll v__3 : int(c..d)
+                               . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__0, v__1, v__3]
+                                 ->
+                                 (exists v__4 : int(c..d)
+                                      . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__0, v__2, v__4] /\ v__4 = v__3))
+                          /\
+                          (forAll v__3 : int(c..d)
+                               . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__0, v__2, v__3]
+                                 ->
+                                 (exists v__4 : int(c..d)
+                                      . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__0, v__1, v__4]
+                                        /\
+                                        v__4 = v__3))))),
+    forAll v__0 : int(1..1)
+        . 1 < v__0
+          ->
+          !(forAll v__1 : int(a..b)
+                . (forAll v__2 : int(1..2)
+                       . (exists v__3 : int(1..2)
+                              . (forAll v__4 : int(c..d)
+                                     . fs_Explicit_Matrix1D_Explicit_Occurrence[v__0, v__1, v__3, v__4]
+                                       ->
+                                       (exists v__5 : int(c..d)
+                                            . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__1, v__2, v__5]
+                                              /\
+                                              v__5 = v__4))
+                                /\
+                                (forAll v__4 : int(c..d)
+                                     . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__1, v__2, v__4]
+                                       ->
+                                       (exists v__5 : int(c..d)
+                                            . fs_Explicit_Matrix1D_Explicit_Occurrence[v__0, v__1, v__3, v__5]
+                                              /\
+                                              v__5 = v__4))))
+                  /\
+                  (forAll v__2 : int(1..2)
+                       . (exists v__3 : int(1..2)
+                              . (forAll v__4 : int(c..d)
+                                     . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__1, v__3, v__4]
+                                       ->
+                                       (exists v__5 : int(c..d)
+                                            . fs_Explicit_Matrix1D_Explicit_Occurrence[v__0, v__1, v__2, v__5]
+                                              /\
+                                              v__5 = v__4))
+                                /\
+                                (forAll v__4 : int(c..d)
+                                     . fs_Explicit_Matrix1D_Explicit_Occurrence[v__0, v__1, v__2, v__4]
+                                       ->
+                                       (exists v__5 : int(c..d)
+                                            . fs_Explicit_Matrix1D_Explicit_Occurrence[1, v__1, v__3, v__5]
+                                              /\
+                                              v__5 = v__4)))))

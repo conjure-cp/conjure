@@ -1,0 +1,110 @@
+MINION 3
+**VARIABLES**
+BOOL fs_ExplicitVarSize_tuple1_00000 #
+BOOL fs_ExplicitVarSize_tuple1_00001 #
+BOOL fs_ExplicitVarSize_tuple1_00002 #
+BOOL fs_ExplicitVarSize_tuple1_00003 #
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000,[-1, 1])
+**VARIABLES**
+DISCRETE fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001 #
+{-1..1}
+**CONSTRAINTS**
+w-inset(fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001,[-1, 1])
+**VARIABLES**
+BOOL aux0 #(fs_ExplicitVarSize_tuple1_00003 /\ fs_ExplicitVarSize_tuple1_00002)
+BOOL aux1 #((fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000=fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000) /\ (fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001=fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001))
+BOOL aux2 #(!aux1)
+BOOL aux3 #(fs_ExplicitVarSize_tuple1_00001 /\ fs_ExplicitVarSize_tuple1_00000)
+BOOL aux4 #((fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000=fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000) /\ (fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001=fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001))
+BOOL aux5 #(!aux4)
+BOOL aux6 #(fs_ExplicitVarSize_tuple1_00002 /\ fs_ExplicitVarSize_tuple1_00000)
+BOOL aux7 #((fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000=fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000) /\ (fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001=fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001))
+BOOL aux8 #(!aux7)
+BOOL aux9 #(fs_ExplicitVarSize_tuple1_00003 /\ fs_ExplicitVarSize_tuple1_00000)
+BOOL aux10 #((fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000=fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000) /\ (fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001=fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001))
+BOOL aux11 #(!aux10)
+BOOL aux12 #(fs_ExplicitVarSize_tuple1_00002 /\ fs_ExplicitVarSize_tuple1_00001)
+BOOL aux13 #((fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000=fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000) /\ (fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001=fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001))
+BOOL aux14 #(!aux13)
+BOOL aux15 #(fs_ExplicitVarSize_tuple1_00003 /\ fs_ExplicitVarSize_tuple1_00001)
+BOOL aux16 #((fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000=fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000) /\ (fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001=fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001))
+BOOL aux17 #(!aux16)
+BOOL aux18 #(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000 != -1)
+BOOL aux19 #(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000 != -1)
+BOOL aux20 #(fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000 != -1)
+BOOL aux21 #(fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000 != -1)
+**SEARCH**
+PRINT[[fs_ExplicitVarSize_tuple1_00000],[fs_ExplicitVarSize_tuple1_00001],[fs_ExplicitVarSize_tuple1_00002],[fs_ExplicitVarSize_tuple1_00003],[fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000],[fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001],[fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000],[fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001],[fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000],[fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001],[fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000],[fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001]]
+VARORDER STATIC [fs_ExplicitVarSize_tuple1_00000,fs_ExplicitVarSize_tuple1_00001,fs_ExplicitVarSize_tuple1_00002,fs_ExplicitVarSize_tuple1_00003,fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001]
+VARORDER AUX [aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7,aux8,aux9,aux10,aux11,aux12,aux13,aux14,aux15,aux16,aux17,aux18,aux19,aux20,aux21]
+**CONSTRAINTS**
+reify(watched-and({w-literal(fs_ExplicitVarSize_tuple1_00003,1),w-literal(fs_ExplicitVarSize_tuple1_00002,1)}), aux0)
+reify(watched-and({eq(fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000),eq(fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001)}), aux1)
+reify(eq(aux1,0), aux2)
+reify(watched-and({w-literal(fs_ExplicitVarSize_tuple1_00001,1),w-literal(fs_ExplicitVarSize_tuple1_00000,1)}), aux3)
+reify(watched-and({eq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000),eq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001)}), aux4)
+reify(eq(aux4,0), aux5)
+reify(watched-and({w-literal(fs_ExplicitVarSize_tuple1_00002,1),w-literal(fs_ExplicitVarSize_tuple1_00000,1)}), aux6)
+reify(watched-and({eq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000),eq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001)}), aux7)
+reify(eq(aux7,0), aux8)
+reify(watched-and({w-literal(fs_ExplicitVarSize_tuple1_00003,1),w-literal(fs_ExplicitVarSize_tuple1_00000,1)}), aux9)
+reify(watched-and({eq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000),eq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001)}), aux10)
+reify(eq(aux10,0), aux11)
+reify(watched-and({w-literal(fs_ExplicitVarSize_tuple1_00002,1),w-literal(fs_ExplicitVarSize_tuple1_00001,1)}), aux12)
+reify(watched-and({eq(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000),eq(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00002_00001)}), aux13)
+reify(eq(aux13,0), aux14)
+reify(watched-and({w-literal(fs_ExplicitVarSize_tuple1_00003,1),w-literal(fs_ExplicitVarSize_tuple1_00001,1)}), aux15)
+reify(watched-and({eq(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000),eq(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00001,fs_ExplicitVarSize_tuple2_Matrix1D_00003_00001)}), aux16)
+reify(eq(aux16,0), aux17)
+reify(diseq(fs_ExplicitVarSize_tuple2_Matrix1D_00000_00000,-1), aux18)
+reify(diseq(fs_ExplicitVarSize_tuple2_Matrix1D_00001_00000,-1), aux19)
+reify(diseq(fs_ExplicitVarSize_tuple2_Matrix1D_00002_00000,-1), aux20)
+reify(diseq(fs_ExplicitVarSize_tuple2_Matrix1D_00003_00000,-1), aux21)
+sumgeq([fs_ExplicitVarSize_tuple1_00000,fs_ExplicitVarSize_tuple1_00001,fs_ExplicitVarSize_tuple1_00002,fs_ExplicitVarSize_tuple1_00003],1)
+ineq(aux0, aux2, 0)
+ineq(aux3, aux5, 0)
+ineq(aux6, aux8, 0)
+ineq(aux9, aux11, 0)
+ineq(aux12, aux14, 0)
+ineq(aux15, aux17, 0)
+ineq(fs_ExplicitVarSize_tuple1_00000, aux18, 0)
+ineq(fs_ExplicitVarSize_tuple1_00001, aux19, 0)
+ineq(fs_ExplicitVarSize_tuple1_00002, aux20, 0)
+ineq(fs_ExplicitVarSize_tuple1_00003, aux21, 0)
+ineq(fs_ExplicitVarSize_tuple1_00000, fs_ExplicitVarSize_tuple1_00001, 0)
+ineq(fs_ExplicitVarSize_tuple1_00001, fs_ExplicitVarSize_tuple1_00002, 0)
+ineq(fs_ExplicitVarSize_tuple1_00002, fs_ExplicitVarSize_tuple1_00003, 0)
+**EOF**
