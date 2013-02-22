@@ -29,7 +29,7 @@ evalTree' mapping prefix (Leaf part) =
     lookUpE = fromMaybe (error "fromMaybe et: lookUpType")  . flip M.lookup mapping
     vdata   = lookUpE  name
 
--- pointless unwraping but..
+
 evalTree' mapping prefix (Tuple arr) =
     let items =  map (unwrapExpr . evalTree' mapping prefix ) arr
     in  [xMake| expr.value.tuple.values := items |]
@@ -39,12 +39,10 @@ evalTree' mapping prefix (Branch s@"AsReln"  arr) =
     in relnToFunc res
     -- `_e` ("evalTree' AsReln", [res] )
 
-
 evalTree' mapping prefix (Branch s@"SetOfSets"  arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
     in matrixToPartiton res
 
--- haskish old code but seems to work
 evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
     let t' =  evalTree' mapping (prefix ++ [s]) t
         [t1,t2] = tupleToArr t'
@@ -58,10 +56,8 @@ evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
     tupleToArr :: E -> [E]
     tupleToArr [xMatch| arr := expr.value.tuple.values |] = arr
 
-
 evalTree' mapping prefix (Branch part arr) =
     evalTree' mapping (prefix ++ [part])  (repSelector arr)
-
 
 
 repSelector :: [Tree String] -> Tree String
@@ -72,7 +68,7 @@ matrixToPartiton [xMatch| vs := expr.value.matrix.values|] =
     let res = map func vs
     in  [xMake| expr.value.partition := res |]
 
-    where 
+    where
     func [xMatch| xs := value.matrix.values |] = [xMake| part := xs |]
 
 relnToFunc :: E -> E
@@ -83,7 +79,7 @@ relnToFunc [xMatch| [v] := expr|] =
 relnToFunc [xMatch| vals := value.matrix.values.value.tuple |] =
     let vals' = map (\(Tagged "values" arr) -> [xMake| mapping := arr |] ) vals
         res   = [xMake| value.function.values := vals' |]
-    in res 
+    in res
 
 relnToFunc [xMatch| _  := value.matrix.values.value.matrix.values
                   | vs := value.matrix.values |] =
@@ -97,7 +93,7 @@ relnToFunc [xMatch| _  := value.matrix.values.value.matrix.values.value.tuple.va
     let res = map relnToFunc vs
     in  [xMake| value.matrix.values := res |]
 
-relnToFunc e =  
+relnToFunc e =
     let tupled = reTuple e
     in  relnToFunc tupled
 
@@ -109,7 +105,7 @@ reTuple [xMatch| _  := value.matrix.values.value.literal
                | vs := value.matrix |]  =
     [xMake| value.tuple := vs |]
 
-reTuple [xMatch| vs := value.matrix.values |]  = 
+reTuple [xMatch| vs := value.matrix.values |]  =
     let res = map reTuple vs
     in  [xMake| value.matrix.values := res |]
 
@@ -119,31 +115,28 @@ repConverter  kind  vdata@VarData{vEssence = es} =
     case kind of
       "Explicit"   -> explicitRep vdata
       "Occurrence" -> occurrenceRep vdata
-      "Matrix1D"   -> matrix1DRep vdata
+      "Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
       _            -> es
 
-
-matrix1DRep :: VarData -> E
-matrix1DRep vd@VarData{vEssence=[xMatch| [v] := expr |] } =
-    let res = matrix1DRep vd{vEssence = v}
+matrix1DRep ::  [[Integer]] -> E -> E
+matrix1DRep indexes [xMatch| [v] := expr |]  =
+    let res = matrix1DRep indexes v
     in  [xMake| expr := [res] |]
 
-matrix1DRep VarData{vIndexes = [ix],
-              vEssence=[xMatch| vals := value.matrix.values |]} =
+matrix1DRep [ix] [xMatch| vals := value.matrix.values |] =
     let togther = zip ix vals
         result  = map (\(a,b) -> [xMake| mapping := [ func a,  b] |] ) togther
         result' = [xMake| value.function.values := result |]
-    in  result' 
-    -- in erri (ix,vals) 
+    in  result'
+    -- in erri (ix,vals)
 
     where func a = [xMake| value.literal := [ Prim (I a) ] |]
 
-matrix1DRep vd@VarData{vIndexes = (x:xs),
-             vEssence=  [xMatch| vs := value.matrix.values |]}  =
-    let arr = map (\v -> matrix1DRep vd{vIndexes=xs,vEssence=v } ) vs
-    in [xMake| value.matrix.values := arr |] 
+matrix1DRep (x:xs) [xMatch| vs := value.matrix.values |]  =
+    let arr = map (\v -> matrix1DRep xs v  ) vs
+    in [xMake| value.matrix.values := arr |]
 
-matrix1DRep VarData{vIndexes = ix, vEssence= e} =  
+matrix1DRep ix e =
     erriM "Matrix1DRep not Handled (indexes, e):" (ix, [unwrapExpr e])
 
 
@@ -193,13 +186,13 @@ transpose []     = []
 transpose [xs]   = map (: [])  xs
 transpose (x:xs) = zipWith (:) x (transpose xs)
 
--- Basically does what pairr was originally written for 
--- which is to  convert 
--- [[2, 3], [2, 3], [2, 3], [2, 3]]  and [[4, 4], [4, 4], [4, 4], [7, 4]]) 
+-- Basically does what pairr was originally written for
+-- which is to  convert
+-- [[2, 3], [2, 3], [2, 3], [2, 3]]  and [[4, 4], [4, 4], [4, 4], [7, 4]])
 -- to [[[2, 4], [3, 4]], [[2, 4], [3, 4]], [[2, 4], [3, 4]], [[2, 7], [3, 4]]])
 -- by pairring the elements of the two matrixes
-pairMatrix :: [E] -> E 
-pairMatrix arr = 
+pairMatrix :: [E] -> E
+pairMatrix arr =
     let res = foldl1 pairMatrix' arr
     in  res
     -- `_b` ("pairMatrix main args",arr)
@@ -212,9 +205,9 @@ pairMatrix'
     let res' = pairEqual v1  v2
 
     in  case res' of
-        ([xMatch| _ := value |]:_)  -> -- __j "pairMatrix' pres1" 
+        ([xMatch| _ := value |]:_)  -> -- __j "pairMatrix' pres1"
             [xMake| value.matrix.values := res'|]
-        ([xMatch| _ := values |]:_) -> -- __j "pairMatrix' pres2" 
+        ([xMatch| _ := values |]:_) -> -- __j "pairMatrix' pres2"
             [xMake| value.matrix.values := (concatMap con res')|]
 
     where con [xMatch| vs := values |] = vs
@@ -222,7 +215,7 @@ pairMatrix'
 
 pairMatrix' a@[xMatch| _ := value.literal |]
        b@[xMatch| _ := value.literal |] =
-    -- __j "pairMatrix' lit res" $ 
+    -- __j "pairMatrix' lit res" $
         [xMake| value.matrix.values :=  [a,b] |]
         -- `_e` ("pairMatrix' lit",[a,b])
 
@@ -231,9 +224,9 @@ pairMatrix' a b = errt [a,b]
 
 pairEqual :: [E] -> [E] -> [E]
 pairEqual v1 v2
-    |  l1 == l2   =  
+    |  l1 == l2   =
             let zipped = zipWith (\a b -> [a, b] ) v1 v2
-                res = map pairMatrix zipped 
+                res = map pairMatrix zipped
             in res
     where l1 = length v1
           l2 = length v2
@@ -266,7 +259,7 @@ mergeExplicitVarSizeTuple
              [xMake| expr :=  [chosen] |]
         else
             error "t1's has to be <= t2's dim"
-    where 
+    where
         dimOfMatrix [xMatch| v := value.matrix.values
                     |  _  := value.matrix.values.value.matrix |] = 1 + dimOfMatrix (head v)
         dimOfMatrix [xMatch| _ := value.matrix.values |] = 1
