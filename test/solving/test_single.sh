@@ -41,7 +41,7 @@ rm -rf "$SPEC" $SPEC.errors
 mkdir -p "$SPEC"
 
 
-conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime"
+conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime" +RTS -s 2> conjure.stats
 
 function perModelperParam {
     WD="$(pwd)"
@@ -54,7 +54,8 @@ function perModelperParam {
         --in-essence $SPEC.essence                                          \
         --in-eprime  $MODEL.eprime                                          \
         --in-essence-param $PARAM.param                                     \
-        --out-eprime-param $MODEL-$PARAM.eprime-param
+        --out-eprime-param $MODEL-$PARAM.eprime-param                       \
+        +RTS -s 2> conjure_refineParam.stats
 
     savilerow                                                               \
         -in-eprime    $MODEL.eprime                                         \
@@ -69,12 +70,14 @@ function perModelperParam {
         --in-eprime             $MODEL.eprime                               \
         --in-eprime-param       $MODEL-$PARAM.eprime-param                  \
         --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
-        --out-essence-solution  $MODEL-$PARAM.solution
+        --out-essence-solution  $MODEL-$PARAM.solution                      \
+        +RTS -s 2> conjure_translateSolution.stats
 
     conjure                                                                 \
         --mode diff                                                         \
         $PARAM.solution                                                     \
-        $MODEL-$PARAM.solution
+        $MODEL-$PARAM.solution                                              \
+        +RTS -s 2> conjure_diff.stats
 
     if (( $? != 0 )); then
         echo "$WD $MODEL $PARAM" >> fail.txt

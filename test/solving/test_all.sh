@@ -17,7 +17,7 @@ function perDirectory {
     DIR="$3"
 
     echo "calling on $DIR"
-    ( cd "$DIR" ; bash "$TEST_SINGLE" df ; touch fail.txt pass.txt all.txt )
+    ( cd "$DIR" ; time bash "$TEST_SINGLE" df ; touch fail.txt pass.txt all.txt )
     cat "$DIR/fail.txt" >> "$SCRIPT_DIR"/fail.txt
     cat "$DIR/pass.txt" >> "$SCRIPT_DIR"/pass.txt
     cat "$DIR/all.txt"  >> "$SCRIPT_DIR"/all.txt
