@@ -1,0 +1,11 @@
+language ESSENCE 2.0
+
+given a,b,c,d,e,f:int
+
+letting Index be domain int(e..f)
+
+find fs : set(maxSize a) of set (minSize b) of function (total) Index --> int(c,d)
+such that
+    forAll f in fs .
+        forAll f2 in f .
+            f2(1) = -1
