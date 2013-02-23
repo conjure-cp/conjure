@@ -4,19 +4,20 @@ $ Problem details available at http://www.csplib.org/prob/prob009/
 $ 05 September 2007
 $
 
-given container_size : int(1..),
-      sizes : set of int(1..container_size)
+given sizes new domain int
 
-where (sum s in sizes . s**2) = container_size**2
+letting container_size be sum i : sizes . 1
 
-letting Index be domain int(0..container_size-1),
-        Square be domain int(sizes)
+where (sum s : sizes . s**2) = container_size**2
+
+letting Index be domain int(0..container_size-1)
+letting Square be domain sizes
 
 find x, y : function (total) Square --> Index
 
 such that
     forAll s : Square . x(s) + s < container_size /\ y(s) + s < container_size,
-    forAll s1,s2 : Square . s1 != s2 ->
+    forAll s1,s2 : Square , s1 != s2 .
         max({x(s1),x(s2)}) - min({x(s1)+s1,x(s2)+s2}) >= 0 \/
         max({y(s1),y(s2)}) - min({y(s1)+s1,y(s2)+s2}) >= 0
 
