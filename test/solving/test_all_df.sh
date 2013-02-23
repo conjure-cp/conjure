@@ -35,7 +35,7 @@ function perDirectory {
 
 export -f perDirectory
 
-find "$SCRIPT_DIR" -name "*.essence" | head -n 3 | parallel perDirectory {//}
+find "$SCRIPT_DIR" -name "*.essence" | parallel perDirectory {//}
 
 cat "$FAIL_FILE" | wc -l > "$FAIL_COUNT_FILE"
 cat "$PASS_FILE" | wc -l > "$PASS_COUNT_FILE"
