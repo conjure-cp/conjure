@@ -24,7 +24,8 @@ data Tree a = Leaf a
 data TagT = TagSingle Tag
           | TagEnum   String
           | TagUnamed String
-          | TagTuple [[TagT]]
+          | TagTuple  [[TagT]]
+          | TagFunc  [TagT] [TagT]
     deriving (Show)
 
 

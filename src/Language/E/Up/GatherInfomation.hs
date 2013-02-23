@@ -84,11 +84,21 @@ getEssenceVariable [xMatch| [Prim (S kind)] := topLevel.declaration.find.domain.
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagEnum (T.unpack  kind)])
 
+getEssenceVariable [xMatch|  _    := topLevel.declaration.find.domain.domain.function
+                          | [ins] := topLevel.declaration.find.domain.domain
+                                  .function.innerFrom
+                          | [tos] := topLevel.declaration.find.domain.domain
+                                  .function.innerTo
+                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+   Just (T.unpack name,  [TagFunc (getTags ins) (getTags tos)]  )
+    --error "d"
+
 getEssenceVariable [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  TagSingle t : concatMap getTags arr )
 
--- Very silly but works for enums
+
+-- Very silly but works for enums and unmaned types
 getEssenceVariable [xMatch| _ := topLevel.declaration.find.domain.topLevel.letting.typeEnum
                           | [Prim (S kind)] := topLevel.declaration.find.domain
                                                    .topLevel.letting.name
@@ -96,7 +106,6 @@ getEssenceVariable [xMatch| _ := topLevel.declaration.find.domain.topLevel.letti
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagEnum (T.unpack  kind)]  )
 
--- For Unnamed types, which are going to be treated as ints for now
 getEssenceVariable [xMatch| _  := topLevel.declaration.find.domain
                                         .topLevel.letting.typeUnnamed
                             | [Prim (S kind)] := topLevel.declaration.find.domain 
@@ -104,7 +113,6 @@ getEssenceVariable [xMatch| _  := topLevel.declaration.find.domain
                                                  .topLevel.letting.name.reference
                             | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagUnamed (T.unpack kind) ] )
-   --errt [t]
 
 
 -- getEssenceVariable e = errb [e]
@@ -112,10 +120,14 @@ getEssenceVariable _ = Nothing
 
 
 getTags ::  E -> [TagT]
-getTags [xMatch| arr := inner.domain.tuple.inners |] = [TagTuple (map getTags arr)]
-getTags [xMatch| arr := domain.tuple.inners |]       = [TagTuple (map getTags arr)]
-getTags [xMatch| [Tagged t arr] := inner.domain |]   = TagSingle t : concatMap getTags arr
-getTags [xMatch| [Tagged t arr] := domain |]         = TagSingle t : concatMap getTags arr
+getTags [xMatch|  _    := domain.function
+               | [ins] := domain.function.innerFrom
+               | [tos] := domain.function.innerTo |] =
+   [TagFunc (getTags ins) (getTags tos)]
+
+getTags [xMatch| arr := domain.tuple.inners |] = [TagTuple (map getTags arr)]
+getTags [xMatch| [Tagged t arr] := domain |]   = TagSingle t : concatMap getTags arr
+getTags [xMatch| [dom] := inner |]             = getTags dom
 getTags _ = []
 
 
