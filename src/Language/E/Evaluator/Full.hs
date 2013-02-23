@@ -69,13 +69,13 @@ fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      |] = ret x
 
 fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
-                     | xs := binOp.left.value.set.values
-                     | ys := binOp.left.value.set.values
+                     | xs := binOp.left .value.set.values
+                     | ys := binOp.right.value.set.values
                      |] = ret $ [xMake| value.set.values := nub (xs ++ ys) |]
 
 fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
-                     | xs := binOp.left.value.mset.values
-                     | ys := binOp.left.value.mset.values
+                     | xs := binOp.left .value.mset.values
+                     | ys := binOp.right.value.mset.values
                      |] = ret $ [xMake| value.mset.values := xs ++ ys |]
 
 fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
