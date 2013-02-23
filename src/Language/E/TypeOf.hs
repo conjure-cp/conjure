@@ -95,7 +95,11 @@ typeErrorIn :: MonadConjure m => E -> m a
 typeErrorIn p = typeErrorIn' p ""
 
 typeErrorIn' :: MonadConjure m => E -> Doc -> m a
-typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [pretty p, prettyAsPaths p, d]
+typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [ pretty p
+                                                             , prettyAsTree p
+                                                             , prettyAsPaths p
+                                                             , d
+                                                             ]
 
 
 typeOf :: MonadConjure m => E -> m E
@@ -225,6 +229,23 @@ typeOf p@[xMatch| xs := value.relation.values |] = do
             [xMatch| is := type.tuple.inners |] -> return [xMake| type.relation.inners := is |]
             _ -> typeErrorIn p
         else typeErrorIn p
+
+typeOf   [xMatch| [] := value.partition |] = return [xMake| type.partition.inner.type.unknown := [] |]
+typeOf p@[xMatch| xs := value.partition |] = do
+    (tx:txs) <- mapM typeOf xs
+    res <- and <$> mapM (tx `typeUnify`) txs
+    if res
+        then return [xMake| type.partition.inner := [tx] |]
+        else typeErrorIn p
+
+typeOf   [xMatch| [] := part |] = return [xMake| type.unknown := [] |]
+typeOf p@[xMatch| xs := part |] = do
+    (tx:txs) <- mapM typeOf xs
+    res <- and <$> mapM (tx `typeUnify`) txs
+    if res
+        then return tx
+        else typeErrorIn p
+
 
 -- expressions
 
