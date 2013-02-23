@@ -3,12 +3,13 @@
 module Language.E.Parser.EssenceFile where
 
 import Language.E.Parser.Imports
+import Language.E.Parser.Shunt ( shuntingYardExpr, shuntingYardDomain )
 
 import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
-import Language.E.Data ( Fixity(..), operators, functionals )
-import Language.E.Lexer ( Lexeme(..), lexemeFace, lexemeText )
+import Language.E.Data ( operators, functionals )
+import Language.E.Lexer ( Lexeme(..), lexemeFace )
 
 import Data.String ( fromString )
 
@@ -50,78 +51,13 @@ parseMetaVariable = do
     return [xMake| metavar := [Prim (S iden)] |]
 
 parseExpr :: Parser E
-parseExpr = do
-    xs <- fixNegate <$> parseBeforeShunt
-    -- error $ unlines $ map show xs
-    if not $ checkAlternating xs
-        then fail "Shunting Yard failed. How dare you."
-        else shunt xs
+parseExpr = shuntingYardExpr parseBeforeShunt
     where
-        fixNegate :: [Either Lexeme E] -> [Either Lexeme E]
-        fixNegate ( Right a
-                  : Right ([xMatch| [b] := unaryOp.negate |])
-                  : cs
-                  ) = fixNegate $ Right a : Left L_Minus : Right b : cs
-        fixNegate (a:bs) = a : fixNegate bs
-        fixNegate [] = []
-
-        checkAlternating :: [Either a b] -> Bool
-        checkAlternating [Right _] = True
-        checkAlternating (Right _:Left _:rest) = checkAlternating rest
-        checkAlternating _ = False
-
-        shunt :: [Either Lexeme E] -> Parser E
-        shunt xs = do
-            result <- findPivotOp xs
-            case result of
-                Left x -> return x
-                Right (before, op, after) -> do
-                    b <- shunt before
-                    a <- shunt after
-                    return [xMake| binOp.operator := [Prim (S $ lexemeText op)]
-                                 | binOp.left     := [b]
-                                 | binOp.right    := [a]
-                                 |]
-
-        findPivotOp :: [Either Lexeme E] -> Parser (Either E ([Either Lexeme E], Lexeme, [Either Lexeme E]))
-        findPivotOp [Right x] = return $ Left x
-        findPivotOp xs = do
-            let
-                pivotPrec :: Int
-                pivotFixity :: Fixity
-                (pivotPrec,pivotFixity) = minimumBy (comparing fst)
-                                [ (p, f) | Left l <- xs, (l',f,p) <- operators, l == l' ]
-
-                chck op = case [ p | (l,_,p) <- operators, l == op ] of
-                            [p] -> p == pivotPrec
-                            _ -> False
-
-                findFirst :: [Either Lexeme E] -> Parser ([Either Lexeme E], Lexeme, [Either Lexeme E])
-                findFirst [] = fail "findPivotOp.findFirst"
-                findFirst (Left i:is) | chck i = return ([], i, is)
-                findFirst (i:is) = do
-                    (before, op, after) <- findFirst is
-                    return (i:before, op, after)
-
-                findLast :: [Either Lexeme E] -> Parser ([Either Lexeme E], Lexeme, [Either Lexeme E])
-                findLast is = do
-                    (before, op, after) <- findFirst (reverse is)
-                    return (reverse after, op, reverse before)
-
-                findOnly :: [Either Lexeme E] -> Parser ([Either Lexeme E], Lexeme, [Either Lexeme E])
-                findOnly is = do
-                    f <- findFirst is
-                    l <- findLast  is
-                    if f == l
-                        then return f
-                        else fail "Ambiguous use of non-associative operator."
-
-            let
-                finder = case pivotFixity of
-                            FLeft  -> findLast
-                            FNone  -> findOnly
-                            FRight -> findFirst
-            Right <$> finder xs
+        parseBeforeShunt :: Parser [Either Lexeme E]
+        parseBeforeShunt = some $ msum
+            [ Right <$> try parseAtomicExpr
+            , Left  <$> parseOp
+            ]
 
 
 parseAtomicExpr :: Parser E
@@ -252,11 +188,6 @@ parseReference = do
     return [xMake| reference := [Prim (S x)]
                  |]
 
-parseBeforeShunt :: Parser [Either Lexeme E]
-parseBeforeShunt = some $ msum
-    [ Right <$> try parseAtomicExpr
-    , Left  <$> parseOp
-    ]
 
 parseOp :: Parser Lexeme
 parseOp = msum [ do lexeme x; return x | (x,_,_) <- operators ]
@@ -349,15 +280,22 @@ parseRange = msum [try pRange, pSingle]
             return [xMake| range.single := [x] |]
 
 parseDomain :: Parser E
-parseDomain = msum $ map try
-    [ pBool, pInt, pEnum
-    , pMatrix, pTupleWithout, pTupleWith
-    , pSet, pMSet, pFunction, pFunction'
-    , pRelation, pRelation'
-    , pPartition
-    , parseMetaVariable, pParens
-    ]
+parseDomain
+    = shuntingYardDomain
+    $ some
+    $ msum [ Right <$> try pDomainAtom
+           , Left  <$> parseOp
+           ]
     where
+        pDomainAtom = msum $ map try
+            [ pBool, pInt, pEnum
+            , pMatrix, pTupleWithout, pTupleWith
+            , pSet, pMSet, pFunction, pFunction'
+            , pRelation, pRelation'
+            , pPartition
+            , parseMetaVariable, pParens
+            ]
+
         pParens = parens parseDomain
 
         pBool = do

@@ -164,9 +164,6 @@ instance Pretty E where
                   |]
         = Pr.parens $ pretty a <+> ":" <+> pretty b
 
-    pretty [xMatch| [d] := domainInExpr
-                 |]
-        = "`" <> pretty d <> "`"
 
 -- type.*
     pretty [xMatch| [ ] := type.unknown    |] = "?"
@@ -201,6 +198,10 @@ instance Pretty E where
 
 
     -- domain.*
+
+    pretty [xMatch| [d] := domainInExpr |] = "`" <> pretty d <> "`"
+    pretty [xMatch| xs  := domain.binOp |] = pretty [xMake| binOp := xs |]
+
     pretty [xMatch| [Prim (S x)] := domain.reference   |] = pretty x
 
     pretty [xMatch|      []      := domain.bool        |] = "bool"

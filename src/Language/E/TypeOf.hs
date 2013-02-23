@@ -133,6 +133,14 @@ typeOf [xMatch| [d] := typed.right |] = typeOf d
 
 typeOf [xMatch| [d] := domainInExpr |] = typeOf d
 
+typeOf [xMatch| [lhs] := domain.binOp.left
+              | [rhs] := domain.binOp.right
+              | [Prim (S op)] := domain.binOp.operator
+              |] | op `elem` ["-", "union", "intersect"] = do
+    lhsTy <- typeOf lhs
+    rhsTy <- typeOf rhs
+    mostKnown lhsTy rhsTy
+
 typeOf [xMatch| _ := domain.bool |] = return [xMake| type.bool := [] |]
 typeOf [xMatch| _ := domain.int  |] = return [xMake| type.int  := [] |]
 

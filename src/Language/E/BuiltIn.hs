@@ -139,7 +139,35 @@ builtInRefn :: MonadConjure m => [RefnFunc m]
 builtInRefn = [ relationApply, tupleExplode, functionLiteralApply
               , quanOverToSetRelationProject
               , tupleDomInQuantification
+              , intDomFromSet
               ]
+
+intDomFromSet :: MonadConjure m => RefnFunc m
+intDomFromSet p@[xMatch| xs := domain.int.ranges.range.single.value.set.values |]
+    = ret p "builtIn.intDomFromSet" [xMake| domain.int.ranges := (map toSingleRange xs) |]
+    where toSingleRange i = [xMake| range.single := [i] |]
+intDomFromSet p@[xMatch| [r] := domain.int.ranges.range.single |] =
+    case r of
+        [eMatch| &a union &b |] ->
+            ret p "builtIn.intDomFromSet"
+                [xMake| domain.binOp.operator := [Prim (S "union")]
+                      | domain.binOp.left     := [a]
+                      | domain.binOp.right    := [b]
+                      |]
+        [eMatch| &a intersect &b |] ->
+            ret p "builtIn.intDomFromSet"
+                [xMake| domain.binOp.operator := [Prim (S "intersect")]
+                      | domain.binOp.left     := [a]
+                      | domain.binOp.right    := [b]
+                      |]
+        [eMatch| &a - &b |] ->
+            ret p "builtIn.intDomFromSet"
+                [xMake| domain.binOp.operator := [Prim (S "-")]
+                      | domain.binOp.left     := [a]
+                      | domain.binOp.right    := [b]
+                      |]
+        _ -> return Nothing
+intDomFromSet _ = return Nothing
 
 relationApply :: MonadConjure m => RefnFunc m
 relationApply p@[xMatch| [actual]             := functionApply.actual
