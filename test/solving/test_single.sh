@@ -41,7 +41,7 @@ rm -rf "$SPEC" $SPEC.errors
 mkdir -p "$SPEC"
 
 
-conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime" +RTS -s 2> conjure.stats
+conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime" +RTS -M8G -s 2> conjure.stats
 
 function perModelperParam {
     WD="$(pwd)"
