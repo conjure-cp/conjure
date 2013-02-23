@@ -138,38 +138,6 @@ reTuple  n e = reTuple (n-1) [xMake| value.tuple.values := [e]|]
 
 toEssenceRep :: [TagT] -> E -> E
 
-{-
-toEssenceRep all
-    e@[xMatch| _  := expr
-             | [val] := expr |] =
-    let res = toEssenceRep all val
-    in [xMake| expr := [res] |]
-        `_i` ("expr", (all, [e]) )
--}
-
-
--- CHECK seem  Suspicious?
-toEssenceRep r@(TagSingle "matrix":_)
-    e@[xMatch| _  := expr.value.tuple.values.value.matrix
-             | [ex] := expr |] = 
-    let res = toEssenceRep r ex
-        res' = [xMake| expr := [res] |]
-    in res'
-    `_f` ("S expr.value.tuple.values.value.matrix",r)
-    `_p` ("S expr.value.tuple.values.value.matrix",[e])
-
-
-toEssenceRep r@(TagSingle "matrix":_)
-    e@[xMatch| _  := expr.value.tuple.values.value.tuple
-             | [val] := expr |] =
-    let res = toEssenceRep r val
-        res' = [xMake| expr := [res] |]
-    in res'
-    `_f` ("S expr.value.tuple.values.value.tuple",r)
-    `_p` ("S expr.value.tuple.values.value.tuple",[e])
-
-
-
 -- To handles singeton tuples
 -- FIXME rec handling
 toEssenceRep [TagSingle "matrix", TagTuple [[ts]] ]
@@ -186,7 +154,6 @@ toEssenceRep [TagSingle "matrix", TagTuple [[ts]] ]
         `_g` ("singleton count", count)
         `_p` ("singleton vs1", [vs1])
         `_f` ("singleton ts", [ts])
-
 
     where
     val = isNestedTuple [ts] vs1
@@ -600,13 +567,6 @@ toEssenceRep r@[TagSingle "matrix", TagTuple ts ]
         `_f` ("V M T values.value.tuple.values ts ", ts)
 
 
-toEssenceRep (TagSingle t :ts)  [xMatch| [vals] := expr.value.matrix|] =
-    let vals' = toEssenceRep ts vals in
-        [xMake| expr.value := [Tagged t [vals'] ] |]
-        `_e` ("S expr.value.matrix",[vals'])
-        `_e` ("S expr.value.matrix args", [vals])
-        `_f` ("S expr.value.matrix ts", ts)
-
 toEssenceRep (TagSingle t :ts)  [xMatch| [vals] := value.matrix |] =
     let vals' = toEssenceRep ts vals in
         [xMake| value := [Tagged t [vals'] ] |]
@@ -700,6 +660,11 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
     `_e` ("T values.value vs",  vs)
     `_e` ("T values.value args", [e])
     `_f` ("T values.value ts", r)
+
+toEssenceRep all e@[xMatch| [val] := expr |] =
+    let res = toEssenceRep all val
+    in [xMake| expr := [res] |]
+        `_i` ("expr", (all, [e]) )
 
 toEssenceRep r e =
     e
