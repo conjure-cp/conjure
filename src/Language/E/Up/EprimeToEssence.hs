@@ -79,9 +79,6 @@ convertRep' (TagUnamed _) =  (True, TagSingle "int")
 convertRep' (TagTuple ts) = (or b', TagTuple res)
     where (b',res) =  unzip $ map convertRep ts
 
-convertRep' (TagMuti ts) = (or b', TagMuti res)
-    where (b',res) =  unzip $ map convertRep ts
-
 
 convertTag :: Tag -> (Bool,Tag)
 convertTag "set"  = (True, "matrix")

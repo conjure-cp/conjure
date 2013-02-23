@@ -25,7 +25,6 @@ data TagT = TagSingle Tag
           | TagEnum   String
           | TagUnamed String
           | TagTuple [[TagT]]
-          | TagMuti [[TagT]] -- only for flatten and toEssenceRep
     deriving (Show)
 
 
