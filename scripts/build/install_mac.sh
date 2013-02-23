@@ -18,7 +18,7 @@ mkdir -p dist/tools
 cd dist/tools
 
 export PATH="$WD/dist/tools/ghc-7.6.2-build/bin":$PATH
-export PATH="~/cabal/bin":$PATH
+export PATH="~/.cabal/bin":$PATH
 
 
 # installing ghc
