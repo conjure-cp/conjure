@@ -103,6 +103,19 @@ partialEvaluator
              | _            := quantified.quanOverOp.binOp.in
              | [qnVar]      := quantified.quanVar.structural.single
              | [qnOverExpr] := quantified.quanOverExpr
+             | parts        := quantified.quanOverExpr.operator.parts.value.partition
+             | qnGuards     := quantified.guard
+             | [qnBody]     := quantified.body
+             |] = partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody
+    where vs = map one parts
+          one [xMatch| xs := part |] = [xMake| value.set.values := xs |]
+          one _ = error "This should never happen. Please report a bug."
+
+partialEvaluator
+   _p@[xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
+             | _            := quantified.quanOverOp.binOp.in
+             | [qnVar]      := quantified.quanVar.structural.single
+             | [qnOverExpr] := quantified.quanOverExpr
              | vs           := quantified.quanOverExpr.value.set.values
              | qnGuards     := quantified.guard
              | [qnBody]     := quantified.body
