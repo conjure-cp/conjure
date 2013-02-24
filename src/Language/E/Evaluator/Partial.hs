@@ -158,7 +158,9 @@ partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody = do
                         _ -> qnGuards
     identity   <- identityOp quantifier
     tyOverExpr <- typeOf qnOverExpr
-    tyInner    <- innerTypeOf "in simplify" tyOverExpr
+    tyInner    <- case innerTypeOf tyOverExpr of
+                    Nothing -> err ErrFatal $ "Cannot get the inner type of:" <+> pretty tyOverExpr
+                    Just i  -> return i
     case vs of
         [] -> ret identity
         _  ->

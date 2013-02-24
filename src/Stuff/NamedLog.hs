@@ -67,7 +67,6 @@ suppress = S.fromList
     , "Evaluator.stripStructuralSingle"
     , "Simplify"
     , "missing:relationRepr"
-    , "missing:typeUnify"
     , "missing:mostKnown"
     , "missing:domainOf"
 

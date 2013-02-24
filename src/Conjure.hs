@@ -54,6 +54,7 @@ runConjureMode (ModePrettify pathInp pathOut) = do
     inp <- case pathInp of
         Nothing -> readSpecFromStdIn
         Just fp -> readSpecFromFile fp
+    typeCheckSpecIO inp
     case pathOut of
         Nothing -> printPretty  (atMostOneSuchThat inp)
         Just fp -> writeSpec fp (atMostOneSuchThat inp)
@@ -66,6 +67,7 @@ runConjureMode mode@(ModeDFAll pathInEssence) = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) <- getRulesDB
     inEssence <- readSpecFromFile pathInEssence
+    typeCheckSpecIO inEssence
     driverConjure
         (conjureWithMode seed mode)
         (dropExtEssence pathInEssence)
@@ -74,8 +76,14 @@ runConjureMode mode@(ModeSingleOutput _ pathInEssence pathOutEprime) = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) <- getRulesDB
     inEssence <- readSpecFromFile pathInEssence
+    typeCheckSpecIO inEssence
     driverConjureSingle True
         pathOutEprime
         (conjureWithMode seed mode ruleReprs ruleRefns inEssence)
 
+typeCheckSpecIO :: Spec -> IO ()
+typeCheckSpecIO spec =
+    case fst $ runCompESingle "Type checking" $ typeCheckSpec spec of
+        Left  e  -> error $ renderPretty e
+        Right () -> return ()
 

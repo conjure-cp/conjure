@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.TypeOf ( typeOf, innerTypeOf ) where
+module Language.E.TypeOf ( typeCheckSpec, typeOf, innerTypeOf ) where
 
 import Stuff.Generic
 
@@ -16,11 +16,29 @@ import Language.E.Parser
 import qualified Data.Text as T
 
 
-typeUnify :: MonadConjure m => E -> E -> m Bool
-typeUnify [xMatch| _ := type.unknown |] _ = return True
-typeUnify _ [xMatch| _ := type.unknown |] = return True
-typeUnify [xMatch| [] := type.bool |] [xMatch| [] := type.bool |] = return True
-typeUnify [xMatch| [] := type.int  |] [xMatch| [] := type.int  |] = return True
+typeCheckSpec :: MonadConjure m => Spec -> m ()
+typeCheckSpec (Spec _ x) = withBindingScope' $
+    forM_ (statementAsList x) $ \ st -> do
+        introduceStuff st
+        let tyExpected = case st of
+                [xMatch| _ := topLevel.suchThat  |] -> Just tyBool
+                [xMatch| _ := topLevel.objective |] -> Just tyInt
+                [xMatch| _ := topLevel.where     |] -> Just tyBool
+                _ -> Nothing
+        case tyExpected of
+            Nothing  -> return ()
+            Just ty' -> do
+                ty <- typeOf st
+                if ty `typeUnify` ty'
+                    then return ()
+                    else typeErrorIn st
+
+
+typeUnify :: E -> E -> Bool
+typeUnify [xMatch| _ := type.unknown |] _ = True
+typeUnify _ [xMatch| _ := type.unknown |] = True
+typeUnify [xMatch| [] := type.bool |] [xMatch| [] := type.bool |] = True
+typeUnify [xMatch| [] := type.int  |] [xMatch| [] := type.int  |] = True
 typeUnify
     [xMatch| [a] := type.set.inner |]
     [xMatch| [b] := type.set.inner |]
@@ -36,22 +54,34 @@ typeUnify
     [xMatch| [bFr] := type.function.innerFrom
            | [bTo] := type.function.innerTo
            |]
-    = (&&) <$> typeUnify aFr bFr <*> typeUnify aTo bTo
+    = typeUnify aFr bFr && typeUnify aTo bTo
 typeUnify
     [xMatch| [a1,b1] := mapping |]
     [xMatch| [a2,b2] := mapping |]
-    = (&&) <$> typeUnify a1 a2 <*> typeUnify b1 b2
+    = typeUnify a1 a2 && typeUnify b1 b2
 typeUnify
     [xMatch| as := type.tuple.inners |]
     [xMatch| bs := type.tuple.inners |]
     = if length as == length bs
-        then fmap and $ sequence $ zipWith typeUnify as bs
-        else return False
-typeUnify x y = do
-    mkLog "missing:typeUnify" $ pretty x <+> "~~" <+> pretty y
-    mkLog "missing:typeUnify" $ prettyAsPaths x
-    mkLog "missing:typeUnify" $ prettyAsPaths y
-    return (x == y)
+        then and $ zipWith typeUnify as bs
+        else False
+typeUnify
+    [xMatch| as := type.relation.inners |]
+    [xMatch| bs := type.relation.inners |]
+    = if length as == length bs
+        then and $ zipWith typeUnify as bs
+        else False
+typeUnify
+    [xMatch| [a] := type.partition.inner |]
+    [xMatch| [b] := type.partition.inner |]
+    = typeUnify a b
+typeUnify x y = trace ( show $ vcat [ "missing:typeUnify"
+                                    , pretty x <+> "~~" <+> pretty y
+                                    -- , prettyAsPaths x
+                                    -- , prettyAsPaths y
+                                    ]
+                      )
+                      (x == y)
 
 mostKnown :: MonadConjure m => E -> E -> m E
 mostKnown [xMatch| _ := type.unknown |] x = return x
@@ -96,8 +126,8 @@ typeErrorIn p = typeErrorIn' p ""
 
 typeErrorIn' :: MonadConjure m => E -> Doc -> m a
 typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [ pretty p
-                                                             , prettyAsTree p
-                                                             , prettyAsPaths p
+                                                             -- , prettyAsTree p
+                                                             -- , prettyAsPaths p
                                                              , d
                                                              ]
 
@@ -106,7 +136,12 @@ typeOf :: MonadConjure m => E -> m E
 
 -- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
 
-typeOf (Prim (B {})) = return [xMake| type.bool := [] |]
+typeOf [xMatch| [x] := topLevel.suchThat             |] = typeOf x
+typeOf [xMatch| [x] := topLevel.where                |] = typeOf x
+typeOf [xMatch| [x] := topLevel.objective.minimising |] = typeOf x
+typeOf [xMatch| [x] := topLevel.objective.maximising |] = typeOf x
+
+typeOf (Prim (B {})) = return tyBool
 typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
 typeOf p@[xMatch| _ := type |] = return p
@@ -125,7 +160,7 @@ typeOf [xMatch| [i] := structural.single |] = typeOf i
 typeOf [xMatch| [d] := topLevel.declaration.find .domain  |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.given.domain  |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.dim  .domain  |] = typeOf d
-typeOf [xMatch| [ ] := topLevel.declaration.given.typeInt |] = return [xMake| type.int := [] |]
+typeOf [xMatch| [ ] := topLevel.declaration.given.typeInt |] = return tyInt
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
 
@@ -141,7 +176,7 @@ typeOf [xMatch| [lhs] := domain.binOp.left
     rhsTy <- typeOf rhs
     mostKnown lhsTy rhsTy
 
-typeOf [xMatch| _ := domain.bool |] = return [xMake| type.bool := [] |]
+typeOf [xMatch| _ := domain.bool |] = return tyBool
 typeOf [xMatch| _ := domain.int  |] = return [xMake| type.int  := [] |]
 
 typeOf [xMatch| [index] := domain.matrix.index
@@ -191,7 +226,7 @@ typeOf [xMatch| xs := value.tuple.values |] = do
     return [xMake| type.tuple.inners := txs |]
 
 typeOf [xMatch| xs := value.matrix.values |] = do
-    let tInt = [xMake| type.int := [] |]
+    let tInt = tyInt
     txs <- mapM typeOf xs
     return [xMake| type.matrix.index := [tInt]
                  | type.matrix.inner := [head txs]
@@ -200,16 +235,14 @@ typeOf [xMatch| xs := value.matrix.values |] = do
 typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.set.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.set.values |] = do
     (tx:txs) <- mapM typeOf xs
-    res <- and <$> mapM (tx `typeUnify`) txs
-    if res
+    if and (map (tx `typeUnify`) txs)
         then return [xMake| type.set.inner := [tx] |]
         else typeErrorIn p
 
 typeOf   [xMatch| [] := value.mset.values |] = return [xMake| type.mset.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.mset.values |] = do
     (tx:txs) <- mapM typeOf xs
-    res <- and <$> mapM (tx `typeUnify`) txs
-    if res
+    if and (map (tx `typeUnify`) txs)
         then return [xMake| type.mset.inner := [tx] |]
         else typeErrorIn p
 
@@ -218,8 +251,7 @@ typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.function.
                                                                 |]
 typeOf p@[xMatch| xs := value.function.values |] = do
     (tx:txs) <- mapM typeOf xs
-    res <- and <$> mapM (tx `typeUnify`) txs
-    if res
+    if and (map (tx `typeUnify`) txs)
         then case tx of
             [xMatch| [i,j] := mapping |] ->
                 return [xMake| type.function.innerFrom := [i]
@@ -231,8 +263,7 @@ typeOf p@[xMatch| xs := value.function.values |] = do
 typeOf   [xMatch| [] := value.relation.values |] = return [xMake| type.relation.inners := [] |]
 typeOf p@[xMatch| xs := value.relation.values |] = do
     (tx:txs) <- mapM typeOf xs
-    res <- and <$> mapM (tx `typeUnify`) txs
-    if res
+    if and (map (tx `typeUnify`) txs)
         then case tx of
             [xMatch| is := type.tuple.inners |] -> return [xMake| type.relation.inners := is |]
             _ -> typeErrorIn p
@@ -241,16 +272,14 @@ typeOf p@[xMatch| xs := value.relation.values |] = do
 typeOf   [xMatch| [] := value.partition |] = return [xMake| type.partition.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.partition |] = do
     (tx:txs) <- mapM typeOf xs
-    res <- and <$> mapM (tx `typeUnify`) txs
-    if res
+    if and (map (tx `typeUnify`) txs)
         then return [xMake| type.partition.inner := [tx] |]
         else typeErrorIn p
 
 typeOf   [xMatch| [] := part |] = return [xMake| type.unknown := [] |]
 typeOf p@[xMatch| xs := part |] = do
     (tx:txs) <- mapM typeOf xs
-    res <- and <$> mapM (tx `typeUnify`) txs
-    if res
+    if and (map (tx `typeUnify`) txs)
         then return tx
         else typeErrorIn p
 
@@ -267,20 +296,27 @@ typeOf [xMatch| [i,j] := mapping |] = do
 typeOf p@[eMatch| &a = &b |] = do
     tya <- typeOf a
     tyb <- typeOf b
-    if tya == tyb
-        then return [xMake| type.bool := [] |]
+    if tya `typeUnify` tyb
+        then return tyBool
+        else typeErrorIn p
+
+typeOf p@[eMatch| &a != &b |] = do
+    tya <- typeOf a
+    tyb <- typeOf b
+    if tya `typeUnify` tyb
+        then return tyBool
         else typeErrorIn p
 
 typeOf p@[eMatch| ! &a |] = do
     tya <- typeOf a
     case tya of
-        [xMatch| [] := type.bool |] -> return [xMake| type.bool := [] |]
+        [xMatch| [] := type.bool |] -> return tyBool
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| toInt(&a) |] = do
     tya <- typeOf a
     case tya of
-        [xMatch| [] := type.bool |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.bool |] -> return tyInt
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| parts(&x) |] = do
@@ -298,10 +334,11 @@ typeOf p@[eMatch| hist(&m, &n) |] = do
          , [xMatch| [nIndex] := type.matrix.index
                   | [nInner] := type.matrix.inner
                   |]
-          ) | mInner == nInner -> let tInt = [xMake| type.int := [] |]
-                                  in  return [xMake| type.matrix.index := [ nIndex ]
-                                                   | type.matrix.inner := [ tInt   ]
-                                                   |]
+          ) | mInner `typeUnify` nInner ->
+                let tInt = tyInt
+                in  return [xMake| type.matrix.index := [ nIndex ]
+                                 | type.matrix.inner := [ tInt   ]
+                                 |]
         _ -> typeErrorIn p
 
 
@@ -311,10 +348,9 @@ typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
               | [ ] := quanVar.within.quantified.quanOverOp.binOp.in
               |] = do
     ti <- typeOf i
-    case ti of
-        [xMatch| [j] := type.set.inner  |] -> return j
-        [xMatch| [j] := type.mset.inner |] -> return j
-        _ -> err ErrFatal $ "Cannot determine the inner type of: " <+> prettyAsPaths ti
+    case innerTypeOf ti of
+        Nothing -> err ErrFatal $ "Cannot determine the inner type of: " <+> prettyAsPaths ti
+        Just j  -> return j
 
 typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
               | [ ] := quanVar.within.quantified.quanOverOp.binOp.subset
@@ -325,21 +361,21 @@ typeOf [xMatch| [i] := quanVar.within.quantified.quanOverExpr
               |] = typeOf i
 
 typeOf [xMatch| [Prim (S "forAll")] := quantified.quantifier.reference |] =
-    return [xMake| type.bool := [] |]
+    return tyBool
 
 typeOf [xMatch| [Prim (S "exists")] := quantified.quantifier.reference |] =
-    return [xMake| type.bool := [] |]
+    return tyBool
 
 typeOf [xMatch| [Prim (S "sum")] := quantified.quantifier.reference |] =
-    return [xMake| type.int := [] |]
+    return tyInt
 
 typeOf p@[xMatch| [x] := operator.twoBars |] = do
     tx <- typeOf x
     case tx of
-        [xMatch| [] := type.int      |] -> return [xMake| type.int := [] |]
-        [xMatch| _  := type.set      |] -> return [xMake| type.int := [] |]
-        [xMatch| _  := type.mset     |] -> return [xMake| type.int := [] |]
-        [xMatch| _  := type.function |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type.int      |] -> return tyInt
+        [xMatch| _  := type.set      |] -> return tyInt
+        [xMatch| _  := type.mset     |] -> return tyInt
+        [xMatch| _  := type.function |] -> return tyInt
         _ -> typeErrorIn p
 
 typeOf p@[xMatch| [m,i'] := operator.indices |] = do
@@ -390,14 +426,12 @@ typeOf p@[eMatch| freq(&m,&i) |]  = do
     ti <- typeOf i
     case tm of
         [xMatch| [tmInner] := type.mset.inner |] -> do
-            res <- typeUnify tmInner ti
-            if res
-                then return [xMake| type.int := [] |]
+            if typeUnify tmInner ti
+                then return tyInt
                 else typeErrorIn p
         [xMatch| [tmInner] := type.matrix.inner |] -> do
-            res <- typeUnify tmInner ti
-            if res
-                then return [xMake| type.int := [] |]
+            if typeUnify tmInner ti
+                then return tyInt
                 else typeErrorIn p
         _ -> typeErrorIn p
 
@@ -406,13 +440,11 @@ typeOf p@[eMatch| &a intersect &b |] = do
     tb <- typeOf b
     case (ta, tb) of
         ([xMatch| [ia] := type.set.inner |], [xMatch| [ib] := type.set.inner |]) -> do
-            res <- typeUnify ia ib
-            if res
+            if typeUnify ia ib
                 then mostKnown ta tb
                 else typeErrorIn p
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
-            res <- typeUnify ia ib
-            if res
+            if typeUnify ia ib
                 then mostKnown ta tb
                 else typeErrorIn p
         ([xMatch| [iaF] := type.function.innerFrom
@@ -420,8 +452,8 @@ typeOf p@[eMatch| &a intersect &b |] = do
                 |], [xMatch| [ibF] := type.function.innerFrom
                            | [ibT] := type.function.innerTo
                            |]) -> do
-            resF <- typeUnify iaF ibF
-            resT <- typeUnify iaT ibT
+            let resF = typeUnify iaF ibF
+            let resT = typeUnify iaT ibT
             if resF && resT
                 then mostKnown ta tb
                 else typeErrorIn p
@@ -432,13 +464,11 @@ typeOf p@[eMatch| &a union &b |] = do
     tb <- typeOf b
     case (ta, tb) of
         ([xMatch| [ia] := type.set.inner |], [xMatch| [ib] := type.set.inner |]) -> do
-            res <- typeUnify ia ib
-            if res
+            if typeUnify ia ib
                 then mostKnown ta tb
                 else typeErrorIn p
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
-            res <- typeUnify ia ib
-            if res
+            if typeUnify ia ib
                 then mostKnown ta tb
                 else typeErrorIn p
         ([xMatch| [iaF] := type.function.innerFrom
@@ -446,8 +476,8 @@ typeOf p@[eMatch| &a union &b |] = do
                 |], [xMatch| [ibF] := type.function.innerFrom
                            | [ibT] := type.function.innerTo
                            |]) -> do
-            resF <- typeUnify iaF ibF
-            resT <- typeUnify iaT ibT
+            let resF = typeUnify iaF ibF
+            let resT = typeUnify iaT ibT
             if resF && resT
                 then mostKnown ta tb
                 else typeErrorIn p
@@ -457,15 +487,13 @@ typeOf p@[eMatch| &a - &b |] = do
     ta <- typeOf a
     tb <- typeOf b
     case (ta, tb) of
-        ([xMatch| [] := type.int |], [xMatch| [] := type.int |]) -> return [xMake| type.int := [] |]
+        ([xMatch| [] := type.int |], [xMatch| [] := type.int |]) -> return tyInt
         ([xMatch| [ia] := type.set.inner |], [xMatch| [ib] := type.set.inner |]) -> do
-            res <- typeUnify ia ib
-            if res
+            if typeUnify ia ib
                 then mostKnown ta tb
                 else typeErrorIn p
         ([xMatch| [ia] := type.mset.inner |], [xMatch| [ib] := type.mset.inner |]) -> do
-            res <- typeUnify ia ib
-            if res
+            if typeUnify ia ib
                 then mostKnown ta tb
                 else typeErrorIn p
         ([xMatch| [iaF] := type.function.innerFrom
@@ -473,8 +501,8 @@ typeOf p@[eMatch| &a - &b |] = do
                 |], [xMatch| [ibF] := type.function.innerFrom
                            | [ibT] := type.function.innerTo
                            |]) -> do
-            resF <- typeUnify iaF ibF
-            resT <- typeUnify iaT ibT
+            let resF = typeUnify iaF ibF
+            let resT = typeUnify iaT ibT
             if resF && resT
                 then mostKnown ta tb
                 else typeErrorIn p
@@ -487,7 +515,7 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
+        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return tyInt
         _ -> typeErrorIn p
 
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
@@ -497,44 +525,45 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-        ( [xMatch| [] := type.bool |] , [xMatch| [] := type.bool |] ) -> return [xMake| type.bool := [] |]
+        ( [xMatch| [] := type.bool |] , [xMatch| [] := type.bool |] ) -> return tyBool
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| &a in &b |] = do
     tya <- typeOf a
     tyb <- typeOf b
-    tybInner <- innerTypeOf "in" tyb
-    flag <- typeUnify tya tybInner
-    if flag
-        then return [xMake| type.bool := [] |]
-        else typeErrorIn p
+    case innerTypeOf tyb of
+        Nothing -> typeErrorIn p
+        Just tybInner ->
+            if typeUnify tya tybInner
+                then return tyBool
+                else typeErrorIn p
 
 typeOf p@[eMatch| max(&a) |] = do
     ta <- typeOf a
     case ta of
-        [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
-        [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type. set.inner.type.int |] -> return tyInt
+        [xMatch| [] := type.mset.inner.type.int |] -> return tyInt
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| max(&a,&b) |] = do
     ta <- typeOf a
     tb <- typeOf b
     case (ta,tb) of
-        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
+        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return tyInt
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| min(&a) |] = do
     ta <- typeOf a
     case ta of
-        [xMatch| [] := type. set.inner.type.int |] -> return [xMake| type.int := [] |]
-        [xMatch| [] := type.mset.inner.type.int |] -> return [xMake| type.int := [] |]
+        [xMatch| [] := type. set.inner.type.int |] -> return tyInt
+        [xMatch| [] := type.mset.inner.type.int |] -> return tyInt
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| min(&a,&b) |] = do
     ta <- typeOf a
     tb <- typeOf b
     case (ta,tb) of
-        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return [xMake| type.int := [] |]
+        ( [xMatch| [] := type.int |] , [xMatch| [] := type.int |] ) -> return tyInt
         _ -> typeErrorIn p
 
 typeOf [xMatch| [i] := withLocals.actual
@@ -548,7 +577,7 @@ typeOf p@[xMatch| [f] := functionApply.actual
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
                | [to] := type.function.innerTo
-               |] | fr == tyX -> return to
+               |] | fr `typeUnify` tyX -> return to
         _ -> typeErrorIn p
 
 typeOf p@[xMatch| [rel] := functionApply.actual
@@ -561,7 +590,7 @@ typeOf p@[xMatch| [rel] := functionApply.actual
             outTypes <- forM (zip3 tyRels args tyArgs) $ \ (relType, arg, argType) ->
                 if arg == [eMake| _ |]
                     then return (Just relType)
-                    else if relType == argType
+                    else if relType `typeUnify` argType
                             then return Nothing
                             else typeErrorIn p
             return [xMake| type.relation.inners := (catMaybes outTypes) |]
@@ -573,7 +602,7 @@ typeOf p@[eMatch| preImage(&f,&x) |] = do
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
                | [to] := type.function.innerTo
-               |] | to == tyX -> return [xMake| type.set.inner := [fr] |]
+               |] | to `typeUnify` tyX -> return [xMake| type.set.inner := [fr] |]
         _ -> typeErrorIn p
 
 typeOf p@[xMatch| [f] := operator.defined |] = do
@@ -601,7 +630,7 @@ typeOf p@[xMatch| [m] := operator.index.left
     case tyM of
         [xMatch| [ind] := type.matrix.index
                | [inn] := type.matrix.inner
-               |] | ind == tyI -> return inn
+               |] | ind `typeUnify` tyI -> return inn
         [xMatch| ts := type.tuple.inners |] -> do
             mint <- toInt i
             case mint of
@@ -613,8 +642,17 @@ typeOf p = typeErrorIn' p "default case"
 
 
 
-innerTypeOf :: MonadConjure m => Doc -> E -> m E
-innerTypeOf _ [xMatch| [ty] := type. set.inner |] = return ty
-innerTypeOf _ [xMatch| [ty] := type.mset.inner |] = return ty
-innerTypeOf doc p = err ErrFatal $ vcat [ "innerTypeOf", pretty p, doc ]
+innerTypeOf :: E -> Maybe E
+innerTypeOf [xMatch| [ty] := type. set.inner |] = return ty
+innerTypeOf [xMatch| [ty] := type.mset.inner |] = return ty
+innerTypeOf _ = Nothing
+
+
+
+
+tyBool :: E
+tyBool = [xMake| type.bool := [] |]
+
+tyInt :: E
+tyInt = [xMake| type.int := [] |]
 
