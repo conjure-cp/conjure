@@ -1,9 +1,7 @@
 module Conjure.Mode where
 
-import Control.Arrow ( first, second )
 import Control.Monad ( guard, msum, mzero )
 import Data.Char ( toLower )
-import Data.List ( partition )
 import Data.Maybe ( listToMaybe, mapMaybe )
 
 
@@ -14,18 +12,21 @@ type GenericArgs
       )
 
 parseGenericArgs :: [String] -> GenericArgs 
-parseGenericArgs xs =
-    let
-        kvOut (key:value:rest)
-            | key `elem` allKeys
-            = ((key,value):) `first` kvOut rest
-        kvOut (x:rest) = (x:) `second` kvOut rest
-        kvOut [] = ([],[])
+parseGenericArgs = go
+    where
+        go (flag:args)
+            | isFlag flag
+            = let (pairs, flags, rest) = go args
+              in  (pairs, flag:flags, rest)
+        go (key:value:args)
+            | isKey key
+            = let (pairs, flags, rest) = go args
+              in  ((key,value):pairs, flags, rest)
+        go (arg:args)
+            = let (pairs, flags, rest) = go args
+              in  (pairs, flags, arg:rest)
+        go [] = ([],[],[])
 
-        (flags, xs1) = partition (`elem` allFlags) xs
-        (pairs, xs2) = kvOut xs1
-    in
-        ( pairs , flags , xs2 )
 
 data ConjureModeSingle
     = ModeRandom
@@ -52,6 +53,10 @@ data ConjureMode
     | ModePrettify
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
+    | ModeValidateSolution
+        FilePath            -- Essence
+        (Maybe FilePath)    -- Essence Param
+        FilePath            -- Essence Solution
     | ModeDFAll
         FilePath    -- Essence
     | ModeSingleOutput
@@ -66,6 +71,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeRefineParam
     , modeTranslateSolution
     , modePrettify
+    , modeValidateSolution
     , modeDFAll
     , modeRandom
     , modeFirst
@@ -98,7 +104,10 @@ parseArgs (pairs, flags, rest) = msum
             inEprimeParam    <- optional $ key "--in-eprime-param"
             inEprimeSolution <- key "--in-eprime-solution"
             outSolution      <- anyKey $ words "--out-solution --out-essence-solution"
-            return $ ModeTranslateSolution inEssence inParam inEprime inEprimeParam inEprimeSolution outSolution
+            return $ ModeTranslateSolution
+                        inEssence inParam
+                        inEprime inEprimeParam inEprimeSolution
+                        outSolution
 
         modePrettify = do
             mode <- key "--mode"
@@ -106,6 +115,14 @@ parseArgs (pairs, flags, rest) = msum
             inp  <- optional $ key "--in"
             out  <- optional $ key "--out"
             return $ ModePrettify inp out
+
+        modeValidateSolution = do
+            mode <- key "--mode"
+            guard (mode =~= words "validateSolution validateSol validateSoln")
+            essence  <- key "--in-essence"
+            param    <- optional $ key "--in-param"
+            solution <- key "--in-solution"
+            return $ ModeValidateSolution essence param solution
 
         modeDFAll = do
             mode <- key "--mode"
@@ -146,31 +163,12 @@ parseArgs (pairs, flags, rest) = msum
             return $ mk inEssence outEprime
 
 
-allKeys :: [String]
-allKeys =
-    [ "--mode"
-    , "--in"
-    , "--in-essence"
-    , "--in-essence-param"
-    , "--in-essence-solution"
-    , "--in-eprime"
-    , "--in-eprime-param"
-    , "--in-eprime-solution"
-    , "--in-param"
-    , "--in-solution"
-    , "--out"
-    , "--out-essence"
-    , "--out-essence-param"
-    , "--out-essence-solution"
-    , "--out-eprime"
-    , "--out-eprime-param"
-    , "--out-eprime-solution"
-    , "--out-param"
-    , "--out-solution"
-    ]
+isKey :: String -> Bool
+isKey ('-':'-':_) = True
+isKey _ = False
 
-allFlags :: [String]
-allFlags =
-    [ "--trace-logs"
-    ]
+isFlag :: String -> Bool
+isFlag = (`elem` allFlags)
+    where
+        allFlags = [] -- we don't have any flags, yet.
 

@@ -284,9 +284,10 @@ parseDomain
     = shuntingYardDomain
     $ some
     $ msum [ Right <$> try pDomainAtom
-           , Left  <$> parseOp
+           , Left  <$> parseOp'
            ]
     where
+        parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
         pDomainAtom = msum $ map try
             [ pBool, pInt, pEnum
             , pMatrix, pTupleWithout, pTupleWith

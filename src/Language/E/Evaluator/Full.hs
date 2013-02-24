@@ -42,6 +42,32 @@ fullEvaluator [xMatch| [Prim (S "**")] := binOp.operator
                      | [Prim (I b)   ] := binOp.right.value.literal
                      |] | b > 0 = returnInt $ a ^ b
 
+fullEvaluator [xMatch| [Prim (S op)] := binOp.operator
+                     | [Prim (I a )] := binOp.left .value.literal
+                     | [Prim (I b )] := binOp.right.value.literal
+                     |] | Just f <- lookup op comparators
+                        = returnBool $ f a b
+    where comparators = [ ( ">" , (>)  )
+                        , ( ">=", (>=) )
+                        , ( "<" , (<)  )
+                        , ( "<=", (<=) )
+                        , ( "=" , (==) )
+                        , ( "!=", (/=) )
+                        ]
+ 
+fullEvaluator [xMatch| [Prim (S op)] := binOp.operator
+                     | [Prim (B a )] := binOp.left .value.literal
+                     | [Prim (B b )] := binOp.right.value.literal
+                     |] | Just f <- lookup op comparators
+                        = returnBool $ f a b
+    where comparators = [ ( ">" , (>)  )
+                        , ( ">=", (>=) )
+                        , ( "<" , (<)  )
+                        , ( "<=", (<=) )
+                        , ( "=" , (==) )
+                        , ( "!=", (/=) )
+                        ]
+
 fullEvaluator [eMatch| !false |] = ret [eMake| true  |]
 fullEvaluator [eMatch| !true  |] = ret [eMake| false |]
 
@@ -53,10 +79,24 @@ fullEvaluator [eMatch| &a = &b |]
     , [xMatch| [Prim b'] := value.literal |] <- b
     = returnBool (a' == b')
 
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.set.values |] <- a
+    , [xMatch| bs := value.set.values |] <- b
+    = returnBool (sortNub as == sortNub bs)
+
 fullEvaluator [eMatch| &a != &b |]
     | [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     = returnBool (a' /= b')
+
+fullEvaluator [eMatch| &a != &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.set.values |] <- a
+    , [xMatch| bs := value.set.values |] <- b
+    = returnBool (sortNub as /= sortNub bs)
 
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.left.emptyGuard
@@ -77,6 +117,27 @@ fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
                      | xs := binOp.left .value.mset.values
                      | ys := binOp.right.value.mset.values
                      |] = ret $ [xMake| value.mset.values := xs ++ ys |]
+
+fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
+                     | xs := binOp.left .value.set.values
+                     | ys := binOp.right.value.set.values
+                     | [lhs] := binOp.left
+                     | [rhs] := binOp.right
+                     |]
+                     | isFullyInstantiated lhs && isFullyInstantiated rhs
+                     = let zs = nub [ i | i <- xs, i `elem` ys]
+                       in  ret $ [xMake| value.set.values := zs |]
+
+fullEvaluator
+  p@[xMatch| [fn]  := functionApply.actual
+           | xs    := functionApply.actual.value.function.values
+           | [arg] := functionApply.args
+           |]
+        | isFullyInstantiated fn && isFullyInstantiated arg
+        = let go ([xMatch| [a,b] := mapping |]:rest) | a == arg  = ret b
+                                                     | otherwise = go rest
+              go _ = err ErrFatal $ "Undefinedness:" <+> pretty p
+          in  go xs
 
 fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs

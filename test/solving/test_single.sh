@@ -21,12 +21,13 @@ fi
 
 if (( $COUNT_PARAM != $COUNT_SOLUTION )); then
     WD="$(pwd)"
-    echo "ERROR: Give 1 solution file per param file in: $WD"
-    exit 1
+    echo "Warning: You need to give 1 solution file per param file"
+    echo "         if you want to compare against an expected solution."
+    echo "         In: $WD"
 fi
 
 if (( $# != 1 )); then
-    echo "ERROR: Give a single parameter, mode to be used by conjure."
+    echo "ERROR: Give a single parameter, mode to be used by Conjure."
     echo "       Options: {df, best, random}"
     exit 1
 fi
@@ -54,8 +55,7 @@ function perModelperParam {
         --in-essence $SPEC.essence                                          \
         --in-eprime  $MODEL.eprime                                          \
         --in-essence-param $PARAM.param                                     \
-        --out-eprime-param $MODEL-$PARAM.eprime-param                       \
-        +RTS -s 2> conjure_refineParam.stats
+        --out-eprime-param $MODEL-$PARAM.eprime-param
 
     savilerow                                                               \
         -in-eprime    $MODEL.eprime                                         \
@@ -70,21 +70,34 @@ function perModelperParam {
         --in-eprime             $MODEL.eprime                               \
         --in-eprime-param       $MODEL-$PARAM.eprime-param                  \
         --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
-        --out-essence-solution  $MODEL-$PARAM.solution                      \
-        +RTS -s 2> conjure_translateSolution.stats
+        --out-essence-solution  $MODEL-$PARAM.solution
 
     conjure                                                                 \
-        --mode diff                                                         \
-        $PARAM.solution                                                     \
-        $MODEL-$PARAM.solution                                              \
-        +RTS -s 2> conjure_diff.stats
+        --mode validateSolution                                             \
+        --in-essence  $SPEC.essence                                         \
+        --in-param    $PARAM.param                                          \
+        --in-solution $MODEL-$PARAM.solution
+    SOL_VALIDATE=$?
 
-    if (( $? != 0 )); then
-        echo "$WD $MODEL $PARAM" >> fail.txt
-    else
-        echo "$WD $MODEL $PARAM" >> pass.txt
+    if [ -f "$PARAM.solution" ] ; then
+        conjure                                                             \
+            --mode diff                                                     \
+            $PARAM.solution                                                 \
+            $MODEL-$PARAM.solution
+        SOL_DIFF=$?
     fi
-    echo "$WD $MODEL $PARAM" >> all.txt
+
+    if (( $SOL_VALIDATE != 0 )) ; then
+        echo "[validateSolution] $WD $MODEL $PARAM" >> fail.txt
+    else
+        echo "[validateSolution] $WD $MODEL $PARAM" >> pass.txt
+    fi
+
+    if (( $SOL_DIFF != 0 )) ; then
+        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> fail.txt
+    else
+        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> pass.txt
+    fi
 
 }
 

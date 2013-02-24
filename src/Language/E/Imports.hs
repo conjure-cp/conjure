@@ -20,7 +20,7 @@ module Language.E.Imports
     , isLeft, isRight
     , trace, tracing
     , allCombinations
-    , sortOn
+    , sortOn, sortNub
     , maybeRead
     , padShowInt
     , decodeFromFile
@@ -68,6 +68,8 @@ import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
+
+import qualified Data.Set as S
 
 import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
@@ -170,6 +172,10 @@ allCombinations ((x,ys):qs) = concat [ [ (x,y) : ws | y <- ys ] | ws <- allCombi
 
 sortOn :: Ord b => (a -> b) -> [a] -> [a]
 sortOn f = sortBy (comparing f)
+
+sortNub :: Ord a => [a] -> [a]
+sortNub = S.toList . S.fromList
+
 
 instance Serialize T.Text where
     put = Data.Serialize.put . T.unpack

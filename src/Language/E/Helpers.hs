@@ -131,3 +131,14 @@ mkIndexedExpr = go . reverse
         go []     x = x
         go (i:is) x = let y = go is x in [eMake| &y[&i] |]
 
+
+isFullyInstantiated :: E -> Bool
+isFullyInstantiated (Prim (I _)) = True
+isFullyInstantiated (Prim (B _)) = True
+isFullyInstantiated [xMatch| [x] := value.literal         |] = isFullyInstantiated x
+isFullyInstantiated [xMatch| xs  := value.set     .values |] = all isFullyInstantiated xs
+isFullyInstantiated [xMatch| xs  := value.function.values |] = all isFullyInstantiated xs
+isFullyInstantiated [xMatch| [a,b] := mapping |] = all isFullyInstantiated [a,b]
+isFullyInstantiated _ = False
+
+

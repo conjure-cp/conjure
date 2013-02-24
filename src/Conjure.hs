@@ -10,20 +10,14 @@ import Conjure.Mode
 import Language.E
 import Language.E.Pipeline.ReadIn ( readSpecFromStdIn, readSpecFromFile, writeSpec, dropExtEssence )
 
--- for RefineParam
-import Language.E.Pipeline.RedArrow ( redArrow )
-
--- for TranslateSolution
-import Language.E.Up ( translateSolution )
-
--- for DFAll
+import Language.E.NormaliseSolution ( normaliseSolution )
+import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
+import Language.E.Pipeline.RedArrow ( redArrow )
+import Language.E.Up ( translateSolution )
+import Language.E.ValidateSolution ( validateSolution )
 
--- for prettify
-import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-
-import Language.E.NormaliseSolution (normaliseSolution)
 
 rulesdbLoc :: IO FilePath
 rulesdbLoc = liftM (++ "/conjure.rulesdb") getBinDir
@@ -63,6 +57,11 @@ runConjureMode (ModePrettify pathInp pathOut) = do
     case pathOut of
         Nothing -> printPretty  (atMostOneSuchThat inp)
         Just fp -> writeSpec fp (atMostOneSuchThat inp)
+runConjureMode (ModeValidateSolution pathEssence pathParam pathSolution) = do
+    essence  <- readSpecFromFile pathEssence
+    param    <- maybe (return Nothing) (fmap Just . readSpecFromFile) pathParam
+    solution <- readSpecFromFile pathSolution
+    validateSolution essence param solution
 runConjureMode mode@(ModeDFAll pathInEssence) = do
     seed <- getStdGen
     (ruleReprs, ruleRefns) <- getRulesDB
