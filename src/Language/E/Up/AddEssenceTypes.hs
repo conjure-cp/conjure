@@ -533,12 +533,10 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  =
         `_f` ("S values.value ts",r)
 
     where
-        er (Tagged kind [vals]) | kind `elem` ["matrix","tuple", "set", "mset", "function"] =
-                Tagged "value" [Tagged t  [toEssenceRep ts vals]]
-
+        er (Tagged "matrix" [vals]) = Tagged "value" [Tagged t  [toEssenceRep ts vals]]
         er a@(Tagged "literal" _)   = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
-
+        er f = errpM "AddEssenceTypes:er error" [f]
 
 toEssenceRep r@[TagTuple _]  [xMatch| vals := expr.value.tuple |] =
     let res = toEssenceRep r (Tagged "tuple" vals )
