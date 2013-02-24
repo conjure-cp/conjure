@@ -36,6 +36,7 @@ mainPure (spec,sol,org,unalteredOrg) =
         wrap name (Tagged "expr" arr) =
             [xMake| topLevel.letting.expr := arr
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
+        wrap name e = errpM ("EprimeToEssence: wrap failed for " ++ name) [e]
 
         lookUpType = fromMaybe (error "fromMaybe eTe: lookUpType")  . flip M.lookup orgInfo
         eval (s,e) = 
@@ -92,7 +93,6 @@ convertTag "bool" = (True, "int")
 convertTag t      = (False, t)
 
 introduceTypes ::  M.Map String [E] -> [TagT] -> E -> E
---introduceTypes emap ts e = errb [e]
 
 introduceTypes emap ts [xMatch| [val] := expr |] = 
     let res = introduceTypes emap ts val
@@ -131,12 +131,13 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
    in  [xMake| value.function.values := mappings |]
 
     where 
-    func ins tos [xMatch| [a,b] := mapping |] =
-       let a' = introduceTypes emap ins a
-           b' = introduceTypes emap tos b
+    func ins' tos' [xMatch| [a,b] := mapping |] =
+       let a' = introduceTypes emap ins' a
+           b' = introduceTypes emap tos' b
        in   [xMake| mapping := [a',b'] |]
+    func _ _ _  = error "EprimeToEssence: introduceTypes function error"
 
--- TODO stuff inside a partition and functions
+-- TODO stuff inside a partition
 
 introduceTypes _ _ e = e
 -- introduceTypes _ ts e = errr (ts,e)
