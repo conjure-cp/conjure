@@ -12,10 +12,6 @@ import Language.E.Up.Data
 import Language.E.Up.Debug
 import Language.E.Up.Common(transposeE,unwrapMatrix,matrixToTuple)
 
-import qualified Data.Text as T
-import qualified Data.List as L(transpose)
-import qualified Data.Map as M
-
 import Data.Maybe
 
 
@@ -31,9 +27,12 @@ matrixOrTuple _ = False
 
 unwrapTuple :: E -> [E]
 unwrapTuple [xMatch| vs := value.tuple.values|] = vs
+unwrapTuple e = errpM "AddEssenceTypes: unwrapTuple failed" [e]
 
 unwrapValues :: E -> [E]
 unwrapValues [xMatch| vs := values |] = vs
+unwrapValues e = errpM "AddEssenceTypes: unwrapValues failed" [e]
+
 
 unwrapSingleMatrix :: E -> E
 unwrapSingleMatrix [xMatch| [vs] := value.matrix.values |] = vs
@@ -613,13 +612,13 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
     `_e` ("T values.value args", [e])
     `_f` ("T values.value ts", r)
 
-toEssenceRep all e@[xMatch| [val] := expr |] =
-    let res = toEssenceRep all val
+toEssenceRep r e@[xMatch| [val] := expr |] =
+    let res = toEssenceRep r val
     in [xMake| expr := [res] |]
-        `_i` ("expr", (all, [e]) )
+        `_k` ("expr", (r, [e]) )
 
 toEssenceRep r e =
     e
-    `_b` ("toEssenceRep no match vs",  [e])
+    `_p` ("toEssenceRep no match vs",  [e])
     `_f` ("toEssenceRep no match ts", r)
 
