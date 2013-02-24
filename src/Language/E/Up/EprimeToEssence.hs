@@ -4,6 +4,7 @@ module Language.E.Up.EprimeToEssence where
 import Language.E
 
 import Language.E.Up.Data
+import Language.E.Up.Debug
 import Language.E.Up.GatherInfomation
 import Language.E.Up.RepresentationTree
 import Language.E.Up.EvaluateTree
@@ -91,6 +92,8 @@ convertTag "bool" = (True, "int")
 convertTag t      = (False, t)
 
 introduceTypes ::  M.Map String [E] -> [TagT] -> E -> E
+--introduceTypes emap ts e = errb [e]
+
 introduceTypes emap ts [xMatch| [val] := expr |] = 
     let res = introduceTypes emap ts val
     in  [xMake| expr := [res] |]
@@ -122,6 +125,16 @@ introduceTypes emap (TagSingle "mset":ts) [xMatch| vs := value.matrix.values |] 
 introduceTypes emap [TagTuple ts] [xMatch| vs := value.tuple.values |] = 
     let res = zipWith (introduceTypes emap) ts vs
     in  [xMake| value.tuple.values := res |] 
+
+introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] = 
+   let mappings =  map (func ins tos) arr
+   in  [xMake| value.function.values := mappings |]
+
+    where 
+    func ins tos [xMatch| [a,b] := mapping |] =
+       let a' = introduceTypes emap ins a
+           b' = introduceTypes emap tos b
+       in   [xMake| mapping := [a',b'] |]
 
 -- TODO stuff inside a partition and functions
 
