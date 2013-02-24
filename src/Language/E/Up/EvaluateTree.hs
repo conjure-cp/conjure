@@ -7,6 +7,7 @@ module Language.E.Up.EvaluateTree (
 import Language.E
 
 import Language.E.Up.Data
+import Language.E.Up.Common(transposeE,matrixToTuple)
 import Language.E.Up.Debug
 
 import qualified Data.Map as M
@@ -37,7 +38,25 @@ evalTree' mapping prefix (Tuple arr) =
 evalTree' mapping prefix (Branch s@"AsReln"  arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
     in relnToFunc res
-    -- `_e` ("evalTree' AsReln", [res] )
+     `_p` ("evalTree' AsReln", [unwrapExpr res] )
+
+evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
+    let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
+        indexArr = indexes !! (length prefix -1)
+        converted = matrix1DRep [indexArr] res
+    in converted
+    {-in errpM "2,3,4" [converted]-}
+
+    where
+    name  = intercalate "_" $ prefix ++ s : getName (repSelector arr)
+    VarData{vIndexes=indexes} =
+        fromMaybe (error "fromMaybe evalTree': Matrix1D") (M.lookup name mapping)
+
+    getName :: Tree String  -> [String]
+    getName (Leaf s) = [s]
+    getName (Branch s arr) = s : getName (repSelector arr)
+    getName (Tuple arr) = getName (head arr)
+
 
 evalTree' mapping prefix (Branch s@"SetOfSets"  arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
@@ -72,9 +91,12 @@ matrixToPartiton [xMatch| vs := expr.value.matrix.values|] =
     func [xMatch| xs := value.matrix.values |] = [xMake| part := xs |]
 
 relnToFunc :: E -> E
-relnToFunc [xMatch| [v] := expr|] =
+relnToFunc e@[xMatch| [v] := expr|] =
     let res = relnToFunc (reTuple v)
     in  [xMake| expr := [res] |]
+     `_p` ("evalTree' relnToFunc res", [res] )
+
+
 
 relnToFunc [xMatch| vals := value.matrix.values.value.tuple |] =
     let vals' = map (\(Tagged "values" arr) -> [xMake| mapping := arr |] ) vals
@@ -133,11 +155,36 @@ matrix1DRep [ix] [xMatch| vals := value.matrix.values |] =
     where func a = [xMake| value.literal := [ Prim (I a) ] |]
 
 matrix1DRep (x:xs) [xMatch| vs := value.matrix.values |]  =
-    let arr = map (\v -> matrix1DRep xs v  ) vs
+    let arr = map (matrix1DRep xs) vs
     in [xMake| value.matrix.values := arr |]
 
+-- for function whoes ranges are tuples  e.g setOfFuncTupleSet and setOfFuncTupleSetMatrix
+matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
+    let mappings = zipWith (\a b -> [xMake| mapping := [ func a,  b] |]) ix vals
+    in  [xMake| value.function.values := mappings |]
+        `_p` ("Matrix1D range", [e])
+
+    where
+    func a = [xMake| value.literal := [ Prim (I a) ] |]
+
+    -- TODO number of matrix taken off should be releated to number of 
+    -- sets/matrixes the func is in, but is at the moment 1 
+    vals  =  (map matrixToTuple . transposeE . convert) e
+    -- take a matrix off each nested matrix
+    convert :: E -> [E]
+    convert [xMatch| vs := value.tuple.values |] =
+        map convert' vs
+
+        where
+        convert' :: E -> E
+        convert' e@[xMatch| vs  := value.tuple.values |]  =
+            let res = map convert' vs
+            in  [xMake| value.tuple.values := res |]
+        convert' [xMatch| [singleton] := value.matrix.values |]  = singleton
+
+
 matrix1DRep ix e =
-    erriM "Matrix1DRep not Handled (indexes, e):" (ix, [unwrapExpr e])
+    erriM "Matrix1DRep not Handled (indexes, e):" (ix, [e])
 
 
 occurrenceRep :: VarData -> E
@@ -267,11 +314,14 @@ mergeExplicitVarSizeTuple
 mergeExplicitVarSizeTuple
     e1@([xMatch| _  := value.matrix.values.value.matrix
                | _  := value.matrix.values|])
-       ([xMatch| _  := value.tuple.values.value.matrix
+    e2@([xMatch| _  := value.tuple.values.value.matrix
                | ts := value.tuple.values|]) =
     let res = map (unwrapExpr . mergeExplicitVarSizeTuple  e1) ts
         paired = pairMatrix res
     in [xMake| expr := [paired]|]
+        `_p` ("mergeExplicitVarSizeTuple M T ",[paired])
+        `_p` ("mergeExplicitVarSizeTuple M T e2",[e2])
+        `_p` ("mergeExplicitVarSizeTuple M T e1",[e1])
 
 
 selected :: (E,E) -> E
