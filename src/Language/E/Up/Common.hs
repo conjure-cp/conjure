@@ -22,11 +22,11 @@ transposeE arr  |  all isLiteral arr =
 
 transposeE e = e
 
+
 tranposeCheck :: E -> [E]
 tranposeCheck   [xMatch| vs := value.matrix.values |] = vs
 
 -- This is actually needed for very few cases such as tupley26
--- need to make more specific
 tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
     let res = convertTuples e
     in  unwrapMatrix res
@@ -43,13 +43,18 @@ convertTuples [xMatch| vs := value.tuple.values |] =
 
 convertTuples (e) = e
 
+
 isLiteral ::  E -> Bool
 isLiteral [xMatch| _ := value.literal |] = False
 isLiteral  _ = True
 
 unwrapMatrix :: E -> [E]
 unwrapMatrix [xMatch| vs := value.matrix.values |] = vs
+unwrapMatrix e = errpM "Common: unwrapMatrix failed" [e]
+
+
 
 matrixToTuple :: E -> E
 matrixToTuple [xMatch| vs := value.matrix|] = [xMake| value.tuple := vs |]
+matrixToTuple e = errpM "Common: matrixToTuple failed" [e]
 
