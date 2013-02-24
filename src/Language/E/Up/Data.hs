@@ -15,6 +15,7 @@ data VarData =  VarData {
     vEssence :: E
 } deriving (Show)
 
+
 data Tree a = Leaf a
             | Branch a [Tree a]
             | Tuple [Tree a]

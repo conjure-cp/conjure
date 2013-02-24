@@ -51,11 +51,7 @@ removeIndexRanges spec@(Spec _ _) = do
 
     removeIndexRange x = return x
 
-removeIndexRanges' :: Monad m => Spec -> m Spec
-removeIndexRanges' spec@(Spec ver _) = do
-    let ee = toLst spec
-        ef = filter removeIndexRange ee
-    return $ Spec ver (listAsStatement ef)
+
 
 introduceParams :: Monad m => Maybe (m Spec) -> Spec -> m Spec
 introduceParams (Just par) spec@(Spec ver _) = do
@@ -118,14 +114,9 @@ removeLettings :: E -> Bool
 removeLettings [xMatch| _ := topLevel.letting|] = False
 removeLettings  _ = True
 
-
 removeGiven :: E -> Bool
 removeGiven [xMatch| _ := topLevel.declaration.given |] = False
 removeGiven _ = True
-
-removeIndexRange :: E -> Bool
-removeIndexRange [xMatch| _ := indexrange|] = False
-removeIndexRange  _ = True
 
 exclude :: E -> Bool
 exclude [xMatch| _ := name.reference |] =  True

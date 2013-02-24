@@ -278,6 +278,7 @@ pairEqual v1 v2
     where l1 = length v1
           l2 = length v2
 
+
 mergeExplicitVarSizeTuple :: E -> E -> E
 mergeExplicitVarSizeTuple
     ([xMatch| v1  := value.matrix.values.value.literal|])
@@ -347,3 +348,6 @@ getValue value =
 
 unwrapExpr ::  E -> E
 unwrapExpr  (Tagged Texpr [val]) =  val
+unwrapExpr e = errpM "EvaluateTree: unwrapExpr failed" [e]
+
+
