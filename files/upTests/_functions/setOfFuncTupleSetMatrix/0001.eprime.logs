@@ -1,0 +1,1254 @@
+[handleInfDom] given a: int
+               ~~>
+               given a: int(MININT..MAXINT)
+[handleInfDom] given b: int
+               ~~>
+               given b: int(MININT..MAXINT)
+[representation] find fs:
+                         set (size 1) of
+                             function (total)
+                                 int(a..b)
+                                     --> matrix indexed by [int(1..2)] of ((set (size 1) of
+                                                                                set (size 1) of int(18, 19),
+                                                                            int(16, 27)),
+                                                                           int(11, 12))
+                 (#1)
+                 Explicit
+[configuration] fs§region1#Explicit
+[addedDecl] find fs_Explicit:
+                    matrix indexed by [int(1..1)] of function (total)
+                                                         int(a..b)
+                                                             --> matrix indexed by [int(1..2)] of ((set (size 1) of
+                                                                                                        set (size 1) of
+                                                                                                            int(18, 19),
+                                                                                                    int(16, 27)),
+                                                                                                   int(11, 12))
+[applied] |fs§region1#Explicit|
+          {rules/refns/set-card.rule}
+              (sum v__3 in fs§region1#Explicit . 1)
+[applied] (sum v__3 in fs§region1#Explicit . 1)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              1
+[simplified] 1 = 1
+             ~~>
+             true
+[applied] fs_Explicit§region1[1] != fs_Explicit§region1[v__2]
+          {rules/refns/neq-to-eq.rule}
+              !(fs_Explicit§region1[1] = fs_Explicit§region1[v__2])
+[applied] fs_Explicit§region1[1] = fs_Explicit§region1[v__2]
+          {rules/refns/function-eq.rule}
+              (forAll v__5 in defined(fs_Explicit§region1[1])
+                   . fs_Explicit§region1[1](v__5) = fs_Explicit§region1[v__2](v__5))
+[applied] (forAll v__5 in defined(fs_Explicit§region1[1])
+               . fs_Explicit§region1[1](v__5) = fs_Explicit§region1[v__2](v__5))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__6 in toSet(fs_Explicit§region1[1])
+                   . fs_Explicit§region1[1](v__6[1]) = fs_Explicit§region1[v__2](v__6[1]))
+[removedDecl] find fs:
+                      set (size 1) of
+                          function (total)
+                              int(a..b)
+                                  --> matrix indexed by [int(1..2)] of ((set (size 1) of
+                                                                             set (size 1) of int(18, 19),
+                                                                         int(16, 27)),
+                                                                        int(11, 12))
+[representation] find fs_Explicit:
+                         matrix indexed by [int(1..1)] of function (total)
+                                                              int(a..b)
+                                                                  --> matrix indexed by [int(1..2)] of ((set (size 1) of
+                                                                                                             set (size 1) of
+                                                                                                                 int(18,
+                                                                                                                     19),
+                                                                                                         int(16, 27)),
+                                                                                                        int(11, 12))
+                 (#1)
+                 Matrix1D
+[configuration] fs_Explicit§region1#Matrix1D
+[addedDecl] find fs_Explicit_Matrix1D:
+                    matrix indexed by [int(1..1), int(a..b), int(1..2)] of ((set (size 1) of
+                                                                                 set (size 1) of int(18, 19),
+                                                                             int(16, 27)),
+                                                                            int(11, 12))
+[applied] fs_Explicit§region1#Matrix1D[1](v__6[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              fs_Explicit_Matrix1D§region1[1, v__6[1]]
+[applied] fs_Explicit§region1#Matrix1D[v__2](v__6[1])
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1]]
+[simplified] fs_Explicit_Matrix1D§region1[1, v__6[1]]
+             =
+             fs_Explicit_Matrix1D§region1[v__2, v__6[1]]
+             ~~>
+             fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+             =
+             fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+             /\
+             fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 2]
+             =
+             fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 2]
+             /\
+             fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 2]
+             =
+             fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 2]
+             /\
+             (fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+              =
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+              /\
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 2]
+              =
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 2]
+              /\
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 2]
+              =
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 2])
+[applied] fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+          =
+          fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+          {rules/refns/set-eq-to-subsets.rule}
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+              subsetEq
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+              /\
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+              supsetEq
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+[applied] fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+          subsetEq
+          fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__11 in fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+                   . v__11 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1])
+[applied] v__11 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__12 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+                   . v__12 = v__11)
+[applied] v__12 = v__11
+          {rules/refns/set-eq-to-subsets.rule}
+              v__12 subsetEq v__11 /\ v__12 supsetEq v__11
+[applied] v__12 subsetEq v__11
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__13 in v__12 . v__13 in v__11)
+[applied] v__13 in v__11
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__14 in v__11 . v__14 = v__13)
+[applied] v__12 supsetEq v__11
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__11 subsetEq v__12
+[applied] v__11 subsetEq v__12
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__15 in v__11 . v__15 in v__12)
+[applied] v__15 in v__12
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__16 in v__12 . v__16 = v__15)
+[applied] fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+          supsetEq
+          fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+              subsetEq
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+[applied] fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+          subsetEq
+          fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__17 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+                   . v__17 in fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1])
+[applied] v__17 in fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__18 in fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+                   . v__18 = v__17)
+[applied] v__18 = v__17
+          {rules/refns/set-eq-to-subsets.rule}
+              v__18 subsetEq v__17 /\ v__18 supsetEq v__17
+[applied] v__18 subsetEq v__17
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__19 in v__18 . v__19 in v__17)
+[applied] v__19 in v__17
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__20 in v__17 . v__20 = v__19)
+[applied] v__18 supsetEq v__17
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__17 subsetEq v__18
+[applied] v__17 subsetEq v__18
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__21 in v__17 . v__21 in v__18)
+[applied] v__21 in v__18
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__22 in v__18 . v__22 = v__21)
+[applied] fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+          =
+          fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+          {rules/refns/set-eq-to-subsets.rule}
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+              subsetEq
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+              /\
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+              supsetEq
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+[applied] fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+          subsetEq
+          fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__23 in fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+                   . v__23 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1])
+[applied] v__23 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__24 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+                   . v__24 = v__23)
+[applied] v__24 = v__23
+          {rules/refns/set-eq-to-subsets.rule}
+              v__24 subsetEq v__23 /\ v__24 supsetEq v__23
+[applied] v__24 subsetEq v__23
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__25 in v__24 . v__25 in v__23)
+[applied] v__25 in v__23
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__26 in v__23 . v__26 = v__25)
+[applied] v__24 supsetEq v__23
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__23 subsetEq v__24
+[applied] v__23 subsetEq v__24
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__27 in v__23 . v__27 in v__24)
+[applied] v__27 in v__24
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__28 in v__24 . v__28 = v__27)
+[applied] fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+          supsetEq
+          fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+              subsetEq
+              fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+[applied] fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+          subsetEq
+          fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__29 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+                   . v__29 in fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1])
+[applied] v__29 in fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__30 in fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+                   . v__30 = v__29)
+[applied] v__30 = v__29
+          {rules/refns/set-eq-to-subsets.rule}
+              v__30 subsetEq v__29 /\ v__30 supsetEq v__29
+[applied] v__30 subsetEq v__29
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__31 in v__30 . v__31 in v__29)
+[applied] v__31 in v__29
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__32 in v__29 . v__32 = v__31)
+[applied] v__30 supsetEq v__29
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              v__29 subsetEq v__30
+[applied] v__29 subsetEq v__30
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__33 in v__29 . v__33 in v__30)
+[applied] v__33 in v__30
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__34 in v__30 . v__34 = v__33)
+[applied] (forAll v__6 in toSet(fs_Explicit§region1#Matrix1D[1])
+               . (forAll v__11 in fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+                      . (exists v__12 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+                             . (forAll v__13 in v__12 . (exists v__14 in v__11 . v__14 = v__13))
+                               /\
+                               (forAll v__15 in v__11 . (exists v__16 in v__12 . v__16 = v__15))))
+                 /\
+                 (forAll v__17 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 1]
+                      . (exists v__18 in fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 1]
+                             . (forAll v__19 in v__18 . (exists v__20 in v__17 . v__20 = v__19))
+                               /\
+                               (forAll v__21 in v__17 . (exists v__22 in v__18 . v__22 = v__21))))
+                 /\
+                 fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 1, 2]
+                 =
+                 fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 1, 2]
+                 /\
+                 fs_Explicit_Matrix1D§region1[1, v__6[1], 1, 2]
+                 =
+                 fs_Explicit_Matrix1D§region1[v__2, v__6[1], 1, 2]
+                 /\
+                 ((forAll v__23 in fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+                       . (exists v__24 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+                              . (forAll v__25 in v__24 . (exists v__26 in v__23 . v__26 = v__25))
+                                /\
+                                (forAll v__27 in v__23 . (exists v__28 in v__24 . v__28 = v__27))))
+                  /\
+                  (forAll v__29 in fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 1]
+                       . (exists v__30 in fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 1]
+                              . (forAll v__31 in v__30 . (exists v__32 in v__29 . v__32 = v__31))
+                                /\
+                                (forAll v__33 in v__29 . (exists v__34 in v__30 . v__34 = v__33))))
+                  /\
+                  fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 1, 2]
+                  =
+                  fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 1, 2]
+                  /\
+                  fs_Explicit_Matrix1D§region1[1, v__6[1], 2, 2]
+                  =
+                  fs_Explicit_Matrix1D§region1[v__2, v__6[1], 2, 2]))
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (forAll v__35 : int(a..b)
+                   . (forAll v__11 in fs_Explicit_Matrix1D§region1[1, v__35, 1, 1, 1]
+                          . (exists v__12 in fs_Explicit_Matrix1D§region1[v__2, v__35, 1, 1, 1]
+                                 . (forAll v__13 in v__12 . (exists v__14 in v__11 . v__14 = v__13))
+                                   /\
+                                   (forAll v__15 in v__11 . (exists v__16 in v__12 . v__16 = v__15))))
+                     /\
+                     (forAll v__17 in fs_Explicit_Matrix1D§region1[v__2, v__35, 1, 1, 1]
+                          . (exists v__18 in fs_Explicit_Matrix1D§region1[1, v__35, 1, 1, 1]
+                                 . (forAll v__19 in v__18 . (exists v__20 in v__17 . v__20 = v__19))
+                                   /\
+                                   (forAll v__21 in v__17 . (exists v__22 in v__18 . v__22 = v__21))))
+                     /\
+                     fs_Explicit_Matrix1D§region1[1, v__35, 1, 1, 2]
+                     =
+                     fs_Explicit_Matrix1D§region1[v__2, v__35, 1, 1, 2]
+                     /\
+                     fs_Explicit_Matrix1D§region1[1, v__35, 1, 2]
+                     =
+                     fs_Explicit_Matrix1D§region1[v__2, v__35, 1, 2]
+                     /\
+                     ((forAll v__23 in fs_Explicit_Matrix1D§region1[1, v__35, 2, 1, 1]
+                           . (exists v__24 in fs_Explicit_Matrix1D§region1[v__2, v__35, 2, 1, 1]
+                                  . (forAll v__25 in v__24 . (exists v__26 in v__23 . v__26 = v__25))
+                                    /\
+                                    (forAll v__27 in v__23 . (exists v__28 in v__24 . v__28 = v__27))))
+                      /\
+                      (forAll v__29 in fs_Explicit_Matrix1D§region1[v__2, v__35, 2, 1, 1]
+                           . (exists v__30 in fs_Explicit_Matrix1D§region1[1, v__35, 2, 1, 1]
+                                  . (forAll v__31 in v__30 . (exists v__32 in v__29 . v__32 = v__31))
+                                    /\
+                                    (forAll v__33 in v__29 . (exists v__34 in v__30 . v__34 = v__33))))
+                      /\
+                      fs_Explicit_Matrix1D§region1[1, v__35, 2, 1, 2]
+                      =
+                      fs_Explicit_Matrix1D§region1[v__2, v__35, 2, 1, 2]
+                      /\
+                      fs_Explicit_Matrix1D§region1[1, v__35, 2, 2]
+                      =
+                      fs_Explicit_Matrix1D§region1[v__2, v__35, 2, 2]))
+[removedDecl] find fs_Explicit_Matrix1D:
+                      matrix indexed by [int(1..1), int(a..b), int(1..2)] of ((set (size 1) of
+                                                                                   set (size 1) of int(18, 19),
+                                                                               int(16, 27)),
+                                                                              int(11, 12))
+[removedDecl] find fs_Explicit_Matrix1D_tuple1:
+                      matrix indexed by [int(1..1), int(a..b), int(1..2)] of (set (size 1) of
+                                                                                  set (size 1) of int(18, 19),
+                                                                              int(16, 27))
+[removedDecl] find fs_Explicit:
+                      matrix indexed by [int(1..1)] of function (total)
+                                                           int(a..b)
+                                                               --> matrix indexed by [int(1..2)] of ((set (size 1) of
+                                                                                                          set (size 1) of
+                                                                                                              int(18,
+                                                                                                                  19),
+                                                                                                      int(16, 27)),
+                                                                                                     int(11, 12))
+[representation] find fs_Explicit_Matrix1D_tuple1_tuple1:
+                         matrix indexed by [int(1..1), int(a..b), int(1..2)] of set (size 1) of
+                                                                                    set (size 1) of int(18, 19)
+                 (#1)
+                 Explicit
+[configuration] fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit
+[addedDecl] find fs_Explicit_Matrix1D_tuple1_tuple1_Explicit:
+                    matrix indexed by [int(1..1),
+                                       int(a..b),
+                                       int(1..2),
+                                       int(1..1)] of set (size 1) of int(18, 19)
+[applied] (exists v__12 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[v__2,
+                                                                               v__35,
+                                                                               1]
+               . (forAll v__13 in v__12 . (exists v__14 in v__11 . v__14 = v__13))
+                 /\
+                 (forAll v__15 in v__11 . (exists v__16 in v__12 . v__16 = v__15)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__13 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                   v__35,
+                                                                                   1,
+                                                                                   1]
+                   . (exists v__14 in v__11 . v__14 = v__13))
+              /\
+              (forAll v__15 in v__11
+                   . (exists v__16 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                          v__35,
+                                                                                          1,
+                                                                                          1]
+                          . v__16 = v__15))
+[applied] (forAll v__11 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[1,
+                                                                               v__35,
+                                                                               1]
+               . (forAll v__13 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                      v__35,
+                                                                                      1,
+                                                                                      1]
+                      . (exists v__14 in v__11 . v__14 = v__13))
+                 /\
+                 (forAll v__15 in v__11
+                      . (exists v__16 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                             v__35,
+                                                                                             1,
+                                                                                             1]
+                             . v__16 = v__15)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__13 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                   v__35,
+                                                                                   1,
+                                                                                   1]
+                   . (exists v__14 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                          v__35,
+                                                                                          1,
+                                                                                          1]
+                          . v__14 = v__13))
+              /\
+              (forAll v__15 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__35,
+                                                                                   1,
+                                                                                   1]
+                   . (exists v__16 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                          v__35,
+                                                                                          1,
+                                                                                          1]
+                          . v__16 = v__15))
+[applied] (exists v__18 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[1,
+                                                                               v__35,
+                                                                               1]
+               . (forAll v__19 in v__18 . (exists v__20 in v__17 . v__20 = v__19))
+                 /\
+                 (forAll v__21 in v__17 . (exists v__22 in v__18 . v__22 = v__21)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__19 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__35,
+                                                                                   1,
+                                                                                   1]
+                   . (exists v__20 in v__17 . v__20 = v__19))
+              /\
+              (forAll v__21 in v__17
+                   . (exists v__22 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                          v__35,
+                                                                                          1,
+                                                                                          1]
+                          . v__22 = v__21))
+[applied] (forAll v__17 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[v__2,
+                                                                               v__35,
+                                                                               1]
+               . (forAll v__19 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                      v__35,
+                                                                                      1,
+                                                                                      1]
+                      . (exists v__20 in v__17 . v__20 = v__19))
+                 /\
+                 (forAll v__21 in v__17
+                      . (exists v__22 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                             v__35,
+                                                                                             1,
+                                                                                             1]
+                             . v__22 = v__21)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__19 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__35,
+                                                                                   1,
+                                                                                   1]
+                   . (exists v__20 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                          v__35,
+                                                                                          1,
+                                                                                          1]
+                          . v__20 = v__19))
+              /\
+              (forAll v__21 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                   v__35,
+                                                                                   1,
+                                                                                   1]
+                   . (exists v__22 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                          v__35,
+                                                                                          1,
+                                                                                          1]
+                          . v__22 = v__21))
+[applied] (exists v__24 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[v__2,
+                                                                               v__35,
+                                                                               2]
+               . (forAll v__25 in v__24 . (exists v__26 in v__23 . v__26 = v__25))
+                 /\
+                 (forAll v__27 in v__23 . (exists v__28 in v__24 . v__28 = v__27)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__25 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                   v__35,
+                                                                                   2,
+                                                                                   1]
+                   . (exists v__26 in v__23 . v__26 = v__25))
+              /\
+              (forAll v__27 in v__23
+                   . (exists v__28 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                          v__35,
+                                                                                          2,
+                                                                                          1]
+                          . v__28 = v__27))
+[applied] (forAll v__23 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[1,
+                                                                               v__35,
+                                                                               2]
+               . (forAll v__25 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                      v__35,
+                                                                                      2,
+                                                                                      1]
+                      . (exists v__26 in v__23 . v__26 = v__25))
+                 /\
+                 (forAll v__27 in v__23
+                      . (exists v__28 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                             v__35,
+                                                                                             2,
+                                                                                             1]
+                             . v__28 = v__27)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__25 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                   v__35,
+                                                                                   2,
+                                                                                   1]
+                   . (exists v__26 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                          v__35,
+                                                                                          2,
+                                                                                          1]
+                          . v__26 = v__25))
+              /\
+              (forAll v__27 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__35,
+                                                                                   2,
+                                                                                   1]
+                   . (exists v__28 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                          v__35,
+                                                                                          2,
+                                                                                          1]
+                          . v__28 = v__27))
+[applied] (exists v__30 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[1,
+                                                                               v__35,
+                                                                               2]
+               . (forAll v__31 in v__30 . (exists v__32 in v__29 . v__32 = v__31))
+                 /\
+                 (forAll v__33 in v__29 . (exists v__34 in v__30 . v__34 = v__33)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__31 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__35,
+                                                                                   2,
+                                                                                   1]
+                   . (exists v__32 in v__29 . v__32 = v__31))
+              /\
+              (forAll v__33 in v__29
+                   . (exists v__34 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                          v__35,
+                                                                                          2,
+                                                                                          1]
+                          . v__34 = v__33))
+[applied] (forAll v__29 in fs_Explicit_Matrix1D_tuple1_tuple1§region1#Explicit[v__2,
+                                                                               v__35,
+                                                                               2]
+               . (forAll v__31 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                      v__35,
+                                                                                      2,
+                                                                                      1]
+                      . (exists v__32 in v__29 . v__32 = v__31))
+                 /\
+                 (forAll v__33 in v__29
+                      . (exists v__34 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                             v__35,
+                                                                                             2,
+                                                                                             1]
+                             . v__34 = v__33)))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__31 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__35,
+                                                                                   2,
+                                                                                   1]
+                   . (exists v__32 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                          v__35,
+                                                                                          2,
+                                                                                          1]
+                          . v__32 = v__31))
+              /\
+              (forAll v__33 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[v__2,
+                                                                                   v__35,
+                                                                                   2,
+                                                                                   1]
+                   . (exists v__34 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                          v__35,
+                                                                                          2,
+                                                                                          1]
+                          . v__34 = v__33))
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+          !=
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+          {rules/refns/neq-to-eq.rule}
+              !(fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+                =
+                fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41])
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+          =
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+          {rules/refns/set-eq-to-subsets.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+              subsetEq
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+              /\
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+              supsetEq
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+          subsetEq
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__50 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   1,
+                                                                                   1]
+                   . v__50
+                     in
+                     fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41])
+[applied] v__50
+          in
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__51 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   1,
+                                                                                   v__41]
+                   . v__51 = v__50)
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+          supsetEq
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41]
+              subsetEq
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                              v__40,
+                                                              1,
+                                                              v__41]
+          subsetEq
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__52 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   1,
+                                                                                   v__41]
+                   . v__52 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1])
+[applied] v__52
+          in
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__53 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   1,
+                                                                                   1]
+                   . v__53 = v__52)
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+          !=
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+          {rules/refns/neq-to-eq.rule}
+              !(fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+                =
+                fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41])
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+          =
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+          {rules/refns/set-eq-to-subsets.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+              subsetEq
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+              /\
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+              supsetEq
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+          subsetEq
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__54 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   2,
+                                                                                   1]
+                   . v__54
+                     in
+                     fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41])
+[applied] v__54
+          in
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__55 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   2,
+                                                                                   v__41]
+                   . v__55 = v__54)
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+          supsetEq
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41]
+              subsetEq
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+[applied] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                              v__40,
+                                                              2,
+                                                              v__41]
+          subsetEq
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__56 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   2,
+                                                                                   v__41]
+                   . v__56 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1])
+[applied] v__56
+          in
+          fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__57 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                   v__40,
+                                                                                   2,
+                                                                                   1]
+                   . v__57 = v__56)
+[from-cached] such that
+                  forAll v__40 : int(a..b)
+                      . (forAll v__41 : int(1..1) , 1 < v__41
+                             . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, 1]
+                               !=
+                               fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 1, v__41])
+                        /\
+                        (forAll v__41 : int(1..1) , 1 < v__41
+                             . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, 1]
+                               !=
+                               fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1, v__40, 2, v__41])
+              ~~>
+              such that
+                  forAll v__40 : int(a..b)
+                      . (forAll v__41 : int(1..1) , 1 < v__41
+                             . !((forAll v__50 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                      v__40,
+                                                                                                      1,
+                                                                                                      1]
+                                      . (exists v__51 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                             v__40,
+                                                                                                             1,
+                                                                                                             v__41]
+                                             . v__51 = v__50))
+                                 /\
+                                 (forAll v__52 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                      v__40,
+                                                                                                      1,
+                                                                                                      v__41]
+                                      . (exists v__53 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                             v__40,
+                                                                                                             1,
+                                                                                                             1]
+                                             . v__53 = v__52))))
+                        /\
+                        (forAll v__41 : int(1..1) , 1 < v__41
+                             . !((forAll v__54 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                      v__40,
+                                                                                                      2,
+                                                                                                      1]
+                                      . (exists v__55 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                             v__40,
+                                                                                                             2,
+                                                                                                             v__41]
+                                             . v__55 = v__54))
+                                 /\
+                                 (forAll v__56 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                      v__40,
+                                                                                                      2,
+                                                                                                      v__41]
+                                      . (exists v__57 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1[1,
+                                                                                                             v__40,
+                                                                                                             2,
+                                                                                                             1]
+                                             . v__57 = v__56))))
+[removedDecl] find fs_Explicit_Matrix1D_tuple1_tuple1:
+                      matrix indexed by [int(1..1), int(a..b), int(1..2)] of set (size 1) of
+                                                                                 set (size 1) of int(18, 19)
+[representation] find fs_Explicit_Matrix1D_tuple1_tuple1_Explicit:
+                         matrix indexed by [int(1..1),
+                                            int(a..b),
+                                            int(1..2),
+                                            int(1..1)] of set (size 1) of int(18, 19)
+                 (#1)
+                 Explicit
+[configuration] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit
+[addedDecl] find fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit:
+                    matrix indexed by [int(1..1),
+                                       int(a..b),
+                                       int(1..2),
+                                       int(1..1),
+                                       int(1..1)] of int(18, 19)
+[fullEvaluator empty range] (forAll v__63 : int(1..0)
+                                 . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                                v__62,
+                                                                                                1,
+                                                                                                1,
+                                                                                                v__63]
+                                   <
+                                   fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                                v__62,
+                                                                                                1,
+                                                                                                1,
+                                                                                                v__63 + 1])
+[fullEvaluator empty range] (forAll v__63 : int(1..0)
+                                 . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                                v__62,
+                                                                                                2,
+                                                                                                1,
+                                                                                                v__63]
+                                   <
+                                   fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                                v__62,
+                                                                                                2,
+                                                                                                1,
+                                                                                                v__63 + 1])
+[applied] (exists v__14 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . v__14 = v__13)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 1, 1, 1]
+              =
+              v__13
+[applied] (forAll v__13 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__35,
+                                                                              1,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__13)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 1, 1, 1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           1,
+                                                                           1,
+                                                                           1]
+[applied] (exists v__16 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . v__16 = v__15)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           1,
+                                                                           1,
+                                                                           1]
+              =
+              v__15
+[applied] (forAll v__15 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                              v__35,
+                                                                              1,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__15)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           1,
+                                                                           1,
+                                                                           1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 1, 1, 1]
+[applied] (exists v__20 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . v__20 = v__19)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           1,
+                                                                           1,
+                                                                           1]
+              =
+              v__19
+[applied] (forAll v__19 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                              v__35,
+                                                                              1,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__19)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           1,
+                                                                           1,
+                                                                           1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 1, 1, 1]
+[applied] (exists v__22 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . v__22 = v__21)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 1, 1, 1]
+              =
+              v__21
+[applied] (forAll v__21 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        1,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__35,
+                                                                              1,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__21)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 1, 1, 1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           1,
+                                                                           1,
+                                                                           1]
+[applied] (exists v__26 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . v__26 = v__25)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 2, 1, 1]
+              =
+              v__25
+[applied] (forAll v__25 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__35,
+                                                                              2,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__25)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 2, 1, 1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           2,
+                                                                           1,
+                                                                           1]
+[applied] (exists v__28 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . v__28 = v__27)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           2,
+                                                                           1,
+                                                                           1]
+              =
+              v__27
+[applied] (forAll v__27 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                              v__35,
+                                                                              2,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__27)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           2,
+                                                                           1,
+                                                                           1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 2, 1, 1]
+[applied] (exists v__32 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . v__32 = v__31)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           2,
+                                                                           1,
+                                                                           1]
+              =
+              v__31
+[applied] (forAll v__31 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                              v__35,
+                                                                              2,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__31)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           2,
+                                                                           1,
+                                                                           1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 2, 1, 1]
+[applied] (exists v__34 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . v__34 = v__33)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 2, 1, 1]
+              =
+              v__33
+[applied] (forAll v__33 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[v__2,
+                                                                                        v__35,
+                                                                                        2,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__35,
+                                                                              2,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__33)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__35, 2, 1, 1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[v__2,
+                                                                           v__35,
+                                                                           2,
+                                                                           1,
+                                                                           1]
+[applied] (exists v__51 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        1,
+                                                                                        v__41]
+               . v__51 = v__50)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                           v__40,
+                                                                           1,
+                                                                           v__41,
+                                                                           1]
+              =
+              v__50
+[applied] (forAll v__50 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        1,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__40,
+                                                                              1,
+                                                                              v__41,
+                                                                              1]
+                 =
+                 v__50)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                           v__40,
+                                                                           1,
+                                                                           v__41,
+                                                                           1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 1, 1, 1]
+[applied] (exists v__53 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        1,
+                                                                                        1]
+               . v__53 = v__52)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 1, 1, 1]
+              =
+              v__52
+[applied] (forAll v__52 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        1,
+                                                                                        v__41]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__40,
+                                                                              1,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__52)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 1, 1, 1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                           v__40,
+                                                                           1,
+                                                                           v__41,
+                                                                           1]
+[applied] (exists v__55 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        2,
+                                                                                        v__41]
+               . v__55 = v__54)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                           v__40,
+                                                                           2,
+                                                                           v__41,
+                                                                           1]
+              =
+              v__54
+[applied] (forAll v__54 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        2,
+                                                                                        1]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__40,
+                                                                              2,
+                                                                              v__41,
+                                                                              1]
+                 =
+                 v__54)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                           v__40,
+                                                                           2,
+                                                                           v__41,
+                                                                           1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 2, 1, 1]
+[applied] (exists v__57 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        2,
+                                                                                        1]
+               . v__57 = v__56)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 2, 1, 1]
+              =
+              v__56
+[applied] (forAll v__56 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                        v__40,
+                                                                                        2,
+                                                                                        v__41]
+               . fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                              v__40,
+                                                                              2,
+                                                                              1,
+                                                                              1]
+                 =
+                 v__56)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 2, 1, 1]
+              =
+              fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                           v__40,
+                                                                           2,
+                                                                           v__41,
+                                                                           1]
+[from-cached] such that
+                  forAll v__40 : int(a..b)
+                      . (forAll v__41 : int(1..1) , 1 < v__41
+                             . !((forAll v__50 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                               v__40,
+                                                                                                               1,
+                                                                                                               1]
+                                      . (exists v__51 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                                      v__40,
+                                                                                                                      1,
+                                                                                                                      v__41]
+                                             . v__51 = v__50))
+                                 /\
+                                 (forAll v__52 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                               v__40,
+                                                                                                               1,
+                                                                                                               v__41]
+                                      . (exists v__53 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                                      v__40,
+                                                                                                                      1,
+                                                                                                                      1]
+                                             . v__53 = v__52))))
+                        /\
+                        (forAll v__41 : int(1..1) , 1 < v__41
+                             . !((forAll v__54 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                               v__40,
+                                                                                                               2,
+                                                                                                               1]
+                                      . (exists v__55 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                                      v__40,
+                                                                                                                      2,
+                                                                                                                      v__41]
+                                             . v__55 = v__54))
+                                 /\
+                                 (forAll v__56 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                               v__40,
+                                                                                                               2,
+                                                                                                               v__41]
+                                      . (exists v__57 in fs_Explicit_Matrix1D_tuple1_tuple1_Explicit§region1#Explicit[1,
+                                                                                                                      v__40,
+                                                                                                                      2,
+                                                                                                                      1]
+                                             . v__57 = v__56))))
+              ~~>
+              such that
+                  forAll v__40 : int(a..b)
+                      . (forAll v__41 : int(1..1) , 1 < v__41
+                             . !(fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                              v__40,
+                                                                                              1,
+                                                                                              v__41,
+                                                                                              1]
+                                 =
+                                 fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 1, 1, 1]
+                                 /\
+                                 fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 1, 1, 1]
+                                 =
+                                 fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                              v__40,
+                                                                                              1,
+                                                                                              v__41,
+                                                                                              1]))
+                        /\
+                        (forAll v__41 : int(1..1) , 1 < v__41
+                             . !(fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                              v__40,
+                                                                                              2,
+                                                                                              v__41,
+                                                                                              1]
+                                 =
+                                 fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 2, 1, 1]
+                                 /\
+                                 fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1, v__40, 2, 1, 1]
+                                 =
+                                 fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit§region1[1,
+                                                                                              v__40,
+                                                                                              2,
+                                                                                              v__41,
+                                                                                              1]))
+[removedDecl] find fs_Explicit_Matrix1D_tuple1_tuple1_Explicit:
+                      matrix indexed by [int(1..1),
+                                         int(a..b),
+                                         int(1..2),
+                                         int(1..1)] of set (size 1) of int(18, 19)
+[addSlicing] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit[1, v__0, 1, 1]
+             fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit[1, v__0, 1, 1, ..]
+[addSlicing] fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit[1, v__0, 2, 1]
+             fs_Explicit_Matrix1D_tuple1_tuple1_Explicit_Explicit[1, v__0, 2, 1, ..]
