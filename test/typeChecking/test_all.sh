@@ -4,7 +4,6 @@ set -o nounset
 set -o errexit
 
 export SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
-echo $SCRIPT_DIR
 export FAIL_FILE="$SCRIPT_DIR/fail.txt"
 export PASS_FILE="$SCRIPT_DIR/pass.txt"
 

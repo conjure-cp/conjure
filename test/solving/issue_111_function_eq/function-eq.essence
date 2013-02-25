@@ -1,13 +1,11 @@
 language Essence 1.3
 
-$letting Index be domain int(1..3)
+letting Index be domain int(1..2)
 
-$letting f be function(3 --> {}, 2 --> {1},  1 --> {2,1})
-
-find x : int(0..100)
+find fs : mset(size 2) of set (minSize 1) of function (total) Index --> int(-1,1)
 
 such that
-    x = 10
-    $forAll i in f(2) . x >= i
-    $f = function(3 --> {}, 2 --> {1},  1 --> {2,1} )
+    forAll f in fs .
+        forAll f2 in f .
+            f2(1) = -1
 
