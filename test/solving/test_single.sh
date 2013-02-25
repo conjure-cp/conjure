@@ -72,6 +72,9 @@ function perModelperParam {
         --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
         --out-essence-solution  $MODEL-$PARAM.solution
 
+    SOL_VALIDATE=0
+    SOL_DIFF=0
+
     conjure                                                                 \
         --mode validateSolution                                             \
         --in-essence  $SPEC.essence                                         \
