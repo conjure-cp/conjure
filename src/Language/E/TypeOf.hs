@@ -40,6 +40,13 @@ typeUnify _ [xMatch| _ := type.unknown |] = True
 typeUnify [xMatch| [] := type.bool |] [xMatch| [] := type.bool |] = True
 typeUnify [xMatch| [] := type.int  |] [xMatch| [] := type.int  |] = True
 typeUnify
+    [xMatch| [a1] := type.matrix.index
+           | [b1] := type.matrix.inner
+           |]
+    [xMatch| [a2] := type.matrix.index
+           | [b2] := type.matrix.inner
+           |] = typeUnify a1 a2 && typeUnify b1 b2
+typeUnify
     [xMatch| [a] := type.set.inner |]
     [xMatch| [b] := type.set.inner |]
     = typeUnify a b
