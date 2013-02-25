@@ -257,7 +257,7 @@ parseValue = msum ( map try
         pPartition = do
             lexeme L_partition
             xs <- parens (sepBy inner comma)
-            return [xMake| value.partition := xs|]
+            return [xMake| value.partition.values := xs|]
             where
                 inner = do
                     is <- braces (sepBy parseExpr comma)

@@ -283,13 +283,13 @@ instance Pretty E where
                   | [d] := value.matrix.indexrange
                   |] = let f i = Pr.brackets (i <> ";" <+> pretty d)
                        in  prettyList f "," xs
-    pretty [xMatch| xs := value.matrix  .values |] =                prettyList Pr.brackets "," xs
-    pretty [xMatch| xs := value.set     .values |] =                prettyList Pr.braces   "," xs
-    pretty [xMatch| xs := value.mset    .values |] = "mset"      <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.function.values |] = "function"  <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.relation.values |] = "relation"  <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.partition       |] = "partition" <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := part                  |] =                prettyList Pr.braces   "," xs
+    pretty [xMatch| xs := value.matrix   .values |] =                prettyList Pr.brackets "," xs
+    pretty [xMatch| xs := value.set      .values |] =                prettyList Pr.braces   "," xs
+    pretty [xMatch| xs := value.mset     .values |] = "mset"      <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.function .values |] = "function"  <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.relation .values |] = "relation"  <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.partition.values |] = "partition" <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := part                   |] =                prettyList Pr.braces   "," xs
 
     pretty [xMatch| [a,b] := mapping |] = pretty a <+> "-->" <+> pretty b
 

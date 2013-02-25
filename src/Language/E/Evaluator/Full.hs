@@ -86,6 +86,29 @@ fullEvaluator [eMatch| &a = &b |]
     , [xMatch| bs := value.set.values |] <- b
     = returnBool (sortNub as == sortNub bs)
 
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool (sort as == sort bs)
+
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.relation.values |] <- a
+    , [xMatch| bs := value.relation.values |] <- b
+    = returnBool (sort as == sort bs)
+
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.partition.values |] <- a
+    , [xMatch| bs := value.partition.values |] <- b
+    = returnBool (sort (map sortPart as) == sort (map sortPart bs))
+    where sortPart [xMatch| xs := part |] = [xMake| part := sort xs |]
+          sortPart x = x
+
 fullEvaluator [eMatch| &a != &b |]
     | [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
@@ -97,6 +120,14 @@ fullEvaluator [eMatch| &a != &b |]
     , [xMatch| as := value.set.values |] <- a
     , [xMatch| bs := value.set.values |] <- b
     = returnBool (sortNub as /= sortNub bs)
+
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
+           | xs  := operator.twoBars.value.set.values
+           |]
+    | isFullyInstantiated x
+    = returnInt (genericLength $ sortNub xs)
+
 
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.left.emptyGuard
@@ -138,6 +169,30 @@ fullEvaluator
                                                      | otherwise = go rest
               go _ = err ErrFatal $ "Undefinedness:" <+> pretty p
           in  go xs
+
+fullEvaluator
+    [xMatch| [fn]  := functionApply.actual
+           | xs    := functionApply.actual.value.relation.values
+           | args  := functionApply.args
+           |]
+        | isFullyInstantiated fn && and [ isFullyInstantiated i || i == [eMake| _ |] | i <- args ]
+        = let
+
+            select :: [E] -> [E] -> Bool
+            select  pat act = and [ i == [eMake| _ |] || i == j | (i,j) <- zip pat act ]
+
+            project :: [E] -> [E] -> [E]
+            project pat act = [ j | (i,j) <- zip pat act
+                                  , i == [eMake| _ |]
+                                  ]
+
+            ys = [ [xMake| value.tuple.values := project args cols |]
+                 | [xMatch| cols := value.tuple.values |] <- xs
+                 , select args cols
+                 ]
+
+          in
+            ret [xMake| value.relation.values := ys |]
 
 fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
