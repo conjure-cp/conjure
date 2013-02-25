@@ -50,6 +50,11 @@ runConjureMode (ModeTranslateSolution pathInEssence pathInParam
     translateSolution pathInEssence pathInParam
                       pathInEprime pathInEprimeParam pathInEprimeSolution
                       pathOutSolution
+runConjureMode (ModeTypeCheck pathInp) = do
+    inp <- case pathInp of
+        Nothing -> readSpecFromStdIn
+        Just fp -> readSpecFromFile fp
+    typeCheckSpecIO inp
 runConjureMode (ModePrettify pathInp pathOut) = do
     inp <- case pathInp of
         Nothing -> readSpecFromStdIn

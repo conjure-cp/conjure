@@ -50,6 +50,8 @@ data ConjureMode
         (Maybe FilePath)    -- Input:  Essence' Param
         FilePath            -- Input:  Essence' Solution
         FilePath            -- Output: Essence  Solution
+    | ModeTypeCheck
+        (Maybe FilePath)    -- input
     | ModePrettify
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
@@ -70,6 +72,7 @@ parseArgs (pairs, flags, rest) = msum
     [ modeDiff
     , modeRefineParam
     , modeTranslateSolution
+    , modeTypeCheck
     , modePrettify
     , modeValidateSolution
     , modeDFAll
@@ -108,6 +111,12 @@ parseArgs (pairs, flags, rest) = msum
                         inEssence inParam
                         inEprime inEprimeParam inEprimeSolution
                         outSolution
+
+        modeTypeCheck = do
+            mode <- key "--mode"
+            guard (mode =~= words "typeCheck")
+            inp  <- optional $ key "--in"
+            return $ ModeTypeCheck inp
 
         modePrettify = do
             mode <- key "--mode"
