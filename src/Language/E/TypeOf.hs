@@ -269,8 +269,8 @@ typeOf p@[xMatch| xs := value.relation.values |] = do
             _ -> typeErrorIn p
         else typeErrorIn p
 
-typeOf   [xMatch| [] := value.partition |] = return [xMake| type.partition.inner.type.unknown := [] |]
-typeOf p@[xMatch| xs := value.partition |] = do
+typeOf   [xMatch| [] := value.partition.values |] = return [xMake| type.partition.inner.type.unknown := [] |]
+typeOf p@[xMatch| xs := value.partition.values |] = do
     (tx:txs) <- mapM typeOf xs
     if and (map (tx `typeUnify`) txs)
         then return [xMake| type.partition.inner := [tx] |]
