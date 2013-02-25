@@ -1,0 +1,24 @@
+language ESSENCE 1.2.0
+$ prob038.essence: Steel Mill Slab Design Problem
+$ Problem details available at http://www.csplib.org/prob/prob038/
+$ 07 September 2007
+
+given n_colours, n_orders, col_per_slab : int(1..)
+given sizes new domain int
+
+letting Colour be domain int(1..n_colours),
+        Order be domain int(1..n_orders)
+
+given ordsize : function (total) Order --> int(1..),
+      ordcol : function (total) Order --> Colour
+
+find cut : function set of Order --> sizes
+
+minimising sum (_,os) in toSet(cut) . os
+
+such that
+    forAll os1, os2 in defined(cut), os1 != os2 . |os1 intersect os2| = 0,
+    forAll o : Order . exists os in defined(cut) . o in os,
+    forAll os in defined(cut) . (sum o in os . ordsize(o)) <= cut(os),
+    forAll (os,cut_os) in toSet(cut) . (sum o in os . ordsize(o)) <= cut_os,
+    forAll os in defined(cut) . (sum o in os . ordcol(o) ) <= col_per_slab

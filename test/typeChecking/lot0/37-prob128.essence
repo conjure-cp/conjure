@@ -1,0 +1,51 @@
+language ESSENCE 1.2.0
+$ prob128.essence: Crossword Problem
+$ Problem details available in:
+$   Constraint Programming Lessons Learned from Crossword Puzzles
+$   A. Beacham, X. Chen, J. Sillito, P. van Beek
+$   Proc. Advances in Artificial Intelligence: 14th Biennial Conference of the
+$   Canadian Society for Computational Studies of Intelligence (AI 2001),
+$   Ottawa, Canada, p. 78, 2001.
+$
+$ 30 July 2007
+$
+
+given n_upper : int(1..)
+
+$ n_places: the number of positions to place words
+$ n_words: the number of words in the dictionary
+given n_places, n_words : int(1..)
+
+$ Place: place identifiers are represented as integers
+$ Word: word identifiers are represented as integers
+$ Alphabet: the integers being used to represent characters. in this case,
+$           65..90 are ascii for A-Z
+letting Place be domain int(1..n_places),
+        Word be domain int(1..n_words),
+        Alphabet be domain int(65..90)
+
+$ length: the length of each place
+$ inter: the indicies at which two places intersect
+$ dict: the dictionary. maps word identifiers to alphabet elements
+given length : function (total) Place --> int(1..n_upper),
+      inter : function tuple (Place,Place) --> tuple (int(1..n_upper),int(1..n_upper)),
+      dict : function (total) Word --> function int(1..n_upper) --> Alphabet
+
+where
+$ intersections should be symmetric
+    forAll ((p1,p2),(i1,i2)) in inter . inter((p2,p1)) = (i2,i1),
+$ the dictionary maps identifiers to valid sequences
+    forAll s in range(dict) . forAll i : int(1..|s|) . i in defined(s)
+
+$ crossword: a function mapping word places to words from the dictionary
+find crossword : function (total) Place --> Word
+
+such that
+$ lengths of words and places match up
+    forAll p : Place . |dict(crossword(p))| = length(p),
+$ the letters at intersections match up
+    forAll ((p1,p2),(i1,i2)) in toSet(inter) .
+        dict(crossword(p1))(i1) = dict(crossword(p2))(i2),
+$ no word in the dictionary is used more than once
+    forAll p1,p2 : Place . crossword(p1) =  crossword(p2) -> p1 = p2
+

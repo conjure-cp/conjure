@@ -1,0 +1,22 @@
+language ESSENCE 1.2.0
+$ prob030.essence: Balanced Academic Curriculum Problem
+$ Problem details available at http://www.csplib.org/prob/prob030/
+$ 07 September 2007
+$
+
+given n_periods, maxl, minl, n_courses, maxc, minc : int(1..)
+
+letting Course be domain int(1..n_courses),
+        Period be domain int(1..n_periods)
+
+given prereq : relation of (Course*Course),
+      credits : function (total) Course --> int(1..)
+
+find curr : function (total) Course --> Period
+
+such that
+    forAll c1,c2 : Course . prereq(c1,c2) -> curr(c1) < curr(c2),
+    forAll p : Period . (sum c in preImage(curr,p) . credits(c)) <= maxl /\
+                        (sum c in preImage(curr,p) . credits(c)) >= minl,
+    forAll p : Period . |preImage(curr,p)| <= maxc /\ |preImage(curr,p)| >= minc
+

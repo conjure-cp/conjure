@@ -1,0 +1,7 @@
+language ESSENCE 2.0
+
+letting Index be domain int(2..3)
+
+find fs : set(minSize 1) of function (total) Index --> int(4,7)
+such that
+    forAll f in fs . f(2) != 4

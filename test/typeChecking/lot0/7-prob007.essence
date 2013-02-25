@@ -1,0 +1,16 @@
+language ESSENCE 1.2.0
+$ prob007.essence: All-interval Series
+$ Problem details available at http://www.csplib.org/prob/prob007/
+$ 05 September 2007
+$
+
+given n : int(1..)
+
+letting Num be domain int(0..n-1),
+        Interval be domain int(1..n-1)
+
+find s : function (total, bijective) int(1..n) --> Num,
+     v : function (total, bijective) int(1..n-1) --> Interval
+
+such that forAll i : int(1..n-1) . v(i) = |s(i+1) - s(i)|
+

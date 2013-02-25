@@ -1,0 +1,23 @@
+language Essence 1.3
+$ prob001.essence: Car Sequencing
+$ Problem details available at http://www.csplib.org/prob/prob001/
+
+given n_cars, n_classes, n_options, n_upperBound : int(1..)
+
+letting Slots  be domain int(1..n_cars),
+        Class  be domain int(1..n_classes),
+        Option be domain int(1..n_options)
+
+$ giving an n_upperBound here lets us use more than one representation for the functions.
+given quantity : function (total) Class  --> int(1..n_upperBound),
+      maxcars  : function (total) Option --> int(1..n_upperBound),
+      blksize  : function (total) Option --> int(1..n_upperBound),
+      usage    : relation of ( Class * Option )
+
+find car : function (total) Slots --> Class
+
+such that
+    forAll c : Class . |preImage(car,c)| = quantity(c),
+    forAll opt : Option .
+        forAll s : int(1..n_cars+1-blksize(opt)) .
+            (sum i : int(s..s+blksize(opt)-1) . toInt(usage(car(i),opt))) <= maxcars(opt)

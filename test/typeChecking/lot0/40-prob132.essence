@@ -1,0 +1,45 @@
+language ESSENCE 1.2.0
+$ prob132.essence: A Layout Problem
+$ Problem details available in:
+$   Exploiting Symmetries Within Constraint Satisfaction Search
+$   P. Meseguer, C. Torras
+$   Artificial Intelligence, Volume 129, Number 1, June 2001, pp. 133-163
+$
+$ 01 August 2007
+$
+
+$ x_max: maximum x dimension
+$ y_max: maximum y dimension
+$ n_shapes: the number of shapes to fit in to the grid
+given x_max, y_max, n_shapes : int(1..)
+
+$ Shape: identifiers for individual shapes
+$ X: a position on the x-axis
+$ Y: a position on the y-axis
+$ Cell: the domain consisting of cells on the grid
+letting Shape be domain int(1..n_shapes),
+        X be domain int(1..x_max),
+        Y be domain int(1..y_max),
+        Cell be domain tuple (X,Y)
+
+$ grid: the set of pairs of x and y coordinates that make up the grid shape
+$ form: the form of each shape, as a set of pairs of x and y coordinates
+given grid : set of Cell,
+      form : function (total) Shape --> set of Cell
+
+$ layout: a mapping from each cell in the grid to the shape id occupying it
+find layout : function Cell --> Shape
+
+such that
+$ only cells in the grid are part of the layout
+    forAll c in defined(layout) . c in grid,
+$ the cells that map to a shape match the shape's form.
+$ this is long and complicated because we need the minimum x and y coordinates
+$ (min(sx) and min(sy)) that map to each shape, and i can't think of a nicer way
+$ of getting them...
+    forAll s : Shape . exists sx : set of X . exists sy : set of Y .
+        (forAll (x,y) : Cell . x in sx /\ y in sy <-> (x,y) in preImage(layout,s)) /\
+        forAll (x,y) in form(s) . layout((min(sx) + x,min(sy) + y)) = s,
+$ a shape has exactly the right number of cells mapping to it
+    forAll s : Shape . |form(s)| = |preImage(layout,s)|
+

@@ -1,0 +1,18 @@
+language ESSENCE 1.2.0
+$ prob028.essence: Balanced Incomplete Block Design
+$ Problem details available at http://www.csplib.org/prob/prob028/
+$ 07 September 2007
+$
+
+given v, b, r, k, lambda__ : int(1..)
+
+letting Obj be new type of size v,
+        Block be new type of size b
+
+find bibd : relation of (Obj*Block)
+
+such that
+    forAll o : Obj . |bibd(o,_)| = r,
+    forAll bl : Block . |bibd(_,bl)| = k,
+    forAll o1,o2 : Obj . o1 != o2 -> |toSet(bibd(o1,_)) intersect toSet(bibd(o2,_))| = lambda_
+

@@ -1,0 +1,40 @@
+language ESSENCE 1.2.0
+$ prob023.essence: Magic Hexagon
+$ Problem details available at http://www.csplib.org/prob/prob023/
+$ 03 September 2007
+$
+
+$ d: the diameter of the hexagon (length of the longest row)
+given d : int(1..)
+
+$ d must be an odd integer
+where d % 2 = 1
+
+$ o: the order of the hexagon (length of the shortest row)
+$ maxval: the maximum value that will appear in the hexagon
+$ maxsum: the maximum value that a row could sum to
+$ Value: the domain consisting of the integers contained in the hexagon
+letting o be d/2 + 1,
+        maxval be 3 * o**2 - 3 * o + 1,
+        maxsum be sum i : int(maxval + 1 - d..maxval) . i,
+        Value be domain int(1..maxval)
+
+$ hexagon: the hexagon is represented by a matrix. for any row i, we are only
+$          interested in the first d - |d/2 + 1 - i| elements of the row
+$ s: the magic number that all rows and diagonals sum to
+find hexagon : matrix indexed by [int(1..d),int(1..d)] of Value,
+     s : int(1..maxsum)
+
+such that
+$ all elements are different (and therefore all values are included)
+    forAll r1,r2 : int(1..d) . forAll i1 : int(1..d - |o - r1|) .
+        forAll i2 : int(1..d - |o - r2|) . r1 != r2 \/ i1 != i2 ->
+            hexagon[r1,i1] != hexagon[r2,i2],
+$ all rows sum to s
+    forAll r : int(1..d) . (sum i : int(1..d - |o - r|) . hexagon[r,i]) = s,
+$ all right-sloping diagonals sum to s
+    forAll r : int(1..d) . (sum i : int(1..d - |o - r|) .
+        hexagon[i + max({0,o-r}), r - max({0,o-(i + max({0,o-r}))})]) = s,
+$ all left-sloping diagonals sum to s
+    forAll r : int(1..d) . (sum i : int(1..d - |o - r|) .
+        hexagon[i + max({0,r-o}), r - max({0,(i + max({0,r-o}))-o})]) = s

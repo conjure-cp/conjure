@@ -1,0 +1,36 @@
+language ESSENCE 1.2.0
+$ prob032.essence: Maximum Density Still Life
+$ Problem details available at http://www.csplib.org/prob/prob032/
+$ 09 August 2007
+$
+
+$ n: the side length of the board
+given n : int(1..)
+
+$ Index: cell indicies can be between 1 and n on both axes
+$ Cell: a cell is a tuple made up of two elements, an x-index and a y-index
+letting Index be domain int(1..n+2)
+letting Cell  be domain tuple (Index,Index)
+
+$ alive: the set of cells that are alive
+find alive : set of Cell
+
+$ maximise the number of cells that are alive
+maximising |alive|
+
+such that
+$ all border cells are dead
+    forAll (a,b) : Cell
+    	, |{a,b} intersect {1,n+2}| = 0
+    	. !((a,b) in alive),
+    
+$ alive cells have between 2 and 3 alive neighbours (between 3 and 4, when
+$ including the cell itself)
+    forAll (a,b) in alive .
+        3 <= ( sum i,j : int(-1..1) . (a+i,b+j) in alive ) /\
+        (sum i,j : int(-1..1) . (a+i,b+j) in alive) <= 4,
+
+$ dead cells must not have 3 alive neighbours
+    forAll (a,b) : Cell
+    	, !((a,b) in alive)
+    	. (sum i,j : int(-1..1) . (a+i,b+j) in alive) != 3
