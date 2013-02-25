@@ -24,16 +24,24 @@ function perEssence {
         --in    "$SPEC.essence"                                             \
     FLAG1=$?
 
-    conjure                                                                 \
-        --mode  pretty                                                      \
-        --in    "$SPEC.essence"                                             \
-        --out   "$SPEC.pretty"
-    FLAG2=$?
-
-    conjure                                                                 \
-        --mode  typeCheck                                                   \
-        --in    "$SPEC.pretty"                                              \
-    FLAG3=$?
+    if (( $FLAG1 != 0 )) ; then             # type-checking failed, stop.
+        FLAG2=1
+        FLAG3=1
+    else                                    # type-checks, try pretty
+        conjure                                                             \
+            --mode  pretty                                                  \
+            --in    "$SPEC.essence"                                         \
+            --out   "$SPEC.pretty"
+        FLAG2=$?
+        if (( $FLAG2 != 0 )) ; then         # pretty failed, stop.
+            FLAG3=1
+        else                                # pretty worked, try type-checking prettified
+            conjure                                                         \
+                --mode  typeCheck                                           \
+                --in    "$SPEC.pretty"                                      \
+            FLAG3=$?
+        fi
+    fi
 
     rm -f "$SPEC.pretty"
 
