@@ -42,8 +42,6 @@ function perEssence {
         fi
     fi
 
-    rm -f "$SPEC.pretty"
-
     if (( $FLAG1 != 0 )) ; then
         echo "[flag1] $SPEC.essence" >> "$FAIL_FILE"
     else
