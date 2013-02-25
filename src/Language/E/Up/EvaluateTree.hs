@@ -85,7 +85,7 @@ repSelector arr = arr !! (length arr -1)
 matrixToPartiton :: E -> E
 matrixToPartiton [xMatch| vs := expr.value.matrix.values|] =
     let res = map func vs
-    in  [xMake| expr.value.partition := res |]
+    in  [xMake| expr.value.partition.values := res |]
 
     where
     func [xMatch| xs := value.matrix.values |] = [xMake| part := xs |]
