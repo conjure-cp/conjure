@@ -3,36 +3,27 @@
 set -o nounset
 set -o errexit
 
-if (( $# != 1 )); then
-    echo "ERROR: Give a single parameter, mode to be used by Conjure."
+if (( $# == 0 )); then
+    echo "ERROR: Give a list of arguments, each a mode to be used by Conjure."
     echo "       Options: {df, best, random}"
     exit 1
 fi
 
-export MODE=$1
+export MODES="$@"
 
 export SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 export SCRIPT_TEST_SINGLE="$SCRIPT_DIR/test_single.sh"
 
-export FAIL_FILE="$SCRIPT_DIR/${MODE}_fail.txt"
-export FAIL_COUNT_FILE="$SCRIPT_DIR/${MODE}_countFail.txt"
-
-export PASS_FILE="$SCRIPT_DIR/${MODE}_pass.txt"
-export PASS_COUNT_FILE="$SCRIPT_DIR/${MODE}_countPass.txt"
-
-export ALL_FILE="$SCRIPT_DIR/${MODE}_all.txt"
-export ALL_COUNT_FILE="$SCRIPT_DIR/${MODE}_countAll.txt"
-
-export FILES="$FAIL_FILE $PASS_FILE $ALL_FILE $FAIL_COUNT_FILE $PASS_COUNT_FILE $ALL_COUNT_FILE"
-
-rm -f $FILES
-touch $FILES
 
 function perDirectory {
-    DIR="$1"
+    MODE="$1"
+    DIR="$2"
+
+    FAIL_FILE="$SCRIPT_DIR/${MODE}_fail.txt"
+    PASS_FILE="$SCRIPT_DIR/${MODE}_pass.txt"
+    ALL_FILE="$SCRIPT_DIR/${MODE}_all.txt"
 
     cd "$DIR"
-    echo "calling on $DIR"
     rm -f fail.txt pass.txt
     touch fail.txt pass.txt
     time bash "$SCRIPT_TEST_SINGLE" "$MODE"
@@ -44,22 +35,46 @@ function perDirectory {
 
 export -f perDirectory
 
-find "$SCRIPT_DIR" -name "*.essence" | parallel --tag perDirectory "{//}"
 
-FAIL_COUNT=$(cat "$FAIL_FILE" | wc -l | tr -d ' ')
-PASS_COUNT=$(cat "$PASS_FILE" | wc -l | tr -d ' ')
-ALL_COUNT=$( cat "$ALL_FILE"  | wc -l | tr -d ' ')
-echo "YVALUE=$FAIL_COUNT" > "$FAIL_COUNT_FILE"
-echo "YVALUE=$PASS_COUNT" > "$PASS_COUNT_FILE"
-echo "YVALUE=$ALL_COUNT"  > "$ALL_COUNT_FILE"
+for MODE in $MODES ; do
+    FAIL_FILE="$SCRIPT_DIR/${MODE}_fail.txt"
+    PASS_FILE="$SCRIPT_DIR/${MODE}_pass.txt"
+    ALL_FILE="$SCRIPT_DIR/${MODE}_all.txt"
 
-echo "($MODE) Number of failing tests: "
-cat "$FAIL_COUNT_FILE"
-cat "$FAIL_FILE"
+    FAIL_COUNT_FILE="$SCRIPT_DIR/${MODE}_countFail.txt"
+    PASS_COUNT_FILE="$SCRIPT_DIR/${MODE}_countPass.txt"
+    ALL_COUNT_FILE="$SCRIPT_DIR/${MODE}_countAll.txt"
 
-echo "($MODE) Number of passing tests: "
-cat "$PASS_COUNT_FILE"
+    rm -f "$FAIL_FILE" "$PASS_FILE" "$ALL_FILE"
+done
 
-echo "($MODE) Number of all tests: "
-cat "$ALL_COUNT_FILE"
+parallel --tag perDirectory {1} {2//} ::: $MODES ::: $(find "$SCRIPT_DIR" -name "*.essence")
+
+for MODE in $MODES ; do
+    FAIL_FILE="$SCRIPT_DIR/${MODE}_fail.txt"
+    PASS_FILE="$SCRIPT_DIR/${MODE}_pass.txt"
+    ALL_FILE="$SCRIPT_DIR/${MODE}_all.txt"
+
+    FAIL_COUNT_FILE="$SCRIPT_DIR/${MODE}_countFail.txt"
+    PASS_COUNT_FILE="$SCRIPT_DIR/${MODE}_countPass.txt"
+    ALL_COUNT_FILE="$SCRIPT_DIR/${MODE}_countAll.txt"
+
+    FAIL_COUNT=$(cat "$FAIL_FILE" | wc -l | tr -d ' ')
+    PASS_COUNT=$(cat "$PASS_FILE" | wc -l | tr -d ' ')
+    ALL_COUNT=$( cat "$ALL_FILE"  | wc -l | tr -d ' ')
+
+    echo "YVALUE=$FAIL_COUNT" > "$FAIL_COUNT_FILE"
+    echo "YVALUE=$PASS_COUNT" > "$PASS_COUNT_FILE"
+    echo "YVALUE=$ALL_COUNT"  > "$ALL_COUNT_FILE"
+
+    echo "($MODE) Number of failing tests: "
+    cat "$FAIL_COUNT_FILE"
+    cat "$FAIL_FILE"
+
+    echo "($MODE) Number of passing tests: "
+    cat "$PASS_COUNT_FILE"
+
+    echo "($MODE) Number of all tests: "
+    cat "$ALL_COUNT_FILE"
+done
 

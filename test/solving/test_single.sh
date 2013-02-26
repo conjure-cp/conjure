@@ -37,12 +37,16 @@ MODE=$1
 SPEC=$(ls -1 *.essence | head -n 1)
 SPEC=${SPEC%.essence}
 
+export OUT_DIR="$SPEC-$MODE"
+if [ $MODE == "df" ] ; then
+    OUT_DIR="$SPEC"
+fi
 
-rm -rf "$SPEC" $SPEC.errors
-mkdir -p "$SPEC"
+rm -rf "$OUT_DIR"
+mkdir -p "$OUT_DIR"
 
 
-conjure --mode $MODE --in "$SPEC.essence" --out "$SPEC/$MODE.eprime" +RTS -M8G -s 2> conjure.stats
+conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M8G -s 2> conjure.stats
 
 function perModelperParam {
     WD="$(pwd)"
@@ -111,6 +115,6 @@ touch fail.txt pass.txt
 
 parallel -j1                                                                \
     perModelperParam "$SPEC" {1.} {2.}                                      \
-        ::: $(ls -1 "$SPEC"/*.eprime)                                       \
+        ::: $(ls -1 "$OUT_DIR"/*.eprime)                                    \
         ::: $(ls -1 *.param)
 
