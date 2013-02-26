@@ -143,6 +143,7 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                                         else map (transform reregion) cons
                                                                 ++ structuralConsLog st
                                                 }
+                            unless (isGiven origDecl) $ mkLog "addedStructuralCons" (pretty nm)
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
                 _ -> return p
