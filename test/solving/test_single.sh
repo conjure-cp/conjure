@@ -1,7 +1,7 @@
 #/bin/bash
 
 set -o nounset
-set -o errexit
+
 
 COUNT_ESSENCE=$(ls -1 *.essence 2> /dev/null | wc -l)
 COUNT_PARAM=$(ls -1 *.param 2> /dev/null | wc -l)
@@ -34,10 +34,12 @@ fi
 
 export WD="$(pwd)"
 
-MODE=$1
+export MODE=$1
+export FAIL_FILE="${MODE}_fail.txt"
+export PASS_FILE="${MODE}_pass.txt"
 
-SPEC=$(ls -1 *.essence | head -n 1)
-SPEC=${SPEC%.essence}
+export SPEC=$(ls -1 *.essence | head -n 1)
+export SPEC=${SPEC%.essence}
 
 export OUT_DIR="$SPEC-$MODE"
 if [ $MODE == "df" ] ; then
@@ -48,12 +50,10 @@ rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 
-conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M8G -s 2> >(tee conjure.stats >&2)
 
 function perModelperParam {
-    SPEC=$1
-    MODEL=$2
-    PARAM=$3
+    MODEL=$1
+    PARAM=$2
 
     conjure                                                                 \
         --mode       refineParam                                            \
@@ -96,32 +96,36 @@ function perModelperParam {
     fi
 
     if (( $SOL_VALIDATE != 0 )) ; then
-        echo "[validateSolution] $WD $MODEL $PARAM" >> fail.txt
+        echo "[validateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
     else
-        echo "[validateSolution] $WD $MODEL $PARAM" >> pass.txt
+        echo "[validateSolution] $WD $MODEL $PARAM" >> "$PASS_FILE"
     fi
 
     if (( $SOL_DIFF != 0 )) ; then
-        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> fail.txt
+        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> "$FAIL_FILE"
     else
-        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> pass.txt
+        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> "$PASS_FILE"
     fi
 
 }
 
 export -f perModelperParam;
 
-rm -f fail.txt pass.txt
-touch fail.txt pass.txt
+
+
+rm -f "$FAIL_FILE" "$PASS_FILE"
+touch "$FAIL_FILE" "$PASS_FILE"
+
+conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M1G -s 2> >(tee "${MODE}_conjure.stats" >&2)
 
 NB_EPRIMES=$(ls -1 "$OUT_DIR"/*.eprime 2> /dev/null | wc -l)
 
 if (( $NB_EPRIMES == 0 )) ; then
-    echo "[   no outputs   ] $WD" >> fail.txt
+    echo "[   no outputs   ] $WD" >> "$FAIL_FILE"
 else
-    parallel -j1                                                                \
-        perModelperParam "$SPEC" {1.} {2.}                                      \
-            ::: $(ls -1 "$OUT_DIR"/*.eprime)                                    \
+    parallel -j1                                                            \
+        perModelperParam {1.} {2.}                                          \
+            ::: $(ls -1 "$OUT_DIR"/*.eprime)                                \
             ::: $(ls -1 *.param)
 fi
 

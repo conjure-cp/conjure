@@ -1,7 +1,6 @@
 #/bin/bash
 
 set -o nounset
-set -o errexit
 
 
 if (( $# < 2 )); then
@@ -28,13 +27,13 @@ function perDirectory {
     ALL_FILE="$WD/${MODE}_all.txt"
 
     cd "$DIR"
-    rm -f fail.txt pass.txt
-    touch fail.txt pass.txt
+    rm -f "${MODE}_fail.txt" "${MODE}_pass.txt"
+    touch "${MODE}_fail.txt" "${MODE}_pass.txt"
     time bash "$SCRIPT_TEST_SINGLE" "$MODE"
-    cat fail.txt >> "$FAIL_FILE"
-    cat pass.txt >> "$PASS_FILE"
-    cat fail.txt >> "$ALL_FILE"
-    cat pass.txt >> "$ALL_FILE"
+    cat "${MODE}_fail.txt" >> "$FAIL_FILE"
+    cat "${MODE}_pass.txt" >> "$PASS_FILE"
+    cat "${MODE}_fail.txt" >> "$ALL_FILE"
+    cat "${MODE}_pass.txt" >> "$ALL_FILE"
 }
 
 export -f perDirectory
