@@ -103,7 +103,7 @@ partialEvaluator
              | _            := quantified.quanOverOp.binOp.in
              | [qnVar]      := quantified.quanVar.structural.single
              | [qnOverExpr] := quantified.quanOverExpr
-             | parts        := quantified.quanOverExpr.operator.parts.value.partition
+             | parts        := quantified.quanOverExpr.operator.parts.value.partition.values
              | qnGuards     := quantified.guard
              | [qnBody]     := quantified.body
              |] = partialEvaluatorValueSet quantifier qnVar qnOverExpr vs qnGuards qnBody
