@@ -51,7 +51,6 @@ __h :: Show a => String -> a -> a
 __j :: String -> E -> E
 _e2 :: a -> (String, [[E]]) -> a
 _b :: a -> (String, [E]) -> a
-__f :: a -> a
 __r :: a -> a
 _p2 :: a -> b -> a
 _x :: a -> b -> a
@@ -107,7 +106,6 @@ _x a = (putStrLn . groom) a
 
 #else
 
-__f a = a
 __h _ a = a
 
 __j _ a = a
