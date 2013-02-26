@@ -51,13 +51,17 @@ __h :: Show a => String -> a -> a
 __j :: String -> E -> E
 _e2 :: a -> (String, [[E]]) -> a
 _b :: a -> (String, [E]) -> a
+__f :: a -> a
+__r :: a -> a
+_p2 :: a -> b -> a
+_x :: a -> b -> a
 
 prettyAsBoth :: E -> Doc
 prettyAsBoth a = vcat [prettyAsTree a, pretty a]
 nlToTab :: String -> String
 nlToTab = map (\a -> if a == '\n' then '\t' else a )
 
-__groomPrint a = (putStrLn . groom) a
+__groomPrint = putStrLn . groom
 __groomPrintM a b = putStr (a ++ " ⦙\n ") >> (putStrLn . groom) b
 __s2 (msg,b) =  "\n##" ++ msg ++ " ⦙ " ++ (show . prettyAsTree) b ++ "\n"
 
