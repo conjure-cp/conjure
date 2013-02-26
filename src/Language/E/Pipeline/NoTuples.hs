@@ -176,10 +176,10 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
 renameMatrixOfTupleIndexes :: MonadConjure m => M.HashMap Text Int -> E -> m E
 renameMatrixOfTupleIndexes identifiers = bottomUpE' f
     where
-        f p | trace (show $ vcat [ "renameMatrixOfTupleIndexes"
-                                 , pretty p
-                                 ]
-                    ) False = undefined
+        -- f p | trace (show $ vcat [ "renameMatrixOfTupleIndexes"
+                                 -- , pretty p
+                                 -- ]
+                    -- ) False = undefined
         f p@(viewIndexed -> (iExpr, js)) = do
             maybe_i <- case iExpr of
                 [xMatch| [Prim (S i)] := reference |] -> return $ Just i
