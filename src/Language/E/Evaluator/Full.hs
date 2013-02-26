@@ -287,10 +287,11 @@ fullEvaluator p@[eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
         res <- identityOp quanStr
         ret res
 
-fullEvaluator [eMatch| sum &i : int(&a..&b) , &guard . &body |]
+fullEvaluator p@[eMatch| sum &i : int(&a..&b) , &guard . &body |]
     | [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     , [xMake| emptyGuard := [] |] == guard
+    , isFullyInstantiated p
     = ret $ summation [ replace i j body
                       | j' <- [a'..b']
                       , let j = [xMake| value.literal := [Prim (I j')] |]
