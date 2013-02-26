@@ -106,8 +106,8 @@ function perModelperParam {
 
 export -f perModelperParam;
 
-rm -f fail.txt pass.txt all.txt
-touch fail.txt pass.txt all.txt
+rm -f fail.txt pass.txt
+touch fail.txt pass.txt
 
 parallel -j1                                                                \
     perModelperParam "$SPEC" {1.} {2.}                                      \
