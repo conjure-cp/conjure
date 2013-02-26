@@ -32,6 +32,8 @@ if (( $# != 1 )); then
     exit 1
 fi
 
+export WD="$(pwd)"
+
 MODE=$1
 
 SPEC=$(ls -1 *.essence | head -n 1)
@@ -49,7 +51,6 @@ mkdir -p "$OUT_DIR"
 conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M8G -s 2> >(tee conjure.stats >&2)
 
 function perModelperParam {
-    WD="$(pwd)"
     SPEC=$1
     MODEL=$2
     PARAM=$3
@@ -113,8 +114,14 @@ export -f perModelperParam;
 rm -f fail.txt pass.txt
 touch fail.txt pass.txt
 
-parallel -j1                                                                \
-    perModelperParam "$SPEC" {1.} {2.}                                      \
-        ::: $(ls -1 "$OUT_DIR"/*.eprime)                                    \
-        ::: $(ls -1 *.param)
+NB_EPRIMES=$(ls -1 "$OUT_DIR"/*.eprime 2> /dev/null | wc -l)
+
+if (( $NB_EPRIMES == 0 )) ; then
+    echo "[   no outputs   ] $WD" >> fail.txt
+else
+    parallel -j1                                                                \
+        perModelperParam "$SPEC" {1.} {2.}                                      \
+            ::: $(ls -1 "$OUT_DIR"/*.eprime)                                    \
+            ::: $(ls -1 *.param)
+fi
 
