@@ -6,6 +6,7 @@ import qualified Data.HashMap.Strict as M
 
 import Language.E
 import Language.E.Pipeline.InlineLettings
+import Language.E.Pipeline.ExplodeStructuralVars
 import Language.E.Pipeline.AtMostOneSuchThat
 
 
@@ -54,7 +55,7 @@ validateSolution essence param solution = do
             fullyInlined    <- do bs <- gets binders
                                   let bsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
                                   return $ inliner bsMap lettingsInlined
-            Spec _ s <- fmap atMostOneSuchThat $ simplifySpec fullyInlined
+            Spec _ s <- fullyEvaluate fullyInlined
             -- mkLog "debug stripped"           (pretty declsStripped)
             -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
             -- mkLog "debug fullyInlined"       (pretty fullyInlined)
@@ -66,4 +67,12 @@ validateSolution essence param solution = do
                                                  , prettyAsTree s
                                                  , prettyAsPaths s
                                                  ]
+
+fullyEvaluate :: MonadConjure m => Spec -> m Spec
+fullyEvaluate
+    = return
+    >=> recordSpec >=> explodeStructuralVars
+    >=> recordSpec >=> simplifySpec
+    >=> recordSpec >=> return . atMostOneSuchThat
+
 

@@ -139,6 +139,43 @@ fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.right.emptyGuard
                      |] = ret x
 
+
+-- in
+
+fullEvaluator
+    [xMatch| [Prim (S "in")] := binOp.operator
+           | [x] := binOp.left
+           | ys  := binOp.right.value.set.values
+           |]
+    | isFullyInstantiated x && all isFullyInstantiated ys
+    = returnBool $ x `elem` ys
+
+fullEvaluator
+    [xMatch| [Prim (S "in")] := binOp.operator
+           | [x] := binOp.left
+           | ys  := binOp.right.typed.left.value.set.values
+           |]
+    | isFullyInstantiated x && all isFullyInstantiated ys
+    = returnBool $ x `elem` ys
+
+fullEvaluator
+    [xMatch| [Prim (S "in")] := binOp.operator
+           | [x] := binOp.left
+           | ys  := binOp.right.value.mset.values
+           |]
+    | isFullyInstantiated x && all isFullyInstantiated ys
+    = returnBool $ x `elem` ys
+
+fullEvaluator
+    [xMatch| [Prim (S "in")] := binOp.operator
+           | [x] := binOp.left
+           | ys  := binOp.right.typed.left.value.mset.values
+           |]
+    | isFullyInstantiated x && all isFullyInstantiated ys
+    = returnBool $ x `elem` ys
+
+
+
 fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
                      | xs := binOp.left .value.set.values
                      | ys := binOp.right.value.set.values
