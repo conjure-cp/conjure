@@ -46,7 +46,7 @@ rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 
-conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M8G -s 2> conjure.stats
+conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M8G -s 2> >(tee conjure.stats >&2)
 
 function perModelperParam {
     WD="$(pwd)"
