@@ -11,6 +11,7 @@ import Language.E hiding (trace)
 
 import qualified Debug.Trace ( trace )
 import qualified Text.Groom
+
 trace :: String -> a -> a
 trace = Debug.Trace.trace
 
@@ -51,9 +52,6 @@ __h :: Show a => String -> a -> a
 __j :: String -> E -> E
 _e2 :: a -> (String, [[E]]) -> a
 _b :: a -> (String, [E]) -> a
-__r :: a -> a
-_p2 :: a -> b -> a
-_x :: a -> b -> a
 
 prettyAsBoth :: E -> Doc
 prettyAsBoth a = vcat [prettyAsTree a, pretty a]
@@ -82,7 +80,6 @@ __s (msg,b) = trace ("\n##" ++ msg ++ " ⦙ " ++ groom b ++ "\n")
 __h msg a = trace ("\n#" ++ msg ++ "\n"++ groom a ++ "\n##\n") a
 
 __j msg a = trace ("\n#" ++ msg ++ "\n"++ show (prettyAsTree a) ++ "\n##\n") a
-__r arr = "\n#\n" ++ (show . vcat . map prettyAsTree) arr ++ "\n##\n" arr
 
 _e a (msg, [b@[xMatch| _ := value.literal |]]) =  trace ( __s2 (msg,b) ) a
 _e a (msg, [b@[xMatch| _ := literal |]])       =  trace ( __s2 (msg,b) ) a
@@ -102,6 +99,7 @@ _f a (msg,b) = trace (msg ++ "\n#\n" ++ groom b ++ "\n##\n") a
 _g a b = __s b $ a
 _i a (msg,(c,d)) = trace (msg ++ __i c d) a
 _k a (msg,(c,d)) = trace (msg ++ __k c d) a
+_x :: Show a => a  -> IO ()
 _x a = (putStrLn . groom) a
 
 #else
@@ -109,18 +107,15 @@ _x a = (putStrLn . groom) a
 __h _ a = a
 
 __j _ a = a
-__r arr   = arr
 
 _e  a _ =  a
 _e2 a _ =  a
 _b  a _ =  a
 _p  a _ =  a
-_p2 a _ =  a
 _f  a _ =  a
 _g  a _ =  a
 _i  a _ =  a
 _k  a _ =  a
-_x  a _ =  a
 
 #endif
 
