@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -300,7 +300,6 @@ defSelectByMode _ _ = error "selectByMode: Shouldn't be used in this mode"
 instance SelectByMode E where
     selectByMode _ [] = return []
     selectByMode (ModeSingleOutput ModeSmallest _ _) xs = return [minimumBy (comparing eDepth) xs]
-    selectByMode (ModeSingleOutput ModeBest     _ _) xs = return [minimumBy (comparing eDepth) xs]
     selectByMode mode xs = defSelectByMode mode xs
 
 eDepth :: E -> Int
@@ -308,13 +307,39 @@ eDepth (Tagged _ []) = 1
 eDepth (Tagged _ ys) = 1 + maximum (map eDepth ys)
 eDepth _ = 1
 
+compareChain :: [Ordering] -> Ordering
+compareChain (EQ:xs) = compareChain xs
+compareChain (x :_ ) = x
+compareChain []      = EQ
+
+domOrder :: E -> E -> Ordering
+domOrder
+    [xMatch| [indexA] := domain.matrix.index
+           | [innerA] := domain.matrix.inner
+           |]
+    [xMatch| [indexB] := domain.matrix.index
+           | [innerB] := domain.matrix.inner
+           |]
+    = compareChain [ domOrder indexA indexB
+                   , domOrder innerA innerB
+                   ]
+domOrder [xMatch| _ := domain.bool   |] _ = LT
+domOrder [xMatch| _ := domain.int    |] _ = LT
+domOrder [xMatch| _ := domain.matrix |] _ = LT
+
+domOrder x y = compare (eDepth x) (eDepth y)
+
+
 instance SelectByMode RuleReprResult where
     selectByMode _ [] = return []
-    selectByMode (ModeSingleOutput ModeSmallest _ _) xs = return [minimumBy comparer xs]
+    selectByMode (ModeSingleOutput ModeSmallest _ _) xs
+        = trace "selectByMode" $ return [minimumBy comparer xs]
         where
             comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
                      ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
-                compare (eDepth newDom1, length structuralCons1)
-                        (eDepth newDom2, length structuralCons2)
+                compareChain
+                    [ domOrder newDom1 newDom2
+                    , compare (length structuralCons1) (length structuralCons2)
+                    ]
     selectByMode mode xs = defSelectByMode mode xs
 
