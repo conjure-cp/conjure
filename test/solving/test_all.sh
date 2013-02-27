@@ -7,7 +7,7 @@ if (( $# < 2 )); then
     echo "ERROR:"
     echo "    - Give a directory path."
     echo "    - and a list of arguments, each a mode to be used by Conjure."
-    echo "        Modes: {df, best, random}"
+    echo "        Modes: {df, smallest, random}"
     exit 1
 fi
 
