@@ -324,8 +324,11 @@ domOrder
                    , domOrder innerA innerB
                    ]
 domOrder [xMatch| _ := domain.bool   |] _ = LT
+domOrder _ [xMatch| _ := domain.bool   |] = GT
 domOrder [xMatch| _ := domain.int    |] _ = LT
+domOrder _ [xMatch| _ := domain.int    |] = GT
 domOrder [xMatch| _ := domain.matrix |] _ = LT
+domOrder _ [xMatch| _ := domain.matrix |] = GT
 
 domOrder x y = compare (eDepth x) (eDepth y)
 
@@ -333,7 +336,7 @@ domOrder x y = compare (eDepth x) (eDepth y)
 instance SelectByMode RuleReprResult where
     selectByMode _ [] = return []
     selectByMode (ModeSingleOutput ModeSmallest _ _) xs
-        = trace "selectByMode" $ return [minimumBy comparer xs]
+        = return [minimumBy comparer xs]
         where
             comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
                      ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
