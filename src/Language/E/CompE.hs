@@ -314,7 +314,7 @@ instance SelectByMode RuleReprResult where
         where
             comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
                      ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
-                compare (length structuralCons1, eDepth newDom1)
-                        (length structuralCons2, eDepth newDom2)
+                compare (eDepth newDom1, length structuralCons1)
+                        (eDepth newDom2, length structuralCons2)
     selectByMode mode xs = defSelectByMode mode xs
 
