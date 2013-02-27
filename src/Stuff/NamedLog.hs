@@ -76,13 +76,19 @@ suppress = S.fromList
     , "builtIn.functionLiteralApply"
 
     -- process indicators for conjure-repr, uncomment if you want to suppress
+    -- , "configuration"
     -- , "representation"
-    -- , "addedDecl
+    -- , "addedDecl"
+    -- , "addedStructuralCons"
 
     -- process indicators for conjure-refn, uncomment if you want to suppress
     -- , "applied"
     -- , "simplified"
     -- , "removedDecl"
+
+    -- other process indicators
+    -- , "handleInfDom"
+    -- , "noTupleDomsInQuan"
 
     ]
 
