@@ -5,7 +5,7 @@ import Language.E
 
 import Language.E.Up.EprimeToEssence
 import Language.E.Up.IO
-
+import Language.E.NormaliseSolution (normaliseSolutionEs)
 
 translateSolution
     :: FilePath         -- Input:  Essence
@@ -20,7 +20,7 @@ translateSolution
     (spec, sol, org) <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
     unalteredOrg     <- getSpec essence
 
-    let resultEssence = mainPure(spec,sol,org,unalteredOrg)
+    let resultEssence =  normaliseSolutionEs $ mainPure(spec,sol,org,unalteredOrg)
     writeEssence outSolution resultEssence
 
     return ()

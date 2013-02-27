@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
-module Language.E.NormaliseSolution (normaliseSolution) where
+module Language.E.NormaliseSolution (normaliseSolution,normaliseSolutionEs) where
 
 import Language.E
 import Language.E.Up.IO
@@ -17,6 +17,9 @@ normaliseSolution (Spec v e) =
         res = map normaliseSolution' es
     in  Spec v (listAsStatement res)
 
+
+normaliseSolutionEs :: [E] -> [E]
+normaliseSolutionEs = map normaliseSolution'
 
 normaliseSolution' :: E -> E
 normaliseSolution' [xMatch|  [val] := topLevel.letting.expr
@@ -43,9 +46,9 @@ normaliseSolution' [xMatch| vs := mapping |] =
     in  [xMake| mapping := res |]
 
 
-normaliseSolution' [xMatch| vs := value.partition |] =
+normaliseSolution' [xMatch| vs := value.partition.values |] =
     let res = map normaliseSolution' vs
-    in  [xMake| value.partition:= sort res |]
+    in  [xMake| value.partition.values:= sort res |]
 
 normaliseSolution' [xMatch| vs := part |] = 
     let res = map normaliseSolution' vs
