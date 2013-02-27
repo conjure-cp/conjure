@@ -13,4 +13,4 @@ such that
                          <->
                          (exists v__0 : int(1..k * n) . seq_Matrix1D[v__0] = m /\ v__0 = i))
                   /\
-                  (forAll j : int(1..k - 1) . s_Matrix1D[j + 1] - s_Matrix1D[j] = m)))
+                  (forAll j : int(1..k - 1) . s_Matrix1D[j + 1] - s_Matrix1D[j] = m + 1)))

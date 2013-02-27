@@ -28,7 +28,7 @@ such that
                                 /\
                                 v__0 = i))
                   /\
-                  (forAll j : int(1..k - 1) . s_Matrix1D[j + 1] - s_Matrix1D[j] = m))),
+                  (forAll j : int(1..k - 1) . s_Matrix1D[j + 1] - s_Matrix1D[j] = m + 1))),
     forAll v__0 : int(1..k * n * n)
         . (forAll v__1 : int(1..k * n * n)
                . v__0 < v__1 /\ seq_AsReln_RelationAsSet_ExplicitVarSize_tuple1[v__0]
