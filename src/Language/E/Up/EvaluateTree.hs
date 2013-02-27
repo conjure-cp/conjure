@@ -7,7 +7,7 @@ module Language.E.Up.EvaluateTree (
 import Language.E
 
 import Language.E.Up.Data
-import Language.E.Up.Common(transposeE,matrixToTuple)
+import Language.E.Up.Common(transposeE,matrixToTuple,unwrapExpr)
 import Language.E.Up.Debug
 
 import qualified Data.Map as M
@@ -45,7 +45,8 @@ evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
         indexArr = indexes !! (length prefix -1)
         converted = matrix1DRep [indexArr] res
     in converted
-    {-in errpM "2,3,4" [converted]-}
+    {-in errpM ("indexArr" ++ groom indexArr) [converted]-}
+        `_p` ("indexArr" ++ groom indexArr, [converted])
 
     where
     name  = intercalate "_" $ prefix ++ s : getName (repSelector arr)
@@ -168,7 +169,7 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
     func a = [xMake| value.literal := [ Prim (I a) ] |]
 
     -- TODO number of matrix taken off should be releated to number of 
-    -- sets/matrixes the func is in, but is at the moment 1 
+    -- sets/matrixes the func and remove and record them 
     vals  =  (map matrixToTuple . transposeE . convert) e
     -- take a matrix off each nested matrix
     convert :: E -> [E]
@@ -180,7 +181,8 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
         convert' e@[xMatch| vs  := value.tuple.values |]  =
             let res = map convert' vs
             in  [xMake| value.tuple.values := res |]
-        convert' [xMatch| [singleton] := value.matrix.values |]  = singleton
+        {-convert' [xMatch| [singleton] := value.matrix.values |]  = singleton-}
+        convert' e@[xMatch| _ := value.matrix.values |]  = e 
 
 
 matrix1DRep ix e =
@@ -345,9 +347,5 @@ getValue :: E -> Integer
 getValue value =
     case value of
         [xMatch| [Prim (I n)] := value.literal |] ->  n
-
-unwrapExpr ::  E -> E
-unwrapExpr  (Tagged Texpr [val]) =  val
-unwrapExpr e = errpM "EvaluateTree: unwrapExpr failed" [e]
 
 

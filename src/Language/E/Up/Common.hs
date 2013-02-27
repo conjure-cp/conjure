@@ -3,6 +3,7 @@
 module Language.E.Up.Common(
     transposeE,
     unwrapMatrix,
+    unwrapExpr,
     matrixToTuple
 ) where
 
@@ -48,10 +49,14 @@ isLiteral ::  E -> Bool
 isLiteral [xMatch| _ := value.literal |] = False
 isLiteral  _ = True
 
+
+unwrapExpr ::  E -> E
+unwrapExpr  (Tagged Texpr [val]) =  val
+unwrapExpr e = errpM "EvaluateTree: unwrapExpr failed" [e]
+
 unwrapMatrix :: E -> [E]
 unwrapMatrix [xMatch| vs := value.matrix.values |] = vs
 unwrapMatrix e = errpM "Common: unwrapMatrix failed" [e]
-
 
 
 matrixToTuple :: E -> E

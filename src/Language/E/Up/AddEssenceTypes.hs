@@ -10,7 +10,7 @@ import Language.E
 
 import Language.E.Up.Data
 import Language.E.Up.Debug
-import Language.E.Up.Common(transposeE,unwrapMatrix,matrixToTuple)
+import Language.E.Up.Common(transposeE,unwrapMatrix,matrixToTuple,unwrapExpr)
 
 import Data.Maybe
 
@@ -43,6 +43,9 @@ wrapInMatrix arr = [xMake| value.matrix.values := arr |]
 
 wrapInTuple :: [E] -> E
 wrapInTuple arr = [xMake| value.tuple.values := arr |]
+
+wrapInExpr :: [E] -> E
+wrapInExpr arr = [xMake| expr := arr |]
 
 isMatrix :: E -> Bool
 isMatrix [xMatch| _ := value.matrix.values |] = True
@@ -538,6 +541,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  =
         er a@[xMatch| _ := value.literal|] = a
         er f = errpM "AddEssenceTypes:er error" [f]
 
+-- FIXME This really should not be needed
 toEssenceRep r@[TagTuple _]  [xMatch| vals := expr.value.tuple |] =
     let res = toEssenceRep r (Tagged "tuple" vals )
     in [xMake| expr.value := [res] |]
@@ -610,10 +614,29 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
     `_e` ("T values.value args", [e])
     `_f` ("T values.value ts", r)
 
+
+toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] = 
+    let mappings =  map (func ins tos) arr
+    in  [xMake| value.function.values := mappings |]
+
+    `_p` ("F mapping", arr)
+    `_f` ("F ts", r)
+
+    where 
+    func ins' tos' [xMatch| [a,b] := mapping |] =
+       let a' = unwrapExpr $ toEssenceRep ins'  (wrapInExpr [a])
+           b' = unwrapExpr $ toEssenceRep tos'  (wrapInExpr [b])
+       in   [xMake| mapping := [a',b'] |]
+    func _ _ _  = error "AddEssenceTypes: toEssenceRep function error"
+
 toEssenceRep r e@[xMatch| [val] := expr |] =
     let res = toEssenceRep r val
     in [xMake| expr := [res] |]
         `_k` ("expr", (r, [e]) )
+
+
+toEssenceRep [TagSingle "int"] e@[xMatch|  [Prim (I _)] := value.literal |] = e
+    `_p` ("toEssenceRep Int ", [e])
 
 toEssenceRep r e =
     e
