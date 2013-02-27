@@ -32,7 +32,6 @@ data ConjureModeSingle
     = ModeRandom
     | ModeFirst
     | ModeSmallest
-    | ModeBest
     deriving (Show)
 
 data ConjureMode
@@ -79,7 +78,6 @@ parseArgs (pairs, flags, rest) = msum
     , modeRandom
     , modeFirst
     , modeSmallest
-    , modeBest
     ]
     where
         modeDiff = do
@@ -151,13 +149,8 @@ parseArgs (pairs, flags, rest) = msum
 
         modeSmallest = do
             mode <- key "--mode"
-            guard (mode =~= words "small smallest")
+            guard (mode =~= words "small smallest best")
             modeSingleOutput $ ModeSingleOutput ModeSmallest
-
-        modeBest = do
-            mode <- key "--mode"
-            guard (mode =~= words "best")
-            modeSingleOutput $ ModeSingleOutput ModeBest
 
         -- helper functions for the above
         anyKey = listToMaybe . mapMaybe key
