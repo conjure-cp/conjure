@@ -76,7 +76,7 @@ conjureAll limit reprs refns = phaseRepr0
             if limitReached n
                 then do
                     mkLog "limit reached" (pretty n)
-                    return s
+                    (refn >=> groom) s
                 else ifNone repr groom (phaseRefn n) s
 
         phaseRefn :: Int -> Spec -> m Spec
