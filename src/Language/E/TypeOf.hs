@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.TypeOf ( typeCheckSpec, typeOf, innerTypeOf ) where
+module Language.E.TypeOf ( typeCheckSpec, typeOf, innerTypeOf, mostKnown ) where
 
 import Stuff.Generic
 

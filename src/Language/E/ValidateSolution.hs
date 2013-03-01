@@ -17,6 +17,7 @@ type Solution = Spec
 validateSolution :: Essence -> Param -> Solution -> IO ()
 validateSolution essence param solution = do
     let (mresult, _logs) = runCompESingle "validating solution" helper
+    printLogs _logs
     case mresult of
         Left  x     -> error $ renderPretty x
         Right False -> error "Not a valid solution"
@@ -25,16 +26,36 @@ validateSolution essence param solution = do
     where
         Spec language essenceStmt = essence
 
-        inliner bindersMap (Spec v s) = Spec v (f s)
+        getDecls (Spec _ x) =
+            [ (nm, dom)
+            | [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference
+                     | [dom]         := topLevel.declaration.find.domain
+                     |] <- statementAsList x
+            ] ++
+            [ (nm, dom)
+            | [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+                     | [dom]         := topLevel.declaration.given.domain
+                     |] <- statementAsList x
+            ]
+
+        inliner typesMap bindingsMap (Spec v s) = Spec v (f s)
             where
-                f [xMatch| [Prim (S x)] := reference |]
-                    | Just y <- M.lookup x bindersMap
-                    = f y
+                f x@[xMatch| [Prim (S nm)] := reference |]
+                    | trace (show $ "f" <+> pretty x) True
+                    = case (M.lookup nm typesMap, M.lookup nm bindingsMap) of
+                        (Just theType, Just binding) ->
+                            f [xMake| typed.left  := [binding]
+                                    | typed.right := [theType]
+                                    |]
+                        (_, Just _) -> error $ show $ "Cannot determine the type of:" <+> pretty nm
+                        _           -> x
+                f x@[xMatch| [_] := structural.single.reference |] = x
                 f (Tagged t xs)
                     = Tagged t (map f xs)
                 f x = x
 
         helper = do
+
             case param of
                 Nothing -> return ()
                 Just (Spec _ s) -> mapM_ introduceStuff (statementAsList s)
@@ -53,9 +74,15 @@ validateSolution essence param solution = do
                     ]
             lettingsInlined <- inlineLettings declsStripped
             fullyInlined    <- do bs <- gets binders
-                                  let bsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
-                                  return $ inliner bsMap lettingsInlined
+                                  typesMap <- fmap M.fromList
+                                        $ forM (getDecls essence)
+                                        $ \ (nm, dom) -> do
+                                            itsType <- typeOf dom
+                                            return (nm, itsType)
+                                  let bindingsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
+                                  return $ inliner typesMap bindingsMap lettingsInlined
             Spec _ s <- fullyEvaluate fullyInlined
+            -- simplified@(Spec _ s) <- fullyEvaluate fullyInlined
             -- mkLog "debug stripped"           (pretty declsStripped)
             -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
             -- mkLog "debug fullyInlined"       (pretty fullyInlined)
@@ -72,7 +99,7 @@ fullyEvaluate :: MonadConjure m => Spec -> m Spec
 fullyEvaluate
     = return
     >=> recordSpec >=> explodeStructuralVars
-    >=> recordSpec >=> simplifySpec
+    >=> recordSpec >=> fullySimplifySpec
     >=> recordSpec >=> return . atMostOneSuchThat
 
 

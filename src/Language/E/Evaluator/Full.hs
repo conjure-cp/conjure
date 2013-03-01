@@ -17,6 +17,7 @@ import                Language.E.Evaluator.DataAboutQuantifiers
 
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
                      | [Prim (I a)  ] := binOp.left .value.literal
                      | [Prim (I b)  ] := binOp.right.value.literal
@@ -235,24 +236,6 @@ fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
       in  ret [xMake| domain.int.ranges := ys |]
 
--- fullEvaluator p@[eMatch| &quan &i : int(&a..&b) , &guard . &body |]
-    -- | [xMatch| [Prim (S quanStr)] := reference |] <- quan
-    -- , [xMatch| [Prim (I a')] := value.literal |] <- a
-    -- , [xMatch| [Prim (I b')] := value.literal |] <- b
-    -- , a' == b'
-    -- = do
-    -- res1 <- guardOp quanStr [guard] body
-    -- let res2 = [eMake| &res1 { &i --> &a } |]
-    -- mres3 <- evalReplace res2
-    -- case mres3 of
-        -- Just (res3, _) -> do
-            -- mkLog "fullEvaluator 1" $ pretty p
-            -- mkLog "fullEvaluator 2" $ pretty res3
-            -- return mres3
-        -- Nothing -> do
-            -- mkLog "fullEvaluator Nothing" $ pretty p
-            -- return Nothing
-
 fullEvaluator [xMatch| vs           := operator.index.left .value.matrix.values
                      | ranges       := operator.index.left .value.matrix.indexrange.domain.int.ranges
                      | [Prim (I a)] := operator.index.right.value.literal
@@ -277,13 +260,35 @@ fullEvaluator [xMatch| vs           := operator.index.left .value.tuple.values
                      |] | i >= 1 && i <= genericLength vs
                         = ret (vs `genericIndex` (i-1))
 
-fullEvaluator p@[eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
+
+fullEvaluator [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    , [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    , a' == b'
+    = do
+    res1 <- guardOp quanStr [guard] body
+    let res2 = [eMake| &res1 { &i --> &a } |]
+    evalReplace res2
+
+fullEvaluator [eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
     | [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     , a' > b'
     = do
-        mkLog "fullEvaluator empty range" $ pretty p
+        res <- identityOp quanStr
+        ret res
+
+fullEvaluator [eMatch| &quan &_ in {} , &_ . &_ |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    = do
+        res <- identityOp quanStr
+        ret res
+
+fullEvaluator [eMatch| &quan &_ in mset() , &_ . &_ |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    = do
         res <- identityOp quanStr
         ret res
 
@@ -301,8 +306,91 @@ fullEvaluator [eMatch| &_ &i : int(&a..&b) . &body |]
     | a == b
     = ret $ replace i a body
 
+-- typed.* ones
+fullEvaluator
+    [xMatch| [Prim (S op)] := binOp.operator
+           | [lhs]         := binOp.left .typed.left
+           | [rhs]         := binOp.right.typed.left
+           |] = do
+    fullEvaluator [xMake| binOp.operator := [Prim (S op)]
+                                | binOp.left     := [lhs]
+                                | binOp.right    := [rhs]
+                                |]
+fullEvaluator
+    [xMatch| [Prim (S op)] := binOp.operator
+           | [lhs]         := binOp.left .typed.left
+           | [rhs]         := binOp.right
+           |] = do
+    fullEvaluator [xMake| binOp.operator := [Prim (S op)]
+                                | binOp.left     := [lhs]
+                                | binOp.right    := [rhs]
+                                |]
+fullEvaluator
+    [xMatch| [Prim (S op)] := binOp.operator
+           | [lhs]         := binOp.left
+           | [rhs]         := binOp.right.typed.left
+           |] = do
+    fullEvaluator [xMake| binOp.operator := [Prim (S op)]
+                                | binOp.left     := [lhs]
+                                | binOp.right    := [rhs]
+                                |]
+
+fullEvaluator
+    [xMatch| [lhs] := operator.index.left .typed.left
+           | [rhs] := operator.index.right.typed.left
+           |] = do
+    fullEvaluator [xMake| operator.index.left  := [lhs]
+                                | operator.index.right := [rhs]
+                                |]
+fullEvaluator
+    [xMatch| [lhs] := operator.index.left .typed.left
+           | [rhs] := operator.index.right
+           |] = do
+    fullEvaluator [xMake| operator.index.left  := [lhs]
+                                | operator.index.right := [rhs]
+                                |]
+fullEvaluator
+    [xMatch| [lhs] := operator.index.left
+           | [rhs] := operator.index.right.typed.left
+           |] = do
+    fullEvaluator [xMake| operator.index.left  := [lhs]
+                                | operator.index.right := [rhs]
+                                |]
+
 fullEvaluator _ = return Nothing
 
+
+-- if something has a type annotation, it can either be useful or not.
+-- it is useful if the calculated type isn't ==, so keep it
+-- strip if the calculated type is ==
+stripUnnecessaryTyped :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+stripUnnecessaryTyped [xMatch| [x]  := typed.left
+                             | [ty] := typed.right
+                             |] = do
+    ty'  <- typeOf x
+    if ty == ty'
+        then ret x
+        else return Nothing
+stripUnnecessaryTyped _ = return Nothing
+
+-- we generally don't and actually don't even want to, unroll quantifiers.
+-- but we need this for validateSolution
+unrollQuantifiers :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+unrollQuantifiers [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    , [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    = do
+    xs <- forM [a'..b'] $ \ n' -> do
+        let n = [xMake| value.literal := [Prim (I n')] |]
+        newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
+        newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+        case (newGuard, newBody) of
+            (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
+            _ -> return Nothing
+    y <- unrollQuantifier quanStr (catMaybes xs)
+    ret y
+unrollQuantifiers _ = return Nothing
 
 returnBool :: MonadConjure m => Bool -> m (Maybe (E,[Binder]))
 returnBool i = ret [xMake| value.literal := [Prim (B i)] |]

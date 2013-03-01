@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Language.E.Evaluator ( simplify, simplifySpec ) where
+module Language.E.Evaluator ( simplify, simplifySpec, fullySimplifySpec ) where
 
 import Stuff.Pretty
 
@@ -15,6 +15,8 @@ import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalIndices, evalReplace
                                     , tupleEq, matrixEq
                                     , stripStructuralSingle
+                                    , stripUnnecessaryTyped
+                                    , unrollQuantifiers
                                     )
 import Language.E.Evaluator.Partial ( partialEvaluator )
 
@@ -32,6 +34,38 @@ import Language.E.Evaluator.Partial ( partialEvaluator )
 
 simplifySpec :: MonadConjure m => Spec -> m Spec
 simplifySpec = liftM fst . runWriterT . bottomUpSpec simplify
+
+fullySimplifySpec :: MonadConjure m => Spec -> m Spec
+fullySimplifySpec = liftM fst . runWriterT . bottomUpSpec s
+    where
+        s x = do
+            (y, (Any flag, _)) <- listen $ pipeline x
+            if flag
+                then simplify y
+                else return x
+            where
+                pipeline =  bottomUpE (mkIdempotent allCombinedDoFirst)
+                        >=> bottomUpE (mkIdempotent unrolling)
+
+        unrolling :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+        -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
+        unrolling i =
+            firstJustOr i
+                $ map ($ i) [ logged "Evaluator"                        fullEvaluator
+                            , logged "Evaluator.hasRepr"                evalHasRepr
+                            , logged "Evaluator.hasType"                evalHasType
+                            , logged "Evaluator.hasDomain"              evalHasDomain
+                            , logged "Evaluator.domSize"                evalDomSize
+                            , logged "Evaluator.indices"                evalIndices
+                            , logged "Evaluator.replace"                evalReplace
+                            , logged "Evaluator.tupleEq"                tupleEq
+                            , logged "Evaluator.matrixEq"               matrixEq
+                            , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
+                            , logged "Simplify"                         (adapter partialEvaluator)
+                            , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped
+                            , logged "Evaluator.unrollQuantifiers"      unrollQuantifiers
+                            ]
+
 
 
 simplify :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
@@ -60,6 +94,7 @@ allCombined i =
                     , logged "Evaluator.matrixEq"               matrixEq
                     , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
                     , logged "Simplify"                         (adapter partialEvaluator)
+                    , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped
                     ]
 
 -- these transformations should be applied first. others might depend on them.

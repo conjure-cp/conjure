@@ -43,3 +43,14 @@ glueOp quantifier a b = case quantifier of
             "sum"    -> return [eMake| &a +  &b |]
             _        -> err ErrFatal $ "Unknown quantifier: " <+> pretty quantifier
 
+glueOpMultiple :: MonadConjure m => Text -> [E] -> m E
+glueOpMultiple quantifier xs = do
+    let g = glueOp quantifier
+    i <- identityOp quantifier
+    foldM g i xs
+
+unrollQuantifier :: MonadConjure m => Text -> [([E],E)] -> m E
+unrollQuantifier quantifier xs = do
+    ys <- mapM (uncurry $ guardOp quantifier) xs
+    glueOpMultiple quantifier ys
+

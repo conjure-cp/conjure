@@ -65,6 +65,8 @@ suppress = S.fromList
     , "Evaluator.tupleEq"
     , "Evaluator.matrixEq"
     , "Evaluator.stripStructuralSingle"
+    , "Evaluator.stripUnnecessaryTyped"
+    , "Evaluator.unrollQuantifiers"
     , "Simplify"
     , "missing:relationRepr"
     , "missing:mostKnown"
