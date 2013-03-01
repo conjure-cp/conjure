@@ -15,13 +15,14 @@ import Language.E.Pipeline.Groom ( groomSpec )
 
 conjureWithMode
     :: StdGen
+    -> Maybe Int
     -> ConjureMode
     -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureWithMode seed mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
+conjureWithMode seed limit mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
     set_stdgen seed
     modifyGlobal $ \ gl -> gl { conjureMode = mode }
-    conjureAll reprs refns spec
+    conjureAll limit reprs refns spec
 
 
 onlyOneError :: [(Either a b, c)] -> [(Either a b, c)]
@@ -35,8 +36,9 @@ data Which = GeneratesNone | GeneratesSome
 conjureAll
     :: forall m
     .  MonadConjureList m
-    => [RuleRepr] -> [RuleRefn] -> Spec -> m Spec
-conjureAll reprs refns = phaseRepr0
+    => Maybe Int
+    -> [RuleRepr] -> [RuleRefn] -> Spec -> m Spec
+conjureAll limit reprs refns = phaseRepr0
     where
         ifNone
             :: (Spec -> m Spec)     -- run this
@@ -61,11 +63,29 @@ conjureAll reprs refns = phaseRepr0
         refn  s = trace "refn"  $ conjureRefn reprs refns s
         -- prepare the spec for outputting.
         groom s = trace "groom" $ groomSpec s
+        -- groom s = trace "groom" $ return s
 
         -- conjure phases, these call the appropriate phase following them.
         -- calling phaseRepr0 will run the whole of conjure.
-        phaseRepr0, phaseRepr, phaseRefn :: Spec -> m Spec
-        phaseRepr0 = ifNone repr (refn >=> groom) phaseRefn
-        phaseRepr  = ifNone repr groom            phaseRefn
-        phaseRefn  = refn >=> phaseRepr
+        phaseRepr0 :: Spec -> m Spec
+        phaseRepr0  = ifNone repr (refn >=> groom) (phaseRefn 0)
+
+        phaseRepr :: Int -> Spec -> m Spec
+        phaseRepr n s = do
+            mkLog "repr" (pretty n)
+            if limitReached n
+                then do
+                    mkLog "limit reached" (pretty n)
+                    return s
+                else ifNone repr groom (phaseRefn n) s
+
+        phaseRefn :: Int -> Spec -> m Spec
+        phaseRefn n s = do
+            mkLog "refn" (pretty n)
+            (refn >=> phaseRepr (n+1)) s
+
+        limitReached n = case limit of
+            Nothing -> False
+            Just l  -> n >= l
+
 

@@ -4,15 +4,20 @@ import Control.Monad ( guard, msum, mzero )
 import Data.Char ( toLower )
 import Data.Maybe ( listToMaybe, mapMaybe )
 
+import Data.HashSet as S ( HashSet, fromList, member )
+import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
+
 
 type GenericArgs
-    = ( [(String,String)]  -- key-value pairs
-      , [String]           -- flags
-      , [String]           -- rest
+    = ( M.HashMap String String  -- key-value pairs
+      , S.HashSet String         -- flags
+      , [String]                 -- rest
       )
 
 parseGenericArgs :: [String] -> GenericArgs 
-parseGenericArgs = go
+parseGenericArgs inp =
+    let (pairs, flags, rest) = go inp
+    in  (M.fromList pairs, S.fromList flags, rest)
     where
         go (flag:args)
             | isFlag flag
@@ -66,7 +71,14 @@ data ConjureMode
         FilePath    -- Essence'
     deriving (Show)
 
-parseArgs :: GenericArgs -> Maybe ConjureMode
+data ConjureModeWithFlags
+    = ConjureModeWithFlags
+        ConjureMode                     -- the mode
+        (M.HashMap String String)       -- all key-value pairs
+        (S.HashSet String)              -- all flags
+        [String]                        -- all the rest
+
+parseArgs :: GenericArgs -> Maybe ConjureModeWithFlags
 parseArgs (pairs, flags, rest) = msum
     [ modeDiff
     , modeRefineParam
@@ -81,88 +93,83 @@ parseArgs (pairs, flags, rest) = msum
     ]
     where
         modeDiff = do
-            mode <- key "--mode"
-            guard (mode =~= words "diff")
+            mode $ words "diff"
             case rest of
-                [in1, in2] -> return $ ModeDiff in1 in2
+                [in1, in2] -> returnMode $ ModeDiff in1 in2
                 _          -> mzero
 
         modeRefineParam = do
-            mode      <- key "--mode"
-            guard (mode =~= words "refineParam")
+            mode $ words "refineParam"
             inEssence <- key "--in-essence"
             inParam   <- key "--in-essence-param"
             inEprime  <- key "--in-eprime"
             outParam  <- key "--out-eprime-param"
-            return $ ModeRefineParam inEssence inParam inEprime outParam
+            returnMode $ ModeRefineParam inEssence inParam inEprime outParam
 
         modeTranslateSolution = do
-            mode             <- key "--mode"
-            guard (mode =~= words "transSol translateSol translateSolution")
+            mode $ words "transSol translateSol translateSolution"
             inEssence        <- key "--in-essence"
             inParam          <- optional $ key "--in-essence-param"
             inEprime         <- key "--in-eprime"
             inEprimeParam    <- optional $ key "--in-eprime-param"
             inEprimeSolution <- key "--in-eprime-solution"
             outSolution      <- anyKey $ words "--out-solution --out-essence-solution"
-            return $ ModeTranslateSolution
+            returnMode $ ModeTranslateSolution
                         inEssence inParam
                         inEprime inEprimeParam inEprimeSolution
                         outSolution
 
         modeTypeCheck = do
-            mode <- key "--mode"
-            guard (mode =~= words "typeCheck")
+            mode $ words "typeCheck"
             inp  <- optional $ key "--in"
-            return $ ModeTypeCheck inp
+            returnMode $ ModeTypeCheck inp
 
         modePrettify = do
-            mode <- key "--mode"
-            guard (mode =~= words "pretty prettify")
+            mode $ words "pretty prettify"
             inp  <- optional $ key "--in"
             out  <- optional $ key "--out"
-            return $ ModePrettify inp out
+            returnMode $ ModePrettify inp out
 
         modeValidateSolution = do
-            mode <- key "--mode"
-            guard (mode =~= words "validateSolution validateSol validateSoln")
+            mode $ words "validateSolution validateSol validateSoln"
             essence  <- key "--in-essence"
             param    <- optional $ key "--in-param"
             solution <- key "--in-solution"
-            return $ ModeValidateSolution essence param solution
+            returnMode $ ModeValidateSolution essence param solution
 
         modeDFAll = do
-            mode <- key "--mode"
-            guard (mode =~= words "df depthfirst depth-first")
+            mode $ words "df depthfirst depth-first"
             inEssence <- anyKey $ words "--in --in-essence"
-            return $ ModeDFAll inEssence
+            returnMode $ ModeDFAll inEssence
 
         modeRandom = do
-            mode <- key "--mode"
-            guard (mode =~= words "rand random")
+            mode $ words "rand random"
             modeSingleOutput $ ModeSingleOutput ModeRandom
 
         modeFirst = do
-            mode <- key "--mode"
-            guard (mode =~= words "first")
+            mode $ words "first"
             modeSingleOutput $ ModeSingleOutput ModeFirst
 
         modeSmallest = do
-            mode <- key "--mode"
-            guard (mode =~= words "small smallest best")
+            mode $ words "small smallest best"
             modeSingleOutput $ ModeSingleOutput ModeSmallest
 
         -- helper functions for the above
+        mode xs = do
+            m <- key "--mode"
+            guard (m =~= xs)
         anyKey = listToMaybe . mapMaybe key
-        key = (`lookup` pairs)
+        key = (`M.lookup` pairs)
         optional = return
-        _flag = (`elem` flags)
+        _flag = (`S.member` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
+
+        returnMode m = return $ ConjureModeWithFlags m pairs flags rest
 
         modeSingleOutput mk = do
             inEssence <- anyKey $ words "--in --in-essence"
             outEprime <- anyKey $ words "--out --out-eprime"
-            return $ mk inEssence outEprime
+            returnMode $ mk inEssence outEprime
 
 
 isKey :: String -> Bool
