@@ -126,7 +126,7 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                                            (Just "regionS")
                                                                            Nothing
                                         let renameTo = [xMake| reference := [Prim (S newName)] |]
-                                        (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
+                                        (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) (freshQuanVar "applyToInnerDomain")
                                         let renameToIndexed = mkIndexedExpr loopVars renameTo
                                         return $ inForAlls (zip loopVarStrs is) 
                                                            ( [xMake| emptyGuard := [] |]

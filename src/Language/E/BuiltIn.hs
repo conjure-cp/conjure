@@ -102,7 +102,7 @@ applyToInnerDomain' f (origName, origDomain, origDecl) = do
                                                        (Just "regionS")
                                                        Nothing
                     let renameTo = [xMake| reference := [Prim (S newName)] |]
-                    (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) freshQuanVar
+                    (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) (freshQuanVar "applyToInnerDomain'")
                     let renameToIndexed = mkIndexedExpr loopVars renameTo
                     return $ inForAlls (zip loopVarStrs is)
                                        ( [xMake| emptyGuard := [] |]
@@ -207,7 +207,7 @@ quanOverToSetRelationProject
                                                                                 mregion
                                                                                 Nothing
                                                 ] |]
-            (_newQuanVarStr, newQuanVar) <- freshQuanVar
+            (_newQuanVarStr, newQuanVar) <- freshQuanVar "quanOverToSetRelationProject"
 
             -- the rest of the items are available as output. sort of.
             let projectedElems = catMaybes
@@ -286,7 +286,7 @@ tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] =
     case dom of
         [xMatch| xs := domain.tuple.inners |] -> do
             ys <- forM xs $ \ x -> do
-                (_, quanvar) <- freshQuanVar
+                (_, quanvar) <- freshQuanVar "tupleDomInQuantification"
                 return (quanvar, x)
             let quanvars = [xMake| value.tuple.values := map fst ys |]
             ret p "builtIn.tupleDomInQuantification" (helper quanvars ys)
@@ -308,7 +308,7 @@ functionLiteralApply
     tyActual <- typeOf actual
     case tyActual of
         [xMatch| [] := type.function.innerTo.type.int |] -> do
-            (quanVarStr, quanVar) <- freshQuanVar
+            (quanVarStr, quanVar) <- freshQuanVar "functionLiteralApply"
             let overs = [ [xMake| value.tuple.values := [i,j] |]
                         | [xMatch| [i,j] := mapping |] <- mappings
                         ]
@@ -345,7 +345,7 @@ functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guard . &body |] =
                     let newGuard = conjunct [ replace i [eMake| &i[2] |] guard
                                             , [eMake| &i[1] = &arg |]
                                             ]
-                    (_, j) <- freshQuanVar
+                    (_, j) <- freshQuanVar "functionLiteralApply"
                     let newBody  = replace i j body
                     let out = [eMake| &quan &i in &newQuanOverExpr
                                         , &newGuard

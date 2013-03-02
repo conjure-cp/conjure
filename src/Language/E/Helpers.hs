@@ -37,8 +37,9 @@ domainNeedsRepresentation [xMatch| [i] := domain.matrix.inner |] = domainNeedsRe
 domainNeedsRepresentation _ = False
 
 
-freshQuanVar :: MonadConjure m => m (Text, E)
-freshQuanVar = do
+freshQuanVar :: MonadConjure m => Doc -> m (Text, E)
+freshQuanVar from = do
+    mkLog "freshQuanVar" from
     quanVarStr <- nextUniqueName
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
