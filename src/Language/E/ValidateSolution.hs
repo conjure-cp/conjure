@@ -20,7 +20,7 @@ validateSolution essence param solution = do
     printLogs _logs
     case mresult of
         Left  x     -> error $ renderPretty x
-        Right False -> error "Not a valid solution"
+        Right False -> error "Not a valid solution."
         Right True  -> return ()
 
     where
@@ -87,13 +87,19 @@ validateSolution essence param solution = do
             -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
             -- mkLog "debug fullyInlined"       (pretty fullyInlined)
             -- mkLog "debug simplified"         (pretty simplified)
-            case statementAsList s of
-                [ [xMatch| [Prim (B b)] := topLevel.suchThat.value.literal |] ] -> return b
-                _ -> error $ renderPretty $ vcat [ "Cannot fully evaluate."
+            let checks = map isPartOfValidSolution (statementAsList s)
+            if all isJust checks
+                then return (and $ catMaybes checks)
+                else error $ renderPretty $ vcat [ "Cannot fully evaluate."
                                                  , pretty s
                                                  , prettyAsTree s
                                                  , prettyAsPaths s
                                                  ]
+isPartOfValidSolution :: E -> Maybe Bool
+isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.suchThat.value.literal |] = Just b
+isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.where   .value.literal |] = Just b
+isPartOfValidSolution [xMatch| _ := topLevel.objective |] = Just True
+isPartOfValidSolution _ = Nothing
 
 fullyEvaluate :: MonadConjure m => Spec -> m Spec
 fullyEvaluate
