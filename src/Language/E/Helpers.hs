@@ -5,6 +5,7 @@ module Language.E.Helpers where
 
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Pretty
 import Language.E.CompE
 import Language.E.TH
 
@@ -39,8 +40,8 @@ domainNeedsRepresentation _ = False
 
 freshQuanVar :: MonadConjure m => Doc -> m (Text, E)
 freshQuanVar from = do
-    mkLog "freshQuanVar" from
     quanVarStr <- nextUniqueName
+    mkLog "freshQuanVar" (from <+> pretty quanVarStr)
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
 
