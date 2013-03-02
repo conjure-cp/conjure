@@ -41,7 +41,6 @@ validateSolution essence param solution = do
         inliner typesMap bindingsMap (Spec v s) = Spec v (f s)
             where
                 f x@[xMatch| [Prim (S nm)] := reference |]
-                    | trace (show $ "f" <+> pretty x) True
                     = case (M.lookup nm typesMap, M.lookup nm bindingsMap) of
                         (Just theType, Just binding) ->
                             f [xMake| typed.left  := [binding]
