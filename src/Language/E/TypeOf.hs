@@ -320,6 +320,12 @@ typeOf p@[eMatch| ! &a |] = do
         [xMatch| [] := type.bool |] -> return tyBool
         _ -> typeErrorIn p
 
+typeOf p@[eMatch| allDiff(&a) |] = do
+    tya <- typeOf a
+    case tya of
+        [xMatch| _ := type.matrix |] -> return tyBool
+        _ -> typeErrorIn p
+
 typeOf p@[eMatch| toInt(&a) |] = do
     tya <- typeOf a
     case tya of
