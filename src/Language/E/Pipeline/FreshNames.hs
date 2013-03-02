@@ -4,6 +4,7 @@ module Language.E.Pipeline.FreshNames ( freshNames ) where
 
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Pretty
 import Language.E.CompE
 
 import qualified Data.HashSet as S
@@ -39,9 +40,11 @@ freshNames param = do
 
     uniqueNamesInQuanVar <- forM (S.toList newvarsInQuanVar) $ \ a -> do
         b <- nextUniqueName
+        mkLog "gensym" (pretty a <+> "~~" <+> pretty b)
         return (a, b)
     uniqueNamesInBubbles <- forM (S.toList newvarsInBubbles) $ \ a -> do
         b <- nextUniqueName
+        mkLog "gensym" (pretty a <+> "~~" <+> pretty b)
         return (a, identifierConstruct b (Just "regionF") Nothing)
     let uniqueNamesMap = M.fromList (uniqueNamesInQuanVar ++ uniqueNamesInBubbles)
 
