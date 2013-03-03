@@ -54,9 +54,9 @@ evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
         fromMaybe (error "fromMaybe evalTree': Matrix1D") (M.lookup name mapping)
 
     getName :: Tree String  -> [String]
-    getName (Leaf s) = [s]
-    getName (Branch s arr) = s : getName (repSelector arr)
-    getName (Tuple arr) = getName (head arr)
+    getName (Leaf s2) = [s2]
+    getName (Branch s2 arr2) = s2 : getName (repSelector arr2)
+    getName (Tuple arr2) = getName (head arr2)
 
 
 evalTree' mapping prefix (Branch s@"SetOfSets"  arr) =
@@ -92,7 +92,7 @@ matrixToPartiton [xMatch| vs := expr.value.matrix.values|] =
     func [xMatch| xs := value.matrix.values |] = [xMake| part := xs |]
 
 relnToFunc :: E -> E
-relnToFunc e@[xMatch| [v] := expr|] =
+relnToFunc [xMatch| [v] := expr|] =
     let res = relnToFunc (reTuple v)
     in  [xMake| expr := [res] |]
      `_p` ("evalTree' relnToFunc res", [res] )
@@ -155,7 +155,7 @@ matrix1DRep [ix] [xMatch| vals := value.matrix.values |] =
 
     where func a = [xMake| value.literal := [ Prim (I a) ] |]
 
-matrix1DRep (x:xs) [xMatch| vs := value.matrix.values |]  =
+matrix1DRep (_:xs) [xMatch| vs := value.matrix.values |]  =
     let arr = map (matrix1DRep xs) vs
     in [xMake| value.matrix.values := arr |]
 
@@ -178,11 +178,11 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
 
         where
         convert' :: E -> E
-        convert' e@[xMatch| vs  := value.tuple.values |]  =
-            let res = map convert' vs
+        convert' [xMatch| vs2  := value.tuple.values |]  =
+            let res = map convert' vs2
             in  [xMake| value.tuple.values := res |]
         {-convert' [xMatch| [singleton] := value.matrix.values |]  = singleton-}
-        convert' e@[xMatch| _ := value.matrix.values |]  = e 
+        convert' f@[xMatch| _ := value.matrix.values |]  = f
 
 
 matrix1DRep ix e =
