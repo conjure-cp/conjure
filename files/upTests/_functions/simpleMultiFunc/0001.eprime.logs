@@ -1,0 +1,354 @@
+[removedDecl] find y: tuple (matrix indexed by [int(1, 2)] of (int(10, 11),
+                                                               function (total) int(1..3) --> set of int(1, 2),
+                                                               int(33, 55)))
+[removedDecl] find y_tuple1:
+                      matrix indexed by [int(1, 2)] of (int(10, 11),
+                                                        function (total) int(1..3) --> set of int(1, 2),
+                                                        int(33, 55))
+[representation] find y_tuple1_tuple2:
+                         matrix indexed by [int(1, 2)] of function (total) int(1..3) --> set of int(1, 2)
+                 (#1)
+                 Matrix1D
+[configuration] y_tuple1_tuple2§region1#Matrix1D y_tuple1_tuple2§region2#Matrix1D
+[addedDecl] find y_tuple1_tuple2_Matrix1D:
+                    matrix indexed by [int(1, 2), int(1..3)] of set of int(1, 2)
+[applied] y_tuple1_tuple2§region1#Matrix1D[1]
+          =
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})
+          {rules/refns/function-eq.rule}
+              (forAll v__5 in defined(y_tuple1_tuple2§region1#Matrix1D[1])
+                   . y_tuple1_tuple2§region1#Matrix1D[1](v__5)
+                     =
+                     function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5))
+[applied] y_tuple1_tuple2§region1#Matrix1D[1](v__5)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+[applied] y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+          =
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+          {rules/refns/set-eq-to-subsets.rule}
+              y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+              subsetEq
+              function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+              /\
+              y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+              supsetEq
+              function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+[applied] y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+          subsetEq
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__6 in y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+                   . v__6 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5))
+[applied] v__6 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__7 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5) . v__7 = v__6)
+[debug] v__7 = v__6
+[debug] v__8 = v__6
+[debug] (exists v__7 in {(3, {}), (2, {1}), (1, {2, 1})}
+             , emptyGuard /\ v__7[1] = v__5
+             . (exists v__8 in v__7[2] . v__8 = v__6))
+[applied] (exists v__7 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+               . v__7 = v__6)
+          {builtIn.functionLiteralApply}
+              2 = v__5 /\ 1 = v__6 \/ 1 = v__5 /\ (2 = v__6 \/ 1 = v__6)
+[applied] y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+          supsetEq
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+              subsetEq
+              y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+[applied] function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+          subsetEq
+          y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__9 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+                   . v__9 in y_tuple1_tuple2_Matrix1D§region1[1, v__5])
+[applied] v__9 in y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = v__9)
+[debug] (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+             . v__10 = v__9)
+[debug] (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+             . v__10 = v__11)
+[debug] (forAll v__9 in {(3, {}), (2, {1}), (1, {2, 1})}
+             , emptyGuard /\ v__9[1] = v__5
+             . (forAll v__11 in v__9[2]
+                    . (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = v__11)))
+[applied] (forAll v__9 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__5)
+               . (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = v__9))
+          {builtIn.functionLiteralApply}
+              (3 = v__5 -> true)
+              /\
+              (2 = v__5
+               ->
+               (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = 1))
+              /\
+              (1 = v__5
+               ->
+               (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = 2)
+               /\
+               (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = 1))
+[applied] (forAll v__5 in defined(y_tuple1_tuple2§region1#Matrix1D[1])
+               . (forAll v__6 in y_tuple1_tuple2_Matrix1D§region1[1, v__5]
+                      . 2 = v__5 /\ 1 = v__6 \/ 1 = v__5 /\ (2 = v__6 \/ 1 = v__6))
+                 /\
+                 ((3 = v__5 -> true)
+                  /\
+                  (2 = v__5
+                   ->
+                   (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = 1))
+                  /\
+                  (1 = v__5
+                   ->
+                   (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = 2)
+                   /\
+                   (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__5] . v__10 = 1))))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__12 in toSet(y_tuple1_tuple2§region1#Matrix1D[1])
+                   . (forAll v__6 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]]
+                          . 2 = v__12[1] /\ 1 = v__6 \/ 1 = v__12[1] /\ (2 = v__6 \/ 1 = v__6))
+                     /\
+                     ((3 = v__12[1] -> true)
+                      /\
+                      (2 = v__12[1]
+                       ->
+                       (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]] . v__10 = 1))
+                      /\
+                      (1 = v__12[1]
+                       ->
+                       (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]] . v__10 = 2)
+                       /\
+                       (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]] . v__10 = 1))))
+[applied] (forAll v__12 in toSet(y_tuple1_tuple2§region1#Matrix1D[1])
+               . (forAll v__6 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]]
+                      . 2 = v__12[1] /\ 1 = v__6 \/ 1 = v__12[1] /\ (2 = v__6 \/ 1 = v__6))
+                 /\
+                 ((3 = v__12[1] -> true)
+                  /\
+                  (2 = v__12[1]
+                   ->
+                   (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]] . v__10 = 1))
+                  /\
+                  (1 = v__12[1]
+                   ->
+                   (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]] . v__10 = 2)
+                   /\
+                   (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__12[1]] . v__10 = 1))))
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (forAll v__13 : int(1..3)
+                   . (forAll v__6 in y_tuple1_tuple2_Matrix1D§region1[1, v__13]
+                          . 2 = v__13 /\ 1 = v__6 \/ 1 = v__13 /\ (2 = v__6 \/ 1 = v__6))
+                     /\
+                     ((3 = v__13 -> true)
+                      /\
+                      (2 = v__13
+                       ->
+                       (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__13] . v__10 = 1))
+                      /\
+                      (1 = v__13
+                       ->
+                       (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__13] . v__10 = 2)
+                       /\
+                       (exists v__10 in y_tuple1_tuple2_Matrix1D§region1[1, v__13] . v__10 = 1))))
+[applied] y_tuple1_tuple2§region2#Matrix1D[2]
+          =
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})
+          {rules/refns/function-eq.rule}
+              (forAll v__14 in defined(y_tuple1_tuple2§region2#Matrix1D[2])
+                   . y_tuple1_tuple2§region2#Matrix1D[2](v__14)
+                     =
+                     function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14))
+[applied] y_tuple1_tuple2§region2#Matrix1D[2](v__14)
+          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
+              y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+[applied] y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+          =
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+          {rules/refns/set-eq-to-subsets.rule}
+              y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+              subsetEq
+              function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+              /\
+              y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+              supsetEq
+              function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+[applied] y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+          subsetEq
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__15 in y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+                   . v__15 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14))
+[applied] v__15 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__16 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+                   . v__16 = v__15)
+[debug] v__16 = v__15
+[debug] v__17 = v__15
+[debug] (exists v__16 in {(3, {}), (2, {1}), (1, {2, 1})}
+             , emptyGuard /\ v__16[1] = v__14
+             . (exists v__17 in v__16[2] . v__17 = v__15))
+[applied] (exists v__16 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+               . v__16 = v__15)
+          {builtIn.functionLiteralApply}
+              2 = v__14 /\ 1 = v__15 \/ 1 = v__14 /\ (2 = v__15 \/ 1 = v__15)
+[applied] y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+          supsetEq
+          function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+              subsetEq
+              y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+[applied] function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+          subsetEq
+          y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__18 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+                   . v__18 in y_tuple1_tuple2_Matrix1D§region2[2, v__14])
+[applied] v__18 in y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = v__18)
+[debug] (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+             . v__19 = v__18)
+[debug] (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+             . v__19 = v__20)
+[debug] (forAll v__18 in {(3, {}), (2, {1}), (1, {2, 1})}
+             , emptyGuard /\ v__18[1] = v__14
+             . (forAll v__20 in v__18[2]
+                    . (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = v__20)))
+[applied] (forAll v__18 in function(3 --> {}, 2 --> {1}, 1 --> {2, 1})(v__14)
+               . (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = v__18))
+          {builtIn.functionLiteralApply}
+              (3 = v__14 -> true)
+              /\
+              (2 = v__14
+               ->
+               (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = 1))
+              /\
+              (1 = v__14
+               ->
+               (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = 2)
+               /\
+               (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = 1))
+[applied] (forAll v__14 in defined(y_tuple1_tuple2§region2#Matrix1D[2])
+               . (forAll v__15 in y_tuple1_tuple2_Matrix1D§region2[2, v__14]
+                      . 2 = v__14 /\ 1 = v__15 \/ 1 = v__14 /\ (2 = v__15 \/ 1 = v__15))
+                 /\
+                 ((3 = v__14 -> true)
+                  /\
+                  (2 = v__14
+                   ->
+                   (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = 1))
+                  /\
+                  (1 = v__14
+                   ->
+                   (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = 2)
+                   /\
+                   (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__14] . v__19 = 1))))
+          {rules/refns/function-defined-quantified.rule}
+              (forAll v__21 in toSet(y_tuple1_tuple2§region2#Matrix1D[2])
+                   . (forAll v__15 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]]
+                          . 2 = v__21[1] /\ 1 = v__15 \/ 1 = v__21[1] /\ (2 = v__15 \/ 1 = v__15))
+                     /\
+                     ((3 = v__21[1] -> true)
+                      /\
+                      (2 = v__21[1]
+                       ->
+                       (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]] . v__19 = 1))
+                      /\
+                      (1 = v__21[1]
+                       ->
+                       (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]] . v__19 = 2)
+                       /\
+                       (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]] . v__19 = 1))))
+[applied] (forAll v__21 in toSet(y_tuple1_tuple2§region2#Matrix1D[2])
+               . (forAll v__15 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]]
+                      . 2 = v__21[1] /\ 1 = v__15 \/ 1 = v__21[1] /\ (2 = v__15 \/ 1 = v__15))
+                 /\
+                 ((3 = v__21[1] -> true)
+                  /\
+                  (2 = v__21[1]
+                   ->
+                   (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]] . v__19 = 1))
+                  /\
+                  (1 = v__21[1]
+                   ->
+                   (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]] . v__19 = 2)
+                   /\
+                   (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__21[1]] . v__19 = 1))))
+          {rules/refns/function-matrix1d/function-toSet-quantified.rule}
+              (forAll v__22 : int(1..3)
+                   . (forAll v__15 in y_tuple1_tuple2_Matrix1D§region2[2, v__22]
+                          . 2 = v__22 /\ 1 = v__15 \/ 1 = v__22 /\ (2 = v__15 \/ 1 = v__15))
+                     /\
+                     ((3 = v__22 -> true)
+                      /\
+                      (2 = v__22
+                       ->
+                       (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__22] . v__19 = 1))
+                      /\
+                      (1 = v__22
+                       ->
+                       (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__22] . v__19 = 2)
+                       /\
+                       (exists v__19 in y_tuple1_tuple2_Matrix1D§region2[2, v__22] . v__19 = 1))))
+[removedDecl] find y_tuple1_tuple2:
+                      matrix indexed by [int(1, 2)] of function (total) int(1..3) --> set of int(1, 2)
+[representation] find y_tuple1_tuple2_Matrix1D:
+                         matrix indexed by [int(1, 2), int(1..3)] of set of int(1, 2)
+                 (#1)
+                 Occurrence
+[configuration] y_tuple1_tuple2_Matrix1D§region1#Occurrence y_tuple1_tuple2_Matrix1D§region2#Occurrence
+[addedDecl] find y_tuple1_tuple2_Matrix1D_Occurrence:
+                    matrix indexed by [int(1, 2), int(1..3), int(1, 2)] of bool
+[applied] (forAll v__6 in y_tuple1_tuple2_Matrix1D§region1#Occurrence[1, v__13]
+               . 2 = v__13 /\ 1 = v__6 \/ 1 = v__13 /\ (2 = v__6 \/ 1 = v__6))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__27 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region1[1, v__13, v__27]
+                   . 2 = v__13 /\ 1 = v__27 \/ 1 = v__13 /\ (2 = v__27 \/ 1 = v__27))
+[applied] (exists v__10 in y_tuple1_tuple2_Matrix1D§region1#Occurrence[1, v__13]
+               . v__10 = 1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__28 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region1[1, v__13, v__28]
+                   . v__28 = 1)
+[applied] (exists v__10 in y_tuple1_tuple2_Matrix1D§region1#Occurrence[1, v__13]
+               . v__10 = 2)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__29 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region1[1, v__13, v__29]
+                   . v__29 = 2)
+[applied] (exists v__10 in y_tuple1_tuple2_Matrix1D§region1#Occurrence[1, v__13]
+               . v__10 = 1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__30 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region1[1, v__13, v__30]
+                   . v__30 = 1)
+[applied] (forAll v__15 in y_tuple1_tuple2_Matrix1D§region2#Occurrence[2, v__22]
+               . 2 = v__22 /\ 1 = v__15 \/ 1 = v__22 /\ (2 = v__15 \/ 1 = v__15))
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__31 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region2[2, v__22, v__31]
+                   . 2 = v__22 /\ 1 = v__31 \/ 1 = v__22 /\ (2 = v__31 \/ 1 = v__31))
+[applied] (exists v__19 in y_tuple1_tuple2_Matrix1D§region2#Occurrence[2, v__22]
+               . v__19 = 1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__32 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region2[2, v__22, v__32]
+                   . v__32 = 1)
+[applied] (exists v__19 in y_tuple1_tuple2_Matrix1D§region2#Occurrence[2, v__22]
+               . v__19 = 2)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__33 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region2[2, v__22, v__33]
+                   . v__33 = 2)
+[applied] (exists v__19 in y_tuple1_tuple2_Matrix1D§region2#Occurrence[2, v__22]
+               . v__19 = 1)
+          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__34 : int(1, 2)
+                   , y_tuple1_tuple2_Matrix1D_Occurrence§region2[2, v__22, v__34]
+                   . v__34 = 1)
+[removedDecl] find y_tuple1_tuple2_Matrix1D:
+                      matrix indexed by [int(1, 2), int(1..3)] of set of int(1, 2)
