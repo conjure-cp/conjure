@@ -1,0 +1,351 @@
+[removedDecl] find pain:
+                      matrix indexed by [int(1)] of (int(1),
+                                                     (int(8), int(3)),
+                                                     set (size 1) of
+                                                         (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                          (int(14), int(15)),
+                                                          int(4),
+                                                          matrix indexed by [int(1)] of set (size 1) of
+                                                                                            ((int(32),
+                                                                                              int(55),
+                                                                                              matrix indexed by [int(1)] of (int(92),
+                                                                                                                             int(93),
+                                                                                                                             int(94))),
+                                                                                             int(99))),
+                                                     (int(15), int(16), int(17), int(18)))
+[removedDecl] find pain_tuple2: matrix indexed by [int(1)] of (int(8), int(3))
+[removedDecl] find pain_tuple4:
+                      matrix indexed by [int(1)] of (int(15), int(16), int(17), int(18))
+[representation] find pain_tuple3:
+                         matrix indexed by [int(1)] of set (size 1) of
+                                                           (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                            (int(14), int(15)),
+                                                            int(4),
+                                                            matrix indexed by [int(1)] of set (size 1) of
+                                                                                              ((int(32),
+                                                                                                int(55),
+                                                                                                matrix indexed by [int(1)] of (int(92),
+                                                                                                                               int(93),
+                                                                                                                               int(94))),
+                                                                                               int(99)))
+                 (#1)
+                 Explicit
+[configuration] pain_tuple3§region1#Explicit
+[addedStructuralCons] pain_tuple3§region1
+[addedDecl] find pain_tuple3_Explicit:
+                    matrix indexed by [int(1),
+                                       int(1..1)] of (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                      (int(14), int(15)),
+                                                      int(4),
+                                                      matrix indexed by [int(1)] of set (size 1) of
+                                                                                        ((int(32),
+                                                                                          int(55),
+                                                                                          matrix indexed by [int(1)] of (int(92),
+                                                                                                                         int(93),
+                                                                                                                         int(94))),
+                                                                                         int(99)))
+[refn] 0
+[applied] pain_tuple3§region1#Explicit[1]
+          =
+          {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+          {rules/refns/set-eq-to-subsets.rule}
+              pain_tuple3§region1#Explicit[1]
+              subsetEq
+              {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+              /\
+              pain_tuple3§region1#Explicit[1]
+              supsetEq
+              {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+[applied] pain_tuple3§region1#Explicit[1]
+          subsetEq
+          {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__4 in pain_tuple3§region1#Explicit[1]
+                   . v__4 in {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])})
+[applied] v__4
+          in
+          {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+          {rules/refns/set-in-to-quantified.rule}
+              [(12, 13)] = v__4[1]
+              /\
+              (14 = v__4[2, 1] /\ 15 = v__4[2, 2]
+               /\
+               (4 = v__4[3] /\ [{((32, 55, [(92, 93, 94)]), 99)}] = v__4[4]))
+[applied] (forAll v__4 in pain_tuple3§region1#Explicit[1]
+               . [(12, 13)] = v__4[1]
+                 /\
+                 (14 = v__4[2, 1] /\ 15 = v__4[2, 2]
+                  /\
+                  (4 = v__4[3] /\ [{((32, 55, [(92, 93, 94)]), 99)}] = v__4[4])))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              12 = pain_tuple3_Explicit§region1[1, 1, 1, 1, 1]
+              /\
+              13 = pain_tuple3_Explicit§region1[1, 1, 1, 1, 2]
+              /\
+              (14 = pain_tuple3_Explicit§region1[1, 1, 2, 1]
+               /\
+               15 = pain_tuple3_Explicit§region1[1, 1, 2, 2]
+               /\
+               (4 = pain_tuple3_Explicit§region1[1, 1, 3]
+                /\
+                {((32, 55, [(92, 93, 94)]), 99)} = pain_tuple3_Explicit§region1[1, 1, 4, 1]))
+[applied] {((32, 55, [(92, 93, 94)]), 99)}
+          =
+          pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          {rules/refns/set-eq-to-subsets.rule}
+              {((32, 55, [(92, 93, 94)]), 99)}
+              subsetEq
+              pain_tuple3_Explicit§region1[1, 1, 4, 1]
+              /\
+              {((32, 55, [(92, 93, 94)]), 99)}
+              supsetEq
+              pain_tuple3_Explicit§region1[1, 1, 4, 1]
+[applied] {((32, 55, [(92, 93, 94)]), 99)}
+          subsetEq
+          pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              ((32, 55, [(92, 93, 94)]), 99) in pain_tuple3_Explicit§region1[1, 1, 4, 1]
+[applied] ((32, 55, [(92, 93, 94)]), 99)
+          in
+          pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__10 in pain_tuple3_Explicit§region1[1, 1, 4, 1]
+                   . v__10[1, 1] = 32 /\ (v__10[1, 2] = 55 /\ v__10[1, 3] = [(92, 93, 94)])
+                     /\
+                     v__10[2] = 99)
+[applied] {((32, 55, [(92, 93, 94)]), 99)}
+          supsetEq
+          pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              pain_tuple3_Explicit§region1[1, 1, 4, 1]
+              subsetEq
+              {((32, 55, [(92, 93, 94)]), 99)}
+[applied] pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          subsetEq
+          {((32, 55, [(92, 93, 94)]), 99)}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__11 in pain_tuple3_Explicit§region1[1, 1, 4, 1]
+                   . v__11 in {((32, 55, [(92, 93, 94)]), 99)})
+[applied] v__11 in {((32, 55, [(92, 93, 94)]), 99)}
+          {rules/refns/set-in-to-quantified.rule}
+              32 = v__11[1, 1] /\ (55 = v__11[1, 2] /\ [(92, 93, 94)] = v__11[1, 3])
+              /\
+              99 = v__11[2]
+[applied] pain_tuple3§region1#Explicit[1]
+          supsetEq
+          {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+              subsetEq
+              pain_tuple3§region1#Explicit[1]
+[applied] {([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])}
+          subsetEq
+          pain_tuple3§region1#Explicit[1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              ([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])
+              in
+              pain_tuple3§region1#Explicit[1]
+[applied] ([(12, 13)], (14, 15), 4, [{((32, 55, [(92, 93, 94)]), 99)}])
+          in
+          pain_tuple3§region1#Explicit[1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__14 in pain_tuple3§region1#Explicit[1]
+                   . v__14[1] = [(12, 13)]
+                     /\
+                     (v__14[2, 1] = 14 /\ v__14[2, 2] = 15
+                      /\
+                      (v__14[3] = 4 /\ v__14[4] = [{((32, 55, [(92, 93, 94)]), 99)}])))
+[applied] (exists v__14 in pain_tuple3§region1#Explicit[1]
+               . v__14[1] = [(12, 13)]
+                 /\
+                 (v__14[2, 1] = 14 /\ v__14[2, 2] = 15
+                  /\
+                  (v__14[3] = 4 /\ v__14[4] = [{((32, 55, [(92, 93, 94)]), 99)}])))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              pain_tuple3_Explicit§region1[1, 1, 1, 1, 1] = 12
+              /\
+              pain_tuple3_Explicit§region1[1, 1, 1, 1, 2] = 13
+              /\
+              (pain_tuple3_Explicit§region1[1, 1, 2, 1] = 14
+               /\
+               pain_tuple3_Explicit§region1[1, 1, 2, 2] = 15
+               /\
+               (pain_tuple3_Explicit§region1[1, 1, 3] = 4
+                /\
+                pain_tuple3_Explicit§region1[1, 1, 4, 1] = {((32, 55, [(92, 93, 94)]), 99)}))
+[applied] pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          =
+          {((32, 55, [(92, 93, 94)]), 99)}
+          {rules/refns/set-eq-to-subsets.rule}
+              pain_tuple3_Explicit§region1[1, 1, 4, 1]
+              subsetEq
+              {((32, 55, [(92, 93, 94)]), 99)}
+              /\
+              pain_tuple3_Explicit§region1[1, 1, 4, 1]
+              supsetEq
+              {((32, 55, [(92, 93, 94)]), 99)}
+[applied] pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          subsetEq
+          {((32, 55, [(92, 93, 94)]), 99)}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__18 in pain_tuple3_Explicit§region1[1, 1, 4, 1]
+                   . v__18 in {((32, 55, [(92, 93, 94)]), 99)})
+[applied] v__18 in {((32, 55, [(92, 93, 94)]), 99)}
+          {rules/refns/set-in-to-quantified.rule}
+              32 = v__18[1, 1] /\ (55 = v__18[1, 2] /\ [(92, 93, 94)] = v__18[1, 3])
+              /\
+              99 = v__18[2]
+[applied] pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          supsetEq
+          {((32, 55, [(92, 93, 94)]), 99)}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {((32, 55, [(92, 93, 94)]), 99)}
+              subsetEq
+              pain_tuple3_Explicit§region1[1, 1, 4, 1]
+[applied] ((32, 55, [(92, 93, 94)]), 99)
+          in
+          pain_tuple3_Explicit§region1[1, 1, 4, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__21 in pain_tuple3_Explicit§region1[1, 1, 4, 1]
+                   . v__21[1, 1] = 32 /\ (v__21[1, 2] = 55 /\ v__21[1, 3] = [(92, 93, 94)])
+                     /\
+                     v__21[2] = 99)
+[removedDecl] find pain_tuple3_Explicit:
+                      matrix indexed by [int(1),
+                                         int(1..1)] of (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                        (int(14), int(15)),
+                                                        int(4),
+                                                        matrix indexed by [int(1)] of set (size 1) of
+                                                                                          ((int(32),
+                                                                                            int(55),
+                                                                                            matrix indexed by [int(1)] of (int(92),
+                                                                                                                           int(93),
+                                                                                                                           int(94))),
+                                                                                           int(99)))
+[removedDecl] find pain_tuple3_Explicit_tuple1:
+                      matrix indexed by [int(1), int(1..1), int(1)] of (int(12), int(13))
+[removedDecl] find pain_tuple3_Explicit_tuple2:
+                      matrix indexed by [int(1), int(1..1)] of (int(14), int(15))
+[removedDecl] find pain_tuple3:
+                      matrix indexed by [int(1)] of set (size 1) of
+                                                        (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                         (int(14), int(15)),
+                                                         int(4),
+                                                         matrix indexed by [int(1)] of set (size 1) of
+                                                                                           ((int(32),
+                                                                                             int(55),
+                                                                                             matrix indexed by [int(1)] of (int(92),
+                                                                                                                            int(93),
+                                                                                                                            int(94))),
+                                                                                            int(99)))
+[repr] 1
+[representation] find pain_tuple3_Explicit_tuple4:
+                         matrix indexed by [int(1), int(1..1), int(1)] of set (size 1) of
+                                                                              ((int(32),
+                                                                                int(55),
+                                                                                matrix indexed by [int(1)] of (int(92),
+                                                                                                               int(93),
+                                                                                                               int(94))),
+                                                                               int(99))
+                 (#1)
+                 Explicit
+[configuration] pain_tuple3_Explicit_tuple4§region1#Explicit
+[addedStructuralCons] pain_tuple3_Explicit_tuple4§region1
+[addedDecl] find pain_tuple3_Explicit_tuple4_Explicit:
+                    matrix indexed by [int(1), int(1..1), int(1), int(1..1)] of ((int(32),
+                                                                                  int(55),
+                                                                                  matrix indexed by [int(1)] of (int(92),
+                                                                                                                 int(93),
+                                                                                                                 int(94))),
+                                                                                 int(99))
+[refn] 1
+[applied] (exists v__10 in pain_tuple3_Explicit_tuple4§region1#Explicit[1, 1, 1]
+               . v__10[1, 1] = 32 /\ (v__10[1, 2] = 55 /\ v__10[1, 3] = [(92, 93, 94)])
+                 /\
+                 v__10[2] = 99)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 1] = 32
+              /\
+              (pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 2] = 55
+               /\
+               (pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 1] = 92
+                /\
+                (pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 2] = 93
+                 /\
+                 pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 3] = 94)))
+              /\
+              pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 2] = 99
+[applied] (forAll v__11 in pain_tuple3_Explicit_tuple4§region1#Explicit[1, 1, 1]
+               . 32 = v__11[1, 1] /\ (55 = v__11[1, 2] /\ [(92, 93, 94)] = v__11[1, 3])
+                 /\
+                 99 = v__11[2])
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              32 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 1]
+              /\
+              (55 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 2]
+               /\
+               (92 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 1]
+                /\
+                (93 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 2]
+                 /\
+                 94 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 3])))
+              /\
+              99 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 2]
+[applied] (forAll v__18 in pain_tuple3_Explicit_tuple4§region1#Explicit[1, 1, 1]
+               . 32 = v__18[1, 1] /\ (55 = v__18[1, 2] /\ [(92, 93, 94)] = v__18[1, 3])
+                 /\
+                 99 = v__18[2])
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              32 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 1]
+              /\
+              (55 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 2]
+               /\
+               (92 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 1]
+                /\
+                (93 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 2]
+                 /\
+                 94 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 3])))
+              /\
+              99 = pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 2]
+[applied] (exists v__21 in pain_tuple3_Explicit_tuple4§region1#Explicit[1, 1, 1]
+               . v__21[1, 1] = 32 /\ (v__21[1, 2] = 55 /\ v__21[1, 3] = [(92, 93, 94)])
+                 /\
+                 v__21[2] = 99)
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 1] = 32
+              /\
+              (pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 2] = 55
+               /\
+               (pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 1] = 92
+                /\
+                (pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 2] = 93
+                 /\
+                 pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 1, 3, 1, 3] = 94)))
+              /\
+              pain_tuple3_Explicit_tuple4_Explicit§region1[1, 1, 1, 1, 2] = 99
+[removedDecl] find pain_tuple3_Explicit_tuple4_Explicit:
+                      matrix indexed by [int(1), int(1..1), int(1), int(1..1)] of ((int(32),
+                                                                                    int(55),
+                                                                                    matrix indexed by [int(1)] of (int(92),
+                                                                                                                   int(93),
+                                                                                                                   int(94))),
+                                                                                   int(99))
+[removedDecl] find pain_tuple3_Explicit_tuple4_Explicit_tuple1:
+                      matrix indexed by [int(1), int(1..1), int(1), int(1..1)] of (int(32),
+                                                                                   int(55),
+                                                                                   matrix indexed by [int(1)] of (int(92),
+                                                                                                                  int(93),
+                                                                                                                  int(94)))
+[removedDecl] find pain_tuple3_Explicit_tuple4_Explicit_tuple1_tuple3:
+                      matrix indexed by [int(1), int(1..1), int(1), int(1..1), int(1)] of (int(92),
+                                                                                           int(93),
+                                                                                           int(94))
+[removedDecl] find pain_tuple3_Explicit_tuple4:
+                      matrix indexed by [int(1), int(1..1), int(1)] of set (size 1) of
+                                                                           ((int(32),
+                                                                             int(55),
+                                                                             matrix indexed by [int(1)] of (int(92),
+                                                                                                            int(93),
+                                                                                                            int(94))),
+                                                                            int(99))
+[repr] 2

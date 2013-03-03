@@ -1,0 +1,124 @@
+[removedDecl] find pain:
+                      matrix indexed by [int(1, 2), int(1)] of (int(1),
+                                                                (int(8), int(3)),
+                                                                set (size 1) of
+                                                                    (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                                     (int(14), int(15))),
+                                                                (int(15), int(16), int(17), int(18)))
+[removedDecl] find pain_tuple2:
+                      matrix indexed by [int(1, 2), int(1)] of (int(8), int(3))
+[removedDecl] find pain_tuple4:
+                      matrix indexed by [int(1, 2), int(1)] of (int(15), int(16), int(17), int(18))
+[representation] find pain_tuple3:
+                         matrix indexed by [int(1, 2), int(1)] of set (size 1) of
+                                                                      (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                                       (int(14), int(15)))
+                 (#1)
+                 Explicit
+[configuration] pain_tuple3§region2#Explicit pain_tuple3§region1#Explicit
+[addedStructuralCons] pain_tuple3§region1
+[addedStructuralCons] pain_tuple3§region2
+[addedDecl] find pain_tuple3_Explicit:
+                    matrix indexed by [int(1, 2),
+                                       int(1),
+                                       int(1..1)] of (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                      (int(14), int(15)))
+[refn] 0
+[applied] pain_tuple3§region1#Explicit[1, 1] = {([(12, 13)], (14, 15))}
+          {rules/refns/set-eq-to-subsets.rule}
+              pain_tuple3§region1#Explicit[1, 1] subsetEq {([(12, 13)], (14, 15))}
+              /\
+              pain_tuple3§region1#Explicit[1, 1] supsetEq {([(12, 13)], (14, 15))}
+[applied] pain_tuple3§region1#Explicit[1, 1] subsetEq {([(12, 13)], (14, 15))}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__5 in pain_tuple3§region1#Explicit[1, 1]
+                   . v__5 in {([(12, 13)], (14, 15))})
+[applied] v__5 in {([(12, 13)], (14, 15))}
+          {rules/refns/set-in-to-quantified.rule}
+              [(12, 13)] = v__5[1] /\ (14 = v__5[2, 1] /\ 15 = v__5[2, 2])
+[applied] (forAll v__5 in pain_tuple3§region1#Explicit[1, 1]
+               . [(12, 13)] = v__5[1] /\ (14 = v__5[2, 1] /\ 15 = v__5[2, 2]))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              12 = pain_tuple3_Explicit§region1[1, 1, 1, 1, 1, 1]
+              /\
+              13 = pain_tuple3_Explicit§region1[1, 1, 1, 1, 1, 2]
+              /\
+              (14 = pain_tuple3_Explicit§region1[1, 1, 1, 2, 1]
+               /\
+               15 = pain_tuple3_Explicit§region1[1, 1, 1, 2, 2])
+[applied] pain_tuple3§region1#Explicit[1, 1] supsetEq {([(12, 13)], (14, 15))}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {([(12, 13)], (14, 15))} subsetEq pain_tuple3§region1#Explicit[1, 1]
+[applied] {([(12, 13)], (14, 15))} subsetEq pain_tuple3§region1#Explicit[1, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              ([(12, 13)], (14, 15)) in pain_tuple3§region1#Explicit[1, 1]
+[applied] ([(12, 13)], (14, 15)) in pain_tuple3§region1#Explicit[1, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__10 in pain_tuple3§region1#Explicit[1, 1]
+                   . v__10[1] = [(12, 13)] /\ (v__10[2, 1] = 14 /\ v__10[2, 2] = 15))
+[applied] (exists v__10 in pain_tuple3§region1#Explicit[1, 1]
+               . v__10[1] = [(12, 13)] /\ (v__10[2, 1] = 14 /\ v__10[2, 2] = 15))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              pain_tuple3_Explicit§region1[1, 1, 1, 1, 1, 1] = 12
+              /\
+              pain_tuple3_Explicit§region1[1, 1, 1, 1, 1, 2] = 13
+              /\
+              (pain_tuple3_Explicit§region1[1, 1, 1, 2, 1] = 14
+               /\
+               pain_tuple3_Explicit§region1[1, 1, 1, 2, 2] = 15)
+[applied] pain_tuple3§region2#Explicit[2, 1] = {([(12, 13)], (14, 15))}
+          {rules/refns/set-eq-to-subsets.rule}
+              pain_tuple3§region2#Explicit[2, 1] subsetEq {([(12, 13)], (14, 15))}
+              /\
+              pain_tuple3§region2#Explicit[2, 1] supsetEq {([(12, 13)], (14, 15))}
+[applied] pain_tuple3§region2#Explicit[2, 1] subsetEq {([(12, 13)], (14, 15))}
+          {rules/refns/set-subseteq-to-quantified.rule}
+              (forAll v__13 in pain_tuple3§region2#Explicit[2, 1]
+                   . v__13 in {([(12, 13)], (14, 15))})
+[applied] v__13 in {([(12, 13)], (14, 15))}
+          {rules/refns/set-in-to-quantified.rule}
+              [(12, 13)] = v__13[1] /\ (14 = v__13[2, 1] /\ 15 = v__13[2, 2])
+[applied] (forAll v__13 in pain_tuple3§region2#Explicit[2, 1]
+               . [(12, 13)] = v__13[1] /\ (14 = v__13[2, 1] /\ 15 = v__13[2, 2]))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              12 = pain_tuple3_Explicit§region2[2, 1, 1, 1, 1, 1]
+              /\
+              13 = pain_tuple3_Explicit§region2[2, 1, 1, 1, 1, 2]
+              /\
+              (14 = pain_tuple3_Explicit§region2[2, 1, 1, 2, 1]
+               /\
+               15 = pain_tuple3_Explicit§region2[2, 1, 1, 2, 2])
+[applied] pain_tuple3§region2#Explicit[2, 1] supsetEq {([(12, 13)], (14, 15))}
+          {rules/refns/set-supseteq-to-subseteq.rule}
+              {([(12, 13)], (14, 15))} subsetEq pain_tuple3§region2#Explicit[2, 1]
+[applied] {([(12, 13)], (14, 15))} subsetEq pain_tuple3§region2#Explicit[2, 1]
+          {rules/refns/set-subseteq-to-quantified.rule}
+              ([(12, 13)], (14, 15)) in pain_tuple3§region2#Explicit[2, 1]
+[applied] ([(12, 13)], (14, 15)) in pain_tuple3§region2#Explicit[2, 1]
+          {rules/refns/set-in-to-quantified.rule}
+              (exists v__18 in pain_tuple3§region2#Explicit[2, 1]
+                   . v__18[1] = [(12, 13)] /\ (v__18[2, 1] = 14 /\ v__18[2, 2] = 15))
+[applied] (exists v__18 in pain_tuple3§region2#Explicit[2, 1]
+               . v__18[1] = [(12, 13)] /\ (v__18[2, 1] = 14 /\ v__18[2, 2] = 15))
+          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              pain_tuple3_Explicit§region2[2, 1, 1, 1, 1, 1] = 12
+              /\
+              pain_tuple3_Explicit§region2[2, 1, 1, 1, 1, 2] = 13
+              /\
+              (pain_tuple3_Explicit§region2[2, 1, 1, 2, 1] = 14
+               /\
+               pain_tuple3_Explicit§region2[2, 1, 1, 2, 2] = 15)
+[removedDecl] find pain_tuple3_Explicit:
+                      matrix indexed by [int(1, 2),
+                                         int(1),
+                                         int(1..1)] of (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                        (int(14), int(15)))
+[removedDecl] find pain_tuple3_Explicit_tuple1:
+                      matrix indexed by [int(1, 2), int(1), int(1..1), int(1)] of (int(12), int(13))
+[removedDecl] find pain_tuple3_Explicit_tuple2:
+                      matrix indexed by [int(1, 2), int(1), int(1..1)] of (int(14), int(15))
+[removedDecl] find pain_tuple3:
+                      matrix indexed by [int(1, 2), int(1)] of set (size 1) of
+                                                                   (matrix indexed by [int(1)] of (int(12), int(13)),
+                                                                    (int(14), int(15)))
+[repr] 1

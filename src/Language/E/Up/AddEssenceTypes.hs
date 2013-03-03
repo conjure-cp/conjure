@@ -228,7 +228,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
     func _  [xMatch| [ele] := value.matrix.values |] = ele
         `_p` ("func mat", [ele])
-            `_p` ("M T func e",[e])
+        `_p` ("M T func e",[e])
 
     func r@[TagTuple ts1]   e1@[xMatch| vs1 := value.tuple.values |] =
         let
@@ -255,14 +255,13 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
         handle _ts _e = _e
             `_k` ("t2 not handled", (_ts,[_e]))
 
-    -- for o92  add a match which does not unwrap the matrix
-    --
-
+    -- FIXME for o92 /o9
+    -- removed the matrix around ts1 with no ill and postive effect 
     func ts1  e1@[xMatch| vs1 := value.tuple.values |] =
         let
             vs2 = map unwrapSingleMatrix vs1
             e2  = [xMake| value.tuple.values := vs2 |]
-            rs  = toEssenceRep (TagSingle "matrix": ts1)  e2
+            rs  = toEssenceRep ts1 e2
         in  rs
             `_p` ("M T func rs",[rs])
             `_p` ("M T func e2",[e2])
