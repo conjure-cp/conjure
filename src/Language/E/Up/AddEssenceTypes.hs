@@ -311,14 +311,8 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     `_f` ("N T value.tuple.values ts",ts)
     `_f` ("N T value.tuple.values tags",tags)
 
-    -- new idea handle tuples you toEssenceRep first but
-    --  don not unwrap one lay of matrix first?
-
-    -- idea2  after using tranposeE  run toEssenceRep on res using the TagTuple
-
     where
-
-    --FIXME should handle nested tuples e.g tupley26
+    -- should handle nested tuples e.g tupley26, seems to work
     handleNested ::  [TagT] ->  E -> E
     handleNested ts1@[TagTuple tts]  e@[xMatch| vs1 := value.tuple.values |]
         -- CHECK not sure about using matrixOrTuple or isMatrix
