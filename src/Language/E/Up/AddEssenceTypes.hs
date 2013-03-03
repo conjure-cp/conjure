@@ -92,7 +92,7 @@ reTuple  n e = reTuple (n-1) [xMake| value.tuple.values := [e]|]
 
 
 getLit :: E -> Maybe E
-getLit [xMatch| [ele] := value.matrix.values |] =  (getLit ele)
+getLit [xMatch| [ele] := value.matrix.values |] =  getLit ele
 getLit f@[xMatch| _ := value.literal |]  = Just f
 getLit _ = Nothing
 
@@ -235,7 +235,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     
     -- FIXME this method is seems to work by unwraping the singeton matrix of a int
     -- but this should not be really needed
-    func ts2@[TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
+    func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
         | isJust res = fromJust res
             `_p` ("T2 unwraping int", [res])
         where res = getLit ele
@@ -268,7 +268,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
         -- FIXME this method is seems to work by unwraping the singeton matrix of a int
         -- but this should not be really needed
-        handle ts2@[TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
+        handle [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
             | isJust res = fromJust res
                 `_p` ("T2 unwraping int", [res])
             where res = getLit ele
@@ -630,7 +630,7 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
 -- fixes mutiMatixMatixTupleComplex3Simpler5 (o85) and mutiMatixMatixTupleComplex3Simpler4
 --
 toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
-    let res  = zipWith (\t e -> toEssenceRep (TagSingle "matrix": t ) e ) ( ts) vs
+    let res  = zipWith (\t f -> toEssenceRep (TagSingle "matrix": t ) f )  ts vs
         res' = [xMake| value.tuple.values := res |]
     in res'
     `_p` ("T value.tuples.value res'",  [res'])
