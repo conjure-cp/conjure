@@ -627,6 +627,18 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
     `_e` ("T values.value args", [e])
     `_f` ("T values.value ts", r)
 
+-- fixes mutiMatixMatixTupleComplex3Simpler5 (o85) and mutiMatixMatixTupleComplex3Simpler4
+--
+toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
+    let res  = zipWith (\t e -> toEssenceRep (TagSingle "matrix": t ) e ) ( ts) vs
+        res' = [xMake| value.tuple.values := res |]
+    in res'
+    `_p` ("T value.tuples.value res'",  [res'])
+    `_p` ("T value.tuples.value res",  res)
+    `_p` ("T value.tuples.value vs",  vs)
+    `_p` ("T value.tuples.value args", [e])
+    `_f` ("T value.tuples.value ts", r)
+
 
 toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] = 
     let mappings =  map (func ins tos) arr
