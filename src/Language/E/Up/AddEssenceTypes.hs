@@ -90,6 +90,13 @@ reTuple :: Int -> E -> E
 reTuple  0 e = e
 reTuple  n e = reTuple (n-1) [xMake| value.tuple.values := [e]|]
 
+
+getLit :: E -> Maybe E
+getLit [xMatch| [ele] := value.matrix.values |] =  (getLit ele)
+getLit f@[xMatch| _ := value.literal |]  = Just f
+getLit _ = Nothing
+
+
 toEssenceRep :: [TagT] -> E -> E
 
 -- To handles singeton tuples
@@ -225,10 +232,17 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     where
 
     func :: [TagT] ->  E -> E
+    
+    -- FIXME this method is seems to work by unwraping the singeton matrix of a int
+    -- but this should not be really needed
+    func ts2@[TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
+        | isJust res = fromJust res
+            `_p` ("T2 unwraping int", [res])
+        where res = getLit ele
 
-    func _  [xMatch| [ele] := value.matrix.values |] = ele
-        `_p` ("func mat", [ele])
-        `_p` ("M T func e",[e])
+    func ts2  [xMatch| [ele] := value.matrix.values |] = ele
+        `_p` ("M T func mat", [ele])
+        `_f` ("M T func mat ts",ts2)
 
     func r@[TagTuple ts1]   e1@[xMatch| vs1 := value.tuple.values |] =
         let
@@ -251,6 +265,13 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             `_p` (" T2 handle res'",[res'])
             `_p` (" T2 handle e",[_e])
             `_f` (" T2 handle r",_r)
+
+        -- FIXME this method is seems to work by unwraping the singeton matrix of a int
+        -- but this should not be really needed
+        handle ts2@[TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
+            | isJust res = fromJust res
+                `_p` ("T2 unwraping int", [res])
+            where res = getLit ele
 
         handle _ts _e = _e
             `_k` ("t2 not handled", (_ts,[_e]))
@@ -456,7 +477,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_f` ("prePro CT ts", r)
         `_p` ("prePro CT vs",  [e1])
         `_f` ("prePro CT ts", r)
-
 
     --prePro ts e = erri (ts, [e])
     prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
