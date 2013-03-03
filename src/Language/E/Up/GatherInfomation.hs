@@ -10,6 +10,7 @@ module Language.E.Up.GatherInfomation(
 
 import Language.E
 import Language.E.Up.Data
+import Language.E.Up.Debug
 
 import qualified Data.Text as T
 import qualified Data.Map as M
@@ -45,6 +46,7 @@ getBounds e = case  getBounds' e of
     getBounds' [[xMatch| f := domain.matrix.inner |]] = getBounds' f
     getBounds' [[xMatch| f := domain.int |]] = f
     getBounds' [[xMatch| _ := domain.bool |]] = [Tagged "bool" []]
+    getBounds' es = errpM "GatherInfomation: getBounds'" es
 
 
 getIndexes :: [E]  -> [[Integer]]
@@ -68,7 +70,9 @@ getRange [Tagged "ranges" arr] =
     getRange' [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = [a..b]
     getRange' [xMatch| [Prim (I a)] := range.single.value.literal |] = [a]
     getRange' [xMatch| [Prim (I a)] := range.single.unaryOp.negate.value.literal |] = [-a]
+    getRange' e = errpM "GatherInfomation: getRange'" [e]
 
+getRange e = errpM "GatherInfomation: getRange" e
 
 getEssenceVariables :: Spec -> M.Map String [TagT]
 getEssenceVariables (Spec _ xs) =  
