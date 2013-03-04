@@ -23,6 +23,13 @@ readSpecFromStdIn = do
     handleInIOSingle =<<
         runCompEIOSingle errorMsg (readSpec ("<STDIN>", pack stdin))
 
+readSpecPreambleFromFile :: FilePath -> IO Spec
+readSpecPreambleFromFile fp = do
+    let errorMsg = "Error while parsing file."
+    pair <- pairWithContents fp
+    handleInIOSingle =<<
+        runCompEIOSingle errorMsg (readSpecPreamble pair)
+
 
 readSpec :: MonadConjure m
     => (FilePath, Text)
