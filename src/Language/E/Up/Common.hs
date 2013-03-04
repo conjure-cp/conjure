@@ -16,7 +16,7 @@ import Language.E.Up.Debug
 transposeE :: [E] -> [E]
 -- transposeE e | 1 == 3  `_p` ("tranposeE args", e ) = undefined
 
-transposeE arr  |  all isLiteral arr =
+transposeE arr  |  all (not . isLiteral) arr =
     let arr2D = map tranposeCheck arr
         res = L.transpose arr2D
     in  map (\ele -> [xMake| value.matrix.values := ele |] ) res
@@ -46,8 +46,8 @@ convertTuples (e) = e
 
 
 isLiteral ::  E -> Bool
-isLiteral [xMatch| _ := value.literal |] = False
-isLiteral  _ = True
+isLiteral [xMatch| _ := value.literal |] = True
+isLiteral  _ = False
 
 
 unwrapExpr ::  E -> E
