@@ -524,6 +524,23 @@ typeOf p@[eMatch| &a - &b |] = do
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
+                |] | operator `elem` T.words "subset subsetEq supset supsetEq" = do
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        ( [xMatch| [aInner] := type. set.inner |] , [xMatch| [bInner] := type. set.inner |] ) ->
+            if typeUnify aInner bInner
+                then return tyBool
+                else typeErrorIn p
+        ( [xMatch| [aInner] := type.mset.inner |] , [xMatch| [bInner] := type.mset.inner |] ) ->
+            if typeUnify aInner bInner
+                then return tyBool
+                else typeErrorIn p
+        _ -> typeErrorIn p
+
+typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
+                | [a] := binOp.left
+                | [b] := binOp.right
                 |] | operator `elem` T.words "+ - * / % **" = do
     tya <- typeOf a
     tyb <- typeOf b
