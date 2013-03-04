@@ -59,12 +59,14 @@ function perModelperParam {
         --in-essence-param $PARAM.param                                     \
         --out-eprime-param $MODEL-$PARAM.eprime-param
 
+    echo "savilerow for $SPEC $MODEL $PARAM"
     savilerow                                                               \
         -in-eprime    $MODEL.eprime                                         \
         -in-param     $MODEL-$PARAM.eprime-param                            \
         -out-minion   $MODEL-$PARAM.eprime-minion                           \
         -out-solution $MODEL-$PARAM.eprime-solution
 
+    echo "translateSolution for $SPEC $MODEL $PARAM"
     conjure                                                                 \
         --mode translateSolution                                            \
         --in-essence            $SPEC.essence                               \
@@ -77,6 +79,7 @@ function perModelperParam {
     SOL_VALIDATE=0
     SOL_DIFF=0
 
+    echo "validateSolution for $SPEC $MODEL $PARAM"
     conjure                                                                 \
         --mode validateSolution                                             \
         --in-essence  $SPEC.essence                                         \
@@ -85,6 +88,7 @@ function perModelperParam {
     SOL_VALIDATE=$?
 
     if [ -f "$PARAM.solution" ] ; then
+        echo "diffSolution for $SPEC $MODEL $PARAM"
         conjure                                                             \
             --mode diff                                                     \
             $PARAM.solution                                                 \
