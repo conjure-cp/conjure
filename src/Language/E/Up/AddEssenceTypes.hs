@@ -55,6 +55,10 @@ isTagMatrix :: TagT -> Bool
 isTagMatrix (TagSingle "matrix") = True
 isTagMatrix _ = False
 
+isTagTuple :: TagT -> Bool
+isTagTuple (TagTuple _) = True
+isTagTuple _ = False
+
 isNestedTuple :: [TagT] -> E ->  Maybe (Int, [TagT], E)
 isNestedTuple [ TagTuple [  ts@(TagSingle _:_) ] ]
               [xMatch| [vs2] := value.tuple.values|] =
@@ -232,10 +236,10 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     where
 
     func :: [TagT] ->  E -> E
-    
+
     -- FIXME this method is seems to work by unwraping the singeton matrix of a int
     -- but this should not be really needed
-    func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
+    func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
         | isJust res = fromJust res
             `_p` ("T2 unwraping int", [res])
         where res = getLit ele
@@ -268,7 +272,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
         -- FIXME this method is seems to work by unwraping the singeton matrix of a int
         -- but this should not be really needed
-        handle [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |] 
+        handle [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
             | isJust res = fromJust res
                 `_p` ("T2 unwraping int", [res])
             where res = getLit ele
@@ -277,7 +281,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             `_k` ("t2 not handled", (_ts,[_e]))
 
     -- FIXME for o92 /o9
-    -- removed the matrix around ts1 with no ill and postive effect 
+    -- removed the matrix around ts1 with no ill and postive effect
     func ts1  e1@[xMatch| vs1 := value.tuple.values |] =
         let
             vs2 = map unwrapSingleMatrix vs1
@@ -398,7 +402,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     -- for innerMutiMatixMatixTuple and tupley32-8-6  e.g singleton matrix
     wrapper arr | all isLit arr =  wrapInTuple   arr
     wrapper arr = (wrapInMatrix .  map matrixToTupleMaybe)  arr
-        `_p` ("wrapper",arr)
+        `_p` ("NB T wrapper",arr)
 
     --wrapper arr = errb arr
 
@@ -434,7 +438,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
 
         where
         val = isNestedTuple [ts1] vs1
-   
+
     --  seem good  guard for tmm3
     prePro ts1@[TagSingle "matrix", TagTuple _] e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
         let res = toEssenceRep  (TagSingle "matrix": ts1) e1
@@ -456,6 +460,18 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_f` ("prePro CT ts", r)
         `_p` ("prePro CT vs",  [e1])
         `_f` ("prePro CT ts", r)
+
+    -- FIXME mostly fixes c1 
+    -- ints more nested then they should be
+    prePro r@[TagTuple tss] f@[xMatch| vs2 := value.tuple.values |] =
+        let res   = zipWith (\z -> toEssenceRep (TagSingle "matrix":z)  ) tss vs2
+            res2  = map (\h -> wrapInMatrix [h]) res
+            res'  = [xMake| value.tuple.values := res |]
+        in  res'
+        `_p` ("prePro TV res'", [res'])
+        `_p` ("prePro TV res", [res])
+        `_p` ("prePro TV e",  [f])
+        `_f` ("prePro TV ts", r)
 
     --prePro ts e = erri (ts, [e])
     prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
@@ -519,14 +535,18 @@ toEssenceRep r@[TagSingle "matrix", TagTuple ts ]
         `_f` ("V M T values.value.tuple.values ts ", ts)
 
 
-toEssenceRep (TagSingle t :ts)  [xMatch| [vals] := value.matrix |] =
+toEssenceRep r@(TagSingle t :ts)  [xMatch| [vals] := value.matrix |] |
+    t /= "int" =
     let vals' = toEssenceRep ts vals in
         [xMake| value := [Tagged t [vals'] ] |]
         `_p` ("S value.matrix v vals'", unwrapValues vals')
         `_p` ("S value.matrix v args",  unwrapValues vals)
         `_f` ("S value.matrix ts", ts)
+        `_f` ("S value.matrix tags", r)
 
-toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  =
+-- FIXME seprate relation and partion from tagsingle
+toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
+    t /= "int" =
     let vals' = map er arr
     in  [xMake| values := vals'|]
         `_p` ("S values.value res",vals')
@@ -624,14 +644,14 @@ toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
     `_f` ("T value.tuples.value ts", r)
 
 
-toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] = 
+toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
     let mappings =  map (func ins tos) arr
     in  [xMake| value.function.values := mappings |]
 
     `_p` ("F mapping", arr)
     `_f` ("F ts", r)
 
-    where 
+    where
     func ins' tos' [xMatch| [a,b] := mapping |] =
        let a' = unwrapExpr $ toEssenceRep ins'  (wrapInExpr [a])
            b' = unwrapExpr $ toEssenceRep tos'  (wrapInExpr [b])
@@ -646,6 +666,13 @@ toEssenceRep r e@[xMatch| [val] := expr |] =
 
 toEssenceRep [TagSingle "int"] e@[xMatch|  [Prim (I _)] := value.literal |] = e
     `_p` ("toEssenceRep Int ", [e])
+
+-- FIXME this method is seems to work by unwraping the singeton matrix of a int
+-- but this should not be really needed
+{-toEssenceRep [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]-}
+    {-| isJust res = fromJust res-}
+        {-`_p` ("toEssenceRep unwraping int", [res])-}
+    {-where res = getLit ele-}
 
 toEssenceRep r e =
     e
