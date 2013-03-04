@@ -11,11 +11,11 @@ For each test case, create a directory, put:
 
 To run an individual test:
  * cd DIR
- * bash ../test_single.sh CONJURE_MODE
+ * bash path/to/test_single.sh CONJURE_MODE
 
 
 To run all tests:
- * bash test_all.sh
+ * bash path/to/test_all.sh full/path/to/fast-or-slow CONJURE_MODE1 CONJURE_MODE2 ...
  * by default, the above script will use all CPU cores.
    (`export PARALLEL="-j2"` to control the number of parallel executions.)
 
