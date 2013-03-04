@@ -1,0 +1,15 @@
+
+[1000]
+
+$ when it is in `apply` form
+
+(&f(&x))(&y)
+
+    ~~>
+
+sum i in toSet(&f), i[1] = &x
+                  . i[2](&y)
+
+    where &f hasType `function _ --> (function _ --> int)`
+    where &f hasRepr AsReln
+

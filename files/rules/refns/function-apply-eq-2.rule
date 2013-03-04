@@ -1,0 +1,7 @@
+
+[1000]
+
+&y = &f(&x) ~~> forAll i in toSet(&f) , i[1] = &x . i[2] = &y
+
+    where &f hasType `function _ --> _`
+
