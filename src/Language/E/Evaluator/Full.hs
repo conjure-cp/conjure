@@ -125,6 +125,33 @@ fullEvaluator [eMatch| &a != &b |]
     , [xMatch| bs := value.set.values |] <- b
     = returnBool (sortNub as /= sortNub bs)
 
+
+fullEvaluator [eMatch| &a subset &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.set.values |] <- a
+    , [xMatch| bs := value.set.values |] <- b
+    = returnBool (sortNub as /= sortNub bs && and [ i `elem` bs | i <- as ])
+fullEvaluator [eMatch| &a subsetEq &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.set.values |] <- a
+    , [xMatch| bs := value.set.values |] <- b
+    = returnBool $ and [ i `elem` bs | i <- as ]
+fullEvaluator [eMatch| &b supset &a |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.set.values |] <- a
+    , [xMatch| bs := value.set.values |] <- b
+    = returnBool (sortNub as /= sortNub bs && and [ i `elem` bs | i <- as ])
+fullEvaluator [eMatch| &b supsetEq &a |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.set.values |] <- a
+    , [xMatch| bs := value.set.values |] <- b
+    = returnBool $ and [ i `elem` bs | i <- as ]
+
+
 fullEvaluator
     [xMatch| [x] := operator.twoBars
            | xs  := operator.twoBars.value.set.values
