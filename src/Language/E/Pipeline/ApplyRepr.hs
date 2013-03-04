@@ -174,18 +174,21 @@ addChannellingFromLog (Spec v xs) = do
                 $ sortBy (comparing fst)
                 $ nub
                   [ (nm, reprName) | (nm, reprName, origDecl, _) <- rlogs
-                                   , isGiven origDecl
+                                   , isFind origDecl
                                    ]
 
-    let newCons = [ [ [xMake| topLevel.suchThat := [theCons] |]
-                    | ((nm1,r1),(nm2,r2)) <- allPairs one
-                    , let x1 = [xMake| reference := [ Prim $ S $ mconcat [nm1, "#", r1] ] |]
-                    , let x2 = [xMake| reference := [ Prim $ S $ mconcat [nm2, "#", r2] ] |]
-                    , let [y1,y2] = sort [x1,x2]
-                    , let theCons = [eMake| &y1 = &y2 |]
-                    ]
-                  | one <- grouped
-                  ]
+    let newCons = sortNub $ concat
+            [ [ [xMake| topLevel.suchThat := [theCons] |]
+              | ((nm1,r1),(nm2,r2)) <- allPairs one
+              , let x1 = [xMake| reference := [ Prim $ S $ mconcat [nm1, "#", r1] ] |]
+              , let x2 = [xMake| reference := [ Prim $ S $ mconcat [nm2, "#", r2] ] |]
+              , let [y1,y2] = sort [x1,x2]
+              , let theCons = [eMake| &y1 = &y2 |]
+              ]
+            | one <- grouped
+            ]
+
+    mapM_ (mkLog "addedChannel" . pretty) newCons
 
     let
         insertAfter _         [] = []
@@ -216,7 +219,7 @@ addChannellingFromLog (Spec v xs) = do
     newDecls' <- mapM (\ (i,j) -> do j' <- liftM fst $ runWriterT $ simplify j ; return (i,j')) newDecls
     mapM_ (introduceStuff . snd) newDecls'
 
-    newCons'  <- mapM (liftM fst . runWriterT . simplify) (concat newCons)
+    newCons'  <- mapM (liftM fst . runWriterT . simplify) newCons
 
     mapM_ (mkLog "addedDecl" . pretty . snd) newDecls'
 
