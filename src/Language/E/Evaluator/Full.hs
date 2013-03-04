@@ -137,6 +137,17 @@ fullEvaluator
     | all isFullyInstantiated xs
     = returnBool $ length xs == length (nub xs)
 
+fullEvaluator
+    [eMatch| max(&a,&b) |]
+    | [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    = returnInt $ if a' > b' then a' else b'
+
+fullEvaluator
+    [eMatch| min(&a,&b) |]
+    | [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    = returnInt $ if a' < b' then a' else b'
 
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.left.emptyGuard
