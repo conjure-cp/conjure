@@ -165,6 +165,10 @@ instance Pretty E where
         = Pr.parens $ pretty a <+> ":" <+> pretty b
 
 
+    pretty [xMatch| [thingy] := expr |]
+        =  pretty thingy
+
+
 -- type.*
     pretty [xMatch| [ ] := type.unknown    |] = "?"
     pretty [xMatch| [ ] := type.bool       |] = "bool"

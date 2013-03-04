@@ -434,22 +434,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
 
         where
         val = isNestedTuple [ts1] vs1
-
-
-    --Add a case for  nestedSingleton2ma- (nsm2)
-    {-prePro (r@[TagTuple [ts] ], e@[xMatch| [_]  := value.tuple.values-}
-                                         {-|  vs  := value.tuple.values.value.matrix.values|] )=-}
-        {-let res     = transposeE vs-}
-            {-wrapped = wrapInTuple [wrapInMatrix res]-}
-        {-in wrapped-}
-        {-in error "dd"-}
-        {-`_p` ("prepro nsm2 wrapped", [wrapped] )-}
-        {-`_p` ("prepro nsm2 res", [res])-}
-        {-`_p` ("prepro nsm2 vs", vs)-}
-        {-`_p` ("prepro nsm2 e", [e])-}
-        {-`_f` ("prepro nsm2 r", [r])-}
-
-
+   
     --  seem good  guard for tmm3
     prePro ts1@[TagSingle "matrix", TagTuple _] e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
         let res = toEssenceRep  (TagSingle "matrix": ts1) e1
@@ -628,7 +613,6 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
     `_f` ("T values.value ts", r)
 
 -- fixes mutiMatixMatixTupleComplex3Simpler5 (o85) and mutiMatixMatixTupleComplex3Simpler4
---
 toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
     let res  = zipWith (\t f -> toEssenceRep (TagSingle "matrix": t ) f )  ts vs
         res' = [xMake| value.tuple.values := res |]
