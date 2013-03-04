@@ -132,6 +132,11 @@ fullEvaluator
     | isFullyInstantiated x
     = returnInt (genericLength $ sortNub xs)
 
+fullEvaluator
+    [xMatch| xs := operator.allDiff.value.matrix.values |]
+    | all isFullyInstantiated xs
+    = returnBool $ length xs == length (nub xs)
+
 
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator
                      | [ ] := binOp.left.emptyGuard
