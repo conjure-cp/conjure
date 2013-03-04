@@ -9,7 +9,7 @@ import qualified Data.HashMap.Strict as M
 import Paths_conjure_cp ( getBinDir )
 import Conjure.Mode
 import Language.E
-import Language.E.Pipeline.ReadIn ( readSpecFromStdIn, readSpecFromFile, writeSpec, dropExtEssence )
+import Language.E.Pipeline.ReadIn ( readSpecFromStdIn, readSpecFromFile, readSpecPreambleFromFile, writeSpec, dropExtEssence )
 
 import Language.E.NormaliseSolution ( normaliseSolution )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
@@ -46,9 +46,9 @@ runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
             unless ( sort (statementAsList in1) == sort (statementAsList in2) )
                 $  error "Files differ."
         helper (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutParam) = do
-            inEssence <- readSpecFromFile pathInEssence
+            inEssence <- readSpecPreambleFromFile pathInEssence
             inParam   <- readSpecFromFile pathInParam
-            inEprime  <- readSpecFromFile pathInEprime
+            inEprime  <- readSpecPreambleFromFile pathInEprime
             inLogs    <- T.readFile (pathInEprime ++ ".logs")
             driverConjureSingle False pathOutParam
                 [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]

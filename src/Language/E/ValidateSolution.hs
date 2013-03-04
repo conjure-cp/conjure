@@ -15,7 +15,7 @@ type Param    = Maybe Spec
 type Solution = Spec
 
 validateSolution :: Essence -> Param -> Solution -> IO ()
-validateSolution essence param solution = do
+validateSolution essence@(Spec language _) param solution = do
     let (mresult, _logs) = runCompESingle "validating solution" helper
     printLogs _logs
     case mresult of
@@ -24,8 +24,6 @@ validateSolution essence param solution = do
         Right True  -> return ()
 
     where
-        Spec language essenceStmt = essence
-
         getDecls (Spec _ x) =
             [ (nm, dom)
             | [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference
@@ -64,28 +62,34 @@ validateSolution essence param solution = do
                 Spec _ s        -> mapM_ introduceStuff (statementAsList s)
             -- bindersDoc >>= mkLog "binders 2"
 
+            lettingsInlined <- inlineLettings essence
+            -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
+
             let declsStripped = Spec language $ listAsStatement
                     [ i
-                    | i <- statementAsList essenceStmt
+                    | let Spec _ stmt = lettingsInlined
+                    , i <- statementAsList stmt
                     , case i of
-                        [xMatch| _ := topLevel.declaration|] -> False
+                        [xMatch| _ := topLevel.declaration |] -> False
                         _ -> True
                     ]
-            lettingsInlined <- inlineLettings declsStripped
+            -- mkLog "debug stripped"           (pretty declsStripped)
+
+
             fullyInlined    <- do bs <- gets binders
                                   typesMap <- fmap M.fromList
-                                        $ forM (getDecls essence)
+                                        $ forM (getDecls lettingsInlined)
                                         $ \ (nm, dom) -> do
                                             itsType <- typeOf dom
                                             return (nm, itsType)
                                   let bindingsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
-                                  return $ inliner typesMap bindingsMap lettingsInlined
+                                  return $ inliner typesMap bindingsMap declsStripped
+            -- mkLog "debug fullyInlined"       (pretty fullyInlined)
+
             Spec _ s <- fullyEvaluate fullyInlined
             -- simplified@(Spec _ s) <- fullyEvaluate fullyInlined
-            -- mkLog "debug stripped"           (pretty declsStripped)
-            -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
-            -- mkLog "debug fullyInlined"       (pretty fullyInlined)
             -- mkLog "debug simplified"         (pretty simplified)
+
             let checks = map isPartOfValidSolution (statementAsList s)
             if all isJust checks
                 then return (and $ catMaybes checks)
@@ -94,6 +98,8 @@ validateSolution essence param solution = do
                                                  , prettyAsTree s
                                                  , prettyAsPaths s
                                                  ]
+
+
 isPartOfValidSolution :: E -> Maybe Bool
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.suchThat.value.literal |] = Just b
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.where   .value.literal |] = Just b

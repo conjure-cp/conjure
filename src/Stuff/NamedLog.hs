@@ -68,9 +68,12 @@ suppress = S.fromList
     , "Evaluator.stripUnnecessaryTyped"
     , "Evaluator.unrollQuantifiers"
     , "Simplify"
+
     , "missing:relationRepr"
     , "missing:mostKnown"
     , "missing:domainOf"
+
+    , "gensym"
 
     , "builtIn.relationRepr"
     , "builtIn.relationApply"

@@ -314,6 +314,12 @@ compareChain []      = EQ
 
 domOrder :: E -> E -> Ordering
 domOrder
+    [xMatch| _ := domain.bool |]
+    [xMatch| _ := domain.bool |] = EQ
+domOrder
+    [xMatch| _ := domain.int |]
+    [xMatch| _ := domain.int |] = EQ
+domOrder
     [xMatch| [indexA] := domain.matrix.index
            | [innerA] := domain.matrix.inner
            |]

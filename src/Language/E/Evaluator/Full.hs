@@ -18,6 +18,9 @@ import                Language.E.Evaluator.DataAboutQuantifiers
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
+fullEvaluator [xMatch| [Prim (I n)] := unaryOp.negate.value.literal
+                     |] = returnInt (-n)
+
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
                      | [Prim (I a)  ] := binOp.left .value.literal
                      | [Prim (I b)  ] := binOp.right.value.literal
@@ -128,6 +131,11 @@ fullEvaluator
            |]
     | isFullyInstantiated x
     = returnInt (genericLength $ sortNub xs)
+
+fullEvaluator
+    [xMatch| xs := operator.allDiff.value.matrix.values |]
+    | all isFullyInstantiated xs
+    = returnBool $ length xs == length (nub xs)
 
 
 fullEvaluator [xMatch| [Prim (S "/\\")] := binOp.operator

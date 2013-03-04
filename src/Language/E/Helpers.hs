@@ -138,11 +138,12 @@ isFullyInstantiated :: E -> Bool
 isFullyInstantiated (Prim (I _)) = True
 isFullyInstantiated (Prim (B _)) = True
 isFullyInstantiated [xMatch| [x] := value.literal          |] = isFullyInstantiated x
+isFullyInstantiated [xMatch| xs  := value.matrix   .values |] = all isFullyInstantiated xs
+isFullyInstantiated [xMatch| xs  := value.tuple    .values |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := value.set      .values |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := value.mset     .values |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := value.function .values |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := value.relation .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.tuple    .values |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := value.partition.values |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := mapping |] = all isFullyInstantiated xs
 isFullyInstantiated [xMatch| xs  := part    |] = all isFullyInstantiated xs
