@@ -85,6 +85,7 @@ suppress = S.fromList
     -- , "representation"
     -- , "addedDecl"
     -- , "addedStructuralCons"
+    -- , "addedChannel"
 
     -- process indicators for conjure-refn, uncomment if you want to suppress
     -- , "applied"
