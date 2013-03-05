@@ -4,6 +4,7 @@ module Language.E.Up.AddEssenceTypes(
     toEssenceRep
     ,wrapInMatrix
     ,unwrapMatrix
+    ,flattenInt
 )where
 
 import Language.E
@@ -239,11 +240,12 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
     -- FIXME this method is seems to work by unwraping the singeton matrix of a int
     -- but this should not be really needed
-    func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
+{-
+func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
         | isJust res = fromJust res
             `_p` ("T2 unwraping int", [res])
         where res = getLit ele
-
+-}
     func ts2  [xMatch| [ele] := value.matrix.values |] = ele
         `_p` ("M T func mat", [ele])
         `_f` ("M T func mat ts",ts2)
@@ -272,10 +274,12 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
         -- FIXME this method is seems to work by unwraping the singeton matrix of a int
         -- but this should not be really needed
+{-
         handle [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
             | isJust res = fromJust res
                 `_p` ("T2 unwraping int", [res])
             where res = getLit ele
+-}
 
         handle _ts _e = _e
             `_k` ("t2 not handled", (_ts,[_e]))
@@ -461,7 +465,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_p` ("prePro CT vs",  [e1])
         `_f` ("prePro CT ts", r)
 
-    -- FIXME mostly fixes c1 
+    -- FIXME mostly fixes c1
     -- ints more nested then they should be
     prePro r@[TagTuple tss] f@[xMatch| vs2 := value.tuple.values |] =
         let res   = zipWith (\z -> toEssenceRep (TagSingle "matrix":z)  ) tss vs2
@@ -658,24 +662,39 @@ toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = error "AddEssenceTypes: toEssenceRep function error"
 
-toEssenceRep r e@[xMatch| [val] := expr |] =
-    let res = toEssenceRep r val
-    in [xMake| expr := [res] |]
-        `_k` ("expr", (r, [e]) )
 
 
 toEssenceRep [TagSingle "int"] e@[xMatch|  [Prim (I _)] := value.literal |] = e
     `_p` ("toEssenceRep Int ", [e])
 
--- FIXME this method is seems to work by unwraping the singeton matrix of a int
--- but this should not be really needed
-{-toEssenceRep [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]-}
-    {-| isJust res = fromJust res-}
-        {-`_p` ("toEssenceRep unwraping int", [res])-}
-    {-where res = getLit ele-}
+
+toEssenceRep r e@[xMatch| [val] := expr |] =
+    let res  = toEssenceRep r val
+        res2 = flattenInt r res
+    in [xMake| expr := [res2] |]
+        `_k` ("expr", (r, [e]) )
 
 toEssenceRep r e =
     e
     `_p` ("toEssenceRep no match vs",  [e])
     `_f` ("toEssenceRep no match ts", r)
 
+
+-- FIXME  should not be needed
+-- flattens [[1]]  when it is ment to be just 1
+flattenInt :: [TagT] -> E -> E
+flattenInt [TagSingle "int"]  e@[xMatch| [ele] := value.matrix.values |]
+    | isJust res = fromJust res
+        `_p` ("toEssenceRep unwraping int res", [res])
+        `_p` ("toEssenceRep unwraping int e", [e])
+    where res = getLit ele
+
+flattenInt  (TagSingle "matrix":ts) [xMatch| vs := value.matrix.values |] =
+    let res = map (flattenInt ts) vs
+    in  [xMake| value.matrix.values := res |]
+
+flattenInt  [TagTuple ts] [xMatch| vs := value.tuple.values |] =
+    let res = zipWith flattenInt ts vs
+    in  [xMake| value.tuple.values := res |]
+
+flattenInt _  e = e
