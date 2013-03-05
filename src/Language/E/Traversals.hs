@@ -285,12 +285,13 @@ introduceStuff = helper
         helper x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] =
             let (base, _, _) = identifierSplit name in addReference base x
 
-        helper x@[xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+        helper   [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
                         | xs            := topLevel.letting.typeEnum.values
                         |] = do
-            addReference nm x
+            let ty = [xMake| type.enum := [Prim (S nm)] |]
+            addReference nm ty
             forM_ xs $ \ y -> case y of
-                [xMatch| [Prim (S nm')] := reference |] -> addReference nm' x
+                [xMatch| [Prim (S nm')] := reference |] -> addReference nm' ty
                 _ -> return ()
 
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
