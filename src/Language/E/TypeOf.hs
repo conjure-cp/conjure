@@ -37,8 +37,18 @@ typeCheckSpec (Spec _ x) = withBindingScope' $
 typeUnify :: E -> E -> Bool
 typeUnify [xMatch| _ := type.unknown |] _ = True
 typeUnify _ [xMatch| _ := type.unknown |] = True
-typeUnify [xMatch| [] := type.bool |] [xMatch| [] := type.bool |] = True
-typeUnify [xMatch| [] := type.int  |] [xMatch| [] := type.int  |] = True
+typeUnify
+    [xMatch| [] := type.bool |]
+    [xMatch| [] := type.bool |]
+    = True
+typeUnify
+    [xMatch| [] := type.int  |]
+    [xMatch| [] := type.int  |]
+    = True
+typeUnify
+    [xMatch| [Prim (S a)] := type.enum |]
+    [xMatch| [Prim (S b)] := type.enum |]
+    = a == b
 typeUnify
     [xMatch| [a1] := type.matrix.index
            | [b1] := type.matrix.inner
@@ -168,6 +178,9 @@ typeOf [xMatch| [d] := topLevel.declaration.find .domain  |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.given.domain  |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.dim  .domain  |] = typeOf d
 typeOf [xMatch| [ ] := topLevel.declaration.given.typeInt |] = return tyInt
+typeOf [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+              | _             := topLevel.letting.typeEnum
+              |] = return [xMake| type.enum := [Prim (S nm)] |]
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
 
@@ -185,6 +198,9 @@ typeOf [xMatch| [lhs] := domain.binOp.left
 
 typeOf [xMatch| _ := domain.bool |] = return tyBool
 typeOf [xMatch| _ := domain.int  |] = return [xMake| type.int  := [] |]
+
+typeOf [xMatch| [Prim (S nm)] := domain.enum.name.reference
+              |] = return [xMake| type.enum := [Prim (S nm)] |]
 
 typeOf [xMatch| [index] := domain.matrix.index
               | [inner] := domain.matrix.inner
