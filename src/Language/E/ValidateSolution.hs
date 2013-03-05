@@ -5,9 +5,11 @@ module Language.E.ValidateSolution ( validateSolution ) where
 import qualified Data.HashMap.Strict as M
 
 import Language.E
-import Language.E.Pipeline.InlineLettings
-import Language.E.Pipeline.ExplodeStructuralVars
-import Language.E.Pipeline.AtMostOneSuchThat
+import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
+import Language.E.Pipeline.HandlingEnums ( handleEnums )
+import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
+import Language.E.Pipeline.InlineLettings ( inlineLettings )
 
 
 type Essence  = Spec
@@ -62,7 +64,14 @@ validateSolution essence@(Spec language _) param solution = do
                 Spec _ s        -> mapM_ introduceStuff (statementAsList s)
             -- bindersDoc >>= mkLog "binders 2"
 
-            lettingsInlined <- inlineLettings essence
+            let pipeline0 =
+                        recordSpec >=> explodeStructuralVars
+                    >=> recordSpec >=> handleEnums
+                    >=> recordSpec >=> handleUnnameds
+                    >=> recordSpec >=> inlineLettings
+
+
+            lettingsInlined <- pipeline0 essence
             -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
 
             let declsStripped = Spec language $ listAsStatement

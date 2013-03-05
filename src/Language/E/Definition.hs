@@ -100,6 +100,9 @@ listAsStatement (x:xs) = [xMake| statement.this := [x]
 
 statementAsList :: E -> [E]
 statementAsList [xMatch| _ := statementEOF |] = []
+statementAsList [xMatch| []     := statement.this.statementEOF
+                       | [next] := statement.next
+                       |] = statementAsList next
 statementAsList [xMatch| [this] := statement.this
                        | [next] := statement.next
                        |] = this : statementAsList next

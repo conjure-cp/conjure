@@ -285,6 +285,14 @@ introduceStuff = helper
         helper x@[xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference |] =
             let (base, _, _) = identifierSplit name in addReference base x
 
+        helper x@[xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+                        | xs            := topLevel.letting.typeEnum.values
+                        |] = do
+            addReference nm x
+            forM_ xs $ \ y -> case y of
+                [xMatch| [Prim (S nm')] := reference |] -> addReference nm' x
+                _ -> return ()
+
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [ x ]           := topLevel.letting.expr           |] = addReference name x
         helper   [xMatch| [Prim (S name)] := topLevel.letting.name.metavar

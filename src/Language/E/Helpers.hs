@@ -65,6 +65,7 @@ inQuan quan quanVar quanOverDom (guard,body) =
 inForAlls :: [(Text,E)] -> (E,E) -> E
 inForAlls = inQuans "forAll"
 
+-- inQuans quanStr [(quanVar,quanOverDom)] -> (guard,body)
 inQuans :: Text -> [(Text,E)] -> (E,E) -> E
 inQuans quan = go . reverse
     where

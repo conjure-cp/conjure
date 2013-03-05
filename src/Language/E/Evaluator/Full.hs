@@ -436,6 +436,51 @@ unrollQuantifiers [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
+unrollQuantifiers
+    [xMatch| [Prim (S quanStr)] := quantified.quantifier.reference
+           | [quanVar]          := quantified.quanVar.structural.single
+           | as                 := quantified.quanOverDom.domain.set.attributes.attrCollection
+           | [a,b]              := quantified.quanOverDom.domain.set.inner.domain.int.ranges.range.fromTo
+           | []                 := quantified.quanOverOp
+           | []                 := quantified.quanOverExpr
+           | [guard]            := quantified.guard
+           | [body ]            := quantified.body
+           |]
+    | [xMatch| [Prim (I a')] := value.literal |] <- a
+    , [xMatch| [Prim (I b')] := value.literal |] <- b
+    = do
+    let lookupAttribute attr ( [xMatch| [Prim (S attr')] := attribute.nameValue.name.reference
+                                      | [val]            := attribute.nameValue.value
+                                      |] : _ )
+                    | attr == attr' = Just val
+        lookupAttribute attr (_:rest) = lookupAttribute attr rest
+        lookupAttribute _ [] = Nothing
+
+    let predicateSize = case lookupAttribute "size" as of
+            Just [xMatch| [Prim (I i)] := value.literal |] -> (i ==)
+            _ -> const True
+    let predicateMinSize = case lookupAttribute "minSize" as of
+            Just [xMatch| [Prim (I i)] := value.literal |] -> (i <=)
+            _ -> const True
+    let predicateMaxSize = case lookupAttribute "maxSize" as of
+            Just [xMatch| [Prim (I i)] := value.literal |] -> (i >=)
+            _ -> const True
+    let sets = map (\ xs -> [xMake| value.set.values := xs |] )
+             $ map (map (\ x -> [xMake| value.literal := [Prim (I x)] |] ))
+             $ filter (predicateSize    . genericLength)
+             $ filter (predicateMinSize . genericLength)
+             $ filter (predicateMaxSize . genericLength)
+             $ subsequences [a'..b']
+    xs <- forM sets $ \ n -> do
+        newGuard <- evalReplace [eMake| &guard { &quanVar --> &n } |]
+        newBody  <- evalReplace [eMake| &body  { &quanVar --> &n } |]
+        case (newGuard, newBody) of
+            (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
+            _ -> return Nothing
+    y <- unrollQuantifier quanStr (catMaybes xs)
+    mkLog "debug0" $ vcat $ map pretty sets
+    mkLog "debug1" $ pretty y
+    ret y
 unrollQuantifiers _ = return Nothing
 
 returnBool :: MonadConjure m => Bool -> m (Maybe (E,[Binder]))

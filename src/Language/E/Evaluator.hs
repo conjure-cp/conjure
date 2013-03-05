@@ -41,7 +41,7 @@ fullySimplifySpec = liftM fst . runWriterT . bottomUpSpec s
         s x = do
             (y, (Any flag, _)) <- listen $ pipeline x
             if flag
-                then simplify y
+                then s y
                 else return x
             where
                 pipeline =  bottomUpE (mkIdempotent allCombinedDoFirst)

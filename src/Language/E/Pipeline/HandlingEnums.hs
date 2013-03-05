@@ -28,6 +28,9 @@ handleEnumsLetting spec
                    | values          := topLevel.letting.typeEnum.values
                    |] -> do
                 let enumLookup = zip values $ map (\ i -> [xMake| value.literal := [Prim (I i)] |] ) [1..]
+                forM_ enumLookup $ \ (a,b) -> case a of
+                    [xMatch| [Prim (S nm)] := reference |] -> lift $ addReference nm b
+                    _ -> return ()
                 tell [ ( [xMake| reference := [Prim (S name)] |]
                        , [xMake| reference := [Prim (S $ name `mappend` "_fromEnum")] |]
                        )
