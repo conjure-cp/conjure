@@ -51,7 +51,7 @@ for MODE in $MODES ; do
     rm -f "$FAIL_FILE" "$PASS_FILE" "$ALL_FILE"
 done
 
-parallel --tag perDirectory {1} {2//} ::: $MODES ::: $(find "$WD" -name "*.essence")
+parallel -k --tag perDirectory {1} {2//} ::: $MODES ::: $(find "$WD" -name "*.essence")
 
 for MODE in $MODES ; do
     FAIL_FILE="$WD/${MODE}_fail.txt"
