@@ -1,66 +1,60 @@
-language ESSENCE 1.2.0
+language Essence 1.3
 $ prob018.essence: Water Bucket Problem
 $ Problem details available at http://www.csplib.org/prob/prob018/
-$ 25 July 2007
-$
 
-$ n_buckets: the number of buckets
-$ total_water: the total amount of water to be used
-given n_buckets, total_water : int(1..)
+letting nBuckets be 3
+letting totalWater be 8
 
 $ Bucket: buckets are represented by identifiers between 1 and 3
 $ Water: amounts of water are represented as integers between 0 and 8
-letting Bucket be domain int(1..n_buckets),
-        Water be domain int(0..total_water),
-        State be domain function (total) Bucket --> Water
+letting Bucket be domain int(1..nBuckets),
+        Water  be domain int(0..totalWater),
+        State  be domain function (total) Bucket --> Water
 
-$ capacity: the capacity of each bucket (e.g. {(1,8),(2,5),(3,3)})
-$ init: the initial state (e.g. {(1,8),(2,0),(3,0)})
-$ goal: the goal state (e.g. {(1,4),(2,4),(3,0)})
-given capacity, init, goal : State
+letting start    be function (1 --> 8, 2 --> 0, 3 --> 0)
+letting capacity be function (1 --> 8, 2 --> 5, 3 --> 3)
 
-$ no bucket contains more than its capacity in the initial or goal states
-where forAll b : Bucket . init(b) <= capacity(b) /\ goal(b) <= capacity(b)
+letting goal be function (1 --> 4, 2 --> 4, 3 --> 0)
 
-$ plan: a sequence of states consisting of an amount of water in each bucket.
-$       the maximum size of the sequence is the total number of possible states
-find plan : function int(1..(total_water+1)**n_buckets) --> State
+find plan: function int(1..(total_water+1)**n_buckets) --> State
 
-$ minimise the number of state transitions that are used
-minimising |plan|
+find plan_len: int(1..(total_water+1)**n_buckets)
+
+
+minimising plan_len
 
 such that
 
-$ the partial function 'plan' maps integers between 1 and |plan| to values, to
-$ ensure a correct sequence representation
-    forAll i : int(1..|plan|) . i in defined(plan),
+plan_len = |plan|, 
 
-$ there is always the same amount of water in total
-    forAll s in range(plan) . (sum b : Bucket . s(b)) = total_water,
+$the partial function 'plan' maps integers between 1 and |plan| to values, to
+$ensure a correct sequence representation
+forAll i : int(1..(total_water+1)**n_buckets) ,
+    i <= plan_len .
+    i in defined(plan),
 
-$ no bucket ever has more water than its maximum limit
-    forAll s in range(plan) . forAll b : Bucket . s(b) <= capacity(b),
+$ no water lost
+forAll s in range(plan) . (sum b : Bucket . s(b) )  = totalWater,
 
-$ TODO: Constraints after this point aren't type correct.
+$ no water gained
+forAll s in range(plan) .
+    forAll b : Bucket .
+        s(b) <= capacity(b),
 
-$ $ the sequence of states starts with the initial state
-$     plan(1) = init,
+$ start state
+plan(1) = start,
 
-$ $ the sequence of states ends with the goal state
-$     plan(|plan|) = goal,
+$ goal
+plan(|plan|) = goal,
 
-$ $ each transition changes the amount of water in exactly 2 buckets
-$     forAll i : int(1..|plan|-1) . |plan(i) intersect plan(i+1)| = 1,
+$ only two buckets changes in each stage
+forAll i : int(1..(total_water+1)**n_buckets) 
+    , i <= plan_len .
+     |plan(i) intersect plan(i+1)| = 1,
 
-$ $ in state i+1, the 2 involved buckets containt the same total amount of water
-$ $ as in state i
-$     forAll i : int(1..|plan|-1) .
-$         (sum w in range(plan(i) - (plan(i) intersect plan(i+1))) . w) =
-$         (sum w in range(plan(i+1) - (plan(i) intersect plan(i+1))) . w),
-
-$ $ in state i+1, at least 1 of the involved buckets must be either empty or full
-$     forAll i : int(1..|plan|-1) .
-$         exists (b,w) in toSet(plan(i+1) - (plan(i) intersect plan(i+1))) .
-$             w in {0,capacity(b)},
-
-    true
+$ in state i+1, the 2 involved buckets containt the same total amount of water 
+$ as in state i
+forAll i : int(1..(total_water+1)**n_buckets) ,
+    i <= plan_len-1 .
+    (sum w in range(plan(i) - (plan(i) intersect plan(i+1))) . w) =
+    (sum w in range(plan(i+1) - (plan(i) intersect plan(i+1))) . w)
