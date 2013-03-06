@@ -43,7 +43,14 @@ mainPure (spec,sol,org,unalteredOrg) =
             let orgType = lookUpType s
                 (changed, _type) = convertRep orgType
                 res  = toEssenceRep _type e
+                {-  Running toEssenceRep multiple times is crazy, fast and fixes bugs
+                --  but is too much of a hack   -}
+                {-res2  = toEssenceRep _type res-}
+                {-res3  = toEssenceRep _type res2-}
+                {-res4  = toEssenceRep _type res3-}
+                {-res' = introduceTypes enumMapping orgType res4-}
                 res' = introduceTypes enumMapping orgType res
+            {-in wrap s (if changed then res' else res4)-}
             in wrap s (if changed then res' else res)
 
         resultEssence   = map eval varResults
