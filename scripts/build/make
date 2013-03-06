@@ -50,11 +50,16 @@ OptionParser.new do |opts|
 
 end.parse!
 
-File.open("src/RepositoryVersion.hs", "w") do |file|
-    version = `hg id -i | head -n 1`.strip
-    file.puts("module RepositoryVersion where")
-    file.puts("repositoryVersion :: String")
-    file.puts("repositoryVersion = \"#{version}\"")
+version  = `hg id -i | head -n 1`.strip
+contents = [ "module RepositoryVersion where",
+             "repositoryVersion :: String",
+             "repositoryVersion = \"#{version}\""
+           ].join("\n")
+unless File.exists?("src/RepositoryVersion.hs") && contents == File.read("src/RepositoryVersion.hs")
+    File.open("src/RepositoryVersion.hs", "w") do |file|
+        file.write(contents)
+    end
+    puts "writing"
 end
 
 paramsBuild = []
