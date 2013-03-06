@@ -102,11 +102,11 @@ validateSolution essence@(Spec language _) param solution = do
             let checks = map isPartOfValidSolution (statementAsList s)
             if all isJust checks
                 then return (and $ catMaybes checks)
-                else bug $ renderPretty $ vcat [ "Cannot fully evaluate."
-                                               , pretty s
-                                               , prettyAsTree s
-                                               , prettyAsPaths s
-                                               ]
+                else bug $ vcat [ "Cannot fully evaluate."
+                                , pretty s
+                                , prettyAsTree s
+                                , prettyAsPaths s
+                                ]
 
 
 isPartOfValidSolution :: E -> Maybe Bool
