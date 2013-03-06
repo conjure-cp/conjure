@@ -63,6 +63,11 @@ ghc --version
 cabal --version
 happy --version
 
+VERSION=$(hg id -i | head -n 1)A
+echo "module RepositoryVersion where"       >  src/RepositoryVersion.hs
+echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
+echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
+
 # install conjure, finally
 cabal update
 cabal install -O2 \
