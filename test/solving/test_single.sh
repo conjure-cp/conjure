@@ -76,9 +76,8 @@ function perModelperParam {
         --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
         --out-essence-solution  $MODEL-$PARAM.solution
 
-    SOL_VALIDATE=0
-    SOL_DIFF=0
 
+    SOL_VALIDATE=0
     echo "validateSolution for $SPEC $MODEL $PARAM"
     conjure                                                                 \
         --mode validateSolution                                             \
@@ -86,7 +85,14 @@ function perModelperParam {
         --in-param    $PARAM.param                                          \
         --in-solution $MODEL-$PARAM.solution
     SOL_VALIDATE=$?
+    if (( $SOL_VALIDATE != 0 )) ; then
+        echo "[validateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+    else
+        echo "[validateSolution] $WD $MODEL $PARAM" >> "$PASS_FILE"
+    fi
 
+
+    SOL_DIFF=0
     if [ -f "$PARAM.solution" ] ; then
         echo "diffSolution for $SPEC $MODEL $PARAM"
         conjure                                                             \
@@ -94,19 +100,13 @@ function perModelperParam {
             $PARAM.solution                                                 \
             $MODEL-$PARAM.solution
         SOL_DIFF=$?
+        if (( $SOL_DIFF != 0 )) ; then
+            echo "[  diffSolution  ] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+        else
+            echo "[  diffSolution  ] $WD $MODEL $PARAM" >> "$PASS_FILE"
+        fi
     fi
 
-    if (( $SOL_VALIDATE != 0 )) ; then
-        echo "[validateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
-    else
-        echo "[validateSolution] $WD $MODEL $PARAM" >> "$PASS_FILE"
-    fi
-
-    if (( $SOL_DIFF != 0 )) ; then
-        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> "$FAIL_FILE"
-    else
-        echo "[  diffSolution  ] $WD $MODEL $PARAM" >> "$PASS_FILE"
-    fi
 
 }
 
