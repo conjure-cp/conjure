@@ -25,6 +25,7 @@ module Language.E.Imports
     , padShowInt
     , decodeFromFile
     , RandomM(..)
+    , bug
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -195,4 +196,22 @@ decodeFromFile path = do
 class Monad m => RandomM m where
     get_stdgen :: m StdGen
     set_stdgen :: StdGen -> m ()
+
+
+-- call this function instead of "error"
+-- the String argument is only printed if compiled with --trace-logs
+bug :: String -> a
+bug _message = error $ unlines
+    [ "This should never happen, sorry!"
+    , ""
+    , "Please report a bug."
+    , "Conjure is actively maintained, we will get back to you as soon as possible."
+    , "You can help us by providing a minimal failing example."
+    , ""
+    , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
+#ifdef TRACELOGS
+    , "", "" , _message
+#endif
+    ]
+
 
