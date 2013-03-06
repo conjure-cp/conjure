@@ -299,6 +299,21 @@ fullEvaluator
           in
             ret [xMake| value.relation.values := ys |]
 
+fullEvaluator [eMatch| inverse(&f,&g) |]
+    | isFullyInstantiated f && isFullyInstantiated g
+    , [xMatch| fValues := value.function.values |] <- f
+    , [xMatch| gValues := value.function.values |] <- g
+    = let
+        getPair [xMatch| [x,y] := mapping |] = (x,y)
+        getPair _ = bug $ show $ vcat [ "fullEvaluator.inverse(&f,&g)"
+                                          , "f:" <+> pretty f
+                                          , "g:" <+> pretty g
+                                          ]
+        fPairs = map getPair fValues
+        gPairs = map getPair gValues
+      in
+        returnBool $ fPairs == map swap gPairs
+
 fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
       in  ret [xMake| domain.int.ranges := ys |]

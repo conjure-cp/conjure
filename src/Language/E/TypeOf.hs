@@ -666,6 +666,16 @@ typeOf p@[eMatch| preImage(&f,&x) |] = do
                |] | to `typeUnify` tyX -> return [xMake| type.set.inner := [fr] |]
         _ -> typeErrorIn p
 
+typeOf p@[eMatch| inverse(&f,&g) |] = do
+    tyF <- typeOf f
+    tyG <- typeOf g
+    case (tyF, tyG) of
+    -- following has weird intendation because of some brain-fuck in the layout rule
+        (     [xMatch| [frF] := type.function.innerFrom | [toF] := type.function.innerTo |]
+            , [xMatch| [frG] := type.function.innerFrom | [toG] := type.function.innerTo |]
+                ) | frF `typeUnify` toG && toF `typeUnify` frG -> return tyBool
+        _ -> typeErrorIn p
+
 typeOf p@[xMatch| [f] := operator.defined |] = do
     tyF <- typeOf f
     case tyF of

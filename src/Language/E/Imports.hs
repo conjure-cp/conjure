@@ -52,6 +52,7 @@ import Data.Maybe        as X ( catMaybes, listToMaybe, fromMaybe, maybe, maybeT
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
+import Data.Tuple        as X ( swap )
 
 import Control.DeepSeq          as X ( NFData(..), force, ($!!) )
 import Control.DeepSeq.Generics as X ( genericRnf )
