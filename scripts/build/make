@@ -50,6 +50,13 @@ OptionParser.new do |opts|
 
 end.parse!
 
+File.open("src/RepositoryVersion.hs", "w") do |file|
+    version = `hg id -i | head -n 1`.strip
+    file.puts("module RepositoryVersion where")
+    file.puts("repositoryVersion :: String")
+    file.puts("repositoryVersion = \"#{version}\"")
+end
+
 paramsBuild = []
 paramsBuild << "cabal" << "install" << "--force-reinstalls"
 
