@@ -172,6 +172,8 @@ instance Pretty E where
     pretty [xMatch| [x] := type.set.inner  |] = "set of"  <+> pretty x
     pretty [xMatch| [x] := type.mset.inner |] = "mset of" <+> pretty x
 
+    pretty [xMatch| [Prim (S nm)] := type.enum |] = pretty nm
+
     pretty [xMatch| [a] := type.function.innerFrom
                   | [b] := type.function.innerTo
                   |] = "function" <+> pretty a <+> "-->" <+> pretty b
