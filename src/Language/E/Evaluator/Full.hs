@@ -411,7 +411,7 @@ fullEvaluator _ = return Nothing
 -- strip if the calculated type is ==
 stripUnnecessaryTyped :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 stripUnnecessaryTyped [xMatch| [x]  := typed.left
-                             | [ty] := typed.right
+                             | [ty] := typed.right.domainInExpr
                              |] = do
     ty'  <- typeOf x
     if ty == ty'
