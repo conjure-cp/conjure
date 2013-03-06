@@ -33,13 +33,27 @@ redArrow
     -> Essence'Model -> Essence'Logs
     -> m Essence'Param
 redArrow spec specParam@(Spec _ specParamStatements) _model@(Spec langEprime _) modelLogs = do
+
     ints <- execWriterT $ forM_ (statementAsList specParamStatements) $ \ s -> case lettingOut s of
         Nothing -> return ()
         Just (nm, _) ->
             if nm `elem` map fst (concat eprimeReprs)
                 then return ()
                 else tell [s]
-    xs <- execWriterT $ withBindingScope $ do
+
+    enums <- execWriterT $ forM_ (statementAsList specParamStatements) $ \ s -> case s of
+        [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+               | enumValues    := topLevel.letting.typeEnum.values
+               |] -> do
+                let outName  = [xMake| reference     := [Prim (S (nm `T.append` "_fromEnumSize"))] |]
+                let outValue = [xMake| value.literal := [Prim (I (genericLength enumValues     ))] |]
+                let out      = [xMake| topLevel.letting.name := [outName]
+                                     | topLevel.letting.expr := [outValue]
+                                     |]
+                tell [out]
+        _ -> return ()
+
+    abstracts <- execWriterT $ withBindingScope $ do
         lift $ mapM_ introduceStuff (statementAsList specParamStatements)
         case eprimeReprs of
             [] -> return ()
@@ -53,7 +67,8 @@ redArrow spec specParam@(Spec _ specParamStatements) _model@(Spec langEprime _) 
                             (_, Nothing) -> lift $ err ErrFatal $ "No value given for parameter:" <+> pretty name
                             (Nothing, _) -> lift $ err ErrFatal $ "Unknown parameter in the configuration file:" <+> pretty name
             _ -> lift $ mkLog "warning" "Don't know what to do with this logs file, sorry."
-    return (Spec langEprime $ listAsStatement $ ints ++ xs)
+
+    return (Spec langEprime $ listAsStatement $ ints ++ enums ++ abstracts)
 
     where
 
