@@ -85,23 +85,14 @@ validateSolution essence@(Spec language _) param solution = do
             -- mkLog "debug stripped"           (pretty declsStripped)
 
 
-            fullyInlined <- do
-                typesMap1 <- forM (getDecls lettingsInlined) $ \ (nm, dom) -> do
-                    itsType <- typeOf dom
-                    return (nm, itsType)
-                typesMap2 <- forM ((\ (Spec _ x) -> statementAsList x) essence) $ \ x -> case x of
-                    [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
-                           | vs            := topLevel.letting.typeEnum.values
-                           |] -> do
-                           nms <- fmap concat $ forM vs $ \ v -> case v of
-                                [xMatch| [Prim (S i)] := reference |] -> return [i]
-                                _ -> return []
-                           let res = zip (nm:nms) (repeat [xMake| type.int := [] |])
-                           return res
-                    _ -> return []
-                let typesMap = M.fromList (typesMap1 ++ concat typesMap2)
-                bindingsMap <- do bs <- gets binders ; return $ M.fromList $ reverse [ (nm, val) | Binder nm val <- bs ]
-                return $ inliner typesMap bindingsMap declsStripped
+            fullyInlined    <- do bs <- gets binders
+                                  typesMap <- fmap M.fromList
+                                        $ forM (getDecls lettingsInlined)
+                                        $ \ (nm, dom) -> do
+                                            itsType <- typeOf dom
+                                            return (nm, itsType)
+                                  let bindingsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
+                                  return $ inliner typesMap bindingsMap declsStripped
             -- mkLog "debug fullyInlined"       (pretty fullyInlined)
 
             Spec _ s <- fullyEvaluate fullyInlined
