@@ -100,6 +100,13 @@ fullEvaluator [eMatch| &a = &b |]
 fullEvaluator [eMatch| &a = &b |]
     | isFullyInstantiated a
     , isFullyInstantiated b
+    , [xMatch| as := value.function.values |] <- a
+    , [xMatch| bs := value.function.values |] <- b
+    = returnBool (sortNub as == sortNub bs)
+
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
     , [xMatch| as := value.relation.values |] <- a
     , [xMatch| bs := value.relation.values |] <- b
     = returnBool (sort as == sort bs)
@@ -123,6 +130,20 @@ fullEvaluator [eMatch| &a != &b |]
     , isFullyInstantiated b
     , [xMatch| as := value.set.values |] <- a
     , [xMatch| bs := value.set.values |] <- b
+    = returnBool (sortNub as /= sortNub bs)
+
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool (sort as /= sort bs)
+
+fullEvaluator [eMatch| &a = &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.function.values |] <- a
+    , [xMatch| bs := value.function.values |] <- b
     = returnBool (sortNub as /= sortNub bs)
 
 
