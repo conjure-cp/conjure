@@ -478,8 +478,6 @@ unrollQuantifiers
             (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
-    mkLog "debug0" $ vcat $ map pretty sets
-    mkLog "debug1" $ pretty y
     ret y
 unrollQuantifiers _ = return Nothing
 

@@ -19,7 +19,7 @@ type Solution = Spec
 validateSolution :: Essence -> Param -> Solution -> IO ()
 validateSolution essence@(Spec language _) param solution = do
     let (mresult, _logs) = runCompESingle "validating solution" helper
-    printLogs _logs
+    -- printLogs _logs
     case mresult of
         Left  x     -> error $ renderPretty x
         Right False -> error "Not a valid solution."
