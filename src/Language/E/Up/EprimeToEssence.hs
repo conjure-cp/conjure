@@ -39,24 +39,31 @@ mainPure (spec,sol,org,unalteredOrg) =
         wrap name e = errpM ("EprimeToEssence: wrap failed for " ++ name) [e]
 
         lookUpType = fromMaybe (error "fromMaybe eTe: lookUpType")  . flip M.lookup orgInfo
-        eval (s,e) = 
+        eval (s,e) =
             let orgType = lookUpType s
                 (changed, _type) = convertRep orgType
-                res  = toEssenceRep _type e
-                {-  Running toEssenceRep multiple times is crazy, fast and fixes bugs
-                --  but is too much of a hack   -}
-                {-res2  = toEssenceRep _type res-}
-                {-res3  = toEssenceRep _type res2-}
-                {-res4  = toEssenceRep _type res3-}
-                {-res' = introduceTypes enumMapping orgType res4-}
+                {-  Running toEssenceRep multiple times is crazy, fast and fixes bugs -}
+                res  = toEssenceRep' _type e
+
                 res' = introduceTypes enumMapping orgType res
-            {-in wrap s (if changed then res' else res4)-}
             in wrap s (if changed then res' else res)
 
         resultEssence   = map eval varResults
         --resultEssence =  map (uncurry wrap) varResults
 
     in enums ++ resultEssence
+
+
+-- Keeps on running toEssenceRep until no changes happen.
+toEssenceRep' :: [TagT] -> E -> E
+toEssenceRep' ts e0 = refineUntilEqual ts e0 e1
+
+    where
+    e1 = toEssenceRep ts e0
+
+    refineUntilEqual :: [TagT] -> E -> E -> E
+    refineUntilEqual ts f1 f2 | f1 == f2 = f1
+    refineUntilEqual ts f1 f2 = refineUntilEqual ts f2 (toEssenceRep ts f2)
 
 
 combineInfos ::  M.Map String VarInfo -> M.Map String [E] -> M.Map String VarData
@@ -74,7 +81,7 @@ combineInfos varInfo solInfo =
 
 
 convertRep :: [TagT] -> (Bool,[TagT])
-convertRep arr = 
+convertRep arr =
   let (bs,res) =  unzip $ map convertRep' arr
   in  (or bs, res)
 
@@ -89,9 +96,9 @@ convertRep' (TagTuple ts) = (or b', TagTuple res)
     where (b',res) =  unzip $ map convertRep ts
 
 convertRep' (TagFunc ins tos) = ( b1 || b2, TagFunc ins' tos')
-    where 
+    where
         (b1,ins') =  convertRep ins
-        (b2,tos') =  convertRep tos 
+        (b2,tos') =  convertRep tos
 
 convertTag :: Tag -> (Bool,Tag)
 convertTag "set"  = (True, "matrix")
@@ -101,43 +108,43 @@ convertTag t      = (False, t)
 
 introduceTypes ::  M.Map String [E] -> [TagT] -> E -> E
 
-introduceTypes emap ts [xMatch| [val] := expr |] = 
+introduceTypes emap ts [xMatch| [val] := expr |] =
     let res = introduceTypes emap ts val
     in  [xMake| expr := [res] |]
 
-introduceTypes emap [TagEnum name] [xMatch| [Prim (I num)] := value.literal |] = 
+introduceTypes emap [TagEnum name] [xMatch| [Prim (I num)] := value.literal |] =
     let res = fromMaybe (error "fromMaybe enums") $ M.lookup name emap
         selected = res !! fromInteger (num - 1)
-    in  selected 
+    in  selected
 
-introduceTypes emap [TagUnamed kind] e@[xMatch| [Prim (I _)] := value.literal |] = 
+introduceTypes emap [TagUnamed kind] e@[xMatch| [Prim (I _)] := value.literal |] =
     introduceTypes emap [TagEnum ("__named_" ++ kind)] e
 
-introduceTypes _ [TagSingle "bool"] [xMatch| [Prim (I num)] := value.literal |] = 
+introduceTypes _ [TagSingle "bool"] [xMatch| [Prim (I num)] := value.literal |] =
     let bool = num == 1
-    in  [xMake| value.literal := [Prim (B bool)] |] 
+    in  [xMake| value.literal := [Prim (B bool)] |]
 
-introduceTypes emap (TagSingle "matrix":ts) [xMatch| vs := value.matrix.values |] = 
+introduceTypes emap (TagSingle "matrix":ts) [xMatch| vs := value.matrix.values |] =
     let res = map (introduceTypes emap ts) vs
-    in  [xMake| value.matrix.values := res |] 
+    in  [xMake| value.matrix.values := res |]
 
-introduceTypes emap (TagSingle "set":ts) [xMatch| vs := value.matrix.values |] = 
+introduceTypes emap (TagSingle "set":ts) [xMatch| vs := value.matrix.values |] =
     let res = map (introduceTypes emap ts) vs
-    in  [xMake| value.set.values := res |] 
+    in  [xMake| value.set.values := res |]
 
-introduceTypes emap (TagSingle "mset":ts) [xMatch| vs := value.matrix.values |] = 
+introduceTypes emap (TagSingle "mset":ts) [xMatch| vs := value.matrix.values |] =
     let res = map (introduceTypes emap ts) vs
-    in  [xMake| value.mset.values := res |] 
+    in  [xMake| value.mset.values := res |]
 
-introduceTypes emap [TagTuple ts] [xMatch| vs := value.tuple.values |] = 
+introduceTypes emap [TagTuple ts] [xMatch| vs := value.tuple.values |] =
     let res = zipWith (introduceTypes emap) ts vs
-    in  [xMake| value.tuple.values := res |] 
+    in  [xMake| value.tuple.values := res |]
 
-introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] = 
+introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
    let mappings =  map (func ins tos) arr
    in  [xMake| value.function.values := mappings |]
 
-    where 
+    where
     func ins' tos' [xMatch| [a,b] := mapping |] =
        let a' = introduceTypes emap ins' a
            b' = introduceTypes emap tos' b
@@ -157,7 +164,7 @@ convertUnamed m arr =
         arr'       = arr ++ enums
     in  (m', arr')
 
-    where toEnum' (name,es) = 
+    where toEnum' (name,es) =
             [xMake| topLevel.letting.name.reference  := [Prim (S ref) ]
                   | topLevel.letting.typeEnum.values := es |]
 
