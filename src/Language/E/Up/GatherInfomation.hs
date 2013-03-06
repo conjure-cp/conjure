@@ -23,7 +23,7 @@ getVariables  (Spec _ xs) = M.fromList $ mapMaybe getVariable (statementAsList x
 
 
 getVariable :: E -> Maybe (String, VarInfo)
-getVariable  z = 
+getVariable  z =
     case  getVariable' z of
       Nothing -> Nothing
       Just (name',domainRep) -> Just (name', VarInfo (getIndexes domainRep) (getBounds domainRep))
@@ -63,7 +63,7 @@ getRangeList :: [E] -> [Integer]
 getRangeList =  S.toAscList . getRange
 
 getRange :: [E] -> S.Set Integer
-getRange [Tagged "ranges" arr] = 
+getRange [Tagged "ranges" arr] =
     foldr ((\ a s -> (S.union s . S.fromList) a) . getRange') S.empty arr
 
     where
@@ -75,7 +75,7 @@ getRange [Tagged "ranges" arr] =
 getRange e = errpM "GatherInfomation: getRange" e
 
 getEssenceVariables :: Spec -> M.Map String [TagT]
-getEssenceVariables (Spec _ xs) =  
+getEssenceVariables (Spec _ xs) =
     M.fromList $ mapMaybe getEssenceVariable (statementAsList xs)
 
 
@@ -102,17 +102,15 @@ getEssenceVariable [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.
    Just (T.unpack name,  TagSingle t : concatMap getTags arr )
 
 
--- Very silly but works for enums and unmaned types
-getEssenceVariable [xMatch| _ := topLevel.declaration.find.domain.topLevel.letting.typeEnum
-                          | [Prim (S kind)] := topLevel.declaration.find.domain
-                                                   .topLevel.letting.name
-                                                   .topLevel.letting.name.reference
-                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+getEssenceVariable [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
+                          | [Prim (S kind)] := topLevel.declaration.find.domain.type.enum |] =
    Just (T.unpack name,  [TagEnum (T.unpack  kind)]  )
 
+
+-- Very silly but works for unmaned types
 getEssenceVariable [xMatch| _  := topLevel.declaration.find.domain
                                         .topLevel.letting.typeUnnamed
-                            | [Prim (S kind)] := topLevel.declaration.find.domain 
+                            | [Prim (S kind)] := topLevel.declaration.find.domain
                                                  .topLevel.letting.name
                                                  .topLevel.letting.name.reference
                             | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
@@ -146,7 +144,7 @@ getSolVariable [xMatch| e               := topLevel.letting
 getSolVariable _ = Nothing
 
 
--- Maps a enums's name to it Definition 
+-- Maps a enums's name to it Definition
 getEnumMapping :: Spec -> M.Map String [E]
 getEnumMapping  (Spec _ xs) = M.fromList $ mapMaybe getEnumMapping' (statementAsList xs)
 
