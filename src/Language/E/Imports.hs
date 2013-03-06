@@ -203,7 +203,7 @@ class Monad m => RandomM m where
 
 -- call this function instead of "error"
 -- the String argument is only printed if compiled with --trace-logs
-bug :: String -> a
+bug :: Doc -> a
 bug _message = error $ unlines
     [ "This should never happen, sorry!"
     , ""
@@ -214,7 +214,7 @@ bug _message = error $ unlines
     , ""
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
 #ifdef TRACELOGS
-    , "", "" , _message
+    , "", "" , show _message
 #endif
     ]
 

@@ -46,7 +46,7 @@ validateSolution essence@(Spec language _) param solution = do
                             f [xMake| typed.left               := [binding]
                                     | typed.right.domainInExpr := [theType]
                                     |]
-                        (_, Just _) -> error $ show $ "Cannot determine the type of:" <+> pretty nm
+                        (_, Just _) -> bug $ "Cannot determine the type of:" <+> pretty nm
                         _           -> x
                 f x@[xMatch| [_] := structural.single.reference |] = x
                 f (Tagged t xs)
@@ -102,11 +102,11 @@ validateSolution essence@(Spec language _) param solution = do
             let checks = map isPartOfValidSolution (statementAsList s)
             if all isJust checks
                 then return (and $ catMaybes checks)
-                else error $ renderPretty $ vcat [ "Cannot fully evaluate."
-                                                 , pretty s
-                                                 , prettyAsTree s
-                                                 , prettyAsPaths s
-                                                 ]
+                else bug $ renderPretty $ vcat [ "Cannot fully evaluate."
+                                               , pretty s
+                                               , prettyAsTree s
+                                               , prettyAsPaths s
+                                               ]
 
 
 isPartOfValidSolution :: E -> Maybe Bool

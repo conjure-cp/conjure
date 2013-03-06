@@ -307,10 +307,10 @@ fullEvaluator [eMatch| preImage(&f,&x) |]
     , [xMatch| fValues := value.function.values |] <- f
     = let
         getPair [xMatch| [i,j] := mapping |] = (i,j)
-        getPair _ = bug $ show $ vcat [ "fullEvaluator.preImage(&f,&x)"
-                                      , "f:" <+> pretty f
-                                      , "x:" <+> pretty x
-                                      ]
+        getPair _ = bug $ vcat [ "fullEvaluator.preImage(&f,&x)"
+                               , "f:" <+> pretty f
+                               , "x:" <+> pretty x
+                               ]
         ys = [ j | val <- fValues
                  , let (i,j) = getPair val
                  , i == x
@@ -323,9 +323,9 @@ fullEvaluator [eMatch| defined(&f) |]
     , [xMatch| fValues := value.function.values |] <- f
     = let
         getPair [xMatch| [i,j] := mapping |] = (i,j)
-        getPair _ = bug $ show $ vcat [ "fullEvaluator.defined(&f,&x)"
-                                      , "f:" <+> pretty f
-                                      ]
+        getPair _ = bug $ vcat [ "fullEvaluator.defined(&f,&x)"
+                               , "f:" <+> pretty f
+                               ]
         fPairs = map getPair fValues
         ys     = sortNub $ map fst fPairs
       in
@@ -336,9 +336,9 @@ fullEvaluator [eMatch| range(&f) |]
     , [xMatch| fValues := value.function.values |] <- f
     = let
         getPair [xMatch| [i,j] := mapping |] = (i,j)
-        getPair _ = bug $ show $ vcat [ "fullEvaluator.range(&f,&x)"
-                                      , "f:" <+> pretty f
-                                      ]
+        getPair _ = bug $ vcat [ "fullEvaluator.range(&f,&x)"
+                               , "f:" <+> pretty f
+                               ]
         fPairs = map getPair fValues
         ys     = sortNub $ map snd fPairs
       in
@@ -350,10 +350,10 @@ fullEvaluator [eMatch| inverse(&f,&g) |]
     , [xMatch| gValues := value.function.values |] <- g
     = let
         getPair [xMatch| [i,j] := mapping |] = (i,j)
-        getPair _ = bug $ show $ vcat [ "fullEvaluator.inverse(&f,&g)"
-                                      , "f:" <+> pretty f
-                                      , "g:" <+> pretty g
-                                      ]
+        getPair _ = bug $ vcat [ "fullEvaluator.inverse(&f,&g)"
+                               , "f:" <+> pretty f
+                               , "g:" <+> pretty g
+                               ]
         fPairs = map getPair fValues
         gPairs = map getPair gValues
       in
