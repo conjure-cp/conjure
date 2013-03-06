@@ -178,8 +178,13 @@ typeOf [xMatch| [d] := topLevel.declaration.find .domain  |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.given.domain  |] = typeOf d
 typeOf [xMatch| [d] := topLevel.declaration.dim  .domain  |] = typeOf d
 typeOf [xMatch| [ ] := topLevel.declaration.given.typeInt |] = return tyInt
+
 typeOf [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
               | _             := topLevel.letting.typeEnum
+              |] = return [xMake| type.enum := [Prim (S nm)] |]
+
+typeOf [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+              | _             := topLevel.declaration.given.typeEnum
               |] = return [xMake| type.enum := [Prim (S nm)] |]
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
