@@ -165,7 +165,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple _]
 
 
 -- fix NB T value.tuple  first which should be done now
--- Idea is to rec handle tags util  len ts = len vs
+-- Idea is to rec handle tags until  len ts = len vs
 -- see tmm4
 -- toEssenceRep tags@[TagSingle "matrix", TagTuple ts] is
 
@@ -238,7 +238,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
     func :: [TagT] ->  E -> E
 
-    -- FIXME this method is seems to work by unwraping the singeton matrix of a int
+    -- FIXME this method is seems to work by unwrapping the singleton matrix of a int
     -- but this should not be really needed
 {-
 func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
@@ -444,7 +444,8 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         val = isNestedTuple [ts1] vs1
 
     --  seem good  guard for tmm3
-    prePro ts1@[TagSingle "matrix", TagTuple _] e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
+    prePro ts1@[TagSingle "matrix", TagTuple _] 
+            e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
         let res = toEssenceRep  (TagSingle "matrix": ts1) e1
         --in  errpM "prePro MMT for tmm3,  needs some work" [res]
         in  res
@@ -453,6 +454,19 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
             `_f` ("prePro MMT ts", ts1)
             `_p` ("prePro MMT vs",  [e1])
             `_f` ("prePro MMT ts", ts1)
+
+    -- for C2 kind of  works but have to run toEssenceRep twice which is bad
+    prePro ts1@[TagSingle "matrix", TagTuple _]
+            e1@[xMatch| _ := value.tuple.values.value.tuple.values |] =
+        let res = toEssenceRep  (TagSingle "matrix": ts1) e1
+        in  res
+        {-in  error "prePro c2  needs some work" -}
+            `_f` ("prePro c2  ts", ts1)
+            `_p` ("prePro c2  e1", [e1])
+            `_p` ("prePro c2  res", [res])
+            `_p` ("prePro c2  e1", [e1])
+            `_f` ("prePro c2  ts", ts1)
+
 
    -- CHECK not sure if to do after all above?
     prePro r@[TagSingle "matrix", TagTuple _]
@@ -465,7 +479,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_p` ("prePro CT vs",  [e1])
         `_f` ("prePro CT ts", r)
 
-    -- FIXME mostly fixes c1
+    -- FIXME  fixes c1
     -- ints more nested then they should be
     prePro r@[TagTuple tss] f@[xMatch| vs2 := value.tuple.values |] =
         let res   = zipWith (\z -> toEssenceRep (TagSingle "matrix":z)  ) tss vs2
@@ -478,7 +492,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_f` ("prePro TV ts", r)
 
     --prePro ts e = erri (ts, [e])
-    prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
+    prePro ts2 f = f `_i` ("prePro no change", (ts2, [f]))
 
 -- see _tuples_of_matrix
 toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]
@@ -526,8 +540,8 @@ toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]
     after _ f = f
 
 
--- CHECK add more gurds
--- Check one two many matrixes?
+-- CHECK add more guards
+-- Check one two many matrices?
 -- for mutiMatixMatixTupleComplex3Simpler2 (main' o7)
 toEssenceRep r@[TagSingle "matrix", TagTuple ts ]
                [xMatch| vs := values
@@ -548,7 +562,7 @@ toEssenceRep r@(TagSingle t :ts)  [xMatch| [vals] := value.matrix |] |
         `_f` ("S value.matrix ts", ts)
         `_f` ("S value.matrix tags", r)
 
--- FIXME seprate relation and partion from tagsingle
+-- FIXME separate relation and partition from tagsingle
 toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
     t /= "int" =
     let vals' = map er arr
@@ -561,6 +575,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
         er (Tagged "matrix" [vals]) = Tagged "value" [Tagged t  [toEssenceRep ts vals]]
         er a@(Tagged "literal" _)   = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
+        {-er f = f -}
         er f = errpM "AddEssenceTypes:er error" [f]
 
 -- FIXME This really should not be needed
@@ -584,6 +599,7 @@ toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
 
          wrapper e@[xMatch| _ := values |]  = e
          wrapper e@[xMatch| _ := value  |]  = Tagged "values" [e]  -- wat?
+         wrapper f = errpM "toEssenceRep wrapper " [f]
 
          combineValues :: E -> E  -> E
          combineValues [xMatch| v1 := values |]  v2@[xMatch| _:= value |] = [xMake| values := v1 ++ [v2] |]
@@ -604,7 +620,7 @@ toEssenceRep r@(TagTuple _ : [])  e@[xMatch| vals := values.value.tuple |] =
                 toEssenceRep r (Tagged "tuple" [val])
            ]
 
--- convert matrixes rep to tuples
+-- convert matrices rep to tuples
 toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
     let zipped= map ( zip t . unwrapValues ) vals
         vals' =  map convert zipped
@@ -685,8 +701,8 @@ toEssenceRep r e =
 flattenInt :: [TagT] -> E -> E
 flattenInt [TagSingle "int"]  e@[xMatch| [ele] := value.matrix.values |]
     | isJust res = fromJust res
-        `_p` ("toEssenceRep unwraping int res", [res])
-        `_p` ("toEssenceRep unwraping int e", [e])
+        `_p` ("flattenInt unwraping int res", [res])
+        `_p` ("flattenInt unwraping int e", [e])
     where res = getLit ele
 
 flattenInt  (TagSingle "matrix":ts) [xMatch| vs := value.matrix.values |] =
