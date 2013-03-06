@@ -242,7 +242,10 @@ fullEvaluator
     | isFullyInstantiated x && all isFullyInstantiated ys
     = returnBool $ x `elem` ys
 
-
+fullEvaluator [eMatch| freq(&m,&x) |]
+    | isFullyInstantiated m, isFullyInstantiated x
+    , [xMatch| mValues := value.mset.values |] <- m
+    = returnInt $ genericLength [ () | i <- mValues, i == x ]
 
 fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
                      | xs := binOp.left .value.set.values
