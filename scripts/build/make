@@ -59,7 +59,7 @@ unless File.exists?("src/RepositoryVersion.hs") && contents == File.read("src/Re
     File.open("src/RepositoryVersion.hs", "w") do |file|
         file.write(contents)
     end
-    puts "writing"
+    puts "Generated file: src/RepositoryVersion.hs with version #{version}"
 end
 
 paramsBuild = []
