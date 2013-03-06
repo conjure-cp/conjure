@@ -14,7 +14,7 @@ import Language.E.Up.Debug
 
 
 transposeE :: [E] -> [E]
--- transposeE e | 1 == 3  `_p` ("tranposeE args", e ) = undefined
+transposeE e | 1 == 3  `_p` ("tranposeE args", e ) = undefined
 
 transposeE arr  |  all (not . isLiteral) arr =
     let arr2D = map tranposeCheck arr
@@ -26,6 +26,7 @@ transposeE e = e
 
 tranposeCheck :: E -> [E]
 tranposeCheck   [xMatch| vs := value.matrix.values |] = vs
+        `_p` ("tranposeCheck mat", vs)
 
 -- This is actually needed for very few cases such as tupley26
 tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
@@ -62,4 +63,8 @@ unwrapMatrix e = errpM "Common: unwrapMatrix failed" [e]
 matrixToTuple :: E -> E
 matrixToTuple [xMatch| vs := value.matrix|] = [xMake| value.tuple := vs |]
 matrixToTuple e = errpM "Common: matrixToTuple failed" [e]
+
+
+wrapInMatrix :: [E] -> E
+wrapInMatrix arr = [xMake| value.matrix.values := arr |]
 
