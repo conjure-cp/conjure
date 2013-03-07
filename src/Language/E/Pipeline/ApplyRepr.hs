@@ -211,7 +211,7 @@ addChannellingFromLog (Spec v xs) = do
                     | topLevel.declaration.given.domain         := [newDom]
                     |]
             )
-        mkWithNewDom _ = error "Impossible: addChannellingFromLog.mkWithNewDom"
+        mkWithNewDom _ = bug "Impossible: addChannellingFromLog.mkWithNewDom"
 
     let newDecls = nub $ map mkWithNewDom rlogs
     mapM_ (introduceStuff . snd) newDecls

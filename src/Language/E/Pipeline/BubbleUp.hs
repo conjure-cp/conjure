@@ -46,7 +46,7 @@ bubbleUpE [xMatch| [quantifier] := quantified.quantifier
                                         |]
                                 )
 
-        declFix x = error $ show $ "bubbleUpE.declFix" <+> pretty x
+        declFix x = bug $ "bubbleUpE.declFix" <+> pretty x
     let (names,newDecls') = unzip $ map declFix newDecls
 
     let liftName x = let f p@[xMatch| [Prim (S s)] := reference |]
