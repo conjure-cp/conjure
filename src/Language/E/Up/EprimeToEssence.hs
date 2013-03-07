@@ -46,9 +46,9 @@ mainPure (spec,sol,org,unalteredOrg) =
         wrap name (Tagged "expr" arr) =
             [xMake| topLevel.letting.expr := arr
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
-        wrap name e = errpM ("EprimeToEssence: wrap failed for " ++ name) [e]
+        wrap name e = _bug ("wrap failed for " ++ name) [e]
 
-        lookUpType = fromMaybe (error "fromMaybe eTe: lookUpType")  . flip M.lookup orgInfo
+        lookUpType = fromMaybe (_bugg "fromMaybe: lookUpType")  . flip M.lookup orgInfo
         eval (s,e) =
             let orgType = lookUpType s
                 (changed, _type) = convertRep orgType
@@ -123,7 +123,7 @@ introduceTypes emap ts [xMatch| [val] := expr |] =
     in  [xMake| expr := [res] |]
 
 introduceTypes emap [TagEnum name] [xMatch| [Prim (I num)] := value.literal |] =
-    let res = fromMaybe (error "fromMaybe enums") $ M.lookup name emap
+    let res = fromMaybe (_bugg "fromMaybe enums") $ M.lookup name emap
         selected = res !! fromInteger (num - 1)
     in  selected
 
@@ -159,7 +159,7 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
        let a' = introduceTypes emap ins' a
            b' = introduceTypes emap tos' b
        in   [xMake| mapping := [a',b'] |]
-    func _ _ _  = error "EprimeToEssence: introduceTypes function error"
+    func _ _ _  = _bugg "EprimeToEssence: introduceTypes function error"
 
 -- TODO stuff inside a partition
 
@@ -195,3 +195,7 @@ convertU [xMatch| [Prim (S name)] := topLevel.letting.name.reference
 
 convertU _ = Nothing
 
+_bug :: String -> [E] -> t 
+_bug s = upBug ("EprimeToEssence: " ++ s)
+_bugg :: String -> t 
+_bugg s = _bug s []
