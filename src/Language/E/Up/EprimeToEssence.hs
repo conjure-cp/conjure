@@ -52,14 +52,12 @@ mainPure (spec,sol,org,unalteredOrg) =
         eval (s,e) =
             let orgType = lookUpType s
                 (changed, _type) = convertRep orgType
-                {-  Running toEssenceRep multiple times is crazy, fast and fixes bugs -}
                 res  = toEssenceRep' _type e
 
                 res' = introduceTypes enumMapping orgType res
             in wrap s (if changed then res' else res)
 
         resultEssence   = map eval varResults
-        --resultEssence =  map (uncurry wrap) varResults
 
     in enums ++ resultEssence
 
@@ -161,7 +159,7 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = _bugg "EprimeToEssence: introduceTypes function error"
 
--- TODO stuff inside a partition
+-- FIXME stuff inside a partition
 
 introduceTypes _ _ e = e
 -- introduceTypes _ ts e = errr (ts,e)
@@ -199,3 +197,4 @@ _bug :: String -> [E] -> t
 _bug s = upBug ("EprimeToEssence: " ++ s)
 _bugg :: String -> t 
 _bugg s = _bug s []
+
