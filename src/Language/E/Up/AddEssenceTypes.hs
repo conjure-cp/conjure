@@ -88,8 +88,6 @@ isNestedTuple r@[ TagTuple t ]  e@[xMatch| vs := value.tuple.values |]
     tagAllowed _                    = False
 
 isNestedTuple _ _ = Nothing
-{-isNestedTuple ts e = erri (ts,[e])-}
-
 
 reTuple :: Int -> E -> E
 reTuple  0 e = e
@@ -367,7 +365,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
         in  [xMake| value.matrix.values := vss |]
 
     after _ e = e
-    --after ts1 e = erri (ts1, [e])
 
 -- FIXME  works. should make recursive
 toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
@@ -478,8 +475,8 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_p` ("prePro TV e",  [f])
         `_f` ("prePro TV ts", r)
 
-    --prePro ts e = erri (ts, [e])
     prePro ts2 f = f `_i` ("prePro no change", (ts2, [f]))
+    {-prePro ts e = _bugi "prePro" (ts, [e])-}
 
 -- see _tuples_of_matrix
 toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]

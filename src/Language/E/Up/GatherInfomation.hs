@@ -46,7 +46,7 @@ getBounds e = case  getBounds' e of
     getBounds' [[xMatch| f := domain.matrix.inner |]] = getBounds' f
     getBounds' [[xMatch| f := domain.int |]] = f
     getBounds' [[xMatch| _ := domain.bool |]] = [Tagged "bool" []]
-    getBounds' es = errpM "GatherInfomation: getBounds'" es
+    getBounds' es = _bug "GatherInfomation: getBounds'" es
 
 
 getIndexes :: [E]  -> [[Integer]]
@@ -70,9 +70,9 @@ getRange [Tagged "ranges" arr] =
     getRange' [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = [a..b]
     getRange' [xMatch| [Prim (I a)] := range.single.value.literal |] = [a]
     getRange' [xMatch| [Prim (I a)] := range.single.unaryOp.negate.value.literal |] = [-a]
-    getRange' e = errpM "GatherInfomation: getRange'" [e]
+    getRange' e = _bug "GatherInfomation: getRange'" [e]
 
-getRange e = errpM "GatherInfomation: getRange" e
+getRange e = _bug "GatherInfomation: getRange" e
 
 getEssenceVariables :: Spec -> M.Map String [TagT]
 getEssenceVariables (Spec _ xs) =
@@ -94,8 +94,7 @@ getEssenceVariable [xMatch|  _    := topLevel.declaration.find.domain.domain.fun
                           | [tos] := topLevel.declaration.find.domain.domain
                                   .function.innerTo
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagFunc (getTags ins) (getTags tos)]  )
-    --error "d"
+   Just (T.unpack name,  [TagFunc (getTags ins) (getTags tos)] )
 
 getEssenceVariable [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
@@ -117,7 +116,7 @@ getEssenceVariable [xMatch| _  := topLevel.declaration.find.domain
    Just (T.unpack name,  [TagUnamed (T.unpack kind) ] )
 
 
--- getEssenceVariable e = errb [e]
+{-getEssenceVariable e = _bug "getEssenceVariable" [e]-}
 getEssenceVariable _ = Nothing
 
 

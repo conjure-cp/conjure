@@ -104,7 +104,7 @@ excludeSim _ = False
 
 head'        :: [a] -> a
 head' (x:_)  =  x
-head' []     =  error "head: simSpec"
+head' []     =  _bugg "head: simSpec"
 
 toLst :: Spec -> [E]
 toLst (Spec _ ee) = statementAsList ee

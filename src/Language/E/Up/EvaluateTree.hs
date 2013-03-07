@@ -258,7 +258,7 @@ pairMatrix'
             [xMake| value.matrix.values := (concatMap con res')|]
 
     where con [xMatch| vs := values |] = vs
-          con e = errb [e]
+          con e = _bug "pairMatrix' con" [e]
 
 pairMatrix' a@[xMatch| _ := value.literal |]
        b@[xMatch| _ := value.literal |] =
@@ -266,7 +266,7 @@ pairMatrix' a@[xMatch| _ := value.literal |]
         [xMake| value.matrix.values :=  [a,b] |]
         -- `_e` ("pairMatrix' lit",[a,b])
 
-pairMatrix' a b = errt [a,b]
+pairMatrix' a b = _bug "pairMatrix" [a,b]
 
 
 pairEqual :: [E] -> [E] -> [E]
@@ -306,7 +306,7 @@ mergeExplicitVarSizeTuple
              let chosen =  selected (e1, e2) in
              [xMake| expr :=  [chosen] |]
         else
-            error "t1's has to be <= t2's dim"
+            _bugg "t1's has to be <= t2's dim"
     where
         dimOfMatrix [xMatch| v := value.matrix.values
                     |  _  := value.matrix.values.value.matrix |] = 1 + dimOfMatrix (head v)

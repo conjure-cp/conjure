@@ -162,7 +162,7 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
 -- FIXME stuff inside a partition
 
 introduceTypes _ _ e = e
--- introduceTypes _ ts e = errr (ts,e)
+{-introduceTypes _ ts e = _bugi "introduceTypes" (ts,[e])-}
 
 convertUnamed :: M.Map String [E] -> [E]  -> (M.Map String [E], [E])
 convertUnamed m arr =
