@@ -28,11 +28,11 @@ matrixOrTuple _ = False
 
 unwrapTuple :: E -> [E]
 unwrapTuple [xMatch| vs := value.tuple.values|] = vs
-unwrapTuple e = errpM "AddEssenceTypes: unwrapTuple failed" [e]
+unwrapTuple e = upBug "AddEssenceTypes: unwrapTuple failed" [e]
 
 unwrapValues :: E -> [E]
 unwrapValues [xMatch| vs := values |] = vs
-unwrapValues e = errpM "AddEssenceTypes: unwrapValues failed" [e]
+unwrapValues e = upBug "AddEssenceTypes: unwrapValues failed" [e]
 
 
 unwrapSingleMatrix :: E -> E
@@ -298,7 +298,7 @@ func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
             `_p` ("M T func e",[e1])
             `_f` ("M T func ts",ts1)
 
-    func _ e1 = errbM "func matrix of tuples" [e1]
+    func _ e1 = upBug "func matrix of tuples" [e1]
 
 toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     [xMatch| vs := value.tuple.values |]
@@ -447,7 +447,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     prePro ts1@[TagSingle "matrix", TagTuple _] 
             e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
         let res = toEssenceRep  (TagSingle "matrix": ts1) e1
-        --in  errpM "prePro MMT for tmm3,  needs some work" [res]
+        --in  upBug "prePro MMT for tmm3,  needs some work" [res]
         in  res
             --`_p` ("prePro MMT  vs", [e1])
             `_p` ("prePro MMT res", [res])
@@ -568,7 +568,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
     let vals' = map er arr
     in  [xMake| values := vals'|]
         `_p` ("S values.value res",vals')
-        `_e` ("S values.value args", arr)
+        `_p` ("S values.value args", arr)
         `_f` ("S values.value ts",r)
 
     where
@@ -576,7 +576,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
         er a@(Tagged "literal" _)   = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
         {-er f = f -}
-        er f = errpM "AddEssenceTypes:er error" [f]
+        er f = upBug "AddEssenceTypes:er error" [f]
 
 -- FIXME This really should not be needed
 toEssenceRep r@[TagTuple _]  [xMatch| vals := expr.value.tuple |] =
@@ -591,7 +591,7 @@ toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
         vals' = map func zipped
     in [xMake| tuple :=  [foldl1 combineValues vals'] |]
         `_e` ("T tuple.values res'",  vals')
-        `_f` ("T tuple.values zipped", zipped)
+        {-`_f` ("T tuple.values zipped", zipped)-}
         `_p` ("T tuple.values vals", vals)
         `_f` ("T tuple.values ts", r)
    where func (ts,val) =
@@ -599,7 +599,7 @@ toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
 
          wrapper e@[xMatch| _ := values |]  = e
          wrapper e@[xMatch| _ := value  |]  = Tagged "values" [e]  -- wat?
-         wrapper f = errpM "toEssenceRep wrapper " [f]
+         wrapper f = upBug "toEssenceRep wrapper " [f]
 
          combineValues :: E -> E  -> E
          combineValues [xMatch| v1 := values |]  v2@[xMatch| _:= value |] = [xMake| values := v1 ++ [v2] |]
@@ -676,7 +676,7 @@ toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
        let a' = unwrapExpr $ toEssenceRep ins'  (wrapInExpr [a])
            b' = unwrapExpr $ toEssenceRep tos'  (wrapInExpr [b])
        in   [xMake| mapping := [a',b'] |]
-    func _ _ _  = error "AddEssenceTypes: toEssenceRep function error"
+    func _ _ _  = bug "AddEssenceTypes: toEssenceRep function error"
 
 
 
