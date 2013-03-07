@@ -37,7 +37,7 @@ abstractDomsInQuans
             Left es     -> err ErrFatal $ vcat $ map (prettyError "abstractDomsInQuans") es
             Right func' -> withBindingScope' $ do
                 let func = mergeReprFunc (func' : builtInRepr)
-                ys <- func (qnVar, qnOverDom, error "abstractDomsInQuans.decl")
+                ys <- func (qnVar, qnOverDom, bug "abstractDomsInQuans.decl")
                 zs <- case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty qnOverDom
                     _  -> do

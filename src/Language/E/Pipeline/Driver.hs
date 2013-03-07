@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Language.E.Pipeline.Driver where
 
 import Language.E
@@ -17,7 +19,7 @@ driverConjureSingle logsOut pathOut [(Right x, logs)] = do
 driverConjureSingle logsOut pathOut [(Left  x, logs)] = do
     toFile (pathOut ++ ".error") x
     when logsOut $ toFile (pathOut ++ ".logs" ) logs
-driverConjureSingle _ _ _ = error "Generates multiple outputs, must be a bug. Sorry."
+driverConjureSingle _ _ _ = bug "Generates multiple outputs, must be a bug. Sorry."
 
 
 driverConjure

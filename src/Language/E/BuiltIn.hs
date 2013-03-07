@@ -20,7 +20,7 @@ type ReprFunc m =
 
 
 mergeReprFunc :: MonadConjure m => [ReprFunc m] -> ReprFunc m
-mergeReprFunc [ ] =  error "mergeReprFunc []"
+mergeReprFunc [ ] =  bug "mergeReprFunc []"
 mergeReprFunc [f] = f
 mergeReprFunc fs = \ param -> concat <$> mapM ($ param) fs
 
@@ -292,7 +292,7 @@ tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] =
             ret p "builtIn.tupleDomInQuantification" (helper quanvars ys)
         _ -> return Nothing
     where
-        helper _ [] = error "this should never happen, tupleDomInQuantification"
+        helper _ [] = bug "this should never happen, tupleDomInQuantification"
         helper allQuanVars [(quanvar,quandom)] = replace i allQuanVars [eMake| &quan &quanvar : &quandom , &guard . &body |]
         helper allQuanVars ((quanvar,quandom):rest) =
             let body' = helper allQuanVars rest

@@ -642,7 +642,7 @@ parseQuantifiedExpr parseBody = do
             fixedBodys     = map idenToSingleStructural [qnBody]
 
         let
-            f []     = error "The Impossible has happenned. in parseQuantifiedExpr.f"
+            f []     = bug "The Impossible has happenned. in parseQuantifiedExpr.f"
             f [i]    = [xMake| quantified.quantifier   := [qnName]
                              | quantified.quanVar      := [i]
                              | quantified.quanOverDom  := fixedQuanDoms
