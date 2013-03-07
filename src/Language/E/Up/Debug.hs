@@ -30,12 +30,12 @@ groom :: Show a => a -> String
 groom = show
 
 upBug :: String -> [E] -> t
-upBug = errpM
-{-upBug s _ = bug (pretty s)-}
+{-upBug = errpM-}
+upBug s _ = bug (pretty s)
 
 upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
-upBugi = erriM
-{-upBugi s _ = bug (pretty s)-}
+{-upBugi = erriM-}
+upBugi s _ = bug (pretty s)
 
 #endif
 
