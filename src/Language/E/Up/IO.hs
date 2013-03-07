@@ -11,6 +11,8 @@ module Language.E.Up.IO (
 import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Up.ReduceSpec
+import Language.E.Up.Debug
+
 
 import qualified Data.Text as T
 
@@ -92,3 +94,11 @@ simSpecMaybe (Just _) s = simSpec s
 zeroPad :: Int -> String
 zeroPad n = replicate (4 - length sn) '0'  ++ sn
  where sn = show n
+
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("Up.IO: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("Up.IO: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
+

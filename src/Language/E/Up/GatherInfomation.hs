@@ -164,3 +164,10 @@ getEnumsAndUnamed (Spec _ xs) = filter func  (statementAsList xs)
     func [xMatch| _ := topLevel.letting.typeUnnamed |] = True
     func _ = False
 
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("GatherInfomation: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("GatherInfomation: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
+

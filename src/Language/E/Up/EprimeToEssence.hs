@@ -157,7 +157,7 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
        let a' = introduceTypes emap ins' a
            b' = introduceTypes emap tos' b
        in   [xMake| mapping := [a',b'] |]
-    func _ _ _  = _bugg "EprimeToEssence: introduceTypes function error"
+    func _ _ _  = _bugg "EprimeToEssence: introduceTypes function"
 
 -- FIXME stuff inside a partition
 
@@ -193,8 +193,10 @@ convertU [xMatch| [Prim (S name)] := topLevel.letting.name.reference
 
 convertU _ = Nothing
 
-_bug :: String -> [E] -> t 
-_bug s = upBug ("EprimeToEssence: " ++ s)
-_bugg :: String -> t 
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("EprimeToEssence: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("EprimeToEssence: " ++ s )
+_bugg :: String -> t
 _bugg s = _bug s []
 

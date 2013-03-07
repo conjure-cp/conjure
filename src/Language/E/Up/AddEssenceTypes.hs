@@ -132,10 +132,8 @@ toEssenceRep r@[TagTuple _]
     let (ts',e') = fromJust info
         res  = toEssenceRep (TagSingle "matrix" : ts') e'
         res' = map (\f -> [xMake| value.tuple.values := [f] |]) (unwrapMatrix res)
-        {-res' = [xMake| value.tuple.values := [res] |]-}
 
     in wrapInMatrix res'
-    {-in  error "allowed"-}
 
     `_p` (" MT Nested tuples res", [res'])
     `_p` (" MT Nested tuples res", [res])
@@ -179,7 +177,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple t
         res4 = map (wrapInMatrix . map matrixToTuple) res3
 
     in [xMake| value.matrix.values.value.tuple.values := res4 |]
-    {-in error "d"-}
 
         `_p` ("P T tuple tuple res4",res4)
         `_p` ("P T tuple tuple res3",res3)
@@ -201,7 +198,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple t
             rs2 = after ts2 rs
 
         in rs2
-        {-in errb [rs2]-}
             `_p` ("  P T handleNerted res2",[rs2])
             `_f` ("  P T handleNested ts",ts2)
             `_p` ("  P T handleNerted res",[rs])
@@ -216,7 +212,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple t
         in  [xMake| value.matrix.values := vss |]
 
     after _ e1 = e1
-    {-after ts e = erri (ts, [e])-}
 
 -- see _matrix_of_tuples
 toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
@@ -309,7 +304,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
         res  = map matrixToTuple (transposeE vs2)
         res' = [xMake| value.matrix.values := res |]
 
-    --in  errb res
     in  res'
     `_p` ("N T value.tuple.values res'",[res'])
     `_p` ("N T value.tuple.values res",[res])
@@ -331,7 +325,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             rs2  = after ts' rs
 
         in rs2
-        --in errb [rs2]
             --`_p` (" K T handleNerted res2",[rs2])
             `_f` ("  K T handleNested ts'",ts')
             `_p` ("  K T handleNerted res",[rs])
@@ -347,7 +340,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             rs2 = after ts2 rs
 
         in rs2
-        --in errb [rs2]
             `_p` ("  MM T handleNerted res2",[rs2])
             `_f` ("  MM T handleNested ts",ts1)
             `_p` ("  MM T handleNerted res",[rs])
@@ -361,7 +353,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             rs2  = after ts1 rs
 
         in rs2
-        --in errb [rs2]
             `_p` (" N T handleNerted res2",[rs2])
             `_f` ("  N T handleNested ts",ts1)
             `_p` ("  N T handleNerted res",[rs])
@@ -408,8 +399,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     wrapper arr = (wrapInMatrix .  map matrixToTupleMaybe)  arr
         `_p` ("NB T wrapper",arr)
 
-    --wrapper arr = errb arr
-
     matrixToTupleMaybe :: E -> E
     matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
     matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
@@ -430,7 +419,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
             wrapped        = map (reTuple (count + 1) ) tranposed
 
         in  wrapInMatrix wrapped
-        {-in error "yes"-}
 
         `_p` ("prepro wrapped", [wrapped])
         `_p` ("prepro e'", tranposed)
@@ -460,7 +448,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
             e1@[xMatch| _ := value.tuple.values.value.tuple.values |] =
         let res = toEssenceRep  (TagSingle "matrix": ts1) e1
         in  res
-        {-in  error "prePro c2  needs some work" -}
             `_f` ("prePro c2  ts", ts1)
             `_p` ("prePro c2  e1", [e1])
             `_p` ("prePro c2  res", [res])
@@ -520,7 +507,6 @@ toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]
             rs2 = after ts2 rs
 
         in rs2
-        --in errb [rs2]
 
             --`_p` (" N T handleNerted res2",[rs2])
             `_f` (" ,N T handleNested ts",ts)
@@ -576,7 +562,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
         er a@(Tagged "literal" _)   = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
         {-er f = f -}
-        er f = upBug "AddEssenceTypes:er error" [f]
+        er f = _bug "toEssenceRep S values.value er" [f]
 
 -- FIXME This really should not be needed
 toEssenceRep r@[TagTuple _]  [xMatch| vals := expr.value.tuple |] =
@@ -676,7 +662,7 @@ toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
        let a' = unwrapExpr $ toEssenceRep ins'  (wrapInExpr [a])
            b' = unwrapExpr $ toEssenceRep tos'  (wrapInExpr [b])
        in   [xMake| mapping := [a',b'] |]
-    func _ _ _  = bug "AddEssenceTypes: toEssenceRep function error"
+    func _ _ _  = _bugg "toEssenceRep func "
 
 
 
@@ -714,3 +700,11 @@ flattenInt  [TagTuple ts] [xMatch| vs := value.tuple.values |] =
     in  [xMake| value.tuple.values := res |]
 
 flattenInt _  e = e
+
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("AddEssenceTypes: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("AddEssenceTypes: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
+

@@ -15,12 +15,14 @@ import qualified Text.Groom
 trace :: String -> a -> a
 trace = Debug.Trace.trace
 
-
 groom :: Show a => a -> String
 groom = Text.Groom.groom
 
 upBug :: String -> [E] -> t
 upBug = errpM
+
+upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
+upBugi = erriM
 
 #else
 import Language.E
@@ -28,9 +30,16 @@ groom :: Show a => a -> String
 groom = show
 
 upBug :: String -> [E] -> t
+{-upBug = errpM-}
 upBug s _ = bug (pretty s)
 
+upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
+{-upBugi = erriM-}
+upBugi s _ = bug (pretty s)
+
 #endif
+
+
 
 -- type Signatures to get rid of 
 -- defaulting the following constraint(s) to type `String' warnnings

@@ -34,7 +34,7 @@ tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
     in  unwrapMatrix res
         `_p` ("USING tranposeCheck tuples", [res])
 
-tranposeCheck e = errbM "tranposeCheck" [e]
+tranposeCheck e = _bug "tranposeCheck" [e]
 
 
 convertTuples :: E -> E
@@ -53,18 +53,25 @@ isLiteral  _ = False
 
 unwrapExpr ::  E -> E
 unwrapExpr  (Tagged Texpr [val]) =  val
-unwrapExpr e = errpM "EvaluateTree: unwrapExpr failed" [e]
+unwrapExpr e = _bug "unwrapExpr failed" [e]
 
 unwrapMatrix :: E -> [E]
 unwrapMatrix [xMatch| vs := value.matrix.values |] = vs
-unwrapMatrix e = errpM "Common: unwrapMatrix failed" [e]
+unwrapMatrix e = _bug "unwrapMatrix failed" [e]
 
 
 matrixToTuple :: E -> E
 matrixToTuple [xMatch| vs := value.matrix|] = [xMake| value.tuple := vs |]
-matrixToTuple e = errpM "Common: matrixToTuple failed" [e]
+matrixToTuple e = _bug "matrixToTuple failed" [e]
 
 
 wrapInMatrix :: [E] -> E
 wrapInMatrix arr = [xMake| value.matrix.values := arr |]
+
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("Up.Common: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("Up.Common: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
 

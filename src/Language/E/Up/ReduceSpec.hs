@@ -11,7 +11,7 @@ module Language.E.Up.ReduceSpec(
 
 import Language.E
 import Language.E.Evaluator.Full    ( fullEvaluator)
-
+import Language.E.Up.Debug
 
 -- Convert the unaryOp.negate.value.literal to a value.literal
 removeNegatives :: Monad m => Spec -> m Spec
@@ -161,4 +161,11 @@ bindersDoc' = do
     bs <- gets binders
     let bs' = nubBy ((==) `on` binderName) bs
     return $ vcat [ pretty nm <+> ":" <+> pretty val | Binder nm val <- bs' ]
+
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("ReduceSpec: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("ReduceSpec: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
 

@@ -6,7 +6,7 @@ import qualified Data.Map as M
 
 import Language.E
 import Language.E.Up.Data
-
+import Language.E.Up.Debug
 
 createVarTree ::  M.Map String a -> [Tree String]
 createVarTree varInfo =
@@ -55,4 +55,11 @@ treeInsert (Leaf k) ts =  Branch k ts
 
 tupleSplit :: [String] -> Bool
 tupleSplit arr  = (not . null) arr && (isPrefixOf "tuple" . head) arr
+
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("RepresentationTree " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("RepresentationTree: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
 

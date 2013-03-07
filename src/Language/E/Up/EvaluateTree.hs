@@ -27,7 +27,7 @@ evalTree' mapping prefix (Leaf part) =
 
     where
     name    = intercalate "_" (prefix ++ [part])
-    lookUpE = fromMaybe (error "fromMaybe et: lookUpType")  . flip M.lookup mapping
+    lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE evalTree'")  . flip M.lookup mapping
     vdata   = lookUpE  name
 
 
@@ -45,13 +45,12 @@ evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
         indexArr = indexes !! (length prefix -1)
         converted = matrix1DRep [indexArr] res
     in converted
-    {-in errpM ("indexArr" ++ groom indexArr) [converted]-}
         `_p` ("indexArr" ++ groom indexArr, [converted])
 
     where
     name  = intercalate "_" $ prefix ++ s : getName (repSelector arr)
     VarData{vIndexes=indexes} =
-        fromMaybe (error "fromMaybe evalTree': Matrix1D") (M.lookup name mapping)
+        fromMaybe (_bugg "fromMaybe evalTree': Matrix1D") (M.lookup name mapping)
 
     getName :: Tree String  -> [String]
     getName (Leaf s2) = [s2]
@@ -151,7 +150,6 @@ matrix1DRep [ix] [xMatch| vals := value.matrix.values |] =
         result  = map (\(a,b) -> [xMake| mapping := [ func a,  b] |] ) togther
         result' = [xMake| value.function.values := result |]
     in  result'
-    -- in erri (ix,vals)
 
     where func a = [xMake| value.literal := [ Prim (I a) ] |]
 
@@ -186,7 +184,7 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
 
 
 matrix1DRep ix e =
-    erriM "Matrix1DRep not Handled (indexes, e):" (ix, [e])
+    _bugi "Matrix1DRep not Handled (indexes, e):" (ix, [e])
 
 
 occurrenceRep :: VarData -> E
@@ -348,4 +346,10 @@ getValue value =
     case value of
         [xMatch| [Prim (I n)] := value.literal |] ->  n
 
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("EvaluateTree: " ++ s)
+_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi s = upBugi ("EvaluateTree: " ++ s )
+_bugg :: String -> t
+_bugg s = _bug s []
 
