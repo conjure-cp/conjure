@@ -19,10 +19,16 @@ trace = Debug.Trace.trace
 groom :: Show a => a -> String
 groom = Text.Groom.groom
 
+upBug :: String -> [E] -> t
+upBug = errpM
+
 #else
 import Language.E
 groom :: Show a => a -> String
 groom = show
+
+upBug :: String -> [E] -> t
+upBug s _ = bug (pretty s)
 
 #endif
 
