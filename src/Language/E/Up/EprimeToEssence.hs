@@ -1,5 +1,15 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
-module Language.E.Up.EprimeToEssence where
+module Language.E.Up.EprimeToEssence(
+    mainPure,
+    toEssenceRep',
+
+    -- for debuging
+    introduceTypes,
+    convertUnamed,
+    combineInfos,
+    convertRep,
+
+) where
 
 import Language.E
 
@@ -56,14 +66,14 @@ mainPure (spec,sol,org,unalteredOrg) =
 
 -- Keeps on running toEssenceRep until no changes happen.
 toEssenceRep' :: [TagT] -> E -> E
-toEssenceRep' ts e0 = refineUntilEqual ts e0 e1
+toEssenceRep' ts' e0 = refineUntilEqual ts' e0 e1
 
     where
-    e1 = toEssenceRep ts e0
+    e1 = toEssenceRep ts' e0
 
     refineUntilEqual :: [TagT] -> E -> E -> E
-    refineUntilEqual ts f1 f2 | f1 == f2 = f1
-    refineUntilEqual ts f1 f2 = refineUntilEqual ts f2 (toEssenceRep ts f2)
+    refineUntilEqual _  f1 f2 | f1 == f2 = f1
+    refineUntilEqual ts _  f2 = refineUntilEqual ts f2 (toEssenceRep ts f2)
 
 
 combineInfos ::  M.Map String VarInfo -> M.Map String [E] -> M.Map String VarData
