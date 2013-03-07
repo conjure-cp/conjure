@@ -20,6 +20,7 @@ evalTree mapping (Branch name arr) =
 evalTree mapping tree@(Leaf name) =
     (name,  evalTree' mapping []  tree)
 
+evalTree _ _ = _bugg "evalTree no match"
 
 evalTree' :: M.Map String VarData -> [String] -> Tree String  -> E
 evalTree' mapping prefix (Leaf part) =
@@ -42,14 +43,14 @@ evalTree' mapping prefix (Branch s@"AsReln"  arr) =
 
 evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
-        indexArr = indexes !! (length prefix -1)
+        indexArr = indexe !! (length prefix -1)
         converted = matrix1DRep [indexArr] res
     in converted
         `_p` ("indexArr" ++ groom indexArr, [converted])
 
     where
     name  = intercalate "_" $ prefix ++ s : getName (repSelector arr)
-    VarData{vIndexes=indexes} =
+    VarData{vIndexes=indexe} =
         fromMaybe (_bugg "fromMaybe evalTree': Matrix1D") (M.lookup name mapping)
 
     getName :: Tree String  -> [String]
@@ -74,6 +75,7 @@ evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
     where
     tupleToArr :: E -> [E]
     tupleToArr [xMatch| arr := expr.value.tuple.values |] = arr
+    tupleToArr _ = _bugg "tupleToArr"
 
 evalTree' mapping prefix (Branch part arr) =
     evalTree' mapping (prefix ++ [part])  (repSelector arr)
@@ -89,6 +91,9 @@ matrixToPartiton [xMatch| vs := expr.value.matrix.values|] =
 
     where
     func [xMatch| xs := value.matrix.values |] = [xMake| part := xs |]
+    func f = _bug "matrixToPartiton func" [f]
+
+matrixToPartiton e = _bug "matrixToPartiton" [e]
 
 relnToFunc :: E -> E
 relnToFunc [xMatch| [v] := expr|] =
@@ -131,6 +136,8 @@ reTuple [xMatch| vs := value.matrix.values |]  =
     let res = map reTuple vs
     in  [xMake| value.matrix.values := res |]
 
+reTuple e = _bug "reTuple" [e]
+
 
 repConverter ::  String -> VarData -> E
 repConverter  kind  vdata@VarData{vEssence = es} =
@@ -141,8 +148,8 @@ repConverter  kind  vdata@VarData{vEssence = es} =
       _            -> es
 
 matrix1DRep ::  [[Integer]] -> E -> E
-matrix1DRep indexes [xMatch| [v] := expr |]  =
-    let res = matrix1DRep indexes v
+matrix1DRep indexe [xMatch| [v] := expr |]  =
+    let res = matrix1DRep indexe v
     in  [xMake| expr := [res] |]
 
 matrix1DRep [ix] [xMatch| vals := value.matrix.values |] =
@@ -179,8 +186,10 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
         convert' [xMatch| vs2  := value.tuple.values |]  =
             let res = map convert' vs2
             in  [xMake| value.tuple.values := res |]
-        {-convert' [xMatch| [singleton] := value.matrix.values |]  = singleton-}
         convert' f@[xMatch| _ := value.matrix.values |]  = f
+        convert' f = _bug "Matrix1DRep convert'" [f]
+
+    convert f = _bug  "Matrix1DRep convert" [f]
 
 
 matrix1DRep ix e =
@@ -201,6 +210,7 @@ occurrenceRep  VarData{vIndexes = ix,
 
     in  [xMake| expr.value := [set] |]
 
+occurrenceRep _ = _bugg "occurrenceRep"
 
 occurrence :: [[Integer]] -> E -> E
 occurrence ix [xMatch| [Tagged "matrix" _ ] := value
@@ -212,6 +222,8 @@ occurrence ix [xMatch| [Tagged "matrix" _ ] := value
              |  mats := value.matrix.values |] =
     let vals =  map (occurrence (tail ix)) mats
     in [xMake| value.matrix.values :=  vals |]
+
+occurrence ix f = _bugi "occurrence" (ix,[f])
 
 occurrence' :: [[Integer]] -> [E] -> [E]
 occurrence' ix lits=
@@ -226,6 +238,7 @@ explicitRep VarData{vEssence=[xMatch| [Tagged _ vals ] := expr.value
     let set = Tagged "matrix" vals in
     [xMake| expr.value := [set] |]
 
+explicitRep _ = _bugg "explicitRep"
 
 -- e.g [ [2,2], [4,4], [6,7]] -> [ [2,4,6], [2,4,7] ]
 transpose :: [[t]] -> [[t]]
@@ -257,6 +270,8 @@ pairMatrix'
         ([xMatch| _ := values |]:_) -> -- __j "pairMatrix' pres2"
             [xMake| value.matrix.values := (concatMap con res')|]
 
+        f -> _bug "pairMatrix'" f
+
     where con [xMatch| vs := values |] = vs
           con e = _bug "pairMatrix' con" [e]
 
@@ -278,6 +293,7 @@ pairEqual v1 v2
     where l1 = length v1
           l2 = length v2
 
+pairEqual _ _ = _bugg "pairEqual not equal lengths"
 
 mergeExplicitVarSizeTuple :: E -> E -> E
 mergeExplicitVarSizeTuple
@@ -308,9 +324,11 @@ mergeExplicitVarSizeTuple
         else
             _bugg "t1's has to be <= t2's dim"
     where
+        dimOfMatrix :: E -> Integer
         dimOfMatrix [xMatch| v := value.matrix.values
                     |  _  := value.matrix.values.value.matrix |] = 1 + dimOfMatrix (head v)
         dimOfMatrix [xMatch| _ := value.matrix.values |] = 1
+        dimOfMatrix f = _bug "dimOfMatrix" [f]
 
 mergeExplicitVarSizeTuple
     e1@([xMatch| _  := value.matrix.values.value.matrix
@@ -325,10 +343,13 @@ mergeExplicitVarSizeTuple
         `_p` ("mergeExplicitVarSizeTuple M T e1",[e1])
 
 
+mergeExplicitVarSizeTuple f g = _bug "mergeExplicitVarSizeTuple" [f,g]
+
+
 selected :: (E,E) -> E
 selected ([xMatch| _ := value.matrix.values.value.literal
                  | [Tagged "values" v1] := value.matrix |]
-        ,([xMatch| [Tagged "values" v2] := value.matrix |]))=
+        ,[xMatch| [Tagged "values" v2] := value.matrix |])=
             let togther = zip v1 v2
                 chosen  = filter (\(a,_) -> getValue a == 1) togther
                 values  = map snd chosen in
@@ -340,11 +361,14 @@ selected ([xMatch| [Tagged "values" v1] := value.matrix |]
                 values  = map selected togther  in
         [xMake| value.matrix :=  [Tagged "values" values] |]
 
+selected _ = _bugg "selected"
 
 getValue :: E -> Integer
 getValue value =
     case value of
         [xMatch| [Prim (I n)] := value.literal |] ->  n
+        f ->  _bug "getValue" [f]
+
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("EvaluateTree: " ++ s)

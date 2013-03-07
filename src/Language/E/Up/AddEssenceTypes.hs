@@ -429,7 +429,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         val = isNestedTuple [ts1] vs1
 
     --  seem good  guard for tmm3
-    prePro ts1@[TagSingle "matrix", TagTuple _] 
+    prePro ts1@[TagSingle "matrix", TagTuple _]
             e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
         let res = toEssenceRep  (TagSingle "matrix": ts1) e1
         --in  upBug "prePro MMT for tmm3,  needs some work" [res]
@@ -463,11 +463,8 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         `_p` ("prePro CT vs",  [e1])
         `_f` ("prePro CT ts", r)
 
-    -- FIXME  fixes c1
-    -- ints more nested then they should be
     prePro r@[TagTuple tss] f@[xMatch| vs2 := value.tuple.values |] =
         let res   = zipWith (\z -> toEssenceRep (TagSingle "matrix":z)  ) tss vs2
-            res2  = map (\h -> wrapInMatrix [h]) res
             res'  = [xMake| value.tuple.values := res |]
         in  res'
         `_p` ("prePro TV res'", [res'])
@@ -590,6 +587,8 @@ toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
          combineValues [xMatch| v1 := values |]  [xMatch| v2 := values |] = [xMake| values := v1 ++ v2 |]
          combineValues v1@[xMatch| _:= value |]  v2@[xMatch| _:= value |] = [xMake| values := [v1,v2] |]
          combineValues v1@[xMatch| _ := value |] [xMatch| v2:= values  |] = [xMake| values := v1 : v2 |]
+
+         combineValues f g = _bug "combineValues" [f,g]
 
 toEssenceRep r@(TagTuple _ : [])  e@[xMatch| vals := values.value.tuple |] =
     let res = map func  vals

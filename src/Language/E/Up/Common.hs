@@ -14,7 +14,7 @@ import Language.E.Up.Debug
 
 
 transposeE :: [E] -> [E]
-transposeE e | 1 == 3  `_p` ("tranposeE args", e ) = undefined
+{-transposeE e | 1 == 3  `_p` ("tranposeE args", e ) = undefined-}
 
 transposeE arr  |  all (not . isLiteral) arr =
     let arr2D = map tranposeCheck arr
