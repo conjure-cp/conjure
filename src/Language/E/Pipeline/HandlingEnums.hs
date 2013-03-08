@@ -8,11 +8,11 @@ import Language.E.Pipeline.ImplicitWheres
 
 handleEnums :: MonadConjure m => Spec -> m Spec
 handleEnums =
-    handleEnumsLetting >=> return . doReplacements >=>
-    handleEnumsGiven   >=> return . doReplacements >=>
-    updateGivenFinds   >=>
-    handleGivenIntDom  >=>
-    handleInfiniteGivenDoms
+    recordSpec >=> handleEnumsLetting >=> return . doReplacements >=>
+    recordSpec >=> handleEnumsGiven   >=> return . doReplacements >=>
+    recordSpec >=> updateGivenFinds   >=>
+    recordSpec >=> handleGivenIntDom  >=>
+    recordSpec >=> handleInfiniteGivenDoms
 
 -- replaces letting e be new type enum {a, b, c}
 -- with     letting e_fromEnum be domain int(1..3)
@@ -137,12 +137,7 @@ handleGivenIntDom spec
                 befores <- get
                 -- only add this new given if this is the first time we are seeing it.
                 if statement `elem` befores || newDecl `elem` befores
-                    then do
-                        lift $ mkLog "debug"
-                             $ vcat [ "not adding"
-                                    , pretty statement
-                                    ]
-                        return [statement]
+                    then return [statement]
                     else do
                         lift $ mkLog "handleGivenIntDom"
                              $ vcat [ pretty statement
