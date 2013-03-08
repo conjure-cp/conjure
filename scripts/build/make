@@ -50,7 +50,7 @@ OptionParser.new do |opts|
 
 end.parse!
 
-version  = `hg id -i | head -n 1`.strip
+version  = `hg id -i | head -n 1`.strip[0..11]
 contents = [ "module RepositoryVersion where",
              "repositoryVersion :: String",
              "repositoryVersion = \"#{version}\""
