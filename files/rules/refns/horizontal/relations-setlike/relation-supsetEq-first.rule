@@ -1,0 +1,7 @@
+
+[1000]
+
+&a supsetEq &b ~~> toSet(&a) supsetEq &b
+
+    where &a hasType `relation`
+    where &b hasType `set of _`
