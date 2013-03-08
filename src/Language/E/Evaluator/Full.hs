@@ -495,9 +495,12 @@ stripUnnecessaryTyped [xMatch| [x]  := typed.left
                              | [ty] := typed.right.domainInExpr
                              |] = do
     ty'  <- typeOf x
-    if ty == ty'
-        then ret x
-        else return Nothing
+    case ty' of
+        [xMatch| _ := type.bool |] -> ret x
+        [xMatch| _ := type.int  |] -> ret x
+        _ ->  if ty == ty'
+                then ret x
+                else return Nothing
 stripUnnecessaryTyped _ = return Nothing
 
 -- we generally don't and actually don't even want to, unroll quantifiers.
