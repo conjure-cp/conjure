@@ -17,7 +17,7 @@ type Param    = Maybe Spec
 type Solution = Spec
 
 validateSolution :: Essence -> Param -> Solution -> IO ()
-validateSolution essence@(Spec language _) param solution = do
+validateSolution essence param solution = do
     let (mresult, _logs) = runCompESingle "validating solution" helper
     -- printLogs _logs
     case mresult of
@@ -26,32 +26,7 @@ validateSolution essence@(Spec language _) param solution = do
         Right True  -> return ()
 
     where
-        getDecls (Spec _ x) =
-            [ (nm, dom)
-            | [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference
-                     | [dom]         := topLevel.declaration.find.domain
-                     |] <- statementAsList x
-            ] ++
-            [ (nm, dom)
-            | [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
-                     | [dom]         := topLevel.declaration.given.domain
-                     |] <- statementAsList x
-            ]
 
-        inliner typesMap bindingsMap (Spec v s) = Spec v (f s)
-            where
-                f x@[xMatch| [Prim (S nm)] := reference |]
-                    = case (M.lookup nm typesMap, M.lookup nm bindingsMap) of
-                        (Just theType, Just binding) ->
-                            f [xMake| typed.left               := [binding]
-                                    | typed.right.domainInExpr := [theType]
-                                    |]
-                        (_, Just _) -> bug $ "Cannot determine the type of:" <+> pretty nm
-                        _           -> x
-                f x@[xMatch| [_] := structural.single.reference |] = x
-                f (Tagged t xs)
-                    = Tagged t (map f xs)
-                f x = x
 
         helper = do
 
@@ -64,40 +39,22 @@ validateSolution essence@(Spec language _) param solution = do
                 Spec _ s        -> mapM_ introduceStuff (statementAsList s)
             -- bindersDoc >>= mkLog "binders 2"
 
+            let essenceCombined =
+                    case (essence, param) of
+                        (Spec l s, Just (Spec _ p)) -> Spec l (listAsStatement $ statementAsList p ++ statementAsList s)
+                        _ -> essence
+
             let pipeline0 =
                         recordSpec >=> explodeStructuralVars
+                    >=> recordSpec >=> stripDecls
+                    >=> recordSpec >=> inlineLettings
+                    >=> recordSpec >=> fullyInline
                     >=> recordSpec >=> handleEnums
                     >=> recordSpec >=> handleUnnameds
-                    >=> recordSpec >=> inlineLettings
+                    >=> recordSpec >=> stripDecls
+                    >=> recordSpec >=> fullyEvaluate
 
-
-            lettingsInlined <- pipeline0 essence
-            -- mkLog "debug lettingsInlined"    (pretty lettingsInlined)
-
-            let declsStripped = Spec language $ listAsStatement
-                    [ i
-                    | let Spec _ stmt = lettingsInlined
-                    , i <- statementAsList stmt
-                    , case i of
-                        [xMatch| _ := topLevel.declaration |] -> False
-                        _ -> True
-                    ]
-            -- mkLog "debug stripped"           (pretty declsStripped)
-
-
-            fullyInlined    <- do bs <- gets binders
-                                  typesMap <- fmap M.fromList
-                                        $ forM (getDecls lettingsInlined)
-                                        $ \ (nm, dom) -> do
-                                            itsType <- typeOf dom
-                                            return (nm, itsType)
-                                  let bindingsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
-                                  return $ inliner typesMap bindingsMap declsStripped
-            -- mkLog "debug fullyInlined"       (pretty fullyInlined)
-
-            Spec _ s <- fullyEvaluate fullyInlined
-            -- simplified@(Spec _ s) <- fullyEvaluate fullyInlined
-            -- mkLog "debug simplified"         (pretty simplified)
+            Spec _ s <- pipeline0 essenceCombined
 
             let checks = map isPartOfValidSolution (statementAsList s)
             if all isJust checks
@@ -109,11 +66,13 @@ validateSolution essence@(Spec language _) param solution = do
                                 ]
 
 
+
 isPartOfValidSolution :: E -> Maybe Bool
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.suchThat.value.literal |] = Just b
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.where   .value.literal |] = Just b
 isPartOfValidSolution [xMatch| _ := topLevel.objective |] = Just True
 isPartOfValidSolution _ = Nothing
+
 
 fullyEvaluate :: MonadConjure m => Spec -> m Spec
 fullyEvaluate
@@ -121,5 +80,62 @@ fullyEvaluate
     >=> recordSpec >=> explodeStructuralVars
     >=> recordSpec >=> fullySimplifySpec
     >=> recordSpec >=> return . atMostOneSuchThat
+
+
+fullyInline :: MonadConjure m => Spec -> m Spec
+fullyInline inp = do
+    bs <- gets binders
+    typesMap <- fmap M.fromList
+        $ forM (getDecls inp)
+        $ \ (nm, dom) -> do
+            itsType <- typeOf dom
+            return (nm, itsType)
+    let bindingsMap = M.fromList [ (nm, val) | Binder nm val <- bs ]
+    inliner typesMap bindingsMap inp
+
+    where
+
+        inliner typesMap bindingsMap (Spec v s) = Spec v <$> f s
+            where
+                f x@[xMatch| [Prim (S nm)] := reference |]
+                    = case (M.lookup nm typesMap, M.lookup nm bindingsMap) of
+                        (_, Just [xMatch| _ := type |]) -> return x
+                        (Just theType, Just binding) ->
+                            f [xMake| typed.left               := [binding]
+                                    | typed.right.domainInExpr := [theType]
+                                    |]
+                        (Nothing, Just binding) -> do
+                            theType <- typeOf x
+                            f [xMake| typed.left               := [binding]
+                                    | typed.right.domainInExpr := [theType]
+                                    |]
+                        _           -> return x
+                f x@[xMatch| [_] := structural.single.reference |] = return x
+                f (Tagged t xs)
+                    = Tagged t <$> mapM f xs
+                f x = return x
+
+        getDecls (Spec _ x) =
+            [ (nm, dom)
+            | [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference
+                     | [dom]         := topLevel.declaration.find.domain
+                     |] <- statementAsList x
+            ] ++
+            [ (nm, dom)
+            | [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+                     | [dom]         := topLevel.declaration.given.domain
+                     |] <- statementAsList x
+            ]
+
+
+stripDecls :: MonadConjure m => Spec -> m Spec
+stripDecls (Spec language stmt) = return $ Spec language $ listAsStatement
+    [ i
+    | i <- statementAsList stmt
+    , case i of
+        [xMatch| _ := topLevel.declaration    |] -> False
+        [xMatch| _ := topLevel.letting.domain |] -> False
+        _ -> True
+    ]
 
 
