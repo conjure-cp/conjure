@@ -102,7 +102,7 @@ getEssenceVariable [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.
 
 
 getEssenceVariable [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
-                          | [Prim (S kind)] := topLevel.declaration.find.domain.type.enum |] =
+                          | [Prim (S kind)] := topLevel.declaration.find.domain.type.typeEnum |] =
    Just (T.unpack name,  [TagEnum (T.unpack  kind)]  )
 
 

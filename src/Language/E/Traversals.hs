@@ -288,7 +288,7 @@ introduceStuff = helper
         helper   [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
                         | xs            := topLevel.letting.typeEnum.values
                         |] = do
-            let ty = [xMake| type.enum := [Prim (S nm)] |]
+            let ty = [xMake| type.typeEnum := [Prim (S nm)] |]
             addReference nm ty
             forM_ xs $ \ y -> case y of
                 [xMatch| [Prim (S nm')] := reference |] -> addReference nm' ty

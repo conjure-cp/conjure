@@ -46,8 +46,12 @@ typeUnify
     [xMatch| [] := type.int  |]
     = True
 typeUnify
-    [xMatch| [Prim (S a)] := type.enum |]
-    [xMatch| [Prim (S b)] := type.enum |]
+    [xMatch| [Prim (S a)] := type.typeUnnamed |]
+    [xMatch| [Prim (S b)] := type.typeUnnamed |]
+    = a == b
+typeUnify
+    [xMatch| [Prim (S a)] := type.typeEnum |]
+    [xMatch| [Prim (S b)] := type.typeEnum |]
     = a == b
 typeUnify
     [xMatch| [a1] := type.matrix.index
@@ -179,12 +183,16 @@ typeOf [xMatch| [d] := topLevel.declaration.dim  .domain  |] = typeOf d
 typeOf [xMatch| [ ] := topLevel.declaration.given.typeInt |] = return tyInt
 
 typeOf [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+              | _             := topLevel.letting.typeUnnamed
+              |] = return [xMake| type.typeUnnamed := [Prim (S nm)] |]
+
+typeOf [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
               | _             := topLevel.letting.typeEnum
-              |] = return [xMake| type.enum := [Prim (S nm)] |]
+              |] = return [xMake| type.typeEnum := [Prim (S nm)] |]
 
 typeOf [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
               | _             := topLevel.declaration.given.typeEnum
-              |] = return [xMake| type.enum := [Prim (S nm)] |]
+              |] = return [xMake| type.typeEnum := [Prim (S nm)] |]
 
 typeOf [xMatch| [d] := typed.right |] = typeOf d
 
@@ -204,7 +212,7 @@ typeOf [xMatch| _ := domain.bool |] = return tyBool
 typeOf [xMatch| _ := domain.int  |] = return [xMake| type.int  := [] |]
 
 typeOf [xMatch| [Prim (S nm)] := domain.enum.name.reference
-              |] = return [xMake| type.enum := [Prim (S nm)] |]
+              |] = return [xMake| type.typeEnum := [Prim (S nm)] |]
 
 typeOf [xMatch| [index] := domain.matrix.index
               | [inner] := domain.matrix.inner
@@ -679,7 +687,7 @@ typeOf p@[xMatch| [f] := operator.defined |] = do
     tyF <- typeOf f
     case tyF of
         [xMatch| [fr] := type.function.innerFrom
-               |] -> return [xMake| type.set.inner := [fr] |]   
+               |] -> return [xMake| type.set.inner := [fr] |]
         _ -> typeErrorIn p
 
 typeOf p@[xMatch| [f] := operator.range |] = do
