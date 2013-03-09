@@ -56,9 +56,9 @@ isTagMatrix :: TagT -> Bool
 isTagMatrix (TagSingle "matrix") = True
 isTagMatrix _ = False
 
-isTagTuple :: TagT -> Bool
-isTagTuple (TagTuple _) = True
-isTagTuple _ = False
+-- isTagTuple :: TagT -> Bool
+-- isTagTuple (TagTuple _) = True
+-- isTagTuple _ = False
 
 isNestedTuple :: [TagT] -> E ->  Maybe (Int, [TagT], E)
 isNestedTuple [ TagTuple [  ts@(TagSingle _:_) ] ]

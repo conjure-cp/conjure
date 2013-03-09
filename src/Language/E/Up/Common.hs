@@ -65,8 +65,8 @@ matrixToTuple [xMatch| vs := value.matrix|] = [xMake| value.tuple := vs |]
 matrixToTuple e = _bug "matrixToTuple failed" [e]
 
 
-wrapInMatrix :: [E] -> E
-wrapInMatrix arr = [xMake| value.matrix.values := arr |]
+-- wrapInMatrix :: [E] -> E
+-- wrapInMatrix arr = [xMake| value.matrix.values := arr |]
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("Up.Common: " ++ s)

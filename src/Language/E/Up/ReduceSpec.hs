@@ -149,18 +149,18 @@ inlineVars (Tagged val arr) = do
 inlineVars e = return e
 
 
-bd :: MonadConjure m => E -> m E
-bd x = do
-    bs <- bindersDoc'
-    mkLog "Bindings For"  (vcat [pretty x, bs])
-    return x
+-- bd :: MonadConjure m => E -> m E
+-- bd x = do
+    -- bs <- bindersDoc'
+    -- mkLog "Bindings For"  (vcat [pretty x, bs])
+    -- return x
 
 
-bindersDoc' :: MonadConjure m => m Doc
-bindersDoc' = do
-    bs <- gets binders
-    let bs' = nubBy ((==) `on` binderName) bs
-    return $ vcat [ pretty nm <+> ":" <+> pretty val | Binder nm val <- bs' ]
+-- bindersDoc' :: MonadConjure m => m Doc
+-- bindersDoc' = do
+    -- bs <- gets binders
+    -- let bs' = nubBy ((==) `on` binderName) bs
+    -- return $ vcat [ pretty nm <+> ":" <+> pretty val | Binder nm val <- bs' ]
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("ReduceSpec: " ++ s)
