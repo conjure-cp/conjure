@@ -1,0 +1,16 @@
+
+[900]
+
+$ this rule is better than set-eq-to-subsets.rule
+$ however, it cannot be applied in general because hasDomain only works on atomic sets.
+
+&a = &b
+
+    ~~>
+
+(forall i : &t1 . i in &a <-> i in &b) /\ 
+(forall i : &t2 . i in &a <-> i in &b)
+
+    where &a hasDomain `set (..) of &t1`
+    where &b hasDomain `set (..) of &t2`
+

@@ -1,7 +1,0 @@
-
-[1000]
-
-&a = &b ~~> (forall i : &t1. (i in &a <-> i in &b)) /\ (forall i : &t2. (i in &a <-> i in &b))
-
-    where &a hasDomain `set (..) of &t1`
-    where &b hasDomain `set (..) of &t2`
