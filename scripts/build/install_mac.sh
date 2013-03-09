@@ -63,7 +63,7 @@ ghc --version
 cabal --version
 happy --version
 
-VERSION=$(hg id -i | head -n 1)A
+VERSION=$(hg id -i | head -n 1)
 echo "module RepositoryVersion where"       >  src/RepositoryVersion.hs
 echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
 echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
