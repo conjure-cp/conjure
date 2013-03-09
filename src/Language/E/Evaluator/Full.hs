@@ -687,6 +687,7 @@ evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
         mulE [x,y]  = [eMake| &x * &y |]
         mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
 
+        domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
         domSize [xMatch| [Prim (S s)] := reference |] = do
             x <- errMaybeT "domSize" lookupReference s
             domSize x

@@ -127,7 +127,7 @@ handleInIOSingle
 handleInIOSingle (mx, logs) = do
     printLogs logs
     case mx of
-        Left  x -> error $ renderPretty x
+        Left  x -> bug x
         Right x -> return x
 
 toError :: String -> ConjureError -> Doc
