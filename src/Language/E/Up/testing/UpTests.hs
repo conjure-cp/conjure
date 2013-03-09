@@ -44,7 +44,7 @@ specs = do
                  addExtension dir "eprime.solution",
                  f,
                  Just $ addExtension (joinPath [base,name]) "param",
-                 Just $ addExtension (joinPath [base,name,name]) "essence-param"
+                 Just $ addExtension (joinPath [base,name]) "essence-param"
              ),
              addExtension dir "solution" 
             )
@@ -52,13 +52,12 @@ specs = do
 runSpec :: ((FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath)
             , FilePath) -> IO ()
 runSpec  (sps@(_, _,orgF,_,_),ansF) = do
-    (spec,sol,org) <- getTestSpecs sps
-    unalteredOrg <- getSpec orgF
+    (spec,sol,org,orgP) <- getTestSpecs sps
 
     ansS <- getSpec ansF
     let ans = es ansS
 
-    let resultEssence = mainPure(spec,sol,org,unalteredOrg)
+    let resultEssence = mainPure(spec,sol,org,orgP)
 
     show (pretty resultEssence) `shouldBe` show (pretty ans)
     where

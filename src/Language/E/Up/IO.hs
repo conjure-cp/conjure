@@ -42,26 +42,29 @@ getSpec' removeContraints filepath = do
         func t =  fst . T.breakOn t
 
 
-getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) -> IO (Spec, Spec, Spec)
+getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) -> IO (Spec, Spec, Spec,Spec)
 getSpecs (specF, solF, orgF,paramF,orgParamF) = do
     let param    = getSpecMaybe paramF
     let orgParam = getSpecMaybe orgParamF
 
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
-    org   <- getSpec orgF  >>= introduceParams orgParam >>= reduceSpec 
-    return (spec,sol,org)
+    orgP  <- getSpec orgF  >>= introduceParams orgParam
+    org   <- reduceSpec  orgP
+    return (spec,sol,org,orgP)
 
 
-getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath) -> IO (Spec, Spec, Spec)
+getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath) 
+             -> IO (Spec, Spec, Spec,Spec)
 getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
     param    <- getTestSpecMaybe paramF
     orgParam <- getTestSpecMaybe orgParamF
 
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
-    org   <- getSpec orgF  >>= introduceParams orgParam >>= reduceSpec 
-    return (spec,sol,org)
+    orgP  <- getSpec orgF  >>= introduceParams orgParam
+    org   <- reduceSpec  orgP
+    return (spec,sol,org,orgP)
 
 getTestSpecMaybe :: Maybe FilePath -> IO (Maybe (IO Spec))
 getTestSpecMaybe (Just f) = do 

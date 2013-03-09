@@ -24,7 +24,7 @@ import qualified Data.Text as T
 import qualified Data.Map as M
 
 mainPure :: (Spec, Spec, Spec, Spec) -> [E]
-mainPure (spec,sol,org,unalteredOrg) =
+mainPure (spec,sol,org,orgP) =
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
@@ -32,8 +32,8 @@ mainPure (spec,sol,org,unalteredOrg) =
         solInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
         varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) varInfo1
 
-        enumMapping1 = getEnumMapping unalteredOrg
-        enums1       = getEnumsAndUnamed unalteredOrg
+        enumMapping1 = getEnumMapping orgP
+        enums1       = getEnumsAndUnamed orgP
 
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
 

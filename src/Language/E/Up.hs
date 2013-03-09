@@ -17,10 +17,9 @@ translateSolution
     -> IO ()
 translateSolution
     essence param eprime eprimeParam eprimeSolution outSolution= do
-    (spec, sol, org) <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
-    unalteredOrg     <- getSpec essence
+    (spec, sol, org,orgP) <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
 
-    let resultEssence =  normaliseSolutionEs $ mainPure(spec,sol,org,unalteredOrg)
+    let resultEssence =  normaliseSolutionEs $ mainPure(spec,sol,org,orgP)
     writeEssence outSolution resultEssence
 
     return ()
