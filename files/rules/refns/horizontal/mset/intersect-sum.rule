@@ -1,0 +1,14 @@
+
+[1000]
+
+sum &i in &a intersect &b , &guard . &body
+
+    ~~>
+
+sum j : &inner
+    , &guard { &i --> j }
+    . &body  { &i --> j } * min(freq(&a,j),freq(&b,j))
+
+    where &a hasType `mset of _`
+    where &b hasType `mset of _`
+    where &a hasDomain `mset (..) of &inner`
