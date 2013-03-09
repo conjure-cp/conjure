@@ -386,7 +386,7 @@ instance Pretty E where
                   |]
         = pretty actual <> prettyList Pr.parens "," args
 
-    pretty x = "{-#" <+> prettyAsTree x <+> "#-}"
+    pretty (Tagged t xs) = "{-#" <+> pretty t <++> vcat (map pretty xs) <+> "#-}"
 
 
 prettyPrec :: Int -> E -> Doc
