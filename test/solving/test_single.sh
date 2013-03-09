@@ -52,6 +52,7 @@ function perModelperParam {
     PARAM=$2
 
     echo "refineParam for $SPEC $MODEL $PARAM"
+    # echo "conjure --mode refineParam --in-essence $SPEC.essence --in-eprime $MODEL.eprime --in-essence-param $PARAM.param --out-eprime-param $MODEL-$PARAM.eprime-param"
     conjure                                                                 \
         --mode       refineParam                                            \
         --in-essence $SPEC.essence                                          \
@@ -60,6 +61,7 @@ function perModelperParam {
         --out-eprime-param $MODEL-$PARAM.eprime-param
 
     echo "savilerow for $SPEC $MODEL $PARAM"
+    # echo "savilerow -in-eprime $MODEL.eprime -in-param $MODEL-$PARAM.eprime-param -out-minion $MODEL-$PARAM.eprime-minion -out-solution $MODEL-$PARAM.eprime-solution"
     savilerow                                                               \
         -in-eprime    $MODEL.eprime                                         \
         -in-param     $MODEL-$PARAM.eprime-param                            \
@@ -67,6 +69,7 @@ function perModelperParam {
         -out-solution $MODEL-$PARAM.eprime-solution
 
     echo "translateSolution for $SPEC $MODEL $PARAM"
+    # echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
         --mode translateSolution                                            \
         --in-essence            $SPEC.essence                               \
@@ -79,6 +82,7 @@ function perModelperParam {
 
     SOL_VALIDATE=0
     echo "validateSolution for $SPEC $MODEL $PARAM"
+    # echo "conjure --mode validateSolution --in-essence $SPEC.essence --in-param $PARAM.param --in-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
         --mode validateSolution                                             \
         --in-essence  $SPEC.essence                                         \
@@ -95,6 +99,7 @@ function perModelperParam {
     SOL_DIFF=0
     if [ -f "$PARAM.solution" ] ; then
         echo "diffSolution for $SPEC $MODEL $PARAM"
+        # echo "conjure --mode diff $PARAM.solution $MODEL-$PARAM.solution"
         conjure                                                             \
             --mode diff                                                     \
             $PARAM.solution                                                 \
