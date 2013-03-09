@@ -74,6 +74,7 @@ suppress = S.fromList
     , "missing:domainOf"
 
     , "gensym"
+    , "from-cached"
 
     , "builtIn.relationRepr"
     , "builtIn.relationApply"
@@ -84,8 +85,8 @@ suppress = S.fromList
     -- , "configuration"
     -- , "representation"
     -- , "addedDecl"
-    -- , "addedStructuralCons"
-    -- , "addedChannel"
+    , "addedStructuralCons"
+    , "addedChannel"
 
     -- process indicators for conjure-refn, uncomment if you want to suppress
     -- , "applied"
@@ -93,8 +94,9 @@ suppress = S.fromList
     -- , "removedDecl"
 
     -- other process indicators
-    -- , "handleInfDom"
-    -- , "noTupleDomsInQuan"
+    , "handleInfDom"
+    , "noTupleDomsInQuan"
+    , "addSlicing"
 
     ]
 
