@@ -79,9 +79,8 @@ typeUnify
 typeUnify
     [xMatch| as := type.tuple.inners |]
     [xMatch| bs := type.tuple.inners |]
-    = if length as == length bs
-        then and $ zipWith typeUnify as bs
-        else False
+    = and $ (length as == length bs)
+          :  zipWith typeUnify as bs
 typeUnify
     [xMatch| as := type.relation.inners |]
     [xMatch| bs := type.relation.inners |]
@@ -714,8 +713,9 @@ typeOf p = typeErrorIn' p "default case"
 
 
 innerTypeOf :: E -> Maybe E
-innerTypeOf [xMatch| [ty] := type. set.inner |] = return ty
-innerTypeOf [xMatch| [ty] := type.mset.inner |] = return ty
+innerTypeOf [xMatch| [ty] := type.     set.inner  |] = return ty
+innerTypeOf [xMatch| [ty] := type.    mset.inner  |] = return ty
+innerTypeOf [xMatch| tys  := type.relation.inners |] = return [xMake| type.tuple.inners := tys |]
 innerTypeOf _ = Nothing
 
 
