@@ -221,14 +221,6 @@ fullEvaluator
 fullEvaluator
     [xMatch| [Prim (S "in")] := binOp.operator
            | [x] := binOp.left
-           | ys  := binOp.right.typed.left.value.set.values
-           |]
-    | isFullyInstantiated x && all isFullyInstantiated ys
-    = returnBool $ x `elem` ys
-
-fullEvaluator
-    [xMatch| [Prim (S "in")] := binOp.operator
-           | [x] := binOp.left
            | ys  := binOp.right.value.mset.values
            |]
     | isFullyInstantiated x && all isFullyInstantiated ys
@@ -237,7 +229,7 @@ fullEvaluator
 fullEvaluator
     [xMatch| [Prim (S "in")] := binOp.operator
            | [x] := binOp.left
-           | ys  := binOp.right.typed.left.value.mset.values
+           | ys  := binOp.right.value.relation.values
            |]
     | isFullyInstantiated x && all isFullyInstantiated ys
     = returnBool $ x `elem` ys
