@@ -16,10 +16,16 @@ given duration : function (total) Piece --> int(1..),
 find order : function (total, bijective) Index --> Piece,
      arrive, leave : function (total) Player --> Index
 
-maximising sum p : Player . (sum i : int(1..arrive(p)) . duration(order(i)))
-                    + (sum i : int(leave(p)..n_pieces) . duration(order(i)))
+$maximising
+    $sum p : Player .
+        $(sum i : int(1..arrive(p)) . duration(order(i))) +
+        $(sum i : int(leave(p)..n_pieces) . duration(order(i)))
 
-such that forAll p : Player . {(arrive(p)),(leave(p))} subsetEq plays_in(p,_)
-    /\ forAll i : Index . (order(i)) in plays_in(p,_) ->
-        arrive(p) <= i /\ leave(p) >= i
+such that
+    forAll p : Player . plays_in(p,arrive(p)),
+    forAll p : Player . plays_in(p,leave(p)),
+    forAll p : Player .
+        forAll i : Index
+            , plays_in(p,order(i))
+            . arrive(p) <= i /\ leave(p) >= i
 
