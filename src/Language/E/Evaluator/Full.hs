@@ -121,16 +121,9 @@ fullEvaluator [eMatch| &a = &b |]
           sortPart x = x
 
 fullEvaluator [eMatch| &a != &b |]
-    | [xMatch| [Prim (I a')] := value.literal |] <- a
-    , [xMatch| [Prim (I b')] := value.literal |] <- b
-    = returnBool (a' /= b')
-
-fullEvaluator [eMatch| &a != &b |]
     | isFullyInstantiated a
     , isFullyInstantiated b
-    , [xMatch| as := value.set.values |] <- a
-    , [xMatch| bs := value.set.values |] <- b
-    = returnBool (sortNub as /= sortNub bs)
+    = ret [eMake| !(&a = &b) |]
 
 fullEvaluator [eMatch| &a = &b |]
     | isFullyInstantiated a
@@ -179,6 +172,13 @@ fullEvaluator
            |]
     | isFullyInstantiated x
     = returnInt (genericLength $ sortNub xs)
+
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
+           | xs  := operator.twoBars.value.mset.values
+           |]
+    | isFullyInstantiated x
+    = returnInt (genericLength xs)
 
 fullEvaluator
     [xMatch| xs := operator.allDiff.value.matrix.values |]
@@ -258,6 +258,25 @@ fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
                      | isFullyInstantiated lhs && isFullyInstantiated rhs
                      = let zs = nub [ i | i <- xs, i `elem` ys]
                        in  ret $ [xMake| value.set.values := zs |]
+
+fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
+                     | xs := binOp.left .value.mset.values
+                     | ys := binOp.right.value.mset.values
+                     | [lhs] := binOp.left
+                     | [rhs] := binOp.right
+                     |]
+                     | isFullyInstantiated lhs && isFullyInstantiated rhs
+                     = let
+                            xsHistogram = map (\ x -> (head x, length x) ) $ group $ sort xs
+                            ysHistogram = map (\ x -> (head x, length x) ) $ group $ sort ys
+                            allKeys = nub $ map fst xsHistogram ++ map fst ysHistogram
+                            zsHistogram = [ (k, min xsCount ysCount)
+                                          | k <- allKeys
+                                          , let xsCount = fromMaybe 0 (lookup k xsHistogram)
+                                          , let ysCount = fromMaybe 0 (lookup k ysHistogram)
+                                          ]
+                            zs = concatMap (\ (x,num) -> replicate num x ) zsHistogram
+                       in   ret [xMake| value.mset.values := zs |]
 
 fullEvaluator
   p@[xMatch| [fn]  := functionApply.actual
