@@ -19,6 +19,11 @@ import qualified Data.Text as T
 import System.FilePath
 import System.Directory (doesFileExist)
 
+type Essence   = Spec
+type Eprime    = Spec
+type ESolution = Spec
+type EssenceWithParamOnly = Spec
+
 getSpec ::  FilePath -> IO Spec
 getSpec = getSpec' True
 
@@ -42,7 +47,8 @@ getSpec' removeContraints filepath = do
         func t =  fst . T.breakOn t
 
 
-getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) -> IO (Spec, Spec, Spec,Spec)
+getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) 
+         -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly)
 getSpecs (specF, solF, orgF,paramF,orgParamF) = do
     let param    = getSpecMaybe paramF
     let orgParam = getSpecMaybe orgParamF
@@ -55,7 +61,7 @@ getSpecs (specF, solF, orgF,paramF,orgParamF) = do
 
 
 getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath) 
-             -> IO (Spec, Spec, Spec,Spec)
+             -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly)
 getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
     param    <- getTestSpecMaybe paramF
     orgParam <- getTestSpecMaybe orgParamF
