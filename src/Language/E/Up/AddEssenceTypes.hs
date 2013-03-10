@@ -230,15 +230,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     where
 
     func :: [TagT] ->  E -> E
-
-    -- FIXME this method is seems to work by unwrapping the singleton matrix of a int
-    -- but this should not be really needed
-{-
-func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
-        | isJust res = fromJust res
-            `_p` ("T2 unwraping int", [res])
-        where res = getLit ele
--}
     func ts2  [xMatch| [ele] := value.matrix.values |] = ele
         `_p` ("M T func mat", [ele])
         `_f` ("M T func mat ts",ts2)
@@ -264,15 +255,6 @@ func [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
             `_p` (" T2 handle res'",[res'])
             `_p` (" T2 handle e",[_e])
             `_f` (" T2 handle r",_r)
-
-        -- FIXME this method is seems to work by unwraping the singeton matrix of a int
-        -- but this should not be really needed
-{-
-        handle [TagSingle "int"]  [xMatch| [ele] := value.matrix.values |]
-            | isJust res = fromJust res
-                `_p` ("T2 unwraping int", [res])
-            where res = getLit ele
--}
 
         handle _ts _e = _e
             `_k` ("t2 not handled", (_ts,[_e]))
