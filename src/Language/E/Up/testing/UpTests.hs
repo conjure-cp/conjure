@@ -16,16 +16,23 @@ essences :: IO [FilePath]
 -- Every test
 essences = allFilesWithSuffix ".essence" "files/uptests/"
 
+-- All tests that take less then 1/8 of second 
+{-
+essences =  filter (flip notElem ["tupley32-8Complex5","tupley32-8Complex4"] 
+         .  dropExtension . takeFileName )
+        <$> allFilesWithSuffix ".essence" "files/uptests/"
+-}
+
 -- Basic tests
---essences = essencesDirs "files/uptests/" ["___parts","___simple","___types"]
+--essences = _essencesDirs "files/uptests/" ["___parts","___simple","___types"]
 
 -- Tuples and matrixes
---essences = essencesDirs "files/uptests/" ["___simple", "_tuples_of_matrix", "_matrix_of_tuples","_zznested_singletons","_zothers"]
+--essences = _essencesDirs "files/uptests/" ["___simple", "_tuples_of_matrix", "_matrix_of_tuples","_zznested_singletons","_zothers"]
 
---essences = essencesDirs "files/uptests/" ["____"]
+--essences = _essencesDirs "files/uptests/" ["____"]
 
-essencesDirs :: FilePath -> [FilePath] -> IO [FilePath]
-essencesDirs base arr = 
+_essencesDirs :: FilePath -> [FilePath] -> IO [FilePath]
+_essencesDirs base arr = 
     concatMapM ( allFilesWithSuffix ".essence") (map (base </>) arr) 
 
 specs :: IO [( (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath), FilePath )]
@@ -51,7 +58,7 @@ specs = do
 
 runSpec :: ((FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath)
             , FilePath) -> IO ()
-runSpec  (sps@(_, _,orgF,_,_),ansF) = do
+runSpec  (sps@(_, _,_,_,_),ansF) = do
     (spec,sol,org,orgP) <- getTestSpecs sps
 
     ansS <- getSpec ansF
