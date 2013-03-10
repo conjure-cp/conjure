@@ -475,7 +475,8 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     prePro ts2 f = f `_i` ("prePro no change", (ts2, [f]))
     {-prePro ts e = _bugi "prePro" (ts, [e])-}
 
--- see _tuples_of_matrix
+--  NOT-NEEDED was for _tuples_of_matrix
+{-
 toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]
     [xMatch| vs  := tuple.values.value.tuple.values
            | [_] := tuple.values |]
@@ -519,6 +520,7 @@ toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]
 
     after _ f = f
 
+-}
 
 -- CHECK add more guards
 -- Check one two many matrices?
@@ -602,7 +604,7 @@ toEssenceRep r@(TagTuple _ : [])  e@[xMatch| vals := values.value.tuple |] =
                 toEssenceRep r (Tagged "tuple" [val])
            ]
 
--- convert matrices rep to tuples
+-- convert matrices rep to tuples for matrixes8
 toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
     let zipped= map ( zip t . unwrapValues ) vals
         vals' =  map convert zipped
@@ -622,6 +624,8 @@ toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
 
           convert zipped  = wrap $ Tagged "values" $  concatMap sub zipped
 
+-- NOT-NEEDED
+{-
 toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
                                      | vs := values|] =
     let res =   map (\v -> toEssenceRep r [xMake| tuple.values := [v] |]  ) vs
@@ -633,8 +637,9 @@ toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
     `_e` ("T values.value vs",  vs)
     `_e` ("T values.value args", [e])
     `_f` ("T values.value ts", r)
-
--- fixes mutiMatixMatixTupleComplex3Simpler5 (o85) and mutiMatixMatixTupleComplex3Simpler4
+-}
+-- NOT-NEEDED Used to fix  mtiMatixMatixTupleComplex3Simpler5 (o85) and mutiMatixMatixTupleComplex3Simpler4
+{-
 toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
     let res  = zipWith (\t f -> toEssenceRep (TagSingle "matrix": t ) f )  ts vs
         res' = [xMake| value.tuple.values := res |]
@@ -645,6 +650,7 @@ toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
     `_p` ("T value.tuples.value args", [e])
     `_f` ("T value.tuples.value ts", r)
 
+-}
 
 toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
     let mappings =  map (func ins tos) arr
