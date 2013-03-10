@@ -102,8 +102,7 @@ getLit _ = Nothing
 
 toEssenceRep :: [TagT] -> E -> E
 
--- To handles singeton tuples
--- FIXME rec handling
+-- FIXME rec handling, for singeton tuples
 toEssenceRep [TagSingle "matrix", TagTuple [[ts]] ]
              [xMatch| [vs1] := value.tuple.values|]
     | isJust val =
@@ -149,7 +148,8 @@ toEssenceRep r@[TagTuple _]
     isAllowed _ _ = Nothing
 
 
--- This really should not be needed but handles stuff wrapped in a values
+-- NOT-NEEDED This really should not be needed but handles stuff wrapped in a values
+{-
 toEssenceRep tags@[TagSingle "matrix", TagTuple _]
     [xMatch| vs := values.value.tuple.values
              | [v] := values |]
@@ -158,7 +158,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple _]
            res' = [xMake| values := [res] |]
        in  res'
        `_p` ("M T values.value.tuple.values", [res])
-
+-}
 
 -- fix NB T value.tuple  first which should be done now
 -- Idea is to rec handle tags until  len ts = len vs
