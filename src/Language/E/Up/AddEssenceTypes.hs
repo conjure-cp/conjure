@@ -237,76 +237,17 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     | all matrixOrTuple vs =
 
     let
-        vs2  = zipWith handleNested ts vs
-        res  = map matrixToTuple (transposeE vs2)
+        res  = map matrixToTuple (transposeE vs)
         res' = [xMake| value.matrix.values := res |]
 
     in  res'
     `_p` ("N T value.tuple.values res'",[res'])
     `_p` ("N T value.tuple.values res",[res])
     `_f` ("N T value.tuple.values ts",ts)
-    `_p` ("N T value.tuple.values vs2",vs2)
     `_p` ("N T value.tuple.values vs",vs)
     `_f` ("N T value.tuple.values ts",ts)
     `_f` ("N T value.tuple.values tags",tags)
 
-    where
-    -- should handle nested tuples e.g tupley26, seems to work
-    handleNested ::  [TagT] ->  E -> E
--- NOT-NEEDED
-{-
-    handleNested ts1@[TagTuple tts]  e@[xMatch| vs1 := value.tuple.values |]
-        -- CHECK not sure about using matrixOrTuple or isMatrix
-        | all ( not . isTagMatrix . head ) tts &&  all isMatrix vs1 =
-
-        let ts'  = TagSingle "matrix" : ts1
-            rs   = toEssenceRep ts' e
-            rs2  = after ts' rs
-
-        in rs2
-            --`_p` (" K T handleNerted res2",[rs2])
-            `_f` ("  K T handleNested ts'",ts')
-            `_p` ("  K T handleNerted res",[rs])
-            `_p` ("  K T handleNerted e",[e])
-            `_f` ("  K T handleNested ts'",ts')
-
-
-    handleNested ts1@[TagSingle "matrix", TagTuple _]
-                  e@[xMatch| _ := value.tuple.values
-                           | _  := value.tuple.values.value.matrix |] =
-
-        let ts2 = TagSingle "matrix"  : ts1
-            rs  = toEssenceRep ts2 e
-            rs2 = after ts2 rs
-
-        in rs2
-            `_p` ("  MM T handleNerted res2",[rs2])
-            `_f` ("  MM T handleNested ts",ts1)
-            `_p` ("  MM T handleNerted res",[rs])
-            `_p` ("  MM T handleNerted e",[e])
-            `_f` ("  MM T handleNested ts",ts1)
-
-
-    handleNested ts1  e@[xMatch| _ := value.tuple.values |] =
-        let
-            rs   = toEssenceRep ts1 e
-            rs2  = after ts1 rs
-
-        in rs2
-            `_p` (" N T handleNerted res2",[rs2])
-            `_f` ("  N T handleNested ts",ts1)
-            `_p` ("  N T handleNerted res",[rs])
-            `_p` ("  N T handleNerted e",[e])
-            `_f` ("  N T handleNested ts",ts1)
--}
-    handleNested _ e = e   -- `_p` (" N T handleNerted unchanged",[e])
-
-    after :: [TagT] -> E -> E
-    after ts1 [xMatch| vs1 := value.matrix.values |] =
-        let vss =  map (toEssenceRep ts1) vs1
-        in  [xMake| value.matrix.values := vss |]
-
-    after _ e = e
 
 -- FIXME  works. should make recursive
 toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
