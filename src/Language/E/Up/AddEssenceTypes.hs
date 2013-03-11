@@ -148,23 +148,6 @@ toEssenceRep r@[TagTuple _]
     isAllowed _ _ = Nothing
 
 
--- NOT-NEEDED This really should not be needed but handles stuff wrapped in a values
-{-
-toEssenceRep tags@[TagSingle "matrix", TagTuple _]
-    [xMatch| vs := values.value.tuple.values
-             | [v] := values |]
-    | all matrixOrTuple vs =
-       let res = toEssenceRep tags v
-           res' = [xMake| values := [res] |]
-       in  res'
-       `_p` ("M T values.value.tuple.values", [res])
--}
-
--- fix NB T value.tuple  first which should be done now
--- Idea is to rec handle tags until  len ts = len vs
--- see tmm4
--- toEssenceRep tags@[TagSingle "matrix", TagTuple ts] is
-
 toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple ts ]] ]
     [xMatch| vs  := value.tuple.values .value.tuple.values
            | [_] := value.tuple.values |]
@@ -457,53 +440,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     prePro ts2 f = f `_i` ("prePro no change", (ts2, [f]))
     {-prePro ts e = _bugi "prePro" (ts, [e])-}
 
---  NOT-NEEDED was for _tuples_of_matrix
-{-
-toEssenceRep [TagTuple [  [TagSingle "matrix", TagTuple ts ] ]  ]
-    [xMatch| vs  := tuple.values.value.tuple.values
-           | [_] := tuple.values |]
-    | all matrixOrTuple vs =
-        let
-            vs2  = zipWith handleNested ts vs
-            res  = map matrixToTuple (transposeE vs2)
-            res' = [xMake| tuple.values.value.matrix.values := res |]
-
-        in res'
-            `_p` ("T M tuple.values.value.tuple.values res", res)
-            `_p` ("T M tuple.values.value.tuple.values vs2", vs2)
-            `_p` ("T M tuple.values.value.tuple.values vs", vs)
-            `_f` ("T M value.tuple.values ts",ts)
-
-    where
-
-    handleNested ::  [TagT] -> E -> E
-    handleNested ts1 e@[xMatch| _ := value.tuple.values |] =
-
-        let ts2  = TagSingle "matrix" : ts1
-            rs  = toEssenceRep ts2 e
-            rs2 = after ts2 rs
-
-        in rs2
-
-            --`_p` (" N T handleNerted res2",[rs2])
-            `_f` (" ,N T handleNested ts",ts)
-            `_p` (" ,N T handleNerted res",[rs])
-            --`_p` (" ,N T handleNerted e2", [e2])
-            `_p` (" ,N T handleNerted e",[e])
-            `_f` (" ,N T handleNested ts",ts)
-
-    handleNested _ f = f
-    --handleNested ts f = f   `_p` (" N T handleNerted unchanged",[f])
-
-    after :: [TagT] -> E -> E
-    after ts2 [xMatch| vs2 := value.matrix.values |] =
-        let vss =  map (toEssenceRep ts2) vs2
-        in  [xMake| value.matrix.values := vss |]
-
-    after _ f = f
-
--}
-
 -- CHECK add more guards
 -- Check one two many matrices?
 -- for mutiMatixMatixTupleComplex3Simpler2 (main' o7)
@@ -606,33 +542,6 @@ toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
 
           convert zipped  = wrap $ Tagged "values" $  concatMap sub zipped
 
--- NOT-NEEDED
-{-
-toEssenceRep r@[TagTuple _] e@[xMatch| _  := values.value
-                                     | vs := values|] =
-    let res =   map (\v -> toEssenceRep r [xMake| tuple.values := [v] |]  ) vs
-        res' =  map (\v -> [xMake| value := [v] |]) res
-    in  [xMake| values := res' |]
-
-    `_e` ("T values.value res'",  res')
-    `_e` ("T values.value res",  res)
-    `_e` ("T values.value vs",  vs)
-    `_e` ("T values.value args", [e])
-    `_f` ("T values.value ts", r)
--}
--- NOT-NEEDED Used to fix  mtiMatixMatixTupleComplex3Simpler5 (o85) and mutiMatixMatixTupleComplex3Simpler4
-{-
-toEssenceRep r@[TagTuple ts] e@[xMatch| vs  := value.tuple.values |] =
-    let res  = zipWith (\t f -> toEssenceRep (TagSingle "matrix": t ) f )  ts vs
-        res' = [xMake| value.tuple.values := res |]
-    in res'
-    `_p` ("T value.tuples.value res'",  [res'])
-    `_p` ("T value.tuples.value res",  res)
-    `_p` ("T value.tuples.value vs",  vs)
-    `_p` ("T value.tuples.value args", [e])
-    `_f` ("T value.tuples.value ts", r)
-
--}
 
 toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
     let mappings =  map (func ins tos) arr
