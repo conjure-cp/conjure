@@ -122,32 +122,6 @@ toEssenceRep [TagSingle "matrix", TagTuple [[ts]] ]
     val = isNestedTuple [ts] vs1
 
 
-toEssenceRep r@[TagTuple _]
-             e@[xMatch| _ := value.tuple.values|]
-    | isJust info && False =
-
-    let (ts',e') = fromJust info
-        res  = toEssenceRep (TagSingle "matrix" : ts') e'
-        res' = map (\f -> [xMake| value.tuple.values := [f] |]) (unwrapMatrix res)
-
-    in wrapInMatrix res'
-
-    `_p` (" MT Nested tuples res", [res'])
-    `_p` (" MT Nested tuples res", [res])
-    `_i` (" MT Nested tuples info", (ts',[e'])  )
-    `_p` (" MT Nested tuples e", [e])
-    `_f` (" MT Nested tuples r",r)
-
-    where
-    info = isAllowed r e
-
-    isAllowed :: [TagT] -> E -> Maybe ([TagT],E)
-    isAllowed [TagTuple [_ts]]  [xMatch|  [vs]:= value.tuple.values|] =
-        Just (_ts,vs)
-
-    isAllowed _ _ = Nothing
-
-
 toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple ts ]] ]
     [xMatch| vs  := value.tuple.values .value.tuple.values
            | [_] := value.tuple.values |]
