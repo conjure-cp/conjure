@@ -121,7 +121,7 @@ toEssenceRep [TagSingle "matrix", TagTuple [[ts]] ]
     where
     val = isNestedTuple [ts] vs1
 
-
+-- for matrix_of_muti2 , matrix_of_muti3 
 toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple ts ]] ]
     [xMatch| vs  := value.tuple.values .value.tuple.values
            | [_] := value.tuple.values |]
@@ -253,6 +253,8 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     where
     -- should handle nested tuples e.g tupley26, seems to work
     handleNested ::  [TagT] ->  E -> E
+-- NOT-NEEDED
+{-
     handleNested ts1@[TagTuple tts]  e@[xMatch| vs1 := value.tuple.values |]
         -- CHECK not sure about using matrixOrTuple or isMatrix
         | all ( not . isTagMatrix . head ) tts &&  all isMatrix vs1 =
@@ -267,6 +269,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             `_p` ("  K T handleNerted res",[rs])
             `_p` ("  K T handleNerted e",[e])
             `_f` ("  K T handleNested ts'",ts')
+
 
     handleNested ts1@[TagSingle "matrix", TagTuple _]
                   e@[xMatch| _ := value.tuple.values
@@ -295,7 +298,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             `_p` ("  N T handleNerted res",[rs])
             `_p` ("  N T handleNerted e",[e])
             `_f` ("  N T handleNested ts",ts1)
-
+-}
     handleNested _ e = e   -- `_p` (" N T handleNerted unchanged",[e])
 
     after :: [TagT] -> E -> E
