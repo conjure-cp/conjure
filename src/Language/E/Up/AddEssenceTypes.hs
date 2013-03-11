@@ -232,6 +232,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
 
     func _ e1 = upBug "func matrix of tuples" [e1]
 
+-- | all matrixOrTuple vs = can be remove with no ill effect
 toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     [xMatch| vs := value.tuple.values |]
     | all matrixOrTuple vs =
@@ -289,8 +290,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
 
 
     prePro :: [TagT] -> E -> E
-
-    -- for singleton tuples should really merge with other function
+    -- for nestedSingleton-
     prePro r@[TagTuple [[ts1]] ] e1@[xMatch| [vs1] := value.tuple.values |]
         | isJust val =
 
@@ -310,30 +310,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
 
         where
         val = isNestedTuple [ts1] vs1
-
-    --  seem good  guard for tmm3
-    prePro ts1@[TagSingle "matrix", TagTuple _]
-            e1@[xMatch| _ := value.tuple.values.value.matrix.values.value.matrix |] =
-        let res = toEssenceRep  (TagSingle "matrix": ts1) e1
-        --in  upBug "prePro MMT for tmm3,  needs some work" [res]
-        in  res
-            --`_p` ("prePro MMT  vs", [e1])
-            `_p` ("prePro MMT res", [res])
-            `_f` ("prePro MMT ts", ts1)
-            `_p` ("prePro MMT vs",  [e1])
-            `_f` ("prePro MMT ts", ts1)
-
-    -- for C2 kind of  works but have to run toEssenceRep twice which is bad
-    prePro ts1@[TagSingle "matrix", TagTuple _]
-            e1@[xMatch| _ := value.tuple.values.value.tuple.values |] =
-        let res = toEssenceRep  (TagSingle "matrix": ts1) e1
-        in  res
-            `_f` ("prePro c2  ts", ts1)
-            `_p` ("prePro c2  e1", [e1])
-            `_p` ("prePro c2  res", [res])
-            `_p` ("prePro c2  e1", [e1])
-            `_f` ("prePro c2  ts", ts1)
-
 
    -- CHECK not sure if to do after all above?
     prePro r@[TagSingle "matrix", TagTuple _]
