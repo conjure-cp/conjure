@@ -336,6 +336,26 @@ toEssenceRep r@(TagSingle t :ts)  [xMatch| [vals] := value.matrix |] |
         `_f` ("S value.matrix ts", ts)
         `_f` ("S value.matrix tags", r)
 
+-- convert matrices rep to tuples for matrixes8
+toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
+    let zipped= map ( zip t . unwrapValues ) vals
+        vals' =  map convert zipped
+        vv = map (\v ->  [xMake| value.tuple := [v] |] ) vals
+        vmap = map (\(Tagged "value" [v]) -> Tagged "value" [toEssenceRep r v]) vv
+
+    in  [xMake| values := vmap |]
+         `_p` ("T values.value.matrix",vmap)
+         `_p` ("T values.value.matrix vv", vv)
+         `_i` ("T values.value.matrix (r,val')", (r,vals'))
+         `_f` ("T values.value.matrix zipped", zipped)
+         `_e` ("T values.value.matrix args", vals)
+
+    where sub :: ([TagT],E) -> [E]
+          sub (ts,val) = unwrapValues $ toEssenceRep ts (Tagged "values" [val])
+
+          convert zipped  = [xMake| value.tuple.values := concatMap sub zipped |]
+
+
 -- FIXME separate relation and partition from tagsingle
 toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
     t /= "int" =
@@ -351,14 +371,6 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
         er a@[xMatch| _ := value.literal|] = a
         {-er f = f -}
         er f = _bug "toEssenceRep S values.value er" [f]
-
--- FIXME This really should not be needed
-toEssenceRep r@[TagTuple _]  [xMatch| vals := expr.value.tuple |] =
-    let res = toEssenceRep r (Tagged "tuple" vals )
-    in [xMake| expr.value := [res] |]
-        `_p` ("T expr.value.tuple res",[Tagged "value" [res]])
-        `_p` ("T expr.value.tuple args", [Tagged "value" [Tagged "tuple" vals]])
-        `_f` ("T expr.value.tuple ts",r)
 
 toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
     let zipped = (zip t vals)
@@ -396,26 +408,22 @@ toEssenceRep r@(TagTuple _ : [])  e@[xMatch| vals := values.value.tuple |] =
                 toEssenceRep r (Tagged "tuple" [val])
            ]
 
--- convert matrices rep to tuples for matrixes8
-toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
-    let zipped= map ( zip t . unwrapValues ) vals
-        vals' =  map convert zipped
-        vv = map (\v ->  [xMake| value.tuple := [v] |] ) vals
-        vmap = map (\(Tagged "value" [v]) -> Tagged "value" [toEssenceRep r v]) vv
+-- FIXME This really should not be needed
+toEssenceRep r@[TagTuple _]  [xMatch| vals := expr.value.tuple |] =
+    let res = toEssenceRep r (Tagged "tuple" vals )
+    in [xMake| expr.value := [res] |]
+        `_p` ("T expr.value.tuple res",[Tagged "value" [res]])
+        `_p` ("T expr.value.tuple args", [Tagged "value" [Tagged "tuple" vals]])
+        `_f` ("T expr.value.tuple ts",r)
 
-    in  [xMake| values := vmap |]
-         `_p` ("T values.value.matrix",vmap)
-         `_p` ("T values.value.matrix vv", vv)
-         `_i` ("T values.value.matrix (r,val')", (r,vals'))
-         `_f` ("T values.value.matrix zipped", zipped)
-         `_e` ("T values.value.matrix args", vals)
 
-    where wrap _v = [xMake| value.tuple := [_v] |]
-          sub :: ([TagT],E) -> [E]
-          sub (ts,val) = unwrapValues $ toEssenceRep ts (Tagged "values" [val])
+toEssenceRep r e@[xMatch| [val] := expr |] =
+    let res  = toEssenceRep r val
+        res2 = flattenInt r res
+    in [xMake| expr := [res2] |]
+        `_k` ("expr", (r, [e]) )
 
-          convert zipped  = wrap $ Tagged "values" $  concatMap sub zipped
-
+-- Functions partitions etc
 
 toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
     let mappings =  map (func ins tos) arr
@@ -431,17 +439,10 @@ toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = _bugg "toEssenceRep func "
 
-
-
+-- to make debuging easier
 toEssenceRep [TagSingle "int"] e@[xMatch|  [Prim (I _)] := value.literal |] = e
     `_p` ("toEssenceRep Int ", [e])
 
-
-toEssenceRep r e@[xMatch| [val] := expr |] =
-    let res  = toEssenceRep r val
-        res2 = flattenInt r res
-    in [xMake| expr := [res2] |]
-        `_k` ("expr", (r, [e]) )
 
 toEssenceRep r e =
     e
