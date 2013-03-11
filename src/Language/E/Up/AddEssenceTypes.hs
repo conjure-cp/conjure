@@ -311,26 +311,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         where
         val = isNestedTuple [ts1] vs1
 
-   -- CHECK not sure if to do after all above?
-    prePro r@[TagSingle "matrix", TagTuple _]
-           e1@[xMatch| _ := value.matrix.values.value.tuple.values.value.matrix |] =
-         let res = toEssenceRep ( TagSingle "matrix" : r) e1
-         in res
-
-        `_p` ("prePro CT res", [res])
-        `_f` ("prePro CT ts", r)
-        `_p` ("prePro CT vs",  [e1])
-        `_f` ("prePro CT ts", r)
-
-    prePro r@[TagTuple tss] f@[xMatch| vs2 := value.tuple.values |] =
-        let res   = zipWith (\z -> toEssenceRep (TagSingle "matrix":z)  ) tss vs2
-            res'  = [xMake| value.tuple.values := res |]
-        in  res'
-        `_p` ("prePro TV res'", [res'])
-        `_p` ("prePro TV res", [res])
-        `_p` ("prePro TV e",  [f])
-        `_f` ("prePro TV ts", r)
-
     prePro ts2 f = f `_i` ("prePro no change", (ts2, [f]))
     {-prePro ts e = _bugi "prePro" (ts, [e])-}
 
