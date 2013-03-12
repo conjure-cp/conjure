@@ -284,9 +284,8 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     e@[xMatch| vs := value.tuple.values |]
     | all matrixOrTuple vs =
 
-    let pre   = zipWith prePro ts vs
-        res   = map matrixToTuple (transposeE pre)
-
+    let 
+        res   = map matrixToTuple (transposeE vs)
         pre2  =  map (zipWith prePro ts . unwrapTuple)  res
         res2  =  map transposeE pre2
         fin   =  map wrapper res2
@@ -297,7 +296,6 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     `_p` ("NB T value.tuple res2", res2)
     `_p` ("NB T value.tuple pre2",pre2)
     `_p` ("NB T value.tuple res",res)
-    `_p` ("NB T value.tuple pre",pre)
     `_p` ("NB T value.tuple vs",[e])
     `_f` ("NB T value.tuple tags",tags)
 
@@ -319,29 +317,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
 
 
     prePro :: [TagT] -> E -> E
-    -- for nestedSingleton-
-    prePro r@[TagTuple [[ts1]] ] e1@[xMatch| [vs1] := value.tuple.values |]
-        | isJust val =
-
-        let (count,_,e') = (fromJust val)
-            tranposed      = transposeE (unwrapMatrix e')
-            wrapped        = map (reTuple (count + 1) ) tranposed
-
-        in  wrapInMatrix wrapped
-
-        `_p` ("prepro wrapped", [wrapped])
-        `_p` ("prepro e'", tranposed)
-        `_p` ("prepro e'", [e'])
-        `_f` ("prepro r", [r])
-        `_g` ("prepro count", count)
-        `_p` ("prepro e", [e1])
-        `_f` ("prepro r", [r])
-
-        where
-        val = isNestedTuple [ts1] vs1
-
     prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
-    {-prePro ts e = _bugi "prePro" (ts, [e])-}
 
 -- CHECK add more guards
 -- Check one two many matrices?
