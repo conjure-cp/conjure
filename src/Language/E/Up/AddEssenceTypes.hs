@@ -28,11 +28,11 @@ matrixOrTuple _ = False
 
 unwrapTuple :: E -> [E]
 unwrapTuple [xMatch| vs := value.tuple.values|] = vs
-unwrapTuple e = upBug "AddEssenceTypes: unwrapTuple failed" [e]
+unwrapTuple e = _bug "unwrapTuple failed" [e]
 
 unwrapValues :: E -> [E]
 unwrapValues [xMatch| vs := values |] = vs
-unwrapValues e = upBug "AddEssenceTypes: unwrapValues failed" [e]
+unwrapValues e = _bug "unwrapValues failed" [e]
 
 
 unwrapSingleMatrix :: E -> E
@@ -121,7 +121,37 @@ toEssenceRep [TagSingle "matrix", TagTuple [[ts]] ]
     where
     val = isNestedTuple [ts] vs1
 
--- for matrix_of_muti2 , matrix_of_muti3 
+-- TODO fixes nestedSingletonComplex0m but used to
+-- break nestedSingleton2ma-  before the c guard was added
+-- test with more Complex singletons matrixes
+toEssenceRep [TagSingle "matrix", TagSingle "matrix", TagTuple [[ts]] ]
+             [xMatch| [vs1] := value.tuple.values|]
+    | isJust val
+    , c vs1 =
+       let  (count,ts',e') = (fromJust val)
+            res            = toEssenceRep  (TagSingle "matrix": ts')  e'
+            wrapped        = map (reTuple (count+1)) (unwrapMatrix res)
+            res'           = transposeE wrapped
+       --in [xMake| value.matrix.values := wrapped |]
+       in [xMake| value.matrix.values := res' |]
+       --in _bug "ns2m"  [ [xMake| value.matrix.values := wrapped |] ]
+        `_p` ("mingleton res'", res')
+        `_p` ("mingleton wrapped", [wrapped])
+        `_p` ("mingleton res", [res])
+        `_p` ("mingleton e'", [e'])
+        `_f` ("mingleton ts'", ts')
+        `_g` ("mingleton count", count)
+        `_p` ("mingleton vs1", [vs1])
+        `_f` ("mingleton ts", [ts])
+
+    where
+    val = isNestedTuple [ts] vs1
+    c [xMatch| [_] := value.tuple.values
+             |  _  := value.tuple.values.value.tuple |]  = True
+    c _ = False
+
+
+-- for matrix_of_muti2 , matrix_of_muti3
 toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple ts ]] ]
     [xMatch| vs  := value.tuple.values .value.tuple.values
            | [_] := value.tuple.values |]
@@ -142,9 +172,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple [[TagSingle "matrix", TagTuple t
         `_f` ("P T tuple tuple ts",ts)
         `_f` ("P T tuple tuple tags",tags)
 
-
     where
-
     handleNested ::  [TagT] -> E -> E
     handleNested ts1 e@[xMatch| _ := value.tuple.values |] =
 
@@ -179,7 +207,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     in res'
     `_p` ("M T value.tuple.values res'",[res'])
     `_p` ("M T value.tuple.values res",[res])
-    `_p` ("M T value.tuple.values vs" ++ show (length vs) ,vs)
+    `_p` ("M T value.tuple.values vs len vs: " ++ show (length vs) ,vs)
     `_p` ("M T value.tuple.values args",[e])
     `_f` ("M T value.tuple.values ts",ts)
     `_f` ("M T value.tuple.values tags",tags)
@@ -216,7 +244,7 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
         handle _ts _e = _e
             `_k` ("t2 not handled", (_ts,[_e]))
 
-    -- FIXME for o92 /o9
+    -- for o92 /o9
     -- removed the matrix around ts1 with no ill and postive effect
     func ts1  e1@[xMatch| vs1 := value.tuple.values |] =
         let
@@ -227,10 +255,11 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
             `_p` ("M T func rs",[rs])
             `_p` ("M T func e2",[e2])
             `_p` ("M T func vs2",vs2)
+            `_p` ("M T func vs1",vs1)
             `_p` ("M T func e",[e1])
             `_f` ("M T func ts",ts1)
 
-    func _ e1 = upBug "func matrix of tuples" [e1]
+    func _ e1 = _bug "func matrix of tuples" [e1]
 
 -- | all matrixOrTuple vs = can be remove with no ill effect
 toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
@@ -311,7 +340,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
         where
         val = isNestedTuple [ts1] vs1
 
-    prePro ts2 f = f `_i` ("prePro no change", (ts2, [f]))
+    prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
     {-prePro ts e = _bugi "prePro" (ts, [e])-}
 
 -- CHECK add more guards
@@ -369,14 +398,14 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
         er (Tagged "matrix" [vals]) = Tagged "value" [Tagged t  [toEssenceRep ts vals]]
         er a@(Tagged "literal" _)   = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
-        {-er f = f -}
-        er f = _bug "toEssenceRep S values.value er" [f]
+        er f = _bugi ("toEssenceRep S values.value er " ++ (show t)) (ts, [f])
+
 
 toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
     let zipped = (zip t vals)
         vals' = map func zipped
     in [xMake| tuple :=  [foldl1 combineValues vals'] |]
-        `_e` ("T tuple.values res'",  vals')
+        `_p` ("T tuple.values res'",  vals')
         {-`_f` ("T tuple.values zipped", zipped)-}
         `_p` ("T tuple.values vals", vals)
         `_f` ("T tuple.values ts", r)
@@ -385,7 +414,7 @@ toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
 
          wrapper e@[xMatch| _ := values |]  = e
          wrapper e@[xMatch| _ := value  |]  = Tagged "values" [e]  -- wat?
-         wrapper f = upBug "toEssenceRep wrapper " [f]
+         wrapper f = _bug "toEssenceRep wrapper " [f]
 
          combineValues :: E -> E  -> E
          combineValues [xMatch| v1 := values |]  v2@[xMatch| _:= value |] = [xMake| values := v1 ++ [v2] |]
