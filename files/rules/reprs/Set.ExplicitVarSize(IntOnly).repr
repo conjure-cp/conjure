@@ -23,7 +23,7 @@ $     letting mx be domSize(t)
     ~~> (sum i : int(1..&mx) . refn[i][1]) >= &mn
     letting &mx be domSize(&t)
 
-*** set (maxSize &mx) of t
+*** set (maxSize &mx) of &t
 
 $ *** set (size n, minSize b) of t
 $     ~~> (sum i : int(1..mx) . refn[i][1]) = n
