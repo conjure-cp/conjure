@@ -118,9 +118,8 @@ single ( name
         if flagMatch
             then do
                 mkLog "trying-rule" $ pretty name <+> "on" $$ pretty x
-                bs <- mapM (localHandler name x) locals
-                if and bs
-                    then do
+                let
+                    localsHandler [] = do
                         mxs <- forM templates $ \ template -> do
                             template' <- freshNames template
                             mres      <- runMaybeT $ patternBind template'
@@ -135,7 +134,12 @@ single ( name
                                 case [ nm | (nm, x') <- xs, x == x' ] of
                                     (nm:_) -> err ErrFatal $ "Rule returns the same expression:" <+> pretty nm
                                     _      -> return (Just xs)
-                    else errRuleFail
+                    localsHandler (l:ls) = do
+                        res <- localHandler name x l
+                        if res
+                            then localsHandler ls
+                            else errRuleFail
+                localsHandler locals
             else errRuleFail
 single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.worker)", Nothing)
 
