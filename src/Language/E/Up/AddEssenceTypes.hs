@@ -52,9 +52,9 @@ isMatrix :: E -> Bool
 isMatrix [xMatch| _ := value.matrix.values |] = True
 isMatrix _ = False
 
-isTagMatrix :: TagT -> Bool
-isTagMatrix (TagSingle "matrix") = True
-isTagMatrix _ = False
+-- isTagMatrix :: TagT -> Bool
+-- isTagMatrix (TagSingle "matrix") = True
+-- isTagMatrix _ = False
 
 -- isTagTuple :: TagT -> Bool
 -- isTagTuple (TagTuple _) = True
