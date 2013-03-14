@@ -21,4 +21,7 @@ import Language.E.Traversals as X
 import Language.E.TypeOf as X
 
 import Language.E.Evaluator as X
+import Language.E.Evaluator.Full as X ( domSize )
+import Language.E.Evaluator.ToInt as X
 import Language.E.Evaluator.ToBool as X
+

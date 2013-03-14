@@ -1,7 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Language.E.Evaluator ( simplify, simplifySpec, fullySimplifySpec ) where
+module Language.E.Evaluator
+    ( simplify
+    , simplifySpec
+    , fullySimplify
+    , fullySimplifySpec
+    ) where
 
 import Stuff.Pretty
 
@@ -36,16 +41,17 @@ simplifySpec :: MonadConjure m => Spec -> m Spec
 simplifySpec = liftM fst . runWriterT . bottomUpSpec simplify
 
 fullySimplifySpec :: MonadConjure m => Spec -> m Spec
-fullySimplifySpec = liftM fst . runWriterT . bottomUpSpec s
+fullySimplifySpec = liftM fst . runWriterT . bottomUpSpec fullySimplify
+
+fullySimplify :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+fullySimplify x = do
+    (y, (Any flag, _)) <- listen $ pipeline x
+    if flag
+        then fullySimplify y
+        else return x
     where
-        s x = do
-            (y, (Any flag, _)) <- listen $ pipeline x
-            if flag
-                then s y
-                else return x
-            where
-                pipeline =  bottomUpE (mkIdempotent allCombinedDoFirst)
-                        >=> bottomUpE (mkIdempotent unrolling)
+        pipeline =  bottomUpE (mkIdempotent allCombinedDoFirst)
+                >=> bottomUpE (mkIdempotent unrolling)
 
         unrolling :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
         -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
@@ -64,8 +70,15 @@ fullySimplifySpec = liftM fst . runWriterT . bottomUpSpec s
                             , logged "Simplify"                         (adapter partialEvaluator)
                             , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped
                             , logged "Evaluator.unrollQuantifiers"      unrollQuantifiers
+                            , logged "Evaluator.instantiate"            instantiate
                             ]
 
+        instantiate [xMatch| [Prim (S nm)] := reference |] = do
+            mres <- runMaybeT $ lookupReference nm
+            case mres of
+                Nothing -> return Nothing
+                Just i  -> return (Just (i, []))
+        instantiate _ = return Nothing
 
 
 simplify :: MonadConjure m => E -> WriterT (Any, [Binder]) m E

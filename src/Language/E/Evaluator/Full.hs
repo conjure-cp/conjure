@@ -1,7 +1,21 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE PatternGuards #-}
 
-module Language.E.Evaluator.Full where
+module Language.E.Evaluator.Full
+    ( fullEvaluator
+    , evalDomSize
+    , evalHasDomain
+    , evalHasRepr
+    , evalHasType
+    , evalIndices
+    , evalReplace
+    , matrixEq
+    , stripStructuralSingle
+    , stripUnnecessaryTyped
+    , tupleEq
+    , unrollQuantifiers
+    , domSize
+    ) where
 
 import Language.E.Imports
 import Language.E.Definition
@@ -600,9 +614,6 @@ returnInt :: MonadConjure m => Integer -> m (Maybe (E,[Binder]))
 returnInt i | i > 1000 = return Nothing
 returnInt i = ret [xMake| value.literal := [Prim (I i)] |]
 
-returnInt' :: MonadConjure m => Integer -> [Binder] -> m (Maybe (E,[Binder]))
-returnInt' i bs = return $ Just ([xMake| value.literal := [Prim (I i)] |], bs)
-
 ret :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 ret i = return $ Just (i, [])
 
@@ -676,59 +687,62 @@ evalHasRepr _ = return Nothing
 
 evalDomSize :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalDomSize [eMatch| domSize(&i) |] = ret =<< domSize i
-    where
-        sumE []     = [eMake| 0 |]
-        sumE [x]    = x
-        sumE [x,y]  = [eMake| &x + &y |]
-        sumE (x:xs) = let sumxs = sumE xs in [eMake| &x + &sumxs |]
-
-        mulE []     = [eMake| 1 |]
-        mulE [x]    = x
-        mulE [x,y]  = [eMake| &x * &y |]
-        mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
-
-        domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
-        domSize [xMatch| [Prim (S s)] := reference |] = do
-            x <- errMaybeT "domSize" lookupReference s
-            domSize x
-        domSize [xMatch| rs := domain.int.ranges |] = do
-            xs <- mapM domSize rs
-            return $ sumE xs
-        domSize [xMatch| [fr,to] := range.fromTo |] =
-            return [eMake| &to - &fr + 1 |]
-        domSize [xMatch| [_] := range.single |] =
-            return [eMake| 1 |]
-
-        domSize [xMatch| rs := domain.tuple.inners |] = do
-            xs <- mapM domSize rs
-            return $ mulE xs
-
-        domSize [xMatch| [t] := domain.set.inner |] = do
-            x <- domSize t
-            return [eMake| 2 ** &x |]
-
-        domSize [dMatch| mset (size &s) of &inn |] = do
-            innSize <- domSize inn
-            return [eMake| &s * &innSize |]
-        domSize [xMatch| [t] := domain.mset.inner |] = do
-            x <- domSize t
-            return [eMake| 2 ** &x |]
-
-        domSize [xMatch| [a] := domain.function.innerFrom
-                       | [b] := domain.function.innerTo
-                       |] = do
-            aSize <- domSize a
-            bSize <- domSize b
-            return [eMake| &aSize * &bSize |]
-
-        domSize [xMatch| [] := topLevel.declaration.given.typeInt
-                       | [Prim (S nm)] := topLevel.declaration.given.name.reference
-                       |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
-
-        domSize p =
-            err ErrFatal $ "domSize:" <+> prettyAsPaths p
-
 evalDomSize _ = return Nothing
+
+sumE :: [E] -> E
+sumE []     = [eMake| 0 |]
+sumE [x]    = x
+sumE [x,y]  = [eMake| &x + &y |]
+sumE (x:xs) = let sumxs = sumE xs in [eMake| &x + &sumxs |]
+
+mulE :: [E] -> E
+mulE []     = [eMake| 1 |]
+mulE [x]    = x
+mulE [x,y]  = [eMake| &x * &y |]
+mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
+
+domSize :: MonadConjure m => E -> m E
+domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
+domSize [xMatch| [Prim (S s)] := reference |] = do
+    x <- errMaybeT "domSize" lookupReference s
+    domSize x
+domSize [xMatch| rs := domain.int.ranges |] = do
+    xs <- mapM domSize rs
+    return $ sumE xs
+domSize [xMatch| [fr,to] := range.fromTo |] =
+    return [eMake| &to - &fr + 1 |]
+domSize [xMatch| [_] := range.single |] =
+    return [eMake| 1 |]
+
+domSize [xMatch| rs := domain.tuple.inners |] = do
+    xs <- mapM domSize rs
+    return $ mulE xs
+
+domSize [xMatch| [t] := domain.set.inner |] = do
+    x <- domSize t
+    return [eMake| 2 ** &x |]
+
+domSize [dMatch| mset (size &s) of &inn |] = do
+    innSize <- domSize inn
+    return [eMake| &s * &innSize |]
+domSize [xMatch| [t] := domain.mset.inner |] = do
+    x <- domSize t
+    return [eMake| 2 ** &x |]
+
+domSize [xMatch| [a] := domain.function.innerFrom
+               | [b] := domain.function.innerTo
+               |] = do
+    aSize <- domSize a
+    bSize <- domSize b
+    return [eMake| &aSize * &bSize |]
+
+domSize [xMatch| [] := topLevel.declaration.given.typeInt
+               | [Prim (S nm)] := topLevel.declaration.given.name.reference
+               |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
+
+domSize p =
+    err ErrFatal $ "domSize:" <+> prettyAsPaths p
+
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalIndices p@[xMatch| [a,b] := operator.indices |] = do

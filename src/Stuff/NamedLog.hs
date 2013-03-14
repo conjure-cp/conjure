@@ -67,6 +67,7 @@ suppress = S.fromList
     , "Evaluator.stripStructuralSingle"
     , "Evaluator.stripUnnecessaryTyped"
     , "Evaluator.unrollQuantifiers"
+    , "Evaluator.instantiate"
     , "Simplify"
 
     , "missing:relationRepr"
@@ -103,7 +104,7 @@ suppress = S.fromList
 buildLog :: String -> Doc -> Maybe NamedLog
 buildLog nm _ | nm `S.member` suppress = Nothing
 #ifdef TRACELOGS
-buildLog nm doc = trace (show $ pretty nm <+> doc) $ Just (NamedLog nm doc)
+buildLog nm doc = trace (renderPretty $ pretty nm <+> doc) $ Just (NamedLog nm doc)
 #else
 buildLog nm doc = Just (NamedLog nm doc)
 #endif

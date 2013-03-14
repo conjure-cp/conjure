@@ -172,7 +172,7 @@ typeOf [xMatch| [Prim (S i  )] := reference |] = do
     typeOf x
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
-    x <- errMaybeT "typeOf" lookupMetaVar i
+    x <- errMaybeT "typeOf metavar" lookupMetaVar i
     typeOf x
 
 typeOf [xMatch| [i] := structural.single |] = typeOf i
