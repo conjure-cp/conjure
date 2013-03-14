@@ -8,9 +8,11 @@ $ however, it cannot be applied in general because hasDomain only works on atomi
 
     ~~>
 
-(forall i : &t1 . i in &a <-> i in &b) /\ 
-(forall i : &t2 . i in &a <-> i in &b)
+(forAll i : &t1 . i in &a <-> i in &b) /\ 
+(forAll i : &t2 . i in &a <-> i in &b)
 
     where &a hasDomain `set (..) of &t1`
     where &b hasDomain `set (..) of &t2`
+    where &t1 hasType `int`
+    where &t2 hasType `int`
 
