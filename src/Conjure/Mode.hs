@@ -69,6 +69,9 @@ data ConjureMode
         ConjureModeSingle
         FilePath    -- Essence
         FilePath    -- Essence'
+    | ModeGenerateParam
+        FilePath    -- Essence
+        FilePath    -- Essence Param file
     deriving (Show)
 
 data ConjureModeWithFlags
@@ -86,6 +89,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeTypeCheck
     , modePrettify
     , modeValidateSolution
+    , modeGenerateParam
     , modeDFAll
     , modeRandom
     , modeFirst
@@ -136,6 +140,12 @@ parseArgs (pairs, flags, rest) = msum
             param    <- optional $ key "--in-param"
             solution <- key "--in-solution"
             returnMode $ ModeValidateSolution essence param solution
+
+        modeGenerateParam = do
+            mode $ words "generateParam genParam"
+            inEssence <- anyKey $ words "--in --in-essence"
+            outParam  <- anyKey $ words "--out --out-param"
+            returnMode $ ModeGenerateParam inEssence outParam
 
         modeDFAll = do
             mode $ words "df depthfirst depth-first"

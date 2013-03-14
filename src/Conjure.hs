@@ -18,6 +18,7 @@ import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
 import Language.E.Pipeline.RedArrow ( redArrow )
 import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
+import Language.E.GenerateRandomParam ( generateRandomParam )
 
 
 rulesdbLoc :: IO FilePath
@@ -76,6 +77,15 @@ runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
             param    <- maybe (return Nothing) (fmap Just . readSpecFromFile) pathParam
             solution <- readSpecFromFile pathSolution
             validateSolution essence param solution
+        helper (ModeGenerateParam pathInEssence pathOutParam) = do
+            seed <- getStdGen
+            inEssence <- readSpecFromFile pathInEssence
+            typeCheckSpecIO inEssence
+            driverConjureSingle False
+                pathOutParam
+                $ runCompE "generateParam"
+                $ set_stdgen seed >>
+                  generateRandomParam inEssence
         helper (ModeDFAll pathInEssence) = do
             seed <- getStdGen
             (ruleReprs, ruleRefns) <- getRulesDB
