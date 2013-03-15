@@ -59,7 +59,7 @@ evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
     getName (Tuple arr2) = getName (head arr2)
 
 
-evalTree' mapping prefix (Branch s@"SetOfSets"  arr) =
+evalTree' mapping prefix (Branch s@"MSetOfSets"  arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
     in matrixToPartiton res
 
