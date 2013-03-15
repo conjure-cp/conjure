@@ -1,3 +1,14 @@
+
+-- Given
+--     * An Essence spec
+--     * An Essence' model for the spec
+--     * An EssenceParam file
+-- Generate
+--     * An Essence'Param file
+
+-- This module is named after the diagram we drew in IanM's room. It
+-- probably shouldn't be.
+
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.Pipeline.RedArrow ( redArrow ) where
@@ -6,19 +17,8 @@ module Language.E.Pipeline.RedArrow ( redArrow ) where
 import Language.E
 
 import qualified Data.Text as T
-import qualified Data.HashSet as S
-import qualified Data.HashMap.Strict as M
 
 
--- Given
---     * An Essence spec
---     * An Essence' model for the spec
---     * A  EssenceParam file
--- Generate
---     * A Essence'Param file
-
--- This module is named after the diagram we drew in IanM's room. It
--- probably shouldn't be.
 
 type EssenceSpec = Spec
 type Essence'Model = Spec
@@ -32,71 +32,51 @@ redArrow
     => EssenceSpec -> EssenceParam
     -> Essence'Model -> Essence'Logs
     -> m Essence'Param
-redArrow spec specParam@(Spec _ specParamStatements) _model@(Spec langEprime _) modelLogs = do
+redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) modelLogs = do
 
-    ints <- execWriterT $ forM_ (statementAsList specParamStatements) $ \ s -> case lettingOut s of
-        Nothing -> return ()
-        Just (nm, _) ->
-            if nm `elem` map fst (concat eprimeReprs)
-                then return ()
-                else tell [s]
-
-    enums <- execWriterT $ forM_ (statementAsList specParamStatements) $ \ s -> case s of
+    forM_ (statementAsList essenceStmt ++ statementAsList essenceParamStmt) $ \ s -> case s of
         [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
-               | enumValues    := topLevel.letting.typeEnum.values
-               |] -> do
-                let outName  = [xMake| reference     := [Prim (S (nm `T.append` "_fromEnumSize"))] |]
-                let outValue = [xMake| value.literal := [Prim (I (genericLength enumValues     ))] |]
-                let out      = [xMake| topLevel.letting.name := [outName]
-                                     | topLevel.letting.expr := [outValue]
-                                     |]
-                tell [out]
+               | [value]       := topLevel.letting.expr
+               |] -> addReference nm value
         _ -> return ()
 
-    abstracts <- execWriterT $ withBindingScope $ do
-        lift $ mapM_ introduceStuff (statementAsList specParamStatements)
-        case eprimeReprs of
-            [] -> return ()
-            [eprimeRepr] ->
-                forM_ eprimeRepr $ \ (name, reprName) ->
-                    unless (S.member name specFinds) $
-                        case (M.lookup name specGivens, M.lookup name paramLettings) of
-                            (Just domain, Just value) -> do
-                                xs <- lift $ onSingleDom reprName name domain value
-                                tell xs
-                            (_, Nothing) -> lift $ err ErrFatal $ "No value given for parameter:" <+> pretty name
-                            (Nothing, _) -> lift $ err ErrFatal $ "Unknown parameter in the configuration file:" <+> pretty name
-            _ -> lift $ mkLog "warning" "Don't know what to do with this logs file, sorry."
+    let
+        -- Givens in the Essence file
+        essenceGivens :: [(Text, E)]
+        essenceGivens
+            = catMaybes
+              [ case full of
+                    [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+                           | [dom]         := topLevel.declaration.given.domain
+                           |] -> Just (nm, dom)
+                    [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
+                           |] -> Just (nm, full)
+                    _ -> Nothing
+              | full <- statementAsList essenceStmt
+              ]
 
-    return (Spec langEprime $ listAsStatement $ ints ++ enums ++ abstracts)
+    let
+        -- Essence Params
+        essenceParams :: [(Text, E)]
+        essenceParams
+            = catMaybes
+              [ case full of
+                    [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+                           | [val]         := topLevel.letting.expr
+                           |] -> Just (nm, val)
+                    [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+                           |] -> Just (nm, full)
+                    _ -> Nothing
+              | full <- statementAsList essenceParamStmt
+              ]
 
-    where
-
-        -- The finds in the input Essence
-        specFinds :: S.HashSet Text
-        specFinds
-            = S.fromList
-            $ mapMaybe findOut
-            $ (\ (Spec _ x) -> statementAsList x ) spec
-
-        -- The givens in the input Essence
-        specGivens :: M.HashMap Text E
-        specGivens
-            = M.fromList
-            $ mapMaybe givenOut
-            $ (\ (Spec _ x) -> statementAsList x ) spec
-
-        -- The params in the Essence param file
-        paramLettings :: M.HashMap Text E
-        paramLettings
-            = M.fromList
-            $ mapMaybe lettingOut
-            $ (\ (Spec _ x) -> statementAsList x) specParam
-
+    let
         -- Whet representations are we targeting for each given
-        eprimeReprs :: [[(Text,Text)]]
-        eprimeReprs
-            = map ( sortBy (comparing fst)
+        lookupReprs :: [(Text, Text)]
+        lookupReprs
+            = nub
+            $ concat
+            $ map ( sortBy (comparing fst)
                   . nub
                   . map (\ x -> case identifierSplit x of
                                     (base, _, Just refn) -> (base, refn)
@@ -108,129 +88,288 @@ redArrow spec specParam@(Spec _ specParamStatements) _model@(Spec langEprime _) 
             $ mapMaybe (T.stripPrefix "[configuration]")
             $ T.lines modelLogs
 
-        findOut :: E -> Maybe Text
-        findOut [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference
-                        |] = Just nm
-        findOut _ = Nothing
+    mkLog "debug" $ vcat $
+        (
+            "essenceGivens" :
+                [ nest 4 $ pretty a <+> ":" <+> pretty b
+                | (a,b) <- essenceGivens
+                ]
+        ) ++ (
+            "essenceParams" :
+                [ nest 4 $ pretty a <+> ":" <+> pretty b
+                | (a,b) <- essenceParams
+                ]
+        ) ++ (
+            "lookupReprs"   :
+                [ nest 4 $ pretty a <+> ":" <+> pretty b
+                | (a,b) <- lookupReprs
+                ]
+        )
 
-        givenOut :: E -> Maybe (Text, E)
-        givenOut [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference
-                        | [domain]      := topLevel.declaration.given.domain
-                        |] = Just (nm, domain)
-        givenOut _ = Nothing
+    outPairs <- concatMapM (workhorse lookupReprs)
+                [ (nm, decl, val)
+                | (nm, decl) <- essenceGivens
+                , (nm2, val) <- essenceParams
+                , nm == nm2
+                ]
+    let outLettings = [ [xMake| topLevel.letting.name.reference := [Prim (S nm)]
+                              | topLevel.letting.expr           := [val]
+                              |]
+                      | (nm,val) <- outPairs
+                      ]
 
-        lettingOut :: E -> Maybe (Text, E)
-        lettingOut [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
-                          | [expr]        := topLevel.letting.expr
-                          |] = Just (nm, expr)
-        lettingOut _ = Nothing
+    return (Spec langEprime $ listAsStatement outLettings)
 
 
-onSingleDom
-    :: MonadConjure m
-    => Text                 -- representation name
-    -> Text                 -- (name   of) the original declaration 
-    -> E                    -- (domain of) the original declaration
-    -> E                    -- (value  of) param instantiating the original declaration
-    -> m [E]                -- params instantiating the refined declaration
-onSingleDom "Occurrence"
-    name
-    [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo 
-           | [innerDom] := domain.set.inner
-           |]
-    [xMatch| values := value.set.values |] = do
-    frInt <- valueIntOut fr
-    toInt <- valueIntOut to
-    intValues <- mapM valueIntOut values
-    let valuesInMatrix = [ if i `elem` intValues then [eMake| 1 |] else [eMake| 0 |]
-                         | i <- [frInt..toInt]
-                         ]
-    let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
-                           | value.matrix.indexrange := [innerDom]
-                           |]
-    let outName = name `T.append` "_Occurrence"
-    let theLetting = [xMake| topLevel.letting.name.reference := [Prim (S outName)]
-                           | topLevel.letting.expr           := [theMatrix]
-                           |]
-    return [theLetting]
-onSingleDom "ExplicitVarSize"
-    name
-    [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo
-           | attrs      := domain.set.attributes.attrCollection
-           |]
-    [xMatch| values := value.set.values |] = do
-    frInt <- valueIntOut fr
-    toInt <- valueIntOut to
-    intValues <- fmap sort $ mapM valueIntOut values
+workhorse :: MonadConjure m => [(Text, Text)] -> (Text, E, E) -> m [(Text, E)]
+workhorse lookupReprs (nm, dom, val) = do
+    let thisReprs = [ repr | (nm', repr) <- lookupReprs, nm == nm' ]
+    result <- if null thisReprs
+                then helper nm dom val Nothing
+                else concatMapM (helper nm dom val . Just) thisReprs
+    unless (null thisReprs) $
+        mkLog "debug" $ sep
+            [ "workhorse"
+            , "~~" <+> sep (map pretty thisReprs)
+            , "~~" <+> pretty nm
+            , "~~" <+> pretty dom
+            , "~~" <+> pretty val
+            , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
+                            | (i,j) <- result
+                            ]
+            ]
+    return result
 
-    nbValues <- case attrs of
-        [] -> return (toInt - frInt + 1)
-        _  -> err ErrFatal "Error while refining parameters"
-    let nbTrues  = genericLength intValues
-    let nbFalses = nbValues - nbTrues
+    where
 
-    let indexOfMatrix_fr = [eMake| 1 |]
-    let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValues)] |]
-    let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
+        helper
+            :: MonadConjure m
+            => Text
+            -> E
+            -> E
+            -> Maybe Text
+            -> m [(Text, E)]
 
-    let outTuple1_Name   = name `T.append` "_ExplicitVarSize_tuple1"
-    let outTuple1_Values = replicate (fromInteger nbTrues ) [eMake| true  |]
-                        ++ replicate (fromInteger nbFalses) [eMake| false |]
-    let outTuple1_Value  = [xMake| value.matrix.values := outTuple1_Values
-                                 | value.matrix.indexrange := [indexOfMatrix]
-                                 |]
-    let outTuple1        = [xMake| topLevel.letting.name.reference := [Prim (S outTuple1_Name)]
-                                 | topLevel.letting.expr           := [outTuple1_Value]
-                                 |]
+        helper
+            name
+            [xMatch| _ := domain.bool |]
+            value
+            Nothing
+            = return [(name,value)]
 
-    let outTuple2_Name   = name `T.append` "_ExplicitVarSize_tuple2"
-    let outTuple2_Values = map (\ x -> [xMake| value.literal := [Prim (I x)] |] ) intValues
-                        ++ replicate (fromInteger nbFalses) [xMake| value.literal := [Prim (I frInt)] |]
-    let outTuple2_Value  = [xMake| value.matrix.values := outTuple2_Values
-                                 | value.matrix.indexrange := [indexOfMatrix]
-                                 |]
-    let outTuple2        = [xMake| topLevel.letting.name.reference := [Prim (S outTuple2_Name)]
-                                 | topLevel.letting.expr           := [outTuple2_Value]
-                                 |]
+        helper
+            name
+            [xMatch| _ := domain.int |]
+            value
+            Nothing
+            = return [(name,value)]
 
-    return [outTuple1, outTuple2]
-onSingleDom "Explicit"
-    name
-    [xMatch| attrs := domain.set.attributes.attrCollection |]
-    [xMatch| values := value.set.values |]
-    | let Just size = listToMaybe
-                        [ s
-                        | [xMatch| [Prim (S "size")] := attribute.nameValue.name.reference
-                                 | [s]               := attribute.nameValue.value
-                                 |] <- attrs
+        helper
+            name
+            _domain
+            [xMatch| enumValues := topLevel.letting.typeEnum.values |]
+            Nothing = do
+                let outName  = name `T.append` "_fromEnumSize"
+                let outValue = [xMake| value.literal := [Prim (I (genericLength enumValues     ))] |]
+                return [ (outName, outValue) ]
+
+        helper
+            name
+            [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo 
+                   | [innerDom] := domain.set.inner
+                   |]
+            [xMatch| values := value.set.values |]
+            (Just "Occurrence") = do
+            innerDom' <- fmap fst $ runWriterT $ fullySimplify innerDom
+            intFr <- valueIntOut fr
+            intTo <- valueIntOut to
+            intValues <- mapM valueIntOut values
+            let valuesInMatrix = [ if i `elem` intValues then [eMake| true |] else [eMake| false |]
+                                 | i <- [intFr .. intTo]
+                                 ]
+            let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
+                                   | value.matrix.indexrange := [innerDom']
+                                   |]
+            let outName = name `T.append` "_Occurrence"
+            return [(outName, theMatrix)]
+
+        helper
+            name
+            [xMatch| attrs      := domain.set.attributes.attrCollection
+                   | [domInner] := domain.set.inner
+                   |]
+            [xMatch| values := value.set.values |]
+            (Just "Explicit")
+            | let Just size = lookupAttr "size" attrs
+            = do
+            let indexOfMatrix_fr = [eMake| 1 |]
+            let indexOfMatrix_to = [eMake| &size |]
+            let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
+
+            values' <- concatMapM (workhorse lookupReprs)
+                        [ (nm', dom', val')
+                        | let nm'  = name `T.append` "_Explicit"
+                        , let dom' = domInner
+                        , val' <- values
                         ]
-    = do
-    let valuesInMatrix = sort values
-    let indexOfMatrix_fr = [eMake| 1 |]
-    let indexOfMatrix_to = [eMake| &size |]
-    let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
-    let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
-                           | value.matrix.indexrange := [indexOfMatrix]
-                           |]
-    let outName = name `T.append` "_Explicit"
-    let theLetting = [xMake| topLevel.letting.name.reference := [Prim (S outName)]
-                           | topLevel.letting.expr           := [theMatrix]
-                           |]
-    return [theLetting]
-onSingleDom reprName name domain value
-    = err ErrFatal $ "missing: onSingleDom" <+> vcat [ pretty name
-                                                     , pretty reprName
-                                                     , pretty domain
-                                                     , pretty value
-                                                     ]
+            let names = map fst values'
+            let nameValuePairs
+                    = map (\ xs -> (fst $ head xs, map snd xs) )
+                    $ groupBy ((==) `on` fst)
+                    $ sort values'
+
+            mkLog "NAMES" $ sep $ map pretty names
+            mkLog "VALUES" $ sep
+                    $ map (\ (i,j) -> pretty i <+> sep (map pretty j) )
+                    nameValuePairs
+
+            return [ (nm', theMatrix)
+                   | (nm', vals) <- nameValuePairs
+                   , let valuesInMatrix = vals
+                   , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
+                                                | value.matrix.indexrange := [indexOfMatrix]
+                                                |]
+                   ]
+
+        helper
+            name
+            [xMatch| attrs      := domain.set.attributes.attrCollection
+                   | [domInner] := domain.set.inner
+                   |]
+            [xMatch| values := value.set.values |]
+            (Just "ExplicitVarSize")
+            = do
+            nbValues <-
+                case lookupAttr "maxSize" attrs of
+                    Just i  -> return i
+                    Nothing -> domSize domInner
+            nbValuesInt <- valueIntOut nbValues
+            let indexOfMatrix_fr = [eMake| 1 |]
+            let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
+            let indexOfMatrix    = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
+
+            let nbTrues  = genericLength values
+            let nbFalses = nbValuesInt - nbTrues
+            let outTuple1_Name   = name `T.append` "_ExplicitVarSize_tuple1"
+            let outTuple1_Values = replicate (fromInteger nbTrues ) [eMake| true  |]
+                                ++ replicate (fromInteger nbFalses) [eMake| false |]
+            let outTuple1_Value  = [xMake| value.matrix.values := outTuple1_Values
+                                         | value.matrix.indexrange := [indexOfMatrix]
+                                         |]
+
+
+            valuesPadded <- do
+                padding <- zeroVal domInner
+                return $ values ++ replicate (fromInteger nbFalses) padding
+            values' <- concatMapM (workhorse lookupReprs)
+                        [ (nm', dom', val')
+                        | let nm'  = name `T.append` "_ExplicitVarSize_tuple2"
+                        , let dom' = domInner
+                        , val' <- valuesPadded
+                        ]
+            let names = map fst values'
+            let nameValuePairs
+                    = map (\ xs -> (fst $ head xs, map snd xs) )
+                    $ groupBy ((==) `on` fst)
+                    $ sortBy  (comparing fst)
+                    $ values'
+
+            mkLog "NAMES" $ sep $ map pretty names
+            mkLog "VALUES" $ sep
+                    $ map (\ (i,j) -> pretty i <+> sep (map pretty j) )
+                    nameValuePairs
+
+            return
+                $ (outTuple1_Name, outTuple1_Value)
+                :
+                [ (nm', theMatrix)
+                | (nm', vals) <- nameValuePairs
+                , let valuesInMatrix = vals
+                , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
+                                             | value.matrix.indexrange := [indexOfMatrix]
+                                             |]
+                ]
+
+        helper name domain value repr = bug $ vcat
+            [ "missing case in RedArrow.workhorse"
+            , "name:"   <+> pretty name
+            , "domain:" <+> pretty domain
+            , "value:"  <+> pretty value
+            , "repr:"   <+> pretty repr
+            ]
 
 
 valueIntOut :: MonadConjure m => E -> m Integer
 valueIntOut [xMatch| [Prim (I x)] := value.literal |] = return x
-valueIntOut [xMatch| [Prim (S nm)] := reference    |] = do
-    mx <- runMaybeT $ lookupReference nm
-    case mx of
-        Nothing -> err ErrFatal $ "Parameter value not given for:" <+> pretty nm
-        Just x  -> valueIntOut x
-valueIntOut p = err ErrFatal $ "Expecting integer literal, found:" <+> pretty p
+valueIntOut [xMatch| [Prim (S n)] := reference     |] = do
+    mres <- runMaybeT $ lookupReference n
+    case mres of
+        Just i  -> valueIntOut i
+        Nothing -> err ErrFatal $ "No value given for identifier:" <+> pretty n
+valueIntOut p = do
+    bindersDoc >>= \ d -> mkLog "binders" d
+    (p', (Any flag, _)) <- runWriterT $ fullySimplify p
+    if flag
+        then valueIntOut p'
+        else err ErrFatal $ "Expecting integer literal, found:" <+> vcat [ pretty p
+                                                                         , prettyAsPaths p
+                                                                         ]
+-- toInt p            = do
+    -- (p', (Any flag, bs)) <- runWriterT $ simplify p
+    -- modify $ \ st -> st { binders = bs ++ binders st }
+    -- if flag
+        -- then do
+            -- mres <- toInt p'
+            -- case mres of
+                -- Nothing         -> return Nothing
+                -- Just (p'', bs2) -> return $ Just (p'', bs ++ bs2)
+        -- else return Nothing
+
+
+lookupAttr :: Text -> [E] -> Maybe E
+lookupAttr attrName attrs = listToMaybe
+    [ val
+    | [xMatch| [Prim (S nm)] := attribute.nameValue.name.reference
+             | [val]         := attribute.nameValue.value
+             |] <- attrs
+    , nm == attrName
+    ]
+
+
+zeroVal :: MonadConjure m => E -> m E
+
+zeroVal [xMatch| _     := domain.bool       |] = return [eMake| false |]
+zeroVal [xMatch| []    := domain.int.ranges |] = return [eMake| 0 |]
+zeroVal [xMatch| (r:_) := domain.int.ranges |] = zeroVal r
+
+zeroVal [xMatch| [x]   := range.single  |] = fmap fst $ runWriterT $ fullySimplify x
+zeroVal [xMatch| [x]   := range.from    |] = fmap fst $ runWriterT $ fullySimplify x
+zeroVal [xMatch| [x]   := range.to      |] = fmap fst $ runWriterT $ fullySimplify x
+zeroVal [xMatch| [x,_] := range.fromTo  |] = fmap fst $ runWriterT $ fullySimplify x
+
+zeroVal [xMatch| [index] := domain.matrix.index
+               | [inner] := domain.matrix.inner
+               |]
+    | [xMatch| [fr,to] := domain.int.ranges.range.fromTo |] <- index
+    = do
+    intFr <- valueIntOut fr
+    intTo <- valueIntOut to
+    valInner <- zeroVal inner
+    let vals =  replicate (fromInteger $ intTo - intFr + 1) valInner
+    return [xMake| value.matrix.values     := vals
+                 | value.matrix.indexrange := [index]
+                 |]
+
+zeroVal [xMatch| [inner] := domain.set.inner 
+               | attrs   := domain.set.attributes.attrCollection
+               |]
+    | let Just size = lookupAttr "size" attrs
+    = do
+    sizeInt  <- valueIntOut size
+    valInner <- zeroVal inner
+    let vals =  replicate (fromInteger sizeInt) valInner
+    return [xMake| value.set.values := vals
+                 |]
+zeroVal x = bug ("RedArrow.zeroVal" <+> prettyAsPaths x)
+
 
