@@ -13,16 +13,14 @@ savilerowCompat
     => Spec
     -> m Spec
 savilerowCompat
-     =  return
-    >=> recordSpec >=> sliceIfTooFewIndices
-    -- >=> recordSpec >=> valueMatrixToLetting
-    >=> recordSpec >=> noTuplesSpec
-    >=> recordSpec >=> conjureNoGuards
-    >=> recordSpec >=> (return . onSpec toIntIsNoOp)
-    >=> recordSpec >=> (return . atMostOneSuchThat)
-    >=> recordSpec >=> (return . removeMinMaxInt)
-    >=> recordSpec >=> (return . langEPrime)
-    >=> recordSpec
+     =  recordSpec "enter savilerowCompat"
+    >=> sliceIfTooFewIndices                >=> recordSpec "sliceIfTooFewIndices"
+    >=> noTuplesSpec                        >=> recordSpec "noTuplesSpec"
+    >=> conjureNoGuards                     >=> recordSpec "conjureNoGuards"
+    >=> (return . onSpec toIntIsNoOp)       >=> recordSpec "toIntIsNoOp"
+    >=> (return . atMostOneSuchThat)        >=> recordSpec "atMostOneSuchThat"
+    >=> (return . removeMinMaxInt)          >=> recordSpec "removeMinMaxInt"
+    >=> (return . langEPrime)               >=> recordSpec "langEPrime"
 
 
 onSpec :: (E -> E) -> Spec -> Spec

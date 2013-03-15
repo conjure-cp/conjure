@@ -16,7 +16,6 @@ checkIfAllRefined spec@(Spec _ statements) = do
                                     <- universe statements
                                 , '#' `elem` T.unpack nm
                                 ]
-    void $ recordSpec spec
     let msg = "Some identifiers are not refined:" <+> prettyList id "," taggedIdentifiers
     if null taggedIdentifiers
         then return spec

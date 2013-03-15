@@ -98,6 +98,7 @@ suppress = S.fromList
     , "handleInfDom"
     , "noTupleDomsInQuan"
     , "addSlicing"
+    , "recordSpec"
 
     ]
 

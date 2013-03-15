@@ -8,11 +8,11 @@ import Language.E.Pipeline.ImplicitWheres
 
 handleEnums :: MonadConjure m => Spec -> m Spec
 handleEnums =
-    recordSpec >=> handleEnumsLetting >=> return . doReplacements >=>
-    recordSpec >=> handleEnumsGiven   >=> return . doReplacements >=>
-    recordSpec >=> updateGivenFinds   >=>
-    recordSpec >=> handleGivenIntDom  >=>
-    recordSpec >=> handleInfiniteGivenDoms
+    handleEnumsLetting          >=> return . doReplacements >=>
+    handleEnumsGiven            >=> return . doReplacements >=>
+    updateGivenFinds            >=>
+    handleGivenIntDom           >=>
+    handleInfiniteGivenDoms
 
 -- replaces letting e be new type enum {a, b, c}
 -- with     letting e_fromEnum be domain int(1..3)

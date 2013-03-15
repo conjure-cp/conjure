@@ -36,17 +36,16 @@ conjureRefn reprs refns spec = withBindingScope' $
                     : quanDomAndSubsetEq
                     : fs
             initialiseSpecState spec
-            let pipeline =  return
-                        >=> recordSpec >=> implicitWheres
-                        >=> recordSpec >=> explodeStructuralVars
-                        >=> recordSpec >=> handleEnums
-                        >=> recordSpec >=> handleUnnameds
-                        >=> recordSpec >=> inlineLettings
-                        >=> recordSpec >=> applyRefn fs'
-                        >=> recordSpec >=> checkIfAllRefined
-                        >=> recordSpec >=> noTuplesSpec
-                        >=> recordSpec >=> removeUnused
-                        >=> recordSpec >=> bubbleUpSpec
-                        >=> recordSpec
+            let pipeline =  recordSpec "entering conjureRefn"
+                        >=> implicitWheres              >=> recordSpec "implicitWheres"
+                        >=> explodeStructuralVars       >=> recordSpec "explodeStructuralVars"
+                        >=> handleEnums                 >=> recordSpec "handleEnums"
+                        >=> handleUnnameds              >=> recordSpec "handleUnnameds"
+                        >=> inlineLettings              >=> recordSpec "inlineLettings"
+                        >=> applyRefn fs'               >=> recordSpec "applyRefn"
+                        >=> checkIfAllRefined           >=> recordSpec "checkIfAllRefined"
+                        >=> noTuplesSpec                >=> recordSpec "noTuplesSpec"
+                        >=> removeUnused                >=> recordSpec "removeUnused"
+                        >=> bubbleUpSpec                >=> recordSpec "bubbleUpSpec"
             pipeline spec
 

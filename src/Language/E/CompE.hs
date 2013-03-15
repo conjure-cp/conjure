@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP #-}
 
 module Language.E.CompE where
 
@@ -156,8 +157,12 @@ instance Pretty ConjureError where
     pretty (_, d, Nothing) = vcat [ nest 4 d,                     "" ]
     pretty (_, d, Just sp) = vcat [ nest 4 d, nest 4 (pretty sp), "" ]
 
-recordSpec :: MonadConjure m => Spec -> m Spec
-recordSpec sp = do
+recordSpec :: MonadConjure m => Doc -> Spec -> m Spec
+recordSpec _msg sp = do
+#ifdef TRACELOGS
+    sp' <- gets lastSpec
+    unless (Just sp == sp') $ mkLog "recordSpec" $ vcat [ _msg, pretty sp ]
+#endif
     modify $ \ st -> st { lastSpec = Just sp }
     return sp
 

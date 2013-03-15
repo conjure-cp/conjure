@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Language.E.Pipeline.ConjureRepr where
 
 import Language.E
@@ -19,19 +21,19 @@ conjureRepr
     -> m Spec
 conjureRepr reprs spec = withBindingScope' $ do
     initialiseSpecState spec
-    let pipeline =  return
-                >=> recordSpec >=> implicitWheres
-                >=> recordSpec >=> explodeStructuralVars
-                >=> recordSpec >=> handleEnums
-                >=> recordSpec >=> handleUnnameds
-                >=> recordSpec >=> inlineLettings
-                >=> recordSpec >=> simplifySpec           -- to remove any unnecessary occurrences of variables
-                >=> recordSpec >=> noTuplesSpec
-                >=> recordSpec >=> introduceFakeConstraints
-                >=> recordSpec >=> introduceRegions
-                >=> recordSpec >=> applyRepr reprs
-                >=> recordSpec >=> return . removeFakeConstraints
-                >=> recordSpec
+    let pipeline =  recordSpec "entering conjureRepr"
+                >=> implicitWheres                          >=> recordSpec "implicitWheres"
+                >=> explodeStructuralVars                   >=> recordSpec "explodeStructuralVars"
+                >=> handleEnums                             >=> recordSpec "handleEnums"
+                >=> handleUnnameds                          >=> recordSpec "handleUnnameds"
+                >=> inlineLettings                          >=> recordSpec "inlineLettings"
+                -- following is to remove any unnecessary occurrences of variables
+                >=> simplifySpec                            >=> recordSpec "simplifySpec"
+                >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
+                >=> introduceFakeConstraints                >=> recordSpec "introduceFakeConstraints"
+                >=> introduceRegions                        >=> recordSpec "introduceRegions"
+                >=> applyRepr reprs                         >=> recordSpec "applyRepr"
+                >=> return . removeFakeConstraints          >=> recordSpec "removeFakeConstraints"
     pipeline spec
 
 

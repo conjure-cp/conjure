@@ -44,15 +44,15 @@ validateSolution essence param solution = do
                         (Spec l s, Just (Spec _ p)) -> Spec l (listAsStatement $ statementAsList p ++ statementAsList s)
                         _ -> essence
 
-            let pipeline0 =
-                        recordSpec >=> explodeStructuralVars
-                    >=> recordSpec >=> stripDecls
-                    >=> recordSpec >=> inlineLettings
-                    >=> recordSpec >=> fullyInline
-                    >=> recordSpec >=> handleEnums
-                    >=> recordSpec >=> handleUnnameds
-                    >=> recordSpec >=> stripDecls
-                    >=> recordSpec >=> fullyEvaluate
+            let pipeline0 = recordSpec "init"
+                    >=> explodeStructuralVars   >=> recordSpec "explodeStructuralVars"
+                    >=> stripDecls              >=> recordSpec "stripDecls"
+                    >=> inlineLettings          >=> recordSpec "inlineLettings"
+                    >=> fullyInline             >=> recordSpec "fullyInline"
+                    >=> handleEnums             >=> recordSpec "handleEnums"
+                    >=> handleUnnameds          >=> recordSpec "handleUnnameds"
+                    >=> stripDecls              >=> recordSpec "stripDecls"
+                    >=> fullyEvaluate           >=> recordSpec "fullyEvaluate"
 
             Spec _ s <- pipeline0 essenceCombined
 
@@ -76,10 +76,10 @@ isPartOfValidSolution _ = Nothing
 
 fullyEvaluate :: MonadConjure m => Spec -> m Spec
 fullyEvaluate
-    = return
-    >=> recordSpec >=> explodeStructuralVars
-    >=> recordSpec >=> fullySimplifySpec
-    >=> recordSpec >=> return . atMostOneSuchThat
+    = recordSpec "entering fullyEvaluate"
+    >=> explodeStructuralVars           >=> recordSpec "explodeStructuralVars"
+    >=> fullySimplifySpec               >=> recordSpec "fullySimplifySpec"
+    >=> return . atMostOneSuchThat      >=> recordSpec "atMostOneSuchThat"
 
 
 fullyInline :: MonadConjure m => Spec -> m Spec

@@ -118,7 +118,7 @@ applyCongfigToSpec
     -> M.HashMap (Text,Text) RuleReprResult
     -> m Spec
 applyCongfigToSpec spec config = withBindingScope' $ do
-    void $ recordSpec spec
+    void $ recordSpec "before applyCongfigToSpec" spec
     initialiseSpecState spec
     let
         f p@[xMatch| [Prim (S nm)] := reference |] =
