@@ -75,9 +75,10 @@ fullySimplify x = do
 
         instantiate [xMatch| [Prim (S nm)] := reference |] = do
             mres <- runMaybeT $ lookupReference nm
-            case mres of
-                Nothing -> return Nothing
-                Just i  -> return (Just (i, []))
+            return $ case mres of
+                Nothing                         -> Nothing
+                Just [xMatch| _ := quanVar |]   -> Nothing
+                Just i                          -> Just (i, [])
         instantiate _ = return Nothing
 
 
