@@ -2,6 +2,7 @@
 
 module Conjure ( getConjureMode, runConjureMode ) where
 
+import System.Directory ( doesFileExist )
 import System.Environment ( getArgs )
 import qualified Data.Text.IO as T
 import qualified Data.HashMap.Strict as M
@@ -9,7 +10,11 @@ import qualified Data.HashMap.Strict as M
 import Paths_conjure_cp ( getBinDir )
 import Conjure.Mode
 import Language.E
-import Language.E.Pipeline.ReadIn ( readSpecFromStdIn, readSpecFromFile, readSpecPreambleFromFile, writeSpec, dropExtEssence )
+import Language.E.Pipeline.ReadIn
+    ( readSpecFromStdIn, readSpecFromFile
+    , readSpecPreambleFromFile
+    , writeSpec, dropExtEssence
+    )
 
 import Language.E.NormaliseSolution ( normaliseSolution )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
@@ -21,11 +26,22 @@ import Language.E.ValidateSolution ( validateSolution )
 import Language.E.GenerateRandomParam ( generateRandomParam )
 
 
-rulesdbLoc :: IO FilePath
-rulesdbLoc = liftM (++ "/conjure.rulesdb") getBinDir
+rulesdbLoc :: IO [FilePath]
+rulesdbLoc = do
+    inDotCabal <- liftM (++ "/conjure.rulesdb") getBinDir
+    return ["conjure.rulesdb", inDotCabal]
 
 getRulesDB :: IO RulesDB
-getRulesDB = decodeFromFile =<< rulesdbLoc
+getRulesDB = do
+    candidates <- rulesdbLoc
+    let
+        loopy [] = error "Cannot locate rules database file."
+        loopy (c:cs) = do
+            b <- doesFileExist c
+            if b
+                then decodeFromFile c
+                else loopy cs
+    loopy candidates
 
 getConjureMode :: IO (Maybe ConjureModeWithFlags)
 getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
