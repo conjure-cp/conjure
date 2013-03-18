@@ -41,25 +41,42 @@ generateRandomParam essence = do
 makeLetting :: E -> E -> E
 makeLetting given val =
     [xMake| topLevel.letting.name := [getRef given] 
-          | topLevel.letting.expr.value := [val]|]
+          | topLevel.letting.expr := [val]|]
 
     where 
     getRef :: E -> E
     getRef [xMatch|  _  := topLevel.declaration.given.name.reference 
                   | [n] := topLevel.declaration.given.name |] = n
 
+
 handleDomain :: MonadConjure m => E -> m E
 handleDomain [xMatch| ranges := domain.int.ranges |] = do
-    mkLog "int" (pretty ranges)
+    mkLog "ranges" (pretty ranges)
     vals <- mapM handleRange ranges
+    --error . show  $ vals
     return (head vals)
 
 handleRange :: MonadConjure m => E -> m E
 handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = do
-   mkLog "fromTo" $ pretty (a,b)
+   --mkLog "fromTo" $ pretty (a,b)
    let val =  a + b `div` 2
-   return $ Tagged "literal" [Prim (I val)]
+   return $ [xMake| value.literal :=  [Prim (I val)] |]
 
+handleRange [xMatch| _   := range.single.value.literal
+                   | [v] := range.single|] = 
+                   return v
+
+handleRange [xMatch| [Prim (I a)] := range.from.value.literal |] = do
+    return $ [xMake| value.literal :=  [Prim (I a)] |]
+
+handleRange [xMatch| [Prim (I a)] := range.to.value.literal |] = do
+    return $ [xMake| value.literal :=  [Prim (I a)] |]
+
+
+handleRange e = do
+    mkLog "unhandled" (prettyAsPaths e)
+    return [eMake| 99 |]
+    --error . show . prettyAsPaths $ e
 
 stripDecVars :: Essence -> Essence
 stripDecVars (Spec v x) = Spec v y
