@@ -7,14 +7,13 @@ import Language.E
 import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.AbstractDomsInQuans ( abstractDomsInQuans, quanDomAndSubsetEq )
 import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
-import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined )
+import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined, removeRefinedDecls )
 import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
-import Language.E.Pipeline.RemoveUnused ( removeUnused )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 
 
@@ -44,8 +43,8 @@ conjureRefn reprs refns spec = withBindingScope' $
                         >=> inlineLettings              >=> recordSpec "inlineLettings"
                         >=> applyRefn fs'               >=> recordSpec "applyRefn"
                         >=> checkIfAllRefined           >=> recordSpec "checkIfAllRefined"
+                        >=> removeRefinedDecls          >=> recordSpec "removeRefinedDecls"
                         >=> noTuplesSpec                >=> recordSpec "noTuplesSpec"
-                        >=> removeUnused                >=> recordSpec "removeUnused"
                         >=> bubbleUpSpec                >=> recordSpec "bubbleUpSpec"
             pipeline spec
 

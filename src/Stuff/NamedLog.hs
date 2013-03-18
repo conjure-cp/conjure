@@ -93,6 +93,7 @@ suppress = S.fromList
     -- , "applied"
     -- , "simplified"
     -- , "removedDecl"
+    -- , "removedRefinedDecl"
 
     -- other process indicators
     , "handleInfDom"

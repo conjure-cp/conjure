@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.Pipeline.CheckIfAllRefined where
+module Language.E.Pipeline.CheckIfAllRefined
+    ( checkIfAllRefined
+    , removeRefinedDecls
+    ) where
 
 import Language.E
 
@@ -20,4 +23,16 @@ checkIfAllRefined spec@(Spec _ statements) = do
     if null taggedIdentifiers
         then return spec
         else err ErrFatal msg
+
+
+removeRefinedDecls :: MonadConjure m => Spec -> m Spec
+removeRefinedDecls (Spec s x) = do
+    reprLog <- gets representationLog
+    modify $ \ st -> st { representationLog = [] }
+    let refinedDecls = sortNub $ map (\ (_,_,i,_) -> i ) reprLog
+    let xs = statementAsList x
+    let ys = xs \\ refinedDecls
+    let y  = listAsStatement ys
+    mapM_ (mkLog "removeRefinedDecl" . pretty) refinedDecls
+    return $ Spec s y
 

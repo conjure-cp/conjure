@@ -118,6 +118,9 @@ applyCongfigToSpec
     -> M.HashMap (Text,Text) RuleReprResult
     -> m Spec
 applyCongfigToSpec spec config = withBindingScope' $ do
+    reprLogPre <- gets representationLog
+    unless (null reprLogPre) $
+        bug "representationLog needs to be null at this point"
     void $ recordSpec "before applyCongfigToSpec" spec
     initialiseSpecState spec
     let
@@ -167,7 +170,6 @@ addChannellingFromLog :: MonadConjure m => Spec -> m Spec
 addChannellingFromLog (Spec v xs) = do
     mapM_ introduceStuff (statementAsList xs)
     rlogs <- gets representationLog
-    modify $ \ st -> st { representationLog = [] }
 
     let grouped = filter ( (>1) . length )
                 $ groupBy ((==) `on` fst)
