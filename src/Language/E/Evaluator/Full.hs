@@ -327,6 +327,23 @@ fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
                             zs = concatMap (\ (x,num) -> replicate num x ) zsHistogram
                        in   ret [xMake| value.mset.values := zs |]
 
+
+-- toSet
+
+fullEvaluator [eMatch| toSet(&f) |]
+    | [xMatch| fMappings := value.function.values |] <- f
+    = let
+        fTuples = map mappingToTuple fMappings
+      in ret [xMake| value.set.values := fTuples |]
+
+
+-- toMSet
+
+fullEvaluator [eMatch| toMSet(&f) |]
+    | [xMatch| fMappings := value.function.values |] <- f
+    = let fTuples = map mappingToTuple fMappings
+      in  ret [xMake| value.mset.values := fTuples |]
+
 fullEvaluator
   p@[xMatch| [fn]  := functionApply.actual
            | xs    := functionApply.actual.value.function.values
@@ -411,12 +428,6 @@ fullEvaluator [eMatch| inverse(&f,&g) |]
     = let
         reverseTuple [xMatch| is := value.tuple.values |] = [xMake| value.tuple.values := (reverse is) |]
         reverseTuple x = x
-
-        mappingToTuple [xMatch| [i,j] := mapping |] = [xMake| value.tuple.values := [i,j] |]
-        mappingToTuple _ = bug $ vcat [ "fullEvaluator.inverse(&f,&g)"
-                                      , "f:" <+> pretty f
-                                      , "g:" <+> pretty g
-                                      ]
 
         fTuples = map                 mappingToTuple  fValues
         gTuples = map (reverseTuple . mappingToTuple) gValues
@@ -554,6 +565,13 @@ fullEvaluator
 
 fullEvaluator _ = return Nothing
 
+
+mappingToTuple :: E -> E
+mappingToTuple [xMatch| [i,j] := mapping |] = [xMake| value.tuple.values := [i,j] |]
+mappingToTuple p = bug $ vcat [ "mappingToTuple"
+                              , pretty p
+                              , prettyAsPaths p
+                              ]
 
 -- if something has a type annotation, it can either be useful or not.
 -- it is useful if the calculated type isn't ==, so keep it
