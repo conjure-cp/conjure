@@ -88,23 +88,23 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
             $ mapMaybe (T.stripPrefix "[configuration]")
             $ T.lines modelLogs
 
-    mkLog "debug" $ vcat $
-        (
-            "essenceGivens" :
-                [ nest 4 $ pretty a <+> ":" <+> pretty b
-                | (a,b) <- essenceGivens
-                ]
-        ) ++ (
-            "essenceParams" :
-                [ nest 4 $ pretty a <+> ":" <+> pretty b
-                | (a,b) <- essenceParams
-                ]
-        ) ++ (
-            "lookupReprs"   :
-                [ nest 4 $ pretty a <+> ":" <+> pretty b
-                | (a,b) <- lookupReprs
-                ]
-        )
+    -- mkLog "debug" $ vcat $
+        -- (
+            -- "essenceGivens" :
+                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
+                -- | (a,b) <- essenceGivens
+                -- ]
+        -- ) ++ (
+            -- "essenceParams" :
+                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
+                -- | (a,b) <- essenceParams
+                -- ]
+        -- ) ++ (
+            -- "lookupReprs"   :
+                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
+                -- | (a,b) <- lookupReprs
+                -- ]
+        -- )
 
     outPairs <- concatMapM (workhorse lookupReprs)
                 [ (nm, decl, val)
@@ -127,17 +127,17 @@ workhorse lookupReprs (nm, dom, val) = do
     result <- if null thisReprs
                 then helper nm dom val Nothing
                 else concatMapM (helper nm dom val . Just) thisReprs
-    unless (null thisReprs) $
-        mkLog "debug" $ sep
-            [ "workhorse"
-            , "~~" <+> sep (map pretty thisReprs)
-            , "~~" <+> pretty nm
-            , "~~" <+> pretty dom
-            , "~~" <+> pretty val
-            , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
-                            | (i,j) <- result
-                            ]
-            ]
+    -- unless (null thisReprs) $
+        -- mkLog "debug" $ sep
+            -- [ "workhorse"
+            -- , "~~" <+> sep (map pretty thisReprs)
+            -- , "~~" <+> pretty nm
+            -- , "~~" <+> pretty dom
+            -- , "~~" <+> pretty val
+            -- , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
+                            -- | (i,j) <- result
+                            -- ]
+            -- ]
     return result
 
     where
@@ -212,16 +212,10 @@ workhorse lookupReprs (nm, dom, val) = do
                         , let dom' = domInner
                         , val' <- values
                         ]
-            let names = map fst values'
             let nameValuePairs
                     = map (\ xs -> (fst $ head xs, map snd xs) )
                     $ groupBy ((==) `on` fst)
                     $ sort values'
-
-            mkLog "NAMES" $ sep $ map pretty names
-            mkLog "VALUES" $ sep
-                    $ map (\ (i,j) -> pretty i <+> sep (map pretty j) )
-                    nameValuePairs
 
             return [ (nm', theMatrix)
                    | (nm', vals) <- nameValuePairs
