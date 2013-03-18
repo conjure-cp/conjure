@@ -366,9 +366,9 @@ fullEvaluator [eMatch| preImage(&f,&x) |]
                                , "f:" <+> pretty f
                                , "x:" <+> pretty x
                                ]
-        ys = [ j | val <- fValues
+        ys = [ i | val <- fValues
                  , let (i,j) = getPair val
-                 , i == x
+                 , j == x
                  ]
       in
         ret [xMake| value.set.values := ys |]
@@ -404,15 +404,23 @@ fullEvaluator [eMatch| inverse(&f,&g) |]
     , [xMatch| fValues := value.function.values |] <- f
     , [xMatch| gValues := value.function.values |] <- g
     = let
-        getPair [xMatch| [i,j] := mapping |] = (i,j)
-        getPair _ = bug $ vcat [ "fullEvaluator.inverse(&f,&g)"
-                               , "f:" <+> pretty f
-                               , "g:" <+> pretty g
-                               ]
-        fPairs = map getPair fValues
-        gPairs = map getPair gValues
+        reverseTuple [xMatch| is := value.tuple.values |] = [xMake| value.tuple.values := (reverse is) |]
+        reverseTuple x = x
+
+        mappingToTuple [xMatch| [i,j] := mapping |] = [xMake| value.tuple.values := [i,j] |]
+        mappingToTuple _ = bug $ vcat [ "fullEvaluator.inverse(&f,&g)"
+                                      , "f:" <+> pretty f
+                                      , "g:" <+> pretty g
+                                      ]
+
+        fTuples = map                 mappingToTuple  fValues
+        gTuples = map (reverseTuple . mappingToTuple) gValues
+
+        fSet = [xMake| value.set.values := fTuples |]
+        gSet = [xMake| value.set.values := gTuples |]
+
       in
-        returnBool $ fPairs == map swap gPairs
+        ret [eMake| &fSet = &gSet |]
 
 fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
