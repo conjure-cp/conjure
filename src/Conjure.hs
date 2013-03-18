@@ -100,8 +100,7 @@ runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
             driverConjureSingle False
                 pathOutParam
                 $ runCompE "generateParam"
-                $ set_stdgen seed >>
-                  generateRandomParam inEssence
+                $ generateRandomParam seed inEssence
         helper (ModeDFAll pathInEssence) = do
             seed <- getStdGen
             (ruleReprs, ruleRefns) <- getRulesDB

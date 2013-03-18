@@ -4,7 +4,8 @@ module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
 import Language.E
 import Language.E.DomainOf(domainOf)
---import Language.E.Up.Debug(prettyAsBoth)
+{-import Language.E.Up.Debug(prettyAsBoth,upBug)-}
+import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec)
 
@@ -12,8 +13,12 @@ type Essence      = Spec
 type EssenceParam = Spec
 
 
-generateRandomParam :: MonadConjure m => Essence -> m EssenceParam
-generateRandomParam essence = do
+generateRandomParam :: (MonadConjure m,RandomM m) => StdGen -> Essence -> m EssenceParam
+generateRandomParam seed essence = do
+    set_stdgen seed
+    i <- rangeRandomM (0, 5)
+    mkLog "rnd test" (pretty i)
+
     let stripped@(Spec _ f) = stripDecVars essence
     reduced@(Spec v e) <- reduceSpec stripped
     let es = statementAsList e
@@ -28,7 +33,7 @@ generateRandomParam essence = do
     givens <-  mapM handleDomain doms
     mkLog "Givens" (vcat $ map pretty givens)
 
-    let lettings = zipWith (makeLetting) es givens
+    let lettings = zipWith makeLetting es givens
     mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
 
@@ -47,6 +52,7 @@ makeLetting given val =
     getRef :: E -> E
     getRef [xMatch|  _  := topLevel.declaration.given.name.reference 
                   | [n] := topLevel.declaration.given.name |] = n
+    getRef e = _bug "getRef: should not happen" [e]
 
 
 handleDomain :: MonadConjure m => E -> m E
@@ -55,6 +61,11 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
     vals <- mapM handleRange ranges
     --error . show  $ vals
     return (head vals)
+
+handleDomain e = do
+    mkLog "unhandled" (prettyAsPaths e)
+    return [eMake| 99 |]
+
 
 handleRange :: MonadConjure m => E -> m E
 handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = do
@@ -66,17 +77,16 @@ handleRange [xMatch| _   := range.single.value.literal
                    | [v] := range.single|] = 
                    return v
 
-handleRange [xMatch| [Prim (I a)] := range.from.value.literal |] = do
+handleRange [xMatch| [Prim (I a)] := range.from.value.literal |] = 
     return $ [xMake| value.literal :=  [Prim (I a)] |]
 
-handleRange [xMatch| [Prim (I a)] := range.to.value.literal |] = do
+handleRange [xMatch| [Prim (I a)] := range.to.value.literal |] = 
     return $ [xMake| value.literal :=  [Prim (I a)] |]
 
 
 handleRange e = do
     mkLog "unhandled" (prettyAsPaths e)
     return [eMake| 99 |]
-    --error . show . prettyAsPaths $ e
 
 stripDecVars :: Essence -> Essence
 stripDecVars (Spec v x) = Spec v y
@@ -95,10 +105,11 @@ stripDecVars (Spec v x) = Spec v y
 instance Show LogTree where
    show = show . pretty
 
-_r :: Monad m => m Essence -> m [(Either Doc EssenceParam, LogTree)]
+_r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
 _r sp = do
-  spec <- sp
-  return $ runCompE "gen" $ generateRandomParam spec
+    seed <- getStdGen
+    spec <- sp
+    return $ runCompE "gen" $ generateRandomParam seed spec
 
 _x :: [(Either Doc EssenceParam, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)
@@ -122,4 +133,7 @@ _p = _getTest "partition-1"
 _s :: IO Spec
 _s = _getTest "set-1"
 
--- _x  =<<  _r _i
+_bug :: String -> [E] -> t
+_bug  s = upBug  ("GenerateRandomParam: " ++ s)
+_bugg :: String -> t
+_bugg s = _bug s []
