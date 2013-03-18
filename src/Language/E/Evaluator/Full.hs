@@ -198,6 +198,11 @@ fullEvaluator [eMatch| &b supsetEq &a |]
 
 
 fullEvaluator
+    [eMatch| |&x| |]
+    | [xMatch| [Prim (I i)] := value.literal |] <- x
+    = returnInt (abs i)
+
+fullEvaluator
     [xMatch| [x] := operator.twoBars
            | xs  := operator.twoBars.value.set.values
            |]
