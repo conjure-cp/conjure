@@ -2,7 +2,7 @@
 ~~> ExplicitVarSize
 ~~> matrix indexed by [int(1..&mx)] of (bool,&t)
 ~~> (
-        forAll i,j : int(1..&mx), i < j /\ refn[i][1] /\ refn[j][1] . refn[i][2] < refn[j][2]
+        forAll i : int(1..&mx-1), refn[i][1] /\ refn[i+1][1] . refn[i][2] < refn[i+1][2]
     )
         /\
     (
