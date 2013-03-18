@@ -3,16 +3,19 @@
 set -o nounset
 
 
-if (( $# < 2 )); then
+if (( $# < 3 )); then
     echo "ERROR:"
     echo "    - Give a directory path."
+    echo "    - a build_frequency value."
+    echo "        one of: {continuous, weekly}"
     echo "    - and a list of arguments, each a mode to be used by Conjure."
     echo "        Modes: {df, smallest, random}"
     exit 1
 fi
 
 export WD="$1"
-export MODES="${*:2}"
+export BUILD_FREQ="$2"
+export MODES="${*:3}"
 
 export SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 export SCRIPT_TEST_SINGLE="$SCRIPT_DIR/test_single.sh"
@@ -21,6 +24,8 @@ export SCRIPT_TEST_SINGLE="$SCRIPT_DIR/test_single.sh"
 function perDirectory {
     MODE="$1"
     DIR="$2"
+
+    if [ "$BUILD_FREQ" == "$(cat ${DIR}/build_frequency)" ] ; then
 
     FAIL_FILE="$WD/${MODE}_fail.txt"
     PASS_FILE="$WD/${MODE}_pass.txt"
@@ -34,6 +39,8 @@ function perDirectory {
     cat "${MODE}_pass.txt" >> "$PASS_FILE"
     cat "${MODE}_fail.txt" >> "$ALL_FILE"
     cat "${MODE}_pass.txt" >> "$ALL_FILE"
+
+    fi
 }
 
 export -f perDirectory
@@ -49,6 +56,7 @@ for MODE in $MODES ; do
     ALL_COUNT_FILE="$WD/${MODE}_countAll.txt"
 
     rm -f "$FAIL_FILE" "$PASS_FILE" "$ALL_FILE"
+    touch "$FAIL_FILE" "$PASS_FILE" "$ALL_FILE"
 done
 
 parallel -k --tag perDirectory {1} {2//} ::: $MODES ::: $(find "$WD" -name "*.essence")
