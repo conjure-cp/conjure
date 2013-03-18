@@ -146,7 +146,10 @@ fullEvaluator [eMatch| &a = &b |]
     , [xMatch| bs := value.partition.values |] <- b
     = returnBool (sort (map sortPart as) == sort (map sortPart bs))
     where sortPart [xMatch| xs := part |] = [xMake| part := sort xs |]
-          sortPart x = x
+          sortPart x = bug $ vcat [ "fullEvaluator"
+                                  , pretty x
+                                  , prettyAsPaths x
+                                  ]
 
 fullEvaluator [eMatch| &a != &b |]
     | isFullyInstantiated a
@@ -261,6 +264,19 @@ fullEvaluator
            |]
     | isFullyInstantiated x && all isFullyInstantiated ys
     = returnBool $ x `elem` ys
+
+fullEvaluator p@[eMatch| &x in parts(&y) |]
+    | isFullyInstantiated x && isFullyInstantiated y
+    , [xMatch| ys := value.partition.values |] <- y
+    = returnBool $ x `elem` map partToSet ys
+    where partToSet [xMatch| is := part |] = [xMake| value.set.values := sortNub is |]
+          partToSet i = bug $ vcat [ "fullEvaluator"
+                                   , pretty p
+                                   , prettyAsPaths p
+                                   , pretty i
+                                   , prettyAsPaths i
+                                   ]
+
 
 fullEvaluator [eMatch| freq(&m,&x) |]
     | isFullyInstantiated m, isFullyInstantiated x
