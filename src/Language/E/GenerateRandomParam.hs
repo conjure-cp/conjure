@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings, FlexibleInstances #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
@@ -12,6 +13,28 @@ import Language.E.Up.ReduceSpec(reduceSpec)
 type Essence      = Spec
 type EssenceParam = Spec
 
+data Choice =  CInt Int [Range]  deriving (Show) 
+data Range = RSingle Int | RRange (Int,Int) deriving (Show)
+
+_c :: Choice
+_c = CInt 5  [RRange (3,6), RSingle 9 ]
+
+evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
+evalChoice (CInt size ranges) = do
+    index <- rangeRandomM (0, size-1)
+    let n = pickIth index ranges
+    mkLog "Index" (pretty index)
+    mkLog "Ranges" (pretty . show $ ranges)
+    mkLog "Choice " (pretty n)
+    return [eMake| 2|]
+
+pickIth :: Int -> [Range] -> Int
+pickIth _ [] = _bugg "pickIth no values"
+pickIth 0 (RSingle i:_) = i
+pickIth index (RRange (a,b):_ ) | index <= b - a =  [a..b] !! index
+
+pickIth index (RSingle _:xs)    =  pickIth (index - 1) xs
+pickIth index (RRange (a,b):xs) = pickIth (index - (b - a) - 1 ) xs 
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
@@ -107,7 +130,13 @@ _r sp = do
     spec <- sp
     return $ runCompE "gen" (set_stdgen seed >> generateRandomParam spec)
 
-_x :: [(Either Doc EssenceParam, LogTree)] -> IO ()
+_d :: Choice -> IO [(Either Doc E, LogTree)]
+_d c = do
+    seed <- getStdGen
+    return $ runCompE "gen" (set_stdgen seed >> evalChoice c)
+
+-- _x  =<<  _r _i
+_x :: [(Either Doc a, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)
 _x _ = return ()
 
