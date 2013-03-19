@@ -176,11 +176,11 @@ workhorse lookupReprs (nm, dom, val) = do
         helper
             name
             [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo 
-                   | [innerDom] := domain.set.inner
+                   | [domInner] := domain.set.inner
                    |]
             [xMatch| values := value.set.values |]
             (Just "Occurrence") = do
-            innerDom' <- fmap fst $ runWriterT $ fullySimplify innerDom
+            domInner' <- fmap fst $ runWriterT $ fullySimplify domInner
             intFr <- valueIntOut fr
             intTo <- valueIntOut to
             intValues <- mapM valueIntOut values
@@ -188,7 +188,7 @@ workhorse lookupReprs (nm, dom, val) = do
                                  | i <- [intFr .. intTo]
                                  ]
             let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
-                                   | value.matrix.indexrange := [innerDom']
+                                   | value.matrix.indexrange := [domInner']
                                    |]
             let outName = name `T.append` "_Occurrence"
             return [(outName, theMatrix)]
@@ -261,17 +261,11 @@ workhorse lookupReprs (nm, dom, val) = do
                         , let dom' = domInner
                         , val' <- valuesPadded
                         ]
-            let names = map fst values'
             let nameValuePairs
                     = map (\ xs -> (fst $ head xs, map snd xs) )
                     $ groupBy ((==) `on` fst)
                     $ sortBy  (comparing fst)
                     $ values'
-
-            mkLog "NAMES" $ sep $ map pretty names
-            mkLog "VALUES" $ sep
-                    $ map (\ (i,j) -> pretty i <+> sep (map pretty j) )
-                    nameValuePairs
 
             return
                 $ (outTuple1_Name, outTuple1_Value)
@@ -283,6 +277,39 @@ workhorse lookupReprs (nm, dom, val) = do
                                              | value.matrix.indexrange := [indexOfMatrix]
                                              |]
                 ]
+
+        helper
+            name
+            [xMatch| attrs      := domain.set.attributes.attrCollection
+                   | [domInner] := domain.set.inner
+                   | [fr,_]    := domain.set.inner.domain.int.ranges.range.fromTo
+                   |]
+            [xMatch| values := value.set.values |]
+            (Just "ExplicitVarSizeWithDefault")
+            = do
+
+            nbValues <-
+                case lookupAttr "maxSize" attrs of
+                    Just i  -> return i
+                    Nothing -> domSize domInner
+            nbValuesInt <- valueIntOut nbValues
+            let indexOfMatrix_fr = [eMake| 1 |]
+            let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
+            let indexOfMatrix    = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
+
+            intFr <- valueIntOut fr
+            let defValue = [xMake| value.literal := [Prim (I (intFr - 1))] |]
+
+            let nbTrues  = genericLength values
+            let nbFalses = nbValuesInt - nbTrues
+
+            let valuesInMatrix = replicate (fromInteger nbFalses) defValue ++ values
+
+            let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
+                                   | value.matrix.indexrange := [indexOfMatrix]
+                                   |]
+            let outName = name `T.append` "_ExplicitVarSizeWithDefault"
+            return [(outName, theMatrix)]
 
         helper name domain value repr = bug $ vcat
             [ "missing case in RedArrow.workhorse"
