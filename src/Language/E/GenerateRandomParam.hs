@@ -13,13 +13,12 @@ type Essence      = Spec
 type EssenceParam = Spec
 
 
-generateRandomParam :: (MonadConjure m,RandomM m) => StdGen -> Essence -> m EssenceParam
-generateRandomParam seed essence = do
-    set_stdgen seed
+generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
+generateRandomParam essence = do
     i <- rangeRandomM (0, 5)
     mkLog "rnd test" (pretty i)
 
-    let stripped@(Spec _ f) = stripDecVars essence
+    let stripped@(Spec _ _) = stripDecVars essence
     reduced@(Spec v e) <- reduceSpec stripped
     let es = statementAsList e
 
@@ -101,15 +100,12 @@ stripDecVars (Spec v x) = Spec v y
         stays _ = False
 
 
--- To use in ghci
-instance Show LogTree where
-   show = show . pretty
 
 _r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
 _r sp = do
     seed <- getStdGen
     spec <- sp
-    return $ runCompE "gen" $ generateRandomParam seed spec
+    return $ runCompE "gen" (set_stdgen seed >> generateRandomParam spec)
 
 _x :: [(Either Doc EssenceParam, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)

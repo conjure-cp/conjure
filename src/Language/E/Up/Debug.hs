@@ -35,7 +35,7 @@ upBug s es = bug (pretty s <+> pretty es)
 
 upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
 {-upBugi = erriM-}
-upBugi s (a,b) = bug (pretty s <+> pretty (groom a)  )
+upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )
 
 
 #endif

@@ -25,7 +25,7 @@ import Debug.Trace ( trace )
 
 
 data LogTree = LTEmpty | LTSingle !NamedLog | LTMultiple !LogTree !LogTree
-    deriving GHC.Generics.Generic
+    deriving (Show, GHC.Generics.Generic)
 
 instance Serialize LogTree
 
@@ -41,7 +41,7 @@ instance Default LogTree where
     def = LTEmpty
 
 data NamedLog = NamedLog String Doc
-    deriving GHC.Generics.Generic
+    deriving (Show, GHC.Generics.Generic)
 
 instance Serialize NamedLog
 
