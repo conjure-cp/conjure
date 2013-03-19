@@ -1,0 +1,24 @@
+[representation] find fs:
+                         function (total) int(a..b) --> set (size 2) of (int(10, 11), int(12, 13))
+                 (#1)
+                 Matrix1D
+[configuration] fs§region1#Matrix1D
+[addedDecl] find fs_Matrix1D:
+                    matrix indexed by [int(a..b)] of set (size 2) of (int(10, 11), int(12, 13))
+[refn] 0
+[removeRefinedDecl] find fs:
+                            function (total) int(a..b) --> set (size 2) of (int(10, 11), int(12, 13))
+[repr] 1
+[representation] find fs_Matrix1D:
+                         matrix indexed by [int(a..b)] of set (size 2) of (int(10, 11), int(12, 13))
+                 (#1)
+                 Explicit
+[configuration] fs_Matrix1D§region1#Explicit
+[addedDecl] find fs_Matrix1D_Explicit:
+                    matrix indexed by [int(a..b), int(1..2)] of (int(10, 11), int(12, 13))
+[refn] 1
+[removeRefinedDecl] find fs_Matrix1D:
+                            matrix indexed by [int(a..b)] of set (size 2) of (int(10, 11), int(12, 13))
+[removedDecl] find fs_Matrix1D_Explicit:
+                      matrix indexed by [int(a..b), int(1..2)] of (int(10, 11), int(12, 13))
+[repr] 2

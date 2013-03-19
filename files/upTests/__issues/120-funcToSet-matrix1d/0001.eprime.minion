@@ -1,0 +1,26 @@
+MINION 3
+**VARIABLES**
+DISCRETE fs_Matrix1D_Explicit_tuple1_00000_00000 #
+{10..11}
+DISCRETE fs_Matrix1D_Explicit_tuple1_00000_00001 #
+{10..11}
+DISCRETE fs_Matrix1D_Explicit_tuple1_00001_00000 #
+{10..11}
+DISCRETE fs_Matrix1D_Explicit_tuple1_00001_00001 #
+{10..11}
+DISCRETE fs_Matrix1D_Explicit_tuple2_00000_00000 #
+{12..13}
+DISCRETE fs_Matrix1D_Explicit_tuple2_00000_00001 #
+{12..13}
+DISCRETE fs_Matrix1D_Explicit_tuple2_00001_00000 #
+{12..13}
+DISCRETE fs_Matrix1D_Explicit_tuple2_00001_00001 #
+{12..13}
+**SEARCH**
+PRINT[[fs_Matrix1D_Explicit_tuple1_00000_00000],[fs_Matrix1D_Explicit_tuple1_00000_00001],[fs_Matrix1D_Explicit_tuple1_00001_00000],[fs_Matrix1D_Explicit_tuple1_00001_00001],[fs_Matrix1D_Explicit_tuple2_00000_00000],[fs_Matrix1D_Explicit_tuple2_00000_00001],[fs_Matrix1D_Explicit_tuple2_00001_00000],[fs_Matrix1D_Explicit_tuple2_00001_00001]]
+VARORDER STATIC [fs_Matrix1D_Explicit_tuple1_00000_00000,fs_Matrix1D_Explicit_tuple1_00000_00001,fs_Matrix1D_Explicit_tuple1_00001_00000,fs_Matrix1D_Explicit_tuple1_00001_00001,fs_Matrix1D_Explicit_tuple2_00000_00000,fs_Matrix1D_Explicit_tuple2_00000_00001,fs_Matrix1D_Explicit_tuple2_00001_00000,fs_Matrix1D_Explicit_tuple2_00001_00001]
+VARORDER AUX []
+**CONSTRAINTS**
+watched-or({diseq(fs_Matrix1D_Explicit_tuple1_00000_00000,fs_Matrix1D_Explicit_tuple1_00000_00001),diseq(fs_Matrix1D_Explicit_tuple2_00000_00000,fs_Matrix1D_Explicit_tuple2_00000_00001)})
+watched-or({diseq(fs_Matrix1D_Explicit_tuple1_00001_00000,fs_Matrix1D_Explicit_tuple1_00001_00001),diseq(fs_Matrix1D_Explicit_tuple2_00001_00000,fs_Matrix1D_Explicit_tuple2_00001_00001)})
+**EOF**
