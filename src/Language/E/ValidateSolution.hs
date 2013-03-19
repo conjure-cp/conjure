@@ -46,9 +46,9 @@ validateSolution essence param solution = do
 
             let pipeline0 = recordSpec "init"
                     >=> explodeStructuralVars   >=> recordSpec "explodeStructuralVars"
-                    >=> stripDecls              >=> recordSpec "stripDecls"
                     >=> inlineLettings          >=> recordSpec "inlineLettings"
                     >=> fullyInline             >=> recordSpec "fullyInline"
+                    >=> stripDecls              >=> recordSpec "stripDecls"
                     >=> handleEnums             >=> recordSpec "handleEnums"
                     >=> handleUnnameds          >=> recordSpec "handleUnnameds"
                     >=> stripDecls              >=> recordSpec "stripDecls"
