@@ -1,0 +1,28 @@
+
+~~> ExplicitVarSizeWithDefault
+~~> matrix indexed by [int(1..&mx)] of int(&def..&ub)
+~~> (
+        forAll i : int(1..&mx-1), refn[i] != &def /\ refn[i+1] != &def . refn[i] < refn[i+1]
+    )
+        /\
+    (
+        forAll i : int(1..&mx-1) . refn[i] <= refn[i+1]
+    )
+
+    where &t hasType `int`
+    where &t hasDomain `int(&lb..&ub)`
+    letting &def be &lb - 1
+
+
+*** set of &t
+    letting &mx be domSize(&t)
+
+*** set (minSize &mn) of &t
+    ~~> (sum i : int(1..&mx) . refn[i] = &def) >= &mn
+    letting &mx be domSize(&t)
+
+*** set (maxSize &mx) of &t
+
+*** set (minSize &mn, maxSize &mx) of &t
+    ~~> (sum i : int(1..&mx) . refn[i] = &def) >= &mn
+
