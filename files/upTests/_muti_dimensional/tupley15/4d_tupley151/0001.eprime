@@ -1,0 +1,69 @@
+language ESSENCE' 1.0
+
+find pain_tuple1_tuple1_Occurrence:
+        matrix indexed by [int(1, 2),
+                           int(8, 9),
+                           int(6, 7),
+                           int(1..2),
+                           int(1, 2, 3)] of bool
+find pain_tuple1_tuple2:
+        matrix indexed by [int(1, 2), int(8, 9), int(6, 7), int(1..2)] of int(4, 5, 6)
+find pain_tuple2:
+        matrix indexed by [int(1, 2), int(8, 9), int(6, 7), int(1..2)] of int(8, 9, 10)
+such that
+    pain_tuple1_tuple1_Occurrence[1, 8, 6, 1, 2] = true,
+    pain_tuple1_tuple1_Occurrence[1, 8, 6, 2, 1] = true,
+    pain_tuple1_tuple1_Occurrence[1, 9, 7, 1, 2] = true,
+    pain_tuple1_tuple1_Occurrence[1, 9, 7, 2, 3] = true,
+    pain_tuple1_tuple1_Occurrence[2, 8, 6, 1, 3] = true,
+    pain_tuple1_tuple1_Occurrence[2, 8, 6, 2, 2] = true,
+    pain_tuple1_tuple1_Occurrence[2, 9, 6, 1, 1] = true,
+    pain_tuple1_tuple1_Occurrence[2, 9, 6, 2, 3] = true,
+    pain_tuple1_tuple2[1, 8, 6, 1] = 5,
+    pain_tuple1_tuple2[1, 8, 6, 2] = 4,
+    pain_tuple1_tuple2[1, 9, 7, 1] = 6,
+    pain_tuple1_tuple2[1, 9, 7, 2] = 4,
+    pain_tuple1_tuple2[2, 8, 6, 1] = 6,
+    pain_tuple1_tuple2[2, 8, 6, 2] = 5,
+    pain_tuple1_tuple2[2, 9, 6, 1] = 5,
+    pain_tuple1_tuple2[2, 9, 6, 2] = 5,
+    pain_tuple2[1, 8, 6, 1] = 8,
+    pain_tuple2[1, 8, 6, 2] = 9,
+    pain_tuple2[1, 9, 7, 1] = 8,
+    pain_tuple2[1, 9, 7, 2] = 10,
+    pain_tuple2[2, 8, 6, 1] = 10,
+    pain_tuple2[2, 8, 6, 2] = 8,
+    pain_tuple2[2, 9, 6, 1] = 10,
+    pain_tuple2[2, 9, 6, 2] = 9,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 8, 6, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 8, 6, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 8, 7, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 8, 7, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 9, 6, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 9, 6, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 9, 7, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[1, 9, 7, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 8, 6, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 8, 6, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 8, 7, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 8, 7, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 9, 6, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 9, 6, 2, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 9, 7, 1, v__0]) = 1,
+    (sum v__0 : int(1, 2, 3) . pain_tuple1_tuple1_Occurrence[2, 9, 7, 2, v__0]) = 1,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[1, 8, 6, 1, v__0] -> 2 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[1, 8, 6, 2, v__0] -> 1 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[1, 9, 7, 1, v__0] -> 2 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[1, 9, 7, 2, v__0] -> 3 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[2, 8, 6, 1, v__0] -> 3 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[2, 8, 6, 2, v__0] -> 2 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[2, 9, 6, 1, v__0] -> 1 = v__0,
+    forAll v__0 : int(1, 2, 3)
+        . pain_tuple1_tuple1_Occurrence[2, 9, 6, 2, v__0] -> 3 = v__0
