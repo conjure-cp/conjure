@@ -12,6 +12,7 @@ import Language.E.Up.Debug
 
 import qualified Data.Map as M
 
+--TODO should really use a Trie like Structure
 
 evalTree :: M.Map String VarData ->  Tree String  -> (String,E)
 evalTree mapping (Branch name arr) =
@@ -35,6 +36,16 @@ evalTree' mapping prefix (Leaf part) =
 evalTree' mapping prefix (Tuple arr) =
     let items =  map (unwrapExpr . evalTree' mapping prefix ) arr
     in  [xMake| expr.value.tuple.values := items |]
+
+{-
+evalTree' mapping prefix (Branch s@"Explicit" arr) =
+
+    errr (prefix,arr,same)
+    where
+    same =  M.filterWithKey filterer mapping
+    filterer k _ = (intercalate "_" $ prefix ++ [s] ) `isPrefixOf` k
+-}
+
 
 evalTree' mapping prefix (Branch s@"AsReln"  arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
@@ -145,6 +156,7 @@ repConverter  kind  vdata@VarData{vEssence = es} =
       "Explicit"   -> explicitRep vdata
       "Occurrence" -> occurrenceRep vdata
       "Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
+      "ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
       _            -> es
 
 matrix1DRep ::  [[Integer]] -> E -> E
@@ -173,8 +185,8 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
     where
     func a = [xMake| value.literal := [ Prim (I a) ] |]
 
-    -- TODO number of matrix taken off should be releated to number of 
-    -- sets/matrixes the func and remove and record them 
+    -- TODO number of matrix taken off should be releated to number of
+    -- sets/matrixes the func and remove and record them
     vals  =  (map matrixToTuple . transposeE . convert) e
     -- take a matrix off each nested matrix
     convert :: E -> [E]
@@ -194,6 +206,29 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
 
 matrix1DRep ix e =
     _bugi "Matrix1DRep not Handled (indexes, e):" (ix, [e])
+
+
+explicitVarSizeWithDefaultRep :: VarData -> E
+explicitVarSizeWithDefaultRep  v@VarData{vBounds=b,
+                vEssence=[xMatch| [Tagged _ [Tagged "values" _ ] ] := expr.value
+                                | [e] := expr
+                                | _ := expr.value.matrix.values.value.literal |]}  =
+    let res = explicitVarSizeWithDefault (head b)  e 
+    in [xMake| expr := [res] |]
+
+explicitVarSizeWithDefaultRep  VarData{vBounds=b,
+                vEssence=[xMatch| [Tagged _ [Tagged "values" mat_val] ] := expr.value |]}  =
+    let res =  map (explicitVarSizeWithDefault (head b)) mat_val
+        set = Tagged "matrix" [Tagged "values" res ]
+
+    in  [xMake| expr.value := [set] |]
+
+explicitVarSizeWithDefaultRep _ = _bugg "explicitVarSizeWithDefaultRep"
+
+explicitVarSizeWithDefault :: Integer -> E -> E
+explicitVarSizeWithDefault to_remove [xMatch| vs := value.matrix.values  |] =
+    let vs' = filter (\[xMatch| [Prim (I i)] := value.literal  |] -> i /= to_remove )  vs
+    in  [xMake| value.matrix.values := vs' |]
 
 
 occurrenceRep :: VarData -> E
