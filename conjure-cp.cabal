@@ -146,6 +146,7 @@ Library
         -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
+        -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
         -fwarn-name-shadowing
         -fwarn-orphans
@@ -154,7 +155,6 @@ Library
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -Werror
 
 
 Executable conjureBF
@@ -171,6 +171,7 @@ Executable conjureBF
         -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
+        -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
         -fwarn-name-shadowing
         -fwarn-orphans
@@ -179,7 +180,6 @@ Executable conjureBF
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -Werror
         -rtsopts
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
@@ -196,6 +196,7 @@ Executable conjure
         -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
+        -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
         -fwarn-name-shadowing
         -fwarn-orphans
@@ -204,7 +205,6 @@ Executable conjure
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -Werror
         -rtsopts
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G

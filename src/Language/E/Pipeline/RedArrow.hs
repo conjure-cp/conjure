@@ -200,7 +200,7 @@ workhorse lookupReprs (nm, dom, val) = do
                    |]
             [xMatch| values := value.set.values |]
             (Just "Explicit")
-            | let Just size = lookupAttr "size" attrs
+            | Just size <- lookupAttr "size" attrs
             = do
             let indexOfMatrix_fr = [eMake| 1 |]
             let indexOfMatrix_to = [eMake| &size |]
@@ -384,7 +384,7 @@ zeroVal [xMatch| [index] := domain.matrix.index
 zeroVal [xMatch| [inner] := domain.set.inner 
                | attrs   := domain.set.attributes.attrCollection
                |]
-    | let Just size = lookupAttr "size" attrs
+    | Just size <- lookupAttr "size" attrs
     = do
     sizeInt  <- valueIntOut size
     valInner <- zeroVal inner

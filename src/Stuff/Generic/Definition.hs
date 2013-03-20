@@ -125,14 +125,15 @@ xMatch :: QuasiQuoter
 xMatch = qq {
     quotePat = \ inp -> do
         let inps = splitOn "|" inp
-        let each i = do
-                let [patternS, tag] = splitOn ":=" i
-                let tags = splitOn "." $ strip tag
-                case parsePat patternS of
-                    Left  e -> error $ "Malformed expression: " ++ e
-                    Right p -> do
-                        tags' <- [e| tags |]
-                        return (tags', p)
+        let each i = case splitOn ":=" i of
+                [patternS, tag] -> do
+                    let tags = splitOn "." $ strip tag
+                    case parsePat patternS of
+                        Left  e -> error $ "Malformed expression: " ++ e
+                        Right p -> do
+                            tags' <- [e| tags |]
+                            return (tags', p)
+                _ -> error $ "Malformed expression: " ++ i
         xs <- mapM each inps
         let lhs = AppE (VarE  $ mkName "viewTaggeds")
                        (ListE $ map fst xs)
@@ -146,13 +147,14 @@ xMake = qq {
         let inps = splitOn "|" inp
         let
             each :: String -> Q Exp
-            each i = do
-                let [lhs,rhs] = splitOn ":=" i
-                let stripped = strip lhs
-                let tags = map strip $ splitOn "." stripped
-                case parseExp rhs of
-                    Left  e -> error $ "Malformed expression: " ++ e
-                    Right x -> return $ mkTaggedTH tags x
+            each i = case splitOn ":=" i of
+                [lhs,rhs] -> do
+                    let stripped = strip lhs
+                    let tags = map strip $ splitOn "." stripped
+                    case parseExp rhs of
+                        Left  e -> error $ "Malformed expression: " ++ e
+                        Right x -> return $ mkTaggedTH tags x
+                _ -> error $ "Malformed expression: " ++ i
         xs <- mapM each inps
         case mergeTaggedTH xs of
             [x] -> return x

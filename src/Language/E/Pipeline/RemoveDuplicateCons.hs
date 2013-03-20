@@ -37,11 +37,13 @@ renameQuantifiedVars = go
     where
         go  names t@[xMatch| [Prim (S old)] := quantified.quanVar.structural.single.reference |]
             | "v__" `T.isPrefixOf` old =
-                let
-                    (nextName:restNames) = names
-                    t' = replace (Prim (S old)) (Prim (S nextName)) t
-                in
-                    go restNames t'
+                case names of
+                    (nextName:restNames) ->
+                        let t' = replace (Prim (S old)) (Prim (S nextName)) t
+                        in  go restNames t'
+                    [] -> bug $ vcat [ "well done, you just ran out of fresh names."
+                                     , "and there were an infinite number of them!"
+                                     ]
         go  names (Tagged t xs) = Tagged t (map (go names) xs)
         go _names t             = t
 
