@@ -7,4 +7,4 @@ ghc -O2 \
     -hidir dist/upTests \
     -feager-blackholing  -threaded  -rtsopts --make \
     -isrc "src/Language/E/Up/testing/UpTests.hs"\
-    -o dist/UpTestsBin && dist/UpTestsBin +RTS -N6 -RTS;
+    -o dist/UpTestsBin && dist/UpTestsBin $@ +RTS -N6 -RTS;
