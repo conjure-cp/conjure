@@ -1,0 +1,44 @@
+MINION 3
+**VARIABLES**
+DISCRETE s_ExplicitVarSizeWithDefault_00000 #
+{0..4}
+DISCRETE s_ExplicitVarSizeWithDefault_00001 #
+{0..4}
+DISCRETE s_ExplicitVarSizeWithDefault_00002 #
+{0..4}
+DISCRETE s_ExplicitVarSizeWithDefault_00003 #
+{0..4}
+BOOL aux0 #CSE: 3 occurrences of: (s_ExplicitVarSizeWithDefault_00000 != 0)
+BOOL aux1 #CSE: 3 occurrences of: (s_ExplicitVarSizeWithDefault_00003 != 0)
+BOOL aux2 #CSE: 4 occurrences of: (s_ExplicitVarSizeWithDefault_00001 != 0)
+BOOL aux3 #CSE: 4 occurrences of: (s_ExplicitVarSizeWithDefault_00002 != 0)
+BOOL aux4 #(aux0 /\ aux2)
+BOOL aux5 #(s_ExplicitVarSizeWithDefault_00000<s_ExplicitVarSizeWithDefault_00001)
+BOOL aux6 #(aux2 /\ aux3)
+BOOL aux7 #(s_ExplicitVarSizeWithDefault_00001<s_ExplicitVarSizeWithDefault_00002)
+BOOL aux8 #(aux3 /\ aux1)
+BOOL aux9 #(s_ExplicitVarSizeWithDefault_00002<s_ExplicitVarSizeWithDefault_00003)
+**SEARCH**
+PRINT[[s_ExplicitVarSizeWithDefault_00000],[s_ExplicitVarSizeWithDefault_00001],[s_ExplicitVarSizeWithDefault_00002],[s_ExplicitVarSizeWithDefault_00003]]
+VARORDER STATIC [s_ExplicitVarSizeWithDefault_00000,s_ExplicitVarSizeWithDefault_00001,s_ExplicitVarSizeWithDefault_00002,s_ExplicitVarSizeWithDefault_00003]
+VARORDER AUX [aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7,aux8,aux9]
+**CONSTRAINTS**
+reify(watched-and({w-literal(aux0,1),w-literal(aux2,1)}), aux4)
+reify(ineq(s_ExplicitVarSizeWithDefault_00000, s_ExplicitVarSizeWithDefault_00001, -1), aux5)
+reify(watched-and({w-literal(aux2,1),w-literal(aux3,1)}), aux6)
+reify(ineq(s_ExplicitVarSizeWithDefault_00001, s_ExplicitVarSizeWithDefault_00002, -1), aux7)
+reify(watched-and({w-literal(aux3,1),w-literal(aux1,1)}), aux8)
+reify(ineq(s_ExplicitVarSizeWithDefault_00002, s_ExplicitVarSizeWithDefault_00003, -1), aux9)
+reify(diseq(s_ExplicitVarSizeWithDefault_00000,0), aux0)
+reify(diseq(s_ExplicitVarSizeWithDefault_00003,0), aux1)
+reify(diseq(s_ExplicitVarSizeWithDefault_00001,0), aux2)
+reify(diseq(s_ExplicitVarSizeWithDefault_00002,0), aux3)
+sumgeq([aux0,aux2,aux3,aux1],3)
+watched-or({watched-and({w-literal(aux0,1),w-literal(s_ExplicitVarSizeWithDefault_00000,2)}),watched-and({w-literal(aux2,1),w-literal(s_ExplicitVarSizeWithDefault_00001,2)}),watched-and({w-literal(aux3,1),w-literal(s_ExplicitVarSizeWithDefault_00002,2)}),watched-and({w-literal(aux1,1),w-literal(s_ExplicitVarSizeWithDefault_00003,2)})})
+ineq(s_ExplicitVarSizeWithDefault_00000, s_ExplicitVarSizeWithDefault_00001, 0)
+ineq(s_ExplicitVarSizeWithDefault_00001, s_ExplicitVarSizeWithDefault_00002, 0)
+ineq(s_ExplicitVarSizeWithDefault_00002, s_ExplicitVarSizeWithDefault_00003, 0)
+ineq(aux4, aux5, 0)
+ineq(aux6, aux7, 0)
+ineq(aux8, aux9, 0)
+**EOF**

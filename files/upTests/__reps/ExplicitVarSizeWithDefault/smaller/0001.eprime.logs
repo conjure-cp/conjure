@@ -1,0 +1,16 @@
+[representation] find s: set (minSize 3) of int(1..4)
+                 (#3)
+                 ExplicitVarSize, ExplicitVarSizeWithDefault, Occurrence
+[configuration] s§region1#ExplicitVarSizeWithDefault
+[addedDecl] find s_ExplicitVarSizeWithDefault:
+                    matrix indexed by [int(1..4)] of int(0..4)
+[refn] 0
+[applied] 2 in s§region1#ExplicitVarSizeWithDefault
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__6 in s§region1#ExplicitVarSizeWithDefault . v__6 = 2)
+[applied] (exists v__6 in s§region1#ExplicitVarSizeWithDefault . v__6 = 2)
+          {rules/refns/vertical/set-ExplicitVarSizeWithDefault/set-ExplicitVarSizeWithDefault-quantified.rule}
+              (exists v__7 : int(1..4) , s_ExplicitVarSizeWithDefault§region1[v__7] != 0
+                   . s_ExplicitVarSizeWithDefault§region1[v__7] = 2)
+[removeRefinedDecl] find s: set (minSize 3) of int(1..4)
+[repr] 1
