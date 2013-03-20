@@ -1,8 +1,24 @@
 
 ~~> MSetOfSets
-~~> mset of set of &tau
+~~> mset (size &n) of set (size &m) of &tau                                $ there are n parts in the partition
 
-*** partition from &tau
-    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )    $ parts that aren't equal should have no common element
-                                                                $ i.e. a part can only be in one set
-    /\  ( forAll i : &tau . exists s in refn . i in s )         $ every element of the domain is in one set
+
+*** partition (regular, size &n) from &tau
+    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
+    /\  ( forAll i : &tau . exists s in refn . i in s )
+
+    letting &m be domSize(&tau) / &n
+
+
+*** partition (regular, partSize &m) from &tau
+    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
+    /\  ( forAll i : &tau . exists s in refn . i in s )
+
+    letting &n be domSize(&tau) / &m
+
+
+*** partition (regular, size &n, partSize &m) from &tau
+    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
+    /\  ( forAll i : &tau . exists s in refn . i in s )
+
+
