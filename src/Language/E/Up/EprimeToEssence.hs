@@ -8,6 +8,7 @@ module Language.E.Up.EprimeToEssence(
     convertUnamed,
     combineInfos,
     convertRep,
+    onlyNeeded
 
 ) where
 
@@ -40,7 +41,7 @@ mainPure (spec,sol,org,orgP) =
         varTrees = createVarTree varInfo
         varsData = combineInfos varInfo solInfo
 
-        varResults = map (evalTree varsData) varTrees
+        varResults = map (\t -> evalTree (onlyNeeded varsData t ) t ) varTrees
 
         wrap :: String -> E -> E
         wrap name (Tagged "expr" arr) =
@@ -60,6 +61,11 @@ mainPure (spec,sol,org,orgP) =
         resultEssence   = map eval varResults
 
     in enums ++ resultEssence
+
+onlyNeeded :: M.Map String VarData -> Tree String ->  M.Map String VarData
+onlyNeeded mapping (Branch s _) = M.filterWithKey (\k _ -> s `isPrefixOf` k ) mapping
+onlyNeeded mapping (Leaf s ) = M.filterWithKey (\k _ -> s `isPrefixOf` k ) mapping
+onlyNeeded mapping _ = mapping
 
 
 -- Keeps on running toEssenceRep until no changes happen.
