@@ -7,7 +7,7 @@ module Language.E.Up.EvaluateTree (
 import Language.E
 
 import Language.E.Up.Data
-import Language.E.Up.Common(transposeE,matrixToTuple,unwrapExpr)
+import Language.E.Up.Common(transposeE,matrixToTuple,unwrapExpr,wrapInExpr)
 import Language.E.Up.Debug
 
 import qualified Data.Map as M
@@ -209,20 +209,8 @@ matrix1DRep ix e =
 
 
 explicitVarSizeWithDefaultRep :: VarData -> E
-explicitVarSizeWithDefaultRep  VarData{vBounds=b,
-                vEssence=[xMatch| [e] := expr
-                                |  _  := expr.value.matrix.values.value.literal |]}  =
-    let res = explicitVarSizeWithDefault (head b)  e 
-    in [xMake| expr := [res] |]
-
-explicitVarSizeWithDefaultRep  VarData{vBounds=b,
-                vEssence=[xMatch| [Tagged _ [Tagged "values" mat_val] ] := expr.value |]}  =
-    let res =  map (explicitVarSizeWithDefault (head b)) mat_val
-        set = Tagged "matrix" [Tagged "values" res ]
-
-    in  [xMake| expr.value := [set] |]
-
-explicitVarSizeWithDefaultRep _ = _bugg "explicitVarSizeWithDefaultRep"
+explicitVarSizeWithDefaultRep  VarData{vBounds=b, vEssence=e} =
+   wrapInExpr $ explicitVarSizeWithDefault (head b) (unwrapExpr e)
 
 explicitVarSizeWithDefault :: Integer -> E -> E
 explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values  
@@ -233,7 +221,6 @@ explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values
 explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values |] =
     let vs' =   map (explicitVarSizeWithDefault toRemove) vs
     in  [xMake| value.matrix.values := vs' |]
-
 
 explicitVarSizeWithDefault toRemove e = _bugi "explicitVarSizeWithDefault" (toRemove,[e])
 

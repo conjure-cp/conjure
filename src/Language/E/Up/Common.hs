@@ -4,7 +4,8 @@ module Language.E.Up.Common(
     transposeE,
     unwrapMatrix,
     unwrapExpr,
-    matrixToTuple
+    matrixToTuple,
+    wrapInExpr
 ) where
 
 import qualified Data.List as L(transpose)
@@ -64,9 +65,8 @@ matrixToTuple :: E -> E
 matrixToTuple [xMatch| vs := value.matrix|] = [xMake| value.tuple := vs |]
 matrixToTuple e = _bug "matrixToTuple failed" [e]
 
-
--- wrapInMatrix :: [E] -> E
--- wrapInMatrix arr = [xMake| value.matrix.values := arr |]
+wrapInExpr :: E -> E
+wrapInExpr e = [xMake| expr := [e] |]
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("Up.Common: " ++ s)
