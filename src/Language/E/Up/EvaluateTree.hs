@@ -57,7 +57,8 @@ evalTree' mapping prefix (Branch s@"Matrix1D" arr) =
         indexArr = indexe !! (length prefix -1)
         converted = matrix1DRep [indexArr] res
     in converted
-        `_p` ("indexArr" ++ groom indexArr, [converted])
+        `_p` ("evalTree' indexArr" ++ groom indexArr, [converted])
+        `_p` ("evalTree' m1d res", [res])
 
     where
     name  = intercalate "_" $ prefix ++ s : getName (repSelector arr)
@@ -76,7 +77,7 @@ evalTree' mapping prefix (Branch s@"MSetOfSets"  arr) =
 
 evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
     let t' =  evalTree' mapping (prefix ++ [s]) t
-        [t1,t2] = tupleToArr t'
+        (t1,t2) = tupleToArr t'
         mt = mergeExplicitVarSizeTuple t1 t2
     in  mt
         -- `_e` ("evalTree' ExplicitVarSize", [mt])
@@ -84,8 +85,8 @@ evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
         -- `_e` ("evalTree' t1", [t1])
 
     where
-    tupleToArr :: E -> [E]
-    tupleToArr [xMatch| arr := expr.value.tuple.values |] = arr
+    tupleToArr :: E -> (E,E)
+    tupleToArr [xMatch| [a,b] := expr.value.tuple.values |] = (a,b)
     tupleToArr _ = _bugg "tupleToArr"
 
 evalTree' mapping prefix (Branch part arr) =
@@ -115,9 +116,13 @@ relnToFunc [xMatch| [v] := expr|] =
 
 
 relnToFunc [xMatch| vals := value.matrix.values.value.tuple |] =
-    let vals' = map (\(Tagged "values" arr) -> [xMake| mapping := arr |] ) vals
+    let vals' = map f vals
         res   = [xMake| value.function.values := vals' |]
     in res
+
+    where 
+    f (Tagged "values" arr) =  [xMake| mapping := arr |]
+    f e = _bugg "relnToFunc f" [e]
 
 relnToFunc [xMatch| _  := value.matrix.values.value.matrix.values
                   | vs := value.matrix.values |] =
@@ -215,8 +220,12 @@ explicitVarSizeWithDefaultRep  VarData{vBounds=b, vEssence=e} =
 explicitVarSizeWithDefault :: Integer -> E -> E
 explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values  
                                            | _  := value.matrix.values.value.literal |] =
-    let vs' = filter (\[xMatch| [Prim (I i)] := value.literal  |] -> i /= toRemove )  vs
+    let vs' = filter f vs
     in  [xMake| value.matrix.values := vs' |]
+
+    where 
+    f [xMatch| [Prim (I i)] := value.literal  |] = i /= toRemove
+    f e = _bug "explicitVarSizeWithDefault f" [e]
 
 explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values |] =
     let vs' =   map (explicitVarSizeWithDefault toRemove) vs
@@ -256,9 +265,12 @@ occurrence ix f = _bugi "occurrence" (ix,[f])
 occurrence' :: [[Integer]] -> [E] -> [E]
 occurrence' ix lits=
    let all_vals =  zip lits (head ix)
-       in_set   = filter (\(Prim(I b),_) -> b == 1) all_vals
+       in_set   = filter f all_vals
    in  map (\(_,n) ->  [xMake| value.literal :=  [Prim (I n)] |] ) in_set
 
+   where 
+   f (Prim(I b),_) =  b == 1
+   f t = _bugi "occurrence' f" (t,[]) 
 
 explicitRep :: VarData -> E
 explicitRep VarData{vEssence=[xMatch| [Tagged _ vals ] := expr.value
@@ -327,14 +339,20 @@ mergeExplicitVarSizeTuple :: E -> E -> E
 mergeExplicitVarSizeTuple
     ([xMatch| v1  := value.matrix.values.value.literal|])
     ([xMatch| v2s := value.tuple.values.value.matrix|]) =
-        let vals   = map (\(Tagged Tvalues arr)  -> zip v1 arr) v2s
-            chosen = map (filter (\(Prim (I i),_) -> i ==1)) vals
+        let vals   = map f1 v2s
+            chosen = map (filter f2) vals
             rep    = transpose . map (map snd) $ chosen
             ans    = map (\a -> [xMake| value.tuple.values := a|]) rep
             ans'   = [xMake| expr.value.matrix.values := ans|]
         in  ans'
             `_e` ("mergeExplicitVarSizeTuple ans'",[ans'])
--- old
+
+    where
+    f1 (Tagged Tvalues arr) =   zip v1 arr
+    f1 e = _bug "mergeExplicitVarSizeTuple f1" [e]
+    f2 (Prim (I i),_)       = i == 1
+    f2 (e,t) = _bugi "mergeExplicitVarSizeTuple f1" (t,[e])
+
 mergeExplicitVarSizeTuple
     e1@([xMatch| [Tagged "values" v1] := value.matrix|])
     e2@([xMatch| [Tagged "values" v2] := value.matrix|])
