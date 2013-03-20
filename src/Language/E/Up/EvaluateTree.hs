@@ -211,7 +211,7 @@ matrix1DRep ix e =
 explicitVarSizeWithDefaultRep :: VarData -> E
 explicitVarSizeWithDefaultRep  VarData{vBounds=b,
                 vEssence=[xMatch| [e] := expr
-                                | _ := expr.value.matrix.values.value.literal |]}  =
+                                |  _  := expr.value.matrix.values.value.literal |]}  =
     let res = explicitVarSizeWithDefault (head b)  e 
     in [xMake| expr := [res] |]
 
@@ -225,9 +225,15 @@ explicitVarSizeWithDefaultRep  VarData{vBounds=b,
 explicitVarSizeWithDefaultRep _ = _bugg "explicitVarSizeWithDefaultRep"
 
 explicitVarSizeWithDefault :: Integer -> E -> E
-explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values  |] =
+explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values  
+                                           | _  := value.matrix.values.value.literal |] =
     let vs' = filter (\[xMatch| [Prim (I i)] := value.literal  |] -> i /= toRemove )  vs
     in  [xMake| value.matrix.values := vs' |]
+
+explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values |] =
+    let vs' =   map (explicitVarSizeWithDefault toRemove) vs
+    in  [xMake| value.matrix.values := vs' |]
+
 
 explicitVarSizeWithDefault toRemove e = _bugi "explicitVarSizeWithDefault" (toRemove,[e])
 
