@@ -1,0 +1,22 @@
+[representation] find x: set (size 2) of (int(2, 3), int(4, 5), int(6, 7))
+                 (#1)
+                 Explicit
+[configuration] x§region1#Explicit
+[addedDecl] find x_Explicit:
+                    matrix indexed by [int(1..2)] of (int(2, 3), int(4, 5), int(6, 7))
+[refn] 0
+[applied] (2, 4, 6) in x§region1#Explicit
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__3 in x§region1#Explicit
+                   . v__3[1] = 2 /\ (v__3[2] = 4 /\ v__3[3] = 6))
+[applied] (exists v__3 in x§region1#Explicit
+               . v__3[1] = 2 /\ (v__3[2] = 4 /\ v__3[3] = 6))
+          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+              (exists v__4 : int(1..2)
+                   . x_Explicit§region1[v__4, 1] = 2
+                     /\
+                     (x_Explicit§region1[v__4, 2] = 4 /\ x_Explicit§region1[v__4, 3] = 6))
+[removeRefinedDecl] find x: set (size 2) of (int(2, 3), int(4, 5), int(6, 7))
+[removedDecl] find x_Explicit:
+                      matrix indexed by [int(1..2)] of (int(2, 3), int(4, 5), int(6, 7))
+[repr] 1
