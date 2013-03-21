@@ -1,23 +1,26 @@
 
 ~~> MSetOfSets
-~~> mset (size &n) of set (size &m) of &tau                                $ there are n parts in the partition
-    
+~~> mset (size &n) of set (size &m) of &tau
+$ there are n parts in the partition
+$ each part has m things in it.
+
 
 *** partition (regular, size &n) from &tau
     ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
-    /\ (&n * &m) = domSize(&tau)
- 
+
     letting &m be domSize(&tau) / &n
-   
+    where   domSize(&tau) = &n * &m
+
 
 *** partition (regular, partSize &m) from &tau
     ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
-    /\ (&n * &m) = domSize(&tau)
- 
+
     letting &n be domSize(&tau) / &m
+    where   domSize(&tau) = &n * &m
 
 
 *** partition (regular, size &n, partSize &m) from &tau
     ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
-    /\ (&n * &m) = domSize(&tau)
- 
+
+    where   domSize(&tau) = &n * &m
+

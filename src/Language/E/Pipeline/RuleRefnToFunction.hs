@@ -170,7 +170,15 @@ localHandler :: MonadConjure m
     -> E
     -> m Bool
 localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
-    xBool <- toBool y
+    my' <- runMaybeT $ inlineMetavars y
+    y'  <- case my' of
+        Nothing    -> err ErrFatal
+                $ "where statement cannot be fully evaluated: " <++> vcat [ pretty lokal
+                                                                          , "in rule" <+> pretty name
+                                                                          , "at expression" <+> pretty x
+                                                                          ]
+        Just i -> return i
+    xBool <- toBool y'
     case xBool of
         Just (True, newBindings) -> do
             modify $ \ st -> st { binders = newBindings ++ binders st }
@@ -188,4 +196,14 @@ localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
                                                                           , "at expression" <+> pretty x
                                                                           ]
 localHandler _ _ lokal = introduceStuff lokal >> return True
+
+
+inlineMetavars :: MonadConjure m => E -> MaybeT m E
+inlineMetavars [xMatch| [Prim (S nm)] := metavar |] = lookupMetaVar nm
+inlineMetavars [eMatch| &x hasDomain `&y`        |] = do xNew <- inlineMetavars x
+                                                         return [eMake| &xNew hasDomain `&y` |]
+inlineMetavars [eMatch| &x hasType   `&y`        |] = do xNew <- inlineMetavars x
+                                                         return [eMake| &xNew hasType   `&y` |]
+inlineMetavars (Tagged t xs) = Tagged t <$> mapM inlineMetavars xs
+inlineMetavars x = return x
 
