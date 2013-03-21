@@ -11,7 +11,7 @@ import Language.E
 
 import Language.E.Up.Data
 import Language.E.Up.Debug
-import Language.E.Up.Common(transposeE,unwrapMatrix,matrixToTuple,unwrapExpr)
+import Language.E.Up.Common(transposeE,unwrapMatrix,matrixToTuple,unwrapExpr,wrapInExpr)
 
 import Data.Maybe
 
@@ -45,8 +45,7 @@ wrapInMatrix arr = [xMake| value.matrix.values := arr |]
 wrapInTuple :: [E] -> E
 wrapInTuple arr = [xMake| value.tuple.values := arr |]
 
-wrapInExpr :: [E] -> E
-wrapInExpr arr = [xMake| expr := arr |]
+
 
 isMatrix :: E -> Bool
 isMatrix [xMatch| _ := value.matrix.values |] = True
@@ -93,6 +92,9 @@ reTuple :: Int -> E -> E
 reTuple  0 e = e
 reTuple  n e = reTuple (n-1) [xMake| value.tuple.values := [e]|]
 
+isLit :: E -> Bool
+isLit [xMatch| _ := value.literal  |] = True
+isLit _ = False
 
 getLit :: E -> Maybe E
 getLit [xMatch| [ele] := value.matrix.values |] =  getLit ele
@@ -284,7 +286,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     e@[xMatch| vs := value.tuple.values |]
     | all matrixOrTuple vs =
 
-    let 
+    let
         res   = map matrixToTuple (transposeE vs)
         pre2  =  map (zipWith prePro ts . unwrapTuple)  res
         res2  =  map transposeE pre2
@@ -311,12 +313,134 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
     matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
 
-    isLit :: E -> Bool
-    isLit [xMatch| _ := value.literal  |] = True
-    isLit _ = False
+    prePro :: [TagT] -> E -> E
+    prePro  [TagTuple ts'] es@[xMatch| vs2 := value.tuple.values |] =
+        let res = zipWith toEssenceRep  ts' vs2
+        in  wrapInTuple res
+            `_p` ("prePro res", [res])
+            `_p` ("prePro e", [es])
 
+    --prePro  r@[TagTuple ts] v@[xMatch| vs2 := value.tuple.values |] =
+        --erriM "prePro" (r,[v])
+
+
+    prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
+
+
+
+-- Hack/idea to make recursive
+toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", TagTuple ts]
+    e@[xMatch| vs := value.tuple.values |]
+    |  all matrixOrTuple vs =
+
+    let
+        res   =  map matrixToTuple (transposeE vs)
+        pre2  =  p2 res
+        res2  =  p3 pre2
+        fin   =  p4 res2
+
+        pre3  =  map (p2 . unwrapMatrix ) fin
+        res3  =  map p3 pre3
+        fin2  =  map (wrapInMatrix . p4)  res3
+
+
+        pre4  =  map (map (p2 . unwrapMatrix ) . unwrapMatrix ) fin2
+        res4  =  map (map p3) pre4
+        fin3  =  map (wrapInMatrix . map (wrapInMatrix . p4))  res4
+
+
+    {-in errr ("" :: String)-}
+    in wrapInMatrix fin3
+
+    `_p` ("NB T4 value.tuple fin3 ", fin3)
+    `_p` ("NB T4 value.tuple res4 head head", head $ head res4)
+    `_p` ("NB T4 value.tuple pre4 head head", head $ head pre4)
+    `_p` ("NB T4 value.tuple fin2 ", fin2)
+    `_p` ("NB T4 value.tuple res3 head", head res3)
+    `_p` ("NB T4 value.tuple pre3 head", head pre3)
+    `_p` ("NB T4 value.tuple fin", fin)
+    `_p` ("NB T4 value.tuple res2", res2)
+    `_p` ("NB T4 value.tuple pre2",pre2)
+    `_p` ("NB T4 value.tuple res",res)
+    `_p` ("NB T4 value.tuple vs",[e])
+    `_f` ("NB T4 value.tuple tags",tags)
+
+    where
+
+    p2 = map (zipWith prePro ts . unwrapTuple)
+    p3 = map transposeE
+    p4 = map wrapper
+     
+
+    wrapper :: [E] -> E
+    -- for innerMutiMatixMatixTuple and tupley32-8-6  e.g singleton matrix
+    wrapper arr | all isLit arr =  wrapInTuple   arr
+    wrapper arr = (wrapInMatrix .  map matrixToTupleMaybe)  arr
+        `_p` ("NB T wrapper",arr)
+
+    matrixToTupleMaybe :: E -> E
+    matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
+    matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
 
     prePro :: [TagT] -> E -> E
+    prePro  [TagTuple ts'] es@[xMatch| vs2 := value.tuple.values |] =
+        let res = zipWith toEssenceRep  ts' vs2
+        in  wrapInTuple res
+            `_p` ("prePro res", [res])
+            `_p` ("prePro e", [es])
+
+    prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
+
+-- Hack/idea to make recursive  -- fixes nestedSingletonComplex0mm and 3d_tupley15
+toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", TagTuple ts]
+    e@[xMatch| vs := value.tuple.values |]
+    |  all matrixOrTuple vs =
+
+    let
+        res   =  map matrixToTuple (transposeE vs)
+        pre2  =  p2 res
+        res2  =  p3 pre2
+        fin   =  p4 res2
+
+        pre3  =  map (p2 . unwrapMatrix ) fin
+        res3  =  map p3 pre3
+        fin2  =  map (wrapInMatrix . p4)  res3
+
+    in wrapInMatrix fin2
+
+    `_p` ("NB T3 value.tuple fin2 ", fin2)
+    `_p` ("NB T3 value.tuple res3 head", head res3)
+    `_p` ("NB T3 value.tuple pre3 head", head pre3)
+    `_p` ("NB T3 value.tuple fin", fin)
+    `_p` ("NB T3 value.tuple res2", res2)
+    `_p` ("NB T3 value.tuple pre2",pre2)
+    `_p` ("NB T3 value.tuple res",res)
+    `_p` ("NB T3 value.tuple vs",[e])
+    `_f` ("NB T3 value.tuple tags",tags)
+
+    where
+
+    p2 = map (zipWith prePro ts . unwrapTuple)
+    p3 = map transposeE
+    p4 = map wrapper
+
+    wrapper :: [E] -> E
+    -- for innerMutiMatixMatixTuple and tupley32-8-6  e.g singleton matrix
+    wrapper arr | all isLit arr =  wrapInTuple   arr
+    wrapper arr = (wrapInMatrix .  map matrixToTupleMaybe)  arr
+        `_p` ("NB T wrapper",arr)
+
+    matrixToTupleMaybe :: E -> E
+    matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
+    matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
+
+    prePro :: [TagT] -> E -> E
+    prePro  [TagTuple ts'] es@[xMatch| vs2 := value.tuple.values |] =
+        let res = zipWith toEssenceRep  ts' vs2
+        in  wrapInTuple res
+            `_p` ("prePro res", [res])
+            `_p` ("prePro e", [es])
+
     prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
 
 -- CHECK add more guards
@@ -439,8 +563,8 @@ toEssenceRep r@[TagFunc ins tos] [xMatch| arr := value.function.values |] =
 
     where
     func ins' tos' [xMatch| [a,b] := mapping |] =
-       let a' = unwrapExpr $ toEssenceRep ins'  (wrapInExpr [a])
-           b' = unwrapExpr $ toEssenceRep tos'  (wrapInExpr [b])
+       let a' = unwrapExpr $ toEssenceRep ins'  (wrapInExpr a)
+           b' = unwrapExpr $ toEssenceRep tos'  (wrapInExpr b)
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = _bugg "toEssenceRep func "
 
@@ -449,8 +573,7 @@ toEssenceRep [TagSingle "int"] e@[xMatch|  [Prim (I _)] := value.literal |] = e
     `_p` ("toEssenceRep Int ", [e])
 
 
-toEssenceRep r e =
-    e
+toEssenceRep r e = e
     `_p` ("toEssenceRep no match vs",  [e])
     `_f` ("toEssenceRep no match ts", r)
 
