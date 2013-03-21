@@ -1,0 +1,205 @@
+[representation] find fs:
+                         set (size 1) of
+                             set (size 1) of
+                                 function (total) int(a..b) --> set (size 2) of set (size 3) of int(c..d)
+                 (#1)
+                 Explicit
+[configuration] fs§region1#Explicit
+[addedDecl] find fs_Explicit:
+                    matrix indexed by [int(1..1)] of set (size 1) of
+                                                         function (total)
+                                                             int(a..b) --> set (size 2) of set (size 3) of int(c..d)
+[refn] 0
+[applied] |fs§region1#Explicit|
+          {rules/refns/horizontal/set-card-fixed-size.rule}
+              1
+[simplified] 1 = 1
+             ~~>
+             true
+[removeRefinedDecl] find fs:
+                            set (size 1) of
+                                set (size 1) of
+                                    function (total) int(a..b) --> set (size 2) of set (size 3) of int(c..d)
+[repr] 1
+[representation] find fs_Explicit:
+                         matrix indexed by [int(1..1)] of set (size 1) of
+                                                              function (total)
+                                                                  int(a..b)
+                                                                      --> set (size 2) of set (size 3) of int(c..d)
+                 (#1)
+                 Explicit
+[configuration] fs_Explicit§region1#Explicit
+[addedDecl] find fs_Explicit_Explicit:
+                    matrix indexed by [int(1..1), int(1..1)] of function (total)
+                                                                    int(a..b)
+                                                                        --> set (size 2) of set (size 3) of int(c..d)
+[refn] 1
+[removeRefinedDecl] find fs_Explicit:
+                            matrix indexed by [int(1..1)] of set (size 1) of
+                                                                 function (total)
+                                                                     int(a..b)
+                                                                         --> set (size 2) of set (size 3) of int(c..d)
+[repr] 2
+[representation] find fs_Explicit_Explicit:
+                         matrix indexed by [int(1..1), int(1..1)] of function (total)
+                                                                         int(a..b)
+                                                                             --> set (size 2) of
+                                                                                     set (size 3) of int(c..d)
+                 (#1)
+                 Matrix1D
+[configuration] fs_Explicit_Explicit§region1#Matrix1D
+[addedDecl] find fs_Explicit_Explicit_Matrix1D:
+                    matrix indexed by [int(1..1), int(1..1), int(a..b)] of set (size 2) of
+                                                                               set (size 3) of int(c..d)
+[refn] 2
+[removeRefinedDecl] find fs_Explicit_Explicit:
+                            matrix indexed by [int(1..1), int(1..1)] of function (total)
+                                                                            int(a..b)
+                                                                                --> set (size 2) of
+                                                                                        set (size 3) of int(c..d)
+[repr] 3
+[representation] find fs_Explicit_Explicit_Matrix1D:
+                         matrix indexed by [int(1..1), int(1..1), int(a..b)] of set (size 2) of
+                                                                                    set (size 3) of int(c..d)
+                 (#1)
+                 Explicit
+[configuration] fs_Explicit_Explicit_Matrix1D§region1#Explicit
+[addedDecl] find fs_Explicit_Explicit_Matrix1D_Explicit:
+                    matrix indexed by [int(1..1),
+                                       int(1..1),
+                                       int(a..b),
+                                       int(1..2)] of set (size 3) of int(c..d)
+[refn] 3
+[applied] fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+          !=
+          fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15]
+          {rules/refns/horizontal/neq-to-eq.rule}
+              !(fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+                =
+                fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15])
+[applied] fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+          =
+          fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15]
+          {rules/refns/horizontal/set-eq-better.rule}
+              (forAll v__16 : int(c..d)
+                   . v__16 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+                     <->
+                     v__16 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15])
+              /\
+              (forAll v__16 : int(c..d)
+                   . v__16 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+                     <->
+                     v__16 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15])
+[applied] v__16
+          in
+          fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__17 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1,
+                                                                              1,
+                                                                              v__13,
+                                                                              v__14]
+                   . v__17 = v__16)
+[applied] v__16
+          in
+          fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__18 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1,
+                                                                              1,
+                                                                              v__13,
+                                                                              v__15]
+                   . v__18 = v__16)
+[applied] v__16
+          in
+          fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__14]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__19 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1,
+                                                                              1,
+                                                                              v__13,
+                                                                              v__14]
+                   . v__19 = v__16)
+[applied] v__16
+          in
+          fs_Explicit_Explicit_Matrix1D_Explicit§region1[1, 1, v__13, v__15]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__20 in fs_Explicit_Explicit_Matrix1D_Explicit§region1[1,
+                                                                              1,
+                                                                              v__13,
+                                                                              v__15]
+                   . v__20 = v__16)
+[removeRefinedDecl] find fs_Explicit_Explicit_Matrix1D:
+                            matrix indexed by [int(1..1), int(1..1), int(a..b)] of set (size 2) of
+                                                                                       set (size 3) of int(c..d)
+[repr] 4
+[representation] find fs_Explicit_Explicit_Matrix1D_Explicit:
+                         matrix indexed by [int(1..1),
+                                            int(1..1),
+                                            int(a..b),
+                                            int(1..2)] of set (size 3) of int(c..d)
+                 (#1)
+                 Occurrence
+[configuration] fs_Explicit_Explicit_Matrix1D_Explicit§region1#Occurrence
+[addedDecl] find fs_Explicit_Explicit_Matrix1D_Explicit_Occurrence:
+                    matrix indexed by [int(1..1),
+                                       int(1..1),
+                                       int(a..b),
+                                       int(1..2),
+                                       int(c..d)] of bool
+[refn] 4
+[applied] (exists v__17 in fs_Explicit_Explicit_Matrix1D_Explicit§region1#Occurrence[1,
+                                                                                     1,
+                                                                                     v__13,
+                                                                                     v__14]
+               . v__17 = v__16)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__33 : int(c..d)
+                   , fs_Explicit_Explicit_Matrix1D_Explicit_Occurrence§region1[1,
+                                                                               1,
+                                                                               v__13,
+                                                                               v__14,
+                                                                               v__33]
+                   . v__33 = v__16)
+[applied] (exists v__18 in fs_Explicit_Explicit_Matrix1D_Explicit§region1#Occurrence[1,
+                                                                                     1,
+                                                                                     v__13,
+                                                                                     v__15]
+               . v__18 = v__16)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__34 : int(c..d)
+                   , fs_Explicit_Explicit_Matrix1D_Explicit_Occurrence§region1[1,
+                                                                               1,
+                                                                               v__13,
+                                                                               v__15,
+                                                                               v__34]
+                   . v__34 = v__16)
+[applied] (exists v__19 in fs_Explicit_Explicit_Matrix1D_Explicit§region1#Occurrence[1,
+                                                                                     1,
+                                                                                     v__13,
+                                                                                     v__14]
+               . v__19 = v__16)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__35 : int(c..d)
+                   , fs_Explicit_Explicit_Matrix1D_Explicit_Occurrence§region1[1,
+                                                                               1,
+                                                                               v__13,
+                                                                               v__14,
+                                                                               v__35]
+                   . v__35 = v__16)
+[applied] (exists v__20 in fs_Explicit_Explicit_Matrix1D_Explicit§region1#Occurrence[1,
+                                                                                     1,
+                                                                                     v__13,
+                                                                                     v__15]
+               . v__20 = v__16)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__36 : int(c..d)
+                   , fs_Explicit_Explicit_Matrix1D_Explicit_Occurrence§region1[1,
+                                                                               1,
+                                                                               v__13,
+                                                                               v__15,
+                                                                               v__36]
+                   . v__36 = v__16)
+[removeRefinedDecl] find fs_Explicit_Explicit_Matrix1D_Explicit:
+                            matrix indexed by [int(1..1),
+                                               int(1..1),
+                                               int(a..b),
+                                               int(1..2)] of set (size 3) of int(c..d)
+[repr] 5
