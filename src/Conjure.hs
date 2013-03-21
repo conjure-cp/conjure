@@ -122,7 +122,7 @@ runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
 
 typeCheckSpecIO :: Spec -> IO ()
 typeCheckSpecIO spec =
-    case fst $ runCompESingle "Type checking" $ typeCheckSpec spec of
+    case fst $ runCompESingle "Error while type checking." $ typeCheckSpec spec of
         Left  e  -> error $ renderPretty e
         Right () -> return ()
 

@@ -132,7 +132,7 @@ handleInIOSingle (mx, logs) = do
         Right x -> return x
 
 toError :: String -> ConjureError -> Doc
-toError msg = prettyError (pretty $ "Error in phase: " ++ msg)
+toError msg = prettyError (pretty msg)
 
 
 

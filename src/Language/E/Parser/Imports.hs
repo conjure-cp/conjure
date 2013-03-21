@@ -52,7 +52,8 @@ runParser :: (MonadError Pr.Doc m) => Parser a -> String -> [LexemePos] -> m a
 runParser p s ls =
     -- error $ unlines $ map show ls
     case parse p s ls of
-        Left  e -> throwError $ Pr.text $ show (s,e)
+        Left  e -> let eDoc = pretty $ show e
+                   in  throwError $ pretty s <+> eDoc
         Right x -> return x
 
 identifierText :: Parser T.Text
