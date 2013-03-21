@@ -25,7 +25,7 @@ module Language.E.Imports
     , padShowInt
     , decodeFromFile
     , RandomM(..)
-    , bug
+    , bug, userErr
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -78,6 +78,7 @@ import System.FilePath ( (</>) )
 import System.CPUTime ( getCPUTime )
 
 import RepositoryVersion ( repositoryVersion )
+import Stuff.Pretty
 
 
 #ifdef TRACELOGS
@@ -214,8 +215,15 @@ bug _message = error $ unlines
     , ""
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
 #ifdef TRACELOGS
-    , "", "" , show _message
+    , "", "" , renderPretty _message
 #endif
     ]
+
+
+-- call this function instead of "error"
+-- in case of a user error.
+-- parsing, type checking errors are of this kind.
+userErr :: Doc -> a
+userErr = error . renderPretty
 
 
