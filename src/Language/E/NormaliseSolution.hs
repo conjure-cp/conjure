@@ -55,6 +55,15 @@ normaliseSolution' [xMatch| vs := part |] =
     in  [xMake| part := sort res |]
 
 
+normaliseSolution' [xMatch| vs   := value.matrix.values
+                          | [ir] := value.matrix.indexrange
+                          |] =
+    let res = map normaliseSolution' vs
+        ir' = normaliseSolution' ir
+    in  [xMake| value.matrix.values := res
+              | value.matrix.indexrange := [ir']
+              |]
+
 normaliseSolution' [xMatch| vs := value.matrix.values |] =
     let res = map normaliseSolution' vs
     in  [xMake| value.matrix.values := res |]
