@@ -11,6 +11,8 @@ import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec)
 import Text.Groom(groom)
 
+import Control.Arrow(arr)
+
 type Essence      = Spec
 type EssenceParam = Spec
 
@@ -28,7 +30,7 @@ _c = CInt 51  [RRange (0,49), RSingle 50 ]
 
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
-    index <- rangeRandomM (0, (fromIntegral size-1))
+    index <- rangeRandomM (0, fromIntegral size-1)
     let n = pickIth (toInteger index) ranges
     mkLog "Index" (pretty index)
     mkLog "Ranges" (pretty . show $ ranges)
@@ -92,35 +94,26 @@ makeLetting given val =
     getRef e = _bug "getRef: should not happen" [e]
 
 
-handleDomain :: MonadConjure m => E -> m Choice 
+handleDomain :: MonadConjure m => E -> m Choice
 handleDomain [xMatch| ranges := domain.int.ranges |] = do
     mkLog "ranges" (pretty ranges)
     cRanges <- mapM handleRange ranges
-    return $ createChoice cRanges 
+    return $ createChoice cRanges
 
-    where 
+    where
     createChoice :: [(Integer,Range)] -> Choice
-    createChoice arr = CInt num ranges
-        
-        where
-        (nums,ranges) = unzip arr 
-        num = sum nums :: Integer
+    createChoice = uncurry CInt . first (arr sum) . unzip 
+
 
 handleDomain e = do
     mkLog "unhandled" (prettyAsPaths e)
     return _c
 
 handleRange :: MonadConjure m => E -> m (Integer,Range)
-handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = 
+handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] =
     return  (abs (b - a) +1, RRange (a,b) )
 
-
-
 handleRange' :: MonadConjure m => E -> m E
-handleRange' [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = do
-   --mkLog "fromTo" $ pretty (a,b)
-   let val =  a + b `div` 2
-   return $ [xMake| value.literal :=  [Prim (I val)] |]
 
 handleRange' [xMatch| _   := range.single.value.literal
                    | [v] := range.single|] =
@@ -131,7 +124,6 @@ handleRange' [xMatch| [Prim (I a)] := range.from.value.literal |] =
 
 handleRange' [xMatch| [Prim (I a)] := range.to.value.literal |] =
     return $ [xMake| value.literal :=  [Prim (I a)] |]
-
 
 handleRange' e = do
     mkLog "unhandled" (prettyAsPaths e)
@@ -148,7 +140,6 @@ stripDecVars (Spec v x) = Spec v y
         stays [xMatch| _ := topLevel.letting           |] = True
         stays [xMatch| _ := topLevel.where             |] = True
         stays _ = False
-
 
 
 _r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
