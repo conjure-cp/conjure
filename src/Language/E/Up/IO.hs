@@ -53,7 +53,7 @@ getSpecs (specF, solF, orgF,paramF,orgParamF) = do
     let param    = getSpecMaybe paramF
     let orgParam = getSpecMaybe orgParamF
 
-    spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
+    spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param >>= removeNegatives
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
     org   <- reduceSpec  orgP
@@ -66,7 +66,7 @@ getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
     param    <- getTestSpecMaybe paramF
     orgParam <- getTestSpecMaybe orgParamF
 
-    spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param
+    spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param >>= removeNegatives
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
     org   <- reduceSpec  orgP
