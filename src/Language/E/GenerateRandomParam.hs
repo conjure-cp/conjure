@@ -15,12 +15,12 @@ type Essence      = Spec
 type EssenceParam = Spec
 
 data Choice =
-    CInt Int [Range]
+    CInt Integer [Range]
     deriving (Show)
 
 data Range  =
-    RSingle Int
-  | RRange (Int,Int)
+    RSingle Integer
+  | RRange (Integer,Integer)
     deriving (Show)
 
 _c :: Choice
@@ -28,21 +28,25 @@ _c = CInt 51  [RRange (0,49), RSingle 50 ]
 
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
-    index <- rangeRandomM (0, size-1)
-    let n = pickIth index ranges
+    index <- rangeRandomM (0, (fromIntegral size-1))
+    let n = pickIth (toInteger index) ranges
     mkLog "Index" (pretty index)
     mkLog "Ranges" (pretty . show $ ranges)
     mkLog "Choice " (pretty n)
     mkLog "Choice " (pretty n)
-    return [xMake| value.literal := [Prim (I (toInteger n) )] |]
+    return [xMake| value.literal := [Prim (I n )] |]
 
-pickIth :: Int -> [Range] -> Int
+pickIth :: Integer -> [Range] -> Integer
 pickIth _ [] = _bugg "pickIth no values"
 pickIth 0 (RSingle i:_) = i
-pickIth index (RRange (a,b):_ ) | index <= b - a =  [a..b] !! index
+pickIth index (RRange (a,b):_ ) | index <= b - a =  [a..b] `genericIndex2`  index
 
 pickIth index (RSingle _:xs)    = pickIth (index - 1) xs
 pickIth index (RRange (a,b):xs) = pickIth (index - (b - a) - 1 ) xs
+
+genericIndex2 :: [Integer] -> Integer -> Integer
+genericIndex2 a b | b < 0 = error $ "genericIndex2" ++ show  (a,b)
+genericIndex2 a b = genericIndex a b
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
@@ -89,35 +93,47 @@ makeLetting given val =
 
 
 handleDomain :: MonadConjure m => E -> m Choice 
---handleDomain [xMatch| ranges := domain.int.ranges |] = do
-    --mkLog "ranges" (pretty ranges)
-    --vals <- mapM handleRange ranges
-    ----error . show  $ vals
-    --return (head vals)
+handleDomain [xMatch| ranges := domain.int.ranges |] = do
+    mkLog "ranges" (pretty ranges)
+    cRanges <- mapM handleRange ranges
+    return $ createChoice cRanges 
+
+    where 
+    createChoice :: [(Integer,Range)] -> Choice
+    createChoice arr = CInt num ranges
+        
+        where
+        (nums,ranges) = unzip arr 
+        num = sum nums :: Integer
 
 handleDomain e = do
     mkLog "unhandled" (prettyAsPaths e)
-    return _c -- [eMake| 99 |]
+    return _c
+
+handleRange :: MonadConjure m => E -> m (Integer,Range)
+handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = 
+    return  (abs (b - a) +1, RRange (a,b) )
 
 
-handleRange :: MonadConjure m => E -> m E
-handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = do
+
+handleRange' :: MonadConjure m => E -> m E
+handleRange' [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = do
    --mkLog "fromTo" $ pretty (a,b)
    let val =  a + b `div` 2
    return $ [xMake| value.literal :=  [Prim (I val)] |]
 
-handleRange [xMatch| _   := range.single.value.literal
+handleRange' [xMatch| _   := range.single.value.literal
                    | [v] := range.single|] =
                    return v
 
-handleRange [xMatch| [Prim (I a)] := range.from.value.literal |] =
+handleRange' [xMatch| [Prim (I a)] := range.from.value.literal |] =
     return $ [xMake| value.literal :=  [Prim (I a)] |]
 
-handleRange [xMatch| [Prim (I a)] := range.to.value.literal |] =
+handleRange' [xMatch| [Prim (I a)] := range.to.value.literal |] =
     return $ [xMake| value.literal :=  [Prim (I a)] |]
 
 
-handleRange e = do
+handleRange' e = do
     mkLog "unhandled" (prettyAsPaths e)
     return [eMake| 99 |]
 
