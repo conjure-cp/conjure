@@ -349,7 +349,11 @@ toEssenceRep tags@(TagSingle "matrix":TagSingle "matrix":xs)
     p3 = map transposeE
     p4 = map wrapper
 
-    (tl,TagTuple ts) = fromJust ans 
+    isTagTuple (TagTuple ts2) = ts2
+    isTagTuple _ = bug "This can't happen and is only here because the analysis is not good enough" 
+    (tl,tsWrapped) = fromJust ans 
+    ts = isTagTuple tsWrapped
+
     res   =  map matrixToTuple (transposeE vs)
     pre2  =  p2 res
     res2  =  p3 pre2
@@ -367,9 +371,9 @@ toEssenceRep tags@(TagSingle "matrix":TagSingle "matrix":xs)
 
     -- return the number of matrixes and tags following it
     isMatrixesThenTuple :: (Int,[TagT]) -> Maybe (Int,TagT)
-    isMatrixesThenTuple (i,(TagSingle "matrix":xs)) = isMatrixesThenTuple ((i+1), xs)
+    isMatrixesThenTuple (i,(TagSingle "matrix":xx)) = isMatrixesThenTuple ((i+1), xx)
     isMatrixesThenTuple (i,[TagTuple ts]) | i > 0 = Just (i,TagTuple ts)
-    isMatrixesThenTuple (_,_)                       = Nothing
+    isMatrixesThenTuple (_,_)                     = Nothing
 
 
     wrapper :: [E] -> E
