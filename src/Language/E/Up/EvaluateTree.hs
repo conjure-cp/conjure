@@ -269,7 +269,8 @@ occurrence' ix lits=
    in  map (\(_,n) ->  [xMake| value.literal :=  [Prim (I n)] |] ) in_set
 
    where 
-   f (Prim(I b),_) =  b == 1
+   f (Prim(B b),_) =  b 
+   f (Prim(I b),_) =  b == 1  -- Leaving this here so I don't have recreate my tests
    f t = _bugi "occurrence' f" (t,[]) 
 
 explicitRep :: VarData -> E
