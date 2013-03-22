@@ -442,30 +442,34 @@ fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
       in  ret [xMake| domain.int.ranges := ys |]
 
-fullEvaluator [xMatch| vs           := operator.index.left .value.matrix.values
-                     | ranges       := operator.index.left .value.matrix.indexrange.domain.int.ranges
-                     | [Prim (I a)] := operator.index.right.value.literal
-                     |] | a `elem` vals
-                        , Just x <- listToMaybe [ x | (x,y) <- zip vs vals , y == a ]
-                        = ret x
-                        where
-                            valsFromRange [xMatch| [Prim (I j)] := range.single.value.literal |] = [j]
-                            valsFromRange [xMatch| [i',j'] := range.fromTo |] =
-                                case (i',j') of
-                                    ([xMatch| [Prim (I i)] := value.literal |], [xMatch| [Prim (I j)] := value.literal |]) -> [i..j]
-                                    _ -> []
-                            valsFromRange [xMatch| [Prim (I j)] := range.from.value.literal |] = [j..]
-                            valsFromRange _ = []
-                            vals = concatMap valsFromRange ranges
-fullEvaluator [xMatch| vs           := operator.index.left .value.matrix.values
-                     | [Prim (I i)] := operator.index.right.value.literal
-                     |] | i >= 1 && i <= genericLength vs
-                        = ret (vs `genericIndex` (i-1))
-fullEvaluator [xMatch| vs           := operator.index.left .value.tuple.values
-                     | [Prim (I i)] := operator.index.right.value.literal
-                     |] | i >= 1 && i <= genericLength vs
-                        = ret (vs `genericIndex` (i-1))
+fullEvaluator p@[xMatch| vs           := operator.index.left .value.matrix.values
+                       | ranges       := operator.index.left .value.matrix.indexrange.domain.int.ranges
+                       | [Prim (I a)] := operator.index.right.value.literal
+                       |]
+    = case result of
+        Just x  -> ret x
+        Nothing -> userErr $ "Matrix indexing out of range in:" <+> pretty p
+        where
+            valsFromRange [xMatch| [Prim (I j)] := range.single.value.literal |] = [j]
+            valsFromRange [xMatch| [i',j'] := range.fromTo |] =
+                case (i',j') of
+                    ([xMatch| [Prim (I i)] := value.literal |], [xMatch| [Prim (I j)] := value.literal |]) -> [i..j]
+                    _ -> []
+            valsFromRange [xMatch| [Prim (I j)] := range.from.value.literal |] = [j..]
+            valsFromRange _ = []
+            vals = concatMap valsFromRange ranges
+            result = listToMaybe [ x | (x,y) <- zip vs vals , y == a ]
 
+fullEvaluator p@[xMatch| vs           := operator.index.left .value.matrix.values
+                       | [Prim (I i)] := operator.index.right.value.literal
+                       |]
+    | i >= 1 && i <= genericLength vs = ret (vs `genericIndex` (i-1))
+    | otherwise = userErr $ "Matrix indexing out of range in:" <+> pretty p
+fullEvaluator p@[xMatch| vs           := operator.index.left .value.tuple.values
+                       | [Prim (I i)] := operator.index.right.value.literal
+                       |]
+    | i >= 1 && i <= genericLength vs = ret (vs `genericIndex` (i-1))
+    | otherwise = userErr $ "Tuple indexing out of range in:" <+> pretty p
 
 fullEvaluator [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
     | [xMatch| [Prim (S quanStr)] := reference |] <- quan
