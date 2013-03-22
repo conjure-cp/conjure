@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings, FlexibleInstances #-}
+--{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
@@ -26,7 +26,8 @@ evalChoice (CInt size ranges) = do
     mkLog "Index" (pretty index)
     mkLog "Ranges" (pretty . show $ ranges)
     mkLog "Choice " (pretty n)
-    return [eMake| 2|]
+    mkLog "Choice " (pretty n)
+    return [xMake| value.literal := [Prim (I (toInteger n) )] |]
 
 pickIth :: Int -> [Range] -> Int
 pickIth _ [] = _bugg "pickIth no values"
