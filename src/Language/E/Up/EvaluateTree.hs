@@ -398,7 +398,7 @@ selected ([xMatch| _ := value.matrix.values.value.literal
                  | [Tagged "values" v1] := value.matrix |]
         ,[xMatch| [Tagged "values" v2] := value.matrix |])=
             let togther = zip v1 v2
-                chosen  = filter (\(a,_) -> getValue a == 1) togther
+                chosen  = filter (\(a,_) -> getValue a) togther
                 values  = map snd chosen in
         [xMake| value.matrix :=  [Tagged "values" values] |]
 
@@ -410,10 +410,11 @@ selected ([xMatch| [Tagged "values" v1] := value.matrix |]
 
 selected _ = _bugg "selected"
 
-getValue :: E -> Integer
+getValue :: E -> Bool
 getValue value =
     case value of
-        [xMatch| [Prim (I n)] := value.literal |] ->  n
+        [xMatch| [Prim (I n)] := value.literal |] ->  n == 1
+        [xMatch| [Prim (B b)] := value.literal |] ->  b
         f ->  _bug "getValue" [f]
 
 
