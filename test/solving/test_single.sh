@@ -81,7 +81,7 @@ function perModelperParam {
         --out-essence-solution  $MODEL-$PARAM.solution
     SOL_TRANS=$?
 
-    if (( $SOL_VALIDATE != 0 )) ; then
+    if (( $SOL_TRANS != 0 )) ; then
         echo "[translateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
     else
         SOL_VALIDATE=0
