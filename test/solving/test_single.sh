@@ -68,6 +68,7 @@ function perModelperParam {
         -out-minion   $MODEL-$PARAM.eprime-minion                           \
         -out-solution $MODEL-$PARAM.eprime-solution
 
+    SOL_TRANS=0
     echo "translateSolution for $SPEC $MODEL $PARAM"
     # echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
@@ -78,8 +79,8 @@ function perModelperParam {
         --in-eprime-param       $MODEL-$PARAM.eprime-param                  \
         --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
         --out-essence-solution  $MODEL-$PARAM.solution
-
     SOL_TRANS=$?
+
     if (( $SOL_VALIDATE != 0 )) ; then
         echo "[translateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
     else
