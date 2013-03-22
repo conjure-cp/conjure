@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(3, 7, 8), int(10..12, 19)] of int(4..9)
+such that
+    forAll i : int(3, 7, 8) . allDiff(m[.., ..]),
+    forAll v__0 : int(3, 7, 8)
+        . (forAll v__1 : int(3, 7, 8)
+               . v__0 < v__1
+                 ->
+                 !(m[v__0, 10] = m[v__1, 10]
+                   /\
+                   (m[v__0, 11] = m[v__1, 11]
+                    /\
+                    (m[v__0, 12] = m[v__1, 12] /\ m[v__0, 19] = m[v__1, 19]))))
