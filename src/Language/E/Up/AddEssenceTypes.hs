@@ -371,7 +371,7 @@ toEssenceRep tags@(TagSingle "matrix":TagSingle "matrix":xs)
 
     -- return the number of matrixes and tags following it
     isMatrixesThenTuple :: (Int,[TagT]) -> Maybe (Int,TagT)
-    isMatrixesThenTuple (i,(TagSingle "matrix":xx)) = isMatrixesThenTuple ((i+1), xx)
+    isMatrixesThenTuple (i,TagSingle "matrix":xx) = isMatrixesThenTuple (i+1, xx)
     isMatrixesThenTuple (i,[TagTuple ts]) | i > 0 = Just (i,TagTuple ts)
     isMatrixesThenTuple (_,_)                     = Nothing
 
@@ -456,7 +456,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
         er (Tagged "matrix" [vals]) = Tagged "value" [Tagged t  [toEssenceRep ts vals]]
         er a@(Tagged "literal" _)   = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
-        er f = _bugi ("toEssenceRep S values.value er " ++ (show t)) (ts, [f])
+        er f = _bugi ("toEssenceRep S values.value er " ++ show t) (ts, [f])
 
 
 toEssenceRep r@(TagTuple t : [])  [xMatch| vals := tuple.values |] =
