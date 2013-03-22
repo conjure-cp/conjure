@@ -9,15 +9,22 @@ import Language.E.DomainOf(domainOf)
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec)
+import Text.Groom(groom)
 
 type Essence      = Spec
 type EssenceParam = Spec
 
-data Choice =  CInt Int [Range]  deriving (Show) 
-data Range = RSingle Int | RRange (Int,Int) deriving (Show)
+data Choice =
+    CInt Int [Range]
+    deriving (Show)
+
+data Range  =
+    RSingle Int
+  | RRange (Int,Int)
+    deriving (Show)
 
 _c :: Choice
-_c = CInt 5  [RRange (3,6), RSingle 9 ]
+_c = CInt 51  [RRange (0,49), RSingle 50 ]
 
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
@@ -34,8 +41,8 @@ pickIth _ [] = _bugg "pickIth no values"
 pickIth 0 (RSingle i:_) = i
 pickIth index (RRange (a,b):_ ) | index <= b - a =  [a..b] !! index
 
-pickIth index (RSingle _:xs)    =  pickIth (index - 1) xs
-pickIth index (RRange (a,b):xs) = pickIth (index - (b - a) - 1 ) xs 
+pickIth index (RSingle _:xs)    = pickIth (index - 1) xs
+pickIth index (RRange (a,b):xs) = pickIth (index - (b - a) - 1 ) xs
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
@@ -53,41 +60,44 @@ generateRandomParam essence = do
     doms <-  mapM domainOf es
     mkLog "Doms" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
 
-    givens <-  mapM handleDomain doms
-    mkLog "Givens" (vcat $ map pretty givens)
+    choices <-  mapM handleDomain doms
+    mkLog "choices" (pretty . groom $ choices)
+
+    givens <- mapM evalChoice choices
 
     let lettings = zipWith makeLetting es givens
     mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
-    --mkLog "EssenceParam" (pretty essenceParam)
+    --mkLog "EssenceParam" (pretty essenceParam)-}
 
     return essenceParam
+    --return essence
 
 
 makeLetting :: E -> E -> E
 makeLetting given val =
-    [xMake| topLevel.letting.name := [getRef given] 
+    [xMake| topLevel.letting.name := [getRef given]
           | topLevel.letting.expr := [val]|]
 
-    where 
+    where
     getRef :: E -> E
-    getRef [xMatch|  _  := topLevel.declaration.given.name.reference 
+    getRef [xMatch|  _  := topLevel.declaration.given.name.reference
                   | [n] := topLevel.declaration.given.name |] = n
     getRef e = _bug "getRef: should not happen" [e]
 
 
-handleDomain :: MonadConjure m => E -> m E
-handleDomain [xMatch| ranges := domain.int.ranges |] = do
-    mkLog "ranges" (pretty ranges)
-    vals <- mapM handleRange ranges
-    --error . show  $ vals
-    return (head vals)
+handleDomain :: MonadConjure m => E -> m Choice 
+--handleDomain [xMatch| ranges := domain.int.ranges |] = do
+    --mkLog "ranges" (pretty ranges)
+    --vals <- mapM handleRange ranges
+    ----error . show  $ vals
+    --return (head vals)
 
 handleDomain e = do
     mkLog "unhandled" (prettyAsPaths e)
-    return [eMake| 99 |]
+    return _c -- [eMake| 99 |]
 
 
 handleRange :: MonadConjure m => E -> m E
@@ -97,13 +107,13 @@ handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = 
    return $ [xMake| value.literal :=  [Prim (I val)] |]
 
 handleRange [xMatch| _   := range.single.value.literal
-                   | [v] := range.single|] = 
+                   | [v] := range.single|] =
                    return v
 
-handleRange [xMatch| [Prim (I a)] := range.from.value.literal |] = 
+handleRange [xMatch| [Prim (I a)] := range.from.value.literal |] =
     return $ [xMake| value.literal :=  [Prim (I a)] |]
 
-handleRange [xMatch| [Prim (I a)] := range.to.value.literal |] = 
+handleRange [xMatch| [Prim (I a)] := range.to.value.literal |] =
     return $ [xMake| value.literal :=  [Prim (I a)] |]
 
 
