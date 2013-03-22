@@ -332,11 +332,11 @@ toEssenceRep tags@(TagSingle "matrix":TagSingle "matrix":xs)
     recursive :: Int -> [E] -> [E]
     recursive 0 es = es 
     recursive 1 es = process es  
-        `_p` ("NB TR rec " ++ (show 1), [es]) 
+        `_p` ("NB TR rec 1", [es]) 
     recursive 2 es = map (wrapUnwrap  process ) (recursive 1 es)
-        `_p` ("NB TR rec " ++ (show 2), [es]) 
+        `_p` ("NB TR rec 2", [es]) 
     recursive 3 es = map (wrapUnwrap (map (wrapUnwrap process))) (recursive 2 es) 
-        `_p` ("NB TR rec " ++ (show 2), [es]) 
+        `_p` ("NB TR rec 3", [es]) 
     recursive _ es = es
         `_p` ("NB TR rec n  This might work", [es]) 
 
