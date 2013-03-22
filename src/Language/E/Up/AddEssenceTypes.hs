@@ -346,7 +346,9 @@ toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
     let zipped= map ( zip t . unwrapValues ) vals
         vals' =  map convert zipped
         vv = map (\v ->  [xMake| value.tuple := [v] |] ) vals
-        vmap = map (\(Tagged "value" [v]) -> Tagged "value" [toEssenceRep r v]) vv
+        onValue (Tagged "value" [v]) = Tagged "value" [toEssenceRep r v]
+        onValue v = bug $ vcat [ "toEssenceRep.onValue", pretty v]
+        vmap = map onValue vv
 
     in  [xMake| values := vmap |]
          `_p` ("T values.value.matrix",vmap)
