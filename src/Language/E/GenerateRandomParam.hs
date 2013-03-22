@@ -102,7 +102,7 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
 
     where
     createChoice :: [(Integer,Range)] -> Choice
-    createChoice = uncurry CInt . first (arr sum) . unzip 
+    createChoice = uncurry CInt . first (arr sum) . unzip
 
 
 handleDomain e = do
@@ -113,21 +113,13 @@ handleRange :: MonadConjure m => E -> m (Integer,Range)
 handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] =
     return  (abs (b - a) +1, RRange (a,b) )
 
-handleRange' :: MonadConjure m => E -> m E
+handleRange [xMatch| [Prim (I n) ]  := range.single.value.literal |] =
+    return (1, RSingle n)
 
-handleRange' [xMatch| _   := range.single.value.literal
-                   | [v] := range.single|] =
-                   return v
-
-handleRange' [xMatch| [Prim (I a)] := range.from.value.literal |] =
-    return $ [xMake| value.literal :=  [Prim (I a)] |]
-
-handleRange' [xMatch| [Prim (I a)] := range.to.value.literal |] =
-    return $ [xMake| value.literal :=  [Prim (I a)] |]
-
-handleRange' e = do
+handleRange e = do
     mkLog "unhandled" (prettyAsPaths e)
-    return [eMake| 99 |]
+    return (1,RSingle (-99))
+
 
 stripDecVars :: Essence -> Essence
 stripDecVars (Spec v x) = Spec v y
