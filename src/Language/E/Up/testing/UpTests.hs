@@ -19,50 +19,48 @@ type ParamF          = FilePath
 type EssenceParamF   = FilePath
 
 
-essences :: IO [FilePath]
+eprimes :: IO [EprimeF]
 -- Every test
-essences = allFilesWithSuffix ".essence" "files/uptests/"
+eprimes = allFilesWithSuffix ".eprime" "files/uptests/"
 
 -- All tests that take less then 1/8 of second
 {-
-essences =  filter (flip notElem ["tupley32-8Complex5"]
-         .  dropExtension . takeFileName )
-        <$> allFilesWithSuffix ".essence" "files/uptests/"
+eprimes =  filter (flip notElem ["tupley32-8Complex5"]
+        .   takeFileName . takeDirectory )
+       <$> allFilesWithSuffix ".eprime" "files/uptests/"
 -}
 
 -- Basic tests
---essences = _essencesDirs "files/uptests/" ["___parts","___simple","___types"]
+--eprimes = _eprimeDirs "files/uptests/" ["___parts","___simple","___types"]
 
 -- Tuples and matrixes
---essences = _essencesDirs "files/uptests/" ["___simple", "_tuples_of_matrix", "_matrix_of_tuples","_zznested_singletons","_zothers"]
+--eprimes = _eprimeDirs "files/uptests/" ["___simple", "_tuples_of_matrix", "_matrix_of_tuples","_zznested_singletons","_zothers"]
 
---essences = _essencesDirs "files/uptests/" ["____"]
 
-_essencesDirs :: FilePath -> [FilePath] -> IO [FilePath]
-_essencesDirs base arr = 
-    concatMapM ( allFilesWithSuffix ".essence") (map (base </>) arr) 
+_eprimeDirs :: FilePath -> [FilePath] -> IO [EprimeF]
+_eprimeDirs base arr = 
+    concatMapM ( allFilesWithSuffix ".eprime") (map (base </>) arr) 
 
 specs :: IO [((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF )]
 specs = do
-    es <- essences
+    es <- eprimes
     return $ map getFiles es
 
     where 
         getFiles f = 
-            let base = dropExtension f 
-                name = takeFileName base 
-                dir = joinPath [base, "0001"] in
+            let base = takeDirectory f 
+                name = takeFileName base
+                dir  = takeFileName f in
             (
              (
-                 addExtension dir "eprime",
-                 addExtension dir "eprime.solution",
                  f,
-                 Just $ addExtension (joinPath [base,name]) "param",
-                 Just $ addExtension (joinPath [base,name]) "essence-param"
+                 addExtension f "solution",
+                 addExtension base  "essence",
+                 Just $  addExtension (joinPath [base,name])  "param",
+                 Just $  addExtension (joinPath [base,name])  "essence-param"
              ),
-             addExtension dir "solution" 
+              replaceExtension f "solution" 
             )
-
 
 runSpec :: ((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF ) -> IO ()
 runSpec  (sps@(_, _,_,_,_),ansF) = do
