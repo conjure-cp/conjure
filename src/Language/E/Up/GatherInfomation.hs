@@ -70,9 +70,9 @@ getRange [Tagged "ranges" arr] =
     getRange' [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = [a..b]
     getRange' [xMatch| [Prim (I a)] := range.single.value.literal |] = [a]
     getRange' [xMatch| [Prim (I a)] := range.single.unaryOp.negate.value.literal |] = [-a]
-    getRange' e = _bug "GatherInfomation: getRange'" [e]
+    getRange' e = errr e  --  _bug " getRange'" [e]
 
-getRange e = _bug "GatherInfomation: getRange" e
+getRange e = _bug " getRange" e
 
 getEssenceVariables :: Spec -> M.Map String [TagT]
 getEssenceVariables (Spec _ xs) =
