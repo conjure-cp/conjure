@@ -11,14 +11,21 @@ import Test.Hspec hiding (Spec)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.HUnit ()
 
+type EssenceF        = FilePath
+type EprimeF         = FilePath
+type SolutionF       = FilePath
+type EprimeSolutionF = FilePath
+type ParamF          = FilePath
+type EssenceParamF   = FilePath
+
 
 essences :: IO [FilePath]
 -- Every test
 essences = allFilesWithSuffix ".essence" "files/uptests/"
 
--- All tests that take less then 1/8 of second 
+-- All tests that take less then 1/8 of second
 {-
-essences =  filter (flip notElem ["tupley32-8Complex5","tupley32-8Complex4"] 
+essences =  filter (flip notElem ["tupley32-8Complex5"]
          .  dropExtension . takeFileName )
         <$> allFilesWithSuffix ".essence" "files/uptests/"
 -}
@@ -35,7 +42,7 @@ _essencesDirs :: FilePath -> [FilePath] -> IO [FilePath]
 _essencesDirs base arr = 
     concatMapM ( allFilesWithSuffix ".essence") (map (base </>) arr) 
 
-specs :: IO [( (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath), FilePath )]
+specs :: IO [((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF )]
 specs = do
     es <- essences
     return $ map getFiles es
@@ -56,8 +63,8 @@ specs = do
              addExtension dir "solution" 
             )
 
-runSpec :: ((FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath)
-            , FilePath) -> IO ()
+
+runSpec :: ((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF ) -> IO ()
 runSpec  (sps@(_, _,_,_,_),ansF) = do
     (spec,sol,org,orgP) <- getTestSpecs sps
 
