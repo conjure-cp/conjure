@@ -281,7 +281,6 @@ toEssenceRep tags@[TagSingle "matrix", TagTuple ts]
     `_f` ("N T value.tuple.values tags",tags)
 
 
--- FIXME  works. should make recursive
 toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
     e@[xMatch| vs := value.tuple.values |]
     | all matrixOrTuple vs =
@@ -311,7 +310,7 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
 
     matrixToTupleMaybe :: E -> E
     matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
-    matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
+    matrixToTupleMaybe es = _bug "matrixToTupleMaybe NB T  this might be needed" [es]
 
     prePro :: [TagT] -> E -> E
     prePro  [TagTuple ts'] es@[xMatch| vs2 := value.tuple.values |] =
@@ -320,57 +319,58 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagTuple ts]
             `_p` ("prePro res", [res])
             `_p` ("prePro e", [es])
 
-    --prePro  r@[TagTuple ts] v@[xMatch| vs2 := value.tuple.values |] =
-        --erriM "prePro" (r,[v])
-
-
     prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
 
 
-
--- Hack/idea to make recursive
-toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", TagTuple ts]
+-- recursive version of above 
+toEssenceRep tags@(TagSingle "matrix":TagSingle "matrix":xs)
     e@[xMatch| vs := value.tuple.values |]
-    |  all matrixOrTuple vs =
+    | all matrixOrTuple vs && isJust ans =
 
     let
-        res   =  map matrixToTuple (transposeE vs)
-        pre2  =  p2 res
-        res2  =  p3 pre2
-        fin   =  p4 res2
+    -- Int: How many TagSingle "matrix" after the second one
+    recursive :: Int -> [E] -> [E]
+    recursive 0 es = es 
+    recursive 1 es = process es  
+        `_p` ("NB TR rec " ++ (show 1), [es]) 
+    recursive 2 es = map (wrapUnwrap  process ) (recursive 1 es)
+        `_p` ("NB TR rec " ++ (show 2), [es]) 
+    recursive 3 es = map (wrapUnwrap (map (wrapUnwrap process))) (recursive 2 es) 
+        `_p` ("NB TR rec " ++ (show 2), [es]) 
+    recursive _ es = es
+        `_p` ("NB TR rec n  This might work", [es]) 
 
-        pre3  =  map (p2 . unwrapMatrix ) fin
-        res3  =  map p3 pre3
-        fin2  =  map (wrapInMatrix . p4)  res3
+    process  :: [E] -> [E]
+    process  = map (wrapUnwrap $  p4 .  p3 . p2 )
 
-
-        pre4  =  map (map (p2 . unwrapMatrix ) . unwrapMatrix ) fin2
-        res4  =  map (map p3) pre4
-        fin3  =  map (wrapInMatrix . map (wrapInMatrix . p4))  res4
-
-
-    {-in errr ("" :: String)-}
-    in wrapInMatrix fin3
-
-    `_p` ("NB T4 value.tuple fin3 ", fin3)
-    `_p` ("NB T4 value.tuple res4 head head", head $ head res4)
-    `_p` ("NB T4 value.tuple pre4 head head", head $ head pre4)
-    `_p` ("NB T4 value.tuple fin2 ", fin2)
-    `_p` ("NB T4 value.tuple res3 head", head res3)
-    `_p` ("NB T4 value.tuple pre3 head", head pre3)
-    `_p` ("NB T4 value.tuple fin", fin)
-    `_p` ("NB T4 value.tuple res2", res2)
-    `_p` ("NB T4 value.tuple pre2",pre2)
-    `_p` ("NB T4 value.tuple res",res)
-    `_p` ("NB T4 value.tuple vs",[e])
-    `_f` ("NB T4 value.tuple tags",tags)
-
-    where
+    wrapUnwrap f = wrapInMatrix . f . unwrapMatrix
 
     p2 = map (zipWith prePro ts . unwrapTuple)
     p3 = map transposeE
     p4 = map wrapper
-     
+
+    (tl,TagTuple ts) = fromJust ans 
+    res   =  map matrixToTuple (transposeE vs)
+    pre2  =  p2 res
+    res2  =  p3 pre2
+    res3  =  p4 res2
+    finn  =  recursive tl res3 
+
+    in wrapInMatrix finn
+
+    `_p` ("NB T value.tuple res3", res3)
+    `_p` ("NB T value.tuple vs",[e])
+    `_f` ("NB T value.tuple tags",tags)
+
+    where
+    ans = isMatrixesThenTuple (0,xs)
+
+    -- return the number of matrixes and tags following it
+    isMatrixesThenTuple :: (Int,[TagT]) -> Maybe (Int,TagT)
+    isMatrixesThenTuple (i,(TagSingle "matrix":xs)) = isMatrixesThenTuple ((i+1), xs)
+    isMatrixesThenTuple (i,[TagTuple ts]) | i > 0 = Just (i,TagTuple ts)
+    isMatrixesThenTuple (_,_)                       = Nothing
+
 
     wrapper :: [E] -> E
     -- for innerMutiMatixMatixTuple and tupley32-8-6  e.g singleton matrix
@@ -378,9 +378,11 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", T
     wrapper arr = (wrapInMatrix .  map matrixToTupleMaybe)  arr
         `_p` ("NB T wrapper",arr)
 
+
     matrixToTupleMaybe :: E -> E
     matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
-    matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
+    matrixToTupleMaybe es = _bug "matrixToTupleMaybe NB TR this might be needed" [es]
+
 
     prePro :: [TagT] -> E -> E
     prePro  [TagTuple ts'] es@[xMatch| vs2 := value.tuple.values |] =
@@ -391,60 +393,9 @@ toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", T
 
     prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
 
--- Hack/idea to make recursive  -- fixes nestedSingletonComplex0mm and 3d_tupley15
-toEssenceRep tags@[TagSingle "matrix", TagSingle "matrix", TagSingle "matrix", TagTuple ts]
-    e@[xMatch| vs := value.tuple.values |]
-    |  all matrixOrTuple vs =
-
-    let
-        res   =  map matrixToTuple (transposeE vs)
-        pre2  =  p2 res
-        res2  =  p3 pre2
-        fin   =  p4 res2
-
-        pre3  =  map (p2 . unwrapMatrix ) fin
-        res3  =  map p3 pre3
-        fin2  =  map (wrapInMatrix . p4)  res3
-
-    in wrapInMatrix fin2
-
-    `_p` ("NB T3 value.tuple fin2 ", fin2)
-    `_p` ("NB T3 value.tuple res3 head", head res3)
-    `_p` ("NB T3 value.tuple pre3 head", head pre3)
-    `_p` ("NB T3 value.tuple fin", fin)
-    `_p` ("NB T3 value.tuple res2", res2)
-    `_p` ("NB T3 value.tuple pre2",pre2)
-    `_p` ("NB T3 value.tuple res",res)
-    `_p` ("NB T3 value.tuple vs",[e])
-    `_f` ("NB T3 value.tuple tags",tags)
-
-    where
-
-    p2 = map (zipWith prePro ts . unwrapTuple)
-    p3 = map transposeE
-    p4 = map wrapper
-
-    wrapper :: [E] -> E
-    -- for innerMutiMatixMatixTuple and tupley32-8-6  e.g singleton matrix
-    wrapper arr | all isLit arr =  wrapInTuple   arr
-    wrapper arr = (wrapInMatrix .  map matrixToTupleMaybe)  arr
-        `_p` ("NB T wrapper",arr)
-
-    matrixToTupleMaybe :: E -> E
-    matrixToTupleMaybe [xMatch| vs1 := value.matrix|] = [xMake| value.tuple := vs1 |]
-    matrixToTupleMaybe _e = _e `_p` ("matrixToTupleMaybe not matrix", [_e])
-
-    prePro :: [TagT] -> E -> E
-    prePro  [TagTuple ts'] es@[xMatch| vs2 := value.tuple.values |] =
-        let res = zipWith toEssenceRep  ts' vs2
-        in  wrapInTuple res
-            `_p` ("prePro res", [res])
-            `_p` ("prePro e", [es])
-
-    prePro ts2 f = f `_k` ("prePro no change", (ts2, [f]))
 
 -- CHECK add more guards
--- Check one two many matrices?
+-- Check one too many matrices?
 -- for mutiMatixMatixTupleComplex3Simpler2 (main' o7)
 toEssenceRep r@[TagSingle "matrix", TagTuple ts ]
                [xMatch| vs := values
@@ -470,7 +421,10 @@ toEssenceRep r@(TagTuple t : []) [xMatch| vals  := values.value.matrix |] =
     let zipped= map ( zip t . unwrapValues ) vals
         vals' =  map convert zipped
         vv = map (\v ->  [xMake| value.tuple := [v] |] ) vals
-        vmap = map (\(Tagged "value" [v]) -> Tagged "value" [toEssenceRep r v]) vv
+
+        onValue (Tagged "value" [v]) = Tagged "value" [toEssenceRep r v]
+        onValue f = _bug "onValue" [f]
+        vmap = map onValue vv
 
     in  [xMake| values := vmap |]
          `_p` ("T values.value.matrix",vmap)
