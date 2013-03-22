@@ -351,9 +351,6 @@ functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guard . &body |] =
                                         , &newGuard
                                         . &quan &j in &i[2] . &newBody
                                     |]
-                    mkLog "debug" $ pretty body
-                    mkLog "debug" $ pretty newBody
-                    mkLog "debug" $ pretty out
                     ret p "builtIn.functionLiteralApply" out
                 else return Nothing
         _ -> return Nothing

@@ -328,7 +328,6 @@ valueIntOut [xMatch| [Prim (S n)] := reference     |] = do
         Just i  -> valueIntOut i
         Nothing -> err ErrFatal $ "No value given for identifier:" <+> pretty n
 valueIntOut p = do
-    bindersDoc >>= \ d -> mkLog "binders" d
     (p', (Any flag, _)) <- runWriterT $ fullySimplify p
     if flag
         then valueIntOut p'

@@ -687,17 +687,11 @@ evalHasType [eMatch| &s hasType &dom |] = do
             [xMake| type.relation.inners := (replicate (length is) typeUnknown) |]
         patternHack _ x = x
 
-    -- mkLog "debug s" $ pretty s
     ts <- typeOf s
-    -- mkLog "debug ts" $ pretty ts
     let ts' = transform replacerActual  ts
-    -- mkLog "debug ts'" $ pretty ts'
 
-    -- mkLog "debug d" $ pretty dom
     td <- typeOf dom
-    -- mkLog "debug td" $ prettyAsPaths td
     let td' = patternHack ts' $ transform replacerPattern td
-    -- mkLog "debug td'" $ prettyAsPaths td'
 
     (flag, bs) <- patternMatch td' ts'
 

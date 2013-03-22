@@ -125,7 +125,7 @@ exclude _ = False
 
 varSelector :: MonadConjure m => E -> m E
 varSelector x@[xMatch| [Prim (S nm)] := reference |] = do
-    mkLog "val" $ pretty $  show x
+    -- mkLog "val" $ pretty $  show x
     ma <- runMaybeT (lookupReference nm)
     case ma of
         Nothing  -> return x
@@ -136,7 +136,7 @@ varSelector x = return x
 
 inlineVars :: MonadConjure m => E -> m E
 inlineVars e@[xMatch| [Prim (S nm)] := reference |] = do
-    mkLog "val2" $ pretty $  show e
+    -- mkLog "val2" $ pretty $  show e
     ma <- runMaybeT (lookupReference nm)
     case ma of
         Nothing ->  return e
