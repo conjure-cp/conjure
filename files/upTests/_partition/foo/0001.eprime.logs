@@ -1,0 +1,227 @@
+[representation] find s: set of int(0..9) (#1) Occurrence
+[representation] find p: partition (size 3) from int(0..9) (#1) MSetOfSets
+[configuration] p§region2#MSetOfSets s§region1#Occurrence
+[addedDecl] find p_MSetOfSets: mset (size 3) of set of int(0..9)
+[addedDecl] find s_Occurrence: matrix indexed by [int(0..9)] of bool
+[refn] 0
+[applied] s§region1#Occurrence in parts(p§region2#MSetOfSets)
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__6 in parts(p§region2#MSetOfSets) . v__6 = s§region1#Occurrence)
+[applied] v__6 = s§region1#Occurrence
+          {rules/refns/horizontal/set-eq-to-subsets.rule}
+              v__6 subsetEq s§region1#Occurrence /\ v__6 supsetEq s§region1#Occurrence
+[applied] v__6 subsetEq s§region1#Occurrence
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
+              (forAll v__7 in v__6 . v__7 in s§region1#Occurrence)
+[applied] v__7 in s§region1#Occurrence
+          {rules/refns/vertical/set-occurrence/set-occurrence-in.rule}
+              s_Occurrence§region1[v__7] = true
+[applied] v__6 supsetEq s§region1#Occurrence
+          {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
+              s§region1#Occurrence subsetEq v__6
+[applied] s§region1#Occurrence subsetEq v__6
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
+              (forAll v__8 in s§region1#Occurrence . v__8 in v__6)
+[applied] v__8 in v__6
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__9 in v__6 . v__9 = v__8)
+[applied] (forAll v__8 in s§region1#Occurrence
+               . (exists v__9 in v__6 . v__9 = v__8))
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__10 : int(0..9) , s_Occurrence§region1[v__10]
+                   . (exists v__9 in v__6 . v__9 = v__10))
+[applied] (exists v__6 in parts(p§region2#MSetOfSets)
+               . (forAll v__7 in v__6 . s_Occurrence§region1[v__7] = true)
+                 /\
+                 (forAll v__10 : int(0..9) , s_Occurrence§region1[v__10]
+                      . (exists v__9 in v__6 . v__9 = v__10)))
+          {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
+              (exists v__6 in p_MSetOfSets§region2
+                   . (forAll v__7 in v__6 . s_Occurrence§region1[v__7] = true)
+                     /\
+                     (forAll v__10 : int(0..9) , s_Occurrence§region1[v__10]
+                          . (exists v__9 in v__6 . v__9 = v__10)))
+[applied] v__3 != v__4
+          {rules/refns/horizontal/neq-to-eq.rule}
+              !(v__3 = v__4)
+[applied] v__3 = v__4
+          {rules/refns/horizontal/set-eq-to-subsets.rule}
+              v__3 subsetEq v__4 /\ v__3 supsetEq v__4
+[applied] v__3 subsetEq v__4
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
+              (forAll v__11 in v__3 . v__11 in v__4)
+[applied] v__11 in v__4
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__12 in v__4 . v__12 = v__11)
+[applied] v__3 supsetEq v__4
+          {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
+              v__4 subsetEq v__3
+[applied] v__4 subsetEq v__3
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
+              (forAll v__13 in v__4 . v__13 in v__3)
+[applied] v__13 in v__3
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__14 in v__3 . v__14 = v__13)
+[applied] |v__3 intersect v__4|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__15 in v__3 intersect v__4 . 1)
+[applied] (sum v__15 in v__3 intersect v__4 . 1)
+          {rules/refns/horizontal/set-intersect-quantifier.rule}
+              (sum v__15 in v__3 , v__15 in v__4 . 1)
+[applied] v__15 in v__4
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__16 in v__4 . v__16 = v__15)
+[applied] v__3 in v__5
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__17 in v__5 . v__17 = v__3)
+[removeRefinedDecl] find p: partition (size 3) from int(0..9)
+[removeRefinedDecl] find s: set of int(0..9)
+[repr] 1
+[representation] find p_MSetOfSets: mset (size 3) of set of int(0..9)
+                 (#1)
+                 Explicit
+[configuration] p_MSetOfSets§region1#Explicit p_MSetOfSets§region2#Explicit
+[addedDecl] find p_MSetOfSets_Explicit:
+                    matrix indexed by [int(1..3)] of set of int(0..9)
+[refn] 1
+[applied] (exists v__6 in p_MSetOfSets§region2#Explicit
+               . (forAll v__7 in v__6 . s_Occurrence§region1[v__7] = true)
+                 /\
+                 (forAll v__10 : int(0..9) , s_Occurrence§region1[v__10]
+                      . (exists v__9 in v__6 . v__9 = v__10)))
+          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+              (exists v__18 : int(1..3)
+                   . (forAll v__7 in p_MSetOfSets_Explicit§region2[v__18]
+                          . s_Occurrence§region1[v__7] = true)
+                     /\
+                     (forAll v__10 : int(0..9) , s_Occurrence§region1[v__10]
+                          . (exists v__9 in p_MSetOfSets_Explicit§region2[v__18] . v__9 = v__10)))
+[applied] (forAll v__4 in p_MSetOfSets§region2#Explicit
+               , !((forAll v__11 in v__3 . (exists v__12 in v__4 . v__12 = v__11))
+                   /\
+                   (forAll v__13 in v__4 . (exists v__14 in v__3 . v__14 = v__13)))
+               . (sum v__15 in v__3 , (exists v__16 in v__4 . v__16 = v__15) . 1) = 0)
+          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+              (forAll v__19 : int(1..3)
+                   , !((forAll v__11 in v__3
+                            . (exists v__12 in p_MSetOfSets_Explicit§region2[v__19] . v__12 = v__11))
+                       /\
+                       (forAll v__13 in p_MSetOfSets_Explicit§region2[v__19]
+                            . (exists v__14 in v__3 . v__14 = v__13)))
+                   . (sum v__15 in v__3
+                          , (exists v__16 in p_MSetOfSets_Explicit§region2[v__19] . v__16 = v__15)
+                          . 1)
+                     =
+                     0)
+[applied] (forAll v__3 in p_MSetOfSets§region2#Explicit
+               . (forAll v__19 : int(1..3)
+                      , !((forAll v__11 in v__3
+                               . (exists v__12 in p_MSetOfSets_Explicit§region2[v__19] . v__12 = v__11))
+                          /\
+                          (forAll v__13 in p_MSetOfSets_Explicit§region2[v__19]
+                               . (exists v__14 in v__3 . v__14 = v__13)))
+                      . (sum v__15 in v__3
+                             , (exists v__16 in p_MSetOfSets_Explicit§region2[v__19] . v__16 = v__15)
+                             . 1)
+                        =
+                        0))
+          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+              (forAll v__20 : int(1..3)
+                   . (forAll v__19 : int(1..3)
+                          , !((forAll v__11 in p_MSetOfSets_Explicit§region2[v__20]
+                                   . (exists v__12 in p_MSetOfSets_Explicit§region2[v__19] . v__12 = v__11))
+                              /\
+                              (forAll v__13 in p_MSetOfSets_Explicit§region2[v__19]
+                                   . (exists v__14 in p_MSetOfSets_Explicit§region2[v__20] . v__14 = v__13)))
+                          . (sum v__15 in p_MSetOfSets_Explicit§region2[v__20]
+                                 , (exists v__16 in p_MSetOfSets_Explicit§region2[v__19] . v__16 = v__15)
+                                 . 1)
+                            =
+                            0))
+[applied] (exists v__5 in p_MSetOfSets§region2#Explicit
+               . (exists v__17 in v__5 . v__17 = v__3))
+          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+              (exists v__21 : int(1..3)
+                   . (exists v__17 in p_MSetOfSets_Explicit§region2[v__21] . v__17 = v__3))
+[removeRefinedDecl] find p_MSetOfSets: mset (size 3) of set of int(0..9)
+[repr] 2
+[representation] find p_MSetOfSets_Explicit:
+                         matrix indexed by [int(1..3)] of set of int(0..9)
+                 (#1)
+                 Occurrence
+[configuration] p_MSetOfSets_Explicit§region2#Occurrence p_MSetOfSets_Explicit§region1#Occurrence
+[addedDecl] find p_MSetOfSets_Explicit_Occurrence:
+                    matrix indexed by [int(1..3), int(0..9)] of bool
+[refn] 2
+[applied] (forAll v__7 in p_MSetOfSets_Explicit§region2#Occurrence[v__18]
+               . s_Occurrence§region1[v__7] = true)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__26 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__18, v__26]
+                   . s_Occurrence§region1[v__26] = true)
+[applied] (exists v__9 in p_MSetOfSets_Explicit§region2#Occurrence[v__18]
+               . v__9 = v__10)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__27 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__18, v__27]
+                   . v__27 = v__10)
+[applied] (exists v__12 in p_MSetOfSets_Explicit§region2#Occurrence[v__19]
+               . v__12 = v__11)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__28 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__28]
+                   . v__28 = v__11)
+[applied] (forAll v__11 in p_MSetOfSets_Explicit§region2#Occurrence[v__20]
+               . (exists v__28 : int(0..9)
+                      , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__28]
+                      . v__28 = v__11))
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__29 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__20, v__29]
+                   . (exists v__28 : int(0..9)
+                          , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__28]
+                          . v__28 = v__29))
+[applied] (exists v__14 in p_MSetOfSets_Explicit§region2#Occurrence[v__20]
+               . v__14 = v__13)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__30 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__20, v__30]
+                   . v__30 = v__13)
+[applied] (forAll v__13 in p_MSetOfSets_Explicit§region2#Occurrence[v__19]
+               . (exists v__30 : int(0..9)
+                      , p_MSetOfSets_Explicit_Occurrence§region2[v__20, v__30]
+                      . v__30 = v__13))
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (forAll v__31 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__31]
+                   . (exists v__30 : int(0..9)
+                          , p_MSetOfSets_Explicit_Occurrence§region2[v__20, v__30]
+                          . v__30 = v__31))
+[applied] (exists v__16 in p_MSetOfSets_Explicit§region2#Occurrence[v__19]
+               . v__16 = v__15)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__32 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__32]
+                   . v__32 = v__15)
+[applied] (sum v__15 in p_MSetOfSets_Explicit§region2#Occurrence[v__20]
+               , (exists v__32 : int(0..9)
+                      , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__32]
+                      . v__32 = v__15)
+               . 1)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (sum v__33 : int(0..9)
+                   , (exists v__32 : int(0..9)
+                          , p_MSetOfSets_Explicit_Occurrence§region2[v__19, v__32]
+                          . v__32 = v__33)
+                     /\
+                     p_MSetOfSets_Explicit_Occurrence§region2[v__20, v__33]
+                   . 1)
+[applied] (exists v__17 in p_MSetOfSets_Explicit§region2#Occurrence[v__21]
+               . v__17 = v__3)
+          {rules/refns/vertical/set-occurrence/set-occurrence-quantified.rule}
+              (exists v__34 : int(0..9)
+                   , p_MSetOfSets_Explicit_Occurrence§region2[v__21, v__34]
+                   . v__34 = v__3)
+[removeRefinedDecl] find p_MSetOfSets_Explicit:
+                            matrix indexed by [int(1..3)] of set of int(0..9)
+[repr] 3
