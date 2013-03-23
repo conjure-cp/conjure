@@ -202,8 +202,9 @@ workhorse lookupReprs (nm, dom, val) = do
             (Just "Explicit")
             | Just size <- lookupAttr "size" attrs
             = do
+            sizeInt <- valueIntOut size
             let indexOfMatrix_fr = [eMake| 1 |]
-            let indexOfMatrix_to = [eMake| &size |]
+            let indexOfMatrix_to = [xMake| value.literal := [Prim (I sizeInt)] |]
             let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
 
             values' <- concatMapM (workhorse lookupReprs)
