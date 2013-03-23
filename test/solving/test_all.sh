@@ -10,7 +10,7 @@ if (( $# < 3 )); then
     echo "        one of: {all, continuous, weekly}"
     echo "        \"all\" would run all tests, independent of their build_frequency values."
     echo "    - and a list of arguments, each a mode to be used by Conjure."
-    echo "        Modes: {df, smallest, random}"
+    echo "        Modes: {df, compact, first, random}"
     exit 1
 fi
 

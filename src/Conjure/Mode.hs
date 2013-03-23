@@ -36,7 +36,7 @@ parseGenericArgs inp =
 data ConjureModeSingle
     = ModeRandom
     | ModeFirst
-    | ModeSmallest
+    | ModeCompact
     deriving (Show)
 
 data ConjureMode
@@ -161,8 +161,8 @@ parseArgs (pairs, flags, rest) = msum
             modeSingleOutput $ ModeSingleOutput ModeFirst
 
         modeSmallest = do
-            mode $ words "small smallest best"
-            modeSingleOutput $ ModeSingleOutput ModeSmallest
+            mode $ words "compact"
+            modeSingleOutput $ ModeSingleOutput ModeCompact
 
         -- helper functions for the above
         mode xs = do

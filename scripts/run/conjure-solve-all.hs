@@ -7,7 +7,7 @@
 -- files.
 --
 -- Will generate all models for the spec, so might take a while.
--- Change `mode` (see below) with something else (like "smallest") for
+-- Change `mode` (see below) with something else (like "compact") for
 -- a faster version.
 
 import Control.Applicative

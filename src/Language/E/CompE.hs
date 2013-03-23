@@ -296,6 +296,7 @@ defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
 defSelectByMode _                                   [] = return []
 defSelectByMode (ModeUnknown                    {}) xs = return xs
 defSelectByMode (ModeDFAll                      {}) xs = return xs
+defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) (x:_) = return [x]
 defSelectByMode (ModeSingleOutput ModeRandom _ _  ) xs = do
     i <- rangeRandomM (0, length xs - 1)
     return [xs !! i]
@@ -304,7 +305,7 @@ defSelectByMode _ _ = error "selectByMode: Shouldn't be used in this mode"
 
 instance SelectByMode E where
     selectByMode _ [] = return []
-    selectByMode (ModeSingleOutput ModeSmallest _ _) xs = return [minimumBy (comparing eDepth) xs]
+    selectByMode (ModeSingleOutput ModeCompact _ _) xs = return [minimumBy (comparing eDepth) xs]
     selectByMode mode xs = defSelectByMode mode xs
 
 eDepth :: E -> Int
@@ -346,7 +347,7 @@ domOrder x y = compare (eDepth x) (eDepth y)
 
 instance SelectByMode RuleReprResult where
     selectByMode _ [] = return []
-    selectByMode (ModeSingleOutput ModeSmallest _ _) xs
+    selectByMode (ModeSingleOutput ModeCompact _ _) xs
         = return [minimumBy comparer xs]
         where
             comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)

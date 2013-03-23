@@ -28,7 +28,7 @@ fi
 
 if (( $# != 1 )); then
     echo "ERROR: Give a single parameter, mode to be used by Conjure."
-    echo "       Options: {df, smallest, random}"
+    echo "       Options: {df, compact, random, first}"
     exit 1
 fi
 
