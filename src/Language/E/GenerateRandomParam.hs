@@ -8,7 +8,7 @@ import Language.E.DomainOf(domainOf)
 {-import Language.E.Up.Debug(prettyAsBoth,upBug)-}
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
-import Language.E.Up.ReduceSpec(reduceSpec)
+import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Text.Groom(groom)
 
 import Control.Arrow(arr)
@@ -60,7 +60,8 @@ genericIndex2 a b = genericIndex a b
 
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
-generateRandomParam essence = do
+generateRandomParam essence' = do
+    essence <- removeNegatives essence'
     i <- rangeRandomM (0, 5)
     mkLog "rnd test" (pretty i)
 
