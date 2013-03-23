@@ -27,8 +27,6 @@ function perDirectory {
     DIR="$2"
 
     if [ "$BUILD_FREQ" == "all" ] || [ "$BUILD_FREQ" == "$(cat ${DIR}/build_frequency 2> /dev/null)" ] ; then
-    echo "$MODE $DIR"
-    exit 1
 
     FAIL_FILE="$WD/${MODE}_fail.txt"
     PASS_FILE="$WD/${MODE}_pass.txt"
