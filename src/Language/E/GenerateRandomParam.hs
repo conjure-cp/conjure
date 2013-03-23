@@ -16,17 +16,26 @@ import Control.Arrow(arr)
 type Essence      = Spec
 type EssenceParam = Spec
 
+-- for choices
+
 data Choice =
     CInt Integer [Range]
     deriving (Show)
 
 data Range  =
     RSingle Integer
-  | RRange (Integer,Integer)
-    deriving (Show)
+  | RRange Integer Integer
+    deriving (Show, Eq)
+
+-- This assumes no overlapping ranges
+instance Ord Range where
+  (RSingle a ) <= (RSingle b ) = a <= b
+  (RRange a _) <= (RRange c _) = a <= c
+  (RRange _ b) <= (RSingle c ) = b <= c
+  (RSingle a)  <= (RRange b _) = a <= b
 
 _c :: Choice
-_c = CInt 51  [RRange (0,49), RSingle 50 ]
+_c = CInt 51  [RRange 0 49, RSingle 50 ]
 
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
@@ -34,21 +43,21 @@ evalChoice (CInt size ranges) = do
     let n = pickIth (toInteger index) ranges
     mkLog "Index" (pretty index)
     mkLog "Ranges" (pretty . show $ ranges)
-    mkLog "Choice " (pretty n)
-    mkLog "Choice " (pretty n)
+    mkLog "Picked" (pretty n)
     return [xMake| value.literal := [Prim (I n )] |]
 
 pickIth :: Integer -> [Range] -> Integer
 pickIth _ [] = _bugg "pickIth no values"
 pickIth 0 (RSingle i:_) = i
-pickIth index (RRange (a,b):_ ) | index <= b - a =  [a..b] `genericIndex2`  index
+pickIth index (RRange a b:_ ) | index <= b - a =  [a..b] `genericIndex2`  index
 
 pickIth index (RSingle _:xs)    = pickIth (index - 1) xs
-pickIth index (RRange (a,b):xs) = pickIth (index - (b - a) - 1 ) xs
+pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
 
 genericIndex2 :: [Integer] -> Integer -> Integer
 genericIndex2 a b | b < 0 = error $ "genericIndex2" ++ show  (a,b)
 genericIndex2 a b = genericIndex a b
+
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
@@ -67,7 +76,7 @@ generateRandomParam essence = do
     mkLog "Doms" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
 
     choices <-  mapM handleDomain doms
-    mkLog "choices" (pretty . groom $ choices)
+    mkLog "Choices" ((pretty . groom) choices )
 
     givens <- mapM evalChoice choices
 
@@ -76,7 +85,7 @@ generateRandomParam essence = do
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
-    --mkLog "EssenceParam" (pretty essenceParam)-}
+    --mkLog "EssenceParam" (pretty essenceParam)
 
     return essenceParam
     --return essence
@@ -96,9 +105,10 @@ makeLetting given val =
 
 handleDomain :: MonadConjure m => E -> m Choice
 handleDomain [xMatch| ranges := domain.int.ranges |] = do
-    mkLog "ranges" (pretty ranges)
+    --mkLog "ranges" (pretty ranges)
     cRanges <- mapM handleRange ranges
-    return $ createChoice cRanges
+    let sortedRange =  sortOn snd cRanges
+    return $ createChoice sortedRange
 
     where
     createChoice :: [(Integer,Range)] -> Choice
@@ -109,9 +119,10 @@ handleDomain e = do
     mkLog "unhandled" (prettyAsPaths e)
     return _c
 
+
 handleRange :: MonadConjure m => E -> m (Integer,Range)
 handleRange [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] =
-    return  (abs (b - a) +1, RRange (a,b) )
+    return  (abs (b - a) +1, RRange a b )
 
 handleRange [xMatch| [Prim (I n) ]  := range.single.value.literal |] =
     return (1, RSingle n)
