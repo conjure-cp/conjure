@@ -7,10 +7,11 @@
 
 rm -f \
     *_fail.txt *_pass.txt   \
-    *_conjure.stats         \
+    *conjure.stats          \
     */*.eprime              \
     */*.eprime.logs         \
     */*.eprime-minion       \
+    */*.eprime-minion-stats \
     */*.eprime-param        \
     */*.eprime-solution     \
     */*.solution
