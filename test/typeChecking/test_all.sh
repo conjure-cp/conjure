@@ -11,6 +11,8 @@ export FAIL_COUNT_FILE="$SCRIPT_DIR/countFail.txt"
 export PASS_COUNT_FILE="$SCRIPT_DIR/countPass.txt"
 export ALL_COUNT_FILE="$SCRIPT_DIR/countAll.txt"
 
+export TOP_DIR=$(cd "$SCRIPT_DIR/../.." ; pwd)
+
 function perEssence {
     SPEC=$1
 
@@ -42,6 +44,8 @@ function perEssence {
         fi
     fi
 
+    rm -f "$SPEC.pretty"
+
     if (( $FLAG1 != 0 )) ; then
         echo "[flag1] $SPEC.essence" >> "$FAIL_FILE"
     else
@@ -66,7 +70,7 @@ export -f perEssence;
 rm -f "$FAIL_FILE" "$PASS_FILE"
 touch "$FAIL_FILE" "$PASS_FILE"
 
-parallel perEssence {1.} ::: $(find "$SCRIPT_DIR" -name "*.essence")
+parallel perEssence {1.} ::: $(find "$TOP_DIR" -name "*.essence")
 
 FAIL_COUNT=$(cat "$FAIL_FILE" | wc -l | tr -d ' ')
 PASS_COUNT=$(cat "$PASS_FILE" | wc -l | tr -d ' ')

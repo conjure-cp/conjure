@@ -1,7 +1,0 @@
-language Essence 2.0
-
-find x : set (minSize 1) of set (minSize 1) of int(1..1)
-find n : int(1..1)
-
-such that 
-	forAll i in x . forAll j in i . j =1

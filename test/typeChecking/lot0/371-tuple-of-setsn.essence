@@ -1,9 +1,0 @@
-language Essence 2.0
-
-find c : tuple (int(0..9), set of int(3..4), 
-    tuple(set of int(3..4), tuple(int(3..4), bool) ) )
-
-such that
-    c[1] = 1,
-    c[2] = {3,4},
-    c[3] = ({3,4},(3,true))

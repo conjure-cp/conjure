@@ -1,7 +1,0 @@
-language ESSENCE 2.0
-
-find x : relation (minSize 1) of (int(1..2) * int(3))
-
-such that
-    forAll i in toSet(x) . i[1] != 1
-
