@@ -50,7 +50,7 @@ specs = do
         getFiles f = 
             let base = takeDirectory f 
                 name = takeFileName base
-                dir  = takeFileName f in
+                in
             (
              (
                  f,
