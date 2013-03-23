@@ -9,18 +9,20 @@ import Language.E.DomainOf(domainOf)
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
-import Text.Groom(groom)
 
 import Control.Arrow(arr)
+import Text.PrettyPrint(text)
+
 
 type Essence      = Spec
 type EssenceParam = Spec
+type Attributes   = E
 
--- for choices
-
+-- Data type Representing choices
 data Choice =
-    CInt Integer [Range]
-    deriving (Show)
+     CInt Integer [Range]
+   | CSet [Attributes] Choice
+     deriving (Show,Eq)
 
 data Range  =
     RSingle Integer
@@ -34,9 +36,15 @@ instance Ord Range where
   (RRange _ b) <= (RSingle c ) = b <= c
   (RSingle a)  <= (RRange b _) = a <= b
 
+instance Pretty Range  where pretty = pretty . show
+instance Pretty Choice where
+    pretty (CInt i rs )    = text "CInt" <+> pretty i    <+> sep (map pretty rs)
+    pretty (CSet attr dom) = text "CSet" <+> pretty attr <+> text "OF" <+> pretty dom
+
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
 
+-- Converts a choice into an action
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
     index <- rangeRandomM (0, fromIntegral size-1)
@@ -45,6 +53,11 @@ evalChoice (CInt size ranges) = do
     mkLog "Ranges" (pretty . show $ ranges)
     mkLog "Picked" (pretty n)
     return [xMake| value.literal := [Prim (I n )] |]
+
+evalChoice (CSet attr dom) = do
+    vals <- mapM evalChoice [dom,dom]
+    return [xMake| value.set.values := vals |] 
+
 
 pickIth :: Integer -> [Range] -> Integer
 pickIth _ [] = _bugg "pickIth no values"
@@ -66,23 +79,23 @@ generateRandomParam essence' = do
     mkLog "rnd test" (pretty i)
 
     let stripped@(Spec _ _) = stripDecVars essence
-    reduced@(Spec v e) <- reduceSpec stripped
+    (Spec v e) <- reduceSpec stripped
     let es = statementAsList e
 
     --mkLog "Spec" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) (statementAsList f) )
     mkLog "GivensSpec" (pretty stripped)
-    mkLog "Reduced" (pretty reduced)
+    mkLog "Reduced" (pretty es)
 
     doms <-  mapM domainOf es
-    mkLog "Doms" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
+    mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
 
     choices <-  mapM handleDomain doms
-    mkLog "Choices" ((pretty . groom) choices )
+    mkLog "Choices" (sep . map pretty $ choices )
 
     givens <- mapM evalChoice choices
 
     let lettings = zipWith makeLetting es givens
-    mkLog "Lettings" (vcat $ map pretty lettings)
+    mkLog "Lettings" (sep $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
@@ -115,10 +128,13 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
     createChoice :: [(Integer,Range)] -> Choice
     createChoice = uncurry CInt . first (arr sum) . unzip
 
+handleDomain [xMatch| [inner] := domain.set.inner
+                    | attr    := domain.set.attributes.attrCollection|] = do
+    dom <- handleDomain inner
+    return $ CSet attr dom
 
-handleDomain e = do
-    mkLog "unhandled" (prettyAsPaths e)
-    return _c
+
+handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
 
 
 handleRange :: MonadConjure m => E -> m (Integer,Range)
@@ -179,6 +195,8 @@ _p :: IO Spec
 _p = _getTest "partition-1"
 _s :: IO Spec
 _s = _getTest "set-1"
+_s2 :: IO Spec
+_s2 = _getTest "set-nested-1"
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateRandomParam: " ++ s)
