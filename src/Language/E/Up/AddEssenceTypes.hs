@@ -362,9 +362,9 @@ toEssenceRep tags@(TagSingle "matrix":TagSingle "matrix":xs)
 
     in wrapInMatrix finn
 
-    `_p` ("NB T value.tuple res3", res3)
-    `_p` ("NB T value.tuple vs",[e])
-    `_f` ("NB T value.tuple tags",tags)
+    `_p` ("NRB T value.tuple res3", res3)
+    `_p` ("NRB T value.tuple vs",[e])
+    `_f` ("NRB T value.tuple tags",tags)
 
     where
     ans = isMatrixesThenTuple (0,xs)
