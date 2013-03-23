@@ -54,7 +54,7 @@ evalChoice (CInt size ranges) = do
     mkLog "Picked" (pretty n)
     return [xMake| value.literal := [Prim (I n )] |]
 
-evalChoice (CSet attr dom) = do
+evalChoice (CSet _ dom) = do
     vals <- mapM evalChoice [dom,dom]
     return [xMake| value.set.values := vals |] 
 
