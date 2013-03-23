@@ -7,7 +7,8 @@ if (( $# < 3 )); then
     echo "ERROR:"
     echo "    - Give a directory path."
     echo "    - a build_frequency value."
-    echo "        one of: {continuous, weekly}"
+    echo "        one of: {all, continuous, weekly}"
+    echo "        \"all\" would run all tests, independent of their build_frequency values."
     echo "    - and a list of arguments, each a mode to be used by Conjure."
     echo "        Modes: {df, smallest, random}"
     exit 1
@@ -25,7 +26,9 @@ function perDirectory {
     MODE="$1"
     DIR="$2"
 
-    if [ "$BUILD_FREQ" == "$(cat ${DIR}/build_frequency)" ] ; then
+    if [ "$BUILD_FREQ" == "all" ] || [ "$BUILD_FREQ" == "$(cat ${DIR}/build_frequency 2> /dev/null)" ] ; then
+    echo "$MODE $DIR"
+    exit 1
 
     FAIL_FILE="$WD/${MODE}_fail.txt"
     PASS_FILE="$WD/${MODE}_pass.txt"
