@@ -352,6 +352,7 @@ mergeExplicitVarSizeTuple
     f1 (Tagged Tvalues arr) =   zip v1 arr
     f1 e = _bug "mergeExplicitVarSizeTuple f1" [e]
     f2 (Prim (I i),_)       = i == 1
+    f2 (Prim (B b),_)       = b
     f2 (e,t) = _bugi "mergeExplicitVarSizeTuple f1" (t,[e])
 
 mergeExplicitVarSizeTuple
