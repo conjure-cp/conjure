@@ -19,7 +19,7 @@ $ each part has m things in it.
     where   domSize(&tau) = &n * &m
 
 
-*** partition (regular, size &n, partSize &m) from &tau
+*** partition (size &n, partSize &m, ..) from &tau
     ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
 
     where   domSize(&tau) = &n * &m
