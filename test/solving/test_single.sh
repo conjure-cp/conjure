@@ -85,7 +85,7 @@ function perModelperParam {
 
     RESULTOF_TRANSLATESOLN=0
     echo "translateSolution for $SPEC $MODEL $PARAM"
-    #echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
+    # echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
         --mode translateSolution                                            \
         --in-essence            $SPEC.essence                               \
@@ -103,7 +103,7 @@ function perModelperParam {
 
     RESULTOF_VALIDATESOLN=0
     echo "validateSolution for $SPEC $MODEL $PARAM"
-    echo "conjure --mode validateSolution --in-essence $SPEC.essence --in-param $PARAM.param --in-solution $MODEL-$PARAM.solution"
+    # echo "conjure --mode validateSolution --in-essence $SPEC.essence --in-param $PARAM.param --in-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
         --mode validateSolution                                             \
         --in-essence  $SPEC.essence                                         \
