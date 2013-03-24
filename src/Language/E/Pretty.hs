@@ -326,6 +326,9 @@ instance Pretty E where
     pretty [xMatch| [x] := unaryOp.negate |]
         = "-" <> prettyPrec 10000 x
 
+    pretty [xMatch| [x] := unaryOp.factorial |]
+        = prettyPrec 10000 x <> "!"
+
     pretty [xMatch| [x] := unaryOp.not |]
         = "!" <> prettyPrec 10000 x
 

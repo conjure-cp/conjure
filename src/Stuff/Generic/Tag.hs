@@ -31,6 +31,7 @@ data Tag = Tactual
     | TemptyGuard
     | Tenum
     | Texpr
+    | Tfactorial
     | Tfind
     | Tflatten
     | Tfreq
@@ -166,6 +167,7 @@ instance IsString Tag where
             fromString' "emptyGuard" = TemptyGuard
             fromString' "enum" = Tenum
             fromString' "expr" = Texpr
+            fromString' "factorial" = Tfactorial
             fromString' "find" = Tfind
             fromString' "flatten" = Tflatten
             fromString' "freq" = Tfreq

@@ -103,7 +103,7 @@ parsePrefixes = [parseUnaryMinus, parseUnaryNot]
             return $ \ x -> [xMake| unaryOp.not := [x] |]
 
 parsePostfixes :: [Parser (E -> E)]
-parsePostfixes = [parseIndexed,parseFuncApply,parseReplace]
+parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply,parseReplace]
     where
         parseIndexed :: Parser (E -> E)
         parseIndexed = do
@@ -124,6 +124,10 @@ parsePostfixes = [parseIndexed,parseFuncApply,parseReplace]
             return $ \ x -> foldl (\ m' i -> [xMake| operator.index.left  := [m']
                                                    | operator.index.right := [i]
                                                    |] ) x is
+        parseFactorial :: Parser (E -> E)
+        parseFactorial = do
+            lexeme L_ExclamationMark
+            return $ \ x -> [xMake| unaryOp.factorial := [x] |]
         parseFuncApply :: Parser (E -> E)
         parseFuncApply = parens $ do
             xs <- parseExpr `sepBy1` comma

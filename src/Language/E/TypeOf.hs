@@ -330,7 +330,8 @@ typeOf p@[xMatch| xs := part |] = do
 
 -- expressions
 
-typeOf [xMatch| [x] := unaryOp.negate |] = typeOf x
+typeOf [xMatch| [x] := unaryOp.negate    |] = typeOf x
+typeOf [xMatch| [x] := unaryOp.factorial |] = typeOf x
 
 typeOf [xMatch| [i,j] := mapping |] = do
     iType <- typeOf i

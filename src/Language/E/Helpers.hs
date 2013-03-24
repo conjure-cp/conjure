@@ -151,3 +151,12 @@ isFullyInstantiated [xMatch| xs  := part    |] = all isFullyInstantiated xs
 isFullyInstantiated _ = False
 
 
+lookupAttr :: Text -> [E] -> Maybe E
+lookupAttr attrName attrs = listToMaybe
+    [ val
+    | [xMatch| [Prim (S nm)] := attribute.nameValue.name.reference
+             | [val]         := attribute.nameValue.value
+             |] <- attrs
+    , nm == attrName
+    ]
+

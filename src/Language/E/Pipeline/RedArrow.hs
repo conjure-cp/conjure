@@ -347,15 +347,6 @@ valueIntOut p = do
         -- else return Nothing
 
 
-lookupAttr :: Text -> [E] -> Maybe E
-lookupAttr attrName attrs = listToMaybe
-    [ val
-    | [xMatch| [Prim (S nm)] := attribute.nameValue.name.reference
-             | [val]         := attribute.nameValue.value
-             |] <- attrs
-    , nm == attrName
-    ]
-
 
 zeroVal :: MonadConjure m => E -> m E
 

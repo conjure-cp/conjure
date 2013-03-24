@@ -34,6 +34,8 @@ fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
 fullEvaluator [xMatch| [Prim (I n)] := unaryOp.negate.value.literal
                      |] = returnInt (-n)
+fullEvaluator [xMatch| [Prim (I n)] := unaryOp.factorial.value.literal
+                     |] = returnInt (product [1..n])
 
 fullEvaluator [xMatch| [Prim (S "+")] := binOp.operator
                      | [Prim (I a)  ] := binOp.left .value.literal
@@ -767,6 +769,15 @@ domSize [xMatch| [_] := range.single |] =
 domSize [xMatch| rs := domain.tuple.inners |] = do
     xs <- mapM domSize rs
     return $ mulE xs
+
+domSize [xMatch| [t]   := domain.set.inner
+               | attrs := domain.set.attributes.attrCollection
+               |]
+    | Just size <- lookupAttr "size" attrs
+    = do
+    x <- domSize t
+    let diff = [eMake| &x - &size |]
+    return [eMake| (&x! / (&size! * &diff!)) |]
 
 domSize [xMatch| [t] := domain.set.inner |] = do
     x <- domSize t
