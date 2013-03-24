@@ -596,7 +596,7 @@ unrollQuantifiers [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
-unrollQuantifiers p@[eMatch| &quan &i : &dom , &guard . &body |]
+unrollQuantifiers [eMatch| &quan &i : &dom , &guard . &body |]
     | [xMatch| rs := domain.int.ranges |] <- dom
     , Just numbers <- mapM singleRangeOut rs
     , [xMatch| [Prim (S quanStr)] := reference |] <- quan
