@@ -32,20 +32,6 @@ import                Language.E.Evaluator.DataAboutQuantifiers
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
--- order integer domains given by a list of integers
--- savilerow expects them ordered
-fullEvaluator [xMatch| rs := domain.int.ranges |]
-    | Just xs <- view rs
-    , let xsSorted = sortNub xs
-    , xs /= xsSorted
-    , let rsSorted = map (\ i -> [xMake| value.literal := [Prim (I i)] |] ) xsSorted
-    = ret [xMake| domain.int.ranges := rsSorted |]
-    where
-        view1 [xMatch| [Prim (I i)] := range.single.value.literal |] = Just i
-        view1 _ = Nothing
-        view [] = Just []
-        view (i:is) = (:) <$> view1 i <*> view is
-
 fullEvaluator [xMatch| [Prim (I n)] := unaryOp.negate.value.literal
                      |] = returnInt (-n)
 
@@ -610,6 +596,25 @@ unrollQuantifiers [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
+unrollQuantifiers p@[eMatch| &quan &i : &dom , &guard . &body |]
+    | [xMatch| rs := domain.int.ranges |] <- dom
+    , Just numbers <- mapM singleRangeOut rs
+    , [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    = do
+    xs <- forM numbers $ \ n' -> do
+        let n = [xMake| value.literal := [Prim (I n')] |]
+        newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
+        newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+        case (newGuard, newBody) of
+            (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
+            _ -> return Nothing
+    y <- unrollQuantifier quanStr (catMaybes xs)
+    ret y
+    where
+        singleRangeOut [xMatch| [Prim (I x)] := range.single.value.literal |] = Just x
+        singleRangeOut [xMatch| [Prim (I x)] :=              value.literal |] = Just x
+        singleRangeOut _ = Nothing
+
 unrollQuantifiers
     [xMatch| [Prim (S quanStr)] := quantified.quantifier.reference
            | [quanVar]          := quantified.quanVar.structural.single
