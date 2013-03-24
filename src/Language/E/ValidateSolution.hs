@@ -100,10 +100,16 @@ fullyInline inp = do
                 f x@[xMatch| [Prim (S nm)] := reference |]
                     = case (M.lookup nm typesMap, M.lookup nm bindingsMap) of
                         (_, Just [xMatch| _ := type |]) -> return x
-                        (Just theType, Just binding) ->
-                            f [xMake| typed.left               := [binding]
-                                    | typed.right.domainInExpr := [theType]
-                                    |]
+                        (Just theType, Just binding) -> do
+                            theType' <- typeOf x
+                            if typeUnify theType theType'
+                                then f [xMake| typed.left               := [binding]
+                                             | typed.right.domainInExpr := [theType]
+                                             |]
+                                else error $ show $ vcat [ "Type mismatch for" <+> pretty nm
+                                                         , "    Expected:" <+> pretty theType
+                                                         , "    Found:   " <+> pretty theType'
+                                                         ]
                         (Nothing, Just binding) -> do
                             theType <- typeOf x
                             f [xMake| typed.left               := [binding]
