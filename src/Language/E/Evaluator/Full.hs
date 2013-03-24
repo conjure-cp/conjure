@@ -302,8 +302,8 @@ fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
                      |]
                      | isFullyInstantiated lhs && isFullyInstantiated rhs
                      = let
-                            xsHistogram = map (\ x -> (head x, length x) ) $ group $ sort xs
-                            ysHistogram = map (\ x -> (head x, length x) ) $ group $ sort ys
+                            xsHistogram = map (\ x -> (headNote "fullEvaluator.xsHistogram" x, length x) ) $ group $ sort xs
+                            ysHistogram = map (\ x -> (headNote "fullEvaluator.ysHistogram" x, length x) ) $ group $ sort ys
                             allKeys = nub $ map fst xsHistogram ++ map fst ysHistogram
                             zsHistogram = [ (k, min xsCount ysCount)
                                           | k <- allKeys

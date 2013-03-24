@@ -26,6 +26,7 @@ module Language.E.Imports
     , decodeFromFile
     , RandomM(..)
     , bug, userErr
+    , headNote
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -218,6 +219,11 @@ bug _message = error $ unlines
     , "", "" , renderPretty _message
 #endif
     ]
+
+
+headNote :: Doc -> [a] -> a
+headNote msg [] = bug msg
+headNote _   (x:_) = x
 
 
 -- call this function instead of "error"

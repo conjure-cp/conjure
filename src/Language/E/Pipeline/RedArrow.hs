@@ -214,7 +214,7 @@ workhorse lookupReprs (nm, dom, val) = do
                         , val' <- values
                         ]
             let nameValuePairs
-                    = map (\ xs -> (fst $ head xs, map snd xs) )
+                    = map (\ xs -> (fst $ headNote "redArrow.nameValuePairs 1" xs, map snd xs) )
                     $ groupBy ((==) `on` fst)
                     $ sort values'
 
@@ -263,7 +263,7 @@ workhorse lookupReprs (nm, dom, val) = do
                         , val' <- valuesPadded
                         ]
             let nameValuePairs
-                    = map (\ xs -> (fst $ head xs, map snd xs) )
+                    = map (\ xs -> (fst $ headNote "redArrow.nameValuePairs 2" xs, map snd xs) )
                     $ groupBy ((==) `on` fst)
                     $ sortBy  (comparing fst)
                     $ values'

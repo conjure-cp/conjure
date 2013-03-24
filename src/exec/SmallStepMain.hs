@@ -352,7 +352,7 @@ dropExts x =
         zs = splitOn "." (last ys)
     in  intercalate "/" $
             (if length ys > 1 then init ys else [])
-            ++ [head zs]
+            ++ [headNote "SmallStepMain.dropExts" zs]
 
 nextFilePathWithExt :: FilePath -> String -> IO FilePath
 nextFilePathWithExt base ext = do

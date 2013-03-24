@@ -1,6 +1,11 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.TypeOf ( typeCheckSpec, typeOf, innerTypeOf, mostKnown ) where
+module Language.E.TypeOf
+    ( typeCheckSpec
+    , typeOf, innerTypeOf
+    , mostKnown
+    , typeUnify
+    ) where
 
 import Stuff.Generic
 
@@ -166,7 +171,7 @@ typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
 
 typeOf p@[xMatch| _ := type |] = return p
 
-typeOf [xMatch| [Prim (S "_")] := reference |] = return [xMake| type.unknown := [] |]
+typeOf [xMatch| [Prim (S "_")] := reference |] = return tyUnknown
 typeOf [xMatch| [Prim (S i  )] := reference |] = do
     x <- errMaybeT "typeOf" lookupReference i
     typeOf x
@@ -260,11 +265,15 @@ typeOf [xMatch| xs := value.tuple.values |] = do
     txs <- mapM typeOf xs
     return [xMake| type.tuple.inners := txs |]
 
-typeOf [xMatch| xs := value.matrix.values |] = do
+typeOf [xMatch| [] := value.matrix.values |] =
+    return [xMake| type.matrix.index := [tyUnknown]
+                 | type.matrix.inner := [tyUnknown]
+                 |]
+typeOf p@[xMatch| xs := value.matrix.values |] = do
     let tInt = tyInt
     txs <- mapM typeOf xs
     return [xMake| type.matrix.index := [tInt]
-                 | type.matrix.inner := [head txs]
+                 | type.matrix.inner := [headNote ("typeOf" <+> prettyAsPaths p) txs]
                  |]
 
 typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.set.inner.type.unknown := [] |]
@@ -311,7 +320,7 @@ typeOf p@[xMatch| xs := value.partition.values |] = do
         then return [xMake| type.partition.inner := [tx] |]
         else typeErrorIn p
 
-typeOf   [xMatch| [] := part |] = return [xMake| type.unknown := [] |]
+typeOf   [xMatch| [] := part |] = return tyUnknown
 typeOf p@[xMatch| xs := part |] = do
     (tx:txs) <- mapM typeOf xs
     if and (map (tx `typeUnify`) txs)
@@ -734,4 +743,7 @@ tyBool = [xMake| type.bool := [] |]
 
 tyInt :: E
 tyInt = [xMake| type.int := [] |]
+
+tyUnknown :: E
+tyUnknown = [xMake| type.unknown := [] |]
 
