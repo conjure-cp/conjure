@@ -10,7 +10,7 @@ $ each part has m things in it.
     /\  ( forAll i : &tau . exists s in refn . i in s )         $ every element of the domain is in one set
 
     letting &m be domSize(&tau) / &n
-    where   domSize(&tau) = &n * &m
+    $where   domSize(&tau) = &n * &m
 
 
 *** partition (regular, partSize &m) from &tau
@@ -18,12 +18,12 @@ $ each part has m things in it.
     /\  ( forAll i : &tau . exists s in refn . i in s )         $ every element of the domain is in one set
 
     letting &n be domSize(&tau) / &m
-    where   domSize(&tau) = &n * &m
+    $where   domSize(&tau) = &n * &m
 
 
 *** partition (size &n, partSize &m, ..) from &tau
     ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )
     /\  ( forAll i : &tau . exists s in refn . i in s )         $ every element of the domain is in one set
 
-    where   domSize(&tau) = &n * &m
+    $where   domSize(&tau) = &n * &m
 
