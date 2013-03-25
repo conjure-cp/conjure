@@ -146,12 +146,26 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
     createChoice = uncurry CInt . first (arr sum) . unzip
 
 handleDomain [xMatch| [inner] := domain.set.inner
-                    | _    := domain.set.attributes.attrCollection|] = do
+                    | attr    := domain.set.attributes.attrCollection|] = do
     dom <- handleDomain inner
-    return $ CSet (RSingle 2) dom
+    sizeRange <- handleSetAttributes attr
+    return $ CSet sizeRange dom
 
 
 handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
+
+handleSetAttributes :: MonadConjure m => [E] -> m Range
+-- To make sure size is at the front if present
+handleSetAttributes es = handleSetAttributes' (reverse . sort $ es) 
+    {-error . show . pretty . reverse . sort $ es-}
+
+
+handleSetAttributes' :: MonadConjure m => [E] -> m Range
+-- TODO finish this
+handleSetAttributes' [] = return $  RSingle 2
+handleSetAttributes' ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference 
+                             | [Prim (I n)]      :=  attribute.nameValue.value.value.literal|]:_) =
+    return $  RSingle n
 
 
 handleRange :: MonadConjure m => E -> m (Integer,Range)
@@ -213,7 +227,9 @@ _p = _getTest "partition-1"
 _s :: IO Spec
 _s = _getTest "set-1"
 _s2 :: IO Spec
-_s2 = _getTest "set-nested-1"
+_s2 = _getTest "set-2"
+_sn :: IO Spec
+_sn = _getTest "set-nested-1"
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateRandomParam: " ++ s)
