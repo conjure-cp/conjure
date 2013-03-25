@@ -49,9 +49,9 @@ evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
     index <- rangeRandomM (0, fromIntegral size-1)
     let n = pickIth (toInteger index) ranges
-    mkLog "Data" $  sep ["Index:"  <+> pretty index, 
-                        "Ranges:" <+> (pretty . show) ranges, 
-                        "Picked"  <+> pretty n] 
+    mkLog "Data" $  sep ["Index:"  <+> pretty index
+                        ,"Ranges:" <+> (pretty . show) ranges
+                        ,"Picked"  <+> pretty n] 
     return [xMake| value.literal := [Prim (I n )] |]
 
 evalChoice (CSet sizeRange dom) = do
@@ -80,9 +80,10 @@ evalRange (RSingle i ) = return i
 evalRange (RRange a b) = do
     let size  = b - a + 1
     index <- rangeRandomM (0, fromIntegral size-1)
-    mkLog "IndexRange" $ sep  [pretty index,pretty $ RRange a b]
     let picked = [a..b] `genericIndex` index 
-    mkLog "Picked" (pretty picked)
+    mkLog "RangeData" $ sep  ["Index:"  <+> pretty index
+                             ,"Range:"  <+> pretty (RRange a b)
+                             ,"Picked:" <+> pretty picked]
     return picked 
 
 
@@ -106,7 +107,7 @@ generateRandomParam essence' = do
     mkLog "Reduced   " $ pretty es <+> "\n"
 
     doms <-  mapM domainOf es
-    mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
+    {-mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )-}
 
     choices <-  mapM handleDomain doms
     mkLog "Choices" (sep . map pretty $ choices )
@@ -136,7 +137,6 @@ makeLetting given val =
     getRef e = _bug "getRef: should not happen" [e]
 
 
-
 handleDomain :: MonadConjure m => E -> m Choice
 handleDomain [xMatch| ranges := domain.int.ranges |] = do
     --mkLog "ranges" (pretty ranges)
@@ -151,15 +151,37 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
 handleDomain [xMatch| [inner] := domain.set.inner
                     | attr    := domain.set.attributes.attrCollection|] = do
     dom <- handleDomain inner
-    sizeRange <- handleSetAttributes attr
+    sizeRange <- handleSetAttributes dom attr
     return $ CSet sizeRange dom
 
 
 handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
 
-handleSetAttributes :: MonadConjure m => [E] -> m Range
--- To make sure size is at the front if present
-handleSetAttributes es = handleSetAttributes' (reverse . sort $ es) 
+handleSetAttributes :: MonadConjure m => Choice -> [E] -> m Range
+handleSetAttributes dom es = 
+    handleSetAttributes' result 
+    where  
+    sorted = sort es
+    -- To make sure size is at the front if present
+    rev    = reverse sorted
+    result = addSize rev sorted
+
+    addSize ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference |] :_)
+      _
+      = es
+
+    addSize _
+      ([xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference |] :_)
+      = es
+
+    addSize _ _   = rev ++ [ [xMake| attribute.nameValue.name.reference := [Prim (S "maxSize")] 
+                                   | attribute.nameValue.value.value.literal := [Prim (I n)] |] ] 
+        where n = findSize dom
+
+
+findSize :: Choice -> Integer
+findSize (CInt size _) = size 
+findSize _ = error "find Size Not implemented"
 
 -- TODO finish this
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
@@ -263,7 +285,7 @@ _s5 = _getTest "set-minMax"
 _sn :: IO Spec
 _sn = _getTest "set-nested-1"
 _sb :: IO Spec
-_sb = _getTest "set-nobounds.essence"
+_sb = _getTest "set-nobounds"
 _sn2 :: IO Spec
 _sn2 = _getTest "set-nested-2"
 
