@@ -7,6 +7,7 @@ import Language.E.Definition
 import Language.E.Pretty
 import Language.E.CompE
 
+import qualified Data.Text as T
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
 
@@ -43,7 +44,8 @@ freshNames param = do
         mkLog "gensym" (pretty a <+> "~~" <+> pretty b)
         return (a, b)
     uniqueNamesInBubbles <- forM (S.toList newvarsInBubbles) $ \ a -> do
-        b <- nextUniqueName
+        b' <- nextUniqueName
+        let b = "aux__" `T.append` (T.drop 3 b')
         mkLog "gensym" (pretty a <+> "~~" <+> pretty b)
         return (a, identifierConstruct b (Just "regionF") Nothing)
     let uniqueNamesMap = M.fromList (uniqueNamesInQuanVar ++ uniqueNamesInBubbles)

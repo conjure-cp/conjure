@@ -6,7 +6,7 @@ module Language.E.Pipeline.ConjureRefn where
 import Language.E
 import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.AbstractDomsInQuans ( abstractDomsInQuans, quanDomAndSubsetEq )
-import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
+-- import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined, removeRefinedDecls )
 import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
@@ -45,6 +45,6 @@ conjureRefn reprs refns spec = withBindingScope' $
                         >=> checkIfAllRefined           >=> recordSpec "checkIfAllRefined"
                         >=> removeRefinedDecls          >=> recordSpec "removeRefinedDecls"
                         >=> noTuplesSpec                >=> recordSpec "noTuplesSpec"
-                        >=> bubbleUpSpec                >=> recordSpec "bubbleUpSpec"
+                        -- >=> bubbleUpSpec                >=> recordSpec "bubbleUpSpec"
             pipeline spec
 
