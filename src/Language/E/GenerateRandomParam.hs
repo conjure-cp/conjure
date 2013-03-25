@@ -66,6 +66,8 @@ findSet set 0 _ =
 
 findSet set size (c:cs) = do
     ele <- evalChoice c
+    -- CHECK I think the element will be order 
+    -- if not use normaliseSolutionEs
     let (size',set') = if Set.notMember ele set 
         then (size - 1, Set.insert ele set)
         else (size,set)
@@ -254,8 +256,11 @@ _s5 :: IO Spec
 _s5 = _getTest "set-minMax"
 _sn :: IO Spec
 _sn = _getTest "set-nested-1"
+_sn2 :: IO Spec
+_sn2 = _getTest "set-nested-2"
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateRandomParam: " ++ s)
 _bugg :: String -> t
 _bugg s = _bug s []
+
