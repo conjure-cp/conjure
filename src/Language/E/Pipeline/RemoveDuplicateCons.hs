@@ -70,19 +70,18 @@ renameAuxVars = go
                     , "aux__" `T.isPrefixOf` nm
                     ]
             in
-                trace (show $ vcat $ "renameAuxVars" : map pretty findNames) $
                 if null findNames
                     then [xMake| withLocals.actual := [go names actual]
                                | withLocals.locals := (map (go names) locals)
                                |]
                     else
                         let
-                            newNames  = trace "foo 1" $ take (length findNames) names
-                            restNames = trace "foo 2" $ drop (length findNames) names
-                            replacer  = trace "foo 3" $ replaceAll $ zip (map (Prim . S) findNames)
+                            newNames  = take (length findNames) names
+                            restNames = drop (length findNames) names
+                            replacer  = replaceAll $ zip (map (Prim . S) findNames)
                                                          (map (Prim . S) newNames)
-                            actual'   = trace "foo 4" $ replacer actual
-                            locals'   = trace "foo 5" $ map replacer locals
+                            actual'   = replacer actual
+                            locals'   = map replacer locals
                         in
                             go restNames [xMake| withLocals.actual := [actual']
                                                | withLocals.locals := locals'
