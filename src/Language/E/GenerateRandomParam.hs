@@ -11,22 +11,22 @@ import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 
 import Control.Arrow(arr)
-import Text.PrettyPrint(text)
 
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 type Essence      = Spec
 type EssenceParam = Spec
-type Attributes   = E
 
--- Data type Representing choices
+-- Data type representing choices
 data Choice =
      CInt Integer [Range]
-   | CSet [Attributes] Choice
+   | CSet Range Choice
      deriving (Show,Eq)
 
 data Range  =
     RSingle Integer
-  | RRange Integer Integer
+  | RRange  Integer Integer
     deriving (Show, Eq)
 
 -- This assumes no overlapping ranges
@@ -38,8 +38,8 @@ instance Ord Range where
 
 instance Pretty Range  where pretty = pretty . show
 instance Pretty Choice where
-    pretty (CInt i rs )    = text "CInt" <+> pretty i    <+> sep (map pretty rs)
-    pretty (CSet attr dom) = text "CSet" <+> pretty attr <+> text "OF" <+> pretty dom
+    pretty (CInt i rs )    = "CInt" <+> pretty i    <+> sep (map pretty rs)
+    pretty (CSet attr dom) = "CSet" <+> pretty attr <+> "OF" <+> pretty dom
 
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
@@ -54,30 +54,47 @@ evalChoice (CInt size ranges) = do
     mkLog "Picked" (pretty n)
     return [xMake| value.literal := [Prim (I n )] |]
 
-evalChoice (CSet _ dom) = do
-    vals <- mapM evalChoice [dom,dom]
-    return [xMake| value.set.values := vals |] 
+evalChoice (CSet sizeRange dom) = do
+    size <- evalRange sizeRange
+    findSet Set.empty size (repeat dom)
+
+-- Takes a size and a inf list of choice (by repeat) and returns a set of that size
+findSet :: (MonadConjure m, RandomM m) => Set E -> Integer -> [Choice] -> m E
+findSet set 0 _ = 
+    let vs = Set.toAscList set
+    in  return $ [xMake| value.set.values := vs |]
+
+findSet set size (c:cs) = do
+    ele <- evalChoice c
+    let (size',set') = if Set.notMember ele set 
+        then (size - 1, Set.insert ele set)
+        else (size,set)
+    findSet set' size' cs
+
+findSet _ _ _ = _bugg "findSet: Can never happen"
+
+evalRange :: (MonadConjure m, RandomM m) => Range -> m Integer 
+evalRange (RSingle i ) = return i
+evalRange (RRange a b) = do
+    let size  = b - a + 1
+    index <- rangeRandomM (0, fromIntegral size-1)
+    mkLog "IndexRange" $ sep  [pretty index,pretty $ RRange a b]
+    let picked = [a..b] `genericIndex` index 
+    mkLog "Picked" (pretty picked)
+    return picked 
 
 
 pickIth :: Integer -> [Range] -> Integer
 pickIth _ [] = _bugg "pickIth no values"
 pickIth 0 (RSingle i:_) = i
-pickIth index (RRange a b:_ ) | index <= b - a =  [a..b] `genericIndex2`  index
+pickIth index (RRange a b:_ ) | index <= b - a =  [a..b] `genericIndex`  index
 
 pickIth index (RSingle _:xs)    = pickIth (index - 1) xs
 pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
 
-genericIndex2 :: [Integer] -> Integer -> Integer
-genericIndex2 a b | b < 0 = error $ "genericIndex2" ++ show  (a,b)
-genericIndex2 a b = genericIndex a b
-
-
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence' = do
     essence <- removeNegatives essence'
-    i <- rangeRandomM (0, 5)
-    mkLog "rnd test" (pretty i)
-
     let stripped@(Spec _ _) = stripDecVars essence
     (Spec v e) <- reduceSpec stripped
     let es = statementAsList e
@@ -129,9 +146,9 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
     createChoice = uncurry CInt . first (arr sum) . unzip
 
 handleDomain [xMatch| [inner] := domain.set.inner
-                    | attr    := domain.set.attributes.attrCollection|] = do
+                    | _    := domain.set.attributes.attrCollection|] = do
     dom <- handleDomain inner
-    return $ CSet attr dom
+    return $ CSet (RSingle 2) dom
 
 
 handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
