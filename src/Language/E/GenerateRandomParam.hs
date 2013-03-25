@@ -1,4 +1,4 @@
---{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
@@ -49,9 +49,9 @@ evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
 evalChoice (CInt size ranges) = do
     index <- rangeRandomM (0, fromIntegral size-1)
     let n = pickIth (toInteger index) ranges
-    mkLog "Index" (pretty index)
-    mkLog "Ranges" (pretty . show $ ranges)
-    mkLog "Picked" (pretty n)
+    mkLog "Data" $  sep ["Index:"  <+> pretty index, 
+                        "Ranges:" <+> (pretty . show) ranges, 
+                        "Picked"  <+> pretty n] 
     return [xMake| value.literal := [Prim (I n )] |]
 
 evalChoice (CSet sizeRange dom) = do
@@ -66,7 +66,7 @@ findSet set 0 _ =
 
 findSet set size (c:cs) = do
     ele <- evalChoice c
-    -- CHECK I think the element will be order 
+    -- CHECK I think the element will be in order 
     -- if not use normaliseSolutionEs
     let (size',set') = if Set.notMember ele set 
         then (size - 1, Set.insert ele set)
@@ -97,13 +97,13 @@ pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence' = do
     essence <- removeNegatives essence'
-    let stripped@(Spec _ _) = stripDecVars essence
+    let stripped@(Spec _ f) = stripDecVars essence
     (Spec v e) <- reduceSpec stripped
     let es = statementAsList e
 
     --mkLog "Spec" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) (statementAsList f) )
-    mkLog "GivensSpec" (pretty stripped)
-    mkLog "Reduced" (pretty es)
+    mkLog "GivensSpec"   (pretty f)
+    mkLog "Reduced   " $ pretty es <+> "\n"
 
     doms <-  mapM domainOf es
     mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
@@ -134,6 +134,7 @@ makeLetting given val =
     getRef [xMatch|  _  := topLevel.declaration.given.name.reference
                   | [n] := topLevel.declaration.given.name |] = n
     getRef e = _bug "getRef: should not happen" [e]
+
 
 
 handleDomain :: MonadConjure m => E -> m Choice
@@ -213,6 +214,11 @@ stripDecVars (Spec v x) = Spec v y
         stays _ = False
 
 
+choose :: Integral a => a -> a -> a
+_ `choose` 0 = 1
+0 `choose` _ = 0
+n `choose` r = (n-1) `choose` (r-1) * n `div` r
+
 _r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
 _r sp = do
     seed <- getStdGen
@@ -256,6 +262,8 @@ _s5 :: IO Spec
 _s5 = _getTest "set-minMax"
 _sn :: IO Spec
 _sn = _getTest "set-nested-1"
+_sb :: IO Spec
+_sb = _getTest "set-nobounds.essence"
 _sn2 :: IO Spec
 _sn2 = _getTest "set-nested-2"
 
