@@ -51,9 +51,12 @@ function perModelperParam {
     MODEL=$1
     PARAM=$2
 
+    MSG_TEMPLATE="$MODE $WD $MODEL $PARAM"
+
 
     RESULTOF_REFINEPARAM=0
-    echo "refineParam for $SPEC $MODEL $PARAM"
+    MSG_REFINEPARAM="[refineParam] $MSG_TEMPLATE"
+    echo "$MSG_REFINEPARAM"
     # echo "conjure --mode refineParam --in-essence $SPEC.essence --in-eprime $MODEL.eprime --in-essence-param $PARAM.param --out-eprime-param $MODEL-$PARAM.eprime-param"
     conjure                                                                 \
         --mode       refineParam                                            \
@@ -63,13 +66,14 @@ function perModelperParam {
         --out-eprime-param $MODEL-$PARAM.eprime-param
     RESULTOF_REFINEPARAM=$?
     if (( $RESULTOF_REFINEPARAM != 0 )) ; then
-        echo "[refineParam] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+        echo "$MSG_REFINEPARAM" >> "$FAIL_FILE"
         exit 1
     fi
 
 
     RESULTOF_SAVILEROW=0
-    echo "savilerow for $SPEC $MODEL $PARAM"
+    MSG_SAVILEROW="[savilerow] $MSG_TEMPLATE"
+    echo "$MSG_SAVILEROW"
     # echo "savilerow -in-eprime $MODEL.eprime -in-param $MODEL-$PARAM.eprime-param -out-minion $MODEL-$PARAM.eprime-minion -out-solution $MODEL-$PARAM.eprime-solution"
     savilerow                                                               \
         -in-eprime    $MODEL.eprime                                         \
@@ -78,13 +82,14 @@ function perModelperParam {
         -out-solution $MODEL-$PARAM.eprime-solution
     RESULTOF_SAVILEROW=$?
     if (( $RESULTOF_SAVILEROW != 0 )) ; then
-        echo "[savilerow] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+        echo "$MSG_SAVILEROW" >> "$FAIL_FILE"
         exit 1
     fi
 
 
     RESULTOF_TRANSLATESOLN=0
-    echo "translateSolution for $SPEC $MODEL $PARAM"
+    MSG_TRANSLATESOLN="[translateSolution] $MSG_TEMPLATE"
+    echo "$MSG_TRANSLATESOLN"
     # echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
         --mode translateSolution                                            \
@@ -96,13 +101,14 @@ function perModelperParam {
         --out-essence-solution  $MODEL-$PARAM.solution
     RESULTOF_TRANSLATESOLN=$?
     if (( $RESULTOF_TRANSLATESOLN != 0 )) ; then
-        echo "[translateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+        echo "$MSG_TRANSLATESOLN" >> "$FAIL_FILE"
         exit 1
     fi
 
 
     RESULTOF_VALIDATESOLN=0
-    echo "validateSolution for $SPEC $MODEL $PARAM"
+    MSG_VALIDATESOLN="[validateSolution] $MSG_TEMPLATE"
+    echo "$MSG_VALIDATESOLN"
     # echo "conjure --mode validateSolution --in-essence $SPEC.essence --in-param $PARAM.param --in-solution $MODEL-$PARAM.solution"
     conjure                                                                 \
         --mode validateSolution                                             \
@@ -111,15 +117,16 @@ function perModelperParam {
         --in-solution $MODEL-$PARAM.solution
     RESULTOF_VALIDATESOLN=$?
     if (( $RESULTOF_VALIDATESOLN != 0 )) ; then
-        echo "[validateSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+        echo "$MSG_VALIDATESOLN" >> "$FAIL_FILE"
     else
-        echo "[validateSolution] $WD $MODEL $PARAM" >> "$PASS_FILE"
+        echo "$MSG_VALIDATESOLN" >> "$PASS_FILE"
     fi
 
 
     if [ -f "$PARAM.solution" ] ; then
         RESULTOF_DIFF=0
-        echo "diffSolution for $SPEC $MODEL $PARAM"
+        MSG_DIFF="[diffSolution] $MSG_TEMPLATE"
+        echo "$MSG_DIFF"
         # echo "conjure --mode diff $PARAM.solution $MODEL-$PARAM.solution"
         conjure                                                             \
             --mode diff                                                     \
@@ -127,9 +134,9 @@ function perModelperParam {
             $MODEL-$PARAM.solution
         RESULTOF_DIFF=$?
         if (( $RESULTOF_DIFF != 0 )) ; then
-            echo "[diffSolution] $WD $MODEL $PARAM" >> "$FAIL_FILE"
+            echo "$MSG_DIFF" >> "$FAIL_FILE"
         else
-            echo "[diffSolution] $WD $MODEL $PARAM" >> "$PASS_FILE"
+            echo "$MSG_DIFF" >> "$PASS_FILE"
         fi
     fi
 
@@ -149,7 +156,7 @@ conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M1
 NB_EPRIMES=$(ls -1 "$OUT_DIR"/*.eprime 2> /dev/null | wc -l)
 
 if (( $NB_EPRIMES == 0 )) ; then
-    echo "[generatesZeroModels] $WD" >> "$FAIL_FILE"
+    echo "[generatesZeroModels] $MODE $WD" >> "$FAIL_FILE"
 else
     parallel -j1                                                            \
         perModelperParam {1.} {2.}                                          \
