@@ -157,15 +157,33 @@ handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
 handleSetAttributes :: MonadConjure m => [E] -> m Range
 -- To make sure size is at the front if present
 handleSetAttributes es = handleSetAttributes' (reverse . sort $ es) 
-    {-error . show . pretty . reverse . sort $ es-}
 
-
-handleSetAttributes' :: MonadConjure m => [E] -> m Range
 -- TODO finish this
+handleSetAttributes' :: MonadConjure m => [E] -> m Range
 handleSetAttributes' [] = return $  RSingle 2
 handleSetAttributes' ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference 
-                             | [Prim (I n)]      :=  attribute.nameValue.value.value.literal|]:_) =
+                             | [Prim (I n)]      := attribute.nameValue.value.value.literal|]
+                      :_) =
     return $  RSingle n
+
+handleSetAttributes' [[xMatch| [Prim (S "minSize")] := attribute.nameValue.name.reference 
+                             | [Prim (I n)]         := attribute.nameValue.value.value.literal|]
+                     ] =
+    return $  RRange n 10
+
+handleSetAttributes' [[xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference 
+                             | [Prim (I n)]         := attribute.nameValue.value.value.literal|]
+                     ] =
+    return $  RRange 0 n 
+
+handleSetAttributes' [[xMatch| [Prim (S "minSize")] := attribute.nameValue.name.reference 
+                             | [Prim (I a)]         := attribute.nameValue.value.value.literal|]
+                     ,[xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference 
+                             | [Prim (I b)]         := attribute.nameValue.value.value.literal|]
+                     ] =
+    return $  RRange a b
+
+handleSetAttributes' _ = _bugg "handleSetAttributes': Can never happen"
 
 
 handleRange :: MonadConjure m => E -> m (Integer,Range)
@@ -225,9 +243,15 @@ _l = _getTest "letting-1"
 _p :: IO Spec
 _p = _getTest "partition-1"
 _s :: IO Spec
-_s = _getTest "set-1"
+_s = _getTest "set-size"
 _s2 :: IO Spec
-_s2 = _getTest "set-2"
+_s2 = _getTest "set-all"
+_s3 :: IO Spec
+_s3 = _getTest "set-max"
+_s4 :: IO Spec
+_s4 = _getTest "set-min"
+_s5 :: IO Spec
+_s5 = _getTest "set-minMax"
 _sn :: IO Spec
 _sn = _getTest "set-nested-1"
 
