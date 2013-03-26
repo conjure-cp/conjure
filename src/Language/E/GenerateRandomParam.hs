@@ -414,6 +414,8 @@ _n :: IO Spec
 _n = _getTest "relation"
 _n2 :: IO Spec
 _n2 = _getTest "relation-all"
+_ns :: IO Spec
+_ns = _getTest "relation-complex"
 
 _m :: IO Spec
 _m = _getTest "matrixes-0"
