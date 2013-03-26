@@ -5,6 +5,7 @@ module Conjure ( getConjureMode, runConjureMode ) where
 import System.Directory ( doesFileExist )
 import System.Environment ( getArgs )
 import qualified Data.Text.IO as T
+import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
 
 import Paths_conjure_cp ( getBinDir )
@@ -105,9 +106,13 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             (ruleReprs, ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
+            let outDirPath = dropExtEssence pathInEssence
+                          ++ if S.member "--no-channelling" flags
+                                then "-no-channelling"
+                                else "-df"
             driverConjure
                 (conjureWithMode flags seed limit mode)
-                (dropExtEssence pathInEssence)
+                outDirPath
                 ruleReprs ruleRefns inEssence
         helper (ModeSingleOutput _ pathInEssence pathOutEprime) = do
             seed <- getStdGen

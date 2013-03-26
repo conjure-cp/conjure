@@ -43,7 +43,9 @@ export SPEC=${SPEC%.essence}
 
 export OUT_DIR="$SPEC-$MODE"
 if [ $MODE == "df" ] ; then
-    OUT_DIR="$SPEC"
+    OUT_DIR="${SPEC}-df"
+elif [ $MODE == "df-no-channelling" ] ; then
+    OUT_DIR="${SPEC}-no-channelling"
 fi
 
 
