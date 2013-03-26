@@ -155,7 +155,7 @@ evalRange (RSingle i ) = return i
 evalRange (RRange a b) = do
     let size  = b - a + 1
     index <- rangeRandomM (0, fromIntegral size-1)
-    let picked = a + index 
+    let picked = a + toInteger index 
     mkLog "RangeData" $ sep  ["Index:"  <+> pretty index
                              ,"Range:"  <+> pretty (RRange a b)
                              ,"Picked:" <+> pretty picked]
@@ -260,11 +260,11 @@ handleRelAttributes doms es =
 
     addSize ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference |] :_)
       _
-      = es
+      = rev 
 
     addSize _
       ([xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference |] :_)
-      = es
+      = rev 
 
     addSize _ _   = rev ++ [ [xMake| attribute.nameValue.name.reference := [Prim (S "maxSize")]
                                    | attribute.nameValue.value.value.literal := [Prim (I n)] |] ]
@@ -281,11 +281,11 @@ handleSetAttributes dom es =
 
     addSize ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference |] :_)
       _
-      = es
+      = rev 
 
     addSize _
       ([xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference |] :_)
-      = es
+      = rev 
 
     addSize _ _   = rev ++ [ [xMake| attribute.nameValue.name.reference := [Prim (S "maxSize")]
                                    | attribute.nameValue.value.value.literal := [Prim (I n)] |] ]
@@ -313,16 +313,12 @@ findSize (CMatrix ranges dom ) =  dSize ^ matSize
 
 
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
-handleSetAttributes' [] = _bugg "handleSetAttributes' no size"
+handleSetAttributes' [] = _bugg "handleSetAttributes' no attributes"
+
 handleSetAttributes' ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference
                              | [Prim (I n)]      := attribute.nameValue.value.value.literal|]
                       :_) =
     return $  RSingle n
-
-handleSetAttributes' [[xMatch| [Prim (S "minSize")] := attribute.nameValue.name.reference
-                             | [Prim (I n)]         := attribute.nameValue.value.value.literal|]
-                     ] =
-    return $  RRange n 10
 
 handleSetAttributes' [[xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference
                              | [Prim (I n)]         := attribute.nameValue.value.value.literal|]
