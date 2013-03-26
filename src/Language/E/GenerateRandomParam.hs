@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+--{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
@@ -181,11 +181,18 @@ handleSetAttributes dom es =
 
 findSize :: Choice -> Integer
 findSize (CInt size _) = size 
-findSize _ = error "find Size Not implemented"
 
--- TODO finish this
+findSize (CSet range dom) = result
+    where 
+    dSize = findSize dom
+    result  = sizeFromRange range
+    sizeFromRange :: Range -> Integer 
+    sizeFromRange (RSingle k)  = dSize `choose` k
+    sizeFromRange (RRange a b) = sum . map (dSize `choose`  ) $ [a..b]
+
+
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
-handleSetAttributes' [] = return $  RSingle 2
+handleSetAttributes' [] = _bugg "handleSetAttributes' no size" 
 handleSetAttributes' ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference 
                              | [Prim (I n)]      := attribute.nameValue.value.value.literal|]
                       :_) =
@@ -286,6 +293,8 @@ _sn :: IO Spec
 _sn = _getTest "set-nested-1"
 _sb :: IO Spec
 _sb = _getTest "set-nobounds"
+_sb2 :: IO Spec
+_sb2 = _getTest "set-nobounds-2"
 _sn2 :: IO Spec
 _sn2 = _getTest "set-nested-2"
 
