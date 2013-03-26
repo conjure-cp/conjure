@@ -108,7 +108,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             typeCheckSpecIO inEssence
             let outDirPath = dropExtEssence pathInEssence
                           ++ if S.member "--no-channelling" flags
-                                then "-no-channelling"
+                                then "-df-no-channelling"
                                 else "-df"
             driverConjure
                 (conjureWithMode flags seed limit mode)
