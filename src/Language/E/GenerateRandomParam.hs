@@ -19,9 +19,10 @@ type EssenceParam = Spec
 
 -- Data type representing choices
 data Choice =
-     CInt  Integer [Range]
-   | CBool
-   | CSet  Range Choice
+     CBool
+   | CInt    Integer [Range]
+   | CTuple  [Choice]
+   | CSet    Range Choice
      deriving (Show,Eq)
 
 data Range  =
@@ -38,9 +39,12 @@ instance Ord Range where
 
 instance Pretty Range  where pretty = pretty . show
 instance Pretty Choice where
-    pretty (CInt i rs )    = "CInt" <+> pretty i    <+> sep (map pretty rs)
-    pretty (CSet attr dom) = "CSet" <+> pretty attr <+> "OF" <+> pretty dom
-    pretty (CBool)         = "CBool"
+    pretty (CInt i rs )      = "CInt{" <> pretty i <> "}"    <+> sep (map pretty rs)
+    pretty (CSet attr dom)   = "CSet" <+> pretty attr <+> "OF" <+> pretty dom
+    pretty (CBool)           = "CBool"
+    pretty (CTuple vs )      = "CTuple" <+> "(" <+> 
+                               sep (map (\a -> pretty a<+> " ") vs) <> ")"
+ 
 
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
@@ -62,6 +66,10 @@ evalChoice (CInt size ranges) = do
 evalChoice (CSet sizeRange dom) = do
     size <- evalRange sizeRange
     findSet Set.empty size (repeat dom)
+
+evalChoice (CTuple doms) = do
+    vals <- mapM evalChoice doms
+    return $ [xMake| value.tuple.values :=  vals |]
 
 -- Takes a size and a inf list of choice (by repeat) and returns a set of that size
 findSet :: (MonadConjure m, RandomM m) => Set E -> Integer -> [Choice] -> m E
@@ -112,7 +120,7 @@ generateRandomParam essence' = do
     mkLog "Reduced   " $ pretty es <+> "\n"
 
     doms <-  mapM domainOf es
-    mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
+    {-mkLog "D" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )-}
 
     choices <-  mapM handleDomain doms
     mkLog "Choices" (sep . map pretty $ choices )
@@ -143,8 +151,9 @@ makeLetting given val =
 
 
 handleDomain :: MonadConjure m => E -> m Choice
+handleDomain [xMatch| _ := domain.bool |] =  return CBool
+
 handleDomain [xMatch| ranges := domain.int.ranges |] = do
-    --mkLog "ranges" (pretty ranges)
     cRanges <- mapM handleRange ranges
     let sortedRange =  sortOn snd cRanges
     return $ createChoice sortedRange
@@ -159,9 +168,10 @@ handleDomain [xMatch| [inner] := domain.set.inner
     sizeRange <- handleSetAttributes dom attr
     return $ CSet sizeRange dom
 
-handleDomain [xMatch| _ := domain.bool |] =  return CBool
+handleDomain [xMatch| doms := domain.tuple.inners |]  = 
+   liftM CTuple (mapM handleDomain doms)
 
-handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
+handleDomain e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
 
 handleSetAttributes :: MonadConjure m => Choice -> [E] -> m Range
 handleSetAttributes dom es = 
@@ -187,8 +197,8 @@ handleSetAttributes dom es =
 
 findSize :: Choice -> Integer
 findSize CBool = 2
-
 findSize (CInt size _) = size 
+findSize (CTuple doms) = product . map findSize $ doms
 
 findSize (CSet range dom) = result
     where 
@@ -198,6 +208,8 @@ findSize (CSet range dom) = result
     sizeFromRange (RSingle k)  = dSize `choose` k
     sizeFromRange (RRange a b) = sum . map (dSize `choose`  ) $ [a..b]
 
+
+    
 
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
 handleSetAttributes' [] = _bugg "handleSetAttributes' no size" 
@@ -256,6 +268,8 @@ _ `choose` 0 = 1
 0 `choose` _ = 0
 n `choose` r = (n-1) `choose` (r-1) * n `div` r
 
+
+
 _r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
 _r sp = do
     seed <- getStdGen
@@ -299,7 +313,11 @@ _m :: IO Spec
 _m = _getTest "matrixes"
 
 _t :: IO Spec
-_t = _getTest "tuples"
+_t = _getTest "tuples-0"
+_t2 :: IO Spec
+_t2 = _getTest "tuples"
+_t3 :: IO Spec
+_t3 = _getTest "tuples-set"
 
 _s :: IO Spec
 _s = _getTest "set-size"
