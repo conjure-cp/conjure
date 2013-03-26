@@ -17,20 +17,20 @@ import qualified Data.Set as Set
 
 type Essence      = Spec
 type EssenceParam = Spec
+type Size         = Range
 
 -- Data type representing choices
 data Choice =
      CBool
-   | CInt    Integer [Range]
+   | CInt     Integer [Range]
    | CTuple  [Choice]
-   | CSet    Range Choice
-   | CMatrix [Range] Choice
+   | CMatrix [Range]   Choice
+   | CSet     Size     Choice
+   | CRel     Size    [Choice]
      deriving (Show,Eq)
 
---TODO MSet 
---TODO relation 
-
-data FAttrs = FTotal   | FInjective        | Fsurjective 
+--TODO MSet
+data FAttrs = FTotal   | FInjective        | Fsurjective
 data PAttrs = PRegular | PNumParts Integer | PPartSize Integer
 
 
@@ -48,18 +48,21 @@ instance Ord Range where
 
 instance Pretty Range  where pretty = pretty . show
 instance Pretty Choice where
-    pretty (CInt i rs )      = "CInt{" <> pretty i <> "}"    <+> sep (map pretty rs)
     pretty (CBool)           = "CBool"
+    pretty (CInt i rs )      = "CInt{" <> pretty i <> "}"    <+> sep (map pretty rs)
     pretty (CTuple vs )      = "CTuple" <+> "(" <+>
                                sep (map (\a -> pretty a <+> " ") vs) <> ")"
-    pretty (CSet rs dom)     = "CSet" <+> pretty rs <+> "OF" <+> pretty dom
     pretty (CMatrix rs cs)   = "CMatrix" <+> sep (map pretty rs) <+> "[" <+> pretty cs <+> "]"
+    pretty (CSet rs dom)     = "CSet" <+> pretty rs <+> "OF" <+> pretty dom
+    pretty (CRel rs vs)      = "CSet" <+> pretty rs <+> "⟪" <+>
+                               sep (map (\a -> pretty a <+> " ") vs) <> "⟫"
 
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
 
 -- Converts a choice into an action
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
+
 evalChoice (CBool) = do
     index <- rangeRandomM (0, 1)
     return $ Tagged "value" [Tagged "literal" [Prim (B (index == 1) )]]
@@ -67,7 +70,7 @@ evalChoice (CBool) = do
 evalChoice (CInt size ranges) = do
     index <- rangeRandomM (0, fromIntegral size-1)
     let n = pickIth (toInteger index) ranges
-    mkLog "Data" $  sep ["Index:"  <+> pretty index
+    mkLog "IntData" $  sep ["Index:"  <+> pretty index
                         ,"Ranges:" <+> (pretty . show) ranges
                         ,"Picked"  <+> pretty n]
     return [xMake| value.literal := [Prim (I n )] |]
@@ -80,7 +83,6 @@ evalChoice (CSet sizeRange dom) = do
     size <- evalRange sizeRange
     findSet Set.empty size (repeat dom)
 
--- TODO add IndexRange 
 evalChoice (CMatrix sizeRange dom) = do
     let size  = sum . map countRange $ sizeRange
     vals     <- mapM evalChoice (genericTake size . repeat $ dom)
@@ -88,23 +90,43 @@ evalChoice (CMatrix sizeRange dom) = do
                    | value.matrix.indexrange.domain.int.ranges := indexRanges |]
 
     where
-    indexRanges = map rangeToIndexRange sizeRange 
+    indexRanges = map rangeToIndexRange sizeRange
     rangeToIndexRange :: Range -> E
     rangeToIndexRange (RSingle i)  = [xMake| range.single.value.literal := [Prim (I i) ] |]
-    rangeToIndexRange (RRange a b) = 
+    rangeToIndexRange (RRange a b) =
         [xMake| range.fromTo := map wrap [a,b] |]
     wrap i = [xMake| value.literal := [Prim (I i)]  |]
 
+evalChoice (CRel sizeRange doms) = do
+    size <- evalRange sizeRange
+    findRel Set.empty size doms
 
-countRanges :: [Range] -> Integer
-countRanges = sum . map countRange
 
-countRange :: Range -> Integer
-countRange (RSingle _ ) = 1
-countRange (RRange a b) =  b - a + 1
+-- Takes a size and list of choices returns a relation of that size
+findRel :: (MonadConjure m, RandomM m) => Set [E] -> Integer -> [Choice] -> m E
+
+findRel set 0 _ =
+    let elems = Set.toAscList set
+    in  return $ [xMake| value.relation.values := (map wrap elems) |]
+
+    where 
+    wrap :: [E] -> E
+    wrap vs = [xMake| value.tuple.values := vs |]
+
+findRel set size cs | size /= 0 = do
+    elems <- mapM evalChoice cs
+    --CHECK I think the element will be in order
+    --if not use normaliseSolutionEs
+    let (size',set') = if Set.notMember elems set
+        then (size - 1, Set.insert elems set)
+        else (size,set)
+    findRel set' size' cs
+
+findRel _ _ _ = _bugg "findRel: Can never happen"
 
 -- Takes a size and a inf list of choice (by repeat) and returns a set of that size
 findSet :: (MonadConjure m, RandomM m) => Set E -> Integer -> [Choice] -> m E
+
 findSet set 0 _ =
     let vs = Set.toAscList set
     in  return $ [xMake| value.set.values := vs |]
@@ -119,6 +141,14 @@ findSet set size (c:cs) = do
     findSet set' size' cs
 
 findSet _ _ _ = _bugg "findSet: Can never happen"
+
+
+countRanges :: [Range] -> Integer
+countRanges = sum . map countRange
+
+countRange :: Range -> Integer
+countRange (RSingle _ ) = 1
+countRange (RRange a b) =  b - a + 1
 
 evalRange :: (MonadConjure m, RandomM m) => Range -> m Integer
 evalRange (RSingle i ) = return i
@@ -210,8 +240,35 @@ handleDomain [xMatch| [range] := domain.matrix.index
     dom'            <- handleDomain dom
     return $ CMatrix ranges dom'
 
+handleDomain [xMatch| inners := domain.relation.inners
+                    | attr   := domain.relation.attributes.attrCollection|] = do
+    doms <- mapM handleDomain inners
+    sizeRange <- handleRelAttributes doms attr
+    return $ CRel sizeRange doms
+    
 
 handleDomain e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
+
+handleRelAttributes :: MonadConjure m => [Choice] -> [E] -> m Range
+handleRelAttributes doms es =
+    handleSetAttributes' result
+    where
+    sorted = sort es
+    -- To make sure size is at the front if present
+    rev    = reverse sorted
+    result = addSize rev sorted
+
+    addSize ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference |] :_)
+      _
+      = es
+
+    addSize _
+      ([xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference |] :_)
+      = es
+
+    addSize _ _   = rev ++ [ [xMake| attribute.nameValue.name.reference := [Prim (S "maxSize")]
+                                   | attribute.nameValue.value.value.literal := [Prim (I n)] |] ]
+        where n = product . map findSize $ doms
 
 handleSetAttributes :: MonadConjure m => Choice -> [E] -> m Range
 handleSetAttributes dom es =
@@ -252,7 +309,7 @@ findSize (CSet range dom) = result
 findSize (CMatrix ranges dom ) =  dSize ^ matSize
    where
    matSize = countRanges ranges
-   dSize = findSize dom 
+   dSize = findSize dom
 
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
 handleSetAttributes' [] = _bugg "handleSetAttributes' no size"
@@ -313,6 +370,7 @@ n `choose` r = (n-1) `choose` (r-1) * n `div` r
 
 
 
+
 _r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
 _r sp = do
     seed <- getStdGen
@@ -351,6 +409,11 @@ _l = _getTest "letting-1"
 
 _p :: IO Spec
 _p = _getTest "partition-1"
+
+_n :: IO Spec
+_n = _getTest "relation"
+_n2 :: IO Spec
+_n2 = _getTest "relation-all"
 
 _m :: IO Spec
 _m = _getTest "matrixes-0"
