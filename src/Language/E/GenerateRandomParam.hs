@@ -79,6 +79,9 @@ evalChoice (CMatrix sizeRange dom) = do
     vals     <- mapM evalChoice (genericTake size . repeat $ dom)
     return $ [xMake| value.matrix.values := vals |]
 
+countRanges :: [Range] -> Integer
+countRanges = sum . map countRange
+
 countRange :: Range -> Integer
 countRange (RSingle _ ) = 1
 countRange (RRange a b) =  b - a + 1
@@ -229,7 +232,10 @@ findSize (CSet range dom) = result
     sizeFromRange (RRange a b) = sum . map (dSize `choose`  ) $ [a..b]
 
 
-
+findSize (CMatrix ranges dom ) =  dSize ^ matSize
+   where
+   matSize = countRanges ranges
+   dSize = findSize dom 
 
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
 handleSetAttributes' [] = _bugg "handleSetAttributes' no size"
@@ -333,6 +339,8 @@ _m :: IO Spec
 _m = _getTest "matrixes-0"
 _m2 :: IO Spec
 _m2 = _getTest "matrixes"
+_ms :: IO Spec
+_ms = _getTest "matrixes-set"
 
 _t :: IO Spec
 _t = _getTest "tuples-0"
