@@ -4,7 +4,7 @@ import Control.Monad ( guard, msum, mzero )
 import Data.Char ( toLower )
 import Data.Maybe ( listToMaybe, mapMaybe )
 
-import Data.HashSet as S ( HashSet, fromList, member )
+import Data.HashSet as S ( HashSet, fromList, member, insert )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 
 
@@ -91,6 +91,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeValidateSolution
     , modeGenerateParam
     , modeDFAll
+    , modeDFNoChannel
     , modeRandom
     , modeFirst
     , modeSmallest
@@ -151,6 +152,15 @@ parseArgs (pairs, flags, rest) = msum
             mode $ words "df depthfirst depth-first"
             inEssence <- anyKey $ words "--in --in-essence"
             returnMode $ ModeDFAll inEssence
+
+        modeDFNoChannel = do
+            mode $ words "df-no-channelling"
+            inEssence <- anyKey $ words "--in --in-essence"
+            return $ ConjureModeWithFlags
+                (ModeDFAll inEssence)
+                pairs
+                (S.insert "--no-channelling" flags)
+                rest
 
         modeRandom = do
             mode $ words "rand random"
