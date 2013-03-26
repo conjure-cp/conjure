@@ -1,4 +1,4 @@
---{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
@@ -26,6 +26,13 @@ data Choice =
    | CSet    Range Choice
    | CMatrix [Range] Choice
      deriving (Show,Eq)
+
+--TODO MSet 
+--TODO relation 
+
+data FAttrs = FTotal   | FInjective        | Fsurjective 
+data PAttrs = PRegular | PNumParts Integer | PPartSize Integer
+
 
 data Range  =
     RSingle Integer
