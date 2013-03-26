@@ -189,5 +189,6 @@ isKey _ = False
 isFlag :: String -> Bool
 isFlag = (`elem` allFlags)
     where
-        allFlags = [] -- we don't have any flags, yet.
+        allFlags = [ "--no-channelling"
+                   ]
 

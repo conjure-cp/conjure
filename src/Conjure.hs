@@ -47,7 +47,7 @@ getConjureMode :: IO (Maybe ConjureModeWithFlags)
 getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
 
 runConjureMode :: ConjureModeWithFlags -> IO ()
-runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
+runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
     where
 
         limit = do
@@ -106,7 +106,7 @@ runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             driverConjure
-                (conjureWithMode seed limit mode)
+                (conjureWithMode flags seed limit mode)
                 (dropExtEssence pathInEssence)
                 ruleReprs ruleRefns inEssence
         helper (ModeSingleOutput _ pathInEssence pathOutEprime) = do
@@ -117,7 +117,7 @@ runConjureMode (ConjureModeWithFlags mode pairs _flags _rest) = helper mode
             driverConjureSingle True
                 pathOutEprime
                 (conjureWithMode
-                    seed limit mode
+                    flags seed limit mode
                     ruleReprs ruleRefns inEssence)
 
 typeCheckSpecIO :: Spec -> IO ()

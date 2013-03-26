@@ -11,17 +11,21 @@ import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
 
+import qualified Data.HashSet as S
 
 
 conjureWithMode
-    :: StdGen
+    :: S.HashSet String
+    -> StdGen
     -> Maybe Int
     -> ConjureMode
     -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureWithMode seed limit mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
+conjureWithMode flags seed limit mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
     set_stdgen seed
-    modifyGlobal $ \ gl -> gl { conjureMode = mode }
+    modifyGlobal $ \ gl -> gl { conjureMode  = mode
+                              , conjureFlags = flags
+                              }
     conjureAll limit reprs refns spec
 
 

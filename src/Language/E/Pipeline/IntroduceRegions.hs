@@ -14,10 +14,14 @@ import Data.Text ( pack )
 -- attach a region to each an every identifier.
 -- applyRepr should respect these regions: identifiers with the same region
 -- should be represented in the same way.
-introduceRegions :: MonadConjure m => Spec -> m Spec
-introduceRegions spec = withBindingScope' $
-    evalStateT (bottomUpSpecExcept skip op spec)
-               [ "region" `mappend` pack (show i) | i <- [ 1::Int .. ] ]
+introduceRegions :: MonadConjure m => Bool -> Spec -> m Spec
+introduceRegions useChannelling spec = withBindingScope' $
+    let
+        regions = if useChannelling
+                    then [ "region" `mappend` pack (show i) | i <- [ 1::Int .. ] ]
+                    else repeat "regionS"
+    in
+        evalStateT (bottomUpSpecExcept skip op spec) regions
     where
         skip [xMatch| _ := topLevel.declaration.find  |] = True
         skip [xMatch| _ := topLevel.declaration.given |] = True

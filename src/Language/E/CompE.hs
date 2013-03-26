@@ -263,6 +263,7 @@ data GlobalState = GlobalState
         , memoRefnStaysTheSame :: !IntSet
         , conjureMode          :: ConjureMode
         , conjureSeed          :: StdGen
+        , conjureFlags         :: S.HashSet String
         }
 
 instance (Functor m, Monad m) => RandomM (FunkyMulti GlobalState st err m) where
@@ -278,7 +279,7 @@ rangeRandomM range = do
 
 
 instance Default GlobalState where
-    def = GlobalState def def ModeUnknown (error "Seed not initialised")
+    def = GlobalState def def ModeUnknown (error "Seed not initialised") S.empty
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do

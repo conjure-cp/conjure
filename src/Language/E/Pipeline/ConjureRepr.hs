@@ -13,6 +13,8 @@ import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
 
+import Data.HashSet as S
+
 
 conjureRepr
     :: MonadConjureList m
@@ -20,6 +22,9 @@ conjureRepr
     -> Spec
     -> m Spec
 conjureRepr reprs spec = withBindingScope' $ do
+    flags <- getsGlobal conjureFlags
+    let useChannelling = not $ S.member "--no-channelling" flags
+    mkLog "useChannelling" $ pretty useChannelling 
     initialiseSpecState spec
     let pipeline =  recordSpec "entering conjureRepr"
                 >=> implicitWheres                          >=> recordSpec "implicitWheres"
@@ -31,7 +36,7 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> simplifySpec                            >=> recordSpec "simplifySpec"
                 >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
                 >=> introduceFakeConstraints                >=> recordSpec "introduceFakeConstraints"
-                >=> introduceRegions                        >=> recordSpec "introduceRegions"
+                >=> introduceRegions useChannelling         >=> recordSpec "introduceRegions"
                 >=> applyRepr reprs                         >=> recordSpec "applyRepr"
                 >=> return . removeFakeConstraints          >=> recordSpec "removeFakeConstraints"
     pipeline spec
