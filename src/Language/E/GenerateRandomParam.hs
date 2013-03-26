@@ -5,7 +5,6 @@ module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
 import Language.E
 import Language.E.DomainOf(domainOf)
-{-import Language.E.Up.Debug(prettyAsBoth,upBug)-}
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
@@ -20,8 +19,9 @@ type EssenceParam = Spec
 
 -- Data type representing choices
 data Choice =
-     CInt Integer [Range]
-   | CSet Range Choice
+     CInt  Integer [Range]
+   | CBool
+   | CSet  Range Choice
      deriving (Show,Eq)
 
 data Range  =
@@ -40,12 +40,17 @@ instance Pretty Range  where pretty = pretty . show
 instance Pretty Choice where
     pretty (CInt i rs )    = "CInt" <+> pretty i    <+> sep (map pretty rs)
     pretty (CSet attr dom) = "CSet" <+> pretty attr <+> "OF" <+> pretty dom
+    pretty (CBool)         = "CBool"
 
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
 
 -- Converts a choice into an action
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
+evalChoice (CBool) = do
+    index <- rangeRandomM (0, 1)
+    return $ Tagged "value" [Tagged "literal" [Prim (B (index == 1) )]] 
+
 evalChoice (CInt size ranges) = do
     index <- rangeRandomM (0, fromIntegral size-1)
     let n = pickIth (toInteger index) ranges
@@ -115,7 +120,7 @@ generateRandomParam essence' = do
     givens <- mapM evalChoice choices
 
     let lettings = zipWith makeLetting es givens
-    mkLog "Lettings" (sep $ map pretty lettings)
+    mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
@@ -154,6 +159,7 @@ handleDomain [xMatch| [inner] := domain.set.inner
     sizeRange <- handleSetAttributes dom attr
     return $ CSet sizeRange dom
 
+handleDomain [xMatch| _ := domain.bool |] =  return CBool
 
 handleDomain e = mkLog "unhandled" (prettyAsPaths e) >> return _c
 
@@ -180,6 +186,8 @@ handleSetAttributes dom es =
 
 
 findSize :: Choice -> Integer
+findSize CBool = 2
+
 findSize (CInt size _) = size 
 
 findSize (CSet range dom) = result
@@ -267,6 +275,8 @@ _x _ = return ()
 _getTest :: FilePath -> IO Spec
 _getTest f = getSpec $ "/Users/bilalh/CS/conjure/test/generateParams/" ++ f  ++ ".essence"
 
+_b :: IO Spec 
+_b = _getTest "bool"
 _e :: IO Spec
 _e = _getTest "enum-1"
 _f :: IO Spec
