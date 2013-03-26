@@ -60,7 +60,7 @@ for MODE in $MODES ; do
     touch "$FAIL_FILE" "$PASS_FILE" "$ALL_FILE"
 done
 
-parallel -k --tag perDirectory {1//} {2} ::: $(find "$WD" -name "*.essence") ::: $MODES
+parallel -k --tag perDirectory {2} {1//} ::: $(find "$WD" -name "*.essence") ::: $MODES
 
 for MODE in $MODES ; do
     FAIL_FILE="$WD/${MODE}_fail.txt"
