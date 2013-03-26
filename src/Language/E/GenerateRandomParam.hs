@@ -54,7 +54,7 @@ instance Pretty Choice where
                                sep (map (\a -> pretty a <+> " ") vs) <> ")"
     pretty (CMatrix rs cs)   = "CMatrix" <+> sep (map pretty rs) <+> "[" <+> pretty cs <+> "]"
     pretty (CSet rs dom)     = "CSet" <+> pretty rs <+> "OF" <+> pretty dom
-    pretty (CRel rs vs)      = "CSet" <+> pretty rs <+> "⟪" <+>
+    pretty (CRel rs vs)      = "CRel" <+> pretty rs <+> "⟪" <+>
                                sep (map (\a -> pretty a <+> " ") vs) <> "⟫"
 
 _c :: Choice
