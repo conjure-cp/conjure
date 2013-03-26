@@ -77,7 +77,17 @@ evalChoice (CSet sizeRange dom) = do
 evalChoice (CMatrix sizeRange dom) = do
     let size  = sum . map countRange $ sizeRange
     vals     <- mapM evalChoice (genericTake size . repeat $ dom)
-    return $ [xMake| value.matrix.values := vals |]
+    return $ [xMake| value.matrix.values := vals
+                   | value.matrix.indexrange.domain.int.ranges := indexRanges |]
+
+    where
+    indexRanges = map rangeToIndexRange sizeRange 
+    rangeToIndexRange :: Range -> E
+    rangeToIndexRange (RSingle i)  = [xMake| range.single.value.literal := [Prim (I i) ] |]
+    rangeToIndexRange (RRange a b) = 
+        [xMake| range.fromTo := map wrap [a,b] |]
+    wrap i = [xMake| value.literal := [Prim (I i)]  |]
+
 
 countRanges :: [Range] -> Integer
 countRanges = sum . map countRange
@@ -369,6 +379,8 @@ _sb2 :: IO Spec
 _sb2 = _getTest "set-nobounds-2"
 _sn2 :: IO Spec
 _sn2 = _getTest "set-nested-2"
+_lots :: IO Spec
+_lots = _getTest "lots"
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateRandomParam: " ++ s)
