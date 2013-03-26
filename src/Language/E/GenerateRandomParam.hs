@@ -112,7 +112,7 @@ generateRandomParam essence' = do
     mkLog "Reduced   " $ pretty es <+> "\n"
 
     doms <-  mapM domainOf es
-    {-mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )-}
+    mkLog "Doms" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
 
     choices <-  mapM handleDomain doms
     mkLog "Choices" (sep . map pretty $ choices )
@@ -277,18 +277,30 @@ _getTest f = getSpec $ "/Users/bilalh/CS/conjure/test/generateParams/" ++ f  ++ 
 
 _b :: IO Spec 
 _b = _getTest "bool"
+
 _e :: IO Spec
 _e = _getTest "enum-1"
+
 _f :: IO Spec
 _f = _getTest "func-1"
+
 _i :: IO Spec
 _i = _getTest "int-1"
 _i2 :: IO Spec
 _i2 = _getTest "int-2"
+
 _l :: IO Spec
 _l = _getTest "letting-1"
+
 _p :: IO Spec
 _p = _getTest "partition-1"
+
+_m :: IO Spec
+_m = _getTest "matrixes"
+
+_t :: IO Spec
+_t = _getTest "tuples"
+
 _s :: IO Spec
 _s = _getTest "set-size"
 _s2 :: IO Spec
