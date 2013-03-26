@@ -155,7 +155,7 @@ evalRange (RSingle i ) = return i
 evalRange (RRange a b) = do
     let size  = b - a + 1
     index <- rangeRandomM (0, fromIntegral size-1)
-    let picked = [a..b] `genericIndex` index
+    let picked = a + index 
     mkLog "RangeData" $ sep  ["Index:"  <+> pretty index
                              ,"Range:"  <+> pretty (RRange a b)
                              ,"Picked:" <+> pretty picked]
@@ -165,7 +165,7 @@ evalRange (RRange a b) = do
 pickIth :: Integer -> [Range] -> Integer
 pickIth _ [] = _bugg "pickIth no values"
 pickIth 0 (RSingle i:_) = i
-pickIth index (RRange a b:_ ) | index <= b - a =  [a..b] `genericIndex`  index
+pickIth index (RRange a b:_ ) | index <= b - a = a + index 
 
 pickIth index (RSingle _:xs)    = pickIth (index - 1) xs
 pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
