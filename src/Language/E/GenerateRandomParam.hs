@@ -294,8 +294,9 @@ handleSetAttributes dom es =
 
 findSize :: Choice -> Integer
 findSize CBool = 2
-findSize (CInt size _) = size
-findSize (CTuple doms) = product . map findSize $ doms
+findSize (CInt size _)  = size
+findSize (CTuple doms)  = product . map findSize $ doms
+findSize (CRel range _) = 2 ^ countRange range
 
 findSize (CSet range dom) = result
     where
@@ -305,11 +306,11 @@ findSize (CSet range dom) = result
     sizeFromRange (RSingle k)  = dSize `choose` k
     sizeFromRange (RRange a b) = sum . map (dSize `choose`  ) $ [a..b]
 
-
 findSize (CMatrix ranges dom ) =  dSize ^ matSize
    where
    matSize = countRanges ranges
    dSize = findSize dom
+
 
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
 handleSetAttributes' [] = _bugg "handleSetAttributes' no size"
@@ -414,8 +415,10 @@ _n :: IO Spec
 _n = _getTest "relation"
 _n2 :: IO Spec
 _n2 = _getTest "relation-all"
+_nc :: IO Spec
+_nc = _getTest "relation-complex"
 _ns :: IO Spec
-_ns = _getTest "relation-complex"
+_ns = _getTest "relation-set"
 
 _m :: IO Spec
 _m = _getTest "matrixes-0"
