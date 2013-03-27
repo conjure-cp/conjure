@@ -243,13 +243,11 @@ allChoices :: Choice -> [E]
 allChoices (CInt _ rs) = concatMap rangeToE rs
 allChoices (CBool)     = [ [eMake| false |], [eMake| true |] ] 
 allChoices (CMatrix rs choice) = 
-    error . groom $ choices 
+    map (\p -> [xMake| value.matrix.values := p |] ) perms    
 
     where size    = countRanges rs
           choices = allChoices choice
-
-
-
+          perms   = permutationsN size choices
 
 
 rangeToE :: Range -> [E] 
@@ -484,7 +482,7 @@ n `choose` r = (n-1) `choose` (r-1) * n `div` r
 cartesianProduct :: [a] -> [b] -> [(a,b)]
 xs `cartesianProduct` ys = [(x,y) | x <- xs, y <- ys ]
 
-permutationsN :: Int -> [Int] -> [[Int]]
+permutationsN :: Integer -> [a] -> [[a]]
 permutationsN 0 _ = [[]]
 permutationsN n array =  concatMap (\b -> map ((:) b ) res) array
     where res = permutationsN (n-1) array
