@@ -17,6 +17,7 @@ module Language.E.Pipeline.RedArrow ( redArrow ) where
 import Language.E
 
 import qualified Data.Text as T
+import Data.List ( findIndex )
 
 
 
@@ -34,11 +35,15 @@ redArrow
     -> m Essence'Param
 redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) modelLogs = do
 
-    forM_ (statementAsList essenceStmt ++ statementAsList essenceParamStmt) $ \ s -> case s of
-        [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
-               | [value]       := topLevel.letting.expr
-               |] -> addReference nm value
-        _ -> return ()
+    forM_ (statementAsList essenceStmt ++ statementAsList essenceParamStmt) $ \ s -> do
+        introduceStuff s
+        case s of
+            [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+                   | [value]       := topLevel.letting.expr
+                   |] -> addReference nm value
+            [xMatch| [Prim (S nm)] := topLevel.letting.name.reference
+                   |] -> addReference nm s
+            _ -> return ()
 
     let
         -- Givens in the Essence file
@@ -88,6 +93,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
             $ mapMaybe (T.stripPrefix "[configuration]")
             $ T.lines modelLogs
 
+    -- bs <- bindersDoc
     -- mkLog "debug" $ vcat $
         -- (
             -- "essenceGivens" :
@@ -104,7 +110,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
                 -- [ nest 4 $ pretty a <+> ":" <+> pretty b
                 -- | (a,b) <- lookupReprs
                 -- ]
-        -- )
+        -- ) ++ [bs]
 
     outPairs <- concatMapM (workhorse lookupReprs)
                 [ (nm, decl, val)
@@ -312,11 +318,27 @@ workhorse lookupReprs (nm, dom, val) = do
             let outName = name `T.append` "_ExplicitVarSizeWithDefault"
             return [(outName, theMatrix)]
 
+        helper
+            name
+            [xMatch| [Prim (S domId)] := reference |]
+            value
+            Nothing = do
+                domain <- runMaybeT $ lookupReference domId
+                case domain of
+                    Just [xMatch| vs := topLevel.letting.typeEnum.values |] ->
+                        case findIndex (== value) vs of
+                            Nothing -> userErr $ vcat
+                                [ "Not an element of the enumeration:" <+> pretty value
+                                , "Options were:" <+> sep (map pretty vs)
+                                ]
+                            Just i  -> return [(name, [xMake| value.literal := [Prim $ I $ fromIntegral $ i + 1] |])]
+                    _ -> bug "don't know what this is"
+
         helper name domain value repr = bug $ vcat
             [ "missing case in RedArrow.workhorse"
             , "name:"   <+> pretty name
-            , "domain:" <+> pretty domain
-            , "value:"  <+> pretty value
+            , "domain:" <+> vcat (map ($ domain) [pretty, prettyAsPaths])
+            , "value:"  <+> vcat (map ($ value ) [pretty, prettyAsPaths])
             , "repr:"   <+> pretty repr
             ]
 

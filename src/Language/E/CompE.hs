@@ -190,6 +190,12 @@ bindersDoc = do
         "Current bindings: " <+>
         prettyList id "," (nubBy ((==) `on` binderName) bs)
 
+bindersDocNamesOnly :: MonadConjure m => m Doc
+bindersDocNamesOnly = do
+    bs <- gets binders
+    return $
+        "Current bindings: " <+>
+        prettyList id "," (nub $ map binderName bs)
 
 data Binder = Binder !Text !E
     deriving (Show, GHC.Generics.Generic)
@@ -233,12 +239,11 @@ lookupMetaVar :: MonadConjure m => Text -> MaybeT m E
 lookupMetaVar nm = lookupReference ("&" `mappend` nm)
 
 errUndefinedRef :: (MonadConjure m, Pretty p) => Doc -> p -> m a
-errUndefinedRef place t = do
-    bsText <- bindersDoc
-    err ErrFatal $ vcat [ "(in" <+> place <> ")"
-                        , "Undefined reference:" <+> pretty t
-                        , nest 4 ("Current bindings:" <+> bsText)
-                        ]
+errUndefinedRef _place t = do
+    bsText <- bindersDocNamesOnly
+    userErr $ vcat [ "Undefined reference:" <+> pretty t
+                   , nest 4 bsText
+                   ]
 
 errMaybeT :: MonadConjure m => Doc -> (Text -> MaybeT m E) -> Text -> m E
 errMaybeT place comp t = do
