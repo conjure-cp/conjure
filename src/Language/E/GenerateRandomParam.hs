@@ -5,7 +5,7 @@
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
-import Language.E
+import Language.E hiding(trace)
 import Language.E.DomainOf(domainOf)
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
@@ -14,14 +14,17 @@ import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Control.Arrow(arr)
 
 import Data.List(genericTake)
-import Data.Set (Set)
+import Data.List(permutations,tails)
 import Data.Map (Map)
+import Data.Set (Set)
 
-import qualified Data.Set as Set
 import qualified Data.Map as M
+import qualified Data.Set as Set
 import qualified Text.PrettyPrint as Pr
 
---import Text.Groom(groom)
+import Text.Groom(groom)
+import Debug.Trace ( trace )
+
 
 type Essence      = Spec
 type EssenceParam = Spec
@@ -132,7 +135,7 @@ evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
     findRel Set.empty size doms
 
-evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) = do
+evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) = 
     findBijective from to
 
 findBijective :: (MonadConjure m, RandomM m) 
@@ -144,13 +147,14 @@ findBijective from to = do
        tSize = M.size allT
    if fSize /= tSize 
    then _bugg "findBijective sizes not equal"
-   else pairSets (Set.empty) tSize allF allT
+   else pairSets Set.empty tSize allF allT
    
 
    where 
+   choiceMap :: Choice -> Map E ()
    choiceMap choice =
        let allC   = allChoices choice
-           tuples = map (\c -> (c,() )) allC 
+           tuples = map (flip  (,) ()) allC 
        in M.fromDistinctAscList tuples
 
    pairSets :: (RandomM m) => Set [E] -> Int -> Map E () -> Map E () -> m E
@@ -162,7 +166,7 @@ findBijective from to = do
      wrap :: [E] -> E
      wrap array = [xMake| mapping := array |]
 
-   pairSets set size fm tm | size /= 0  = do
+   pairSets set size fm tm  = do
      i1 <- rangeRandomM (0, size-1)
      i2 <- rangeRandomM (0, size-1)
      let (e1,_) = M.elemAt i1 fm
@@ -238,7 +242,17 @@ pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
 
 
 allChoices :: Choice -> [E]
-allChoices (CInt _ ranges) = concatMap rangeToE ranges
+allChoices (CInt _ rs) = concatMap rangeToE rs
+allChoices (CBool)     = [ [eMake| false |], [eMake| true |] ] 
+allChoices (CMatrix rs choice) = 
+    error . groom $ choices 
+
+    where size    = countRanges rs
+          choices = allChoices choice
+
+
+
+
 
 rangeToE :: Range -> [E] 
 rangeToE (RSingle i) = [[xMake| value.literal := [Prim (I i)] |]]
@@ -469,7 +483,12 @@ _ `choose` 0 = 1
 0 `choose` _ = 0
 n `choose` r = (n-1) `choose` (r-1) * n `div` r
 
+xs `cartesianProduct` ys = [(x,y) | x <- xs, y <- ys ]
 
+permutationsN :: Int -> [Int] -> [[Int]]
+permutationsN 0 _ = [[]]
+permutationsN n array =  concatMap (\b -> map ((:) b ) res) array
+    where res = permutationsN (n-1) array
 
 
 _r :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
