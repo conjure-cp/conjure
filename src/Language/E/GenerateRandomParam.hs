@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
+--{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+--{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
@@ -140,7 +140,7 @@ findBijective :: (MonadConjure m, RandomM m)
               => Choice -> Choice 
               -> m E
 findBijective from to = do
-   let [allF, allT] = map choiceMap [from,to]
+   let (allF, allT) = (choiceMap from, choiceMap to)
        fSize = M.size allF
        tSize = M.size allT
    if fSize /= tSize 
@@ -345,7 +345,7 @@ handleDomain [xMatch| [from] := domain.function.innerFrom
 
     where
     calcuateSize (FAttrs{fTotal=True, fInjective=True, fSurjective=True}) f t  =
-       let [fromSize,toSize] = map findSize [f,t]
+       let (fromSize,toSize) = (findSize f, findSize t)
        in if   fromSize == toSize
           then RSingle fromSize
           else error "The domain and range must have equal size for a bijective total function"
