@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.ValidateSolution ( validateSolution ) where
+module Language.E.ValidateSolution
+    ( validateSolution
+    , validateSolutionPure
+    ) where
 
 import qualified Data.HashMap.Strict as M
 
@@ -17,16 +20,24 @@ type Param    = Maybe Spec
 type Solution = Spec
 
 validateSolution :: Essence -> Param -> Solution -> IO ()
-validateSolution essence param solution = do
-    let (mresult, _logs) = runCompESingle "validating solution" helper
-    -- printLogs _logs
-    case mresult of
-        Left  x     -> error $ renderPretty x
-        Right False -> error "Not a valid solution."
-        Right True  -> return ()
+validateSolution essence param solution =
+    if validateSolutionPure essence param solution
+        then return ()
+        else error "Not a valid solution."
+
+
+-- this will return True is it's valid, False if not
+-- the validator might use error
+validateSolutionPure :: Essence -> Param -> Solution -> Bool
+validateSolutionPure essence param solution =
+    let
+        (mresult, _logs) = runCompESingle "validating solution" helper
+    in
+        case mresult of
+            Left  x      -> error $ renderPretty x
+            Right result -> result
 
     where
-
 
         helper = do
 
