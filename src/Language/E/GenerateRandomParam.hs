@@ -14,6 +14,7 @@ import Control.Arrow(arr)
 import Data.List(genericTake)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import qualified Text.PrettyPrint as Pr
 
 type Essence      = Spec
 type EssenceParam = Spec
@@ -27,12 +28,22 @@ data Choice =
    | CMatrix [Range]   Choice
    | CSet     Size     Choice
    | CRel     Size    [Choice]
+   | CFunc    Size     FAttrs   Choice   Choice
      deriving (Show,Eq)
 
---TODO MSet
-data FAttrs = FTotal   | FInjective        | Fsurjective
-data PAttrs = PRegular | PNumParts Integer | PPartSize Integer
+--TODO MSet partition funcion and where
 
+data FAttrs = FAttrs
+    {fTotal      :: Bool
+    ,fInjective  :: Bool
+    ,fsurjective :: Bool
+    } deriving(Show,Eq)
+
+data PAttrs = PAttrs
+    {pRegular  :: Bool
+    ,pNumParts :: Integer
+    ,pPartSize :: Integer
+    }deriving(Show,Eq)
 
 data Range  =
     RSingle Integer
@@ -56,6 +67,18 @@ instance Pretty Choice where
     pretty (CSet rs dom)     = "CSet" <+> pretty rs <+> "OF" <+> pretty dom
     pretty (CRel rs vs)      = "CRel" <+> pretty rs <+> "⟪" <+>
                                sep (map (\a -> pretty a <+> " ") vs) <> "⟫"
+
+    pretty (CFunc rs attrs from to) = "CFunc" <> pretty attrs  <+> pretty rs 
+                                   <+> "  "   <> pretty from   <+> "-->" <+> pretty to
+
+instance Pretty FAttrs where
+    pretty (FAttrs{fTotal=t,fInjective=i,fsurjective=s}) = 
+          "{" <> (sep . map func) [(t,"Total"),(i,"Injective"),(s,"Surjective")]  <> "}"
+        where 
+        func (True, str) = str  
+        func (False, _) = Pr.empty 
+
+
 
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
