@@ -14,7 +14,6 @@ import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Control.Arrow(arr)
 
 import Data.List(genericTake)
-import Data.List(permutations,tails)
 import Data.Map (Map)
 import Data.Set (Set)
 
@@ -23,7 +22,6 @@ import qualified Data.Set as Set
 import qualified Text.PrettyPrint as Pr
 
 import Text.Groom(groom)
-import Debug.Trace ( trace )
 
 
 type Essence      = Spec
@@ -483,6 +481,7 @@ _ `choose` 0 = 1
 0 `choose` _ = 0
 n `choose` r = (n-1) `choose` (r-1) * n `div` r
 
+cartesianProduct :: [a] -> [b] -> [(a,b)]
 xs `cartesianProduct` ys = [(x,y) | x <- xs, y <- ys ]
 
 permutationsN :: Int -> [Int] -> [[Int]]
