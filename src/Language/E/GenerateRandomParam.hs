@@ -514,7 +514,9 @@ _e :: IO Spec
 _e = _getTest "enum-1"
 
 _f :: IO Spec
-_f = _getTest "func-1"
+_f = _getTest "_func/bijective-int-int"
+_f2 :: IO Spec
+_f2 = _getTest "_func/bijective-int-matrix"
 
 _i :: IO Spec
 _i = _getTest "int-1"
