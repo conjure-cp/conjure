@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
@@ -13,8 +15,13 @@ import Control.Arrow(arr)
 
 import Data.List(genericTake)
 import Data.Set (Set)
+import Data.Map (Map)
+
 import qualified Data.Set as Set
+import qualified Data.Map as M
 import qualified Text.PrettyPrint as Pr
+
+--import Text.Groom(groom)
 
 type Essence      = Spec
 type EssenceParam = Spec
@@ -36,7 +43,7 @@ data Choice =
 data FAttrs = FAttrs
     {fTotal      :: Bool
     ,fInjective  :: Bool
-    ,fsurjective :: Bool
+    ,fSurjective :: Bool
     } deriving(Show,Eq)
 
 data PAttrs = PAttrs
@@ -68,16 +75,17 @@ instance Pretty Choice where
     pretty (CRel rs vs)      = "CRel" <+> pretty rs <+> "⟪" <+>
                                sep (map (\a -> pretty a <+> " ") vs) <> "⟫"
 
-    pretty (CFunc rs attrs from to) = "CFunc" <> pretty attrs  <+> pretty rs 
-                                   <+> "  "   <> pretty from   <+> "-->" <+> pretty to
+    pretty (CFunc rs attrs from to) = Pr.hang
+                                      ("CFunc" <> pretty attrs  <+> pretty rs)
+                                      8
+                                      (pretty from   <+> "-->" <+> pretty to)
 
 instance Pretty FAttrs where
-    pretty (FAttrs{fTotal=t,fInjective=i,fsurjective=s}) = 
-          "{" <> (sep . map func) [(t,"Total"),(i,"Injective"),(s,"Surjective")]  <> "}"
-        where 
-        func (True, str) = str  
-        func (False, _) = Pr.empty 
-
+    pretty (FAttrs{fTotal=t,fInjective=i,fSurjective=s}) =
+          "{" <> (Pr.hsep . map func) [(t,"Total"),(i,"Injective"),(s,"Surjective")]  <> "}"
+        where
+        func (True, str) = str
+        func (False, _) = Pr.empty
 
 
 _c :: Choice
@@ -124,6 +132,43 @@ evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
     findRel Set.empty size doms
 
+evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) = do
+    findBijective from to
+
+findBijective :: (MonadConjure m, RandomM m) 
+              => Choice -> Choice 
+              -> m E
+findBijective from to = do
+   let [allF, allT] = map choiceMap [from,to]
+       fSize = M.size allF
+       tSize = M.size allT
+   if fSize /= tSize 
+   then _bugg "findBijective sizes not equal"
+   else pairSets (Set.empty) tSize allF allT
+   
+
+   where 
+   choiceMap choice =
+       let allC   = allChoices choice
+           tuples = map (\c -> (c,() )) allC 
+       in M.fromDistinctAscList tuples
+
+   pairSets :: (RandomM m) => Set [E] -> Int -> Map E () -> Map E () -> m E
+   pairSets set 0 _ _  =
+       let elems = Set.toAscList set
+       in return $ [xMake| value.function.values := (map wrap elems) |]
+
+     where
+     wrap :: [E] -> E
+     wrap array = [xMake| mapping := array |]
+
+   pairSets set size fm tm | size /= 0  = do
+     i1 <- rangeRandomM (0, size-1)
+     i2 <- rangeRandomM (0, size-1)
+     let (e1,_) = M.elemAt i1 fm
+     let (e2,_) = M.elemAt i2 tm
+     pairSets (Set.insert [e1,e2] set) (size - 1) (M.deleteAt i1 fm) (M.deleteAt i2 tm)
+
 
 -- Takes a size and list of choices returns a relation of that size
 findRel :: (MonadConjure m, RandomM m) => Set [E] -> Integer -> [Choice] -> m E
@@ -132,14 +177,13 @@ findRel set 0 _ =
     let elems = Set.toAscList set
     in  return $ [xMake| value.relation.values := (map wrap elems) |]
 
-    where 
+    where
     wrap :: [E] -> E
     wrap vs = [xMake| value.tuple.values := vs |]
 
 findRel set size cs | size /= 0 = do
     elems <- mapM evalChoice cs
     --CHECK I think the element will be in order
-    --if not use normaliseSolutionEs
     let (size',set') = if Set.notMember elems set
         then (size - 1, Set.insert elems set)
         else (size,set)
@@ -157,7 +201,6 @@ findSet set 0 _ =
 findSet set size (c:cs) = do
     ele <- evalChoice c
     -- CHECK I think the element will be in order
-    -- if not use normaliseSolutionEs
     let (size',set') = if Set.notMember ele set
         then (size - 1, Set.insert ele set)
         else (size,set)
@@ -178,7 +221,7 @@ evalRange (RSingle i ) = return i
 evalRange (RRange a b) = do
     let size  = b - a + 1
     index <- rangeRandomM (0, fromIntegral size-1)
-    let picked = a + toInteger index 
+    let picked = a + toInteger index
     mkLog "RangeData" $ sep  ["Index:"  <+> pretty index
                              ,"Range:"  <+> pretty (RRange a b)
                              ,"Picked:" <+> pretty picked]
@@ -188,10 +231,20 @@ evalRange (RRange a b) = do
 pickIth :: Integer -> [Range] -> Integer
 pickIth _ [] = _bugg "pickIth no values"
 pickIth 0 (RSingle i:_) = i
-pickIth index (RRange a b:_ ) | index <= b - a = a + index 
+pickIth index (RRange a b:_ ) | index <= b - a = a + index
 
 pickIth index (RSingle _:xs)    = pickIth (index - 1) xs
 pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
+
+
+allChoices :: Choice -> [E]
+allChoices (CInt _ ranges) = concatMap rangeToE ranges
+
+rangeToE :: Range -> [E] 
+rangeToE (RSingle i) = [[xMake| value.literal := [Prim (I i)] |]]
+rangeToE (RRange a b) = 
+    map f [a..b]
+    where f i = [xMake| value.literal := [Prim (I i)] |]
 
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
@@ -268,9 +321,37 @@ handleDomain [xMatch| inners := domain.relation.inners
     doms <- mapM handleDomain inners
     sizeRange <- handleRelAttributes doms attr
     return $ CRel sizeRange doms
-    
+
+handleDomain [xMatch| [from] := domain.function.innerFrom
+                    | [to]   := domain.function.innerTo
+                    | attrs  := domain.function.attributes.attrCollection |] = do
+    [from',to'] <- mapM handleDomain [from,to]
+    let fAttrs =  findAttrs (FAttrs False False False) attrs
+        size   =  calcuateSize fAttrs from' to'
+    {-error . show .pretty $  CFunc size fAttrs from' to'-}
+    return $ CFunc size fAttrs from' to'
+
+    where
+    calcuateSize (FAttrs{fTotal=True, fInjective=True, fSurjective=True}) f t  =
+       let [fromSize,toSize] = map findSize [f,t]
+       in if   fromSize == toSize
+          then RSingle fromSize
+          else error "The domain and range must have equal size for a bijective total function"
+
+    calcuateSize _ _ _ = error "Not done yet"
+
+    findAttrs :: FAttrs -> [E] -> FAttrs
+    findAttrs fa [] = fa
+    findAttrs fa (x:xs) = findAttrs (f x) xs
+        where
+        f [xMatch| [Prim (S "total")]      := attribute.name.reference |] = fa{fTotal=True}
+        f [xMatch| [Prim (S "surjective")] := attribute.name.reference |] = fa{fSurjective=True}
+        f [xMatch| [Prim (S "injective")]  := attribute.name.reference |] = fa{fInjective=True}
+        f [xMatch| [Prim (S "bijective")]  := attribute.name.reference |] = fa{fInjective=True,fSurjective=True}
+        f _ = fa
 
 handleDomain e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
+
 
 handleRelAttributes :: MonadConjure m => [Choice] -> [E] -> m Range
 handleRelAttributes doms es =
@@ -283,11 +364,11 @@ handleRelAttributes doms es =
 
     addSize ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference |] :_)
       _
-      = rev 
+      = rev
 
     addSize _
       ([xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference |] :_)
-      = rev 
+      = rev
 
     addSize _ _   = rev ++ [ [xMake| attribute.nameValue.name.reference := [Prim (S "maxSize")]
                                    | attribute.nameValue.value.value.literal := [Prim (I n)] |] ]
@@ -304,11 +385,11 @@ handleSetAttributes dom es =
 
     addSize ([xMatch| [Prim (S "size")] := attribute.nameValue.name.reference |] :_)
       _
-      = rev 
+      = rev
 
     addSize _
       ([xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference |] :_)
-      = rev 
+      = rev
 
     addSize _ _   = rev ++ [ [xMake| attribute.nameValue.name.reference := [Prim (S "maxSize")]
                                    | attribute.nameValue.value.value.literal := [Prim (I n)] |] ]
