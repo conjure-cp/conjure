@@ -1,8 +1,0 @@
-[handleInfDom] given n: int(1..)
-               ~~>
-               given n: int(1..MAXINT)
-[applied] allDiff(square)
-          {rules/refns/matrix/allDiff.rule}
-              (forAll v__1 : int(1..n)
-                   . (forAll v__2 : int(1..n) , v__1 < v__2
-                          . !(forAll v__3 : int(1..n) . square[v__1, v__3] = square[v__2, v__3])))

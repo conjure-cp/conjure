@@ -1,8 +1,0 @@
-language ESSENCE' 1.0
-
-given MAXINT: int
-given n: int(1..MAXINT)
-find s_Matrix1D: matrix indexed by [int(1..n)] of int(-1, 1)
-minimising sum k : int(1..n - 1)
-               . (sum i : int(0..n - k - 1) . s_Matrix1D[i] * s_Matrix1D[i + k]) ** 2
-such that true
