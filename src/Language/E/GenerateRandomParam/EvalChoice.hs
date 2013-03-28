@@ -34,6 +34,15 @@ evalChoice (CInt size ranges) = do
                         ,"Picked"  <+> pretty n]
     return [xMake| value.literal := [Prim (I n )] |]
 
+evalChoice (CEnum _ range enums) = do
+    index <- rangeRandomM (getNums range)
+    return $ enums !! index
+    where
+    getNums :: Range -> (Int,Int)
+    getNums (RSingle n)  = (fromIntegral n,fromIntegral n)
+    getNums (RRange a b) = (fromIntegral a, fromIntegral b)
+    
+
 evalChoice (CTuple doms) = do
     vals <- mapM evalChoice doms
     return $ [xMake| value.tuple.values :=  vals |]
@@ -186,6 +195,7 @@ allChoices (CRel size cs) =
     where 
     cross = cartesianProduct . map allChoices $ cs 
 
+choiceFilterer :: Range -> [b] -> Bool
 choiceFilterer (RSingle n)  = (==) n . genericLength
 choiceFilterer (RRange a b) = genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&) 
 

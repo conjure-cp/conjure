@@ -9,16 +9,18 @@ import Language.E.GenerateRandomParam.Common
 import Language.E.Up.Debug(upBug)
 
 import Control.Arrow(arr)
-import qualified Text.PrettyPrint as Pr
 
+import qualified Data.Map as Map
+import qualified Data.Text as T
+import qualified Text.PrettyPrint as Pr
 
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
 
-handleDomain :: MonadConjure m => E -> m Choice
-handleDomain [xMatch| _ := domain.bool |] =  return CBool
+handleDomain :: MonadConjure m => EnumMap -> E -> m Choice
+handleDomain _ [xMatch| _ := domain.bool |] =  return CBool
 
-handleDomain [xMatch| ranges := domain.int.ranges |] = do
+handleDomain _ [xMatch| ranges := domain.int.ranges |] = do
     cRanges <- mapM handleRange ranges
     let sortedRange =  sortOn snd cRanges
     return $ createChoice sortedRange
@@ -27,31 +29,39 @@ handleDomain [xMatch| ranges := domain.int.ranges |] = do
     createChoice :: [(Integer,Range)] -> Choice
     createChoice = uncurry CInt . first (arr sum) . unzip
 
-handleDomain [xMatch| [inner] := domain.set.inner
-                    | attr    := domain.set.attributes.attrCollection|] = do
-    dom <- handleDomain inner
+handleDomain em [xMatch| [Prim (S name)] := type.typeEnum |] =
+    return $ CEnum len (RRange 0 (len - 1)) enums
+
+    where 
+    enums = fromMaybe (_bugg ("Enum missing from mapping in handleDomain" ++ T.unpack name)) 
+            $ Map.lookup (T.unpack name) em 
+    len   = genericLength enums
+
+handleDomain em [xMatch| [inner] := domain.set.inner
+                       | attr    := domain.set.attributes.attrCollection|] = do
+    dom <- handleDomain em inner
     sizeRange <- handleSetAttributes dom attr
     return $ CSet sizeRange dom
 
-handleDomain [xMatch| doms := domain.tuple.inners |]  =
-   liftM CTuple (mapM handleDomain doms)
+handleDomain em [xMatch| doms := domain.tuple.inners |]  =
+   liftM CTuple (mapM (handleDomain em) doms)
 
-handleDomain [xMatch| [range] := domain.matrix.index
-                    | [dom]   := domain.matrix.inner |]  = do
-    (CInt _ ranges) <- handleDomain range
-    dom'            <- handleDomain dom
+handleDomain em [xMatch| [range] := domain.matrix.index
+                       | [dom]   := domain.matrix.inner |]  = do
+    (CInt _ ranges) <- handleDomain em range
+    dom'            <- handleDomain em dom
     return $ CMatrix ranges dom'
 
-handleDomain [xMatch| inners := domain.relation.inners
-                    | attr   := domain.relation.attributes.attrCollection|] = do
-    doms <- mapM handleDomain inners
+handleDomain em [xMatch| inners := domain.relation.inners
+                       | attr   := domain.relation.attributes.attrCollection|] = do
+    doms <- mapM (handleDomain em) inners
     sizeRange <- handleRelAttributes doms attr
     return $ CRel sizeRange doms
 
-handleDomain [xMatch| [from] := domain.function.innerFrom
-                    | [to]   := domain.function.innerTo
-                    | attrs  := domain.function.attributes.attrCollection |] = do
-    [from',to'] <- mapM handleDomain [from,to]
+handleDomain em [xMatch| [from] := domain.function.innerFrom
+                       | [to]   := domain.function.innerTo
+                       | attrs  := domain.function.attributes.attrCollection |] = do
+    [from',to'] <- mapM (handleDomain em) [from,to]
     let fAttrs =  findAttrs (FAttrs False False False) attrs
         size   =  calcuateSize fAttrs from' to'
     {-error . show .pretty $  CFunc size fAttrs from' to'-}
@@ -84,7 +94,7 @@ handleDomain [xMatch| [from] := domain.function.innerFrom
         f [xMatch| [Prim (S "bijective")]  := attribute.name.reference |] = fa{fInjective=True,fSurjective=True}
         f _ = fa
 
-handleDomain e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
+handleDomain _ e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
 
 
 handleRelAttributes :: MonadConjure m => [Choice] -> [E] -> m Range
