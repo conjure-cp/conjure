@@ -3,15 +3,19 @@ module Language.E.GenerateRandomParam.Data where
 
 import Language.E
 import qualified Text.PrettyPrint as Pr
+import Data.Map(Map)
 
 type Essence      = Spec
 type EssenceParam = Spec
 type Size         = Range
+type EnumMap      = Map String [E]
+
 
 -- Data type representing choices
 data Choice =
      CBool
    | CInt     Integer [Range]
+   | CEnum    Integer  Range   [E]
    | CTuple  [Choice]
    | CMatrix [Range]   Choice
    | CSet     Size     Choice
@@ -48,17 +52,23 @@ instance Ord Range where
 instance Pretty Range  where pretty = pretty . show
 instance Pretty Choice where
     pretty (CBool)           = "CBool"
-    pretty (CInt i rs )      = "CInt{" <> pretty i <> "}"    <+> sep (map pretty rs)
+    pretty (CInt i rs )      = "CInt" <> Pr.braces (pretty i)  <+> sep (map pretty rs)
     pretty (CTuple vs )      = "CTuple" <+> "(" <+>
                                sep (map (\a -> pretty a <+> " ") vs) <> ")"
     pretty (CMatrix rs cs)   = "CMatrix" <+> sep (map pretty rs) <+> "[" <+> pretty cs <+> "]"
     pretty (CSet rs dom)     = "CSet" <+> pretty rs <+> "OF" <+> pretty dom
+
     pretty (CRel rs vs)      = "CRel" <+> pretty rs <+> "⟪" <+>
                                sep (map (\a -> pretty a <+> " ") vs) <> "⟫"
 
+    pretty (CEnum size rs es) = "CEnum" <> Pr.braces (pretty size) <+> pretty rs
+                                Pr.$+$
+                                Pr.nest 8
+                                (Pr.braces $ sep . map pretty $ es)
+
     pretty (CFunc rs attrs from to) = Pr.hang
                                       ("CFunc" <> pretty attrs  <+> pretty rs)
-                                      8
+                                      6
                                       (pretty from   <+> "-->" <+> pretty to)
 
 instance Pretty FAttrs where
