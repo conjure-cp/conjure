@@ -2,6 +2,7 @@
 
 module Language.E.Up.ReduceSpec(
      reduceSpec
+    ,reduceSpec'
     ,simSpec
     ,removeNegatives
     ,removeIndexRanges
@@ -12,6 +13,8 @@ module Language.E.Up.ReduceSpec(
 import Language.E
 import Language.E.Evaluator.Full    ( fullEvaluator)
 import Language.E.Up.Debug
+import Language.E.DomainOf(domainOf)
+
 
 -- Convert the unaryOp.negate.value.literal to a value.literal
 removeNegatives :: Monad m => Spec -> m Spec
@@ -65,18 +68,20 @@ introduceParams Nothing spec@(Spec ver _) = do
     let ef = filter removeGiven (toLst spec)
     return $  Spec ver (listAsStatement ef)
 
+reduceSpec  :: Monad m => Spec -> m Spec
+reduceSpec' :: Monad m => Bool -> Spec -> m Spec
 
-reduceSpec :: Monad m => Spec -> m Spec
-reduceSpec spec@(Spec ver _) = do
-    let (s,_) = head $ reduce spec
-
+reduceSpec  = reduceSpec' True
+reduceSpec' reduceEnumRange spec@(Spec ver _) = do
+    let (s,l) = head $ reduce spec
+    --putStrLn . show . pretty $ l 
     let ee = removeE removeLettings $  (head .rights) [s]
     return $  Spec ver (listAsStatement ee)
 
     where
 
     reduce ::  Spec -> [(Either Doc Spec, LogTree)]
-    reduce spec1 = runCompE "tranform" $ bottomUpSpecExcept' exclude varSelector spec1
+    reduce spec1 = runCompE "tranform" $ bottomUpSpecExcept' exclude (varSelector reduceEnumRange) spec1
 
     removeE :: (E -> Bool) -> Spec -> [E]
     removeE func spec1 = filter func (toLst spec1) 
@@ -123,15 +128,17 @@ exclude [xMatch| _ := name.reference |] =  True
 exclude _ = False
 
 
-varSelector :: MonadConjure m => E -> m E
-varSelector x@[xMatch| [Prim (S nm)] := reference |] = do
-    -- mkLog "val" $ pretty $  show x
+varSelector :: MonadConjure m => Bool -> E -> m E
+varSelector b x@[xMatch| [Prim (S nm)] := reference |] = do
+    mkLog "val" $ pretty $  show x
     ma <- runMaybeT (lookupReference nm)
-    case ma of
-        Nothing  -> return x
-        Just res -> inlineVars res
+    mkLog "ma" $ pretty . groom $ ma
+    case (b,ma) of
+        (_,Nothing)  -> return x
+        (False,Just (Tagged "type" [Tagged "typeEnum" [Prim (S _)]]))  -> return x
+        (_,Just res) -> inlineVars res
 
-varSelector x = return x
+varSelector _ x = return x
 
 
 inlineVars :: MonadConjure m => E -> m E
