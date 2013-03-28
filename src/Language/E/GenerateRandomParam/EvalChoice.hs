@@ -175,25 +175,27 @@ allChoices (CTuple cs) =
     cross :: [[E]]
     cross   = cartesianProduct choices
 
+allChoices (CSet size cs) =
+    sort . map wrapper . filter (choiceFilterer size) . subsequences . allChoices $ cs 
+    where
+    wrapper vs = [xMake| value.set.values := vs|]
+
+
 allChoices (CRel size cs) = 
-    relChoice size cross
-    where cross = cartesianProduct . map allChoices $ cs 
+    relChoice (choiceFilterer size) cross
+    where 
+    cross = cartesianProduct . map allChoices $ cs 
 
-relChoice :: Range -> [[E]] -> [E]
-relChoice (RSingle n)  = relChoice' ((==) n . genericLength) 
--- CHECK I think the element will be in order now
-relChoice (RRange a b) = sort . relChoice' (genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&) ) 
+choiceFilterer (RSingle n)  = (==) n . genericLength
+choiceFilterer (RRange a b) = genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&) 
 
-relChoice' :: ([[E]] -> Bool) -> [[E]] -> [E]
-relChoice'  f es =
+relChoice :: ([[E]] -> Bool) -> [[E]] -> [E]
+relChoice  f es =
     map mapper elems 
     where
-    elems :: [[[E]]]
     elems = filter f (subsequences es)
-
     wrap :: [E] -> E
-    wrap vs = [xMake| value.tuple.values := vs |]
-
+    wrap vs   = [xMake| value.tuple.values := vs |]
     mapper vs =  [xMake| value.relation.values := (map wrap vs) |]
 
 

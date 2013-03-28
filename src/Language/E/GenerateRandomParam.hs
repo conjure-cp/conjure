@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
 import Language.E
@@ -11,9 +12,11 @@ import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.HandleDomain
 import Language.E.GenerateRandomParam.EvalChoice
 
-
 import System.Directory(getCurrentDirectory)
 import System.FilePath((</>))
+import Control.Arrow((&&&),arr,(***))
+import Language.E.NormaliseSolution(normaliseSolutionEs)
+
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence' = do
@@ -67,9 +70,6 @@ stripDecVars (Spec v x) = Spec v y
         stays _ = False
 
 
-
-
-
 {-
      Run easily from GHCI with
      _x  =<<  _r _i
@@ -106,6 +106,10 @@ _f2 :: IO Spec
 _f2 = _getTest "_func/bijective-int-matrix"
 _ftm :: IO Spec
 _ftm = _getTest "_func/bijective-tuple-matrix"
+_ftr :: IO Spec
+_ftr = _getTest "_func/bijective-tuple-relation"
+_fsr :: IO Spec
+_fsr = _getTest "_func/bijective-set-relation"
 
 _i :: IO Spec
 _i = _getTest "int-1"
@@ -168,4 +172,7 @@ _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateRandomParam: " ++ s)
 _bugg :: String -> t
 _bugg s = _bug s []
+
+_fa :: Choice -> (Integer, Int)
+_fa = findSize &&&  (length . allChoices)
 
