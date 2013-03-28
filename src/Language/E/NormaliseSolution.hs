@@ -28,6 +28,7 @@ normaliseSolution' [xMatch|  [val] := topLevel.letting.expr
     in  [xMake| topLevel.letting.expr := [res]
               | topLevel.letting.name := name |]
 
+
 normaliseSolution' [xMatch| vs := value.set.values |] =
     let res = map normaliseSolution' vs
     in  [xMake| value.set.values := sort res |]
@@ -36,6 +37,9 @@ normaliseSolution' [xMatch| vs := value.mset.values |] =
     let res = map normaliseSolution' vs
     in  [xMake| value.mset.values := sort res |]
 
+normaliseSolution' [xMatch| vs := value.relation.values |] =
+    let res = map normaliseSolution' vs
+    in  [xMake| value.relation.values := sort res |]
 
 normaliseSolution' [xMatch| vs := value.function.values |] =
     let res = map normaliseSolution' vs
