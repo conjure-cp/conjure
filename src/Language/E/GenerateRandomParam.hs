@@ -1,5 +1,5 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
 import Language.E
@@ -7,15 +7,21 @@ import Language.E.DomainOf(domainOf)
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.IO(getSpec)
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
+import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
+import Language.E.Up.EprimeToEssence(convertUnamed)
 
 import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.HandleDomain
 import Language.E.GenerateRandomParam.EvalChoice
 
 import System.Directory(getCurrentDirectory)
+import Text.Groom(groom)
+
 import System.FilePath((</>))
-import Control.Arrow((&&&),arr,(***))
+import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Language.E.NormaliseSolution(normaliseSolutionEs)
+
+import qualified Data.Map as Map
 
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
@@ -23,16 +29,22 @@ generateRandomParam essence' = do
     essence <- removeNegatives essence'
     let stripped@(Spec v f) = stripDecVars essence
     (Spec _ e) <- reduceSpec stripped
-    let es = statementAsList e
 
-    --mkLog "Spec" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) (statementAsList f) )
+    --mkLog "GivensSpec"   (vcat .  map (pretty . prettyAsTree) $  (statementAsList f))
     mkLog "GivensSpec"   (pretty f)
+
+    let enumMapping1         = getEnumMapping essence
+        enums1               = getEnumsAndUnamed essence
+        (enumMapping, _) = convertUnamed enumMapping1 enums1
+        es = statementAsList e 
+    
     mkLog "Reduced   " $ pretty es <+> "\n"
+    mkLog "enums" (pretty . groom $ enumMapping)
 
     doms <-  mapM domainOf es
-    {-mkLog "D" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )-}
+    --mkLog "D" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
 
-    choices <-  mapM handleDomain doms
+    choices <-  mapM (handleDomain enumMapping) doms
     mkLog "Choices" (sep . map pretty $ choices )
 
     givens <- mapM evalChoice choices
@@ -42,7 +54,7 @@ generateRandomParam essence' = do
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
-    --mkLog "EssenceParam" (pretty essenceParam)
+    mkLog "EssenceParam" (pretty essenceParam)
 
     return essenceParam
 
@@ -98,7 +110,9 @@ _b :: IO Spec
 _b = _getTest "bool"
 
 _e :: IO Spec
-_e = _getTest "enum-1"
+_e = _getTest "_enum/ofType"
+_ep :: IO Spec
+_ep = _getTest "_enum/partial"
 
 _f :: IO Spec
 _f = _getTest "_func/bijective-int-int"
