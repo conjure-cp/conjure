@@ -1,10 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Language.E.GenerateRandomParam.Data where
 
 import Language.E
-
 import qualified Text.PrettyPrint as Pr
 
-type Size = Range
+type Essence      = Spec
+type EssenceParam = Spec
+type Size         = Range
 
 -- Data type representing choices
 data Choice =

@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-
 module Language.E.GenerateRandomParam ( generateRandomParam ) where
 
 import Language.E
@@ -12,7 +11,6 @@ import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.HandleDomain
 import Language.E.GenerateRandomParam.EvalChoice
 
-import Text.Groom(groom)
 
 import System.Directory(getCurrentDirectory)
 import System.FilePath((</>))
@@ -69,8 +67,6 @@ stripDecVars (Spec v x) = Spec v y
         stays _ = False
 
 
-_cartesianProduct :: [a] -> [b] -> [(a,b)]
-xs `_cartesianProduct` ys = [(x,y) | x <- xs, y <- ys ]
 
 
 
@@ -108,6 +104,8 @@ _f :: IO Spec
 _f = _getTest "_func/bijective-int-int"
 _f2 :: IO Spec
 _f2 = _getTest "_func/bijective-int-matrix"
+_ftm :: IO Spec
+_ftm = _getTest "_func/bijective-tuple-matrix"
 
 _i :: IO Spec
 _i = _getTest "int-1"

@@ -1,5 +1,5 @@
---{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
---{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices) where
 
@@ -15,6 +15,7 @@ import Data.Map (Map)
 import qualified Data.Set as Set
 import qualified Data.Map as M
 
+--import Text.Groom(groom)
 
 -- Converts a choice into an action
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
@@ -57,26 +58,26 @@ evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
     findRel Set.empty size doms
 
-evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) = 
+evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) =
     findBijective from to
 
-findBijective :: (MonadConjure m, RandomM m) 
-              => Choice -> Choice 
+findBijective :: (MonadConjure m, RandomM m)
+              => Choice -> Choice
               -> m E
 findBijective from to = do
    let (allF, allT) = (choiceMap from, choiceMap to)
        fSize = M.size allF
        tSize = M.size allT
-   if fSize /= tSize 
+   if fSize /= tSize
    then _bugg "findBijective sizes not equal"
    else pairSets Set.empty tSize allF allT
-   
 
-   where 
+
+   where
    choiceMap :: Choice -> Map E ()
    choiceMap choice =
        let allC   = allChoices choice
-           tuples = map (flip  (,) ()) allC 
+           tuples = map (flip  (,) ()) allC
        in M.fromDistinctAscList tuples
 
    pairSets :: (RandomM m) => Set [E] -> Int -> Map E () -> Map E () -> m E
@@ -158,18 +159,29 @@ pickIth index (RRange a b:xs) = pickIth (index - (b - a) - 1 ) xs
 
 allChoices :: Choice -> [E]
 allChoices (CInt _ rs) = concatMap rangeToE rs
-allChoices (CBool)     = [ [eMake| false |], [eMake| true |] ] 
+allChoices (CBool)     = [ [eMake| false |], [eMake| true |] ]
 
-allChoices (CMatrix rs choice) = 
-    map (\p -> [xMake| value.matrix.values := p |] ) perms    
+allChoices (CMatrix rs choice) =
+    map (\p -> [xMake| value.matrix.values := p |] ) perms
     where size    = countRanges rs
           choices = allChoices choice
           perms   = permutationsN size choices
 
+allChoices (CTuple cs) =
+    map (\p -> [xMake| value.tuple.values := p |] ) cross
+    where
+    choices = map allChoices cs
+    cross :: [[E]]
+    cross   = cartesianProduct choices
 
-rangeToE :: Range -> [E] 
+
+cartesianProduct :: [[a]] -> [[a]]
+cartesianProduct = sequence
+
+
+rangeToE :: Range -> [E]
 rangeToE (RSingle i) = [[xMake| value.literal := [Prim (I i)] |]]
-rangeToE (RRange a b) = 
+rangeToE (RRange a b) =
     map f [a..b]
     where f i = [xMake| value.literal := [Prim (I i)] |]
 
