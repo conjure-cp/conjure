@@ -1,0 +1,8 @@
+language Essence 1.3
+
+letting E be new type enum { foo, bar, baz,cookies}
+
+letting Dom   be domain E
+letting Range be domain matrix indexed by [int(1,2)] of int(-1,1)
+
+given f : function (total,surjective,injective) Dom --> Range
