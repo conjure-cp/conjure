@@ -17,7 +17,7 @@ import Data.Map (Map)
 import qualified Data.Set as Set
 import qualified Data.Map as M
 
-import Text.Groom(groom)
+--import Text.Groom(groom)
 
 -- Converts a choice into an action
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E

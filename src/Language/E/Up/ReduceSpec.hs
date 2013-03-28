@@ -13,8 +13,6 @@ module Language.E.Up.ReduceSpec(
 import Language.E
 import Language.E.Evaluator.Full    ( fullEvaluator)
 import Language.E.Up.Debug
-import Language.E.DomainOf(domainOf)
-
 
 -- Convert the unaryOp.negate.value.literal to a value.literal
 removeNegatives :: Monad m => Spec -> m Spec
@@ -73,7 +71,7 @@ reduceSpec' :: Monad m => Bool -> Spec -> m Spec
 
 reduceSpec  = reduceSpec' True
 reduceSpec' reduceEnumRange spec@(Spec ver _) = do
-    let (s,l) = head $ reduce spec
+    let (s,_) = head $ reduce spec
     --putStrLn . show . pretty $ l 
     let ee = removeE removeLettings $  (head .rights) [s]
     return $  Spec ver (listAsStatement ee)
