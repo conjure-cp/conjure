@@ -5,8 +5,10 @@ module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices) where
 
 import Language.E
 import Language.E.GenerateRandomParam.Data
-import Language.E.GenerateRandomParam.Common
+import Language.E.GenerateRandomParam.Common(countRanges,countRange)
 import Language.E.Up.Debug(upBug)
+
+import Control.Arrow((&&&))
 
 import Data.Set (Set)
 import Data.List(genericTake)
@@ -15,7 +17,7 @@ import Data.Map (Map)
 import qualified Data.Set as Set
 import qualified Data.Map as M
 
---import Text.Groom(groom)
+import Text.Groom(groom)
 
 -- Converts a choice into an action
 evalChoice :: (MonadConjure m, RandomM m) => Choice -> m E
@@ -127,7 +129,6 @@ findSet set 0 _ =
 
 findSet set size (c:cs) = do
     ele <- evalChoice c
-    -- CHECK I think the element will be in order
     let (size',set') = if Set.notMember ele set
         then (size - 1, Set.insert ele set)
         else (size,set)
@@ -174,17 +175,36 @@ allChoices (CTuple cs) =
     cross :: [[E]]
     cross   = cartesianProduct choices
 
+allChoices (CRel size cs) = 
+    relChoice size cross
+    where cross = cartesianProduct . map allChoices $ cs 
+
+relChoice :: Range -> [[E]] -> [E]
+relChoice (RSingle n)  = relChoice' ((==) n . genericLength) 
+-- CHECK I think the element will be in order now
+relChoice (RRange a b) = sort . relChoice' (genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&) ) 
+
+relChoice' :: ([[E]] -> Bool) -> [[E]] -> [E]
+relChoice'  f es =
+    map mapper elems 
+    where
+    elems :: [[[E]]]
+    elems = filter f (subsequences es)
+
+    wrap :: [E] -> E
+    wrap vs = [xMake| value.tuple.values := vs |]
+
+    mapper vs =  [xMake| value.relation.values := (map wrap vs) |]
+
 
 cartesianProduct :: [[a]] -> [[a]]
 cartesianProduct = sequence
-
 
 rangeToE :: Range -> [E]
 rangeToE (RSingle i) = [[xMake| value.literal := [Prim (I i)] |]]
 rangeToE (RRange a b) =
     map f [a..b]
     where f i = [xMake| value.literal := [Prim (I i)] |]
-
 
 permutationsN :: Integer -> [a] -> [[a]]
 permutationsN 0 _ = [[]]
