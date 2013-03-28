@@ -11,7 +11,7 @@ import Language.E.Up.Debug(upBug)
 import Control.Arrow((&&&))
 
 import Data.Set (Set)
-import Data.List(genericTake)
+import Data.List(genericTake,genericDrop)
 import Data.Map (Map)
 
 import qualified Data.Set as Set
@@ -171,6 +171,9 @@ allChoices :: Choice -> [E]
 allChoices (CInt _ rs) = concatMap rangeToE rs
 allChoices (CBool)     = [ [eMake| false |], [eMake| true |] ]
 
+allChoices (CEnum _ (RSingle n) es)  = [es `genericIndex` n]
+allChoices (CEnum _ (RRange a b) es) =  genericDrop a . genericTake (b+1) $ es
+
 allChoices (CMatrix rs choice) =
     map (\p -> [xMake| value.matrix.values := p |] ) perms
     where size    = countRanges rs
@@ -206,7 +209,7 @@ relChoice  f es =
     elems = filter f (subsequences es)
     wrap :: [E] -> E
     wrap vs   = [xMake| value.tuple.values := vs |]
-    mapper vs =  [xMake| value.relation.values := (map wrap vs) |]
+    mapper vs = [xMake| value.relation.values := (map wrap vs) |]
 
 
 cartesianProduct :: [[a]] -> [[a]]

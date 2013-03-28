@@ -15,9 +15,10 @@ import Language.E.GenerateRandomParam.HandleDomain
 import Language.E.GenerateRandomParam.EvalChoice
 
 import System.Directory(getCurrentDirectory)
+import System.FilePath((</>))
 import Text.Groom(groom)
 
-import System.FilePath((</>))
+
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Language.E.NormaliseSolution(normaliseSolutionEs)
 
@@ -31,13 +32,13 @@ generateRandomParam essence' = do
     (Spec _ e) <- reduceSpec stripped
 
     --mkLog "GivensSpec"   (vcat .  map (pretty . prettyAsTree) $  (statementAsList f))
-    mkLog "GivensSpec"   (pretty f)
+    mkLog "GivensSpec" (pretty f)
 
-    let enumMapping1         = getEnumMapping essence
-        enums1               = getEnumsAndUnamed essence
+    let enumMapping1     = getEnumMapping essence
+        enums1           = getEnumsAndUnamed essence
         (enumMapping, _) = convertUnamed enumMapping1 enums1
-        es = statementAsList e 
-    
+        es               = statementAsList e
+
     mkLog "Reduced   " $ pretty es <+> "\n"
     mkLog "enums" (pretty . groom $ enumMapping)
 
@@ -51,7 +52,7 @@ generateRandomParam essence' = do
 
     let lettings = zipWith makeLetting es givens
     mkLog "Lettings" (vcat $ map pretty lettings)
-    --mkLog "Lettings" (vcat $ map (\a -> prettyAsBoth a <+> "\n" ) lettings )
+    --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
     mkLog "EssenceParam" (pretty essenceParam)
@@ -111,6 +112,8 @@ _b = _getTest "bool"
 
 _e :: IO Spec
 _e = _getTest "_enum/ofType"
+_es :: IO Spec
+_es = _getTest "_enum/set"
 _ep :: IO Spec
 _ep = _getTest "_enum/partial"
 
@@ -124,6 +127,8 @@ _ftr :: IO Spec
 _ftr = _getTest "_func/bijective-tuple-relation"
 _fsr :: IO Spec
 _fsr = _getTest "_func/bijective-set-relation"
+_fem :: IO Spec
+_fem = _getTest "_func/bijective-enum-matrix"
 
 _i :: IO Spec
 _i = _getTest "int-1"
