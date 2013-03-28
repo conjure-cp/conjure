@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-module Language.E.GenerateRandomParam.HandleDomain(handleDomain) where
+module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize) where
 
 import Language.E
 import Language.E.GenerateRandomParam.Data
@@ -9,6 +9,7 @@ import Language.E.GenerateRandomParam.Common
 import Language.E.Up.Debug(upBug)
 
 import Control.Arrow(arr)
+import qualified Text.PrettyPrint as Pr
 
 
 _c :: Choice
@@ -57,11 +58,19 @@ handleDomain [xMatch| [from] := domain.function.innerFrom
     return $ CFunc size fAttrs from' to'
 
     where
+    --calcuateSize :: FAttrs -> Choice -> Choice -> Integer 
     calcuateSize (FAttrs{fTotal=True, fInjective=True, fSurjective=True}) f t  =
        let (fromSize,toSize) = (findSize f, findSize t)
        in if   fromSize == toSize
           then RSingle fromSize
-          else error "The domain and range must have equal size for a bijective total function"
+          else  error . show $ hsep  ["The Domain size"
+                                     , Pr.parens (pretty fromSize)
+                                     , "and Range size"
+                                     , Pr.parens (pretty toSize)
+                                     , "must have a equal Length for a bijective function"
+                                     ] 
+                                     Pr.$+$  
+                                     (nest 4 . vcat . map (pretty .show) $ [ f, t ])
 
     calcuateSize _ _ _ = error "Not done yet"
 
@@ -125,21 +134,26 @@ findSize :: Choice -> Integer
 findSize CBool = 2
 findSize (CInt size _)  = size
 findSize (CTuple doms)  = product . map findSize $ doms
-findSize (CRel range _) = 2 ^ countRange range
+
+findSize (CRel range vs) = result 
+    where 
+    dSize  = (product . map findSize) vs 
+    result = sizeFromRange dSize range 
 
 findSize (CSet range dom) = result
     where
-    dSize = findSize dom
-    result  = sizeFromRange range
-    sizeFromRange :: Range -> Integer
-    sizeFromRange (RSingle k)  = dSize `choose` k
-    sizeFromRange (RRange a b) = sum . map (dSize `choose`  ) $ [a..b]
+    dSize  = findSize dom
+    result = sizeFromRange dSize range
 
 findSize (CMatrix ranges dom ) =  dSize ^ matSize
    where
    matSize = countRanges ranges
    dSize = findSize dom
 
+-- for a set
+sizeFromRange :: Integer -> Range -> Integer
+sizeFromRange d (RSingle k)  =  d `choose` k
+sizeFromRange d (RRange a b) = sum . map (d `choose`  ) $ [a..b]
 
 handleSetAttributes' :: MonadConjure m => [E] -> m Range
 handleSetAttributes' [] = _bugg "handleSetAttributes' no attributes"
