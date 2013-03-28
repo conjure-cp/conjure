@@ -5,7 +5,7 @@ module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize) where
 
 import Language.E
 import Language.E.GenerateRandomParam.Data
-import Language.E.GenerateRandomParam.Common
+import Language.E.GenerateRandomParam.Common(countRanges)
 import Language.E.Up.Debug(upBug)
 
 import Control.Arrow(arr)
@@ -142,8 +142,9 @@ handleSetAttributes dom es =
 
 findSize :: Choice -> Integer
 findSize CBool = 2
-findSize (CInt size _)  = size
-findSize (CTuple doms)  = product . map findSize $ doms
+findSize (CInt size _)    = size
+findSize (CEnum size _ _) = size
+findSize (CTuple doms)    = product . map findSize $ doms
 
 findSize (CRel range vs) = result 
     where 
@@ -159,6 +160,7 @@ findSize (CMatrix ranges dom ) =  dSize ^ matSize
    where
    matSize = countRanges ranges
    dSize = findSize dom
+
 
 -- for a set
 sizeFromRange :: Integer -> Range -> Integer
