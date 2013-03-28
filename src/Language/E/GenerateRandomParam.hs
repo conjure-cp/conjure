@@ -14,12 +14,14 @@ import Language.E.GenerateRandomParam.EvalChoice
 
 import Text.Groom(groom)
 
+import System.Directory(getCurrentDirectory)
+import System.FilePath((</>))
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence' = do
     essence <- removeNegatives essence'
-    let stripped@(Spec _ f) = stripDecVars essence
-    (Spec v e) <- reduceSpec stripped
+    let stripped@(Spec v f) = stripDecVars essence
+    (Spec _ e) <- reduceSpec stripped
     let es = statementAsList e
 
     --mkLog "Spec" (vcat $ map (\a -> prettyAsPaths a <+> "\n" ) (statementAsList f) )
@@ -92,7 +94,9 @@ _x ((_, lg):_) =   print (pretty lg)
 _x _ = return ()
 
 _getTest :: FilePath -> IO Spec
-_getTest f = getSpec $ "/Users/bilalh/CS/conjure/test/generateParams/" ++ f  ++ ".essence"
+_getTest f = do
+    dir <- getCurrentDirectory  -- Assume running from conjure directory
+    getSpec $ dir </> "test/generateParams" </> f  ++ ".essence"
 
 _b :: IO Spec
 _b = _getTest "bool"
