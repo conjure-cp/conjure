@@ -49,8 +49,8 @@ evalChoice (CTuple doms) = do
 
 evalChoice (CSet sizeRange dom) = do
     size <- evalRange sizeRange
-    es <- findDistinct (evalChoice dom) Set.empty size
-    return [xMake| value.set.values := (Set.toAscList es) |]
+    es <- findDistinct' (evalChoice dom) Set.empty size
+    return [xMake| value.set.values := (es) |]
 
 evalChoice (CMatrix sizeRange dom) = do
     let size  = sum . map countRange $ sizeRange
@@ -68,8 +68,8 @@ evalChoice (CMatrix sizeRange dom) = do
 
 evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
-    es <- findDistinct (mapM evalChoice doms) Set.empty size
-    return $ [xMake| value.relation.values := (map wrap (Set.toAscList es)) |]
+    es <- findDistinct' (mapM evalChoice doms) Set.empty size
+    return $ [xMake| value.relation.values := (map wrap es) |]
 
     where
     wrap :: [E] -> E
@@ -84,9 +84,9 @@ evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True,fTotal=_} from to) 
 evalChoice (CFunc sizeRange FAttrs{fInjective=True,fTotal=total} from to) = do
     size  <- evalRange sizeRange
     eFrom <- getFuncElements total size from
-    eTo   <- findDistinct (evalChoice to)   Set.empty size
+    eTo   <- findDistinct' (evalChoice to)   Set.empty size
 
-    let vs = zipWith wrap eFrom (Set.toAscList eTo)
+    let vs = zipWith wrap eFrom eTo
     return [xMake| value.function.values := vs |]
 
     where
@@ -96,20 +96,20 @@ evalChoice (CFunc sizeRange FAttrs{fSurjective=True,fTotal=total} from to) = do
     size  <- evalRange sizeRange
     let eTo   =  allChoices to
         toLen =  genericLength eTo
-    --if size < toLen
-    --then error "evalChoice: surjective function invaild size"
-    --else do
-    eFrom <- getFuncElements total size from
+    if size < toLen
+    then error "evalChoice: surjective function invaild size"
+    else do
+        eFrom <- getFuncElements total size from
 
-    let (vs,extraFrom) = genericSplitAt toLen eFrom
+        let (vs,extraFrom) = genericSplitAt toLen eFrom
 
-    let paired = zipWith wrap vs eTo
-        extraFromLen = genericLength extraFrom
+        let paired = zipWith wrap vs eTo
+            extraFromLen = genericLength extraFrom
 
-    extraTo <- pickN extraFromLen toLen eTo
-    let extraPaired = zipWith wrap extraFrom extraTo
+        extraTo <- pickN extraFromLen toLen eTo
+        let extraPaired = zipWith wrap extraFrom extraTo
 
-    return [xMake| value.function.values :=  (paired ++ extraPaired) |]
+        return [xMake| value.function.values :=  (paired ++ extraPaired) |]
 
     where
     wrap f t = [xMake| mapping := [f,t] |]
@@ -131,9 +131,8 @@ getFuncElements :: (RandomM m, MonadConjure m) =>Bool -> Integer -> Choice -> m 
 getFuncElements getAll size dom  = 
     if getAll then
         return $ allChoices dom
-    else do
-        res1 <- findDistinct (evalChoice dom) Set.empty size
-        return $ Set.toAscList res1
+    else 
+        findDistinct' (evalChoice dom) Set.empty size
 
     
 
@@ -181,6 +180,9 @@ findBijective from to = do
      let (e2,_) = M.elemAt i2 tm
      pairSets (Set.insert [e1,e2] set) (size - 1) (M.deleteAt i1 fm) (M.deleteAt i2 tm)
 
+
+findDistinct'  :: (MonadConjure m, RandomM m, Ord a) => m a -> Set a -> Integer -> m [a] 
+findDistinct' f set n =  return . Set.toAscList =<< findDistinct f set n  
 
 -- Take a function which generates values and return n distinct values
 findDistinct  :: (MonadConjure m, RandomM m, Ord a) => m a -> Set a -> Integer -> m (Set a)
