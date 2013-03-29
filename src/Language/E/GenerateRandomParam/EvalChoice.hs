@@ -81,12 +81,12 @@ evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) =
     findBijective from to
 
  --TODO If size is large gen all then select a few
-evalChoice (CFunc sizeRange FAttrs{fInjective=True} from to) = do
+evalChoice (CFunc sizeRange FAttrs{fInjective=True,fTotal=total} from to) = do
     size  <- evalRange sizeRange
-    eFrom <- findDistinct (evalChoice from) Set.empty size
+    eFrom <- getFuncElements total size from
     eTo   <- findDistinct (evalChoice to)   Set.empty size
 
-    let vs = zipWith wrap (Set.toAscList eFrom) (Set.toAscList eTo)
+    let vs = zipWith wrap eFrom (Set.toAscList eTo)
 
     return [xMake| value.function.values := vs |]
 
@@ -101,25 +101,29 @@ evalChoice (CFunc sizeRange FAttrs{fSurjective=True,fTotal=total} from to) = do
     then error "evalChoice: surjective function invaild size"
     else do
 
-    eFrom <-  
-        if total then  
-            return $ allChoices from
-        else do
-            eFrom1 <- findDistinct (evalChoice from) Set.empty size
-            return $ Set.toAscList eFrom1
+    eFrom <- getFuncElements total size from
 
     let (vs,extraFrom) = genericSplitAt toLen eFrom
-    
+
     let paired = zipWith wrap vs eTo
         extraFromLen = genericLength extraFrom
 
-    extraTo <- pickN extraFromLen toLen eTo 
+    extraTo <- pickN extraFromLen toLen eTo
     let extraPaired = zipWith wrap extraFrom extraTo
 
     return [xMake| value.function.values :=  (paired ++ extraPaired) |]
 
     where
     wrap f t = [xMake| mapping := [f,t] |]
+
+getFuncElements getAll size dom  = 
+    if getAll then
+        return $ allChoices dom
+    else do
+        res1 <- findDistinct (evalChoice dom) Set.empty size
+        return $ Set.toAscList res1
+
+    
 
 -- Pick n random elements from a list
 pickN :: (MonadConjure m, RandomM m, Pretty a,Show a) => Integer -> Integer -> [a] -> m [a]
