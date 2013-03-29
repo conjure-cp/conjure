@@ -133,6 +133,9 @@ _fem = _getTest "_func/bijective-enum-matrix"
 _fii :: IO Spec
 _fii = _getTest "_func/injective-int-int"
 
+_fsi :: IO Spec
+_fsi = _getTest "_func/surjective-int-int"
+
 _i :: IO Spec
 _i = _getTest "int-1"
 _i2 :: IO Spec

@@ -1,5 +1,5 @@
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
+--{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+--{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices) where
 
@@ -11,7 +11,7 @@ import Language.E.Up.Debug(upBug)
 import Control.Arrow((&&&))
 
 import Data.Set (Set)
-import Data.List(genericTake,genericDrop)
+import Data.List(genericTake,genericDrop, genericSplitAt)
 import Data.Map (Map)
 
 import qualified Data.Set as Set
@@ -41,7 +41,7 @@ evalChoice (CEnum _ range enums) = do
     getNums :: Range -> (Int,Int)
     getNums (RSingle n)  = (fromIntegral n,fromIntegral n)
     getNums (RRange a b) = (fromIntegral a, fromIntegral b)
-    
+
 
 evalChoice (CTuple doms) = do
     vals <- mapM evalChoice doms
@@ -50,7 +50,7 @@ evalChoice (CTuple doms) = do
 evalChoice (CSet sizeRange dom) = do
     size <- evalRange sizeRange
     es <- findDistinct (evalChoice dom) Set.empty size
-    return [xMake| value.set.values := es |]
+    return [xMake| value.set.values := (Set.toAscList es) |]
 
 evalChoice (CMatrix sizeRange dom) = do
     let size  = sum . map countRange $ sizeRange
@@ -69,16 +69,16 @@ evalChoice (CMatrix sizeRange dom) = do
 evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
     es <- findDistinct (mapM evalChoice doms) Set.empty size
-    return $ [xMake| value.relation.values := (map wrap es) |]
+    return $ [xMake| value.relation.values := (map wrap (Set.toAscList es)) |]
 
     where
     wrap :: [E] -> E
     wrap vs = [xMake| value.tuple.values := vs |]
- 
 
+
+-- Handle bijection differently since we need all the values anyway
 evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) =
     findBijective from to
-
 
  --TODO If size is large gen all then select a few
 evalChoice (CFunc sizeRange FAttrs{fInjective=True} from to) = do
@@ -86,12 +86,45 @@ evalChoice (CFunc sizeRange FAttrs{fInjective=True} from to) = do
     eFrom <- findDistinct (evalChoice from) Set.empty size
     eTo   <- findDistinct (evalChoice to)   Set.empty size
 
-    return [xMake| value.function.values :=  (zipWith wrap eFrom eTo) |]
+    let vs = zipWith wrap (Set.toAscList eFrom) (Set.toAscList eTo)
 
-    where 
+    return [xMake| value.function.values := vs |]
+
+    where
     wrap f t = [xMake| mapping := [f,t] |]
 
--- Handle bijection different since we need all the values anyway
+evalChoice (CFunc sizeRange FAttrs{fSurjective=True} from to) = do
+    size  <- evalRange sizeRange
+    let eTo   =  allChoices to
+        toLen =  genericLength eTo
+    if size < toLen
+    then error "evalChoice: surjective function invaild size"
+    else do
+
+    eFrom <- findDistinct (evalChoice from) Set.empty size
+
+    let (vs,extraFrom) = genericSplitAt toLen (Set.toAscList eFrom)
+    
+    let paired = zipWith wrap vs eTo
+        extraFromLen = genericLength extraFrom
+
+    extraTo <- pickN extraFromLen toLen eTo 
+    let extraPaired = zipWith wrap extraFrom extraTo
+
+    return [xMake| value.function.values :=  (paired ++ extraPaired) |]
+
+    where
+    wrap f t = [xMake| mapping := [f,t] |]
+
+-- Pick n random elements from a list
+pickN :: (MonadConjure m, RandomM m, Pretty a,Show a) => Integer -> Integer -> [a] -> m [a]
+pickN 0 _    ls = return []
+pickN n size ls = do
+    index <- rangeRandomM (0, fromIntegral size-1)
+    res <- pickN (n-1) size ls
+    return $ ls `genericIndex` index : res
+
+
 findBijective :: (MonadConjure m, RandomM m)
               => Choice -> Choice
               -> m E
@@ -128,9 +161,9 @@ findBijective from to = do
      pairSets (Set.insert [e1,e2] set) (size - 1) (M.deleteAt i1 fm) (M.deleteAt i2 tm)
 
 
--- Take a function which generates values and return n distinct values  
-findDistinct :: (MonadConjure m, RandomM m, Ord a) => (m a) -> Set a -> Integer -> m [a]
-findDistinct _ set 0    = return $ Set.toAscList set
+-- Take a function which generates values and return n distinct values
+findDistinct  :: (MonadConjure m, RandomM m, Ord a) => m a -> Set a -> Integer -> m (Set a)
+findDistinct _ set 0    = return $  set
 findDistinct f set size = do
     ele <- f
     let (size',set') = if Set.notMember ele set
@@ -181,19 +214,19 @@ allChoices (CTuple cs) =
     cross   = cartesianProduct choices
 
 allChoices (CSet size cs) =
-    sort . map wrapper . filter (choiceFilterer size) . subsequences . allChoices $ cs 
+    sort . map wrapper . filter (choiceFilterer size) . subsequences . allChoices $ cs
     where
     wrapper vs = [xMake| value.set.values := vs|]
 
 
-allChoices (CRel size cs) = 
+allChoices (CRel size cs) =
     relChoice (choiceFilterer size) cross
-    where 
-    cross = cartesianProduct . map allChoices $ cs 
+    where
+    cross = cartesianProduct . map allChoices $ cs
 
     relChoice :: ([[E]] -> Bool) -> [[E]] -> [E]
     relChoice  f es =
-        map mapper elems 
+        map mapper elems
         where
         elems = filter f (subsequences es)
         wrap :: [E] -> E
@@ -203,7 +236,7 @@ allChoices (CRel size cs) =
 
 choiceFilterer :: Range -> [b] -> Bool
 choiceFilterer (RSingle n)  = (==) n . genericLength
-choiceFilterer (RRange a b) = genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&) 
+choiceFilterer (RRange a b) = genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&)
 
 cartesianProduct :: [[a]] -> [[a]]
 cartesianProduct = sequence
