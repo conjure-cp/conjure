@@ -79,11 +79,19 @@ evalChoice (CRel sizeRange doms) = do
 evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) =
     findBijective from to
 
--- TODO If number large gen all then select a few
---evalChoice (CFunc RRange FAttrs{fInjective=True}) = do
-    --size <- evalRange sizeRange
-    
 
+ --TODO If size is large gen all then select a few
+evalChoice (CFunc sizeRange FAttrs{fInjective=True} from to) = do
+    size  <- evalRange sizeRange
+    eFrom <- findDistinct (evalChoice from) Set.empty size
+    eTo   <- findDistinct (evalChoice to)   Set.empty size
+
+    return [xMake| value.function.values :=  (zipWith wrap eFrom eTo) |]
+
+    where 
+    wrap f t = [xMake| mapping := [f,t] |]
+
+-- Handle bijection different since we need all the values anyway
 findBijective :: (MonadConjure m, RandomM m)
               => Choice -> Choice
               -> m E
@@ -122,7 +130,7 @@ findBijective from to = do
 
 -- Take a function which generates values and return n distinct values  
 findDistinct :: (MonadConjure m, RandomM m, Ord a) => (m a) -> Set a -> Integer -> m [a]
-findDistinct f set 0    = return $ Set.toAscList set
+findDistinct _ set 0    = return $ Set.toAscList set
 findDistinct f set size = do
     ele <- f
     let (size',set') = if Set.notMember ele set

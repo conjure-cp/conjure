@@ -30,13 +30,13 @@ data FAttrs = FAttrs
     ,fInjective  :: Bool
     ,fSurjective :: Bool
     } deriving(Show,Eq)
-
+{-
 data PAttrs = PAttrs
     {pRegular  :: Bool
     ,pNumParts :: Integer
     ,pPartSize :: Integer
     }deriving(Show,Eq)
-
+-}
 data Range  =
     RSingle Integer
   | RRange  Integer Integer

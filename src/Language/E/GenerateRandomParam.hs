@@ -130,6 +130,9 @@ _fsr = _getTest "_func/bijective-set-relation"
 _fem :: IO Spec
 _fem = _getTest "_func/bijective-enum-matrix"
 
+_fii :: IO Spec
+_fii = _getTest "_func/injective-int-int"
+
 _i :: IO Spec
 _i = _getTest "int-1"
 _i2 :: IO Spec
