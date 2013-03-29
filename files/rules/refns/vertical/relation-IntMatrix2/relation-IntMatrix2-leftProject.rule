@@ -1,0 +1,18 @@
+
+[1000]
+
+&quan &i in toSet(&x(&j,_)) , &guard . &body
+
+~~>
+
+&quan j2 : &index2
+    , &guard { &i[1] --> j2 } /\ &refnx[&j,j2]
+    . &body  { &i[1] --> j2 }
+
+
+    where &x hasRepr RelationIntMatrix2
+    where &j != _
+
+    letting &refnx be refn(&x)
+    letting &index2 be indices(&refnx, 1)
+
