@@ -108,11 +108,9 @@ handleDomain em [xMatch| [from] := domain.function.innerFrom
        fu a b | a > b  = RRange b a
        fu a b = errr a b f t "domain size must be >= the range's size" 
 
-    calcuateSize aa fa f t = 
-       let (fromSize,toSize) = (findSize f, findSize t)
-       in   errr fromSize toSize f t $ 
-            pretty fa <+> (pretty . show) aa <+> "Not Done yet"
-    
+    calcuateSize _ (FAttrs{fSurjective=False,fInjective=False}) f _ =
+       let fromSize = findSize f
+       in  RRange 0 fromSize
 
     fixAttrs :: FAttrs -> FAttrs
     fixAttrs fa@(FAttrs{fInjective=True,fSurjective=True,fTotal=False}) = fa{fTotal=True}

@@ -140,6 +140,9 @@ _fsi = _getTest "_func/surjective-int-int"
 _fsit :: IO Spec
 _fsit = _getTest "_func/surjective-int-int-total"
 
+_fn :: IO Spec
+_fn  = _getTest "_func/none-int-int"
+
 _i :: IO Spec
 _i = _getTest "int-1"
 _i2 :: IO Spec

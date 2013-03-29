@@ -77,7 +77,7 @@ evalChoice (CRel sizeRange doms) = do
 
 
 -- Handle bijection differently since we need all the values anyway
-evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) =
+evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True,fTotal=_} from to) =
     findBijective from to
 
  --TODO If size is large gen all then select a few
@@ -87,7 +87,6 @@ evalChoice (CFunc sizeRange FAttrs{fInjective=True,fTotal=total} from to) = do
     eTo   <- findDistinct (evalChoice to)   Set.empty size
 
     let vs = zipWith wrap eFrom (Set.toAscList eTo)
-
     return [xMake| value.function.values := vs |]
 
     where
@@ -114,6 +113,19 @@ evalChoice (CFunc sizeRange FAttrs{fSurjective=True,fTotal=total} from to) = do
 
     where
     wrap f t = [xMake| mapping := [f,t] |]
+
+evalChoice (CFunc sizeRange FAttrs{fSurjective=False,fInjective=False,fTotal=total} from to) = do
+    size  <- evalRange sizeRange
+
+    eFrom <- getFuncElements total size from
+    eTo   <- mapM evalChoice (genericTake size $ repeat to)
+
+    let vs = zipWith wrap eFrom eTo
+    return [xMake| value.function.values := vs |]
+
+    where
+    wrap f t = [xMake| mapping := [f,t] |]
+
 
 getFuncElements :: (RandomM m, MonadConjure m) =>Bool -> Integer -> Choice -> m [E]
 getFuncElements getAll size dom  = 
