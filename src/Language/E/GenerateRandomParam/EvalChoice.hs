@@ -49,7 +49,8 @@ evalChoice (CTuple doms) = do
 
 evalChoice (CSet sizeRange dom) = do
     size <- evalRange sizeRange
-    findSet Set.empty size (repeat dom)
+    es <- findDistinct' (evalChoice dom) Set.empty size
+    return [xMake| value.set.values := es |]
 
 evalChoice (CMatrix sizeRange dom) = do
     let size  = sum . map countRange $ sizeRange
@@ -67,10 +68,21 @@ evalChoice (CMatrix sizeRange dom) = do
 
 evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
-    findRel Set.empty size doms
+    es <- findDistinct' (mapM evalChoice doms) Set.empty size
+    return $ [xMake| value.relation.values := (map wrap es) |]
+
+    where
+    wrap :: [E] -> E
+    wrap vs = [xMake| value.tuple.values := vs |]
+ 
 
 evalChoice (CFunc _ FAttrs{fInjective=True, fSurjective=True} from to) =
     findBijective from to
+
+-- TODO If number large gen all then select a few
+--evalChoice (CFunc RRange FAttrs{fInjective=True}) = do
+    --size <- evalRange sizeRange
+    
 
 findBijective :: (MonadConjure m, RandomM m)
               => Choice -> Choice
@@ -107,43 +119,15 @@ findBijective from to = do
      let (e2,_) = M.elemAt i2 tm
      pairSets (Set.insert [e1,e2] set) (size - 1) (M.deleteAt i1 fm) (M.deleteAt i2 tm)
 
-
--- Takes a size and list of choices returns a relation of that size
-findRel :: (MonadConjure m, RandomM m) => Set [E] -> Integer -> [Choice] -> m E
-
-findRel set 0 _ =
-    let elems = Set.toAscList set
-    in  return $ [xMake| value.relation.values := (map wrap elems) |]
-
-    where
-    wrap :: [E] -> E
-    wrap vs = [xMake| value.tuple.values := vs |]
-
-findRel set size cs | size /= 0 = do
-    elems <- mapM evalChoice cs
-    --CHECK I think the element will be in order
-    let (size',set') = if Set.notMember elems set
-        then (size - 1, Set.insert elems set)
-        else (size,set)
-    findRel set' size' cs
-
-findRel _ _ _ = _bugg "findRel: Can never happen"
-
--- Takes a size and a inf list of choice (by repeat) and returns a set of that size
-findSet :: (MonadConjure m, RandomM m) => Set E -> Integer -> [Choice] -> m E
-
-findSet set 0 _ =
-    let vs = Set.toAscList set
-    in  return $ [xMake| value.set.values := vs |]
-
-findSet set size (c:cs) = do
-    ele <- evalChoice c
+-- Take a function which generates values and return n distinct values  
+findDistinct :: (MonadConjure m, RandomM m, Ord a) => (m a) -> Set a -> Integer -> m [a]
+findDistinct f set 0    = return $ Set.toAscList set
+findDistinct f set size = do
+    ele <- f
     let (size',set') = if Set.notMember ele set
         then (size - 1, Set.insert ele set)
         else (size,set)
-    findSet set' size' cs
-
-findSet _ _ _ = _bugg "findSet: Can never happen"
+    findDistinct' f set' size'
 
 
 evalRange :: (MonadConjure m, RandomM m) => Range -> m Integer
