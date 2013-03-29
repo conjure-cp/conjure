@@ -16,8 +16,9 @@ fi
 
 if (( $COUNT_PARAM == 0 )); then
     WD="$(pwd)"
-    echo "ERROR: At least 1 *.param file should be in: $WD"
-    exit 1
+    echo "Warning: No *.param file found, using an empty one."
+    cp "${CONJURE_REPO}/files/empty.param" .
+    $COUNT_PARAM=1
 fi
 
 if (( $COUNT_PARAM != $COUNT_SOLUTION )); then
@@ -192,4 +193,6 @@ else
         perParam {1.}                                                       \
             ::: $(ls -1 *.param)
 fi
+
+rm -f empty.param
 
