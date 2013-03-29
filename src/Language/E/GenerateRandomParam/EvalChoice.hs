@@ -49,7 +49,7 @@ evalChoice (CTuple doms) = do
 
 evalChoice (CSet sizeRange dom) = do
     size <- evalRange sizeRange
-    es <- findDistinct' (evalChoice dom) Set.empty size
+    es <- findDistinct (evalChoice dom) Set.empty size
     return [xMake| value.set.values := es |]
 
 evalChoice (CMatrix sizeRange dom) = do
@@ -68,7 +68,7 @@ evalChoice (CMatrix sizeRange dom) = do
 
 evalChoice (CRel sizeRange doms) = do
     size <- evalRange sizeRange
-    es <- findDistinct' (mapM evalChoice doms) Set.empty size
+    es <- findDistinct (mapM evalChoice doms) Set.empty size
     return $ [xMake| value.relation.values := (map wrap es) |]
 
     where
@@ -119,6 +119,7 @@ findBijective from to = do
      let (e2,_) = M.elemAt i2 tm
      pairSets (Set.insert [e1,e2] set) (size - 1) (M.deleteAt i1 fm) (M.deleteAt i2 tm)
 
+
 -- Take a function which generates values and return n distinct values  
 findDistinct :: (MonadConjure m, RandomM m, Ord a) => (m a) -> Set a -> Integer -> m [a]
 findDistinct f set 0    = return $ Set.toAscList set
@@ -127,7 +128,7 @@ findDistinct f set size = do
     let (size',set') = if Set.notMember ele set
         then (size - 1, Set.insert ele set)
         else (size,set)
-    findDistinct' f set' size'
+    findDistinct f set' size'
 
 
 evalRange :: (MonadConjure m, RandomM m) => Range -> m Integer
@@ -182,19 +183,19 @@ allChoices (CRel size cs) =
     where 
     cross = cartesianProduct . map allChoices $ cs 
 
+    relChoice :: ([[E]] -> Bool) -> [[E]] -> [E]
+    relChoice  f es =
+        map mapper elems 
+        where
+        elems = filter f (subsequences es)
+        wrap :: [E] -> E
+        wrap vs   = [xMake| value.tuple.values := vs |]
+        mapper vs = [xMake| value.relation.values := (map wrap vs) |]
+
+
 choiceFilterer :: Range -> [b] -> Bool
 choiceFilterer (RSingle n)  = (==) n . genericLength
 choiceFilterer (RRange a b) = genericLength >>> (>=a) &&& (<=b) >>> uncurry (&&) 
-
-relChoice :: ([[E]] -> Bool) -> [[E]] -> [E]
-relChoice  f es =
-    map mapper elems 
-    where
-    elems = filter f (subsequences es)
-    wrap :: [E] -> E
-    wrap vs   = [xMake| value.tuple.values := vs |]
-    mapper vs = [xMake| value.relation.values := (map wrap vs) |]
-
 
 cartesianProduct :: [[a]] -> [[a]]
 cartesianProduct = sequence
