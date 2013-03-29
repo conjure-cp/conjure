@@ -97,10 +97,9 @@ evalChoice (CFunc sizeRange FAttrs{fSurjective=True,fTotal=total} from to) = do
     size  <- evalRange sizeRange
     let eTo   =  allChoices to
         toLen =  genericLength eTo
-    if size < toLen
-    then error "evalChoice: surjective function invaild size"
-    else do
-
+    --if size < toLen
+    --then error "evalChoice: surjective function invaild size"
+    --else do
     eFrom <- getFuncElements total size from
 
     let (vs,extraFrom) = genericSplitAt toLen eFrom
@@ -116,6 +115,7 @@ evalChoice (CFunc sizeRange FAttrs{fSurjective=True,fTotal=total} from to) = do
     where
     wrap f t = [xMake| mapping := [f,t] |]
 
+getFuncElements :: (RandomM m, MonadConjure m) =>Bool -> Integer -> Choice -> m [E]
 getFuncElements getAll size dom  = 
     if getAll then
         return $ allChoices dom
@@ -127,7 +127,7 @@ getFuncElements getAll size dom  =
 
 -- Pick n random elements from a list
 pickN :: (MonadConjure m, RandomM m, Pretty a,Show a) => Integer -> Integer -> [a] -> m [a]
-pickN 0 _    ls = return []
+pickN 0 _    _ = return []
 pickN n size ls = do
     index <- rangeRandomM (0, fromIntegral size-1)
     res <- pickN (n-1) size ls
@@ -172,7 +172,7 @@ findBijective from to = do
 
 -- Take a function which generates values and return n distinct values
 findDistinct  :: (MonadConjure m, RandomM m, Ord a) => m a -> Set a -> Integer -> m (Set a)
-findDistinct _ set 0    = return $  set
+findDistinct _ set 0    = return set
 findDistinct f set size = do
     ele <- f
     let (size',set') = if Set.notMember ele set
