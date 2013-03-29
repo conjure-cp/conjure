@@ -1,5 +1,5 @@
---{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
---{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices) where
 
@@ -93,7 +93,7 @@ evalChoice (CFunc sizeRange FAttrs{fInjective=True} from to) = do
     where
     wrap f t = [xMake| mapping := [f,t] |]
 
-evalChoice (CFunc sizeRange FAttrs{fSurjective=True} from to) = do
+evalChoice (CFunc sizeRange FAttrs{fSurjective=True,fTotal=total} from to) = do
     size  <- evalRange sizeRange
     let eTo   =  allChoices to
         toLen =  genericLength eTo
@@ -101,9 +101,14 @@ evalChoice (CFunc sizeRange FAttrs{fSurjective=True} from to) = do
     then error "evalChoice: surjective function invaild size"
     else do
 
-    eFrom <- findDistinct (evalChoice from) Set.empty size
+    eFrom <-  
+        if total then  
+            return $ allChoices from
+        else do
+            eFrom1 <- findDistinct (evalChoice from) Set.empty size
+            return $ Set.toAscList eFrom1
 
-    let (vs,extraFrom) = genericSplitAt toLen (Set.toAscList eFrom)
+    let (vs,extraFrom) = genericSplitAt toLen eFrom
     
     let paired = zipWith wrap vs eTo
         extraFromLen = genericLength extraFrom

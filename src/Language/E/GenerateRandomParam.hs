@@ -135,6 +135,8 @@ _fii = _getTest "_func/injective-int-int"
 
 _fsi :: IO Spec
 _fsi = _getTest "_func/surjective-int-int"
+_fsit :: IO Spec
+_fsit = _getTest "_func/surjective-int-int-total"
 
 _i :: IO Spec
 _i = _getTest "int-1"
