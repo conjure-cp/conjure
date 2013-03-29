@@ -671,7 +671,11 @@ typeOf p@[xMatch| [rel] := functionApply.actual
                     else if relType `typeUnify` argType
                             then return Nothing
                             else typeErrorIn p
-            return [xMake| type.relation.inners := (catMaybes outTypes) |]
+            let innerTypes = catMaybes outTypes
+            return $
+                if null innerTypes
+                    then tyBool
+                    else [xMake| type.relation.inners := innerTypes |]
         _ -> typeErrorIn p
 
 typeOf p@[eMatch| preImage(&f,&x) |] = do

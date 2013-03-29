@@ -32,6 +32,22 @@ import                Language.E.Evaluator.DataAboutQuantifiers
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
+-- this is a small hack to make rule language work.
+fullEvaluator [xMatch| [Prim (S "!=")] := binOp.operator
+                     | [Prim (S "_") ] := binOp.left .reference
+                     | [Prim (S "_") ] := binOp.right.reference
+                     |] = returnBool False
+fullEvaluator [xMatch| [Prim (S "!=")] := binOp.operator
+                     | [Prim (S "_") ] := binOp.right.reference
+                     |] = returnBool True
+fullEvaluator [xMatch| [Prim (S "=") ] := binOp.operator
+                     | [Prim (S "_") ] := binOp.left .reference
+                     | [Prim (S "_") ] := binOp.right.reference
+                     |] = returnBool True
+fullEvaluator [xMatch| [Prim (S "=") ] := binOp.operator
+                     | [Prim (S "_") ] := binOp.right.reference
+                     |] = returnBool False
+
 fullEvaluator [xMatch| [Prim (I n)] := unaryOp.negate.value.literal
                      |] = returnInt (-n)
 fullEvaluator [xMatch| [Prim (I n)] := unaryOp.factorial.value.literal
