@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize) where
+module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize,choose) where
 
 import Language.E
 import Language.E.GenerateRandomParam.Data
@@ -86,16 +86,35 @@ handleDomain em [xMatch| [from] := domain.function.innerFrom
     calcuateSize (ASize{aMinSize=Just a, aMaxSize=Just b}) _ _ _ = RRange a b
     -- TODO handle other size cases
 
+    calcuateSize (ASize{aMinSize=Just mi}) fa f t =
+        fu (calcuateSize (ASize Nothing Nothing Nothing) fa f t )
+
+        where
+        fu (RSingle n)  | n > mi = RRange mi n
+        fu (RSingle n)  | n < mi = RSingle mi
+        fu (RRange a b) | a > mi = RRange mi b
+        fu (RRange _ b) | b < mi = RSingle mi
+        fu r                     = r
+
+    calcuateSize (ASize{aMaxSize=Just ma}) fa f t =
+        fu (calcuateSize (ASize Nothing Nothing Nothing) fa f t )
+
+        where
+        fu (RSingle n)  | n > ma = RSingle ma
+        fu (RSingle n)  | n < ma = RRange n ma
+        fu (RRange a b) | b > ma = RRange a ma
+        fu (RRange a _) | a > ma = RSingle ma
+        fu r                     = r
+
     calcuateSize _ (FAttrs{fInjective=True, fSurjective=True}) f t  =
        let (fromSize,toSize) = (findSize f, findSize t)
        in if   fromSize == toSize
           then RSingle fromSize
-          else errr fromSize toSize f t "must have a equal Length for a bijective function" 
+          else errr fromSize toSize f t "must have a equal Length for a bijective function"
 
-    -- TODO handle total with other attributes
     calcuateSize _ (FAttrs{fTotal=True}) f _     = RSingle (findSize f)
 
-    calcuateSize _ (FAttrs{fInjective=True}) f t = 
+    calcuateSize _ (FAttrs{fInjective=True}) f t =
        let (fromSize,toSize) = (findSize f, findSize t)
        in  RRange 0 (min fromSize toSize)
 
@@ -106,7 +125,7 @@ handleDomain em [xMatch| [from] := domain.function.innerFrom
        where
        fu a b | a == b = RSingle a
        fu a b | a > b  = RRange b a
-       fu a b = errr a b f t "domain size must be >= the range's size" 
+       fu a b = errr a b f t "domain size must be >= the range's size"
 
     calcuateSize _ (FAttrs{fSurjective=False,fInjective=False}) f _ =
        let fromSize = findSize f
@@ -127,14 +146,14 @@ handleDomain em [xMatch| [from] := domain.function.innerFrom
             "bijective"  -> fa{fInjective=True,fSurjective=True,fTotal=True}
             _            -> fa
         f _ = fa
-    
+
     -- Shows a error when the attributes can not be vaild
-    errr a b f t s =  error . show $ hsep  
+    errr a b f t s =  error . show $ hsep
             ["The Domain size"
             , Pr.parens (pretty a)
             , "and Range size"
             , Pr.parens (pretty b)
-            , s 
+            , s
             ]
             Pr.$+$
             (nest 4 . vcat . map (pretty .show) $ [ f, t ])
@@ -221,6 +240,20 @@ findSize (CMatrix ranges dom ) =  dSize ^ matSize
    matSize = countRanges ranges
    dSize = findSize dom
 
+
+-- Assume function is sane
+findSize (CFunc (RSingle size) (FAttrs{fInjective=True, fSurjective=True, fTotal=_}) _ _) =
+    product [1 .. size ]
+
+findSize fu@(CFunc  _ (FAttrs{fInjective=True, fSurjective=True, fTotal=_}) _ _) =
+    error . show . vcat $ ["HandleDomain: findSize: Invaild size for function", pretty fu] 
+{-
+findSize fu@(CFunc  range (FAttrs{fInjective=True}) f t) =
+    error . show $ fu -- result
+
+    where
+    dSize  = (product . map findSize) [f,t]
+    result = sizeFromRange dSize range-}
 
 -- for a set
 sizeFromRange :: Integer -> Range -> Integer
