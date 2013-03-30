@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-module Language.E.GenerateRandomParam ( generateRandomParam ) where
+module Language.E.GenerateRandomParam ( generateRandomParam,generateAllParams) where
 
 import Language.E
 import Language.E.DomainOf(domainOf)
@@ -18,7 +18,7 @@ import System.Directory(getCurrentDirectory)
 import System.FilePath((</>))
 import Text.Groom(groom)
 
-
+import Data.List(permutations,transpose)
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Language.E.NormaliseSolution(normaliseSolutionEs)
 
@@ -26,7 +26,21 @@ import qualified Data.Map as Map
 
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
-generateRandomParam essence' = do
+generateRandomParam essence = do
+    (choices,es,v) <- plumming essence
+    givens <- mapM evalChoice choices
+    wrapping es v givens
+
+generateAllParams :: (MonadConjure m, RandomM m) => Essence -> m [EssenceParam]
+generateAllParams essence = do
+    (choices,es,v) <- plumming essence
+    let acs = sequence . map allChoices $ choices
+    --mkLog "acs" (vcat . map pretty $ acs)    
+    mapM (wrapping es v) acs
+
+
+plumming :: MonadConjure m => Spec -> m ([Choice], [E], Version)
+plumming essence' = do
     essence <- removeNegatives essence'
     let stripped@(Spec v f) = stripDecVars essence
     (Spec _ e) <- reduceSpec stripped
@@ -46,17 +60,15 @@ generateRandomParam essence' = do
     --mkLog "D" (sep $ map (\a -> prettyAsPaths a <+> "\n" ) doms )
 
     choices <-  mapM (handleDomain enumMapping) doms
-    mkLog "Choices" (sep . map pretty $ choices )
+    return (choices,es,v)
 
-    givens <- mapM evalChoice choices
-
+wrapping :: (MonadConjure m, RandomM m) => [E] -> Version -> [E] -> m EssenceParam
+wrapping es v givens= do
     let lettings = zipWith makeLetting es givens
     mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
     let essenceParam = Spec v (listAsStatement lettings )
-    mkLog "EssenceParam" (pretty essenceParam)
-
     return essenceParam
 
 makeLetting :: E -> E -> E
@@ -92,6 +104,12 @@ _r sp = do
     seed <- getStdGen
     spec <- sp
     return $ runCompE "gen" (set_stdgen seed >> generateRandomParam spec)
+
+_a :: IO Essence -> IO [(Either Doc [EssenceParam], LogTree)]
+_a sp = do
+    seed <- getStdGen
+    spec <- sp
+    return $ runCompE "all" (set_stdgen seed >> generateAllParams spec)
 
 _d :: Choice -> IO [(Either Doc E, LogTree)]
 _d c = do
@@ -142,6 +160,9 @@ _fsit = _getTest "_func/surjective-int-int-total"
 
 _fn :: IO Spec
 _fn  = _getTest "_func/none-int-int"
+
+_fs :: IO Spec
+_fs = _getTest "_func/injective-int-int-set"
 
 _i :: IO Spec
 _i = _getTest "int-1"
@@ -207,4 +228,8 @@ _bugg s = _bug s []
 
 _fa :: Choice -> (Integer, Int)
 _fa = findSize &&&  (length . allChoices)
+_fb :: Choice -> (Integer, (Int, Doc))
+_fb = findSize &&&  (length . allChoices &&& pretty . (++) "\n\n" . show . pretty . allChoices)
 
+_ff :: FAttrs
+_ff = FAttrs False False False
