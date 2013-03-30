@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices) where
+module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices,permutationsN) where
 
 import Language.E
 import Language.E.GenerateRandomParam.Data
@@ -201,9 +201,10 @@ evalRange (RRange a b) = do
     let size  = b - a + 1
     index <- rangeRandomM (0, fromIntegral size-1)
     let picked = a + toInteger index
-    mkLog "RangeData" $ sep  ["Index:"  <+> pretty index
-                             ,"Range:"  <+> pretty (RRange a b)
-                             ,"Picked:" <+> pretty picked]
+    mkLog "RangeData" $ sep  ["Range:"  <+> pretty (RRange a b)
+                             ,"Index:"  <+> pretty index
+                             ,"Picked:" <+> pretty picked
+                             ]
     return picked
 
 
