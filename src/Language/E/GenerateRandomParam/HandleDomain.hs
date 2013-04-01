@@ -249,7 +249,7 @@ findSize fu@(CFunc  (RRange _ _) (FAttrs{fTotal=True}) _ _) =
 findSize (CFunc (RSingle size) (FAttrs{fInjective=True, fSurjective=True, fTotal=_}) _ _) =
     product [1 .. size ]
 
-findSize fu@(CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
+findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     if isVaildSize total size 
     then sum . map (injSize' fromSize toSize) $ size
     else error "total function with invaild size specifed"
@@ -262,13 +262,13 @@ findSize fu@(CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     fromSize =  findSize f
     toSize   =  findSize t
 
-    size = handleRange range
-    handleRange (RSingle a)  = [a]
-    handleRange (RRange a b) = [a..b]
+    size = handleSize range
+    handleSize (RSingle a)  = [a]
+    handleSize (RRange a b) = [a..b]
 
     injSize' d r n = injSize  n d r 
     injSize :: (Integral n, Integral m, Show n) => n -> m -> m -> m
-    injSize n _ _ | n < 0 = error $ "inj with negative size" ++ (show n) 
+    injSize n _ _ | n < 0 = error $ "inj with negative size" ++ show n 
     injSize 0 _ _ = 1
     injSize 1 d r = d * r
     -- this case for size 2 is not really needed
