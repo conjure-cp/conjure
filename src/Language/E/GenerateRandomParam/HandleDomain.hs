@@ -242,18 +242,40 @@ findSize (CMatrix ranges dom ) =  dSize ^ matSize
 
 
 -- Assume function is sane
+
+findSize fu@(CFunc  (RRange _ _) (FAttrs{fTotal=True}) _ _) =
+    error . show . vcat $ ["HandleDomain: findSize: Invaild size for total function", pretty fu] 
+
 findSize (CFunc (RSingle size) (FAttrs{fInjective=True, fSurjective=True, fTotal=_}) _ _) =
     product [1 .. size ]
 
-findSize fu@(CFunc  _ (FAttrs{fInjective=True, fSurjective=True, fTotal=_}) _ _) =
-    error . show . vcat $ ["HandleDomain: findSize: Invaild size for function", pretty fu] 
-{-
-findSize fu@(CFunc  range (FAttrs{fInjective=True}) f t) =
-    error . show $ fu -- result
+findSize fu@(CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
+    if isVaildSize total size 
+    then sum . map (injSize' fromSize toSize) $ size
+    else error "total function with invaild size specifed"
 
     where
-    dSize  = (product . map findSize) [f,t]
-    result = sizeFromRange dSize range-}
+    isVaildSize True [n] = n == fromSize
+    isVaildSize True  _  = False
+    isVaildSize False _  = True
+
+    fromSize =  findSize f
+    toSize   =  findSize t
+
+    size = handleRange range
+    handleRange (RSingle a)  = [a]
+    handleRange (RRange a b) = [a..b]
+
+    injSize' d r n = injSize  n d r 
+    injSize :: (Integral n, Integral m, Show n) => n -> m -> m -> m
+    injSize n _ _ | n < 0 = error $ "inj with negative size" ++ (show n) 
+    injSize 0 _ _ = 1
+    injSize 1 d r = d * r
+    -- this case for size 2 is not really needed
+    injSize 2 d r = sum [0..(d-1)]  * r * (r-1)
+    injSize n d r = sum . map (\c -> r * injSize (n-1) c (r-1) ) $ [1 .. d - 1]
+
+
 
 -- for a set
 sizeFromRange :: Integer -> Range -> Integer
