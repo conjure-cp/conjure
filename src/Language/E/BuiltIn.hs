@@ -170,29 +170,23 @@ intDomFromSet p@[xMatch| [r] := domain.int.ranges.range.single |] =
 intDomFromSet _ = return Nothing
 
 relationApply :: MonadConjure m => RefnFunc m
-relationApply p@[xMatch| [actual]             := functionApply.actual
-                       | [Prim (S actualRef)] := functionApply.actual.reference
-                       |  args                := functionApply.args
-                       |] =
-    case identifierSplit actualRef of
-        (actualName, mregion, Just "RelationAsSet") -> do
-            actualTy <- typeOf actual
-            argsTy   <- mapM typeOf args
-            case actualTy of
-                [xMatch| actualInners := type.relation.inners |] | actualInners == argsTy -> do
-                    let theTuple = [xMake| value.tuple.values := args |]
-                    let theSet   = [xMake| reference := [Prim $ S $ identifierConstruct (actualName `mappend` "_RelationAsSet")
-                                                                                        mregion
-                                                                                        Nothing
-                                                        ] |]
-                    ret p "builtIn.relationApply" [eMake| &theTuple in &theSet |]
-                _ -> return Nothing
-        _ -> return Nothing
+relationApply p@[xMatch| [actual] := functionApply.actual
+                       |  args    := functionApply.args
+                       |]
+    | hasRepr "RelationAsSet" actual = do
+        actualTy <- typeOf actual
+        argsTy   <- mapM typeOf args
+        case actualTy of
+            [xMatch| actualInners := type.relation.inners |] | actualInners == argsTy -> do
+                let theTuple = [xMake| value.tuple.values := args |]
+                let theSet   = refnOf "RelationAsSet" actual
+                ret p "builtIn.relationApply" [eMake| &theTuple in &theSet |]
+            _ -> return Nothing
 relationApply _ = return Nothing
 
 quanOverToSetRelationProject :: MonadConjure m => RefnFunc m
 quanOverToSetRelationProject
-  p@[xMatch| [Prim (S relationName)]    := quantified.quanOverExpr.operator.toSet.functionApply.actual.reference
+  p@[xMatch| [relation]                 := quantified.quanOverExpr.operator.toSet.functionApply.actual
            | args                       := quantified.quanOverExpr.operator.toSet.functionApply.args
            | []                         := quantified.quanOverDom
            | []                         := quantified.quanOverOp.binOp.in
@@ -200,57 +194,50 @@ quanOverToSetRelationProject
            | [quanVar]                  := quantified.quanVar.structural.single
            | [guard]                    := quantified.guard
            | [body]                     := quantified.body
-           |] =
-    case identifierSplit relationName of
-        (relationBase, mregion, Just "RelationAsSet") -> do
-            let theSet   = [xMake| reference := [Prim $ S $ identifierConstruct (relationBase `mappend` "_RelationAsSet")
-                                                                                mregion
-                                                                                Nothing
-                                                ] |]
-            (_newQuanVarStr, newQuanVar) <- freshQuanVar "quanOverToSetRelationProject"
+           |]
+    | hasRepr "RelationAsSet" relation = do
+        let theSet   = refnOf "RelationAsSet" relation
+        (_newQuanVarStr, newQuanVar) <- freshQuanVar "quanOverToSetRelationProject"
 
-            -- the rest of the items are available as output. sort of.
-            let projectedElems = catMaybes
-                    [ if arg == [eMake| _ |]
-                        then Just i
-                        else Nothing
-                    | (i,arg) <- zip [ 1::Integer .. ] args
-                    ]
+        -- the rest of the items are available as output. sort of.
+        let projectedElems = catMaybes
+                [ if arg == [eMake| _ |]
+                    then Just i
+                    else Nothing
+                | (i,arg) <- zip [ 1::Integer .. ] args
+                ]
 
-            let projectedElems_Values =
-                    [ [eMake| &newQuanVar[&i] |]
-                    | i' <- projectedElems
-                    , let i = [xMake| value.literal := [Prim (I i')] |]
-                    ]
+        let projectedElems_Values =
+                [ [eMake| &newQuanVar[&i] |]
+                | i' <- projectedElems
+                , let i = [xMake| value.literal := [Prim (I i')] |]
+                ]
 
-            let projectedElems_Expr =
-                    [xMake| value.tuple.values := projectedElems_Values |]
+        let projectedElems_Expr =
+                [xMake| value.tuple.values := projectedElems_Values |]
 
-            let newGuard = conjunct
-                    $ replace quanVar projectedElems_Expr guard
-                    : [ [eMake| &newQuanVar[&i] = &arg |]
-                      | (i',arg) <- zip [ 1::Integer .. ] args
-                      , arg /= [eMake| _ |]
-                      , let i = [xMake| value.literal := [Prim (I i')] |]
-                      ]
-                    -- : [ [eMake| &newQuanVar[&i] = &args_Expr[&i] |]
-                      -- | i' <- projectedEqs
-                      -- , let i = [xMake| value.literal := [Prim (I i')] |]
-                      -- ]
-            let newBody  = replace quanVar projectedElems_Expr body
+        let newGuard = conjunct
+                $ replace quanVar projectedElems_Expr guard
+                : [ [eMake| &newQuanVar[&i] = &arg |]
+                  | (i',arg) <- zip [ 1::Integer .. ] args
+                  , arg /= [eMake| _ |]
+                  , let i = [xMake| value.literal := [Prim (I i')] |]
+                  ]
+                -- : [ [eMake| &newQuanVar[&i] = &args_Expr[&i] |]
+                  -- | i' <- projectedEqs
+                  -- , let i = [xMake| value.literal := [Prim (I i')] |]
+                  -- ]
+        let newBody  = replace quanVar projectedElems_Expr body
 
-            ret p "builtIn.quanOverToSetRelationProject"
-                [xMake| quantified.quantifier           := [quantifier]
-                      | quantified.quanVar              := [newQuanVar]
-                      | quantified.quanOverDom          := []
-                      | quantified.quanOverOp.binOp.in  := []
-                      | quantified.quanOverExpr         := [theSet]
-                      | quantified.guard                := [newGuard]
-                      | quantified.body                 := [newBody]
-                      |]
-        _ -> return Nothing
-
-
+        ret p "builtIn.quanOverToSetRelationProject"
+            [xMake| quantified.quantifier           := [quantifier]
+                  | quantified.quanVar              := [newQuanVar]
+                  | quantified.quanOverDom          := []
+                  | quantified.quanOverOp.binOp.in  := []
+                  | quantified.quanOverExpr         := [theSet]
+                  | quantified.guard                := [newGuard]
+                  | quantified.body                 := [newBody]
+                  |]
 quanOverToSetRelationProject _ = return Nothing
 
 tupleExplode :: MonadConjure m => RefnFunc m
@@ -356,4 +343,29 @@ functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guard . &body |] =
         _ -> return Nothing
 functionLiteralApply _ = return Nothing
 
+
+hasRepr :: Text -> E -> Bool
+hasRepr repr [xMatch| [Prim (S ref)] := reference |] =
+    case identifierSplit ref of
+        (_, _, Just repr2) | repr == repr2 -> True
+        _ -> False
+hasRepr repr [eMatch| &m[&_] |] = hasRepr repr m
+hasRepr _ _ = False
+
+
+refnOf :: Text -> E -> E
+refnOf repr p@[xMatch| [Prim (S ref)] := reference |] =
+    case identifierSplit ref of
+        (actualName, mregion, Just repr2) | repr == repr2 ->
+            let
+                ref' = identifierConstruct (mconcat [actualName, "_", repr]) mregion Nothing
+            in
+                [xMake| reference := [Prim (S ref')] |]
+        _ -> p
+refnOf repr [eMatch| &m[&i] |] =
+    let
+        n = refnOf repr m
+    in
+        [eMake| &n[&i] |]
+refnOf _ p = p
 
