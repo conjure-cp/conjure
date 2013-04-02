@@ -2,6 +2,7 @@
 
 set -o nounset
 
+echo "conjure reposoroty is ${CONJURE_REPO}"
 
 COUNT_ESSENCE=$(ls -1 *.essence 2> /dev/null | wc -l)
 COUNT_PARAM=$(ls -1 *.param 2> /dev/null | wc -l)
@@ -15,8 +16,9 @@ fi
 
 if (( $COUNT_PARAM == 0 )); then
     WD="$(pwd)"
-    echo "ERROR: At least 1 *.param file should be in: $WD"
-    exit 1
+    echo "Warning: No *.param file found, using an empty one."
+    cp "${CONJURE_REPO}/files/empty.param" .
+    COUNT_PARAM=1
 fi
 
 if (( $COUNT_PARAM != $COUNT_SOLUTION )); then
@@ -166,3 +168,4 @@ else
             ::: $(ls -1 *.param)
 fi
 
+rm -rf empty.param

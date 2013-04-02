@@ -18,7 +18,7 @@ if (( $COUNT_PARAM == 0 )); then
     WD="$(pwd)"
     echo "Warning: No *.param file found, using an empty one."
     cp "${CONJURE_REPO}/files/empty.param" .
-    $COUNT_PARAM=1
+    COUNT_PARAM=1
 fi
 
 if (( $COUNT_PARAM != $COUNT_SOLUTION )); then
