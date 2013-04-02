@@ -3,9 +3,10 @@
 module Language.E.GenerateRandomParam ( generateRandomParam,generateAllParams) where
 
 import Language.E
+import Language.E.Imports
 import Language.E.DomainOf(domainOf)
 import Language.E.Up.Debug(upBug)
-import Language.E.Up.IO(getSpec)
+import Language.E.Up.IO(getSpec')
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
 import Language.E.Up.EprimeToEssence(convertUnamed)
@@ -13,6 +14,8 @@ import Language.E.Up.EprimeToEssence(convertUnamed)
 import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.HandleDomain
 import Language.E.GenerateRandomParam.EvalChoice
+
+import Language.E.ValidateSolution(validateSolutionPure)
 
 import System.Directory(getCurrentDirectory)
 import System.FilePath((</>))
@@ -28,15 +31,46 @@ import qualified Data.Map as Map
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
     (choices,es,v) <- plumming essence
-    givens <- mapM evalChoice choices
-    wrapping es v givens
+    mkLog "Choices" ((vcat . map (pretty)) choices <+> "\n")
+
+    let vEssence = removeForValidate essence
+
+        generateUntilVaild :: (MonadConjure m, RandomM m) => Integer -> m EssenceParam
+        generateUntilVaild n@10000 = 
+            userErr $ "Failed to genrate param after" <+>  pretty n <+> "iterations"
+
+        generateUntilVaild n = do
+            givens <- mapM evalChoice choices
+            param  <- wrapping es v givens
+
+            let isValid = validateSolutionPure vEssence (Just param) emptySolution
+            mkLog "isValid" (pretty isValid <+> "on" <+> pretty n <+> "iteration")
+
+            if isValid
+            then return param
+            else generateUntilVaild (n+1)
+
+    param  <- generateUntilVaild 0
+    return param
+
+    where
+    emptySolution = Spec ("Essence", [1,3]) (listAsStatement [])
+    removeForValidate (Spec v es) = Spec v $ listAsStatement $  filter filterer es'
+        where es' = statementAsList es
+              filterer [xMatch| _ := topLevel.suchThat           |] = False
+              filterer [xMatch| _ := topLevel.declaration.find   |] = False
+              filterer _                              = True
+
 
 generateAllParams :: (MonadConjure m, RandomM m) => Essence -> m [EssenceParam]
 generateAllParams essence = do
-    (choices,es,v) <- plumming essence
+    {-(choices,es,v) <- plumming essence-}
+    (choices,_,_) <- plumming essence
+    mkLog "Choices" $ vcat . map (findSize &&& id >>> pretty) $ choices
     let acs = sequence . map allChoices $ choices
-    --mkLog "acs" (vcat . map pretty $ acs)    
-    mapM (wrapping es v) acs
+    mkLog "acs" $ pretty $ (length &&& vcat . map pretty ) acs
+    return []
+    {-mapM (wrapping es v) acs-}
 
 
 plumming :: MonadConjure m => Spec -> m ([Choice], [E], Version)
@@ -51,7 +85,9 @@ plumming essence' = do
     let enumMapping1     = getEnumMapping essence
         enums1           = getEnumsAndUnamed essence
         (enumMapping, _) = convertUnamed enumMapping1 enums1
-        es               = statementAsList e
+        filterer [xMatch| _ := topLevel.where  |] = False
+        filterer _ = True
+        es  = filter filterer (statementAsList e)
 
     mkLog "Reduced   " $ pretty es <+> "\n"
     mkLog "enums" (pretty . groom $ enumMapping)
@@ -61,6 +97,7 @@ plumming essence' = do
 
     choices <-  mapM (handleDomain enumMapping) doms
     return (choices,es,v)
+
 
 wrapping :: (MonadConjure m, RandomM m) => [E] -> Version -> [E] -> m EssenceParam
 wrapping es v givens= do
@@ -123,7 +160,7 @@ _x _ = return ()
 _getTest :: FilePath -> IO Spec
 _getTest f = do
     dir <- getCurrentDirectory  -- Assume running from conjure directory
-    getSpec $ dir </> "test/generateParams" </> f  ++ ".essence"
+    getSpec' False $ dir </> "test/generateParams" </> f  ++ ".essence"
 
 _b :: IO Spec
 _b = _getTest "bool"
@@ -221,6 +258,9 @@ _sn2 = _getTest "set-nested-2"
 _lots :: IO Spec
 _lots = _getTest "lots"
 
+_w :: IO Spec
+_w = _getTest "_where/where-int"
+
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateRandomParam: " ++ s)
 _bugg :: String -> t
@@ -233,3 +273,5 @@ _fb = findSize &&&  (length . allChoices &&& pretty . (++) "\n\n" . show . prett
 
 _ff :: FAttrs
 _ff = FAttrs False False False
+
+
