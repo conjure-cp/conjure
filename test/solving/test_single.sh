@@ -168,4 +168,3 @@ else
             ::: $(ls -1 *.param)
 fi
 
-rm -rf empty.param
