@@ -33,12 +33,13 @@ abstractDomsInQuans
     | domainNeedsRepresentation qnOverDom
     = do
         mode <- getsGlobal conjureMode
-        withBindingScope' $ let mfunc = ruleReprToFunction mode reprs in case mfunc of
+        withBindingScope' $ let mfunc = ruleReprToFunction reprs in case mfunc of
             Left es     -> err ErrFatal $ vcat $ map (prettyError "abstractDomsInQuans") es
             Right func' -> withBindingScope' $ do
                 let func = mergeReprFunc (func' : builtInRepr)
-                ys <- func (qnVar, qnOverDom, bug "abstractDomsInQuans.decl")
-                zs <- case ys of
+                ys' <- func (qnVar, qnOverDom, bug "abstractDomsInQuans.decl")
+                ys  <- selectByMode mode ys'
+                zs  <- case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty qnOverDom
                     _  -> do
                         let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName

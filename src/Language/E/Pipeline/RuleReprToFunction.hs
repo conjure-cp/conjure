@@ -3,8 +3,6 @@
 
 module Language.E.Pipeline.RuleReprToFunction ( RuleReprResult, ruleReprToFunction ) where
 
-import Conjure.Mode
-
 import Language.E
 import Language.E.Pipeline.FreshNames
 import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
@@ -16,8 +14,7 @@ ruleReprToFunction
     :: ( MonadConjure m
        , RandomM m
        )
-    => ConjureMode
-    -> [RuleRepr]
+    => [RuleRepr]
     -> Either
         [ConjureError]                -- static errors
         ( ( Text                      -- input: name of the variable
@@ -26,13 +23,13 @@ ruleReprToFunction
           )
           -> m [RuleReprResult]
         )
-ruleReprToFunction mode fs =
+ruleReprToFunction fs =
     let
         mresults = map one fs
         errors   = concat $ lefts mresults
         results  = rights mresults
     in  if null errors
-            then Right $ \ e -> concatMapM ($ e) results >>= selectByMode mode
+            then Right $ \ e -> concatMapM ($ e) results
             else Left errors
 
 

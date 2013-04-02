@@ -20,7 +20,7 @@ applyRepr
     -> m Spec
 applyRepr rules spec = do
     theMode <- getsGlobal conjureMode
-    withBindingScope' $ let mfunc = ruleReprToFunction theMode rules in case mfunc of
+    withBindingScope' $ let mfunc = ruleReprToFunction rules in case mfunc of
         Left es     -> err ErrFatal $ vcat $ map (prettyError "repr") es
         Right func' -> do
 
@@ -41,7 +41,8 @@ applyRepr rules spec = do
 
             candidates :: [(Text,[RuleReprResult])]
                 <- forM topLevels $ \ (x,n,d) -> do
-                ys <- func (n,d,x)
+                ys' <- func (n,d,x)
+                ys  <- selectByMode theMode ys'
                 case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
                     _  -> do

@@ -186,6 +186,7 @@ data ConjureState = ConjureState
 bindersDoc :: MonadConjure m => m Doc
 bindersDoc = do
     bs <- gets binders
+    if null bs then "" else
     return $
         "Current bindings: " <+>
         prettyList id "," (nubBy ((==) `on` binderName) bs)
@@ -193,6 +194,7 @@ bindersDoc = do
 bindersDocNamesOnly :: MonadConjure m => m Doc
 bindersDocNamesOnly = do
     bs <- gets binders
+    if null bs then "" else
     return $
         "Current bindings: " <+>
         prettyList id "," (nub $ map binderName bs)
