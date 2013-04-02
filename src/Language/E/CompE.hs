@@ -186,18 +186,18 @@ data ConjureState = ConjureState
 bindersDoc :: MonadConjure m => m Doc
 bindersDoc = do
     bs <- gets binders
-    if null bs then "" else
-    return $
-        "Current bindings: " <+>
-        prettyList id "," (nubBy ((==) `on` binderName) bs)
+    return $ if null bs
+        then ""
+        else "Current bindings: " <+>
+             prettyList id "," (nubBy ((==) `on` binderName) bs)
 
 bindersDocNamesOnly :: MonadConjure m => m Doc
 bindersDocNamesOnly = do
     bs <- gets binders
-    if null bs then "" else
-    return $
-        "Current bindings: " <+>
-        prettyList id "," (nub $ map binderName bs)
+    return $ if null bs
+        then ""
+        else "Current bindings: " <+>
+             prettyList id "," (nub $ map binderName bs)
 
 data Binder = Binder !Text !E
     deriving (Show, GHC.Generics.Generic)
