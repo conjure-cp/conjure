@@ -2,7 +2,7 @@
 
 set -o nounset
 
-echo "conjure reposoroty is ${CONJURE_REPO}"
+echo "conjure repository is at ${CONJURE_REPO}"
 
 COUNT_ESSENCE=$(ls -1 *.essence 2> /dev/null | wc -l)
 COUNT_PARAM=$(ls -1 *.param 2> /dev/null | wc -l)
