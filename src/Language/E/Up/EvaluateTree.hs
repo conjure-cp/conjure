@@ -12,6 +12,10 @@ import Language.E.Up.Debug
 
 import qualified Data.Map as M
 
+
+wrapInRelation :: [E] -> E
+wrapInRelation es = [xMake| value.relation.values := es |]
+
 --TODO should really use a Trie like Structure
 
 evalTree :: M.Map String VarData ->  Tree String  -> (String,E)
@@ -99,6 +103,23 @@ evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
     tupleToArr :: E -> (E,E)
     tupleToArr [xMatch| [a,b] := expr.value.tuple.values |] = (a,b)
     tupleToArr _ = _bugg "tupleToArr"
+
+-- TODO after #149 
+{-
+evalTree' mapping prefix (Branch s@"RelationAsSet"  arr) =
+    let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
+        rel = 
+            wrapInExpr 
+          . wrapInMatrix
+          . map (wrapInRelation . map matrixToTuple . unwrapMatrix) 
+          . unwrapMatrix 
+          . unwrapExpr 
+          $ res
+    in rel
+    --in error . groom $ (prefix, s, arr, pretty rel)
+    
+    where wrapInMatrix es = [xMake| value.matrix.values := es |]
+-}
 
 evalTree' mapping prefix (Branch part arr) =
     evalTree' mapping (prefix ++ [part])  (repSelector arr)
@@ -234,7 +255,6 @@ relationIntMatrix2 [a,b]
       . map (map fst . filter f . zip b . unwrapMatrix) 
       $ vs
 
-    wrapInRelation es = [xMake| value.relation.values := es |]
 
     tuples :: (Integer,[Integer]) -> [E]
     tuples (x,ys) = map (\y -> [xMake| value.tuple.values := (map wrap [x,y]) |]) ys
