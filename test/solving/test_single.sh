@@ -83,7 +83,8 @@ function perModelperParam {
         -in-eprime    $MODEL.eprime                                         \
         -in-param     $MODEL-$PARAM.eprime-param                            \
         -out-minion   $MODEL-$PARAM.eprime-minion                           \
-        -out-solution $MODEL-$PARAM.eprime-solution
+        -out-solution $MODEL-$PARAM.eprime-solution                         \
+        -minion-options "-timelimit 300"
     RESULTOF_SAVILEROW=$?
     if (( $RESULTOF_SAVILEROW != 0 )) ; then
         echo "$MSG_SAVILEROW" >> "$FAIL_FILE"
