@@ -215,7 +215,7 @@ matrix1DRep ix e =
     _bugi "Matrix1DRep not Handled (indexes, e):" (ix, [e])
 
 relationIntMatrix2Rep :: VarData -> E
-relationIntMatrix2Rep  v@VarData{vIndexes=ix, vEssence=e} =
+relationIntMatrix2Rep  VarData{vIndexes=ix, vEssence=e} =
    wrapInExpr $ relationIntMatrix2 ix (unwrapExpr e)
 
 relationIntMatrix2 :: [[Integer]] -> E -> E
@@ -234,7 +234,7 @@ relationIntMatrix2 [a,b]
       . map (map fst . filter f . zip b . unwrapMatrix) 
       $ vs
 
-    wrapInRelation vs = [xMake| value.relation.values := vs |]
+    wrapInRelation es = [xMake| value.relation.values := es |]
 
     tuples :: (Integer,[Integer]) -> [E]
     tuples (x,ys) = map (\y -> [xMake| value.tuple.values := (map wrap [x,y]) |]) ys
@@ -243,14 +243,15 @@ relationIntMatrix2 [a,b]
     notEmpty (_,[]) = False
     notEmpty _      = True 
 
-    f (_,Tagged "value" [Tagged "literal" [Prim (B b)]]) = b
+    f (_,Tagged "value" [Tagged "literal" [Prim (B c)]]) = c
     f _ = False
 
-relationIntMatrix2 (x:xs) [xMatch| vs := value.matrix.values |] =
+relationIntMatrix2 (_:xs) [xMatch| vs := value.matrix.values |] =
     let vs' =  map (relationIntMatrix2 xs) vs
     in  [xMake| value.matrix.values := vs' |]
 
-
+relationIntMatrix2 ix e =
+    _bugi "relationIntMatrix2 not Handled (indexes, e):" (ix, [e])
 
 explicitVarSizeWithDefaultRep :: VarData -> E
 explicitVarSizeWithDefaultRep  VarData{vBounds=b, vEssence=e} =
@@ -467,4 +468,5 @@ _bugi :: (Show a) => String -> (a, [E]) -> t
 _bugi s = upBugi ("EvaluateTree: " ++ s )
 _bugg :: String -> t
 _bugg s = _bug s []
+
 
