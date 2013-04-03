@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize,choose) where
+module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize,choose,premute) where
 
 import Language.E
 import Language.E.GenerateRandomParam.Data
@@ -276,7 +276,8 @@ findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     injSize n d r = sum . map (\c -> r * injSize (n-1) c (r-1) ) $ [1 .. d - 1]
 
 
---findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t) = error "surjective"
+{-findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t) =-}
+
 
 
 --findSize (CFunc range (FAttrs{fSurjective=False, fInjective =False, fTotal=total}) f t) = error "General function"
@@ -327,7 +328,10 @@ _ `choose` 0 = 1
 0 `choose` _ = 0
 n `choose` r = (n-1) `choose` (r-1) * n `div` r
 
-
+premute :: Integral a => a -> a -> a
+_ `premute` 0 = 1
+0 `premute` _ = 0
+n `premute` r = (n-1) `premute` (r-1) * n
 
 
 _bug :: String -> [E] -> t
