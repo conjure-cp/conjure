@@ -241,11 +241,11 @@ findSize (CMatrix ranges dom ) =  dSize ^ matSize
    dSize = findSize dom
 
 
--- Assume function is sane
 
 findSize fu@(CFunc  (RRange _ _) (FAttrs{fTotal=True}) _ _) =
     error . show . vcat $ ["HandleDomain: findSize: Invaild size for total function", pretty fu] 
 
+-- Assume function is sane
 findSize (CFunc (RSingle size) (FAttrs{fInjective=True, fSurjective=True, fTotal=_}) _ _) =
     product [1 .. size ]
 
@@ -275,6 +275,11 @@ findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     injSize 2 d r = sum [0..(d-1)]  * r * (r-1)
     injSize n d r = sum . map (\c -> r * injSize (n-1) c (r-1) ) $ [1 .. d - 1]
 
+
+--findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t) = error "surjective"
+
+
+--findSize (CFunc range (FAttrs{fSurjective=False, fInjective =False, fTotal=total}) f t) = error "General function"
 
 
 -- for a set
