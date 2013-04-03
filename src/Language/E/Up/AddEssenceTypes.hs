@@ -455,6 +455,7 @@ toEssenceRep r@(TagSingle t :ts) [xMatch| arr := values.value|]  |
     where
         er (Tagged "matrix" [vals]) = Tagged "value" [Tagged t  [toEssenceRep ts vals]]
         er a@(Tagged "literal" _)   = Tagged "value" [a]
+        er a@(Tagged "relation" _)  = Tagged "value" [a]
         er a@[xMatch| _ := value.literal|] = a
         er f = _bugi ("toEssenceRep S values.value er " ++ show t) (ts, [f])
 

@@ -7,7 +7,7 @@ module Language.E.Up.EvaluateTree (
 import Language.E
 
 import Language.E.Up.Data
-import Language.E.Up.Common(transposeE,matrixToTuple,unwrapExpr,wrapInExpr)
+import Language.E.Up.Common(transposeE,matrixToTuple,unwrapExpr,wrapInExpr,unwrapMatrix)
 import Language.E.Up.Debug
 
 import qualified Data.Map as M
@@ -22,6 +22,17 @@ evalTree mapping tree@(Leaf name) =
     (name,  evalTree' mapping []  tree)
 
 evalTree _ _ = _bugg "evalTree no match"
+
+-- Deals with (most) representations
+repConverter ::  String -> VarData -> E
+repConverter  kind  vdata@VarData{vEssence = es} =
+    case kind of
+      "Explicit"   -> explicitRep vdata
+      "Occurrence" -> occurrenceRep vdata
+      "Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
+      "RelationIntMatrix2" -> relationIntMatrix2Rep vdata
+      "ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
+      _            -> es
 
 evalTree' :: M.Map String VarData -> [String] -> Tree String  -> E
 evalTree' mapping prefix (Leaf part) =
@@ -155,15 +166,6 @@ reTuple [xMatch| vs := value.matrix.values |]  =
 reTuple e = _bug "reTuple" [e]
 
 
-repConverter ::  String -> VarData -> E
-repConverter  kind  vdata@VarData{vEssence = es} =
-    case kind of
-      "Explicit"   -> explicitRep vdata
-      "Occurrence" -> occurrenceRep vdata
-      "Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
-      "ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
-      _            -> es
-
 matrix1DRep ::  [[Integer]] -> E -> E
 matrix1DRep indexe [xMatch| [v] := expr |]  =
     let res = matrix1DRep indexe v
@@ -212,6 +214,43 @@ matrix1DRep [ix] e@[xMatch| _ := value.tuple.values |] =
 matrix1DRep ix e =
     _bugi "Matrix1DRep not Handled (indexes, e):" (ix, [e])
 
+relationIntMatrix2Rep :: VarData -> E
+relationIntMatrix2Rep  v@VarData{vIndexes=ix, vEssence=e} =
+   wrapInExpr $ relationIntMatrix2 ix (unwrapExpr e)
+
+relationIntMatrix2 :: [[Integer]] -> E -> E
+relationIntMatrix2 [a,b] 
+                   [xMatch| vs := value.matrix.values
+                          | _  := value.matrix.values.value.matrix.values.value.literal |] =
+    values
+    --error . groom $  (pretty $ groom [a,b], pretty vs, pretty values)
+
+    where 
+    values = 
+        wrapInRelation 
+      . concatMap tuples 
+      . filter notEmpty 
+      . zip a 
+      . map (map fst . filter f . zip b . unwrapMatrix) 
+      $ vs
+
+    wrapInRelation vs = [xMake| value.relation.values := vs |]
+
+    tuples :: (Integer,[Integer]) -> [E]
+    tuples (x,ys) = map (\y -> [xMake| value.tuple.values := (map wrap [x,y]) |]) ys
+        where wrap i =  [xMake| value.literal := [Prim (I i)] |]
+
+    notEmpty (_,[]) = False
+    notEmpty _      = True 
+
+    f (_,Tagged "value" [Tagged "literal" [Prim (B b)]]) = b
+    f _ = False
+
+relationIntMatrix2 (x:xs) [xMatch| vs := value.matrix.values |] =
+    let vs' =  map (relationIntMatrix2 xs) vs
+    in  [xMake| value.matrix.values := vs' |]
+
+
 
 explicitVarSizeWithDefaultRep :: VarData -> E
 explicitVarSizeWithDefaultRep  VarData{vBounds=b, vEssence=e} =
@@ -232,6 +271,7 @@ explicitVarSizeWithDefault toRemove [xMatch| vs := value.matrix.values |] =
     in  [xMake| value.matrix.values := vs' |]
 
 explicitVarSizeWithDefault toRemove e = _bugi "explicitVarSizeWithDefault" (toRemove,[e])
+
 
 occurrenceRep :: VarData -> E
 occurrenceRep  VarData{vIndexes = ix,
@@ -273,6 +313,7 @@ occurrence' ix lits=
    f (Prim(I b),_) =  b == 1  -- Leaving this here so I don't have recreate my tests
    f t = _bugi "occurrence' f" (t,[]) 
 
+
 explicitRep :: VarData -> E
 explicitRep VarData{vEssence=[xMatch| [Tagged _ vals ] := expr.value
                                     | _ := expr.value |]}  =
@@ -280,6 +321,7 @@ explicitRep VarData{vEssence=[xMatch| [Tagged _ vals ] := expr.value
     [xMake| expr.value := [set] |]
 
 explicitRep _ = _bugg "explicitRep"
+
 
 -- e.g [ [2,2], [4,4], [6,7]] -> [ [2,4,6], [2,4,7] ]
 transpose :: [[t]] -> [[t]]
