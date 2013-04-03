@@ -1,0 +1,10 @@
+
+[1000]
+
+&r(&i,&j) ~~> &refnr[&i,&j]
+
+    where &r hasRepr RelationIntMatrix2
+    where &r(&i,&j) hasType `bool`
+
+    letting &refnr be refn(&r)
+
