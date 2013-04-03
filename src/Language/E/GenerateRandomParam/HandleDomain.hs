@@ -3,9 +3,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize,choose,premute) where
 
-import Language.E
+import Language.E hiding (mkLog)
 import Language.E.GenerateRandomParam.Data
-import Language.E.GenerateRandomParam.Common(countRanges)
+import Language.E.GenerateRandomParam.Common(countRanges,mkLog)
 import Language.E.Up.Debug(upBug)
 
 import Control.Arrow(arr)
@@ -250,21 +250,16 @@ findSize (CFunc (RSingle size) (FAttrs{fInjective=True, fSurjective=True, fTotal
     product [1 .. size ]
 
 findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
-    if isVaildSize total size 
+    if isConsistentFuncSize total size fromSize 
     then sum . map (injSize' fromSize toSize) $ size
     else error "total function with invaild size specifed"
 
     where
-    isVaildSize True [n] = n == fromSize
-    isVaildSize True  _  = False
-    isVaildSize False _  = True
 
     fromSize =  findSize f
     toSize   =  findSize t
 
-    size = handleSize range
-    handleSize (RSingle a)  = [a]
-    handleSize (RRange a b) = [a..b]
+    size = expandRange range
 
     injSize' d r n = injSize  n d r 
     injSize :: (Integral n, Integral m, Show n) => n -> m -> m -> m
@@ -275,12 +270,33 @@ findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     injSize 2 d r = sum [0..(d-1)]  * r * (r-1)
     injSize n d r = sum . map (\c -> r * injSize (n-1) c (r-1) ) $ [1 .. d - 1]
 
+{-
+findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t)  | fromSize >= toSize =
+    if not $ isConsistentFuncSize total size fromSize 
+    then error "total function with invaild size specifed"
+    else error "s"
 
-{-findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t) =-}
+    where 
 
+    fromSize =  findSize f
+    toSize   =  findSize t
 
+    size = expandRange range
+-}
 
 --findSize (CFunc range (FAttrs{fSurjective=False, fInjective =False, fTotal=total}) f t) = error "General function"
+
+expandRange :: Range -> [Integer]
+expandRange (RSingle a)  = [a]
+expandRange (RRange a b) = [a..b]
+
+-- Take a bool saying if the function is total and check if it consistent with total 
+isConsistentFuncSize :: Bool -> [Integer] -> Integer -> Bool
+isConsistentFuncSize True [n] s = n == s
+isConsistentFuncSize True  _  _ = False
+isConsistentFuncSize False _  _ = True
+
+
 
 
 -- for a set

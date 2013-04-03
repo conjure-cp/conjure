@@ -3,9 +3,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices,permutationsN) where
 
-import Language.E
+import Language.E hiding (mkLog)
 import Language.E.GenerateRandomParam.Data
-import Language.E.GenerateRandomParam.Common(countRanges,countRange)
+import Language.E.GenerateRandomParam.Common(countRanges,countRange,mkLog)
 import Language.E.Up.Debug(upBug)
 
 import Control.Arrow((&&&))

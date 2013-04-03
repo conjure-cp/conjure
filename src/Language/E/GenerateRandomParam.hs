@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam ( generateRandomParam,generateAllParams) where
 
-import Language.E
+import Language.E hiding (mkLog)
 import Language.E.Imports
 import Language.E.DomainOf(domainOf)
 import Language.E.Up.Debug(upBug)
@@ -27,6 +27,8 @@ import Language.E.NormaliseSolution(normaliseSolutionEs)
 
 import qualified Data.Map as Map
 
+mkLog :: MonadConjure m => String -> Doc -> m ()
+mkLog _ _ = return ()
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
