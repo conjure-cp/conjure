@@ -79,16 +79,21 @@ function perModelperParam {
     MSG_SAVILEROW="[savilerow] $MSG_TEMPLATE"
     echo "$MSG_SAVILEROW"
     # echo "savilerow -in-eprime $MODEL.eprime -in-param $MODEL-$PARAM.eprime-param -out-minion $MODEL-$PARAM.eprime-minion -out-solution $MODEL-$PARAM.eprime-solution"
-    savilerow                                                               \
-        -in-eprime    $MODEL.eprime                                         \
-        -in-param     $MODEL-$PARAM.eprime-param                            \
-        -out-minion   $MODEL-$PARAM.eprime-minion                           \
-        -out-solution $MODEL-$PARAM.eprime-solution
-    RESULTOF_SAVILEROW=$?
-    if (( $RESULTOF_SAVILEROW != 0 )) ; then
-        echo "$MSG_SAVILEROW" >> "$FAIL_FILE"
-        exit 1
-    fi
+    (
+        ulimit -t 600
+        savilerow                                                           \
+            -in-eprime    $MODEL.eprime                                     \
+            -in-param     $MODEL-$PARAM.eprime-param                        \
+            -out-minion   $MODEL-$PARAM.eprime-minion                       \
+            -out-solution $MODEL-$PARAM.eprime-solution                     \
+            -boundvars                                                      \
+            -minion-options "-timelimit 600"
+        RESULTOF_SAVILEROW=$?
+        if (( $RESULTOF_SAVILEROW != 0 )) ; then
+            echo "$MSG_SAVILEROW" >> "$FAIL_FILE"
+            exit 1
+        fi
+    )
 
 
     RESULTOF_MINIONSTATS=0
@@ -105,58 +110,58 @@ function perModelperParam {
     fi
 
 
-    RESULTOF_TRANSLATESOLN=0
-    MSG_TRANSLATESOLN="[translateSolution] $MSG_TEMPLATE"
-    echo "$MSG_TRANSLATESOLN"
-    # echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
-    conjure                                                                 \
-        --mode translateSolution                                            \
-        --in-essence            $SPEC.essence                               \
-        --in-essence-param      $PARAM.param                                \
-        --in-eprime             $MODEL.eprime                               \
-        --in-eprime-param       $MODEL-$PARAM.eprime-param                  \
-        --in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
-        --out-essence-solution  $MODEL-$PARAM.solution
-    RESULTOF_TRANSLATESOLN=$?
-    if (( $RESULTOF_TRANSLATESOLN != 0 )) ; then
-        echo "$MSG_TRANSLATESOLN" >> "$FAIL_FILE"
-        exit 1
-    fi
+    #RESULTOF_TRANSLATESOLN=0
+    #MSG_TRANSLATESOLN="[translateSolution] $MSG_TEMPLATE"
+    #echo "$MSG_TRANSLATESOLN"
+    ## echo "conjure --mode translateSolution --in-essence $SPEC.essence --in-essence-param $PARAM.param --in-eprime $MODEL.eprime --in-eprime-param $MODEL-$PARAM.eprime-param --in-eprime-solution $MODEL-$PARAM.eprime-solution --out-essence-solution $MODEL-$PARAM.solution"
+    #conjure                                                                 \
+        #--mode translateSolution                                            \
+        #--in-essence            $SPEC.essence                               \
+        #--in-essence-param      $PARAM.param                                \
+        #--in-eprime             $MODEL.eprime                               \
+        #--in-eprime-param       $MODEL-$PARAM.eprime-param                  \
+        #--in-eprime-solution    $MODEL-$PARAM.eprime-solution               \
+        #--out-essence-solution  $MODEL-$PARAM.solution
+    #RESULTOF_TRANSLATESOLN=$?
+    #if (( $RESULTOF_TRANSLATESOLN != 0 )) ; then
+        #echo "$MSG_TRANSLATESOLN" >> "$FAIL_FILE"
+        #exit 1
+    #fi
 
 
-    RESULTOF_VALIDATESOLN=0
-    MSG_VALIDATESOLN="[validateSolution] $MSG_TEMPLATE"
-    echo "$MSG_VALIDATESOLN"
-    # echo "conjure --mode validateSolution --in-essence $SPEC.essence --in-param $PARAM.param --in-solution $MODEL-$PARAM.solution"
-    conjure                                                                 \
-        --mode validateSolution                                             \
-        --in-essence  $SPEC.essence                                         \
-        --in-param    $PARAM.param                                          \
-        --in-solution $MODEL-$PARAM.solution
-    RESULTOF_VALIDATESOLN=$?
-    if (( $RESULTOF_VALIDATESOLN != 0 )) ; then
-        echo "$MSG_VALIDATESOLN" >> "$FAIL_FILE"
-    else
-        echo "$MSG_VALIDATESOLN" >> "$PASS_FILE"
-    fi
+    #RESULTOF_VALIDATESOLN=0
+    #MSG_VALIDATESOLN="[validateSolution] $MSG_TEMPLATE"
+    #echo "$MSG_VALIDATESOLN"
+    ## echo "conjure --mode validateSolution --in-essence $SPEC.essence --in-param $PARAM.param --in-solution $MODEL-$PARAM.solution"
+    #conjure                                                                 \
+        #--mode validateSolution                                             \
+        #--in-essence  $SPEC.essence                                         \
+        #--in-param    $PARAM.param                                          \
+        #--in-solution $MODEL-$PARAM.solution
+    #RESULTOF_VALIDATESOLN=$?
+    #if (( $RESULTOF_VALIDATESOLN != 0 )) ; then
+        #echo "$MSG_VALIDATESOLN" >> "$FAIL_FILE"
+    #else
+        #echo "$MSG_VALIDATESOLN" >> "$PASS_FILE"
+    #fi
 
 
-    if [ -f "$PARAM.solution" ] ; then
-        RESULTOF_DIFF=0
-        MSG_DIFF="[diffSolution] $MSG_TEMPLATE"
-        echo "$MSG_DIFF"
-        # echo "conjure --mode diff $PARAM.solution $MODEL-$PARAM.solution"
-        conjure                                                             \
-            --mode diff                                                     \
-            $PARAM.solution                                                 \
-            $MODEL-$PARAM.solution
-        RESULTOF_DIFF=$?
-        if (( $RESULTOF_DIFF != 0 )) ; then
-            echo "$MSG_DIFF" >> "$FAIL_FILE"
-        else
-            echo "$MSG_DIFF" >> "$PASS_FILE"
-        fi
-    fi
+    #if [ -f "$PARAM.solution" ] ; then
+        #RESULTOF_DIFF=0
+        #MSG_DIFF="[diffSolution] $MSG_TEMPLATE"
+        #echo "$MSG_DIFF"
+        ## echo "conjure --mode diff $PARAM.solution $MODEL-$PARAM.solution"
+        #conjure                                                             \
+            #--mode diff                                                     \
+            #$PARAM.solution                                                 \
+            #$MODEL-$PARAM.solution
+        #RESULTOF_DIFF=$?
+        #if (( $RESULTOF_DIFF != 0 )) ; then
+            #echo "$MSG_DIFF" >> "$FAIL_FILE"
+        #else
+            #echo "$MSG_DIFF" >> "$PASS_FILE"
+        #fi
+    #fi
 
 
 }
