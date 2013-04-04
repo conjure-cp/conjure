@@ -1,0 +1,28 @@
+language Essence 1.3
+
+given s : set(minSize 2) of int(1..9)
+
+where |s| > 3
+
+
+find s2 : set of int(4..9)
+find i : int(1,2)
+
+maximising i
+
+such that
+    s2 intersect s = {}
+
+where |s| < 6
+
+
+letting Dom   be domain int(1..8)
+letting Range be domain int(1..20)
+
+given f : function (injective) Dom --> Range
+
+where f(1) = 10
+
+
+such that 
+    i in s
