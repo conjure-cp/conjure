@@ -161,7 +161,8 @@ handleDomain em [xMatch| [from] := domain.function.innerFrom
             (nest 4 . vcat . map (pretty .show) $ [ f, t ])
 
 
-handleDomain _ e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
+handleDomain _ e = bug ("Not done" <+> pretty e) 
+--handleDomain _ e = mkLog "U" (prettyAsPaths e <+> "\n"  ) >> return _c
 
 -- Process the size attribute until we get a size attribute which is assumed correct
 sizeAttributes :: ASize -> [E] -> ASize
@@ -369,7 +370,8 @@ handleRange [xMatch| [Prim (I n) ]  := range.single.value.literal |] =
 
 handleRange e = do
     mkLog "unhandled" (prettyAsPaths e)
-    return (1,RSingle (-99))
+    bug ("Not Done"  <+> pretty e)
+    --return (1,RSingle (-99))
 
 
 choose :: Integral a => a -> a -> a
