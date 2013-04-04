@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize,choose,premute) where
 
@@ -301,24 +299,49 @@ findSize fu@(CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t)  | fromSi
                 baseSize [0..(fromSize-toSize-1)]
                 )
 
-    getSelected :: Integer -> [Integer] -> [Integer] -> [Integer]
-    getSelected _ []  _      = []
-    getSelected n [r] (s:_)        | r == n = [s]
-    getSelected n (r:rr) (s:xs)    | r == n = s : getSelected (n+1) rr xs
-    getSelected n rr@(r:_) (_:xs)  | r /= n =  getSelected (n+1) rr xs
-
-    getSelected _ _ _ = []
-
     surjectiveSizeRest :: Integral a => a -> a -> a -> a -> a
     surjectiveSizeRest d r v i=  r * ((d -i) - r) * v
 
-    tuple a = (a,a)
+
 
 findSize fu@(CFunc _ (FAttrs{fSurjective=True}) _ _) =
     bug ("Invaild? Surjective function" <+> pretty fu)
 
 
---findSize (CFunc range (FAttrs{fSurjective=False, fInjective =False, fTotal=total}) f t) = error "General function"
+findSize fu@(CFunc range (FAttrs{fSurjective=False, fInjective =False, fTotal=total}) f t) = 
+    if      not $ isConsistentFuncSize total rs fromSize 
+    then    userErr $ "total function with invaild size specifed" <+> pretty fu
+
+    else selected --  error . groom $ (fromSize,toSize, sizeOne,sizes,rs,selected)
+
+    where 
+    fromSize =  findSize f
+    toSize   =  findSize t
+    sizeOne  =  fromSize * toSize
+    rs       =  expandRange range
+
+    selected | total == True = last sizes
+             | otherwise     = sum  $ getSelected 0  rs sizes 
+
+    sizes = 0 : sizeOne : snd (
+                mapAccumL (\acc i -> tuple $ sizeRest fromSize toSize acc i  ) 
+                sizeOne [1..(fromSize-1)]
+                )
+
+    sizeRest :: Integral a => a -> a -> a -> a -> a
+    sizeRest d r v i=  r * ((d -i) ) * v
+
+
+getSelected :: Integer -> [Integer] -> [Integer] -> [Integer]
+getSelected _ []  _      = []
+getSelected n [r] (s:_)        | r == n = [s]
+getSelected n (r:rr) (s:xs)    | r == n = s : getSelected (n+1) rr xs
+getSelected n rr@(r:_) (_:xs)  | r /= n =  getSelected (n+1) rr xs
+
+getSelected _ _ _ = []
+
+tuple ::  a ->(a,a)
+tuple a = (a,a)
 
 expandRange :: Range -> [Integer]
 expandRange (RSingle a)  = [a]
