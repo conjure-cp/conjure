@@ -10,6 +10,8 @@ import Language.E.Up.Debug(upBug)
 
 import Control.Arrow(arr)
 
+import Data.List(mapAccumL)
+
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
@@ -270,19 +272,38 @@ findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     injSize 2 d r = sum [0..(d-1)]  * r * (r-1)
     injSize n d r = sum . map (\c -> r * injSize (n-1) c (r-1) ) $ [1 .. d - 1]
 
-{-
+
 findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t)  | fromSize >= toSize =
-    if not $ isConsistentFuncSize total size fromSize 
+    if not $ isConsistentFuncSize total rs fromSize 
     then error "total function with invaild size specifed"
-    else error "s"
+
+    --else error . groom $ (fromSize,toSize, baseSize,sizes)
+    else selecter 
 
     where 
 
+    selecter | total == True = last sizes
+             | otherwise     = sum sizes
+
     fromSize =  findSize f
     toSize   =  findSize t
+    rs       =  expandRange range
 
-    size = expandRange range
--}
+    baseSize =  fromSize `premute` toSize
+    sizes = baseSize : snd (
+                mapAccumL (\acc i -> tuple $ surjectiveSizeRest fromSize toSize acc i  ) 
+                baseSize [0..(fromSize-toSize-1)]
+                )
+
+
+    surjectiveSizeRest :: Integral a => a -> a -> a -> a -> a
+    surjectiveSizeRest d r v i=  r * ((d -i) - r) * v
+
+    tuple a = (a,a)
+
+findSize fu@(CFunc _ (FAttrs{fSurjective=True}) _ _) =
+    bug ("Invaild? Surjective function" <+> pretty fu)
+
 
 --findSize (CFunc range (FAttrs{fSurjective=False, fInjective =False, fTotal=total}) f t) = error "General function"
 
@@ -290,7 +311,7 @@ expandRange :: Range -> [Integer]
 expandRange (RSingle a)  = [a]
 expandRange (RRange a b) = [a..b]
 
--- Take a bool saying if the function is total and check if it consistent with total 
+-- Take a bool saying if the function is total this check if the size is consistent with it. 
 isConsistentFuncSize :: Bool -> [Integer] -> Integer -> Bool
 isConsistentFuncSize True [n] s = n == s
 isConsistentFuncSize True  _  _ = False

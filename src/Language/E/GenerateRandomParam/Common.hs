@@ -5,12 +5,13 @@ import Language.E hiding(mkLog)
 
 import Language.E.GenerateRandomParam.Data
 
-mkLog :: MonadConjure m => String -> Doc -> m ()
 
 #ifdef UP_DEBUG 
 import qualified Language.E  as LE
+mkLog :: MonadConjure m => String -> Doc -> m ()
 mkLog = LE.mkLog
 #else
+mkLog :: MonadConjure m => String -> Doc -> m ()
 mkLog _ _ = return ()
 #endif
 

@@ -11,6 +11,7 @@ import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
 import Language.E.Up.EprimeToEssence(convertUnamed)
 
+import Language.E.GenerateRandomParam.Common(mkLog)
 import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.HandleDomain
 import Language.E.GenerateRandomParam.EvalChoice
@@ -21,14 +22,12 @@ import System.Directory(getCurrentDirectory)
 import System.FilePath((</>))
 import Text.Groom(groom)
 
-import Data.List(permutations,transpose)
+import Data.List(permutations,transpose,mapAccumL,foldl1')
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Language.E.NormaliseSolution(normaliseSolutionEs)
 
 import qualified Data.Map as Map
 
-mkLog :: MonadConjure m => String -> Doc -> m ()
-mkLog _ _ = return ()
 
 generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateRandomParam essence = do
@@ -53,6 +52,7 @@ generateRandomParam essence = do
             else generateUntilVaild (n+1)
 
     param  <- generateUntilVaild 0
+    mkLog "Param" (pretty param)
     return param
 
     where
@@ -202,6 +202,8 @@ _fn  = _getTest "_func/none-int-int"
 
 _fs :: IO Spec
 _fs = _getTest "_func/injective-int-int-set"
+_fs2 :: IO Spec
+_fs2 = _getTest "_func/surjective-int-int-set"
 
 _i :: IO Spec
 _i = _getTest "int-1"
@@ -275,5 +277,4 @@ _fb = findSize &&&  (length . allChoices &&& pretty . (++) "\n\n" . show . prett
 
 _ff :: FAttrs
 _ff = FAttrs False False False
-
 
