@@ -273,21 +273,26 @@ findSize (CFunc range (FAttrs{fInjective=True, fTotal=total}) f t) =
     injSize n d r = sum . map (\c -> r * injSize (n-1) c (r-1) ) $ [1 .. d - 1]
 
 
-findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t)  | fromSize >= toSize =
-    if not $ isConsistentFuncSize total rs fromSize 
-    then error "total function with invaild size specifed"
+findSize fu@(CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t)  | fromSize >= toSize =
+    if      not $ isConsistentFuncSize total rs fromSize 
+    then    userErr $ "total function with invaild size specifed" <+> pretty fu
+    else if head rs < toSize || last rs < toSize || last rs > fromSize 
+    then    userErr $  "Invaild Size for surjective function" <+> pretty fu
 
-    --else error . groom $ (fromSize,toSize, baseSize,sizes)
-    else selecter 
+    --else error . groom $ (fromSize,toSize, baseSize,sizes,rs,rsAdjected,selected)
+    else selected 
 
     where 
-
-    selecter | total == True = last sizes
-             | otherwise     = sum sizes
-
     fromSize =  findSize f
     toSize   =  findSize t
     rs       =  expandRange range
+    rsAdjected = map (subtract toSize) rs
+
+    selected | total == True = last sizes
+             | otherwise     =  check . sum  $ getSelected 0  rsAdjected sizes 
+
+    check n | n <= 0 = bug $ "error in selecting size" <+> pretty fu
+    check n = n 
 
     baseSize =  fromSize `premute` toSize
     sizes = baseSize : snd (
@@ -295,6 +300,13 @@ findSize (CFunc range (FAttrs{fSurjective=True, fTotal=total}) f t)  | fromSize 
                 baseSize [0..(fromSize-toSize-1)]
                 )
 
+    getSelected :: Integer -> [Integer] -> [Integer] -> [Integer]
+    getSelected _ []  _      = []
+    getSelected n [r] (s:_)        | r == n = [s]
+    getSelected n (r:rr) (s:xs)    | r == n = s : getSelected (n+1) rr xs
+    getSelected n rr@(r:_) (_:xs)  | r /= n =  getSelected (n+1) rr xs
+
+    getSelected _ _ _ = []
 
     surjectiveSizeRest :: Integral a => a -> a -> a -> a -> a
     surjectiveSizeRest d r v i=  r * ((d -i) - r) * v
