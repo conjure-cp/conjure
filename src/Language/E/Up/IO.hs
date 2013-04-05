@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings  #-}
 module Language.E.Up.IO (
      getSpecs
+    ,getSpecsM
     ,getSpecMaybe
     ,getSpec
     ,getSpec'
@@ -9,7 +10,7 @@ module Language.E.Up.IO (
 ) where
 
 import Language.E
-import Language.E.Pipeline.ReadIn
+import Language.E.Pipeline.ReadIn(readSpec)
 import Language.E.Up.ReduceSpec
 import Language.E.Up.Debug
 
@@ -23,6 +24,8 @@ type Essence   = Spec
 type Eprime    = Spec
 type ESolution = Spec
 type EssenceWithParamOnly = Spec
+type Param = Spec
+type EssenceParam = Spec
 
 getSpec ::  FilePath -> IO Spec
 getSpec = getSpec' True
@@ -57,6 +60,14 @@ getSpecs (specF, solF, orgF,paramF,orgParamF) = do
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
     org   <- reduceSpec  orgP
+    return (spec,sol,org,orgP)
+
+getSpecsM :: (Monad m) => (Eprime,ESolution,Essence,Maybe Param,Maybe EssenceParam) -> m (Eprime, ESolution, Essence,EssenceWithParamOnly)
+getSpecsM (spec', sol', org',param',orgParam') = do
+    spec  <- introduceParams' param' spec' >>= reduceSpec  >>= simSpecMaybe param' >>= removeNegatives
+    sol   <- removeNegatives sol' >>= removeIndexRanges
+    orgP  <- introduceParams' orgParam' org'
+    org   <- reduceSpec orgP
     return (spec,sol,org,orgP)
 
 

@@ -7,6 +7,7 @@ module Language.E.Up.ReduceSpec(
     ,removeNegatives
     ,removeIndexRanges
     ,introduceParams
+    ,introduceParams'
     ,toLst
 ) where
 
@@ -63,6 +64,17 @@ introduceParams (Just par) spec@(Spec ver _) = do
     return $  Spec ver (listAsStatement ef)
 
 introduceParams Nothing spec@(Spec ver _) = do
+    let ef = filter removeGiven (toLst spec)
+    return $  Spec ver (listAsStatement ef)
+
+introduceParams' :: Monad m => Maybe Spec -> Spec -> m Spec
+introduceParams' (Just param) spec@(Spec ver _) = do
+    let (pe,ee) = (toLst param, toLst spec)
+        ef = pe ++ filter removeGiven  ee
+
+    return $  Spec ver (listAsStatement ef)
+
+introduceParams' Nothing spec@(Spec ver _) = do
     let ef = filter removeGiven (toLst spec)
     return $  Spec ver (listAsStatement ef)
 
