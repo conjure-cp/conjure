@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings  #-}
-module Language.E.Up(translateSolution) where
+module Language.E.Up(translateSolution,translateSolution',translateSolutionM) where
 
 import Language.E
 
 import Language.E.NormaliseSolution (normaliseSolutionEs)
 import Language.E.Pipeline.ReadIn(writeSpec)
 import Language.E.Up.EprimeToEssence(mainPure)
-import Language.E.Up.IO(getSpecs)
+import Language.E.Up.IO(getSpecs,getSpecsM)
 
 translateSolution
     :: EssenceFP
@@ -17,13 +17,47 @@ translateSolution
     -> EssenceSolutionFP  --Output
     -> IO ()
 translateSolution
-    essence param eprime eprimeParam eprimeSolution outSolution= do
+    essence param eprime eprimeParam eprimeSolution outSolution= 
+    translateSolution' essence param eprime eprimeParam eprimeSolution
+    >>= writeSpec outSolution
+    >>  return ()
+
+translateSolution'
+    :: EssenceFP
+    -> Maybe EssenceParamFP
+    -> EprimeFP
+    -> Maybe EprimeParamFP
+    -> EprimeSolutionFP
+    -> IO EssenceSolution 
+translateSolution' essence param eprime eprimeParam eprimeSolution= do
     specs <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
+    return $ Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
 
-    let resSpec = Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
-    writeSpec outSolution resSpec
 
-    return ()
+type Essence   = Spec
+type Eprime    = Spec
+type ESolution = Spec
+type Param = Spec
+type EssenceParam = Spec
+
+translateSolutionM
+  :: Monad m =>
+  Essence
+  -> Maybe EssenceParam
+  -> Eprime
+  -> Maybe Param
+  -> ESolution
+  -> m Spec
+
+translateSolutionM essence param eprime eprimeParam eprimeSolution= do
+    specs <- getSpecsM (eprime, eprimeSolution, essence, eprimeParam, param)
+    return $ Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
+
+
+
+
+
+type EssenceSolution = Spec
 
 type EssenceFP         = FilePath
 type EprimeFP          = FilePath
