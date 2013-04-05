@@ -6,7 +6,7 @@
 
 module Language.E.GenerateRandomParam2(generateParam) where
 
-import Language.E 
+import Language.E
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjureSingle )
 import Language.E.Pipeline.ReadIn(readSpecFromFile)
@@ -35,17 +35,20 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir  = do
         param_minion    = intermediateDir FP.</> (basename ++ ".eprime.minion")
         param_esolution = intermediateDir FP.</> (basename ++ ".eprime.solution")
 
+    putStrLn $ "Creating the intermediate directory: " ++ intermediateDir 
     FP.createDirectoryIfMissing True intermediateDir
 
+    putStrLn $ "Creating Essence specification of the param"
     driverConjureSingle False
         param_gen
         $ runCompE "generateParamSolve" (prepareParamSpecification essence)
 
     paramEssence <- readSpecFromFile param_gen
-    seed <- getStdGen    
+    seed <- getStdGen
 
+    putStrLn "Running Conjure compact on created specification\n"
     driverConjureSingle True
-        param_eprime 
+        param_eprime
         (conjureWithMode
             S.empty seed Nothing (ModeSingleOutput ModeCompact param_gen param_eprime)
             ruleReprs ruleRefns paramEssence)
@@ -53,14 +56,14 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir  = do
 
     _ <- shelly $ verbosely $ do
         echo "Running Savilerow"
-        _ <- savilerow (LT.pack param_eprime) (LT.pack param_minion) (LT.pack param_esolution) Nothing 
+        _ <- savilerow (LT.pack param_eprime) (LT.pack param_minion) (LT.pack param_esolution) Nothing
 
         return ()
 
-    putStrLn "Running translateSolution"
-    translateSolution' 
-        param_gen 
-        Nothing 
+    putStrLn "\nRunning translateSolution"
+    translateSolution'
+        param_gen
+        Nothing
         param_eprime
         Nothing
         param_esolution
@@ -78,8 +81,8 @@ savilerow in_eprime out_minion out_solution in_param= run
     handleParam Nothing = []
     handleParam (Just param) = ["-in-param",param]
 
-_test :: IO EssenceParam 
+_test :: IO EssenceParam
 _test = do
     db <- decodeFromFile "/Users/bilalh/.cabal/bin/conjure.rulesdb"
     sp <- readSpecFromFile "/Users/bilalh/CS/conjure/test/generateParams/set-all.essence"
-    generateParam db sp "intermediate" 
+    generateParam db sp "intermediate"
