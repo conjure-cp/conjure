@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -14,25 +13,18 @@ import qualified Data.Text.Lazy as LT
 
 import Shelly
 
-import Control.Monad
-import System.Environment
-import Data.List ( genericLength )
-import qualified Data.HashMap.Strict as M
-import qualified Debug.Trace as Debug
 
 import Language.E 
-import Language.E.Pipeline.ReadIn(readSpecFromFile)
-import Language.E.Up(translateSolution')
-import Language.E.PrepareParam(prepareParamSpecification)
-
-import Language.E.Pipeline.Driver ( driverConjureSingle )
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
+import Language.E.Pipeline.Driver ( driverConjureSingle )
+import Language.E.Pipeline.ReadIn(readSpecFromFile)
+import Language.E.PrepareParam(prepareParamSpecification)
+import Language.E.Up(translateSolution')
+
 import Conjure.Mode(ConjureModeSingle(ModeCompact),ConjureMode,ConjureMode(ModeSingleOutput))
 
-import qualified System.FilePath  as FP
 import qualified System.Directory  as FP
-
-import Paths_conjure_cp ( getBinDir )
+import qualified System.FilePath  as FP
 
 import qualified Data.HashSet as S
 
@@ -40,48 +32,27 @@ import qualified Data.HashSet as S
 type EssenceSolution = Spec
 type Essence = Spec
 
-_a = do
-    sp <- readSpecFromFile "/Users/bilalh/CS/conjure/test/generateParams/set-all.essence"
-    generateRandomParam sp "intermediate" 
-
-
-rulesdbLoc :: IO [FP.FilePath]
-rulesdbLoc = do
-    inDotCabal <- liftM (++ "/conjure.rulesdb") getBinDir
-    return ["conjure.rulesdb", inDotCabal]
-
-getRulesDB :: IO RulesDB
-getRulesDB = do
-    candidates <- rulesdbLoc
-    let
-        loopy [] = error "Cannot locate rules database file."
-        loopy (c:cs) = do
-            b <- FP.doesFileExist c
-            if b
-                then decodeFromFile c
-                else loopy cs
-    loopy candidates
-
-generateRandomParam essence intermediateDir = do
+generateRandomParam  :: RulesDB -> Essence -> FP.FilePath -> IO EssenceSolution
+generateRandomParam (ruleReprs,ruleRefns) essence intermediateDir  = do
     let basename        = FP.takeBaseName intermediateDir
         param_gen       = intermediateDir FP.</> (basename ++ ".essence")
         param_eprime    = intermediateDir FP.</> (basename ++ ".eprime")
         param_minion    = intermediateDir FP.</> (basename ++ ".eprime.minion")
         param_esolution = intermediateDir FP.</> (basename ++ ".eprime.solution")
 
-    
+    FP.createDirectoryIfMissing True intermediateDir
+
     driverConjureSingle False
         param_gen
         $ runCompE "generateParam" (prepareParamSpecification essence)
 
     paramEssence <- readSpecFromFile param_gen
     seed <- getStdGen    
-    (ruleReprs, ruleRefns) <- getRulesDB
 
     driverConjureSingle True
         param_eprime 
         (conjureWithMode
-            (S.empty) seed Nothing (ModeSingleOutput ModeCompact param_gen param_eprime)
+            S.empty seed Nothing (ModeSingleOutput ModeCompact param_gen param_eprime)
             ruleReprs ruleRefns paramEssence)
 
 
@@ -92,16 +63,14 @@ generateRandomParam essence intermediateDir = do
         return ()
 
     putStrLn "Running translateSolution"
-    solution <- translateSolution' 
+    translateSolution' 
         param_gen 
         Nothing 
         param_eprime
         Nothing
         param_esolution
 
-    return solution 
-
-
+savilerow :: LT.Text -> LT.Text -> LT.Text -> Maybe LT.Text -> Sh LT.Text
 savilerow in_eprime out_minion out_solution in_param= run
                           "savilerow" $
                           ["-in-eprime",    in_eprime
@@ -114,12 +83,8 @@ savilerow in_eprime out_minion out_solution in_param= run
     handleParam Nothing = []
     handleParam (Just param) = ["-in-param",param]
 
-
-in_eprime        = "/Users/bilalh/CS/conjure/files/upTests/_easy/b3/0001.eprime"
-out_minion       = "/Users/bilalh/CS/conjure/files/upTests/_easy/b3/0001.eprime.minion"
-out_solution     = "/Users/bilalh/CS/conjure/files/upTests/_easy/b3/0001.eprime.solution"
-{-in_param       = Just "/Users/bilalh/CS/conjure/files/upTests/__essence_catalog/prob005/prob005.param"-}
-in_param         = Nothing
-in_essence_param = Nothing
-in_essence = "/Users/bilalh/CS/conjure/files/upTests/_easy/b3.essence" 
-
+_test :: IO EssenceSolution
+_test = do
+    db <- decodeFromFile "/Users/bilalh/.cabal/bin/conjure.rulesdb"
+    sp <- readSpecFromFile "/Users/bilalh/CS/conjure/test/generateParams/set-all.essence"
+    generateRandomParam db sp "intermediate" 
