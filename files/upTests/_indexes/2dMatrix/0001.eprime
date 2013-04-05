@@ -2,7 +2,7 @@ language ESSENCE' 1.0
 
 find m: matrix indexed by [int(3, 7, 8), int(10..12, 19)] of int(4..9)
 such that
-    forAll i : int(3, 7, 8) . allDiff(m[.., ..]),
+    forAll v__0 : int(3, 7, 8) . allDiff(m[v__0, ..]),
     forAll v__0 : int(3, 7, 8)
         . (forAll v__1 : int(3, 7, 8)
                . v__0 < v__1
