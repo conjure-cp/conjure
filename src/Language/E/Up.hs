@@ -3,29 +3,32 @@ module Language.E.Up(translateSolution) where
 
 import Language.E
 
-import Language.E.Up.EprimeToEssence
-import Language.E.Up.IO
 import Language.E.NormaliseSolution (normaliseSolutionEs)
+import Language.E.Pipeline.ReadIn(writeSpec)
+import Language.E.Up.EprimeToEssence(mainPure)
+import Language.E.Up.IO(getSpecs)
 
 translateSolution
-    :: FilePath         -- Input:  Essence
-    -> Maybe FilePath   -- Input:  Essence param
-    -> FilePath         -- Input:  Essence' model
-    -> Maybe FilePath   -- Input:  Essence' param
-    -> FilePath         -- Input:  Essence' solution
-    -> FilePath         -- Output: Essence solution
+    :: EssenceFP
+    -> Maybe EssenceParamFP
+    -> EprimeFP
+    -> Maybe EprimeParamFP
+    -> EprimeSolutionFP
+    -> EssenceSolutionFP  --Output
     -> IO ()
 translateSolution
     essence param eprime eprimeParam eprimeSolution outSolution= do
-    (spec, sol, org,orgP) <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
+    specs <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
 
-    let resultEssence =  normaliseSolutionEs $ mainPure(spec,sol,org,orgP)
-    writeEssence outSolution resultEssence
+    let resSpec = Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
+    writeSpec outSolution resSpec
 
     return ()
 
-
-writeEssence ::  FilePath -> [E] -> IO ()
-writeEssence outFilename es = writeFile outFilename $ renderPretty
-    (Spec ("ESSENCE",[1,3])  (listAsStatement es))
+type EssenceFP         = FilePath
+type EprimeFP          = FilePath
+type EssenceParamFP    = FilePath
+type EprimeParamFP     = FilePath
+type EprimeSolutionFP  = FilePath
+type EssenceSolutionFP = FilePath
 
