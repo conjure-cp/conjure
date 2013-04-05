@@ -75,6 +75,7 @@ savilerow in_eprime out_minion out_solution in_param= run
                           ,"-out-minion",   out_minion
                           ,"-out-solution", out_solution
                           ,"-runsolver"
+                          ,"-minion-options", "-randomiseorder"
                           ] ++ handleParam  in_param
 
     where

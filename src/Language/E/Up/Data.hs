@@ -2,7 +2,6 @@ module Language.E.Up.Data where
 
 import Language.E
 
-
 data VarInfo =  VarInfo {
     indexes :: [[Integer]],
     bounds  :: [Integer]
@@ -29,4 +28,14 @@ data TagT = TagSingle Tag
           | TagFunc  [TagT] [TagT]
     deriving (Show)
 
+type IndexRange = E
+
+data IndexT = IndexNone 
+            | IndexMatrix IndexRange IndexT
+            | IndexTuple [IndexT]
+            | IndexFunc   IndexT  IndexT
+            | IndexRel   [IndexT]
+            | IndexPar    IndexT
+            | IndexSet    IndexT
+    deriving (Show)
 
