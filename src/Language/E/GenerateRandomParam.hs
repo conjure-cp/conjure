@@ -37,7 +37,7 @@ generateRandomParam essence = do
     let vEssence = removeForValidate essence
 
         generateUntilVaild :: (MonadConjure m, RandomM m) => Integer -> m EssenceParam
-        generateUntilVaild n@10000 = 
+        generateUntilVaild n@10000 =
             userErr $ "Failed to genrate param after" <+>  pretty n <+> "iterations"
 
         generateUntilVaild n = do
@@ -52,7 +52,7 @@ generateRandomParam essence = do
             else generateUntilVaild (n+1)
 
     param  <- generateUntilVaild 0
-    mkLog "Param" (pretty param)
+    --mkLog "Param" (pretty param)
     return param
 
     where
@@ -63,7 +63,7 @@ generateRandomParam essence = do
               filterer [xMatch| _ := topLevel.declaration.find   |] = False
               filterer _                              = True
 
-
+-- ignores where statements
 generateAllParams :: (MonadConjure m, RandomM m) => Essence -> m [EssenceParam]
 generateAllParams essence = do
     {-(choices,es,v) <- plumming essence-}
@@ -194,6 +194,8 @@ _fiit = _getTest "_func/injective-int-int-total"
 
 _fsi :: IO Spec
 _fsi = _getTest "_func/surjective-int-int"
+_fsi2 :: IO Spec
+_fsi2 = _getTest "_func/surjective-int-int2"
 _fsit :: IO Spec
 _fsit = _getTest "_func/surjective-int-int-total"
 
@@ -204,6 +206,8 @@ _fs :: IO Spec
 _fs = _getTest "_func/injective-int-int-set"
 _fs2 :: IO Spec
 _fs2 = _getTest "_func/surjective-int-int-set"
+_fs3 :: IO Spec
+_fs3 = _getTest "_func/general-int-int"
 
 _i :: IO Spec
 _i = _getTest "int-1"
