@@ -184,7 +184,10 @@ reTuple [xMatch| vs := value.matrix.values |]  =
     let res = map reTuple vs
     in  [xMake| value.matrix.values := res |]
 
-reTuple e = _bug "reTuple" [e]
+-- Temporary fix for #151 
+reTuple [xMatch| vs := value.relation |] = [xMake| value.matrix := vs |]
+
+reTuple e = _bug "reTuple failed" [e]
 
 
 matrix1DRep ::  [[Integer]] -> E -> E
