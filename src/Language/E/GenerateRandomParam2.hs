@@ -7,11 +7,6 @@
 module Language.E.GenerateRandomParam2 where
 
 
-import Prelude hiding ( FilePath, reverse )
-import qualified Data.Text.Lazy as LT
--- default (LT.Text)
-
-import Shelly
 
 
 import Language.E 
@@ -23,10 +18,13 @@ import Language.E.Up(translateSolution')
 
 import Conjure.Mode(ConjureModeSingle(ModeCompact),ConjureMode,ConjureMode(ModeSingleOutput))
 
-import qualified System.Directory  as FP
-import qualified System.FilePath  as FP
+import Prelude hiding ( FilePath, reverse )
+import Shelly
 
-import qualified Data.HashSet as S
+import qualified Data.HashSet      as S
+import qualified Data.Text.Lazy    as LT
+import qualified System.Directory  as FP
+import qualified System.FilePath   as FP
 
 
 type EssenceSolution = Spec
