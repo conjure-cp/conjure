@@ -25,6 +25,7 @@ import Language.E.Pipeline.RedArrow ( redArrow )
 import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
 import Language.E.GenerateRandomParam ( generateRandomParam )
+import Language.E.GenerateRandomParam2 ( generateParam )
 
 
 rulesdbLoc :: IO [FilePath]
@@ -63,6 +64,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             let Spec _ in2 = normaliseSolution s2
             unless ( sort (statementAsList in1) == sort (statementAsList in2) )
                 $  error "Files differ."
+
         helper (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutParam) = do
             inEssence <- readSpecPreambleFromFile pathInEssence
             inParam   <- readSpecFromFile pathInParam
@@ -70,17 +72,20 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             inLogs    <- T.readFile (pathInEprime ++ ".logs")
             driverConjureSingle False pathOutParam
                 [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
+
         helper (ModeTranslateSolution pathInEssence pathInParam
                                               pathInEprime pathInEprimeParam pathInEprimeSolution
                                               pathOutSolution) =
             translateSolution pathInEssence pathInParam
                               pathInEprime pathInEprimeParam pathInEprimeSolution
                               pathOutSolution
+
         helper (ModeTypeCheck pathInp) = do
             inp <- case pathInp of
                 Nothing -> readSpecFromStdIn
                 Just fp -> readSpecFromFile fp
             typeCheckSpecIO inp
+
         helper (ModePrettify pathInp pathOut) = do
             inp <- case pathInp of
                 Nothing -> readSpecFromStdIn
@@ -89,11 +94,13 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             case pathOut of
                 Nothing -> printPretty  (atMostOneSuchThat inp)
                 Just fp -> writeSpec fp (atMostOneSuchThat inp)
+
         helper (ModeValidateSolution pathEssence pathParam pathSolution) = do
             essence  <- readSpecFromFile pathEssence
             param    <- maybe (return Nothing) (fmap Just . readSpecFromFile) pathParam
             solution <- readSpecFromFile pathSolution
             validateSolution essence param solution
+
         helper (ModeGenerateParam pathInEssence pathOutParam) = do
             seed <- getStdGen
             inEssence <- readSpecFromFile pathInEssence
@@ -101,6 +108,14 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             driverConjureSingle False
                 pathOutParam
                 $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
+
+        helper (ModeGenerateParam2 pathInEssence pathOutParam intermediateDir) = do
+            inEssence <- readSpecFromFile pathInEssence
+            rulesDB <- getRulesDB
+            typeCheckSpecIO inEssence
+            param <- generateParam rulesDB inEssence intermediateDir
+            writeSpec pathOutParam param
+
         helper (ModeDFAll pathInEssence) = do
             seed <- getStdGen
             (ruleReprs, ruleRefns) <- getRulesDB
@@ -114,6 +129,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
                 (conjureWithMode flags seed limit mode)
                 outDirPath
                 ruleReprs ruleRefns inEssence
+
         helper (ModeSingleOutput _ pathInEssence pathOutEprime) = do
             seed <- getStdGen
             (ruleReprs, ruleRefns) <- getRulesDB

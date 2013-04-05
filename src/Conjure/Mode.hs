@@ -72,6 +72,10 @@ data ConjureMode
     | ModeGenerateParam
         FilePath    -- Essence
         FilePath    -- Essence Param file
+    | ModeGenerateParam2
+        FilePath    -- In:  Essence
+        FilePath    -- Out: Essence Param file
+        FilePath    -- Directory to store intermediate files
     deriving (Show)
 
 data ConjureModeWithFlags
@@ -90,6 +94,7 @@ parseArgs (pairs, flags, rest) = msum
     , modePrettify
     , modeValidateSolution
     , modeGenerateParam
+    , modeGenerateParam2
     , modeDFAll
     , modeDFNoChannel
     , modeRandom
@@ -147,6 +152,13 @@ parseArgs (pairs, flags, rest) = msum
             inEssence <- anyKey $ words "--in --in-essence"
             outParam  <- anyKey $ words "--out --out-param"
             returnMode $ ModeGenerateParam inEssence outParam
+
+        modeGenerateParam2 = do
+            mode $ words "generateParam2 genParam2"
+            inEssence       <- anyKey $ words "--in --in-essence"
+            outParam        <- anyKey $ words "--out --out-param"
+            intermediateDir <- anyKey $ words "--intermediate"
+            returnMode $ ModeGenerateParam2 inEssence outParam intermediateDir
 
         modeDFAll = do
             mode $ words "df depthfirst depth-first"

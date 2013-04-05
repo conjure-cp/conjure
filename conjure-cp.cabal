@@ -61,6 +61,9 @@ Library
                      , Language.E.GenerateRandomParam.EvalChoice
                      , Language.E.GenerateRandomParam.HandleDomain
 
+                     , Language.E.GenerateRandomParam2
+                     , Language.E.PrepareParam
+
                      , Language.E.Evaluator
                      , Language.E.Evaluator.DataAboutQuantifiers
                      , Language.E.Evaluator.Full
@@ -146,6 +149,7 @@ Library
                      , transformers
                      , transformers-base
                      , unordered-containers
+                     , shelly
     ghc-prof-options:
         -auto-all
         -caf-all

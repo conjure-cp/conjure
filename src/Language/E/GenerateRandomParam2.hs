@@ -4,10 +4,7 @@
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.E.GenerateRandomParam2 where
-
-
-
+module Language.E.GenerateRandomParam2(generateParam) where
 
 import Language.E 
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
@@ -27,11 +24,11 @@ import qualified System.Directory  as FP
 import qualified System.FilePath   as FP
 
 
-type EssenceSolution = Spec
+type EssenceParam = Spec
 type Essence = Spec
 
-generateRandomParam  :: RulesDB -> Essence -> FP.FilePath -> IO EssenceSolution
-generateRandomParam (ruleReprs,ruleRefns) essence intermediateDir  = do
+generateParam  :: RulesDB -> Essence -> FP.FilePath -> IO EssenceParam
+generateParam (ruleReprs,ruleRefns) essence intermediateDir  = do
     let basename        = FP.takeBaseName intermediateDir
         param_gen       = intermediateDir FP.</> (basename ++ ".essence")
         param_eprime    = intermediateDir FP.</> (basename ++ ".eprime")
@@ -42,7 +39,7 @@ generateRandomParam (ruleReprs,ruleRefns) essence intermediateDir  = do
 
     driverConjureSingle False
         param_gen
-        $ runCompE "generateParam" (prepareParamSpecification essence)
+        $ runCompE "generateParamSolve" (prepareParamSpecification essence)
 
     paramEssence <- readSpecFromFile param_gen
     seed <- getStdGen    
@@ -81,8 +78,8 @@ savilerow in_eprime out_minion out_solution in_param= run
     handleParam Nothing = []
     handleParam (Just param) = ["-in-param",param]
 
-_test :: IO EssenceSolution
+_test :: IO EssenceParam 
 _test = do
     db <- decodeFromFile "/Users/bilalh/.cabal/bin/conjure.rulesdb"
     sp <- readSpecFromFile "/Users/bilalh/CS/conjure/test/generateParams/set-all.essence"
-    generateRandomParam db sp "intermediate" 
+    generateParam db sp "intermediate" 
