@@ -20,32 +20,85 @@ import Data.List ( genericLength )
 import qualified Data.HashMap.Strict as M
 import qualified Debug.Trace as Debug
 
-import Language.E
+import Language.E 
+import Language.E.Pipeline.ReadIn(readSpecFromFile)
 import Language.E.Up(translateSolution')
+import Language.E.PrepareParam(prepareParamSpecification)
 
-intermediateDir = "intermediate"
+import Language.E.Pipeline.Driver ( driverConjureSingle )
+import Language.E.Pipeline.ConjureAll ( conjureWithMode )
+import Conjure.Mode(ConjureModeSingle(ModeCompact),ConjureMode,ConjureMode(ModeSingleOutput))
+
+import qualified System.FilePath  as FP
+import qualified System.Directory  as FP
+
+import Paths_conjure_cp ( getBinDir )
+
+import qualified Data.HashSet as S
+
 
 type EssenceSolution = Spec
+type Essence = Spec
 
-generateRandomParam :: IO EssenceSolution
-generateRandomParam = do
+_a = do
+    sp <- readSpecFromFile "/Users/bilalh/CS/conjure/test/generateParams/set-all.essence"
+    generateRandomParam sp "intermediate" 
+
+
+rulesdbLoc :: IO [FP.FilePath]
+rulesdbLoc = do
+    inDotCabal <- liftM (++ "/conjure.rulesdb") getBinDir
+    return ["conjure.rulesdb", inDotCabal]
+
+getRulesDB :: IO RulesDB
+getRulesDB = do
+    candidates <- rulesdbLoc
+    let
+        loopy [] = error "Cannot locate rules database file."
+        loopy (c:cs) = do
+            b <- FP.doesFileExist c
+            if b
+                then decodeFromFile c
+                else loopy cs
+    loopy candidates
+
+generateRandomParam essence intermediateDir = do
+    let basename        = FP.takeBaseName intermediateDir
+        param_gen       = intermediateDir FP.</> (basename ++ ".essence")
+        param_eprime    = intermediateDir FP.</> (basename ++ ".eprime")
+        param_minion    = intermediateDir FP.</> (basename ++ ".eprime.minion")
+        param_esolution = intermediateDir FP.</> (basename ++ ".eprime.solution")
+
+    
+    driverConjureSingle False
+        param_gen
+        $ runCompE "generateParam" (prepareParamSpecification essence)
+
+    paramEssence <- readSpecFromFile param_gen
+    seed <- getStdGen    
+    (ruleReprs, ruleRefns) <- getRulesDB
+
+    driverConjureSingle True
+        param_eprime 
+        (conjureWithMode
+            (S.empty) seed Nothing (ModeSingleOutput ModeCompact param_gen param_eprime)
+            ruleReprs ruleRefns paramEssence)
+
+
     _ <- shelly $ verbosely $ do
-        mkdir_p intermediateDir
-
         echo "Running Savilerow"
-        _ <- savilerow in_eprime out_minion out_solution in_param
+        _ <- savilerow (LT.pack param_eprime) (LT.pack param_minion) (LT.pack param_esolution) Nothing 
 
         return ()
 
     putStrLn "Running translateSolution"
     solution <- translateSolution' 
-        (LT.unpack in_essence) 
-        (LT.unpack <$> in_essence_param)
-        (LT.unpack in_eprime) 
-        (LT.unpack <$> in_param)
-        (LT.unpack out_solution)
+        param_gen 
+        Nothing 
+        param_eprime
+        Nothing
+        param_esolution
 
-    
     return solution 
 
 
