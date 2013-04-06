@@ -33,8 +33,8 @@ type IndexRange = E
 data IndexT = IndexNone 
             | IndexMatrix IndexRange IndexT
             | IndexTuple [IndexT]
-            | IndexFunc   IndexT  IndexT
             | IndexRel   [IndexT]
+            | IndexFunc   IndexT  IndexT
             | IndexPar    IndexT
             | IndexSet    IndexT
     deriving (Show)
