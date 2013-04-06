@@ -218,7 +218,11 @@ introduceIndexRange (IndexSet it) [xMatch| vs := value.mset.values |] =
 
 introduceIndexRange IndexNone e = e
 
-introduceIndexRange _ e = e
+introduceIndexRange i [xMatch| [v] := expr |] = 
+    [xMake| expr :=  [introduceIndexRange i v] |]
+
+
+introduceIndexRange _ e = error . show  . pretty $ e
 
 
 convertUnamed :: M.Map String [E] -> [E]  -> (M.Map String [E], [E])

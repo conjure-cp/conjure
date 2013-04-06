@@ -25,7 +25,7 @@ gatherIndexT :: E -> IndexT
 
 gatherIndexT [xMatch| [domRange] := domain.matrix.index 
                     | [dom]      := domain.matrix.inner |] =
-   IndexMatrix (wrapInIndexRange domRange) (gatherIndexT dom) 
+   IndexMatrix domRange (gatherIndexT dom) 
 
    where wrapInIndexRange e = [xMake| indexrange := [e] |]
 
@@ -45,6 +45,9 @@ gatherIndexT [xMatch| [dom] := domain.partition.inner |] =
  
 
 gatherIndexT [xMatch| [dom] := domain.set.inner |] =
+   IndexSet (gatherIndexT dom)
+
+gatherIndexT [xMatch| [dom] := domain.mset.inner |] =
    IndexSet (gatherIndexT dom)
 
 -- for unnamed 

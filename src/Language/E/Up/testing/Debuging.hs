@@ -25,6 +25,7 @@ import Language.E.Up.Data
 import Language.E.Up.Common
 import Language.E.Up.GatherIndexRanges
 
+import Data.List(stripPrefix)
 import qualified Data.Map as M
 import qualified Data.Text as T
 
@@ -35,8 +36,10 @@ import qualified Data.Text as T
 gir specs@(specF, solF, orgF,param,orgParam) =do
     (_,_,_,ess@(Spec _ es)) <- getTestSpecs specs
     (Spec _ esol) <- getSpec solF
-    mapM_ (putStrLn . show . prettyAsBoth) (statementAsList esol)
-    mapM_ (putStrLn . show . prettyAsBoth) (statementAsList es)
+    mapM_ (print . prettyAsBoth) (statementAsList esol)
+    putStrLn ""
+    mapM_ (print . prettyAsBoth) (statementAsList es)
+    putStrLn ""    
     let info  = gatherIndexRanges ess
     putStrLn . groom $ info
 
@@ -48,6 +51,7 @@ s specs@(specF, solF, orgF,param,orgParam) = do
     let esolF = addExtension (dropExtensions solF) "solution"
     (Spec _ es) <- getSpec esolF
     (print . pretty) es
+    (putStrLn . groom) es
 
 
 -- Reveal files
@@ -163,6 +167,7 @@ mainn bool specs@(_, _, _ ,_ ,_) = do
     --putStrLn "enums:"
     --mapM (print . pretty) enums
 
+    let indexrangeMapping = gatherIndexRanges orgP
 
     let varTrees = createVarTree varInfo
         varsData = combineInfos varInfo solInfo
@@ -187,31 +192,34 @@ mainn bool specs@(_, _, _ ,_ ,_) = do
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
         wrap n e = errbM "cgs: wrap failed"  [e]
 
-    let lookUpType = fromMaybe (error "fromMaybe cgs: lookUpType")  . flip M.lookup orgInfo
+    let lookUp m = fromMaybe (error "fromMaybe cgs: lookUpType")  . flip M.lookup m
         eval (s,e) =
-            let orgType = lookUpType s
+            let orgType = lookUp orgInfo s
+                indext = lookUp indexrangeMapping s
                 (changed, _type) = convertRep orgType
                 res  = if bool then iterate (toEssenceRep _type) e !! c else toEssenceRep' _type e
                 res' = introduceTypes enumMapping orgType res
-            in wrap s (if changed then res' else res)
+            in wrap s $ introduceIndexRange indext (if changed then res' else res)
 
         resultEssence =  map eval varResults
         --resultEssence =  map (uncurry wrap ) varResults
 
 
+    putStrLn . groom $ indexrangeMapping
     putStrLn ""
     --__groomPrintM "resultEssence" resultEssence
     (print . vcat . map pretty) (enums ++  resultEssence)
+    --mapM_ (print . prettyAsTree) (enums ++  resultEssence)
+    --return resultEssence
 
-    return ()
+base     =  "/Users/bilalh/CS/conjure/files/upTests/"
+getTest' = getFiles base
+getTest  = flip (getFiles base) 1
+
+
+gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix base s) ) n
 
 #ifdef UP_DEBUG
-getTest' = (getFiles "/Users/bilalh/CS/conjure/files/upTests/")
-getTest  = flip (getFiles "/Users/bilalh/CS/conjure/files/upTests/") 1
-
-
-gg n s = getFiles "/Users/bilalh/CS/conjure/files/upTests/" s n
-
 n1 = getTest "_zothers/tupley27"
 n2 = getTest "_zothers/tupley27-1-1m"
 
