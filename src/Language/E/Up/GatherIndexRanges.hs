@@ -3,7 +3,7 @@ module Language.E.Up.GatherIndexRanges(gatherIndexRanges) where
 
 import Language.E
 import Language.E.Up.Data
-import Language.E.Up.Debug(upBug)
+{-import Language.E.Up.Debug(upBug)-}
 
 import Data.Map(Map)
 import qualified Data.Map  as M
@@ -18,7 +18,7 @@ gatherIndexRange [xMatch| [Prim (S name)] := topLevel.declaration.find.name.refe
                         | [dom]           := topLevel.declaration.find.domain |] = 
     Just (T.unpack name,gatherIndexT dom)
 
-{-gatherIndexRange _  = Nothing-}
+gatherIndexRange _  = Nothing
 
 
 gatherIndexT :: E -> IndexT
