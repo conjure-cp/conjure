@@ -5,6 +5,7 @@ module Language.E.Up.EprimeToEssence(
 
     -- for debuging
     introduceTypes,
+    introduceIndexRange,
     convertUnamed,
     combineInfos,
     convertRep,
@@ -169,6 +170,56 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
 
 introduceTypes _ _ e = e
 {-introduceTypes _ ts e = _bugi "introduceTypes" (ts,[e])-}
+
+introduceIndexRange :: IndexT -> E -> E
+
+introduceIndexRange (IndexMatrix ir it) [xMatch| vs := value.matrix.values |] =
+    let vs' = map (introduceIndexRange it) vs
+    in  [xMake| value.matrix.values     := vs'
+              | value.matrix.indexrange := [ir] |]
+
+introduceIndexRange (IndexTuple its) [xMatch| vs := value.tuple.values |] =
+    let vs' = zipWith introduceIndexRange its vs
+    in  [xMake| value.tuple.values := vs' |]
+
+introduceIndexRange (IndexRel its) [xMatch| vs := value.relation.values |] =
+    let vs' = zipWith introduceIndexRange its vs
+    in  [xMake| value.relation.values := vs' |]
+
+introduceIndexRange (IndexFunc ins tos) [xMatch| arr := value.function.values |] =
+   let mappings =  map (func ins tos) arr
+   in  [xMake| value.function.values := mappings |]
+
+    where
+    func ins' tos' [xMatch| [a,b] := mapping |] =
+       let a' = introduceIndexRange ins' a
+           b' = introduceIndexRange tos' b
+       in   [xMake| mapping := [a',b'] |]
+    func _ _ _  = _bugg "EprimeToEssence: introduceIndexRange function" 
+
+introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
+   let parts =  map par arr
+   in  [xMake| value.partition.values := parts |]
+
+    where
+    par [xMatch| vs := part |] =
+       let vs' = map (introduceIndexRange it) vs 
+       in  [xMake| part := vs' |]
+    par _  = _bugg "EprimeToEssence: introduceIndexRange partition" 
+
+
+introduceIndexRange (IndexSet it) [xMatch| vs := value.set.values |] =
+    let vs' = map (introduceIndexRange it) vs
+    in  [xMake| value.set.values := vs' |]
+
+introduceIndexRange (IndexSet it) [xMatch| vs := value.mset.values |] =
+    let vs' = map (introduceIndexRange it) vs
+    in  [xMake| value.mset.values := vs' |]
+
+introduceIndexRange IndexNone e = e
+
+introduceIndexRange _ e = e
+
 
 convertUnamed :: M.Map String [E] -> [E]  -> (M.Map String [E], [E])
 convertUnamed m arr =
