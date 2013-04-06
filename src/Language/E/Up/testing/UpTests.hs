@@ -69,7 +69,7 @@ runSpec  (sps@(_, _,_,_,_),ansF) = do
     ansS <- getSpec ansF
     let ans = es ansS
 
-    let resultEssence = mainPure(spec,sol,org,orgP)
+    let resultEssence = mainPure' False (spec,sol,org,orgP)
 
     show (pretty resultEssence) `shouldBe` show (pretty ans)
     where

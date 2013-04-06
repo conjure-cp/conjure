@@ -27,8 +27,6 @@ gatherIndexT [xMatch| [domRange] := domain.matrix.index
                     | [dom]      := domain.matrix.inner |] =
    IndexMatrix domRange (gatherIndexT dom) 
 
-   where wrapInIndexRange e = [xMake| indexrange := [e] |]
-
 gatherIndexT [xMatch| doms := domain.tuple.inners |] =
    IndexTuple (map gatherIndexT doms)
 
@@ -54,7 +52,7 @@ gatherIndexT [xMatch| [dom] := domain.mset.inner |] =
 gatherIndexT (Tagged "reference" _) = IndexNone 
 
 gatherIndexT (Tagged "domain" [Tagged tag _]) 
-    | tag `elem` ["int", "typeUnnamed", "enum"] = IndexNone
+    | tag `elem` ["int", "bool", "enum", "typeUnnamed"] = IndexNone
 
 gatherIndexT dom = upBug "gatherIndexRange: gatherIndexT domain not matched" [dom]
 

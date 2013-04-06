@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
 module Language.E.Up.EprimeToEssence(
     mainPure,
+    mainPure',
     toEssenceRep',
 
     -- for debuging
@@ -21,12 +22,17 @@ import Language.E.Up.GatherInfomation
 import Language.E.Up.RepresentationTree
 import Language.E.Up.EvaluateTree
 import Language.E.Up.AddEssenceTypes
+import Language.E.Up.GatherIndexRanges
+
 
 import qualified Data.Text as T
 import qualified Data.Map as M
 
 mainPure :: (Spec, Spec, Spec, Spec) -> [E]
-mainPure (spec,sol,org,orgP) =
+mainPure = mainPure' True
+
+mainPure' :: Bool -> (Spec, Spec, Spec, Spec) -> [E]
+mainPure' addIndexRange (spec,sol,org,orgP) =
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
@@ -39,6 +45,8 @@ mainPure (spec,sol,org,orgP) =
 
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
 
+        indexrangeMapping = gatherIndexRanges orgP    
+
         varTrees = createVarTree varInfo
         varsData = combineInfos varInfo solInfo
 
@@ -50,14 +58,16 @@ mainPure (spec,sol,org,orgP) =
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
         wrap name e = _bug ("wrap failed for " ++ name) [e]
 
-        lookUpType = fromMaybe (_bugg "fromMaybe: lookUpType")  . flip M.lookup orgInfo
+        lookUp m = fromMaybe (error "fromMaybe: lookUpType")  . flip M.lookup m
         eval (s,e) =
-            let orgType = lookUpType s
+            let orgType = lookUp orgInfo s
+                indext = lookUp indexrangeMapping s
                 (changed, _type) = convertRep orgType
                 res  = toEssenceRep' _type e
-
                 res' = introduceTypes enumMapping orgType res
-            in wrap s (if changed then res' else res)
+            in wrap s $ 
+               (if addIndexRange then introduceIndexRange indext else id)
+               (if changed then res' else res)
 
         resultEssence   = map eval varResults
 
@@ -195,7 +205,7 @@ introduceIndexRange (IndexFunc ins tos) [xMatch| arr := value.function.values |]
        let a' = introduceIndexRange ins' a
            b' = introduceIndexRange tos' b
        in   [xMake| mapping := [a',b'] |]
-    func _ _ _  = _bugg "EprimeToEssence: introduceIndexRange function" 
+    func _ _ _  = _bugg "EprimeToEssence: introduceIndexRange function"
 
 introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
    let parts =  map par arr
@@ -203,9 +213,9 @@ introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
 
     where
     par [xMatch| vs := part |] =
-       let vs' = map (introduceIndexRange it) vs 
+       let vs' = map (introduceIndexRange it) vs
        in  [xMake| part := vs' |]
-    par _  = _bugg "EprimeToEssence: introduceIndexRange partition" 
+    par _  = _bugg "EprimeToEssence: introduceIndexRange partition"
 
 
 introduceIndexRange (IndexSet it) [xMatch| vs := value.set.values |] =
@@ -218,7 +228,7 @@ introduceIndexRange (IndexSet it) [xMatch| vs := value.mset.values |] =
 
 introduceIndexRange IndexNone e = e
 
-introduceIndexRange i [xMatch| [v] := expr |] = 
+introduceIndexRange i [xMatch| [v] := expr |] =
     [xMake| expr :=  [introduceIndexRange i v] |]
 
 
