@@ -37,6 +37,7 @@ noTuplesE statementIn = do
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
                                     lift $ mkLog "removedDecl" $ pretty statement
+                                    lift $ mkLog "matrixToTuple" $ name statement
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
                                     forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
@@ -53,6 +54,8 @@ noTuplesE statementIn = do
                   (listAsStatement statementsOut)
             return (s', True)
 
+    where name [xMatch| [Prim (S _n)] := topLevel.declaration.find.name.reference  |] = pretty _n
+          name _f = pretty _f 
 
 noTupleDomsInQuanEs :: MonadConjure m => E -> m (E, Bool)
 noTupleDomsInQuanEs inp@(Tagged t xs) = do
