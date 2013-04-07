@@ -380,8 +380,16 @@ fullEvaluator
                  , select args cols
                  ]
 
+            zs = not $ null
+                 [ ()
+                 | [xMatch| cols := value.tuple.values |] <- xs
+                 , cols == args
+                 ]
+
           in
-            ret [xMake| value.relation.values := ys |]
+            if any (\ i -> i == [eMake| _ |] ) args
+                then ret [xMake| value.relation.values := ys |]
+                else returnBool zs
 
 fullEvaluator [eMatch| preImage(&f,&x) |]
     | isFullyInstantiated f && isFullyInstantiated x
