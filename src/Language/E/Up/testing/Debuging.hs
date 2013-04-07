@@ -26,9 +26,13 @@ import Language.E.Up.Common
 import Language.E.Up.GatherIndexRanges
 
 import Data.List(stripPrefix)
+import Data.Map(Map)
+import Data.Set(Set)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import qualified Data.Text as T
-
+import qualified Data.Text.IO as T
+import Data.Char(isSpace)
                             {-              -}
                             -- For Debuging --
                             {-              -}
@@ -141,6 +145,27 @@ be specs@(_, _, orgF ,_ ,_) = do
     (print . vcat . map pretty) resultEssence
 
 c = 1
+
+
+logFile = "/Users/bilalh/CS/conjure/files/upTests/_zothers/tupley27-1-1m/0001.eprime.logs"
+
+_rm = do
+    text <- T.readFile logFile
+    return $ makeMatrixToTuplesMapping text
+
+
+makeMatrixToTuplesMapping :: T.Text -> Set String 
+makeMatrixToTuplesMapping logs = S.fromList lines 
+
+    where
+    lines = 
+          map (dropWhile isSpace)
+        . map T.unpack
+        . nub
+        . mapMaybe (T.stripPrefix "[matrixToTuple]")
+        . T.lines 
+        $ logs
+
 
 -- impure main for printing stuff
 main' = mainn True
