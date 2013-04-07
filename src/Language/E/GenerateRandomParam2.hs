@@ -34,8 +34,8 @@ getSpecMaybe filepath  = getSpecMaybe' filepath =<<  FP.doesFileExist filepath
     getSpecMaybe' _ False = return Nothing
 
 
-generateParam  :: RulesDB -> Essence -> FP.FilePath -> IO EssenceParam
-generateParam (ruleReprs,ruleRefns) essence intermediateDir  = do
+generateParam  :: RulesDB -> Essence -> FP.FilePath -> Maybe String -> IO EssenceParam
+generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
 
     paramEssenceOld <- getSpecMaybe param_gen
 
@@ -78,10 +78,11 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir  = do
 
     where
     basename        = FP.takeBaseName intermediateDir
+    basename2       = fromMaybe (FP.takeBaseName intermediateDir) prefix
     param_gen       = intermediateDir FP.</> (basename ++ ".essence")
     param_eprime    = intermediateDir FP.</> (basename ++ ".eprime")
-    param_minion    = intermediateDir FP.</> (basename ++ ".eprime.minion")
-    param_esolution = intermediateDir FP.</> (basename ++ ".eprime.solution")
+    param_minion    = intermediateDir FP.</> (basename2 ++ ".eprime.minion")
+    param_esolution = intermediateDir FP.</> (basename2 ++ ".eprime.solution")
 
 
 savilerow :: LT.Text -> LT.Text -> LT.Text -> Maybe LT.Text -> Sh LT.Text
@@ -103,5 +104,5 @@ _test :: IO EssenceParam
 _test = do
     db <- decodeFromFile "/Users/bilalh/.cabal/bin/conjure.rulesdb"
     sp <- readSpecFromFile "/Users/bilalh/CS/conjure/test/generateParams/set-all.essence"
-    generateParam db sp "intermediate"
+    generateParam db sp "intermediate" Nothing
 

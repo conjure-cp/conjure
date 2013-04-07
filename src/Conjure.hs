@@ -109,11 +109,11 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
                 pathOutParam
                 $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
 
-        helper (ModeGenerateParam2 pathInEssence pathOutParam intermediateDir) = do
+        helper (ModeGenerateParam2 pathInEssence pathOutParam intermediateDir basename) = do
             inEssence <- readSpecFromFile pathInEssence
             rulesDB <- getRulesDB
             typeCheckSpecIO inEssence
-            param <- generateParam rulesDB inEssence intermediateDir
+            param <- generateParam rulesDB inEssence intermediateDir basename
             writeSpec pathOutParam param
 
         helper (ModeDFAll pathInEssence) = do
