@@ -335,11 +335,16 @@ fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
 -- toSet
 
 fullEvaluator [eMatch| toSet(&f) |]
-    | [xMatch| fMappings := value.function.values |] <- f
+    | isFullyInstantiated f
+    , [xMatch| fMappings := value.function.values |] <- f
     = let
         fTuples = map mappingToTuple fMappings
       in ret [xMake| value.set.values := fTuples |]
 
+fullEvaluator [eMatch| toSet(&f) |]
+    | isFullyInstantiated f
+    , [xMatch| fTuples := value.relation.values |] <- f
+    = ret [xMake| value.set.values := fTuples |]
 
 -- toMSet
 
@@ -347,6 +352,11 @@ fullEvaluator [eMatch| toMSet(&f) |]
     | [xMatch| fMappings := value.function.values |] <- f
     = let fTuples = map mappingToTuple fMappings
       in  ret [xMake| value.mset.values := fTuples |]
+
+fullEvaluator [eMatch| toMSet(&f) |]
+    | isFullyInstantiated f
+    , [xMatch| fTuples := value.relation.values |] <- f
+    = ret [xMake| value.mset.values := fTuples |]
 
 fullEvaluator
   p@[xMatch| [fn]  := functionApply.actual
@@ -380,8 +390,16 @@ fullEvaluator
                  , select args cols
                  ]
 
+            zs = not $ null
+                 [ ()
+                 | [xMatch| cols := value.tuple.values |] <- xs
+                 , cols == args
+                 ]
+
           in
-            ret [xMake| value.relation.values := ys |]
+            if any (\ i -> i == [eMake| _ |] ) args
+                then ret [xMake| value.relation.values := ys |]
+                else returnBool zs
 
 fullEvaluator [eMatch| preImage(&f,&x) |]
     | isFullyInstantiated f && isFullyInstantiated x

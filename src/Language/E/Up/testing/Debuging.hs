@@ -118,8 +118,10 @@ be specs@(_, _, orgF ,_ ,_) = do
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
         -- I don't think I need the aux variables
-        solInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
-        varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) varInfo1
+        solInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
+        solInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) solInfo2
+        varInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) varInfo1
+        varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) varInfo2
 
     let varTrees = createVarTree varInfo
         varsData = combineInfos varInfo solInfo
@@ -177,9 +179,11 @@ mainn bool specs@(_, _, _ ,_ ,_) = do
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
-        -- I don't think I need the aux variables
-        solInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
-        varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) varInfo1
+        -- I don't  need the aux variables
+        solInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
+        solInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) solInfo2
+        varInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) varInfo1
+        varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) varInfo2
 
     let enumMapping1 = getEnumMapping orgP
         enums1       = getEnumsAndUnamed orgP
