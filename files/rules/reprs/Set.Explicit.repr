@@ -1,8 +1,7 @@
 
 ~~> Explicit
 ~~> matrix indexed by [int(1..&n)] of &t
-~~> forAll i,j : int(1..&n) , i < j . refn[i] != refn[j]
-
-    where !(&t hasType `int`)
+~~> forAll i : int(1..&n-1) . refn[i] .< refn[i+1]
 
 *** set (size &n, ..) of &t
+
