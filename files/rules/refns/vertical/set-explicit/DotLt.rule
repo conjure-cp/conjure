@@ -1,0 +1,12 @@
+[100]
+
+&a .< &b ~~> refn(&a) <lex refn(&b)
+
+    $where &a hasType `set of int`
+    $where &b hasType `set of int`
+    where &a hasType `set of _`
+    where &b hasType `set of _`
+
+    where &a hasRepr Explicit
+    where &b hasRepr Explicit
+
