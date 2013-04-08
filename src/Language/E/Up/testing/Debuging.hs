@@ -18,7 +18,7 @@ import System.FilePath
 import Language.E.Up.ReduceSpec
 import Language.E.Up.GatherInfomation
 import Language.E.Up.RepresentationTree
-import Language.E.Up.EvaluateTree
+import Language.E.Up.EvaluateTree2
 import Language.E.Up.AddEssenceTypes
 import Language.E.Up.Debug
 import Language.E.Up.Data
@@ -26,9 +26,13 @@ import Language.E.Up.Common
 import Language.E.Up.GatherIndexRanges
 
 import Data.List(stripPrefix)
+import Data.Map(Map)
+import Data.Set(Set)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import qualified Data.Text as T
-
+import qualified Data.Text.IO as T
+import Data.Char(isSpace)
                             {-              -}
                             -- For Debuging --
                             {-              -}
@@ -107,8 +111,15 @@ rs specs@(specF, solF, orgF,param,orgParam)  = do
 
 
 -- Print out using eval
-be specs@(_, _, orgF ,_ ,_) = do
-    (spec,sol,org,_) <- getTestSpecs specs
+be specs@(specF, _, orgF ,_ ,_) = do
+    (spec,sol,org,orgP) <- getTestSpecs specs
+    (print . pretty) orgP
+
+
+    let logsF = addExtension specF "logs"
+    logs <- liftM T.lines (T.readFile logsF)
+    let tuplesOfMatrixes =  makeTuplesOfMatrixesSet logs
+    __groomPrintM "tuplesOfMatrixes" tuplesOfMatrixes
 
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
@@ -120,16 +131,16 @@ be specs@(_, _, orgF ,_ ,_) = do
         varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) varInfo2
 
     let varTrees = createVarTree varInfo
-        varsData = combineInfos varInfo solInfo
+        varMap = combineInfos varInfo solInfo
 
     --__groomPrintM "org" org
     __groomPrintM "orgInfo" orgInfo
     __groomPrintM "varInfo" varInfo
     {-__groomPrintM "solInfo" solInfo-}
     __groomPrintM "varTrees" varTrees
-    --__groomPrintM "varsData" varsData
+    --__groomPrintM "varMap" varMap
 
-    let varResults = map (\t -> evalTree (onlyNeeded varsData t ) t ) varTrees
+    let varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees
 
     let
         wrap :: String -> E -> E
@@ -144,13 +155,50 @@ be specs@(_, _, orgF ,_ ,_) = do
 
 c = 1
 
+
+logFile = "/Users/bilalh/CS/conjure/files/upTests/_zothers/tupley27-1-1m/0001.eprime.logs"
+
+_rm = do
+    text <- T.readFile logFile
+    return $ makeTuplesOfMatrixesSet (T.lines text)
+
+
+makeTuplesOfMatrixesSet :: [T.Text] -> Set [String]
+makeTuplesOfMatrixesSet = 
+      S.fromList
+    . map (splitOn "_")
+    . map (dropWhile isSpace . T.unpack)
+    . nub
+    . mapMaybe (T.stripPrefix "[matrixToTuple]")
+
+-- Stages of tupley27-1-1m 
+test  = [eMake| ([4,5], [8,9]) |]
+test2 = [eMake| ( [1,2], [(4, 8), (5, 9)]) |]
+test3 = [eMake| tuple( [(1, (4, 8)), (2, (5, 9))] ) |]
+--   [tuple ((1, (4, 8))), tuple ((2, (5, 9)))]
+
+reverseTuplesOfMatrixes ::  E -> E
+reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
+    wrapInMatrix . map matrixToTuple $ transposeE vs
+
+reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
+
+
 -- impure main for printing stuff
 main' = mainn True
 mainf = mainn False
-mainn bool specs@(_, _, _ ,_ ,_) = do
+mainn bool specs@(specF, _, _ ,_ ,_) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
 
     (print . pretty) orgP
+
+    let logsF = addExtension specF "logs"
+    logs <- liftM T.lines (T.readFile logsF)
+    let tuplesOfMatrixes =  makeTuplesOfMatrixesSet logs
+    __groomPrintM "tuplesOfMatrixes" tuplesOfMatrixes
+    
+
+
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
@@ -174,7 +222,7 @@ mainn bool specs@(_, _, _ ,_ ,_) = do
     let indexrangeMapping = gatherIndexRanges orgP
 
     let varTrees = createVarTree varInfo
-        varsData = combineInfos varInfo solInfo
+        varMap   = combineInfos varInfo solInfo
 
     --__groomPrintM "org" org
     --__groomPrintM "spec" spec
@@ -185,7 +233,7 @@ mainn bool specs@(_, _, _ ,_ ,_) = do
     --__groomPrintM "varsData" varsData
 
 
-    let varResults = map (\t -> evalTree (onlyNeeded varsData t ) t ) varTrees
+    let varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees
     --__groomPrintM "varResults" varResults
 
     -- Wrap all the variables with the required essence stuff
