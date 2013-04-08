@@ -219,6 +219,9 @@ data Lexeme
     | L_HasDomain
     | L_indices
 
+    | L_DotLt
+    | L_DotLeq
+
     deriving (Eq, Ord, Show, Generic)
 
 instance Hashable Lexeme
@@ -388,6 +391,9 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_HasType         , "hasType"   )
     , ( L_HasDomain       , "hasDomain" )
     , ( L_indices         , "indices"   )
+
+    , ( L_DotLt           , ".<"    )
+    , ( L_DotLeq          , ".<="   )
 
     ]
 
