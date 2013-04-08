@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+
 
 module Language.E.Up.EvaluateTree2 (
     evalTree
@@ -40,19 +42,25 @@ evalTree' mapping set prefix (Leaf part) =
 evalTree' mapping set prefix (Branch part arr) =
     evalTree' mapping set (prefix ++ [part])  (repSelector arr)
 
-     `_g` ("prefix",prefix )
-
 
 evalTree' mapping set prefix (Tuple arr) =
     let items =  map (unwrapExpr . evalTree' mapping set prefix ) arr
-    in  [xMake| expr.value.tuple.values := items |]
+        tuple = [xMake| value.tuple.values := items |]
+        res   = handleTuplesOfMatrixes tuple
+    in wrapInExpr res 
 
+     `_p` ("res",[res] )
+     `_p` ("ans",[tuple] )
      `_g` ("prefix_tuple",prefix )
-     `_p` ("items",items )
 
+
+
+    where
+    handleTuplesOfMatrixes :: E -> E
+    handleTuplesOfMatrixes f | prefix `S.member` set = reverseTuplesOfMatrixes f
+    handleTuplesOfMatrixes f = f
 
 --evalTree' m prefix tree =  error . show $  (pretty . groom) prefix  <+> (pretty . groom) m  <+>  (pretty . groom) tree
-
 
 -- Deals with (most) representations
 repConverter ::  String -> VarData -> E
