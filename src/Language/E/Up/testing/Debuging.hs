@@ -168,6 +168,18 @@ makeMatrixToTuplesMapping logs = S.fromList lines
         . T.lines 
         $ logs
 
+-- Stages of tupley27-1-1m 
+test  = [eMake| ([4,5], [8,9]) |]
+test2 = [eMake| ( [1,2], [(4, 8), (5, 9)]) |]
+test3 = [eMake| tuple( [(1, (4, 8)), (2, (5, 9))] ) |]
+--   [tuple ((1, (4, 8))), tuple ((2, (5, 9)))]
+
+reverseTuplesOfMatrixes ::  E -> E
+reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
+    wrapInMatrix . map matrixToTuple $ transposeE vs
+
+reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
+
 
 -- impure main for printing stuff
 main' = mainn True
