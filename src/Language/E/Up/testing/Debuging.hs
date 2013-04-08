@@ -153,20 +153,15 @@ logFile = "/Users/bilalh/CS/conjure/files/upTests/_zothers/tupley27-1-1m/0001.ep
 
 _rm = do
     text <- T.readFile logFile
-    return $ makeMatrixToTuplesMapping text
+    return $ makeTuplesOfMatrixesSet (T.lines text)
 
 
-makeMatrixToTuplesMapping :: T.Text -> Set String 
-makeMatrixToTuplesMapping logs = S.fromList lines 
-
-    where
-    lines = 
-          map (dropWhile isSpace)
-        . map T.unpack
-        . nub
-        . mapMaybe (T.stripPrefix "[matrixToTuple]")
-        . T.lines 
-        $ logs
+makeTuplesOfMatrixesSet :: [T.Text] -> Set String 
+makeTuplesOfMatrixesSet = 
+      S.fromList
+    . map (dropWhile isSpace . T.unpack)
+    . nub
+    . mapMaybe (T.stripPrefix "[matrixToTuple]")
 
 -- Stages of tupley27-1-1m 
 test  = [eMake| ([4,5], [8,9]) |]
@@ -184,8 +179,12 @@ reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> prett
 -- impure main for printing stuff
 main' = mainn True
 mainf = mainn False
-mainn bool specs@(_, _, _ ,_ ,_) = do
+mainn bool specs@(specF, _, _ ,_ ,_) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
+
+    let logsF = replaceExtension specF "logs"
+    logs <- liftM T.lines (T.readFile logsF)
+    let tuplesOfMatrixes =  makeTuplesOfMatrixesSet logs
 
     (print . pretty) orgP
     let varInfo1 = getVariables spec
