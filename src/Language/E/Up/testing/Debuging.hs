@@ -18,7 +18,7 @@ import System.FilePath
 import Language.E.Up.ReduceSpec
 import Language.E.Up.GatherInfomation
 import Language.E.Up.RepresentationTree
-import Language.E.Up.EvaluateTree
+import Language.E.Up.EvaluateTree2
 import Language.E.Up.AddEssenceTypes
 import Language.E.Up.Debug
 import Language.E.Up.Data
@@ -182,11 +182,15 @@ mainf = mainn False
 mainn bool specs@(specF, _, _ ,_ ,_) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
 
-    let logsF = replaceExtension specF "logs"
+    (print . pretty) orgP
+
+    let logsF = addExtension specF "logs"
     logs <- liftM T.lines (T.readFile logsF)
     let tuplesOfMatrixes =  makeTuplesOfMatrixesSet logs
+    __groomPrintM "tuplesOfMatrixes" tuplesOfMatrixes
+    
 
-    (print . pretty) orgP
+
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
