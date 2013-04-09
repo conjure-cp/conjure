@@ -60,7 +60,8 @@ inQuan quan quanVar quanOverDom (guard,body) =
                   | quantified.guard                               := [guard]
                   | quantified.body                                := [body]
                   |]
-    in  fromMaybe out (tryUnrollForAll out)
+    -- in  fromMaybe out (tryUnrollForAll out)
+    in  out
 
 inForAlls :: [(Text,E)] -> (E,E) -> E
 inForAlls = inQuans "forAll"
