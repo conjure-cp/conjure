@@ -4,7 +4,7 @@ module Language.E.Pipeline.ReadIn where
 
 import Language.E
 
-import Data.Text ( breakOn, pack )
+import qualified Data.Text as T
 import System.Directory ( createDirectoryIfMissing )
 
 
@@ -21,7 +21,7 @@ readSpecFromStdIn = do
     let errorMsg = "Error while parsing file."
     stdin <- getContents
     handleInIOSingle =<<
-        runCompEIOSingle errorMsg (readSpec ("<STDIN>", pack stdin))
+        runCompEIOSingle errorMsg (readSpec ("<STDIN>", T.pack stdin))
 
 readSpecPreambleFromFile :: FilePath -> IO Spec
 readSpecPreambleFromFile fp = do
@@ -47,13 +47,15 @@ readSpecPreamble (fp,con) =
         Left  e -> err ErrFatal e
         Right x -> initialiseSpecState x >> return x
     where
-        discardAfter t = fst . breakOn t
+        stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
+        discardAfter t = fst . T.breakOn t
         onlyPreamble
             = discardAfter "maximising"
             . discardAfter "maximizing"
             . discardAfter "minimising"
             . discardAfter "minimizing"
             . discardAfter "such that"
+            . stripComments
 
 
 fixRulename :: String -> String
