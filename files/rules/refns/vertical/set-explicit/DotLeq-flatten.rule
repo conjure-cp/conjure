@@ -1,0 +1,10 @@
+[100]
+
+flatten(&a) <=lex flatten(&b) ~~> flatten(refn(&a)) <=lex flatten(refn(&b))
+
+    $where &a hasType `matrix indexed by [_] of set of _`
+    $where &b hasType `matrix indexed by [_] of set of _`
+
+    where &a hasRepr Explicit
+    where &b hasRepr Explicit
+

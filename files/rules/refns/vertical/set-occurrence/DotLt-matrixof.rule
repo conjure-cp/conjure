@@ -1,7 +1,6 @@
 [100]
 
 &a <lex &b ~~> flatten(refn(&a)) <lex flatten(refn(&b))
-$&a <lex &b ~~> refn(&a) <lex refn(&b)
 
     where &a hasType `matrix indexed by [_] of set of _`
     where &b hasType `matrix indexed by [_] of set of _`
