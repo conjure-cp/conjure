@@ -1,6 +1,7 @@
 
 ~~> Explicit
 ~~> matrix indexed by [int(1..&n)] of &t
+~~> forAll i : int(1..&n-1) . refn[i] .<= refn[i+1]
 
 *** mset (size &n, ..) of &t
 

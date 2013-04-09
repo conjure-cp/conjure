@@ -154,9 +154,9 @@ export -f perModelperParam;
 rm -f "$FAIL_FILE" "$PASS_FILE"
 touch "$FAIL_FILE" "$PASS_FILE"
 
-#rm -rf "$OUT_DIR"
-#mkdir -p "$OUT_DIR"
-#conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M16G -s 2> >(tee "${MODE}_conjure.stats" >&2)
+rm -rf "$OUT_DIR"
+mkdir -p "$OUT_DIR"
+conjure --mode $MODE --in "$SPEC.essence" --out "$OUT_DIR/$MODE.eprime" +RTS -M16G -s 2> >(tee "${MODE}_conjure.stats" >&2)
 
 NB_EPRIMES=$(ls -1 "$OUT_DIR"/*.eprime 2> /dev/null | wc -l)
 
