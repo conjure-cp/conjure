@@ -364,6 +364,15 @@ typeOf p@[eMatch| allDiff(&a) |] = do
         [xMatch| _ := type.matrix |] -> return tyBool
         _ -> typeErrorIn p
 
+typeOf p@[eMatch| flatten(&a) |] = do
+    tya <- typeOf a
+    case tya of
+        [xMatch| _ := type.matrix |] -> return
+            [xMake| type.matrix.index := [tyUnknown]
+                  | type.matrix.inner := [tyInt]
+                  |]
+        _ -> typeErrorIn p
+
 typeOf p@[eMatch| toInt(&a) |] = do
     tya <- typeOf a
     case tya of
