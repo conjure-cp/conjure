@@ -34,7 +34,6 @@ evalTree _ _ _ = _bugg "evalTree no match"
 evalTree' :: VarMap -> IsTuplesOfMatrixes -> [String] -> Tree String  -> E
 evalTree' mapping set prefix (Leaf part) =
    leafRepConverter part vdata
-    {-in  error . show $ (res,name, vdata)-}
      `_p` ("\n" ++ name, [vdata] )
 
     where
@@ -46,7 +45,7 @@ evalTree' mapping set prefix (Tuple arr) =
     let items =  map ( evalTree' mapping set prefix ) arr
         tuple = [xMake| value.tuple.values := items |]
         res   = handleTuplesOfMatrixes tuple
-    in  res 
+    in  res
 
      `_p` ("res",[res] )
      `_p` ("ans",[tuple] )
@@ -59,9 +58,9 @@ evalTree' mapping set prefix (Tuple arr) =
     handleTuplesOfMatrixes f = f
 
 
-evalTree' mapping set prefix (Branch part@"Explicit" arr) =
-    evalTree' mapping set (prefix ++ [part])  (repSelector arr)
-    {-error . show $  (pretty . groom) prefix  <+> (pretty . groom) mapping  <+>  (pretty . groom) arr-}
+evalTree' mapping set prefix (Branch part@"ExplicitVarSize" arr) =
+    let res = evalTree' mapping set (prefix ++ [part])  (repSelector arr)
+    in error . show $  (pretty . groom) prefix  <+> (pretty . groom) mapping  <+>  (pretty . groom) arr
 
 evalTree' mapping set prefix (Branch part arr) =
     evalTree' mapping set (prefix ++ [part])  (repSelector arr)
@@ -75,27 +74,51 @@ leafRepConverter  kind  vdata@VarData{vEssence = es} =
     case kind of
       "Explicit"   -> explicitRep vdata
       "Occurrence" -> occurrenceRep vdata
-      "Matrix1D"   -> matrix1DRep vdata 
-      --"RelationIntMatrix2" -> relationIntMatrix2Rep vdata
+      "Matrix1D"   -> matrix1DRep vdata
+      "RelationIntMatrix2" -> relationIntMatrix2Rep vdata
       --"ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
       _            -> es
 
 
 explicitRep :: VarData -> E
-explicitRep VarData{vEssence=e} = e 
+explicitRep VarData{vEssence=e} = e
 
 
 -- CHECK with Mset
 occurrenceRep :: VarData -> E
-occurrenceRep VarData{vIndexes=[ix], 
-  vEssence=[xMatch| vs :=  value.matrix.values |]} = 
+occurrenceRep VarData{vIndexes=[ix],
+  vEssence=[xMatch| vs :=  value.matrix.values |]} =
     wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ vs
 
 occurrenceRep v = error $  "occurrenceRep " ++  (show . pretty) v
 
 
+relationIntMatrix2Rep :: VarData -> E
+relationIntMatrix2Rep VarData{vIndexes=[a,b],
+                              vEssence=[xMatch| vs := value.matrix.values |] } =
+  values
+  where
+  values =
+       wrapInRelation
+     . concatMap tuples
+     . filter notEmpty
+     . zip a
+     . map (map fst . filter f . zip b . unwrapMatrix)
+     $ vs
+
+  tuples :: (Integer,[Integer]) -> [E]
+  tuples (x,ys) = map (\y -> [xMake| value.tuple.values := (map wrap [x,y]) |]) ys
+       where wrap i =  [xMake| value.literal := [Prim (I i)] |]
+
+  notEmpty (_,[]) = False
+  notEmpty _      = True
+
+  f (_,[eMatch| true |])  = True
+  f (_,[eMatch| false |]) = False
+  f _ = _bugg "relationIntMatrix2Rep not boolean"
+
 matrix1DRep :: VarData -> E
-matrix1DRep VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} = 
+matrix1DRep VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
         func     = [xMake| value.function.values := mappings |]
     in func
@@ -111,12 +134,13 @@ matrix1DRep vd@VarData{vIndexes=ixs, vEssence=[xMatch| vs :=  value.matrix.value
 matrix1DRep  v = error $  "matrix1DRep " ++  (show . pretty) v
 
 
+
 partitionMSetOfSetsRep :: VarData -> E
 partitionMSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    let parts = map toPart vs 
+    let parts = map toPart vs
     in  [xMake| value.partition.values := parts |]
 
-    where 
+    where
     toPart [xMatch| es := value.matrix.values |] =  [xMake| part := es |]
 
 
@@ -133,6 +157,7 @@ reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> prett
 
 toIntLit :: Integer -> E
 toIntLit j =  [xMake| value.literal := [Prim (I j)] |]
+
 
 onlySelectedValues :: [(a,E)] -> [(a,E)]
 onlySelectedValues = filter f
