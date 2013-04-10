@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
+{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
@@ -9,7 +9,8 @@
 module Language.E.Up.Testing.Debugging where
 
 
-import Language.E
+import Language.E hiding(trace)
+
 import Language.E.Up.EprimeToEssence
 import Language.E.Up.IO
 import System.Process (runCommand)
@@ -33,6 +34,8 @@ import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Char(isSpace)
+
+
                             {-              -}
                             -- For Debuging --
                             {-              -}
@@ -120,6 +123,7 @@ be specs@(specF, _, orgF ,_ ,_) = do
     logs <- liftM T.lines (T.readFile logsF)
     let tuplesOfMatrixes =  makeTuplesOfMatrixesSet logs
     __groomPrintM "tuplesOfMatrixes" tuplesOfMatrixes
+    putStrLn ""
 
     let varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
@@ -131,7 +135,8 @@ be specs@(specF, _, orgF ,_ ,_) = do
         varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) varInfo2
 
     let varTrees = createVarTree varInfo
-        varMap = combineInfos varInfo solInfo
+        varMap1  = combineInfos varInfo solInfo
+        varMap   = M.map (\vd@VarData{vEssence=e} -> vd{vEssence=unwrapExpr e} ) varMap1
 
     --__groomPrintM "org" org
     __groomPrintM "orgInfo" orgInfo
@@ -141,19 +146,35 @@ be specs@(specF, _, orgF ,_ ,_) = do
     --__groomPrintM "varMap" varMap
 
     let varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees
-
+        
     let
         wrap :: String -> E -> E
-        wrap name (Tagged "expr" arr) =
-            [xMake| topLevel.letting.expr := arr
+        wrap name value =
+            [xMake| topLevel.letting.expr := [value]
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
-        wrap n e = errbM "cgs: wrap failed"  [e]
 
 
-    let resultEssence =  map (uncurry wrap ) varResults
+    let indexrangeMapping = gatherIndexRanges orgP    
+
+    let enumMapping1 = getEnumMapping orgP
+        enums1       = getEnumsAndUnamed orgP
+
+        (enumMapping, enums) = convertUnamed enumMapping1 enums1
+
+    let lookUp m = fromMaybe (error "fromMaybe cgs: lookUpType")  . flip M.lookup m
+        eval (s,e) =
+            let orgType = lookUp orgInfo s
+                indext  = lookUp indexrangeMapping s
+                res'    = introduceTypes enumMapping orgType e
+            in wrap s $ introduceIndexRange indext res' 
+
+        {-resultEssence =  map eval varResults-}
+        resultEssence =  map (uncurry wrap ) varResults
+
     (print . vcat . map pretty) resultEssence
+    mapM_ (print . prettyAsPaths) resultEssence
 
-c = 1
+
 
 
 logFile = "/Users/bilalh/CS/conjure/files/upTests/_zothers/tupley27-1-1m/0001.eprime.logs"
@@ -184,6 +205,112 @@ reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
 
 
+type Before = (Start  -> [Start])
+type After  = (Start -> [Start] -> Start)
+type Mid    = (Start  -> Start)
+type Start  =  VarData
+
+run :: [(Before, After)] -> Start -> Start
+run  fs starting   = evalFs fs id starting
+run' fs starting f = evalFs fs (liftRep f) starting
+
+evalFs :: [(Before, After)] -> Mid -> Start -> Start
+evalFs []     mid v =  v
+evalFs [g]    mid v =  f g mid v
+evalFs (g:gs) mid v =  f g (evalFs gs mid ) v 
+
+-- Run the before transformtion the inner function then the after transformtion
+f :: (Before,After) -> Mid -> Start -> Start
+f (before,after) mid value = 
+    let vs     = tracer "before:" $ before  (tracer "value:" value)
+        mids   = tracer "mid:" $ map mid vs
+        res    = tracer "after:" $ after value mids
+    in res
+
+
+explicit = ( before, after )
+    where 
+    before v@VarData{vEssence=e, vIndexes=ix} =  
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+
+    after orgData vs = 
+        orgData{vEssence = wrapInMatrix . map vEssence $ vs }
+
+occurrence = ( before, after )
+    where 
+    before v@VarData{vEssence=e, vIndexes=ix} = 
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+
+    after orgData vs = 
+        orgData{vEssence = wrapInMatrix . map occurrenceRep $  vs }
+
+matrix1D = ( before, after )
+    where 
+    before v@VarData{vEssence=e, vIndexes=ix} = 
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+
+    after orgData vs = 
+        orgData{vEssence = wrapInMatrix . map matrix1DRep $  vs }
+
+partitionMSetOfSets = ( before, after )
+    where 
+    before v = [v]
+
+    after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
+
+liftRep ::  (VarData -> E) -> VarData  -> VarData
+liftRep repFunc vdata  = vdata{vEssence=repFunc vdata} 
+
+
+fs :: [(Before,After)]
+fs = [matrix1D,explicit]
+
+tracer :: Pretty a => String -> a -> a
+tracer s a = trace (s ++ (show . pretty $ a)) a
+
+vTest = VarData{
+        vIndexes = [[1, 2, 3], [0, 1, 2]]
+        ,vBounds = [0, 1]
+        ,vEssence = [eMake| [ [false,false,true], [false,true,true], [true,true,true]] |]
+        }
+
+vFuncSetnR = run' [matrix1D,explicit] vFuncSetn occurrenceRep
+vFuncSetn = VarData{vIndexes = [[2, 3, 4], [1, 2], [5, 6, 7, 8]],
+        vBounds = [0, 1],
+        vEssence =[eMake| 
+        [[[false, true, true, true],
+          [true, false, true, true]],
+         [[false, true, true, true],
+          [true, false, true, true]],
+         [[false, true, true, true],
+          [true, false, true, true]]]
+        |]}
+
+vFuncSetR = run' [matrix1D] vFuncSet occurrenceRep
+vFuncSet = VarData {vIndexes = [[2, 3, 4], [5, 6]]
+         ,vBounds = [0, 1]
+         ,vEssence =
+             [eMake| [[true, true], [true, true], [true, true]]
+             |]}
+
+
+vParF = run' [partitionMSetOfSets, explicit] vPar occurrenceRep
+vPar = VarData {vIndexes = [[1, 2, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+         ,vBounds = [0, 1]
+         ,vEssence = [eMake|
+         [[false, false, false, false, false, false, false, false, true],
+          [false, false, false, false, true, true, true, true, false],
+          [true, true, true, true, false, false, false, false, false]]
+          |]}
+
+{-
+explicit   = ( (\a -> [a,a*2] ) ,sum )
+occurrence = ( (\a -> [a,1,2] ) ,product )
+-}
+
+
+
+c = 1
 -- impure main for printing stuff
 main' = mainn True
 mainf = mainn False
@@ -222,7 +349,8 @@ mainn bool specs@(specF, _, _ ,_ ,_) = do
     let indexrangeMapping = gatherIndexRanges orgP
 
     let varTrees = createVarTree varInfo
-        varMap   = combineInfos varInfo solInfo
+        varMap1  = combineInfos varInfo solInfo
+        varMap   = M.map (\vd@VarData{vEssence=e} -> vd{vEssence=unwrapExpr e} ) varMap1
 
     --__groomPrintM "org" org
     --__groomPrintM "spec" spec
@@ -271,6 +399,12 @@ getTest  = flip (getFiles base) 1
 
 gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix base s) ) n
 
+func1d     = getTest  "___types/func_matrix1d"
+func1dSetn = getTest  "_functions/funcSetNested"
+func1dSet  = getTest  "_functions/funcSet"
+
+par = getTest "_partition/partition_lit"
+
 #ifdef UP_DEBUG
 n1 = getTest "_zothers/tupley27"
 n2 = getTest "_zothers/tupley27-1-1m"
@@ -308,3 +442,4 @@ rei =  getTest' "__reps/RelationIntMatrix2/set_of_first" 2
 
 ind = getTest "_indexes/2dMatrix"
 #endif
+
