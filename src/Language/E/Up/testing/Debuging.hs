@@ -58,7 +58,7 @@ s specs@(specF, solF, orgF,param,orgParam) = do
     let esolF = addExtension (dropExtensions solF) "solution"
     (Spec _ es) <- getSpec esolF
     (print . pretty) es
-    (putStrLn . groom) es
+    {-(putStrLn . groom) es-}
 
 
 -- Reveal files
@@ -166,13 +166,14 @@ be specs@(specF, _, orgF ,_ ,_) = do
             let orgType = lookUp orgInfo s
                 indext  = lookUp indexrangeMapping s
                 res'    = introduceTypes enumMapping orgType e
-            in wrap s $ introduceIndexRange indext res' 
+                withIndexes =   introduceIndexRange indext res'
+            in wrap s $ res' 
 
-        {-resultEssence =  map eval varResults-}
-        resultEssence =  map (uncurry wrap ) varResults
+        resultEssence =  map eval varResults
+        {-resultEssence =  map (uncurry wrap ) varResults-}
 
     (print . vcat . map pretty) resultEssence
-    mapM_ (print . prettyAsPaths) resultEssence
+    {-mapM_ (print . prettyAsPaths) resultEssence-}
 
 
 
@@ -205,68 +206,57 @@ reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
 
 
-type Before = (Start  -> [Start])
-type After  = (Start -> [Start] -> Start)
-type Mid    = (Start  -> Start)
-type Start  =  VarData
+type Before = (VarData  -> [VarData])
+type After  = (VarData -> [VarData] -> VarData)
+type Mid    = (VarData  -> VarData)
 
-run :: [(Before, After)] -> Start -> Start
+run :: [(Before, After)] -> VarData -> VarData
 run  fs starting   = evalFs fs id starting
 run' fs starting f = evalFs fs (liftRep f) starting
 
-evalFs :: [(Before, After)] -> Mid -> Start -> Start
+evalFs :: [(Before, After)] -> Mid -> VarData -> VarData
 evalFs []     mid v =  v
 evalFs [g]    mid v =  f g mid v
 evalFs (g:gs) mid v =  f g (evalFs gs mid ) v 
 
 -- Run the before transformtion the inner function then the after transformtion
-f :: (Before,After) -> Mid -> Start -> Start
+f :: (Before,After) -> Mid -> VarData -> VarData
 f (before,after) mid value = 
     let vs     = tracer "before:" $ before  (tracer "value:" value)
         mids   = tracer "mid:" $ map mid vs
         res    = tracer "after:" $ after value mids
     in res
 
-
-explicit = ( before, after )
-    where 
-    before v@VarData{vEssence=e, vIndexes=ix} =  
+unwrapSet :: VarData -> [VarData]
+unwrapSet v@VarData{vEssence=e, vIndexes=ix} =  
         map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
 
-    after orgData vs = 
-        orgData{vEssence = wrapInMatrix . map vEssence $ vs }
+mapLeafFunc :: (VarData -> E) -> VarData -> [VarData] -> VarData
+mapLeafFunc f orgData vs = 
+        orgData{vEssence = wrapInMatrix . map f $  vs }
 
-occurrence = ( before, after )
-    where 
-    before v@VarData{vEssence=e, vIndexes=ix} = 
-        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+mapLeafUnchanged :: VarData -> [VarData] -> VarData
+mapLeafUnchanged = mapLeafFunc vEssence 
 
-    after orgData vs = 
-        orgData{vEssence = wrapInMatrix . map occurrenceRep $  vs }
+explicit :: (Before,After)
+explicit = ( unwrapSet, mapLeafUnchanged )
 
-matrix1D = ( before, after )
-    where 
-    before v@VarData{vEssence=e, vIndexes=ix} = 
-        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+occurrence :: (Before,After)
+occurrence = ( unwrapSet, mapLeafFunc occurrenceRep )
 
-    after orgData vs = 
-        orgData{vEssence = wrapInMatrix . map matrix1DRep $  vs }
+matrix1D :: (Before,After)
+matrix1D = ( unwrapSet, mapLeafFunc matrix1DRep )
 
+
+partitionMSetOfSets :: (Before,After)
 partitionMSetOfSets = ( before, after )
     where 
     before v = [v]
-
     after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
 
 liftRep ::  (VarData -> E) -> VarData  -> VarData
 liftRep repFunc vdata  = vdata{vEssence=repFunc vdata} 
 
-
-fs :: [(Before,After)]
-fs = [matrix1D,explicit]
-
-tracer :: Pretty a => String -> a -> a
-tracer s a = trace (s ++ (show . pretty $ a)) a
 
 vTest = VarData{
         vIndexes = [[1, 2, 3], [0, 1, 2]]
@@ -293,7 +283,6 @@ vFuncSet = VarData {vIndexes = [[2, 3, 4], [5, 6]]
              [eMake| [[true, true], [true, true], [true, true]]
              |]}
 
-
 vParF = run' [partitionMSetOfSets, explicit] vPar occurrenceRep
 vPar = VarData {vIndexes = [[1, 2, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]]
          ,vBounds = [0, 1]
@@ -302,12 +291,6 @@ vPar = VarData {vIndexes = [[1, 2, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]]
           [false, false, false, false, true, true, true, true, false],
           [true, true, true, true, false, false, false, false, false]]
           |]}
-
-{-
-explicit   = ( (\a -> [a,a*2] ) ,sum )
-occurrence = ( (\a -> [a,1,2] ) ,product )
--}
-
 
 
 c = 1
@@ -405,17 +388,18 @@ func1dSet  = getTest  "_functions/funcSet"
 
 par = getTest "_partition/partition_lit"
 
+sets = getTest' "__simple-sets/sets"
+
+
 #ifdef UP_DEBUG
 n1 = getTest "_zothers/tupley27"
 n2 = getTest "_zothers/tupley27-1-1m"
-
-p0 = getTest "___types/partition"
 
 f1  = getTest  "_functions/setOfFunc2"
 f2  = getTest  "_functions/funcSet"
 f3  = getTest  "_functions/funcSetNested"
 f4  = getTest  "_functions/setOfFuncSetNested"
-f5  = getTest  "_functions/setOfFuncTupleSet"
+f5  = getTest  "_functions/setOfFuncTupleSet"  -- TODO
 f51 = getTest  "_functions/funcTupleSet"
 f6  = getTest  "_functions/setOfFuncTupleSetMatrix"
 f7  = getTest  "_functions/func_setToInts"
@@ -436,7 +420,9 @@ md4 = getTest "_muti_dimensional/tupley15/4d_tupley15"
 md5 = getTest "_muti_dimensional/tupley15/5d_tupley15"
 mdm = getTest "_muti_dimensional/withMutiMutiMatrix3m/2d_withMutiMutiMatrix3m"
 
+--TODO
 i120m = getTest "__issues/120-funcToSet-matrix1d"
+
 rei =  getTest' "__reps/RelationIntMatrix2/set_of_first" 2
 
 
