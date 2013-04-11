@@ -24,6 +24,7 @@ type IsTuplesOfMatrixes = Set [String]
 evalTree ::VarMap -> IsTuplesOfMatrixes -> Tree String  -> (String,E)
 evalTree mapping set (Branch name arr) =
     (name, evalTree' mapping set [] [name] (repSelector arr))
+    `_g` ("evalTree name", name)
 
 evalTree mapping set tree@(Leaf name) =
     (name,  evalTree' mapping set [] []  tree)
@@ -37,7 +38,7 @@ evalTree' mapping set fs prefix (Leaf part) =
        res     = runBranchFuncs (reverse fs) vdata leafFunc
    in  vEssence res
 
-     {-`_p` ("\n" ++ name, [vdata] )-}
+     `_p` ("leaf \n" ++ name, [vdata] )
 
     where
     name    = intercalate "_" (prefix ++ [part])
@@ -74,10 +75,33 @@ evalTree' mapping set fs prefix (Branch name arr) =
 repSelector :: [Tree String] -> Tree String
 repSelector arr = arr !! (length arr -1)
 
-
 reverseTuplesOfMatrixes ::  E -> E
+
+
+reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values 
+                               | fvs := value.tuple.values.value.function|] | all isFunc vs =
+    let ((dom:_),range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs 
+        range2   = (map wrapInMatrix range)
+        range3   = transposeE range2
+        range'   = map matrixToTuple range3
+        mapping' = zipWith makeMapping dom range'
+
+    in errp $  wrapInFunction mapping'
+
+    where
+
+    makeMapping :: E -> E -> E
+    makeMapping f g =  [xMake| mapping := [f, g] |]
+
+    splitMapping [xMatch| [a,b] := mapping |] = (a,b)
+
+    isFunc :: E -> Bool
+    isFunc [xMatch| _ := value.function.values |] = True
+    isFunc _ = False  
+
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
-    wrapInMatrix . map matrixToTuple $ transposeE vs
+    wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
+
 
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
 
@@ -89,3 +113,9 @@ _bugi s = upBugi ("EvaluateTree: " ++ s )
 _bugg :: String -> t
 _bugg s = _bug s []
 
+unwrapValues ::  E -> [E]
+unwrapValues  (Tagged "values" vs) =  vs
+unwrapValues e = _bug "unwrapValues failed" [e]
+
+wrapInFunction :: [E] -> E
+wrapInFunction es = [xMake| value.function.values := es |]

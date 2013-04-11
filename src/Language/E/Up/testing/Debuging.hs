@@ -16,15 +16,16 @@ import Language.E.Up.IO
 import System.Process (runCommand)
 import System.FilePath
 
-import Language.E.Up.ReduceSpec
-import Language.E.Up.GatherInfomation
-import Language.E.Up.RepresentationTree
-import Language.E.Up.EvaluateTree2
 import Language.E.Up.AddEssenceTypes
-import Language.E.Up.Debug
-import Language.E.Up.Data
 import Language.E.Up.Common
+import Language.E.Up.Data
+import Language.E.Up.Debug
+import Language.E.Up.EvaluateTree2
 import Language.E.Up.GatherIndexRanges
+import Language.E.Up.GatherInfomation
+import Language.E.Up.ReduceSpec
+import Language.E.Up.RepresentationTree
+import Language.E.Up.Representations
 
 import Data.List(stripPrefix)
 import Data.Map(Map)
@@ -112,6 +113,10 @@ rs specs@(specF, solF, orgF,param,orgParam)  = do
     (Spec  _ es) <- getSpec orgF >>= reduceSpec
     (print . pretty) es
 
+bes specs=  do
+    be specs
+    putStrLn "solution"
+    s specs
 
 -- Print out using eval
 be specs@(specF, _, orgF ,_ ,_) = do
@@ -206,21 +211,18 @@ reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
 
 
-type Before = (VarData  -> [VarData])
-type After  = (VarData -> [VarData] -> VarData)
-type Mid    = (VarData  -> VarData)
 
 run :: [(Before, After)] -> VarData -> VarData
 run  fs starting   = evalFs fs id starting
 run' fs starting f = evalFs fs (liftRep f) starting
 
-evalFs :: [(Before, After)] -> Mid -> VarData -> VarData
+evalFs :: [(Before, After)] -> BranchFunc -> VarData -> VarData
 evalFs []     mid v =  v
 evalFs [g]    mid v =  f g mid v
 evalFs (g:gs) mid v =  f g (evalFs gs mid ) v 
 
 -- Run the before transformtion the inner function then the after transformtion
-f :: (Before,After) -> Mid -> VarData -> VarData
+f :: (Before,After) -> BranchFunc -> VarData -> VarData
 f (before,after) mid value = 
     let vs     = tracer "before:" $ before  (tracer "value:" value)
         mids   = tracer "mid:" $ map mid vs
@@ -399,15 +401,15 @@ f1  = getTest  "_functions/setOfFunc2"
 f2  = getTest  "_functions/funcSet"
 f3  = getTest  "_functions/funcSetNested"
 f4  = getTest  "_functions/setOfFuncSetNested"
-f5  = getTest  "_functions/setOfFuncTupleSet"  -- TODO
-f51 = getTest  "_functions/funcTupleSet"
-f6  = getTest  "_functions/setOfFuncTupleSetMatrix"
-f7  = getTest  "_functions/func_setToInts"
-f8  = getTest  "_functions/func_msetToInts"
-f9  = getTest  "_functions/setOfFuncTupleSetFromSet"
-f10 = getTest  "_functions/func_intToTuple"
-f11 = getTest  "_functions/func_setToTuple"
-f12 = getTest  "_functions/simpleMultiFunc"
+f5  = getTest' "_functions/setOfFuncTupleSet" 2      -- TODO
+f51 = getTest  "_functions/funcTupleSet"             -- TODO
+f6  = getTest  "_functions/setOfFuncTupleSetMatrix"  -- TODO
+f7  = getTest  "_functions/func_setToInts"           -- TODO
+f8  = getTest  "_functions/func_msetToInts"          -- TODO
+f9  = getTest  "_functions/setOfFuncTupleSetFromSet" -- TODO
+f10 = getTest' "_functions/func_intToTuple" 2        
+f11 = getTest  "_functions/func_setToTuple"          -- TODO
+f12 = getTest  "_functions/simpleMultiFunc"          -- TODO
 
 c2 = getTest "_zzComplex/tupley32-8m"
 c3 = getTest "_zzComplex/tupley32-8-t2m"
@@ -428,4 +430,5 @@ rei =  getTest' "__reps/RelationIntMatrix2/set_of_first" 2
 
 ind = getTest "_indexes/2dMatrix"
 #endif
+
 
