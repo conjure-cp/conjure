@@ -35,7 +35,7 @@ evalTree' :: VarMap -> IsTuplesOfMatrixes -> [(Before,After)] -> [String] -> Tre
 evalTree' mapping set fs prefix (Leaf part) =
    let leafFunc = leafRep part
        res     = runBranchFuncs (reverse fs) vdata leafFunc
-   in  vEssence res 
+   in  vEssence res
 
      {-`_p` ("\n" ++ name, [vdata] )-}
 
@@ -67,9 +67,9 @@ evalTree' mapping set fs prefix (Branch part@"ExplicitVarSize" arr) =
 evalTree' mapping set fs prefix (Branch name arr) =
     evalTree' mapping set fs' (prefix ++ [name])  (repSelector arr)
 
-    where 
+    where
     fs' :: [(Before,After)]
-    fs' = getBranch name ++ fs 
+    fs' = getBranch name ++ fs
 
 
 -- Deals with (most) representations
@@ -84,7 +84,7 @@ leafRep kind =
       _            -> noRep
 
 
-noRep :: VarData -> E 
+noRep :: VarData -> E
 noRep  = vEssence
 
 
@@ -152,7 +152,6 @@ repSelector arr = arr !! (length arr -1)
 
 
 -- Branch funcs
-
 type Before     = (VarData  -> [VarData])
 type After      = (VarData -> [VarData] -> VarData)
 type BranchFunc = (VarData  -> VarData)
@@ -163,25 +162,25 @@ runBranchFuncs fs starting f = evalFs fs (liftRep f) starting
 
 evalFs :: [(Before, After)] -> BranchFunc -> VarData -> VarData
 evalFs []     mid v =  mid v
-evalFs [g]    mid v =  f g mid v
-evalFs (g:gs) mid v =  f g (evalFs gs mid ) v 
+evalFs [g]    mid v =  evalF g mid v
+evalFs (g:gs) mid v =  evalF g (evalFs gs mid ) v
 
 -- Run the before transformtion the inner function then the after transformtion
-f :: (Before,After) -> BranchFunc -> VarData -> VarData
-f (before,after) mid value = 
+evalF :: (Before,After) -> BranchFunc -> VarData -> VarData
+evalF (before,after) mid value =
     let vs     = tracer "before:" $ before  (tracer "value:" value)
         mids   = tracer "mid:" $ map mid vs
         res    = tracer "after:" $ after value mids
     in res
 
 -- Lift a LeafFunc to a Branch Func
-liftRep ::  LeafFunc -> BranchFunc 
-liftRep repFunc vdata  = vdata{vEssence=repFunc vdata} 
+liftRep ::  LeafFunc -> BranchFunc
+liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 
 
 getBranch :: String -> [(Before,After)]
-getBranch s = 
-    case tracer "\nBranchFunc " s of 
+getBranch s =
+    case tracer "\nBranchFunc " s of
       "Matrix1D"   -> [matrix1DBranch]
       "Explicit"   -> [explicitBranch]
       "Occurrence" -> [occurrenceBranch]
@@ -198,30 +197,30 @@ occurrenceBranch = ( unwrapSet, mapLeafFunc occurrenceRep )
 matrix1DBranch :: (Before,After)
 matrix1DBranch = ( unwrapSet, after )
 
-    where 
+    where
     after :: After
-    after orgData vs = 
+    after orgData vs =
         let wraped = wrapInMatrix $ map vEssence vs
-        in orgData{vEssence=matrix1DRep orgData{vEssence=wraped}} 
+        in orgData{vEssence=matrix1DRep orgData{vEssence=wraped}}
 
 
 partitionMSetOfSetsBranch :: (Before,After)
 partitionMSetOfSetsBranch = ( before, after )
-    where 
+    where
     before v = [v]
     after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
 
 
 unwrapSet :: Before
-unwrapSet v@VarData{vEssence=e, vIndexes=ix} =  
+unwrapSet v@VarData{vEssence=e, vIndexes=ix} =
         map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
 
 mapLeafFunc :: LeafFunc -> VarData -> [VarData] -> VarData
-mapLeafFunc f orgData vs = 
+mapLeafFunc f orgData vs =
         orgData{vEssence = wrapInMatrix . map f $  vs }
 
 mapLeafUnchanged :: VarData -> [VarData] -> VarData
-mapLeafUnchanged = mapLeafFunc vEssence 
+mapLeafUnchanged = mapLeafFunc vEssence
 
 
 
