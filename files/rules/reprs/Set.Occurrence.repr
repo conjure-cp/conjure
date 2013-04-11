@@ -18,7 +18,7 @@ $ ~~> true                                $ structural cons. (optional)
 *** set (maxSize &mx) of &t
     ~~> (sum i : &t . toInt(refn[i])) <= &mx
 
-*** set (minSize &mn, maxSize &mx) of t
+*** set (minSize &mn, maxSize &mx) of &t
     ~~> (sum i : &t . toInt(refn[i])) >= &mn
     /\  (sum i : &t . toInt(refn[i])) <= &mx
 
