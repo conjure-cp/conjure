@@ -6,8 +6,8 @@ module Language.E.Up.Debug where
 
 import Text.PrettyPrint
 
-#ifdef UP_DEBUG
 import Language.E hiding (trace)
+#ifdef UP_DEBUG
 
 import qualified Debug.Trace ( trace )
 import qualified Text.Groom
@@ -25,9 +25,12 @@ upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
 upBugi = erriM
 
 #else
-import Language.E
+import qualified Language.E 
 groom :: Show a => a -> String
 groom = show
+
+trace :: String -> a -> a
+trace = Language.E.trace 
 
 upBug :: String -> [E] -> t
 {-upBug = errpM-}
@@ -41,6 +44,8 @@ upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )
 #endif
 
 
+tracer :: Pretty a => String -> a -> a
+tracer s a = trace (s ++ (show . pretty $ a)) a
 
 -- type Signatures to get rid of 
 -- defaulting the following constraint(s) to type `String' warnnings
