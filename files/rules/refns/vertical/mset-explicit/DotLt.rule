@@ -1,6 +1,6 @@
 [100]
 
-&a .< &b ~~> refn(&a) <lex refn(&b)
+&a .< &b ~~> refn(&a) .< refn(&b)
 
     where &a hasType `mset of _`
     where &b hasType `mset of _`
