@@ -18,6 +18,7 @@ savilerowCompat
     >=> noTuplesSpec                        >=> recordSpec "noTuplesSpec"
     >=> conjureNoGuards                     >=> recordSpec "conjureNoGuards"
     >=> (return . onSpec toIntIsNoOp)       >=> recordSpec "toIntIsNoOp"
+    >=> (return . onSpec dotOrderIsLex)     >=> recordSpec "dotOrderIsLex"
     >=> (return . atMostOneSuchThat)        >=> recordSpec "atMostOneSuchThat"
     >=> (return . removeMinMaxInt)          >=> recordSpec "removeMinMaxInt"
     >=> (return . langEPrime)               >=> recordSpec "langEPrime"
@@ -31,6 +32,12 @@ toIntIsNoOp :: E -> E
 toIntIsNoOp [eMatch| toInt(&x) |] = x
 toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
+
+dotOrderIsLex :: E -> E
+dotOrderIsLex [eMatch| &a .<  &b |] = [eMake| flatten(&a) <lex  flatten(&b) |]
+dotOrderIsLex [eMatch| &a .<= &b |] = [eMake| flatten(&a) <=lex flatten(&b) |]
+dotOrderIsLex (Tagged t xs) = Tagged t $ map dotOrderIsLex xs
+dotOrderIsLex p = p
 
 sliceIfTooFewIndices :: MonadConjure m => Spec -> m Spec
 sliceIfTooFewIndices (Spec v xs) = withBindingScope' $ Spec v <$> sliceIfTooFewIndicesE xs

@@ -40,7 +40,7 @@ instance NFData Spec where
     {-# INLINEABLE rnf #-}
 
 instance Default Spec where
-    def = Spec ("Essence", [1,3]) (Tagged TstatementEOF [])
+    def = Spec ("Essence", [1,3]) (Tagged TstatementEOF def)
 
 type Version = (Text,[Int])
 
