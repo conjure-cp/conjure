@@ -1,9 +1,9 @@
 [100]
 
-&a .<= &b ~~> refn(&a) <=lex refn(&b)
+&a .<= &b ~~> refn(&a) .<= refn(&b)
 
-    where &a hasType `set of _`
-    where &b hasType `set of _`
+    $ where &a hasType `set of _`
+    $ where &b hasType `set of _`
 
     where &a hasRepr Occurrence
     where &b hasRepr Occurrence
