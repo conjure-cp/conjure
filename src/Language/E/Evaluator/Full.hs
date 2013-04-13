@@ -32,6 +32,20 @@ import                Language.E.Evaluator.DataAboutQuantifiers
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
+-- order integer domains given by a list of integers
+-- savilerow expects them ordered
+fullEvaluator [xMatch| rs := domain.int.ranges |]
+    | Just xs <- view rs
+    , let xsSorted = sortNub xs
+    , xs /= xsSorted
+    , let rsSorted = map (\ i -> [xMake| value.literal := [Prim (I i)] |] ) xsSorted
+    = ret [xMake| domain.int.ranges := rsSorted |]
+    where
+        view1 [xMatch| [Prim (I i)] := range.single.value.literal |] = Just i
+        view1 _ = Nothing
+        view [] = Just []
+        view (i:is) = (:) <$> view1 i <*> view is
+
 -- this is a small hack to make rule language work.
 fullEvaluator [xMatch| [Prim (S "!=")] := binOp.operator
                      | [Prim (S "_") ] := binOp.left .reference
