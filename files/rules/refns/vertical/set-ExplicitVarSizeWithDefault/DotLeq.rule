@@ -1,0 +1,17 @@
+[100]
+
+$ this representation if for set of int only
+$ the default value is lower bound - 1
+$ the semantics of dot-order-eq is <=lex
+
+&a .<= &b
+    ~~>
+refn(&a) <=lex refn(&b)
+
+
+    where &a hasType   `set of _`
+    where &b hasType   `set of _`
+
+    where &a hasRepr   ExplicitVarSizeWithDefault
+    where &b hasRepr   ExplicitVarSizeWithDefault
+
