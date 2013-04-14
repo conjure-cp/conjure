@@ -447,7 +447,7 @@ tryLexIntLiteral t = case T.decimal t of
     Right (x,rest) -> Just (rest, LIntLiteral x)
 
 isIdentifierLetter :: Char -> Bool
-isIdentifierLetter ch = isAlphaNum ch || ch `elem` "_'#§"
+isIdentifierLetter ch = isAlphaNum ch || ch `elem` "_'#§~"
 
 tryLexMetaVar :: T.Text -> Maybe (T.Text, Lexeme)
 tryLexMetaVar running =
@@ -463,7 +463,7 @@ tryLexIden running =
         (iden,rest) = T.span isIdentifierLetter running
     in
         case T.uncons running of
-            Just (ch,_) | isAlpha ch || ch `elem` "_" ->
+            Just (ch,_) | isAlpha ch || ch `elem` "_'#§~" ->
                 if T.null iden
                     then Nothing
                     else Just (rest, LIdentifier iden)
