@@ -7,6 +7,9 @@ import Language.E.Up.IO (getTestSpecs, getSpec)
 
 import System.FilePath
 
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
+
 import Test.Hspec hiding (Spec)
 import qualified Test.Hspec as Hspec
 import Test.Hspec.HUnit ()
@@ -17,11 +20,12 @@ type SolutionF       = FilePath
 type EprimeSolutionF = FilePath
 type ParamF          = FilePath
 type EssenceParamF   = FilePath
+type LogsF           = FilePath
 
 
 eprimes :: IO [EprimeF]
 -- Every test
-eprimes = allFilesWithSuffix ".eprime" "files/uptests/"
+{-eprimes = allFilesWithSuffix ".eprime" "files/uptests/"-}
 
 -- All tests that take less then 1/8 of second
 {-
@@ -29,6 +33,9 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
         .   takeFileName . takeDirectory )
        <$> allFilesWithSuffix ".eprime" "files/uptests/"
 -}
+
+eprimes = _eprimeDirs "files/uptests/" ["___simple","__doing"]
+
 
 -- Basic tests
 --eprimes = _eprimeDirs "files/uptests/" ["___parts","___simple","___types"]
@@ -38,17 +45,17 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
 
 
 _eprimeDirs :: FilePath -> [FilePath] -> IO [EprimeF]
-_eprimeDirs base arr = 
-    concatMapM ( allFilesWithSuffix ".eprime") (map (base </>) arr) 
+_eprimeDirs base arr =
+    concatMapM ( allFilesWithSuffix ".eprime") (map (base </>) arr)
 
-specs :: IO [((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF )]
+specs :: IO [((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF,LogsF )]
 specs = do
     es <- eprimes
     return $ map getFiles es
 
-    where 
-        getFiles f = 
-            let base = takeDirectory f 
+    where
+        getFiles f =
+            let base = takeDirectory f
                 name = takeFileName base
                 in
             (
@@ -59,17 +66,20 @@ specs = do
                  Just $  addExtension (joinPath [base,name])  "param",
                  Just $  addExtension (joinPath [base,name])  "essence-param"
              ),
-              replaceExtension f "solution" 
+              replaceExtension f "solution",
+              addExtension f "logs"
             )
 
-runSpec :: ((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF ) -> IO ()
-runSpec  (sps@(_, _,_,_,_),ansF) = do
+runSpec :: ((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF,LogsF ) -> IO ()
+runSpec  (sps@(_, _,_,_,_),ansF,logsF) = do
     (spec,sol,org,orgP) <- getTestSpecs sps
 
     ansS <- getSpec ansF
     let ans = es ansS
 
-    let resultEssence = mainPure' False (spec,sol,org,orgP)
+    logs <- liftM T.lines (T.readFile logsF)
+
+    let resultEssence = mainPure' True (spec,sol,org,orgP,logs)
 
     show (pretty resultEssence) `shouldBe` show (pretty ans)
     where
@@ -81,10 +91,10 @@ tests = do
     xs <- specs
     return $
         describe "Converting eprime back to essence" $
-            forM_ xs $ \every@( (specF,_,_,_,_),_) ->
+            forM_ xs $ \every@( (specF,_,_,_,_),_,_) ->
                 it specF $ runSpec every
 
 main :: IO ()
-main = do 
+main = do
     ts <- tests
     hspec ts

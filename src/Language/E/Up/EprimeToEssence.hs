@@ -16,24 +16,33 @@ module Language.E.Up.EprimeToEssence(
 
 import Language.E
 
+import Language.E.Up.Common(unwrapExpr)
 import Language.E.Up.Data
 import Language.E.Up.Debug
 import Language.E.Up.GatherInfomation
 import Language.E.Up.RepresentationTree
-import Language.E.Up.EvaluateTree
+import Language.E.Up.EvaluateTree2(evalTree)
 import Language.E.Up.AddEssenceTypes
 import Language.E.Up.GatherIndexRanges
 
+import Data.Char(isSpace)
+import Data.Set(Set)
 
-import qualified Data.Text as T
 import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified Data.Text as T
 
-mainPure :: (Spec, Spec, Spec, Spec) -> [E]
+type Logs = [Text]
+
+mainPure :: (Spec, Spec, Spec, Spec,Logs) -> [E]
 mainPure = mainPure' True
 
-mainPure' :: Bool -> (Spec, Spec, Spec, Spec) -> [E]
-mainPure' addIndexRange (spec,sol,org,orgP) =
-    let varInfo1 = getVariables spec
+mainPure' :: Bool -> (Spec, Spec, Spec, Spec,Logs) -> [E]
+mainPure' addIndexRange (spec,sol,org,orgP,logs) =
+
+
+    let tuplesOfMatrixes =  makeTuplesOfMatrixesSet logs
+        varInfo1 = getVariables spec
         orgInfo  = getEssenceVariables org
         solInfo1 = getSolVariables sol
         -- I don't think I need the aux variables
@@ -42,38 +51,45 @@ mainPure' addIndexRange (spec,sol,org,orgP) =
         varInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) varInfo1
         varInfo  = M.filterWithKey (\a _ ->  not $ isPrefixOf "aux__" a) varInfo2
 
+        varTrees = createVarTree varInfo
+        varMap1  = combineInfos varInfo solInfo
+        varMap   = M.map (\vd@VarData{vEssence=e} -> vd{vEssence=unwrapExpr e} ) varMap1
+       
+        varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees 
+
+        wrap :: String -> E -> E
+        wrap name value =
+            [xMake| topLevel.letting.expr := [value]
+                  | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
+
+        indexrangeMapping = gatherIndexRanges orgP    
+
         enumMapping1 = getEnumMapping orgP
         enums1       = getEnumsAndUnamed orgP
 
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
 
-        indexrangeMapping = gatherIndexRanges orgP    
-
-        varTrees = createVarTree varInfo
-        varsData = combineInfos varInfo solInfo
-
-        varResults = map (\t -> evalTree (onlyNeeded varsData t ) t ) varTrees
-
-        wrap :: String -> E -> E
-        wrap name (Tagged "expr" arr) =
-            [xMake| topLevel.letting.expr := arr
-                  | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
-        wrap name e = _bug ("wrap failed for " ++ name) [e]
-
-        lookUp m = fromMaybe (error "fromMaybe: lookUpType")  . flip M.lookup m
+        lookUp m = fromMaybe (error "fromMaybe EprimeToEssence: lookUpType")  . flip M.lookup m
         eval (s,e) =
-            let orgType = lookUp orgInfo s
-                indext = lookUp indexrangeMapping s
-                (changed, _type) = convertRep orgType
-                res  = toEssenceRep' _type e
-                res' = introduceTypes enumMapping orgType res
+            let orgType     = lookUp orgInfo s
+                indext      = lookUp indexrangeMapping s
+                res        = introduceTypes enumMapping orgType e
+                withIndexes = introduceIndexRange indext res
             in wrap s $ 
-               (if addIndexRange then introduceIndexRange indext else id)
-               (if changed then res' else res)
+               if addIndexRange then withIndexes else res
 
         resultEssence   = map eval varResults
 
     in enums ++ resultEssence
+
+
+makeTuplesOfMatrixesSet :: [Text] -> Set [String]
+makeTuplesOfMatrixesSet = 
+      S.fromList
+    . map (splitOn "_" . dropWhile isSpace . T.unpack)
+    . nub
+    . mapMaybe (T.stripPrefix "[matrixToTuple]")
+
 
 onlyNeeded :: M.Map String VarData -> Tree String ->  M.Map String VarData
 onlyNeeded mapping (Branch s _) = M.filterWithKey (\k _ -> s `isPrefixOf` k ) mapping
