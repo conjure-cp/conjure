@@ -14,11 +14,8 @@ $forAll i : &r
     $, &ma[i][1] /\ &mb[i][1]
     $. &ma[i][2] .< &mb[i][2]
 
-    where &a hasType `set of _`
-    where &b hasType `set of _`
-
-    where &a hasRepr ExplicitVarSize
-    where &b hasRepr ExplicitVarSize
+    where &a hasRepr Set~ExplicitVarSize
+    where &b hasRepr Set~ExplicitVarSize
 
     letting &ma be refn(&a)
     letting &mb be refn(&b)

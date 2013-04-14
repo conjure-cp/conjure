@@ -1,15 +1,13 @@
 
-~~> ExplicitVarSize
+~~> Set~ExplicitVarSize
 ~~> matrix indexed by [int(1..&mx)] of (bool,&t)
 ~~> (
-        forAll i : int(1..&mx-1), refn[i][1] /\ refn[i+1][1] . refn[i][2] < refn[i+1][2]
+        forAll i : int(1..&mx-1), refn[i][1] /\ refn[i+1][1] . refn[i][2] .< refn[i+1][2]
     )
         /\
     (
         forAll i : int(1..&mx-1) . refn[i][1] <= refn[i+1][1]
     )
-
-    where &t hasType `int`
 
 
 *** set of &t

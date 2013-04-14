@@ -6,9 +6,8 @@
 &quan j : &t , &g { &i --> j } /\ &m[j]
              . &k { &i --> j }
 
-    where &s hasType `set of _`
     where &s hasDomain `set (..) of &t`
-    where &s hasRepr Occurrence
+    where &s hasRepr Set~Occurrence
 
     letting &m be refn(&s)
 

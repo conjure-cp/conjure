@@ -58,11 +58,11 @@ evalTree' mapping set prefix (Tuple arr) =
 repConverter ::  String -> VarData -> E
 repConverter  kind  vdata@VarData{vEssence = es} =
     case kind of
-      --"Explicit"   -> explicitRep vdata
-      --"Occurrence" -> occurrenceRep vdata
+      --"SetExplicit"   -> explicitRep vdata
+      --"SetOccurrence" -> occurrenceRep vdata
       --"Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
       --"RelationIntMatrix2" -> relationIntMatrix2Rep vdata
-      --"ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
+      --"SetExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
       _            -> es
 
 

@@ -9,14 +9,9 @@ $ except for one case, when both sets are empty.
     ~~>
 (&a = {} /\ &b = {}) \/ refn(&a) <lex refn(&b)
 
-
-    where &a hasType   `set of _`
-    where &b hasType   `set of _`
-
-    where &a hasRepr   ExplicitVarSizeWithDefault
-    where &b hasRepr   ExplicitVarSizeWithDefault
+    where &a hasRepr   Set~ExplicitVarSizeWithDefault
+    where &b hasRepr   Set~ExplicitVarSizeWithDefault
 
     where &a hasDomain `set (..) of int(&lb..&ub)`
     letting &def be &lba - 1
-
 

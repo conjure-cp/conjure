@@ -8,8 +8,7 @@
 &quan j : &r , &g { &i --> &m[j] }
              . &k { &i --> &m[j] }
 
-    where &s hasType `set of _`
-    where &s hasRepr Explicit
+    where &s hasRepr Set~Explicit
 
     letting &m be refn(&s)
     letting &r be indices(&m,0)

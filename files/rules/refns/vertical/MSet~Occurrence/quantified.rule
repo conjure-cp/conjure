@@ -6,7 +6,7 @@
 &quan j : &t , &g { &i --> j } /\ (&m[j] > 0)
              . &k { &i --> j }
 
-    where &s hasRepr Occurrence
+    where &s hasRepr MSet~Occurrence
     where &s hasDomain `mset (..) of &t`
 
     letting &m be refn(&s)

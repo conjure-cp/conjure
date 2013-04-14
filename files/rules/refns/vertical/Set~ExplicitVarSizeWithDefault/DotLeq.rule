@@ -8,10 +8,6 @@ $ the semantics of dot-order-eq is <=lex
     ~~>
 refn(&a) <=lex refn(&b)
 
-
-    where &a hasType   `set of _`
-    where &b hasType   `set of _`
-
-    where &a hasRepr   ExplicitVarSizeWithDefault
-    where &b hasRepr   ExplicitVarSizeWithDefault
+    where &a hasRepr   Set~ExplicitVarSizeWithDefault
+    where &b hasRepr   Set~ExplicitVarSizeWithDefault
 
