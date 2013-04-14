@@ -895,8 +895,8 @@ evalReplace _ = return Nothing
 tupleEq :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 -- tupleEq x | trace (show $ "tupleEq:" <+> pretty x) False = undefined
 tupleEq [eMatch| &a = &b |] = do
-    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
-    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    ta <- typeOf a
+    tb <- typeOf b
     case (ta,tb) of
         ([xMatch| is := type.tuple.inners |], _) ->
             ret $ conjunct [ [eMake| &a[&i] = &b[&i] |]
@@ -910,8 +910,8 @@ tupleEq [eMatch| &a = &b |] = do
                            ]
         _ -> return Nothing
 tupleEq [eMatch| &a != &b |] = do
-    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
-    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    ta <- typeOf a
+    tb <- typeOf b
     case (ta,tb) of
         ([xMatch| is := type.tuple.inners |], _) ->
             ret $ disjunct [ [eMake| &a[&i] != &b[&i] |]
@@ -925,8 +925,8 @@ tupleEq [eMatch| &a != &b |] = do
                            ]
         _ -> return Nothing
 tupleEq [eMatch| &a .< &b |] = do
-    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
-    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    ta <- typeOf a
+    tb <- typeOf b
     melems <- case (ta,tb) of
         ([xMatch| is := type.tuple.inners |], _) ->
             return $ Just [ ( [eMake| &a[&i] |]
@@ -963,8 +963,8 @@ tupleEq [eMatch| &a .< &b |] = do
                                   in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
             ret $ go elems
 tupleEq [eMatch| &a .<= &b |] = do
-    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
-    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    ta <- typeOf a
+    tb <- typeOf b
     melems <- case (ta,tb) of
         ([xMatch| is := type.tuple.inners |], _) ->
             return $ Just [ ( [eMake| &a[&i] |]

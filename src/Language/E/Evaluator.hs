@@ -83,6 +83,7 @@ fullySimplify x = do
 
 
 simplify :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
+-- simplify x = trace (show $ "simplify" <+> pretty x) $ do
 simplify x = do
     (y, (Any flag, _)) <- listen $ pipeline x
     if flag
@@ -113,7 +114,7 @@ allCombined i =
 
 -- these transformations should be applied first. others might depend on them.
 allCombinedDoFirst :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
--- allCombinedDoFirst i = trace (show $ "allCombinedDoFirst:" <+> pretty i)
+-- allCombinedDoFirst i = trace (show $ "allCombinedDoFirst:" <+> pretty i) $
 allCombinedDoFirst i =
     firstJustOr i
         $ map ($ i) [ logged "Evaluator"           fullEvaluator
