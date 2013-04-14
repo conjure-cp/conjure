@@ -940,6 +940,18 @@ tupleEq [eMatch| &a .< &b |] = do
                           | j <- [1..genericLength is]
                           , let i = [xMake| value.literal := [Prim (I j)] |]
                           ]
+        ([xMatch| is := type.matrix.inner.type.tuple.inners |], _) -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| is := type.matrix.inner.type.tuple.inners |]) ->
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
         _ -> return Nothing
     case melems of
         Nothing -> return Nothing
