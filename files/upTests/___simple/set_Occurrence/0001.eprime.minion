@@ -1,51 +1,54 @@
 MINION 3
+# CSE_number = 0
+# CSE_eliminated_expressions = 0
+# CSE_total_size = 0
 **VARIABLES**
-BOOL x_Occurrence_00000 #
-BOOL x_Occurrence_00001 #
-BOOL x_Occurrence_00002 #
-BOOL x_Occurrence_00003 #
-BOOL x_Occurrence_00004 #
-BOOL x_Occurrence_00005 #
-BOOL x_Occurrence_00006 #
-BOOL x_Occurrence_00007 #
-BOOL x_Occurrence_00008 #
-BOOL x_Occurrence_00009 #
-DISCRETE v__5 #
+BOOL x_SetOccurrence_00000 #
+BOOL x_SetOccurrence_00001 #
+BOOL x_SetOccurrence_00002 #
+BOOL x_SetOccurrence_00003 #
+BOOL x_SetOccurrence_00004 #
+BOOL x_SetOccurrence_00005 #
+BOOL x_SetOccurrence_00006 #
+BOOL x_SetOccurrence_00007 #
+BOOL x_SetOccurrence_00008 #
+BOOL x_SetOccurrence_00009 #
+DISCRETE aux__5 #
 {0..9}
-BOOL aux0 #(1<=v__5)
-BOOL aux1 #(2<=v__5)
-BOOL aux2 #(3<=v__5)
-BOOL aux3 #(4<=v__5)
-BOOL aux4 #(5<=v__5)
-BOOL aux5 #(6<=v__5)
-BOOL aux6 #(7<=v__5)
-BOOL aux7 #(8<=v__5)
-BOOL aux8 #(9<=v__5)
+BOOL aux0 #(1<=aux__5)
+BOOL aux1 #(2<=aux__5)
+BOOL aux2 #(3<=aux__5)
+BOOL aux3 #(4<=aux__5)
+BOOL aux4 #(5<=aux__5)
+BOOL aux5 #(6<=aux__5)
+BOOL aux6 #(7<=aux__5)
+BOOL aux7 #(8<=aux__5)
+BOOL aux8 #(9<=aux__5)
 **SEARCH**
-PRINT[[x_Occurrence_00000],[x_Occurrence_00001],[x_Occurrence_00002],[x_Occurrence_00003],[x_Occurrence_00004],[x_Occurrence_00005],[x_Occurrence_00006],[x_Occurrence_00007],[x_Occurrence_00008],[x_Occurrence_00009],[v__5]]
-VARORDER STATIC [x_Occurrence_00000,x_Occurrence_00001,x_Occurrence_00002,x_Occurrence_00003,x_Occurrence_00004,x_Occurrence_00005,x_Occurrence_00006,x_Occurrence_00007,x_Occurrence_00008,x_Occurrence_00009,v__5]
+PRINT[[x_SetOccurrence_00000],[x_SetOccurrence_00001],[x_SetOccurrence_00002],[x_SetOccurrence_00003],[x_SetOccurrence_00004],[x_SetOccurrence_00005],[x_SetOccurrence_00006],[x_SetOccurrence_00007],[x_SetOccurrence_00008],[x_SetOccurrence_00009],[aux__5]]
+VARORDER STATIC [x_SetOccurrence_00000,x_SetOccurrence_00001,x_SetOccurrence_00002,x_SetOccurrence_00003,x_SetOccurrence_00004,x_SetOccurrence_00005,x_SetOccurrence_00006,x_SetOccurrence_00007,x_SetOccurrence_00008,x_SetOccurrence_00009,aux__5]
 VARORDER AUX [aux0,aux1,aux2,aux3,aux4,aux5,aux6,aux7,aux8]
 **CONSTRAINTS**
-reify(ineq(1, v__5, 0), aux0)
-reify(ineq(2, v__5, 0), aux1)
-reify(ineq(3, v__5, 0), aux2)
-reify(ineq(4, v__5, 0), aux3)
-reify(ineq(5, v__5, 0), aux4)
-reify(ineq(6, v__5, 0), aux5)
-reify(ineq(7, v__5, 0), aux6)
-reify(ineq(8, v__5, 0), aux7)
-reify(ineq(9, v__5, 0), aux8)
-watched-or({watched-and({w-literal(x_Occurrence_00000,1),w-literal(v__5,0)}),watched-and({w-literal(x_Occurrence_00001,1),w-literal(v__5,1)}),watched-and({w-literal(x_Occurrence_00002,1),w-literal(v__5,2)}),watched-and({w-literal(x_Occurrence_00003,1),w-literal(v__5,3)}),watched-and({w-literal(x_Occurrence_00004,1),w-literal(v__5,4)}),watched-and({w-literal(x_Occurrence_00005,1),w-literal(v__5,5)}),watched-and({w-literal(x_Occurrence_00006,1),w-literal(v__5,6)}),watched-and({w-literal(x_Occurrence_00007,1),w-literal(v__5,7)}),watched-and({w-literal(x_Occurrence_00008,1),w-literal(v__5,8)}),watched-and({w-literal(x_Occurrence_00009,1),w-literal(v__5,9)})})
-sumleq([x_Occurrence_00000,x_Occurrence_00001,x_Occurrence_00002,x_Occurrence_00003,x_Occurrence_00004,x_Occurrence_00005,x_Occurrence_00006,x_Occurrence_00007,x_Occurrence_00008,x_Occurrence_00009],2)
-w-literal(x_Occurrence_00002,1)
-ineq(8, v__5, -1)
-ineq(x_Occurrence_00001, aux0, 0)
-ineq(x_Occurrence_00002, aux1, 0)
-ineq(x_Occurrence_00003, aux2, 0)
-ineq(x_Occurrence_00004, aux3, 0)
-ineq(x_Occurrence_00005, aux4, 0)
-ineq(x_Occurrence_00006, aux5, 0)
-ineq(x_Occurrence_00007, aux6, 0)
-ineq(x_Occurrence_00008, aux7, 0)
-ineq(x_Occurrence_00009, aux8, 0)
+reify(ineq(1, aux__5, 0), aux0)
+reify(ineq(2, aux__5, 0), aux1)
+reify(ineq(3, aux__5, 0), aux2)
+reify(ineq(4, aux__5, 0), aux3)
+reify(ineq(5, aux__5, 0), aux4)
+reify(ineq(6, aux__5, 0), aux5)
+reify(ineq(7, aux__5, 0), aux6)
+reify(ineq(8, aux__5, 0), aux7)
+reify(ineq(9, aux__5, 0), aux8)
+ineq(8, aux__5, -1)
+sumleq([x_SetOccurrence_00000,x_SetOccurrence_00001,x_SetOccurrence_00002,x_SetOccurrence_00003,x_SetOccurrence_00004,x_SetOccurrence_00005,x_SetOccurrence_00006,x_SetOccurrence_00007,x_SetOccurrence_00008,x_SetOccurrence_00009],2)
+watchelement_undefzero([x_SetOccurrence_00000, x_SetOccurrence_00001, x_SetOccurrence_00002, x_SetOccurrence_00003, x_SetOccurrence_00004, x_SetOccurrence_00005, x_SetOccurrence_00006, x_SetOccurrence_00007, x_SetOccurrence_00008, x_SetOccurrence_00009], aux__5, 1)
+w-literal(x_SetOccurrence_00002,1)
+ineq(x_SetOccurrence_00001, aux0, 0)
+ineq(x_SetOccurrence_00002, aux1, 0)
+ineq(x_SetOccurrence_00003, aux2, 0)
+ineq(x_SetOccurrence_00004, aux3, 0)
+ineq(x_SetOccurrence_00005, aux4, 0)
+ineq(x_SetOccurrence_00006, aux5, 0)
+ineq(x_SetOccurrence_00007, aux6, 0)
+ineq(x_SetOccurrence_00008, aux7, 0)
+ineq(x_SetOccurrence_00009, aux8, 0)
 **EOF**
