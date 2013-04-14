@@ -35,10 +35,15 @@ evalTree _ _ _ = _bugg "evalTree no match"
 evalTree' :: VarMap -> IsTuplesOfMatrixes -> [(Before,After)] -> [String] -> Tree String  -> E
 evalTree' mapping set fs prefix (Leaf part) =
    let leafFunc = leafRep part
+         `_p` ("leaf \n" ++ name, [vdata] )
+         `_g` ("leaf_prefix +n",prefix ++ [name] )
+         `_g` ("leaf_func",length fs )
+
+
        res     = runBranchFuncs (reverse fs) vdata leafFunc
    in  vEssence res
 
-     `_p` ("leaf \n" ++ name, [vdata] )
+     
 
     where
     name    = intercalate "_" (prefix ++ [part])
@@ -86,7 +91,7 @@ reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
         range'   = map matrixToTuple range3
         mapping' = zipWith makeMapping dom range'
 
-    in errp $  wrapInFunction mapping'
+    in wrapInFunction mapping'
 
     where
 
@@ -100,7 +105,9 @@ reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
     isFunc _ = False  
 
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
+    tracer "reverseTuplesOfMatrixes result" $
     wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
+
 
 
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e

@@ -45,6 +45,11 @@ occurrenceRep VarData{vIndexes=[ix],
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
     wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ vs
 
+-- FIXME should not really need this
+occurrenceRep v@VarData{vIndexes=ix,
+  vEssence=[xMatch| vs :=  value.matrix.values |]} =
+    wrapInMatrix $ map (\f -> occurrenceRep v{vIndexes=tail ix, vEssence=f} ) vs
+
 occurrenceRep v = error $  "occurrenceRep " ++  (show . pretty) v
 
 
@@ -62,8 +67,7 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
      $ vs
 
   tuples :: (Integer,[Integer]) -> [E]
-  tuples (x,ys) = map (\y -> [xMake| value.tuple.values := (map wrap [x,y]) |]) ys
-       where wrap i =  [xMake| value.literal := [Prim (I i)] |]
+  tuples (x,ys) = map (\y -> [xMake| value.tuple.values := (map toIntLit [x,y]) |]) ys
 
   notEmpty (_,[]) = False
   notEmpty _      = True
@@ -71,6 +75,7 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
   f (_,[eMatch| true |])  = True
   f (_,[eMatch| false |]) = False
   f _ = _bugg "relationIntMatrix2Rep not boolean"
+
 
 matrix1DRep :: VarData -> E
 matrix1DRep VarData{vIndexes=(ix:_), vEssence=[xMatch| vs :=  value.matrix.values |]} =
@@ -108,8 +113,8 @@ evalFs (g:gs) mid v =  evalF g (evalFs gs mid ) v
 evalF :: (Before,After) -> BranchFunc -> VarData -> VarData
 evalF (before,after) mid value =
     let vs     = tracer "before:" $ before  (tracer "value:" value)
-        mids   = tracer "mid:" $ map mid vs
-        res    = tracer "after:" $ after value mids
+        mids   = tracer "mid:"    $ map mid vs
+        res    = tracer "after:"  $ after value mids
     in res
 
 -- Lift a LeafFunc to a Branch Func
