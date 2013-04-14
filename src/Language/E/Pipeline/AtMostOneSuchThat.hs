@@ -7,9 +7,9 @@ module Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat ) where
 import Language.E
 
 
-atMostOneSuchThat :: Spec -> Spec
-atMostOneSuchThat (Spec lang statements)
-    = Spec lang $ listAsStatement $ others ++ [toSuchThat suchthats]
+atMostOneSuchThat :: Bool -> Spec -> Spec
+atMostOneSuchThat generateEmptySuchThat (Spec lang statements)
+    = Spec lang $ listAsStatement $ others ++ toSuchThat generateEmptySuchThat suchthats
     where
         f [] = ([],[])
         f (x:xs) = case isSuchThat x of
@@ -22,16 +22,21 @@ isSuchThat :: E -> Maybe [E]
 isSuchThat [xMatch| xs := topLevel.suchThat |] = Just xs
 isSuchThat _ = Nothing
 
-toSuchThat :: [E] -> E
-toSuchThat xs =
+toSuchThat :: Bool -> [E] -> [E]
+toSuchThat generateEmptySuchThat xs =
     let
-        constraints' = sort
-                     $ nubKeepOrder
-                     $ filter (/= trueCons)
-                     $ concatMap conjunctOut xs
+        constraints
+            = sort
+            $ nubKeepOrder
+            $ filter (/= trueCons)
+            $ concatMap conjunctOut xs
         trueCons = [eMake| true |]
-        constraints = if null constraints' then [trueCons] else constraints'
-    in  [xMake| topLevel.suchThat := constraints |]
+    in  if null constraints
+            then
+                if generateEmptySuchThat
+                    then [ [xMake| topLevel.suchThat := [trueCons] |] ]
+                    else []
+            else [ [xMake| topLevel.suchThat := constraints |] ]
     where
         conjunctOut :: E -> [E]
         conjunctOut [eMatch| &a /\ &b |] = conjunctOut a ++ conjunctOut b

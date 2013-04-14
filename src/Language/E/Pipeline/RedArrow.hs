@@ -15,6 +15,7 @@ module Language.E.Pipeline.RedArrow ( redArrow ) where
 
 
 import Language.E
+import Language.E.Pipeline.Groom ( groomSpec )
 
 import qualified Data.Text as T
 import Data.List ( findIndex )
@@ -124,7 +125,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
                       | (nm,val) <- outPairs
                       ]
 
-    return (Spec langEprime $ listAsStatement outLettings)
+    groomSpec False (Spec langEprime $ listAsStatement outLettings)
 
 
 workhorse :: MonadConjure m => [(Text, Text)] -> (Text, E, E) -> m [(Text, E)]

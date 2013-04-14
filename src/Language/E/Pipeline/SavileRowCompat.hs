@@ -12,9 +12,10 @@ import qualified Data.Text as T ( filter )
 
 savilerowCompat
     :: MonadConjure m
-    => Spec
+    => Bool
+    -> Spec
     -> m Spec
-savilerowCompat
+savilerowCompat b
      =  recordSpec "enter savilerowCompat"
     >=> sliceIfTooFewIndices                    >=> recordSpec "sliceIfTooFewIndices"
     >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
@@ -22,7 +23,7 @@ savilerowCompat
     >=> (return . onSpec toIntIsNoOp)           >=> recordSpec "toIntIsNoOp"
     >=> (return . onSpec dotOrderIsLex)         >=> recordSpec "dotOrderIsLex"
     >=> (return . onSpec tildeIsn'tSupported)   >=> recordSpec "tildeIsn'tSupported"
-    >=> (return . atMostOneSuchThat)            >=> recordSpec "atMostOneSuchThat"
+    >=> (return . (atMostOneSuchThat b))        >=> recordSpec "atMostOneSuchThat"
     >=> (return . removeMinMaxInt)              >=> recordSpec "removeMinMaxInt"
     >=> (return . langEPrime)                   >=> recordSpec "langEPrime"
 

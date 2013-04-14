@@ -92,8 +92,8 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
                 Just fp -> readSpecFromFile fp
             typeCheckSpecIO inp
             case pathOut of
-                Nothing -> printPretty  (atMostOneSuchThat inp)
-                Just fp -> writeSpec fp (atMostOneSuchThat inp)
+                Nothing -> printPretty  (atMostOneSuchThat False inp)
+                Just fp -> writeSpec fp (atMostOneSuchThat False inp)
 
         helper (ModeValidateSolution pathEssence pathParam pathSolution) = do
             essence  <- readSpecFromFile pathEssence

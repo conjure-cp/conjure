@@ -8,9 +8,9 @@ import Language.E.Pipeline.RemoveDuplicateCons ( removeDuplicateCons )
 import Language.E.Pipeline.SavileRowCompat ( savilerowCompat )
 
 
-groomSpec :: MonadConjure m => Spec -> m Spec
-groomSpec =  recordSpec "entering groomSpec"
+groomSpec :: MonadConjure m => Bool -> Spec -> m Spec
+groomSpec b = recordSpec "entering groomSpec"
         >=> removeRegions           >=> recordSpec "removeRegions"
         >=> removeDuplicateCons     >=> recordSpec "removeDuplicateCons"
-        >=> savilerowCompat         >=> recordSpec "savilerowCompat"
+        >=> savilerowCompat b       >=> recordSpec "savilerowCompat"
 
