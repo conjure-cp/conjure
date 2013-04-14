@@ -12,7 +12,10 @@ import qualified Data.Text as T
 removeDuplicateCons :: MonadConjure m => Spec -> m Spec
 removeDuplicateCons (Spec v x) = do
     let statements  = statementAsList x
-    let statements' = nubKeepOrder $ map (renameAuxVarsTopLevel . renameQuantifiedVarsTopLevel) statements
+    let statements' = nubKeepOrder $ map ( bubbleHasAtMostOneSuchThat
+                                         . renameAuxVarsTopLevel
+                                         . renameQuantifiedVarsTopLevel
+                                         ) statements
     return $ Spec v $ listAsStatement statements'
 
 newQs :: [Text]
@@ -77,7 +80,8 @@ renameAuxVars = go
                          |] =
             let
                 findNames =
-                    [ nm | [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference |] <- locals
+                    [ nm
+                    | [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference |] <- locals
                     , "aux__" `T.isPrefixOf` nm
                     ]
             in
@@ -89,19 +93,46 @@ renameAuxVars = go
                         let
                             newNames  = take (length findNames) names
                             restNames = drop (length findNames) names
-                            newNames' = [ new
-                                        | (old, newbase) <- zip findNames newNames
-                                        , let (_, oldrepr, oldregion) = identifierSplit old
-                                        , let new = identifierConstruct newbase oldrepr oldregion
+                            lu        = [ (findNameBase, newbase)
+                                        | (findName, newbase) <- zip findNames newNames
+                                        , let (findNameBase, _, _) = identifierSplit findName
                                         ]
-                            replacer  = replaceAll $ zip (map (Prim . S) findNames)
-                                                         (map (Prim . S) newNames')
-                            actual'   = replacer actual
-                            locals'   = map replacer locals
+
+                            replacer p@(Prim (S candidate)) =
+                                let
+                                    (cbase, crepr, cregion) = identifierSplit candidate
+                                in
+                                    case lookup cbase lu of
+                                        Just newbase -> Prim $ S $ identifierConstruct newbase crepr cregion
+                                        Nothing      -> p
+                            replacer p = p
+
+                            actual'   = transform replacer actual
+                            locals'   = map (transform replacer) locals
                         in
                             go restNames [xMake| withLocals.actual := [actual']
                                                | withLocals.locals := locals'
                                                |]
         go  names (Tagged t xs) = Tagged t (map (go names) xs)
         go _names t             = t
+
+bubbleHasAtMostOneSuchThat :: E -> E
+bubbleHasAtMostOneSuchThat = transform go
+    where
+        go [xMatch| [actual] := withLocals.actual
+                  | locals   := withLocals.locals
+                  |] =
+            let
+                fromSuchThat [xMatch| xs := topLevel.suchThat |] = Just xs
+                fromSuchThat _ = Nothing
+                isn'tSuchThat = not . isJust . fromSuchThat
+
+                others = filter isn'tSuchThat locals
+                suchThats = concat $ mapMaybe fromSuchThat locals
+                singleSuchThat = [xMake| topLevel.suchThat := suchThats |]
+            in
+                [xMake| withLocals.actual := [actual]
+                      | withLocals.locals := (others ++ [singleSuchThat])
+                      |]
+        go p = p
 
