@@ -4,16 +4,16 @@
 module Language.E.Pipeline.ConjureRefn where
 
 import Language.E
-import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.AbstractDomsInQuans ( abstractDomsInQuans, quanDomAndSubsetEq )
-import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
+import Language.E.Pipeline.ApplyRefn ( applyRefn )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined, removeRefinedDecls )
 import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
-import Language.E.Pipeline.InlineLettings ( inlineLettings )
-import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
+import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
+import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
+import Language.E.Pipeline.RemoveDuplicateCons ( removeDuplicateCons )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 
 
@@ -45,6 +45,6 @@ conjureRefn reprs refns spec = withBindingScope' $
                         >=> checkIfAllRefined           >=> recordSpec "checkIfAllRefined"
                         >=> removeRefinedDecls          >=> recordSpec "removeRefinedDecls"
                         >=> noTuplesSpec                >=> recordSpec "noTuplesSpec"
-                        >=> bubbleUpSpec                >=> recordSpec "bubbleUpSpec"
+                        >=> removeDuplicateCons         >=> recordSpec "removeDuplicateCons"
             pipeline spec
 
