@@ -66,7 +66,7 @@ conjureAll limit reprs refns = phaseRepr0
         -- never returns [], neither raises ErrGeneratesNone. always go to repr after this.
         refn  s = trace "refn"  $ conjureRefn reprs refns s
         -- prepare the spec for outputting.
-        groom s = trace "groom" $ groomSpec s
+        groom s = trace "groom" $ groomSpec True s
         -- groom s = trace "groom" $ return s
 
         -- conjure phases, these call the appropriate phase following them.

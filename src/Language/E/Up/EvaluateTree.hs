@@ -31,11 +31,11 @@ evalTree _ _ = _bugg "evalTree no match"
 repConverter ::  String -> VarData -> E
 repConverter  kind  vdata@VarData{vEssence = es} =
     case kind of
-      "Explicit"   -> explicitRep vdata
-      "Occurrence" -> occurrenceRep vdata
+      "SetExplicit"   -> explicitRep vdata
+      "SetOccurrence" -> occurrenceRep vdata
       "Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
       "RelationIntMatrix2" -> relationIntMatrix2Rep vdata
-      "ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
+      "SetExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
       _            -> es
 
 evalTree' :: M.Map String VarData -> [String] -> Tree String  -> E
@@ -53,7 +53,7 @@ evalTree' mapping prefix (Tuple arr) =
     in  [xMake| expr.value.tuple.values := items |]
 
 {-
-evalTree' mapping prefix (Branch s@"Explicit" arr) =
+evalTree' mapping prefix (Branch s@"SetExplicit" arr) =
 
     errr (prefix,arr,same)
     where
@@ -90,7 +90,7 @@ evalTree' mapping prefix (Branch s@"MSetOfSets"  arr) =
     let res = evalTree' mapping (prefix ++ [s])  (repSelector arr)
     in matrixToPartiton res
 
-evalTree' mapping prefix (Branch s@"ExplicitVarSize" [t@(Tuple _) ])  =
+evalTree' mapping prefix (Branch s@"SetExplicitVarSize" [t@(Tuple _) ])  =
     let t' =  evalTree' mapping (prefix ++ [s]) t
         (t1,t2) = tupleToArr t'
         mt = mergeExplicitVarSizeTuple t1 t2

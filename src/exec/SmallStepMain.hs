@@ -254,7 +254,7 @@ phaseRepr0 one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         then do -- run refn and groom and output an *.eprime file
             let
                 results2 :: [(Either ConjureError Spec, LogTree)]
-                results2 = takeOne $ runComp logsInp $ conjureRefn ruleReprs ruleRefns essenceInp >>= groomSpec
+                results2 = takeOne $ runComp logsInp $ conjureRefn ruleReprs ruleRefns essenceInp >>= groomSpec True
 
             forM_ results2 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut   outDirPath x logs
@@ -295,7 +295,7 @@ phaseRepr one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         then do -- run groom and output an *.eprime file
             let
                 result2 :: (Either ConjureError Spec, LogTree)
-                result2 = runComp1 logsInp $ groomSpec essenceInp
+                result2 = runComp1 logsInp $ groomSpec True essenceInp
             case result2 of
                 (Left  x2, logs2) -> errorFileOut   outDirPath x2 logs2
                 (Right x2, logs2) -> essenceFileOut outDirPath x2 logs2

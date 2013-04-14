@@ -1,0 +1,18 @@
+
+~~> MSet~Occurrence
+~~> matrix indexed by [&t] of int(0..&maxO)
+
+    where &t hasType `int`
+
+*** mset (maxOccur &maxO) of &t
+
+*** mset (size &n, minOccur &minO, maxOccur &maxO, ..) of &t
+~~> (forAll i : &t . freq(&m,i) >= &minO)
+    /\
+    ((sum i : &t . freq(&m,i) > 0) = &n)
+
+*** mset (minOccur &minO, maxOccur &maxO, ..) of &t
+~~> forAll i : &t . freq(&m,i) >= &minO
+
+*** mset (size &n, maxOccur &maxO, ..) of &t
+~~> (sum i : &t . freq(&m,i) > 0) = &n

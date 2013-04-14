@@ -32,6 +32,20 @@ import                Language.E.Evaluator.DataAboutQuantifiers
 
 fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
+-- order integer domains given by a list of integers
+-- savilerow expects them ordered
+fullEvaluator [xMatch| rs := domain.int.ranges |]
+    | Just xs <- view rs
+    , let xsSorted = sortNub xs
+    , xs /= xsSorted
+    , let rsSorted = map (\ i -> [xMake| value.literal := [Prim (I i)] |] ) xsSorted
+    = ret [xMake| domain.int.ranges := rsSorted |]
+    where
+        view1 [xMatch| [Prim (I i)] := range.single.value.literal |] = Just i
+        view1 _ = Nothing
+        view [] = Just []
+        view (i:is) = (:) <$> view1 i <*> view is
+
 -- this is a small hack to make rule language work.
 fullEvaluator [xMatch| [Prim (S "!=")] := binOp.operator
                      | [Prim (S "_") ] := binOp.left .reference
@@ -910,6 +924,70 @@ tupleEq [eMatch| &a != &b |] = do
                            , let i = [xMake| value.literal := [Prim (I j)] |]
                            ]
         _ -> return Nothing
+tupleEq [eMatch| &a .< &b |] = do
+    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
+    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    melems <- case (ta,tb) of
+        ([xMatch| is := type.tuple.inners |], _) ->
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| is := type.tuple.inners |]) ->
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        ([xMatch| is := type.matrix.inner.type.tuple.inners |], _) -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| is := type.matrix.inner.type.tuple.inners |]) ->
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        _ -> return Nothing
+    case melems of
+        Nothing -> return Nothing
+        Just elems -> do
+            let
+                go [] = bug "tupleEq.(.<)"
+                go [(i,j)] = [eMake| &i .< &j |]
+                go ((i,j):rest) = let rest' = go rest
+                                  in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
+            ret $ go elems
+tupleEq [eMatch| &a .<= &b |] = do
+    ta <- flip const (show $ "fromFullEVal" <+> pretty a) $ typeOf a
+    tb <- flip const (show $ "fromFullEVal" <+> pretty b) $ typeOf b
+    melems <- case (ta,tb) of
+        ([xMatch| is := type.tuple.inners |], _) ->
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| is := type.tuple.inners |]) ->
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        _ -> return Nothing
+    case melems of
+        Nothing -> return Nothing
+        Just elems -> do
+            let
+                go [] = bug "tupleEq.(.<=)"
+                go [(i,j)] = [eMake| &i .<= &j |]
+                go ((i,j):rest) = let rest' = go rest
+                                  in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
+            ret $ go elems
 tupleEq [eMatch| &a[&i] |] = do
     miInt <- toInt i
     case miInt of

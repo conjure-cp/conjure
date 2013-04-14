@@ -1,0 +1,13 @@
+
+[1000]
+
+&quan &i in &s , &g . &k
+    ~~>
+&quan j : &t , &g { &i --> j } /\ &m[j]
+             . &k { &i --> j }
+
+    where &s hasDomain `set (..) of &t`
+    where &s hasRepr Set~Occurrence
+
+    letting &m be refn(&s)
+

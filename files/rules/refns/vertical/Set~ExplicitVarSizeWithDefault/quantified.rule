@@ -1,0 +1,17 @@
+
+[1000]
+
+&quan &i in &s , &g . &k
+
+~~>
+
+&quan j : &r , &g { &i --> &m[j] } /\ &m[j] != &def
+             . &k { &i --> &m[j] }
+
+    where &s hasDomain `set (..) of int(&lb..&ub)`
+    where &s hasRepr   Set~ExplicitVarSizeWithDefault
+
+    letting &m be refn(&s)
+    letting &r be indices(&m,0)
+    letting &def be &lb - 1
+

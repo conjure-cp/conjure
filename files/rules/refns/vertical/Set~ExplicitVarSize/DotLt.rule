@@ -1,0 +1,23 @@
+[100]
+
+$ <lex
+$ [ (0,?), (1,x), (1,y) ]
+$ [ (0,?), (1,z), (1,t) ]
+$ [x,y] <lex [z,t]
+$ x = z /\ y < t
+
+
+&a .< &b
+    ~~>
+true
+$forAll i : &r
+    $, &ma[i][1] /\ &mb[i][1]
+    $. &ma[i][2] .< &mb[i][2]
+
+    where &a hasRepr Set~ExplicitVarSize
+    where &b hasRepr Set~ExplicitVarSize
+
+    letting &ma be refn(&a)
+    letting &mb be refn(&b)
+    letting &r  be indices(&ma,0)
+

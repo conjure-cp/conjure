@@ -90,7 +90,7 @@ fullyEvaluate
     = recordSpec "entering fullyEvaluate"
     >=> explodeStructuralVars           >=> recordSpec "explodeStructuralVars"
     >=> fullySimplifySpec               >=> recordSpec "fullySimplifySpec"
-    >=> return . atMostOneSuchThat      >=> recordSpec "atMostOneSuchThat"
+    >=> return . atMostOneSuchThat True >=> recordSpec "atMostOneSuchThat"
 
 
 fullyInline :: MonadConjure m => Spec -> m Spec

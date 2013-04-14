@@ -1,0 +1,15 @@
+
+[1000]
+
+&quan &i in &s, &g . &k
+
+~~>
+
+&quan j : &r , &g { &i --> &m[j] }
+             . &k { &i --> &m[j] }
+
+    where &s hasType `mset of _`
+    where &s hasRepr MSet~Explicit
+
+    letting &m be refn(&s)
+    letting &r be indices(&m,0)

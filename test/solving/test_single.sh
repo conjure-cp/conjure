@@ -163,7 +163,7 @@ NB_EPRIMES=$(ls -1 "$OUT_DIR"/*.eprime 2> /dev/null | wc -l)
 if (( $NB_EPRIMES == 0 )) ; then
     echo "[generatesZeroModels] $MODE $WD" >> "$FAIL_FILE"
 else
-    parallel -j1                                                            \
+    parallel -j3                                                            \
         perModelperParam {1.} {2.}                                          \
             ::: $(ls -1 "$OUT_DIR"/*.eprime)                                \
             ::: $(ls -1 *.param)

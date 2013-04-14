@@ -7,20 +7,25 @@ import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 
+import qualified Data.Text as T ( filter )
+
 
 savilerowCompat
     :: MonadConjure m
-    => Spec
+    => Bool
+    -> Spec
     -> m Spec
-savilerowCompat
+savilerowCompat b
      =  recordSpec "enter savilerowCompat"
-    >=> sliceIfTooFewIndices                >=> recordSpec "sliceIfTooFewIndices"
-    >=> noTuplesSpec                        >=> recordSpec "noTuplesSpec"
-    >=> conjureNoGuards                     >=> recordSpec "conjureNoGuards"
-    >=> (return . onSpec toIntIsNoOp)       >=> recordSpec "toIntIsNoOp"
-    >=> (return . atMostOneSuchThat)        >=> recordSpec "atMostOneSuchThat"
-    >=> (return . removeMinMaxInt)          >=> recordSpec "removeMinMaxInt"
-    >=> (return . langEPrime)               >=> recordSpec "langEPrime"
+    >=> sliceIfTooFewIndices                    >=> recordSpec "sliceIfTooFewIndices"
+    >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
+    >=> conjureNoGuards                         >=> recordSpec "conjureNoGuards"
+    >=> (return . onSpec toIntIsNoOp)           >=> recordSpec "toIntIsNoOp"
+    >=> (return . onSpec dotOrderIsLex)         >=> recordSpec "dotOrderIsLex"
+    >=> (return . onSpec tildeIsn'tSupported)   >=> recordSpec "tildeIsn'tSupported"
+    >=> (return . (atMostOneSuchThat b))        >=> recordSpec "atMostOneSuchThat"
+    >=> (return . removeMinMaxInt)              >=> recordSpec "removeMinMaxInt"
+    >=> (return . langEPrime)                   >=> recordSpec "langEPrime"
 
 
 onSpec :: (E -> E) -> Spec -> Spec
@@ -31,6 +36,17 @@ toIntIsNoOp :: E -> E
 toIntIsNoOp [eMatch| toInt(&x) |] = x
 toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
+
+dotOrderIsLex :: E -> E
+dotOrderIsLex [eMatch| &a .<  &b |] = [eMake| flatten(&a) <lex  flatten(&b) |]
+dotOrderIsLex [eMatch| &a .<= &b |] = [eMake| flatten(&a) <=lex flatten(&b) |]
+dotOrderIsLex (Tagged t xs) = Tagged t $ map dotOrderIsLex xs
+dotOrderIsLex p = p
+
+tildeIsn'tSupported :: E -> E
+tildeIsn'tSupported (Prim (S nm)) = Prim $ S $ T.filter ('~'/=) nm
+tildeIsn'tSupported (Tagged t xs) = Tagged t $ map tildeIsn'tSupported xs
+tildeIsn'tSupported p = p
 
 sliceIfTooFewIndices :: MonadConjure m => Spec -> m Spec
 sliceIfTooFewIndices (Spec v xs) = withBindingScope' $ Spec v <$> sliceIfTooFewIndicesE xs

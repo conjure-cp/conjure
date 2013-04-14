@@ -39,7 +39,18 @@ renameQuantifiedVars = go
             | not ("w__" `T.isPrefixOf` old) =
                 case names of
                     (nextName:restNames) ->
-                        let t' = replace (Prim (S old)) (Prim (S nextName)) t
+                        let
+                            (oldbase, _, _) = identifierSplit old
+                            replacer p@(Prim (S candidate)) =
+                                let
+                                    (cbase, crepr, cregion) = identifierSplit candidate
+                                in
+                                    if cbase == oldbase
+                                        then Prim $ S $ identifierConstruct nextName crepr cregion
+                                        else p
+                            replacer p = p
+
+                            t' = transform replacer t
                         in  go restNames t'
                     [] -> bug $ vcat [ "well done, you just ran out of fresh names."
                                      , "and there were an infinite number of them!"
@@ -78,8 +89,13 @@ renameAuxVars = go
                         let
                             newNames  = take (length findNames) names
                             restNames = drop (length findNames) names
+                            newNames' = [ new
+                                        | (old, newbase) <- zip findNames newNames
+                                        , let (_, oldrepr, oldregion) = identifierSplit old
+                                        , let new = identifierConstruct newbase oldrepr oldregion
+                                        ]
                             replacer  = replaceAll $ zip (map (Prim . S) findNames)
-                                                         (map (Prim . S) newNames)
+                                                         (map (Prim . S) newNames')
                             actual'   = replacer actual
                             locals'   = map replacer locals
                         in

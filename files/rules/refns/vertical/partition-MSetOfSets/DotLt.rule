@@ -1,0 +1,10 @@
+[100]
+
+&a .< &b ~~> refn(&a) .< refn(&b)
+
+    where &a hasType `partition from _`
+    where &b hasType `partition from _`
+
+    where &a hasRepr MSetOfSets
+    where &b hasRepr MSetOfSets
+

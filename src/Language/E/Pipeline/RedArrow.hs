@@ -15,6 +15,7 @@ module Language.E.Pipeline.RedArrow ( redArrow ) where
 
 
 import Language.E
+import Language.E.Pipeline.Groom ( groomSpec )
 
 import qualified Data.Text as T
 import Data.List ( findIndex )
@@ -124,7 +125,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
                       | (nm,val) <- outPairs
                       ]
 
-    return (Spec langEprime $ listAsStatement outLettings)
+    groomSpec False (Spec langEprime $ listAsStatement outLettings)
 
 
 workhorse :: MonadConjure m => [(Text, Text)] -> (Text, E, E) -> m [(Text, E)]
@@ -185,7 +186,7 @@ workhorse lookupReprs (nm, dom, val) = do
                    | [domInner] := domain.set.inner
                    |]
             [xMatch| values := value.set.values |]
-            (Just "Occurrence") = do
+            (Just "Set~Occurrence") = do
             domInner' <- fmap fst $ runWriterT $ fullySimplify domInner
             intFr <- valueIntOut fr
             intTo <- valueIntOut to
@@ -196,7 +197,7 @@ workhorse lookupReprs (nm, dom, val) = do
             let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
                                    | value.matrix.indexrange := [domInner']
                                    |]
-            let outName = name `T.append` "_Occurrence"
+            let outName = name `T.append` "_Set~Occurrence"
             return [(outName, theMatrix)]
 
         helper
@@ -205,7 +206,7 @@ workhorse lookupReprs (nm, dom, val) = do
                    | [domInner] := domain.set.inner
                    |]
             [xMatch| values := value.set.values |]
-            (Just "Explicit")
+            (Just "Set~Explicit")
             | Just size <- lookupAttr "size" attrs
             = do
             sizeInt <- valueIntOut size
@@ -215,7 +216,7 @@ workhorse lookupReprs (nm, dom, val) = do
 
             values' <- concatMapM (workhorse lookupReprs)
                         [ (nm', dom', val')
-                        | let nm'  = name `T.append` "_Explicit"
+                        | let nm'  = name `T.append` "_Set~Explicit"
                         , let dom' = domInner
                         , val' <- values
                         ]
@@ -238,7 +239,7 @@ workhorse lookupReprs (nm, dom, val) = do
                    | [domInner] := domain.set.inner
                    |]
             [xMatch| values := value.set.values |]
-            (Just "ExplicitVarSize")
+            (Just "Set~ExplicitVarSize")
             = do
             nbValues <-
                 case lookupAttr "maxSize" attrs of
@@ -251,7 +252,7 @@ workhorse lookupReprs (nm, dom, val) = do
 
             let nbTrues  = genericLength values
             let nbFalses = nbValuesInt - nbTrues
-            let outTuple1_Name   = name `T.append` "_ExplicitVarSize_tuple1"
+            let outTuple1_Name   = name `T.append` "_Set~ExplicitVarSize_tuple1"
             let outTuple1_Values = replicate (fromInteger nbTrues ) [eMake| true  |]
                                 ++ replicate (fromInteger nbFalses) [eMake| false |]
             let outTuple1_Value  = [xMake| value.matrix.values := outTuple1_Values
@@ -264,7 +265,7 @@ workhorse lookupReprs (nm, dom, val) = do
                 return $ values ++ replicate (fromInteger nbFalses) padding
             values' <- concatMapM (workhorse lookupReprs)
                         [ (nm', dom', val')
-                        | let nm'  = name `T.append` "_ExplicitVarSize_tuple2"
+                        | let nm'  = name `T.append` "_Set~ExplicitVarSize_tuple2"
                         , let dom' = domInner
                         , val' <- valuesPadded
                         ]
@@ -292,7 +293,7 @@ workhorse lookupReprs (nm, dom, val) = do
                    | [fr,_]    := domain.set.inner.domain.int.ranges.range.fromTo
                    |]
             [xMatch| values := value.set.values |]
-            (Just "ExplicitVarSizeWithDefault")
+            (Just "Set~ExplicitVarSizeWithDefault")
             = do
 
             nbValues <-
@@ -315,7 +316,7 @@ workhorse lookupReprs (nm, dom, val) = do
             let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
                                    | value.matrix.indexrange := [indexOfMatrix]
                                    |]
-            let outName = name `T.append` "_ExplicitVarSizeWithDefault"
+            let outName = name `T.append` "_Set~ExplicitVarSizeWithDefault"
             return [(outName, theMatrix)]
 
         helper
