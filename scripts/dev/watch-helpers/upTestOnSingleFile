@@ -1,0 +1,21 @@
+#/bin/sh
+#printf %b '\033c'
+
+name="$1"
+function run(){
+    echo "\033[36m"                 # set the colour to cyan
+    echo "[ ===== $name ===== ]\033[0m"
+    date +'%a %d %b %Y %k:%M:%S %z';
+    hg log -r . --template '{latesttagdistance}-{node|short}\n';
+
+    scripts/run/up-tests.sh --format=failed-examples |\
+    egrep -v '^Loading|Compiling' |\
+    scripts/dev/watch-helpers/unescapelines.rb 
+
+    echo "[Finished] $1"
+
+}
+
+run |  tee -a ~/upFailed.txt 
+
+
