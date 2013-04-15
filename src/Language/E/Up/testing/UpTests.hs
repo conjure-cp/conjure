@@ -35,7 +35,9 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
        <$> allFilesWithSuffix ".eprime" "files/uptests/"
 -}
 
-eprimes = _eprimeDirs "files/uptests/" ["___simple","__doing"]
+eprimes = _eprimeDirs "files/uptests/" ["___simple","___parts","___types","__easy","__reps"
+                                       ,"_relations", "_indexes", "__failed"
+                                       ]
 
 
 -- Basic tests
