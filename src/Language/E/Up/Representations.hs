@@ -26,11 +26,12 @@ type RepName    = String
 leafRep ::  String -> LeafFunc
 leafRep kind =
     case kind of
-      "SetExplicit"                  -> explicitRep
-      "SetOccurrence"                -> setOccurrenceRep
-      "Matrix1D"                     -> matrix1DRep
-      "RelationIntMatrix2"           -> relationIntMatrix2Rep
-      _                              -> noRep
+      "SetExplicit"                   -> explicitRep
+      "SetOccurrence"                 -> setOccurrenceRep
+      "Matrix1D"                      -> matrix1DRep
+      "RelationIntMatrix2"            -> relationIntMatrix2Rep
+      "SetExplicitVarSizeWithDefault" -> setExplicitVarSizeWithDefaultRep
+      _                               -> noRep
 
 
 noRep :: VarData -> E
@@ -54,6 +55,18 @@ setOccurrenceRep v@VarData{vIndexes=ix,
 
 setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
+setExplicitVarSizeWithDefaultRep :: VarData -> E
+setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} = 
+    wrapInMatrix . mapMaybe (removeIt $ toRemove bs) $ (unwrapMatrix e)
+
+    where 
+    toRemove :: [Integer] -> Integer
+    toRemove (b:_) = b
+    toRemove []    = _bugg "setExplicitVarSizeWithDefaultRep no bounds" 
+
+    removeIt :: Integer -> E -> Maybe E 
+    removeIt toRemove f@[xMatch| [Prim (I i)] := value.literal |] =
+       if i == toRemove then Nothing else Just f
 
 {- Relations -}
 
@@ -139,6 +152,7 @@ getBranch s =
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
       _                    -> Nothing
+
 
 isBranchRep :: RepName -> Bool
 isBranchRep "Matrix1D"             = True
