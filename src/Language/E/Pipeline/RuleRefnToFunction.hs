@@ -132,7 +132,7 @@ single ( name
                             [] -> errRuleFail
                             xs ->
                                 case [ nm | (nm, x') <- xs, x == x' ] of
-                                    (nm:_) -> err ErrFatal $ "Rule returns the same expression:" <+> pretty nm
+                                    (nm:_) -> userErr $ "Rule returns the same expression:" <+> pretty nm
                                     _      -> return (Just xs)
                     localsHandler (l:ls) = do
                         res <- localHandler name x l

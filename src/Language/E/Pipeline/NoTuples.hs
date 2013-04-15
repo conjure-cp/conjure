@@ -50,6 +50,7 @@ noTuplesE statementIn = do
         then return (statementIn, False)
         else do
             s' <- ( renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
+                    valueMatrixOfTuple >=>
                     renameTupleIndexes (S.fromList tuplesToExplode) )
                   (listAsStatement statementsOut)
             return (s', True)
@@ -233,3 +234,29 @@ viewIndexed p = (p,[])
 -- given an expression and a list of indexers, producers an indexed expression.
 mkIndexed :: E -> [E] -> E
 mkIndexed = foldl (\ x i -> [eMake| &x[&i] |])
+
+valueMatrixOfTuple :: MonadConjure m => E -> m E
+valueMatrixOfTuple = bottomUpE' f
+    where
+        f p@[eMatch| &m[&i,&j] |] = do
+            tym <- typeOf m
+            mjint <- toInt j
+            case mjint of
+                Just (jInt, _) -> do
+                    let
+                        project [xMatch| tupleValues := value.tuple.values |] =
+                            if jInt >= 1 && jInt <= genericLength tupleValues
+                                then genericIndex tupleValues (jInt - 1)
+                                else userErr $ "Out of range tuple indexing:" <+> pretty p
+                        project tupleValues = bug $ "valueMatrixOfTuple.project" <+> pretty tupleValues
+                    case tym of
+                        [xMatch| _ := type.matrix.inner.type.tuple |] ->
+                            case m of
+                                [xMatch| matrixValues := value.matrix.values |] -> do
+                                    let n = [xMake| value.matrix.values := map project matrixValues |]
+                                    return [eMake| &n[&i] |]
+                                _ -> return p
+                        _ -> return p
+                _ -> return p
+        f p = return p
+

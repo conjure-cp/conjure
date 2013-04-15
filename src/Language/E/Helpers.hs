@@ -5,6 +5,7 @@ module Language.E.Helpers where
 
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Definition.Literal
 import Language.E.Pretty
 import Language.E.CompE
 import Language.E.TH
@@ -136,20 +137,49 @@ mkIndexedExpr = go . reverse
         go (i:is) x = let y = go is x in [eMake| &y[&i] |]
 
 
+toEssenceLiteral :: E -> Maybe EssenceLiteral
+toEssenceLiteral (Prim (B x)) = return $ ELB x
+toEssenceLiteral (Prim (I x)) = return $ ELI x
+toEssenceLiteral [xMatch| [x] := value.literal          |] = toEssenceLiteral x
+toEssenceLiteral [xMatch| xs  := value.matrix   .values |] = ELMatrix    <$> mapM toEssenceLiteral xs
+toEssenceLiteral [xMatch| xs  := value.tuple    .values |] = ELTuple     <$> mapM toEssenceLiteral xs
+toEssenceLiteral [xMatch| xs  := value.set      .values |] = ELSet       <$> mapM toEssenceLiteral xs
+toEssenceLiteral [xMatch| xs  := value.mset     .values |] = ELMSet      <$> mapM toEssenceLiteral xs
+toEssenceLiteral [xMatch| xs  := value.function .values |] = ELFunction  <$> mapM helper xs
+    where
+        helper [xMatch| [a,b] := mapping |] = (,) <$> toEssenceLiteral a <*> toEssenceLiteral b
+        helper _ = Nothing
+toEssenceLiteral [xMatch| xs  := value.relation .values |] = ELRelation  <$> mapM helper xs
+    where
+        helper [xMatch| ys := value.tuple.values |] = mapM toEssenceLiteral ys
+        helper _ = Nothing
+toEssenceLiteral [xMatch| xs  := value.partition.values |] = ELPartition <$> mapM helper xs
+    where
+        helper [xMatch| ys  := part |] = mapM toEssenceLiteral ys
+        helper _ = Nothing
+toEssenceLiteral _ = Nothing
+
+fromEssenceLiteral :: EssenceLiteral -> E
+fromEssenceLiteral (ELB         x ) = [xMake| value.literal := [Prim (B x)] |]
+fromEssenceLiteral (ELI         x ) = [xMake| value.literal := [Prim (I x)] |]
+fromEssenceLiteral (ELTuple     xs) = [xMake| value.tuple    .literal := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELMatrix    xs) = [xMake| value.matrix   .literal := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELSet       xs) = [xMake| value.set      .literal := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELMSet      xs) = [xMake| value.mset     .literal := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELFunction  xs) = [xMake| value.function .literal := map helper xs |]
+    where
+        helper (a,b) = [xMake| mapping := [fromEssenceLiteral a, fromEssenceLiteral b] |]
+fromEssenceLiteral (ELRelation  xs) = [xMake| value.relation .literal := map helper xs |]
+    where
+        helper ys = [xMake| value.tuple.literal := map fromEssenceLiteral ys |]
+fromEssenceLiteral (ELPartition xs) = [xMake| value.partition.literal := map helper xs |]
+    where
+        helper ys = [xMake| part := map fromEssenceLiteral ys |]
+
 isFullyInstantiated :: E -> Bool
-isFullyInstantiated (Prim (I _)) = True
-isFullyInstantiated (Prim (B _)) = True
-isFullyInstantiated [xMatch| [x] := value.literal          |] = isFullyInstantiated x
-isFullyInstantiated [xMatch| xs  := value.matrix   .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.tuple    .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.set      .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.mset     .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.function .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.relation .values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := value.partition.values |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := mapping |] = all isFullyInstantiated xs
-isFullyInstantiated [xMatch| xs  := part    |] = all isFullyInstantiated xs
-isFullyInstantiated _ = False
+isFullyInstantiated x = case toEssenceLiteral x of
+    Nothing -> False
+    Just _  -> True
 
 
 lookupAttr :: Text -> [E] -> Maybe E
