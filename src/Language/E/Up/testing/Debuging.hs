@@ -190,14 +190,6 @@ _rm = do
     return $ makeTuplesOfMatrixesSet (T.lines text)
 
 
-makeTuplesOfMatrixesSet :: [T.Text] -> Set [String]
-makeTuplesOfMatrixesSet = 
-      S.fromList
-    . map (splitOn "_")
-    . map (dropWhile isSpace . T.unpack)
-    . nub
-    . mapMaybe (T.stripPrefix "[matrixToTuple]")
-
 -- Stages of tupley27-1-1m 
 test  = [eMake| ([4,5], [8,9]) |]
 test2 = [eMake| ( [1,2], [(4, 8), (5, 9)]) |]
@@ -244,7 +236,7 @@ explicit :: (Before,After)
 explicit = ( unwrapSet, mapLeafUnchanged )
 
 occurrence :: (Before,After)
-occurrence = ( unwrapSet, mapLeafFunc occurrenceRep )
+occurrence = ( unwrapSet, mapLeafFunc setOccurrenceRep )
 
 matrix1D :: (Before,After)
 matrix1D = ( unwrapSet, mapLeafFunc matrix1DRep )
@@ -266,7 +258,7 @@ vTest = VarData{
         ,vEssence = [eMake| [ [false,false,true], [false,true,true], [true,true,true]] |]
         }
 
-vFuncSetnR = run' [matrix1D,explicit] vFuncSetn occurrenceRep
+vFuncSetnR = run' [matrix1D,explicit] vFuncSetn setOccurrenceRep
 vFuncSetn = VarData{vIndexes = [[2, 3, 4], [1, 2], [5, 6, 7, 8]],
         vBounds = [0, 1],
         vEssence =[eMake| 
@@ -278,14 +270,14 @@ vFuncSetn = VarData{vIndexes = [[2, 3, 4], [1, 2], [5, 6, 7, 8]],
           [true, false, true, true]]]
         |]}
 
-vFuncSetR = run' [matrix1D] vFuncSet occurrenceRep
+vFuncSetR = run' [matrix1D] vFuncSet setOccurrenceRep
 vFuncSet = VarData {vIndexes = [[2, 3, 4], [5, 6]]
          ,vBounds = [0, 1]
          ,vEssence =
              [eMake| [[true, true], [true, true], [true, true]]
              |]}
 
-vParF = run' [partitionMSetOfSets, explicit] vPar occurrenceRep
+vParF = run' [partitionMSetOfSets, explicit] vPar setOccurrenceRep
 vPar = VarData {vIndexes = [[1, 2, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]]
          ,vBounds = [0, 1]
          ,vEssence = [eMake|

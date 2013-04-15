@@ -6,7 +6,7 @@ module Language.E.Up.Representations(
     , Before, After
     
     -- for debuging
-    , occurrenceRep, matrix1DRep, partitionMSetOfSetsRep
+    , setOccurrenceRep, matrix1DRep, partitionMSetOfSetsRep
     ) where
 
 import Language.E
@@ -23,12 +23,12 @@ type After      = (VarData -> [VarData] -> VarData)
 leafRep ::  String -> LeafFunc
 leafRep kind =
     case kind of
-      "Explicit"   -> explicitRep
-      "Occurrence" -> occurrenceRep
-      "Matrix1D"   -> matrix1DRep
-      "RelationIntMatrix2" -> relationIntMatrix2Rep
+      "SetExplicit"                  -> explicitRep
+      "SetOccurrence"                -> setOccurrenceRep
+      "Matrix1D"                     -> matrix1DRep
+      "RelationIntMatrix2"           -> relationIntMatrix2Rep
       --"ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep
-      _            -> noRep
+      _                              -> noRep
 
 
 noRep :: VarData -> E
@@ -40,17 +40,17 @@ explicitRep VarData{vEssence=e} = e
 
 
 -- CHECK with Mset
-occurrenceRep :: VarData -> E
-occurrenceRep VarData{vIndexes=[ix],
+setOccurrenceRep :: VarData -> E
+setOccurrenceRep VarData{vIndexes=[ix],
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
     wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ vs
 
 -- FIXME should not really need this
-occurrenceRep v@VarData{vIndexes=ix,
+setOccurrenceRep v@VarData{vIndexes=ix,
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    wrapInMatrix $ map (\f -> occurrenceRep v{vIndexes=tail ix, vEssence=f} ) vs
+    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) vs
 
-occurrenceRep v = error $  "occurrenceRep " ++  (show . pretty) v
+setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
 
 relationIntMatrix2Rep :: VarData -> E
@@ -137,7 +137,7 @@ explicitBranch :: (Before,After)
 explicitBranch = ( unwrapSet, mapLeafUnchanged )
 
 occurrenceBranch :: (Before,After)
-occurrenceBranch = ( unwrapSet, mapLeafFunc occurrenceRep )
+occurrenceBranch = ( unwrapSet, mapLeafFunc setOccurrenceRep )
 
 matrix1DBranch :: (Before,After)
 matrix1DBranch = ( unwrapSet, after )
@@ -174,7 +174,8 @@ onlySelectedValues :: [(a,E)] -> [(a,E)]
 onlySelectedValues = filter f
     where
     f (_,[eMatch| true|]) = True
-    f (_,[eMatch| 1   |]) = True -- Temporary
+    f (_,[eMatch| 1   |]) = error "1 should not be used as True"
+    f (_,[eMatch| 0   |]) = error "0 should not be used as False"
     f (_,_) = False
 
 

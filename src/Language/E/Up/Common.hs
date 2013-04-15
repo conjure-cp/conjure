@@ -37,7 +37,7 @@ tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
         `_p` ("USING tranposeCheck tuples", [res])
 
 
--- TO Pass real domain somehow
+-- TODO Pass real domain somehow
 tranposeCheck [xMatch|fvs := value.function|]  =
     let ((dom:_),range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs 
 

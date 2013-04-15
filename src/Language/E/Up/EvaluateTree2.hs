@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
+--{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 
 
 module Language.E.Up.EvaluateTree2 (

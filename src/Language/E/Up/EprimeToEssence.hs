@@ -10,7 +10,8 @@ module Language.E.Up.EprimeToEssence(
     convertUnamed,
     combineInfos,
     convertRep,
-    onlyNeeded
+    onlyNeeded,
+    makeTuplesOfMatrixesSet
 
 ) where
 
@@ -54,15 +55,15 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
         varTrees = createVarTree varInfo
         varMap1  = combineInfos varInfo solInfo
         varMap   = M.map (\vd@VarData{vEssence=e} -> vd{vEssence=unwrapExpr e} ) varMap1
-       
-        varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees 
+
+        varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees
 
         wrap :: String -> E -> E
         wrap name value =
             [xMake| topLevel.letting.expr := [value]
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
 
-        indexrangeMapping = gatherIndexRanges orgP    
+        indexrangeMapping = gatherIndexRanges orgP
 
         enumMapping1 = getEnumMapping orgP
         enums1       = getEnumsAndUnamed orgP
@@ -75,7 +76,7 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
                 indext      = lookUp indexrangeMapping s
                 res        = introduceTypes enumMapping orgType e
                 withIndexes = introduceIndexRange indext res
-            in wrap s $ 
+            in wrap s $
                if addIndexRange then withIndexes else res
 
         resultEssence   = map eval varResults
@@ -84,9 +85,10 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
 
 
 makeTuplesOfMatrixesSet :: [Text] -> Set [String]
-makeTuplesOfMatrixesSet = 
+makeTuplesOfMatrixesSet =
       S.fromList
-    . map (splitOn "_" . dropWhile isSpace . T.unpack)
+    . map (splitOn "_" .  dropWhile isSpace . T.unpack)
+    . map (T.replace "~" "")
     . nub
     . mapMaybe (T.stripPrefix "[matrixToTuple]")
 
