@@ -30,15 +30,14 @@ evalTree mapping set tree@(Leaf name) =
 evalTree _ _ _ = _bugg "evalTree no match"
 
 
-evalTree' :: VarMap -> IsTuplesOfMatrixes -> [(Before,After)] -> [String] -> Tree String  -> E
+evalTree' :: VarMap -> IsTuplesOfMatrixes -> [RepName] -> [String] -> Tree String  -> E
 evalTree' mapping set fs prefix (Leaf part) =
    let leafFunc = leafRep part
          `_p` ("leaf \n" ++ name, [vdata] )
-         `_g` ("leaf_prefix +n",prefix ++ [name] )
-         `_g` ("leaf_func",length fs )
+         `_g` ("leaf prefix +n",prefix ++ [name] )
+         `_g` ("leaf funcs str", fs )
 
-
-       res     = runBranchFuncs (reverse fs) vdata leafFunc
+       res     = runBranchFuncs (reverse . mapMaybe getBranch $ fs) vdata leafFunc
    in  vEssence res
 
 
@@ -48,13 +47,16 @@ evalTree' mapping set fs prefix (Leaf part) =
    vdata   = lookUpE  name
 
 evalTree' mapping set fs prefix (Tuple arr) =
-    let items =  map ( evalTree' mapping set fs prefix ) arr
+    let items =  map ( evalTree' mapping set [] prefix ) arr
         tuple = [xMake| value.tuple.values := items |]
         res   = handleTuplesOfMatrixes tuple
-    in  res
+        afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) (vdata res) noRep
+    in  (vEssence afterFuncs)
 
+     `_p` ("afterFuncs",[afterFuncs] )
      `_p` ("res",[res] )
      `_p` ("ans",[tuple] )
+     `_g` ("tuple funs str",fs )
      `_g` ("prefix_tuple",prefix )
 
 
@@ -63,18 +65,26 @@ evalTree' mapping set fs prefix (Tuple arr) =
     handleTuplesOfMatrixes f | prefix `S.member` set = reverseTuplesOfMatrixes f
     handleTuplesOfMatrixes f = f
 
+    vdata e        = VarData
+         {vIndexes = [[]]
+         ,vBounds  = []
+         ,vEssence = e}
+
+
+
 
 evalTree' mapping set fs prefix (Branch part@"SetExplicitVarSize2s" arr) =
     error . show $  (pretty . groom) prefix  <+> (pretty . groom) mapping  <+>  (pretty . groom) arr
 
 evalTree' mapping set fs prefix (Branch name arr) =
-    evalTree' mapping set fs' (prefix ++ [name])  (repSelector arr)
+    evalTree' mapping set (addRep name) (prefix ++ [name])  (repSelector arr)
 
     `_p` ("branch ",[name] )
 
     where
-    fs' :: [(Before,After)]
-    fs' = getBranch name ++ fs
+    addRep :: RepName -> [RepName]
+    addRep name | isBranchRep  name = name : fs
+    addRep _ = fs
 
 
 repSelector :: [Tree String] -> Tree String

@@ -4,6 +4,7 @@ module Language.E.Up.Representations(
     , runBranchFuncs
     , LeafFunc, BranchFunc
     , Before, After
+    , RepName, isBranchRep, noRep
     
     -- for debuging
     , setOccurrenceRep, matrix1DRep, partitionMSetOfSetsRep
@@ -19,6 +20,8 @@ type LeafFunc   = (VarData ->  E)
 type BranchFunc = (VarData ->  VarData)
 type Before     = (VarData -> [VarData])
 type After      = (VarData -> [VarData] -> VarData)
+type RepName    = String
+
 
 leafRep ::  String -> LeafFunc
 leafRep kind =
@@ -27,7 +30,6 @@ leafRep kind =
       "SetOccurrence"                -> setOccurrenceRep
       "Matrix1D"                     -> matrix1DRep
       "RelationIntMatrix2"           -> relationIntMatrix2Rep
-      --"ExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep
       _                              -> noRep
 
 
@@ -131,15 +133,24 @@ liftRep ::  LeafFunc -> BranchFunc
 liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 
 
-getBranch :: String -> [(Before,After)]
+getBranch :: String -> Maybe (Before,After)
 getBranch s =
     case tracer "\nBranchFunc str " s of
-      "Matrix1D"           -> [matrix1DBranch]
-      "Explicit"           -> [explicitBranch]
-      "Occurrence"         -> [occurrenceBranch]
-      "MSetOfSets"         -> [partitionMSetOfSetsBranch]
-      "SetExplicitVarSize" -> [setExplicitVarSizeBranch]
-      _                    -> []
+      "Matrix1D"           -> Just matrix1DBranch
+      "Explicit"           -> Just explicitBranch
+      "Occurrence"         -> Just occurrenceBranch
+      "MSetOfSets"         -> Just partitionMSetOfSetsBranch
+      "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
+      _                    -> Nothing
+
+isBranchRep :: RepName -> Bool
+isBranchRep "Matrix1D"             = True
+isBranchRep "Explicit1D"           = True
+isBranchRep "Occurrence1D"         = True
+isBranchRep "MSetOfSets1D"         = True
+isBranchRep "SetExplicitVarSize"   = True
+isBranchRep _                      = False
+
 
 {- Sets -}
 
@@ -153,7 +164,13 @@ setExplicitVarSizeBranch :: (Before,After)
 setExplicitVarSizeBranch = ( unwrapSet, after )
 
     where 
-    after orgData vs = errpM "dsdsd" vs 
+    after orgData vs = 
+        let inSet = mapMaybe getInSet vs 
+        in orgData{vEssence=wrapInMatrix inSet}
+
+    getInSet :: VarData -> Maybe E
+    getInSet VarData{vEssence=[eMatch| (true,&v) |]}  = Just v
+    getInSet VarData{vEssence=[eMatch| (false,&_) |]} = Nothing 
 
 {- Functions -}
 
