@@ -45,7 +45,7 @@ upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )
 
 
 tracer :: Pretty a => String -> a -> a
-tracer s a = trace (s ++ (show . pretty $ a)) a
+tracer s a = trace (s ++ '\n' : (show . pretty $ a)) a
 
 -- type Signatures to get rid of 
 -- defaulting the following constraint(s) to type `String' warnnings
@@ -146,7 +146,7 @@ errt :: [E] -> t
 errs :: [E] -> t
 errb :: [E] -> t
 errbM :: String -> [E] -> t
-errpM :: String -> [E] -> t
+errpM :: Pretty a => String -> [a] -> t
 errc :: [E] -> [E] -> t
 erri :: (Show a, Pretty a1) => (a, [a1]) -> t
 erriM :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
