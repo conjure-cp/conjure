@@ -4,6 +4,7 @@ import Language.E
 
 import Language.E.Up.EprimeToEssence
 import Language.E.Up.IO (getTestSpecs, getSpec)
+import Language.E.NormaliseSolution(normaliseSolutionEs)
 
 import System.FilePath
 
@@ -75,11 +76,11 @@ runSpec  (sps@(_, _,_,_,_),ansF,logsF) = do
     (spec,sol,org,orgP) <- getTestSpecs sps
 
     ansS <- getSpec ansF
-    let ans = es ansS
+    let ans = normaliseSolutionEs . es $ ansS
 
     logs <- liftM T.lines (T.readFile logsF)
 
-    let resultEssence = mainPure' True (spec,sol,org,orgP,logs)
+    let resultEssence = normaliseSolutionEs $  mainPure' True (spec,sol,org,orgP,logs)
 
     show (pretty resultEssence) `shouldBe` show (pretty ans)
     where
