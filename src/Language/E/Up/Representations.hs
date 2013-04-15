@@ -147,7 +147,8 @@ getBranch :: String -> Maybe (Before,After)
 getBranch s =
     case tracer "\nBranchFunc str " s of
       "Matrix1D"           -> Just matrix1DBranch
-      "Explicit"           -> Just explicitBranch
+      "SetExplicit"        -> Just explicitBranch
+      "MSetExplicit"       -> Just explicitBranch
       "Occurrence"         -> Just occurrenceBranch
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
@@ -160,10 +161,12 @@ isBranchRep :: RepName -> Bool
 isBranchRep "Matrix1D"           = True
 isBranchRep "Explicit1D"         = True
 isBranchRep "Occurrence1D"       = True
-isBranchRep "MSetOfSets1D"       = True
+isBranchRep "MSetOfSets"         = True
 isBranchRep "SetExplicitVarSize" = True
 isBranchRep "RelationAsSet"      = True
 isBranchRep "AsReln"             = True
+isBranchRep "SetExplicit"        = True
+isBranchRep "MSetExplicit"       = True
 isBranchRep _                    = False
 
 
@@ -228,7 +231,7 @@ functionAsRelnRep = ( beforeUnchanged, after )
 {- Partitions -}
 
 partitionMSetOfSetsBranch :: (Before,After)
-partitionMSetOfSetsBranch = ( beforeUnchanged, after )
+partitionMSetOfSetsBranch = ( beforeUnchanged , after )
     where
     after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
 
@@ -249,6 +252,8 @@ mapLeafFunc f orgData vs =
 mapLeafUnchanged :: VarData -> [VarData] -> VarData
 mapLeafUnchanged = mapLeafFunc vEssence
 
+_afterErr ::Pretty a => a -> t
+_afterErr e = errp e
 
 -- Utility functions
 
