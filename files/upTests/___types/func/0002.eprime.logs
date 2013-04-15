@@ -41,22 +41,22 @@
 [configuration] f_AsReln§region1#RelationAsSet
 [addedDecl] find f_AsReln_RelationAsSet: set of (int(1..2), int(-1, 1))
 [refn] 1
-[applied] (sum v__4 in toSet(f_AsReln§region1#RelationAsSet) , v__4[1] = v__6[1]
-               . v__4[2])
+[applied] (sum v__1 in toSet(f_AsReln§region1#RelationAsSet) , v__1[1] = v__0[1]
+               . v__1[2])
           {rules/refns/vertical/relation-RelationAsSet/relation-RelationAsSet-toSet.rule}
-              (sum v__4 in f_AsReln_RelationAsSet§region1 , v__4[1] = v__6[1] . v__4[2])
-[applied] (forAll v__6 in toSet(f_AsReln§region1#RelationAsSet)
-               . (sum v__4 in f_AsReln_RelationAsSet§region1 , v__4[1] = v__6[1] . v__4[2])
+              (sum v__1 in f_AsReln_RelationAsSet§region1 , v__1[1] = v__0[1] . v__1[2])
+[applied] (forAll v__0 in toSet(f_AsReln§region1#RelationAsSet)
+               . (sum v__1 in f_AsReln_RelationAsSet§region1 , v__1[1] = v__0[1] . v__1[2])
                  =
-                 toInt(1 = v__6[1]) * -1 + toInt(2 = v__6[1]))
+                 toInt(1 = v__0[1]) * -1 + toInt(2 = v__0[1]))
           {rules/refns/vertical/relation-RelationAsSet/relation-RelationAsSet-toSet.rule}
-              (forAll v__6 in f_AsReln_RelationAsSet§region1
-                   . (sum v__4 in f_AsReln_RelationAsSet§region1 , v__4[1] = v__6[1] . v__4[2])
+              (forAll v__0 in f_AsReln_RelationAsSet§region1
+                   . (sum v__1 in f_AsReln_RelationAsSet§region1 , v__1[1] = v__0[1] . v__1[2])
                      =
-                     toInt(1 = v__6[1]) * -1 + toInt(2 = v__6[1]))
-[applied] (sum v__2 in toSet(f_AsReln§region1#RelationAsSet) . v__1 = v__2[1])
+                     toInt(1 = v__0[1]) * -1 + toInt(2 = v__0[1]))
+[applied] (sum v__1 in toSet(f_AsReln§region1#RelationAsSet) . v__0 = v__1[1])
           {rules/refns/vertical/relation-RelationAsSet/relation-RelationAsSet-toSet.rule}
-              (sum v__2 in f_AsReln_RelationAsSet§region1 . v__1 = v__2[1])
+              (sum v__1 in f_AsReln_RelationAsSet§region1 . v__0 = v__1[1])
 [removeRefinedDecl] find f_AsReln: relation of (int(1..2) * int(-1, 1))
 [repr] 2
 [representation] find f_AsReln_RelationAsSet: set of (int(1..2), int(-1, 1))
@@ -66,23 +66,23 @@
 [addedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize:
                     matrix indexed by [int(1..4)] of (bool, (int(1..2), int(-1, 1)))
 [refn] 2
-[applied] (sum v__4 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
-               , v__4[1] = v__6[1]
-               . v__4[2])
+[applied] (sum v__1 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+               , v__1[1] = v__0[1]
+               . v__1[2])
           {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
               (sum v__8 : int(1..4)
-                   , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 1] = v__6[1]
+                   , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 1] = v__0[1]
                      /\
                      f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 1]
                    . f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 2])
-[applied] (forAll v__6 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+[applied] (forAll v__0 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
                . (sum v__8 : int(1..4)
-                      , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 1] = v__6[1]
+                      , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 1] = v__0[1]
                         /\
                         f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 1]
                       . f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 2])
                  =
-                 toInt(1 = v__6[1]) * -1 + toInt(2 = v__6[1]))
+                 toInt(1 = v__0[1]) * -1 + toInt(2 = v__0[1]))
           {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
               (forAll v__9 : int(1..4)
                    , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__9, 1]
@@ -97,12 +97,12 @@
                      toInt(1 = f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__9, 2, 1]) * -1
                      +
                      toInt(2 = f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__9, 2, 1]))
-[applied] (sum v__2 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
-               . v__1 = v__2[1])
+[applied] (sum v__1 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+               . v__0 = v__1[1])
           {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
               (sum v__10 : int(1..4)
                    , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__10, 1]
-                   . v__1 = f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__10, 2, 1])
+                   . v__0 = f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__10, 2, 1])
 [applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__7, 2, 1]
           .<
           f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__7 + 1, 2, 1]
