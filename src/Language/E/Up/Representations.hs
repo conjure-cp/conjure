@@ -133,7 +133,7 @@ liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 
 getBranch :: String -> [(Before,After)]
 getBranch s =
-    case tracer "\nBranchFunc " s of
+    case tracer "\nBranchFunc str " s of
       "Matrix1D"           -> [matrix1DBranch]
       "Explicit"           -> [explicitBranch]
       "Occurrence"         -> [occurrenceBranch]
@@ -153,7 +153,7 @@ setExplicitVarSizeBranch :: (Before,After)
 setExplicitVarSizeBranch = ( unwrapSet, after )
 
     where 
-    after orgData vs = errp vs 
+    after orgData vs = errpM "dsdsd" vs 
 
 {- Functions -}
 

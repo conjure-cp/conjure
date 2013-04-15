@@ -1,6 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
---{-# OPTIONS_GHC -fno-warn-unused-binds #-}
-
 
 module Language.E.Up.EvaluateTree2 (
      evalTree
@@ -74,20 +72,19 @@ evalTree' mapping set fs prefix (Branch name arr) =
 
     `_p` ("branch ",[name] )
 
-
     where
     fs' :: [(Before,After)]
     fs' = getBranch name ++ fs
 
+
 repSelector :: [Tree String] -> Tree String
 repSelector arr = arr !! (length arr -1)
 
+
 reverseTuplesOfMatrixes ::  E -> E
-
-
 reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
                                | fvs := value.tuple.values.value.function|] | all isFunc vs =
-    let ((dom:_),range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs
+    let (dom:_ ,range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs
         range2   = (map wrapInMatrix range)
         range3   = transposeE range2
         range'   = map matrixToTuple range3
@@ -110,9 +107,15 @@ reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
     tracer "reverseTuplesOfMatrixes result" $
     wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
 
-
-
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
+
+
+unwrapValues ::  E -> [E]
+unwrapValues  (Tagged "values" vs) =  vs
+unwrapValues e = _bug "unwrapValues failed" [e]
+
+wrapInFunction :: [E] -> E
+wrapInFunction es = [xMake| value.function.values := es |]
 
 
 _bug :: String -> [E] -> t
@@ -122,9 +125,3 @@ _bugi s = upBugi ("EvaluateTree: " ++ s )
 _bugg :: String -> t
 _bugg s = _bug s []
 
-unwrapValues ::  E -> [E]
-unwrapValues  (Tagged "values" vs) =  vs
-unwrapValues e = _bug "unwrapValues failed" [e]
-
-wrapInFunction :: [E] -> E
-wrapInFunction es = [xMake| value.function.values := es |]
