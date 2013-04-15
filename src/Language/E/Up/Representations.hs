@@ -100,8 +100,7 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
 matrix1DRep :: VarData -> E
 matrix1DRep VarData{vIndexes=(ix:_), vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
-        func     = [xMake| value.function.values := mappings |]
-    in func
+    in  wrapInFunction mappings
 
     where
     makeMapping :: Integer -> E -> E
@@ -153,6 +152,7 @@ getBranch s =
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
       "RelationAsSet"      -> Just relationAsSetRep
+      "AsReln"             -> Just functionAsRelnRep
       _                    -> Nothing
 
 
@@ -163,6 +163,7 @@ isBranchRep "Occurrence1D"       = True
 isBranchRep "MSetOfSets1D"       = True
 isBranchRep "SetExplicitVarSize" = True
 isBranchRep "RelationAsSet"      = True
+isBranchRep "AsReln"             = True
 isBranchRep _                    = False
 
 
@@ -181,6 +182,7 @@ setExplicitVarSizeBranch = ( unwrapSet, after )
     after orgData vs = 
         let inSet = mapMaybe getInSet vs 
         in orgData{vEssence=wrapInMatrix inSet}
+        `_p` ("setExplicitVarSizeBranch", inSet)
 
     getInSet :: VarData -> Maybe E
     getInSet VarData{vEssence=[eMatch| (true,&v) |]}  = Just v
@@ -198,8 +200,8 @@ relationAsSetRep = ( beforeUnchanged, after)
         in  orgData{vEssence=wrapInRelation tuples}
 
     getTuples :: VarData -> [E]
-    getTuples VarData{vEssence = es } = unwrapMatrix es
-
+    getTuples VarData{vEssence = [xMatch| es := value.matrix.values |] } =  es
+    getTuples v = upBug "d" [v]
 
 {- Functions -}
 
@@ -210,6 +212,17 @@ matrix1DBranch = ( unwrapSet, after )
     after orgData vs =
         let wraped = wrapInMatrix $ map vEssence vs
         in orgData{vEssence=matrix1DRep orgData{vEssence=wraped}}
+
+
+functionAsRelnRep :: (Before, After)
+functionAsRelnRep = ( beforeUnchanged, after )
+
+    where
+    after orgData [v] = 
+        let res = wrapInFunction . map relnToFunc .  unwrapRelation . vEssence $ v 
+        in  orgData{vEssence=res}
+
+    relnToFunc [eMatch| (&from,&to) |] = [xMake| mapping := [from,to] |]
 
 
 {- Partitions -}
@@ -248,17 +261,23 @@ onlySelectedValues = filter f
     f (_,_) = False
 
 
+wrapInFunction :: [E] -> E
+wrapInFunction es = [xMake| value.function.values := es |]
+
 wrapInRelation :: [E] -> E
 wrapInRelation es = [xMake| value.relation.values := es |]
+
+unwrapRelation :: E -> [E]
+unwrapRelation [xMatch| vs := value.relation.values |] = vs
 
 toIntLit :: Integer -> E
 toIntLit j =  [xMake| value.literal := [Prim (I j)] |]
 
 
-_bug :: String -> [E] -> t
+_bug  :: Pretty a => String -> [a] -> t
 _bug  s = upBug  ("Representations: " ++ s)
-_bugi :: (Show a) => String -> (a, [E]) -> t
+_bugi :: (Show a,Pretty b) => String -> (a, [b]) -> t
 _bugi s = upBugi ("Representations: " ++ s )
 _bugg :: String -> t
-_bugg s = _bug s []
+_bugg s = _bug s ([] :: [E])
 
