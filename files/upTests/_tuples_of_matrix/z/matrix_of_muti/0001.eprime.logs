@@ -1,9 +1,0 @@
-[simplified] y[1] = tuple ([(10, 12), (11, 13)])
-             ~~>
-             y[1, 1, 1, 1] = 10 /\ y[1, 1, 1, 2] = 12
-             /\
-             (y[1, 1, 2, 1] = 11 /\ y[1, 1, 2, 2] = 13)
-[removedDecl] find y: matrix indexed by [int(1)] of tuple (matrix indexed by [int(1,
-                                                                                  2)] of (int(10, 11), int(12, 13)))
-[removedDecl] find y_tuple1:
-                      matrix indexed by [int(1), int(1, 2)] of (int(10, 11), int(12, 13))
