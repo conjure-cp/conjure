@@ -27,6 +27,7 @@ leafRep ::  String -> LeafFunc
 leafRep kind =
     case kind of
       "SetExplicit"                   -> explicitRep
+      "MSetExplicit"                  -> explicitRep
       "SetOccurrence"                 -> setOccurrenceRep
       "Matrix1D"                      -> matrix1DRep
       "RelationIntMatrix2"            -> relationIntMatrix2Rep
@@ -151,16 +152,18 @@ getBranch s =
       "Occurrence"         -> Just occurrenceBranch
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
+      "RelationAsSet"      -> Just relationAsSetRep
       _                    -> Nothing
 
 
 isBranchRep :: RepName -> Bool
-isBranchRep "Matrix1D"             = True
-isBranchRep "Explicit1D"           = True
-isBranchRep "Occurrence1D"         = True
-isBranchRep "MSetOfSets1D"         = True
-isBranchRep "SetExplicitVarSize"   = True
-isBranchRep _                      = False
+isBranchRep "Matrix1D"           = True
+isBranchRep "Explicit1D"         = True
+isBranchRep "Occurrence1D"       = True
+isBranchRep "MSetOfSets1D"       = True
+isBranchRep "SetExplicitVarSize" = True
+isBranchRep "RelationAsSet"      = True
+isBranchRep _                    = False
 
 
 {- Sets -}
@@ -183,6 +186,21 @@ setExplicitVarSizeBranch = ( unwrapSet, after )
     getInSet VarData{vEssence=[eMatch| (true,&v) |]}  = Just v
     getInSet VarData{vEssence=[eMatch| (false,&_) |]} = Nothing 
 
+
+{- Relations -}
+
+relationAsSetRep :: (Before,After)
+relationAsSetRep = ( beforeUnchanged, after) 
+
+    where
+    after orgData vs = 
+        let tuples = concatMap getTuples vs
+        in  orgData{vEssence=wrapInRelation tuples}
+
+    getTuples :: VarData -> [E]
+    getTuples VarData{vEssence = es } = unwrapMatrix es
+
+
 {- Functions -}
 
 matrix1DBranch :: (Before,After)
@@ -197,13 +215,15 @@ matrix1DBranch = ( unwrapSet, after )
 {- Partitions -}
 
 partitionMSetOfSetsBranch :: (Before,After)
-partitionMSetOfSetsBranch = ( before, after )
+partitionMSetOfSetsBranch = ( beforeUnchanged, after )
     where
-    before v = [v]
     after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
 
 
 {- End -}
+
+beforeUnchanged :: VarData -> [VarData]
+beforeUnchanged v = [v]
 
 unwrapSet :: Before
 unwrapSet v@VarData{vEssence=e, vIndexes=ix} =

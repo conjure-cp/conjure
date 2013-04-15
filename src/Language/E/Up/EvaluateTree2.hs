@@ -64,13 +64,12 @@ evalTree' mapping set fs prefix (Tuple arr) =
     handleTuplesOfMatrixes :: E -> E
     handleTuplesOfMatrixes f | prefix `S.member` set = reverseTuplesOfMatrixes f
     handleTuplesOfMatrixes f = f
-
+    
+    -- CHECK very hackish but seems to work
     vdata e        = VarData
          {vIndexes = [[]]
          ,vBounds  = []
          ,vEssence = e}
-
-
 
 
 evalTree' mapping set fs prefix (Branch part@"SetExplicitVarSize2s" arr) =
