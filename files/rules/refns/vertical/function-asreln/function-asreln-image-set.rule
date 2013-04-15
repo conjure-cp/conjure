@@ -1,13 +1,16 @@
 
 [1000]
 
+$ here, &f(&x) is a set of tau
+$ following from this, &i is a tau
+
 &quan &i in &f(&x) , &guard . &body
 
     ~~>
 
-&quan j in toSet(refn(&f))
-    , &guard { &i --> j[2] } /\ &x = j[1]
-    . &body  { &i --> j[2] }
+&quan j in toSet(refn(&f)) , &x = j[1] .
+    &quan k in j[2], &guard { &i --> k }
+                   . &body  { &i --> k }
 
     where &f hasType   `function _ --> set of _`
     where &f hasRepr    AsReln
