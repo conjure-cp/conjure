@@ -4,8 +4,9 @@ module Language.E.Pipeline.Driver where
 
 import Language.E
 
+import Data.Time.Clock ( getCurrentTime )
 import System.Directory
--- import System.Mem ( performGC )
+import System.Mem ( performGC )
 
 
 driverConjureSingle
@@ -26,9 +27,6 @@ driverConjure
     :: ([RuleRepr] -> [RuleRefn] -> Spec -> [(Either Doc Spec, LogTree)])
     -> FilePath -> [RuleRepr] -> [RuleRefn] -> Spec -> IO ()
 driverConjure conj baseFilename reprs refns spec = do
-    let nats = map (padShowInt 4) [ (1 :: Int) .. ]
-    let mouts = conj reprs refns spec
-
     let outDirPath = baseFilename
     b <- doesDirectoryExist outDirPath
     when b $ do
@@ -42,6 +40,8 @@ driverConjure conj baseFilename reprs refns spec = do
                  (removeFile $ outDirPath ++ "/" ++ con)
     createDirectoryIfMissing True outDirPath
 
+    let nats = map (padShowInt 4) [ (1 :: Int) .. ]
+    let mouts = conj reprs refns spec
     forM_ (zip nats mouts) $ \ (i, (mout, logs)) -> do
         let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ext
         case mout of
@@ -51,11 +51,11 @@ driverConjure conj baseFilename reprs refns spec = do
             Right x -> do
                 toFile (mkOutFilename ".eprime"     ) x
                 toFile (mkOutFilename ".eprime.logs") logs
-        -- performGC
-        -- putStrLn "preformGC"
+        performGC
 
 toFile :: Pretty p => FilePath -> p -> IO ()
 toFile fp con = do
-    -- putStrLn $ "Created: " ++ fp
+    curr <- getCurrentTime
+    putStrLn $ "[Conjure] Created file (at " ++ take 19 (show curr) ++ ") " ++ fp
     writeFile fp (renderPretty con)
 

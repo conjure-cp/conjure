@@ -134,6 +134,12 @@ mostKnown x y = do
     mkLog "missing:mostKnown" $ pretty x <+> "~~" <+> pretty y
     return x
 
+mostKnowns :: MonadConjure m => [E] -> m E
+mostKnowns [] = bug "TypeOf.mostKnowns"
+mostKnowns [x] = return x
+mostKnowns [x,y] = mostKnown x y
+mostKnowns (x:ys) = do z <- mostKnowns ys ; mostKnown x z
+
 
 _testTypeOf :: T.Text -> IO ()
 _testTypeOf t = do
@@ -295,8 +301,9 @@ typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.function.
                                                                 |]
 typeOf p@[xMatch| xs := value.function.values |] = do
     (tx:txs) <- mapM typeOf xs
+    tx' <- mostKnowns (tx:txs)
     if and (map (tx `typeUnify`) txs)
-        then case tx of
+        then case tx' of
             [xMatch| [i,j] := mapping |] ->
                 return [xMake| type.function.innerFrom := [i]
                              | type.function.innerTo   := [j]

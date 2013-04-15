@@ -384,6 +384,17 @@ fullEvaluator
           in  go xs
 
 fullEvaluator
+  p@[xMatch| [fn]  := functionApply.actual.typed.left
+           | xs    := functionApply.actual.typed.left.value.function.values
+           | [arg] := functionApply.args
+           |]
+        | isFullyInstantiated fn && isFullyInstantiated arg
+        = let go ([xMatch| [a,b] := mapping |]:rest) | a == arg  = ret b
+                                                     | otherwise = go rest
+              go _ = err ErrFatal $ "Undefinedness:" <+> pretty p
+          in  go xs
+
+fullEvaluator
     [xMatch| [fn]  := functionApply.actual
            | xs    := functionApply.actual.value.relation.values
            | args  := functionApply.args

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 
 module Language.E.Pipeline.ConjureAll ( conjureWithMode) where
 
@@ -49,15 +50,14 @@ conjureAll limit reprs refns = phaseRepr0
             -> (Spec -> m Spec)     -- run this with the result if no errors
             -> (Spec -> m Spec)     -- run this instead if ErrGeneratesNone
             -> Spec -> m Spec
-        ifNone ma mIf mElse s = flip evalStateT GeneratesSome $ do
-            s' <- catchError (lift $ ma s) $ \ e ->
+        ifNone ma mIf mElse s = do
+            (s',w) <- catchError (fmap (,GeneratesSome) (ma s)) $ \ e ->
                     case e of
-                        (ErrGeneratesNone,_,_) -> do put GeneratesNone ; lift $ mIf s
-                        _                      -> throwError e
-            w <- get
+                        (ErrGeneratesNone,_,_) -> fmap (,GeneratesNone) (mIf s)
+                        _                      -> fmap (,GeneratesSome) (throwError e)
             case w of
                 GeneratesNone -> return s'
-                GeneratesSome -> lift $ mElse s'
+                GeneratesSome -> mElse s'
 
         -- conjure phases, these run only once
         repr, refn, groom :: Spec -> m Spec
