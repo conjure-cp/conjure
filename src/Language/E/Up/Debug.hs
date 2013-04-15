@@ -18,7 +18,7 @@ trace = Debug.Trace.trace
 groom :: Show a => a -> String
 groom = Text.Groom.groom
 
-upBug :: String -> [E] -> t
+upBug :: Pretty a =>  String -> [a] -> t
 upBug = errpM
 
 upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
@@ -32,9 +32,9 @@ groom = show
 trace :: String -> a -> a
 trace = Language.E.trace 
 
-upBug :: String -> [E] -> t
+upBug :: Pretty a =>  String -> [a] -> t
 {-upBug = errpM-}
-upBug s es = bug (pretty s <+> pretty es)
+upBug s es = bug (pretty s <+> vcat (map pretty es) )
 
 upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
 {-upBugi = erriM-}
