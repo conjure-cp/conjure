@@ -9,10 +9,12 @@ echo "\033[0m"                  # reset the colour
 if [ $# -eq 2 ]
 then
     ( scripts/dev/watch-helpers/ghcOnSingleFile   $1 2>&1
-      scripts/dev/watch-helpers/hlintOnSingleFile $1 2>&1 ) | head -n $2
+      scripts/dev/watch-helpers/hlintOnSingleFile $1 2>&1
+    ) | head -n $2
 else
     ( scripts/dev/watch-helpers/ghcOnSingleFile   $1 2>&1
-      scripts/dev/watch-helpers/hlintOnSingleFile $1 2>&1 )
+      scripts/dev/watch-helpers/hlintOnSingleFile $1 2>&1
+    )
 fi
 
 echo "[Finished] $1"
