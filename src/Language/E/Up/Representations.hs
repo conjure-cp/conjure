@@ -34,24 +34,29 @@ leafRep kind =
 noRep :: VarData -> E
 noRep  = vEssence
 
+{- Sets -}
 
 explicitRep :: VarData -> E
 explicitRep VarData{vEssence=e} = e
 
 
--- CHECK with Mset
 setOccurrenceRep :: VarData -> E
 setOccurrenceRep VarData{vIndexes=[ix],
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
     wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ vs
 
--- FIXME should not really need this
+-- CHECK should not really need this
 setOccurrenceRep v@VarData{vIndexes=ix,
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
     wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) vs
 
 setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
+setExplicitVarSize  :: VarData -> E
+setExplicitVarSize  vd = error "fdfdfd" -- errp vd
+
+
+{- Relations -}
 
 relationIntMatrix2Rep :: VarData -> E
 relationIntMatrix2Rep VarData{vIndexes=[a,b],
@@ -77,6 +82,8 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
   f _ = _bugg "relationIntMatrix2Rep not boolean"
 
 
+{- Functions -}
+
 matrix1DRep :: VarData -> E
 matrix1DRep VarData{vIndexes=(ix:_), vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
@@ -89,6 +96,7 @@ matrix1DRep VarData{vIndexes=(ix:_), vEssence=[xMatch| vs :=  value.matrix.value
 
 matrix1DRep  v = error $  "matrix1DRep " ++  (show . pretty) v
 
+{- Partitions -}
 
 partitionMSetOfSetsRep :: VarData -> E
 partitionMSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} =
@@ -98,6 +106,7 @@ partitionMSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} 
     where
     toPart [xMatch| es := value.matrix.values |] =  [xMake| part := es |]
 
+{- End -}
 
 
 -- Branch funcs
@@ -109,7 +118,7 @@ evalFs []     mid v =  mid v
 evalFs [g]    mid v =  evalF g mid v
 evalFs (g:gs) mid v =  evalF g (evalFs gs mid ) v
 
--- Run the before transformtion the inner function then the after transformtion
+-- Run the before transformations the inner function then the after transformation
 evalF :: (Before,After) -> BranchFunc -> VarData -> VarData
 evalF (before,after) mid value =
     let vs     = tracer "before:" $ before  (tracer "value:" value)
@@ -122,16 +131,17 @@ liftRep ::  LeafFunc -> BranchFunc
 liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 
 
-
 getBranch :: String -> [(Before,After)]
 getBranch s =
     case tracer "\nBranchFunc " s of
-      "Matrix1D"   -> [matrix1DBranch]
-      "Explicit"   -> [explicitBranch]
-      "Occurrence" -> [occurrenceBranch]
-      "MSetOfSets" -> [partitionMSetOfSetsBranch]
-      _            -> []
+      "Matrix1D"           -> [matrix1DBranch]
+      "Explicit"           -> [explicitBranch]
+      "Occurrence"         -> [occurrenceBranch]
+      "MSetOfSets"         -> [partitionMSetOfSetsBranch]
+      "SetExplicitVarSize" -> [setExplicitVarSizeBranch]
+      _                    -> []
 
+{- Sets -}
 
 explicitBranch :: (Before,After)
 explicitBranch = ( unwrapSet, mapLeafUnchanged )
@@ -139,15 +149,24 @@ explicitBranch = ( unwrapSet, mapLeafUnchanged )
 occurrenceBranch :: (Before,After)
 occurrenceBranch = ( unwrapSet, mapLeafFunc setOccurrenceRep )
 
+setExplicitVarSizeBranch :: (Before,After)
+setExplicitVarSizeBranch = ( unwrapSet, after )
+
+    where 
+    after orgData vs = errp vs 
+
+{- Functions -}
+
 matrix1DBranch :: (Before,After)
 matrix1DBranch = ( unwrapSet, after )
 
     where
-    after :: After
     after orgData vs =
         let wraped = wrapInMatrix $ map vEssence vs
         in orgData{vEssence=matrix1DRep orgData{vEssence=wraped}}
 
+
+{- Partitions -}
 
 partitionMSetOfSetsBranch :: (Before,After)
 partitionMSetOfSetsBranch = ( before, after )
@@ -155,6 +174,8 @@ partitionMSetOfSetsBranch = ( before, after )
     before v = [v]
     after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
 
+
+{- End -}
 
 unwrapSet :: Before
 unwrapSet v@VarData{vEssence=e, vIndexes=ix} =

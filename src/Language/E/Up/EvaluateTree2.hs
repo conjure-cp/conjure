@@ -43,12 +43,11 @@ evalTree' mapping set fs prefix (Leaf part) =
        res     = runBranchFuncs (reverse fs) vdata leafFunc
    in  vEssence res
 
-     
 
-    where
-    name    = intercalate "_" (prefix ++ [part])
-    lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE evalTree'")  . flip M.lookup mapping
-    vdata   = lookUpE  name
+   where
+   name    = intercalate "_" (prefix ++ [part])
+   lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE evalTree'")  . flip M.lookup mapping
+   vdata   = lookUpE  name
 
 evalTree' mapping set fs prefix (Tuple arr) =
     let items =  map ( evalTree' mapping set fs prefix ) arr
@@ -67,11 +66,14 @@ evalTree' mapping set fs prefix (Tuple arr) =
     handleTuplesOfMatrixes f = f
 
 
-evalTree' mapping set fs prefix (Branch part@"ExplicitVarSize" arr) =
+evalTree' mapping set fs prefix (Branch part@"SetExplicitVarSize2s" arr) =
     error . show $  (pretty . groom) prefix  <+> (pretty . groom) mapping  <+>  (pretty . groom) arr
 
 evalTree' mapping set fs prefix (Branch name arr) =
     evalTree' mapping set fs' (prefix ++ [name])  (repSelector arr)
+
+    `_p` ("branch ",[name] )
+
 
     where
     fs' :: [(Before,After)]
@@ -83,9 +85,9 @@ repSelector arr = arr !! (length arr -1)
 reverseTuplesOfMatrixes ::  E -> E
 
 
-reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values 
+reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
                                | fvs := value.tuple.values.value.function|] | all isFunc vs =
-    let ((dom:_),range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs 
+    let ((dom:_),range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs
         range2   = (map wrapInMatrix range)
         range3   = transposeE range2
         range'   = map matrixToTuple range3
@@ -102,7 +104,7 @@ reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
 
     isFunc :: E -> Bool
     isFunc [xMatch| _ := value.function.values |] = True
-    isFunc _ = False  
+    isFunc _ = False
 
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
     tracer "reverseTuplesOfMatrixes result" $
