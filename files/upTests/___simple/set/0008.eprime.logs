@@ -1,6 +1,10 @@
 [useChannelling] True
-[representation] find x: set (size 5) of int(4..9) (#1) Set~Occurrence
-[representation] find y: set (size 3) of int(3..7) (#1) Set~Occurrence
+[representation] find x: set (size 5) of int(4..9)
+                 (#2)
+                 Set~Explicit, Set~Occurrence
+[representation] find y: set (size 3) of int(3..7)
+                 (#2)
+                 Set~Explicit, Set~Occurrence
 [configuration] y§region2#Set~Occurrence x§region3#Set~Occurrence x§region1#Set~Occurrence
 [addedDecl] find x_Set~Occurrence: matrix indexed by [int(4..9)] of bool
 [addedDecl] find y_Set~Occurrence: matrix indexed by [int(3..7)] of bool
