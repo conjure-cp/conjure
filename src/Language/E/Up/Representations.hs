@@ -54,9 +54,6 @@ setOccurrenceRep v@VarData{vIndexes=ix,
 
 setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
-setExplicitVarSize  :: VarData -> E
-setExplicitVarSize  vd = error "fdfdfd" -- errp vd
-
 
 {- Relations -}
 
