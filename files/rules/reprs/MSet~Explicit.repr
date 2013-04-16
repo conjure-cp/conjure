@@ -1,14 +1,174 @@
 
 ~~> MSet~Explicit
-~~> matrix indexed by [int(1..&n)] of &t
-~~> forAll i : int(1..&n-1) . refn[i] .<= refn[i+1]
+~~> matrix indexed by [int(1..&size_)] of &tau
+~~> forAll i : int(1..&size_-1) . refn[i] .<= refn[i+1]
 
-*** mset (size &n, ..) of &t
 
-$ *** set (size &n) of &t
-$ 
-$ *** set (size &n, minSize &_) of &t
-$ 
-$ *** set (size &n, maxSize &_) of &t
-$ 
-$ *** set (size &n, minSize &_, maxSize &_) of &t
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> (&minSize_ <= &size_) /\
+    (&maxSize_ >= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_) /\
+         ((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_)
+        )
+    )
+
+
+$ *** mset (minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+
+
+*** mset (size &size_ , maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> (&maxSize_ >= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_) /\
+         ((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_)
+        )
+    )
+
+
+*** mset (size &size_ , minSize &minSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> (&minSize_ <= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_) /\
+         ((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_)
+        )
+    )
+
+
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+~~> (&minSize_ <= &size_) /\
+    (&maxSize_ >= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_))
+    )
+
+
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_) of &tau
+~~> (&minSize_ <= &size_) /\
+    (&maxSize_ >= &size_) /\
+    forAll i : &tau . (
+         ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+         (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_))
+    )
+
+
+$ *** mset (maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+
+
+$ *** mset (minSize &minSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+
+
+*** mset (size &size_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_) /\
+         ((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_)
+        )
+    )
+
+
+$ *** mset (minSize &minSize_ , maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+
+
+*** mset (size &size_ , maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+~~> (&maxSize_ >= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_))
+    )
+
+
+*** mset (size &size_ , minSize &minSize_ , maxOccur &maxOccur_) of &tau
+~~> (&minSize_ <= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_))
+    )
+
+
+$ *** mset (minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_) of &tau
+
+
+*** mset (size &size_ , maxSize &maxSize_ , minOccur &minOccur_) of &tau
+~~> (&maxSize_ >= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_))
+    )
+
+
+*** mset (size &size_ , minSize &minSize_ , minOccur &minOccur_) of &tau
+~~> (&minSize_ <= &size_) /\
+    forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_))
+    )
+
+
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_) of &tau
+~~> (&minSize_ <= &size_) /\
+    (&maxSize_ >= &size_)
+
+
+$ *** mset (minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+
+
+$ *** mset (maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+
+
+$ *** mset (minSize &minSize_ , maxOccur &maxOccur_) of &tau
+
+
+*** mset (size &size_ , maxOccur &maxOccur_) of &tau
+~~> forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) <= &maxOccur_))
+    )
+
+
+$ *** mset (maxSize &maxSize_ , minOccur &minOccur_) of &tau
+
+
+$ *** mset (minSize &minSize_ , minOccur &minOccur_) of &tau
+
+
+*** mset (size &size_ , minOccur &minOccur_) of &tau
+~~> forAll i : &tau . (
+        ((sum j : int(1..&size_) , refn[j] = i . 1) = 0) \/
+        (((sum j : int(1..&size_) , refn[j] = i . 1) >= &minOccur_))
+    )
+
+
+$ *** mset (minSize &minSize_ , maxSize &maxSize_) of &tau
+
+
+*** mset (size &size_ , maxSize &maxSize_) of &tau
+~~> (&maxSize_ >= &size_)
+
+
+*** mset (size &size_ , minSize &minSize_) of &tau
+~~> (&minSize_ <= &size_)
+
+
+$ *** mset (maxOccur &maxOccur_) of &tau
+
+
+$ *** mset (minOccur &minOccur_) of &tau
+
+
+$ *** mset (maxSize &maxSize_) of &tau
+
+
+$ *** mset (minSize &minSize_) of &tau
+
+
+*** mset (size &size_) of &tau
+
+
+$ *** mset () of &tau
+
+
