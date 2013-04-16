@@ -1,18 +1,177 @@
 
 ~~> MSet~Occurrence
-~~> matrix indexed by [&t] of int(0..&maxO)
+~~> matrix indexed by [&tau] of int(0..&maxOccur_)
 
-    where &t hasType `int`
+    where &tau hasType `int`
 
-*** mset (maxOccur &maxO) of &t
 
-*** mset (size &n, minOccur &minO, maxOccur &maxO, ..) of &t
-~~> (forAll i : &t . freq(&m,i) >= &minO)
-    /\
-    ((sum i : &t . freq(&m,i) > 0) = &n)
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
 
-*** mset (minOccur &minO, maxOccur &maxO, ..) of &t
-~~> forAll i : &t . freq(&m,i) >= &minO
 
-*** mset (size &n, maxOccur &maxO, ..) of &t
-~~> (sum i : &t . freq(&m,i) > 0) = &n
+*** mset (minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (size &size_ , maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (size &size_ , minSize &minSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+
+
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+    letting &maxOccur_ be &size
+
+
+*** mset (maxSize &maxSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (minSize &minSize_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (size &size_ , minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (minSize &minSize_ , maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (size &size_ , maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+
+
+*** mset (size &size_ , minSize &minSize_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (minSize &minSize_ , maxSize &maxSize_ , minOccur &minOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+    letting &maxOccur_ be &maxSize_
+
+
+*** mset (size &size_ , maxSize &maxSize_ , minOccur &minOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+    letting &maxOccur_ be &size_
+
+
+*** mset (size &size_ , minSize &minSize_ , minOccur &minOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+    letting &maxOccur_ be &size_
+
+
+*** mset (size &size_ , minSize &minSize_ , maxSize &maxSize_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+    letting &maxOccur_ be &size_
+
+
+*** mset (minOccur &minOccur_ , maxOccur &maxOccur_) of &tau
+~~> (forAll i in refn . i >= &minOccur_)
+
+
+*** mset (maxSize &maxSize_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+
+
+*** mset (minSize &minSize_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) >= &minSize_)
+
+
+*** mset (size &size_ , maxOccur &maxOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_)
+
+
+*** mset (maxSize &maxSize_ , minOccur &minOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) <= &maxSize_) /\
+    (forAll i in refn . i >= &minOccur_)
+    letting &maxOccur_ be &maxSize_
+
+
+$ *** mset (minSize &minSize_ , minOccur &minOccur_) of &tau
+
+
+*** mset (size &size_ , minOccur &minOccur_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    (forAll i in refn . i >= &minOccur_)
+    letting &maxOccur_ be &size_
+
+
+*** mset (minSize &minSize_ , maxSize &maxSize_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) >= &minSize_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+    letting &maxOccur_ be &maxSize_
+
+
+*** mset (size &size_ , maxSize &maxSize_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+    letting &maxOccur_ be &size_
+
+
+*** mset (size &size_ , minSize &minSize_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_) /\
+    ((sum i : &tau . refn[i] > 0) >= &minSize_)
+    letting &maxOccur_ be &size_
+
+
+*** mset (maxOccur &maxOccur_) of &tau
+
+
+$ *** mset (minOccur &minOccur_) of &tau
+
+
+*** mset (maxSize &maxSize_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) <= &maxSize_)
+    letting &maxOccur_ be &maxSize_
+
+
+$ *** mset (minSize &minSize_) of &tau
+
+
+*** mset (size &size_) of &tau
+~~> ((sum i : &tau . refn[i] > 0) = &size_)
+    letting &maxOccur_ be &size_
+
+
+$ *** mset () of &tau
+
+
