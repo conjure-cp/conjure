@@ -3,6 +3,7 @@
 module Language.E.Up.Common(
     transposeE,
     unwrapMatrix,
+    unwrapMatrix',
     unwrapExpr,
     matrixToTuple,
     wrapInExpr,
@@ -93,6 +94,10 @@ unwrapExpr e = _bug "unwrapExpr failed" [e]
 unwrapMatrix :: E -> [E]
 unwrapMatrix [xMatch| vs := value.matrix.values |] = vs
 unwrapMatrix e = _bug "unwrapMatrix failed" [e]
+
+unwrapMatrix' :: String -> E -> [E]
+unwrapMatrix' _ [xMatch| vs := value.matrix.values |] = vs
+unwrapMatrix' str e = _bug (str ++ ": unwrapMatrix failed") [e]
 
 wrapInMatrix :: [E] -> E
 wrapInMatrix arr = [xMake| value.matrix.values := arr |]

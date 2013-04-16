@@ -10,9 +10,9 @@ module Language.E.Up.Representations(
     , setOccurrenceRep, matrix1DRep, partitionMSetOfSetsRep
     ) where
 
-import Language.E
+import Language.E hiding (trace)
 import Language.E.Up.Data
-import Language.E.Up.Common(wrapInMatrix,unwrapMatrix)
+import Language.E.Up.Common(wrapInMatrix,unwrapMatrix,unwrapMatrix')
 import Language.E.Up.Debug
 
 -- Types 
@@ -41,24 +41,28 @@ noRep  = vEssence
 {- Sets -}
 
 explicitRep :: VarData -> E
-explicitRep VarData{vEssence=e} = e
+explicitRep VarData{vEssence=e} =  e
+    `_t` "explicitRep"
 
 
 setOccurrenceRep :: VarData -> E
 setOccurrenceRep VarData{vIndexes=[ix],
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ vs
+    wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ 
+        tracee "setOccurrenceRep" vs
 
 -- CHECK should not really need this
 setOccurrenceRep v@VarData{vIndexes=ix,
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) vs
+    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) $ 
+       tracee "setOccurrenceRep" vs
 
 setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
 setExplicitVarSizeWithDefaultRep :: VarData -> E
 setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} = 
-    wrapInMatrix . mapMaybe (removeIt $ toRemove bs) $ (unwrapMatrix e)
+    wrapInMatrix . mapMaybe (removeIt $ toRemove bs) . unwrapMatrix $ 
+        tracee "setExplicitVarSizeWithDefaultRep" e
 
     where 
     toRemove :: [Integer] -> Integer
@@ -74,7 +78,7 @@ setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
 relationIntMatrix2Rep :: VarData -> E
 relationIntMatrix2Rep VarData{vIndexes=[a,b],
                               vEssence=[xMatch| vs := value.matrix.values |] } =
-  values
+  tracee "relationIntMatrix2d" values
   where
   values =
        wrapInRelation
@@ -100,7 +104,7 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
 matrix1DRep :: VarData -> E
 matrix1DRep VarData{vIndexes=(ix:_), vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
-    in  wrapInFunction mappings
+    in  wrapInFunction $ tracee "matrix1DRep" mappings
 
     where
     makeMapping :: Integer -> E -> E
@@ -113,7 +117,7 @@ matrix1DRep  v = error $  "matrix1DRep " ++  (show . pretty) v
 partitionMSetOfSetsRep :: VarData -> E
 partitionMSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let parts = map toPart vs
-    in  [xMake| value.partition.values := parts |]
+    in  tracee "partitionMSetOfSetsRep" [xMake| value.partition.values := parts |]
 
     where
     toPart [xMatch| es := value.matrix.values |] =  [xMake| part := es |]
@@ -173,13 +177,13 @@ isBranchRep _                    = False
 {- Sets -}
 
 explicitBranch :: (Before,After)
-explicitBranch = ( unwrapSet, mapLeafUnchanged )
+explicitBranch = ( tracee "explicitBranch" unwrapSet, mapLeafUnchanged )
 
 occurrenceBranch :: (Before,After)
 occurrenceBranch = ( unwrapSet, mapLeafFunc setOccurrenceRep )
 
 setExplicitVarSizeBranch :: (Before,After)
-setExplicitVarSizeBranch = ( unwrapSetMaybe, after )
+setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after )
 
     where 
     after orgData vs = 
@@ -197,6 +201,8 @@ setExplicitVarSizeBranch = ( unwrapSetMaybe, after )
        let zipped = zipWith (\a b -> [eMake| (&a,&b) |] ) (unwrapMatrix bs) (unwrapMatrix vs)
        in  map (\e -> v{vEssence=e}) zipped
        `_p` ("unwrapSetMaybe", zipped)
+           where unwrapMatrix = unwrapMatrix' "unwrapSetMaybe"
+
 
     unwrapSetMaybe v@VarData{vEssence=e, vIndexes=ix} =
         map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
@@ -253,7 +259,8 @@ beforeUnchanged v = [v]
 
 unwrapSet :: Before
 unwrapSet v@VarData{vEssence=e, vIndexes=ix} =
-        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix' "unwrapSet" e)
+    
 
 mapLeafFunc :: LeafFunc -> VarData -> [VarData] -> VarData
 mapLeafFunc f orgData vs =
@@ -285,8 +292,8 @@ wrapInRelation es = [xMake| value.relation.values := es |]
 unwrapRelation :: E -> [E]
 unwrapRelation [xMatch| vs := value.relation.values |] = vs
 
-toIntLit :: Integer -> E
 toIntLit j =  [xMake| value.literal := [Prim (I j)] |]
+toIntLit :: Integer -> E
 
 
 _bug  :: Pretty a => String -> [a] -> t
