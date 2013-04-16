@@ -145,7 +145,7 @@ liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 
 getBranch :: String -> Maybe (Before,After)
 getBranch s =
-    case tracer "\nBranchFunc str " s of
+    case s of
       "Matrix1D"           -> Just matrix1DBranch
       "SetExplicit"        -> Just explicitBranch
       "MSetExplicit"       -> Just explicitBranch
@@ -179,17 +179,27 @@ occurrenceBranch :: (Before,After)
 occurrenceBranch = ( unwrapSet, mapLeafFunc setOccurrenceRep )
 
 setExplicitVarSizeBranch :: (Before,After)
-setExplicitVarSizeBranch = ( unwrapSet, after )
+setExplicitVarSizeBranch = ( unwrapSetMaybe, after )
 
     where 
     after orgData vs = 
-        let inSet = mapMaybe getInSet vs 
+        let inSet = mapMaybe (getInSet . vEssence) (tracer "afterVarSize vs" vs)
         in orgData{vEssence=wrapInMatrix inSet}
         `_p` ("setExplicitVarSizeBranch", inSet)
 
-    getInSet :: VarData -> Maybe E
-    getInSet VarData{vEssence=[eMatch| (true,&v) |]}  = Just v
-    getInSet VarData{vEssence=[eMatch| (false,&_) |]} = Nothing 
+    getInSet ::E -> Maybe E
+    getInSet [eMatch| (true,&v)  |] = Just v
+    getInSet [eMatch| (false,&_) |] = Nothing 
+    getInSet e  = _bug "getInSet" [e]
+
+    unwrapSetMaybe :: Before
+    unwrapSetMaybe v@VarData{vEssence=[eMatch| (&bs, &vs) |]} = 
+       let zipped = zipWith (\a b -> [eMake| (&a,&b) |] ) (unwrapMatrix bs) (unwrapMatrix vs)
+       in  map (\e -> v{vEssence=e}) zipped
+       `_p` ("unwrapSetMaybe", zipped)
+
+    unwrapSetMaybe v@VarData{vEssence=e, vIndexes=ix} =
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
 
 
 {- Relations -}
