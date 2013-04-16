@@ -178,7 +178,7 @@ parseOthers = [ parseFunctional l
                 _ -> Tagged "operator" [Tagged (fromString $ show $ lexemeFace l) xs]
 
 parseWithLocals :: Parser E
-parseWithLocals = parens $ do
+parseWithLocals = braces $ do
     i  <- parseExpr
     lexeme L_At
     js <- parseTopLevels

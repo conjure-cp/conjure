@@ -157,7 +157,7 @@ instance Pretty E where
                   | locals   := withLocals.locals
                   |]
         = let locals' = [ [xMake| atTopLevel := [x] |] | x <- locals ] in
-            Pr.parens $ pretty actual <+> "@" <+> vcat (map pretty locals')
+            Pr.braces $ pretty actual <+> "@" <+> vcat (map pretty locals')
 
     pretty [xMatch| [a] := typed.left
                   | [b] := typed.right
