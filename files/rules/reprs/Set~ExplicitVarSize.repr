@@ -1,4 +1,23 @@
 
+$ Cells can be either empty or full.
+$ Cells that are empty have a "false" first component.
+$ Cells that are full  have a "true"  first component.
+$ Empty cells come before full cells.
+$ Full cells have a strict value ordering.
+
+$ To break the symmetry between two Set~ExplicitVarSize represented sets,
+$ we do a case analysis.
+$ (|first| < |second|) \/ ((|first| = |second|) /\ "complicated")
+$ Where "complicated" needs to put a lexicographic ordering between full cells.
+
+$ What do we know now:
+$ * number of full cells of the first set = number of of full cells in the second
+$ * they aren't exactly equal.
+$ ==> there has to be at least one value that is smaller in the first set.
+$ See ../../rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule for the implementation
+
+
+
 ~~> Set~ExplicitVarSize
 ~~> matrix indexed by [int(1..&mx)] of (bool,&t)
 ~~> (
