@@ -240,6 +240,14 @@ fullEvaluator
     = returnBool $ length xs == length (nub xs)
 
 fullEvaluator
+    [xMatch| [Prim (S "=")] := binOp.operator
+           | xs := binOp.left .value.matrix.values
+           | ys := binOp.right.value.matrix.values
+           |]
+    | all isFullyInstantiated xs && all isFullyInstantiated ys
+    = returnBool $ length xs == length ys && and (zipWith (==) xs ys)
+
+fullEvaluator
     [eMatch| max(&a,&b) |]
     | [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b

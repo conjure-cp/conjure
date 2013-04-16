@@ -40,24 +40,30 @@ typeCheckSpec (Spec _ x) = withBindingScope' $
 
 
 typeUnify :: E -> E -> Bool
+
 typeUnify [xMatch| _ := type.unknown |] _ = True
 typeUnify _ [xMatch| _ := type.unknown |] = True
+
 typeUnify
     [xMatch| [] := type.bool |]
     [xMatch| [] := type.bool |]
     = True
+
 typeUnify
     [xMatch| [] := type.int  |]
     [xMatch| [] := type.int  |]
     = True
+
 typeUnify
     [xMatch| [Prim (S a)] := type.typeUnnamed |]
     [xMatch| [Prim (S b)] := type.typeUnnamed |]
     = a == b
+
 typeUnify
     [xMatch| [Prim (S a)] := type.typeEnum |]
     [xMatch| [Prim (S b)] := type.typeEnum |]
     = a == b
+
 typeUnify
     [xMatch| [a1] := type.matrix.index
            | [b1] := type.matrix.inner
@@ -65,14 +71,17 @@ typeUnify
     [xMatch| [a2] := type.matrix.index
            | [b2] := type.matrix.inner
            |] = typeUnify a1 a2 && typeUnify b1 b2
+
 typeUnify
     [xMatch| [a] := type.set.inner |]
     [xMatch| [b] := type.set.inner |]
     = typeUnify a b
+
 typeUnify
     [xMatch| [a] := type.mset.inner |]
     [xMatch| [b] := type.mset.inner |]
     = typeUnify a b
+
 typeUnify
     [xMatch| [aFr] := type.function.innerFrom
            | [aTo] := type.function.innerTo
@@ -81,25 +90,38 @@ typeUnify
            | [bTo] := type.function.innerTo
            |]
     = typeUnify aFr bFr && typeUnify aTo bTo
+
 typeUnify
     [xMatch| [a1,b1] := mapping |]
     [xMatch| [a2,b2] := mapping |]
     = typeUnify a1 a2 && typeUnify b1 b2
+
 typeUnify
     [xMatch| as := type.tuple.inners |]
     [xMatch| bs := type.tuple.inners |]
     = and $ (length as == length bs)
           :  zipWith typeUnify as bs
+
+typeUnify
+    [xMatch| [] := type.relation.inners.type.unknown |]
+    [xMatch| _  := type.relation.inners |]
+    = True
+typeUnify
+    [xMatch| _  := type.relation.inners |]
+    [xMatch| [] := type.relation.inners.type.unknown |]
+    = True
 typeUnify
     [xMatch| as := type.relation.inners |]
     [xMatch| bs := type.relation.inners |]
     = if length as == length bs
         then and $ zipWith typeUnify as bs
         else False
+
 typeUnify
     [xMatch| [a] := type.partition.inner |]
     [xMatch| [b] := type.partition.inner |]
     = typeUnify a b
+
 typeUnify x y = trace ( show $ vcat [ "missing:typeUnify"
                                     , pretty x <+> "~~" <+> pretty y
                                     -- , prettyAsPaths x
@@ -311,7 +333,7 @@ typeOf p@[xMatch| xs := value.function.values |] = do
             _ -> typeErrorIn p
         else typeErrorIn p
 
-typeOf   [xMatch| [] := value.relation.values |] = return [xMake| type.relation.inners := [] |]
+typeOf   [xMatch| [] := value.relation.values |] = return [xMake| type.relation.inners.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.relation.values |] = do
     (tx:txs) <- mapM typeOf xs
     if and (map (tx `typeUnify`) txs)
