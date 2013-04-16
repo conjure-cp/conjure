@@ -50,12 +50,14 @@ evalTree' mapping set fs prefix (Tuple arr) =
     let items =  map ( evalTree' mapping set [] prefix ) arr
         tuple = [xMake| value.tuple.values := items |]
         res   = handleTuplesOfMatrixes tuple
+        -- Have to apply the inner rep conversion function first
         afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) (vdata res) noRep
     in  (vEssence afterFuncs)
 
-     `_p` ("afterFuncs",[afterFuncs] )
-     `_p` ("res",[res] )
-     `_p` ("ans",[tuple] )
+     `_p` ("tuple_afterFuncs",[afterFuncs] )
+     `_p` ("tuple_fs",fs )
+     `_p` ("tuple_res",[res] )
+     `_p` ("tuple+ans",[tuple] )
      `_g` ("tuple funs str",fs )
      `_g` ("prefix_tuple",prefix )
 
