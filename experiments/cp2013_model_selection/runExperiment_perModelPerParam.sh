@@ -7,20 +7,20 @@ EPRIME="$2"
 PARAM="$3"
 
 DIR=$(dirname $ESSENCE)
+EPRIMEBASE=${EPRIME%.eprime}
+PARAMBASE=${PARAM%.param}
 
-OUT_PARAM="blah"
-OUT_MINION="blah"
-OUT_MINION_STATS="blah"
-OUT_SR_SOLUTION="blah"
-OUT_SOLUTION="blah"
+OUT_PARAM="${EPRIMEBASE}-${PARAMBASE}.eprime-param"
+OUT_MINION="${EPRIMEBASE}-${PARAMBASE}.eprime-minion"
+OUT_MINION_STATS="${EPRIMEBASE}-${PARAMBASE}.eprime-minion-stats"
+OUT_SR_SOLUTION="${EPRIMEBASE}-${PARAMBASE}.eprime-solution"
 
 
 MSG_TEMPLATE="$ESSENCE $EPRIME $PARAM"
 
-FAIL_FILE="fail"
+FAIL_FILE="fails.txt"
 
 rm -f "$FAIL_FILE"
-touch "$FAIL_FILE"
 
 
 RESULTOF_REFINEPARAM=0
@@ -46,7 +46,7 @@ savilerow                                                               \
     -in-eprime    $EPRIME                                               \
     -in-param     $OUT_PARAM                                            \
     -out-minion   $OUT_MINION                                           \
-    -out-solution $OUT_SOLUTION                                         \
+    -out-solution $OUT_SR_SOLUTION                                      \
     -boundvars                                                          \
     -minion-options "-timelimit 600"
 RESULTOF_SAVILEROW=$?
