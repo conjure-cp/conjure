@@ -26,6 +26,7 @@ main = do
     case args of
         [arg] -> interact
                     $ unlines
+                    . (\ xs -> "BEGIN TRANSACTION;" : xs ++ ["COMMIT;"] )
                     . map (toSQL conjure_repo arg)
                     . mapMaybe parse
                     . filter nonHash
@@ -46,9 +47,9 @@ parse line = case splitOn ":" blah of
         -- [attribute,value] = splitOn ":" $ drop 1 $ dropWhile (/=' ') line
         --
 
-toSQL conjure_repo essence
-    = unwords
-    . ((conjure_repo ++ "/experiments/cp2013_model_selection/dbops/insert.sh") :)
-    . map show
-    . (essence:)
+toSQL conjure_repo essence xs
+    = id
+    $ ("INSERT OR REPLACE INTO attributes ( SPEC , MODEL , PARAM , ATTRIBUTE , VALUE) VALUES " ++)
+    $ (\ i -> "(" ++ i ++ ");" )
+    $ intercalate "," $ map show (essence:xs)
 

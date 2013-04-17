@@ -30,17 +30,22 @@ main = scotty 3000 $ do
         attributes' :: String <- param "attributes"
         let attributes = splitOn "+" attributes'
         let params     = splitOn "+" params'
-        liftIO $ print attributes
         models :: [String] <- fmap concat $
             liftIO $ query conn "SELECT DISTINCT MODEL FROM attributes WHERE SPEC=(?)" [essence]
-        attributeValues :: [[(String, String, String, Double)]] <- fmap concat $ 
-            forM params $ \ p ->
-                forM attributes $ \ a ->
-                    liftIO $ query conn 
-                        "SELECT MODEL, PARAM, ATTRIBUTE, VALUE FROM attributes WHERE SPEC=(?) AND PARAM=(?) AND ATTRIBUTE=(?) ORDER BY MODEL"
-                        (essence, p, a)
+        attributeValues :: [[(String, String, String, Double)]] <- do
+            whichParams <-
+                if params' == "all"
+                    then do
+                        allParams :: [String] <- fmap concat $ liftIO $ query conn "SELECT DISTINCT PARAM FROM attributes WHERE SPEC=(?)" [essence]
+                        return allParams
+                    else return params
 
-        liftIO $ mapM_ print attributeValues
+            fmap concat $ 
+                forM whichParams $ \ p ->
+                    forM attributes $ \ a ->
+                        liftIO $ query conn 
+                            "SELECT MODEL, PARAM, ATTRIBUTE, VALUE FROM attributes WHERE SPEC=(?) AND PARAM=(?) AND ATTRIBUTE=(?) ORDER BY MODEL"
+                            (essence, p, a)
 
         let modelsHtml = [lt| var modelNames = #{show models} |]
         let seriesHtmlOne name vals = concat ["{name: \"", name, "\", data: ", show vals, "}"]
