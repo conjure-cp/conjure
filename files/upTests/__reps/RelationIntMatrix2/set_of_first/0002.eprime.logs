@@ -87,7 +87,85 @@
           .<
           rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]
           {rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule}
-              true
+              |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1]|
+              <
+              |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]|
+              \/
+              |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1]|
+              =
+              |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]|
+              /\
+              (exists v__11 : int(1..20)
+                   , rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__11, 1]
+                     /\
+                     rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 1]
+                   . rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__11, 2, 1]
+                     .<
+                     rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 1]
+                     \/
+                     rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__11, 2, 1]
+                     =
+                     rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 1]
+                     /\
+                     rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__11, 2, 2]
+                     .<
+                     rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 2])
+[applied] |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1]|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__12 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1] . 1)
+[applied] (sum v__12 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1]
+               . 1)
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__13 : int(1..20)
+                   , rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__13, 1]
+                   . 1)
+[applied] |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__14 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2] . 1)
+[applied] (sum v__14 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]
+               . 1)
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__15 : int(1..20)
+                   , rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__15, 1]
+                   . 1)
+[applied] |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1]|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__16 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1] . 1)
+[applied] (sum v__16 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[1]
+               . 1)
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__17 : int(1..20)
+                   , rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__17, 1]
+                   . 1)
+[applied] |rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__18 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2] . 1)
+[applied] (sum v__18 in rs_Set~Explicit_RelationAsSet§region1#Set~ExplicitVarSize[2]
+               . 1)
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__19 : int(1..20)
+                   , rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__19, 1]
+                   . 1)
+[applied] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1,
+                                                                    v__11,
+                                                                    2,
+                                                                    1]
+          .<
+          rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 1]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__11, 2, 1]
+              <
+              rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 1]
+[applied] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1,
+                                                                    v__11,
+                                                                    2,
+                                                                    2]
+          .<
+          rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 2]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[1, v__11, 2, 2]
+              <
+              rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[2, v__11, 2, 2]
 [applied] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize§region1[v__7,
                                                                     v__8,
                                                                     2,
@@ -112,8 +190,8 @@
                             matrix indexed by [int(1..2)] of set of (int(0..3), int(0..4))
 [removedDecl] find rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize:
                       matrix indexed by [int(1..2), int(1..20)] of (bool, (int(0..3), int(0..4)))
-[matrixToTuple] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize
+[matrixToTuple] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize∑2
 [removedDecl] find rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize_tuple2:
                       matrix indexed by [int(1..2), int(1..20)] of (int(0..3), int(0..4))
-[matrixToTuple] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize_tuple2
+[matrixToTuple] rs_Set~Explicit_RelationAsSet_Set~ExplicitVarSize_tuple2∑2
 [repr] 3
