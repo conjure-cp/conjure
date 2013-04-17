@@ -21,6 +21,7 @@ savilerowCompat b
     >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
     >=> conjureNoGuards                         >=> recordSpec "conjureNoGuards"
     >=> (return . onSpec toIntIsNoOp)           >=> recordSpec "toIntIsNoOp"
+    >=> (return . onSpec factorialIsFactorial)  >=> recordSpec "factorialIsFactorial"
     >=> (return . onSpec dotOrderIsLex)         >=> recordSpec "dotOrderIsLex"
     >=> (return . onSpec tildeIsn'tSupported)   >=> recordSpec "tildeIsn'tSupported"
     >=> (return . (atMostOneSuchThat b))        >=> recordSpec "atMostOneSuchThat"
@@ -36,6 +37,11 @@ toIntIsNoOp :: E -> E
 toIntIsNoOp [eMatch| toInt(&x) |] = x
 toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
+
+factorialIsFactorial:: E -> E
+factorialIsFactorial [eMatch| (&x)! |] = [eMake| factorial(&x) |]
+factorialIsFactorial (Tagged t xs) = Tagged t $ map factorialIsFactorial xs
+factorialIsFactorial p = p
 
 dotOrderIsLex :: E -> E
 dotOrderIsLex [eMatch| &a .<  &b |] = [eMake| flatten(&a) <lex  flatten(&b) |]
