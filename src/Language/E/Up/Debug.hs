@@ -44,8 +44,15 @@ upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )
 #endif
 
 
+
 tracer :: Pretty a => String -> a -> a
 tracer s a = trace (s ++ '\n' : (show . pretty $ a)) a
+
+tracee :: String -> a -> a
+tracee s a = trace (s ++ "\n") a
+
+_t :: a -> String -> a
+_t a s = trace s a
 
 -- type Signatures to get rid of 
 -- defaulting the following constraint(s) to type `String' warnnings
@@ -61,7 +68,6 @@ __groomPrintM :: Show a => String -> a -> IO ()
 __s2 :: Pretty primitive => (String, Generic primitive) -> String
 
 __p :: [E] -> String
-__p2 :: [[E]] -> String
 __i :: Show a => a -> [E] -> String
 __k :: (Show a, Pretty a1) => a -> [a1] -> String
 __b :: [E] -> String
@@ -71,7 +77,6 @@ __g :: Show a1 => a1 -> a -> a
 __s :: Show a1 => (String, a1) -> a -> a
 __h :: Show a => String -> a -> a
 __j :: String -> E -> E
-_e2 :: a -> (String, [[E]]) -> a
 _b :: a -> (String, [E]) -> a
 
 prettyAsBoth :: E -> Doc
@@ -84,7 +89,6 @@ __groomPrintM a b = putStr (a ++ " ⦙\n ") >> (putStrLn . groom) b
 __s2 (msg,b) =  "\n##" ++ msg ++ " ⦙ " ++ (show . prettyAsTree) b ++ "\n"
 
 __p arr = "\n#\n" ++ (show . vcat . map prettyAsTree) arr ++ "\n##\n"
-__p2 arr = "\n#\n" ++  (show . vcat) (concatMap (map prettyAsBoth) arr) ++ "\n##\n"
 __i a b = "\n#\n"++ groom a ++ "\n\n" ++ (show . vcat . map prettyAsBoth) b ++  "\n##\n"
 __k a b = "\n#\n"++ groom a ++ "\n\n" ++ (show . vcat . map pretty) b ++  "\n##\n"
 __b arr = "\n#\n" ++ (show . vcat . map prettyAsBoth) arr ++ "\n##\n"
@@ -106,7 +110,6 @@ _e a (msg, [b@[xMatch| _ := value.literal |]]) =  trace ( __s2 (msg,b) ) a
 _e a (msg, [b@[xMatch| _ := literal |]])       =  trace ( __s2 (msg,b) ) a
 _e a (msg,b) = trace (msg ++ __p b) a
 
-_e2 a (msg,b) = trace (msg ++ __p2 b) a
 _b a (msg,b)  = trace (msg ++ __b b) a
 
 _p a (msg,b) = 
@@ -130,7 +133,6 @@ __h _ a = a
 __j _ a = a
 
 _e  a _ =  a
-_e2 a _ =  a
 _b  a _ =  a
 _p  a _ =  a
 _f  a _ =  a
