@@ -36,7 +36,10 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
 -}
 
 eprimes = _eprimeDirs "files/uptests/" ["___simple","___parts","___types","__easy","__reps"
-                                       ,"_relations", "_indexes", "__failed"
+                                       ,"_relations", "_indexes", "__failed","__issues","_essence_params"
+                                       ,"_matrix_of_tuples", "_muti_dimensional","_zznested_singletons"
+                                       ,"_functions","_tuples_of_matrix","_zzComplex","_zothers"
+                                       ,"__indexrange"
                                        ]
 
 
