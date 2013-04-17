@@ -39,7 +39,8 @@ toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
 
 factorialIsFactorial:: E -> E
-factorialIsFactorial [eMatch| (&x)! |] = [eMake| factorial(&x) |]
+factorialIsFactorial [eMatch| (&x)! |] = let y = factorialIsFactorial x
+                                         in  [eMake| factorial(&y) |]
 factorialIsFactorial (Tagged t xs) = Tagged t $ map factorialIsFactorial xs
 factorialIsFactorial p = p
 
