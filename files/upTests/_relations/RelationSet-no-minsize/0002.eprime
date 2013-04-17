@@ -7,6 +7,34 @@ find x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple1:
 find x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple2:
         matrix indexed by [int(1..2), int(1..2)] of int(3)
 such that
+    (sum v__0 : int(1..2)
+         . x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0] * 1)
+    <
+    (sum v__0 : int(1..2)
+         . x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[2, v__0] * 1)
+    \/
+    (sum v__0 : int(1..2)
+         . x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0] * 1)
+    =
+    (sum v__0 : int(1..2)
+         . x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[2, v__0] * 1)
+    /\
+    (exists v__0 : int(1..2)
+         . x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0]
+           /\
+           x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[2, v__0]
+           /\
+           (x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1, v__0]
+            <
+            x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[2, v__0]
+            \/
+            x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1, v__0]
+            =
+            x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[2, v__0]
+            /\
+            x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple2[1, v__0]
+            <
+            x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple2_tuple2[2, v__0])),
     forAll v__0 : int(1..2)
         . (x_SetExplicit_RelationAsSet_SetExplicitVarSize_tuple1[v__0, 1]
            /\
