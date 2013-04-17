@@ -17,7 +17,7 @@ import Data.Set(Set)
 import qualified Data.Set as S
 
 type VarMap             = Map String VarData
-type IsTuplesOfMatrixes = Set [String]
+type IsTuplesOfMatrixes = Map [String] Int
 
 evalTree ::VarMap -> IsTuplesOfMatrixes -> Tree String  -> (String,E)
 evalTree mapping set (Branch name arr) =
@@ -51,7 +51,7 @@ evalTree' mapping set fs prefix (Tuple arr) =
         tuple = [xMake| value.tuple.values := items |]
         res   = handleTuplesOfMatrixes tuple
         -- Have to apply the inner rep conversion function first
-        afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) (vdata res) noRep
+        afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) res noRep
     in  (vEssence afterFuncs)
 
      `_p` ("tuple_afterFuncs",[afterFuncs] )
@@ -63,13 +63,25 @@ evalTree' mapping set fs prefix (Tuple arr) =
 
 
     where
-    handleTuplesOfMatrixes :: E -> E
-    handleTuplesOfMatrixes f | prefix `S.member` set = reverseTuplesOfMatrixes f
-    handleTuplesOfMatrixes f = f
-    
+    handleTuplesOfMatrixes :: E -> VarData 
+    handleTuplesOfMatrixes f |  Just num <- prefix `M.lookup` set = 
+       vdata num $ handleTuplesOfMatrixes' num f
+
+    handleTuplesOfMatrixes f = vdata 0 f
+   
+    handleTuplesOfMatrixes' :: Int  -> E -> E
+    handleTuplesOfMatrixes' 0 f = f
+    handleTuplesOfMatrixes' 1 f = reverseTuplesOfMatrixes f 
+    {-handleTuplesOfMatrixes' 2 f = 
+        wrapInMatrix . map reverseTuplesOfMatrixes . unwrapMatrix . reverseTuplesOfMatrixes $ f-}
+    handleTuplesOfMatrixes' n f =
+        wrapInMatrix . map (handleTuplesOfMatrixes' (n - 1)) . unwrapMatrix $ reverseTuplesOfMatrixes f
+   
+
+
     -- CHECK very hackish but seems to work
-    vdata e        = VarData
-         {vIndexes = [[]]
+    vdata n e        = VarData
+         {vIndexes = replicate n []
          ,vBounds  = []
          ,vEssence = e}
 
@@ -93,6 +105,8 @@ repSelector arr = arr !! (length arr -1)
 
 
 reverseTuplesOfMatrixes ::  E -> E
+-- ? needed
+{--
 reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
                                | fvs := value.tuple.values.value.function|] | all isFunc vs =
     let (dom:_ ,range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs
@@ -113,7 +127,7 @@ reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
     isFunc :: E -> Bool
     isFunc [xMatch| _ := value.function.values |] = True
     isFunc _ = False
-
+-}
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
     tracer "reverseTuplesOfMatrixes result" $
     wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
