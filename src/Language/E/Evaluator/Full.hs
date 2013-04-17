@@ -825,6 +825,7 @@ domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
 domSize [xMatch| [Prim (S s)] := reference |] = do
     x <- errMaybeT "domSize" lookupReference s
     domSize x
+domSize [xMatch| [] := domain.bool |] = return [eMake| 2 |]
 domSize [xMatch| rs := domain.int.ranges |] = do
     xs <- mapM domSize rs
     return $ sumE xs
