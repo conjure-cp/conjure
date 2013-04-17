@@ -37,7 +37,7 @@ noTuplesE statementIn = do
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
                                     lift $ mkLog "removedDecl" $ pretty statement
-                                    lift $ mkLog "matrixToTuple" $ name statement
+                                    lift $ mkLog "matrixToTuple" $ name statement <> "∑" <> pretty (length indices)
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
                                     forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
