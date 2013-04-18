@@ -290,7 +290,7 @@ workhorse lookupReprs (nm, dom, val) = do
             name
             [xMatch| attrs      := domain.set.attributes.attrCollection
                    | [domInner] := domain.set.inner
-                   | [fr,_]     := domain.set.inner.domain.int.ranges.range.fromTo
+                   | [_,to]     := domain.set.inner.domain.int.ranges.range.fromTo
                    |]
             [xMatch| values := value.set.values |]
             (Just "Set~ExplicitVarSizeWithDefault")
@@ -305,8 +305,8 @@ workhorse lookupReprs (nm, dom, val) = do
             let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
             let indexOfMatrix    = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
 
-            intFr <- valueIntOut fr
-            let defValue = [xMake| value.literal := [Prim (I (intFr - 1))] |]
+            intTo <- valueIntOut to
+            let defValue = [xMake| value.literal := [Prim (I (intTo + 1))] |]
 
             let nbTrues  = genericLength values
             let nbFalses = nbValuesInt - nbTrues
