@@ -189,6 +189,9 @@ typeOf :: MonadConjure m => E -> m E
 
 -- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
 
+typeOf [eMatch| true(&_)    |] = return tyBool
+typeOf [eMatch| true(&_,&_) |] = return tyBool
+
 typeOf [xMatch| [x] := topLevel.suchThat             |] = typeOf x
 typeOf [xMatch| [x] := topLevel.where                |] = typeOf x
 typeOf [xMatch| [x] := topLevel.objective.minimising |] = typeOf x
