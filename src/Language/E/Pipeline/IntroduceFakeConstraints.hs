@@ -45,6 +45,7 @@ removeFakeConstraints :: Spec -> Spec
 removeFakeConstraints (Spec v s) = Spec v (helper s)
     where
         helper [eMatch| true(&_) |] = [eMake| true |]
+        helper [eMatch| true(&_,&_) |] = [eMake| true |]
         helper (Tagged t xs) = Tagged t (map helper xs)
         helper x = x
 
