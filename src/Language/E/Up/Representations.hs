@@ -187,25 +187,20 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
 
     where 
     after orgData vs = 
-        let inSet = mapMaybe (getInSet . vEssence) (tracer "afterVarSize vs" vs)
-        in orgData{vEssence=wrapInMatrix inSet}
-        `_p` ("setExplicitVarSizeBranch", inSet)
+        let res =  explicitVarSize (map vEssence vs)
+        in orgData{vEssence=res}
+        `_p` ("explicitVarSize", [res])
+
+    explicitVarSize :: [E] -> E
+    explicitVarSize vs = 
+        wrapInMatrix $ mapMaybe getInSet (tracer "afterVarSize vs" vs)
 
     getInSet ::E -> Maybe E
     getInSet [eMatch| (true,&v)  |] = Just v
     getInSet [eMatch| (false,&_) |] = Nothing 
-    getInSet e  = _bug "getInSet" [e]
+    getInSet [xMatch| vs := value.matrix.values |] = Just $ explicitVarSize vs
 
-    unwrapSetMaybe :: Before
-    unwrapSetMaybe v@VarData{vEssence=[eMatch| (&bs, &vs) |]} = 
-       let zipped = zipWith (\a b -> [eMake| (&a,&b) |] ) (unwrapMatrix bs) (unwrapMatrix vs)
-       in  map (\e -> v{vEssence=e}) zipped
-       `_p` ("unwrapSetMaybe", zipped)
-           where unwrapMatrix = unwrapMatrix' "unwrapSetMaybe"
-
-
-    unwrapSetMaybe v@VarData{vEssence=e, vIndexes=ix} =
-        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix e)
+    getInSet e  = _bug "setExplicitVarSizeBranch: getInSet" [e]
 
 
 {- Relations -}
