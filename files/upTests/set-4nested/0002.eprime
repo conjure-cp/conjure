@@ -1,0 +1,111 @@
+language ESSENCE' 1.0
+
+given n: int
+given a: int
+given b: int
+find s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence:
+        matrix indexed by [int(1..n), int(1..n), int(1..n), int(a..b)] of bool
+such that
+    exists v__0 : int(1..n)
+        . (forAll v__1 : int(1..n)
+               . (exists v__2 : int(1..n)
+                      . (forAll v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               ->
+                               1 = v__3 \/ 2 = v__3)
+                        /\
+                        ((exists v__3 : int(a..b)
+                              . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                                /\
+                                v__3 = 1)
+                         /\
+                         (exists v__3 : int(a..b)
+                              . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                                /\
+                                v__3 = 2)))
+                 /\
+                 (forAll v__2 : int(1..n)
+                      . (exists v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               /\
+                               v__3 = 1)
+                        /\
+                        (exists v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               /\
+                               v__3 = 2)
+                        /\
+                        (forAll v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               ->
+                               1 = v__3 \/ 2 = v__3)))
+          /\
+          (exists v__1 : int(1..n)
+               . (forAll v__2 : int(1..n)
+                      . (exists v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               /\
+                               v__3 = 1)
+                        /\
+                        (exists v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               /\
+                               v__3 = 2)
+                        /\
+                        (forAll v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               ->
+                               1 = v__3 \/ 2 = v__3))
+                 /\
+                 (exists v__2 : int(1..n)
+                      . (forAll v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                               ->
+                               1 = v__3 \/ 2 = v__3)
+                        /\
+                        ((exists v__3 : int(a..b)
+                              . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                                /\
+                                v__3 = 1)
+                         /\
+                         (exists v__3 : int(a..b)
+                              . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3]
+                                /\
+                                v__3 = 2)))),
+    forAll v__0 : int(1..n - 1)
+        . flatten(s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, .., .., ..])
+          <lex
+          flatten(s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0 + 1,
+                                                                      ..,
+                                                                      ..,
+                                                                      ..]),
+    forAll v__0 : int(1..n)
+        . (forAll v__1 : int(1..n - 1)
+               . flatten(s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0,
+                                                                             v__1,
+                                                                             ..,
+                                                                             ..])
+                 <lex
+                 flatten(s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0,
+                                                                             v__1 + 1,
+                                                                             ..,
+                                                                             ..])),
+    forAll v__0 : int(1..n)
+        . (forAll v__1 : int(1..n)
+               . (forAll v__2 : int(1..n - 1)
+                      . flatten(s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0,
+                                                                                    v__1,
+                                                                                    v__2,
+                                                                                    ..])
+                        <lex
+                        flatten(s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0,
+                                                                                    v__1,
+                                                                                    v__2 + 1,
+                                                                                    ..]))),
+    forAll v__0 : int(1..n)
+        . (forAll v__1 : int(1..n)
+               . (forAll v__2 : int(1..n)
+                      . (sum v__3 : int(a..b)
+                             . s_SetExplicit_SetExplicit_SetExplicit_SetOccurrence[v__0, v__1, v__2, v__3])
+                        =
+                        n))

@@ -1,12 +1,16 @@
-[representation] find s: set (size 2) of bool (#1) Explicit
-[configuration] s§region1#Explicit
-[addedDecl] find s_Explicit: matrix indexed by [int(1..2)] of bool
+[useChannelling] True
+[representation] find s: set (size 2) of bool (#1) Set~Explicit
+[configuration] s§region1#Set~Explicit
+[addedDecl] find s_Set~Explicit: matrix indexed by [int(1..2)] of bool
 [refn] 0
-[applied] true in s§region1#Explicit
+[applied] true in s§region1#Set~Explicit
           {rules/refns/horizontal/set-in-to-quantified.rule}
-              (exists v__3 in s§region1#Explicit . v__3 = true)
-[applied] (exists v__3 in s§region1#Explicit . v__3 = true)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
-              (exists v__4 : int(1..2) . s_Explicit§region1[v__4] = true)
+              (exists v__2 in s§region1#Set~Explicit . v__2 = true)
+[applied] (exists v__2 in s§region1#Set~Explicit . v__2 = true)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
+              (exists v__3 : int(1..2) . s_Set~Explicit§region1[v__3] = true)
+[applied] s_Set~Explicit§region1[1] .< s_Set~Explicit§region1[2]
+          {rules/refns/horizontal/DotLt-bools.rule}
+              toInt(s_Set~Explicit§region1[1]) < toInt(s_Set~Explicit§region1[2])
 [removeRefinedDecl] find s: set (size 2) of bool
 [repr] 1

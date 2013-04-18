@@ -1,38 +1,15 @@
 language ESSENCE' 1.0
 
-find pain_tuple1_tuple1_Explicit_Explicit:
+find pain_tuple1_tuple1_SetExplicit_SetExplicit:
         matrix indexed by [int(1..2), int(1..1), int(1..1)] of int(1, 2)
 find pain_tuple1_tuple2: matrix indexed by [int(1..2)] of int(4, 5)
 find pain_tuple2: matrix indexed by [int(1..2)] of int(8, 9)
 such that
-    forAll v__7 : int(1..1)
-        . (exists v__39 : int(1..1)
-               . pain_tuple1_tuple1_Explicit_Explicit[1, v__7, v__39] = 2)
-          /\
-          (forAll v__40 : int(1..1)
-               . 2 = pain_tuple1_tuple1_Explicit_Explicit[1, v__7, v__40]),
-    exists v__14 : int(1..1)
-        . (forAll v__41 : int(1..1)
-               . 2 = pain_tuple1_tuple1_Explicit_Explicit[1, v__14, v__41])
-          /\
-          (exists v__42 : int(1..1)
-               . pain_tuple1_tuple1_Explicit_Explicit[1, v__14, v__42] = 2),
+    pain_tuple1_tuple1_SetExplicit_SetExplicit[1, 1, 1] = 2,
+    pain_tuple1_tuple1_SetExplicit_SetExplicit[2, 1, 1] = 1,
     pain_tuple1_tuple2[1] = 5,
-    forAll v__21 : int(1..1)
-        . (exists v__43 : int(1..1)
-               . pain_tuple1_tuple1_Explicit_Explicit[2, v__21, v__43] = 1)
-          /\
-          (forAll v__44 : int(1..1)
-               . 1 = pain_tuple1_tuple1_Explicit_Explicit[2, v__21, v__44]),
-    exists v__28 : int(1..1)
-        . (forAll v__45 : int(1..1)
-               . 1 = pain_tuple1_tuple1_Explicit_Explicit[2, v__28, v__45])
-          /\
-          (exists v__46 : int(1..1)
-               . pain_tuple1_tuple1_Explicit_Explicit[2, v__28, v__46] = 1),
     pain_tuple1_tuple2[2] = 4,
     pain_tuple2[1] = 8,
     pain_tuple2[2] = 9,
-    forAll v__32 : int(1..2)
-        . (forAll v__33 : int(1..1)
-               . allDiff(pain_tuple1_tuple1_Explicit_Explicit[v__32, v__33, ..]))
+    1 = pain_tuple1_tuple1_SetExplicit_SetExplicit[2, 1, 1],
+    2 = pain_tuple1_tuple1_SetExplicit_SetExplicit[1, 1, 1]

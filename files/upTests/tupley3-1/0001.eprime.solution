@@ -1,12 +1,12 @@
 language ESSENCE' 1.0
 $ minion Nodes: 11
-$ minion TotalTime: 0.001475
-$ Savile Row TotalTime: 0.357
-letting pain_ExplicitVarSize_tuple1 be [[[0, 1], 
-[0, 1]], 
-[[0, 1], 
-[0, 1]]]
-letting pain_ExplicitVarSize_tuple2 be [[[6, 6], 
-[6, 8]], 
-[[6, 6], 
-[6, 6]]]
+$ minion TotalTime: 0.001511
+$ Savile Row TotalTime: 0.642
+letting pain_SetExplicitVarSize_tuple1 be [[[false, true;int(1..2)], 
+[false, true;int(1..2)];int(3..4)], 
+[[false, true;int(1..2)], 
+[false, true;int(1..2)];int(3..4)];int(1..2)]
+letting pain_SetExplicitVarSize_tuple2 be [[[6, 6;int(1..2)], 
+[6, 8;int(1..2)];int(3..4)], 
+[[6, 6;int(1..2)], 
+[6, 6;int(1..2)];int(3..4)];int(1..2)]
