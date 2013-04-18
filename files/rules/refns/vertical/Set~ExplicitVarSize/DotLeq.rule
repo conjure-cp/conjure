@@ -7,30 +7,8 @@ $ See ../../../../rules/reprs/Set~ExplicitVarSize.repr for an explanation.
 
     ~~>
 
-(|&a| < |&b|) \/
-(
-    (|&a| = |&b|)
-    /\
-    (
-    	(&a = &b)
-    	\/
-        (
-	        exists i : &r
-	            , &ma[i][1] /\ &mb[i][1]
-	            . (&ma[i][2] .< &mb[i][2])
-	                /\
-	              ( forAll j : &r
-	                    , j < i /\ &ma[j][1] /\ &mb[j][1]
-	                    . &ma[j][2] = &mb[j][2]
-	              )
-	    )
-    )
-)
+(&a = &b) \/ (&a .< &b)
 
     where &a hasRepr Set~ExplicitVarSize
     where &b hasRepr Set~ExplicitVarSize
-
-    letting &ma be refn(&a)
-    letting &mb be refn(&b)
-    letting &r  be indices(&ma,0)
 
