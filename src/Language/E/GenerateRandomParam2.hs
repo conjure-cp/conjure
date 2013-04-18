@@ -43,7 +43,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
     FP.createDirectoryIfMissing True intermediateDir
 
     putStrLn  "Creating Essence specification of the param"
-    driverConjureSingle False
+    driverConjureSingle False True
         param_gen
         $ runCompE "generateParamSolve" (prepareParamSpecification essence)
 
@@ -55,7 +55,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
         runConjure _ = do
             seed <- getStdGen
             putStrLn "Running Conjure compact on created specification\n"
-            driverConjureSingle True
+            driverConjureSingle True True
                 param_eprime
                 (conjureWithMode
                     S.empty seed Nothing (ModeSingleOutput ModeCompact param_gen param_eprime)

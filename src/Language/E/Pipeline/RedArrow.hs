@@ -290,7 +290,7 @@ workhorse lookupReprs (nm, dom, val) = do
             name
             [xMatch| attrs      := domain.set.attributes.attrCollection
                    | [domInner] := domain.set.inner
-                   | [fr,_]    := domain.set.inner.domain.int.ranges.range.fromTo
+                   | [fr,_]     := domain.set.inner.domain.int.ranges.range.fromTo
                    |]
             [xMatch| values := value.set.values |]
             (Just "Set~ExplicitVarSizeWithDefault")
@@ -318,6 +318,65 @@ workhorse lookupReprs (nm, dom, val) = do
                                    |]
             let outName = name `T.append` "_Set~ExplicitVarSizeWithDefault"
             return [(outName, theMatrix)]
+
+        helper
+            name
+            [xMatch| attrs        := domain.function.attributes.attrCollection
+                   | [domInnerFr] := domain.function.innerFrom
+                   | [domInnerTo] := domain.function.innerTo
+                   |]
+            [xMatch| values := value.function.values |]
+            (Just "AsReln")
+            = do
+                let
+                    mappingToTuple [xMatch| [a,b] := mapping |] = [xMake| value.tuple.values := [a,b] |]
+                    mappingToTuple p = bug $ vcat [ "workhorse.helper.AsReln 1", pretty p ]
+                    valuesOut = map mappingToTuple values
+                    nameOut = name `T.append` "_AsReln"
+                case lookup nameOut lookupReprs of
+                    Nothing   -> bug $ vcat [ "workhorse.helper.AsReln 2", pretty name]
+                    Just repr ->
+                        helper
+                            nameOut
+                            [xMake| domain.relation.attributes.attrCollection := attrs
+                                  | domain.relation.inners := [domInnerFr, domInnerTo]
+                                  |]
+                            [xMake| value.relation.values := valuesOut |]
+                            (Just repr)
+
+        helper
+            name
+            [xMatch| attrs     := domain.relation.attributes.attrCollection
+                   | domInners := domain.relation.inners
+                   |]
+            [xMatch| values := value.relation.values |]
+            (Just "RelationAsSet")
+            = do
+                let
+                    nameOut = name `T.append` "_RelationAsSet"
+                    domInnerOut = [xMake| domain.tuple.inners := domInners |]
+                case lookup nameOut lookupReprs of
+                    Nothing   -> bug $ vcat [ "workhorse.helper.RelationAsSet", pretty name]
+                    Just repr ->
+                        helper
+                            nameOut
+                            [xMake| domain.set.attributes.attrCollection := attrs
+                                  | domain.set.inner := [domInnerOut]
+                                  |]
+                            [xMake| value.set.values := values |]
+                            (Just repr)
+
+        helper
+            name
+            [xMatch| ds := domain.tuple.inners |]
+            [xMatch| vs := value.tuple.values  |]
+            Nothing | length ds == length vs = do
+                let outNames = [ mconcat [name, "_tuple", T.pack (show i)]
+                               | i <- [1 .. length ds]
+                               ]
+                liftM concat $ sequence [ helper n d v Nothing
+                                        | (n,d,v) <- zip3 outNames ds vs
+                                        ]
 
         helper
             name
@@ -405,6 +464,20 @@ zeroVal [xMatch| [inner] := domain.set.inner
     let vals =  replicate (fromInteger sizeInt) valInner
     return [xMake| value.set.values := vals
                  |]
+
+zeroVal [xMatch| xs := domain.tuple.inners |] = do
+    zeroes <- mapM zeroVal xs
+    return [xMake| value.tuple.values := zeroes |]
+
+zeroVal [xMatch| [Prim (S domId)] := reference |] = do
+    domain <- runMaybeT $ lookupReference domId
+    case domain of
+        Just [xMatch| vs := topLevel.letting.typeEnum.values |] ->
+            case vs of
+                (v:_) -> return v
+                _     -> userErr $ "Empty enumeration:" <+> pretty domId
+        _ -> bug "don't know what this is"
+
 zeroVal x = bug ("RedArrow.zeroVal" <+> prettyAsPaths x)
 
 

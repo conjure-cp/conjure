@@ -869,6 +869,9 @@ domSize [xMatch| [] := topLevel.declaration.given.typeInt
                | [Prim (S nm)] := topLevel.declaration.given.name.reference
                |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
 
+domSize [xMatch| vs := topLevel.letting.typeEnum.values |] =
+    return [xMake| value.literal := [Prim (I (genericLength vs))] |]
+
 domSize p =
     err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
