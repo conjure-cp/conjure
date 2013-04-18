@@ -253,8 +253,8 @@ workhorse lookupReprs (nm, dom, val) = do
             let nbTrues  = genericLength values
             let nbFalses = nbValuesInt - nbTrues
             let outTuple1_Name   = name `T.append` "_Set~ExplicitVarSize_tuple1"
-            let outTuple1_Values = replicate (fromInteger nbTrues ) [eMake| true  |]
-                                ++ replicate (fromInteger nbFalses) [eMake| false |]
+            let outTuple1_Values = replicate (fromInteger nbFalses) [eMake| false |]
+                                ++ replicate (fromInteger nbTrues ) [eMake| true  |]
             let outTuple1_Value  = [xMake| value.matrix.values := outTuple1_Values
                                          | value.matrix.indexrange := [indexOfMatrix]
                                          |]
@@ -311,7 +311,7 @@ workhorse lookupReprs (nm, dom, val) = do
             let nbTrues  = genericLength values
             let nbFalses = nbValuesInt - nbTrues
 
-            let valuesInMatrix = replicate (fromInteger nbFalses) defValue ++ values
+            let valuesInMatrix = sort values ++ replicate (fromInteger nbFalses) defValue
 
             let theMatrix  = [xMake| value.matrix.values := valuesInMatrix
                                    | value.matrix.indexrange := [indexOfMatrix]
