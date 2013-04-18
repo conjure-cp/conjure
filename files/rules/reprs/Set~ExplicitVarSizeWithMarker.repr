@@ -1,0 +1,43 @@
+
+$ A set of variable cardinality is represented using a tuple.
+$ First component of the tuple is an integer
+$ Second component is an array holding the actual values
+
+$ Things that are to the left of the marker are in the set.
+$ The marker position is also in the set.
+$ You can refer to the marker by saying refn[1]
+$ Also, refn[1] = cardinality
+
+~~> Set~ExplicitVarSizeWithMarker
+~~> ( int(0..&maxSize_)
+    , matrix indexed by [int(1..&maxSize_)] of &tau
+    )
+~~> forAll i : int(1..&maxSize_)
+        , i+1 <= refn[1]
+        . refn[2][i] .< refn[2][i+1]
+
+
+*** set (minSize &minSize_ , maxSize &maxSize_) of &tau
+    ~~> refn[1] >= &minSize_
+
+
+$*** set (size &size_ , maxSize &maxSize_) of &tau
+
+
+$*** set (size &size_ , minSize &minSize_) of &tau
+
+
+*** set (maxSize &maxSize_) of &tau
+
+
+*** set (minSize &minSize_) of &tau
+    ~~> refn[1] >= &minSize_
+    letting &maxSize_ be domSize(&tau)
+
+$*** set (size &size_) of &tau
+
+
+*** set () of &tau
+    letting &maxSize_ be domSize(&tau)
+
+

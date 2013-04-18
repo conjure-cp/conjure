@@ -1,0 +1,22 @@
+[100]
+
+&a .< &b
+
+    ~~>
+
+exists i : &r .
+    ( forAll j : &r , j < i . &ma[2][j] = &mb[2][j] )               $ everything up to i are ==
+    /\
+    (
+        (&ma[1] >= i /\ &mb[1] >= i /\ &ma[i][2] .< &mb[i][2])      $ things at i'th position are ordered
+        \/
+        (toInt(&ma[i][1]) > toInt(&mb[i][1]))                       $ first set has more items in it.
+    )
+
+    where &a hasRepr Set~ExplicitVarSizeWithMarker
+    where &b hasRepr Set~ExplicitVarSizeWithMarker
+
+    letting &ma be refn(&a)
+    letting &mb be refn(&a)
+    letting &r be indices(&ma[2],0)
+
