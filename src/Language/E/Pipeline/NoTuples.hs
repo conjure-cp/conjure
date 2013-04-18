@@ -49,9 +49,11 @@ noTuplesE statementIn = do
     if and [null tuplesToExplode, null matrixOfTuplesToExplode, sameLength statements statementsOut, statements == statementsOut]
         then return (statementIn, False)
         else do
-            s' <- ( renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
-                    valueMatrixOfTuple >=>
-                    renameTupleIndexes (S.fromList tuplesToExplode) )
+            s' <- ( 
+                    renameTupleIndexes (S.fromList tuplesToExplode)                 >=>
+                    renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
+                    valueMatrixOfTuple
+                  )
                   (listAsStatement statementsOut)
             return (s', True)
 
