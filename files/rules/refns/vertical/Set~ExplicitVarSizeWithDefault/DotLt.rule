@@ -1,17 +1,13 @@
 [100]
 
 $ this representation if for set of int only
-$ the default value is lower bound - 1
+$ the default value is upper bound + 1
 $ the semantics of dot-order is <lex
-$ except for one case, when both sets are empty.
 
 &a .< &b
     ~~>
-(&a = {} /\ &b = {}) \/ refn(&a) <lex refn(&b)
+refn(&a) <lex refn(&b)
 
     where &a hasRepr   Set~ExplicitVarSizeWithDefault
     where &b hasRepr   Set~ExplicitVarSizeWithDefault
-
-    where &a hasDomain `set (..) of int(&lb..&ub)`
-    letting &def be &lba - 1
 

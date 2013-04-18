@@ -1,6 +1,6 @@
 
 ~~> Set~ExplicitVarSizeWithDefault
-~~> matrix indexed by [int(1..&mx)] of int(&def..&ub)
+~~> matrix indexed by [int(1..&mx)] of int(&lb..&def)
 ~~> (
         forAll i : int(1..&mx-1), refn[i] != &def /\ refn[i+1] != &def . refn[i] < refn[i+1]
     )
@@ -11,7 +11,7 @@
 
     where &t hasType `int`
     where &t hasDomain `int(&lb..&ub)`
-    letting &def be &lb - 1
+    letting &def be &ub + 1
 
 
 *** set of &t
