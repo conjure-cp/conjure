@@ -105,29 +105,7 @@ repSelector arr = arr !! (length arr -1)
 
 
 reverseTuplesOfMatrixes ::  E -> E
--- ? needed
-{--
-reverseTuplesOfMatrixes [xMatch| vs  := value.tuple.values
-                               | fvs := value.tuple.values.value.function|] | all isFunc vs =
-    let (dom:_ ,range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs
-        range2   = (map wrapInMatrix range)
-        range3   = transposeE range2
-        range'   = map matrixToTuple range3
-        mapping' = zipWith makeMapping dom range'
 
-    in wrapInFunction mapping'
-
-    where
-
-    makeMapping :: E -> E -> E
-    makeMapping f g =  [xMake| mapping := [f, g] |]
-
-    splitMapping [xMatch| [a,b] := mapping |] = (a,b)
-
-    isFunc :: E -> Bool
-    isFunc [xMatch| _ := value.function.values |] = True
-    isFunc _ = False
--}
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
     tracer "reverseTuplesOfMatrixes result" $
     wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)

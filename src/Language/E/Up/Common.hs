@@ -37,28 +37,6 @@ tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
     in  unwrapMatrix res
         `_p` ("USING tranposeCheck tuples", [res])
 
-
--- TODO Pass real domain somehow
-tranposeCheck [xMatch|fvs := value.function|]  =
-    let ((dom:_),range) =unzip $ map (unzip . map splitMapping .  unwrapValues) fvs 
-
-        range' = map unwrapMatrix $ concat range
-        fakeDom = map (toIntLit . (+100)) [1..genericLength (head range')]
-        mapping = map (zipWith makeMapping fakeDom )  range'
-
-    {-in map wrapInFunction mapping-}
-    in errr . map pretty $ (range')
-    where
-
-    makeMapping :: E -> E -> E
-    makeMapping f g =  [xMake| mapping := [f, g] |]
-
-    splitMapping [xMatch| [a,b] := mapping |] = (a,b)
-
-    isFunc :: E -> Bool
-    isFunc [xMatch| _ := value.function.values |] = True
-    isFunc _ = False  
-
 tranposeCheck e = _bug "tranposeCheck" [e]
 
 
