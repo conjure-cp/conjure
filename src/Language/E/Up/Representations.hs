@@ -89,7 +89,7 @@ setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
 relationIntMatrix2Rep :: VarData -> E
 relationIntMatrix2Rep VarData{vIndexes=[a,b],
                               vEssence=[xMatch| vs := value.matrix.values |] } =
-  tracee "relationIntMatrix2d" values
+  tracer "relationIntMatrix2d:" values
   where
   values =
        wrapInRelation
@@ -108,6 +108,15 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
   f (_,[eMatch| true |])  = True
   f (_,[eMatch| false |]) = False
   f _ = _bugg "relationIntMatrix2Rep not boolean"
+
+
+relationIntMatrix2Rep v@VarData{vIndexes = (c:rest@(_:_)), 
+                                vEssence = [xMatch| vs := value.matrix.values |] } =
+    wrapInMatrix . map (\w ->  relationIntMatrix2Rep v{vIndexes=rest,vEssence=w} ) $ vs 
+
+    
+
+relationIntMatrix2Rep v = errpM "relationIntMatrix2Rep" [v]
 
 
 {- Functions -}
@@ -240,12 +249,16 @@ matrix1DBranch = ( unwrapSet, after )
 
 
 functionAsRelnRep :: (Before, After)
-functionAsRelnRep = ( beforeUnchanged, after )
+functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 
     where
-    after orgData [v] = 
-        let res = wrapInFunction . map relnToFunc .  unwrapRelation . vEssence $ v 
+    after orgData [VarData{vEssence=[xMatch| vs := value.matrix.values |]}] = 
+        let res = wrapInMatrix . map functionAsReln $ vs
         in  orgData{vEssence=res}
+
+    after orgData [v] = orgData{vEssence=functionAsReln . vEssence $ v }
+
+    functionAsReln =  wrapInFunction . map relnToFunc .  unwrapRelation
 
     relnToFunc [eMatch| (&from,&to) |] = [xMake| mapping := [from,to] |]
 
@@ -297,6 +310,7 @@ wrapInRelation es = [xMake| value.relation.values := es |]
 
 unwrapRelation :: E -> [E]
 unwrapRelation [xMatch| vs := value.relation.values |] = vs
+unwrapRelation e = _bug "unwrapRelation" [e]
 
 toIntLit j =  [xMake| value.literal := [Prim (I j)] |]
 toIntLit :: Integer -> E
