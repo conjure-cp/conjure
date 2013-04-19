@@ -14,8 +14,6 @@ import Language.E.Up.Representations
 
 import Data.Map(Map)
 import qualified Data.Map as M
-import Data.Set(Set)
-import qualified Data.Set as S
 
 type VarMap             = Map String VarData
 type IsTuplesOfMatrixes = Map [String] Int
@@ -32,7 +30,7 @@ evalTree _ _ _ = _bugg "evalTree no match"
 
 
 evalTree' :: VarMap -> IsTuplesOfMatrixes -> [RepName] -> [String] -> Tree String  -> E
-evalTree' mapping set fs prefix (Leaf part) =
+evalTree' mapping _ fs prefix (Leaf part) =
    let leafFunc = leafRep part
          `_p` ("leaf \n" ++ name, [vdata] )
          `_g` ("leaf funcs str", fs )
@@ -52,7 +50,7 @@ evalTree' mapping set fs prefix (Tuple arr) =
         res   = handleTuplesOfMatrixes tuple
         -- Have to apply the inner rep conversion function first
         afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) res noRep
-    in  (vEssence afterFuncs)
+    in  vEssence afterFuncs
 
      `_p` ("tuple_afterFuncs",[afterFuncs] )
      `_p` ("tuple_fs",fs )
@@ -93,12 +91,12 @@ evalTree' mapping set fs prefix (Tuple arr) =
 
     -- No much better then above but works for Matrix1D as well
     getVarData :: VarMap -> [String] -> Tree String  -> VarData
-    getVarData mapping prefix (Leaf part) = vdata
+    getVarData m2 pre2 (Leaf p2) = vdata2
 
        where
-       name    = intercalate "_" (prefix ++ [part])
-       lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE getVarData")  . flip M.lookup mapping
-       vdata   = lookUpE  name
+       name    = intercalate "_" (pre2 ++ [p2 ])
+       lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE getVarData")  . flip M.lookup m2
+       vdata2   = lookUpE  name
 
     getVarData m2 pre2 (Branch p2 a2) =
         getVarData m2 (pre2 ++ [p2])  (repSelector a2)
@@ -113,7 +111,7 @@ evalTree' mapping set fs prefix (Branch name arr) =
 
     where
     addRep :: RepName -> [RepName]
-    addRep name | isBranchRep  name = name : fs
+    addRep name2 | isBranchRep  name2 = name2 : fs
     addRep _ = fs
 
 
@@ -128,15 +126,6 @@ reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
     wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
 
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
-
-
-unwrapValues ::  E -> [E]
-unwrapValues  (Tagged "values" vs) =  vs
-unwrapValues e = _bug "unwrapValues failed" [e]
-
-wrapInFunction :: [E] -> E
-wrapInFunction es = [xMake| value.function.values := es |]
-
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("EvaluateTree: " ++ s)
