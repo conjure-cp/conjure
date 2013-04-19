@@ -117,7 +117,7 @@ relationIntMatrix2Rep v@VarData{vIndexes = (_:rest@(_:_)),
     wrapInMatrix . map (\w ->  relationIntMatrix2Rep v{vIndexes=rest,vEssence=w} ) $ vs
 
 
-relationIntMatrix2Rep v = errpM "relationIntMatrix2Rep" [v]
+relationIntMatrix2Rep v = _bug "relationIntMatrix2Rep" [v]
 
 
 {- Functions -}
@@ -315,8 +315,8 @@ onlySelectedValues :: [(a,E)] -> [(a,E)]
 onlySelectedValues = filter f
     where
     f (_,[eMatch| true|]) = True
-    f (_,[eMatch| 1   |]) = error "1 should not be used as True"
-    f (_,[eMatch| 0   |]) = error "0 should not be used as False"
+    f (_,[eMatch| 1   |]) = userErr "1 should not be used as True"
+    f (_,[eMatch| 0   |]) = userErr "0 should not be used as False"
     f (_,_) = False
 
 
