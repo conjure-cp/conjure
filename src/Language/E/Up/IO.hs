@@ -49,7 +49,6 @@ getSpec' removeContraints filepath = do
                 (readSpec (fp,txt') )
 
     where 
-        func t =  fst . T.breakOn t
         stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
         discardAfter t = fst . T.breakOn t
         onlyPreamble
