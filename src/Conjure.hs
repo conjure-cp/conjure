@@ -70,7 +70,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             inParam   <- readSpecFromFile pathInParam
             inEprime  <- readSpecPreambleFromFile pathInEprime
             inLogs    <- T.readFile (pathInEprime ++ ".logs")
-            driverConjureSingle False pathOutParam
+            driverConjureSingle False False pathOutParam
                 [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
 
         helper (ModeTranslateSolution pathInEssence pathInParam
@@ -105,7 +105,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             seed <- getStdGen
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
-            driverConjureSingle False
+            driverConjureSingle False False
                 pathOutParam
                 $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
 
@@ -135,7 +135,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             (ruleReprs, ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
-            driverConjureSingle True
+            driverConjureSingle True False
                 pathOutEprime
                 (conjureWithMode
                     flags seed limit mode
