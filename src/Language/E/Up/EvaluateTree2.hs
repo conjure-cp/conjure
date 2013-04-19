@@ -63,31 +63,48 @@ evalTree' mapping set fs prefix (Tuple arr) =
 
 
     where
-    handleTuplesOfMatrixes :: E -> VarData 
-    handleTuplesOfMatrixes f |  Just num <- prefix `M.lookup` set = 
+    handleTuplesOfMatrixes :: E -> VarData
+    handleTuplesOfMatrixes f |  Just num <- prefix `M.lookup` set =
        vdata num $ handleTuplesOfMatrixes' num f
 
     handleTuplesOfMatrixes f = vdata 0 f
-   
+
     handleTuplesOfMatrixes' :: Int  -> E -> E
     handleTuplesOfMatrixes' 0 f = f
-    handleTuplesOfMatrixes' 1 f = reverseTuplesOfMatrixes f 
-    {-handleTuplesOfMatrixes' 2 f = 
+    handleTuplesOfMatrixes' 1 f = reverseTuplesOfMatrixes f
+    {-handleTuplesOfMatrixes' 2 f =
         wrapInMatrix . map reverseTuplesOfMatrixes . unwrapMatrix . reverseTuplesOfMatrixes $ f-}
     handleTuplesOfMatrixes' n f =
         wrapInMatrix . map (handleTuplesOfMatrixes' (n - 1)) . unwrapMatrix $ reverseTuplesOfMatrixes f
-   
 
 
-    -- FIXME very hackish but seems to work apart from Matrix1D
-    vdata n e        = VarData
-         {vIndexes = replicate n []
-         ,vBounds  = []
-         ,vEssence = e}
 
+    -- very hackish but seems to work apart from Matrix1D
+    vdata n e =
+        let fake =  VarData{
+             vIndexes  = replicate n []
+            ,vBounds  = []
+            ,vEssence = e
+            }
+            real = (getVarData mapping prefix (head arr)){vEssence=e}
+        in real
+        `_p` ("Fake VarData",[fake]  )
+        `_p` ("Real VarData",[real]  )
 
-evalTree' mapping set fs prefix (Branch part@"SetExplicitVarSize2s" arr) =
-    error . show $  (pretty . groom) prefix  <+> (pretty . groom) mapping  <+>  (pretty . groom) arr
+    -- No much better then above but works for Matrix1D as well
+    getVarData :: VarMap -> [String] -> Tree String  -> VarData
+    getVarData mapping prefix (Leaf part) = vdata
+
+       where
+       name    = intercalate "_" (prefix ++ [part])
+       lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE getVarData")  . flip M.lookup mapping
+       vdata   = lookUpE  name
+
+    getVarData m2 pre2 (Branch p2 a2) =
+        getVarData m2 (pre2 ++ [p2])  (repSelector a2)
+
+    getVarData m2 pre2 (Tuple a2) =
+        getVarData m2 pre2 (head a2)
 
 evalTree' mapping set fs prefix (Branch name arr) =
     evalTree' mapping set (addRep name) (prefix ++ [name])  (repSelector arr)
