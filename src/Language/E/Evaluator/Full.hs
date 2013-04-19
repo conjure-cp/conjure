@@ -822,6 +822,10 @@ mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
 
 domSize :: MonadConjure m => E -> m E
 domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
+
+domSize [xMatch| [x] := structural.single |] = domSize x
+domSize [xMatch| [d] := quanVar.within.quantified.body.quantified.quanOverDom |] = domSize d
+
 domSize [xMatch| [Prim (S s)] := reference |] = do
     x <- errMaybeT "domSize" lookupReference s
     domSize x
