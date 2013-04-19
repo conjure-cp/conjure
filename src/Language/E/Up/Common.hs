@@ -7,7 +7,10 @@ module Language.E.Up.Common(
     unwrapExpr,
     matrixToTuple,
     wrapInExpr,
-    wrapInMatrix
+    wrapInMatrix,
+    toIntLit,
+    unwrapValues,
+    wrapInFunction
 ) where
 
 import qualified Data.List as L(transpose)
