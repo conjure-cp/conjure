@@ -1,0 +1,236 @@
+[useChannelling] True
+[representation] find p: partition (size 3) from int(1..9) (#1) MSetOfSets
+[configuration] p§region1#MSetOfSets
+[addedDecl] find p_MSetOfSets: mset (size 3) of set of int(1..9)
+[refn] 0
+[applied] |i|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__4 in i . 1)
+[applied] (forAll i in parts(p§region1#MSetOfSets) . (sum v__4 in i . 1) < 5)
+          {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
+              (forAll i in p_MSetOfSets§region1 . (sum v__4 in i . 1) < 5)
+[applied] v__1 != v__2
+          {rules/refns/horizontal/neq-to-eq.rule}
+              !(v__1 = v__2)
+[applied] v__1 = v__2
+          {rules/refns/horizontal/set-eq-to-subsets.rule}
+              v__1 subsetEq v__2 /\ v__1 supsetEq v__2
+[applied] v__1 subsetEq v__2
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
+              (forAll v__5 in v__1 . v__5 in v__2)
+[applied] v__5 in v__2
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__6 in v__2 . v__6 = v__5)
+[applied] v__1 supsetEq v__2
+          {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
+              v__2 subsetEq v__1
+[applied] v__2 subsetEq v__1
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
+              (forAll v__7 in v__2 . v__7 in v__1)
+[applied] v__7 in v__1
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__8 in v__1 . v__8 = v__7)
+[applied] |v__1 intersect v__2|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__9 in v__1 intersect v__2 . 1)
+[applied] (sum v__9 in v__1 intersect v__2 . 1)
+          {rules/refns/horizontal/set-intersect-quantifier.rule}
+              (sum v__9 in v__1 , v__9 in v__2 . 1)
+[applied] v__9 in v__2
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__10 in v__2 . v__10 = v__9)
+[applied] v__1 in v__3
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__11 in v__3 . v__11 = v__1)
+[removeRefinedDecl] find p: partition (size 3) from int(1..9)
+[repr] 1
+[representation] find p_MSetOfSets: mset (size 3) of set of int(1..9)
+                 (#1)
+                 MSet~Explicit
+[configuration] p_MSetOfSets§region1#MSet~Explicit
+[addedDecl] find p_MSetOfSets_MSet~Explicit:
+                    matrix indexed by [int(1..3)] of set of int(1..9)
+[refn] 1
+[applied] (forAll v__0 in p_MSetOfSets§region1#MSet~Explicit
+               . (sum v__1 in v__0 . 1) < 5)
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
+              (forAll v__13 : int(1..3)
+                   . (sum v__1 in p_MSetOfSets_MSet~Explicit§region1[v__13] . 1) < 5)
+[applied] (forAll v__1 in p_MSetOfSets§region1#MSet~Explicit
+               , !((forAll v__2 in v__0 . (exists v__3 in v__1 . v__3 = v__2))
+                   /\
+                   (forAll v__2 in v__1 . (exists v__3 in v__0 . v__3 = v__2)))
+               . (sum v__2 in v__0 , (exists v__3 in v__1 . v__3 = v__2) . 1) = 0)
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
+              (forAll v__14 : int(1..3)
+                   , !((forAll v__2 in v__0
+                            . (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__14] . v__3 = v__2))
+                       /\
+                       (forAll v__2 in p_MSetOfSets_MSet~Explicit§region1[v__14]
+                            . (exists v__3 in v__0 . v__3 = v__2)))
+                   . (sum v__2 in v__0
+                          , (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__14] . v__3 = v__2)
+                          . 1)
+                     =
+                     0)
+[applied] (forAll v__0 in p_MSetOfSets§region1#MSet~Explicit
+               . (forAll v__14 : int(1..3)
+                      , !((forAll v__2 in v__0
+                               . (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__14] . v__3 = v__2))
+                          /\
+                          (forAll v__2 in p_MSetOfSets_MSet~Explicit§region1[v__14]
+                               . (exists v__3 in v__0 . v__3 = v__2)))
+                      . (sum v__2 in v__0
+                             , (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__14] . v__3 = v__2)
+                             . 1)
+                        =
+                        0))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
+              (forAll v__15 : int(1..3)
+                   . (forAll v__14 : int(1..3)
+                          , !((forAll v__2 in p_MSetOfSets_MSet~Explicit§region1[v__15]
+                                   . (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__14] . v__3 = v__2))
+                              /\
+                              (forAll v__2 in p_MSetOfSets_MSet~Explicit§region1[v__14]
+                                   . (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__15] . v__3 = v__2)))
+                          . (sum v__2 in p_MSetOfSets_MSet~Explicit§region1[v__15]
+                                 , (exists v__3 in p_MSetOfSets_MSet~Explicit§region1[v__14] . v__3 = v__2)
+                                 . 1)
+                            =
+                            0))
+[applied] (exists v__1 in p_MSetOfSets§region1#MSet~Explicit
+               . (exists v__2 in v__1 . v__2 = v__0))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
+              (exists v__16 : int(1..3)
+                   . (exists v__2 in p_MSetOfSets_MSet~Explicit§region1[v__16] . v__2 = v__0))
+[removeRefinedDecl] find p_MSetOfSets: mset (size 3) of set of int(1..9)
+[repr] 2
+[representation] find p_MSetOfSets_MSet~Explicit:
+                         matrix indexed by [int(1..3)] of set of int(1..9)
+                 (#3)
+                 Set~ExplicitVarSize, Set~ExplicitVarSizeWithDefault, Set~Occurrence
+[configuration] p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault
+[addedDecl] find p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault:
+                    matrix indexed by [int(1..3), int(1..9)] of int(1..10)
+[refn] 2
+[applied] (sum v__1 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0]
+               . 1)
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (sum v__23 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__23]
+                     !=
+                     10
+                   . 1)
+[applied] (exists v__3 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__1]
+               . v__3 = v__2)
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (exists v__24 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
+                     !=
+                     10
+                   . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
+                     =
+                     v__2)
+[applied] (forAll v__2 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0]
+               . (exists v__24 : int(1..9)
+                      , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
+                        !=
+                        10
+                      . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
+                        =
+                        v__2))
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (forAll v__25 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__25]
+                     !=
+                     10
+                   . (exists v__24 : int(1..9)
+                          , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
+                            !=
+                            10
+                          . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
+                            =
+                            p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__25]))
+[applied] (exists v__3 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0]
+               . v__3 = v__2)
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (exists v__26 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
+                     !=
+                     10
+                   . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
+                     =
+                     v__2)
+[applied] (forAll v__2 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__1]
+               . (exists v__26 : int(1..9)
+                      , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
+                        !=
+                        10
+                      . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
+                        =
+                        v__2))
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (forAll v__27 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__27]
+                     !=
+                     10
+                   . (exists v__26 : int(1..9)
+                          , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
+                            !=
+                            10
+                          . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
+                            =
+                            p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__27]))
+[applied] (exists v__3 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__1]
+               . v__3 = v__2)
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (exists v__28 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
+                     !=
+                     10
+                   . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
+                     =
+                     v__2)
+[applied] (sum v__2 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0]
+               , (exists v__28 : int(1..9)
+                      , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
+                        !=
+                        10
+                      . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
+                        =
+                        v__2)
+               . 1)
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (sum v__29 : int(1..9)
+                   , (exists v__28 : int(1..9)
+                          , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
+                            !=
+                            10
+                          . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
+                            =
+                            p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__29])
+                     /\
+                     p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__29]
+                     !=
+                     10
+                   . 1)
+[applied] (exists v__2 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__1]
+               . v__2 = v__0)
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
+              (exists v__30 : int(1..9)
+                   , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__30]
+                     !=
+                     10
+                   . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__30]
+                     =
+                     v__0)
+[applied] p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0]
+          .<=
+          p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
+          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/DotLeq.rule}
+              p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0]
+              <=lex
+              p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0 + 1]
+[removeRefinedDecl] find p_MSetOfSets_MSet~Explicit:
+                            matrix indexed by [int(1..3)] of set of int(1..9)
+[repr] 3

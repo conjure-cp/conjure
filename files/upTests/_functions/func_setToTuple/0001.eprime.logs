@@ -1,3 +1,4 @@
+[useChannelling] True
 [representation] find f: function (total)
                              set (size 2) of int(1..2) --> (int(3, 4), int(5, 6))
                  (#1)
@@ -5,25 +6,26 @@
 [configuration] f§region1#AsReln
 [addedDecl] find f_AsReln:
                     relation of (set (size 2) of int(1..2) * (int(3, 4), int(5, 6)))
+[refn] 0
 [applied] v__1 = v__2[1]
-          {rules/refns/set-eq-to-subsets.rule}
+          {rules/refns/horizontal/set-eq-to-subsets.rule}
               v__1 subsetEq v__2[1] /\ v__1 supsetEq v__2[1]
 [applied] v__1 subsetEq v__2[1]
-          {rules/refns/set-subseteq-to-quantified.rule}
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
               (forAll v__3 in v__1 . v__3 in v__2[1])
 [applied] v__3 in v__2[1]
-          {rules/refns/set-in-to-quantified.rule}
+          {rules/refns/horizontal/set-in-to-quantified.rule}
               (exists v__4 in v__2[1] . v__4 = v__3)
 [applied] v__1 supsetEq v__2[1]
-          {rules/refns/set-supseteq-to-subseteq.rule}
+          {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
               v__2[1] subsetEq v__1
 [applied] v__2[1] subsetEq v__1
-          {rules/refns/set-subseteq-to-quantified.rule}
+          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
               (forAll v__5 in v__2[1] . v__5 in v__1)
 [applied] v__5 in v__1
-          {rules/refns/set-in-to-quantified.rule}
+          {rules/refns/horizontal/set-in-to-quantified.rule}
               (exists v__6 in v__1 . v__6 = v__5)
-[representation] set (size 2) of int(1..2) (#1) Explicit
+[representation] set (size 2) of int(1..2) (#2) Set~Explicit, Set~Occurrence
 [applied] (forAll v__1 : set (size 2) of int(1..2)
                . (sum v__2 in toSet(f_AsReln§region1)
                       . (forAll v__3 in v__1 . (exists v__4 in v__2[1] . v__4 = v__3))
@@ -32,27 +34,41 @@
                  =
                  1)
           {builtIn.abstractDomsInQuans}
-              (forAll v__1_Explicit : matrix indexed by [int(1..2)] of int(1..2)
-                   , allDiff(v__1_Explicit§regionS)
-                     /\
-                     v__1_Explicit§regionS[1] < v__1_Explicit§regionS[2]
+              (forAll v__1_Set~Explicit : matrix indexed by [int(1..2)] of int(1..2)
+                   , v__1_Set~Explicit§regionS[1] .< v__1_Set~Explicit§regionS[2]
                    . (sum v__2 in toSet(f_AsReln§region1)
-                          . (forAll v__3 in v__1§regionS#Explicit
+                          . (forAll v__3 in v__1§regionS#Set~Explicit
                                  . (exists v__4 in v__2[1] . v__4 = v__3))
                             /\
-                            (forAll v__5 in v__2[1] . (exists v__6 in v__1§regionS#Explicit . v__6 = v__5)))
+                            (forAll v__5 in v__2[1]
+                                 . (exists v__6 in v__1§regionS#Set~Explicit . v__6 = v__5)))
                      =
                      1)
-[applied] (forAll v__3 in v__1§regionS#Explicit
+          {builtIn.abstractDomsInQuans}
+              (forAll v__1_Set~Occurrence : matrix indexed by [int(1..2)] of bool
+                   , (sum v__8 : int(1..2) . toInt(v__1_Set~Occurrence§regionS[v__8])) = 2
+                   . (sum v__2 in toSet(f_AsReln§region1)
+                          . (forAll v__3 in v__1§regionS#Set~Occurrence
+                                 . (exists v__4 in v__2[1] . v__4 = v__3))
+                            /\
+                            (forAll v__5 in v__2[1]
+                                 . (exists v__6 in v__1§regionS#Set~Occurrence . v__6 = v__5)))
+                     =
+                     1)
+[applied] v__1_Set~Explicit§regionS[1] .< v__1_Set~Explicit§regionS[2]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              v__1_Set~Explicit§regionS[1] < v__1_Set~Explicit§regionS[2]
+[applied] (forAll v__3 in v__1§regionS#Set~Explicit
                . (exists v__4 in v__2[1] . v__4 = v__3))
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__9 : int(1..2)
-                   . (exists v__4 in v__2[1] . v__4 = v__1_Explicit§regionS[v__9]))
-[applied] (exists v__6 in v__1§regionS#Explicit . v__6 = v__5)
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
-              (exists v__10 : int(1..2) . v__1_Explicit§regionS[v__10] = v__5)
-[removedDecl] find f: function (total)
-                          set (size 2) of int(1..2) --> (int(3, 4), int(5, 6))
+                   . (exists v__4 in v__2[1] . v__4 = v__1_Set~Explicit§regionS[v__9]))
+[applied] (exists v__6 in v__1§regionS#Set~Explicit . v__6 = v__5)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
+              (exists v__10 : int(1..2) . v__1_Set~Explicit§regionS[v__10] = v__5)
+[removeRefinedDecl] find f: function (total)
+                                set (size 2) of int(1..2) --> (int(3, 4), int(5, 6))
+[repr] 1
 [representation] find f_AsReln:
                          relation of (set (size 2) of int(1..2) * (int(3, 4), int(5, 6)))
                  (#1)
@@ -60,308 +76,205 @@
 [configuration] f_AsReln§region1#RelationAsSet
 [addedDecl] find f_AsReln_RelationAsSet:
                     set of (set (size 2) of int(1..2), (int(3, 4), int(5, 6)))
-[applied] (sum v__2 in toSet(f_AsReln§region1#RelationAsSet)
-               . (forAll v__9 : int(1..2)
-                      . (exists v__4 in v__2[1] . v__4 = v__1_Explicit§regionS[v__9]))
+[refn] 1
+[applied] (sum v__1 in toSet(f_AsReln§region1#RelationAsSet)
+               . (forAll v__2 : int(1..2)
+                      . (exists v__3 in v__1[1] . v__3 = v__0§regionS[v__2]))
                  /\
-                 (forAll v__5 in v__2[1]
-                      . (exists v__10 : int(1..2) . v__1_Explicit§regionS[v__10] = v__5)))
-          {rules/refns/relation-asset/relation-asset-toSet.rule}
-              (sum v__2 in f_AsReln_RelationAsSet§region1
-                   . (forAll v__9 : int(1..2)
-                          . (exists v__4 in v__2[1] . v__4 = v__1_Explicit§regionS[v__9]))
+                 (forAll v__2 in v__1[1]
+                      . (exists v__3 : int(1..2) . v__0§regionS[v__3] = v__2)))
+          {rules/refns/vertical/relation-RelationAsSet/relation-RelationAsSet-toSet.rule}
+              (sum v__1 in f_AsReln_RelationAsSet§region1
+                   . (forAll v__2 : int(1..2)
+                          . (exists v__3 in v__1[1] . v__3 = v__0§regionS[v__2]))
                      /\
-                     (forAll v__5 in v__2[1]
-                          . (exists v__10 : int(1..2) . v__1_Explicit§regionS[v__10] = v__5)))
-[removedDecl] find f_AsReln:
-                      relation of (set (size 2) of int(1..2) * (int(3, 4), int(5, 6)))
+                     (forAll v__2 in v__1[1]
+                          . (exists v__3 : int(1..2) . v__0§regionS[v__3] = v__2)))
+[removeRefinedDecl] find f_AsReln:
+                            relation of (set (size 2) of int(1..2) * (int(3, 4), int(5, 6)))
+[repr] 2
 [representation] find f_AsReln_RelationAsSet:
                          set of (set (size 2) of int(1..2), (int(3, 4), int(5, 6)))
                  (#1)
-                 ExplicitVarSize
-[configuration] f_AsReln_RelationAsSet§region1#ExplicitVarSize
-[addedDecl] find f_AsReln_RelationAsSet_ExplicitVarSize:
-                    matrix indexed by [int(1..16)] of (bool,
-                                                       (set (size 2) of int(1..2), (int(3, 4), int(5, 6))))
-[applied] (sum v__2 in f_AsReln_RelationAsSet§region1#ExplicitVarSize
-               . (forAll v__9 : int(1..2)
-                      . (exists v__4 in v__2[1] . v__4 = v__1_Explicit§regionS[v__9]))
+                 Set~ExplicitVarSize
+[configuration] f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+[addedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize:
+                    matrix indexed by [int(1..4)] of (bool,
+                                                      (set (size 2) of int(1..2), (int(3, 4), int(5, 6))))
+[refn] 2
+[applied] (sum v__1 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+               . (forAll v__2 : int(1..2)
+                      . (exists v__3 in v__1[1] . v__3 = v__0§regionS[v__2]))
                  /\
-                 (forAll v__5 in v__2[1]
-                      . (exists v__10 : int(1..2) . v__1_Explicit§regionS[v__10] = v__5)))
-          {rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-              (sum v__13 : int(1..16)
-                   , f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 1]
-                   . (forAll v__9 : int(1..2)
-                          . (exists v__4 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 2, 1]
-                                 . v__4 = v__1_Explicit§regionS[v__9]))
+                 (forAll v__2 in v__1[1]
+                      . (exists v__3 : int(1..2) . v__0§regionS[v__3] = v__2)))
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__12 : int(1..4)
+                   , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__12, 1]
+                   . (forAll v__2 : int(1..2)
+                          . (exists v__3 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__12,
+                                                                                               2,
+                                                                                               1]
+                                 . v__3 = v__0§regionS[v__2]))
                      /\
-                     (forAll v__5 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__13, 2, 1]
-                          . (exists v__10 : int(1..2) . v__1_Explicit§regionS[v__10] = v__5)))
-[applied] f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-          !=
-          f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-          {rules/refns/neq-to-eq.rule}
-              !(f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-                =
-                f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1])
-[applied] f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
+                     (forAll v__2 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__12, 2, 1]
+                          . (exists v__3 : int(1..2) . v__0§regionS[v__3] = v__2)))
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
           =
-          f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-          {rules/refns/set-eq-to-subsets.rule}
-              f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-              subsetEq
-              f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 1]
+          {rules/refns/horizontal/set-eq-better.rule}
+              (forAll v__13 : int(1..2)
+                   . v__13 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
+                     <->
+                     v__13 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 1])
               /\
-              f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-              supsetEq
-              f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-[applied] f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-          subsetEq
-          f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-          {rules/refns/set-subseteq-to-quantified.rule}
-              (forAll v__14 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-                   . v__14 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1])
-[applied] v__14 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-          {rules/refns/set-in-to-quantified.rule}
-              (exists v__15 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-                   . v__15 = v__14)
-[applied] f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-          supsetEq
-          f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-          {rules/refns/set-supseteq-to-subseteq.rule}
-              f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-              subsetEq
-              f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-[applied] f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-          subsetEq
-          f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-          {rules/refns/set-subseteq-to-quantified.rule}
-              (forAll v__16 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-                   . v__16 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1])
-[applied] v__16 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-          {rules/refns/set-in-to-quantified.rule}
-              (exists v__17 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-                   . v__17 = v__16)
-[from-cached] such that
-                  (forAll v__11 : int(1..16)
-                       . (forAll v__12 : int(1..16)
-                              , v__11 < v__12 /\ f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 1]
-                                /\
-                                f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 1]
-                              . f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-                                !=
-                                f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-                                \/
-                                (f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 2, 1]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 2, 1]
-                                 \/
-                                 f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 2, 2]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 2, 2])))
-                  /\
-                  (forAll v__11 : int(1..15)
-                       . f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 1]
-                         <=
-                         f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11 + 1, 1])
-              ~~>
-              such that
-                  (forAll v__11 : int(1..16)
-                       . (forAll v__12 : int(1..16)
-                              , v__11 < v__12 /\ f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 1]
-                                /\
-                                f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 1]
-                              . !((forAll v__14 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-                                       . (exists v__15 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-                                              . v__15 = v__14))
-                                  /\
-                                  (forAll v__16 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 1]
-                                       . (exists v__17 in f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 1]
-                                              . v__17 = v__16)))
-                                \/
-                                (f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 2, 1]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 2, 1]
-                                 \/
-                                 f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 2, 2, 2]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__12, 2, 2, 2])))
-                  /\
-                  (forAll v__11 : int(1..15)
-                       . f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11, 1]
-                         <=
-                         f_AsReln_RelationAsSet_ExplicitVarSize§region1[v__11 + 1, 1])
-[removedDecl] find f_AsReln_RelationAsSet_ExplicitVarSize:
-                      matrix indexed by [int(1..16)] of (bool,
-                                                         (set (size 2) of int(1..2), (int(3, 4), int(5, 6))))
-[removedDecl] find f_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
-                      matrix indexed by [int(1..16)] of (set (size 2) of int(1..2),
-                                                         (int(3, 4), int(5, 6)))
-[removedDecl] find f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2:
-                      matrix indexed by [int(1..16)] of (int(3, 4), int(5, 6))
-[removedDecl] find f_AsReln_RelationAsSet:
-                      set of (set (size 2) of int(1..2), (int(3, 4), int(5, 6)))
-[representation] find f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
-                         matrix indexed by [int(1..16)] of set (size 2) of int(1..2)
-                 (#1)
-                 Explicit
-[configuration] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit
-[addedDecl] find f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit:
-                    matrix indexed by [int(1..16), int(1..2)] of int(1..2)
-[applied] (exists v__4 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__13]
-               . v__4 = v__1_Explicit§regionS[v__9])
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
-              (exists v__22 : int(1..2)
-                   . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__13,
-                                                                                           v__22]
-                     =
-                     v__1_Explicit§regionS[v__9])
-[applied] (forAll v__5 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__13]
-               . (exists v__10 : int(1..2) . v__1_Explicit§regionS[v__10] = v__5))
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
-              (forAll v__23 : int(1..2)
-                   . (exists v__10 : int(1..2)
-                          . v__1_Explicit§regionS[v__10]
-                            =
-                            f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__13,
-                                                                                                  v__23]))
-[applied] (exists v__15 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__12]
-               . v__15 = v__14)
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
+              (forAll v__13 : int(1..2)
+                   . v__13 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
+                     <->
+                     v__13 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 1])
+[applied] v__13
+          in
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__14 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
+                   . v__14 = v__13)
+[applied] v__13
+          in
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 1]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__15 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1,
+                                                                                  2,
+                                                                                  1]
+                   . v__15 = v__13)
+[applied] v__13
+          in
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__16 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 1]
+                   . v__16 = v__13)
+[applied] v__13
+          in
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 1]
+          {rules/refns/horizontal/set-in-to-quantified.rule}
+              (exists v__17 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1,
+                                                                                  2,
+                                                                                  1]
+                   . v__17 = v__13)
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 2, 1]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 2, 1]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 2, 1]
+              <
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 2, 1]
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 2, 2]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 2, 2]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11, 2, 2, 2]
+              <
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__11 + 1, 2, 2, 2]
+[removeRefinedDecl] find f_AsReln_RelationAsSet:
+                            set of (set (size 2) of int(1..2), (int(3, 4), int(5, 6)))
+[removedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize:
+                      matrix indexed by [int(1..4)] of (bool,
+                                                        (set (size 2) of int(1..2), (int(3, 4), int(5, 6))))
+[matrixToTuple] f_AsReln_RelationAsSet_Set~ExplicitVarSize∑1
+[removedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..4)] of (set (size 2) of int(1..2),
+                                                        (int(3, 4), int(5, 6)))
+[matrixToTuple] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2∑1
+[removedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2:
+                      matrix indexed by [int(1..4)] of (int(3, 4), int(5, 6))
+[matrixToTuple] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2∑1
+[repr] 3
+[representation] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1:
+                         matrix indexed by [int(1..4)] of set (size 2) of int(1..2)
+                 (#2)
+                 Set~Explicit, Set~Occurrence
+[configuration] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit
+[addedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit:
+                    matrix indexed by [int(1..4), int(1..2)] of int(1..2)
+[refn] 3
+[applied] (exists v__3 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__1]
+               . v__3 = v__0§regionS[v__2])
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__24 : int(1..2)
-                   . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__12,
-                                                                                           v__24]
+                   . f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__1,
+                                                                                                   v__24]
                      =
-                     v__14)
-[applied] (forAll v__14 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__11]
-               . (exists v__24 : int(1..2)
-                      . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__12,
-                                                                                              v__24]
-                        =
-                        v__14))
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
+                     v__0§regionS[v__2])
+[applied] (forAll v__2 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__1]
+               . (exists v__3 : int(1..2) . v__0§regionS[v__3] = v__2))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__25 : int(1..2)
-                   . (exists v__24 : int(1..2)
-                          . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__12,
-                                                                                                  v__24]
+                   . (exists v__3 : int(1..2)
+                          . v__0§regionS[v__3]
                             =
-                            f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__11,
-                                                                                                  v__25]))
-[applied] (exists v__17 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__11]
-               . v__17 = v__16)
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
+                            f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__1,
+                                                                                                          v__25]))
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__0]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__0
+                                                                                        +
+                                                                                        1]
+          {rules/refns/vertical/Set~Explicit/DotLt.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__0]
+              .<
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__0
+                                                                                            +
+                                                                                            1]
+[applied] (exists v__2 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__0]
+               . v__2 = v__1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__26 : int(1..2)
-                   . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__11,
-                                                                                           v__26]
+                   . f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__0,
+                                                                                                   v__26]
                      =
-                     v__16)
-[applied] (forAll v__16 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__12]
-               . (exists v__26 : int(1..2)
-                      . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__11,
-                                                                                              v__26]
-                        =
-                        v__16))
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
-              (forAll v__27 : int(1..2)
-                   . (exists v__26 : int(1..2)
-                          . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__11,
-                                                                                                  v__26]
-                            =
-                            f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__12,
-                                                                                                  v__27]))
-[from-cached] such that
-                  (forAll v__11 : int(1..16)
-                       . (forAll v__12 : int(1..16)
-                              , v__11 < v__12 /\ f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__11]
-                                /\
-                                f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__12]
-                              . !((forAll v__14 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__11]
-                                       . (exists v__15 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__12]
-                                              . v__15 = v__14))
-                                  /\
-                                  (forAll v__16 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__12]
-                                       . (exists v__17 in f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1§region1#Explicit[v__11]
-                                              . v__17 = v__16)))
-                                \/
-                                (f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple1§region1[v__11]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple1§region1[v__12]
-                                 \/
-                                 f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple2§region1[v__11]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple2§region1[v__12])))
-                  /\
-                  (forAll v__11 : int(1..15)
-                       . f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__11]
-                         <=
-                         f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__11 + 1])
-              ~~>
-              such that
-                  (forAll v__11 : int(1..16)
-                       . (forAll v__12 : int(1..16)
-                              , v__11 < v__12 /\ f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__11]
-                                /\
-                                f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__12]
-                              . !((forAll v__25 : int(1..2)
-                                       . (exists v__24 : int(1..2)
-                                              . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__12,
-                                                                                                                      v__24]
-                                                =
-                                                f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__11,
-                                                                                                                      v__25]))
-                                  /\
-                                  (forAll v__27 : int(1..2)
-                                       . (exists v__26 : int(1..2)
-                                              . f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__11,
-                                                                                                                      v__26]
-                                                =
-                                                f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit§region1[v__12,
-                                                                                                                      v__27])))
-                                \/
-                                (f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple1§region1[v__11]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple1§region1[v__12]
-                                 \/
-                                 f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple2§region1[v__11]
-                                 !=
-                                 f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple2_tuple2§region1[v__12])))
-                  /\
-                  (forAll v__11 : int(1..15)
-                       . f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__11]
-                         <=
-                         f_AsReln_RelationAsSet_ExplicitVarSize_tuple1§region1[v__11 + 1])
-[removedDecl] find f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1:
-                      matrix indexed by [int(1..16)] of set (size 2) of int(1..2)
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[1]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[1, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[2]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[2, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[3]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[3, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[4]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[4, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[5]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[5, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[6]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[6, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[7]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[7, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[8]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[8, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[9]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[9, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[10]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[10, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[11]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[11, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[12]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[12, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[13]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[13, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[14]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[14, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[15]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[15, ..]
-[addSlicing] f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[16]
-             f_AsReln_RelationAsSet_ExplicitVarSize_tuple2_tuple1_Explicit[16, ..]
+                     v__1)
+[applied] (exists v__2 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__0
+                                                                                                        +
+                                                                                                        1]
+               . v__2 = v__1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
+              (exists v__27 : int(1..2)
+                   . f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__0
+                                                                                                   +
+                                                                                                   1,
+                                                                                                   v__27]
+                     =
+                     v__1)
+[applied] (exists v__2 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__0]
+               . v__2 = v__1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
+              (exists v__28 : int(1..2)
+                   . f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__0,
+                                                                                                   v__28]
+                     =
+                     v__1)
+[applied] (exists v__2 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1§region1#Set~Explicit[v__0
+                                                                                                        +
+                                                                                                        1]
+               . v__2 = v__1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
+              (exists v__29 : int(1..2)
+                   . f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__0
+                                                                                                   +
+                                                                                                   1,
+                                                                                                   v__29]
+                     =
+                     v__1)
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__19,
+                                                                                        1]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__19,
+                                                                                        2]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__19,
+                                                                                            1]
+              <
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1_Set~Explicit§region1[v__19,
+                                                                                            2]
+[removeRefinedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple1:
+                            matrix indexed by [int(1..4)] of set (size 2) of int(1..2)
+[repr] 4

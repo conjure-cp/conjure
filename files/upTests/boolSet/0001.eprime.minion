@@ -3,13 +3,13 @@ MINION 3
 # CSE_eliminated_expressions = 0
 # CSE_total_size = 0
 **VARIABLES**
-BOOL s_Explicit_00000 #
-BOOL s_Explicit_00001 #
+BOOL s_SetExplicit_00000 #
+BOOL s_SetExplicit_00001 #
 **SEARCH**
-PRINT[[s_Explicit_00000],[s_Explicit_00001]]
-VARORDER STATIC [s_Explicit_00000,s_Explicit_00001]
+PRINT[[s_SetExplicit_00000],[s_SetExplicit_00001]]
+VARORDER STATIC [s_SetExplicit_00000,s_SetExplicit_00001]
 VARORDER AUX []
 **CONSTRAINTS**
-watched-or({w-literal(s_Explicit_00000,1),w-literal(s_Explicit_00001,1)})
-diseq(s_Explicit_00000,s_Explicit_00001)
+ineq(s_SetExplicit_00000, s_SetExplicit_00001, -1)
+watched-or({w-literal(s_SetExplicit_00000,1),w-literal(s_SetExplicit_00001,1)})
 **EOF**

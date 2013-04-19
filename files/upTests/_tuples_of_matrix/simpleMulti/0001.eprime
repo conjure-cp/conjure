@@ -4,9 +4,9 @@ find y_tuple1_tuple1: matrix indexed by [int(1, 2)] of int(10, 11)
 find y_tuple1_tuple2: matrix indexed by [int(1, 2)] of int(12, 13)
 find y_tuple1_tuple3: matrix indexed by [int(1, 2)] of int(33, 55)
 such that
-    y_tuple1_tuple1[1] = 10,
-    y_tuple1_tuple1[2] = 11,
-    y_tuple1_tuple2[1] = 12,
-    y_tuple1_tuple2[2] = 13,
-    y_tuple1_tuple3[1] = 33,
-    y_tuple1_tuple3[2] = 55
+    forAll v__0 : int(1, 2)
+        . y_tuple1_tuple1[v__0] = [10, 11][v__0]
+          /\
+          (y_tuple1_tuple2[v__0] = [12, 13][v__0]
+           /\
+           y_tuple1_tuple3[v__0] = [33, 55][v__0])

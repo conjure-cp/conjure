@@ -1,7 +1,5 @@
+[useChannelling] True
 [handleEnums] given e new type enum
               ~~>
               given e_fromEnumSize: int(1..)
               letting e_fromEnum be domain int(1..e_fromEnumSize)
-[handleInfDom] given e_fromEnumSize: int(1..)
-               ~~>
-               given e_fromEnumSize: int(1..MAXINT)

@@ -15,11 +15,16 @@ find pain_tuple3_tuple4: matrix indexed by [int(1)] of int(18)
 such that
     pain_tuple1_tuple1[1] = 8,
     pain_tuple1_tuple2[1] = 3,
-    pain_tuple2_tuple1_tuple1[1, 1, 1] = 12,
-    pain_tuple2_tuple1_tuple2[1, 1, 1] = 13,
-    pain_tuple2_tuple2_tuple1[1, 1] = 14,
-    pain_tuple2_tuple2_tuple2[1, 1] = 15,
     pain_tuple3_tuple1[1] = 15,
     pain_tuple3_tuple2[1] = 16,
     pain_tuple3_tuple3[1] = 17,
-    pain_tuple3_tuple4[1] = 18
+    pain_tuple3_tuple4[1] = 18,
+    forAll v__0 : int(1)
+        . (forAll v__1 : int(1)
+               . pain_tuple2_tuple1_tuple1[1, v__0, v__1] = [[(12, 13)]][v__0, v__1, 1]
+                 /\
+                 pain_tuple2_tuple1_tuple2[1, v__0, v__1] = [[(12, 13)]][v__0, v__1, 2])
+          /\
+          (pain_tuple2_tuple2_tuple1[1, v__0] = [14][v__0]
+           /\
+           pain_tuple2_tuple2_tuple2[1, v__0] = [15][v__0])

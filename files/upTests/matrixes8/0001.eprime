@@ -1,57 +1,61 @@
 language ESSENCE' 1.0
 
-find x_ExplicitVarSize_tuple1: matrix indexed by [int(1..2), int(1..9)] of bool
-find x_ExplicitVarSize_tuple2_tuple1:
+find x_SetExplicitVarSize_tuple1:
+        matrix indexed by [int(1..2), int(1..9)] of bool
+find x_SetExplicitVarSize_tuple2_tuple1:
         matrix indexed by [int(1..2), int(1..9)] of int(4, 5, 6)
-find x_ExplicitVarSize_tuple2_tuple2:
+find x_SetExplicitVarSize_tuple2_tuple2:
         matrix indexed by [int(1..2), int(1..9)] of int(7, 8, 9)
 such that
-    exists v__9 : int(1..9)
-        . x_ExplicitVarSize_tuple1[1, v__9]
+    exists v__0 : int(1..9)
+        . x_SetExplicitVarSize_tuple1[1, v__0]
           /\
-          (x_ExplicitVarSize_tuple2_tuple1[1, v__9] = 4
+          (x_SetExplicitVarSize_tuple2_tuple1[1, v__0] = 4
            /\
-           x_ExplicitVarSize_tuple2_tuple2[1, v__9] = 7),
-    forAll v__12 : int(1..9)
-        . x_ExplicitVarSize_tuple1[2, v__12]
-          ->
-          5 = x_ExplicitVarSize_tuple2_tuple1[2, v__12]
+           x_SetExplicitVarSize_tuple2_tuple2[1, v__0] = 7),
+    exists v__0 : int(1..9)
+        . x_SetExplicitVarSize_tuple1[2, v__0]
           /\
-          8 = x_ExplicitVarSize_tuple2_tuple2[2, v__12]
-          \/
-          6 = x_ExplicitVarSize_tuple2_tuple1[2, v__12]
-          /\
-          9 = x_ExplicitVarSize_tuple2_tuple2[2, v__12],
-    exists v__15 : int(1..9)
-        . x_ExplicitVarSize_tuple1[2, v__15]
-          /\
-          (x_ExplicitVarSize_tuple2_tuple1[2, v__15] = 5
+          (x_SetExplicitVarSize_tuple2_tuple1[2, v__0] = 5
            /\
-           x_ExplicitVarSize_tuple2_tuple2[2, v__15] = 8),
-    exists v__17 : int(1..9)
-        . x_ExplicitVarSize_tuple1[2, v__17]
+           x_SetExplicitVarSize_tuple2_tuple2[2, v__0] = 8),
+    exists v__0 : int(1..9)
+        . x_SetExplicitVarSize_tuple1[2, v__0]
           /\
-          (x_ExplicitVarSize_tuple2_tuple1[2, v__17] = 6
+          (x_SetExplicitVarSize_tuple2_tuple1[2, v__0] = 6
            /\
-           x_ExplicitVarSize_tuple2_tuple2[2, v__17] = 9),
-    forAll v__4 : int(1..2)
-        . (forAll v__2 : int(1..9)
-               . (forAll v__3 : int(1..9)
-                      . v__2 < v__3 /\ x_ExplicitVarSize_tuple1[v__4, v__2]
-                        /\
-                        x_ExplicitVarSize_tuple1[v__4, v__3]
-                        ->
-                        x_ExplicitVarSize_tuple2_tuple1[v__4, v__2]
-                        !=
-                        x_ExplicitVarSize_tuple2_tuple1[v__4, v__3]
-                        \/
-                        x_ExplicitVarSize_tuple2_tuple2[v__4, v__2]
-                        !=
-                        x_ExplicitVarSize_tuple2_tuple2[v__4, v__3]))
+           x_SetExplicitVarSize_tuple2_tuple2[2, v__0] = 9),
+    forAll v__0 : int(1..2)
+        . (forAll v__1 : int(1..8)
+               . x_SetExplicitVarSize_tuple1[v__0, v__1]
+                 /\
+                 x_SetExplicitVarSize_tuple1[v__0, v__1 + 1]
+                 ->
+                 x_SetExplicitVarSize_tuple2_tuple1[v__0, v__1]
+                 <
+                 x_SetExplicitVarSize_tuple2_tuple1[v__0, v__1 + 1]
+                 \/
+                 x_SetExplicitVarSize_tuple2_tuple1[v__0, v__1]
+                 =
+                 x_SetExplicitVarSize_tuple2_tuple1[v__0, v__1 + 1]
+                 /\
+                 x_SetExplicitVarSize_tuple2_tuple2[v__0, v__1]
+                 <
+                 x_SetExplicitVarSize_tuple2_tuple2[v__0, v__1 + 1])
           /\
-          (forAll v__2 : int(1..8)
-               . x_ExplicitVarSize_tuple1[v__4, v__2]
+          (forAll v__1 : int(1..8)
+               . x_SetExplicitVarSize_tuple1[v__0, v__1]
                  <=
-                 x_ExplicitVarSize_tuple1[v__4, v__2 + 1]),
-    forAll v__7 : int(1..2)
-        . (sum v__6 : int(1..9) . x_ExplicitVarSize_tuple1[v__7, v__6]) >= 1
+                 x_SetExplicitVarSize_tuple1[v__0, v__1 + 1]),
+    forAll v__0 : int(1..2)
+        . (sum v__1 : int(1..9) . x_SetExplicitVarSize_tuple1[v__0, v__1]) >= 1,
+    forAll v__0 : int(1..9)
+        . x_SetExplicitVarSize_tuple1[2, v__0]
+          ->
+          5 = x_SetExplicitVarSize_tuple2_tuple1[2, v__0]
+          /\
+          8 = x_SetExplicitVarSize_tuple2_tuple2[2, v__0]
+          \/
+          6 = x_SetExplicitVarSize_tuple2_tuple1[2, v__0]
+          /\
+          9 = x_SetExplicitVarSize_tuple2_tuple2[2, v__0]
