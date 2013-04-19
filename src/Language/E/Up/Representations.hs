@@ -121,9 +121,11 @@ relationIntMatrix2Rep v = errpM "relationIntMatrix2Rep" [v]
 {- Functions -}
 
 matrix1DRep :: VarData -> E
-matrix1DRep VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
+matrix1DRep v@VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
-    in  wrapInFunction $ tracee "matrix1DRep:" mappings
+    in  wrapInFunction  mappings
+    `_p` ("matrix1DRep v",[v] )
+    `_p` ("matrix1DRep res",[mappings] )
 
     where
     makeMapping :: Integer -> E -> E
@@ -133,7 +135,7 @@ matrix1DRep v@VarData{vIndexes=(_:ix), vEssence=[xMatch| vs :=  value.matrix.val
     wrapInMatrix . map (\w -> matrix1DRep v{vIndexes=ix,vEssence=w} ) $ vs
 
 
-matrix1DRep  v = error $  "matrix1DRep: " ++  (show . pretty) v
+matrix1DRep  v = error $  "matrix1DRep! " ++  (show . pretty) v
 
 {- Partitions -}
 
@@ -203,7 +205,7 @@ explicitBranch :: (Before,After)
 explicitBranch = ( tracee "explicitBranch" unwrapSet, mapLeafUnchanged )
 
 occurrenceBranch :: (Before,After)
-occurrenceBranch = ( unwrapSet, mapLeafFunc setOccurrenceRep )
+occurrenceBranch = (tracee "occurrenceBranch" unwrapSet, mapLeafFunc setOccurrenceRep )
 
 setExplicitVarSizeBranch :: (Before,After)
 setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after )
@@ -252,7 +254,7 @@ relationAsSetRep = ( tracee "relationAsSet" beforeUnchanged, after)
 {- Functions -}
 
 matrix1DBranch :: (Before,After)
-matrix1DBranch = ( unwrapSet, after )
+matrix1DBranch = ( tracee "matrix1DBranch" unwrapSet, after )
 
     where
     after orgData@VarData{vIndexes=ix} vs =
@@ -279,9 +281,10 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 {- Partitions -}
 
 partitionMSetOfSetsBranch :: (Before,After)
-partitionMSetOfSetsBranch = ( beforeUnchanged , after )
+partitionMSetOfSetsBranch = ( tracee "partitionMSetOfSetsBranch" beforeUnchanged , after )
     where
     after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
+        `_p` ("partitionMSetOfSetsBranch v", [vs])
 
 
 {- End -}
