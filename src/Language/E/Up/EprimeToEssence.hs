@@ -248,6 +248,10 @@ introduceIndexRange (IndexFunc ins tos) [xMatch| arr := value.function.values |]
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = _bugg "EprimeToEssence: introduceIndexRange function"
 
+-- FIXME after adding TPar
+introduceIndexRange (IndexPar _) e =e
+
+{-
 introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
    let parts =  map par arr
    in  [xMake| value.partition.values := parts |]
@@ -257,6 +261,7 @@ introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
        let vs' = map (introduceIndexRange it) vs
        in  [xMake| part := vs' |]
     par _  = _bugg "EprimeToEssence: introduceIndexRange partition"
+-}
 
 
 introduceIndexRange (IndexSet it) [xMatch| vs := value.set.values |] =
@@ -272,8 +277,8 @@ introduceIndexRange IndexNone e = e
 introduceIndexRange i [xMatch| [v] := expr |] =
     [xMake| expr :=  [introduceIndexRange i v] |]
 
-
-introduceIndexRange _ e = error . show  . pretty $ e
+introduceIndexRange _ e  = e
+{-introduceIndexRange p e = error $ "introduceIndexRange" ++ (show p) ++ " " ++  (show  . prettyAsBoth $ e)-}
 
 
 convertUnamed :: M.Map String [E] -> [E]  -> (M.Map String [E], [E])
