@@ -390,46 +390,8 @@
           .<
           x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1, 2]
           {rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule}
-              |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1, 1]|
-              <
-              |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1, 2]|
-              \/
-              |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1, 1]|
-              =
-              |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1, 2]|
-              /\
               (exists v__72 : int(1..2)
-                   , x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           1,
-                                                                                           v__72,
-                                                                                           1]
-                     /\
-                     x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           2,
-                                                                                           v__72,
-                                                                                           1]
-                   . x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           1,
-                                                                                           v__72,
-                                                                                           2]
-                     .<
-                     x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           2,
-                                                                                           v__72,
-                                                                                           2]
-                     /\
-                     (forAll v__73 : int(1..2)
-                          , v__73 < v__72
-                            /\
-                            x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                                  1,
-                                                                                                  v__73,
-                                                                                                  1]
-                            /\
-                            x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                                  2,
-                                                                                                  v__73,
-                                                                                                  1]
+                   . (forAll v__73 : int(1..2) , v__73 < v__72
                           . x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
                                                                                                   1,
                                                                                                   v__73,
@@ -438,71 +400,37 @@
                             x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
                                                                                                   2,
                                                                                                   v__73,
-                                                                                                  2]))
-[applied] |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                 1]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__74 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                                  1]
-                   . 1)
-[applied] (sum v__74 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                              1]
-               . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__75 : int(1..2)
-                   , x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           1,
-                                                                                           v__75,
-                                                                                           1]
-                   . 1)
-[applied] |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                 2]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__76 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                                  2]
-                   . 1)
-[applied] (sum v__76 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                              2]
-               . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__77 : int(1..2)
-                   , x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           2,
-                                                                                           v__77,
-                                                                                           1]
-                   . 1)
-[applied] |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                 1]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__78 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                                  1]
-                   . 1)
-[applied] (sum v__78 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                              1]
-               . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__79 : int(1..2)
-                   , x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           1,
-                                                                                           v__79,
-                                                                                           1]
-                   . 1)
-[applied] |x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                 2]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__80 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                                  2]
-                   . 1)
-[applied] (sum v__80 in x_Set~Explicit_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSize[1,
-                                                                                              2]
-               . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__81 : int(1..2)
-                   , x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
-                                                                                           2,
-                                                                                           v__81,
-                                                                                           1]
-                   . 1)
+                                                                                                  2])
+                     /\
+                     (x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
+                                                                                            1,
+                                                                                            v__72,
+                                                                                            1]
+                      /\
+                      x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
+                                                                                            2,
+                                                                                            v__72,
+                                                                                            1]
+                      /\
+                      x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
+                                                                                            1,
+                                                                                            v__72,
+                                                                                            2]
+                      .<
+                      x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
+                                                                                            2,
+                                                                                            v__72,
+                                                                                            2]
+                      \/
+                      toInt(x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
+                                                                                                  1,
+                                                                                                  v__72,
+                                                                                                  1])
+                      >
+                      toInt(x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
+                                                                                                  2,
+                                                                                                  v__72,
+                                                                                                  1])))
 [applied] x_Set~Explicit_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSize§region1[1,
                                                                                 1,
                                                                                 v__72,

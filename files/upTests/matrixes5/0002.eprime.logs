@@ -7,7 +7,7 @@
 [addedDecl] find x_Set~ExplicitVarSize:
                     matrix indexed by [int(1..2), int(1, 2), int(1..3)] of (bool, int(6..8))
 [addedDecl] find x_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..2), int(1, 2), int(1..3)] of int(5..8)
+                    matrix indexed by [int(1..2), int(1, 2), int(1..3)] of int(6..9)
 [refn] 0
 [applied] x§region1#Set~ExplicitVarSizeWithDefault[1, 1] = {6}
           {rules/refns/horizontal/set-eq-to-subsets.rule}
@@ -24,7 +24,7 @@
                . 6 = v__28)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (forAll v__30 : int(1..3)
-                   , x_Set~ExplicitVarSizeWithDefault§region1[1, 1, v__30] != 5
+                   , x_Set~ExplicitVarSizeWithDefault§region1[1, 1, v__30] != 9
                    . 6 = x_Set~ExplicitVarSizeWithDefault§region1[1, 1, v__30])
 [applied] x§region1#Set~ExplicitVarSizeWithDefault[1, 1] supsetEq {6}
           {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
@@ -39,7 +39,7 @@
                . v__32 = 6)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__33 : int(1..3)
-                   , x_Set~ExplicitVarSizeWithDefault§region1[1, 1, v__33] != 5
+                   , x_Set~ExplicitVarSizeWithDefault§region1[1, 1, v__33] != 9
                    . x_Set~ExplicitVarSizeWithDefault§region1[1, 1, v__33] = 6)
 [applied] x§region2#Set~ExplicitVarSize[1, 2] = {7}
           {rules/refns/horizontal/set-eq-to-subsets.rule}
@@ -164,7 +164,7 @@
                . v__57 = v__54)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__58 : int(1..3)
-                   , x_Set~ExplicitVarSizeWithDefault[v__26, v__27, v__58] != 5
+                   , x_Set~ExplicitVarSizeWithDefault[v__26, v__27, v__58] != 9
                    . x_Set~ExplicitVarSizeWithDefault[v__26, v__27, v__58] = v__54)
 [applied] v__54 in x#Set~ExplicitVarSize[v__26, v__27]
           {rules/refns/horizontal/set-in-to-quantified.rule}
@@ -180,7 +180,7 @@
                . v__61 = v__54)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__62 : int(1..3)
-                   , x_Set~ExplicitVarSizeWithDefault[v__26, v__27, v__62] != 5
+                   , x_Set~ExplicitVarSizeWithDefault[v__26, v__27, v__62] != 9
                    . x_Set~ExplicitVarSizeWithDefault[v__26, v__27, v__62] = v__54)
 [applied] x_Set~ExplicitVarSize§region4[v__4, v__3, v__5, 2]
           .<

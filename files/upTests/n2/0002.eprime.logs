@@ -21,7 +21,7 @@
                  Set~ExplicitVarSize, Set~ExplicitVarSizeWithDefault, Set~Occurrence
 [configuration] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault
 [addedDecl] find x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..4), int(1..2)] of int(0..2)
+                    matrix indexed by [int(1..4), int(1..2)] of int(1..3)
 [refn] 1
 [applied] (sum v__1 in x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
                . v__1)
@@ -30,144 +30,16 @@
                    , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0,
                                                                                          v__19]
                      !=
-                     0
+                     3
                    . x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0,
                                                                                          v__19])
 [applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
           .<
           x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/DotLt.rule}
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0] = {}
-              /\
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
-              =
-              {}
-              \/
               x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0]
               <lex
               x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0 + 1]
-[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-          =
-          {}
-          {rules/refns/horizontal/set-eq-to-subsets.rule}
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-              subsetEq
-              {}
-              /\
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-              supsetEq
-              {}
-[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-          subsetEq
-          {}
-          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
-              (forAll v__20 in x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-                   . v__20 in {})
-[applied] v__20 in {}
-          {rules/refns/horizontal/set-in-to-quantified.rule}
-              false
-[applied] (forAll v__20 in x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-               . false)
-          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
-              (forAll v__22 : int(1..2)
-                   , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0,
-                                                                                         v__22]
-                     !=
-                     0
-                   . false)
-[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-          supsetEq
-          {}
-          {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
-              {}
-              subsetEq
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-[applied] {}
-          subsetEq
-          x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0]
-          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
-              true
-[simplified] (forAll v__22 : int(1..2)
-                  , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0,
-                                                                                        v__22]
-                    !=
-                    0
-                  . false)
-             /\
-             true
-             ~~>
-             (forAll v__22 : int(1..2)
-                  , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0,
-                                                                                        v__22]
-                    !=
-                    0
-                  . false)
-[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0
-                                                                              +
-                                                                              1]
-          =
-          {}
-          {rules/refns/horizontal/set-eq-to-subsets.rule}
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
-              subsetEq
-              {}
-              /\
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
-              supsetEq
-              {}
-[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0
-                                                                              +
-                                                                              1]
-          subsetEq
-          {}
-          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
-              (forAll v__24 in x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0
-                                                                                                   +
-                                                                                                   1]
-                   . v__24 in {})
-[applied] v__24 in {}
-          {rules/refns/horizontal/set-in-to-quantified.rule}
-              false
-[applied] (forAll v__24 in x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0
-                                                                                               +
-                                                                                               1]
-               . false)
-          {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
-              (forAll v__26 : int(1..2)
-                   , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0 + 1,
-                                                                                         v__26]
-                     !=
-                     0
-                   . false)
-[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0
-                                                                              +
-                                                                              1]
-          supsetEq
-          {}
-          {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
-              {}
-              subsetEq
-              x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
-[applied] {}
-          subsetEq
-          x_Set~ExplicitVarSize_tuple2§region1#Set~ExplicitVarSizeWithDefault[v__0 + 1]
-          {rules/refns/horizontal/set-subseteq-to-quantified.rule}
-              true
-[simplified] (forAll v__26 : int(1..2)
-                  , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0 + 1,
-                                                                                        v__26]
-                    !=
-                    0
-                  . false)
-             /\
-             true
-             ~~>
-             (forAll v__26 : int(1..2)
-                  , x_Set~ExplicitVarSize_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__0 + 1,
-                                                                                        v__26]
-                    !=
-                    0
-                  . false)
 [removeRefinedDecl] find x_Set~ExplicitVarSize_tuple2:
                             matrix indexed by [int(1..4)] of set (minSize 1) of int(1..2)
 [repr] 2

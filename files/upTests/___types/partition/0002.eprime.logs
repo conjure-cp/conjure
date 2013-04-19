@@ -111,7 +111,7 @@
                  Set~ExplicitVarSize, Set~ExplicitVarSizeWithDefault, Set~Occurrence
 [configuration] p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault
 [addedDecl] find p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..3), int(1..9)] of int(0..9)
+                    matrix indexed by [int(1..3), int(1..9)] of int(1..10)
 [refn] 2
 [applied] (sum v__1 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__0]
                . 1)
@@ -119,7 +119,7 @@
               (sum v__23 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__23]
                      !=
-                     0
+                     10
                    . 1)
 [applied] (exists v__3 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__1]
                . v__3 = v__2)
@@ -127,7 +127,7 @@
               (exists v__24 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
                      !=
-                     0
+                     10
                    . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
                      =
                      v__2)
@@ -135,7 +135,7 @@
                . (exists v__24 : int(1..9)
                       , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
                         !=
-                        0
+                        10
                       . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
                         =
                         v__2))
@@ -143,11 +143,11 @@
               (forAll v__25 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__25]
                      !=
-                     0
+                     10
                    . (exists v__24 : int(1..9)
                           , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
                             !=
-                            0
+                            10
                           . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__24]
                             =
                             p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__25]))
@@ -157,7 +157,7 @@
               (exists v__26 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
                      !=
-                     0
+                     10
                    . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
                      =
                      v__2)
@@ -165,7 +165,7 @@
                . (exists v__26 : int(1..9)
                       , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
                         !=
-                        0
+                        10
                       . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
                         =
                         v__2))
@@ -173,11 +173,11 @@
               (forAll v__27 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__27]
                      !=
-                     0
+                     10
                    . (exists v__26 : int(1..9)
                           , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
                             !=
-                            0
+                            10
                           . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__26]
                             =
                             p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__27]))
@@ -187,7 +187,7 @@
               (exists v__28 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
                      !=
-                     0
+                     10
                    . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
                      =
                      v__2)
@@ -195,7 +195,7 @@
                , (exists v__28 : int(1..9)
                       , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
                         !=
-                        0
+                        10
                       . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
                         =
                         v__2)
@@ -205,14 +205,14 @@
                    , (exists v__28 : int(1..9)
                           , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
                             !=
-                            0
+                            10
                           . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__28]
                             =
                             p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__29])
                      /\
                      p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__0, v__29]
                      !=
-                     0
+                     10
                    . 1)
 [applied] (exists v__2 in p_MSetOfSets_MSet~Explicit§region1#Set~ExplicitVarSizeWithDefault[v__1]
                . v__2 = v__0)
@@ -220,7 +220,7 @@
               (exists v__30 : int(1..9)
                    , p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__30]
                      !=
-                     0
+                     10
                    . p_MSetOfSets_MSet~Explicit_Set~ExplicitVarSizeWithDefault§region1[v__1, v__30]
                      =
                      v__0)

@@ -10,39 +10,27 @@ such that
     forAll v__0 : int(1..3)
         . x_SetExplicitVarSize_tuple1[v__0] /\ x_SetExplicitVarSize_tuple1[v__0 + 1]
           ->
-          (sum v__1 : int(1..2)
-               . x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, v__1] * 1)
-          <
-          (sum v__1 : int(1..2)
-               . x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0 + 1, v__1] * 1)
-          \/
-          (sum v__1 : int(1..2)
-               . x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, v__1] * 1)
-          =
-          (sum v__1 : int(1..2)
-               . x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0 + 1, v__1] * 1)
-          /\
           (exists v__1 : int(1..2)
-               . x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, v__1]
+               . (forAll v__2 : int(1..2)
+                      . v__2 < v__1
+                        ->
+                        x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0, v__2]
+                        =
+                        x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0 + 1, v__2])
                  /\
-                 x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0 + 1, v__1]
-                 /\
-                 (x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0, v__1]
+                 (x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, v__1]
+                  /\
+                  x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0 + 1, v__1]
+                  /\
+                  x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0, v__1]
                   <
                   x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0 + 1, v__1]
-                  /\
-                  (forAll v__2 : int(1..2)
-                       . v__2 < v__1
-                         /\
-                         x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, v__2]
-                         /\
-                         x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0 + 1, v__2]
-                         ->
-                         x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0, v__2]
-                         =
-                         x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0 + 1, v__2]))),
+                  \/
+                  x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, v__1]
+                  >
+                  x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0 + 1, v__1])),
     forAll v__0 : int(1..3)
-        . x_SetExplicitVarSize_tuple1[v__0] <= x_SetExplicitVarSize_tuple1[v__0 + 1],
+        . x_SetExplicitVarSize_tuple1[v__0] >= x_SetExplicitVarSize_tuple1[v__0 + 1],
     forAll v__0 : int(1..4)
         . x_SetExplicitVarSize_tuple1[v__0]
           ->
@@ -62,7 +50,7 @@ such that
            x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple2[v__0, 2])
           /\
           x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, 1]
-          <=
+          >=
           x_SetExplicitVarSize_tuple2_SetExplicitVarSize_tuple1[v__0, 2],
     forAll v__0 : int(1..4)
         . (sum v__1 : int(1..2)

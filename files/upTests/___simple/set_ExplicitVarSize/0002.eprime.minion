@@ -4,35 +4,35 @@ MINION 3
 # CSE_total_size = 90
 **VARIABLES**
 DISCRETE x_SetExplicitVarSizeWithDefault_00000 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00002 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00003 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00004 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00005 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00006 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00007 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00008 #
-{-1..9}
+{0..10}
 DISCRETE x_SetExplicitVarSizeWithDefault_00009 #
-{-1..9}
-BOOL aux0 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00000 != -1)
-BOOL aux1 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00009 != -1)
-BOOL aux2 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00004 != -1)
-BOOL aux3 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00003 != -1)
-BOOL aux4 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00002 != -1)
-BOOL aux5 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00001 != -1)
-BOOL aux6 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00008 != -1)
-BOOL aux7 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00007 != -1)
-BOOL aux8 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00006 != -1)
-BOOL aux9 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00005 != -1)
+{0..10}
+BOOL aux0 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00000 != 10)
+BOOL aux1 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00009 != 10)
+BOOL aux2 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00004 != 10)
+BOOL aux3 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00003 != 10)
+BOOL aux4 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00002 != 10)
+BOOL aux5 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00001 != 10)
+BOOL aux6 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00008 != 10)
+BOOL aux7 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00007 != 10)
+BOOL aux8 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00006 != 10)
+BOOL aux9 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00005 != 10)
 BOOL aux10 #(aux0 /\ aux5)
 BOOL aux11 #(x_SetExplicitVarSizeWithDefault_00000<x_SetExplicitVarSizeWithDefault_00001)
 BOOL aux12 #(aux5 /\ aux4)
@@ -94,16 +94,16 @@ reify(ineq(4, x_SetExplicitVarSizeWithDefault_00006, -1), aux34)
 reify(ineq(4, x_SetExplicitVarSizeWithDefault_00007, -1), aux35)
 reify(ineq(4, x_SetExplicitVarSizeWithDefault_00008, -1), aux36)
 reify(ineq(4, x_SetExplicitVarSizeWithDefault_00009, -1), aux37)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000,-1), aux0)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00009,-1), aux1)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00004,-1), aux2)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00003,-1), aux3)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00002,-1), aux4)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001,-1), aux5)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00008,-1), aux6)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00007,-1), aux7)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00006,-1), aux8)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00005,-1), aux9)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000,10), aux0)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00009,10), aux1)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00004,10), aux2)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00003,10), aux3)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00002,10), aux4)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001,10), aux5)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00008,10), aux6)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00007,10), aux7)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00006,10), aux8)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00005,10), aux9)
 sumgeq([aux0,aux5,aux4,aux3,aux2,aux9,aux8,aux7,aux6,aux1],2)
 ineq(aux10, aux11, 0)
 ineq(aux12, aux13, 0)

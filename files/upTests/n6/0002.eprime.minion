@@ -4,14 +4,14 @@ MINION 3
 # CSE_total_size = 27
 **VARIABLES**
 DISCRETE x_SetExplicitVarSizeWithDefault_00000 #
-{3..6}
+{4..7}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001 #
-{3..6}
+{4..7}
 DISCRETE x_SetExplicitVarSizeWithDefault_00002 #
-{3..6}
-BOOL aux0 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00000 != 3)
-BOOL aux1 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00002 != 3)
-BOOL aux2 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00001 != 3)
+{4..7}
+BOOL aux0 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00000 != 7)
+BOOL aux1 #CSE: 3 occurrences of: (x_SetExplicitVarSizeWithDefault_00002 != 7)
+BOOL aux2 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00001 != 7)
 BOOL aux3 #(aux0 /\ aux2)
 BOOL aux4 #(x_SetExplicitVarSizeWithDefault_00000<x_SetExplicitVarSizeWithDefault_00001)
 BOOL aux5 #(aux2 /\ aux1)
@@ -31,9 +31,9 @@ reify(ineq(x_SetExplicitVarSizeWithDefault_00001, x_SetExplicitVarSizeWithDefaul
 reify(diseq(x_SetExplicitVarSizeWithDefault_00000,4), aux7)
 reify(diseq(x_SetExplicitVarSizeWithDefault_00001,4), aux8)
 reify(diseq(x_SetExplicitVarSizeWithDefault_00002,4), aux9)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000,3), aux0)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00002,3), aux1)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001,3), aux2)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000,7), aux0)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00002,7), aux1)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001,7), aux2)
 sumgeq([aux0,aux2,aux1],2)
 ineq(aux3, aux4, 0)
 ineq(aux5, aux6, 0)

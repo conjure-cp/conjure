@@ -3,35 +3,17 @@ language ESSENCE' 1.0
 find x_SetExplicit_SetExplicitVarSize_tuple1:
         matrix indexed by [int(1..1), int(1..2)] of bool
 find x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault:
-        matrix indexed by [int(1..1), int(1..2), int(1..2)] of int(1..3)
+        matrix indexed by [int(1..1), int(1..2), int(1..2)] of int(2..4)
 such that
     x_SetExplicit_SetExplicitVarSize_tuple1[1, 1]
     /\
     x_SetExplicit_SetExplicitVarSize_tuple1[1, 2]
     ->
-    (forAll v__0 : int(1..2)
-         . x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
-                                                                                 1,
-                                                                                 v__0]
-           !=
-           1
-           ->
-           false)
-    /\
-    (forAll v__0 : int(1..2)
-         . x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
-                                                                                 2,
-                                                                                 v__0]
-           !=
-           1
-           ->
-           false)
-    \/
     x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1, 1, ..]
     <lex
     x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1, 2, ..],
     x_SetExplicit_SetExplicitVarSize_tuple1[1, 1]
-    <=
+    >=
     x_SetExplicit_SetExplicitVarSize_tuple1[1, 2],
     (sum v__0 : int(1..2) . x_SetExplicit_SetExplicitVarSize_tuple1[1, v__0]) >= 1,
     exists v__0 : int(1..2)
@@ -42,7 +24,7 @@ such that
                                                                                         v__0,
                                                                                         v__1]
                   !=
-                  1
+                  4
                   ->
                   2
                   =
@@ -55,7 +37,7 @@ such that
                                                                                         v__0,
                                                                                         v__1]
                   !=
-                  1
+                  4
                   /\
                   x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                         v__0,
@@ -70,7 +52,7 @@ such that
                                                                                         v__0,
                                                                                         v__1]
                   !=
-                  1
+                  4
                   ->
                   2
                   =
@@ -89,7 +71,7 @@ such that
                                                                                          v__0,
                                                                                          v__1]
                    !=
-                   1
+                   4
                    /\
                    x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                          v__0,
@@ -102,7 +84,7 @@ such that
                                                                                          v__0,
                                                                                          v__1]
                    !=
-                   1
+                   4
                    /\
                    x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                          v__0,
@@ -117,7 +99,7 @@ such that
                                                                                        v__0,
                                                                                        v__1]
                  !=
-                 1
+                 4
                  /\
                  x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                        v__0,
@@ -130,7 +112,7 @@ such that
                                                                                        v__0,
                                                                                        v__1]
                  !=
-                 1
+                 4
                  /\
                  x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                        v__0,
@@ -143,7 +125,7 @@ such that
                                                                                        v__0,
                                                                                        v__1]
                  !=
-                 1
+                 4
                  ->
                  2
                  =
@@ -162,7 +144,7 @@ such that
                                                                                        v__0,
                                                                                        v__1]
                  !=
-                 1
+                 4
                  /\
                  x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                        v__0,
@@ -175,7 +157,7 @@ such that
                                                                                        v__0,
                                                                                        v__1]
                  !=
-                 1
+                 4
                  ->
                  2
                  =
@@ -187,13 +169,13 @@ such that
                                                                                  v__0,
                                                                                  1]
            !=
-           1
+           4
            /\
            x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                  v__0,
                                                                                  2]
            !=
-           1
+           4
            ->
            x_SetExplicit_SetExplicitVarSize_tuple2_SetExplicitVarSizeWithDefault[1,
                                                                                  v__0,
@@ -216,6 +198,6 @@ such that
                                                                                        v__0,
                                                                                        v__1]
                  !=
-                 1)
+                 4)
           >=
           1

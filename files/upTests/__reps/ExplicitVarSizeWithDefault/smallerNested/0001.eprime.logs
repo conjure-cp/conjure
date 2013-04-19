@@ -33,49 +33,23 @@
           .<
           s_Set~Explicit§region1#Set~ExplicitVarSize[2]
           {rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule}
-              |s_Set~Explicit§region1#Set~ExplicitVarSize[1]|
-              <
-              |s_Set~Explicit§region1#Set~ExplicitVarSize[2]|
-              \/
-              |s_Set~Explicit§region1#Set~ExplicitVarSize[1]|
-              =
-              |s_Set~Explicit§region1#Set~ExplicitVarSize[2]|
-              /\
               (exists v__20 : int(1..4)
-                   , s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__20, 1]
+                   . (forAll v__21 : int(1..4) , v__21 < v__20
+                          . s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__21, 2]
+                            =
+                            s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__21, 2])
                      /\
-                     s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__20, 1]
-                   . s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__20, 2]
-                     .<
-                     s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__20, 2])
-[applied] |s_Set~Explicit§region1#Set~ExplicitVarSize[1]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__21 in s_Set~Explicit§region1#Set~ExplicitVarSize[1] . 1)
-[applied] (sum v__21 in s_Set~Explicit§region1#Set~ExplicitVarSize[1] . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__22 : int(1..4) , s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__22, 1]
-                   . 1)
-[applied] |s_Set~Explicit§region1#Set~ExplicitVarSize[2]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__23 in s_Set~Explicit§region1#Set~ExplicitVarSize[2] . 1)
-[applied] (sum v__23 in s_Set~Explicit§region1#Set~ExplicitVarSize[2] . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__24 : int(1..4) , s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__24, 1]
-                   . 1)
-[applied] |s_Set~Explicit§region1#Set~ExplicitVarSize[1]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__25 in s_Set~Explicit§region1#Set~ExplicitVarSize[1] . 1)
-[applied] (sum v__25 in s_Set~Explicit§region1#Set~ExplicitVarSize[1] . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__26 : int(1..4) , s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__26, 1]
-                   . 1)
-[applied] |s_Set~Explicit§region1#Set~ExplicitVarSize[2]|
-          {rules/refns/horizontal/set-card.rule}
-              (sum v__27 in s_Set~Explicit§region1#Set~ExplicitVarSize[2] . 1)
-[applied] (sum v__27 in s_Set~Explicit§region1#Set~ExplicitVarSize[2] . 1)
-          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
-              (sum v__28 : int(1..4) , s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__28, 1]
-                   . 1)
+                     (s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__20, 1]
+                      /\
+                      s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__20, 1]
+                      /\
+                      s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__20, 2]
+                      .<
+                      s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__20, 2]
+                      \/
+                      toInt(s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__20, 1])
+                      >
+                      toInt(s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__20, 1])))
 [applied] s_Set~Explicit_Set~ExplicitVarSize§region1[1, v__20, 2]
           .<
           s_Set~Explicit_Set~ExplicitVarSize§region1[2, v__20, 2]

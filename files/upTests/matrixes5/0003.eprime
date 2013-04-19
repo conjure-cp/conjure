@@ -37,7 +37,7 @@ such that
                  /\
                  (forAll v__2 : int(1..2)
                       . x_SetExplicitVarSize_tuple1[v__0, v__1, v__2]
-                        <=
+                        >=
                         x_SetExplicitVarSize_tuple1[v__0, v__1, v__2 + 1])),
     forAll v__0 : int(1..2)
         . (forAll v__1 : int(1, 2)
