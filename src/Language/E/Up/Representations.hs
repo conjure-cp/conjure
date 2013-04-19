@@ -299,7 +299,6 @@ partitionMSetOfSetsBranch = ( tracee "partitionMSetOfSetsBranch" beforeUnchanged
     after orgData [vs] = orgData{vEssence=partitionMSetOfSetsRep vs}
         `_p` ("partitionMSetOfSetsBranch v", [vs])
 
-
     after _ vvs = _bug "partitionMSetOfSetsBranch unhandled" vvs
 
 

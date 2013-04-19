@@ -26,15 +26,10 @@ import Language.E.Up.EvaluateTree2(evalTree)
 import Language.E.Up.AddEssenceTypes
 import Language.E.Up.GatherIndexRanges
 
-import Control.Arrow(arr,first,second)
-
-
 import Data.Char(isSpace)
-import Data.Set(Set)
 import Data.Map(Map)
 
 import qualified Data.Map as M
-import qualified Data.Set as S
 import qualified Data.Text as T
 
 type Logs = [Text]
@@ -88,12 +83,10 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
     in enums ++ resultEssence
 
 
-
-
 makeTuplesOfMatrixesMap :: [Text] -> Map [String] Int
 makeTuplesOfMatrixesMap =
       M.fromList
-    . map  ( second ( toInt .  tailTemp  )
+    . map  ( second ( textToInt .  tailTemp  )
            . first  (splitOn "_" .  dropWhile isSpace . T.unpack) 
            )
     . map (T.break (== '∑') . T.replace "~" "")
@@ -105,13 +98,10 @@ makeTuplesOfMatrixesMap =
     tailTemp t | T.length t == 0  = "1"  
     tailTemp t = T.tail t
 
-    toInt :: Text -> Int
-    toInt t = case reads (T.unpack t) of 
+    textToInt :: Text -> Int
+    textToInt t = case reads (T.unpack t) of 
         [(i,_)] -> i
-        _       -> error $ "Logs: [matrixToTuple] Unable to parse a int from " ++ (show t)
-
-
-
+        _       -> error $ "Logs: [matrixToTuple] Unable to parse a int from " ++ show t
 
 
 onlyNeeded :: M.Map String VarData -> Tree String ->  M.Map String VarData
