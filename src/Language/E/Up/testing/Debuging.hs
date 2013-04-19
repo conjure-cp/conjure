@@ -121,6 +121,7 @@ bes specs=  do
     s specs
 
 -- Print out using eval
+bg n s = be (gg n s)
 be specs@(specF, _, orgF ,_ ,_) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
     (print . pretty) orgP
@@ -196,4 +197,5 @@ base     =  "/Users/bilalh/CS/conjure/files/upTests/"
 getTest' = getFiles base
 getTest  = flip (getFiles base) 1
 gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix base s) ) n
+
 
