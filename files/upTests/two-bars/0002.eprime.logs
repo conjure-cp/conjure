@@ -9,7 +9,7 @@
 [addedDecl] find s2_Set~ExplicitVarSize:
                     matrix indexed by [int(1..10)] of (bool, int(0..9))
 [addedDecl] find s1_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..10)] of int(-1..9)
+                    matrix indexed by [int(1..10)] of int(0..10)
 [refn] 0
 [applied] |s1§region1#Set~ExplicitVarSizeWithDefault
            intersect
@@ -45,7 +45,7 @@
                             =
                             s1_Set~ExplicitVarSizeWithDefault§region1[v__8])
                      /\
-                     s1_Set~ExplicitVarSizeWithDefault§region1[v__8] != -1
+                     s1_Set~ExplicitVarSizeWithDefault§region1[v__8] != 10
                    . 1)
 [applied] s2_Set~ExplicitVarSize§region2[v__3, 2]
           .<
