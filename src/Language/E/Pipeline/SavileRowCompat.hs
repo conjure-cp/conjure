@@ -34,7 +34,7 @@ onSpec f (Spec v xs) = Spec v $ f xs
 
 
 toIntIsNoOp :: E -> E
-toIntIsNoOp [eMatch| toInt(&x) |] = x
+toIntIsNoOp [eMatch| toInt(&x) |] = toIntIsNoOp x
 toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
 
