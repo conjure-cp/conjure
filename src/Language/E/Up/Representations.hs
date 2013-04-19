@@ -61,10 +61,15 @@ setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
 setExplicitVarSizeWithDefaultRep :: VarData -> E
 setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} = 
-    wrapInMatrix . mapMaybe (removeIt $ toRemove bs) . unwrapMatrix $ 
-        tracee "setExplicitVarSizeWithDefaultRep" e
+    explicitVarSizeWithDefault e
 
     where 
+    
+    explicitVarSizeWithDefault :: E -> E
+    explicitVarSizeWithDefault f = 
+        wrapInMatrix . mapMaybe (removeIt $ toRemove bs) . unwrapMatrix $ 
+        tracee "setExplicitVarSizeWithDefaultRep" f
+
     toRemove :: [Integer] -> Integer
     toRemove (b:_) = b
     toRemove []    = _bugg "setExplicitVarSizeWithDefaultRep no bounds" 
@@ -72,6 +77,12 @@ setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
     removeIt :: Integer -> E -> Maybe E 
     removeIt toRemove f@[xMatch| [Prim (I i)] := value.literal |] =
        if i == toRemove then Nothing else Just f
+
+    removeIt toRemove f@[xMatch| _ := value.matrix.values |] = 
+        Just $ explicitVarSizeWithDefault f
+
+
+    removeIt i e = errpM ("removeIt " ++ show i) [e]
 
 {- Relations -}
 
