@@ -10,9 +10,9 @@ DISCRETE b_tuple1 #
 DISCRETE b_tuple2 #
 {3..8}
 DISCRETE b_tuple3_SetExplicitVarSizeWithDefault_00000 #
-{2..4}
+{3..5}
 DISCRETE b_tuple3_SetExplicitVarSizeWithDefault_00001 #
-{2..4}
+{3..5}
 DISCRETE c_tuple1 #
 {0..9}
 BOOL c_tuple2_SetExplicitVarSize_tuple1_00000 #
@@ -30,8 +30,8 @@ DISCRETE c_tuple3_tuple1_SetExplicitVarSize_tuple2_00001 #
 DISCRETE c_tuple3_tuple2_tuple1 #
 {3..4}
 BOOL c_tuple3_tuple2_tuple2 #
-BOOL aux0 #CSE: 3 occurrences of: (2 != b_tuple3_SetExplicitVarSizeWithDefault_00000)
-BOOL aux1 #CSE: 3 occurrences of: (2 != b_tuple3_SetExplicitVarSizeWithDefault_00001)
+BOOL aux0 #CSE: 3 occurrences of: (5 != b_tuple3_SetExplicitVarSizeWithDefault_00000)
+BOOL aux1 #CSE: 3 occurrences of: (5 != b_tuple3_SetExplicitVarSizeWithDefault_00001)
 BOOL aux2 #CSE: 2 occurrences of: (c_tuple3_tuple1_SetExplicitVarSize_tuple2_00000=4)
 BOOL aux3 #CSE: 2 occurrences of: (c_tuple3_tuple1_SetExplicitVarSize_tuple2_00000=3)
 BOOL aux4 #CSE: 2 occurrences of: (c_tuple3_tuple1_SetExplicitVarSize_tuple2_00001=3)
@@ -65,8 +65,8 @@ reify(watched-or({watched-and({w-literal(aux0,1),w-literal(b_tuple3_SetExplicitV
 reify(watched-or({watched-and({w-literal(c_tuple2_SetExplicitVarSize_tuple1_00000,1),w-literal(c_tuple2_SetExplicitVarSize_tuple2_00000,3)}),watched-and({w-literal(c_tuple2_SetExplicitVarSize_tuple1_00001,1),w-literal(c_tuple2_SetExplicitVarSize_tuple2_00001,3)})}), aux15)
 reify(watched-or({watched-and({w-literal(aux0,1),w-literal(b_tuple3_SetExplicitVarSizeWithDefault_00000,4)}),watched-and({w-literal(aux1,1),w-literal(b_tuple3_SetExplicitVarSizeWithDefault_00001,4)})}), aux16)
 reify(watched-or({watched-and({w-literal(c_tuple2_SetExplicitVarSize_tuple1_00000,1),w-literal(c_tuple2_SetExplicitVarSize_tuple2_00000,4)}),watched-and({w-literal(c_tuple2_SetExplicitVarSize_tuple1_00001,1),w-literal(c_tuple2_SetExplicitVarSize_tuple2_00001,4)})}), aux17)
-reify(diseq(2,b_tuple3_SetExplicitVarSizeWithDefault_00000), aux0)
-reify(diseq(2,b_tuple3_SetExplicitVarSizeWithDefault_00001), aux1)
+reify(diseq(5,b_tuple3_SetExplicitVarSizeWithDefault_00000), aux0)
+reify(diseq(5,b_tuple3_SetExplicitVarSizeWithDefault_00001), aux1)
 reify(w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple2_00000,4), aux2)
 reify(w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple2_00000,3), aux3)
 reify(w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple2_00001,3), aux4)
@@ -76,12 +76,12 @@ ineq(aux8, aux9, 0)
 ineq(aux10, aux11, 0)
 ineq(b_tuple1, 2, -1)
 ineq(b_tuple3_SetExplicitVarSizeWithDefault_00000, b_tuple3_SetExplicitVarSizeWithDefault_00001, 0)
-ineq(c_tuple2_SetExplicitVarSize_tuple1_00000, c_tuple2_SetExplicitVarSize_tuple1_00001, 0)
-ineq(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00000, c_tuple3_tuple1_SetExplicitVarSize_tuple1_00001, 0)
 eq(c_tuple1,a_tuple1)
 w-literal(c_tuple3_tuple2_tuple1,3)
 w-literal(c_tuple3_tuple2_tuple2,1)
 ineq(b_tuple1, b_tuple2, -1)
+ineq(c_tuple2_SetExplicitVarSize_tuple1_00001, c_tuple2_SetExplicitVarSize_tuple1_00000, 0)
+ineq(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00001, c_tuple3_tuple1_SetExplicitVarSize_tuple1_00000, 0)
 watched-or({watched-and({w-literal(aux3,1),w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00000,1)}),watched-and({w-literal(aux4,1),w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00001,1)})})
 watched-or({watched-and({w-literal(aux2,1),w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00000,1)}),watched-and({w-literal(aux5,1),w-literal(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00001,1)})})
 ineq(c_tuple3_tuple1_SetExplicitVarSize_tuple1_00000, aux12, 0)

@@ -11,7 +11,7 @@
 [configuration] c_tuple2§region1#Set~ExplicitVarSizeWithDefault b_tuple3§region2#Set~Occurrence
 [addedDecl] find b_tuple3_Set~Occurrence: matrix indexed by [int(3..4)] of bool
 [addedDecl] find c_tuple2_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..2)] of int(2..4)
+                    matrix indexed by [int(1..2)] of int(3..5)
 [refn] 0
 [applied] c_tuple2§region1#Set~ExplicitVarSizeWithDefault
           =
@@ -33,7 +33,7 @@
                . v__6 = v__5)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__7 : int(1..2)
-                   , c_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__7] != 2
+                   , c_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__7] != 5
                    . c_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__7] = v__5)
 [applied] v__5 in b_tuple3§region2#Set~Occurrence
           {rules/refns/vertical/Set~Occurrence/in.rule}
@@ -45,7 +45,7 @@
                . v__8 = v__5)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__9 : int(1..2)
-                   , c_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__9] != 2
+                   , c_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__9] != 5
                    . c_tuple2_Set~ExplicitVarSizeWithDefault§region1[v__9] = v__5)
 [removeRefinedDecl] find b_tuple3: set of int(3..4)
 [removeRefinedDecl] find c_tuple2: set of int(3..4)

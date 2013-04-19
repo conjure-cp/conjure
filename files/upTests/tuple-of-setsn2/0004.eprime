@@ -6,13 +6,13 @@ find c_tuple2_SetExplicitVarSize_tuple1: matrix indexed by [int(1..2)] of bool
 find c_tuple2_SetExplicitVarSize_tuple2:
         matrix indexed by [int(1..2)] of int(3..4)
 find c_tuple3_tuple1_SetExplicitVarSizeWithDefault:
-        matrix indexed by [int(1..2)] of int(2..4)
+        matrix indexed by [int(1..2)] of int(3..5)
 find c_tuple3_tuple2_tuple1: int(3..4)
 find c_tuple3_tuple2_tuple2: bool
 such that
-    c_tuple3_tuple1_SetExplicitVarSizeWithDefault[1] != 2
+    c_tuple3_tuple1_SetExplicitVarSizeWithDefault[1] != 5
     /\
-    c_tuple3_tuple1_SetExplicitVarSizeWithDefault[2] != 2
+    c_tuple3_tuple1_SetExplicitVarSizeWithDefault[2] != 5
     ->
     c_tuple3_tuple1_SetExplicitVarSizeWithDefault[1]
     <
@@ -20,19 +20,19 @@ such that
     c_tuple2_SetExplicitVarSize_tuple1[1] /\ c_tuple2_SetExplicitVarSize_tuple1[2]
     ->
     c_tuple2_SetExplicitVarSize_tuple2[1] < c_tuple2_SetExplicitVarSize_tuple2[2],
-    c_tuple2_SetExplicitVarSize_tuple1[1] <= c_tuple2_SetExplicitVarSize_tuple1[2],
     c_tuple3_tuple1_SetExplicitVarSizeWithDefault[1]
     <=
     c_tuple3_tuple1_SetExplicitVarSizeWithDefault[2],
     c_tuple1 = a_tuple1,
     c_tuple3_tuple2_tuple1 = 3,
     c_tuple3_tuple2_tuple2 = true,
+    c_tuple2_SetExplicitVarSize_tuple1[1] >= c_tuple2_SetExplicitVarSize_tuple1[2],
     exists v__0 : int(1..2)
-        . c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] != 2
+        . c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] != 5
           /\
           c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] = 3,
     exists v__0 : int(1..2)
-        . c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] != 2
+        . c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] != 5
           /\
           c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] = 4,
     exists v__0 : int(1..2)
@@ -44,7 +44,7 @@ such that
           /\
           c_tuple2_SetExplicitVarSize_tuple2[v__0] = 4,
     forAll v__0 : int(1..2)
-        . c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] != 2
+        . c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0] != 5
           ->
           3 = c_tuple3_tuple1_SetExplicitVarSizeWithDefault[v__0]
           \/

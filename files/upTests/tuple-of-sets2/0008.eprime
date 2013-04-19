@@ -6,11 +6,11 @@ find b_tuple2: int(3..8)
 find b_tuple3_SetOccurrence: matrix indexed by [int(3..4)] of bool
 find c_tuple1: int(0..9)
 find c_tuple2_SetExplicitVarSizeWithDefault:
-        matrix indexed by [int(1..2)] of int(2..4)
+        matrix indexed by [int(1..2)] of int(3..5)
 such that
-    c_tuple2_SetExplicitVarSizeWithDefault[1] != 2
+    c_tuple2_SetExplicitVarSizeWithDefault[1] != 5
     /\
-    c_tuple2_SetExplicitVarSizeWithDefault[2] != 2
+    c_tuple2_SetExplicitVarSizeWithDefault[2] != 5
     ->
     c_tuple2_SetExplicitVarSizeWithDefault[1]
     <
@@ -21,7 +21,7 @@ such that
     c_tuple1 = a_tuple1,
     forAll v__0 : int(3..4)
         . (exists v__1 : int(1..2)
-               . c_tuple2_SetExplicitVarSizeWithDefault[v__1] != 2
+               . c_tuple2_SetExplicitVarSizeWithDefault[v__1] != 5
                  /\
                  c_tuple2_SetExplicitVarSizeWithDefault[v__1] = v__0)
           <->

@@ -12,7 +12,7 @@
                  Set~ExplicitVarSize, Set~ExplicitVarSizeWithDefault, Set~Occurrence
 [configuration] c_tuple2§region1#Set~ExplicitVarSize c_tuple3_tuple1§region2#Set~ExplicitVarSizeWithDefault
 [addedDecl] find c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..2)] of int(2..4)
+                    matrix indexed by [int(1..2)] of int(3..5)
 [addedDecl] find c_tuple2_Set~ExplicitVarSize:
                     matrix indexed by [int(1..2)] of (bool, int(3..4))
 [refn] 0
@@ -72,7 +72,7 @@
                . 3 = v__13 \/ 4 = v__13)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (forAll v__15 : int(1..2)
-                   , c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__15] != 2
+                   , c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__15] != 5
                    . 3 = c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__15]
                      \/
                      4 = c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__15])
@@ -92,7 +92,7 @@
                . v__17 = 3)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__18 : int(1..2)
-                   , c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__18] != 2
+                   , c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__18] != 5
                    . c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__18] = 3)
 [applied] 4 in c_tuple3_tuple1§region2#Set~ExplicitVarSizeWithDefault
           {rules/refns/horizontal/set-in-to-quantified.rule}
@@ -102,7 +102,7 @@
                . v__19 = 4)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__20 : int(1..2)
-                   , c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__20] != 2
+                   , c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__20] != 5
                    . c_tuple3_tuple1_Set~ExplicitVarSizeWithDefault§region2[v__20] = 4)
 [applied] c_tuple2_Set~ExplicitVarSize§region1[1, 2]
           .<

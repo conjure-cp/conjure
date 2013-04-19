@@ -12,8 +12,8 @@ such that
     c_tuple2_SetExplicitVarSize_tuple1[1] /\ c_tuple2_SetExplicitVarSize_tuple1[2]
     ->
     c_tuple2_SetExplicitVarSize_tuple2[1] < c_tuple2_SetExplicitVarSize_tuple2[2],
-    c_tuple2_SetExplicitVarSize_tuple1[1] <= c_tuple2_SetExplicitVarSize_tuple1[2],
     c_tuple1 = a_tuple1,
+    c_tuple2_SetExplicitVarSize_tuple1[1] >= c_tuple2_SetExplicitVarSize_tuple1[2],
     forAll v__0 : int(3..4)
         . (exists v__1 : int(1..2)
                . c_tuple2_SetExplicitVarSize_tuple1[v__1]

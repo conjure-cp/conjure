@@ -12,8 +12,8 @@ such that
     b_tuple3_SetExplicitVarSize_tuple1[1] /\ b_tuple3_SetExplicitVarSize_tuple1[2]
     ->
     b_tuple3_SetExplicitVarSize_tuple2[1] < b_tuple3_SetExplicitVarSize_tuple2[2],
-    b_tuple3_SetExplicitVarSize_tuple1[1] <= b_tuple3_SetExplicitVarSize_tuple1[2],
     c_tuple1 = a_tuple1,
+    b_tuple3_SetExplicitVarSize_tuple1[1] >= b_tuple3_SetExplicitVarSize_tuple1[2],
     forAll v__0 : int(3..4)
         . c_tuple2_SetOccurrence[v__0] = true
           <->

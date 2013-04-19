@@ -10,19 +10,19 @@ DISCRETE b_tuple1 #
 DISCRETE b_tuple2 #
 {3..8}
 DISCRETE b_tuple3_SetExplicitVarSizeWithDefault_00000 #
-{2..4}
+{3..5}
 DISCRETE b_tuple3_SetExplicitVarSizeWithDefault_00001 #
-{2..4}
+{3..5}
 DISCRETE c_tuple1 #
 {0..9}
 DISCRETE c_tuple2_SetExplicitVarSizeWithDefault_00000 #
-{2..4}
+{3..5}
 DISCRETE c_tuple2_SetExplicitVarSizeWithDefault_00001 #
-{2..4}
-BOOL aux0 #CSE: 3 occurrences of: (2 != b_tuple3_SetExplicitVarSizeWithDefault_00000)
-BOOL aux1 #CSE: 3 occurrences of: (2 != b_tuple3_SetExplicitVarSizeWithDefault_00001)
-BOOL aux2 #CSE: 3 occurrences of: (c_tuple2_SetExplicitVarSizeWithDefault_00000 != 2)
-BOOL aux3 #CSE: 3 occurrences of: (c_tuple2_SetExplicitVarSizeWithDefault_00001 != 2)
+{3..5}
+BOOL aux0 #CSE: 3 occurrences of: (5 != b_tuple3_SetExplicitVarSizeWithDefault_00000)
+BOOL aux1 #CSE: 3 occurrences of: (5 != b_tuple3_SetExplicitVarSizeWithDefault_00001)
+BOOL aux2 #CSE: 3 occurrences of: (c_tuple2_SetExplicitVarSizeWithDefault_00000 != 5)
+BOOL aux3 #CSE: 3 occurrences of: (c_tuple2_SetExplicitVarSizeWithDefault_00001 != 5)
 BOOL aux4 #(aux0 /\ aux1)
 BOOL aux5 #(b_tuple3_SetExplicitVarSizeWithDefault_00000<b_tuple3_SetExplicitVarSizeWithDefault_00001)
 BOOL aux6 #(aux2 /\ aux3)
@@ -44,10 +44,10 @@ reify(watched-or({watched-and({w-literal(c_tuple2_SetExplicitVarSizeWithDefault_
 reify(watched-or({watched-and({w-literal(aux0,1),w-literal(b_tuple3_SetExplicitVarSizeWithDefault_00000,3)}),watched-and({w-literal(aux1,1),w-literal(b_tuple3_SetExplicitVarSizeWithDefault_00001,3)})}), aux9)
 reify(watched-or({watched-and({w-literal(c_tuple2_SetExplicitVarSizeWithDefault_00000,4),w-literal(aux2,1)}),watched-and({w-literal(c_tuple2_SetExplicitVarSizeWithDefault_00001,4),w-literal(aux3,1)})}), aux10)
 reify(watched-or({watched-and({w-literal(aux0,1),w-literal(b_tuple3_SetExplicitVarSizeWithDefault_00000,4)}),watched-and({w-literal(aux1,1),w-literal(b_tuple3_SetExplicitVarSizeWithDefault_00001,4)})}), aux11)
-reify(diseq(2,b_tuple3_SetExplicitVarSizeWithDefault_00000), aux0)
-reify(diseq(2,b_tuple3_SetExplicitVarSizeWithDefault_00001), aux1)
-reify(diseq(c_tuple2_SetExplicitVarSizeWithDefault_00000,2), aux2)
-reify(diseq(c_tuple2_SetExplicitVarSizeWithDefault_00001,2), aux3)
+reify(diseq(5,b_tuple3_SetExplicitVarSizeWithDefault_00000), aux0)
+reify(diseq(5,b_tuple3_SetExplicitVarSizeWithDefault_00001), aux1)
+reify(diseq(c_tuple2_SetExplicitVarSizeWithDefault_00000,5), aux2)
+reify(diseq(c_tuple2_SetExplicitVarSizeWithDefault_00001,5), aux3)
 ineq(aux4, aux5, 0)
 ineq(aux6, aux7, 0)
 ineq(b_tuple3_SetExplicitVarSizeWithDefault_00000, b_tuple3_SetExplicitVarSizeWithDefault_00001, 0)
