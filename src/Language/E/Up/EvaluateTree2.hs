@@ -2,6 +2,7 @@
 
 module Language.E.Up.EvaluateTree2 (
      evalTree
+     ,reverseTuplesOfMatrixes
 ) where
 
 import Language.E
@@ -34,7 +35,6 @@ evalTree' :: VarMap -> IsTuplesOfMatrixes -> [RepName] -> [String] -> Tree Strin
 evalTree' mapping set fs prefix (Leaf part) =
    let leafFunc = leafRep part
          `_p` ("leaf \n" ++ name, [vdata] )
-         `_g` ("leaf prefix +n",prefix ++ [name] )
          `_g` ("leaf funcs str", fs )
 
        res     = runBranchFuncs (reverse . mapMaybe getBranch $ fs) vdata leafFunc
@@ -79,7 +79,7 @@ evalTree' mapping set fs prefix (Tuple arr) =
    
 
 
-    -- CHECK very hackish but seems to work
+    -- FIXME very hackish but seems to work apart from Matrix1D
     vdata n e        = VarData
          {vIndexes = replicate n []
          ,vBounds  = []
