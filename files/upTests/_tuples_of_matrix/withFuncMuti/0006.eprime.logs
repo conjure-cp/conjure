@@ -35,11 +35,11 @@
                          matrix indexed by [int(1, 2, 3)] of relation of (int(1..2) * int(-1, 1))
                  (#2)
                  RelationIntMatrix2, RelationAsSet
-[configuration] pain_tuple1_tuple2_AsReln§region3#RelationAsSet pain_tuple1_tuple2_AsReln§region1#RelationIntMatrix2 pain_tuple1_tuple2_AsReln§region2#RelationAsSet
-[addedDecl] find pain_tuple1_tuple2_AsReln_RelationIntMatrix2:
-                    matrix indexed by [int(1, 2, 3), int(1..2), int(-1, 1)] of bool
+[configuration] pain_tuple1_tuple2_AsReln§region3#RelationAsSet pain_tuple1_tuple2_AsReln§region1#RelationAsSet pain_tuple1_tuple2_AsReln§region2#RelationIntMatrix2
 [addedDecl] find pain_tuple1_tuple2_AsReln_RelationAsSet:
                     matrix indexed by [int(1, 2, 3)] of set of (int(1..2), int(-1, 1))
+[addedDecl] find pain_tuple1_tuple2_AsReln_RelationIntMatrix2:
+                    matrix indexed by [int(1, 2, 3), int(1..2), int(-1, 1)] of bool
 [refn] 1
 [removeRefinedDecl] find pain_tuple1_tuple2_AsReln:
                             matrix indexed by [int(1, 2, 3)] of relation of (int(1..2) * int(-1, 1))

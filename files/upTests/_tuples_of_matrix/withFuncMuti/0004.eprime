@@ -1,21 +1,33 @@
 language ESSENCE' 1.0
 
 find pain_tuple1_tuple1: matrix indexed by [int(1, 2, 3)] of int(1, 2)
-find pain_tuple1_tuple2_AsReln_RelationIntMatrix2:
-        matrix indexed by [int(1, 2, 3), int(1..2), int(-1, 1)] of bool
 find pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple1:
         matrix indexed by [int(1, 2, 3), int(1..4)] of bool
 find pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1:
         matrix indexed by [int(1, 2, 3), int(1..4)] of int(1..2)
 find pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2:
         matrix indexed by [int(1, 2, 3), int(1..4)] of int(-1, 1)
+find pain_tuple1_tuple2_AsReln_RelationIntMatrix2:
+        matrix indexed by [int(1, 2, 3), int(1..2), int(-1, 1)] of bool
 find pain_tuple1_tuple3: matrix indexed by [int(1, 2, 3)] of int(4, 5)
 such that
     (sum v__0 : int(1..2)
          . (sum v__1 : int(-1, 1)
-                . (v__0 = 1 /\ pain_tuple1_tuple2_AsReln_RelationIntMatrix2[1, v__0, v__1])
+                . (v__0 = 1 /\ pain_tuple1_tuple2_AsReln_RelationIntMatrix2[3, v__0, v__1])
                   *
                   v__1))
+    !=
+    -1,
+    (sum v__0 : int(1..4)
+         . (pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1,
+                                                                                     v__0]
+            =
+            1
+            /\
+            pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0])
+           *
+           pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2[1,
+                                                                                    v__0])
     !=
     -1,
     (sum v__0 : int(1..4)
@@ -30,18 +42,6 @@ such that
                                                                                     v__0])
     !=
     1,
-    (sum v__0 : int(1..4)
-         . (pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[3,
-                                                                                     v__0]
-            =
-            1
-            /\
-            pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[3, v__0])
-           *
-           pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2[3,
-                                                                                    v__0])
-    !=
-    -1,
     pain_tuple1_tuple1[1] = 2,
     pain_tuple1_tuple1[2] = 1,
     pain_tuple1_tuple1[3] = 2,

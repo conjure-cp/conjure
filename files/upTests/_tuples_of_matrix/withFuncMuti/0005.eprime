@@ -18,16 +18,11 @@ such that
                   v__1))
     !=
     -1,
-    (sum v__0 : int(1..4)
-         . (pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[2,
-                                                                                     v__0]
-            =
-            1
-            /\
-            pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[2, v__0])
-           *
-           pain_tuple1_tuple2_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2[2,
-                                                                                    v__0])
+    (sum v__0 : int(1..2)
+         . (sum v__1 : int(-1, 1)
+                . (v__0 = 1 /\ pain_tuple1_tuple2_AsReln_RelationIntMatrix2[2, v__0, v__1])
+                  *
+                  v__1))
     !=
     1,
     (sum v__0 : int(1..4)
