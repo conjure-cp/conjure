@@ -78,7 +78,7 @@ m specs@(specF, solF, orgF,param,orgParam) =
     runCommand $ "mvim \"" ++ orgF ++ "\""
 
 po specs@(specF, solF, orgF,param,orgParam)  = do
-    org <- getSpec orgF
+    org <- getSpec' False orgF
     mapM_ __groomPrint    (toLst org)
     --(print . pretty) org
     return ()
@@ -163,25 +163,28 @@ be specs@(specF, _, orgF ,_ ,_) = do
 
 
     let indexrangeMapping = gatherIndexRanges orgP    
+    __groomPrintM "indexrangeMapping" indexrangeMapping
+        
 
     let enumMapping1 = getEnumMapping orgP
         enums1       = getEnumsAndUnamed orgP
 
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
 
-    let lookUp m = fromMaybe (error "fromMaybe cgs: lookUpType")  . flip M.lookup m
+    let lookUp m k= fromMaybe (error $ "fromMaybe cgs: lookUpType: " ++ (show k) ++ " " ++ (show m) )  . flip M.lookup m $ k
         eval (s,e) =
             let orgType = lookUp orgInfo s
                 indext  = lookUp indexrangeMapping s
                 res'    = introduceTypes enumMapping orgType e
                 withIndexes =   introduceIndexRange indext res'
-            in wrap s $ res' 
+            in wrap s $ withIndexes 
 
         resultEssence =  map eval varResults
         {-resultEssence =  map (uncurry wrap ) varResults-}
 
     (print . vcat . map pretty) resultEssence
     {-mapM_ (print . prettyAsPaths) resultEssence-}
+    putStrLn "[Finished]"
 
 
 
