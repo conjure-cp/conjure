@@ -18,7 +18,7 @@ import Language.E
 import Language.E.Pipeline.Groom ( groomSpec )
 
 import qualified Data.Text as T
-import Data.List ( findIndex )
+import Data.List ( findIndex, transpose )
 
 
 
@@ -346,6 +346,24 @@ workhorse lookupReprs (nm, dom, val) = do
 
         helper
             name
+            [xMatch| [domInnerFr] := domain.function.innerFrom |]
+            [xMatch| values := value.function.values |]
+            (Just "Matrix1D")
+            = do
+                let
+                    mappingToTuple [xMatch| [a,b] := mapping |] = (a,b)
+                    mappingToTuple p = bug $ vcat [ "workhorse.helper.Matrix1D", pretty p ]
+                    (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
+                    nameOut = name `T.append` "_Matrix1D"
+                domInnerFr' <- instantiate [] domInnerFr
+                let
+                    valueOut = [xMake| value.matrix.values     := actualValues
+                                     | value.matrix.indexrange := [domInnerFr']
+                                     |]
+                return [(nameOut, valueOut)]
+
+        helper
+            name
             [xMatch| attrs     := domain.relation.attributes.attrCollection
                    | domInners := domain.relation.inners
                    |]
@@ -365,6 +383,36 @@ workhorse lookupReprs (nm, dom, val) = do
                                   |]
                             [xMake| value.set.values := values |]
                             (Just repr)
+
+        helper
+            name
+            [xMatch| [da,db] := domain.relation.inners |]
+            [xMatch| values  := value.relation.values |]
+            (Just "RelationIntMatrix2")
+            = do
+                da' <- instantiate [] da
+                db' <- instantiate [] db
+                let nameOut = name `T.append` "_RelationIntMatrix2"
+                case (da', db') of
+                    (  [xMatch| [aFr,aTo] := domain.int.ranges.range.fromTo |]
+                     , [xMatch| [bFr,bTo] := domain.int.ranges.range.fromTo |]
+                      ) -> do
+                        aFr' <- valueIntOut aFr
+                        aTo' <- valueIntOut aTo
+                        bFr' <- valueIntOut bFr
+                        bTo' <- valueIntOut bTo
+                        let outMatrix = [ [ [xMake| value.literal := [Prim (B $ elem forlookup values)] |]
+                                          | i <- [ aFr' .. aTo' ]
+                                          , let forlookup_1 = [xMake| value.literal := [Prim (I i)] |]
+                                          , let forlookup_2 = [xMake| value.literal := [Prim (I j)] |]
+                                          , let forlookup = [xMake| value.tuple.values := [forlookup_1, forlookup_2] |]
+                                          ]
+                                        | j <- [ bFr' .. bTo' ]
+                                        ]
+                        let valueMatrix xs = [xMake| value.matrix.values := xs |]
+                        let outMatrix' = valueMatrix $ map valueMatrix $ transpose outMatrix
+                        return [(nameOut, outMatrix')]
+                    (_, _) -> bug $ vcat [ "workhorse.helper.RelationIntMatrix2", pretty name]
 
         helper
             name
@@ -417,17 +465,6 @@ valueIntOut p = do
         else err ErrFatal $ "Expecting integer literal, found:" <+> vcat [ pretty p
                                                                          , prettyAsPaths p
                                                                          ]
--- toInt p            = do
-    -- (p', (Any flag, bs)) <- runWriterT $ simplify p
-    -- modify $ \ st -> st { binders = bs ++ binders st }
-    -- if flag
-        -- then do
-            -- mres <- toInt p'
-            -- case mres of
-                -- Nothing         -> return Nothing
-                -- Just (p'', bs2) -> return $ Just (p'', bs ++ bs2)
-        -- else return Nothing
-
 
 
 zeroVal :: MonadConjure m => E -> m E
@@ -480,4 +517,16 @@ zeroVal [xMatch| [Prim (S domId)] := reference |] = do
 
 zeroVal x = bug ("RedArrow.zeroVal" <+> prettyAsPaths x)
 
+
+instantiate :: MonadConjure m => [Text] -> E -> m E
+instantiate seen [xMatch| [Prim (S domId)] := reference |]
+    | domId `elem` seen = userErr $ "Cyclic definition:" <+> sep (map pretty seen)
+instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
+    mdomain <- runMaybeT $ lookupReference domId
+    case mdomain of
+        Nothing -> return p
+        Just [xMatch| [domain] := topLevel.letting.domain |] -> instantiate (domId:seen) domain
+        Just domain -> instantiate (domId:seen) domain
+instantiate seen (Tagged t xs) = Tagged t <$> mapM (instantiate seen) xs
+instantiate _ p = return p
 
