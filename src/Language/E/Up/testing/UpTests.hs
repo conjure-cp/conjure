@@ -26,7 +26,7 @@ type LogsF           = FilePath
 
 eprimes :: IO [EprimeF]
 -- Every test
-{-eprimes = allFilesWithSuffix ".eprime" "files/uptests/"-}
+eprimes = allFilesWithSuffix ".eprime" "files/uptests/"
 
 -- All tests that take less then 1/8 of second
 {-
@@ -35,12 +35,17 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
        <$> allFilesWithSuffix ".eprime" "files/uptests/"
 -}
 
+-- Most tests
+{-
 eprimes = _eprimeDirs "files/uptests/" ["___simple","___parts","___types","__easy","__reps"
                                        ,"_relations", "_indexes", "__failed","__issues","_essence_params"
                                        ,"_matrix_of_tuples", "_muti_dimensional","_zznested_singletons"
                                        ,"_functions","_tuples_of_matrix","_zzComplex","_zothers"
-                                       ,"__indexrange"
+                                       ,"__indexrange","_partition", "_essence_catalog"
                                        ]
+-}
+
+{-eprimes = _eprimeDirs "files/uptests/" ["_partition","__essence_catalog"]-}
 
 
 -- Basic tests
