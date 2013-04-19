@@ -148,6 +148,9 @@ partitionMSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} 
 
     where
     toPart [xMatch| es := value.matrix.values |] =  [xMake| part := es |]
+    toPart f = _bug "partitionMSetOfSetsRep: toPart unhandled" [f]
+
+partitionMSetOfSetsRep v =  _bug "partitionMSetOfSetsRep unhandled" [v]
 
 {- End -}
 
@@ -245,12 +248,16 @@ relationAsSetRep = ( tracee "relationAsSet" beforeUnchanged, after)
         `_p` ("relationAsSet res",  [res])
         `_p` ("relationAsSet e", [e])
 
+    after _ vvs = _bug "relationAsSetRep unhandled" vvs
+
     relationAsSet :: E -> E
     relationAsSet [xMatch| vs := value.matrix.values
                          | _  := value.matrix.values.value.matrix.values |] =
         wrapInMatrix . map relationAsSet $ vs
 
     relationAsSet [xMatch| vs := value.matrix.values |] = wrapInRelation vs
+
+    relationAsSet f = _bug "relationAsSetRep: relationAsSet unhandled" [f]
 
 
 {- Functions -}
@@ -272,6 +279,9 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
     where
     after orgData [v] = orgData{vEssence=functionAsReln . vEssence $ tracer "functionAsRelnRep v:" v }
 
+    after _ vvs = _bug "functionAsRelnRep unhandled" vvs
+
+
     functionAsReln [xMatch| vs := value.matrix.values |] =
         wrapInMatrix . map functionAsReln $ vs
 
@@ -279,6 +289,7 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 
     relnToFunc [eMatch| (&from,&to) |] = [xMake| mapping := [from,to] |]
 
+    relnToFunc f =  _bug "functionAsRelnRep: relnToFunc unhandled" [f]
 
 {- Partitions -}
 
@@ -287,6 +298,9 @@ partitionMSetOfSetsBranch = ( tracee "partitionMSetOfSetsBranch" beforeUnchanged
     where
     after orgData [vs] = orgData{vEssence=partitionMSetOfSetsRep vs}
         `_p` ("partitionMSetOfSetsBranch v", [vs])
+
+
+    after _ vvs = _bug "partitionMSetOfSetsBranch unhandled" vvs
 
 
 {- End -}
