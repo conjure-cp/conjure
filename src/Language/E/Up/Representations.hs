@@ -226,12 +226,21 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
 {- Relations -}
 
 relationAsSetRep :: (Before,After)
-relationAsSetRep = ( beforeUnchanged, after)
+relationAsSetRep = ( tracee "relationAsSet" beforeUnchanged, after)
 
     where
-    after orgData vs =
-        let tuples = concatMap getTuples vs
-        in  orgData{vEssence=wrapInRelation tuples}
+    after orgData [VarData{vEssence=e}] =
+        let res =  relationAsSet e
+        in  orgData{vEssence=res}
+        `_p` ("relationAsSet res",  [res])
+        `_p` ("relationAsSet e", [e])
+
+    relationAsSet :: E -> E
+    relationAsSet [xMatch| vs := value.matrix.values
+                         | _  := value.matrix.values.value.matrix.values |] =
+        wrapInMatrix . map relationAsSet $ vs
+
+    relationAsSet [xMatch| vs := value.matrix.values |] = wrapInRelation vs
 
     getTuples :: VarData -> [E]
     getTuples VarData{vEssence = [xMatch| es := value.matrix.values |] } =  es
@@ -252,7 +261,7 @@ functionAsRelnRep :: (Before, After)
 functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 
     where
-    after orgData [v] = orgData{vEssence=functionAsReln . vEssence $ v }
+    after orgData [v] = orgData{vEssence=functionAsReln . vEssence $ tracer "functionAsRelnRep v:" v }
 
     functionAsReln [xMatch| vs := value.matrix.values |] =
         wrapInMatrix . map functionAsReln $ vs
