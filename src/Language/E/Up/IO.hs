@@ -42,7 +42,7 @@ getSpec' removeContraints filepath = do
 
     -- I don't need any of the constraints, speed up running the test lot
     let txt' = if removeContraints then
-                   (func "maximising" . func "minimising" . func  "such that")  txt
+                   onlyPreamble  txt
                 else txt
     handleInIOSingle =<< runCompEIOSingle
                 "Parsing problem specification"
@@ -50,7 +50,15 @@ getSpec' removeContraints filepath = do
 
     where 
         func t =  fst . T.breakOn t
-
+        stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
+        discardAfter t = fst . T.breakOn t
+        onlyPreamble
+            = discardAfter "maximising"
+            . discardAfter "maximizing"
+            . discardAfter "minimising"
+            . discardAfter "minimizing"
+            . discardAfter "such that"
+            . stripComments
 
 getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) 
          -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
