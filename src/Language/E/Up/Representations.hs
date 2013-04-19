@@ -74,17 +74,17 @@ setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
 
     toRemove :: [Integer] -> Integer
     toRemove []  = _bugg "setExplicitVarSizeWithDefaultRep no bounds"
-    toRemove bs  = last bs
+    toRemove bs'  = last bs'
 
     removeIt :: Integer -> E -> Maybe E
-    removeIt toRemove f@[xMatch| [Prim (I i)] := value.literal |] =
-       if i == toRemove then Nothing else Just f
+    removeIt toRm f@[xMatch| [Prim (I i)] := value.literal |] =
+       if i == toRm then Nothing else Just f
 
-    removeIt toRemove f@[xMatch| _ := value.matrix.values |] =
+    removeIt _ f@[xMatch| _ := value.matrix.values |] =
         Just $ explicitVarSizeWithDefault f
 
 
-    removeIt i e = errpM ("removeIt " ++ show i) [e]
+    removeIt i f = errpM ("removeIt " ++ show i) [f]
 
 {- Relations -}
 
@@ -112,7 +112,7 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
   f _ = _bugg "relationIntMatrix2Rep not boolean"
 
 
-relationIntMatrix2Rep v@VarData{vIndexes = (c:rest@(_:_)),
+relationIntMatrix2Rep v@VarData{vIndexes = (_:rest@(_:_)),
                                 vEssence = [xMatch| vs := value.matrix.values |] } =
     wrapInMatrix . map (\w ->  relationIntMatrix2Rep v{vIndexes=rest,vEssence=w} ) $ vs
 
@@ -252,9 +252,6 @@ relationAsSetRep = ( tracee "relationAsSet" beforeUnchanged, after)
 
     relationAsSet [xMatch| vs := value.matrix.values |] = wrapInRelation vs
 
-    getTuples :: VarData -> [E]
-    getTuples VarData{vEssence = [xMatch| es := value.matrix.values |] } =  es
-    getTuples v = upBug "d" [v]
 
 {- Functions -}
 
@@ -288,7 +285,7 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 partitionMSetOfSetsBranch :: (Before,After)
 partitionMSetOfSetsBranch = ( tracee "partitionMSetOfSetsBranch" beforeUnchanged , after )
     where
-    after orgData [vs] = vs{vEssence=partitionMSetOfSetsRep vs}
+    after orgData [vs] = orgData{vEssence=partitionMSetOfSetsRep vs}
         `_p` ("partitionMSetOfSetsBranch v", [vs])
 
 
@@ -310,7 +307,7 @@ mapLeafUnchanged :: VarData -> [VarData] -> VarData
 mapLeafUnchanged = mapLeafFunc vEssence
 
 _afterErr ::Pretty a => a -> t
-_afterErr e = errp e
+_afterErr = errp 
 
 -- Utility functions
 
