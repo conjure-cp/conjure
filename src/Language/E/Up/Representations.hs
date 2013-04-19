@@ -71,8 +71,8 @@ setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
         tracee "setExplicitVarSizeWithDefaultRep" f
 
     toRemove :: [Integer] -> Integer
-    toRemove (b:_) = b
-    toRemove []    = _bugg "setExplicitVarSizeWithDefaultRep no bounds" 
+    toRemove []  = _bugg "setExplicitVarSizeWithDefaultRep no bounds" 
+    toRemove bs  = last bs
 
     removeIt :: Integer -> E -> Maybe E 
     removeIt toRemove f@[xMatch| [Prim (I i)] := value.literal |] =
