@@ -29,7 +29,7 @@ such that
           /\
           (forAll v__1 : int(1..2)
                . x_SetExplicitVarSize_tuple1[v__0, v__1]
-                 <=
+                 >=
                  x_SetExplicitVarSize_tuple1[v__0, v__1 + 1]),
     forAll v__0 : int(1..2)
         . (sum v__1 : int(1..3) . x_SetExplicitVarSize_tuple1[v__0, v__1]) >= 1,

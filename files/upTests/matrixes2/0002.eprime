@@ -5,10 +5,10 @@ find x_SetExplicitVarSize_tuple1:
 find x_SetExplicitVarSize_tuple2:
         matrix indexed by [int(1..2), int(1..3)] of int(6..8)
 find x_SetExplicitVarSizeWithDefault:
-        matrix indexed by [int(1..2), int(1..3)] of int(5..8)
+        matrix indexed by [int(1..2), int(1..3)] of int(6..9)
 such that
     exists v__0 : int(1..3)
-        . x_SetExplicitVarSizeWithDefault[1, v__0] != 5
+        . x_SetExplicitVarSizeWithDefault[1, v__0] != 9
           /\
           x_SetExplicitVarSizeWithDefault[1, v__0] = 6,
     exists v__0 : int(1..3)
@@ -21,9 +21,9 @@ such that
           x_SetExplicitVarSize_tuple2[2, v__0] = 8,
     forAll v__0 : int(1..2)
         . (forAll v__1 : int(1..2)
-               . x_SetExplicitVarSizeWithDefault[v__0, v__1] != 5
+               . x_SetExplicitVarSizeWithDefault[v__0, v__1] != 9
                  /\
-                 x_SetExplicitVarSizeWithDefault[v__0, v__1 + 1] != 5
+                 x_SetExplicitVarSizeWithDefault[v__0, v__1 + 1] != 9
                  ->
                  x_SetExplicitVarSizeWithDefault[v__0, v__1]
                  <
@@ -45,7 +45,7 @@ such that
           /\
           (forAll v__1 : int(1..2)
                . x_SetExplicitVarSize_tuple1[v__0, v__1]
-                 <=
+                 >=
                  x_SetExplicitVarSize_tuple1[v__0, v__1 + 1]),
     forAll v__0 : int(1..2)
         . (forAll v__1 : int(6..8)
@@ -55,7 +55,7 @@ such that
                         x_SetExplicitVarSize_tuple2[v__0, v__2] = v__1)
                  <->
                  (exists v__2 : int(1..3)
-                      . x_SetExplicitVarSizeWithDefault[v__0, v__2] != 5
+                      . x_SetExplicitVarSizeWithDefault[v__0, v__2] != 9
                         /\
                         x_SetExplicitVarSizeWithDefault[v__0, v__2] = v__1))
           /\
@@ -66,17 +66,17 @@ such that
                         x_SetExplicitVarSize_tuple2[v__0, v__2] = v__1)
                  <->
                  (exists v__2 : int(1..3)
-                      . x_SetExplicitVarSizeWithDefault[v__0, v__2] != 5
+                      . x_SetExplicitVarSizeWithDefault[v__0, v__2] != 9
                         /\
                         x_SetExplicitVarSizeWithDefault[v__0, v__2] = v__1)),
     forAll v__0 : int(1..2)
-        . (sum v__1 : int(1..3) . x_SetExplicitVarSizeWithDefault[v__0, v__1] != 5)
+        . (sum v__1 : int(1..3) . x_SetExplicitVarSizeWithDefault[v__0, v__1] != 9)
           >=
           1,
     forAll v__0 : int(1..2)
         . (sum v__1 : int(1..3) . x_SetExplicitVarSize_tuple1[v__0, v__1]) >= 1,
     forAll v__0 : int(1..3)
-        . x_SetExplicitVarSizeWithDefault[1, v__0] != 5
+        . x_SetExplicitVarSizeWithDefault[1, v__0] != 9
           ->
           6 = x_SetExplicitVarSizeWithDefault[1, v__0],
     forAll v__0 : int(1..3)

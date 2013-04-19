@@ -4,23 +4,23 @@ MINION 3
 # CSE_total_size = 81
 **VARIABLES**
 DISCRETE x_SetExplicitVarSizeWithDefault_00000_00000 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00000_00001 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00000_00002 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001_00000 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001_00001 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001_00002 #
-{5..8}
-BOOL aux0 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00002 != 5)
-BOOL aux1 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00000 != 5)
-BOOL aux2 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00001 != 5)
-BOOL aux3 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00000 != 5)
-BOOL aux4 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00002 != 5)
-BOOL aux5 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00001 != 5)
+{6..9}
+BOOL aux0 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00002 != 9)
+BOOL aux1 #CSE: 4 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00000 != 9)
+BOOL aux2 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00001 != 9)
+BOOL aux3 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00000 != 9)
+BOOL aux4 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00002 != 9)
+BOOL aux5 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00001 != 9)
 BOOL aux6 #CSE: 2 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00001=6)
 BOOL aux7 #CSE: 2 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00000=6)
 BOOL aux8 #CSE: 2 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00002=6)
@@ -57,12 +57,12 @@ reify(ineq(x_SetExplicitVarSizeWithDefault_00001_00001, x_SetExplicitVarSizeWith
 reify(watched-or({w-literal(aux13,1),w-literal(aux14,1)}), aux23)
 reify(watched-or({w-literal(aux9,1),w-literal(aux10,1)}), aux24)
 reify(watched-or({w-literal(aux11,1),w-literal(aux12,1)}), aux25)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00002,5), aux0)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00000,5), aux1)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00001,5), aux2)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00000,5), aux3)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00002,5), aux4)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00001,5), aux5)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00002,9), aux0)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00000,9), aux1)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00001,9), aux2)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00000,9), aux3)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00002,9), aux4)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00001,9), aux5)
 reify(w-literal(x_SetExplicitVarSizeWithDefault_00000_00001,6), aux6)
 reify(w-literal(x_SetExplicitVarSizeWithDefault_00000_00000,6), aux7)
 reify(w-literal(x_SetExplicitVarSizeWithDefault_00000_00002,6), aux8)

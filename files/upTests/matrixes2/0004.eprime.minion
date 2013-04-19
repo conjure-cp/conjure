@@ -4,17 +4,17 @@ MINION 3
 # CSE_total_size = 177
 **VARIABLES**
 DISCRETE x_SetExplicitVarSizeWithDefault_00000_00000 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00000_00001 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00000_00002 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001_00000 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001_00001 #
-{5..8}
+{6..9}
 DISCRETE x_SetExplicitVarSizeWithDefault_00001_00002 #
-{5..8}
+{6..9}
 BOOL x_SetExplicitVarSize_tuple1_00000_00000 #
 BOOL x_SetExplicitVarSize_tuple1_00000_00001 #
 BOOL x_SetExplicitVarSize_tuple1_00000_00002 #
@@ -33,12 +33,12 @@ DISCRETE x_SetExplicitVarSize_tuple2_00001_00001 #
 {6..8}
 DISCRETE x_SetExplicitVarSize_tuple2_00001_00002 #
 {6..8}
-BOOL aux0 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00002 != 5)
-BOOL aux1 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00000 != 5)
-BOOL aux2 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00001 != 5)
-BOOL aux3 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00000 != 5)
-BOOL aux4 #CSE: 7 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00001 != 5)
-BOOL aux5 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00002 != 5)
+BOOL aux0 #CSE: 7 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00001 != 9)
+BOOL aux1 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00000 != 9)
+BOOL aux2 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00001 != 9)
+BOOL aux3 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00000 != 9)
+BOOL aux4 #CSE: 6 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00002 != 9)
+BOOL aux5 #CSE: 5 occurrences of: (x_SetExplicitVarSizeWithDefault_00000_00002 != 9)
 BOOL aux6 #CSE: 2 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00000=7)
 BOOL aux7 #CSE: 2 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00000=8)
 BOOL aux8 #CSE: 2 occurrences of: (x_SetExplicitVarSizeWithDefault_00001_00001=7)
@@ -52,9 +52,9 @@ BOOL aux15 #(aux3 /\ aux2)
 BOOL aux16 #(x_SetExplicitVarSizeWithDefault_00000_00000<x_SetExplicitVarSizeWithDefault_00000_00001)
 BOOL aux17 #(aux2 /\ aux5)
 BOOL aux18 #(x_SetExplicitVarSizeWithDefault_00000_00001<x_SetExplicitVarSizeWithDefault_00000_00002)
-BOOL aux19 #(aux1 /\ aux4)
+BOOL aux19 #(aux1 /\ aux0)
 BOOL aux20 #(x_SetExplicitVarSizeWithDefault_00001_00000<x_SetExplicitVarSizeWithDefault_00001_00001)
-BOOL aux21 #(aux4 /\ aux0)
+BOOL aux21 #(aux0 /\ aux4)
 BOOL aux22 #(x_SetExplicitVarSizeWithDefault_00001_00001<x_SetExplicitVarSizeWithDefault_00001_00002)
 BOOL aux23 #(x_SetExplicitVarSize_tuple1_00000_00000 /\ x_SetExplicitVarSize_tuple1_00000_00001)
 BOOL aux24 #(x_SetExplicitVarSize_tuple2_00000_00000<x_SetExplicitVarSize_tuple2_00000_00001)
@@ -69,7 +69,7 @@ BOOL aux32 #((x_SetExplicitVarSize_tuple1_00000_00000 /\ (x_SetExplicitVarSize_t
 BOOL aux33 #(((x_SetExplicitVarSizeWithDefault_00000_00000=8) /\ aux3) \/ ((x_SetExplicitVarSizeWithDefault_00000_00001=8) /\ aux2) \/ ((x_SetExplicitVarSizeWithDefault_00000_00002=8) /\ aux5))
 BOOL aux34 #((x_SetExplicitVarSize_tuple1_00000_00000 /\ (x_SetExplicitVarSize_tuple2_00000_00000=8)) \/ (x_SetExplicitVarSize_tuple1_00000_00001 /\ (x_SetExplicitVarSize_tuple2_00000_00001=8)) \/ (x_SetExplicitVarSize_tuple1_00000_00002 /\ (x_SetExplicitVarSize_tuple2_00000_00002=8)))
 BOOL aux35 #(((x_SetExplicitVarSize_tuple2_00001_00000=6) /\ x_SetExplicitVarSize_tuple1_00001_00000) \/ ((x_SetExplicitVarSize_tuple2_00001_00001=6) /\ x_SetExplicitVarSize_tuple1_00001_00001) \/ ((x_SetExplicitVarSize_tuple2_00001_00002=6) /\ x_SetExplicitVarSize_tuple1_00001_00002))
-BOOL aux36 #((aux1 /\ (x_SetExplicitVarSizeWithDefault_00001_00000=6)) \/ (aux4 /\ (x_SetExplicitVarSizeWithDefault_00001_00001=6)) \/ (aux0 /\ (x_SetExplicitVarSizeWithDefault_00001_00002=6)))
+BOOL aux36 #((aux1 /\ (x_SetExplicitVarSizeWithDefault_00001_00000=6)) \/ (aux0 /\ (x_SetExplicitVarSizeWithDefault_00001_00001=6)) \/ (aux4 /\ (x_SetExplicitVarSizeWithDefault_00001_00002=6)))
 BOOL aux37 #(aux6 \/ aux7)
 BOOL aux38 #(aux8 \/ aux9)
 BOOL aux39 #(aux10 \/ aux11)
@@ -82,9 +82,9 @@ reify(watched-and({w-literal(aux3,1),w-literal(aux2,1)}), aux15)
 reify(ineq(x_SetExplicitVarSizeWithDefault_00000_00000, x_SetExplicitVarSizeWithDefault_00000_00001, -1), aux16)
 reify(watched-and({w-literal(aux2,1),w-literal(aux5,1)}), aux17)
 reify(ineq(x_SetExplicitVarSizeWithDefault_00000_00001, x_SetExplicitVarSizeWithDefault_00000_00002, -1), aux18)
-reify(watched-and({w-literal(aux1,1),w-literal(aux4,1)}), aux19)
+reify(watched-and({w-literal(aux1,1),w-literal(aux0,1)}), aux19)
 reify(ineq(x_SetExplicitVarSizeWithDefault_00001_00000, x_SetExplicitVarSizeWithDefault_00001_00001, -1), aux20)
-reify(watched-and({w-literal(aux4,1),w-literal(aux0,1)}), aux21)
+reify(watched-and({w-literal(aux0,1),w-literal(aux4,1)}), aux21)
 reify(ineq(x_SetExplicitVarSizeWithDefault_00001_00001, x_SetExplicitVarSizeWithDefault_00001_00002, -1), aux22)
 reify(watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00000,1),w-literal(x_SetExplicitVarSize_tuple1_00000_00001,1)}), aux23)
 reify(ineq(x_SetExplicitVarSize_tuple2_00000_00000, x_SetExplicitVarSize_tuple2_00000_00001, -1), aux24)
@@ -99,16 +99,16 @@ reify(watched-or({watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00000
 reify(watched-or({watched-and({w-literal(x_SetExplicitVarSizeWithDefault_00000_00000,8),w-literal(aux3,1)}),watched-and({w-literal(x_SetExplicitVarSizeWithDefault_00000_00001,8),w-literal(aux2,1)}),watched-and({w-literal(x_SetExplicitVarSizeWithDefault_00000_00002,8),w-literal(aux5,1)})}), aux33)
 reify(watched-or({watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00000,1),w-literal(x_SetExplicitVarSize_tuple2_00000_00000,8)}),watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00001,1),w-literal(x_SetExplicitVarSize_tuple2_00000_00001,8)}),watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00002,1),w-literal(x_SetExplicitVarSize_tuple2_00000_00002,8)})}), aux34)
 reify(watched-or({watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00000,6),w-literal(x_SetExplicitVarSize_tuple1_00001_00000,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00001,6),w-literal(x_SetExplicitVarSize_tuple1_00001_00001,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00002,6),w-literal(x_SetExplicitVarSize_tuple1_00001_00002,1)})}), aux35)
-reify(watched-or({watched-and({w-literal(aux1,1),w-literal(x_SetExplicitVarSizeWithDefault_00001_00000,6)}),watched-and({w-literal(aux4,1),w-literal(x_SetExplicitVarSizeWithDefault_00001_00001,6)}),watched-and({w-literal(aux0,1),w-literal(x_SetExplicitVarSizeWithDefault_00001_00002,6)})}), aux36)
+reify(watched-or({watched-and({w-literal(aux1,1),w-literal(x_SetExplicitVarSizeWithDefault_00001_00000,6)}),watched-and({w-literal(aux0,1),w-literal(x_SetExplicitVarSizeWithDefault_00001_00001,6)}),watched-and({w-literal(aux4,1),w-literal(x_SetExplicitVarSizeWithDefault_00001_00002,6)})}), aux36)
 reify(watched-or({w-literal(aux6,1),w-literal(aux7,1)}), aux37)
 reify(watched-or({w-literal(aux8,1),w-literal(aux9,1)}), aux38)
 reify(watched-or({w-literal(aux10,1),w-literal(aux11,1)}), aux39)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00002,5), aux0)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00000,5), aux1)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00001,5), aux2)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00000,5), aux3)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00001,5), aux4)
-reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00002,5), aux5)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00001,9), aux0)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00000,9), aux1)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00001,9), aux2)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00000,9), aux3)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00001_00002,9), aux4)
+reify(diseq(x_SetExplicitVarSizeWithDefault_00000_00002,9), aux5)
 reify(w-literal(x_SetExplicitVarSizeWithDefault_00001_00000,7), aux6)
 reify(w-literal(x_SetExplicitVarSizeWithDefault_00001_00000,8), aux7)
 reify(w-literal(x_SetExplicitVarSizeWithDefault_00001_00001,7), aux8)
@@ -118,8 +118,8 @@ reify(w-literal(x_SetExplicitVarSizeWithDefault_00001_00002,8), aux11)
 reify(w-literal(x_SetExplicitVarSize_tuple2_00000_00001,6), aux12)
 reify(w-literal(x_SetExplicitVarSize_tuple2_00000_00000,6), aux13)
 reify(w-literal(x_SetExplicitVarSize_tuple2_00000_00002,6), aux14)
-watched-or({watched-and({w-literal(aux1,1),w-literal(aux6,1)}),watched-and({w-literal(aux4,1),w-literal(aux8,1)}),watched-and({w-literal(aux0,1),w-literal(aux10,1)})})
-watched-or({watched-and({w-literal(aux1,1),w-literal(aux7,1)}),watched-and({w-literal(aux4,1),w-literal(aux9,1)}),watched-and({w-literal(aux0,1),w-literal(aux11,1)})})
+watched-or({watched-and({w-literal(aux1,1),w-literal(aux6,1)}),watched-and({w-literal(aux0,1),w-literal(aux8,1)}),watched-and({w-literal(aux4,1),w-literal(aux10,1)})})
+watched-or({watched-and({w-literal(aux1,1),w-literal(aux7,1)}),watched-and({w-literal(aux0,1),w-literal(aux9,1)}),watched-and({w-literal(aux4,1),w-literal(aux11,1)})})
 watched-or({watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00000,1),w-literal(aux13,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00001,1),w-literal(aux12,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple1_00000_00002,1),w-literal(aux14,1)})})
 ineq(aux15, aux16, 0)
 ineq(aux17, aux18, 0)
@@ -131,12 +131,12 @@ ineq(x_SetExplicitVarSizeWithDefault_00001_00000, x_SetExplicitVarSizeWithDefaul
 ineq(x_SetExplicitVarSizeWithDefault_00001_00001, x_SetExplicitVarSizeWithDefault_00001_00002, 0)
 ineq(aux23, aux24, 0)
 ineq(aux25, aux26, 0)
-ineq(x_SetExplicitVarSize_tuple1_00000_00000, x_SetExplicitVarSize_tuple1_00000_00001, 0)
-ineq(x_SetExplicitVarSize_tuple1_00000_00001, x_SetExplicitVarSize_tuple1_00000_00002, 0)
+ineq(x_SetExplicitVarSize_tuple1_00000_00001, x_SetExplicitVarSize_tuple1_00000_00000, 0)
+ineq(x_SetExplicitVarSize_tuple1_00000_00002, x_SetExplicitVarSize_tuple1_00000_00001, 0)
 ineq(aux27, aux28, 0)
 ineq(aux29, aux30, 0)
-ineq(x_SetExplicitVarSize_tuple1_00001_00000, x_SetExplicitVarSize_tuple1_00001_00001, 0)
-ineq(x_SetExplicitVarSize_tuple1_00001_00001, x_SetExplicitVarSize_tuple1_00001_00002, 0)
+ineq(x_SetExplicitVarSize_tuple1_00001_00001, x_SetExplicitVarSize_tuple1_00001_00000, 0)
+ineq(x_SetExplicitVarSize_tuple1_00001_00002, x_SetExplicitVarSize_tuple1_00001_00001, 0)
 watched-or({watched-and({w-literal(x_SetExplicitVarSizeWithDefault_00000_00000,6),w-literal(aux3,1)}),watched-and({w-literal(x_SetExplicitVarSizeWithDefault_00000_00001,6),w-literal(aux2,1)}),watched-and({w-literal(x_SetExplicitVarSizeWithDefault_00000_00002,6),w-literal(aux5,1)})})
 eq(aux31, aux32)
 eq(aux33, aux34)
@@ -144,12 +144,12 @@ eq(aux35, aux36)
 watched-or({watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00000,7),w-literal(x_SetExplicitVarSize_tuple1_00001_00000,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00001,7),w-literal(x_SetExplicitVarSize_tuple1_00001_00001,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00002,7),w-literal(x_SetExplicitVarSize_tuple1_00001_00002,1)})})
 watched-or({watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00000,8),w-literal(x_SetExplicitVarSize_tuple1_00001_00000,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00001,8),w-literal(x_SetExplicitVarSize_tuple1_00001_00001,1)}),watched-and({w-literal(x_SetExplicitVarSize_tuple2_00001_00002,8),w-literal(x_SetExplicitVarSize_tuple1_00001_00002,1)})})
 sumgeq([aux3,aux2,aux5],1)
-sumgeq([aux1,aux4,aux0],1)
+sumgeq([aux1,aux0,aux4],1)
 sumgeq([x_SetExplicitVarSize_tuple1_00000_00000,x_SetExplicitVarSize_tuple1_00000_00001,x_SetExplicitVarSize_tuple1_00000_00002],1)
 sumgeq([x_SetExplicitVarSize_tuple1_00001_00000,x_SetExplicitVarSize_tuple1_00001_00001,x_SetExplicitVarSize_tuple1_00001_00002],1)
 ineq(aux1, aux37, 0)
-ineq(aux4, aux38, 0)
-ineq(aux0, aux39, 0)
+ineq(aux0, aux38, 0)
+ineq(aux4, aux39, 0)
 ineq(x_SetExplicitVarSize_tuple1_00000_00000, aux13, 0)
 ineq(x_SetExplicitVarSize_tuple1_00000_00001, aux12, 0)
 ineq(x_SetExplicitVarSize_tuple1_00000_00002, aux14, 0)

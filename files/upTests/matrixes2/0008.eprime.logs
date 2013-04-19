@@ -7,7 +7,7 @@
 [addedDecl] find x_Set~Occurrence:
                     matrix indexed by [int(1..2), int(6..8)] of bool
 [addedDecl] find x_Set~ExplicitVarSizeWithDefault:
-                    matrix indexed by [int(1..2), int(1..3)] of int(5..8)
+                    matrix indexed by [int(1..2), int(1..3)] of int(6..9)
 [refn] 0
 [applied] x§region1#Set~ExplicitVarSizeWithDefault[1] = {6}
           {rules/refns/horizontal/set-eq-to-subsets.rule}
@@ -24,7 +24,7 @@
                . 6 = v__17)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (forAll v__19 : int(1..3)
-                   , x_Set~ExplicitVarSizeWithDefault§region1[1, v__19] != 5
+                   , x_Set~ExplicitVarSizeWithDefault§region1[1, v__19] != 9
                    . 6 = x_Set~ExplicitVarSizeWithDefault§region1[1, v__19])
 [applied] x§region1#Set~ExplicitVarSizeWithDefault[1] supsetEq {6}
           {rules/refns/horizontal/set-supseteq-to-subseteq.rule}
@@ -39,7 +39,7 @@
                . v__21 = 6)
           {rules/refns/vertical/Set~ExplicitVarSizeWithDefault/quantified.rule}
               (exists v__22 : int(1..3)
-                   , x_Set~ExplicitVarSizeWithDefault§region1[1, v__22] != 5
+                   , x_Set~ExplicitVarSizeWithDefault§region1[1, v__22] != 9
                    . x_Set~ExplicitVarSizeWithDefault§region1[1, v__22] = 6)
 [applied] x§region2#Set~Occurrence[2] = {7, 8}
           {rules/refns/horizontal/set-eq-to-subsets.rule}
