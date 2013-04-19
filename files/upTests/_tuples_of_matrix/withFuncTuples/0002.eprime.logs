@@ -9,13 +9,13 @@
                                                      function (total) int(1..2) --> int(-1, 1),
                                                      tuple (int(4, 5)),
                                                      (int(7, 8), int(2, 3)))
-[matrixToTuple] pain_tuple1
+[matrixToTuple] pain_tuple1∑1
 [removedDecl] find pain_tuple1_tuple3:
                       matrix indexed by [int(1)] of tuple (int(4, 5))
-[matrixToTuple] pain_tuple1_tuple3
+[matrixToTuple] pain_tuple1_tuple3∑1
 [removedDecl] find pain_tuple1_tuple4:
                       matrix indexed by [int(1)] of (int(7, 8), int(2, 3))
-[matrixToTuple] pain_tuple1_tuple4
+[matrixToTuple] pain_tuple1_tuple4∑1
 [representation] find pain_tuple1_tuple2:
                          matrix indexed by [int(1)] of function (total) int(1..2) --> int(-1, 1)
                  (#2)
@@ -133,8 +133,8 @@
                             matrix indexed by [int(1)] of set of (int(1..2), int(-1, 1))
 [removedDecl] find pain_tuple1_tuple2_AsReln_RelationAsSet_Set~ExplicitVarSize:
                       matrix indexed by [int(1), int(1..4)] of (bool, (int(1..2), int(-1, 1)))
-[matrixToTuple] pain_tuple1_tuple2_AsReln_RelationAsSet_Set~ExplicitVarSize
+[matrixToTuple] pain_tuple1_tuple2_AsReln_RelationAsSet_Set~ExplicitVarSize∑2
 [removedDecl] find pain_tuple1_tuple2_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2:
                       matrix indexed by [int(1), int(1..4)] of (int(1..2), int(-1, 1))
-[matrixToTuple] pain_tuple1_tuple2_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2
+[matrixToTuple] pain_tuple1_tuple2_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2∑2
 [repr] 3
