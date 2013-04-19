@@ -1,0 +1,7 @@
+
+[1000]
+
+&a supsetEq &b ~~> &a supsetEq toSet(&b)
+
+    where &a hasType `set of _`
+    where &b hasType `function _ --> _`

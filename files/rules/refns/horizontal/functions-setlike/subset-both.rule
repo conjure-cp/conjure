@@ -1,0 +1,7 @@
+
+[1000]
+
+&a subset &b ~~> toSet(&a) subset toSet(&b)
+
+    where &a hasType `function _ --> _`
+    where &b hasType `function _ --> _`

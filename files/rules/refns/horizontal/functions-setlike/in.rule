@@ -1,0 +1,6 @@
+
+[1000]
+
+&a in &b ~~> &a in toSet(&b)
+
+    where &b hasType `function _ --> _`
