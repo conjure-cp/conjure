@@ -5,7 +5,7 @@ module Language.E.Up.Representations(
     , LeafFunc, BranchFunc
     , Before, After
     , RepName, isBranchRep, noRep
-    
+
     -- for debuging
     , setOccurrenceRep, matrix1DRep, partitionMSetOfSetsRep
     ) where
@@ -15,7 +15,7 @@ import Language.E.Up.Data
 import Language.E.Up.Common(wrapInMatrix,unwrapMatrix,unwrapMatrix')
 import Language.E.Up.Debug
 
--- Types 
+-- Types
 type LeafFunc   = (VarData ->  E)
 type BranchFunc = (VarData ->  VarData)
 type Before     = (VarData -> [VarData])
@@ -48,37 +48,37 @@ explicitRep VarData{vEssence=e} =  e
 setOccurrenceRep :: VarData -> E
 setOccurrenceRep VarData{vIndexes=[ix],
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $ 
+    wrapInMatrix .  map (toIntLit . fst) . onlySelectedValues . zip ix $
         tracee "setOccurrenceRep" vs
 
 -- CHECK should not really need this
 setOccurrenceRep v@VarData{vIndexes=ix,
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) $ 
+    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) $
        tracee "setOccurrenceRep" vs
 
 setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
 
 setExplicitVarSizeWithDefaultRep :: VarData -> E
-setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} = 
+setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
     explicitVarSizeWithDefault e
 
-    where 
-    
+    where
+
     explicitVarSizeWithDefault :: E -> E
-    explicitVarSizeWithDefault f = 
-        wrapInMatrix . mapMaybe (removeIt $ toRemove bs) . unwrapMatrix $ 
+    explicitVarSizeWithDefault f =
+        wrapInMatrix . mapMaybe (removeIt $ toRemove bs) . unwrapMatrix $
         tracee "setExplicitVarSizeWithDefaultRep" f
 
     toRemove :: [Integer] -> Integer
-    toRemove []  = _bugg "setExplicitVarSizeWithDefaultRep no bounds" 
+    toRemove []  = _bugg "setExplicitVarSizeWithDefaultRep no bounds"
     toRemove bs  = last bs
 
-    removeIt :: Integer -> E -> Maybe E 
+    removeIt :: Integer -> E -> Maybe E
     removeIt toRemove f@[xMatch| [Prim (I i)] := value.literal |] =
        if i == toRemove then Nothing else Just f
 
-    removeIt toRemove f@[xMatch| _ := value.matrix.values |] = 
+    removeIt toRemove f@[xMatch| _ := value.matrix.values |] =
         Just $ explicitVarSizeWithDefault f
 
 
@@ -110,11 +110,11 @@ relationIntMatrix2Rep VarData{vIndexes=[a,b],
   f _ = _bugg "relationIntMatrix2Rep not boolean"
 
 
-relationIntMatrix2Rep v@VarData{vIndexes = (c:rest@(_:_)), 
+relationIntMatrix2Rep v@VarData{vIndexes = (c:rest@(_:_)),
                                 vEssence = [xMatch| vs := value.matrix.values |] } =
-    wrapInMatrix . map (\w ->  relationIntMatrix2Rep v{vIndexes=rest,vEssence=w} ) $ vs 
+    wrapInMatrix . map (\w ->  relationIntMatrix2Rep v{vIndexes=rest,vEssence=w} ) $ vs
 
-    
+
 
 relationIntMatrix2Rep v = errpM "relationIntMatrix2Rep" [v]
 
@@ -205,19 +205,19 @@ occurrenceBranch = ( unwrapSet, mapLeafFunc setOccurrenceRep )
 setExplicitVarSizeBranch :: (Before,After)
 setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after )
 
-    where 
-    after orgData vs = 
+    where
+    after orgData vs =
         let res =  explicitVarSize (map vEssence vs)
         in orgData{vEssence=res}
         `_p` ("explicitVarSize", [res])
 
     explicitVarSize :: [E] -> E
-    explicitVarSize vs = 
+    explicitVarSize vs =
         wrapInMatrix $ mapMaybe getInSet (tracer "afterVarSize vs" vs)
 
     getInSet ::E -> Maybe E
     getInSet [eMatch| (true,&v)  |] = Just v
-    getInSet [eMatch| (false,&_) |] = Nothing 
+    getInSet [eMatch| (false,&_) |] = Nothing
     getInSet [xMatch| vs := value.matrix.values |] = Just $ explicitVarSize vs
 
     getInSet e  = _bug "setExplicitVarSizeBranch: getInSet" [e]
@@ -226,10 +226,10 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
 {- Relations -}
 
 relationAsSetRep :: (Before,After)
-relationAsSetRep = ( beforeUnchanged, after) 
+relationAsSetRep = ( beforeUnchanged, after)
 
     where
-    after orgData vs = 
+    after orgData vs =
         let tuples = concatMap getTuples vs
         in  orgData{vEssence=wrapInRelation tuples}
 
@@ -252,13 +252,12 @@ functionAsRelnRep :: (Before, After)
 functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 
     where
-    after orgData [VarData{vEssence=[xMatch| vs := value.matrix.values |]}] = 
-        let res = wrapInMatrix . map functionAsReln $ vs
-        in  orgData{vEssence=res}
-
     after orgData [v] = orgData{vEssence=functionAsReln . vEssence $ v }
 
-    functionAsReln =  wrapInFunction . map relnToFunc .  unwrapRelation
+    functionAsReln [xMatch| vs := value.matrix.values |] =
+        wrapInMatrix . map functionAsReln $ vs
+
+    functionAsReln f =  wrapInFunction . map relnToFunc .  unwrapRelation $ f
 
     relnToFunc [eMatch| (&from,&to) |] = [xMake| mapping := [from,to] |]
 
@@ -279,7 +278,7 @@ beforeUnchanged v = [v]
 unwrapSet :: Before
 unwrapSet v@VarData{vEssence=e, vIndexes=ix} =
         map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix' "unwrapSet" e)
-    
+
 
 mapLeafFunc :: LeafFunc -> VarData -> [VarData] -> VarData
 mapLeafFunc f orgData vs =
