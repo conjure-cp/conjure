@@ -115,22 +115,25 @@ relationIntMatrix2Rep v@VarData{vIndexes = (c:rest@(_:_)),
     wrapInMatrix . map (\w ->  relationIntMatrix2Rep v{vIndexes=rest,vEssence=w} ) $ vs
 
 
-
 relationIntMatrix2Rep v = errpM "relationIntMatrix2Rep" [v]
 
 
 {- Functions -}
 
 matrix1DRep :: VarData -> E
-matrix1DRep VarData{vIndexes=(ix:_), vEssence=[xMatch| vs :=  value.matrix.values |]} =
+matrix1DRep VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
-    in  wrapInFunction $ tracee "matrix1DRep" mappings
+    in  wrapInFunction $ tracee "matrix1DRep:" mappings
 
     where
     makeMapping :: Integer -> E -> E
     makeMapping i f =  [xMake| mapping := [toIntLit i, f] |]
 
-matrix1DRep  v = error $  "matrix1DRep " ++  (show . pretty) v
+matrix1DRep v@VarData{vIndexes=(_:ix), vEssence=[xMatch| vs :=  value.matrix.values |]} =
+    wrapInMatrix . map (\w -> matrix1DRep v{vIndexes=ix,vEssence=w} ) $ vs
+
+
+matrix1DRep  v = error $  "matrix1DRep: " ++  (show . pretty) v
 
 {- Partitions -}
 
@@ -252,9 +255,11 @@ matrix1DBranch :: (Before,After)
 matrix1DBranch = ( unwrapSet, after )
 
     where
-    after orgData vs =
+    after orgData@VarData{vIndexes=ix} vs =
         let wraped = wrapInMatrix $ map vEssence vs
-        in orgData{vEssence=matrix1DRep orgData{vEssence=wraped}}
+        -- CHECK Seems a bit a hackish to only pass the first index
+        in orgData{vEssence=matrix1DRep orgData{vIndexes=[head ix], vEssence=wraped}}
+
 
 
 functionAsRelnRep :: (Before, After)
