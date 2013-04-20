@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
+module Language.E.Pipeline.ApplyRefn ( applyRefn, applyRefnE ) where
 
 import Conjure.Mode
 
@@ -23,6 +23,16 @@ applyRefn
 applyRefn db' spec = withBindingScope' $ do
     let db = db' ++ builtInRefn
     (spec', _) <- runWriterT $ onSpec db spec
+    return spec'
+
+applyRefnE
+    :: MonadConjureList m
+    => RuleRefnDB m
+    -> E
+    -> m E
+applyRefnE db' spec = withBindingScope' $ do
+    let db = db' ++ builtInRefn
+    (spec', _) <- runWriterT $ onE db spec
     return spec'
 
 
@@ -55,10 +65,10 @@ onE db i = do
         go levelInt (dbLevel:rest) x = do
             (x', Any flag) <- runWriterT $ applyToTree levelInt dbLevel x
             if flag
-                then trace "then" $ do
+                then do
                     (y, _) <- go 0 dbLevels x'
                     return (y, True)
-                else trace "else" $ go (levelInt + 1) rest x'
+                else go (levelInt + 1) rest x'
 
 
 {-# INLINEABLE applyIdempotent #-}

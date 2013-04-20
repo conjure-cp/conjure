@@ -5,7 +5,7 @@ module Language.E.Pipeline.ConjureRefn where
 
 import Language.E
 import Language.E.Pipeline.AbstractDomsInQuans ( abstractDomsInQuans, quanDomAndSubsetEq )
-import Language.E.Pipeline.ApplyRefn ( applyRefn )
+import Language.E.Pipeline.ApplyRefn ( applyRefn, applyRefnE )
 import Language.E.Pipeline.CheckIfAllRefined ( checkIfAllRefined, removeRefinedDecls )
 import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
@@ -31,7 +31,7 @@ conjureRefn reprs refns spec = withBindingScope' $
          ) of
         Left  es -> err ErrFatal $ vcat $ map (prettyError "refn") es
         Right fs -> do
-            let fs' = abstractDomsInQuans reprs
+            let fs' = abstractDomsInQuans (applyRefnE fs') reprs
                     : quanDomAndSubsetEq
                     : fs
             initialiseSpecState spec
