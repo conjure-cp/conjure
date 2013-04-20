@@ -129,7 +129,9 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
 
 
 workhorse :: MonadConjure m => [(Text, Text)] -> (Text, E, E) -> m [(Text, E)]
-workhorse lookupReprs (nm, dom, val) = do
+workhorse lookupReprs (nm, domBefore, valBefore) = do
+    dom <- instantiate [] domBefore
+    val <- instantiate [] valBefore
     let thisReprs = [ repr | (nm', repr) <- lookupReprs, nm == nm' ]
     result <- if null thisReprs
                 then helper nm dom val Nothing
@@ -506,14 +508,16 @@ zeroVal [xMatch| xs := domain.tuple.inners |] = do
     zeroes <- mapM zeroVal xs
     return [xMake| value.tuple.values := zeroes |]
 
-zeroVal [xMatch| [Prim (S domId)] := reference |] = do
+zeroVal p@[xMatch| [Prim (S domId)] := reference |] = do
     domain <- runMaybeT $ lookupReference domId
     case domain of
         Just [xMatch| vs := topLevel.letting.typeEnum.values |] ->
             case vs of
                 (v:_) -> return v
                 _     -> userErr $ "Empty enumeration:" <+> pretty domId
-        _ -> bug "don't know what this is"
+        _ -> do
+            x <- instantiate [] p
+            zeroVal x
 
 zeroVal x = bug ("RedArrow.zeroVal" <+> prettyAsPaths x)
 

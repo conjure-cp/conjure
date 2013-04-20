@@ -876,6 +876,8 @@ domSize [xMatch| [] := topLevel.declaration.given.typeInt
 domSize [xMatch| vs := topLevel.letting.typeEnum.values |] =
     return [xMake| value.literal := [Prim (I (genericLength vs))] |]
 
+domSize [xMatch| [d] := topLevel.letting.domain |] = domSize d
+
 domSize p =
     err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
