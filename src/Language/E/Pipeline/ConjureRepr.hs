@@ -24,7 +24,7 @@ conjureRepr
 conjureRepr reprs spec = withBindingScope' $ do
     flags <- getsGlobal conjureFlags
     let useChannelling = not $ S.member "--no-channelling" flags
-    mkLog "useChannelling" $ pretty useChannelling 
+    mkLog "useChannelling" $ pretty useChannelling
     initialiseSpecState spec
     let pipeline =  recordSpec "entering conjureRepr"
                 >=> implicitWheres                          >=> recordSpec "implicitWheres"

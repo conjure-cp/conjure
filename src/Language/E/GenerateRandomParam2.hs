@@ -13,15 +13,16 @@ import Language.E.Pipeline.ReadIn(readSpecFromFile)
 import Language.E.PrepareParam(prepareParamSpecification)
 import Language.E.Up(translateSolution')
 
-import Conjure.Mode(ConjureModeSingle(ModeCompact),ConjureMode,ConjureMode(ModeSingleOutput))
+import Conjure.Mode
 
 import Prelude hiding ( FilePath, reverse )
 import Shelly
 
-import qualified Data.HashSet      as S
-import qualified Data.Text.Lazy    as LT
-import qualified System.Directory  as FP
-import qualified System.FilePath   as FP
+import qualified Data.HashSet        as S
+import qualified Data.HashMap.Strict as M
+import qualified Data.Text.Lazy      as LT
+import qualified System.Directory    as FP
+import qualified System.FilePath     as FP
 
 type EssenceParam = Spec
 type Essence = Spec
@@ -58,7 +59,8 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
             driverConjureSingle True True
                 param_eprime
                 (conjureWithMode
-                    S.empty seed Nothing (ModeSingleOutput ModeCompact param_gen param_eprime)
+                    S.empty seed Nothing
+                    (ConjureModeWithFlags (ModeSingleOutput ModeCompact param_gen param_eprime) M.empty def def)
                     ruleReprs ruleRefns paramEssence)
 
     _ <- runConjure paramEssenceOld

@@ -100,7 +100,7 @@ tryApply
        , RandomM m
        )
     => RuleRefnDB m
-    -> ConjureMode
+    -> ConjureModeWithFlags
     -> E
     -> m ([E], Bool)
 -- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do

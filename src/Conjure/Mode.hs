@@ -65,6 +65,8 @@ data ConjureMode
         FilePath            -- Essence Solution
     | ModeDFAll
         FilePath    -- Essence
+    | ModeDFAllCompactParam
+        FilePath    -- Essence
     | ModeSingleOutput
         ConjureModeSingle
         FilePath    -- Essence
@@ -97,6 +99,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeGenerateParam
     , modeGenerateParam2
     , modeDFAll
+    , modeDFAllCompactParam
     , modeDFNoChannel
     , modeRandom
     , modeFirst
@@ -166,6 +169,11 @@ parseArgs (pairs, flags, rest) = msum
             mode $ words "df depthfirst depth-first"
             inEssence <- anyKey $ words "--in --in-essence"
             returnMode $ ModeDFAll inEssence
+
+        modeDFAllCompactParam = do
+            mode $ words "df-compact-param"
+            inEssence <- anyKey $ words "--in --in-essence"
+            returnMode $ ModeDFAllCompactParam inEssence
 
         modeDFNoChannel = do
             mode $ words "df-no-channelling"
