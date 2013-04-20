@@ -22,14 +22,14 @@ import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 abstractDomsInQuans :: MonadConjureList m => [RuleRepr] -> E -> m (Maybe [(Text, E)])
 abstractDomsInQuans
     reprs
-    [xMatch| [qnQuan]         := quantified.quantifier
-           | [Prim (S qnVar)] := quantified.quanVar.structural.single.reference
-           | [qnOverDom]      := quantified.quanOverDom
-           | []               := quantified.quanOverOp
-           | []               := quantified.quanOverExpr
-           | [guard]          := quantified.guard
-           | [body]           := quantified.body
-           |]
+    param@[xMatch| [qnQuan]         := quantified.quantifier
+                 | [Prim (S qnVar)] := quantified.quanVar.structural.single.reference
+                 | [qnOverDom]      := quantified.quanOverDom
+                 | []               := quantified.quanOverOp
+                 | []               := quantified.quanOverExpr
+                 | [guard]          := quantified.guard
+                 | [body]           := quantified.body
+                 |]
     | domainNeedsRepresentation qnOverDom
     = do
         mode <- getsGlobal conjureMode
@@ -37,7 +37,7 @@ abstractDomsInQuans
             Left es     -> err ErrFatal $ vcat $ map (prettyError "abstractDomsInQuans") es
             Right func' -> withBindingScope' $ do
                 let func = mergeReprFunc (func' : builtInRepr)
-                ys' <- func (qnVar, qnOverDom, bug "abstractDomsInQuans.decl")
+                ys' <- func (qnVar, qnOverDom, param)
                 ys  <- selectByMode mode ys'
                 zs  <- case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty qnOverDom
