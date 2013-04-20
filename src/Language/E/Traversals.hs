@@ -184,24 +184,25 @@ bottomUpEExcept p func x = withBindingScope $ helper x
 
 bottomUpERefn
     :: MonadConjureList m
-    => (E -> WriterT Any m E)
+    => Int
+    -> (E -> WriterT Any m E)
     -> E
     -> WriterT Any m E
-bottomUpERefn func = withBindingScope . helper
+bottomUpERefn level func = withBindingScope . helper
     where
         helper [xMatch| [this] := statement.this
                       | [next] := statement.next
                       |] = do
             lift $ introduceStuff this
-            this' <- func =<< bottomUpERefn func this
+            this' <- func =<< bottomUpERefn level func this
             lift $ introduceStuff this'
-            next' <- func =<< bottomUpERefn func next
+            next' <- func =<< bottomUpERefn level func next
             return [xMake| statement.this := [this']
                          | statement.next := [next']
                          |]
         helper i = do
             lift $ introduceStuff i
-            checkingMemo i $ \ t ->
+            checkingMemo level i $ \ t ->
                 case t of
                     Tagged s xs -> do
                         xs' <- mapM helper xs
@@ -213,12 +214,13 @@ bottomUpERefn func = withBindingScope . helper
 
 checkingMemo
     :: MonadConjureList m
-    => E
+    => Int
+    -> E
     -> (E -> WriterT Any m E)
     -> WriterT Any m E
-checkingMemo x f = do
+checkingMemo level x f = do
     bs <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
-    let hashX = hash (x, bs) -- hash x
+    let hashX = hash (level, x, bs) -- hash x
     memoSame    <- lift $ getsGlobal memoRefnStaysTheSame
     memoChanged <- lift $ getsGlobal memoRefnChanged
     case (IntSet.member hashX memoSame, IntMap.lookup hashX memoChanged) of
