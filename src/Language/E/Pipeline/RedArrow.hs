@@ -292,6 +292,55 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             name
             [xMatch| attrs      := domain.set.attributes.attrCollection
                    | [domInner] := domain.set.inner
+                   |]
+            [xMatch| values := value.set.values |]
+            (Just "Set~ExplicitVarSizeWithMarker")
+            = do
+            nbValues <-
+                case lookupAttr "maxSize" attrs of
+                    Just i  -> return i
+                    Nothing -> domSize domInner
+            nbValuesInt <- valueIntOut nbValues
+            let indexOfMatrix_fr = [eMake| 1 |]
+            let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
+            let indexOfMatrix    = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
+
+            mkLog "values" $ sep $ map pretty values
+            let nbTrues  = genericLength values
+            let nbFalses = nbValuesInt - nbTrues
+            let outTuple1_Name   = name `T.append` "_Set~ExplicitVarSizeWithMarker_tuple1"
+            let outTuple1_Value  = [xMake| value.literal := [Prim (I nbTrues)] |]
+
+            valuesPadded <- do
+                padding <- zeroVal domInner
+                return $ sort values ++ replicate (fromInteger nbFalses) padding
+            values' <- concatMapM (workhorse lookupReprs)
+                        [ (nm', dom', val')
+                        | let nm'  = name `T.append` "_Set~ExplicitVarSizeWithMarker_tuple2"
+                        , let dom' = domInner
+                        , val' <- valuesPadded
+                        ]
+            let nameValuePairs
+                    = map (\ xs -> (fst $ headNote "redArrow.nameValuePairs 2" xs, map snd xs) )
+                    $ groupBy ((==) `on` fst)
+                    $ sortBy  (comparing fst)
+                    $ values'
+
+            return
+                $ (outTuple1_Name, outTuple1_Value)
+                :
+                [ (nm', theMatrix)
+                | (nm', vals) <- nameValuePairs
+                , let valuesInMatrix = vals
+                , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
+                                             | value.matrix.indexrange := [indexOfMatrix]
+                                             |]
+                ]
+
+        helper
+            name
+            [xMatch| attrs      := domain.set.attributes.attrCollection
+                   | [domInner] := domain.set.inner
                    | [_,to]     := domain.set.inner.domain.int.ranges.range.fromTo
                    |]
             [xMatch| values := value.set.values |]
