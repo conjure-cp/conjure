@@ -1,4 +1,7 @@
 MINION 3
+# CSE_number = 0
+# CSE_eliminated_expressions = 0
+# CSE_total_size = 0
 **VARIABLES**
 DISCRETE pain_tuple1_tuple1_tuple1_00000_00000 #
 {1..6}
@@ -25,8 +28,8 @@ PRINT[[pain_tuple1_tuple1_tuple1_00000_00000],[pain_tuple1_tuple1_tuple1_00000_0
 VARORDER STATIC [pain_tuple1_tuple1_tuple1_00000_00000,pain_tuple1_tuple1_tuple1_00000_00001,pain_tuple1_tuple1_tuple1_00001_00000,pain_tuple1_tuple1_tuple1_00001_00001]
 VARORDER AUX []
 **CONSTRAINTS**
-w-literal(pain_tuple1_tuple1_tuple1_00001_00001,6)
-w-literal(pain_tuple1_tuple1_tuple1_00001_00000,6)
 w-literal(pain_tuple1_tuple1_tuple1_00000_00000,1)
 w-literal(pain_tuple1_tuple1_tuple1_00000_00001,1)
+w-literal(pain_tuple1_tuple1_tuple1_00001_00000,6)
+w-literal(pain_tuple1_tuple1_tuple1_00001_00001,6)
 **EOF**

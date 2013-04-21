@@ -1,168 +1,219 @@
-[handleInfDom] given a: int
-               ~~>
-               given a: int(MININT..MAXINT)
-[handleInfDom] given b: int
-               ~~>
-               given b: int(MININT..MAXINT)
-[handleInfDom] given c: int
-               ~~>
-               given c: int(MININT..MAXINT)
-[handleInfDom] given d: int
-               ~~>
-               given d: int(MININT..MAXINT)
+[useChannelling] True
 [representation] find f: function (total)
                              int(a..b) --> set (size 2) of set (size 3) of int(c..d)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] f§region1#AsReln
+[addedDecl] find f_AsReln:
+                    relation of (int(a..b) * set (size 2) of set (size 3) of int(c..d))
+[refn] 0
+[applied] |f§region1#AsReln(2)|
+          {rules/refns/horizontal/set-card.rule}
+              (sum v__3 in f§region1#AsReln(2) . 1)
+[applied] (sum v__3 in f§region1#AsReln(2) . 1)
+          {rules/refns/vertical/function-asreln/function-asreln-image-set.rule}
+              (sum v__4 in toSet(f_AsReln§region1) , 2 = v__4[1] . (sum v__5 in v__4[2] . 1))
+[removeRefinedDecl] find f: function (total)
+                                int(a..b) --> set (size 2) of set (size 3) of int(c..d)
+[repr] 1
+[representation] find f_AsReln:
+                         relation of (int(a..b) * set (size 2) of set (size 3) of int(c..d))
                  (#1)
-                 Matrix1D
-[configuration] f§region1#Matrix1D
-[addedDecl] find f_Matrix1D:
-                    matrix indexed by [int(a..b)] of set (size 2) of set (size 3) of int(c..d)
-[applied] f§region1#Matrix1D(2)
-          {rules/refns/function-matrix1d/function-matrix1d-image.rule}
-              f_Matrix1D§region1[2]
-[applied] |f_Matrix1D§region1[2]|
-          {rules/refns/set-card.rule}
-              (sum v__3 in f_Matrix1D§region1[2] . 1)
-[removedDecl] find f: function (total)
-                          int(a..b) --> set (size 2) of set (size 3) of int(c..d)
-[representation] find f_Matrix1D:
-                         matrix indexed by [int(a..b)] of set (size 2) of set (size 3) of int(c..d)
+                 RelationAsSet
+[configuration] f_AsReln§region1#RelationAsSet
+[addedDecl] find f_AsReln_RelationAsSet:
+                    set of (int(a..b), set (size 2) of set (size 3) of int(c..d))
+[refn] 1
+[applied] (sum v__0 in toSet(f_AsReln§region1#RelationAsSet) , 2 = v__0[1]
+               . (sum v__1 in v__0[2] . 1))
+          {rules/refns/vertical/relation-RelationAsSet/relation-RelationAsSet-toSet.rule}
+              (sum v__0 in f_AsReln_RelationAsSet§region1 , 2 = v__0[1]
+                   . (sum v__1 in v__0[2] . 1))
+[applied] (sum v__1 in toSet(f_AsReln§region1#RelationAsSet) . v__0 = v__1[1])
+          {rules/refns/vertical/relation-RelationAsSet/relation-RelationAsSet-toSet.rule}
+              (sum v__1 in f_AsReln_RelationAsSet§region1 . v__0 = v__1[1])
+[removeRefinedDecl] find f_AsReln:
+                            relation of (int(a..b) * set (size 2) of set (size 3) of int(c..d))
+[repr] 2
+[representation] find f_AsReln_RelationAsSet:
+                         set of (int(a..b), set (size 2) of set (size 3) of int(c..d))
                  (#1)
-                 Explicit
-[configuration] f_Matrix1D§region1#Explicit
-[addedDecl] find f_Matrix1D_Explicit:
-                    matrix indexed by [int(a..b), int(1..2)] of set (size 3) of int(c..d)
-[applied] (sum v__3 in f_Matrix1D§region1#Explicit[2] . 1)
-          {rules/refns/set-explicit/set-explicit-quantified.rule}
-              2
-[applied] f_Matrix1D_Explicit§region1[v__7, v__5]
-          !=
-          f_Matrix1D_Explicit§region1[v__7, v__6]
-          {rules/refns/neq-to-eq.rule}
-              !(f_Matrix1D_Explicit§region1[v__7, v__5]
-                =
-                f_Matrix1D_Explicit§region1[v__7, v__6])
-[applied] f_Matrix1D_Explicit§region1[v__7, v__5]
-          =
-          f_Matrix1D_Explicit§region1[v__7, v__6]
-          {rules/refns/set-eq-to-subsets.rule}
-              f_Matrix1D_Explicit§region1[v__7, v__5]
-              subsetEq
-              f_Matrix1D_Explicit§region1[v__7, v__6]
-              /\
-              f_Matrix1D_Explicit§region1[v__7, v__5]
-              supsetEq
-              f_Matrix1D_Explicit§region1[v__7, v__6]
-[applied] f_Matrix1D_Explicit§region1[v__7, v__5]
-          subsetEq
-          f_Matrix1D_Explicit§region1[v__7, v__6]
-          {rules/refns/set-subseteq-to-quantified.rule}
-              (forAll v__9 in f_Matrix1D_Explicit§region1[v__7, v__5]
-                   . v__9 in f_Matrix1D_Explicit§region1[v__7, v__6])
-[applied] v__9 in f_Matrix1D_Explicit§region1[v__7, v__6]
-          {rules/refns/set-in-to-quantified.rule}
-              (exists v__10 in f_Matrix1D_Explicit§region1[v__7, v__6] . v__10 = v__9)
-[applied] f_Matrix1D_Explicit§region1[v__7, v__5]
-          supsetEq
-          f_Matrix1D_Explicit§region1[v__7, v__6]
-          {rules/refns/set-supseteq-to-subseteq.rule}
-              f_Matrix1D_Explicit§region1[v__7, v__6]
-              subsetEq
-              f_Matrix1D_Explicit§region1[v__7, v__5]
-[applied] f_Matrix1D_Explicit§region1[v__7, v__6]
-          subsetEq
-          f_Matrix1D_Explicit§region1[v__7, v__5]
-          {rules/refns/set-subseteq-to-quantified.rule}
-              (forAll v__11 in f_Matrix1D_Explicit§region1[v__7, v__6]
-                   . v__11 in f_Matrix1D_Explicit§region1[v__7, v__5])
-[applied] v__11 in f_Matrix1D_Explicit§region1[v__7, v__5]
-          {rules/refns/set-in-to-quantified.rule}
-              (exists v__12 in f_Matrix1D_Explicit§region1[v__7, v__5] . v__12 = v__11)
-[from-cached] such that
-                  forAll v__7 : int(a..b)
-                      . (forAll v__5 : int(1..2)
-                             . (forAll v__6 : int(1..2) , v__5 < v__6
-                                    . f_Matrix1D_Explicit§region1[v__7, v__5]
-                                      !=
-                                      f_Matrix1D_Explicit§region1[v__7, v__6]))
-              ~~>
-              such that
-                  forAll v__7 : int(a..b)
-                      . (forAll v__5 : int(1..2)
-                             . (forAll v__6 : int(1..2) , v__5 < v__6
-                                    . !((forAll v__9 in f_Matrix1D_Explicit§region1[v__7, v__5]
-                                             . (exists v__10 in f_Matrix1D_Explicit§region1[v__7, v__6] . v__10 = v__9))
-                                        /\
-                                        (forAll v__11 in f_Matrix1D_Explicit§region1[v__7, v__6]
-                                             . (exists v__12 in f_Matrix1D_Explicit§region1[v__7, v__5]
-                                                    . v__12 = v__11)))))
-[removedDecl] find f_Matrix1D:
-                      matrix indexed by [int(a..b)] of set (size 2) of set (size 3) of int(c..d)
-[representation] find f_Matrix1D_Explicit:
-                         matrix indexed by [int(a..b), int(1..2)] of set (size 3) of int(c..d)
+                 Set~ExplicitVarSize
+[configuration] f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+[addedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize:
+                    matrix indexed by [int(1..(b - a + 1)
+                                              *
+                                              (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                               /
+                                               (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!)))] of (bool,
+                                                                                                         (int(a..b),
+                                                                                                          set (size 2) of
+                                                                                                              set (size 3) of
+                                                                                                                  int(c..d)))
+[refn] 2
+[applied] (sum v__0 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+               , 2 = v__0[1]
+               . (sum v__1 in v__0[2] . 1))
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__7 : int(1..(b - a + 1)
+                                 *
+                                 (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                  /
+                                  (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!)))
+                   , 2 = f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__7, 2, 1]
+                     /\
+                     f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__7, 1]
+                   . (sum v__1 in f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__7, 2, 2]
+                          . 1))
+[applied] (sum v__1 in f_AsReln_RelationAsSet§region1#Set~ExplicitVarSize
+               . v__0 = v__1[1])
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (sum v__8 : int(1..(b - a + 1)
+                                 *
+                                 (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                  /
+                                  (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!)))
+                   , f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 1]
+                   . v__0 = f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__8, 2, 1])
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__6, 2, 1]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__6 + 1, 2, 1]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__6, 2, 1]
+              <
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize§region1[v__6 + 1, 2, 1]
+[removeRefinedDecl] find f_AsReln_RelationAsSet:
+                            set of (int(a..b), set (size 2) of set (size 3) of int(c..d))
+[removedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize:
+                      matrix indexed by [int(1..(b - a + 1)
+                                                *
+                                                (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                                 /
+                                                 (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!)))] of (bool,
+                                                                                                           (int(a..b),
+                                                                                                            set (size 2) of
+                                                                                                                set (size 3) of
+                                                                                                                    int(c..d)))
+[matrixToTuple] f_AsReln_RelationAsSet_Set~ExplicitVarSize∑1
+[removedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2:
+                      matrix indexed by [int(1..(b - a + 1)
+                                                *
+                                                (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                                 /
+                                                 (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!)))] of (int(a..b),
+                                                                                                           set (size 2) of
+                                                                                                               set (size 3) of
+                                                                                                                   int(c..d))
+[matrixToTuple] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2∑1
+[repr] 3
+[representation] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2:
+                         matrix indexed by [int(1..(b - a + 1)
+                                                   *
+                                                   (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                                    /
+                                                    (2
+                                                     *
+                                                     ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!)))] of set (size 2) of
+                                                                                                             set (size 3) of
+                                                                                                                 int(c..d)
                  (#1)
-                 Occurrence
-[configuration] f_Matrix1D_Explicit§region1#Occurrence
-[addedDecl] find f_Matrix1D_Explicit_Occurrence:
-                    matrix indexed by [int(a..b), int(1..2), int(c..d)] of bool
-[applied] (exists v__10 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__6]
-               . v__10 = v__9)
-          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
-              (exists v__21 : int(c..d)
-                   , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__6, v__21]
-                   . v__21 = v__9)
-[applied] (forAll v__9 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__5]
-               . (exists v__21 : int(c..d)
-                      , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__6, v__21]
-                      . v__21 = v__9))
-          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
-              (forAll v__22 : int(c..d)
-                   , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__5, v__22]
-                   . (exists v__21 : int(c..d)
-                          , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__6, v__21]
-                          . v__21 = v__22))
-[applied] (exists v__12 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__5]
-               . v__12 = v__11)
-          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
-              (exists v__23 : int(c..d)
-                   , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__5, v__23]
-                   . v__23 = v__11)
-[applied] (forAll v__11 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__6]
-               . (exists v__23 : int(c..d)
-                      , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__5, v__23]
-                      . v__23 = v__11))
-          {rules/refns/set-occurrence/set-occurrence-quantified.rule}
-              (forAll v__24 : int(c..d)
-                   , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__6, v__24]
-                   . (exists v__23 : int(c..d)
-                          , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__5, v__23]
-                          . v__23 = v__24))
-[from-cached] such that
-                  forAll v__7 : int(a..b)
-                      . (forAll v__5 : int(1..2)
-                             . (forAll v__6 : int(1..2) , v__5 < v__6
-                                    . !((forAll v__9 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__5]
-                                             . (exists v__10 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__6]
-                                                    . v__10 = v__9))
-                                        /\
-                                        (forAll v__11 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__6]
-                                             . (exists v__12 in f_Matrix1D_Explicit§region1#Occurrence[v__7, v__5]
-                                                    . v__12 = v__11)))))
-              ~~>
-              such that
-                  forAll v__7 : int(a..b)
-                      . (forAll v__5 : int(1..2)
-                             . (forAll v__6 : int(1..2) , v__5 < v__6
-                                    . !((forAll v__22 : int(c..d)
-                                             , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__5, v__22]
-                                             . (exists v__21 : int(c..d)
-                                                    , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__6, v__21]
-                                                    . v__21 = v__22))
-                                        /\
-                                        (forAll v__24 : int(c..d)
-                                             , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__6, v__24]
-                                             . (exists v__23 : int(c..d)
-                                                    , f_Matrix1D_Explicit_Occurrence§region1[v__7, v__5, v__23]
-                                                    . v__23 = v__24)))))
-[removedDecl] find f_Matrix1D_Explicit:
-                      matrix indexed by [int(a..b), int(1..2)] of set (size 3) of int(c..d)
+                 Set~Explicit
+[configuration] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2§region1#Set~Explicit
+[addedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit:
+                    matrix indexed by [int(1..(b - a + 1)
+                                              *
+                                              (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                               /
+                                               (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!))),
+                                       int(1..2)] of set (size 3) of int(c..d)
+[refn] 3
+[applied] (sum v__1 in f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2§region1#Set~Explicit[v__0]
+               . 1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
+              (sum v__12 : int(1..2) . 1)
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2§region1#Set~Explicit[v__0]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2§region1#Set~Explicit[v__0
+                                                                                        +
+                                                                                        1]
+          {rules/refns/vertical/Set~Explicit/DotLt.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1[v__0]
+              .<
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1[v__0
+                                                                                            +
+                                                                                            1]
+[removeRefinedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2:
+                            matrix indexed by [int(1..(b - a + 1)
+                                                      *
+                                                      (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                                       /
+                                                       (2
+                                                        *
+                                                        ((d - c + 1)! / (6 * (d - c + 1 - 3)!)
+                                                         -
+                                                         2)!)))] of set (size 2) of set (size 3) of int(c..d)
+[repr] 4
+[representation] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit:
+                         matrix indexed by [int(1..(b - a + 1)
+                                                   *
+                                                   (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                                    /
+                                                    (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!))),
+                                            int(1..2)] of set (size 3) of int(c..d)
+                 (#2)
+                 Set~Explicit, Set~Occurrence
+[configuration] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1#Set~Explicit
+[addedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit:
+                    matrix indexed by [int(1..(b - a + 1)
+                                              *
+                                              (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                               /
+                                               (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!))),
+                                       int(1..2),
+                                       int(1..3)] of int(c..d)
+[refn] 4
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1#Set~Explicit[v__0]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1#Set~Explicit[v__0
+                                                                                                     +
+                                                                                                     1]
+          {rules/refns/vertical/Set~Explicit/DotLt.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__0]
+              .<
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__0
+                                                                                                         +
+                                                                                                         1]
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1#Set~Explicit[v__0,
+                                                                                                     1]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit§region1#Set~Explicit[v__0,
+                                                                                                     2]
+          {rules/refns/vertical/Set~Explicit/DotLt.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__0,
+                                                                                                         1]
+              .<
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__0,
+                                                                                                         2]
+[applied] f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__17,
+                                                                                                     v__15,
+                                                                                                     v__16]
+          .<
+          f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__17,
+                                                                                                     v__15,
+                                                                                                     v__16 + 1]
+          {rules/refns/horizontal/DotLt-ints.rule}
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__17,
+                                                                                                         v__15,
+                                                                                                         v__16]
+              <
+              f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit_Set~Explicit§region1[v__17,
+                                                                                                         v__15,
+                                                                                                         v__16 + 1]
+[removeRefinedDecl] find f_AsReln_RelationAsSet_Set~ExplicitVarSize_tuple2_tuple2_Set~Explicit:
+                            matrix indexed by [int(1..(b - a + 1)
+                                                      *
+                                                      (((d - c + 1)! / (6 * (d - c + 1 - 3)!))!
+                                                       /
+                                                       (2 * ((d - c + 1)! / (6 * (d - c + 1 - 3)!) - 2)!))),
+                                               int(1..2)] of set (size 3) of int(c..d)
+[repr] 5

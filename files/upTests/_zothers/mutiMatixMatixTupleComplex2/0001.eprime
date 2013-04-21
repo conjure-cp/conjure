@@ -9,19 +9,27 @@ find pain_tuple2_tuple3:
 find pain_tuple3_tuple1: matrix indexed by [int(1, 2)] of int(19)
 find pain_tuple3_tuple2: matrix indexed by [int(1, 2)] of int(32)
 such that
-    pain_tuple2_tuple3[1, 1, 1] = 55,
-    pain_tuple2_tuple3[1, 1, 2] = 99,
-    pain_tuple2_tuple3[2, 1, 1] = 55,
-    pain_tuple2_tuple3[2, 1, 2] = 99,
-    pain_tuple2_tuple1[1, 1] = 12,
-    pain_tuple2_tuple1[2, 1] = 12,
-    pain_tuple2_tuple2_tuple1[1, 1] = 44,
-    pain_tuple2_tuple2_tuple1[2, 1] = 44,
-    pain_tuple2_tuple2_tuple2[1, 1] = 33,
-    pain_tuple2_tuple2_tuple2[2, 1] = 33,
     pain_tuple1[1] = 1,
     pain_tuple1[2] = 1,
     pain_tuple3_tuple1[1] = 19,
     pain_tuple3_tuple1[2] = 19,
     pain_tuple3_tuple2[1] = 32,
-    pain_tuple3_tuple2[2] = 32
+    pain_tuple3_tuple2[2] = 32,
+    forAll v__0 : int(1)
+        . pain_tuple2_tuple1[1, v__0] = [12][v__0]
+          /\
+          (pain_tuple2_tuple2_tuple1[1, v__0] = [44][v__0]
+           /\
+           pain_tuple2_tuple2_tuple2[1, v__0] = [33][v__0]
+           /\
+           (forAll v__1 : int(1, 2)
+                . pain_tuple2_tuple3[1, v__0, v__1] = [[55, 99]][v__0, v__1])),
+    forAll v__0 : int(1)
+        . pain_tuple2_tuple1[2, v__0] = [12][v__0]
+          /\
+          (pain_tuple2_tuple2_tuple1[2, v__0] = [44][v__0]
+           /\
+           pain_tuple2_tuple2_tuple2[2, v__0] = [33][v__0]
+           /\
+           (forAll v__1 : int(1, 2)
+                . pain_tuple2_tuple3[2, v__0, v__1] = [[55, 99]][v__0, v__1]))

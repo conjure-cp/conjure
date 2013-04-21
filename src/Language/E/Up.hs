@@ -47,15 +47,12 @@ translateSolutionM
   -> Eprime
   -> Maybe Param
   -> ESolution
+  -> [Text]
   -> m Spec
 
-translateSolutionM essence param eprime eprimeParam eprimeSolution= do
-    specs <- getSpecsM (eprime, eprimeSolution, essence, eprimeParam, param)
+translateSolutionM essence param eprime eprimeParam eprimeSolution logs= do
+    specs <- getSpecsM (eprime, eprimeSolution, essence, eprimeParam, param, logs)
     return $ Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
-
-
-
-
 
 type EssenceSolution = Spec
 

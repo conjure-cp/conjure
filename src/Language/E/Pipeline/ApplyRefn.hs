@@ -1,7 +1,8 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module Language.E.Pipeline.ApplyRefn ( applyRefn ) where
+module Language.E.Pipeline.ApplyRefn ( applyRefn, applyRefnE ) where
 
 import Conjure.Mode
 
@@ -24,6 +25,16 @@ applyRefn db' spec = withBindingScope' $ do
     (spec', _) <- runWriterT $ onSpec db spec
     return spec'
 
+applyRefnE
+    :: MonadConjureList m
+    => RuleRefnDB m
+    -> E
+    -> m E
+applyRefnE db' spec = withBindingScope' $ do
+    let db = db' ++ builtInRefn
+    (spec', _) <- runWriterT $ onE db spec
+    return spec'
+
 
 {-# INLINEABLE onSpec #-}
 onSpec
@@ -37,26 +48,41 @@ onSpec db (Spec lang statements) = Spec lang <$> onE db statements
 
 {-# INLINEABLE onE #-}
 onE
-    :: MonadConjureList m
+    :: forall m
+    .  MonadConjureList m
     => RuleRefnDB m
     -> E
     -> WriterT Any m E
 -- onE _ x | trace (show $ "onE" <+> pretty x) False = undefined
-onE = applyToTree
-
+onE db i = do
+    (j, flag) <- lift $ go 0 dbLevels i
+    tell (Any flag)
+    return j
+    where
+        dbLevels = map return db
+        go :: Int -> [RuleRefnDB m] -> E -> m (E, Bool)
+        go _ [] x = return (x, False)
+        go levelInt (dbLevel:rest) x = do
+            (x', Any flag) <- runWriterT $ applyToTree levelInt dbLevel x
+            if flag
+                then do
+                    (y, _) <- go 0 dbLevels x'
+                    return (y, True)
+                else go (levelInt + 1) rest x'
 
 
 {-# INLINEABLE applyIdempotent #-}
 applyIdempotent
     :: MonadConjureList m
-    => RuleRefnDB m
+    => Int
+    -> RuleRefnDB m
     -> E
     -> WriterT Any m E
--- applyIdempotent _  x | trace (show $ "applyIdempotent" <+> pretty x) False = undefined
-applyIdempotent db x = do
+-- applyIdempotent _ _ x | trace (show $ "applyIdempotent" <+> pretty x) False = undefined
+applyIdempotent level db x = do
     (y, Any flag) <- listen $ apply db x
     if flag
-        then applyToTree db y
+        then applyToTree level db y
         else return x
 
 
@@ -64,11 +90,15 @@ applyIdempotent db x = do
 {-# INLINEABLE applyToTree #-}
 applyToTree
     :: MonadConjureList m
-    => RuleRefnDB m
+    => Int
+    -> RuleRefnDB m
     -> E
     -> WriterT Any m E
--- applyToTree _  x | trace (show $ "applyToTree" <+> pretty x) False = undefined
-applyToTree db = bottomUpERefn (applyIdempotent db)
+-- applyToTree _ _ x | trace (show $ "applyToTree" <+> pretty x) False = undefined
+applyToTree level db i = do
+    (j, Any flag) <- lift $ runWriterT $ bottomUpERefn level (applyIdempotent level db) i
+    tell (Any flag)
+    return j
 
 
 
@@ -100,7 +130,7 @@ tryApply
        , RandomM m
        )
     => RuleRefnDB m
-    -> ConjureMode
+    -> ConjureModeWithFlags
     -> E
     -> m ([E], Bool)
 -- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do

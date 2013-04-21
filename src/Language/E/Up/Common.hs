@@ -3,9 +3,14 @@
 module Language.E.Up.Common(
     transposeE,
     unwrapMatrix,
+    unwrapMatrix',
     unwrapExpr,
     matrixToTuple,
-    wrapInExpr
+    wrapInExpr,
+    wrapInMatrix,
+    toIntLit,
+    unwrapValues,
+    wrapInFunction
 ) where
 
 import qualified Data.List as L(transpose)
@@ -20,7 +25,7 @@ transposeE :: [E] -> [E]
 transposeE arr  |  all (not . isLiteral) arr =
     let arr2D = map tranposeCheck arr
         res = L.transpose arr2D
-    in  map (\ele -> [xMake| value.matrix.values := ele |] ) res
+    in  map wrapInMatrix res
 
 transposeE e = e
 
@@ -36,6 +41,17 @@ tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
         `_p` ("USING tranposeCheck tuples", [res])
 
 tranposeCheck e = _bug "tranposeCheck" [e]
+
+
+toIntLit :: Integer -> E
+toIntLit j = [xMake| value.literal := [Prim (I j)] |]
+
+unwrapValues ::  E -> [E]
+unwrapValues  (Tagged "values" vs) =  vs
+unwrapValues e = _bug "unwrapValues failed" [e]
+
+wrapInFunction :: [E] -> E
+wrapInFunction es = [xMake| value.function.values := es |]
 
 
 convertTuples :: E -> E
@@ -60,6 +76,12 @@ unwrapMatrix :: E -> [E]
 unwrapMatrix [xMatch| vs := value.matrix.values |] = vs
 unwrapMatrix e = _bug "unwrapMatrix failed" [e]
 
+unwrapMatrix' :: String -> E -> [E]
+unwrapMatrix' _ [xMatch| vs := value.matrix.values |] = vs
+unwrapMatrix' str e = _bug (str ++ ": unwrapMatrix failed") [e]
+
+wrapInMatrix :: [E] -> E
+wrapInMatrix arr = [xMake| value.matrix.values := arr |]
 
 matrixToTuple :: E -> E
 matrixToTuple [xMatch| vs := value.matrix|] = [xMake| value.tuple := vs |]
@@ -67,6 +89,7 @@ matrixToTuple e = _bug "matrixToTuple failed" [e]
 
 wrapInExpr :: E -> E
 wrapInExpr e = [xMake| expr := [e] |]
+
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("Up.Common: " ++ s)

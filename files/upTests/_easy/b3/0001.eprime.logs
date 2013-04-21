@@ -1,17 +1,19 @@
+[useChannelling] True
 [representation] find x: set (maxSize 1) of int(0..9)
                  (#3)
-                 ExplicitVarSize, ExplicitVarSizeWithDefault, Occurrence
-[configuration] x§region1#ExplicitVarSize
-[addedDecl] find x_ExplicitVarSize:
+                 Set~ExplicitVarSize, Set~ExplicitVarSizeWithDefault, Set~Occurrence
+[configuration] x§region1#Set~ExplicitVarSize
+[addedDecl] find x_Set~ExplicitVarSize:
                     matrix indexed by [int(1..1)] of (bool, int(0..9))
 [refn] 0
-[applied] 2 in x§region1#ExplicitVarSize
+[applied] 2 in x§region1#Set~ExplicitVarSize
           {rules/refns/horizontal/set-in-to-quantified.rule}
-              (exists v__4 in x§region1#ExplicitVarSize . v__4 = 2)
-[applied] (exists v__4 in x§region1#ExplicitVarSize . v__4 = 2)
-          {rules/refns/vertical/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-              x_ExplicitVarSize§region1[1, 1] /\ x_ExplicitVarSize§region1[1, 2] = 2
+              (exists v__4 in x§region1#Set~ExplicitVarSize . v__4 = 2)
+[applied] (exists v__4 in x§region1#Set~ExplicitVarSize . v__4 = 2)
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              x_Set~ExplicitVarSize§region1[1, 1] /\ x_Set~ExplicitVarSize§region1[1, 2] = 2
 [removeRefinedDecl] find x: set (maxSize 1) of int(0..9)
-[removedDecl] find x_ExplicitVarSize:
+[removedDecl] find x_Set~ExplicitVarSize:
                       matrix indexed by [int(1..1)] of (bool, int(0..9))
+[matrixToTuple] x_Set~ExplicitVarSize
 [repr] 1

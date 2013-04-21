@@ -13,11 +13,13 @@ find pain_tuple4_tuple1_tuple1: matrix indexed by [int(1)] of int(10)
 find pain_tuple4_tuple1_tuple2: matrix indexed by [int(1)] of int(11)
 find pain_tuple4_tuple2: matrix indexed by [int(1)] of int(12)
 find pain_tuple5: matrix indexed by [int(1)] of int(14)
-find pain_tuple6_Explicit_tuple1:
+find pain_tuple6_SetExplicit_tuple1:
         matrix indexed by [int(1), int(1..1)] of int(15)
-find pain_tuple6_Explicit_tuple2:
+find pain_tuple6_SetExplicit_tuple2:
         matrix indexed by [int(1), int(1..1)] of int(16)
 such that
+    pain_tuple6_SetExplicit_tuple1[1, 1] = 15,
+    pain_tuple6_SetExplicit_tuple2[1, 1] = 16,
     pain_tuple1[1] = 2,
     pain_tuple2_tuple1[1] = 1,
     pain_tuple2_tuple2[1] = 9,
@@ -31,11 +33,5 @@ such that
     pain_tuple4_tuple1_tuple2[1] = 11,
     pain_tuple4_tuple2[1] = 12,
     pain_tuple5[1] = 14,
-    forAll v__3 : int(1..1)
-        . 15 = pain_tuple6_Explicit_tuple1[1, v__3]
-          /\
-          16 = pain_tuple6_Explicit_tuple2[1, v__3],
-    exists v__6 : int(1..1)
-        . pain_tuple6_Explicit_tuple1[1, v__6] = 15
-          /\
-          pain_tuple6_Explicit_tuple2[1, v__6] = 16
+    15 = pain_tuple6_SetExplicit_tuple1[1, 1],
+    16 = pain_tuple6_SetExplicit_tuple2[1, 1]

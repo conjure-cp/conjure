@@ -1,0 +1,16 @@
+
+[500]
+
+&quan &i,&j in &s , &i != &j . &body
+
+~~>
+
+&quan i2,j2 : &r
+    , i2 != j2
+    . &body { &i --> &m[i2], &j --> &m[j2] }
+
+    where &s hasRepr Set~Explicit
+
+    letting &m be refn(&s)
+    letting &r be indices(&m,0)
+

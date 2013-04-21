@@ -2,53 +2,193 @@ language ESSENCE' 1.0
 
 given a: int
 given b: int
-given c: int
-given d: int
-find fs_Explicit_Matrix1D_tuple1:
-        matrix indexed by [int(1..1), int(a..b)] of int(1)
-find fs_Explicit_Matrix1D_tuple2_Explicit_tuple1:
-        matrix indexed by [int(1..1), int(a..b), int(1..2)] of int(10, 11)
-find fs_Explicit_Matrix1D_tuple2_Explicit_tuple2:
-        matrix indexed by [int(1..1), int(a..b), int(1..2)] of int(12, 13)
-find fs_Explicit_Matrix1D_tuple3:
-        matrix indexed by [int(1..1), int(a..b)] of int(4)
+find fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple1:
+        matrix indexed by [int(1..1), int(1..(b - a + 1) * 6)] of bool
+find fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1:
+        matrix indexed by [int(1..1), int(1..(b - a + 1) * 6)] of int(a..b)
+find fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple1:
+        matrix indexed by [int(1..1), int(1..(b - a + 1) * 6)] of int(1)
+find fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1:
+        matrix indexed by [int(1..1), int(1..(b - a + 1) * 6), int(1..2)] of int(10, 11)
+find fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2:
+        matrix indexed by [int(1..1), int(1..(b - a + 1) * 6), int(1..2)] of int(12, 13)
+find fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple3:
+        matrix indexed by [int(1..1), int(1..(b - a + 1) * 6)] of int(4)
 such that
     forAll v__0 : int(a..b)
-        . (forAll v__1 : int(1..2)
-               . (forAll v__2 : int(1..2)
-                      . v__1 < v__2
-                        ->
-                        fs_Explicit_Matrix1D_tuple2_Explicit_tuple1[1, v__0, v__1]
-                        !=
-                        fs_Explicit_Matrix1D_tuple2_Explicit_tuple1[1, v__0, v__2]
-                        \/
-                        fs_Explicit_Matrix1D_tuple2_Explicit_tuple2[1, v__0, v__1]
-                        !=
-                        fs_Explicit_Matrix1D_tuple2_Explicit_tuple2[1, v__0, v__2])),
-    forAll v__0 : int(1..1)
-        . 1 < v__0
+        . (sum v__1 : int(1..(b - a + 1) * 6)
+               . fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[1, v__1]
+                 *
+                 (v__0
+                  =
+                  fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1, v__1]))
+          =
+          1,
+    forAll v__0 : int(1..(b - a + 1) * 6)
+        . fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                         v__0,
+                                                                                                         1]
+          <
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                         v__0,
+                                                                                                         2]
+          \/
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                         v__0,
+                                                                                                         1]
+          =
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                         v__0,
+                                                                                                         2]
+          /\
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                         v__0,
+                                                                                                         1]
+          <
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                         v__0,
+                                                                                                         2],
+    forAll v__0 : int(1..(b - a + 1) * 6 - 1)
+        . fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0]
+          /\
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0 + 1]
           ->
-          !(forAll v__1 : int(a..b)
-                . fs_Explicit_Matrix1D_tuple1[1, v__1] = fs_Explicit_Matrix1D_tuple1[v__0, v__1]
-                  /\
-                  ((forAll v__2 : int(1..2)
-                        . (exists v__3 : int(1..2)
-                               . fs_Explicit_Matrix1D_tuple2_Explicit_tuple1[v__0, v__1, v__3]
-                                 =
-                                 fs_Explicit_Matrix1D_tuple2_Explicit_tuple1[1, v__1, v__2]
-                                 /\
-                                 fs_Explicit_Matrix1D_tuple2_Explicit_tuple2[v__0, v__1, v__3]
-                                 =
-                                 fs_Explicit_Matrix1D_tuple2_Explicit_tuple2[1, v__1, v__2]))
-                   /\
-                   (forAll v__2 : int(1..2)
-                        . (exists v__3 : int(1..2)
-                               . fs_Explicit_Matrix1D_tuple2_Explicit_tuple1[1, v__1, v__3]
-                                 =
-                                 fs_Explicit_Matrix1D_tuple2_Explicit_tuple1[v__0, v__1, v__2]
-                                 /\
-                                 fs_Explicit_Matrix1D_tuple2_Explicit_tuple2[1, v__1, v__3]
-                                 =
-                                 fs_Explicit_Matrix1D_tuple2_Explicit_tuple2[v__0, v__1, v__2]))
-                   /\
-                   fs_Explicit_Matrix1D_tuple3[1, v__1] = fs_Explicit_Matrix1D_tuple3[v__0, v__1]))
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1, v__0]
+          <
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1,
+                                                                               v__0 + 1]
+          \/
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1, v__0]
+          =
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1[1,
+                                                                               v__0 + 1]
+          /\
+          (fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple1[1,
+                                                                                       v__0]
+           <
+           fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple1[1,
+                                                                                       v__0 + 1]
+           \/
+           fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple1[1,
+                                                                                       v__0]
+           =
+           fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple1[1,
+                                                                                       v__0 + 1]
+           /\
+           (fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                           v__0,
+                                                                                                           1]
+            <
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                           v__0 + 1,
+                                                                                                           1]
+            \/
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                           v__0,
+                                                                                                           1]
+            =
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                           v__0 + 1,
+                                                                                                           1]
+            /\
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                           v__0,
+                                                                                                           1]
+            <
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                           v__0 + 1,
+                                                                                                           1]
+            \/
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                           v__0,
+                                                                                                           1]
+            =
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                           v__0 + 1,
+                                                                                                           1]
+            /\
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                           v__0,
+                                                                                                           1]
+            =
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                           v__0 + 1,
+                                                                                                           1]
+            /\
+            (fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                            v__0,
+                                                                                                            2]
+             <
+             fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                            v__0 + 1,
+                                                                                                            2]
+             \/
+             fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                            v__0,
+                                                                                                            2]
+             =
+             fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                            v__0 + 1,
+                                                                                                            2]
+             /\
+             fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                            v__0,
+                                                                                                            2]
+             <
+             fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                            v__0 + 1,
+                                                                                                            2])
+            \/
+            (forAll v__1 : int(1..2)
+                 . (exists v__2 : int(1..2)
+                        . fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                                         v__0
+                                                                                                                         +
+                                                                                                                         1,
+                                                                                                                         v__2]
+                          =
+                          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                                         v__0,
+                                                                                                                         v__1]
+                          /\
+                          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                                         v__0
+                                                                                                                         +
+                                                                                                                         1,
+                                                                                                                         v__2]
+                          =
+                          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                                         v__0,
+                                                                                                                         v__1]))
+            /\
+            (forAll v__1 : int(1..2)
+                 . (exists v__2 : int(1..2)
+                        . fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                                         v__0,
+                                                                                                                         v__2]
+                          =
+                          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple1[1,
+                                                                                                                         v__0
+                                                                                                                         +
+                                                                                                                         1,
+                                                                                                                         v__1]
+                          /\
+                          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                                         v__0,
+                                                                                                                         v__2]
+                          =
+                          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple2_SetExplicit_tuple2[1,
+                                                                                                                         v__0
+                                                                                                                         +
+                                                                                                                         1,
+                                                                                                                         v__1]))
+            /\
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple3[1,
+                                                                                        v__0]
+            <
+            fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple2_tuple3[1,
+                                                                                        v__0 + 1])),
+    forAll v__0 : int(1..(b - a + 1) * 6 - 1)
+        . fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0]
+          <=
+          fs_SetExplicit_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[1, v__0 + 1]

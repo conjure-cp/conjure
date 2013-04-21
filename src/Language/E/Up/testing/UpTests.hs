@@ -4,8 +4,12 @@ import Language.E
 
 import Language.E.Up.EprimeToEssence
 import Language.E.Up.IO (getTestSpecs, getSpec)
+import Language.E.NormaliseSolution(normaliseSolutionEs)
 
 import System.FilePath
+
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import Test.Hspec hiding (Spec)
 import qualified Test.Hspec as Hspec
@@ -17,6 +21,7 @@ type SolutionF       = FilePath
 type EprimeSolutionF = FilePath
 type ParamF          = FilePath
 type EssenceParamF   = FilePath
+type LogsF           = FilePath
 
 
 eprimes :: IO [EprimeF]
@@ -30,6 +35,19 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
        <$> allFilesWithSuffix ".eprime" "files/uptests/"
 -}
 
+-- Most tests
+{-
+eprimes = _eprimeDirs "files/uptests/" ["___simple","___parts","___types","__easy","__reps"
+                                       ,"_relations", "_indexes", "__failed","__issues","_essence_params"
+                                       ,"_matrix_of_tuples", "_muti_dimensional","_zznested_singletons"
+                                       ,"_functions","_tuples_of_matrix","_zzComplex","_zothers"
+                                       ,"__indexrange","_partition", "_essence_catalog"
+                                       ]
+-}
+
+{-eprimes = _eprimeDirs "files/uptests/" ["_partition","__essence_catalog"]-}
+
+
 -- Basic tests
 --eprimes = _eprimeDirs "files/uptests/" ["___parts","___simple","___types"]
 
@@ -38,17 +56,17 @@ eprimes =  filter (flip notElem ["tupley32-8Complex5"]
 
 
 _eprimeDirs :: FilePath -> [FilePath] -> IO [EprimeF]
-_eprimeDirs base arr = 
-    concatMapM ( allFilesWithSuffix ".eprime") (map (base </>) arr) 
+_eprimeDirs base arr =
+    concatMapM ( allFilesWithSuffix ".eprime") (map (base </>) arr)
 
-specs :: IO [((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF )]
+specs :: IO [((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF,LogsF )]
 specs = do
     es <- eprimes
     return $ map getFiles es
 
-    where 
-        getFiles f = 
-            let base = takeDirectory f 
+    where
+        getFiles f =
+            let base = takeDirectory f
                 name = takeFileName base
                 in
             (
@@ -59,17 +77,20 @@ specs = do
                  Just $  addExtension (joinPath [base,name])  "param",
                  Just $  addExtension (joinPath [base,name])  "essence-param"
              ),
-              replaceExtension f "solution" 
+              replaceExtension f "solution",
+              addExtension f "logs"
             )
 
-runSpec :: ((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF ) -> IO ()
-runSpec  (sps@(_, _,_,_,_),ansF) = do
+runSpec :: ((EprimeF, EprimeSolutionF, EssenceF, Maybe ParamF, Maybe EssenceParamF), SolutionF,LogsF ) -> IO ()
+runSpec  (sps@(_, _,_,_,_),ansF,logsF) = do
     (spec,sol,org,orgP) <- getTestSpecs sps
 
     ansS <- getSpec ansF
-    let ans = es ansS
+    let ans = normaliseSolutionEs . es $ ansS
 
-    let resultEssence = mainPure' False (spec,sol,org,orgP)
+    logs <- liftM T.lines (T.readFile logsF)
+
+    let resultEssence = normaliseSolutionEs $  mainPure' True (spec,sol,org,orgP,logs)
 
     show (pretty resultEssence) `shouldBe` show (pretty ans)
     where
@@ -81,10 +102,10 @@ tests = do
     xs <- specs
     return $
         describe "Converting eprime back to essence" $
-            forM_ xs $ \every@( (specF,_,_,_,_),_) ->
+            forM_ xs $ \every@( (specF,_,_,_,_),_,_) ->
                 it specF $ runSpec every
 
 main :: IO ()
-main = do 
+main = do
     ts <- tests
     hspec ts

@@ -1,45 +1,42 @@
 language ESSENCE' 1.0
 
-find x_tuple1_ExplicitVarSize_tuple1:
+find x_tuple1_SetExplicitVarSize_tuple1:
         matrix indexed by [int(1..2), int(1..2)] of bool
-find x_tuple1_ExplicitVarSize_tuple2:
+find x_tuple1_SetExplicitVarSize_tuple2:
         matrix indexed by [int(1..2), int(1..2)] of int(3, 5)
 find x_tuple2: matrix indexed by [int(1..2)] of int(6, 7)
 find x_tuple3: matrix indexed by [int(1..2)] of int(9)
 such that
-    forAll v__13 : int(1..2)
-        . x_tuple1_ExplicitVarSize_tuple1[1, v__13]
-          ->
-          3 = x_tuple1_ExplicitVarSize_tuple2[1, v__13],
-    exists v__16 : int(1..2)
-        . x_tuple1_ExplicitVarSize_tuple1[1, v__16]
-          /\
-          x_tuple1_ExplicitVarSize_tuple2[1, v__16] = 3,
-    forAll v__19 : int(1..2)
-        . x_tuple1_ExplicitVarSize_tuple1[2, v__19]
-          ->
-          5 = x_tuple1_ExplicitVarSize_tuple2[2, v__19],
-    exists v__22 : int(1..2)
-        . x_tuple1_ExplicitVarSize_tuple1[2, v__22]
-          /\
-          x_tuple1_ExplicitVarSize_tuple2[2, v__22] = 5,
+    x_tuple2[1] = 6,
     x_tuple2[2] = 7,
     x_tuple3[2] = 9,
-    x_tuple2[1] = 6,
-    forAll v__4 : int(1..2)
-        . (forAll v__2 : int(1..2)
-               . (forAll v__3 : int(1..2)
-                      . v__2 < v__3 /\ x_tuple1_ExplicitVarSize_tuple1[v__4, v__2]
-                        /\
-                        x_tuple1_ExplicitVarSize_tuple1[v__4, v__3]
-                        ->
-                        x_tuple1_ExplicitVarSize_tuple2[v__4, v__2]
-                        <
-                        x_tuple1_ExplicitVarSize_tuple2[v__4, v__3]))
+    exists v__0 : int(1..2)
+        . x_tuple1_SetExplicitVarSize_tuple1[1, v__0]
           /\
-          (forAll v__2 : int(1..1)
-               . x_tuple1_ExplicitVarSize_tuple1[v__4, v__2]
-                 <=
-                 x_tuple1_ExplicitVarSize_tuple1[v__4, v__2 + 1]),
-    forAll v__7 : int(1..2)
-        . (sum v__6 : int(1..2) . x_tuple1_ExplicitVarSize_tuple1[v__7, v__6]) >= 1
+          x_tuple1_SetExplicitVarSize_tuple2[1, v__0] = 3,
+    exists v__0 : int(1..2)
+        . x_tuple1_SetExplicitVarSize_tuple1[2, v__0]
+          /\
+          x_tuple1_SetExplicitVarSize_tuple2[2, v__0] = 5,
+    forAll v__0 : int(1..2)
+        . x_tuple1_SetExplicitVarSize_tuple1[1, v__0]
+          ->
+          3 = x_tuple1_SetExplicitVarSize_tuple2[1, v__0],
+    forAll v__0 : int(1..2)
+        . x_tuple1_SetExplicitVarSize_tuple1[2, v__0]
+          ->
+          5 = x_tuple1_SetExplicitVarSize_tuple2[2, v__0],
+    forAll v__0 : int(1..2)
+        . (x_tuple1_SetExplicitVarSize_tuple1[v__0, 1]
+           /\
+           x_tuple1_SetExplicitVarSize_tuple1[v__0, 2]
+           ->
+           x_tuple1_SetExplicitVarSize_tuple2[v__0, 1]
+           <
+           x_tuple1_SetExplicitVarSize_tuple2[v__0, 2])
+          /\
+          x_tuple1_SetExplicitVarSize_tuple1[v__0, 1]
+          <=
+          x_tuple1_SetExplicitVarSize_tuple1[v__0, 2],
+    forAll v__0 : int(1..2)
+        . (sum v__1 : int(1..2) . x_tuple1_SetExplicitVarSize_tuple1[v__0, v__1]) >= 1

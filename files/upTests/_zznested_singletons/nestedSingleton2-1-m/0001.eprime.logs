@@ -1,3 +1,13 @@
+[useChannelling] True
+[removedDecl] find pain:
+                      matrix indexed by [int(1..3)] of tuple ((int(1..9),
+                                                               int(1..9),
+                                                               int(1..9),
+                                                               int(1..9)))
+[matrixToTuple] pain
+[removedDecl] find pain_tuple1:
+                      matrix indexed by [int(1..3)] of (int(1..9), int(1..9), int(1..9), int(1..9))
+[matrixToTuple] pain_tuple1
 [simplified] pain[1, 1] = (1, 2, 8, 9)
              ~~>
              pain[1, 1, 1] = 1
@@ -13,10 +23,3 @@
              pain[3, 1, 1] = 4
              /\
              (pain[3, 1, 2] = 5 /\ (pain[3, 1, 3] = 4 /\ pain[3, 1, 4] = 6))
-[removedDecl] find pain:
-                      matrix indexed by [int(1..3)] of tuple ((int(1..9),
-                                                               int(1..9),
-                                                               int(1..9),
-                                                               int(1..9)))
-[removedDecl] find pain_tuple1:
-                      matrix indexed by [int(1..3)] of (int(1..9), int(1..9), int(1..9), int(1..9))

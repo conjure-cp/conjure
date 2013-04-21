@@ -1,9 +1,7 @@
 language ESSENCE' 1.0
 
-find pain_Explicit:
+find pain_SetExplicit:
         matrix indexed by [int(1..2), int(3..4), int(1..1)] of int(6, 8)
 such that
-    exists v__12 : int(1..1) . pain_Explicit[1, 3, v__12] = 6,
-    exists v__14 : int(1..1) . pain_Explicit[1, 4, v__14] = 8,
-    forAll v__4 : int(1..2)
-        . (forAll v__5 : int(3..4) . allDiff(pain_Explicit[v__4, v__5, ..]))
+    pain_SetExplicit[1, 3, 1] = 6,
+    pain_SetExplicit[1, 4, 1] = 8

@@ -19,17 +19,18 @@ import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
 import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 
 
-abstractDomsInQuans :: MonadConjureList m => [RuleRepr] -> E -> m (Maybe [(Text, E)])
+abstractDomsInQuans :: MonadConjureList m => (E -> m E) -> [RuleRepr] -> E -> m (Maybe [(Text, E)])
 abstractDomsInQuans
+    applyRefnE
     reprs
-    [xMatch| [qnQuan]         := quantified.quantifier
-           | [Prim (S qnVar)] := quantified.quanVar.structural.single.reference
-           | [qnOverDom]      := quantified.quanOverDom
-           | []               := quantified.quanOverOp
-           | []               := quantified.quanOverExpr
-           | [guard]          := quantified.guard
-           | [body]           := quantified.body
-           |]
+    param@[xMatch| [qnQuan]         := quantified.quantifier
+                 | [Prim (S qnVar)] := quantified.quanVar.structural.single.reference
+                 | [qnOverDom]      := quantified.quanOverDom
+                 | []               := quantified.quanOverOp
+                 | []               := quantified.quanOverExpr
+                 | [guard]          := quantified.guard
+                 | [body]           := quantified.body
+                 |]
     | domainNeedsRepresentation qnOverDom
     = do
         mode <- getsGlobal conjureMode
@@ -37,7 +38,7 @@ abstractDomsInQuans
             Left es     -> err ErrFatal $ vcat $ map (prettyError "abstractDomsInQuans") es
             Right func' -> withBindingScope' $ do
                 let func = mergeReprFunc (func' : builtInRepr)
-                ys' <- func (qnVar, qnOverDom, bug "abstractDomsInQuans.decl")
+                ys' <- func (qnVar, qnOverDom, param)
                 ys  <- selectByMode mode ys'
                 zs  <- case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty qnOverDom
@@ -64,7 +65,7 @@ abstractDomsInQuans
                                   | quantified.guard        := [conjunct guards']
                                   | quantified.body         := [body']
                                   |]
-                let outs = flip map zs $ \ (reprName, newDom, cons) ->
+                outs <- forM zs $ \ (reprName, newDom, cons) -> do
                         let
                             qnVar'Hash       = identifierConstruct qnVar (Just "regionS") (Just reprName)
                             qnVar'Underscore = qnVar `mappend` "_" `mappend` reprName
@@ -74,19 +75,21 @@ abstractDomsInQuans
                                         (basename, _, Nothing) | basename == qnVar -> [xMake| reference := [Prim (S qnVar'Hash)] |]
                                         _ -> p
                                       f p = p
-                        in
-                            ( "builtIn.abstractDomsInQuans"
-                            , mkOut
-                                qnVar'Underscore
-                                newDom
-                                [ qnVarReplacer i | i <- guard : cons
-                                                  , i /= [xMake| emptyGuard := [] |]
-                                                  , i /= [eMake| true |]
+                        let out = mkOut
+                                    qnVar'Underscore
+                                    newDom
+                                    [ qnVarReplacer i | i <- guard : cons
+                                                      , i /= [xMake| emptyGuard := [] |]
+                                                      , i /= [eMake| true |]
                                                   ]
-                                ( qnVarReplacer body )
+                                    ( qnVarReplacer body )
+                        out' <- applyRefnE out
+                        return
+                            ( "builtIn.abstractDomsInQuans"
+                            , out'
                             )
                 return $ Just outs
-abstractDomsInQuans _ _ = return Nothing
+abstractDomsInQuans _ _ _ = return Nothing
 
 quanDomAndSubsetEq :: MonadConjure m => E -> m (Maybe [(Text, E)])
 quanDomAndSubsetEq x = return $ case go x of

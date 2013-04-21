@@ -1,70 +1,118 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
 
 module Language.E.Up.EvaluateTree2 (
-    evalTree
+     evalTree
+     ,reverseTuplesOfMatrixes
 ) where
 
 import Language.E
 
 import Language.E.Up.Data
-import Language.E.Up.Common(transposeE,matrixToTuple,unwrapExpr,wrapInExpr,unwrapMatrix)
+import Language.E.Up.Common(transposeE,matrixToTuple,unwrapMatrix,wrapInMatrix)
 import Language.E.Up.Debug
+import Language.E.Up.Representations
 
 import Data.Map(Map)
 import qualified Data.Map as M
-import Data.Set(Set)
-import qualified Data.Set as S
 
 type VarMap             = Map String VarData
-type IsTuplesOfMatrixes = Set [String]
+type IsTuplesOfMatrixes = Map [String] Int
 
 evalTree ::VarMap -> IsTuplesOfMatrixes -> Tree String  -> (String,E)
 evalTree mapping set (Branch name arr) =
-    (name,evalTree' mapping set [name] (repSelector arr))
+    (name, evalTree' mapping set [] [name] (repSelector arr))
+    `_g` ("evalTree name", name)
 
 evalTree mapping set tree@(Leaf name) =
-    (name,  evalTree' mapping set []  tree)
+    (name,  evalTree' mapping set [] []  tree)
 
 evalTree _ _ _ = _bugg "evalTree no match"
 
-evalTree' :: VarMap ->IsTuplesOfMatrixes -> [String] -> Tree String  -> E
-evalTree' mapping set prefix (Leaf part) =
-    repConverter part vdata
-     `_f` (name, vdata )
+
+evalTree' :: VarMap -> IsTuplesOfMatrixes -> [RepName] -> [String] -> Tree String  -> E
+evalTree' mapping _ fs prefix (Leaf part) =
+   let leafFunc = leafRep part
+         `_p` ("leaf \n" ++ name, [vdata] )
+         `_g` ("leaf funcs str", fs )
+
+       res     = runBranchFuncs (reverse . mapMaybe getBranch $ fs) vdata leafFunc
+   in  vEssence res
+
+
+   where
+   name    = intercalate "_" (prefix ++ [part])
+   lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE evalTree'")  . flip M.lookup mapping
+   vdata   = lookUpE  name
+
+evalTree' mapping set fs prefix (Tuple arr) =
+    let items =  map ( evalTree' mapping set [] prefix ) arr
+        tuple = [xMake| value.tuple.values := items |]
+        res   = handleTuplesOfMatrixes tuple
+        -- Have to apply the inner rep conversion function first
+        afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) res noRep
+    in  vEssence afterFuncs
+
+     `_p` ("tuple_afterFuncs",[afterFuncs] )
+     `_p` ("tuple_fs",fs )
+     `_p` ("tuple_res",[res] )
+     `_p` ("tuple+ans",[tuple] )
+     `_g` ("tuple funs str",fs )
+     `_g` ("prefix_tuple",prefix )
+
 
     where
-    name    = intercalate "_" (prefix ++ [part])
-    lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE evalTree'")  . flip M.lookup mapping
-    vdata   = lookUpE  name
+    handleTuplesOfMatrixes :: E -> VarData
+    handleTuplesOfMatrixes f |  Just num <- prefix `M.lookup` set =
+       vdata num $ handleTuplesOfMatrixes' num f
 
-evalTree' mapping set prefix (Branch part arr) =
-    evalTree' mapping set (prefix ++ [part])  (repSelector arr)
+    handleTuplesOfMatrixes f = vdata 0 f
 
-     `_g` ("prefix",prefix )
-
-
-evalTree' mapping set prefix (Tuple arr) =
-    let items =  map (unwrapExpr . evalTree' mapping set prefix ) arr
-    in  [xMake| expr.value.tuple.values := items |]
-
-     `_g` ("prefix_tuple",prefix )
-     `_p` ("items",items )
+    handleTuplesOfMatrixes' :: Int  -> E -> E
+    handleTuplesOfMatrixes' 0 f = f
+    handleTuplesOfMatrixes' 1 f = reverseTuplesOfMatrixes f
+    {-handleTuplesOfMatrixes' 2 f =
+        wrapInMatrix . map reverseTuplesOfMatrixes . unwrapMatrix . reverseTuplesOfMatrixes $ f-}
+    handleTuplesOfMatrixes' n f =
+        wrapInMatrix . map (handleTuplesOfMatrixes' (n - 1)) . unwrapMatrix $ reverseTuplesOfMatrixes f
 
 
---evalTree' m prefix tree =  error . show $  (pretty . groom) prefix  <+> (pretty . groom) m  <+>  (pretty . groom) tree
 
+    -- very hackish but seems to work apart from Matrix1D
+    vdata n e =
+        let fake =  VarData{
+             vIndexes  = replicate n []
+            ,vBounds  = []
+            ,vEssence = e
+            }
+            real = (getVarData mapping prefix (head arr)){vEssence=e}
+        in real
+        `_p` ("Fake VarData",[fake]  )
+        `_p` ("Real VarData",[real]  )
 
--- Deals with (most) representations
-repConverter ::  String -> VarData -> E
-repConverter  kind  vdata@VarData{vEssence = es} =
-    case kind of
-      --"SetExplicit"   -> explicitRep vdata
-      --"SetOccurrence" -> occurrenceRep vdata
-      --"Matrix1D"   -> matrix1DRep (vIndexes vdata) (vEssence vdata)
-      --"RelationIntMatrix2" -> relationIntMatrix2Rep vdata
-      --"SetExplicitVarSizeWithDefault" -> explicitVarSizeWithDefaultRep vdata
-      _            -> es
+    -- No much better then above but works for Matrix1D as well
+    getVarData :: VarMap -> [String] -> Tree String  -> VarData
+    getVarData m2 pre2 (Leaf p2) = vdata2
 
+       where
+       name    = intercalate "_" (pre2 ++ [p2 ])
+       lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE getVarData")  . flip M.lookup m2
+       vdata2   = lookUpE  name
+
+    getVarData m2 pre2 (Branch p2 a2) =
+        getVarData m2 (pre2 ++ [p2])  (repSelector a2)
+
+    getVarData m2 pre2 (Tuple a2) =
+        getVarData m2 pre2 (head a2)
+
+evalTree' mapping set fs prefix (Branch name arr) =
+    evalTree' mapping set (addRep name) (prefix ++ [name])  (repSelector arr)
+
+    `_p` ("branch ",[name] )
+
+    where
+    addRep :: RepName -> [RepName]
+    addRep name2 | isBranchRep  name2 = name2 : fs
+    addRep _ = fs
 
 
 repSelector :: [Tree String] -> Tree String
@@ -72,17 +120,12 @@ repSelector arr = arr !! (length arr -1)
 
 
 reverseTuplesOfMatrixes ::  E -> E
+
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
-    wrapInMatrix . map matrixToTuple $ transposeE vs
+    tracer "reverseTuplesOfMatrixes result" $
+    wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
 
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
-
-
-wrapInMatrix :: [E] -> E
-wrapInMatrix arr = [xMake| value.matrix.values := arr |]
-
-wrapInRelation :: [E] -> E
-wrapInRelation es = [xMake| value.relation.values := es |]
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("EvaluateTree: " ++ s)
@@ -90,5 +133,4 @@ _bugi :: (Show a) => String -> (a, [E]) -> t
 _bugi s = upBugi ("EvaluateTree: " ++ s )
 _bugg :: String -> t
 _bugg s = _bug s []
-
 

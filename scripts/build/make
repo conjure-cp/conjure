@@ -102,7 +102,7 @@ if options.dryRun
     puts paramsBuild.join(" ")
 end
 
-exit $? unless system(*paramsBuild)
+exit $?.to_i unless system(*paramsBuild)
 
 if options.tests
     paramsTestBuild = paramsBuild

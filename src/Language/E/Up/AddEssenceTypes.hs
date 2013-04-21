@@ -2,8 +2,6 @@
 
 module Language.E.Up.AddEssenceTypes(
     toEssenceRep
-    ,wrapInMatrix
-    ,unwrapMatrix
     ,flattenInt
 )where
 
@@ -11,7 +9,7 @@ import Language.E
 
 import Language.E.Up.Data
 import Language.E.Up.Debug
-import Language.E.Up.Common(transposeE,unwrapMatrix,matrixToTuple,unwrapExpr,wrapInExpr)
+import Language.E.Up.Common(transposeE,unwrapMatrix,wrapInMatrix, matrixToTuple,unwrapExpr,wrapInExpr)
 
 import Data.Maybe
 
@@ -39,8 +37,6 @@ unwrapSingleMatrix :: E -> E
 unwrapSingleMatrix [xMatch| [vs] := value.matrix.values |] = vs
 unwrapSingleMatrix e  = e
 
-wrapInMatrix :: [E] -> E
-wrapInMatrix arr = [xMake| value.matrix.values := arr |]
 
 wrapInTuple :: [E] -> E
 wrapInTuple arr = [xMake| value.tuple.values := arr |]

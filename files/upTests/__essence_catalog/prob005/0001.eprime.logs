@@ -1,61 +1,52 @@
-[representation] find s: function (total) Index --> int(-1, 1) (#2) AsReln, Matrix1D
-[configuration] s§region1#AsReln s§region2#AsReln
-[addedDecl] find s_AsReln: relation of (Index * int(-1, 1))
+[useChannelling] True
+[representation] find s: function (total) int(1..n) --> int(-1, 1)
+                 (#2)
+                 AsReln, Matrix1D
+[configuration] s§region2#AsReln s§region1#AsReln
+[addedDecl] find s_AsReln: relation of (int(1..n) * int(-1, 1))
+[refn] 0
 [applied] s§region1#AsReln(i)
-{rules/refns/function-asreln/function-asreln-image.rule}
-    (sum v__3 in toSet(s_AsReln§region1) , v__3[1] = i . v__3[2])
+          {rules/refns/vertical/function-asreln/function-asreln-image-int.rule}
+              (sum v__3 in toSet(s_AsReln§region1) , v__3[1] = i . v__3[2])
 [applied] s§region2#AsReln(i + k)
-{rules/refns/function-asreln/function-asreln-image.rule}
-    (sum v__4 in toSet(s_AsReln§region2) , v__4[1] = i + k . v__4[2])
-[removedDecl] find s: function (total) Index --> int(-1, 1)
-[representation] find s_AsReln: relation of (Index * int(-1, 1)) (#1) RelationAsSet
-[configuration] s_AsReln§region1#RelationAsSet s_AsReln§region2#RelationAsSet
-[addedDecl] find s_AsReln_RelationAsSet: set of (Index, int(-1, 1))
-[applied] (sum v__3 in toSet(s_AsReln§region1#RelationAsSet) , v__3[1] = i . v__3[2])
-{rules/refns/relation-asset/relation-asset-toSet.rule}
-    (sum v__3 in s_AsReln_RelationAsSet§region1 , v__3[1] = i . v__3[2])
-[applied] (sum v__4 in toSet(s_AsReln§region2#RelationAsSet) , v__4[1] = i + k . v__4[2])
-{rules/refns/relation-asset/relation-asset-toSet.rule}
-    (sum v__4 in s_AsReln_RelationAsSet§region2 , v__4[1] = i + k . v__4[2])
-[applied] (sum v__2 in toSet(s_AsReln§region2#RelationAsSet) . v__1 = v__2[1])
-{rules/refns/relation-asset/relation-asset-toSet.rule}
-    (sum v__2 in s_AsReln_RelationAsSet§region2 . v__1 = v__2[1])
-[applied] (sum v__2 in toSet(s_AsReln§region1#RelationAsSet) . v__1 = v__2[1])
-{rules/refns/relation-asset/relation-asset-toSet.rule}
-    (sum v__2 in s_AsReln_RelationAsSet§region1 . v__1 = v__2[1])
-[removedDecl] find s_AsReln: relation of (Index * int(-1, 1))
-[representation] find s_AsReln_RelationAsSet: set of (Index, int(-1, 1)) (#1) ExplicitVarSize
-[configuration] s_AsReln_RelationAsSet§region1#ExplicitVarSize s_AsReln_RelationAsSet§region2#ExplicitVarSize
-[addedDecl] find s_AsReln_RelationAsSet_ExplicitVarSize:
-        matrix indexed by [int(1..n * 2)] of (bool, (Index, int(-1, 1)))
-[applied] (sum v__3 in s_AsReln_RelationAsSet§region1#ExplicitVarSize , v__3[1] = i
-     . v__3[2])
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (sum v__7 : int(1..n * 2)
-         , s_AsReln_RelationAsSet_ExplicitVarSize§region1[v__7, 2, 1] = i
-           /\
-           s_AsReln_RelationAsSet_ExplicitVarSize§region1[v__7, 1]
-         . s_AsReln_RelationAsSet_ExplicitVarSize§region1[v__7, 2, 2])
-[applied] (sum v__4 in s_AsReln_RelationAsSet§region2#ExplicitVarSize , v__4[1] = i + k
-     . v__4[2])
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (sum v__8 : int(1..n * 2)
-         , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__8, 2, 1] = i + k
-           /\
-           s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__8, 1]
-         . s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__8, 2, 2])
-[applied] (sum v__2 in s_AsReln_RelationAsSet§region2#ExplicitVarSize . v__1 = v__2[1])
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (sum v__9 : int(1..n * 2)
-         , s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__9, 1]
-         . v__1 = s_AsReln_RelationAsSet_ExplicitVarSize§region2[v__9, 2, 1])
-[applied] (sum v__2 in s_AsReln_RelationAsSet§region1#ExplicitVarSize . v__1 = v__2[1])
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (sum v__10 : int(1..n * 2)
-         , s_AsReln_RelationAsSet_ExplicitVarSize§region1[v__10, 1]
-         . v__1 = s_AsReln_RelationAsSet_ExplicitVarSize§region1[v__10, 2, 1])
-[removedDecl] find s_AsReln_RelationAsSet_ExplicitVarSize:
-        matrix indexed by [int(1..n * 2)] of (bool, (Index, int(-1, 1)))
-[removedDecl] find s_AsReln_RelationAsSet_ExplicitVarSize_tuple2:
-        matrix indexed by [int(1..n * 2)] of (Index, int(-1, 1))
-[removedDecl] find s_AsReln_RelationAsSet: set of (Index, int(-1, 1))
+          {rules/refns/vertical/function-asreln/function-asreln-image-int.rule}
+              (sum v__4 in toSet(s_AsReln§region2) , v__4[1] = i + k . v__4[2])
+[removeRefinedDecl] find s: function (total) int(1..n) --> int(-1, 1)
+[repr] 1
+[representation] find s_AsReln: relation of (int(1..n) * int(-1, 1))
+                 (#2)
+                 RelationIntMatrix2, RelationAsSet
+[configuration] s_AsReln§region1#RelationIntMatrix2 s_AsReln§region2#RelationIntMatrix2
+[addedDecl] find s_AsReln_RelationIntMatrix2:
+                    matrix indexed by [int(1..n), int(-1, 1)] of bool
+[refn] 1
+[applied] (sum v__2 in toSet(s_AsReln§region1#RelationIntMatrix2)
+               , v__2[1] = v__1
+               . v__2[2])
+          {rules/refns/vertical/relation-IntMatrix2/relation-IntMatrix2-toSet.rule}
+              (sum v__5 : int(1..n)
+                   . (sum v__6 : int(-1, 1)
+                          , v__5 = v__1 /\ s_AsReln_RelationIntMatrix2§region1[v__5, v__6]
+                          . v__6))
+[applied] (sum v__2 in toSet(s_AsReln§region2#RelationIntMatrix2)
+               , v__2[1] = v__1 + v__0
+               . v__2[2])
+          {rules/refns/vertical/relation-IntMatrix2/relation-IntMatrix2-toSet.rule}
+              (sum v__7 : int(1..n)
+                   . (sum v__8 : int(-1, 1)
+                          , v__7 = v__1 + v__0 /\ s_AsReln_RelationIntMatrix2§region2[v__7, v__8]
+                          . v__8))
+[applied] (sum v__1 in toSet(s_AsReln§region2#RelationIntMatrix2)
+               . v__0 = v__1[1])
+          {rules/refns/vertical/relation-IntMatrix2/relation-IntMatrix2-toSet.rule}
+              (sum v__9 : int(1..n)
+                   . (sum v__10 : int(-1, 1) , s_AsReln_RelationIntMatrix2§region2[v__9, v__10]
+                          . v__0 = v__9))
+[applied] (sum v__1 in toSet(s_AsReln§region1#RelationIntMatrix2)
+               . v__0 = v__1[1])
+          {rules/refns/vertical/relation-IntMatrix2/relation-IntMatrix2-toSet.rule}
+              (sum v__11 : int(1..n)
+                   . (sum v__12 : int(-1, 1) , s_AsReln_RelationIntMatrix2§region1[v__11, v__12]
+                          . v__0 = v__11))
+[removeRefinedDecl] find s_AsReln: relation of (int(1..n) * int(-1, 1))
+[repr] 2

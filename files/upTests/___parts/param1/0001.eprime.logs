@@ -1,79 +1,41 @@
-[representation] find x: set (minSize n) of set (minSize 1) of int(1..n) (#1) ExplicitVarSize
-[configuration] x§region1#ExplicitVarSize
-[addedDecl] find x_ExplicitVarSize:
-        matrix indexed by [int(1..2 ** n)] of (bool, set (minSize 1) of int(1..n))
-[applied] (forAll y in x§region1#ExplicitVarSize . (sum i in y . i) < n + 3)
-{rules/refns/set-explicitvarsize/set-explicitvarsize-quantified.rule}
-    (forAll v__4 : int(1..2 ** n) , x_ExplicitVarSize§region1[v__4, 1]
-         . (sum i in x_ExplicitVarSize§region1[v__4, 2] . i) < n + 3)
-[applied] x_ExplicitVarSize§region1[v__1, 2] != x_ExplicitVarSize§region1[v__2, 2]
-{rules/refns/set-neq-to-eq.rule}
-    !(x_ExplicitVarSize§region1[v__1, 2] = x_ExplicitVarSize§region1[v__2, 2])
-[applied] x_ExplicitVarSize§region1[v__1, 2] = x_ExplicitVarSize§region1[v__2, 2]
-{rules/refns/set-eq-to-subsets.rule}
-    x_ExplicitVarSize§region1[v__1, 2] subsetEq x_ExplicitVarSize§region1[v__2, 2]
-    /\
-    x_ExplicitVarSize§region1[v__1, 2] supsetEq x_ExplicitVarSize§region1[v__2, 2]
-[applied] x_ExplicitVarSize§region1[v__1, 2] subsetEq x_ExplicitVarSize§region1[v__2, 2]
-{rules/refns/set-subseteq-to-quantified.rule}
-    (forAll v__5 in x_ExplicitVarSize§region1[v__1, 2]
-         . v__5 in x_ExplicitVarSize§region1[v__2, 2])
-[applied] v__5 in x_ExplicitVarSize§region1[v__2, 2]
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__6 in x_ExplicitVarSize§region1[v__2, 2] . v__6 = v__5)
-[applied] x_ExplicitVarSize§region1[v__1, 2] supsetEq x_ExplicitVarSize§region1[v__2, 2]
-{rules/refns/set-supseteq-to-subseteq.rule}
-    x_ExplicitVarSize§region1[v__2, 2] subsetEq x_ExplicitVarSize§region1[v__1, 2]
-[applied] x_ExplicitVarSize§region1[v__2, 2] subsetEq x_ExplicitVarSize§region1[v__1, 2]
-{rules/refns/set-subseteq-to-quantified.rule}
-    (forAll v__7 in x_ExplicitVarSize§region1[v__2, 2]
-         . v__7 in x_ExplicitVarSize§region1[v__1, 2])
-[applied] v__7 in x_ExplicitVarSize§region1[v__1, 2]
-{rules/refns/set-in-to-quantified.rule}
-    (exists v__8 in x_ExplicitVarSize§region1[v__1, 2] . v__8 = v__7)
-[removedDecl] find x_ExplicitVarSize:
-        matrix indexed by [int(1..2 ** n)] of (bool, set (minSize 1) of int(1..n))
-[removedDecl] find x: set (minSize n) of set (minSize 1) of int(1..n)
-[representation] find x_ExplicitVarSize_tuple2:
-        matrix indexed by [int(1..2 ** n)] of set (minSize 1) of int(1..n)
-(#2)
-ExplicitVarSize, Occurrence
-[configuration] x_ExplicitVarSize_tuple2§region1#Occurrence
-[addedDecl] find x_ExplicitVarSize_tuple2_Occurrence:
-        matrix indexed by [int(1..2 ** n), int(1..n)] of bool
-[applied] (sum i in x_ExplicitVarSize_tuple2§region1#Occurrence[v__4] . i)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (sum v__9 : int(1..n) , x_ExplicitVarSize_tuple2_Occurrence§region1[v__4, v__9]
-         . v__9)
-[applied] (exists v__6 in x_ExplicitVarSize_tuple2§region1#Occurrence[v__2] . v__6 = v__5)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__10 : int(1..n)
-         , x_ExplicitVarSize_tuple2_Occurrence§region1[v__2, v__10]
-         . v__10 = v__5)
-[applied] (forAll v__5 in x_ExplicitVarSize_tuple2§region1#Occurrence[v__1]
-     . (exists v__10 : int(1..n)
-            , x_ExplicitVarSize_tuple2_Occurrence§region1[v__2, v__10]
-            . v__10 = v__5))
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__11 : int(1..n)
-         , x_ExplicitVarSize_tuple2_Occurrence§region1[v__1, v__11]
-         . (exists v__10 : int(1..n)
-                , x_ExplicitVarSize_tuple2_Occurrence§region1[v__2, v__10]
-                . v__10 = v__11))
-[applied] (exists v__8 in x_ExplicitVarSize_tuple2§region1#Occurrence[v__1] . v__8 = v__7)
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (exists v__12 : int(1..n)
-         , x_ExplicitVarSize_tuple2_Occurrence§region1[v__1, v__12]
-         . v__12 = v__7)
-[applied] (forAll v__7 in x_ExplicitVarSize_tuple2§region1#Occurrence[v__2]
-     . (exists v__12 : int(1..n)
-            , x_ExplicitVarSize_tuple2_Occurrence§region1[v__1, v__12]
-            . v__12 = v__7))
-{rules/refns/set-occurrence/set-occurrence-quantified.rule}
-    (forAll v__13 : int(1..n)
-         , x_ExplicitVarSize_tuple2_Occurrence§region1[v__2, v__13]
-         . (exists v__12 : int(1..n)
-                , x_ExplicitVarSize_tuple2_Occurrence§region1[v__1, v__12]
-                . v__12 = v__13))
-[removedDecl] find x_ExplicitVarSize_tuple2:
-        matrix indexed by [int(1..2 ** n)] of set (minSize 1) of int(1..n)
+[useChannelling] True
+[representation] find x: set (minSize n) of set (minSize 1) of int(1..n)
+                 (#1)
+                 Set~ExplicitVarSize
+[configuration] x§region1#Set~ExplicitVarSize
+[addedDecl] find x_Set~ExplicitVarSize:
+                    matrix indexed by [int(1..2 ** n)] of (bool, set (minSize 1) of int(1..n))
+[refn] 0
+[applied] (forAll y in x§region1#Set~ExplicitVarSize . (sum i in y . i) < n + 3)
+          {rules/refns/vertical/Set~ExplicitVarSize/quantified.rule}
+              (forAll v__3 : int(1..2 ** n) , x_Set~ExplicitVarSize§region1[v__3, 1]
+                   . (sum i in x_Set~ExplicitVarSize§region1[v__3, 2] . i) < n + 3)
+[removeRefinedDecl] find x: set (minSize n) of set (minSize 1) of int(1..n)
+[removedDecl] find x_Set~ExplicitVarSize:
+                      matrix indexed by [int(1..2 ** n)] of (bool, set (minSize 1) of int(1..n))
+[matrixToTuple] x_Set~ExplicitVarSize
+[repr] 1
+[representation] find x_Set~ExplicitVarSize_tuple2:
+                         matrix indexed by [int(1..2 ** n)] of set (minSize 1) of int(1..n)
+                 (#1)
+                 Set~Occurrence
+[configuration] x_Set~ExplicitVarSize_tuple2§region1#Set~Occurrence
+[addedDecl] find x_Set~ExplicitVarSize_tuple2_Set~Occurrence:
+                    matrix indexed by [int(1..2 ** n), int(1..n)] of bool
+[refn] 1
+[applied] (sum i in x_Set~ExplicitVarSize_tuple2§region1#Set~Occurrence[v__3]
+               . i)
+          {rules/refns/vertical/Set~Occurrence/quantified.rule}
+              (sum v__19 : int(1..n)
+                   , x_Set~ExplicitVarSize_tuple2_Set~Occurrence§region1[v__3, v__19]
+                   . v__19)
+[applied] x_Set~ExplicitVarSize_tuple2§region1#Set~Occurrence[v__1]
+          .<
+          x_Set~ExplicitVarSize_tuple2§region1#Set~Occurrence[v__1 + 1]
+          {rules/refns/vertical/Set~Occurrence/DotLt.rule}
+              x_Set~ExplicitVarSize_tuple2_Set~Occurrence§region1[v__1]
+              .<
+              x_Set~ExplicitVarSize_tuple2_Set~Occurrence§region1[v__1 + 1]
+[removeRefinedDecl] find x_Set~ExplicitVarSize_tuple2:
+                            matrix indexed by [int(1..2 ** n)] of set (minSize 1) of int(1..n)
+[repr] 2

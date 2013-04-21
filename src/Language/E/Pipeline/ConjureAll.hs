@@ -19,7 +19,7 @@ conjureWithMode
     :: S.HashSet String
     -> StdGen
     -> Maybe Int
-    -> ConjureMode
+    -> ConjureModeWithFlags
     -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
 conjureWithMode flags seed limit mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do

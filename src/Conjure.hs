@@ -49,7 +49,7 @@ getConjureMode :: IO (Maybe ConjureModeWithFlags)
 getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
 
 runConjureMode :: ConjureModeWithFlags -> IO ()
-runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
+runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper mode
     where
 
         limit = do
@@ -70,7 +70,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             inParam   <- readSpecFromFile pathInParam
             inEprime  <- readSpecPreambleFromFile pathInEprime
             inLogs    <- T.readFile (pathInEprime ++ ".logs")
-            driverConjureSingle False pathOutParam
+            driverConjureSingle False False pathOutParam
                 [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
 
         helper (ModeTranslateSolution pathInEssence pathInParam
@@ -105,7 +105,7 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             seed <- getStdGen
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
-            driverConjureSingle False
+            driverConjureSingle False False
                 pathOutParam
                 $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
 
@@ -126,7 +126,19 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
                                 then "-df-no-channelling"
                                 else "-df"
             driverConjure
-                (conjureWithMode flags seed limit mode)
+                (conjureWithMode flags seed limit fullmode)
+                outDirPath
+                ruleReprs ruleRefns inEssence
+
+        helper (ModeDFAllCompactParam pathInEssence) = do
+            seed <- getStdGen
+            (ruleReprs, ruleRefns) <- getRulesDB
+            inEssence <- readSpecFromFile pathInEssence
+            typeCheckSpecIO inEssence
+            let outDirPath = dropExtEssence pathInEssence
+                          ++ "-df-compact-param"
+            driverConjure
+                (conjureWithMode flags seed limit fullmode)
                 outDirPath
                 ruleReprs ruleRefns inEssence
 
@@ -135,10 +147,10 @@ runConjureMode (ConjureModeWithFlags mode pairs flags _rest) = helper mode
             (ruleReprs, ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
-            driverConjureSingle True
+            driverConjureSingle True False
                 pathOutEprime
                 (conjureWithMode
-                    flags seed limit mode
+                    flags seed limit fullmode
                     ruleReprs ruleRefns inEssence)
 
 typeCheckSpecIO :: Spec -> IO ()

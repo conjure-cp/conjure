@@ -1,0 +1,125 @@
+language ESSENCE' 1.0
+
+given w: int(1..)
+given g: int(1..)
+given s: int(1..)
+find sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence:
+        matrix indexed by [int(1..w), int(1..g), int(1..g * s)] of bool
+such that
+    forAll v__0 : int(1..w - 1)
+        . flatten(sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0 + 1,
+                                                                           ..,
+                                                                           ..])
+          <=lex
+          flatten(sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, .., ..]),
+    forAll v__0 : int(1..w)
+        . (forAll v__1 : int(1..g)
+               . (forAll v__2 : int(1..g)
+                      . !((forAll v__3 : int(1..g * s)
+                               . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__1, v__3]
+                                 ->
+                                 (exists v__4 : int(1..g * s)
+                                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__2, v__4]
+                                        /\
+                                        v__4 = v__3))
+                          /\
+                          (forAll v__3 : int(1..g * s)
+                               . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__2, v__3]
+                                 ->
+                                 (exists v__4 : int(1..g * s)
+                                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__1, v__4]
+                                        /\
+                                        v__4 = v__3)))
+                        ->
+                        (sum v__3 : int(1..g * s)
+                             . ((exists v__4 : int(1..g * s)
+                                     . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__2, v__4]
+                                       /\
+                                       v__4 = v__3)
+                                /\
+                                sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__1, v__3])
+                               *
+                               1)
+                        =
+                        0))
+          /\
+          (forAll v__1 : int(1..g * s)
+               . (exists v__2 : int(1..g)
+                      . (exists v__3 : int(1..g * s)
+                             . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__2, v__3]
+                               /\
+                               v__3 = v__1))),
+    forAll v__0 : int(1..w)
+        . (forAll v__1 : int(1..g - 1)
+               . flatten(sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0,
+                                                                                  v__1 + 1,
+                                                                                  ..])
+                 <=lex
+                 flatten(sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0,
+                                                                                  v__1,
+                                                                                  ..])),
+    forAll v__0 : int(1..w)
+        . (forAll v__1 : int(1..g)
+               . (sum v__2 : int(1..g * s)
+                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__1, v__2])
+                 =
+                 g * s / g),
+    forAll v__0 : int(1..w)
+        . (forAll v__1 : int(1..w)
+               . !((forAll v__2 : int(1..g)
+                        . (exists v__3 : int(1..g)
+                               . (forAll v__4 : int(1..g * s)
+                                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__1, v__3, v__4]
+                                        ->
+                                        (exists v__5 : int(1..g * s)
+                                             . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0,
+                                                                                                        v__2,
+                                                                                                        v__5]
+                                               /\
+                                               v__5 = v__4))
+                                 /\
+                                 (forAll v__4 : int(1..g * s)
+                                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__2, v__4]
+                                        ->
+                                        (exists v__5 : int(1..g * s)
+                                             . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__1,
+                                                                                                        v__3,
+                                                                                                        v__5]
+                                               /\
+                                               v__5 = v__4))))
+                   /\
+                   (forAll v__2 : int(1..g)
+                        . (exists v__3 : int(1..g)
+                               . (forAll v__4 : int(1..g * s)
+                                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__3, v__4]
+                                        ->
+                                        (exists v__5 : int(1..g * s)
+                                             . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__1,
+                                                                                                        v__2,
+                                                                                                        v__5]
+                                               /\
+                                               v__5 = v__4))
+                                 /\
+                                 (forAll v__4 : int(1..g * s)
+                                      . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__1, v__2, v__4]
+                                        ->
+                                        (exists v__5 : int(1..g * s)
+                                             . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0,
+                                                                                                        v__3,
+                                                                                                        v__5]
+                                               /\
+                                               v__5 = v__4)))))
+                 ->
+                 (forAll v__2 : int(1..g)
+                      . (forAll v__3 : int(1..g)
+                             . (sum v__4 : int(1..g * s)
+                                    . ((exists v__5 : int(1..g * s)
+                                            . sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__1, v__3, v__5]
+                                              /\
+                                              v__5 = v__4)
+                                       /\
+                                       sched_MSetExplicit_MSetOfSets_MSetExplicit_SetOccurrence[v__0, v__2, v__4])
+                                      *
+                                      1)
+                               <
+                               2)))

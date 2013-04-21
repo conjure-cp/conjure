@@ -40,6 +40,7 @@ introduceRegions useChannelling spec = withBindingScope' $
                     _ -> return p
         op p = return p
 
+        -- get the next region from state, and add it to the given identifier
         addRegion base repr = do
             r <- nextRegion
             let s' = identifierConstruct base (Just r) repr

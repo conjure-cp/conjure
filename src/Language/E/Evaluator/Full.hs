@@ -736,7 +736,7 @@ returnBool' :: MonadConjure m => Bool -> [Binder] -> m (Maybe (E,[Binder]))
 returnBool' i bs = return $ Just ([xMake| value.literal := [Prim (B i)] |], bs)
 
 returnInt :: MonadConjure m => Integer -> m (Maybe (E,[Binder]))
-returnInt i | i > 1000 = return Nothing
+returnInt i | i > 1000000 = return Nothing
 returnInt i = ret [xMake| value.literal := [Prim (I i)] |]
 
 ret :: MonadConjure m => E -> m (Maybe (E,[Binder]))
@@ -822,6 +822,10 @@ mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
 
 domSize :: MonadConjure m => E -> m E
 domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
+
+domSize [xMatch| [x] := structural.single |] = domSize x
+domSize [xMatch| [d] := quanVar.within.quantified.body.quantified.quanOverDom |] = domSize d
+
 domSize [xMatch| [Prim (S s)] := reference |] = do
     x <- errMaybeT "domSize" lookupReference s
     domSize x
@@ -868,6 +872,11 @@ domSize [xMatch| [a] := domain.function.innerFrom
 domSize [xMatch| [] := topLevel.declaration.given.typeInt
                | [Prim (S nm)] := topLevel.declaration.given.name.reference
                |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
+
+domSize [xMatch| vs := topLevel.letting.typeEnum.values |] =
+    return [xMake| value.literal := [Prim (I (genericLength vs))] |]
+
+domSize [xMatch| [d] := topLevel.letting.domain |] = domSize d
 
 domSize p =
     err ErrFatal $ "domSize:" <+> prettyAsPaths p

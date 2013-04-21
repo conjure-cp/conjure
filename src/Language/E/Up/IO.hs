@@ -16,16 +16,18 @@ import Language.E.Up.Debug
 
 
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import System.FilePath
 import System.Directory (doesFileExist)
 
-type Essence   = Spec
-type Eprime    = Spec
-type ESolution = Spec
+type Essence              = Spec
+type Eprime               = Spec
+type ESolution            = Spec
 type EssenceWithParamOnly = Spec
-type Param = Spec
-type EssenceParam = Spec
+type Param                = Spec
+type EssenceParam         = Spec
+type Logs                 = [Text]
 
 getSpec ::  FilePath -> IO Spec
 getSpec = getSpec' True
@@ -40,35 +42,47 @@ getSpec' removeContraints filepath = do
 
     -- I don't need any of the constraints, speed up running the test lot
     let txt' = if removeContraints then
-                   (func "maximising" . func "minimising" . func  "such that")  txt
+                   onlyPreamble  txt
                 else txt
     handleInIOSingle =<< runCompEIOSingle
                 "Parsing problem specification"
                 (readSpec (fp,txt') )
 
     where 
-        func t =  fst . T.breakOn t
-
+        stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
+        discardAfter t = fst . T.breakOn t
+        onlyPreamble
+            = discardAfter "maximising"
+            . discardAfter "maximizing"
+            . discardAfter "minimising"
+            . discardAfter "minimizing"
+            . discardAfter "such that"
+            . stripComments
 
 getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) 
-         -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly)
+         -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
 getSpecs (specF, solF, orgF,paramF,orgParamF) = do
     let param    = getSpecMaybe paramF
     let orgParam = getSpecMaybe orgParamF
+
+    let logsF = addExtension specF "logs"
+    logs <- liftM T.lines (T.readFile logsF)
 
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param >>= removeNegatives
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
     org   <- reduceSpec  orgP
-    return (spec,sol,org,orgP)
+    return (spec,sol,org,orgP,logs)
 
-getSpecsM :: (Monad m) => (Eprime,ESolution,Essence,Maybe Param,Maybe EssenceParam) -> m (Eprime, ESolution, Essence,EssenceWithParamOnly)
-getSpecsM (spec', sol', org',param',orgParam') = do
+getSpecsM :: (Monad m) => (Eprime,ESolution,Essence,Maybe Param,Maybe EssenceParam,Logs) -> m (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
+getSpecsM (spec', sol', org',param',orgParam',logs) = do
+
+
     spec  <- introduceParams' param' spec' >>= reduceSpec  >>= simSpecMaybe param' >>= removeNegatives
     sol   <- removeNegatives sol' >>= removeIndexRanges
     orgP  <- introduceParams' orgParam' org'
     org   <- reduceSpec orgP
-    return (spec,sol,org,orgP)
+    return (spec,sol,org,orgP,logs)
 
 
 getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath) 

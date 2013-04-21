@@ -1,3 +1,25 @@
+[useChannelling] True
+[removedDecl] find pain:
+                      matrix indexed by [int(1)] of (int(1, 2),
+                                                     (int(1), int(2)),
+                                                     (int(3), int(4)),
+                                                     (int(5), int(6)),
+                                                     (int(7), int(8)),
+                                                     (int(9), int(10)),
+                                                     (int(11), int(12)))
+[matrixToTuple] pain∑1
+[removedDecl] find pain_tuple2: matrix indexed by [int(1)] of (int(1), int(2))
+[matrixToTuple] pain_tuple2∑1
+[removedDecl] find pain_tuple3: matrix indexed by [int(1)] of (int(3), int(4))
+[matrixToTuple] pain_tuple3∑1
+[removedDecl] find pain_tuple4: matrix indexed by [int(1)] of (int(5), int(6))
+[matrixToTuple] pain_tuple4∑1
+[removedDecl] find pain_tuple5: matrix indexed by [int(1)] of (int(7), int(8))
+[matrixToTuple] pain_tuple5∑1
+[removedDecl] find pain_tuple6: matrix indexed by [int(1)] of (int(9), int(10))
+[matrixToTuple] pain_tuple6∑1
+[removedDecl] find pain_tuple7: matrix indexed by [int(1)] of (int(11), int(12))
+[matrixToTuple] pain_tuple7∑1
 [simplified] pain[1, 2] = (1, 2)
              ~~>
              pain[1, 2, 1] = 1 /\ pain[1, 2, 2] = 2
@@ -16,17 +38,3 @@
 [simplified] pain[1, 7] = (11, 12)
              ~~>
              pain[1, 7, 1] = 11 /\ pain[1, 7, 2] = 12
-[removedDecl] find pain:
-                      matrix indexed by [int(1)] of (int(1, 2),
-                                                     (int(1), int(2)),
-                                                     (int(3), int(4)),
-                                                     (int(5), int(6)),
-                                                     (int(7), int(8)),
-                                                     (int(9), int(10)),
-                                                     (int(11), int(12)))
-[removedDecl] find pain_tuple2: matrix indexed by [int(1)] of (int(1), int(2))
-[removedDecl] find pain_tuple3: matrix indexed by [int(1)] of (int(3), int(4))
-[removedDecl] find pain_tuple4: matrix indexed by [int(1)] of (int(5), int(6))
-[removedDecl] find pain_tuple5: matrix indexed by [int(1)] of (int(7), int(8))
-[removedDecl] find pain_tuple6: matrix indexed by [int(1)] of (int(9), int(10))
-[removedDecl] find pain_tuple7: matrix indexed by [int(1)] of (int(11), int(12))

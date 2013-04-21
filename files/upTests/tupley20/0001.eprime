@@ -1,56 +1,48 @@
 language ESSENCE' 1.0
 
-find pain_tuple1_tuple1_Explicit:
+find pain_tuple1_tuple1_SetExplicit:
         matrix indexed by [int(1..2), int(3), int(1..1)] of int(1, 2)
-find pain_tuple1_tuple2_Explicit:
+find pain_tuple1_tuple2_SetExplicit:
         matrix indexed by [int(1..2), int(3), int(1..1)] of int(4, 5)
-find pain_tuple2_ExplicitVarSize_tuple1:
+find pain_tuple2_SetExplicitVarSize_tuple1:
         matrix indexed by [int(1..2), int(3), int(1..2)] of bool
-find pain_tuple2_ExplicitVarSize_tuple2:
+find pain_tuple2_SetExplicitVarSize_tuple2:
         matrix indexed by [int(1..2), int(3), int(1..2)] of int(8, 9)
 such that
-    forAll v__29 : int(1..1) . 2 = pain_tuple1_tuple1_Explicit[1, 3, v__29],
-    exists v__32 : int(1..1) . pain_tuple1_tuple1_Explicit[1, 3, v__32] = 2,
-    forAll v__35 : int(1..1) . 5 = pain_tuple1_tuple2_Explicit[1, 3, v__35],
-    exists v__38 : int(1..1) . pain_tuple1_tuple2_Explicit[1, 3, v__38] = 5,
-    forAll v__41 : int(1..1) . 1 = pain_tuple1_tuple1_Explicit[2, 3, v__41],
-    exists v__44 : int(1..1) . pain_tuple1_tuple1_Explicit[2, 3, v__44] = 1,
-    forAll v__47 : int(1..1) . 4 = pain_tuple1_tuple2_Explicit[2, 3, v__47],
-    exists v__50 : int(1..1) . pain_tuple1_tuple2_Explicit[2, 3, v__50] = 4,
-    forAll v__53 : int(1..2)
-        . pain_tuple2_ExplicitVarSize_tuple1[1, 3, v__53]
-          ->
-          8 = pain_tuple2_ExplicitVarSize_tuple2[1, 3, v__53],
-    exists v__56 : int(1..2)
-        . pain_tuple2_ExplicitVarSize_tuple1[1, 3, v__56]
+    pain_tuple1_tuple1_SetExplicit[1, 3, 1] = 2,
+    pain_tuple1_tuple1_SetExplicit[2, 3, 1] = 1,
+    pain_tuple1_tuple2_SetExplicit[1, 3, 1] = 5,
+    pain_tuple1_tuple2_SetExplicit[2, 3, 1] = 4,
+    1 = pain_tuple1_tuple1_SetExplicit[2, 3, 1],
+    2 = pain_tuple1_tuple1_SetExplicit[1, 3, 1],
+    4 = pain_tuple1_tuple2_SetExplicit[2, 3, 1],
+    5 = pain_tuple1_tuple2_SetExplicit[1, 3, 1],
+    exists v__0 : int(1..2)
+        . pain_tuple2_SetExplicitVarSize_tuple1[1, 3, v__0]
           /\
-          pain_tuple2_ExplicitVarSize_tuple2[1, 3, v__56] = 8,
-    forAll v__59 : int(1..2)
-        . pain_tuple2_ExplicitVarSize_tuple1[2, 3, v__59]
-          ->
-          9 = pain_tuple2_ExplicitVarSize_tuple2[2, 3, v__59],
-    exists v__62 : int(1..2)
-        . pain_tuple2_ExplicitVarSize_tuple1[2, 3, v__62]
+          pain_tuple2_SetExplicitVarSize_tuple2[1, 3, v__0] = 8,
+    exists v__0 : int(1..2)
+        . pain_tuple2_SetExplicitVarSize_tuple1[2, 3, v__0]
           /\
-          pain_tuple2_ExplicitVarSize_tuple2[2, 3, v__62] = 9,
-    forAll v__25 : int(1..2)
-        . (forAll v__26 : int(3)
-               . (forAll v__23 : int(1..2)
-                      . (forAll v__24 : int(1..2)
-                             . v__23 < v__24 /\ pain_tuple2_ExplicitVarSize_tuple1[v__25, v__26, v__23]
-                               /\
-                               pain_tuple2_ExplicitVarSize_tuple1[v__25, v__26, v__24]
-                               ->
-                               pain_tuple2_ExplicitVarSize_tuple2[v__25, v__26, v__23]
-                               <
-                               pain_tuple2_ExplicitVarSize_tuple2[v__25, v__26, v__24]))
+          pain_tuple2_SetExplicitVarSize_tuple2[2, 3, v__0] = 9,
+    forAll v__0 : int(1..2)
+        . pain_tuple2_SetExplicitVarSize_tuple1[1, 3, v__0]
+          ->
+          8 = pain_tuple2_SetExplicitVarSize_tuple2[1, 3, v__0],
+    forAll v__0 : int(1..2)
+        . pain_tuple2_SetExplicitVarSize_tuple1[2, 3, v__0]
+          ->
+          9 = pain_tuple2_SetExplicitVarSize_tuple2[2, 3, v__0],
+    forAll v__0 : int(1..2)
+        . (forAll v__1 : int(3)
+               . (pain_tuple2_SetExplicitVarSize_tuple1[v__0, v__1, 1]
+                  /\
+                  pain_tuple2_SetExplicitVarSize_tuple1[v__0, v__1, 2]
+                  ->
+                  pain_tuple2_SetExplicitVarSize_tuple2[v__0, v__1, 1]
+                  <
+                  pain_tuple2_SetExplicitVarSize_tuple2[v__0, v__1, 2])
                  /\
-                 (forAll v__23 : int(1..1)
-                      . pain_tuple2_ExplicitVarSize_tuple1[v__25, v__26, v__23]
-                        <=
-                        pain_tuple2_ExplicitVarSize_tuple1[v__25, v__26, v__23 + 1])),
-    forAll v__14 : int(1..2)
-        . (forAll v__15 : int(3)
-               . allDiff(pain_tuple1_tuple2_Explicit[v__14, v__15, ..])),
-    forAll v__4 : int(1..2)
-        . (forAll v__5 : int(3) . allDiff(pain_tuple1_tuple1_Explicit[v__4, v__5, ..]))
+                 pain_tuple2_SetExplicitVarSize_tuple1[v__0, v__1, 1]
+                 <=
+                 pain_tuple2_SetExplicitVarSize_tuple1[v__0, v__1, 2])

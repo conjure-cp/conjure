@@ -20,6 +20,7 @@ import Language.E.Definition
 import Language.E.Pretty
 
 import qualified Data.HashSet as S
+import qualified Data.HashMap.Strict as M
 import Data.IntMap ( IntMap )
 import Data.IntSet ( IntSet )
 
@@ -268,7 +269,7 @@ nextUniqueName = do
 data GlobalState = GlobalState
         { memoRefnChanged      :: !(IntMap E)
         , memoRefnStaysTheSame :: !IntSet
-        , conjureMode          :: ConjureMode
+        , conjureMode          :: ConjureModeWithFlags
         , conjureSeed          :: StdGen
         , conjureFlags         :: S.HashSet String
         }
@@ -286,7 +287,10 @@ rangeRandomM range = do
 
 
 instance Default GlobalState where
-    def = GlobalState def def ModeUnknown (error "Seed not initialised") S.empty
+    def = GlobalState def def
+            (ConjureModeWithFlags ModeUnknown M.empty def def)
+            (error "Seed not initialised")
+            S.empty
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
@@ -297,13 +301,14 @@ makeIdempotent f x = do
 
 
 class SelectByMode a where
-    selectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
-    selectByMode = defSelectByMode
+    selectByMode :: RandomM m => ConjureModeWithFlags -> [a] -> m [a]
+    selectByMode (ConjureModeWithFlags m _ _ _) = defSelectByMode m
 
 defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
 defSelectByMode _                                   [] = return []
 defSelectByMode (ModeUnknown                    {}) xs = return xs
 defSelectByMode (ModeDFAll                      {}) xs = return xs
+defSelectByMode (ModeDFAllCompactParam          {}) xs = return xs
 defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) (x:_) = return [x]
 defSelectByMode (ModeSingleOutput ModeRandom _ _  ) xs = do
     i <- rangeRandomM (0, length xs - 1)
@@ -313,8 +318,10 @@ defSelectByMode _ _ = error "selectByMode: Shouldn't be used in this mode"
 
 instance SelectByMode E where
     selectByMode _ [] = return []
-    selectByMode (ModeSingleOutput ModeCompact _ _) xs = return [minimumBy (comparing eDepth) xs]
-    selectByMode mode xs = defSelectByMode mode xs
+    selectByMode (ConjureModeWithFlags mode _ _ _) xs =
+        case mode of
+            ModeSingleOutput ModeCompact _ _ -> return [minimumBy (comparing eDepth) xs]
+            _                                -> defSelectByMode mode xs
 
 eDepth :: E -> Int
 eDepth (Tagged _ []) = 1
@@ -352,17 +359,29 @@ domOrder _ [xMatch| _ := domain.matrix |] = GT
 
 domOrder x y = compare (eDepth x) (eDepth y)
 
+compactSelect :: [RuleReprResult] -> RuleReprResult
+compactSelect = minimumBy comparer
+    where
+        comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
+                 ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
+            compareChain
+                [ domOrder newDom1 newDom2
+                , compare (length structuralCons1) (length structuralCons2)
+                ]
+
+-- uses compactSelect if the argument is a given,
+-- DfAll if the argument is a find.
+compactIfParam :: [RuleReprResult] -> [RuleReprResult]
+compactIfParam xs@(([xMatch| _ := topLevel.declaration.given |], _, _, _, _):_) = [compactSelect xs]
+compactIfParam xs = xs
+
 
 instance SelectByMode RuleReprResult where
     selectByMode _ [] = return []
-    selectByMode (ModeSingleOutput ModeCompact _ _) xs
-        = return [minimumBy comparer xs]
-        where
-            comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
-                     ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
-                compareChain
-                    [ domOrder newDom1 newDom2
-                    , compare (length structuralCons1) (length structuralCons2)
-                    ]
-    selectByMode mode xs = defSelectByMode mode xs
+    selectByMode (ConjureModeWithFlags mode _ _ _) xs =
+        case mode of
+            ModeSingleOutput ModeCompact _ _ -> return [compactSelect xs]
+            ModeDFAllCompactParam _ -> return (compactIfParam xs)
+            _ -> defSelectByMode mode xs
+
 
