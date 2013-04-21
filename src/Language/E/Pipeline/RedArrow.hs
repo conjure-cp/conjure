@@ -454,6 +454,16 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                             Just i  -> return [(name, [xMake| value.literal := [Prim $ I $ fromIntegral $ i + 1] |])]
                     _ -> bug "don't know what this is"
 
+        helper name domain value Nothing =
+            case lookup name lookupReprs of
+                Just repr -> helper name domain value (Just repr)
+                Nothing -> bug $ vcat
+                    [ "missing case in RedArrow.workhorse"
+                    , "name:"   <+> pretty name
+                    , "domain:" <+> vcat (map ($ domain) [pretty, prettyAsPaths])
+                    , "value:"  <+> vcat (map ($ value ) [pretty, prettyAsPaths])
+                    ]
+
         helper name domain value repr = bug $ vcat
             [ "missing case in RedArrow.workhorse"
             , "name:"   <+> pretty name
