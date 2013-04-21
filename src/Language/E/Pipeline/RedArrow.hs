@@ -151,6 +151,9 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
     where
 
+        callHelper name _      val@[xMatch| _ := value.literal |] _ = return [(name, val)]
+        callHelper name domain val repr = helper name domain val repr
+
         helper
             :: MonadConjure m
             => Text
@@ -158,6 +161,13 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             -> E
             -> Maybe Text
             -> m [(Text, E)]
+
+        -- helper name domain value _
+            -- | trace (show $ sep [ "helper"
+                                -- , pretty name
+                                -- , pretty domain
+                                -- , pretty value
+                                -- ]) False = undefined
 
         helper
             name
@@ -424,7 +434,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 let outNames = [ mconcat [name, "_tuple", T.pack (show i)]
                                | i <- [1 .. length ds]
                                ]
-                liftM concat $ sequence [ helper n d v Nothing
+                liftM concat $ sequence [ callHelper n d v Nothing
                                         | (n,d,v) <- zip3 outNames ds vs
                                         ]
 
