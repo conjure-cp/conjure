@@ -2,9 +2,9 @@
 [representation] find sched:
                          mset (size w) of partition (regular, size g) from int(1..g * s)
                  (#1)
-                 Explicit
-[configuration] sched§region1#Explicit sched§region2#Explicit
-[addedDecl] find sched_Explicit:
+                 MSet~Explicit
+[configuration] sched§region1#MSet~Explicit sched§region2#MSet~Explicit
+[addedDecl] find sched_MSet~Explicit:
                     matrix indexed by [int(1..w)] of partition (regular, size g) from int(1..g * s)
 [refn] 0
 [applied] week1 != week2
@@ -66,7 +66,7 @@
 [applied] v__13 in group2
           {rules/refns/horizontal/set-in-to-quantified.rule}
               (exists v__14 in group2 . v__14 = v__13)
-[applied] (forAll week2 in sched§region2#Explicit
+[applied] (forAll week2 in sched§region2#MSet~Explicit
                , !((forAll v__2 in parts(week1)
                         . (exists v__3 in parts(week2)
                                . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
@@ -81,133 +81,133 @@
                . (forAll group1 in parts(week1)
                       . (forAll group2 in parts(week2)
                              . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2)))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__15 : int(1..w)
                    , !((forAll v__2 in parts(week1)
-                            . (exists v__3 in parts(sched_Explicit§region2[v__15])
+                            . (exists v__3 in parts(sched_MSet~Explicit§region2[v__15])
                                    . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                                      /\
                                      (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6))))
                        /\
-                       (forAll v__2 in parts(sched_Explicit§region2[v__15])
+                       (forAll v__2 in parts(sched_MSet~Explicit§region2[v__15])
                             . (exists v__8 in parts(week1)
                                    . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
                                      /\
                                      (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11)))))
                    . (forAll group1 in parts(week1)
-                          . (forAll group2 in parts(sched_Explicit§region2[v__15])
+                          . (forAll group2 in parts(sched_MSet~Explicit§region2[v__15])
                                  . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2)))
-[applied] (forAll week1 in sched§region1#Explicit
+[applied] (forAll week1 in sched§region1#MSet~Explicit
                . (forAll v__15 : int(1..w)
                       , !((forAll v__2 in parts(week1)
-                               . (exists v__3 in parts(sched_Explicit§region2[v__15])
+                               . (exists v__3 in parts(sched_MSet~Explicit§region2[v__15])
                                       . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                                         /\
                                         (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6))))
                           /\
-                          (forAll v__2 in parts(sched_Explicit§region2[v__15])
+                          (forAll v__2 in parts(sched_MSet~Explicit§region2[v__15])
                                . (exists v__8 in parts(week1)
                                       . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
                                         /\
                                         (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11)))))
                       . (forAll group1 in parts(week1)
-                             . (forAll group2 in parts(sched_Explicit§region2[v__15])
+                             . (forAll group2 in parts(sched_MSet~Explicit§region2[v__15])
                                     . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2))))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__16 : int(1..w)
                    . (forAll v__15 : int(1..w)
-                          , !((forAll v__2 in parts(sched_Explicit§region1[v__16])
-                                   . (exists v__3 in parts(sched_Explicit§region2[v__15])
+                          , !((forAll v__2 in parts(sched_MSet~Explicit§region1[v__16])
+                                   . (exists v__3 in parts(sched_MSet~Explicit§region2[v__15])
                                           . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                                             /\
                                             (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6))))
                               /\
-                              (forAll v__2 in parts(sched_Explicit§region2[v__15])
-                                   . (exists v__8 in parts(sched_Explicit§region1[v__16])
+                              (forAll v__2 in parts(sched_MSet~Explicit§region2[v__15])
+                                   . (exists v__8 in parts(sched_MSet~Explicit§region1[v__16])
                                           . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
                                             /\
                                             (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11)))))
-                          . (forAll group1 in parts(sched_Explicit§region1[v__16])
-                                 . (forAll group2 in parts(sched_Explicit§region2[v__15])
+                          . (forAll group1 in parts(sched_MSet~Explicit§region1[v__16])
+                                 . (forAll group2 in parts(sched_MSet~Explicit§region2[v__15])
                                         . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2))))
 [removeRefinedDecl] find sched:
                             mset (size w) of partition (regular, size g) from int(1..g * s)
 [repr] 1
-[representation] find sched_Explicit:
+[representation] find sched_MSet~Explicit:
                          matrix indexed by [int(1..w)] of partition (regular, size g) from int(1..g * s)
                  (#1)
                  MSetOfSets
-[configuration] sched_Explicit§region1#MSetOfSets sched_Explicit§region2#MSetOfSets
-[addedDecl] find sched_Explicit_MSetOfSets:
+[configuration] sched_MSet~Explicit§region2#MSetOfSets sched_MSet~Explicit§region1#MSetOfSets
+[addedDecl] find sched_MSet~Explicit_MSetOfSets:
                     matrix indexed by [int(1..w)] of mset (size g) of
                                                          set (size g * s / g) of int(1..g * s)
 [refn] 1
-[applied] (exists v__3 in parts(sched_Explicit§region2#MSetOfSets[v__15])
+[applied] (exists v__3 in parts(sched_MSet~Explicit§region2#MSetOfSets[v__1])
                . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                  /\
-                 (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6)))
+                 (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4)))
           {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
-              (exists v__3 in sched_Explicit_MSetOfSets§region2[v__15]
+              (exists v__3 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
                    . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                      /\
-                     (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6)))
-[applied] (forAll v__2 in parts(sched_Explicit§region1#MSetOfSets[v__16])
-               . (exists v__3 in sched_Explicit_MSetOfSets§region2[v__15]
+                     (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4)))
+[applied] (forAll v__2 in parts(sched_MSet~Explicit§region1#MSetOfSets[v__0])
+               . (exists v__3 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
                       . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                         /\
-                        (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6))))
+                        (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4))))
           {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
-              (forAll v__2 in sched_Explicit_MSetOfSets§region1[v__16]
-                   . (exists v__3 in sched_Explicit_MSetOfSets§region2[v__15]
+              (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region1[v__0]
+                   . (exists v__3 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
                           . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                             /\
-                            (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6))))
-[applied] (exists v__8 in parts(sched_Explicit§region1#MSetOfSets[v__16])
-               . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
+                            (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4))))
+[applied] (exists v__3 in parts(sched_MSet~Explicit§region1#MSetOfSets[v__0])
+               . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                  /\
-                 (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11)))
+                 (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4)))
           {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
-              (exists v__8 in sched_Explicit_MSetOfSets§region1[v__16]
-                   . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
+              (exists v__3 in sched_MSet~Explicit_MSetOfSets§region1[v__0]
+                   . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                      /\
-                     (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11)))
-[applied] (forAll v__2 in parts(sched_Explicit§region2#MSetOfSets[v__15])
-               . (exists v__8 in sched_Explicit_MSetOfSets§region1[v__16]
-                      . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
+                     (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4)))
+[applied] (forAll v__2 in parts(sched_MSet~Explicit§region2#MSetOfSets[v__1])
+               . (exists v__3 in sched_MSet~Explicit_MSetOfSets§region1[v__0]
+                      . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                         /\
-                        (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11))))
+                        (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4))))
           {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
-              (forAll v__2 in sched_Explicit_MSetOfSets§region2[v__15]
-                   . (exists v__8 in sched_Explicit_MSetOfSets§region1[v__16]
-                          . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
+              (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
+                   . (exists v__3 in sched_MSet~Explicit_MSetOfSets§region1[v__0]
+                          . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                             /\
-                            (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11))))
-[applied] (forAll group2 in parts(sched_Explicit§region2#MSetOfSets[v__15])
-               . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2)
+                            (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4))))
+[applied] (forAll v__3 in parts(sched_MSet~Explicit§region2#MSetOfSets[v__1])
+               . (sum v__4 in v__2 , (exists v__5 in v__3 . v__5 = v__4) . 1) < 2)
           {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
-              (forAll group2 in sched_Explicit_MSetOfSets§region2[v__15]
-                   . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2)
-[applied] (forAll group1 in parts(sched_Explicit§region1#MSetOfSets[v__16])
-               . (forAll group2 in sched_Explicit_MSetOfSets§region2[v__15]
-                      . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2))
+              (forAll v__3 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
+                   . (sum v__4 in v__2 , (exists v__5 in v__3 . v__5 = v__4) . 1) < 2)
+[applied] (forAll v__2 in parts(sched_MSet~Explicit§region1#MSetOfSets[v__0])
+               . (forAll v__3 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
+                      . (sum v__4 in v__2 , (exists v__5 in v__3 . v__5 = v__4) . 1) < 2))
           {rules/refns/vertical/partition-MSetOfSets/partition-MSetOfSets-part.rule}
-              (forAll group1 in sched_Explicit_MSetOfSets§region1[v__16]
-                   . (forAll group2 in sched_Explicit_MSetOfSets§region2[v__15]
-                          . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2))
-[applied] sched_Explicit§region2#MSetOfSets[v__1]
+              (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region1[v__0]
+                   . (forAll v__3 in sched_MSet~Explicit_MSetOfSets§region2[v__1]
+                          . (sum v__4 in v__2 , (exists v__5 in v__3 . v__5 = v__4) . 1) < 2))
+[applied] sched_MSet~Explicit§region2#MSetOfSets[v__0]
           .<=
-          sched_Explicit§region2#MSetOfSets[v__1 + 1]
+          sched_MSet~Explicit§region2#MSetOfSets[v__0 + 1]
           {rules/refns/vertical/partition-MSetOfSets/DotLeq.rule}
-              sched_Explicit_MSetOfSets§region2[v__1]
+              sched_MSet~Explicit_MSetOfSets§region2[v__0]
               .<=
-              sched_Explicit_MSetOfSets§region2[v__1 + 1]
-[applied] sched_Explicit§region1#MSetOfSets[v__1]
+              sched_MSet~Explicit_MSetOfSets§region2[v__0 + 1]
+[applied] sched_MSet~Explicit§region1#MSetOfSets[v__0]
           .<=
-          sched_Explicit§region1#MSetOfSets[v__1 + 1]
+          sched_MSet~Explicit§region1#MSetOfSets[v__0 + 1]
           {rules/refns/vertical/partition-MSetOfSets/DotLeq.rule}
-              sched_Explicit_MSetOfSets§region1[v__1]
+              sched_MSet~Explicit_MSetOfSets§region1[v__0]
               .<=
-              sched_Explicit_MSetOfSets§region1[v__1 + 1]
+              sched_MSet~Explicit_MSetOfSets§region1[v__0 + 1]
 [applied] v__19 != v__20
           {rules/refns/horizontal/neq-to-eq.rule}
               !(v__19 = v__20)
@@ -265,532 +265,685 @@
 [applied] v__19 in v__21
           {rules/refns/horizontal/set-in-to-quantified.rule}
               (exists v__35 in v__21 . v__35 = v__19)
-[removeRefinedDecl] find sched_Explicit:
+[removeRefinedDecl] find sched_MSet~Explicit:
                             matrix indexed by [int(1..w)] of partition (regular, size g) from int(1..g * s)
 [repr] 2
-[representation] find sched_Explicit_MSetOfSets:
+[representation] find sched_MSet~Explicit_MSetOfSets:
                          matrix indexed by [int(1..w)] of mset (size g) of
                                                               set (size g * s / g) of int(1..g * s)
                  (#1)
-                 Explicit
-[configuration] sched_Explicit_MSetOfSets§region1#Explicit sched_Explicit_MSetOfSets§region2#Explicit
-[addedDecl] find sched_Explicit_MSetOfSets_Explicit:
+                 MSet~Explicit
+[configuration] sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit
+[addedDecl] find sched_MSet~Explicit_MSetOfSets_MSet~Explicit:
                     matrix indexed by [int(1..w), int(1..g)] of set (size g * s / g) of
                                                                     int(1..g * s)
 [refn] 2
-[applied] (exists v__3 in sched_Explicit_MSetOfSets§region2#Explicit[v__15]
+[applied] (exists v__3 in sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__1]
                . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                  /\
-                 (forAll v__6 in v__2 . (exists v__7 in v__3 . v__7 = v__6)))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                 (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4)))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (exists v__39 : int(1..g)
-                   . (forAll v__4 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__39]
+                   . (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                          v__39]
                           . (exists v__5 in v__2 . v__5 = v__4))
                      /\
-                     (forAll v__6 in v__2
-                          . (exists v__7 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__39]
-                                 . v__7 = v__6)))
-[applied] (forAll v__2 in sched_Explicit_MSetOfSets§region1#Explicit[v__16]
+                     (forAll v__4 in v__2
+                          . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                 v__39]
+                                 . v__5 = v__4)))
+[applied] (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
                . (exists v__39 : int(1..g)
-                      . (forAll v__4 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__39]
+                      . (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                             v__39]
                              . (exists v__5 in v__2 . v__5 = v__4))
                         /\
-                        (forAll v__6 in v__2
-                             . (exists v__7 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__39]
-                                    . v__7 = v__6))))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                        (forAll v__4 in v__2
+                             . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                    v__39]
+                                    . v__5 = v__4))))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__40 : int(1..g)
                    . (exists v__39 : int(1..g)
-                          . (forAll v__4 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__39]
-                                 . (exists v__5 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__40]
+                          . (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                 v__39]
+                                 . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                        v__40]
                                         . v__5 = v__4))
                             /\
-                            (forAll v__6 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__40]
-                                 . (exists v__7 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__39]
-                                        . v__7 = v__6))))
-[applied] (exists v__8 in sched_Explicit_MSetOfSets§region1#Explicit[v__16]
-               . (forAll v__9 in v__8 . (exists v__10 in v__2 . v__10 = v__9))
+                            (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                 v__40]
+                                 . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                        v__39]
+                                        . v__5 = v__4))))
+[applied] (exists v__3 in sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
+               . (forAll v__4 in v__3 . (exists v__5 in v__2 . v__5 = v__4))
                  /\
-                 (forAll v__11 in v__2 . (exists v__12 in v__8 . v__12 = v__11)))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                 (forAll v__4 in v__2 . (exists v__5 in v__3 . v__5 = v__4)))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (exists v__41 : int(1..g)
-                   . (forAll v__9 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__41]
-                          . (exists v__10 in v__2 . v__10 = v__9))
+                   . (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                          v__41]
+                          . (exists v__5 in v__2 . v__5 = v__4))
                      /\
-                     (forAll v__11 in v__2
-                          . (exists v__12 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__41]
-                                 . v__12 = v__11)))
-[applied] (forAll v__2 in sched_Explicit_MSetOfSets§region2#Explicit[v__15]
+                     (forAll v__4 in v__2
+                          . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                 v__41]
+                                 . v__5 = v__4)))
+[applied] (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__1]
                . (exists v__41 : int(1..g)
-                      . (forAll v__9 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__41]
-                             . (exists v__10 in v__2 . v__10 = v__9))
+                      . (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                             v__41]
+                             . (exists v__5 in v__2 . v__5 = v__4))
                         /\
-                        (forAll v__11 in v__2
-                             . (exists v__12 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__41]
-                                    . v__12 = v__11))))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                        (forAll v__4 in v__2
+                             . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                    v__41]
+                                    . v__5 = v__4))))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__42 : int(1..g)
                    . (exists v__41 : int(1..g)
-                          . (forAll v__9 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__41]
-                                 . (exists v__10 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__42]
-                                        . v__10 = v__9))
+                          . (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                 v__41]
+                                 . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                        v__42]
+                                        . v__5 = v__4))
                             /\
-                            (forAll v__11 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__42]
-                                 . (exists v__12 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__41]
-                                        . v__12 = v__11))))
-[applied] (forAll group2 in sched_Explicit_MSetOfSets§region2#Explicit[v__15]
-               . (sum v__13 in group1 , (exists v__14 in group2 . v__14 = v__13) . 1) < 2)
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                            (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                 v__42]
+                                 . (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                        v__41]
+                                        . v__5 = v__4))))
+[applied] (forAll v__3 in sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__1]
+               . (sum v__4 in v__2 , (exists v__5 in v__3 . v__5 = v__4) . 1) < 2)
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__43 : int(1..g)
-                   . (sum v__13 in group1
-                          , (exists v__14 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__43]
-                                 . v__14 = v__13)
+                   . (sum v__4 in v__2
+                          , (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                 v__43]
+                                 . v__5 = v__4)
                           . 1)
                      <
                      2)
-[applied] (forAll group1 in sched_Explicit_MSetOfSets§region1#Explicit[v__16]
+[applied] (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
                . (forAll v__43 : int(1..g)
-                      . (sum v__13 in group1
-                             , (exists v__14 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__43]
-                                    . v__14 = v__13)
+                      . (sum v__4 in v__2
+                             , (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                    v__43]
+                                    . v__5 = v__4)
                              . 1)
                         <
                         2))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__44 : int(1..g)
                    . (forAll v__43 : int(1..g)
-                          . (sum v__13 in sched_Explicit_MSetOfSets_Explicit§region1[v__16, v__44]
-                                 , (exists v__14 in sched_Explicit_MSetOfSets_Explicit§region2[v__15, v__43]
-                                        . v__14 = v__13)
+                          . (sum v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0, v__44]
+                                 , (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__1,
+                                                                                                        v__43]
+                                        . v__5 = v__4)
                                  . 1)
                             <
                             2))
-[applied] sched_Explicit_MSetOfSets§region2#Explicit[v__1]
+[applied] sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__0]
           .<=
-          sched_Explicit_MSetOfSets§region2#Explicit[v__1 + 1]
-          {rules/refns/vertical/mset-explicit/DotLeq.rule}
-              sched_Explicit_MSetOfSets_Explicit§region2[v__1]
-              <=lex
-              sched_Explicit_MSetOfSets_Explicit§region2[v__1 + 1]
-[applied] sched_Explicit_MSetOfSets§region1#Explicit[v__1]
+          sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__0 + 1]
+          {rules/refns/vertical/MSet~Explicit/DotLeq.rule}
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0]
+              .<=
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0 + 1]
+[applied] sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
           .<=
-          sched_Explicit_MSetOfSets§region1#Explicit[v__1 + 1]
-          {rules/refns/vertical/mset-explicit/DotLeq.rule}
-              sched_Explicit_MSetOfSets_Explicit§region1[v__1]
-              <=lex
-              sched_Explicit_MSetOfSets_Explicit§region1[v__1 + 1]
-[applied] (forAll v__20 in sched_Explicit_MSetOfSets§region1#Explicit[v__18]
-               , !((forAll v__22 in v__19 . (exists v__23 in v__20 . v__23 = v__22))
+          sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0 + 1]
+          {rules/refns/vertical/MSet~Explicit/DotLeq.rule}
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0]
+              .<=
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0 + 1]
+[applied] (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
+               , !((forAll v__3 in v__1 . (exists v__4 in v__2 . v__4 = v__3))
                    /\
-                   (forAll v__24 in v__20 . (exists v__25 in v__19 . v__25 = v__24)))
-               . (sum v__26 in v__19 , (exists v__27 in v__20 . v__27 = v__26) . 1) = 0)
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                   (forAll v__3 in v__2 . (exists v__4 in v__1 . v__4 = v__3)))
+               . (sum v__3 in v__1 , (exists v__4 in v__2 . v__4 = v__3) . 1) = 0)
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__45 : int(1..g)
-                   , !((forAll v__22 in v__19
-                            . (exists v__23 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                   . v__23 = v__22))
+                   , !((forAll v__3 in v__1
+                            . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                   v__45]
+                                   . v__4 = v__3))
                        /\
-                       (forAll v__24 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                            . (exists v__25 in v__19 . v__25 = v__24)))
-                   . (sum v__26 in v__19
-                          , (exists v__27 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                 . v__27 = v__26)
+                       (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                            v__45]
+                            . (exists v__4 in v__1 . v__4 = v__3)))
+                   . (sum v__3 in v__1
+                          , (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                 v__45]
+                                 . v__4 = v__3)
                           . 1)
                      =
                      0)
-[applied] (forAll v__19 in sched_Explicit_MSetOfSets§region1#Explicit[v__18]
+[applied] (forAll v__1 in sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
                . (forAll v__45 : int(1..g)
-                      , !((forAll v__22 in v__19
-                               . (exists v__23 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                      . v__23 = v__22))
+                      , !((forAll v__3 in v__1
+                               . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                      v__45]
+                                      . v__4 = v__3))
                           /\
-                          (forAll v__24 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                               . (exists v__25 in v__19 . v__25 = v__24)))
-                      . (sum v__26 in v__19
-                             , (exists v__27 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                    . v__27 = v__26)
+                          (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                               v__45]
+                               . (exists v__4 in v__1 . v__4 = v__3)))
+                      . (sum v__3 in v__1
+                             , (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                    v__45]
+                                    . v__4 = v__3)
                              . 1)
                         =
                         0))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__46 : int(1..g)
                    . (forAll v__45 : int(1..g)
-                          , !((forAll v__22 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__46]
-                                   . (exists v__23 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                          . v__23 = v__22))
+                          , !((forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                   v__46]
+                                   . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                          v__45]
+                                          . v__4 = v__3))
                               /\
-                              (forAll v__24 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                   . (exists v__25 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__46]
-                                          . v__25 = v__24)))
-                          . (sum v__26 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__46]
-                                 , (exists v__27 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__45]
-                                        . v__27 = v__26)
+                              (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                   v__45]
+                                   . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                          v__46]
+                                          . v__4 = v__3)))
+                          . (sum v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0, v__46]
+                                 , (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                                        v__45]
+                                        . v__4 = v__3)
                                  . 1)
                             =
                             0))
-[applied] (exists v__21 in sched_Explicit_MSetOfSets§region1#Explicit[v__18]
-               . (exists v__28 in v__21 . v__28 = v__19))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+[applied] (exists v__2 in sched_MSet~Explicit_MSetOfSets§region1#MSet~Explicit[v__0]
+               . (exists v__3 in v__2 . v__3 = v__1))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (exists v__47 : int(1..g)
-                   . (exists v__28 in sched_Explicit_MSetOfSets_Explicit§region1[v__18, v__47]
-                          . v__28 = v__19))
-[applied] (forAll v__20 in sched_Explicit_MSetOfSets§region2#Explicit[v__18]
-               , !((forAll v__29 in v__19 . (exists v__30 in v__20 . v__30 = v__29))
+                   . (exists v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1[v__0,
+                                                                                          v__47]
+                          . v__3 = v__1))
+[applied] (forAll v__2 in sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__0]
+               , !((forAll v__3 in v__1 . (exists v__4 in v__2 . v__4 = v__3))
                    /\
-                   (forAll v__31 in v__20 . (exists v__32 in v__19 . v__32 = v__31)))
-               . (sum v__33 in v__19 , (exists v__34 in v__20 . v__34 = v__33) . 1) = 0)
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+                   (forAll v__3 in v__2 . (exists v__4 in v__1 . v__4 = v__3)))
+               . (sum v__3 in v__1 , (exists v__4 in v__2 . v__4 = v__3) . 1) = 0)
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__48 : int(1..g)
-                   , !((forAll v__29 in v__19
-                            . (exists v__30 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                   . v__30 = v__29))
+                   , !((forAll v__3 in v__1
+                            . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                   v__48]
+                                   . v__4 = v__3))
                        /\
-                       (forAll v__31 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                            . (exists v__32 in v__19 . v__32 = v__31)))
-                   . (sum v__33 in v__19
-                          , (exists v__34 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                 . v__34 = v__33)
+                       (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                            v__48]
+                            . (exists v__4 in v__1 . v__4 = v__3)))
+                   . (sum v__3 in v__1
+                          , (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                 v__48]
+                                 . v__4 = v__3)
                           . 1)
                      =
                      0)
-[applied] (forAll v__19 in sched_Explicit_MSetOfSets§region2#Explicit[v__18]
+[applied] (forAll v__1 in sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__0]
                . (forAll v__48 : int(1..g)
-                      , !((forAll v__29 in v__19
-                               . (exists v__30 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                      . v__30 = v__29))
+                      , !((forAll v__3 in v__1
+                               . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                      v__48]
+                                      . v__4 = v__3))
                           /\
-                          (forAll v__31 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                               . (exists v__32 in v__19 . v__32 = v__31)))
-                      . (sum v__33 in v__19
-                             , (exists v__34 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                    . v__34 = v__33)
+                          (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                               v__48]
+                               . (exists v__4 in v__1 . v__4 = v__3)))
+                      . (sum v__3 in v__1
+                             , (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                    v__48]
+                                    . v__4 = v__3)
                              . 1)
                         =
                         0))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (forAll v__49 : int(1..g)
                    . (forAll v__48 : int(1..g)
-                          , !((forAll v__29 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__49]
-                                   . (exists v__30 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                          . v__30 = v__29))
+                          , !((forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                   v__49]
+                                   . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                          v__48]
+                                          . v__4 = v__3))
                               /\
-                              (forAll v__31 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                   . (exists v__32 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__49]
-                                          . v__32 = v__31)))
-                          . (sum v__33 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__49]
-                                 , (exists v__34 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__48]
-                                        . v__34 = v__33)
+                              (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                   v__48]
+                                   . (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                          v__49]
+                                          . v__4 = v__3)))
+                          . (sum v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0, v__49]
+                                 , (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                                        v__48]
+                                        . v__4 = v__3)
                                  . 1)
                             =
                             0))
-[applied] (exists v__21 in sched_Explicit_MSetOfSets§region2#Explicit[v__18]
-               . (exists v__35 in v__21 . v__35 = v__19))
-          {rules/refns/vertical/mset-explicit/mset-explicit-quantified.rule}
+[applied] (exists v__2 in sched_MSet~Explicit_MSetOfSets§region2#MSet~Explicit[v__0]
+               . (exists v__3 in v__2 . v__3 = v__1))
+          {rules/refns/vertical/MSet~Explicit/quantified.rule}
               (exists v__50 : int(1..g)
-                   . (exists v__35 in sched_Explicit_MSetOfSets_Explicit§region2[v__18, v__50]
-                          . v__35 = v__19))
-[removeRefinedDecl] find sched_Explicit_MSetOfSets:
+                   . (exists v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2[v__0,
+                                                                                          v__50]
+                          . v__3 = v__1))
+[removeRefinedDecl] find sched_MSet~Explicit_MSetOfSets:
                             matrix indexed by [int(1..w)] of mset (size g) of
                                                                  set (size g * s / g) of int(1..g * s)
 [repr] 3
-[representation] find sched_Explicit_MSetOfSets_Explicit:
+[representation] find sched_MSet~Explicit_MSetOfSets_MSet~Explicit:
                          matrix indexed by [int(1..w), int(1..g)] of set (size g * s / g) of
                                                                          int(1..g * s)
                  (#2)
-                 Occurrence, Explicit
-[configuration] sched_Explicit_MSetOfSets_Explicit§region1#Explicit sched_Explicit_MSetOfSets_Explicit§region2#Explicit
-[addedDecl] find sched_Explicit_MSetOfSets_Explicit_Explicit:
+                 Set~Occurrence, Set~Explicit
+[configuration] sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit
+[addedDecl] find sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit:
                     matrix indexed by [int(1..w), int(1..g), int(1..g * s / g)] of int(1..g * s)
 [refn] 3
-[applied] (exists v__5 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__16,
-                                                                              v__40]
+[applied] (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__2]
                . v__5 = v__4)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__61 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__40, v__61]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                       v__2,
+                                                                                       v__61]
                      =
                      v__4)
-[applied] (forAll v__4 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__15,
-                                                                              v__39]
+[applied] (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__1,
+                                                                                            v__3]
                . (exists v__61 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__40, v__61]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                          v__2,
+                                                                                          v__61]
                         =
                         v__4))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__62 : int(1..g * s / g)
                    . (exists v__61 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__40, v__61]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__2,
+                                                                                              v__61]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__39, v__62]))
-[applied] (exists v__7 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__15,
-                                                                              v__39]
-               . v__7 = v__6)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                              v__3,
+                                                                                              v__62]))
+[applied] (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__1,
+                                                                                            v__3]
+               . v__5 = v__4)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__63 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__39, v__63]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                       v__3,
+                                                                                       v__63]
                      =
-                     v__6)
-[applied] (forAll v__6 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__16,
-                                                                              v__40]
+                     v__4)
+[applied] (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__2]
                . (exists v__63 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__39, v__63]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                          v__3,
+                                                                                          v__63]
                         =
-                        v__6))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__4))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__64 : int(1..g * s / g)
                    . (exists v__63 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__39, v__63]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                              v__3,
+                                                                                              v__63]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__40, v__64]))
-[applied] (exists v__10 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__15,
-                                                                               v__42]
-               . v__10 = v__9)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__2,
+                                                                                              v__64]))
+[applied] (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__1,
+                                                                                            v__2]
+               . v__5 = v__4)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__65 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__42, v__65]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                       v__2,
+                                                                                       v__65]
                      =
-                     v__9)
-[applied] (forAll v__9 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__16,
-                                                                              v__41]
+                     v__4)
+[applied] (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__3]
                . (exists v__65 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__42, v__65]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                          v__2,
+                                                                                          v__65]
                         =
-                        v__9))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__4))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__66 : int(1..g * s / g)
                    . (exists v__65 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__42, v__65]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                              v__2,
+                                                                                              v__65]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__41, v__66]))
-[applied] (exists v__12 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__16,
-                                                                               v__41]
-               . v__12 = v__11)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__3,
+                                                                                              v__66]))
+[applied] (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__3]
+               . v__5 = v__4)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__67 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__41, v__67]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                       v__3,
+                                                                                       v__67]
                      =
-                     v__11)
-[applied] (forAll v__11 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__15,
-                                                                               v__42]
+                     v__4)
+[applied] (forAll v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__1,
+                                                                                            v__2]
                . (exists v__67 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__41, v__67]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                          v__3,
+                                                                                          v__67]
                         =
-                        v__11))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__4))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__68 : int(1..g * s / g)
                    . (exists v__67 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__41, v__67]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__3,
+                                                                                              v__67]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__42, v__68]))
-[applied] (exists v__14 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__15,
-                                                                               v__43]
-               . v__14 = v__13)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                              v__2,
+                                                                                              v__68]))
+[applied] (exists v__5 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__1,
+                                                                                            v__3]
+               . v__5 = v__4)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__69 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__43, v__69]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                       v__3,
+                                                                                       v__69]
                      =
-                     v__13)
-[applied] (sum v__13 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__16,
-                                                                            v__44]
+                     v__4)
+[applied] (sum v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                         v__2]
                , (exists v__69 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__43, v__69]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                          v__3,
+                                                                                          v__69]
                         =
-                        v__13)
+                        v__4)
                . 1)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (sum v__70 : int(1..g * s / g)
                    , (exists v__69 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__15, v__43, v__69]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__1,
+                                                                                              v__3,
+                                                                                              v__69]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__16, v__44, v__70])
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__2,
+                                                                                              v__70])
                    . 1)
-[applied] sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__1]
-          <=lex
-          sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__1 + 1]
-          {rules/refns/vertical/set-explicit/DotLeq-matrixof.rule}
-              flatten(sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__1])
-              <=lex
-              flatten(sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__1 + 1])
-[applied] sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__1]
-          <=lex
-          sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__1 + 1]
-          {rules/refns/vertical/set-explicit/DotLeq-matrixof.rule}
-              flatten(sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__1])
-              <=lex
-              flatten(sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__1 + 1])
-[applied] (exists v__23 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                               v__45]
-               . v__23 = v__22)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+[applied] sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0]
+          .<=
+          sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0 + 1]
+          {rules/refns/vertical/Set~Explicit/DotLeq.rule}
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0]
+              .<=
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0 + 1]
+[applied] sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0]
+          .<=
+          sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0 + 1]
+          {rules/refns/vertical/Set~Explicit/DotLeq.rule}
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0]
+              .<=
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0 + 1]
+[applied] (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__2]
+               . v__4 = v__3)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__71 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__71]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                       v__2,
+                                                                                       v__71]
                      =
-                     v__22)
-[applied] (forAll v__22 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                               v__46]
+                     v__3)
+[applied] (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__1]
                . (exists v__71 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__71]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                          v__2,
+                                                                                          v__71]
                         =
-                        v__22))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__3))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__72 : int(1..g * s / g)
                    . (exists v__71 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__71]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__2,
+                                                                                              v__71]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__46, v__72]))
-[applied] (exists v__25 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                               v__46]
-               . v__25 = v__24)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__1,
+                                                                                              v__72]))
+[applied] (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__1]
+               . v__4 = v__3)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__73 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__46, v__73]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                       v__1,
+                                                                                       v__73]
                      =
-                     v__24)
-[applied] (forAll v__24 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                               v__45]
+                     v__3)
+[applied] (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__2]
                . (exists v__73 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__46, v__73]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                          v__1,
+                                                                                          v__73]
                         =
-                        v__24))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__3))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__74 : int(1..g * s / g)
                    . (exists v__73 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__46, v__73]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__1,
+                                                                                              v__73]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__74]))
-[applied] (exists v__27 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                               v__45]
-               . v__27 = v__26)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__2,
+                                                                                              v__74]))
+[applied] (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__2]
+               . v__4 = v__3)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__75 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__75]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                       v__2,
+                                                                                       v__75]
                      =
-                     v__26)
-[applied] (sum v__26 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                            v__46]
+                     v__3)
+[applied] (sum v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                         v__1]
                , (exists v__75 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__75]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                          v__2,
+                                                                                          v__75]
                         =
-                        v__26)
+                        v__3)
                . 1)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (sum v__76 : int(1..g * s / g)
                    , (exists v__75 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__45, v__75]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__2,
+                                                                                              v__75]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__46, v__76])
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                              v__1,
+                                                                                              v__76])
                    . 1)
-[applied] (exists v__28 in sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__18,
-                                                                               v__47]
-               . v__28 = v__19)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+[applied] (exists v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                                            v__2]
+               . v__3 = v__1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__77 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__18, v__47, v__77]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                       v__2,
+                                                                                       v__77]
                      =
-                     v__19)
-[applied] (exists v__30 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                               v__48]
-               . v__30 = v__29)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                     v__1)
+[applied] (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                            v__2]
+               . v__4 = v__3)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__78 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__78]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                       v__2,
+                                                                                       v__78]
                      =
-                     v__29)
-[applied] (forAll v__29 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                               v__49]
+                     v__3)
+[applied] (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                            v__1]
                . (exists v__78 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__78]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                          v__2,
+                                                                                          v__78]
                         =
-                        v__29))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__3))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__79 : int(1..g * s / g)
                    . (exists v__78 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__78]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                              v__2,
+                                                                                              v__78]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__49, v__79]))
-[applied] (exists v__32 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                               v__49]
-               . v__32 = v__31)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                              v__1,
+                                                                                              v__79]))
+[applied] (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                            v__1]
+               . v__4 = v__3)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__80 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__49, v__80]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                       v__1,
+                                                                                       v__80]
                      =
-                     v__31)
-[applied] (forAll v__31 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                               v__48]
+                     v__3)
+[applied] (forAll v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                            v__2]
                . (exists v__80 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__49, v__80]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                          v__1,
+                                                                                          v__80]
                         =
-                        v__31))
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                        v__3))
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (forAll v__81 : int(1..g * s / g)
                    . (exists v__80 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__49, v__80]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                              v__1,
+                                                                                              v__80]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__81]))
-[applied] (exists v__34 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                               v__48]
-               . v__34 = v__33)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                              v__2,
+                                                                                              v__81]))
+[applied] (exists v__4 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                            v__2]
+               . v__4 = v__3)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__82 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__82]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                       v__2,
+                                                                                       v__82]
                      =
-                     v__33)
-[applied] (sum v__33 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                            v__49]
+                     v__3)
+[applied] (sum v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                         v__1]
                , (exists v__82 : int(1..g * s / g)
-                      . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__82]
+                      . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                          v__2,
+                                                                                          v__82]
                         =
-                        v__33)
+                        v__3)
                . 1)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (sum v__83 : int(1..g * s / g)
                    , (exists v__82 : int(1..g * s / g)
-                          . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__48, v__82]
+                          . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                              v__2,
+                                                                                              v__82]
                             =
-                            sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__49, v__83])
+                            sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                              v__1,
+                                                                                              v__83])
                    . 1)
-[applied] (exists v__35 in sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__18,
-                                                                               v__50]
-               . v__35 = v__19)
-          {rules/refns/vertical/set-explicit/set-explicit-quantified.rule}
+[applied] (exists v__3 in sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                                            v__2]
+               . v__3 = v__1)
+          {rules/refns/vertical/Set~Explicit/quantified.rule}
               (exists v__84 : int(1..g * s / g)
-                   . sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__18, v__50, v__84]
+                   . sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                       v__2,
+                                                                                       v__84]
                      =
-                     v__19)
-[applied] sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__38, v__37]
+                     v__1)
+[applied] sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                            v__1]
           .<=
-          sched_Explicit_MSetOfSets_Explicit§region1#Explicit[v__38, v__37 + 1]
-          {rules/refns/vertical/set-explicit/DotLeq.rule}
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__38, v__37]
-              <=lex
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__38, v__37 + 1]
-[applied] sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__38, v__37]
+          sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region1#Set~Explicit[v__0,
+                                                                            v__1 + 1]
+          {rules/refns/vertical/Set~Explicit/DotLeq.rule}
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0, v__1]
+              .<=
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__0,
+                                                                                v__1 + 1]
+[applied] sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                            v__1]
           .<=
-          sched_Explicit_MSetOfSets_Explicit§region2#Explicit[v__38, v__37 + 1]
-          {rules/refns/vertical/set-explicit/DotLeq.rule}
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__38, v__37]
-              <=lex
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__38, v__37 + 1]
-[applied] sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__59,
-                                                              v__58,
-                                                              v__60]
+          sched_MSet~Explicit_MSetOfSets_MSet~Explicit§region2#Set~Explicit[v__0,
+                                                                            v__1 + 1]
+          {rules/refns/vertical/Set~Explicit/DotLeq.rule}
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0, v__1]
+              .<=
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__0,
+                                                                                v__1 + 1]
+[applied] sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__59,
+                                                                            v__58,
+                                                                            v__60]
           .<
-          sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__59, v__58, v__60 + 1]
+          sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__59,
+                                                                            v__58,
+                                                                            v__60 + 1]
           {rules/refns/horizontal/DotLt-ints.rule}
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__59, v__58, v__60]
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__59,
+                                                                                v__58,
+                                                                                v__60]
               <
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region1[v__59, v__58, v__60 + 1]
-[applied] sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__59,
-                                                              v__58,
-                                                              v__60]
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region1[v__59,
+                                                                                v__58,
+                                                                                v__60 + 1]
+[applied] sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__59,
+                                                                            v__58,
+                                                                            v__60]
           .<
-          sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__59, v__58, v__60 + 1]
+          sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__59,
+                                                                            v__58,
+                                                                            v__60 + 1]
           {rules/refns/horizontal/DotLt-ints.rule}
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__59, v__58, v__60]
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__59,
+                                                                                v__58,
+                                                                                v__60]
               <
-              sched_Explicit_MSetOfSets_Explicit_Explicit§region2[v__59, v__58, v__60 + 1]
-[removeRefinedDecl] find sched_Explicit_MSetOfSets_Explicit:
+              sched_MSet~Explicit_MSetOfSets_MSet~Explicit_Set~Explicit§region2[v__59,
+                                                                                v__58,
+                                                                                v__60 + 1]
+[removeRefinedDecl] find sched_MSet~Explicit_MSetOfSets_MSet~Explicit:
                             matrix indexed by [int(1..w), int(1..g)] of set (size g * s / g) of
                                                                             int(1..g * s)
 [repr] 4
