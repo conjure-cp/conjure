@@ -1,8 +1,7 @@
-.PHONY: install clean
+.PHONY: install rules clean
 
 install:
-	cabal update
-	scripts/build/make -O
+	scripts/build/install.sh
 
 rules:
 	conjureBF makeRulesDB `find files/rules -type f`
