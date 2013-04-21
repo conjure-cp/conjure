@@ -15,6 +15,8 @@ import Language.E.Up.Data
 import Language.E.Up.Common(wrapInMatrix,unwrapMatrix,unwrapMatrix')
 import Language.E.Up.Debug
 
+import Data.List(genericTake)
+
 -- Types
 type LeafFunc   = (VarData ->  E)
 type BranchFunc = (VarData ->  VarData)
@@ -180,31 +182,33 @@ liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 getBranch :: String -> Maybe (Before,After)
 getBranch s =
     case s of
-      "Matrix1D"           -> Just matrix1DBranch
-      "SetExplicit"        -> Just explicitBranch
-      "Explicit"           -> Just explicitBranch
-      "MSetExplicit"       -> Just explicitBranch
-      "SetOccurrence"      -> Just occurrenceBranch
-      "Occurrence"         -> Just occurrenceBranch
-      "MSetOfSets"         -> Just partitionMSetOfSetsBranch
-      "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
-      "RelationAsSet"      -> Just relationAsSetRep
-      "AsReln"             -> Just functionAsRelnRep
-      _                    -> Nothing
+      "Explicit"                     -> Just explicitBranch
+      "MSetExplicit"                 -> Just explicitBranch
+      "MSetOfSets"                   -> Just partitionMSetOfSetsBranch
+      "Matrix1D"                     -> Just matrix1DBranch
+      "Occurrence"                   -> Just occurrenceBranch
+      "RelationAsSet"                -> Just relationAsSetRep
+      "SetExplicit"                  -> Just explicitBranch
+      "SetExplicitVarSize"           -> Just setExplicitVarSizeBranch
+      "SetExplicitVarSizeWithMarker" -> Just setExplicitVarSizeWithMarkerBranch 
+      "SetOccurrence"                -> Just occurrenceBranch
+      "AsReln"                       -> Just functionAsRelnRep
+      _                              -> Nothing
 
 
 isBranchRep :: RepName -> Bool
-isBranchRep "Matrix1D"           = True
-isBranchRep "MSetOfSets"         = True
-isBranchRep "SetExplicitVarSize" = True
-isBranchRep "RelationAsSet"      = True
-isBranchRep "AsReln"             = True
-isBranchRep "SetExplicit"        = True
-isBranchRep "Explicit"           = True
-isBranchRep "MSetExplicit"       = True
-isBranchRep "SetOccurrence"      = True
-isBranchRep "Occurrence"         = True
-isBranchRep _                    = False
+isBranchRep "AsReln"                       = True
+isBranchRep "Explicit"                     = True
+isBranchRep "MSetExplicit"                 = True
+isBranchRep "MSetOfSets"                   = True
+isBranchRep "Matrix1D"                     = True
+isBranchRep "Occurrence"                   = True
+isBranchRep "RelationAsSet"                = True
+isBranchRep "SetExplicit"                  = True
+isBranchRep "SetExplicitVarSize"           = True
+isBranchRep "SetExplicitVarSizeWithMarker" = True
+isBranchRep "SetOccurrence"                = True
+isBranchRep _                              = False
 
 
 {- Sets -}
@@ -235,6 +239,18 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
 
     getInSet e  = _bug "setExplicitVarSizeBranch: getInSet" [e]
 
+
+setExplicitVarSizeWithMarkerBranch :: (Before,After)
+setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranch" beforeUnchanged, after )
+
+    where
+    after orgData [VarData{vEssence=[eMatch| (&marker,&mat) |]}] = 
+        orgData{vEssence=wrapInMatrix $ genericTake (tohInt marker) (unwrapMatrix mat)}
+
+    after _ vvs = _bug "setExplicitVarSizeWithMarkerBranch unhandled" vvs
+
+    tohInt [xMatch| [Prim (I i)] := value.literal |] =i
+    tohInt f = _bug "tohInt: not int" [f]  
 
 {- Relations -}
 
