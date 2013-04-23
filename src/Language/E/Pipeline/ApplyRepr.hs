@@ -139,15 +139,16 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                             in  [xMake| reference := [Prim (S i')] |]
                                     _ -> e
                                 reregion e = e
+                            let
+                                cons' = map (transform reregion) cons
                             modify $ \ st -> st { representationLog = (base, reprName, origDecl, newDom)
                                                                     :  representationLog st
                                                 , structuralConsLog =
                                                     if isGiven origDecl
                                                         then structuralConsLog st
-                                                        else map (transform reregion) cons
-                                                                ++ structuralConsLog st
+                                                        else cons' ++ structuralConsLog st
                                                 }
-                            unless (isGiven origDecl) $ mkLog "addedStructuralCons" (pretty nm)
+                            unless (isGiven origDecl) $ mkLog "addedStructuralCons" $ vcat $ pretty nm : map pretty cons'
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
                 _ -> return p
