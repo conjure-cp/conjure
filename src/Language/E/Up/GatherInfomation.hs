@@ -80,6 +80,7 @@ getEssenceVariables (Spec _ xs) =
 
 
 getEssenceVariable :: E -> Maybe (String, [TagT])
+
 getEssenceVariable [xMatch| arr := topLevel.declaration.find.domain.domain.tuple.inners
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagTuple (map getTags arr)])
@@ -95,6 +96,13 @@ getEssenceVariable [xMatch|  _    := topLevel.declaration.find.domain.domain.fun
                                   .function.innerTo
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagFunc (getTags ins) (getTags tos)] )
+
+getEssenceVariable [xMatch|  _    := topLevel.declaration.find.domain.domain.partition
+                          | [ins] := topLevel.declaration.find.domain.domain .partition.inner
+                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+   Just (T.unpack name,  [TagPar (getTags ins)] )
+
+
 
 getEssenceVariable [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
                           | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
@@ -116,7 +124,6 @@ getEssenceVariable [xMatch| _  := topLevel.declaration.find.domain
    Just (T.unpack name,  [TagUnamed (T.unpack kind) ] )
 
 
-{-getEssenceVariable e = _bug "getEssenceVariable" [e]-}
 getEssenceVariable _ = Nothing
 
 

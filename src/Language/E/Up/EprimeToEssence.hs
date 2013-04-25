@@ -207,7 +207,15 @@ introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = _bugg "EprimeToEssence: introduceTypes function"
 
--- FIXME stuff inside a partition
+introduceTypes emap [TagPar ts] [xMatch| partsArr := value.partition.values |] =
+   let parts =  map par partsArr
+   in  [xMake| value.partition.values := parts |]
+
+    where
+    par [xMatch| ps := part |] =
+       let res = map (introduceTypes emap ts) ps
+       in  [xMake| part := res |]
+    par _ = _bugg "EprimeToEssence: introduceTypes partition"
 
 introduceTypes _ _ e = e
 {-introduceTypes _ ts e = _bugi "introduceTypes" (ts,[e])-}
@@ -238,10 +246,6 @@ introduceIndexRange (IndexFunc ins tos) [xMatch| arr := value.function.values |]
        in   [xMake| mapping := [a',b'] |]
     func _ _ _  = _bugg "EprimeToEssence: introduceIndexRange function"
 
--- FIXME after adding TPar
-introduceIndexRange (IndexPar _) e =e
-
-{-
 introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
    let parts =  map par arr
    in  [xMake| value.partition.values := parts |]
@@ -251,8 +255,6 @@ introduceIndexRange (IndexPar it) [xMatch| arr := value.partition.values |] =
        let vs' = map (introduceIndexRange it) vs
        in  [xMake| part := vs' |]
     par _  = _bugg "EprimeToEssence: introduceIndexRange partition"
--}
-
 
 introduceIndexRange (IndexSet it) [xMatch| vs := value.set.values |] =
     let vs' = map (introduceIndexRange it) vs
