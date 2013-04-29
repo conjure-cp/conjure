@@ -156,6 +156,8 @@ convertRep' (TagFunc ins tos) = ( b1 || b2, TagFunc ins' tos')
         (b1,ins') =  convertRep ins
         (b2,tos') =  convertRep tos
 
+convertRep'  t = (False,t)
+
 convertTag :: Tag -> (Bool,Tag)
 convertTag "set"  = (True, "matrix")
 convertTag "mset" = (True, "matrix")
