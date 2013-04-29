@@ -44,6 +44,7 @@ data TagT = TagSingle Tag
           | TagUnamed String
           | TagTuple  [[TagT]]
           | TagFunc  [TagT] [TagT]
+          | TagPar   [TagT]
     deriving (Show)
 
 type IndexRange = E
