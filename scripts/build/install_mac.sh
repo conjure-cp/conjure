@@ -17,20 +17,20 @@ WD="$(pwd)"
 mkdir -p dist/tools
 cd dist/tools
 
-export PATH="$WD/dist/tools/ghc-7.6.2-build/bin":$PATH
+export PATH="$WD/dist/tools/ghc-7.6.3-build/bin":$PATH
 export PATH="~/.cabal/bin":$PATH
 
 
 # installing ghc
-if [ "$(ghc --version)" != "The Glorious Glasgow Haskell Compilation System, version 7.6.2" ]; then
+if [ "$(ghc --version)" != "The Glorious Glasgow Haskell Compilation System, version 7.6.3" ]; then
     echo "Installing GHC"
-    wget -c http://www.haskell.org/ghc/dist/7.6.2/ghc-7.6.2-x86_64-apple-darwin.tar.bz2
-    tar xvjf ghc-7.6.2-x86_64-apple-darwin.tar.bz2
-    cd ghc-7.6.2
-    ./configure --prefix="$WD/dist/tools/ghc-7.6.2-build"
+    wget -c http://www.haskell.org/ghc/dist/7.6.3/ghc-7.6.3-x86_64-apple-darwin.tar.bz2
+    tar xvjf ghc-7.6.3-x86_64-apple-darwin.tar.bz2
+    cd ghc-7.6.3
+    ./configure --prefix="$WD/dist/tools/ghc-7.6.3-build"
     make install
     cd ..
-    rm -rf ghc-7.6.2-x86_64-apple-darwin.tar.bz2 ghc-7.6.2
+    rm -rf ghc-7.6.3-x86_64-apple-darwin.tar.bz2 ghc-7.6.3
 fi
 
 
