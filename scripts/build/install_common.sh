@@ -56,6 +56,7 @@ cabal update
 # installing happy
 HAS_HAPPY="$(which happy 2> /dev/null > /dev/null ; echo $?)" 
 if [ $HAS_HAPPY != 0 ] ; then
+    echo "Installing happy"
     cabal install happy -O2 \
         --force-reinstalls \
         --disable-documentation \
@@ -74,6 +75,7 @@ echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
 
 # install conjure, finally
 if (( $HAS_LLVM > 0 )) ; then
+    echo "Using LLVM"
     cabal install -O2 \
         --force-reinstalls \
         --disable-library-profiling \
@@ -83,6 +85,7 @@ if (( $HAS_LLVM > 0 )) ; then
         --ghc-options="-fexpose-all-unfoldings" \
         --ghc-options="-fllvm"
 else
+    echo "Not using LLVM"
     cabal install -O2 \
         --force-reinstalls \
         --disable-library-profiling \
