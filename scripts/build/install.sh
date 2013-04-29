@@ -4,7 +4,6 @@ set -o errexit
 set -o nounset
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
-DIR="$DIR/../.."
 
 OS=$(uname)
 
