@@ -9,9 +9,9 @@ DIR="$DIR/../.."
 OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
-    ${DIR}/install_mac.sh
+    ${DIR}/install_common.sh "apple-darwin"
 elif [ "$OS" == "Linux" ]; then
-    ${DIR}/install_linux64.sh
+    ${DIR}/install_common.sh "unknown-linux"
 else
     echo "Cannot determine your OS, uname reports: ${OS}"
 fi

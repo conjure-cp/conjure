@@ -12,6 +12,9 @@
 
 
 set -o errexit
+set -o nounset
+
+PLATFORM="$1"
 
 WD="$(pwd)"
 mkdir -p dist/tools
@@ -20,17 +23,19 @@ cd dist/tools
 export PATH="$WD/dist/tools/ghc-7.6.3-build/bin":$PATH
 export PATH="~/.cabal/bin":$PATH
 
+HAS_LLVM="$(opt -version 2> /dev/null | grep -i llvm | wc -l | tr -d ' ')"
+
 
 # installing ghc
 if [ "$(ghc --version)" != "The Glorious Glasgow Haskell Compilation System, version 7.6.3" ]; then
     echo "Installing GHC"
-    wget -c http://www.haskell.org/ghc/dist/7.6.3/ghc-7.6.3-x86_64-unknown-linux.tar.bz2
-    tar xvjf ghc-7.6.3-x86_64-unknown-linux.tar.bz2
+    wget -c http://www.haskell.org/ghc/dist/7.6.3/ghc-7.6.3-x86_64-${PLATFORM}.tar.bz2
+    tar xvjf ghc-7.6.3-x86_64-${PLATFORM}.tar.bz2
     cd ghc-7.6.3
     ./configure --prefix="$WD/dist/tools/ghc-7.6.3-build"
     make install
     cd ..
-    rm -rf ghc-7.6.3-x86_64-unknown-linux.tar.bz2 ghc-7.6.3
+    rm -rf ghc-7.6.3-x86_64-${PLATFORM}.tar.bz2 ghc-7.6.3
 fi
 
 
@@ -43,11 +48,10 @@ if [ "$(cabal --version | head -n 1)" != "cabal-install version 1.16.0.2" ]; the
     bash bootstrap.sh
     cd ..
     rm -rf cabal-install-1.16.0.2.tar.gz cabal-install-1.16.0.2
-    cabal update
 fi
 
 cd "$WD"
-
+cabal update
 
 # installing happy
 HAS_HAPPY="$(which happy 2> /dev/null > /dev/null ; echo $?)" 
@@ -69,12 +73,21 @@ echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
 echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
 
 # install conjure, finally
-cabal update
-cabal install -O2 \
-    --force-reinstalls \
-    --disable-library-profiling \
-    --disable-executable-profiling \
-    --ghc-options="-funbox-strict-fields" \
-    --ghc-options="-fexpose-all-unfoldings"
-
+if (( $HAS_LLVM > 0 )) ; then
+    cabal install -O2 \
+        --force-reinstalls \
+        --disable-library-profiling \
+        --disable-executable-profiling \
+        --disable-documentation \
+        --ghc-options="-funbox-strict-fields" \
+        --ghc-options="-fexpose-all-unfoldings" \
+        --ghc-options="-fllvm"
+else
+    cabal install -O2 \
+        --force-reinstalls \
+        --disable-library-profiling \
+        --disable-executable-profiling \
+        --ghc-options="-funbox-strict-fields" \
+        --ghc-options="-fexpose-all-unfoldings"
+fi
 
