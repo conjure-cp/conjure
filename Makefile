@@ -1,7 +1,7 @@
 .PHONY: install rules clean
 
 install:
-	scripts/build/install.sh
+	bash scripts/build/install.sh
 
 rules:
 	conjureBF makeRulesDB `find files/rules -type f`
