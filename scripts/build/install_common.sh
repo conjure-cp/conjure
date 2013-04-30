@@ -24,6 +24,7 @@ export PATH="$WD/dist/tools/ghc-7.6.3-build/bin":$PATH
 export PATH="~/.cabal/bin":$PATH
 
 HAS_LLVM="$(opt -version 2> /dev/null | grep -i llvm | wc -l | tr -d ' ')"
+OS=$(uname)
 
 
 # installing ghc
@@ -74,7 +75,7 @@ echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
 echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
 
 # install conjure, finally
-if (( $HAS_LLVM > 0 )) ; then
+if (( $HAS_LLVM > 0 )) && [ $OS = "Linux" ] ; then
     echo "Using LLVM"
     cabal install -O2 \
         --force-reinstalls \
