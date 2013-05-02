@@ -26,14 +26,14 @@ type RepName    = String
 leafRep ::  String -> LeafFunc
 leafRep kind =
     case kind of
-      "SetExplicit"                   -> explicitRep
       "Explicit"                      -> explicitRep
       "MSetExplicit"                  -> explicitRep
-      "SetOccurrence"                 -> setOccurrenceRep
-      "Occurrence"                    -> setOccurrenceRep
       "Matrix1D"                      -> matrix1DRep
+      "Occurrence"                    -> setOccurrenceRep
       "RelationIntMatrix2"            -> relationIntMatrix2Rep
+      "SetExplicit"                   -> explicitRep
       "SetExplicitVarSizeWithDefault" -> setExplicitVarSizeWithDefaultRep
+      "SetOccurrence"                 -> setOccurrenceRep
       _                               -> noRep
 
 
@@ -180,30 +180,30 @@ liftRep repFunc vdata  = vdata{vEssence=repFunc vdata}
 getBranch :: String -> Maybe (Before,After)
 getBranch s =
     case s of
-      "Matrix1D"           -> Just matrix1DBranch
-      "SetExplicit"        -> Just explicitBranch
+      "AsReln"             -> Just functionAsRelnRep
       "Explicit"           -> Just explicitBranch
       "MSetExplicit"       -> Just explicitBranch
-      "SetOccurrence"      -> Just occurrenceBranch
-      "Occurrence"         -> Just occurrenceBranch
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
-      "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
+      "Matrix1D"           -> Just matrix1DBranch
+      "Occurrence"         -> Just occurrenceBranch
       "RelationAsSet"      -> Just relationAsSetRep
-      "AsReln"             -> Just functionAsRelnRep
+      "SetExplicit"        -> Just explicitBranch
+      "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
+      "SetOccurrence"      -> Just occurrenceBranch
       _                    -> Nothing
 
 
 isBranchRep :: RepName -> Bool
-isBranchRep "Matrix1D"           = True
-isBranchRep "MSetOfSets"         = True
-isBranchRep "SetExplicitVarSize" = True
-isBranchRep "RelationAsSet"      = True
 isBranchRep "AsReln"             = True
-isBranchRep "SetExplicit"        = True
 isBranchRep "Explicit"           = True
 isBranchRep "MSetExplicit"       = True
-isBranchRep "SetOccurrence"      = True
+isBranchRep "MSetOfSets"         = True
+isBranchRep "Matrix1D"           = True
 isBranchRep "Occurrence"         = True
+isBranchRep "RelationAsSet"      = True
+isBranchRep "SetExplicit"        = True
+isBranchRep "SetExplicitVarSize" = True
+isBranchRep "SetOccurrence"      = True
 isBranchRep _                    = False
 
 
