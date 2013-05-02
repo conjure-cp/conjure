@@ -26,10 +26,8 @@ type RepName    = String
 leafRep ::  String -> LeafFunc
 leafRep kind =
     case kind of
-      "Explicit"                      -> explicitRep
       "MSetExplicit"                  -> explicitRep
       "Matrix1D"                      -> matrix1DRep
-      "Occurrence"                    -> setOccurrenceRep
       "RelationIntMatrix2"            -> relationIntMatrix2Rep
       "SetExplicit"                   -> explicitRep
       "SetExplicitVarSizeWithDefault" -> setExplicitVarSizeWithDefaultRep
@@ -181,11 +179,9 @@ getBranch :: String -> Maybe (Before,After)
 getBranch s =
     case s of
       "AsReln"             -> Just functionAsRelnRep
-      "Explicit"           -> Just explicitBranch
       "MSetExplicit"       -> Just explicitBranch
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
       "Matrix1D"           -> Just matrix1DBranch
-      "Occurrence"         -> Just occurrenceBranch
       "RelationAsSet"      -> Just relationAsSetRep
       "SetExplicit"        -> Just explicitBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
@@ -195,11 +191,9 @@ getBranch s =
 
 isBranchRep :: RepName -> Bool
 isBranchRep "AsReln"             = True
-isBranchRep "Explicit"           = True
 isBranchRep "MSetExplicit"       = True
 isBranchRep "MSetOfSets"         = True
 isBranchRep "Matrix1D"           = True
-isBranchRep "Occurrence"         = True
 isBranchRep "RelationAsSet"      = True
 isBranchRep "SetExplicit"        = True
 isBranchRep "SetExplicitVarSize" = True
