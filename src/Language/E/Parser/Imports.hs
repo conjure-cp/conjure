@@ -9,7 +9,7 @@ import Language.E.Imports
 import Language.E.Pretty ( Pretty, pretty )
 
 import Text.Parsec ( ParsecT, parse, tokenPrim, (<?>) )
-import Text.Parsec.Combinator ( between )
+import Text.Parsec.Combinator ( between, eof )
 
 import qualified Data.Text as T
 import qualified Text.PrettyPrint as Pr
@@ -112,3 +112,15 @@ brackets = between (lexeme L_OpenBracket) (lexeme L_CloseBracket)
 lexeme :: Lexeme -> Parser ()
 lexeme l = void (satisfyT (l==)) <?> show (lexemeFace l)
 
+arrowedPair :: Parser a -> Parser (a,a)
+arrowedPair p = do
+    i <- p
+    lexeme L_LongArrow
+    j <- p
+    return (i,j)
+
+inCompleteFile :: Parser a -> Parser a
+inCompleteFile parser = do
+    result <- parser
+    eof
+    return result
