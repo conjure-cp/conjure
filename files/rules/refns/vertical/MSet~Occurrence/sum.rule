@@ -3,11 +3,11 @@
 
 &quan &i in &s , &g . &k
     ~~>
-&quan j : &t , &g { &i --> j } /\ (&m[j] > 0)
-             . &k { &i --> j }
+&quan j : &t , &g { &i --> j }
+             . &k { &i --> j } * &m[j]
 
     where &s hasRepr MSet~Occurrence
     where &s hasDomain `mset (..) of &t`
-    where (&quan = forAll) \/ (&quan = exists)
+    where &quan = sum
 
     letting &m be refn(&s)
