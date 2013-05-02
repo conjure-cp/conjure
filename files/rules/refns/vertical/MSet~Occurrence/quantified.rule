@@ -8,5 +8,6 @@
 
     where &s hasRepr MSet~Occurrence
     where &s hasDomain `mset (..) of &t`
+    where (&quan = forAll) \/ (&quan = exists)
 
     letting &m be refn(&s)

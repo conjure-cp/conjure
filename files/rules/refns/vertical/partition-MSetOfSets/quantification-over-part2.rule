@@ -1,0 +1,12 @@
+
+[100]
+
+&quan &i, &j in parts(&p), &i != &j . &k
+
+~~>
+
+&quan &i, &j in refn(&p), &i != &j . &k
+
+    where &p hasType `partition from _`
+    where &p hasRepr MSetOfSets
+

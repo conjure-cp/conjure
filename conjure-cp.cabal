@@ -45,6 +45,10 @@ Library
                      , Language.E.Parser.Imports
                      , Language.E.Parser.Shunt
                      , Language.E.Parser.EssenceFile
+                     , Language.E.Parser.EssenceFile.Domain
+                     , Language.E.Parser.EssenceFile.Value
+                     , Language.E.Parser.EssenceFile.Expr
+                     , Language.E.Parser.EssenceFile.Declaration
                      , Language.E.Parser.LogFile
                      , Language.E.Pretty
                      , Language.E.MatchBind
@@ -113,6 +117,7 @@ Library
                      , Language.E.Pipeline.ConjureRefn
                      , Language.E.Pipeline.RuleRefnToFunction
                      , Language.E.Pipeline.ApplyRefn
+                     , Language.E.Pipeline.ApplyRefnSlower
 
                      , Language.E.Pipeline.ConjureRepr
                      , Language.E.Pipeline.RuleReprToFunction

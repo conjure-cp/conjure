@@ -38,26 +38,30 @@ getSpecMaybe Nothing = Nothing
 
 getSpec' ::  Bool -> FilePath -> IO Spec
 getSpec' removeContraints filepath = do
-    (fp,txt) <-  pairWithContents filepath
+    b <- doesFileExist filepath 
+    if not b 
+    then userErr ("File Not Found:" <+> pretty filepath <+> "does not exist")
+    else do
+        (fp,txt) <-  pairWithContents filepath
 
-    -- I don't need any of the constraints, speed up running the test lot
-    let txt' = if removeContraints then
-                   onlyPreamble  txt
-                else txt
-    handleInIOSingle =<< runCompEIOSingle
-                "Parsing problem specification"
-                (readSpec (fp,txt') )
+        -- I don't need any of the constraints, speed up running the test lot
+        let txt' = if removeContraints then
+                       onlyPreamble  txt
+                    else txt
+        handleInIOSingle =<< runCompEIOSingle
+                    "Parsing problem specification"
+                    (readSpec (fp,txt') )
 
-    where 
-        stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
-        discardAfter t = fst . T.breakOn t
-        onlyPreamble
-            = discardAfter "maximising"
-            . discardAfter "maximizing"
-            . discardAfter "minimising"
-            . discardAfter "minimizing"
-            . discardAfter "such that"
-            . stripComments
+        where 
+            stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
+            discardAfter t = fst . T.breakOn t
+            onlyPreamble
+                = discardAfter "maximising"
+                . discardAfter "maximizing"
+                . discardAfter "minimising"
+                . discardAfter "minimizing"
+                . discardAfter "such that"
+                . stripComments
 
 getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) 
          -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
