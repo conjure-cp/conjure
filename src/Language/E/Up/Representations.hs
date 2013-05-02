@@ -14,6 +14,7 @@ import Language.E hiding (trace)
 import Language.E.Up.Data
 import Language.E.Up.Common(wrapInMatrix,unwrapMatrix,unwrapMatrix')
 import Language.E.Up.Debug
+import Data.List(genericReplicate)
 
 -- Types
 type LeafFunc   = (VarData ->  E)
@@ -27,6 +28,7 @@ leafRep ::  String -> LeafFunc
 leafRep kind =
     case kind of
       "MSetExplicit"                  -> explicitRep
+      "MSetOccurrence"                -> msetOccurrenceRep
       "Matrix1D"                      -> matrix1DRep
       "RelationIntMatrix2"            -> relationIntMatrix2Rep
       "SetExplicit"                   -> explicitRep
@@ -58,6 +60,32 @@ setOccurrenceRep v@VarData{vIndexes=ix,
        tracee "setOccurrenceRep" vs
 
 setOccurrenceRep v = error $  "setOccurrenceRep " ++  (show . pretty) v
+
+
+msetOccurrenceRep :: VarData -> E
+msetOccurrenceRep VarData{vIndexes=[ix],
+  vEssence=[xMatch| vs :=  value.matrix.values |]} =
+    wrapInMatrix .  concatMap makeValues . selectedValues . zip ix $
+        tracee "msetOccurrenceRep" vs
+
+    where
+        makeValues :: (Integer,E) -> [E]
+        makeValues (value,count)  = map toIntLit $ genericReplicate (unwrapInt count) value
+
+        selectedValues :: [(a,E)] -> [(a,E)]
+        selectedValues                = filter f
+        f (_,[eMatch| true|])         = userErr "True used for msetOccurrence"
+        f (_,il) | unwrapInt il > 0   = True
+        f (_,_)                       = False
+
+-- CHECK should not really need this
+msetOccurrenceRep v@VarData{vIndexes=ix,
+  vEssence=[xMatch| vs :=  value.matrix.values |]} =
+    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) $
+       tracee "msetOccurrenceRep" vs
+
+msetOccurrenceRep v = error $  "msetOccurrenceRep " ++  (show . pretty) v
+
 
 setExplicitVarSizeWithDefaultRep :: VarData -> E
 setExplicitVarSizeWithDefaultRep VarData{vEssence=e,vBounds=bs} =
@@ -180,6 +208,7 @@ getBranch s =
     case s of
       "AsReln"             -> Just functionAsRelnRep
       "MSetExplicit"       -> Just explicitBranch
+      "MSetOccurrence"     -> Just moccurrenceBranch
       "MSetOfSets"         -> Just partitionMSetOfSetsBranch
       "Matrix1D"           -> Just matrix1DBranch
       "RelationAsSet"      -> Just relationAsSetRep
@@ -192,6 +221,7 @@ getBranch s =
 isBranchRep :: RepName -> Bool
 isBranchRep "AsReln"             = True
 isBranchRep "MSetExplicit"       = True
+isBranchRep "MSetOccurrence"     = True
 isBranchRep "MSetOfSets"         = True
 isBranchRep "Matrix1D"           = True
 isBranchRep "RelationAsSet"      = True
@@ -206,8 +236,12 @@ isBranchRep _                    = False
 explicitBranch :: (Before,After)
 explicitBranch = ( tracee "explicitBranch" unwrapSet, mapLeafUnchanged )
 
+-- TODO these two could be shorter
 occurrenceBranch :: (Before,After)
 occurrenceBranch = (tracee "occurrenceBranch" unwrapSet, mapLeafFunc setOccurrenceRep )
+
+moccurrenceBranch :: (Before,After)
+moccurrenceBranch = (tracee "moccurrenceBranch" unwrapSet, mapLeafFunc msetOccurrenceRep )
 
 setExplicitVarSizeBranch :: (Before,After)
 setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after )
@@ -314,7 +348,7 @@ mapLeafUnchanged :: VarData -> [VarData] -> VarData
 mapLeafUnchanged = mapLeafFunc vEssence
 
 _afterErr ::Pretty a => a -> t
-_afterErr = errp 
+_afterErr = errp
 
 -- Utility functions
 
@@ -337,8 +371,12 @@ unwrapRelation :: E -> [E]
 unwrapRelation [xMatch| vs := value.relation.values |] = vs
 unwrapRelation e = _bug "unwrapRelation" [e]
 
-toIntLit j =  [xMake| value.literal := [Prim (I j)] |]
 toIntLit :: Integer -> E
+toIntLit j =  [xMake| value.literal := [Prim (I j)] |]
+
+unwrapInt :: E -> Integer
+unwrapInt [xMatch| [Prim (I j)] := value.literal  |] = j
+unwrapInt  f = _bug "Not a int literal" [f]
 
 
 _bug  :: Pretty a => String -> [a] -> t
