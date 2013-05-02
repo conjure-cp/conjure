@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find x_MSetOccurrence: matrix indexed by [int(0..6)] of int(0..4)
+such that
+    (sum v__0 : int(0..6) . x_MSetOccurrence[v__0] > 0) <= 12,
+    (sum v__0 : int(0..6) . x_MSetOccurrence[v__0] > 0) >= 6,
+    forAll v__0 : int(0..6) . x_MSetOccurrence[v__0] > 0 -> v__0 > 4,
+    forAll v__0 : int(0..6)
+        . x_MSetOccurrence[v__0] > 0 -> x_MSetOccurrence[v__0] >= 2
