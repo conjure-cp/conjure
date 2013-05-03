@@ -15,10 +15,10 @@ VARORDER STATIC [s_SetOccurrence_00000,s_SetOccurrence_00001,s_SetOccurrence_000
 VARORDER AUX [aux0]
 **CONSTRAINTS**
 ineq(aux0, 3, 0)
-ineq(1, aux0, 0)
 w-literal(s_SetOccurrence_00001,1)
 w-literal(s_SetOccurrence_00002,1)
 w-literal(s_SetOccurrence_00003,1)
+ineq(1, aux0, 0)
 eq(s_SetOccurrence_00000,0)
 sumleq([s_SetOccurrence_00000,s_SetOccurrence_00001,s_SetOccurrence_00002,s_SetOccurrence_00003],aux0)
 sumgeq([s_SetOccurrence_00000,s_SetOccurrence_00001,s_SetOccurrence_00002,s_SetOccurrence_00003],aux0)
