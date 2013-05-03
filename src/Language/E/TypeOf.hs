@@ -189,6 +189,8 @@ typeOf :: MonadConjure m => E -> m E
 
 -- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
 
+typeOf [eMatch| indices(&_) |] = return tyInt
+
 typeOf [eMatch| true(&_)    |] = return tyBool
 typeOf [eMatch| true(&_,&_) |] = return tyBool
 
