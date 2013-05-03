@@ -216,7 +216,7 @@ getBranch s =
       "RelationAsSet"      -> Just relationAsSetRep
       "SetExplicit"        -> Just explicitBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
-      "SetExplicitVarSizeWithMarker" -> Just setExplicitVarSizeWithMarkerBranch 
+      "SetExplicitVarSizeWithMarker" -> Just setExplicitVarSizeWithMarkerBranch
       "SetOccurrence"      -> Just occurrenceBranch
       _                    -> Nothing
 
@@ -272,13 +272,18 @@ setExplicitVarSizeWithMarkerBranch :: (Before,After)
 setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranch" beforeUnchanged, after )
 
     where
-    after orgData [VarData{vEssence=[eMatch| (&marker,&mat) |]}] = 
-        orgData{vEssence=wrapInMatrix $ genericTake (tohInt marker) (unwrapMatrix mat)}
+    after orgData [VarData{vEssence=e}] = orgData{vEssence=explicitVarSizeWithMarker e }
+    after _ vvs = _bug "setExplicitVarSizeWithMarkerBranch after unhandled" vvs
 
-    after _ vvs = _bug "setExplicitVarSizeWithMarkerBranch unhandled" vvs
+    explicitVarSizeWithMarker :: E -> E
+    explicitVarSizeWithMarker [eMatch| (&marker,&mat) |] =
+        wrapInMatrix $ genericTake (unwrapInt marker) (unwrapMatrix mat)
 
-    tohInt [xMatch| [Prim (I i)] := value.literal |] =i
-    tohInt f = _bug "tohInt: not int" [f]  
+    explicitVarSizeWithMarker [xMatch| vs := value.matrix.values |] =
+        wrapInMatrix $  map explicitVarSizeWithMarker vs
+
+    explicitVarSizeWithMarker f = _bug "setExplicitVarSizeWithMarkerBranch unhandled" [f]
+
 
 {- Relations -}
 
