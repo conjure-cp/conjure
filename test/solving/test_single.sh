@@ -91,6 +91,12 @@ function perModelperParam {
         exit 1
     fi
 
+    # Error code for SR not reliable 
+    MSG_NO_EPRIME_Solution="[noEprimeSolution] $MSG_TEMPLATE"
+	if [ ! -f  $MODEL-$PARAM.eprime-solution ]; then
+		echo "$MSG_NO_EPRIME_Solution" >> "$FAIL_FILE"
+        exit 1
+    fi
 
     RESULTOF_TRANSLATESOLN=0
     MSG_TRANSLATESOLN="[translateSolution] $MSG_TEMPLATE"
