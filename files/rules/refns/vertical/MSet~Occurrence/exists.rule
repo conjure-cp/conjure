@@ -1,10 +1,10 @@
 
 [1000]
 
-sum &i in &s , &g . &k
+exists &i in &s , &g . &k
     ~~>
-sum j : &t , &g { &i --> j }
-           . &k { &i --> j } * &m[j]
+exists j : &t , &g { &i --> j } /\ (&m[j] > 0)
+              . &k { &i --> j }
 
     where &s hasRepr MSet~Occurrence
     where &s hasDomain `mset (..) of &t`
