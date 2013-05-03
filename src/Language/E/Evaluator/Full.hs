@@ -215,6 +215,34 @@ fullEvaluator [eMatch| &b supsetEq &a |]
     = returnBool $ and [ i `elem` bs | i <- as ]
 
 
+fullEvaluator [eMatch| &a subset &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+                && or  [ freqInList i as <  freqInList i bs | i <- nub as ]
+fullEvaluator [eMatch| &a subsetEq &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+fullEvaluator [eMatch| &b supset &a |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+                && or  [ freqInList i as <  freqInList i bs | i <- nub as ]
+fullEvaluator [eMatch| &b supsetEq &a |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+
+
 fullEvaluator
     [eMatch| |&x| |]
     | [xMatch| [Prim (I i)] := value.literal |] <- x
@@ -886,50 +914,41 @@ evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalIndices p@[xMatch| [a,b] := operator.indices |] = do
     bInt <- toInt b
     case bInt of
-        Nothing         -> err ErrFatal $ "Second argument is not an integer:" <+> pretty p
+        Nothing         -> userErr $ "Second argument is not an integer:" <+> pretty p
         Just (bInt', _) -> indices a bInt'
     where
         -- indices (matrix) (integer)
         indices :: MonadConjure m => E -> Integer -> m (Maybe (E,[Binder]))
-        indices [xMatch| [Prim (S iden)] := reference |] i = do
+        indices = indicesCore
+
+        indicesCore :: MonadConjure m => E -> Integer -> m (Maybe (E,[Binder]))
+        indicesCore [xMatch| [Prim (S iden)] := reference |] i = do
             res <- errMaybeT "indices" lookupReference iden
             indices res i
-        indices [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
-        indices [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
-        indices [xMatch| [index] := domain.matrix.index |] 0 = ret index
-        indices [xMatch| [inner] := domain.matrix.inner |] i = indices inner (i-1)
-        indices [eMatch| &m[&x]                         |] i = do
+        indicesCore [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
+        indicesCore [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
+        indicesCore [xMatch| [d] := quanVar.within.quantified.quanOverDom |] i = indices d i
+        indicesCore [xMatch| [index] := domain.matrix.index |] 0 = ret index
+        indicesCore [xMatch| [inner] := domain.matrix.inner |] i = indices inner (i-1)
+        indicesCore [eMatch| &m[&x]                         |] i = do
             tym <- typeOf m
             case tym of
                 [xMatch| _ := type.matrix |] -> indices m (i+1)
-                [xMatch| _ := type.tuple  |] -> tuple_indices m x i
+                [xMatch| _ := type.tuple  |] -> do
+                    dm <- domainOf m
+                    mxInt <- toInt x
+                    case (dm, mxInt) of
+                        ( [xMatch| ds := domain.tuple.inners |] , Just (xInt, _) )
+                            | xInt >= 1 && xInt <= genericLength ds
+                            -> do
+                                let next = ds `genericIndex` (xInt - 1)
+                                indices next i
+                        _ -> bug $ vcat [ "Full.indices", pretty m, pretty x ]
                 _ -> return Nothing
-        indices [xMatch| [d] := quanVar.within.quantified.quanOverDom |] i = indices d i
-        indices m i = do
+        indicesCore m i = do
             mkLog "missing:indices" $
                 vcat [ pretty m
                      , prettyAsPaths m
-                     , pretty i
-                     ]
-            return Nothing
-
-        -- tuple_indices (tuple of matrix) (integer, tuple deref) (integer)
-        tuple_indices :: MonadConjure m => E -> E -> Integer -> m (Maybe (E,[Binder]))
-        tuple_indices [xMatch| [Prim (S nm)] := reference |] x i = do
-            res <- errMaybeT "tuple_indices" lookupReference nm
-            tuple_indices res x i
-        tuple_indices [xMatch| [d] := topLevel.declaration.find .domain |] x i = tuple_indices d x i
-        tuple_indices [xMatch| [d] := topLevel.declaration.given.domain |] x i = tuple_indices d x i
-        tuple_indices [xMatch| ts := domain.tuple.inners |]
-                      [xMatch| [Prim (I x)] := value.literal |] i
-            | x >= 1 && x <= genericLength ts
-            = indices (genericIndex ts (x-1)) i
-        tuple_indices m x i = do
-            mkLog "missing:tuple_indices" $
-                vcat [ pretty m
-                     , prettyAsPaths m
-                     , pretty x
-                     , prettyAsPaths x
                      , pretty i
                      ]
             return Nothing
@@ -1100,4 +1119,7 @@ stripStructuralSingle [xMatch| [Prim (S nm)] := structural.single.reference |] =
         _ -> ret [xMake| reference := [Prim (S nm)] |]
 stripStructuralSingle [xMatch| [x] := structural.single |] = ret x
 stripStructuralSingle _ = return Nothing
+
+freqInList :: Eq a => a -> [a] -> Int
+freqInList y xs = length $ filter (y==) xs
 

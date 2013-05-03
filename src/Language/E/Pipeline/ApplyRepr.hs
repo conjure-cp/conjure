@@ -148,7 +148,6 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                                         then structuralConsLog st
                                                         else cons' ++ structuralConsLog st
                                                 }
-                            unless (isGiven origDecl) $ mkLog "addedStructuralCons" $ vcat $ pretty nm : map pretty cons'
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
                 _ -> return p
@@ -160,12 +159,16 @@ applyCongfigToSpec spec config = withBindingScope' $ do
 
 
 addStructuralFromLog :: MonadConjure m => Spec -> m Spec
-addStructuralFromLog (Spec v xs) = do
+addStructuralFromLog sp@(Spec v xs) = do
     cs' <- gets structuralConsLog
-    cs  <- mapM (liftM fst . runWriterT . simplify) cs'
+    cs  <- liftM nub $ mapM (liftM fst . runWriterT . simplify) cs'
     modify $ \ st -> st { structuralConsLog = [] }
     let mk i = [xMake| topLevel.suchThat := [i] |]
-    return $ Spec v $ listAsStatement $ statementAsList xs ++ map mk cs
+    if null cs
+        then return sp
+        else do
+            mkLog "addedStructuralCons" $ vcat $ map pretty cs
+            return $ Spec v $ listAsStatement $ statementAsList xs ++ map mk cs
 
 
 addChannellingFromLog :: MonadConjure m => Spec -> m Spec

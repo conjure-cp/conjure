@@ -73,6 +73,9 @@ fullySimplify x = do
                             , logged "Evaluator.instantiate"            instantiate
                             ]
 
+        instantiate [xMatch| [Prim (S nm)] := reference |]
+            | nm `elem` ["forAll", "exists", "sum"]
+            = return Nothing
         instantiate [xMatch| [Prim (S nm)] := reference |] = do
             mres <- runMaybeT $ lookupReference nm
             return $ case mres of

@@ -231,6 +231,9 @@ addMetaVar :: MonadConjure m => Text -> E -> m ()
 addMetaVar nm = addReference ("&" `mappend` nm)
 
 lookupReference :: MonadConjure m => Text -> MaybeT m E
+lookupReference nm
+    | nm `elem` ["forAll", "exists", "sum"]
+    = return [xMake| reference := [Prim (S nm)] |]
 lookupReference nm = do
     let (base,_,_) = identifierSplit nm
     bs <- lift $ gets binders
