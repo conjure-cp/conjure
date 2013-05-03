@@ -215,6 +215,34 @@ fullEvaluator [eMatch| &b supsetEq &a |]
     = returnBool $ and [ i `elem` bs | i <- as ]
 
 
+fullEvaluator [eMatch| &a subset &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+                && or  [ freqInList i as <  freqInList i bs | i <- nub as ]
+fullEvaluator [eMatch| &a subsetEq &b |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+fullEvaluator [eMatch| &b supset &a |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+                && or  [ freqInList i as <  freqInList i bs | i <- nub as ]
+fullEvaluator [eMatch| &b supsetEq &a |]
+    | isFullyInstantiated a
+    , isFullyInstantiated b
+    , [xMatch| as := value.mset.values |] <- a
+    , [xMatch| bs := value.mset.values |] <- b
+    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
+
+
 fullEvaluator
     [eMatch| |&x| |]
     | [xMatch| [Prim (I i)] := value.literal |] <- x
@@ -1100,4 +1128,7 @@ stripStructuralSingle [xMatch| [Prim (S nm)] := structural.single.reference |] =
         _ -> ret [xMake| reference := [Prim (S nm)] |]
 stripStructuralSingle [xMatch| [x] := structural.single |] = ret x
 stripStructuralSingle _ = return Nothing
+
+freqInList :: Eq a => a -> [a] -> Int
+freqInList y xs = length $ filter (y==) xs
 
