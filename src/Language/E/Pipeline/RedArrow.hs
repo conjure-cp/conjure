@@ -194,6 +194,13 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
+            _domain
+            value@[xMatch| _ := value.matrix.values |]
+            Nothing = do
+                return [(name,value)]
+
+        helper
+            name
             [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo 
                    | [domInner] := domain.set.inner
                    |]
