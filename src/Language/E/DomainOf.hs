@@ -23,7 +23,7 @@ domainOf :: MonadConjure m => E -> m E
 domainOf x@[xMatch| _ := domain |] = return x
 
 domainOf [xMatch| [Prim (S i)] := reference |] =
-    if i == "_"
+    if i `elem` ["_", "forAll", "exists", "sum"]
         then return [xMake| type.unknown := [] |]
         else do
             x <- errMaybeT "domainOf" lookupReference i

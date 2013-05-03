@@ -200,14 +200,16 @@ typeOf [xMatch| [x] := topLevel.objective.minimising |] = typeOf x
 typeOf [xMatch| [x] := topLevel.objective.maximising |] = typeOf x
 
 typeOf (Prim (B {})) = return tyBool
-typeOf (Prim (I {})) = return [xMake| type.int  := [] |]
+typeOf (Prim (I {})) = return tyInt
 
 typeOf p@[xMatch| _ := type |] = return p
 
-typeOf [xMatch| [Prim (S "_")] := reference |] = return tyUnknown
-typeOf [xMatch| [Prim (S i  )] := reference |] = do
-    x <- errMaybeT "typeOf" lookupReference i
-    typeOf x
+typeOf [xMatch| [Prim (S nm )] := reference |]
+    = if nm `elem` ["_", "forAll", "exists", "sum"]
+        then return tyUnknown
+        else do
+            x <- errMaybeT "typeOf" lookupReference nm
+            typeOf x
 
 typeOf [xMatch| [Prim (S i)] := metavar |] = do
     x <- errMaybeT "typeOf metavar" lookupMetaVar i
