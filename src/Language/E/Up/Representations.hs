@@ -16,6 +16,8 @@ import Language.E.Up.Common(wrapInMatrix,unwrapMatrix,unwrapMatrix')
 import Language.E.Up.Debug
 import Data.List(genericReplicate)
 
+import Data.List(genericTake)
+
 -- Types
 type LeafFunc   = (VarData ->  E)
 type BranchFunc = (VarData ->  VarData)
@@ -214,6 +216,7 @@ getBranch s =
       "RelationAsSet"      -> Just relationAsSetRep
       "SetExplicit"        -> Just explicitBranch
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
+      "SetExplicitVarSizeWithMarker" -> Just setExplicitVarSizeWithMarkerBranch
       "SetOccurrence"      -> Just occurrenceBranch
       _                    -> Nothing
 
@@ -227,6 +230,7 @@ isBranchRep "Matrix1D"           = True
 isBranchRep "RelationAsSet"      = True
 isBranchRep "SetExplicit"        = True
 isBranchRep "SetExplicitVarSize" = True
+isBranchRep "SetExplicitVarSizeWithMarker" = True
 isBranchRep "SetOccurrence"      = True
 isBranchRep _                    = False
 
@@ -262,6 +266,23 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
     getInSet [xMatch| vs := value.matrix.values |] = Just $ explicitVarSize vs
 
     getInSet e  = _bug "setExplicitVarSizeBranch: getInSet" [e]
+
+
+setExplicitVarSizeWithMarkerBranch :: (Before,After)
+setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranch" beforeUnchanged, after )
+
+    where
+    after orgData [VarData{vEssence=e}] = orgData{vEssence=explicitVarSizeWithMarker e }
+    after _ vvs = _bug "setExplicitVarSizeWithMarkerBranch after unhandled" vvs
+
+    explicitVarSizeWithMarker :: E -> E
+    explicitVarSizeWithMarker [eMatch| (&marker,&mat) |] =
+        wrapInMatrix $ genericTake (unwrapInt marker) (unwrapMatrix mat)
+
+    explicitVarSizeWithMarker [xMatch| vs := value.matrix.values |] =
+        wrapInMatrix $  map explicitVarSizeWithMarker vs
+
+    explicitVarSizeWithMarker f = _bug "setExplicitVarSizeWithMarkerBranch unhandled" [f]
 
 
 {- Relations -}

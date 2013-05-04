@@ -1,0 +1,22 @@
+[100]
+
+&a .< &b
+
+    ~~>
+
+exists i : &r , i <= &ma[1] /\ i <= &mb[1] .                                $ there exists an i where both sets still have elements 
+    (forAll j : &r , j <= i . &ma[2][j] = &mb[2][j])                        $ everything up to and including i are ==
+    /\
+    (                                                                       $ and
+        (&ma[2][i+1] .< &mb[2][i+1])                                        $ either: things at (i+1)'th position are ordered
+        \/
+        (&ma[1] > &mb[1])                                                   $ or: the first set has more elements in it
+    )
+
+    where &a hasRepr Set~ExplicitVarSizeWithMarker
+    where &b hasRepr Set~ExplicitVarSizeWithMarker
+
+    letting &ma be refn(&a)
+    letting &mb be refn(&b)
+    letting &r be indices(&ma[2],0)
+
