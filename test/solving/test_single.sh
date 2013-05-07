@@ -28,15 +28,17 @@ if (( $COUNT_PARAM != $COUNT_SOLUTION )); then
     echo "         In: $WD"
 fi
 
-if (( $# != 1 )); then
+if (( $# != 1 && $# != 2 )); then
     echo "ERROR: Give a single parameter, mode to be used by Conjure."
     echo "       Options: {df, compact, random, first}"
+	echo "       Optionally give a second parameter, the timeout for minion"
     exit 1
 fi
 
 export WD="$(pwd)"
 
 export MODE=$1
+export TIME_OUT=${2:-300}
 export FAIL_FILE="${MODE}_fail.txt"
 export PASS_FILE="${MODE}_pass.txt"
 
@@ -84,7 +86,7 @@ function perModelperParam {
         -in-param     $MODEL-$PARAM.eprime-param                            \
         -out-minion   $MODEL-$PARAM.eprime-minion                           \
         -out-solution $MODEL-$PARAM.eprime-solution                         \
-        -minion-options "-timelimit 300"
+        -minion-options "-timelimit ${TIME_OUT}"
     RESULTOF_SAVILEROW=$?
     if (( $RESULTOF_SAVILEROW != 0 )) ; then
         echo "$MSG_SAVILEROW" >> "$FAIL_FILE"

@@ -20,7 +20,7 @@ export MODES="${*:3}"
 
 export SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 export SCRIPT_TEST_SINGLE="$SCRIPT_DIR/test_single.sh"
-
+export TIME_OUT_SETTING=${TIME_OUT_SETTING:-300}
 
 function perDirectory {
     MODE="$1"
@@ -35,7 +35,7 @@ function perDirectory {
     cd "$DIR"
     rm -f "${MODE}_fail.txt" "${MODE}_pass.txt"
     touch "${MODE}_fail.txt" "${MODE}_pass.txt"
-    time bash "$SCRIPT_TEST_SINGLE" "$MODE"
+    time bash "$SCRIPT_TEST_SINGLE" "$MODE" "${TIME_OUT_SETTING}"
     cat "${MODE}_fail.txt" >> "$FAIL_FILE"
     cat "${MODE}_pass.txt" >> "$PASS_FILE"
     cat "${MODE}_fail.txt" >> "$ALL_FILE"
