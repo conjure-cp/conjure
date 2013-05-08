@@ -1,6 +1,0 @@
-language Essence 1.3
-
-letting foobarbaz be new type enum { foo, bar, baz }
-given e1,e2,e3 : foobarbaz
-find  x : foobarbaz
-such that x != e1, x != e2, x = e3

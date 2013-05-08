@@ -1,9 +1,0 @@
-language Essence 1.3
-
-letting e be new type enum { foo, bar, baz }
-
-find x : e
-find y : e(bar..baz)
-
-such that x != y
-such that x = foo
