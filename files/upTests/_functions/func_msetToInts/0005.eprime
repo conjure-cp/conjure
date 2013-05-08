@@ -91,27 +91,31 @@ such that
         . f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__0, 1]
           <=
           f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__0, 2],
-    forAll v__0 : matrix indexed by [int(1..2)] of int(1..2)
-        . v__0[1] <= v__0[2]
+    forAll v__0 : matrix indexed by [int(1..2)] of int(0..2)
+        . (sum v__1 : int(1..2) . v__0[v__1]) = 2
           ->
           (sum v__1 : int(1..8)
                . f_AsReln_RelationAsSet_SetExplicitVarSize_tuple1[v__1]
                  *
                  ((forAll v__2 : int(1..2)
-                       . (sum v__3 : int(1..2) . v__0[v__3] = v__0[v__2])
+                       . v__0[v__2] > 0
+                         ->
+                         (sum v__3 : int(1..2) . (v__3 = v__2) * v__0[v__3])
                          <=
                          (sum v__3 : int(1..2)
                               . f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
                                                                                                      v__3]
                                 =
-                                v__0[v__2]))
+                                v__2))
                   /\
                   (forAll v__2 : int(1..2)
                        . (sum v__3 : int(1..2)
-                              . v__0[v__3]
-                                =
-                                f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
-                                                                                                     v__2])
+                              . (v__3
+                                 =
+                                 f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
+                                                                                                      v__2])
+                                *
+                                v__0[v__3])
                          <=
                          (sum v__3 : int(1..2)
                               . f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
@@ -129,18 +133,22 @@ such that
                                                                                                       v__2])
                           <=
                           (sum v__3 : int(1..2)
-                               . v__0[v__3]
-                                 =
-                                 f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
-                                                                                                      v__2]))
+                               . (v__3
+                                  =
+                                  f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
+                                                                                                       v__2])
+                                 *
+                                 v__0[v__3]))
                    /\
                    (forAll v__2 : int(1..2)
-                        . (sum v__3 : int(1..2)
+                        . v__0[v__2] > 0
+                          ->
+                          (sum v__3 : int(1..2)
                                . f_AsReln_RelationAsSet_SetExplicitVarSize_tuple2_tuple1_MSetExplicit[v__1,
                                                                                                       v__3]
                                  =
-                                 v__0[v__2])
+                                 v__2)
                           <=
-                          (sum v__3 : int(1..2) . v__0[v__3] = v__0[v__2])))))
+                          (sum v__3 : int(1..2) . (v__3 = v__2) * v__0[v__3])))))
           =
           1
