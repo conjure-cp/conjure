@@ -83,7 +83,7 @@ msetOccurrenceRep VarData{vIndexes=[ix],
 -- CHECK should not really need this
 msetOccurrenceRep v@VarData{vIndexes=ix,
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
-    wrapInMatrix $ map (\f -> setOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) $
+    wrapInMatrix $ map (\f -> msetOccurrenceRep v{vIndexes=tail ix, vEssence=f} ) $
        tracee "msetOccurrenceRep" vs
 
 msetOccurrenceRep v = error $  "msetOccurrenceRep " ++  (show . pretty) v
