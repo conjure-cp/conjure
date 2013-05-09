@@ -10,6 +10,7 @@ module Language.E.Up.ReduceSpec(
     ,introduceParams'
     ,toLst
     ,inlineSpec
+    ,specSimplify
 ) where
 
 import Language.E
@@ -138,6 +139,21 @@ inlineSpec spec =
                 >=> inlineLettings >=> recordSpec "inlineLettings"
         pipeline spec
 
+specSimplify :: Spec -> Spec
+specSimplify spec =
+    let
+        (mresult, _logs) = runCompESingle "simplifySpec" helper
+    in
+        case mresult of
+            Left  x      -> error $ renderPretty x
+            Right result -> result
+
+    where
+    helper :: FunkySingle ConjureState ConjureError Identity Spec
+    helper = do
+        let pipeline = recordSpec "init" 
+                >=> simplifySpec >=> recordSpec "simplifySpec"
+        pipeline spec
 
 -- bd :: MonadConjure m => E -> m E
 -- bd x = do

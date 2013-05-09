@@ -4,6 +4,7 @@ module Language.E.Up.GatherIndexRanges(gatherIndexRanges) where
 import Language.E
 import Language.E.Up.Data
 import Language.E.Up.Debug(upBug)
+import Language.E.Up.ReduceSpec(specSimplify)
 
 import Data.Map(Map)
 import qualified Data.Map  as M
@@ -25,7 +26,12 @@ gatherIndexT :: E -> IndexT
 
 gatherIndexT [xMatch| [domRange] := domain.matrix.index 
                     | [dom]      := domain.matrix.inner |] =
-   IndexMatrix domRange (gatherIndexT dom) 
+   IndexMatrix sim (gatherIndexT dom) 
+
+   where 
+   sim :: E
+   sim = let (Spec _ es) = specSimplify (Spec ("Essence", [1,3])  (domRange) ) 
+         in es
 
 gatherIndexT [xMatch| doms := domain.tuple.inners |] =
    IndexTuple (map gatherIndexT doms)
@@ -37,11 +43,9 @@ gatherIndexT [xMatch| [from] := domain.function.innerFrom
                     | [to]   := domain.function.innerTo|] =
    IndexFunc (gatherIndexT from) (gatherIndexT to)
 
-
 gatherIndexT [xMatch| [dom] := domain.partition.inner |] =
    IndexPar (gatherIndexT dom)
  
-
 gatherIndexT [xMatch| [dom] := domain.set.inner |] =
    IndexSet (gatherIndexT dom)
 

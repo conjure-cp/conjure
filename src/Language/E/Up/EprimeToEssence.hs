@@ -82,9 +82,7 @@ mainPure' addIndexRange (spec@(Spec v _),sol,org,orgP,logs) =
 
         resultEssence   = map eval varResults
 
-        (Spec _ e) = specSimplify (Spec v (listAsStatement resultEssence))
-    in enums ++ (statementAsList e)
-
+    in enums ++ resultEssence 
 
 makeTuplesOfMatrixesMap :: [Text] -> Map [String] Int
 makeTuplesOfMatrixesMap =
