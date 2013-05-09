@@ -30,7 +30,7 @@ gatherIndexT [xMatch| [domRange] := domain.matrix.index
 
    where 
    sim :: E
-   sim = let (Spec _ es) = specSimplify (Spec ("Essence", [1,3])  (domRange) ) 
+   sim = let (Spec _ es) = specSimplify (Spec ("Essence", [1,3])  domRange ) 
          in es
 
 gatherIndexT [xMatch| doms := domain.tuple.inners |] =
@@ -52,11 +52,10 @@ gatherIndexT [xMatch| [dom] := domain.set.inner |] =
 gatherIndexT [xMatch| [dom] := domain.mset.inner |] =
    IndexSet (gatherIndexT dom)
 
--- for unnamed 
 gatherIndexT (Tagged "reference" _) = IndexNone 
 
 gatherIndexT (Tagged "domain" [Tagged tag _]) 
-    | tag `elem` ["int", "bool", "enum", "typeUnnamed"] = IndexNone
+    | tag `elem` ["int", "bool", "enum" ] = IndexNone
 
 gatherIndexT dom = upBug "gatherIndexRange: gatherIndexT domain not matched" [dom]
 
