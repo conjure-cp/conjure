@@ -25,7 +25,6 @@ import Language.E.Up.RepresentationTree
 import Language.E.Up.EvaluateTree2(evalTree)
 import Language.E.Up.AddEssenceTypes
 import Language.E.Up.GatherIndexRanges
-import Language.E.Up.ReduceSpec(inlineSpec,specSimplify)
 
 import Data.Char(isSpace)
 import Data.Map(Map)
@@ -39,8 +38,7 @@ mainPure :: (Spec, Spec, Spec, Spec,Logs) -> [E]
 mainPure = mainPure' True
 
 mainPure' :: Bool -> (Spec, Spec, Spec, Spec,Logs) -> [E]
-mainPure' addIndexRange (spec@(Spec v _),sol,org,orgP,logs) =
-
+mainPure' addIndexRange (spec,sol,org,orgP,logs) =
 
     let tuplesOfMatrixes =  makeTuplesOfMatrixesMap logs
         varInfo1 = getVariables spec

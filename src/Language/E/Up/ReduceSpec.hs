@@ -18,8 +18,6 @@ import Language.E.Evaluator.Full    ( fullEvaluator)
 import Language.E.Up.Debug
 import Language.E.Pipeline.InlineLettings(inlineLettings)
 
-import qualified Data.HashMap.Strict as M
-
 -- Convert the unaryOp.negate.value.literal to a value.literal
 removeNegatives :: Monad m => Spec -> m Spec
 removeNegatives spec@(Spec _ _) = do
@@ -86,7 +84,7 @@ reduceSpec  :: Monad m => Spec -> m Spec
 reduceSpec' :: Monad m => Bool -> Spec -> m Spec
 
 reduceSpec  = reduceSpec' True
-reduceSpec' reduceEnumRange spec@(Spec ver _) = do
+reduceSpec' _ spec = 
     return $ inlineSpec spec
 
 
