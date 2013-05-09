@@ -9,11 +9,15 @@ module Language.E.Up.ReduceSpec(
     ,introduceParams
     ,introduceParams'
     ,toLst
+    ,inlineSpec
 ) where
 
 import Language.E
 import Language.E.Evaluator.Full    ( fullEvaluator)
 import Language.E.Up.Debug
+import Language.E.Pipeline.InlineLettings(inlineLettings)
+
+import qualified Data.HashMap.Strict as M
 
 -- Convert the unaryOp.negate.value.literal to a value.literal
 removeNegatives :: Monad m => Spec -> m Spec
@@ -54,7 +58,6 @@ removeIndexRanges spec@(Spec _ _) = do
     removeIndexRange x = return x
 
 
-
 introduceParams :: Monad m => Maybe (m Spec) -> Spec -> m Spec
 introduceParams (Just par) spec@(Spec ver _) = do
     param <- par
@@ -83,18 +86,8 @@ reduceSpec' :: Monad m => Bool -> Spec -> m Spec
 
 reduceSpec  = reduceSpec' True
 reduceSpec' reduceEnumRange spec@(Spec ver _) = do
-    let (s,_) = head $ reduce spec
-    --putStrLn . show . pretty $ l 
-    let ee = removeE removeLettings $  (head .rights) [s]
-    return $  Spec ver (listAsStatement ee)
+    return $ inlineSpec spec
 
-    where
-
-    reduce ::  Spec -> [(Either Doc Spec, LogTree)]
-    reduce spec1 = runCompE "tranform" $ bottomUpSpecExcept' exclude (varSelector reduceEnumRange) spec1
-
-    removeE :: (E -> Bool) -> Spec -> [E]
-    removeE func spec1 = filter func (toLst spec1) 
 
 simSpec :: Monad m => Spec -> m Spec
 simSpec spec@(Spec _ _) = do
@@ -125,45 +118,25 @@ toLst :: Spec -> [E]
 toLst (Spec _ ee) = statementAsList ee
 
 
-removeLettings :: E -> Bool
-removeLettings [xMatch| _ := topLevel.letting|] = False
-removeLettings  _ = True
-
 removeGiven :: E -> Bool
 removeGiven [xMatch| _ := topLevel.declaration.given |] = False
 removeGiven _ = True
 
-exclude :: E -> Bool
-exclude [xMatch| _ := name.reference |] =  True
-exclude _ = False
+inlineSpec :: Spec -> Spec
+inlineSpec spec =
+    let
+        (mresult, _logs) = runCompESingle "inlining lettings" helper
+    in
+        case mresult of
+            Left  x      -> error $ renderPretty x
+            Right result -> result
 
-
-varSelector :: MonadConjure m => Bool -> E -> m E
-varSelector b x@[xMatch| [Prim (S nm)] := reference |] = do
-    mkLog "val" $ pretty $  show x
-    ma <- runMaybeT (lookupReference nm)
-    mkLog "ma" $ pretty . groom $ ma
-    case (b,ma) of
-        (_,Nothing)  -> return x
-        (False,Just (Tagged "type" [Tagged "typeEnum" [Prim (S _)]]))  -> return x
-        (_,Just res) -> inlineVars res
-
-varSelector _ x = return x
-
-
-inlineVars :: MonadConjure m => E -> m E
-inlineVars e@[xMatch| [Prim (S nm)] := reference |] = do
-    -- mkLog "val2" $ pretty $  show e
-    ma <- runMaybeT (lookupReference nm)
-    case ma of
-        Nothing ->  return e
-        Just res -> return res
-
-inlineVars (Tagged val arr) = do
-    v <- mapM inlineVars arr
-    return $ Tagged val v
-
-inlineVars e = return e
+    where
+    helper :: FunkySingle ConjureState ConjureError Identity Spec
+    helper = do
+        let pipeline = recordSpec "init" 
+                >=> inlineLettings >=> recordSpec "inlineLettings"
+        pipeline spec
 
 
 -- bd :: MonadConjure m => E -> m E
