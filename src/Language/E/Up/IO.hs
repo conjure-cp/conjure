@@ -65,7 +65,7 @@ getSpec' removeContraints filepath = do
 
 getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath) 
          -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
-getSpecs (specF, solF, orgF,paramF,orgParamF) = do
+getSpecs (specF, solF, orgF,paramF,orgParamF)= do
     let param    = getSpecMaybe paramF
     let orgParam = getSpecMaybe orgParamF
 
@@ -93,13 +93,20 @@ getTestSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath, Maybe FilePath)
              -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly)
 getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
     param    <- getTestSpecMaybe paramF
-    orgParam <- getTestSpecMaybe orgParamF
+    orgParam1 <- getTestSpecMaybe orgParamF
+    let orgParam = getOrgParam param orgParam1
 
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param >>= removeNegatives
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
     org   <- reduceSpec  orgP
     return (spec,sol,org,orgP)
+
+    where
+    getOrgParam :: Maybe a -> Maybe a -> Maybe a
+    getOrgParam _   orgParam@(Just _)  = orgParam
+    getOrgParam param@(Just _) Nothing = param
+    getOrgParam Nothing Nothing        = Nothing
 
 getTestSpecMaybe :: Maybe FilePath -> IO (Maybe (IO Spec))
 getTestSpecMaybe (Just f) = do 
