@@ -74,58 +74,52 @@ getRange [Tagged "ranges" arr] =
 
 getRange e = _bug " getRange" e
 
-getEssenceVariables :: Spec -> M.Map String [TagT]
-getEssenceVariables (Spec _ xs) =
-    M.fromList $ mapMaybe getEssenceVariable (statementAsList xs)
+getEssenceVariables :: M.Map String [E] -> Spec ->  M.Map String [TagT]
+getEssenceVariables emap (Spec _ xs) =
+    M.fromList $ mapMaybe (getEssenceVariable emap) (statementAsList xs)
 
 
-getEssenceVariable :: E -> Maybe (String, [TagT])
+getEssenceVariable :: M.Map String [E] -> E -> Maybe (String, [TagT])
 
-getEssenceVariable [xMatch| arr := topLevel.declaration.find.domain.domain.tuple.inners
-                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+getEssenceVariable _ [xMatch| arr := topLevel.declaration.find.domain.domain.tuple.inners
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagTuple (map getTags arr)])
 
-getEssenceVariable [xMatch| [Prim (S kind)] := topLevel.declaration.find.domain.domain.enum.name.reference
-                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+getEssenceVariable _ [xMatch| [Prim (S kind)] := topLevel.declaration.find.domain.domain.enum.name.reference
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagEnum (T.unpack  kind)])
 
-getEssenceVariable [xMatch|  _    := topLevel.declaration.find.domain.domain.function
-                          | [ins] := topLevel.declaration.find.domain.domain
+getEssenceVariable _ [xMatch|  _    := topLevel.declaration.find.domain.domain.function
+                            | [ins] := topLevel.declaration.find.domain.domain
                                   .function.innerFrom
-                          | [tos] := topLevel.declaration.find.domain.domain
+                            | [tos] := topLevel.declaration.find.domain.domain
                                   .function.innerTo
-                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagFunc (getTags ins) (getTags tos)] )
 
-getEssenceVariable [xMatch|  _    := topLevel.declaration.find.domain.domain.partition
-                          | [ins] := topLevel.declaration.find.domain.domain .partition.inner
-                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+getEssenceVariable _ [xMatch|  _    := topLevel.declaration.find.domain.domain.partition
+                            | [ins] := topLevel.declaration.find.domain.domain .partition.inner
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  [TagPar (getTags ins)] )
 
 
-
-getEssenceVariable [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
-                          | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+getEssenceVariable _ [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
    Just (T.unpack name,  TagSingle t : concatMap getTags arr )
 
+getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
+                               | [Prim (S ref)]  := topLevel.declaration.find.domain.reference |]
+                               | Just _ <- M.lookup (T.unpack ref) emap  =
+    Just (T.unpack name, [TagEnum (T.unpack ref)] )
 
-getEssenceVariable [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
-                          | [Prim (S kind)] := topLevel.declaration.find.domain.type.typeEnum |] =
-   Just (T.unpack name,  [TagEnum (T.unpack  kind)]  )
+getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
+                               | [Prim (S ref)]  := topLevel.declaration.find.domain.reference |]
+                               | Just _ <- M.lookup ("__named_" ++  T.unpack ref) emap  =
+    Just (T.unpack name, [TagUnamed (T.unpack ref)] )
 
-
--- Very silly but works for unmaned types
-getEssenceVariable [xMatch| _  := topLevel.declaration.find.domain
-                                        .topLevel.letting.typeUnnamed
-                            | [Prim (S kind)] := topLevel.declaration.find.domain
-                                                 .topLevel.letting.name
-                                                 .topLevel.letting.name.reference
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagUnamed (T.unpack kind) ] )
-
-
-getEssenceVariable _ = Nothing
-
+getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = 
+    _bug "getEssenceVariable unhandled declaration" [e]
+getEssenceVariable _ _ = Nothing
 
 getTags ::  E -> [TagT]
 getTags [xMatch|  _    := domain.function

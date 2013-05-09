@@ -25,6 +25,7 @@ import Language.E.Up.RepresentationTree
 import Language.E.Up.EvaluateTree2(evalTree)
 import Language.E.Up.AddEssenceTypes
 import Language.E.Up.GatherIndexRanges
+import Language.E.Up.ReduceSpec(inlineSpec)
 
 import Data.Char(isSpace)
 import Data.Map(Map)
@@ -43,7 +44,12 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
 
     let tuplesOfMatrixes =  makeTuplesOfMatrixesMap logs
         varInfo1 = getVariables spec
-        orgInfo  = getEssenceVariables org
+
+        enumMapping1         = getEnumMapping orgP
+        enums1               = getEnumsAndUnamed orgP
+        (enumMapping, enums) = convertUnamed enumMapping1 enums1
+
+        orgInfo  = getEssenceVariables enumMapping org
         solInfo1 = getSolVariables sol
         -- I don't think I need the aux variables
         solInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
@@ -62,12 +68,8 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
             [xMake| topLevel.letting.expr := [value]
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
 
-        indexrangeMapping = gatherIndexRanges orgP
+        indexrangeMapping = gatherIndexRanges (org)
 
-        enumMapping1 = getEnumMapping orgP
-        enums1       = getEnumsAndUnamed orgP
-
-        (enumMapping, enums) = convertUnamed enumMapping1 enums1
 
         lookUp m = fromMaybe (error "fromMaybe EprimeToEssence: lookUpType")  . flip M.lookup m
         eval (s,e) =

@@ -8,8 +8,8 @@
 
 module Language.E.Up.Testing.Debugging where
 
-
 import Language.E hiding(trace)
+import Language.E.Pipeline.InlineLettings(inlineLettings)
 
 import Language.E.Up.EprimeToEssence
 import Language.E.Up.IO
@@ -49,7 +49,7 @@ gir specs@(specF, solF, orgF,param,orgParam) =do
     mapM_ (print . prettyAsBoth) (statementAsList esol)
     putStrLn ""
     mapM_ (print . prettyAsBoth) (statementAsList es)
-    putStrLn ""    
+    putStrLn ""
     let info  = gatherIndexRanges ess
     putStrLn . groom $ info
 
@@ -95,12 +95,6 @@ es specs@(specF, solF, orgF,param,orgParam)  = do
     (print . pretty) s
     return ()
 
-t specs@(specF, solF, orgF,param,orgParam)  = do
-    (spec,sol,org,_) <- getTestSpecs specs
-    let orgInfo  = getEssenceVariables org
-    return orgInfo
-
-ty a = t a >>= __groomPrint
 
 ep specs@(specF, solF, orgF,param,orgParam)  = do
     (spec,sol,org,_) <- getTestSpecs specs
@@ -120,12 +114,21 @@ bes specs=  do
     putStrLn "solution"
     s specs
 
--- Print out using eval
-bg n s = be (gg n s)
-be specs@(specF, _, orgF ,_ ,_) = do
-    (spec,sol,org,orgP) <- getTestSpecs specs
-    (print . pretty) orgP
+base     =  "/Users/bilalh/CS/conjure/files/upTests/"
+getTest' = getFiles base
+getTest  = flip (getFiles base) 1
+gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix base s) ) n
 
+bg n s = be (gg n s)
+be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
+    (spec,sol,org,orgP) <- getTestSpecs specs
+    {-param <- getSpec paramF-}
+    putStrLn "orgP"
+    (print . pretty) (orgP)
+    putStrLn "org"
+    (print . pretty) org
+    {-putStrLn "param"-}
+    {-(print . pretty) param-}
 
     let logsF = addExtension specF "logs"
     logs <- liftM T.lines (T.readFile logsF)
@@ -133,8 +136,14 @@ be specs@(specF, _, orgF ,_ ,_) = do
     __groomPrintM "tuplesOfMatrixes" tuplesOfMatrixes
     putStrLn ""
 
+    let enumMapping1 = getEnumMapping orgP
+        enums1       = getEnumsAndUnamed orgP
+
+        (enumMapping, enums) = convertUnamed enumMapping1 enums1
+    __groomPrintM "enum mapping" enumMapping
+
     let varInfo1 = getVariables spec
-        orgInfo  = getEssenceVariables org
+        orgInfo  = getEssenceVariables enumMapping org
         solInfo1 = getSolVariables sol
         -- I don't think I need the aux variables
         solInfo2 = M.filterWithKey (\a _ ->  not $ isPrefixOf "v__" a) solInfo1
@@ -146,7 +155,6 @@ be specs@(specF, _, orgF ,_ ,_) = do
         varMap1  = combineInfos varInfo solInfo
         varMap   = M.map (\vd@VarData{vEssence=e} -> vd{vEssence=unwrapExpr e} ) varMap1
 
-    --__groomPrintM "org" org
     __groomPrintM "orgInfo" orgInfo
     __groomPrintM "varInfo" varInfo
     {-__groomPrintM "solInfo" solInfo-}
@@ -154,7 +162,7 @@ be specs@(specF, _, orgF ,_ ,_) = do
     --__groomPrintM "varMap" varMap
 
     let varResults = map (\t -> evalTree (onlyNeeded varMap t ) tuplesOfMatrixes t ) varTrees
-        
+
     let
         wrap :: String -> E -> E
         wrap name value =
@@ -162,22 +170,16 @@ be specs@(specF, _, orgF ,_ ,_) = do
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
 
 
-    let indexrangeMapping = gatherIndexRanges orgP    
+    let indexrangeMapping = gatherIndexRanges (inlineSpec orgP)
     __groomPrintM "indexrangeMapping" indexrangeMapping
-        
-
-    let enumMapping1 = getEnumMapping orgP
-        enums1       = getEnumsAndUnamed orgP
-
-        (enumMapping, enums) = convertUnamed enumMapping1 enums1
 
     let lookUp m k= fromMaybe (error $ "fromMaybe cgs: lookUpType: " ++ (show k) ++ " " ++ (show m) )  . flip M.lookup m $ k
         eval (s,e) =
-            let orgType = lookUp orgInfo s
-                indext  = lookUp indexrangeMapping s
-                res'    = introduceTypes enumMapping orgType e
-                withIndexes =   introduceIndexRange indext res'
-            in wrap s $ withIndexes 
+            let orgType     = lookUp orgInfo s
+                indext      = lookUp indexrangeMapping s
+                res'        = introduceTypes enumMapping orgType e
+                withIndexes = introduceIndexRange indext res'
+            in wrap s $ withIndexes
 
         resultEssence =  map eval varResults
         {-resultEssence =  map (uncurry wrap ) varResults-}
@@ -185,20 +187,5 @@ be specs@(specF, _, orgF ,_ ,_) = do
     (print . vcat . map pretty) resultEssence
     {-mapM_ (print . prettyAsPaths) resultEssence-}
     putStrLn "[Finished]"
-
-
-
-
-logFile = "/Users/bilalh/CS/conjure/files/upTests/_zothers/tupley27-1-1m/0001.eprime.logs"
-
-_rm = do
-    text <- T.readFile logFile
-    return $ makeTuplesOfMatrixesMap (T.lines text)
-
-
-base     =  "/Users/bilalh/CS/conjure/files/upTests/"
-getTest' = getFiles base
-getTest  = flip (getFiles base) 1
-gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix base s) ) n
 
 
