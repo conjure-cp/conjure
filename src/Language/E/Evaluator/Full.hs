@@ -46,6 +46,8 @@ fullEvaluator [xMatch| rs := domain.int.ranges |]
         view [] = Just []
         view (i:is) = (:) <$> view1 i <*> view is
 
+fullEvaluator [eMatch| &a <-> &b |] = ret [eMake| &a = &b |]
+
 -- this is a small hack to make rule language work.
 fullEvaluator [xMatch| [Prim (S "!=")] := binOp.operator
                      | [Prim (S "_") ] := binOp.left .reference
@@ -525,6 +527,10 @@ fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
       in  ret [xMake| domain.int.ranges := ys |]
 
+fullEvaluator [xMatch| []  := operator.index.right.slicer
+                     | [x] := operator.index.left
+                     |] = ret x
+
 fullEvaluator p@[xMatch| vs           := operator.index.left .value.matrix.values
                        | ranges       := operator.index.left .value.matrix.indexrange.domain.int.ranges
                        | [Prim (I a)] := operator.index.right.value.literal
@@ -631,24 +637,24 @@ fullEvaluator
 fullEvaluator
     [xMatch| [lhs] := operator.index.left .typed.left
            | [rhs] := operator.index.right.typed.left
-           |] = do
+           |] =
     fullEvaluator [xMake| operator.index.left  := [lhs]
-                                | operator.index.right := [rhs]
-                                |]
+                        | operator.index.right := [rhs]
+                        |]
 fullEvaluator
     [xMatch| [lhs] := operator.index.left .typed.left
            | [rhs] := operator.index.right
-           |] = do
+           |] =
     fullEvaluator [xMake| operator.index.left  := [lhs]
-                                | operator.index.right := [rhs]
-                                |]
+                        | operator.index.right := [rhs]
+                        |]
 fullEvaluator
     [xMatch| [lhs] := operator.index.left
            | [rhs] := operator.index.right.typed.left
-           |] = do
+           |] =
     fullEvaluator [xMake| operator.index.left  := [lhs]
-                                | operator.index.right := [rhs]
-                                |]
+                        | operator.index.right := [rhs]
+                        |]
 
 fullEvaluator _ = return Nothing
 
