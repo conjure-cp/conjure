@@ -134,16 +134,16 @@ fullEvaluator [eMatch| &a = &b |]
 fullEvaluator [eMatch| &a = &b |]
     | isFullyInstantiated a
     , isFullyInstantiated b
-    , [xMatch| as := value.set.values |] <- a
-    , [xMatch| bs := value.set.values |] <- b
-    = returnBool (sortNub as == sortNub bs)
+    , [xMatch| _ := value.set.values |] <- a
+    , [xMatch| _ := value.set.values |] <- b
+    = ret [eMake| &a subsetEq &b /\ &b subsetEq &a |]
 
 fullEvaluator [eMatch| &a = &b |]
     | isFullyInstantiated a
     , isFullyInstantiated b
-    , [xMatch| as := value.mset.values |] <- a
-    , [xMatch| bs := value.mset.values |] <- b
-    = returnBool (sort as == sort bs)
+    , [xMatch| _ := value.mset.values |] <- a
+    , [xMatch| _ := value.mset.values |] <- b
+    = ret [eMake| &a subsetEq &b /\ &b subsetEq &a |]
 
 fullEvaluator [eMatch| &a = &b |]
     | isFullyInstantiated a
@@ -195,26 +195,21 @@ fullEvaluator [eMatch| &a subset &b |]
     | isFullyInstantiated a
     , isFullyInstantiated b
     , [xMatch| as := value.set.values |] <- a
-    , [xMatch| bs := value.set.values |] <- b
-    = returnBool (sortNub as /= sortNub bs && and [ i `elem` bs | i <- as ])
+    = ret $ conjunct $ [ [eMake| &i in &b |] | i <- as ]
+                    ++ [ [eMake| &a != &b |] ]
 fullEvaluator [eMatch| &a subsetEq &b |]
     | isFullyInstantiated a
     , isFullyInstantiated b
     , [xMatch| as := value.set.values |] <- a
-    , [xMatch| bs := value.set.values |] <- b
-    = returnBool $ and [ i `elem` bs | i <- as ]
+    = ret $ conjunct [ [eMake| &i in &b |] | i <- as ]
 fullEvaluator [eMatch| &b supset &a |]
     | isFullyInstantiated a
     , isFullyInstantiated b
-    , [xMatch| as := value.set.values |] <- a
-    , [xMatch| bs := value.set.values |] <- b
-    = returnBool (sortNub as /= sortNub bs && and [ i `elem` bs | i <- as ])
+    = ret [eMake| &a subset &b |]
 fullEvaluator [eMatch| &b supsetEq &a |]
     | isFullyInstantiated a
     , isFullyInstantiated b
-    , [xMatch| as := value.set.values |] <- a
-    , [xMatch| bs := value.set.values |] <- b
-    = returnBool $ and [ i `elem` bs | i <- as ]
+    = ret [eMake| &a subsetEq &b |]
 
 
 fullEvaluator [eMatch| &a subset &b |]
@@ -225,19 +220,6 @@ fullEvaluator [eMatch| &a subset &b |]
     = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
                 && or  [ freqInList i as <  freqInList i bs | i <- nub as ]
 fullEvaluator [eMatch| &a subsetEq &b |]
-    | isFullyInstantiated a
-    , isFullyInstantiated b
-    , [xMatch| as := value.mset.values |] <- a
-    , [xMatch| bs := value.mset.values |] <- b
-    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
-fullEvaluator [eMatch| &b supset &a |]
-    | isFullyInstantiated a
-    , isFullyInstantiated b
-    , [xMatch| as := value.mset.values |] <- a
-    , [xMatch| bs := value.mset.values |] <- b
-    = returnBool $ and [ freqInList i as <= freqInList i bs | i <- nub as ]
-                && or  [ freqInList i as <  freqInList i bs | i <- nub as ]
-fullEvaluator [eMatch| &b supsetEq &a |]
     | isFullyInstantiated a
     , isFullyInstantiated b
     , [xMatch| as := value.mset.values |] <- a
@@ -308,7 +290,7 @@ fullEvaluator
            | ys  := binOp.right.value.set.values
            |]
     | isFullyInstantiated x && all isFullyInstantiated ys
-    = returnBool $ x `elem` ys
+    = ret $ disjunct [ [eMake| &x = &y |] | y <- ys ]
 
 fullEvaluator
     [xMatch| [Prim (S "in")] := binOp.operator
@@ -316,7 +298,7 @@ fullEvaluator
            | ys  := binOp.right.value.mset.values
            |]
     | isFullyInstantiated x && all isFullyInstantiated ys
-    = returnBool $ x `elem` ys
+    = ret $ disjunct [ [eMake| &x = &y |] | y <- ys ]
 
 fullEvaluator
     [xMatch| [Prim (S "in")] := binOp.operator
