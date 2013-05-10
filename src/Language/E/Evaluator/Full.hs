@@ -257,7 +257,9 @@ fullEvaluator
            | ys := binOp.right.value.matrix.values
            |]
     | all isFullyInstantiated xs && all isFullyInstantiated ys
-    = returnBool $ length xs == length ys && and (zipWith (==) xs ys)
+    = ret $ conjunct
+          $ [xMake| value.literal := [Prim (B $ length xs == length ys)] |]
+          : [ [eMake| &x = &y |] | (x,y) <- zip xs ys ]
 
 fullEvaluator
     [eMatch| max(&a,&b) |]
