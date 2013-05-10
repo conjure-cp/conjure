@@ -3,6 +3,7 @@
 module Language.E.Pipeline.NoTuples ( noTuplesSpec ) where
 
 import Language.E
+import Language.E.Evaluator.Full ( unrollQuantifiers )
 
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
@@ -11,10 +12,71 @@ import qualified Data.HashMap.Strict as M
 
 noTuplesSpec :: MonadConjure m => Spec -> m Spec
 noTuplesSpec = makeIdempotent helper
-    where helper (Spec v s) = do
-            (s' , b1) <- noTuplesE s
-            (s'', b2) <- noTupleDomsInQuanEs s'
-            return (Spec v s'', b1 || b2)
+    where helper (Spec v s0) = do
+            (s1, b1) <- noTuplesE s0
+            (s2, b2) <- noTupleDomsInQuanEs s1
+            (s3, b3) <- noTupleLiterals s2
+            (s4, b4) <- unrollIfNeeded s3
+            (s5, (Any b5, _)) <- runWriterT $ simplify s4
+            let bFinal = or [b1,b2,b3,b4,b5]
+            return (Spec v s5, bFinal)
+
+
+noTupleLiterals :: MonadConjure m => E -> m (E, Bool)
+noTupleLiterals inp = do
+    (outp, Any flag) <- runWriterT $ bottomUpE helper inp
+    when flag $ mkLog "noTupleLiterals" $ sep [ pretty inp, "~~>", pretty outp ]
+    return (outp, flag)
+    where
+        helper p@(splitOpIndex -> (_, [])) = return p
+        helper p@(splitOpIndex -> (x, is)) = case toEssenceLiteral x of
+            Nothing -> return p
+            Just lit -> possiblyTupley lit is
+
+        possiblyTupley lit [] = do
+            let out = fromEssenceLiteral lit
+            return out
+        possiblyTupley (ELMatrix xs) (i:is) = do
+            xs' <- sequence [ possiblyTupley x is | x <- xs ]
+            let out = mkIndexedExpr [i] [xMake| value.matrix.values := xs' |]
+            return out
+        possiblyTupley (ELTuple  xs) ([xMatch| [Prim (I i)] := value.literal |] : is) = do
+            tell (Any True)
+            let out = mkIndexedExpr is (fromEssenceLiteral $ xs `genericIndex` (i-1))
+            return out
+        possiblyTupley lit is = do
+            let out = mkIndexedExpr is $ fromEssenceLiteral lit
+            return out
+
+
+unrollIfNeeded :: MonadConjure m => E -> m (E, Bool)
+unrollIfNeeded inp = do
+    (outp, Any flag) <- runWriterT $ helper inp
+    when flag $ mkLog "noTupleUnrollIfNeeded" $ sep [ pretty inp, "~~>", pretty outp ]
+    return (outp, flag)
+    where
+        helper p@[xMatch| _ := quantified |] | containsTupleIndexing' p = do
+            mres <- lift $ unrollQuantifiers p
+            case mres of
+                Nothing -> return p
+                Just (out,_) -> do tell (Any True) ; helper out
+        helper (Tagged t xs) = Tagged t <$> mapM helper xs
+        helper t = return t
+
+        containsTupleIndexing' x@(Tagged _ xs) =
+            containsTupleIndexing x || any containsTupleIndexing' xs
+        containsTupleIndexing' x =
+            containsTupleIndexing x
+
+        containsTupleIndexing (splitOpIndex -> (_, [])) = False
+        containsTupleIndexing (splitOpIndex -> (x, _ )) =
+            case toEssenceLiteral x of
+                Just lit | containsTupleLiteral lit -> True
+                _ -> False
+
+        containsTupleLiteral (ELTuple _) = True
+        containsTupleLiteral (ELMatrix xs) = any containsTupleLiteral xs
+        containsTupleLiteral _ = False
 
 
 noTuplesE :: MonadConjure m => E -> m (E, Bool)
@@ -27,23 +89,29 @@ noTuplesE statementIn = do
                 Just (f,n,d) ->
                     case checkTupleDomain d of
                         Just ts -> do
-                            lift $ mkLog "removedDecl" $ pretty statement
                             -- returning newDecls:
-                            forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
+                            outs <- forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
                                 tell ([n],[])
                                 let n' = mconcat [ n, "_tuple", stringToText (show i) ]
                                 return $ f n' t
+                            lift $ mkLog "removedDecl" $ sep $ [ pretty statement
+                                                               , "Added the following:"
+                                                               ] ++ map pretty outs
+                            return outs
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
-                                    lift $ mkLog "removedDecl" $ pretty statement
                                     lift $ mkLog "matrixToTuple" $ name statement <> "∑" <> pretty (length indices)
                                     tell ([],[(n,length indices)])
                                     -- returning newDecls:
-                                    forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
+                                    outs <- forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
                                         let n' = mconcat [ n, "_tuple", stringToText (show i) ]
                                         let t' = constructMatrixDomain indices t
                                         return $ f n' t'
+                                    lift $ mkLog "removedDecl" $ sep $ [ pretty statement
+                                                                       , "Added the following:"
+                                                                       ] ++ map pretty outs
+                                    return outs
                                 Nothing -> return [statement]
     let statementsOut = concat statements'
     if and [null tuplesToExplode, null matrixOfTuplesToExplode, sameLength statements statementsOut, statements == statementsOut]
@@ -200,10 +268,6 @@ constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
 renameMatrixOfTupleIndexes :: MonadConjure m => M.HashMap Text Int -> E -> m E
 renameMatrixOfTupleIndexes identifiers = bottomUpE' f
     where
-        -- f p | trace (show $ vcat [ "renameMatrixOfTupleIndexes"
-                                 -- , pretty p
-                                 -- ]
-                    -- ) False = undefined
         f p@(viewIndexed -> (iExpr, js)) = do
             maybe_i <- case iExpr of
                 [xMatch| [Prim (S i)] := reference |] -> return $ Just i
@@ -222,8 +286,9 @@ renameMatrixOfTupleIndexes identifiers = bottomUpE' f
                             let i' = identifierConstruct (mconcat [base, "_tuple", stringToText (show tupleIndex)])
                                                          mregion
                                                          mrepr
-                            return $ mkIndexed [xMake| reference := [Prim (S i')] |]
+                            let out = mkIndexed [xMake| reference := [Prim (S i')] |]
                                                (indicesBefore `mappend` indicesAfter)
+                            return out
                         _ -> return p
 
 viewIndexed :: E -> (E,[E])

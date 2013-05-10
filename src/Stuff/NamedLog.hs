@@ -97,6 +97,8 @@ suppress = S.fromList
 
     -- other process indicators
     , "handleInfDom"
+    , "noTupleUnrollIfNeeded"
+    , "noTupleLiterals"
     , "noTupleDomsInQuan"
     , "addSlicing"
     , "recordSpec"
