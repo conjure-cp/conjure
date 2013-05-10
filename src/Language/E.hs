@@ -25,3 +25,5 @@ import Language.E.Evaluator.Full as X ( domSize )
 import Language.E.Evaluator.ToInt as X
 import Language.E.Evaluator.ToBool as X
 
+import Language.E.Definition.Literal as X
+

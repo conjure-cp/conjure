@@ -128,6 +128,15 @@ mkMatrixDomain (i:is) j = [xMake| domain.matrix.index := [i]
                                 |]
 
 
+splitOpIndex :: E -> (E, [E])
+splitOpIndex = second reverse . helper
+    where
+        helper [xMatch| [a] := operator.index.left
+                      | [b] := operator.index.right
+                      |] = second (b:) (helper a)
+        helper x = (x, [])
+
+
 -- given indixers and an expression, create an indexed expression.
 -- given [1,2,3] and m --> m[1,2,3]
 mkIndexedExpr :: [E] -> E -> E
@@ -162,17 +171,17 @@ toEssenceLiteral _ = Nothing
 fromEssenceLiteral :: EssenceLiteral -> E
 fromEssenceLiteral (ELB         x ) = [xMake| value.literal := [Prim (B x)] |]
 fromEssenceLiteral (ELI         x ) = [xMake| value.literal := [Prim (I x)] |]
-fromEssenceLiteral (ELTuple     xs) = [xMake| value.tuple    .literal := map fromEssenceLiteral xs |]
-fromEssenceLiteral (ELMatrix    xs) = [xMake| value.matrix   .literal := map fromEssenceLiteral xs |]
-fromEssenceLiteral (ELSet       xs) = [xMake| value.set      .literal := map fromEssenceLiteral xs |]
-fromEssenceLiteral (ELMSet      xs) = [xMake| value.mset     .literal := map fromEssenceLiteral xs |]
-fromEssenceLiteral (ELFunction  xs) = [xMake| value.function .literal := map helper xs |]
+fromEssenceLiteral (ELTuple     xs) = [xMake| value.tuple    .values := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELMatrix    xs) = [xMake| value.matrix   .values := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELSet       xs) = [xMake| value.set      .values := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELMSet      xs) = [xMake| value.mset     .values := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELFunction  xs) = [xMake| value.function .values := map helper xs |]
     where
         helper (a,b) = [xMake| mapping := [fromEssenceLiteral a, fromEssenceLiteral b] |]
-fromEssenceLiteral (ELRelation  xs) = [xMake| value.relation .literal := map helper xs |]
+fromEssenceLiteral (ELRelation  xs) = [xMake| value.relation .values := map helper xs |]
     where
         helper ys = [xMake| value.tuple.literal := map fromEssenceLiteral ys |]
-fromEssenceLiteral (ELPartition xs) = [xMake| value.partition.literal := map helper xs |]
+fromEssenceLiteral (ELPartition xs) = [xMake| value.partition.values := map helper xs |]
     where
         helper ys = [xMake| part := map fromEssenceLiteral ys |]
 
