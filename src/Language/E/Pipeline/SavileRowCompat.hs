@@ -17,9 +17,9 @@ savilerowCompat
     -> m Spec
 savilerowCompat b
      =  recordSpec "enter savilerowCompat"
-    >=> sliceIfTooFewIndices                    >=> recordSpec "sliceIfTooFewIndices"
     >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
     >=> conjureNoGuards                         >=> recordSpec "conjureNoGuards"
+    >=> sliceIfTooFewIndices                    >=> recordSpec "sliceIfTooFewIndices"
     >=> (return . onSpec toIntIsNoOp)           >=> recordSpec "toIntIsNoOp"
     >=> (return . onSpec factorialIsFactorial)  >=> recordSpec "factorialIsFactorial"
     >=> (return . onSpec dotOrderIsLex)         >=> recordSpec "dotOrderIsLex"
