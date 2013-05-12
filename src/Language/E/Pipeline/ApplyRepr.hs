@@ -41,8 +41,11 @@ applyRepr rules spec = do
 
             candidates :: [(Text,[RuleReprResult])]
                 <- forM topLevels $ \ (x,n,d) -> do
-                ys' <- func (n,d,x)
-                ys  <- selectByMode theMode ys'
+                ys0 <- func (n,d,x)
+                ys1 <- selectByMode theMode ys0
+                let ys = sortBy (\ (_, _, reprName1, _, _)
+                                   (_, _, reprName2, _, _)
+                                   -> compare reprName1 reprName2) ys1
                 case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
                     _  -> do
