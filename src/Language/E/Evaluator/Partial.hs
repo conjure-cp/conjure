@@ -20,13 +20,18 @@ partialEvaluator [eMatch| 0 + &x |] = ret x
 
 partialEvaluator [eMatch| &x - 0 |] = ret x
 
-partialEvaluator [eMatch| &_ * 0 |] = ret [eMake| 0  |]
-partialEvaluator [eMatch| 0 * &_ |] = ret [eMake| 0  |]
+partialEvaluator [eMatch| &_ * 0 |] = ret [eMake| 0 |]
+partialEvaluator [eMatch| 0 * &_ |] = ret [eMake| 0 |]
 
 partialEvaluator [eMatch| &x * 1 |] = ret x
 partialEvaluator [eMatch| 1 * &x |] = ret x
 
 partialEvaluator [eMatch| &x / 1 |] = ret x
+
+partialEvaluator [eMatch| true = &a  |] = ret a
+partialEvaluator [eMatch| &a = true  |] = ret a
+partialEvaluator [eMatch| false = &a |] = ret [eMake| !&a |]
+partialEvaluator [eMatch| &a = false |] = ret [eMake| !&a |]
 
 partialEvaluator [eMatch| true /\ &a |] = ret a
 partialEvaluator [eMatch| &a /\ true |] = ret a
