@@ -23,7 +23,7 @@ applyRefn
     -> m Spec
 applyRefn db' spec = do
     flags <- getsGlobal conjureFlags
-    if "--slower" `S.member` flags
+    if "--better" `S.member` flags
         then Slower.applyRefn db' spec
         else withBindingScope' $ do
             let db = db' ++ builtInRefn
@@ -37,7 +37,7 @@ applyRefnE
     -> m E
 applyRefnE db' x = do
     flags <- getsGlobal conjureFlags
-    if "--slower" `S.member` flags
+    if "--better" `S.member` flags
         then Slower.applyRefnE db' x
         else return x
 

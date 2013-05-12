@@ -222,6 +222,6 @@ isFlag :: String -> Bool
 isFlag = (`elem` allFlags)
     where
         allFlags = [ "--no-channelling"
-                   , "--slower"
+                   , "--better"
                    ]
 

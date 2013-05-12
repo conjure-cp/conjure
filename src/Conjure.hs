@@ -122,9 +122,8 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             let outDirPath = dropExtEssence pathInEssence
-                          ++ if S.member "--no-channelling" flags
-                                then "-df-no-channelling"
-                                else "-df"
+                    ++ (if S.member "--no-channelling" flags then "-df-no-channelling" else "-df")
+                    ++ (if S.member "--better" flags then "-better" else "")
             driverConjure
                 (conjureWithMode flags seed limit fullmode)
                 outDirPath
@@ -136,7 +135,8 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             let outDirPath = dropExtEssence pathInEssence
-                          ++ "-df-compact-param"
+                    ++ "-df-compact-param"
+                    ++ (if S.member "--better" flags then "-better" else "")
             driverConjure
                 (conjureWithMode flags seed limit fullmode)
                 outDirPath
