@@ -35,13 +35,13 @@ mainPure :: (Spec, Spec, Spec, Spec,Logs) -> [E]
 mainPure = mainPure' True
 
 mainPure' :: Bool -> (Spec, Spec, Spec, Spec,Logs) -> [E]
-mainPure' addIndexRange (spec,sol,org,orgP,logs) =
+mainPure' addIndexRange (spec,sol,org,_,logs) =
 
     let tuplesOfMatrixes =  makeTuplesOfMatrixesMap logs
         varInfo1 = getVariables spec
 
-        enumMapping1         = getEnumMapping orgP
-        enums1               = getEnumsAndUnamed orgP
+        enumMapping1         = getEnumMapping org
+        enums1               = getEnumsAndUnamed org
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
 
         orgInfo  = getEssenceVariables enumMapping org

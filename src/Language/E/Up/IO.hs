@@ -67,7 +67,8 @@ getSpecs :: (FilePath, FilePath, FilePath, Maybe FilePath,Maybe FilePath)
          -> IO (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
 getSpecs (specF, solF, orgF,paramF,orgParamF)= do
     let param    = getSpecMaybe paramF
-    let orgParam = getSpecMaybe orgParamF
+    orgParam1 <- getTestSpecMaybe orgParamF
+    let orgParam = getOrgParam param orgParam1
 
     let logsF = addExtension specF "logs"
     logs <- liftM T.lines (T.readFile logsF)
@@ -75,17 +76,16 @@ getSpecs (specF, solF, orgF,paramF,orgParamF)= do
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param >>= removeNegatives
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
-    org   <- reduceSpec  orgP
+    org   <- reduceSpec  orgP >>= simSpecMaybe orgParam
     return (spec,sol,org,orgP,logs)
 
 getSpecsM :: (Monad m) => (Eprime,ESolution,Essence,Maybe Param,Maybe EssenceParam,Logs) -> m (Eprime, ESolution, Essence,EssenceWithParamOnly,Logs)
 getSpecsM (spec', sol', org',param',orgParam',logs) = do
 
-
     spec  <- introduceParams' param' spec' >>= reduceSpec  >>= simSpecMaybe param' >>= removeNegatives
     sol   <- removeNegatives sol' >>= removeIndexRanges
     orgP  <- introduceParams' orgParam' org'
-    org   <- reduceSpec orgP
+    org   <- reduceSpec orgP >>= simSpecMaybe orgParam'
     return (spec,sol,org,orgP,logs)
 
 
@@ -99,14 +99,13 @@ getTestSpecs (specF, solF, orgF,paramF,orgParamF) = do
     spec  <- getSpec specF >>= introduceParams param >>= reduceSpec >>= simSpecMaybe param >>= removeNegatives
     sol   <- getSpec solF  >>= removeNegatives >>= removeIndexRanges
     orgP  <- getSpec orgF  >>= introduceParams orgParam
-    org   <- reduceSpec  orgP
+    org   <- reduceSpec  orgP >>=  simSpecMaybe orgParam 
     return (spec,sol,org,orgP)
 
-    where
-    getOrgParam :: Maybe a -> Maybe a -> Maybe a
-    getOrgParam _   orgParam@(Just _)  = orgParam
-    getOrgParam param@(Just _) Nothing = param
-    getOrgParam Nothing Nothing        = Nothing
+getOrgParam :: Maybe a -> Maybe a -> Maybe a
+getOrgParam _   orgParam@(Just _)  = orgParam
+getOrgParam param@(Just _) Nothing = param
+getOrgParam Nothing Nothing        = Nothing
 
 getTestSpecMaybe :: Maybe FilePath -> IO (Maybe (IO Spec))
 getTestSpecMaybe (Just f) = do 

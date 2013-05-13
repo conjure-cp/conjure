@@ -128,10 +128,12 @@ be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
     __groomPrintM "tuplesOfMatrixes" tuplesOfMatrixes
     putStrLn ""
 
-    let enumMapping1 = getEnumMapping orgP
-        enums1       = getEnumsAndUnamed orgP
+    let enumMapping1 = getEnumMapping org
+        enums1       = getEnumsAndUnamed org
 
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
+    __groomPrintM "enumMapping1" enumMapping1
+    __groomPrintM "enums1" enums1
     __groomPrintM "enum mapping" enumMapping
 
     let varInfo1 = getVariables spec
@@ -162,7 +164,7 @@ be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
 
 
-    let indexrangeMapping = gatherIndexRanges (inlineSpec orgP)
+    let indexrangeMapping = gatherIndexRanges (inlineSpec org)
     __groomPrintM "indexrangeMapping" indexrangeMapping
 
     let lookUp m k= fromMaybe (error $ "fromMaybe cgs: lookUpType: " ++ (show k) ++ " " ++ (show m) )  . flip M.lookup m $ k
