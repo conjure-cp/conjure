@@ -52,20 +52,15 @@ tracee s a = trace (s ++ "\n") a
 _t :: a -> String -> a
 _t a s = trace s a
 
--- type Signatures to get rid of 
--- defaulting the following constraint(s) to type `String' warnnings
-_e :: a -> (String, [E]) -> a
-_f :: Show a1 => a -> (String, a1) -> a
 _g :: Show a1 => a -> (String, a1) -> a
 _p :: Pretty a1 => a -> (String, [a1]) -> a
 
 __groomPrint :: Show a => a -> IO ()
 __groomPrintM :: Show a => String -> a -> IO ()
 
-__p :: [E] -> String
 __q :: Pretty a => [a] -> String
-__g :: Show a1 => a1 -> a -> a
 __s :: Show a1 => (String, a1) -> a -> a
+__q2 :: Pretty a => (String, [a]) -> String
 
 prettyAsBoth :: E -> Doc
 prettyAsBoth a = vcat [prettyAsTree a, pretty a]
@@ -75,18 +70,14 @@ nlToTab = map (\a -> if a == '\n' then '\t' else a )
 __groomPrint = putStrLn . groom
 __groomPrintM a b = putStr (a ++ " ⦙\n ") >> (putStrLn . groom) b
 
-__p arr = "\n#\n" ++ (show . vcat . map prettyAsTree) arr ++ "\n##\n"
 __q arr = "\n#\n" ++ (show . vcat . map pretty) arr ++ "\n##\n"
-__g a = trace ("\n#\n"++ groom a ++ "\n##\n")
 __s (msg,b) = trace ("\n##" ++ msg ++ " ⦙ " ++ groom b ++ "\n")
+__q2 (msg,b) =  "##" ++ msg ++ " ⦙ " ++ (nlToTab . show . vcat . map pretty) b ++ "\n"
 
+_x :: Show a => a  -> IO ()
+_x a = (putStrLn . groom) a
 
 #ifdef UP_DEBUG
-
-_e a (msg, [b@[xMatch| _ := value.literal |]]) =  trace ( __s2 (msg,b) ) a
-_e a (msg, [b@[xMatch| _ := literal |]])       =  trace ( __s2 (msg,b) ) a
-_e a (msg,b) = trace (msg ++ __p b) a
-
 _p a (msg,b) = 
     let str = (show . vcat . map pretty) b
     in if (length str) < 30 then 
@@ -94,18 +85,11 @@ _p a (msg,b) =
        else
             trace (msg ++ __q b) a
 
-_f a (msg,b) = trace (msg ++ "\n#\n" ++ groom b ++ "\n##\n") a
 _g a b = __s b $ a
-_x :: Show a => a  -> IO ()
-_x a = (putStrLn . groom) a
 
 #else
-
-_e  a _ =  a
 _p  a _ =  a
-_f  a _ =  a
 _g  a _ =  a
-
 #endif
 
 errr :: Show a => a -> t
