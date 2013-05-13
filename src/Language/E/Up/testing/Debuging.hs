@@ -16,7 +16,6 @@ import Language.E.Up.IO
 import System.Process (runCommand)
 import System.FilePath
 
-import Language.E.Up.AddEssenceTypes
 import Language.E.Up.Common
 import Language.E.Up.Data
 import Language.E.Up.Debug
