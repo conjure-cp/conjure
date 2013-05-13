@@ -7,8 +7,8 @@ module Language.E.Up.EvaluateTree2 (
 
 import Language.E
 
-import Language.E.Up.Data
 import Language.E.Up.Common(transposeE,matrixToTuple,unwrapMatrix,wrapInMatrix)
+import Language.E.Up.Data
 import Language.E.Up.Debug
 import Language.E.Up.Representations
 
