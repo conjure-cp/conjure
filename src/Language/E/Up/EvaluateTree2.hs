@@ -49,15 +49,16 @@ evalTree' mapping set fs prefix (Tuple arr) =
         tuple = [xMake| value.tuple.values := items |]
         res   = handleTuplesOfMatrixes tuple
         -- Have to apply the inner rep conversion function first
-        afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs) res noRep
+        afterFuncs = runBranchFuncs (reverse . mapMaybe getBranch $ fs ) res noRep
     in  vEssence afterFuncs
 
      `_p` ("tuple_afterFuncs",[afterFuncs] )
-     `_p` ("tuple_fs",fs )
+     `_p` ("tuple_fs str",fs )
      `_p` ("tuple_res",[res] )
      `_p` ("tuple+ans",[tuple] )
-     `_g` ("tuple funs str",fs )
+     `_p` ("tuple funs str",fs )
      `_g` ("prefix_tuple",prefix )
+     `_g` ("tuple arr",arr )
 
 
     where
@@ -65,7 +66,7 @@ evalTree' mapping set fs prefix (Tuple arr) =
     handleTuplesOfMatrixes f |  Just num <- prefix `M.lookup` set =
        vdata num $ handleTuplesOfMatrixes' num f
 
-    handleTuplesOfMatrixes f = vdata 0 f
+    handleTuplesOfMatrixes f = vdata (0 :: Int) f
 
     handleTuplesOfMatrixes' :: Int  -> E -> E
     handleTuplesOfMatrixes' 0 f = f
@@ -78,15 +79,9 @@ evalTree' mapping set fs prefix (Tuple arr) =
 
 
     -- very hackish but seems to work apart from Matrix1D
-    vdata n e =
-        let fake =  VarData{
-             vIndexes  = replicate n []
-            ,vBounds  = []
-            ,vEssence = e
-            }
-            real = (getVarData mapping prefix (head arr)){vEssence=e}
+    vdata _ e =
+        let real = (getVarData mapping prefix (head arr)){vEssence=e}
         in real
-        `_p` ("Fake VarData",[fake]  )
         `_p` ("Real VarData",[real]  )
 
     -- No much better then above but works for Matrix1D as well
@@ -122,8 +117,8 @@ repSelector arr = arr !! (length arr -1)
 reverseTuplesOfMatrixes ::  E -> E
 
 reverseTuplesOfMatrixes [xMatch| vs := value.tuple.values |] =
-    tracer "reverseTuplesOfMatrixes result" $
-    wrapInMatrix . map matrixToTuple $ transposeE (tracer "reverseTuplesOfMatrixes vs\n" vs)
+    tracer "\nreverseTuplesOfMatrixes result" $
+    wrapInMatrix . map matrixToTuple $ transposeE (tracer "\nreverseTuplesOfMatrixes vs:" vs)
 
 reverseTuplesOfMatrixes e = bug $ "reverseTuplesOfMatrixes called on " <+> pretty e
 

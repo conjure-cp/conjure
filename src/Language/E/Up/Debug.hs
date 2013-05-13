@@ -7,10 +7,7 @@ module Language.E.Up.Debug where
 import Text.PrettyPrint
 
 import Language.E hiding (trace)
-import qualified Language.E 
-
 import qualified Debug.Trace ( trace )
-import qualified Text.Groom
 
 
 trace :: String -> a -> a

@@ -41,8 +41,8 @@ noRep  = vEssence
 {- Sets -}
 
 explicitRep :: VarData -> E
-explicitRep VarData{vEssence=e} =  e
-    `_t` "explicitRep"
+explicitRep VarData{vEssence=e} = 
+    tracee "explicitRep" $ e
 
 
 setOccurrenceRep :: VarData -> E
@@ -247,6 +247,8 @@ setExplicitVarSizeBranch :: (Before,After)
 setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after )
 
     where
+    _before v = trace ("setExplicitVarSizeVV\n" ++ (show . pretty)  v) $ unwrapSet v
+
     after orgData vs =
         let res =  explicitVarSize (map vEssence vs)
         in orgData{vEssence=res}
@@ -265,9 +267,15 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
 
 
 setExplicitVarSizeWithMarkerBranch :: (Before,After)
-setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranch" beforeUnchanged, after )
+setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranch" before, after )
 
     where
+    before :: Before
+    {-before v@VarData{vEssence=[eMatch| (&marker,&mat) |]} =  [v]-}
+    before v = 
+        {-trace ("setExplicitVarSizeWithMarkerBranchr\n" ++ (show . pretty)  v) $-}
+        [v]
+
     after orgData [VarData{vEssence=e}] = orgData{vEssence=explicitVarSizeWithMarker e }
     after _ vvs = _bug "setExplicitVarSizeWithMarkerBranch after unhandled" vvs
 
@@ -275,7 +283,7 @@ setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranc
     explicitVarSizeWithMarker [eMatch| (&marker,&mat) |] =
         wrapInMatrix $ genericTake (unwrapInt marker) (unwrapMatrix mat)
 
-    explicitVarSizeWithMarker [xMatch| vs := value.matrix.values |] =
+    explicitVarSizeWithMarker [xMatch| vs := value.matrix.values |] = -- trace (show . pretty $ vs) $
         wrapInMatrix $  map explicitVarSizeWithMarker vs
 
     explicitVarSizeWithMarker f = _bug "setExplicitVarSizeWithMarkerBranch unhandled" [f]
