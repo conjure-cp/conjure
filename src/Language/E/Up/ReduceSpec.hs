@@ -2,7 +2,6 @@
 
 module Language.E.Up.ReduceSpec(
      reduceSpec
-    ,reduceSpec'
     ,simSpec
     ,removeNegatives
     ,removeIndexRanges
@@ -81,10 +80,7 @@ introduceParams' Nothing spec@(Spec ver _) = do
     return $  Spec ver (listAsStatement ef)
 
 reduceSpec  :: Monad m => Spec -> m Spec
-reduceSpec' :: Monad m => Bool -> Spec -> m Spec
-
-reduceSpec  = reduceSpec' True
-reduceSpec' _ spec = 
+reduceSpec  spec = 
     return $ inlineSpec spec
 
 
