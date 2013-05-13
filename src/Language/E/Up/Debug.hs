@@ -96,21 +96,15 @@ errr :: Show a => a -> t
 errp :: Pretty a => a -> t
 errt :: [E] -> t
 errs :: [E] -> t
-errb :: [E] -> t
 errbM :: String -> [E] -> t
 errpM :: Pretty a => String -> [a] -> t
-errc :: [E] -> [E] -> t
-erri :: (Show a, Pretty a1) => (a, [a1]) -> t
 erriM :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
 
 errr a   = error $ '\n' : groom a
 errp a   = error $ '\n' : (show . pretty) a
 errt arr = error $ '\n' : (show . vcat . map prettyAsTree) arr
 errs arr = error $ '\n' : (show . vcat . map prettyAsPaths) arr
-errb arr = error $ '\n' : (show . vcat . map prettyAsBoth) arr
 errbM msg arr = error $ msg ++  '\n' : (show . vcat . map prettyAsBoth) arr
 errpM msg arr = error $ msg ++  '\n' : (show . vcat . map pretty) arr
-errc arr arr2 = error $ '\n' : (show . vcat . map prettyAsBoth) arr  ++ '\n' : '\n' : (show . vcat . map prettyAsBoth) arr2
-erri (ts,arr) = error $ '\n' :  groom ts  ++  '\n' : (show . vcat . map pretty) arr
 erriM msg (ts,arr) = error $  msg ++  '\n' :  groom ts  ++  '\n' : (show . vcat . map pretty) arr
 
