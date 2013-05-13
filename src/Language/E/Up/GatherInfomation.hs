@@ -113,6 +113,10 @@ getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.na
                                | Just _ <- M.lookup ("__named_" ++  T.unpack ref) emap  =
     Just (T.unpack name, [TagUnamed (T.unpack ref)] )
 
+getEssenceVariable _ [xMatch| arr := topLevel.declaration.find.domain.domain.relation.inners
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+   Just (T.unpack name,  [TagRel (map getTags arr)])
+
 
 getEssenceVariable _ [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
                             | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
@@ -120,11 +124,12 @@ getEssenceVariable _ [xMatch| [Tagged t arr]  := topLevel.declaration.find.domai
 
 getEssenceVariable _   [xMatch| _ := topLevel.letting     |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.given       |] = Nothing
-getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = 
-    _bug "getEssenceVariable unhandled declaration" [e]
+{-getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = -}
+    {-_bug "getEssenceVariable unhandled declaration" [e]-}
 
-getEssenceVariable _ e = errr $ e
-{-getEssenceVariable _ e = error . show . prettyAsPaths $ e-}
+{-getEssenceVariable _ e = errr $ e-}
+getEssenceVariable _ e = error . show . prettyAsPaths $ e
+
 
 getTags ::  E -> [TagT]
 getTags [xMatch|  _    := domain.function
@@ -145,7 +150,6 @@ getTags (Tagged "ranges" _)     = []
 getTags (Tagged "inners" _)     = []
 getTags _                       = []
 {-getTags e                       = errp [e]-}
-
 
 
 getSolVariables :: Spec -> M.Map String [E]

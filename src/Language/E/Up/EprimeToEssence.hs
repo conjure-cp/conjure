@@ -15,7 +15,7 @@ module Language.E.Up.EprimeToEssence(
 
 import Language.E
 
-import Language.E.Up.Common(unwrapExpr)
+import Language.E.Up.Common(unwrapExpr,wrapInTuple,unwrapTuple)
 import Language.E.Up.Data
 import Language.E.Up.Debug
 import Language.E.Up.GatherInfomation(getVariables,getEnumMapping,getEnumsAndUnamed,getSolVariables,getEssenceVariables)
@@ -181,6 +181,10 @@ introduceTypes emap [TagTuple ts] [xMatch| vs := value.tuple.values |] =
     let res = zipWith (introduceTypes emap) ts vs
     in  [xMake| value.tuple.values := res |]
 
+introduceTypes emap [TagRel ts] [xMatch| vs := value.relation.values |] =
+    let res = map (zipWith (introduceTypes emap) ts . unwrapTuple ) vs
+    in  [xMake| value.relation.values := (map wrapInTuple res)   |]
+
 introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
    let mappings =  map (func ins tos) arr
    in  [xMake| value.function.values := mappings |]
@@ -203,9 +207,11 @@ introduceTypes emap [TagPar ts] [xMatch| partsArr := value.partition.values |] =
     par _ = _bugg "EprimeToEssence: introduceTypes partition"
 
 
+
 introduceTypes _ [TagSingle _] e = e
-introduceTypes _ _ e = e
-{-introduceTypes _ ts e = _bugi "introduceTypes" (ts,[e])-}
+{-introduceTypes _ ts e = e-}
+introduceTypes _ ts e = _bugi "introduceTypes not handled" (ts,[e])
+
 
 introduceIndexRange :: IndexT -> E -> E
 
