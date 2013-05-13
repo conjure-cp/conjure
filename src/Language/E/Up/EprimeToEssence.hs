@@ -202,6 +202,8 @@ introduceTypes emap [TagPar ts] [xMatch| partsArr := value.partition.values |] =
        in  [xMake| part := res |]
     par _ = _bugg "EprimeToEssence: introduceTypes partition"
 
+
+introduceTypes _ [TagSingle _] e = e
 introduceTypes _ _ e = e
 {-introduceTypes _ ts e = _bugi "introduceTypes" (ts,[e])-}
 

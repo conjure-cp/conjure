@@ -103,10 +103,6 @@ getEssenceVariable _ [xMatch|  _    := topLevel.declaration.find.domain.domain.p
    Just (T.unpack name,  [TagPar (getTags ins)] )
 
 
-getEssenceVariable _ [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  TagSingle t : concatMap getTags arr )
-
 getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
                                | [Prim (S ref)]  := topLevel.declaration.find.domain.reference |]
                                | Just _ <- M.lookup (T.unpack ref) emap  =
@@ -117,9 +113,18 @@ getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.na
                                | Just _ <- M.lookup ("__named_" ++  T.unpack ref) emap  =
     Just (T.unpack name, [TagUnamed (T.unpack ref)] )
 
+
+getEssenceVariable _ [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
+                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+   Just (T.unpack name,  TagSingle t : concatMap getTags arr )
+
+getEssenceVariable _   [xMatch| _ := topLevel.letting     |] = Nothing
+getEssenceVariable _   [xMatch| _ := topLevel.given       |] = Nothing
 getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = 
     _bug "getEssenceVariable unhandled declaration" [e]
-getEssenceVariable _ _ = Nothing
+
+getEssenceVariable _ e = errr $ e
+{-getEssenceVariable _ e = error . show . prettyAsPaths $ e-}
 
 getTags ::  E -> [TagT]
 getTags [xMatch|  _    := domain.function
@@ -127,10 +132,20 @@ getTags [xMatch|  _    := domain.function
                | [tos] := domain.function.innerTo |] =
    [TagFunc (getTags ins) (getTags tos)]
 
-getTags [xMatch| arr := domain.tuple.inners |] = [TagTuple (map getTags arr)]
-getTags [xMatch| [Tagged t arr] := domain |]   = TagSingle t : concatMap getTags arr
-getTags [xMatch| [dom] := inner |]             = getTags dom
-getTags _ = []
+getTags [xMatch| arr            := domain.tuple.inners |] = [TagTuple (map getTags arr)]
+getTags [xMatch| [Tagged t arr] := domain |]              = TagSingle t : concatMap getTags arr
+getTags [xMatch| [dom]          := inner |]               = getTags dom
+--FIXME do unamed types
+getTags (Tagged "reference" [Prim (S name)])              = [TagEnum (T.unpack name)]
+
+getTags (Tagged "attributes" _) = []
+getTags (Tagged "index" _)      = []
+getTags (Tagged "range" _)      = []
+getTags (Tagged "ranges" _)     = []
+getTags (Tagged "inners" _)     = []
+getTags _                       = []
+{-getTags e                       = errp [e]-}
+
 
 
 getSolVariables :: Spec -> M.Map String [E]
