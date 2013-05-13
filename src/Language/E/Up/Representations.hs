@@ -1,11 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
 module Language.E.Up.Representations(
-     leafRep, getBranch
+      leafRep, noRep, 
+      getBranch, isBranchRep
     , runBranchFuncs
-    , LeafFunc, BranchFunc
-    , Before, After
-    , RepName, isBranchRep, noRep
-
+    , RepName
     ) where
 
 import Language.E hiding (trace)
