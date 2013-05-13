@@ -121,6 +121,9 @@ gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix b
 bg n s = be (gg n s)
 be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
+    putStrLn "Solution"
+    s specs
+    putStrLn ""
 
     let logsF = addExtension specF "logs"
     logs <- liftM T.lines (T.readFile logsF)
@@ -132,8 +135,6 @@ be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
         enums1       = getEnumsAndUnamed org
 
         (enumMapping, enums) = convertUnamed enumMapping1 enums1
-    __groomPrintM "enumMapping1" enumMapping1
-    __groomPrintM "enums1" enums1
     __groomPrintM "enum mapping" enumMapping
 
     let varInfo1 = getVariables spec
