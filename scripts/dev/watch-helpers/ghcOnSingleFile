@@ -5,5 +5,6 @@ ghc -odir  dist/watchbuild \
     -isrc                  \
     -isrc/exec             \
     -Wall                  \
+    -fwarn-incomplete-uni-patterns \
     $1 | grep --invert-match "Loading package"
 
