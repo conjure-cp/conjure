@@ -121,13 +121,6 @@ gg n s' = let s = dropExtension s' in getFiles base  (fromMaybe s (stripPrefix b
 bg n s = be (gg n s)
 be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
-    {-param <- getSpec paramF-}
-    putStrLn "orgP"
-    (print . pretty) (orgP)
-    putStrLn "org"
-    (print . pretty) org
-    {-putStrLn "param"-}
-    {-(print . pretty) param-}
 
     let logsF = addExtension specF "logs"
     logs <- liftM T.lines (T.readFile logsF)
