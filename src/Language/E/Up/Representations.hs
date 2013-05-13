@@ -6,8 +6,6 @@ module Language.E.Up.Representations(
     , Before, After
     , RepName, isBranchRep, noRep
 
-    -- for debuging
-    , setOccurrenceRep, matrix1DRep, partitionMSetOfSetsRep
     ) where
 
 import Language.E hiding (trace)
