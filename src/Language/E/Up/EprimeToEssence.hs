@@ -18,10 +18,10 @@ import Language.E
 import Language.E.Up.Common(unwrapExpr)
 import Language.E.Up.Data
 import Language.E.Up.Debug
-import Language.E.Up.GatherInfomation
-import Language.E.Up.RepresentationTree
+import Language.E.Up.GatherInfomation(getVariables,getEnumMapping,getEnumsAndUnamed,getSolVariables,getEssenceVariables)
+import Language.E.Up.RepresentationTree(createVarTree)
 import Language.E.Up.EvaluateTree2(evalTree)
-import Language.E.Up.GatherIndexRanges
+import Language.E.Up.GatherIndexRanges(gatherIndexRanges)
 
 import Data.Char(isSpace)
 import Data.Map(Map)
@@ -63,7 +63,7 @@ mainPure' addIndexRange (spec,sol,org,orgP,logs) =
             [xMake| topLevel.letting.expr := [value]
                   | topLevel.letting.name.reference := [Prim (S (T.pack name))] |]
 
-        indexrangeMapping = gatherIndexRanges (org)
+        indexrangeMapping = gatherIndexRanges org
 
 
         lookUp m = fromMaybe (error "fromMaybe EprimeToEssence: lookUpType")  . flip M.lookup m
