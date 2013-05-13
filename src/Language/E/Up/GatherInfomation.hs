@@ -128,8 +128,6 @@ getEssenceVariable _   [xMatch| _ := topLevel.letting     |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.given       |] = Nothing
 getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = 
     _bug "getEssenceVariable unhandled declaration" [e]
-
-{-getEssenceVariable _ e = errr $ e-}
 getEssenceVariable _ e = error . show . prettyAsPaths $ e
 
 
@@ -146,7 +144,6 @@ getTags emap [xMatch| arr            := domain.tuple.inners |] = [TagTuple (map 
 getTags emap [xMatch| [dom]          := inner |]               = getTags emap dom
 getTags emap [xMatch| [Tagged t arr] := domain |]              = TagSingle t : concatMap (getTags emap) arr
 
---FIXME do unamed types
 getTags emap (Tagged "reference" [Prim (S name)]) 
     | Just _ <- M.lookup ("__named_" ++  T.unpack name) emap = [TagUnamed (T.unpack name)]
 getTags _ (Tagged "reference" [Prim (S name)])            = [TagEnum (T.unpack name)]
@@ -156,8 +153,8 @@ getTags _ (Tagged "index" _)      = []
 getTags _ (Tagged "range" _)      = []
 getTags _ (Tagged "ranges" _)     = []
 getTags _ (Tagged "inners" _)     = []
-{-getTags _                       = []-}
-getTags _ e                       = errp [e]
+getTags _ _                       = []
+{-getTags _ e                       = errp [e]-}
 
 
 getSolVariables :: Spec -> M.Map String [E]
