@@ -7,13 +7,19 @@ module Language.E.Up.Debug where
 import Text.PrettyPrint
 
 import Language.E hiding (trace)
-#ifdef UP_DEBUG
+import qualified Language.E 
 
 import qualified Debug.Trace ( trace )
 import qualified Text.Groom
 
+
 trace :: String -> a -> a
 trace = Debug.Trace.trace
+
+
+#ifdef UP_DEBUG
+
+
 
 groom :: Show a => a -> String
 groom = Text.Groom.groom
@@ -24,30 +30,35 @@ upBug = errpM
 upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
 upBugi = erriM
 
-#else
-import qualified Language.E 
-groom :: Show a => a -> String
-groom = show
-
-trace :: String -> a -> a
-trace = Language.E.trace 
-
-upBug :: Pretty a =>  String -> [a] -> t
-{-upBug = errpM-}
-upBug s es = bug (pretty s <+> vcat (map pretty es) )
-
-upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
-{-upBugi = erriM-}
-upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )
-
-
-#endif
-
 tracer :: Pretty a => String -> a -> a
 tracer s a = trace (s ++ '\n' : (show . pretty $ a)) a
 
 tracee :: String -> a -> a
 tracee s a = trace (s ++ "\n") a
+
+
+#else
+groom :: Show a => a -> String
+groom = show
+
+upBug :: Pretty a =>  String -> [a] -> t
+upBug = errpM
+{-upBug s es = bug (pretty s <+> vcat (map pretty es) )-}
+
+upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
+upBugi = erriM
+{-upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )-}
+
+
+tracer :: Pretty a => String -> a -> a
+tracer _ a = a
+
+tracee :: String -> a -> a
+tracee _ a = a
+
+
+#endif
+
 
 _t :: a -> String -> a
 _t a s = trace s a

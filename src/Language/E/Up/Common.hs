@@ -34,7 +34,7 @@ transposeE e = e
 
 tranposeCheck :: E -> [E]
 tranposeCheck   [xMatch| vs := value.matrix.values |] = vs
-        `_p` ("tranposeCheck mat", vs)
+        {-`_p` ("tranposeCheck mat", vs)-}
 
 -- This is actually needed for very few cases such as tupley26
 tranposeCheck e@[xMatch| _ := value.tuple.values  |] =
