@@ -8,18 +8,13 @@ import Text.PrettyPrint
 
 import Language.E hiding (trace)
 import qualified Debug.Trace ( trace )
-
-
-trace :: String -> a -> a
-trace = Debug.Trace.trace
+import qualified Text.Groom
+groom :: Show a => a -> String
+groom = Text.Groom.groom
 
 
 #ifdef UP_DEBUG
 
-
-
-groom :: Show a => a -> String
-groom = Text.Groom.groom
 
 upBug :: Pretty a =>  String -> [a] -> t
 upBug = errpM
@@ -35,8 +30,6 @@ tracee s a = trace (s ++ "\n") a
 
 
 #else
-groom :: Show a => a -> String
-groom = show
 
 upBug :: Pretty a =>  String -> [a] -> t
 upBug = errpM
@@ -56,6 +49,8 @@ tracee _ a = a
 
 #endif
 
+trace :: String -> a -> a
+trace = Debug.Trace.trace
 
 _t :: a -> String -> a
 _t a s = trace s a
