@@ -43,8 +43,6 @@ upBugi s (a,_) = bug (pretty s <+> pretty (groom a)  )
 
 #endif
 
-
-
 tracer :: Pretty a => String -> a -> a
 tracer s a = trace (s ++ '\n' : (show . pretty $ a)) a
 
@@ -59,25 +57,15 @@ _t a s = trace s a
 _e :: a -> (String, [E]) -> a
 _f :: Show a1 => a -> (String, a1) -> a
 _g :: Show a1 => a -> (String, a1) -> a
-_i :: (Show a1) => a -> (String, (a1, [E])) -> a
-_k :: (Show a1, Pretty a2) => a -> (String, (a1, [a2])) -> a
 _p :: Pretty a1 => a -> (String, [a1]) -> a
 
 __groomPrint :: Show a => a -> IO ()
 __groomPrintM :: Show a => String -> a -> IO ()
-__s2 :: Pretty primitive => (String, Generic primitive) -> String
 
 __p :: [E] -> String
-__i :: Show a => a -> [E] -> String
-__k :: (Show a, Pretty a1) => a -> [a1] -> String
-__b :: [E] -> String
 __q :: Pretty a => [a] -> String
-__q2 :: Pretty a => (String, [a]) -> String
 __g :: Show a1 => a1 -> a -> a
 __s :: Show a1 => (String, a1) -> a -> a
-__h :: Show a => String -> a -> a
-__j :: String -> E -> E
-_b :: a -> (String, [E]) -> a
 
 prettyAsBoth :: E -> Doc
 prettyAsBoth a = vcat [prettyAsTree a, pretty a]
@@ -86,31 +74,18 @@ nlToTab = map (\a -> if a == '\n' then '\t' else a )
 
 __groomPrint = putStrLn . groom
 __groomPrintM a b = putStr (a ++ " ⦙\n ") >> (putStrLn . groom) b
-__s2 (msg,b) =  "\n##" ++ msg ++ " ⦙ " ++ (show . prettyAsTree) b ++ "\n"
 
 __p arr = "\n#\n" ++ (show . vcat . map prettyAsTree) arr ++ "\n##\n"
-__i a b = "\n#\n"++ groom a ++ "\n\n" ++ (show . vcat . map prettyAsBoth) b ++  "\n##\n"
-__k a b = "\n#\n"++ groom a ++ "\n\n" ++ (show . vcat . map pretty) b ++  "\n##\n"
-__b arr = "\n#\n" ++ (show . vcat . map prettyAsBoth) arr ++ "\n##\n"
 __q arr = "\n#\n" ++ (show . vcat . map pretty) arr ++ "\n##\n"
-__q2 (msg,b) =  "##" ++ msg ++ " ⦙ " ++ (nlToTab . show . vcat . map pretty) b ++ "\n"
-
-
 __g a = trace ("\n#\n"++ groom a ++ "\n##\n")
 __s (msg,b) = trace ("\n##" ++ msg ++ " ⦙ " ++ groom b ++ "\n")
 
 
 #ifdef UP_DEBUG
 
-__h msg a = trace ("\n#" ++ msg ++ "\n"++ groom a ++ "\n##\n") a
-
-__j msg a = trace ("\n#" ++ msg ++ "\n"++ show (prettyAsTree a) ++ "\n##\n") a
-
 _e a (msg, [b@[xMatch| _ := value.literal |]]) =  trace ( __s2 (msg,b) ) a
 _e a (msg, [b@[xMatch| _ := literal |]])       =  trace ( __s2 (msg,b) ) a
 _e a (msg,b) = trace (msg ++ __p b) a
-
-_b a (msg,b)  = trace (msg ++ __b b) a
 
 _p a (msg,b) = 
     let str = (show . vcat . map pretty) b
@@ -121,24 +96,15 @@ _p a (msg,b) =
 
 _f a (msg,b) = trace (msg ++ "\n#\n" ++ groom b ++ "\n##\n") a
 _g a b = __s b $ a
-_i a (msg,(c,d)) = trace (msg ++ __i c d) a
-_k a (msg,(c,d)) = trace (msg ++ __k c d) a
 _x :: Show a => a  -> IO ()
 _x a = (putStrLn . groom) a
 
 #else
 
-__h _ a = a
-
-__j _ a = a
-
 _e  a _ =  a
-_b  a _ =  a
 _p  a _ =  a
 _f  a _ =  a
 _g  a _ =  a
-_i  a _ =  a
-_k  a _ =  a
 
 #endif
 
