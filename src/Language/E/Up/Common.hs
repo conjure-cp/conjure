@@ -10,7 +10,9 @@ module Language.E.Up.Common(
     wrapInMatrix,
     toIntLit,
     unwrapValues,
-    wrapInFunction
+    wrapInFunction,
+    wrapInTuple,
+    unwrapTuple
 ) where
 
 import qualified Data.List as L(transpose)
@@ -53,6 +55,12 @@ unwrapValues e = _bug "unwrapValues failed" [e]
 wrapInFunction :: [E] -> E
 wrapInFunction es = [xMake| value.function.values := es |]
 
+wrapInTuple :: [E] -> E
+wrapInTuple es = [xMake| value.tuple.values := es |]
+
+unwrapTuple :: E -> [E]
+unwrapTuple [xMatch| vs := value.tuple.values |] = vs
+unwrapTuple e = _bug "unwrapTuple failed" [e]
 
 convertTuples :: E -> E
 convertTuples [xMatch| vs := value.tuple.values |] =
@@ -66,7 +74,6 @@ convertTuples (e) = e
 isLiteral ::  E -> Bool
 isLiteral [xMatch| _ := value.literal |] = True
 isLiteral  _ = False
-
 
 unwrapExpr ::  E -> E
 unwrapExpr  (Tagged Texpr [val]) =  val
