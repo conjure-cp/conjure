@@ -12,12 +12,14 @@ $ 1,1,0,0
     ~~>
 
 exists i : &r .
-    ( forAll j : &r , j < i . &ma[j][2] = &mb[j][2] )       $ everything up to i are ==
+    (&ma[i][1] /\ &mb[i][1])                                                    $ i'th position exists in both sets
+    /\
+    ( forAll j : &r , j < i . &ma[j][2] = &mb[j][2] )                           $ everything up to i are ==
     /\
     (
-        (&ma[i][1] /\ &mb[i][1] /\ &ma[i][2] .< &mb[i][2])  $ things at i'th position are ordered
+        (&ma[i][2] .< &mb[i][2])                                                $ either: things at i'th position are ordered
         \/
-        (toInt(&ma[i][1]) > toInt(&mb[i][1]))               $ first set has more items in it.
+        (&ma[i][2] = &mb[i][2] /\ toInt(&ma[i][1]) > toInt(&mb[i][1]))          $ or: they are equal but first set has more items in it.
     )
 
     where &a hasRepr Set~ExplicitVarSize
