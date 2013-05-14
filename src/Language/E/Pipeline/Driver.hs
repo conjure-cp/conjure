@@ -16,12 +16,12 @@ driverConjureSingle
     -> [(Either Doc Spec, LogTree)]
     -> IO ()
 driverConjureSingle logsOut _ pathOut [(Right x, logs)] = do
-    toFile  pathOut              x
-    when logsOut $ toFile (pathOut ++ ".logs" ) logs
+    toFile  pathOut              (renderNormal x)
+    when logsOut $ toFile (pathOut ++ ".logs" ) (renderWide logs)
 driverConjureSingle _ False _ [(Left x, _ )] = bug $ pretty x
 driverConjureSingle logsOut True pathOut [(Left  x, logs)] = do
-    toFile (pathOut ++ ".error") x
-    when logsOut $ toFile (pathOut ++ ".logs" ) logs
+    toFile (pathOut ++ ".error") (renderNormal x)
+    when logsOut $ toFile (pathOut ++ ".logs" ) (renderWide logs)
 driverConjureSingle _ _ _ _ = bug "Generates multiple outputs, must be a bug. Sorry."
 
 
@@ -48,16 +48,16 @@ driverConjure conj baseFilename reprs refns spec = do
         let mkOutFilename ext = baseFilename ++ "/" ++ i ++ ext
         case mout of
             Left  x -> do
-                toFile (mkOutFilename ".error"      ) x
-                toFile (mkOutFilename ".error.logs" ) logs
+                toFile (mkOutFilename ".error"      ) (renderNormal x)
+                toFile (mkOutFilename ".error.logs" ) (renderWide logs)
             Right x -> do
-                toFile (mkOutFilename ".eprime"     ) x
-                toFile (mkOutFilename ".eprime.logs") logs
+                toFile (mkOutFilename ".eprime"     ) (renderNormal x)
+                toFile (mkOutFilename ".eprime.logs") (renderWide logs)
         performGC
 
-toFile :: Pretty p => FilePath -> p -> IO ()
+toFile :: FilePath -> String -> IO ()
 toFile fp con = do
     curr <- getCurrentTime
     putStrLn $ "[Conjure] Created file (at " ++ take 19 (show curr) ++ ") " ++ fp
-    writeFile fp (renderPretty con)
+    writeFile fp con
 

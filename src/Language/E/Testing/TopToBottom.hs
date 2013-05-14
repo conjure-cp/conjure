@@ -52,7 +52,7 @@ getAllRefns = do
         in  case mxs of
                 [(Right a, _)] -> testSuccess a $ "parsing -- " ++ fp
                 _              -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                          ++ renderPretty (vcat errors)
+                                          ++ renderNormal (vcat errors)
 
 
 getAllReprs
@@ -68,7 +68,7 @@ getAllReprs = do
         in  case mxs of
                 [(Right a, _)] -> testSuccess a $ "parsing -- " ++ fp
                 _              -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                          ++ renderPretty (vcat errors)
+                                          ++ renderNormal (vcat errors)
 
 
 getAllSpecs
@@ -84,7 +84,7 @@ getAllSpecs = do
         in  case mxs of
                 [(Right a, _)] -> testSuccess (fp,a) $ "parsing -- " ++ fp
                 _              -> testFail $ "parsing -- " ++ fp ++ " -- "
-                                          ++ renderPretty (vcat errors)
+                                          ++ renderNormal (vcat errors)
 
 
 testSuccess :: (MonadWriter [(String, Bool)] m, MonadIO m) => a -> String -> m (Maybe a)

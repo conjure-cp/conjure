@@ -133,7 +133,7 @@ _testMatch patternText actualText = do
         forM_ bs $ \ (Binder nm val) -> liftIO $ do
             putStr $ T.unpack nm
             putStr " : "
-            putStrLn $ renderPretty val
+            putStrLn $ renderNormal val
         liftIO . putStrLn $
             if flag
                 then "Matched."

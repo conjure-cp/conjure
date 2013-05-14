@@ -108,7 +108,7 @@ suppress = S.fromList
 buildLog :: String -> Doc -> Maybe NamedLog
 buildLog nm _ | nm `S.member` suppress = Nothing
 #ifdef TRACELOGS
-buildLog nm doc = trace (renderPretty $ pretty nm <+> doc) $ Just (NamedLog nm doc)
+buildLog nm doc = trace (renderWide $ pretty nm <+> doc) $ Just (NamedLog nm doc)
 #else
 buildLog nm doc = Just (NamedLog nm doc)
 #endif
@@ -126,7 +126,7 @@ instance Pretty LogTree where
 
 printLogs :: LogTree -> IO ()
 printLogs LTEmpty = return ()
-printLogs logs = printPretty $ pretty logs
+printLogs logs = putStrLn $ renderWide $ pretty logs
 
 nubKeepOrder :: Hashable a => [a] -> [a]
 nubKeepOrder = nubKeepOrderBy id
@@ -141,7 +141,7 @@ nubKeepOrderBy f = go []
                 else x : go (hashx : seen) xs
 
 instance Serialize Doc where
-    put = Data.Serialize.put . renderPretty
+    put = Data.Serialize.put . renderWide
     get = do s <- Data.Serialize.get ; return $ pretty (s :: String)
 
 instance Hashable Doc where

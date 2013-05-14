@@ -35,7 +35,7 @@ validateSolutionPure essence param solution =
         (mresult, _logs) = runCompESingle "validating solution" helper
     in
         case mresult of
-            Left  x      -> error $ renderPretty x
+            Left  x      -> userErr x
             Right result -> result
 
     where

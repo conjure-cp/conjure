@@ -216,7 +216,7 @@ bug _message = error $ unlines
     , ""
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
 #ifdef TRACELOGS
-    , "", "" , renderPretty _message
+    , "", "" , renderNormal _message
 #endif
     ]
 
@@ -230,6 +230,6 @@ headNote _   (x:_) = x
 -- in case of a user error.
 -- parsing, type checking errors are of this kind.
 userErr :: Doc -> a
-userErr = error . renderPretty
+userErr = error . renderNormal
 
 

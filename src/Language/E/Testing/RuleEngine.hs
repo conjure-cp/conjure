@@ -226,7 +226,9 @@ buildTests params = describe "rule engine" $
                        ]
 
             forM_ (zip3 [(1::Int) ..] generateds expecteds) $ \ (i,generated,expected) ->
-                case (renderPretty generated == renderPretty expected, generated == expected) of
+                case (renderNormal generated == renderNormal expected, generated == expected) of
+
+
                     (True, True ) -> return ()
                     (True, False) -> return ()
                         -- assertFailure
@@ -235,7 +237,7 @@ buildTests params = describe "rule engine" $
                         --             <+> Pr.parens (stringToDoc $ show i)
                     (False, _   ) ->
                         assertFailure
-                            $ renderPretty
+                            $ renderWide
                                 $ "specs not equal"
                                     <+> Pr.parens (stringToDoc $ show i)
                                         $$ vcat [ " == generated ==" $$ prettySpecDebug generated

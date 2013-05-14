@@ -81,7 +81,7 @@ readRuleRepr (fp,con) =
 
 
 writeSpec :: FilePath -> Spec -> IO ()
-writeSpec fp spec = writeFile fp (renderPretty spec)
+writeSpec fp spec = writeFile fp (renderNormal spec)
 
 
 writeSpecs :: FilePath -> String -> [Spec] -> IO ()

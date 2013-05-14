@@ -92,7 +92,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
                 Just fp -> readSpecFromFile fp
             typeCheckSpecIO inp
             case pathOut of
-                Nothing -> printPretty  (atMostOneSuchThat False inp)
+                Nothing -> putStrLn $ renderNormal (atMostOneSuchThat False inp)
                 Just fp -> writeSpec fp (atMostOneSuchThat False inp)
 
         helper (ModeValidateSolution pathEssence pathParam pathSolution) = do
@@ -156,6 +156,6 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
 typeCheckSpecIO :: Spec -> IO ()
 typeCheckSpecIO spec =
     case fst $ runCompESingle "Error while type checking." $ typeCheckSpec spec of
-        Left  e  -> error $ renderPretty e
+        Left  e  -> userErr e
         Right () -> return ()
 

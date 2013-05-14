@@ -167,10 +167,10 @@ viewBinary:: ConjureFilePath -> IO ()
 viewBinary arg = case arg of
     EssenceBinPath path -> do
         (x :: Spec, _ :: LogTree) <- decodeFromFile path
-        printPretty x
+        putStrLn $ renderNormal x
     RulesDBPath path -> do
         (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile path
-        printPretty $ vcat
+        putStrLn $ renderNormal $ vcat
             [          pretty path               <+> "is a valid Conjure rules database file"
             , nest 4 $ pretty (length ruleReprs) <+> "representation selection rules"
             , nest 4 $ pretty (length ruleRefns) <+> "expression refinement rules"
@@ -259,7 +259,7 @@ phaseRepr0 one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
             forM_ results2 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut   outDirPath x logs
                 (Right x, logs) -> essenceFileOut outDirPath x logs
-            printPretty $ nest 4 ("{HALT " <> pretty (length results2) <> "}")
+            putStrLn $ renderNormal $ nest 4 ("{HALT " <> pretty (length results2) <> "}")
 
         else do -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
@@ -267,7 +267,7 @@ phaseRepr0 one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRefn" one outDirPath queuePath)
-            printPretty ("\t{" <> pretty (length results1) <> "}")
+            putStrLn $ renderNormal ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRepr0 _ _ _ _ = error "Argument error in phaseRepr0"
 
@@ -300,14 +300,14 @@ phaseRepr one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
                 (Left  x2, logs2) -> errorFileOut   outDirPath x2 logs2
                 (Right x2, logs2) -> essenceFileOut outDirPath x2 logs2
 
-            printPretty ("\t{" <> "HALT" <> "}")
+            putStrLn $ renderNormal ("\t{" <> "HALT" <> "}")
         else do -- create the binary file, and output the command to run next to stdout
             forM_ results1 $ \ result -> case result of
                 (Left  x, logs) -> errorFileOut      outDirPath x logs
                 (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRefn" one outDirPath queuePath)
-            printPretty ("\t{" <> pretty (length results1) <> "}")
+            putStrLn $ renderNormal ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRepr _ _ _ _ = error "Argument error in phaseRepr"
 
@@ -331,7 +331,7 @@ phaseRefn one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         (Right x, logs) -> essenceBinFileOut outDirPath x logs
                                     queuePath
                                     (nextPhaseCmd "phaseRepr" one outDirPath queuePath)
-    printPretty ("\t{" <> pretty (length results1) <> "}")
+    putStrLn $ renderNormal ("\t{" <> pretty (length results1) <> "}")
     removeFile path
 phaseRefn _ _ _ _ = error "Argument error in phaseRefn"
 
@@ -366,14 +366,14 @@ nextFilePathWithExt base ext = do
 errorFileOut :: FilePath -> ConjureError -> LogTree -> IO ()
 errorFileOut base x logs = do
     path <- nextFilePathWithExt base ".error"
-    writeFile path              (renderPretty x)
-    writeFile (path ++ ".logs") (renderPretty logs)
+    writeFile path              (renderNormal x)
+    writeFile (path ++ ".logs") (renderWide logs)
 
 essenceFileOut :: FilePath -> Spec -> LogTree -> IO ()
 essenceFileOut base x logs = do
     path <- nextFilePathWithExt base ".eprime"
-    writeFile path              (renderPretty x)
-    writeFile (path ++ ".logs") (renderPretty logs)
+    writeFile path              (renderNormal x)
+    writeFile (path ++ ".logs") (renderWide logs)
 
 essenceBinFileOut :: FilePath -> Spec -> LogTree -> FilePath -> IO String -> IO ()
 essenceBinFileOut base x logs queuePath mCommand = do

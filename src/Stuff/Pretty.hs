@@ -6,8 +6,7 @@ module Stuff.Pretty ( Pretty(..)
                     , (<++>), (<+>), (<>)
                     , prettyList, prettyListDoc
                     , parensIf
-                    , renderPretty
-                    , printPretty
+                    , renderNormal, renderWide
                     ) where
 
 import qualified Data.Text as T
@@ -51,9 +50,9 @@ parensIf = wrapIf parens
         wrapIf :: (Doc -> Doc) -> Bool -> Doc -> Doc
         wrapIf wrap c = if c then wrap else id
 
-renderPretty :: Pretty a => a -> String
-renderPretty = renderStyle (style { lineLength = 120 }) . pretty
+renderNormal :: Pretty a => a -> String
+renderNormal = renderStyle (style { lineLength = 120 }) . pretty
 
-printPretty :: Pretty a => a -> IO ()
-printPretty = putStrLn . renderPretty
+renderWide :: Pretty a => a -> String
+renderWide = renderStyle (style { lineLength = 240 }) . pretty
 

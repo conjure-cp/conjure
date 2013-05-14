@@ -123,7 +123,7 @@ inlineSpec spec =
         (mresult, _logs) = runCompESingle "inlining lettings" helper
     in
         case mresult of
-            Left  x      -> error $ renderPretty x
+            Left  x      -> error $ renderNormal x
             Right result -> result
 
     where
@@ -139,7 +139,7 @@ specSimplify spec =
         (mresult, _logs) = runCompESingle "simplifySpec" helper
     in
         case mresult of
-            Left  x      -> error $ renderPretty x
+            Left  x      -> error $ renderNormal x
             Right result -> result
 
     where
