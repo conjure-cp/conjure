@@ -11,7 +11,8 @@ import qualified Data.Text as T
 
 removeDuplicateCons :: MonadConjure m => Spec -> m Spec
 removeDuplicateCons (Spec v x) = do
-    let statements  = statementAsList x
+    let statements  = filter (/= [xMake| topLevel.suchThat.value.literal := [Prim (B True)] |])
+                    $ statementAsList x
     let statements' = nubKeepOrder $ map ( bubbleHasAtMostOneSuchThat
                                          . renameAuxVarsTopLevel
                                          . renameQuantifiedVarsTopLevel
