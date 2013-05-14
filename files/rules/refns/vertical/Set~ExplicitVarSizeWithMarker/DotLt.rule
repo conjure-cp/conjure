@@ -4,7 +4,7 @@
 
     ~~>
 
-exists i : &r , i <= &ma[1] /\ i <= &mb[1] .                                $ there exists an i where both sets still have elements 
+exists i : &r , i < &ma[1] /\ i < &mb[1] .                                  $ there exists an i where both sets still have elements 
     (forAll j : &r , j <= i . &ma[2][j] = &mb[2][j])                        $ everything up to and including i are ==
     /\
     (                                                                       $ and
@@ -15,6 +15,7 @@ exists i : &r , i <= &ma[1] /\ i <= &mb[1] .                                $ th
 
     where &a hasRepr Set~ExplicitVarSizeWithMarker
     where &b hasRepr Set~ExplicitVarSizeWithMarker
+    where &a hasDomain `set (..) of &_`                                     $ makes sure only `atomic` sets are matched
 
     letting &ma be refn(&a)
     letting &mb be refn(&b)
