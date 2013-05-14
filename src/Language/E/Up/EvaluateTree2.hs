@@ -45,7 +45,7 @@ evalTree' mapping _ fs prefix (Leaf part) =
    vdata   = lookUpE  name
 
 evalTree' mapping set fs prefix (Tuple arr) =
-    let items =  map ( evalTree' mapping set [] prefix ) arr
+    let items =  map ( evalTree' mapping set (mapMaybe repsToPassToTuple fs) prefix ) arr
         tuple = [xMake| value.tuple.values := items |]
         res   = handleTuplesOfMatrixes tuple
         -- Have to apply the inner rep conversion function first
@@ -62,6 +62,12 @@ evalTree' mapping set fs prefix (Tuple arr) =
 
 
     where
+
+    repsToPassToTuple :: RepName -> Maybe RepName
+    repsToPassToTuple "SetExplicitVarSizeWithMarker" = Just "unwrapBranch£"
+    repsToPassToTuple "SetExplicitVarSize"           = Just "unwrapBranch£"
+    repsToPassToTuple _                              = Nothing
+
     handleTuplesOfMatrixes :: E -> VarData
     handleTuplesOfMatrixes f |  Just num <- prefix `M.lookup` set =
        vdata num $ handleTuplesOfMatrixes' num f
@@ -84,7 +90,6 @@ evalTree' mapping set fs prefix (Tuple arr) =
         in real
         `_p` ("Real VarData",[real]  )
 
-    -- No much better then above but works for Matrix1D as well
     getVarData :: VarMap -> [String] -> Tree String  -> VarData
     getVarData m2 pre2 (Leaf p2) = vdata2
 

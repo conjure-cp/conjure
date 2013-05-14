@@ -1,9 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
 module Language.E.Up.Representations(
-      leafRep, noRep, 
+      leafRep, noRep,
       getBranch, isBranchRep
     , runBranchFuncs
-    , RepName
+    , RepName, After, Before
     ) where
 
 import Language.E hiding (trace)
@@ -41,7 +41,7 @@ noRep  = vEssence
 {- Sets -}
 
 explicitRep :: VarData -> E
-explicitRep VarData{vEssence=e} = 
+explicitRep VarData{vEssence=e} =
     tracee "explicitRep" $ e
 
 
@@ -150,8 +150,8 @@ matrix1DRep :: VarData -> E
 matrix1DRep v@VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let mappings = zipWith makeMapping ix vs
     in  wrapInFunction  mappings
-    `_p` ("matrix1DRep v",[v] )
     `_p` ("matrix1DRep res",[mappings] )
+    `_p` ("matrix1DRep v",[v] )
 
     where
     makeMapping :: Integer -> E -> E
@@ -214,6 +214,7 @@ getBranch s =
       "SetExplicitVarSize" -> Just setExplicitVarSizeBranch
       "SetExplicitVarSizeWithMarker" -> Just setExplicitVarSizeWithMarkerBranch
       "SetOccurrence"      -> Just occurrenceBranch
+      "unwrapBranch£"      -> Just unwrapBranch
       _                    -> Nothing
 
 
@@ -228,6 +229,7 @@ isBranchRep "SetExplicit"        = True
 isBranchRep "SetExplicitVarSize" = True
 isBranchRep "SetExplicitVarSizeWithMarker" = True
 isBranchRep "SetOccurrence"      = True
+isBranchRep "unwrapBranch£"      = True
 isBranchRep _                    = False
 
 
@@ -272,7 +274,7 @@ setExplicitVarSizeWithMarkerBranch = ( tracee "setExplicitVarSizeWithMarkerBranc
     where
     before :: Before
     {-before v@VarData{vEssence=[eMatch| (&marker,&mat) |]} =  [v]-}
-    before v = 
+    before v =
         {-trace ("setExplicitVarSizeWithMarkerBranchr\n" ++ (show . pretty)  v) $-}
         [v]
 
@@ -320,8 +322,12 @@ matrix1DBranch = ( tracee "matrix1DBranch" unwrapSet, after )
 
     where
     after orgData@VarData{vIndexes=ix} vs =
-        let wraped = wrapInMatrix $ map vEssence vs
-        -- CHECK Seems a bit a hackish to only pass the first index
+        let wraped = wrapInMatrix $ map vEssence
+                {-$ (trace . show . pretty $ orgData)-}
+                {-trace "----------" $-}
+                {-(trace . show . pretty $ vs)-}
+                vs
+        -- FIXME hackish to only pass the first index and breaks some tests
         in orgData{vEssence=matrix1DRep orgData{vIndexes=[head ix], vEssence=wraped}}
 
 
@@ -356,6 +362,19 @@ partitionMSetOfSetsBranch = ( tracee "partitionMSetOfSetsBranch" beforeUnchanged
 
 
 {- End -}
+
+-- FIXME  reps should not try to refine marker, part 
+unwrapBranch :: (Before,After)
+unwrapBranch = (tracee "unwrapBranch" unwrapSetMaybe, after)
+    where
+    after v@VarData{vEssence=[xMatch| _ := value.literal |]} _ =  v
+    after orgData vs = orgData{vEssence=  wrapInMatrix $ map vEssence vs }
+
+    unwrapSetMaybe :: Before
+    unwrapSetMaybe v@VarData{vEssence=[xMatch| _ := value.literal |]} = [v] 
+    unwrapSetMaybe v@VarData{vEssence=e, vIndexes=ix} =
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix' "unwrapSet" e) 
+
 
 beforeUnchanged :: VarData -> [VarData]
 beforeUnchanged v = [v]
