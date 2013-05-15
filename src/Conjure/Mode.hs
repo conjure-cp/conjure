@@ -98,6 +98,18 @@ conjureHelp :: Doc
 conjureHelp =  Pr.vcat  $ helpStart :
     [ modeDiff
     , modeRefineParam
+    , modeTranslateSolution
+    , modeTypeCheck
+    , modePrettify
+    , modeValidateSolution
+    , modeGenerateParam
+    , modeGenerateParam2
+    , modeDFAll
+    , modeDFAllCompactParam
+    , modeDFNoChannel
+    , modeRandom
+    , modeFirst
+    , modeSmallest
     ]
 
     where
@@ -107,24 +119,84 @@ conjureHelp =  Pr.vcat  $ helpStart :
         ,""
         ]
 
-    modeDiff = modeHelp "diff" [
+    modeDiff = mode "diff" [
          key "--in-essence"
        , key "--in-essence-param"
        , key "--in-eprime"
        , key "--out-eprime-param"
        ]
 
-    modeRefineParam = modeHelp "refineParam" [
+    modeRefineParam = mode "refineParam" [
           key "--in-essence"
         , key "--in-essence-param"
         , key "--in-eprime"
         , key "--out-eprime-param"
         ]
 
-    key flag = flag
+    modeTranslateSolution = mode "translateSolution" [
+          key "--in-essence"
+        , optional $ key "--in-essence-param"
+        , key "--in-eprime"
+        , optional $ key "--in-eprime-param"
+        , key "--in-eprime-solution"
+        , anyKey $ words' "--out-solution --out-essence-solution"
+        ]
 
-    modeHelp :: String -> [Doc] -> Doc
-    modeHelp title docs=  header title Pr.$+$ Pr.nest 4 (vcat docs) <> "\n"
+    modeTypeCheck = mode "typeCheck" [
+          key "--in"
+        ]
+
+    modePrettify = mode "pretty" [
+          optional $ key "--in"
+        , optional $ key "--out"
+        ]
+
+    modeValidateSolution = mode "validateSolution" [
+          key "--in-essence"
+        , optional $ key "--in-param"
+        , key "--in-solution"
+        ]
+
+    modeGenerateParam = mode "generateParam" [
+          anyKey $ words' "--in --in-essence"
+        , anyKey $ words' "--out --out-param"
+        ]
+
+    modeGenerateParam2 = mode "translateSolution" [
+          anyKey $ words' "--in --in-essence"
+        , anyKey $ words' "--out --out-param"
+        , anyKey $ words' "--intermediate"
+        , optional $ key "--prefix"
+        ]
+
+    modeDFAll = mode "df" [
+         anyKey $ words' "--in --in-essence"
+        ]
+
+    modeDFAllCompactParam = mode "df-compact-param" [
+          anyKey $ words' "--in --in-essence"
+        ]
+
+    modeDFNoChannel = mode "df-no-channelling" [
+         anyKey $ words' "--in --in-essence"
+        ]
+
+    modeRandom = mode "random" [
+        ]
+
+    modeFirst = mode "first" [
+        ]
+
+    modeSmallest = mode "compact" [
+        ]
+
+    key flag = flag
+    optional = Pr.brackets
+    words'   = pretty . head . words
+    anyKey   = id
+
+    mode :: String -> [Doc] -> Doc
+    mode title docs=  header title Pr.$+$ Pr.nest 4 (vcat docs) <> "\n"
 
     header :: String -> Doc
     header title = pretty $ "--mode " ++  title ++ "\n"
@@ -226,7 +298,7 @@ parseArgs (pairs, flags, rest) = msum
                 rest
 
         modeRandom = do
-            mode $ words "rand random"
+            mode $ words "random rand"
             modeSingleOutput $ ModeSingleOutput ModeRandom
 
         modeFirst = do
