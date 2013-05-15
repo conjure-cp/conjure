@@ -148,7 +148,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
 
     modePrettify = mode "pretty" [
          optional $ anyKey $ words' "--in-essence --in"
-        ,optional $ anyKey $ words' "--out-param --out"
+        ,optional $ anyKey $ words' "--out-essence --out"
         ]
 
     modeValidateSolution = mode "validateSolution" [
@@ -159,7 +159,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
 
     modeGenerateParam = mode "generateParam" [
           anyKey $ words' "--in-essence --in"
-        , anyKey $ words' "--out-essence --out"
+        , anyKey $ words' "--out-param --out-essence --out"
         ]
 
     modeGenerateParam2 = mode "generateParam2" [
@@ -267,7 +267,7 @@ parseArgs (pairs, flags, rest) = msum
         modeGenerateParam = do
             mode $ words "generateParam genParam"
             inEssence <- anyKey $ words "--in-essence --in"
-            outParam  <- anyKey $ words "--out-essence --out"
+            outParam  <- anyKey $ words "--out-param --out-essence --out"
             returnMode $ ModeGenerateParam inEssence outParam
 
         modeGenerateParam2 = do
