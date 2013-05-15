@@ -196,10 +196,10 @@ conjureHelp =  Pr.vcat  $ helpStart :
     anyKey   = id
 
     mode :: String -> [Doc] -> Doc
-    mode title docs=  header title Pr.$+$ Pr.nest 4 (vcat docs) <> "\n"
+    mode title docs= header title Pr.$+$ Pr.nest 4 (vcat docs) <> "\n" 
 
     header :: String -> Doc
-    header title = pretty $ "--mode " ++  title ++ "\n"
+    header title = pretty $ "--mode " ++  title 
 
 parseArgs :: GenericArgs -> Maybe ConjureModeWithFlags
 parseArgs (pairs, flags, rest) = msum
