@@ -143,12 +143,12 @@ conjureHelp =  Pr.vcat  $ helpStart :
         ]
 
     modeTypeCheck = mode "typeCheck" [
-          key "--in"
+          optional $ anyKey $ words' "--in-essence --in"
         ]
 
     modePrettify = mode "pretty" [
-          optional $ key "--in"
-        , optional $ key "--out"
+         optional $ anyKey $ words' "--in-essence --in"
+        ,optional $ anyKey $ words' "--out-param --out"
         ]
 
     modeValidateSolution = mode "validateSolution" [
@@ -158,27 +158,27 @@ conjureHelp =  Pr.vcat  $ helpStart :
         ]
 
     modeGenerateParam = mode "generateParam" [
-          anyKey $ words' "--in --in-essence"
-        , anyKey $ words' "--out --out-param"
+          anyKey $ words' "--in-essence --in"
+        , anyKey $ words' "--out-essence --out"
         ]
 
-    modeGenerateParam2 = mode "translateSolution" [
-          anyKey $ words' "--in --in-essence"
-        , anyKey $ words' "--out --out-param"
+    modeGenerateParam2 = mode "generateParam2" [
+          anyKey $ words' "--in-essence --in"
+        , anyKey $ words' "--out-param --out"
         , anyKey $ words' "--intermediate"
         , optional $ key "--prefix"
         ]
 
     modeDFAll = mode "df" [
-         anyKey $ words' "--in --in-essence"
+         anyKey $ words' "--in-essence --in"
         ]
 
     modeDFAllCompactParam = mode "df-compact-param" [
-          anyKey $ words' "--in --in-essence"
+          anyKey $ words' "--in-essence --in"
         ]
 
     modeDFNoChannel = mode "df-no-channelling" [
-         anyKey $ words' "--in --in-essence"
+         anyKey $ words' "--in-essence --in"
         ]
 
     modeRandom = mode "random" [
@@ -248,13 +248,13 @@ parseArgs (pairs, flags, rest) = msum
 
         modeTypeCheck = do
             mode $ words "typeCheck"
-            inp  <- optional $ key "--in"
+            inp  <- optional $ anyKey $ words "--in-essence --in"
             returnMode $ ModeTypeCheck inp
 
         modePrettify = do
             mode $ words "pretty prettify"
-            inp  <- optional $ key "--in"
-            out  <- optional $ key "--out"
+            inp  <- optional $ anyKey $ words "--in-essence --in"
+            out  <- optional $ anyKey $ words "--out-essence --out"
             returnMode $ ModePrettify inp out
 
         modeValidateSolution = do
@@ -266,31 +266,31 @@ parseArgs (pairs, flags, rest) = msum
 
         modeGenerateParam = do
             mode $ words "generateParam genParam"
-            inEssence <- anyKey $ words "--in --in-essence"
-            outParam  <- anyKey $ words "--out --out-param"
+            inEssence <- anyKey $ words "--in-essence --in"
+            outParam  <- anyKey $ words "--out-essence --out"
             returnMode $ ModeGenerateParam inEssence outParam
 
         modeGenerateParam2 = do
             mode $ words "generateParam2 genParam2"
-            inEssence       <- anyKey $ words "--in --in-essence"
-            outParam        <- anyKey $ words "--out --out-param"
+            inEssence       <- anyKey $ words "--in-essence --in"
+            outParam        <- anyKey $ words "--out-param --out"
             intermediateDir <- anyKey $ words "--intermediate"
             basename        <- optional $ key "--prefix"
             returnMode $ ModeGenerateParam2 inEssence outParam intermediateDir basename
 
         modeDFAll = do
             mode $ words "df depthfirst depth-first"
-            inEssence <- anyKey $ words "--in --in-essence"
+            inEssence <- anyKey $ words "--in-essence --in"
             returnMode $ ModeDFAll inEssence
 
         modeDFAllCompactParam = do
             mode $ words "df-compact-param"
-            inEssence <- anyKey $ words "--in --in-essence"
+            inEssence <- anyKey $ words "--in-essence --in"
             returnMode $ ModeDFAllCompactParam inEssence
 
         modeDFNoChannel = do
             mode $ words "df-no-channelling"
-            inEssence <- anyKey $ words "--in --in-essence"
+            inEssence <- anyKey $ words "--in-essence --in"
             return $ ConjureModeWithFlags
                 (ModeDFAll inEssence)
                 pairs
@@ -298,7 +298,7 @@ parseArgs (pairs, flags, rest) = msum
                 rest
 
         modeRandom = do
-            mode $ words "random rand"
+            mode $ words "random rand rnd"
             modeSingleOutput $ ModeSingleOutput ModeRandom
 
         modeFirst = do
