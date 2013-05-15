@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Conjure.Mode where
 
 import Control.Monad ( guard, msum, mzero )
@@ -7,6 +8,11 @@ import Data.Maybe ( listToMaybe, mapMaybe )
 import Data.HashSet as S ( HashSet, fromList, member, insert )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 
+import qualified Text.PrettyPrint as Pr
+import Text.PrettyPrint(Doc,vcat)
+import Stuff.Pretty
+import RepositoryVersion ( repositoryVersion )
+
 
 type GenericArgs
     = ( M.HashMap String String  -- key-value pairs
@@ -14,7 +20,7 @@ type GenericArgs
       , [String]                 -- rest
       )
 
-parseGenericArgs :: [String] -> GenericArgs 
+parseGenericArgs :: [String] -> GenericArgs
 parseGenericArgs inp =
     let (pairs, flags, rest) = go inp
     in  (M.fromList pairs, S.fromList flags, rest)
@@ -87,6 +93,41 @@ data ConjureModeWithFlags
         (M.HashMap String String)       -- all key-value pairs
         (S.HashSet String)              -- all flags
         [String]                        -- all the rest
+
+conjureHelp :: Doc
+conjureHelp =  Pr.vcat  $ helpStart :
+    [ modeDiff
+    , modeRefineParam
+    ]
+
+    where
+    helpStart =  vcat . map pretty $ [
+        "conjure --mode=Mode Args "
+        ,"    Version: " ++ repositoryVersion
+        ,""
+        ]
+
+    modeDiff = modeHelp "diff" [
+         key "--in-essence"
+       , key "--in-essence-param"
+       , key "--in-eprime"
+       , key "--out-eprime-param"
+       ]
+
+    modeRefineParam = modeHelp "refineParam" [
+          key "--in-essence"
+        , key "--in-essence-param"
+        , key "--in-eprime"
+        , key "--out-eprime-param"
+        ]
+
+    key flag = flag
+
+    modeHelp :: String -> [Doc] -> Doc
+    modeHelp title docs=  header title Pr.$+$ Pr.nest 4 (vcat docs) <> "\n"
+
+    header :: String -> Doc
+    header title = pretty $ "--mode " ++  title ++ "\n"
 
 parseArgs :: GenericArgs -> Maybe ConjureModeWithFlags
 parseArgs (pairs, flags, rest) = msum
@@ -163,7 +204,7 @@ parseArgs (pairs, flags, rest) = msum
             outParam        <- anyKey $ words "--out --out-param"
             intermediateDir <- anyKey $ words "--intermediate"
             basename        <- optional $ key "--prefix"
-            returnMode $ ModeGenerateParam2 inEssence outParam intermediateDir basename 
+            returnMode $ ModeGenerateParam2 inEssence outParam intermediateDir basename
 
         modeDFAll = do
             mode $ words "df depthfirst depth-first"
