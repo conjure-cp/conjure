@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Conjure ( getConjureMode, runConjureMode ) where
+module Conjure ( getConjureMode, runConjureMode,conjureHelp ) where
 
 import System.Directory ( doesFileExist )
 import System.Environment ( getArgs )
