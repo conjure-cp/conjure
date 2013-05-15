@@ -605,7 +605,8 @@ instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
     mdomain <- runMaybeT $ lookupReference domId
     case mdomain of
         Nothing -> return p
-        Just [xMatch| [domain] := topLevel.letting.domain |] -> instantiate (domId:seen) domain
+        Just [xMatch| _        := topLevel.letting.typeEnum |] -> return p
+        Just [xMatch| [domain] := topLevel.letting.domain   |] -> instantiate (domId:seen) domain
         Just domain -> instantiate (domId:seen) domain
 instantiate seen (Tagged t xs) = Tagged t <$> mapM (instantiate seen) xs
 instantiate _ p = return p
