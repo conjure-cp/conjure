@@ -274,7 +274,6 @@ data GlobalState = GlobalState
         , memoRefnStaysTheSame :: !IntSet
         , conjureMode          :: ConjureModeWithFlags
         , conjureSeed          :: StdGen
-        , conjureFlags         :: S.HashSet String
         }
 
 instance (Functor m, Monad m) => RandomM (FunkyMulti GlobalState st err m) where
@@ -293,7 +292,6 @@ instance Default GlobalState where
     def = GlobalState def def
             (ConjureModeWithFlags ModeUnknown M.empty def def)
             (error "Seed not initialised")
-            S.empty
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
@@ -310,8 +308,7 @@ class SelectByMode a where
 defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
 defSelectByMode _                                   [] = return []
 defSelectByMode (ModeUnknown                    {}) xs = return xs
-defSelectByMode (ModeDFAll                      {}) xs = return xs
-defSelectByMode (ModeDFAllCompactParam          {}) xs = return xs
+defSelectByMode (ModeMultipleOutput             {}) xs = return xs
 defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) (x:_) = return [x]
 defSelectByMode (ModeSingleOutput ModeRandom _ _  ) xs = do
     i <- rangeRandomM (0, length xs - 1)
@@ -383,8 +380,8 @@ instance SelectByMode RuleReprResult where
     selectByMode _ [] = return []
     selectByMode (ConjureModeWithFlags mode _ _ _) xs =
         case mode of
-            ModeSingleOutput ModeCompact _ _ -> return [compactSelect xs]
-            ModeDFAllCompactParam _ -> return (compactIfParam xs)
+            ModeSingleOutput ModeCompact      _ _ -> return [compactSelect xs]
+            ModeMultipleOutput DFCompactParam _ _ -> return (compactIfParam xs)
             _ -> defSelectByMode mode xs
 
 

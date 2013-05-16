@@ -116,29 +116,20 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             param <- generateParam rulesDB inEssence intermediateDir basename
             writeSpec pathOutParam param
 
-        helper (ModeDFAll pathInEssence) = do
+        helper (ModeMultipleOutput multimode pathInEssence pathOutputDir) = do
             seed <- getStdGen
             (ruleReprs, ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
-            let outDirPath = dropExtEssence pathInEssence
-                    ++ (if S.member "--no-channelling" flags then "-df-no-channelling" else "-df")
+            let defOutDirPath = dropExtEssence pathInEssence
+                    ++ (case multimode of
+                            DFAll -> "-df"
+                            DFCompactParam -> "-df-compact-param"
+                            DFNoChannelling -> "-df-no-channelling")
                     ++ (if S.member "--better" flags then "-better" else "")
+            let outDirPath = fromMaybe defOutDirPath pathOutputDir
             driverConjure
-                (conjureWithMode flags seed limit fullmode)
-                outDirPath
-                ruleReprs ruleRefns inEssence
-
-        helper (ModeDFAllCompactParam pathInEssence) = do
-            seed <- getStdGen
-            (ruleReprs, ruleRefns) <- getRulesDB
-            inEssence <- readSpecFromFile pathInEssence
-            typeCheckSpecIO inEssence
-            let outDirPath = dropExtEssence pathInEssence
-                    ++ "-df-compact-param"
-                    ++ (if S.member "--better" flags then "-better" else "")
-            driverConjure
-                (conjureWithMode flags seed limit fullmode)
+                (conjureWithMode seed limit fullmode)
                 outDirPath
                 ruleReprs ruleRefns inEssence
 
@@ -150,7 +141,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             driverConjureSingle True False
                 pathOutEprime
                 (conjureWithMode
-                    flags seed limit fullmode
+                    seed limit fullmode
                     ruleReprs ruleRefns inEssence)
 
 typeCheckSpecIO :: Spec -> IO ()
