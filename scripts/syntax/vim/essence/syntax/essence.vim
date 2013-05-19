@@ -7,8 +7,10 @@ if exists("b:current_syntax")
   finish
 endif
 
-syn keyword essenceKeywords dim  maximising minimising forAll exists sum be by defined domain in find from function given image indexed intersect freq lambda letting maxNumParts maxPartSize minNumParts minOccur minPartSize of partial quantifier relation representation subset subsetEq such supset supsetEq that together new type union where branching on
-syn keyword essenceTypes  true false total injective bijective surjective maxOccur minSize size numParts partSize complete maxSize regular
+syn keyword essenceKeywords dim  maximising minimising forAll exists sum be by defined domain in find from function given image indexed intersect freq lambda letting  of partial quantifier relation representation subset subsetEq such supset supsetEq that together new type union where branching on
+syn keyword essenceTypes false total injective bijective surjective maxOccur minOccur minSize size numParts partSize complete maxSize regular maxNumParts maxPartSize minNumParts minPartSize
+syn keyword essenceTrue  true 
+
 
 syn match essenceNumber '\([a-zA-Z_0-9]\)\@<!\d\+'
 syn match essenceComment "$.*$"
@@ -17,7 +19,8 @@ syn keyword essenceFunc preImage parts max min range toSet toMSet toRelation toI
 syn keyword essenceKind matrix tuple set mset partition int bool enum
 
 
-syn match essenceLang "language Essence'\? "
+syn match essenceLang "language Essence "
+syn match eprimeLang  "language ESSENCE' "
 
 syn match essenceOpsArithmetic '+'
 syn match essenceOpsArithmetic '\*'
@@ -53,6 +56,9 @@ syn match essenceOther ','
 let b:current_syntax = "essence"
 
 hi def link essenceKeywords      Constant
+" highlight true differently 
+hi def link essenceTrue          Special
+
 hi def link essenceNumber        PreProc
 hi def link essenceComment       Comment
 hi def link essenceOpsArithmetic Statement
@@ -61,6 +67,7 @@ hi def link essenceOpsComparison Special
 hi def link essenceOther         Delimiter
 hi def link essenceTypes         Type
 hi def link essenceLang          Special
+hi def link eprimeLang           Special
 hi def link essenceFunc          Function
 hi def link essenceKind          Function
 
