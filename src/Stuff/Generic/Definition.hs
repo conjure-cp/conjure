@@ -158,7 +158,7 @@ xMake = qq {
         xs <- mapM each inps
         case mergeTaggedTH xs of
             [x] -> return x
-            _   -> error "These do not seem to have a commmon root."
+            _   -> error "These do not seem to have a common root."
     }
 
 viewTagged :: Show primitive => [Tag] -> Generic primitive -> Maybe [Generic primitive]
@@ -173,3 +173,4 @@ viewTagged _ _ = Nothing
 
 viewTaggeds :: Show primitive => [[Tag]] -> Generic primitive -> [Maybe [Generic primitive]]
 viewTaggeds as g = map (`viewTagged` g) as
+
