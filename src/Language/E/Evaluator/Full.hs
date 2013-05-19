@@ -751,6 +751,62 @@ unrollQuantifiers
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
+
+unrollQuantifiers
+    [xMatch| quantifier    := quantified.quantifier
+           | [q]           := quantified.quanVar.structural.set
+           | []            := quantified.quanOverDom
+           | []            := quantified.quanOverOp.binOp.subsetEq
+           | quanOverExpr  := quantified.quanOverExpr
+           | guard         := quantified.guard
+           | body          := quantified.body
+           |] = ret
+    [xMake| quantified.quantifier := quantifier
+          | quantified.quanVar.structural.single := [q]
+          | quantified.quanOverDom := []
+          | quantified.quanOverOp.binOp.in := []
+          | quantified.quanOverExpr := quanOverExpr
+          | quantified.guard := guard
+          | quantified.body := body
+          |]
+
+unrollQuantifiers
+    [xMatch| quantifier    := quantified.quantifier
+           | qs            := quantified.quanVar.structural.set
+           | []            := quantified.quanOverDom
+           | []            := quantified.quanOverOp.binOp.subsetEq
+           | quanOverExpr  := quantified.quanOverExpr
+           | [guard]       := quantified.guard
+           | body          := quantified.body
+           |] =
+    let
+        newGuard = conjunct
+            [ [eMake| &i .< &j |]
+            | (i,j) <- zip qs (tail qs)
+            ]
+        guard' = [eMake| &guard /\ &newGuard |]
+
+        unroll []  = bug "unrollQuantifiers.structural.set"
+        unroll [i] =
+            [xMake| quantified.quantifier := quantifier
+                  | quantified.quanVar.structural.single := [i]
+                  | quantified.quanOverDom := []
+                  | quantified.quanOverOp.binOp.in := []
+                  | quantified.quanOverExpr := quanOverExpr
+                  | quantified.guard := [guard']
+                  | quantified.body := body
+                  |]
+        unroll (i:is) =
+            [xMake| quantified.quantifier := quantifier
+                  | quantified.quanVar.structural.single := [i]
+                  | quantified.quanOverDom := []
+                  | quantified.quanOverOp.binOp.in := []
+                  | quantified.quanOverExpr := quanOverExpr
+                  | quantified.guard.emptyGuard := []
+                  | quantified.body := [unroll is]
+                  |]
+    in ret $ unroll qs
+
 unrollQuantifiers _ = return Nothing
 
 returnBool :: MonadConjure m => Bool -> m (Maybe (E,[Binder]))

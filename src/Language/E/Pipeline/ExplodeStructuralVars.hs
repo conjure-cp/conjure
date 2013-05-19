@@ -15,32 +15,34 @@ explodeStructuralVars = bottomUpSpec' helper
 
         -- inlining a structural variable
         helper
-            [xMatch| quantifiers   := quantified.quantifier
+          x@[xMatch| quantifiers   := quantified.quantifier
                    | [quanVar]     := quantified.quanVar
                    | quanOverDoms  := quantified.quanOverDom
                    | quanOverOps   := quantified.quanOverOp
                    | quanOverExprs := quantified.quanOverExpr
                    | guards        := quantified.guard
                    | bodys         := quantified.body
-                   |] = do
-            uniq' <- nextUniqueName
-            -- the new quanVar
-            let uniq = [xMake| structural.single.reference := [Prim (S uniq')] |]
-            let mappings = genMappings quanVar
-            let replacerFunc = replaceAll [ (old, new)
-                                          | (old, is) <- mappings
-                                          , let new = mkIndexedExpr (map intToE is) uniq
-                                          , old /= [eMake| _ |]
-                                          ]
-            let result = [xMake| quantified.quantifier   := quantifiers
-                               | quantified.quanVar      := [uniq]
-                               | quantified.quanOverDom  := quanOverDoms
-                               | quantified.quanOverOp   := quanOverOps
-                               | quantified.quanOverExpr := quanOverExprs
-                               | quantified.guard        := map replacerFunc guards
-                               | quantified.body         := map replacerFunc bodys
-                               |]
-            return result
+                   |] =
+            case genMappings quanVar of
+                [] -> return x
+                mappings -> do
+                    uniq' <- nextUniqueName
+                    -- the new quanVar
+                    let uniq = [xMake| structural.single.reference := [Prim (S uniq')] |]
+                    let replacerFunc = replaceAll [ (old, new)
+                                                  | (old, is) <- mappings
+                                                  , let new = mkIndexedExpr (map intToE is) uniq
+                                                  , old /= [eMake| _ |]
+                                                  ]
+                    let result = [xMake| quantified.quantifier   := quantifiers
+                                       | quantified.quanVar      := [uniq]
+                                       | quantified.quanOverDom  := quanOverDoms
+                                       | quantified.quanOverOp   := quanOverOps
+                                       | quantified.quanOverExpr := quanOverExprs
+                                       | quantified.guard        := map replacerFunc guards
+                                       | quantified.body         := map replacerFunc bodys
+                                       |]
+                    return result
 
         helper x = return x
 
@@ -62,7 +64,7 @@ genMappings [xMatch| xs  := structural.matrix |]
         [ [ (y,i:is) | (y,is) <- genMappings x ]
         | (i,x) <- zip [1..] xs
         ]
-genMappings x = [(x,[])]
+genMappings _ = []
 
 
 intToE :: Integer -> E

@@ -325,6 +325,31 @@ introduceStuff = helper
             = addReference r [xMake| quanVar.name   := [Prim (S r)]
                                    | quanVar.within := [x]
                                    |]
+        helper   [xMatch| quantifier    := quantified.quantifier
+                        | qs            := quantified.quanVar.structural.set
+                        | []            := quantified.quanOverDom
+                        | []            := quantified.quanOverOp.binOp.subsetEq
+                        | quanOverExpr  := quantified.quanOverExpr
+                        | guard         := quantified.guard
+                        | body          := quantified.body
+                        |]
+            = forM_ qs $ \ q -> case q of
+                [xMatch| [Prim (S r)] := reference |] ->
+                    let
+                        within =
+                            [xMake| quantified.quantifier := quantifier
+                                  | quantified.quanVar.structural.single := [q]
+                                  | quantified.quanOverDom := []
+                                  | quantified.quanOverOp.binOp.in := []
+                                  | quantified.quanOverExpr := quanOverExpr
+                                  | quantified.guard := guard
+                                  | quantified.body := body
+                                  |]
+                    in
+                        addReference r [xMake| quanVar.name   := [Prim (S r)]
+                                             | quanVar.within := [within]
+                                             |]
+                _ -> return ()
 
         helper _ = return ()
 

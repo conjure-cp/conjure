@@ -244,4 +244,8 @@ parseStructural = msum
     , do
         xs <- brackets $ parseStructural `sepBy1` comma
         return [xMake| structural.matrix := xs |]
+    , do
+        xs <- braces $ parseStructural `sepBy1` comma
+        return [xMake| structural.set := xs |]
     ]
+
