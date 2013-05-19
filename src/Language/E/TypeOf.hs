@@ -624,6 +624,16 @@ typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
 typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
                 | [a] := binOp.left
                 | [b] := binOp.right
+                |] | operator `elem` T.words ".< .<=" = do
+    tya <- typeOf a
+    tyb <- typeOf b
+    if typeUnify tya tyb
+        then return tyBool
+        else typeErrorIn p
+
+typeOf p@[xMatch| [Prim (S operator)] := binOp.operator
+                | [a] := binOp.left
+                | [b] := binOp.right
                 |] | operator `elem` T.words "+ - * / % **" = do
     tya <- typeOf a
     tyb <- typeOf b

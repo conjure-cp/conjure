@@ -94,30 +94,36 @@ fullEvaluator [xMatch| [Prim (S "**")] := binOp.operator
                      | [Prim (I b)   ] := binOp.right.value.literal
                      |] | b > 0 = returnInt $ a ^ b
 
+-- comparison on integer literals
 fullEvaluator [xMatch| [Prim (S op)] := binOp.operator
                      | [Prim (I a )] := binOp.left .value.literal
                      | [Prim (I b )] := binOp.right.value.literal
                      |] | Just f <- lookup op comparators
                         = returnBool $ f a b
-    where comparators = [ ( ">" , (>)  )
-                        , ( ">=", (>=) )
-                        , ( "<" , (<)  )
-                        , ( "<=", (<=) )
-                        , ( "=" , (==) )
-                        , ( "!=", (/=) )
+    where comparators = [ ( ">"  , (>)  )
+                        , ( ">=" , (>=) )
+                        , ( "<"  , (<)  )
+                        , ( "<=" , (<=) )
+                        , ( "="  , (==) )
+                        , ( "!=" , (/=) )
+                        , ( ".<" , (<)  )
+                        , ( ".<=", (<=) )
                         ]
- 
+
+-- comparison on boolean literals
 fullEvaluator [xMatch| [Prim (S op)] := binOp.operator
                      | [Prim (B a )] := binOp.left .value.literal
                      | [Prim (B b )] := binOp.right.value.literal
                      |] | Just f <- lookup op comparators
                         = returnBool $ f a b
-    where comparators = [ ( ">" , (>)  )
-                        , ( ">=", (>=) )
-                        , ( "<" , (<)  )
-                        , ( "<=", (<=) )
-                        , ( "=" , (==) )
-                        , ( "!=", (/=) )
+    where comparators = [ ( ">"  , (>)  )
+                        , ( ">=" , (>=) )
+                        , ( "<"  , (<)  )
+                        , ( "<=" , (<=) )
+                        , ( "="  , (==) )
+                        , ( "!=" , (/=) )
+                        , ( ".<" , (<)  )
+                        , ( ".<=", (<=) )
                         ]
 
 fullEvaluator [eMatch| !false |] = ret [eMake| true  |]
