@@ -754,24 +754,6 @@ unrollQuantifiers
 
 unrollQuantifiers
     [xMatch| quantifier    := quantified.quantifier
-           | [q]           := quantified.quanVar.structural.set
-           | []            := quantified.quanOverDom
-           | []            := quantified.quanOverOp.binOp.subsetEq
-           | quanOverExpr  := quantified.quanOverExpr
-           | guard         := quantified.guard
-           | body          := quantified.body
-           |] = ret
-    [xMake| quantified.quantifier := quantifier
-          | quantified.quanVar.structural.single := [q]
-          | quantified.quanOverDom := []
-          | quantified.quanOverOp.binOp.in := []
-          | quantified.quanOverExpr := quanOverExpr
-          | quantified.guard := guard
-          | quantified.body := body
-          |]
-
-unrollQuantifiers
-    [xMatch| quantifier    := quantified.quantifier
            | qs            := quantified.quanVar.structural.set
            | []            := quantified.quanOverDom
            | []            := quantified.quanOverOp.binOp.subsetEq
