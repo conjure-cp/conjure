@@ -5,7 +5,7 @@ import Control.Monad ( guard, msum, mzero )
 import Data.Char ( toLower )
 import Data.Maybe ( listToMaybe, mapMaybe )
 
-import Data.HashSet as S ( HashSet, fromList, member, insert )
+import Data.HashSet as S ( HashSet, fromList, member )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 
 import qualified Text.PrettyPrint as Pr
@@ -45,6 +45,12 @@ data ConjureModeSingle
     | ModeCompact
     deriving (Show)
 
+data ConjureModeMultiple
+    = DFAll
+    | DFCompactParam
+    | DFNoChannelling
+    deriving (Show)
+
 data ConjureMode
     = ModeUnknown
     | ModeDiff FilePath FilePath
@@ -69,10 +75,10 @@ data ConjureMode
         FilePath            -- Essence
         (Maybe FilePath)    -- Essence Param
         FilePath            -- Essence Solution
-    | ModeDFAll
-        FilePath    -- Essence
-    | ModeDFAllCompactParam
-        FilePath    -- Essence
+    | ModeMultipleOutput
+        ConjureModeMultiple
+        FilePath            -- Essence
+        (Maybe FilePath)    -- output dir
     | ModeSingleOutput
         ConjureModeSingle
         FilePath    -- Essence
@@ -105,7 +111,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
     , modeGenerateParam
     , modeGenerateParam2
     , modeDFAll
-    , modeDFAllCompactParam
+    , modeDFCompactParam
     , modeDFNoChannel
     , modeRandom
     , modeFirst
@@ -173,7 +179,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
          anyKey $ words' "--in-essence --in"
         ]
 
-    modeDFAllCompactParam = mode "df-compact-param" [
+    modeDFCompactParam = mode "df-compact-param" [
           anyKey $ words' "--in-essence --in"
         ]
 
@@ -212,7 +218,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeGenerateParam
     , modeGenerateParam2
     , modeDFAll
-    , modeDFAllCompactParam
+    , modeDFCompactParam
     , modeDFNoChannel
     , modeRandom
     , modeFirst
@@ -281,21 +287,20 @@ parseArgs (pairs, flags, rest) = msum
         modeDFAll = do
             mode $ words "df depthfirst depth-first"
             inEssence <- anyKey $ words "--in-essence --in"
-            returnMode $ ModeDFAll inEssence
+            outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
+            returnMode $ ModeMultipleOutput DFAll inEssence outDir
 
-        modeDFAllCompactParam = do
+        modeDFCompactParam = do
             mode $ words "df-compact-param"
             inEssence <- anyKey $ words "--in-essence --in"
-            returnMode $ ModeDFAllCompactParam inEssence
+            outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
+            returnMode $ ModeMultipleOutput DFCompactParam inEssence outDir
 
         modeDFNoChannel = do
             mode $ words "df-no-channelling"
             inEssence <- anyKey $ words "--in-essence --in"
-            return $ ConjureModeWithFlags
-                (ModeDFAll inEssence)
-                pairs
-                (S.insert "--no-channelling" flags)
-                rest
+            outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
+            returnMode $ ModeMultipleOutput DFNoChannelling inEssence outDir
 
         modeRandom = do
             mode $ words "random rand rnd"
@@ -334,7 +339,6 @@ isKey _ = False
 isFlag :: String -> Bool
 isFlag = (`elem` allFlags)
     where
-        allFlags = [ "--no-channelling"
-                   , "--better"
+        allFlags = [ "--better"
                    ]
 

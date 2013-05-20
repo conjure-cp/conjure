@@ -313,6 +313,7 @@ instance Pretty E where
     pretty [xMatch| [x] := structural.single |] = pretty x
     pretty [xMatch| xs  := structural.tuple  |] = prettyList Pr.parens "," xs
     pretty [xMatch| xs  := structural.matrix |] = prettyList Pr.brackets "," xs
+    pretty [xMatch| xs  := structural.set    |] = prettyList Pr.braces "," xs
 
     -- :atTopLevel is only used to indicate whether we want a Pr.parens
     -- around a expr-quantified or not.

@@ -325,6 +325,36 @@ introduceStuff = helper
             = addReference r [xMake| quanVar.name   := [Prim (S r)]
                                    | quanVar.within := [x]
                                    |]
+        helper   [xMatch| quantifier    := quantified.quantifier
+                        | qs            := quantified.quanVar.structural.set
+                        | []            := quantified.quanOverDom
+                        | []            := quantified.quanOverOp.binOp.subsetEq
+                        | quanOverExpr  := quantified.quanOverExpr
+                        | guard         := quantified.guard
+                        | body          := quantified.body
+                        |] =
+            let
+                getReferenceOut [xMatch| [Prim (S r)] := reference |] = Just r
+                getReferenceOut [xMatch| [Prim (S r)] := structural.single.reference |] = Just r
+                getReferenceOut _ = Nothing
+            in
+                forM_ qs $ \ q -> case getReferenceOut q of
+                    Just r ->
+                        let
+                            within =
+                                [xMake| quantified.quantifier := quantifier
+                                      | quantified.quanVar.structural.single := [q]
+                                      | quantified.quanOverDom := []
+                                      | quantified.quanOverOp.binOp.in := []
+                                      | quantified.quanOverExpr := quanOverExpr
+                                      | quantified.guard := guard
+                                      | quantified.body := body
+                                      |]
+                        in
+                            addReference r [xMake| quanVar.name   := [Prim (S r)]
+                                                 | quanVar.within := [within]
+                                                 |]
+                    Nothing -> error $ show $ prettyAsPaths q
 
         helper _ = return ()
 

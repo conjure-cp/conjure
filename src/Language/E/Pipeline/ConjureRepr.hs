@@ -12,8 +12,7 @@ import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.NoTuples ( noTuplesSpec )
-
-import Data.HashSet as S
+import Conjure.Mode ( ConjureModeWithFlags(..), ConjureMode(..), ConjureModeMultiple(..) )
 
 
 conjureRepr
@@ -22,8 +21,10 @@ conjureRepr
     -> Spec
     -> m Spec
 conjureRepr reprs spec = withBindingScope' $ do
-    flags <- getsGlobal conjureFlags
-    let useChannelling = not $ S.member "--no-channelling" flags
+    ConjureModeWithFlags mode _ _ _ <- getsGlobal conjureMode
+    let useChannelling = case mode of
+                            ModeMultipleOutput DFNoChannelling _ _ -> False
+                            _ -> True
     mkLog "useChannelling" $ pretty useChannelling
     initialiseSpecState spec
     let pipeline =  recordSpec "entering conjureRepr"

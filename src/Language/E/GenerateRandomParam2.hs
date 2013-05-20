@@ -18,7 +18,6 @@ import Conjure.Mode
 import Prelude hiding ( FilePath, reverse )
 import Shelly
 
-import qualified Data.HashSet        as S
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text.Lazy      as LT
 import qualified System.Directory    as FP
@@ -59,7 +58,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
             driverConjureSingle True True
                 param_eprime
                 (conjureWithMode
-                    S.empty seed Nothing
+                    seed Nothing
                     (ConjureModeWithFlags (ModeSingleOutput ModeCompact param_gen param_eprime) M.empty def def)
                     ruleReprs ruleRefns paramEssence)
 
