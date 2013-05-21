@@ -322,7 +322,6 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
             let indexOfMatrix    = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
 
-            mkLog "values" $ sep $ map pretty values
             let nbTrues  = genericLength values
             let nbFalses = nbValuesInt - nbTrues
             let outTuple1_Name   = name `T.append` "_Set~ExplicitVarSizeWithMarker_tuple1"
@@ -505,7 +504,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                         case findIndex (== value) vs of
                             Nothing -> userErr $ vcat
                                 [ "Not an element of the enumeration:" <+> pretty value
-                                , "Options were:" <+> sep (map pretty vs)
+                                , "Options were:" <+> fsep (map pretty vs)
                                 ]
                             Just i  -> return [(name, [xMake| value.literal := [Prim $ I $ fromIntegral $ i + 1] |])]
                     _ -> bug "don't know what this is"
@@ -600,7 +599,7 @@ zeroVal x = bug ("RedArrow.zeroVal" <+> prettyAsPaths x)
 
 instantiate :: MonadConjure m => [Text] -> E -> m E
 instantiate seen [xMatch| [Prim (S domId)] := reference |]
-    | domId `elem` seen = userErr $ "Cyclic definition:" <+> sep (map pretty seen)
+    | domId `elem` seen = userErr $ "Cyclic definition:" <+> fsep (map pretty seen)
 instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
     mdomain <- runMaybeT $ lookupReference domId
     case mdomain of

@@ -42,7 +42,7 @@ prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
 prettyList wrap punc = prettyListDoc wrap punc . map pretty
 
 prettyListDoc :: (Doc -> Doc) -> Doc -> [Doc] -> Doc
-prettyListDoc wrap punc = wrap . sep . punctuate punc
+prettyListDoc wrap punc = wrap . fsep . punctuate punc
 
 parensIf :: Bool -> Doc -> Doc
 parensIf = wrapIf parens

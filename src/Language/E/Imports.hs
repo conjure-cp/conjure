@@ -63,7 +63,7 @@ import Data.Hashable         as X ( Hashable(..), hash )
 import Data.Serialize as X ( Serialize, encode, decode )
 import qualified Data.Serialize
 
-import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, hsep, vcat, (<+>), ($$) )
+import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, fsep, hsep, vcat, (<+>), ($$) )
 
 import System.Random as X ( StdGen, getStdGen, randomR )
 
