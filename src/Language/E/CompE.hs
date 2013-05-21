@@ -385,3 +385,18 @@ instance SelectByMode RuleReprResult where
             _ -> defSelectByMode mode xs
 
 
+type ReprFunc m =
+    ( Text                                  -- input: name of the variable
+    , E                                     -- input: domain
+    , E                                     -- input: decl
+    )
+    -> m [RuleReprResult]
+
+
+type RefnFunc m =
+    E                                   -- the expression
+    -> m (Maybe [(Text, E)])            -- Nothing if rule doesn't apply
+                                        -- returns a list of rewrites, fst being rulename
+                                        --                           , snd being E
+
+

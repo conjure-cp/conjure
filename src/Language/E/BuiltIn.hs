@@ -8,14 +8,7 @@ module Language.E.BuiltIn
 import Language.E
 import Language.E.Pipeline.FreshNames
 
-
-
-type ReprFunc m =
-    ( Text                                  -- input: name of the variable
-    , E                                     -- input: domain
-    , E                                     -- input: decl
-    )
-    -> m [RuleReprResult]
+import Language.E.BuiltIn.SetStructural ( setStructural )
 
 
 
@@ -125,12 +118,6 @@ renRefn _ x = x
 
 
 
-type RefnFunc m =
-    E                                   -- the expression
-    -> m (Maybe [(Text, E)])            -- Nothing if rule doesn't apply
-                                        -- returns a list of rewrites, fst being rulename
-                                        --                           , snd being E
-
 ret :: MonadConjure m => E -> String -> E -> m (Maybe [(Text, E)])
 ret orig name result = do
     mkLog name $ vcat [pretty orig, "~~>", pretty result]
@@ -141,6 +128,7 @@ builtInRefn = [ relationApply, tupleExplode, functionLiteralApply
               , quanOverToSetRelationProject
               , tupleDomInQuantification
               , intDomFromSet
+              , setStructural
               ]
 
 intDomFromSet :: MonadConjure m => RefnFunc m
