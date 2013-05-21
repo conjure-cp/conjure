@@ -6,7 +6,8 @@
     ~~>
 
 &quan i2,j2 : &r
-    , &guard { &i --> &m[i2], &j --> &m[j2] } /\ i2 < j2
+    , i2 .< j2 /\
+      &guard { &i --> &m[i2], &j --> &m[j2] }
     . &body  { &i --> &m[i2], &j --> &m[j2] }
 
     where &s hasRepr Set~Explicit

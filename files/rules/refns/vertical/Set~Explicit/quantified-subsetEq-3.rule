@@ -1,0 +1,23 @@
+
+[500]
+
+&quan {&q1,&q2,&q3} subsetEq &s , &guard . &body
+
+    ~~>
+
+&quan q1',q2',q3' : &r
+    , q1' < q2' /\ q2' < q3' /\
+      &guard { &q1 --> &m[q1']
+             , &q2 --> &m[q2']
+             , &q3 --> &m[q3']
+             }
+    . &body  { &q1 --> &m[q1']
+             , &q2 --> &m[q2']
+             , &q3 --> &m[q3']
+             }
+
+    where &s hasRepr Set~Explicit
+
+    letting &m be refn(&s)
+    letting &r be indices(&m,0)
+
