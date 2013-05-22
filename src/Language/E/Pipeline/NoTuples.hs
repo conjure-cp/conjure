@@ -82,35 +82,42 @@ unrollIfNeeded inp = do
 noTuplesE :: MonadConjure m => E -> m (E, Bool)
 noTuplesE statementIn = do
     let statements = statementAsList statementIn
-    (statements',(tuplesToExplode,matrixOfTuplesToExplode)) <-
+    (statements',(tuplesToExplode,matrixOfTuplesToExplode,directReplacements)) <-
         runWriterT $ forM statements $ \ statement ->
             case checkTopLevel statement of
                 Nothing      -> return [statement]
                 Just (f,n,d) ->
                     case checkTupleDomain d of
                         Just ts -> do
+                            let exploded_values =
+                                    [ [xMake| reference := [Prim (S nm)] |]
+                                    | i <- [1 .. length ts]
+                                    , let nm = mconcat [ n, "_tuple", stringToText (show i) ]
+                                    ]
+                            let exploded = [xMake| value.tuple.values := exploded_values |]
+                            tell ([],[],[(n, exploded)])
                             -- returning newDecls:
                             outs <- forM (zip [(1 :: Int) ..] ts) $ \ (i,t) -> do
-                                tell ([n],[])
+                                tell ([n],[],[])
                                 let n' = mconcat [ n, "_tuple", stringToText (show i) ]
                                 return $ f n' t
-                            lift $ mkLog "removedDecl" $ sep $ [ pretty statement
-                                                               , "Added the following:"
-                                                               ] ++ map pretty outs
+                            lift $ mkLog "removedDecl" $ vcat $ [ pretty statement
+                                                                , "Added the following:"
+                                                                ] ++ map pretty outs
                             return outs
                         Nothing ->
                             case checkMatrixOfTupleDomain d of
                                 Just (indices,tuples) -> do
                                     lift $ mkLog "matrixToTuple" $ name statement <> "∑" <> pretty (length indices)
-                                    tell ([],[(n,length indices)])
+                                    tell ([],[(n,length indices)],[])
                                     -- returning newDecls:
                                     outs <- forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
                                         let n' = mconcat [ n, "_tuple", stringToText (show i) ]
                                         let t' = constructMatrixDomain indices t
                                         return $ f n' t'
-                                    lift $ mkLog "removedDecl" $ sep $ [ pretty statement
-                                                                       , "Added the following:"
-                                                                       ] ++ map pretty outs
+                                    lift $ mkLog "removedDecl" $ vcat $ [ pretty statement
+                                                                        , "Added the following:"
+                                                                        ] ++ map pretty outs
                                     return outs
                                 Nothing -> return [statement]
     let statementsOut = concat statements'
@@ -120,13 +127,25 @@ noTuplesE statementIn = do
             s' <- ( 
                     renameTupleIndexes (S.fromList tuplesToExplode)                 >=>
                     renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
+                    doDirectReplacements directReplacements                         >=>
                     valueMatrixOfTuple
                   )
                   (listAsStatement statementsOut)
             return (s', True)
 
-    where name [xMatch| [Prim (S _n)] := topLevel.declaration.find.name.reference  |] = pretty _n
-          name _f = pretty _f 
+    where
+        name [xMatch| [Prim (S _n)] := topLevel.declaration.find.name.reference  |] = pretty _n
+        name _f = pretty _f
+
+        doDirectReplacements pairs = bottomUpE' f
+            where
+                f p@[xMatch| [Prim (S nm)] := reference |] = case lookup nm pairs of
+                    Nothing -> return p
+                    Just r  -> do
+                        mkLog "noTuples" $ sep [ pretty p, "~~>", pretty r ]
+                        return r
+                f p = return p
+
 
 noTupleDomsInQuanEs :: MonadConjure m => E -> m (E, Bool)
 noTupleDomsInQuanEs inp@(Tagged t xs) = do
