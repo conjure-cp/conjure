@@ -1062,6 +1062,22 @@ tupleEq [eMatch| &a .< &b |] = do
                           | j <- [1..genericLength is]
                           , let i = [xMake| value.literal := [Prim (I j)] |]
                           ]
+        ([xMatch| [innerTy] := type.matrix.inner
+                | is := type.matrix.index
+                |], _) | isAbstractType innerTy -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| [innerTy] := type.matrix.inner
+                   | is := type.matrix.index
+                   |]) | isAbstractType innerTy -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
         _ -> return Nothing
     case melems of
         Nothing -> return Nothing
@@ -1088,6 +1104,22 @@ tupleEq [eMatch| &a .<= &b |] = do
                           | j <- [1..genericLength is]
                           , let i = [xMake| value.literal := [Prim (I j)] |]
                           ]
+        ([xMatch| [innerTy] := type.matrix.inner
+                | is := type.matrix.index
+                |], _) | isAbstractType innerTy -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| [innerTy] := type.matrix.inner
+                   | is := type.matrix.index
+                   |]) | isAbstractType innerTy -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
         _ -> return Nothing
     case melems of
         Nothing -> return Nothing
@@ -1108,6 +1140,10 @@ tupleEq [eMatch| &a[&i] |] = do
                 _ -> return Nothing
 tupleEq _ = return Nothing
 
+isAbstractType :: E -> Bool
+isAbstractType [xMatch| _ := type.bool |] = False
+isAbstractType [xMatch| _ := type.int  |] = False
+isAbstractType _ = True
 
 matrixEq :: MonadConjure m => E -> m (Maybe (E, [Binder]))
 matrixEq [eMatch| &a = &b |] = do
