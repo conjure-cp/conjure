@@ -19,6 +19,7 @@ import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalHasRepr, evalDomSize
                                     , evalIndices, evalReplace
                                     , tupleEq, matrixEq
+                                    , dotOrderDecompose
                                     , stripStructuralSingle
                                     , stripUnnecessaryTyped
                                     , unrollQuantifiers
@@ -66,6 +67,7 @@ fullySimplify x = do
                             , logged "Evaluator.replace"                evalReplace
                             , logged "Evaluator.tupleEq"                tupleEq
                             , logged "Evaluator.matrixEq"               matrixEq
+                            , logged "Evaluator.dotOrderDecompose"      dotOrderDecompose
                             , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
                             , logged "Simplify"                         (adapter partialEvaluator)
                             , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped
@@ -110,6 +112,7 @@ allCombined i =
                     , logged "Evaluator.replace"                evalReplace
                     , logged "Evaluator.tupleEq"                tupleEq
                     , logged "Evaluator.matrixEq"               matrixEq
+                    , logged "Evaluator.dotOrderDecompose"      dotOrderDecompose
                     , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
                     , logged "Simplify"                         (adapter partialEvaluator)
                     , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped

@@ -64,6 +64,7 @@ suppress = S.fromList
     , "Evaluator.replace"
     , "Evaluator.tupleEq"
     , "Evaluator.matrixEq"
+    , "Evaluator.dotOrderDecompose"
     , "Evaluator.stripStructuralSingle"
     , "Evaluator.stripUnnecessaryTyped"
     , "Evaluator.unrollQuantifiers"

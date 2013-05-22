@@ -10,9 +10,10 @@ module Language.E.Evaluator.Full
     , evalIndices
     , evalReplace
     , matrixEq
+    , tupleEq
+    , dotOrderDecompose
     , stripStructuralSingle
     , stripUnnecessaryTyped
-    , tupleEq
     , unrollQuantifiers
     , domSize
     ) where
@@ -1034,7 +1035,18 @@ tupleEq [eMatch| &a != &b |] = do
                            , let i = [xMake| value.literal := [Prim (I j)] |]
                            ]
         _ -> return Nothing
-tupleEq [eMatch| &a .< &b |] = do
+tupleEq [eMatch| &a[&i] |] = do
+    miInt <- toInt i
+    case miInt of
+        Nothing        -> return Nothing
+        Just (iInt, _) ->
+            case a of
+                [xMatch| vs := value.tuple.values |] -> ret $ vs `genericIndex` (iInt - 1)
+                _ -> return Nothing
+tupleEq _ = return Nothing
+
+dotOrderDecompose :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+dotOrderDecompose [eMatch| &a .< &b |] = do
     ta <- typeOf a
     tb <- typeOf b
     melems <- case (ta,tb) of
@@ -1083,12 +1095,12 @@ tupleEq [eMatch| &a .< &b |] = do
         Nothing -> return Nothing
         Just elems -> do
             let
-                go [] = bug "tupleEq.(.<)"
+                go [] = bug "dotOrderDecompose.(.<)"
                 go [(i,j)] = [eMake| &i .< &j |]
                 go ((i,j):rest) = let rest' = go rest
                                   in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
             ret $ go elems
-tupleEq [eMatch| &a .<= &b |] = do
+dotOrderDecompose [eMatch| &a .<= &b |] = do
     ta <- typeOf a
     tb <- typeOf b
     melems <- case (ta,tb) of
@@ -1125,20 +1137,13 @@ tupleEq [eMatch| &a .<= &b |] = do
         Nothing -> return Nothing
         Just elems -> do
             let
-                go [] = bug "tupleEq.(.<=)"
+                go [] = bug "dotOrderDecompose.(.<=)"
                 go [(i,j)] = [eMake| &i .<= &j |]
                 go ((i,j):rest) = let rest' = go rest
                                   in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
             ret $ go elems
-tupleEq [eMatch| &a[&i] |] = do
-    miInt <- toInt i
-    case miInt of
-        Nothing        -> return Nothing
-        Just (iInt, _) ->
-            case a of
-                [xMatch| vs := value.tuple.values |] -> ret $ vs `genericIndex` (iInt - 1)
-                _ -> return Nothing
-tupleEq _ = return Nothing
+dotOrderDecompose _ = return Nothing
+
 
 isAbstractType :: E -> Bool
 isAbstractType [xMatch| _ := type.bool |] = False
