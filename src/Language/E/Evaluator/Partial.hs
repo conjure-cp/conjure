@@ -45,6 +45,13 @@ partialEvaluator [eMatch| &_ \/ true |] = ret [eMake| true |]
 
 partialEvaluator [eMatch| false -> &_ |] = ret [eMake| true |]
 partialEvaluator [eMatch| true  -> &a |] = ret a
+partialEvaluator [eMatch| &a -> false |] = ret [eMake| !(&a) |]
+partialEvaluator [eMatch| &a -> true  |] = ret a
+
+partialEvaluator [eMatch| &a <-> false |] = ret [eMake| !(&a) |]
+partialEvaluator [eMatch| &a <-> true  |] = ret a
+partialEvaluator [eMatch| false <-> &a |] = ret [eMake| !(&a) |]
+partialEvaluator [eMatch| true  <-> &a |] = ret a
 
 partialEvaluator [eMatch| &a + &b - &c |]
     | [xMatch| [Prim (I bInt)] := value.literal |] <- b
