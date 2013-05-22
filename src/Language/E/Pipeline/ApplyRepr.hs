@@ -11,6 +11,7 @@ import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 import qualified Data.HashMap.Strict as M
 import qualified Data.HashSet as S
 import qualified Data.Text as T
+import qualified Text.PrettyPrint as Pr
 
 
 applyRepr
@@ -149,7 +150,7 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                                 , structuralConsLog =
                                                     if isGiven origDecl
                                                         then structuralConsLog st
-                                                        else cons' ++ structuralConsLog st
+                                                        else (reprName, cons') : structuralConsLog st
                                                 }
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
@@ -162,16 +163,19 @@ applyCongfigToSpec spec config = withBindingScope' $ do
 
 
 addStructuralFromLog :: MonadConjure m => Spec -> m Spec
-addStructuralFromLog sp@(Spec v xs) = do
-    cs' <- gets structuralConsLog
-    cs  <- liftM nub $ mapM (liftM fst . runWriterT . simplify) cs'
-    modify $ \ st -> st { structuralConsLog = [] }
+addStructuralFromLog (Spec v xs) = do
     let mk i = [xMake| topLevel.suchThat := [i] |]
-    if null cs
-        then return sp
-        else do
-            mkLog "addedStructuralCons" $ vcat $ map pretty cs
-            return $ Spec v $ listAsStatement $ statementAsList xs ++ map mk cs
+    structuralConsLog' <- gets structuralConsLog
+    modify $ \ st -> st { structuralConsLog = [] }
+    allStructural <-
+        forM structuralConsLog' $ \ (reprName, cs') -> do
+            cs <- liftM nub $ mapM (liftM fst . runWriterT . simplify) cs'
+            if null cs
+                then return []
+                else do
+                    mkLog "addedStructuralCons" $ vcat $ Pr.braces (pretty reprName) : map pretty cs
+                    return cs
+    return $ Spec v $ listAsStatement $ statementAsList xs ++ map mk (concat allStructural)
 
 
 addChannellingFromLog :: MonadConjure m => Spec -> m Spec

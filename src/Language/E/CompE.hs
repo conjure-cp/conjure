@@ -178,7 +178,10 @@ data ConjureState = ConjureState
                                   , E        -- original full declaration
                                   , E        -- new domain
                                   ) ]
-        , structuralConsLog :: ![E]
+        , structuralConsLog :: ![ ( Text     -- representation name
+                                  , [E]
+                                  )
+                                ]
         , lastSpec :: !(Maybe Spec) -- record the spec after changes, to report in case of an error.
         , localLogs :: !LogTree
         , allNamesPreConjure :: !(S.HashSet Text)  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
