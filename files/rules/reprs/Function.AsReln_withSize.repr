@@ -1,0 +1,70 @@
+
+~~> AsReln
+~~> relation (size &size_) of (&fr * &to)
+
+
+*** function (size &size_, total) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) = 1)        $ is total
+
+*** function (size &size_, total, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+
+*** function (size &size_, total, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) = 1)        $ is total
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+*** function (size &size_, total, injective, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+*** function (size &size_, total, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+
+*** function (size &size_, partial) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+
+*** function (size &size_, partial, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+
+*** function (size &size_, partial, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+*** function (size &size_, partial, injective, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+*** function (size &size_, partial, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+
+*** function (size &size_) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+
+*** function (size &size_, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+
+*** function (size &size_, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+*** function (size &size_, injective, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
+*** function (size &size_, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . i = j[1]) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])       $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])           $ is surjective
+
