@@ -165,8 +165,10 @@ noTupleDomsInQuanE inp = do
     case mout of
         Nothing  -> return (inp, False)
         Just out -> do
-            out' <- ( renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
-                      renameTupleIndexes (S.fromList tuplesToExplode)
+            out' <- ( 
+                    renameTupleIndexes (S.fromList tuplesToExplode)                 >=>
+                    renameMatrixOfTupleIndexes (M.fromList matrixOfTuplesToExplode) >=>
+                    valueMatrixOfTuple
                     ) out
             mkLog "noTupleDomsInQuan" $ vcat [ pretty inp
                                              , "~~>"
@@ -311,7 +313,7 @@ renameMatrixOfTupleIndexes identifiers = bottomUpE' f
                             let out = mkIndexed [xMake| reference := [Prim (S i')] |]
                                                (indicesBefore `mappend` indicesAfter)
                             mkLog "noTuplesReplacement" $ sep [ pretty p, "~~>", pretty out ]
-                            return out
+                            bottomUpE' f out
                         _ -> return p
 
 viewIndexed :: E -> (E,[E])
