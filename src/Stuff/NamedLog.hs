@@ -101,7 +101,7 @@ suppress = S.fromList
     , "noTupleUnrollIfNeeded"
     , "noTupleLiterals"
     , "noTupleDomsInQuan"
-    -- , "noTuplesReplacement"
+    , "noTuplesReplacement"
 
     , "handleInfDom"
     , "addSlicing"
