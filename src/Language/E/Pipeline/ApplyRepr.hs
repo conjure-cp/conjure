@@ -150,7 +150,7 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                                 , structuralConsLog =
                                                     if isGiven origDecl
                                                         then structuralConsLog st
-                                                        else (reprName, cons') : structuralConsLog st
+                                                        else nub $ (reprName, cons') : structuralConsLog st
                                                 }
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
