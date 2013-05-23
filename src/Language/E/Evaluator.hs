@@ -20,6 +20,7 @@ import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalIndices, evalReplace
                                     , tupleEq, matrixEq
                                     , dotOrderDecomposeForTuples
+                                    , dotOrderDecomposeForMatrices
                                     , stripStructuralSingle
                                     , stripUnnecessaryTyped
                                     , unrollQuantifiers
@@ -68,7 +69,7 @@ fullySimplify x = do
                             , logged "Evaluator.tupleEq"                        tupleEq
                             , logged "Evaluator.matrixEq"                       matrixEq
                             , logged "Evaluator.dotOrderDecomposeForTuples"     dotOrderDecomposeForTuples
-                            -- , logged "Evaluator.dotOrderDecomposeForMatrices"   dotOrderDecomposeForMatrices
+                            , logged "Evaluator.dotOrderDecomposeForMatrices"   dotOrderDecomposeForMatrices
                             , logged "Evaluator.stripStructuralSingle"          stripStructuralSingle
                             , logged "Simplify"                                 (adapter partialEvaluator)
                             , logged "Evaluator.stripUnnecessaryTyped"          stripUnnecessaryTyped
@@ -114,7 +115,7 @@ allCombined i =
                     , logged "Evaluator.tupleEq"                        tupleEq
                     , logged "Evaluator.matrixEq"                       matrixEq
                     , logged "Evaluator.dotOrderDecomposeForTuples"     dotOrderDecomposeForTuples
-                    -- , logged "Evaluator.dotOrderDecomposeForMatrices"   dotOrderDecomposeForMatrices
+                    , logged "Evaluator.dotOrderDecomposeForMatrices"   dotOrderDecomposeForMatrices
                     , logged "Evaluator.stripStructuralSingle"          stripStructuralSingle
                     , logged "Simplify"                                 (adapter partialEvaluator)
                     , logged "Evaluator.stripUnnecessaryTyped"          stripUnnecessaryTyped

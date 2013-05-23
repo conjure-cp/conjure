@@ -1117,69 +1117,67 @@ dotOrderDecomposeForMatrices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 dotOrderDecomposeForMatrices [eMatch| &a .< &b |] = do
     ta <- typeOf a
     tb <- typeOf b
-    melems <- case (ta,tb) of
-        ([xMatch| [innerTy] := type.matrix.inner
-                | is := type.matrix.index
-                |], _) | isAbstractType innerTy -> do
-            return $ Just [ ( [eMake| &a[&i] |]
-                            , [eMake| &b[&i] |] )
-                          | j <- [1..genericLength is]
-                          , let i = [xMake| value.literal := [Prim (I j)] |]
-                          ]
-        (_, [xMatch| [innerTy] := type.matrix.inner
-                   | is := type.matrix.index
-                   |]) | isAbstractType innerTy -> do
-            return $ Just [ ( [eMake| &a[&i] |]
-                            , [eMake| &b[&i] |] )
-                          | j <- [1..genericLength is]
-                          , let i = [xMake| value.literal := [Prim (I j)] |]
-                          ]
+    mindex <- case (ta,tb) of
+        ([xMatch| [innerTy] := type.matrix.inner |], _) | isAbstractType innerTy -> do
+            da <- domainOf a
+            case da of
+                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                _ -> return Nothing
+        (_, [xMatch| [innerTy] := type.matrix.inner |]) | isAbstractType innerTy -> do
+            db <- domainOf b
+            case db of
+                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                _ -> return Nothing
         _ -> return Nothing
-    case melems of
+    case mindex of
         Nothing -> return Nothing
-        Just elems -> do
-            let
-                go [] = bug "dotOrderDecomposeForMatrices.(.<)"
-                go [(i,j)] = [eMake| &i .< &j |]
-                go ((i,j):rest) = let rest' = go rest
-                                  in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
-            ret $ go elems
+        Just index -> do
+            (q1Text, q1) <- freshQuanVar "dotOrderDecomposeForMatrices"
+            (q2Text, q2) <- freshQuanVar "dotOrderDecomposeForMatrices"
+            let body1 = inQuan "forAll" q2Text index
+                            ( [eMake| &q2 < &q1 |]
+                            , [eMake| &a[&q2] = &b[&q2] |]
+                            )
+            let body2 = [eMake| &a[&q1] .< &b[&q1] |]
+            let body  = [eMake| &body1 /\ &body2 |]
+            ret $ inQuan "exists" q1Text index ( [xMake| emptyGuard := [] |]
+                                               , body
+                                               )
 dotOrderDecomposeForMatrices [eMatch| &a .<= &b |] = do
     ta <- typeOf a
     tb <- typeOf b
-    melems <- case (ta,tb) of
-        ([xMatch| [innerTy] := type.matrix.inner
-                | is := type.matrix.index
-                |], _) | isAbstractType innerTy -> do
-            return $ Just [ ( [eMake| &a[&i] |]
-                            , [eMake| &b[&i] |] )
-                          | j <- [1..genericLength is]
-                          , let i = [xMake| value.literal := [Prim (I j)] |]
-                          ]
-        (_, [xMatch| [innerTy] := type.matrix.inner
-                   | is := type.matrix.index
-                   |]) | isAbstractType innerTy -> do
-            return $ Just [ ( [eMake| &a[&i] |]
-                            , [eMake| &b[&i] |] )
-                          | j <- [1..genericLength is]
-                          , let i = [xMake| value.literal := [Prim (I j)] |]
-                          ]
+    mindex <- case (ta,tb) of
+        ([xMatch| [innerTy] := type.matrix.inner |], _) | isAbstractType innerTy -> do
+            da <- domainOf a
+            case da of
+                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                _ -> return Nothing
+        (_, [xMatch| [innerTy] := type.matrix.inner |]) | isAbstractType innerTy -> do
+            db <- domainOf b
+            case db of
+                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                _ -> return Nothing
         _ -> return Nothing
-    case melems of
+    case mindex of
         Nothing -> return Nothing
-        Just elems -> do
-            let
-                go [] = bug "dotOrderDecomposeForMatrices.(.<=)"
-                go [(i,j)] = [eMake| &i .<= &j |]
-                go ((i,j):rest) = let rest' = go rest
-                                  in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
-            ret $ go elems
+        Just index -> do
+            (q1Text, q1) <- freshQuanVar "dotOrderDecomposeForMatrices"
+            (q2Text, q2) <- freshQuanVar "dotOrderDecomposeForMatrices"
+            let body1 = inQuan "forAll" q2Text index
+                            ( [eMake| &q2 < &q1 |]
+                            , [eMake| &a[&q2] = &b[&q2] |]
+                            )
+            let body2 = [eMake| &a[&q1] .<= &b[&q1] |]
+            let body  = [eMake| &body1 /\ &body2 |]
+            ret $ inQuan "exists" q1Text index ( [xMake| emptyGuard := [] |]
+                                               , body
+                                               )
 dotOrderDecomposeForMatrices _ = return Nothing
 
 isAbstractType :: E -> Bool
-isAbstractType [xMatch| _ := type.bool   |] = False
-isAbstractType [xMatch| _ := type.int    |] = False
-isAbstractType [xMatch| _ := type.matrix |] = False
+isAbstractType [xMatch| _ := type.bool |] = False
+isAbstractType [xMatch| _ := type.int  |] = False
+isAbstractType [xMatch| [i] := type.matrix.inner |] = isAbstractType i
 isAbstractType _ = True
 
 matrixEq :: MonadConjure m => E -> m (Maybe (E, [Binder]))
