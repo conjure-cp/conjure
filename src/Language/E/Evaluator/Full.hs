@@ -11,7 +11,8 @@ module Language.E.Evaluator.Full
     , evalReplace
     , matrixEq
     , tupleEq
-    , dotOrderDecompose
+    , dotOrderDecomposeForTuples
+    , dotOrderDecomposeForMatrices
     , stripStructuralSingle
     , stripUnnecessaryTyped
     , unrollQuantifiers
@@ -1045,8 +1046,8 @@ tupleEq [eMatch| &a[&i] |] = do
                 _ -> return Nothing
 tupleEq _ = return Nothing
 
-dotOrderDecompose :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-dotOrderDecompose [eMatch| &a .< &b |] = do
+dotOrderDecomposeForTuples :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+dotOrderDecomposeForTuples [eMatch| &a .< &b |] = do
     ta <- typeOf a
     tb <- typeOf b
     melems <- case (ta,tb) of
@@ -1074,33 +1075,17 @@ dotOrderDecompose [eMatch| &a .< &b |] = do
                           | j <- [1..genericLength is]
                           , let i = [xMake| value.literal := [Prim (I j)] |]
                           ]
-        ([xMatch| [innerTy] := type.matrix.inner
-                | is := type.matrix.index
-                |], _) | isAbstractType innerTy -> do
-            return $ Just [ ( [eMake| &a[&i] |]
-                            , [eMake| &b[&i] |] )
-                          | j <- [1..genericLength is]
-                          , let i = [xMake| value.literal := [Prim (I j)] |]
-                          ]
-        (_, [xMatch| [innerTy] := type.matrix.inner
-                   | is := type.matrix.index
-                   |]) | isAbstractType innerTy -> do
-            return $ Just [ ( [eMake| &a[&i] |]
-                            , [eMake| &b[&i] |] )
-                          | j <- [1..genericLength is]
-                          , let i = [xMake| value.literal := [Prim (I j)] |]
-                          ]
         _ -> return Nothing
     case melems of
         Nothing -> return Nothing
         Just elems -> do
             let
-                go [] = bug "dotOrderDecompose.(.<)"
+                go [] = bug "dotOrderDecomposeForTuples.(.<)"
                 go [(i,j)] = [eMake| &i .< &j |]
                 go ((i,j):rest) = let rest' = go rest
                                   in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
             ret $ go elems
-dotOrderDecompose [eMatch| &a .<= &b |] = do
+dotOrderDecomposeForTuples [eMatch| &a .<= &b |] = do
     ta <- typeOf a
     tb <- typeOf b
     melems <- case (ta,tb) of
@@ -1116,6 +1101,23 @@ dotOrderDecompose [eMatch| &a .<= &b |] = do
                           | j <- [1..genericLength is]
                           , let i = [xMake| value.literal := [Prim (I j)] |]
                           ]
+        _ -> return Nothing
+    case melems of
+        Nothing -> return Nothing
+        Just elems -> do
+            let
+                go [] = bug "dotOrderDecomposeForTuples.(.<=)"
+                go [(i,j)] = [eMake| &i .<= &j |]
+                go ((i,j):rest) = let rest' = go rest
+                                  in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
+            ret $ go elems
+dotOrderDecomposeForTuples _ = return Nothing
+
+dotOrderDecomposeForMatrices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
+dotOrderDecomposeForMatrices [eMatch| &a .< &b |] = do
+    ta <- typeOf a
+    tb <- typeOf b
+    melems <- case (ta,tb) of
         ([xMatch| [innerTy] := type.matrix.inner
                 | is := type.matrix.index
                 |], _) | isAbstractType innerTy -> do
@@ -1137,17 +1139,47 @@ dotOrderDecompose [eMatch| &a .<= &b |] = do
         Nothing -> return Nothing
         Just elems -> do
             let
-                go [] = bug "dotOrderDecompose.(.<=)"
+                go [] = bug "dotOrderDecomposeForMatrices.(.<)"
+                go [(i,j)] = [eMake| &i .< &j |]
+                go ((i,j):rest) = let rest' = go rest
+                                  in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
+            ret $ go elems
+dotOrderDecomposeForMatrices [eMatch| &a .<= &b |] = do
+    ta <- typeOf a
+    tb <- typeOf b
+    melems <- case (ta,tb) of
+        ([xMatch| [innerTy] := type.matrix.inner
+                | is := type.matrix.index
+                |], _) | isAbstractType innerTy -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        (_, [xMatch| [innerTy] := type.matrix.inner
+                   | is := type.matrix.index
+                   |]) | isAbstractType innerTy -> do
+            return $ Just [ ( [eMake| &a[&i] |]
+                            , [eMake| &b[&i] |] )
+                          | j <- [1..genericLength is]
+                          , let i = [xMake| value.literal := [Prim (I j)] |]
+                          ]
+        _ -> return Nothing
+    case melems of
+        Nothing -> return Nothing
+        Just elems -> do
+            let
+                go [] = bug "dotOrderDecomposeForMatrices.(.<=)"
                 go [(i,j)] = [eMake| &i .<= &j |]
                 go ((i,j):rest) = let rest' = go rest
                                   in  [eMake| &i .< &j \/ (&i = &j /\ &rest') |]
             ret $ go elems
-dotOrderDecompose _ = return Nothing
-
+dotOrderDecomposeForMatrices _ = return Nothing
 
 isAbstractType :: E -> Bool
-isAbstractType [xMatch| _ := type.bool |] = False
-isAbstractType [xMatch| _ := type.int  |] = False
+isAbstractType [xMatch| _ := type.bool   |] = False
+isAbstractType [xMatch| _ := type.int    |] = False
+isAbstractType [xMatch| _ := type.matrix |] = False
 isAbstractType _ = True
 
 matrixEq :: MonadConjure m => E -> m (Maybe (E, [Binder]))

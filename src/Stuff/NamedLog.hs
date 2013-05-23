@@ -64,7 +64,8 @@ suppress = S.fromList
     , "Evaluator.replace"
     , "Evaluator.tupleEq"
     , "Evaluator.matrixEq"
-    , "Evaluator.dotOrderDecompose"
+    , "Evaluator.dotOrderDecomposeForTuples"
+    , "Evaluator.dotOrderDecomposeForMatrices"
     , "Evaluator.stripStructuralSingle"
     , "Evaluator.stripUnnecessaryTyped"
     , "Evaluator.unrollQuantifiers"
@@ -97,10 +98,12 @@ suppress = S.fromList
     -- , "removedRefinedDecl"
 
     -- other process indicators
-    , "handleInfDom"
     , "noTupleUnrollIfNeeded"
     , "noTupleLiterals"
     , "noTupleDomsInQuan"
+    -- , "noTuplesReplacement"
+
+    , "handleInfDom"
     , "addSlicing"
     , "recordSpec"
 

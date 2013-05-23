@@ -19,7 +19,7 @@ import Language.E.Evaluator.Full    ( fullEvaluator
                                     , evalHasRepr, evalDomSize
                                     , evalIndices, evalReplace
                                     , tupleEq, matrixEq
-                                    , dotOrderDecompose
+                                    , dotOrderDecomposeForTuples
                                     , stripStructuralSingle
                                     , stripUnnecessaryTyped
                                     , unrollQuantifiers
@@ -58,21 +58,22 @@ fullySimplify x = do
         -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
         unrolling i =
             firstJustOr i
-                $ map ($ i) [ logged "Evaluator"                        fullEvaluator
-                            , logged "Evaluator.hasRepr"                evalHasRepr
-                            , logged "Evaluator.hasType"                evalHasType
-                            , logged "Evaluator.hasDomain"              evalHasDomain
-                            , logged "Evaluator.domSize"                evalDomSize
-                            , logged "Evaluator.indices"                evalIndices
-                            , logged "Evaluator.replace"                evalReplace
-                            , logged "Evaluator.tupleEq"                tupleEq
-                            , logged "Evaluator.matrixEq"               matrixEq
-                            , logged "Evaluator.dotOrderDecompose"      dotOrderDecompose
-                            , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
-                            , logged "Simplify"                         (adapter partialEvaluator)
-                            , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped
-                            , logged "Evaluator.unrollQuantifiers"      unrollQuantifiers
-                            , logged "Evaluator.instantiate"            instantiate
+                $ map ($ i) [ logged "Evaluator"                                fullEvaluator
+                            , logged "Evaluator.hasRepr"                        evalHasRepr
+                            , logged "Evaluator.hasType"                        evalHasType
+                            , logged "Evaluator.hasDomain"                      evalHasDomain
+                            , logged "Evaluator.domSize"                        evalDomSize
+                            , logged "Evaluator.indices"                        evalIndices
+                            , logged "Evaluator.replace"                        evalReplace
+                            , logged "Evaluator.tupleEq"                        tupleEq
+                            , logged "Evaluator.matrixEq"                       matrixEq
+                            , logged "Evaluator.dotOrderDecomposeForTuples"     dotOrderDecomposeForTuples
+                            -- , logged "Evaluator.dotOrderDecomposeForMatrices"   dotOrderDecomposeForMatrices
+                            , logged "Evaluator.stripStructuralSingle"          stripStructuralSingle
+                            , logged "Simplify"                                 (adapter partialEvaluator)
+                            , logged "Evaluator.stripUnnecessaryTyped"          stripUnnecessaryTyped
+                            , logged "Evaluator.unrollQuantifiers"              unrollQuantifiers
+                            , logged "Evaluator.instantiate"                    instantiate
                             ]
 
         instantiate [xMatch| [Prim (S nm)] := reference |]
@@ -103,19 +104,20 @@ allCombined :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
 -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
 allCombined i =
     firstJustOr i
-        $ map ($ i) [ logged "Evaluator"                        fullEvaluator
-                    , logged "Evaluator.hasRepr"                evalHasRepr
-                    , logged "Evaluator.hasType"                evalHasType
-                    , logged "Evaluator.hasDomain"              evalHasDomain
-                    , logged "Evaluator.domSize"                evalDomSize
-                    , logged "Evaluator.indices"                evalIndices
-                    , logged "Evaluator.replace"                evalReplace
-                    , logged "Evaluator.tupleEq"                tupleEq
-                    , logged "Evaluator.matrixEq"               matrixEq
-                    , logged "Evaluator.dotOrderDecompose"      dotOrderDecompose
-                    , logged "Evaluator.stripStructuralSingle"  stripStructuralSingle
-                    , logged "Simplify"                         (adapter partialEvaluator)
-                    , logged "Evaluator.stripUnnecessaryTyped"  stripUnnecessaryTyped
+        $ map ($ i) [ logged "Evaluator"                                fullEvaluator
+                    , logged "Evaluator.hasRepr"                        evalHasRepr
+                    , logged "Evaluator.hasType"                        evalHasType
+                    , logged "Evaluator.hasDomain"                      evalHasDomain
+                    , logged "Evaluator.domSize"                        evalDomSize
+                    , logged "Evaluator.indices"                        evalIndices
+                    , logged "Evaluator.replace"                        evalReplace
+                    , logged "Evaluator.tupleEq"                        tupleEq
+                    , logged "Evaluator.matrixEq"                       matrixEq
+                    , logged "Evaluator.dotOrderDecomposeForTuples"     dotOrderDecomposeForTuples
+                    -- , logged "Evaluator.dotOrderDecomposeForMatrices"   dotOrderDecomposeForMatrices
+                    , logged "Evaluator.stripStructuralSingle"          stripStructuralSingle
+                    , logged "Simplify"                                 (adapter partialEvaluator)
+                    , logged "Evaluator.stripUnnecessaryTyped"          stripUnnecessaryTyped
                     ]
 
 -- these transformations should be applied first. others might depend on them.
