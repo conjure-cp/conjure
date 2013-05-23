@@ -330,9 +330,8 @@ typeOf   [xMatch| [] := value.function.values |] = return [xMake| type.function.
                                                                 |]
 typeOf p@[xMatch| xs := value.function.values |] = do
     (tx:txs) <- mapM typeOf xs
-    tx' <- mostKnowns (tx:txs)
     if and (map (tx `typeUnify`) txs)
-        then case tx' of
+        then case tx of
             [xMatch| [i,j] := mapping |] ->
                 return [xMake| type.function.innerFrom := [i]
                              | type.function.innerTo   := [j]
@@ -342,7 +341,8 @@ typeOf p@[xMatch| xs := value.function.values |] = do
 
 typeOf   [xMatch| [] := value.relation.values |] = return [xMake| type.relation.inners.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.relation.values |] = do
-    (tx:txs) <- mapM typeOf xs
+    txs <- mapM typeOf xs
+    tx  <- mostKnowns txs
     if and (map (tx `typeUnify`) txs)
         then case tx of
             [xMatch| is := type.tuple.inners |] -> return [xMake| type.relation.inners := is |]
@@ -351,7 +351,8 @@ typeOf p@[xMatch| xs := value.relation.values |] = do
 
 typeOf   [xMatch| [] := value.partition.values |] = return [xMake| type.partition.inner.type.unknown := [] |]
 typeOf p@[xMatch| xs := value.partition.values |] = do
-    (tx:txs) <- mapM typeOf xs
+    txs <- mapM typeOf xs
+    tx  <- mostKnowns txs
     if and (map (tx `typeUnify`) txs)
         then return [xMake| type.partition.inner := [tx] |]
         else typeErrorIn p
