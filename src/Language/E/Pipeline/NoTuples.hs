@@ -142,7 +142,7 @@ noTuplesE statementIn = do
                 f p@[xMatch| [Prim (S nm)] := reference |] = case lookup nm pairs of
                     Nothing -> return p
                     Just r  -> do
-                        mkLog "noTuples" $ sep [ pretty p, "~~>", pretty r ]
+                        mkLog "noTuplesReplacement" $ sep [ pretty p, "~~>", pretty r ]
                         return r
                 f p = return p
 
@@ -251,14 +251,17 @@ checkTupleDomain _ = Nothing
 renameTupleIndexes :: MonadConjure m => S.HashSet Text -> E -> m E
 renameTupleIndexes identifiers = bottomUpE' f
     where
-        f [xMatch| [Prim (S i)] := operator.index.left.reference
-                 | [Prim (I j)] := operator.index.right.value.literal
-                 |] | let (base,mregion,mrepr) = identifierSplit i
-                    , base `S.member` identifiers
-                    = let i' = identifierConstruct (mconcat [base, "_tuple", stringToText (show j)])
-                                                   mregion
-                                                   mrepr
-                      in  return [xMake| reference := [Prim (S i')] |]
+        f p@[xMatch| [Prim (S i)] := operator.index.left.reference
+                   | [Prim (I j)] := operator.index.right.value.literal
+                   |] | let (base,mregion,mrepr) = identifierSplit i
+                      , base `S.member` identifiers = do
+            let
+                i' = identifierConstruct (mconcat [base, "_tuple", stringToText (show j)])
+                                         mregion
+                                         mrepr
+                r  = [xMake| reference := [Prim (S i')] |]
+            mkLog "noTuplesReplacement" $ sep [ pretty p, "~~>", pretty r ]
+            return r
         f p = return p
 
 
@@ -307,6 +310,7 @@ renameMatrixOfTupleIndexes identifiers = bottomUpE' f
                                                          mrepr
                             let out = mkIndexed [xMake| reference := [Prim (S i')] |]
                                                (indicesBefore `mappend` indicesAfter)
+                            mkLog "noTuplesReplacement" $ sep [ pretty p, "~~>", pretty out ]
                             return out
                         _ -> return p
 
