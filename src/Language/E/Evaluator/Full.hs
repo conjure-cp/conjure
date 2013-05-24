@@ -906,6 +906,13 @@ domSize [xMatch| rs := domain.tuple.inners |] = do
     xs <- mapM domSize rs
     return $ mulE xs
 
+domSize [xMatch| [index] := domain.matrix.index
+               | [inner] := domain.matrix.inner
+               |] = do
+    indexSize <- domSize index
+    innerSize <- domSize inner
+    return [eMake| &indexSize ** &innerSize |]
+
 domSize [xMatch| [t]   := domain.set.inner
                | attrs := domain.set.attributes.attrCollection
                |]
