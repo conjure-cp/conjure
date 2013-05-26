@@ -83,6 +83,7 @@ suppress = S.fromList
     , "builtIn.relationApply"
     , "builtIn.tupleExplode"
     , "builtIn.functionLiteralApply"
+    -- , "builtIn.quantificationOverTupleDomains "
 
     -- process indicators for conjure-repr, uncomment if you want to suppress
     -- , "configuration"

@@ -33,6 +33,7 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> handleEnums                             >=> recordSpec "handleEnums"
                 >=> handleUnnameds                          >=> recordSpec "handleUnnameds"
                 >=> inlineLettings                          >=> recordSpec "inlineLettings"
+                >=> explodeStructuralVars                   >=> recordSpec "explodeStructuralVars"
                 -- following is to remove any unnecessary occurrences of variables
                 >=> simplifySpec                            >=> recordSpec "simplifySpec"
                 >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
