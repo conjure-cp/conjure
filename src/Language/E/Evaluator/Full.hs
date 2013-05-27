@@ -952,7 +952,7 @@ domSize [xMatch| [a] := domain.function.innerFrom
                | attrs := domain.function.attributes.attrCollection
                |]
     | Just _ <- lookupAttr "total" attrs
-    | Just _ <- lookupAttr "injective" attrs
+    , Just _ <- lookupAttr "injective" attrs
     = do
     aSize <- domSize a
     bSize <- domSize b
@@ -963,7 +963,7 @@ domSize [xMatch| [a] := domain.function.innerFrom
                | attrs := domain.function.attributes.attrCollection
                |]
     | Just _ <- lookupAttr "total" attrs
-    | Just _ <- lookupAttr "bijective" attrs
+    , Just _ <- lookupAttr "bijective" attrs
     = do
     aSize <- domSize a
     bSize <- domSize b
