@@ -28,6 +28,7 @@ conjureRepr reprs spec = withBindingScope' $ do
     mkLog "useChannelling" $ pretty useChannelling
     initialiseSpecState spec
     let pipeline =  recordSpec "entering conjureRepr"
+                >=> introduceRegions useChannelling         >=> recordSpec "introduceRegions"
                 >=> implicitWheres                          >=> recordSpec "implicitWheres"
                 >=> explodeStructuralVars                   >=> recordSpec "explodeStructuralVars"
                 >=> handleEnums                             >=> recordSpec "handleEnums"
@@ -38,7 +39,6 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> simplifySpec                            >=> recordSpec "simplifySpec"
                 >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
                 >=> introduceFakeConstraints                >=> recordSpec "introduceFakeConstraints"
-                >=> introduceRegions useChannelling         >=> recordSpec "introduceRegions"
                 >=> applyRepr reprs                         >=> recordSpec "applyRepr"
                 >=> return . removeFakeConstraints          >=> recordSpec "removeFakeConstraints"
     pipeline spec
