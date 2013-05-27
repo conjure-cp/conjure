@@ -940,9 +940,9 @@ domSize [xMatch| [t] := domain.set.inner |] = do
     x <- domSize t
     return [eMake| 2 ** &x |]
 
-domSize [dMatch| mset (size &s) of &inn |] = do
-    innSize <- domSize inn
-    return [eMake| &s * &innSize |]
+domSize [dMatch| mset (size &k) of &inn |] = do
+    n <- domSize inn
+    return [eMake| (&n + &k - 1)! / (&k! * (&n-1)!) |]
 domSize [xMatch| [t] := domain.mset.inner |] = do
     x <- domSize t
     return [eMake| 2 ** &x |]
@@ -952,17 +952,39 @@ domSize [xMatch| [a] := domain.function.innerFrom
                | attrs := domain.function.attributes.attrCollection
                |]
     | Just _ <- lookupAttr "total" attrs
+    | Just _ <- lookupAttr "injective" attrs
     = do
     aSize <- domSize a
     bSize <- domSize b
-    return [eMake| &aSize * &bSize |]
+    return [eMake| &bSize! / (&bSize - &aSize)! |]
+
+domSize [xMatch| [a] := domain.function.innerFrom
+               | [b] := domain.function.innerTo
+               | attrs := domain.function.attributes.attrCollection
+               |]
+    | Just _ <- lookupAttr "total" attrs
+    | Just _ <- lookupAttr "bijective" attrs
+    = do
+    aSize <- domSize a
+    bSize <- domSize b
+    return [eMake| &bSize! / (&bSize - &aSize)! |]
+
+domSize [xMatch| [a] := domain.function.innerFrom
+               | [b] := domain.function.innerTo
+               | attrs := domain.function.attributes.attrCollection
+               |]
+    | Just _ <- lookupAttr "total" attrs
+    = do
+    aSize <- domSize a
+    bSize <- domSize b
+    return [eMake| &bSize ** &aSize |]
 
 domSize [xMatch| [a] := domain.function.innerFrom
                | [b] := domain.function.innerTo
                |] = do
     aSize <- domSize a
     bSize <- domSize b
-    return [eMake| &aSize * &bSize |]
+    return [eMake| (&bSize + 1) ** &aSize |]
 
 domSize [xMatch| [] := topLevel.declaration.given.typeInt
                | [Prim (S nm)] := topLevel.declaration.given.name.reference
