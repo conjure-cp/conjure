@@ -23,9 +23,9 @@ explodeStructuralVars = quantificationOverTupleDomains >=> bottomUpSpec' helper
                    | guards        := quantified.guard
                    | bodys         := quantified.body
                    |] =
-            case genMappings quanVar of
-                [] -> return x
-                mappings -> do
+            case (quanVar, genMappings quanVar) of
+                ([xMatch| _ := structural.single |], _) -> return x
+                (_, mappings) -> do
                     uniq' <- nextUniqueName
                     -- the new quanVar
                     let uniq = [xMake| structural.single.reference := [Prim (S uniq')] |]
@@ -64,7 +64,7 @@ genMappings [xMatch| xs  := structural.matrix |]
         [ [ (y,i:is) | (y,is) <- genMappings x ]
         | (i,x) <- zip [1..] xs
         ]
-genMappings _ = []
+genMappings x = [(x,[])]
 
 
 intToE :: Integer -> E
