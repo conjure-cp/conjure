@@ -225,8 +225,8 @@ introduceIndexRange (IndexTuple its) [xMatch| vs := value.tuple.values |] =
     in  [xMake| value.tuple.values := vs' |]
 
 introduceIndexRange (IndexRel its) [xMatch| vs := value.relation.values |] =
-    let vs' = zipWith introduceIndexRange its vs
-    in  [xMake| value.relation.values := vs' |]
+    let vs' = map (zipWith introduceIndexRange  its . unwrapTuple ) vs
+    in  [xMake| value.relation.values := (map wrapInTuple vs') |]
 
 introduceIndexRange (IndexFunc ins tos) [xMatch| arr := value.function.values |] =
    let mappings =  map (func ins tos) arr
