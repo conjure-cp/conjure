@@ -887,6 +887,8 @@ mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
 domSize :: MonadConjure m => E -> m E
 domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
 
+domSize [xMatch| [d] := domainInExpr |] = domSize d
+
 domSize [xMatch| [x] := structural.single |] = domSize x
 domSize [xMatch| [d] := quanVar.within.quantified.body.quantified.quanOverDom |] = domSize d
 
@@ -919,8 +921,20 @@ domSize [xMatch| [t]   := domain.set.inner
     | Just size <- lookupAttr "size" attrs
     = do
     x <- domSize t
-    let diff = [eMake| &x - &size |]
-    return [eMake| (&x! / (&size! * &diff!)) |]
+    return $ x `choose` size
+domSize [xMatch| [t]   := domain.set.inner
+               | attrs := domain.set.attributes.attrCollection
+               |]
+    | Just minSize <- lookupAttr "minSize" attrs
+    , Just maxSize <- lookupAttr "maxSize" attrs
+    = do
+    x <- domSize t
+    (qStr, q) <- freshQuanVar "from domSize"
+    return $ inQuan "sum" qStr
+        [xMake| domain.int.ranges.range.fromTo := [minSize, maxSize] |]
+        ( [xMake| emptyGuard := [] |]
+        , x `choose` q
+        )
 
 domSize [xMatch| [t] := domain.set.inner |] = do
     x <- domSize t
@@ -932,6 +946,16 @@ domSize [dMatch| mset (size &s) of &inn |] = do
 domSize [xMatch| [t] := domain.mset.inner |] = do
     x <- domSize t
     return [eMake| 2 ** &x |]
+
+domSize [xMatch| [a] := domain.function.innerFrom
+               | [b] := domain.function.innerTo
+               | attrs := domain.function.attributes.attrCollection
+               |]
+    | Just _ <- lookupAttr "total" attrs
+    = do
+    aSize <- domSize a
+    bSize <- domSize b
+    return [eMake| &aSize * &bSize |]
 
 domSize [xMatch| [a] := domain.function.innerFrom
                | [b] := domain.function.innerTo
@@ -952,6 +976,8 @@ domSize [xMatch| [d] := topLevel.letting.domain |] = domSize d
 domSize p =
     err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
+choose :: E -> E -> E
+choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalIndices p@[xMatch| [a,b] := operator.indices |] = do

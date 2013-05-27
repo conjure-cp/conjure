@@ -192,10 +192,15 @@ isFullyInstantiated x = case toEssenceLiteral x of
 
 
 lookupAttr :: Text -> [E] -> Maybe E
-lookupAttr attrName attrs = listToMaybe
+lookupAttr attrName attrs = listToMaybe $
     [ val
     | [xMatch| [Prim (S nm)] := attribute.nameValue.name.reference
              | [val]         := attribute.nameValue.value
+             |] <- attrs
+    , nm == attrName
+    ] ++
+    [ [xMake| emptyGuard := [] |]
+    | [xMatch| [Prim (S nm)] := attribute.name.reference
              |] <- attrs
     , nm == attrName
     ]
