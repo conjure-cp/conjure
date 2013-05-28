@@ -1,0 +1,29 @@
+[500]
+
+&withBools = &withMarker
+
+~~>
+
+(
+	forAll i : &range_withMarker , i <= &refn_withMarker[1]
+		. &refn_withBools[i,1] /\ &refn_withBools[i,2] = &refn_withMarker[2,i]
+
+) /\
+(
+	forAll i : &range_withBools , &refn_withBools[i,1]
+		. i <= &refn_withMarker[1] /\ &refn_withBools[i,2] = &refn_withMarker[2,i]
+)
+
+	where &withBools  hasType `set of _`,
+		  &withMarker hasType `set of _`
+
+	where &withBools  hasRepr Set~ExplicitVarSize
+	where &withMarker hasRepr Set~ExplicitVarSizeWithMarker
+
+	letting &refn_withBools  be refn(&withBools)
+	letting &refn_withMarker be refn(&withMarker)
+	
+
+	letting &range_withBools  be indices(&refn_withBools,0)    
+	letting &range_withMarker be indices(&refn_withMarker[2],0)
+
