@@ -24,7 +24,7 @@ explodeStructuralVars = quantificationOverTupleDomains >=> bottomUpSpec' helper
                    | bodys         := quantified.body
                    |] =
             case (quanVar, genMappings quanVar) of
-                ([xMatch| _ := structural.single |], _) -> return x
+                ([xMatch| _ := structural.set |], _) -> return x
                 (_, mappings) -> do
                     uniq' <- nextUniqueName
                     -- the new quanVar
