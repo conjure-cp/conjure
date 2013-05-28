@@ -1,0 +1,14 @@
+[500]
+
+&withMarker = &withBools
+
+~~>
+
+&withBools = &withMarker
+
+    where &withBools  hasType `set of _`,
+          &withMarker hasType `set of _`
+
+    where &withBools  hasRepr Set~ExplicitVarSize
+    where &withMarker hasRepr Set~ExplicitVarSizeWithMarker
+
