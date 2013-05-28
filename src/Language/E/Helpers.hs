@@ -166,6 +166,7 @@ toEssenceLiteral [xMatch| xs  := value.partition.values |] = ELPartition <$> map
     where
         helper [xMatch| ys  := part |] = mapM toEssenceLiteral ys
         helper _ = Nothing
+toEssenceLiteral [xMatch| [t] := typed.left |] = toEssenceLiteral t
 toEssenceLiteral _ = Nothing
 
 fromEssenceLiteral :: EssenceLiteral -> E

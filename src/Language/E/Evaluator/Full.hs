@@ -249,10 +249,25 @@ fullEvaluator
 
 fullEvaluator
     [xMatch| [x] := operator.twoBars
+           | xs  := operator.twoBars.typed.left.value.set.values
+           |]
+    | isFullyInstantiated x
+    = returnInt (genericLength $ sortNub xs)
+
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
            | xs  := operator.twoBars.value.mset.values
            |]
     | isFullyInstantiated x
     = returnInt (genericLength xs)
+
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
+           | xs  := operator.twoBars.type.left.value.mset.values
+           |]
+    | isFullyInstantiated x
+    = returnInt (genericLength xs)
+
 
 fullEvaluator
     [xMatch| xs := operator.allDiff.value.matrix.values |]
