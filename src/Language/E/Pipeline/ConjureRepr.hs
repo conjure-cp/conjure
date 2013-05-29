@@ -39,6 +39,8 @@ conjureRepr reprs spec = withBindingScope' $ do
                 -- following is to remove any unnecessary occurrences of variables
                 >=> simplifySpec                            >=> recordSpec "simplifySpec"
                 >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
+                >=> introduceFakeConstraints                >=> recordSpec "introduceFakeConstraints"
+                >=> introduceRegions useChannelling         >=> recordSpec "introduceRegions"
                 >=> applyRepr reprs                         >=> recordSpec "applyRepr"
                 >=> return . removeFakeConstraints          >=> recordSpec "removeFakeConstraints"
     pipeline spec
