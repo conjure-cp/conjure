@@ -36,9 +36,14 @@ noTupleLiterals inp = do
         possiblyTupley lit [] = do
             let out = fromEssenceLiteral lit
             return out
-        possiblyTupley (ELMatrix xs) (i:is) = do
+        possiblyTupley (ELMatrix xs mr) (i:is) = do
             xs' <- sequence [ possiblyTupley x is | x <- xs ]
-            let out = mkIndexedExpr [i] [xMake| value.matrix.values := xs' |]
+            let matrix = case mr of
+                    Nothing -> [xMake| value.matrix.values := xs' |]
+                    Just r  -> [xMake| value.matrix.values := xs'
+                                     | value.matrix.indexrange := [r]
+                                     |]
+            let out = mkIndexedExpr [i] matrix
             return out
         possiblyTupley (ELTuple  xs) ([xMatch| [Prim (I i)] := value.literal |] : is) = do
             tell (Any True)
@@ -75,7 +80,7 @@ unrollIfNeeded inp = do
                 _ -> False
 
         containsTupleLiteral (ELTuple _) = True
-        containsTupleLiteral (ELMatrix xs) = any containsTupleLiteral xs
+        containsTupleLiteral (ELMatrix xs _) = any containsTupleLiteral xs
         containsTupleLiteral _ = False
 
 

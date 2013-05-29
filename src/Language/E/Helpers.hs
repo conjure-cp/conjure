@@ -150,7 +150,12 @@ toEssenceLiteral :: E -> Maybe EssenceLiteral
 toEssenceLiteral (Prim (B x)) = return $ ELB x
 toEssenceLiteral (Prim (I x)) = return $ ELI x
 toEssenceLiteral [xMatch| [x] := value.literal          |] = toEssenceLiteral x
+toEssenceLiteral [xMatch| xs  := value.matrix   .values
+                        | [r] := value.matrix   .indexrange
+                        |] = ELMatrix    <$> mapM toEssenceLiteral xs
+                                         <*> return (Just r)
 toEssenceLiteral [xMatch| xs  := value.matrix   .values |] = ELMatrix    <$> mapM toEssenceLiteral xs
+                                                                         <*> return Nothing
 toEssenceLiteral [xMatch| xs  := value.tuple    .values |] = ELTuple     <$> mapM toEssenceLiteral xs
 toEssenceLiteral [xMatch| xs  := value.set      .values |] = ELSet       <$> mapM toEssenceLiteral xs
 toEssenceLiteral [xMatch| xs  := value.mset     .values |] = ELMSet      <$> mapM toEssenceLiteral xs
@@ -173,7 +178,10 @@ fromEssenceLiteral :: EssenceLiteral -> E
 fromEssenceLiteral (ELB         x ) = [xMake| value.literal := [Prim (B x)] |]
 fromEssenceLiteral (ELI         x ) = [xMake| value.literal := [Prim (I x)] |]
 fromEssenceLiteral (ELTuple     xs) = [xMake| value.tuple    .values := map fromEssenceLiteral xs |]
-fromEssenceLiteral (ELMatrix    xs) = [xMake| value.matrix   .values := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELMatrix xs Nothing ) = [xMake| value.matrix   .values := map fromEssenceLiteral xs |]
+fromEssenceLiteral (ELMatrix xs (Just r)) = [xMake| value.matrix   .values := map fromEssenceLiteral xs
+                                                  | value.matrix   .indexrange := [r]
+                                                  |]
 fromEssenceLiteral (ELSet       xs) = [xMake| value.set      .values := map fromEssenceLiteral xs |]
 fromEssenceLiteral (ELMSet      xs) = [xMake| value.mset     .values := map fromEssenceLiteral xs |]
 fromEssenceLiteral (ELFunction  xs) = [xMake| value.function .values := map helper xs |]

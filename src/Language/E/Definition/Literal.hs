@@ -1,10 +1,12 @@
 module Language.E.Definition.Literal where
 
+import Language.E.Definition
+
 data EssenceLiteral
     = ELB Bool
     | ELI Integer
     | ELTuple [EssenceLiteral]
-    | ELMatrix [EssenceLiteral]
+    | ELMatrix [EssenceLiteral] (Maybe E)
     | ELSet [EssenceLiteral]
     | ELMSet [EssenceLiteral]
     | ELFunction [(EssenceLiteral, EssenceLiteral)]   -- list of mappings
