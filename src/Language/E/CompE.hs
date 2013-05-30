@@ -193,7 +193,7 @@ bindersDoc = do
     return $ if null bs
         then ""
         else "Current bindings: " <+>
-             prettyList id "," (nubBy ((==) `on` binderName) bs)
+             vcat (map pretty $ nubBy ((==) `on` binderName) bs)
 
 bindersDocNamesOnly :: MonadConjure m => m Doc
 bindersDocNamesOnly = do

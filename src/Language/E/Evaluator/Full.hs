@@ -66,6 +66,13 @@ fullEvaluator [xMatch| [Prim (S "=") ] := binOp.operator
                      | [Prim (S "_") ] := binOp.right.reference
                      |] = returnBool False
 
+-- this following evaluator is wrong if wither identifier is undefined.
+-- adding it nevertheless, because we need it.
+fullEvaluator [xMatch| [Prim (S "=") ] := binOp.operator
+                     | [Prim (S  a ) ] := binOp.left .reference
+                     | [Prim (S  b ) ] := binOp.right.reference
+                     |] | a == b = returnBool True
+
 fullEvaluator [xMatch| [Prim (I n)] := unaryOp.negate.value.literal
                      |] = returnInt (-n)
 fullEvaluator [xMatch| [Prim (I n)] := unaryOp.factorial.value.literal
