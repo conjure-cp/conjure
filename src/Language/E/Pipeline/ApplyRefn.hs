@@ -150,7 +150,8 @@ tryApply db mode x = do
                 Just ys -> do
                     ys' <- forM ys $ \ (n,y) -> do (y', _) <- simply y ; return (n,y')
                     let msg = vcat $ pretty x
-                               : [ Pr.braces (pretty n) $$ nest 4 (pretty y)
+                               : [ "multiple:" <+> Pr.parens (pretty n) | let n = length ys', n > 1 ]
+                              ++ [ Pr.braces (pretty n) $$ nest 4 (pretty y)
                                  | (n,y) <- ys'
                                  ]
                     mkLog "applied" msg
