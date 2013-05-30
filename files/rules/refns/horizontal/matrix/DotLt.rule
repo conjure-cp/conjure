@@ -2,16 +2,16 @@
 
 &a .< &b
 
-	~~>
+    ~~>
 
 exists i : int(1..&upTo) . (
-	(forAll j : int(1..&upTo) , j < i . &a[j] = &b[j])
-	/\
-	&a[i] .< &b[i]
+    (forAll j : int(1..&upTo) , j < i . &a[j] = &b[j])
+    /\
+    &a[i] .< &b[i]
 )
 
-	where !((&a hasType `matrix indexed by [int] of bool`) \/
-    	    (&a hasType `matrix indexed by [int] of int`))
+    where !((&a hasType `matrix indexed by [int] of bool`) \/
+            (&a hasType `matrix indexed by [int] of int`))
 
     where &a hasDomain `matrix indexed by [int(1..&upTo)] of &_`
 

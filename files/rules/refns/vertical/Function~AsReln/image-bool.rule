@@ -4,5 +4,5 @@
 &f(&x) ~~> forAll i in toSet(refn(&f)) , i[1] = &x . i[2]
 
     where &f hasType   `function _ --> bool`
-    where &f hasRepr    AsReln
+    where &f hasRepr    Function~AsReln
 
