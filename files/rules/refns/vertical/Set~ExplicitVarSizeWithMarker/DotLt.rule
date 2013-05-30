@@ -4,6 +4,7 @@
 
     ~~>
 
+(|&a| = 0 /\ |&b| > 0) \/
 exists i : &r , i <= &ma[1] /\ i <= &mb[1] .                                $ there exists an i where both sets still have elements 
     (forAll j : &r , j < i . &ma[2][j] = &mb[2][j])                         $ everything up to excluding i are ==
     /\
