@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.HandleDomain(handleDomain,findSize,choose,premute) where
-
+import Bug
 import Language.E hiding (mkLog)
 import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.Common(countRanges,mkLog)

@@ -2,6 +2,7 @@
 
 module Language.E.Pipeline.BubbleUp ( bubbleUpSpec ) where
 
+import Bug
 import Language.E
 
 

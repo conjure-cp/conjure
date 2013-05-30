@@ -4,6 +4,7 @@ module Language.E.BuiltIn.SetStructural
     ( setStructural
     ) where
 
+import Bug
 import Language.E
 
 -- We want the following rule, but we want it ti work independent of how

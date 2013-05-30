@@ -5,6 +5,7 @@ module Language.E.Up.EvaluateTree2 (
      ,reverseTuplesOfMatrixes
 ) where
 
+import Bug
 import Language.E
 
 import Language.E.Up.Common(transposeE,matrixToTuple,unwrapMatrix,wrapInMatrix)

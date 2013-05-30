@@ -7,6 +7,7 @@ module Language.E.TypeOf
     , typeUnify
     ) where
 
+import Bug
 import Stuff.Generic
 
 import Language.E.Imports

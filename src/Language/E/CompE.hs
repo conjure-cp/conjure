@@ -8,6 +8,7 @@
 
 module Language.E.CompE where
 
+import Bug
 import Stuff.Funky.FunkySingle
 import Stuff.Funky.FunkyMulti
 import Stuff.NamedLog

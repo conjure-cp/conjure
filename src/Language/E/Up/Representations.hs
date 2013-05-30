@@ -6,6 +6,7 @@ module Language.E.Up.Representations(
     , RepName, After, Before
     ) where
 
+import Bug
 import Language.E hiding (trace)
 import Language.E.Up.Data
 import Language.E.Up.Common(wrapInMatrix,unwrapMatrix,unwrapMatrix')

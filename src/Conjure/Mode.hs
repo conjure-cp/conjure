@@ -9,7 +9,6 @@ import Data.HashSet as S ( HashSet, fromList, member )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 
 import qualified Text.PrettyPrint as Pr
-import Text.PrettyPrint(Doc,vcat)
 import Stuff.Pretty
 import RepositoryVersion ( repositoryVersion )
 
@@ -119,7 +118,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
     ]
 
     where
-    helpStart =  vcat . map pretty $ [
+    helpStart =  Pr.vcat . map pretty $ [
         "conjure --mode=Mode Args "
         ,"    Version: " ++ repositoryVersion
         ,""
@@ -202,7 +201,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
     anyKey   = id
 
     mode :: String -> [Doc] -> Doc
-    mode title docs= header title Pr.$+$ Pr.nest 4 (vcat docs) <> "\n" 
+    mode title docs = header title Pr.$+$ Pr.nest 4 (Pr.vcat docs) <> "\n" 
 
     header :: String -> Doc
     header title = pretty $ "--mode " ++  title 

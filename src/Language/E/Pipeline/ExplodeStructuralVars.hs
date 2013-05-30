@@ -4,6 +4,7 @@ module Language.E.Pipeline.ExplodeStructuralVars
     ( explodeStructuralVars
     ) where
 
+import Bug
 import Language.E
 
 

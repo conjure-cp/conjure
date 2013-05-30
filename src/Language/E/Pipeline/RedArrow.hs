@@ -14,6 +14,7 @@
 module Language.E.Pipeline.RedArrow ( redArrow ) where
 
 
+import Bug
 import Language.E
 import Language.E.Pipeline.Groom ( groomSpec )
 

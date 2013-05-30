@@ -19,6 +19,7 @@ module Language.E.Evaluator.Full
     , domSize
     ) where
 
+import Bug
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Helpers

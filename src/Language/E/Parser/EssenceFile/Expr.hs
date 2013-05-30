@@ -7,6 +7,7 @@ module Language.E.Parser.EssenceFile.Expr
     , parseReference
     ) where
 
+import Bug
 import Language.E.Parser.Imports
 import Language.E.Parser.Shunt ( shuntingYardExpr )
 import {-# SOURCE #-} Language.E.Parser.EssenceFile.Domain ( parseDomain )

@@ -9,6 +9,7 @@ module Language.E.Up.IO (
     ,getTestSpecs
 ) where
 
+import Bug
 import Language.E
 import Language.E.Pipeline.ReadIn(readSpec)
 import Language.E.Up.ReduceSpec

@@ -7,6 +7,7 @@ module Language.E.ValidateSolution
 
 import qualified Data.HashMap.Strict as M
 
+import Bug
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )

@@ -8,6 +8,7 @@ import qualified Data.Text.IO as T
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
 
+import Bug
 import Paths_conjure_cp ( getBinDir )
 import Conjure.Mode
 import Language.E

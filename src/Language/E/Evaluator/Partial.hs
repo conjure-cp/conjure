@@ -2,6 +2,7 @@
 
 module Language.E.Evaluator.Partial ( partialEvaluator, guardOp ) where
 
+import Bug
 import Stuff.Generic
 
 import Language.E.Imports

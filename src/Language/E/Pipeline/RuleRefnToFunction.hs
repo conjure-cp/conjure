@@ -3,6 +3,7 @@
 
 module Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction, localHandler ) where
 
+import Bug
 import Language.E
 import Language.E.Pipeline.FreshNames
 

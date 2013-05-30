@@ -2,6 +2,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam ( generateRandomParam,generateAllParams) where
 
+import Bug
 import Language.E hiding (mkLog)
 import Language.E.Imports
 import Language.E.DomainOf(domainOf)
