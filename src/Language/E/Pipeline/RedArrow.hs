@@ -120,10 +120,16 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
                 , (nm2, val) <- essenceParams
                 , nm == nm2
                 ]
-    let outLettings = [ [xMake| topLevel.letting.name.reference := [Prim (S nm)]
-                              | topLevel.letting.expr           := [val]
+    let outLettings = [ case val of
+                            [xMatch| _ := domain |] ->
+                                [xMake| topLevel.letting.name.reference := [Prim (S nm)]
+                                      | topLevel.letting.domain         := [val]
                               |]
-                      | (nm,val) <- outPairs
+                            _ ->
+                                [xMake| topLevel.letting.name.reference := [Prim (S nm)]
+                                      | topLevel.letting.expr           := [val]
+                              |]
+                      | (nm, val) <- outPairs
                       ]
 
     groomSpec False (Spec langEprime $ listAsStatement outLettings)
@@ -183,6 +189,21 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             value
             Nothing
             = return [(name,value)]
+
+        helper
+            name
+            [xMatch| [] := topLevel.declaration.given.typeInt |]
+            [xMatch| [d] := topLevel.letting.domain |]
+            Nothing
+            = do
+                dSize <- domSize d
+                return $ [ ( name `mappend` "_size"
+                           , dSize
+                           )
+                         , ( name
+                           , d
+                           )
+                         ]
 
         helper
             name
@@ -608,6 +629,7 @@ instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
         Just [xMatch| _        := topLevel.letting.typeEnum |] -> return p
         Just [xMatch| [domain] := topLevel.letting.domain   |] -> instantiate (domId:seen) domain
         Just domain -> instantiate (domId:seen) domain
+instantiate _ p@[xMatch| _ := topLevel.letting |] = return p
 instantiate seen (Tagged t xs) = Tagged t <$> mapM (instantiate seen) xs
 instantiate _ p = return p
 
