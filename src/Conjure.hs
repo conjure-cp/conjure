@@ -117,7 +117,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             param <- generateParam rulesDB inEssence intermediateDir basename
             writeSpec pathOutParam param
 
-        helper (ModeMultipleOutput multimode pathInEssence pathOutputDir) = do
+        helper (ModeMultipleOutput multimode pathInEssence pathOutputDir mlimit) = do
             seed <- getStdGen
             (ruleReprs, ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
@@ -130,7 +130,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
                     ++ (if S.member "--better" flags then "-better" else "")
             let outDirPath = fromMaybe defOutDirPath pathOutputDir
             driverConjure
-                (conjureWithMode seed limit fullmode)
+                (conjureWithMode seed limit mlimit fullmode)
                 outDirPath
                 ruleReprs ruleRefns inEssence
 
@@ -142,7 +142,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             driverConjureSingle True False
                 pathOutEprime
                 (conjureWithMode
-                    seed limit fullmode
+                    seed limit Nothing fullmode
                     ruleReprs ruleRefns inEssence)
 
 typeCheckSpecIO :: Spec -> IO ()

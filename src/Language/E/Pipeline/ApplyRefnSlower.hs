@@ -113,8 +113,9 @@ apply
     -> WriterT Any m E
 -- apply _  x | trace (show $ "apply" <+> pretty x) False = undefined
 apply db x = do
-    mode <- lift $ getsGlobal conjureMode
-    (ys, flag) <- lift $ tryApply db mode x
+    gl   <- lift $ getsGlobal id
+    let mode = conjureMode gl
+    (ys, flag) <- lift $ tryApply db mode gl x
     tell (Any flag)
     lift $ returns ys
 
@@ -131,14 +132,15 @@ tryApply
        )
     => RuleRefnDB m
     -> ConjureModeWithFlags
+    -> GlobalState
     -> E
     -> m ([E], Bool)
 -- tryApply db x = trace (show $ "tryApply:" <+> pretty x) $ do
-tryApply db mode x = do
+tryApply db mode gl x = do
     (x' , b1) <- simply x
     when b1 $ mkLog "simplified" $ vcat [pretty x, "~~>", pretty x']
     (x'', b2) <- go db x'
-    x''' <- selectByMode mode x''
+    x''' <- selectByMode mode gl x''
     return (x''', b1 || b2)
 
     where

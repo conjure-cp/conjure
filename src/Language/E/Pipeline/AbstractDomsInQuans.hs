@@ -37,9 +37,10 @@ abstractDomsInQuans
         withBindingScope' $ let mfunc = ruleReprToFunction reprs in case mfunc of
             Left es     -> err ErrFatal $ vcat $ map (prettyError "abstractDomsInQuans") es
             Right func' -> withBindingScope' $ do
+                gl <- getsGlobal id
                 let func = mergeReprFunc (func' : builtInRepr)
                 ys' <- func (qnVar, qnOverDom, param)
-                ys  <- selectByMode mode ys'
+                ys  <- selectByMode mode gl ys'
                 zs  <- case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty qnOverDom
                     _  -> do

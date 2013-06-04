@@ -23,7 +23,7 @@ conjureRepr
 conjureRepr reprs spec = withBindingScope' $ do
     ConjureModeWithFlags mode _ _ _ <- getsGlobal conjureMode
     let useChannelling = case mode of
-                            ModeMultipleOutput DFNoChannelling _ _ -> False
+                            ModeMultipleOutput DFNoChannelling _ _ _ -> False
                             _ -> True
     mkLog "useChannelling" $ pretty useChannelling
     initialiseSpecState spec

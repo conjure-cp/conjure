@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Conjure.Mode where
 
-import Control.Monad ( guard, msum, mzero )
+import Control.Monad ( (>=>), guard, msum, mzero )
 import Data.Char ( toLower )
 import Data.Maybe ( listToMaybe, mapMaybe )
 
 import Data.HashSet as S ( HashSet, fromList, member )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
+
+import Safe ( readMay )
 
 import qualified Text.PrettyPrint as Pr
 import Stuff.Pretty
@@ -78,6 +80,7 @@ data ConjureMode
         ConjureModeMultiple
         FilePath            -- Essence
         (Maybe FilePath)    -- output dir
+        (Maybe Int)         -- limit the number of output models.
     | ModeSingleOutput
         ConjureModeSingle
         FilePath    -- Essence
@@ -98,6 +101,7 @@ data ConjureModeWithFlags
         (M.HashMap String String)       -- all key-value pairs
         (S.HashSet String)              -- all flags
         [String]                        -- all the rest
+    deriving (Show)
 
 conjureHelp :: Doc
 conjureHelp =  Pr.vcat  $ helpStart :
@@ -287,19 +291,22 @@ parseArgs (pairs, flags, rest) = msum
             mode $ words "df depthfirst depth-first"
             inEssence <- anyKey $ words "--in-essence --in"
             outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
-            returnMode $ ModeMultipleOutput DFAll inEssence outDir
+            limit     <- optional $ readKey "--limit-models"
+            returnMode $ ModeMultipleOutput DFAll inEssence outDir limit
 
         modeDFCompactParam = do
             mode $ words "df-compact-param"
             inEssence <- anyKey $ words "--in-essence --in"
             outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
-            returnMode $ ModeMultipleOutput DFCompactParam inEssence outDir
+            limit     <- optional $ readKey "--limit-models"
+            returnMode $ ModeMultipleOutput DFCompactParam inEssence outDir limit
 
         modeDFNoChannel = do
             mode $ words "df-no-channelling"
             inEssence <- anyKey $ words "--in-essence --in"
             outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
-            returnMode $ ModeMultipleOutput DFNoChannelling inEssence outDir
+            limit     <- optional $ readKey "--limit-models"
+            returnMode $ ModeMultipleOutput DFNoChannelling inEssence outDir limit
 
         modeRandom = do
             mode $ words "random rand rnd"
@@ -319,6 +326,7 @@ parseArgs (pairs, flags, rest) = msum
             guard (m =~= xs)
         anyKey = listToMaybe . mapMaybe key
         key = (`M.lookup` pairs)
+        readKey = key >=> readMay
         optional = return
         _flag = (`S.member` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys

@@ -58,7 +58,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
             driverConjureSingle True True
                 param_eprime
                 (conjureWithMode
-                    seed Nothing
+                    seed Nothing Nothing
                     (ConjureModeWithFlags (ModeSingleOutput ModeCompact param_gen param_eprime) M.empty def def)
                     ruleReprs ruleRefns paramEssence)
 

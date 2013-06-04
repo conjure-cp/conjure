@@ -278,6 +278,7 @@ data GlobalState = GlobalState
         , memoRefnStaysTheSame :: !IntSet
         , conjureMode          :: ConjureModeWithFlags
         , conjureSeed          :: StdGen
+        , limitOutputs         :: Maybe Int
         }
 
 instance (Functor m, Monad m) => RandomM (FunkyMulti GlobalState st err m) where
@@ -293,9 +294,13 @@ rangeRandomM range = do
 
 
 instance Default GlobalState where
-    def = GlobalState def def
-            (ConjureModeWithFlags ModeUnknown M.empty def def)
-            (error "Seed not initialised")
+    def = GlobalState
+        { memoRefnChanged = def
+        , memoRefnStaysTheSame = def
+        , conjureMode = ConjureModeWithFlags ModeUnknown M.empty def def
+        , conjureSeed = error "Seed not initialised"
+        , limitOutputs = def
+        }
 
 makeIdempotent :: Monad m => (a -> m (a,Bool)) -> a -> m a
 makeIdempotent f x = do
@@ -306,26 +311,26 @@ makeIdempotent f x = do
 
 
 class SelectByMode a where
-    selectByMode :: RandomM m => ConjureModeWithFlags -> [a] -> m [a]
-    selectByMode (ConjureModeWithFlags m _ _ _) = defSelectByMode m
+    selectByMode :: RandomM m => ConjureModeWithFlags -> GlobalState -> [a] -> m [a]
+    selectByMode (ConjureModeWithFlags m _ _ _) s = defSelectByMode m s
 
-defSelectByMode :: RandomM m => ConjureMode -> [a] -> m [a]
-defSelectByMode _                                   [] = return []
-defSelectByMode (ModeUnknown                    {}) xs = return xs
-defSelectByMode (ModeMultipleOutput             {}) xs = return xs
-defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) (x:_) = return [x]
-defSelectByMode (ModeSingleOutput ModeRandom _ _  ) xs = do
+defSelectByMode :: RandomM m => ConjureMode -> GlobalState -> [a] -> m [a]
+defSelectByMode _                                   _ [] = return []
+defSelectByMode (ModeUnknown                    {}) s xs = return $ maybe id take (limitOutputs s) xs
+defSelectByMode (ModeMultipleOutput             {}) s xs = return $ maybe id take (limitOutputs s) xs
+defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) _ (x:_) = return [x]
+defSelectByMode (ModeSingleOutput ModeRandom _ _  ) _ xs = do
     i <- rangeRandomM (0, length xs - 1)
     return [xs !! i]
-defSelectByMode (ModeSingleOutput               {}) (x:_) = return [x]
-defSelectByMode _ _ = error "selectByMode: Shouldn't be used in this mode"
+defSelectByMode (ModeSingleOutput               {}) _ (x:_) = return [x]
+defSelectByMode _ _ _ = error "selectByMode: Shouldn't be used in this mode"
 
 instance SelectByMode E where
-    selectByMode _ [] = return []
-    selectByMode (ConjureModeWithFlags mode _ _ _) xs =
+    selectByMode _ _ [] = return []
+    selectByMode (ConjureModeWithFlags mode _ _ _) s xs =
         case mode of
             ModeSingleOutput ModeCompact _ _ -> return [minimumBy (comparing eDepth) xs]
-            _                                -> defSelectByMode mode xs
+            _                                -> defSelectByMode mode s xs
 
 eDepth :: E -> Int
 eDepth (Tagged _ []) = 1
@@ -381,12 +386,12 @@ compactIfParam xs = xs
 
 
 instance SelectByMode RuleReprResult where
-    selectByMode _ [] = return []
-    selectByMode (ConjureModeWithFlags mode _ _ _) xs =
+    selectByMode _ _ [] = return []
+    selectByMode (ConjureModeWithFlags mode _ _ _) s xs =
         case mode of
-            ModeSingleOutput ModeCompact      _ _ -> return [compactSelect xs]
-            ModeMultipleOutput DFCompactParam _ _ -> return (compactIfParam xs)
-            _ -> defSelectByMode mode xs
+            ModeSingleOutput ModeCompact      _ _   -> return [compactSelect xs]
+            ModeMultipleOutput DFCompactParam _ _ _ -> return (compactIfParam xs)
+            _ -> defSelectByMode mode s xs
 
 
 type ReprFunc m =

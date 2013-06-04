@@ -15,21 +15,32 @@ import Language.E.Pipeline.Groom ( groomSpec )
 
 conjureWithMode
     :: StdGen
-    -> Maybe Int
+    -> Maybe Int            -- limit for the number of levels
+    -> Maybe Int            -- limit for the number of generated outputs
     -> ConjureModeWithFlags
     -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureWithMode seed limit mode reprs refns spec = onlyOneError $ runCompE "conjure" $ do
-    set_stdgen seed
-    modifyGlobal $ \ gl -> gl { conjureMode  = mode }
-    conjureAll limit reprs refns spec
+conjureWithMode seed limitLevels limitOut mode reprs refns spec
+    = withLimit
+    $ onlyOneError
+    $ runCompE "conjure" $ do
+        set_stdgen seed
+        modifyGlobal $ \ gl -> gl { conjureMode  = mode
+                                  , limitOutputs = limitOut
+                                  }
+        conjureAll limitLevels reprs refns spec
 
+    where
 
-onlyOneError :: [(Either a b, c)] -> [(Either a b, c)]
-onlyOneError [] = []
-onlyOneError (x:xs)
-    | isLeft (fst x) = [x]
-    | otherwise      = x : onlyOneError xs
+        withLimit :: [a] -> [a]
+        withLimit = maybe id take limitOut
+
+        onlyOneError :: [(Either a b, c)] -> [(Either a b, c)]
+        onlyOneError [] = []
+        onlyOneError (x:xs)
+            | isLeft (fst x) = [x]
+            | otherwise      = x : onlyOneError xs
+
 
 data Which = GeneratesNone | GeneratesSome
 

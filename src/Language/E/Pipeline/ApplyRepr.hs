@@ -41,10 +41,12 @@ applyRepr rules spec = do
 
             let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
 
+            gl <- getsGlobal id
+
             candidates :: [(Text,[RuleReprResult])]
                 <- forM topLevels $ \ (x,n,d) -> do
                 ys0 <- func (n,d,x)
-                ys1 <- selectByMode theMode ys0
+                ys1 <- selectByMode theMode gl ys0
                 let ys = sortBy (\ (_, _, reprName1, _, _)
                                    (_, _, reprName2, _, _)
                                    -> compare reprName1 reprName2) ys1
