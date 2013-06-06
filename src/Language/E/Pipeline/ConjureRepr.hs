@@ -11,7 +11,7 @@ import Language.E.Pipeline.IntroduceRegions ( introduceRegions )
 import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
-import Language.E.Pipeline.NoTuples ( noTuplesSpec )
+import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 import Conjure.Mode ( ConjureModeWithFlags(..), ConjureMode(..), ConjureModeMultiple(..) )
 
 
@@ -38,7 +38,7 @@ conjureRepr reprs spec = withBindingScope' $ do
                 >=> explodeStructuralVars                   >=> recordSpec "explodeStructuralVars"
                 -- following is to remove any unnecessary occurrences of variables
                 >=> simplifySpec                            >=> recordSpec "simplifySpec"
-                >=> noTuplesSpec                            >=> recordSpec "noTuplesSpec"
+                >=> allNoTuplesSpec                         >=> recordSpec "allNoTuplesSpec"
                 >=> introduceFakeConstraints                >=> recordSpec "introduceFakeConstraints"
                 >=> introduceRegions useChannelling         >=> recordSpec "introduceRegions"
                 >=> applyRepr reprs                         >=> recordSpec "applyRepr"

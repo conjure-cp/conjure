@@ -14,7 +14,7 @@ import Language.E.Pipeline.ExplodeStructuralVars ( explodeStructuralVars )
 import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
-import Language.E.Pipeline.NoTuples ( noTuplesSpec )
+import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 
 
 type Essence  = Spec
@@ -65,7 +65,7 @@ validateSolutionPure essence param solution =
                     >=> handleEnums             >=> recordSpec "handleEnums"
                     >=> handleUnnameds          >=> recordSpec "handleUnnameds"
                     >=> stripDecls              >=> recordSpec "stripDecls"
-                    >=> noTuplesSpec            >=> recordSpec "noTuplesSpec"
+                    >=> allNoTuplesSpec         >=> recordSpec "allNoTuplesSpec"
                     >=> fullyEvaluate           >=> recordSpec "fullyEvaluate"
 
             Spec _ s <- pipeline0 essenceCombined

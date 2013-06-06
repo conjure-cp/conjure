@@ -12,7 +12,7 @@ import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.ImplicitWheres ( implicitWheres )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
-import Language.E.Pipeline.NoTuples ( noTuplesSpec )
+import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 import Language.E.Pipeline.RemoveDuplicateCons ( removeDuplicateCons )
 import Language.E.Pipeline.RuleRefnToFunction ( ruleRefnToFunction )
 
@@ -44,7 +44,7 @@ conjureRefn reprs refns spec = withBindingScope' $
                         >=> applyRefn fs'               >=> recordSpec "applyRefn"
                         >=> checkIfAllRefined           >=> recordSpec "checkIfAllRefined"
                         >=> removeRefinedDecls          >=> recordSpec "removeRefinedDecls"
-                        >=> noTuplesSpec                >=> recordSpec "noTuplesSpec"
+                        >=> allNoTuplesSpec             >=> recordSpec "allNoTuplesSpec"
                         >=> removeDuplicateCons         >=> recordSpec "removeDuplicateCons"
             pipeline spec
 

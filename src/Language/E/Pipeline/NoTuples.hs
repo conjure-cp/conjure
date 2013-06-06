@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.Pipeline.NoTuples ( noTuplesSpec ) where
+module Language.E.Pipeline.NoTuples
+    ( allNoTuplesSpec
+    , allNoTuplesE
+    ) where
 
 import Bug
 import Language.E
@@ -11,16 +14,20 @@ import qualified Data.HashMap.Strict as M
 
 
 
-noTuplesSpec :: MonadConjure m => Spec -> m Spec
-noTuplesSpec = makeIdempotent helper
-    where helper (Spec v s0) = do
+allNoTuplesSpec :: MonadConjure m => Spec -> m Spec
+allNoTuplesSpec (Spec v x) = Spec v <$> allNoTuplesE x
+
+
+allNoTuplesE :: MonadConjure m => E -> m E
+allNoTuplesE = makeIdempotent helper
+    where helper s0 = do
             (s1, b1) <- noTuplesE s0
             (s2, b2) <- noTupleDomsInQuanEs s1
             (s3, b3) <- noTupleLiterals s2
             (s4, b4) <- unrollIfNeeded s3
             (s5, (Any b5, _)) <- runWriterT $ simplify s4
             let bFinal = or [b1,b2,b3,b4,b5]
-            return (Spec v s5, bFinal)
+            return (s5, bFinal)
 
 
 noTupleLiterals :: MonadConjure m => E -> m (E, Bool)
@@ -164,6 +171,7 @@ noTupleDomsInQuanEs inp@(Tagged t xs) = do
                         then (Tagged t ys, True)
                         else (inp, False)
 noTupleDomsInQuanEs x = return (x, False)
+
 
 noTupleDomsInQuanE :: MonadConjure m => E -> m (E, Bool)
 noTupleDomsInQuanE inp = do
