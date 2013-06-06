@@ -359,6 +359,7 @@ fullEvaluator [eMatch| freq(&m,&x) |]
     , [xMatch| mValues := value.mset.values |] <- m
     = returnInt $ genericLength [ () | i <- mValues, i == x ]
 
+
 fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
                      | xs := binOp.left .value.set.values
                      | ys := binOp.right.value.set.values
@@ -368,6 +369,7 @@ fullEvaluator [xMatch| [Prim (S "union")] := binOp.operator
                      | xs := binOp.left .value.mset.values
                      | ys := binOp.right.value.mset.values
                      |] = ret $ [xMake| value.mset.values := xs ++ ys |]
+
 
 fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
                      | xs := binOp.left .value.set.values
@@ -394,6 +396,38 @@ fullEvaluator [xMatch| [Prim (S "intersect")] := binOp.operator
                                           | k <- allKeys
                                           , let xsCount = fromMaybe 0 (lookup k xsHistogram)
                                           , let ysCount = fromMaybe 0 (lookup k ysHistogram)
+                                          ]
+                            zs = concatMap (\ (x,num) -> replicate num x ) zsHistogram
+                       in   ret [xMake| value.mset.values := zs |]
+
+
+fullEvaluator [xMatch| [Prim (S "-")] := binOp.operator
+                     | xs := binOp.left .value.set.values
+                     | ys := binOp.right.value.set.values
+                     | [lhs] := binOp.left
+                     | [rhs] := binOp.right
+                     |]
+                     | isFullyInstantiated lhs && isFullyInstantiated rhs
+                     = let zs = nub $ xs \\ ys
+                       in  ret $ [xMake| value.set.values := zs |]
+
+fullEvaluator [xMatch| [Prim (S "-")] := binOp.operator
+                     | xs := binOp.left .value.mset.values
+                     | ys := binOp.right.value.mset.values
+                     | [lhs] := binOp.left
+                     | [rhs] := binOp.right
+                     |]
+                     | isFullyInstantiated lhs && isFullyInstantiated rhs
+                     = let
+                            xsHistogram = map (\ x -> (headNote "fullEvaluator.xsHistogram" x, length x) ) $ group $ sort xs
+                            ysHistogram = map (\ x -> (headNote "fullEvaluator.ysHistogram" x, length x) ) $ group $ sort ys
+                            allKeys = nub $ map fst xsHistogram ++ map fst ysHistogram
+                            zsHistogram = [ (k, zsCount)
+                                          | k <- allKeys
+                                          , let xsCount = fromMaybe 0 (lookup k xsHistogram)
+                                          , let ysCount = fromMaybe 0 (lookup k ysHistogram)
+                                          , let zsCount = xsCount - ysCount
+                                          , zsCount > 0
                                           ]
                             zs = concatMap (\ (x,num) -> replicate num x ) zsHistogram
                        in   ret [xMake| value.mset.values := zs |]
