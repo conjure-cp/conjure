@@ -259,21 +259,31 @@ tupleExplode p@[eMatch| &a != &b |] = do
 tupleExplode _ = return Nothing
 
 tupleDomInQuantification :: MonadConjure m => RefnFunc m
-tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] =
+tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] = do
+    let
+        replacer out inp@[xMatch| [Prim (S nm)] := reference |] =
+            let (base, _, _) = identifierSplit nm
+            in  if i `elem` [ [xMake| reference := [Prim (S base)] |]
+                            , [xMake| structural.single.reference := [Prim (S base)] |]
+                            ]
+                    then out
+                    else inp
+        replacer _ inp = inp
+
+        helper [] = bug "this should never happen, tupleDomInQuantification"
+        helper [(quanvar,quandom)] = [eMake| &quan &quanvar : &quandom , &guard . &body |]
+        helper ((quanvar,quandom):rest) =
+            let body' = helper rest
+            in  [eMake| &quan &quanvar : &quandom . &body' |]
     case dom of
         [xMatch| xs := domain.tuple.inners |] -> do
             ys <- forM xs $ \ x -> do
                 (_, quanvar) <- freshQuanVar "tupleDomInQuantification"
                 return (quanvar, x)
             let quanvars = [xMake| value.tuple.values := map fst ys |]
-            ret p "builtIn.tupleDomInQuantification" (helper quanvars ys)
+            let out = transform (replacer quanvars) $ helper ys
+            ret p "builtIn.tupleDomInQuantification" out
         _ -> return Nothing
-    where
-        helper _ [] = bug "this should never happen, tupleDomInQuantification"
-        helper allQuanVars [(quanvar,quandom)] = replace i allQuanVars [eMake| &quan &quanvar : &quandom , &guard . &body |]
-        helper allQuanVars ((quanvar,quandom):rest) =
-            let body' = helper allQuanVars rest
-            in  [eMake| &quan &quanvar : &quandom . &body' |]
 tupleDomInQuantification _ = return Nothing
 
 functionLiteralApply :: MonadConjure m => RefnFunc m
