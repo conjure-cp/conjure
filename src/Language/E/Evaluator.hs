@@ -15,8 +15,8 @@ import Language.E.Definition
 import Language.E.CompE
 import Language.E.Traversals
 import Language.E.Evaluator.Full    ( fullEvaluator
-                                    , evalHasType, evalHasDomain
-                                    , evalHasRepr, evalDomSize
+                                    , evalHasType, evalHasDomain, evalHasRepr
+                                    , evalDomSize, evalDontCare
                                     , evalIndices, evalReplace
                                     , tupleEq, matrixEq
                                     , dotOrderDecomposeForTuples
@@ -64,6 +64,7 @@ fullySimplify x = do
                             , logged "Evaluator.hasType"                        evalHasType
                             , logged "Evaluator.hasDomain"                      evalHasDomain
                             , logged "Evaluator.domSize"                        evalDomSize
+                            , logged "Evaluator.dontCare"                       evalDontCare
                             , logged "Evaluator.indices"                        evalIndices
                             , logged "Evaluator.replace"                        evalReplace
                             , logged "Evaluator.tupleEq"                        tupleEq
@@ -110,6 +111,7 @@ allCombined i =
                     , logged "Evaluator.hasType"                        evalHasType
                     , logged "Evaluator.hasDomain"                      evalHasDomain
                     , logged "Evaluator.domSize"                        evalDomSize
+                    , logged "Evaluator.dontCare"                       evalDontCare
                     , logged "Evaluator.indices"                        evalIndices
                     , logged "Evaluator.replace"                        evalReplace
                     , logged "Evaluator.tupleEq"                        tupleEq
