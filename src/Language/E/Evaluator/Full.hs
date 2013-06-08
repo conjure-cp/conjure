@@ -1077,13 +1077,16 @@ dontCare p = do
         Nothing -> [eMake| true |]
         Just v  -> [eMake| &p = &v |]
     where
-        dontCareDom [xMatch| _     := domain.bool                    |] = return [eMake| false |]
-        dontCareDom [xMatch| [x]   := domain.int.ranges.range.single |] = return x
-        dontCareDom [xMatch| [x]   := domain.int.ranges.range.from   |] = return x
-        dontCareDom [xMatch| [x]   := domain.int.ranges.range.to     |] = return x
-        dontCareDom [xMatch| [x,_] := domain.int.ranges.range.fromTo |] = return x
-        dontCareDom [xMatch| _     := domain.int                     |] = return [eMake| 0 |]
+        dontCareDom [xMatch| _     := domain.bool       |] = return [eMake| false |]
+        dontCareDom [xMatch| (r:_) := domain.int.ranges |] = dontCareRange r
+        dontCareDom [xMatch| _     := domain.int        |] = return [eMake| 0 |]
         dontCareDom _ = Nothing
+
+        dontCareRange [xMatch| [x]   := range.single |] = return x
+        dontCareRange [xMatch| [x]   := range.from   |] = return x
+        dontCareRange [xMatch| [x]   := range.to     |] = return x
+        dontCareRange [xMatch| [x,_] := range.fromTo |] = return x
+        dontCareRange _ = Nothing
 
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
