@@ -27,6 +27,10 @@ $ See ../../rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule for the implemen
     (
         forAll i : int(1..&mx-1) . refn[i][1] >= refn[i+1][1]
     )
+        /\
+    (
+        forAll i : int(1..&mx) , refn[i][1] = false . dontCare(refn[i][2])
+    )
 
 
 *** set of &t

@@ -12,9 +12,17 @@ $ Also, refn[1] = cardinality
 ~~> ( int(0..&maxSize_)
     , matrix indexed by [int(1..&maxSize_)] of &tau
     )
-~~> forAll i : int(1..&maxSize_)
-        , i+1 <= refn[1]
-        . refn[2][i] .< refn[2][i+1]
+~~> (
+        forAll i : int(1..&maxSize_)
+            , i+1 <= refn[1]
+            . refn[2][i] .< refn[2][i+1]
+    )
+        /\
+    (
+        forAll i : int(1..&maxSize_)
+            , i > refn[1]
+            . dontCare(refn[2][i])
+    )
 
 
 *** set (minSize &minSize_ , maxSize &maxSize_) of &tau
