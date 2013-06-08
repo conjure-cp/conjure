@@ -246,7 +246,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             [xMatch| attrs      := domain.set.attributes.attrCollection
                    | [domInner] := domain.set.inner
                    |]
-            [xMatch| values := value.set.values |]
+            [xMatch| valuesIn := value.set.values |]
             (Just "Set~Explicit")
             | Just size <- lookupAttr "size" attrs
             = do
@@ -255,24 +255,44 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             let indexOfMatrix_to = [xMake| value.literal := [Prim (I sizeInt)] |]
             let indexOfMatrix = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
 
-            values' <- concatMapM (workhorse lookupReprs)
+            let
+                values :: [E]
+                values = sort valuesIn
+
+            let
+                valuesRec' :: [(Text, E, E)]
+                valuesRec' =
                         [ (nm', dom', val')
                         | let nm'  = name `T.append` "_Set~Explicit"
                         , let dom' = domInner
                         , val' <- values
                         ]
-            let nameValuePairs
-                    = map (\ xs -> (fst $ headNote "redArrow.nameValuePairs 1" xs, map snd xs) )
-                    $ groupBy ((==) `on` fst)
-                    $ sort values'
 
-            return [ (nm', theMatrix)
-                   | (nm', vals) <- nameValuePairs
-                   , let valuesInMatrix = vals
-                   , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
-                                                | value.matrix.indexrange := [indexOfMatrix]
-                                                |]
-                   ]
+            valuesRec <- concatMapM (workhorse lookupReprs) valuesRec'
+
+            let
+                valuesRecGrouped :: [(Text,[E])]
+                valuesRecGrouped
+                        = map (\ xs -> (fst $ headNote "redArrow.valuesRecGrouped" xs, map snd xs) )
+                        $ groupBy ((==) `on` fst)
+                        $ sortBy (comparing fst)
+                          valuesRec
+
+            let outputs =
+                    [ (nm', theMatrix)
+                    | (nm', vals) <- valuesRecGrouped
+                    , let valuesInMatrix = vals
+                    , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
+                                                 | value.matrix.indexrange := [indexOfMatrix]
+                                                 |]
+                    ]
+
+            -- forM_ valuesRecGrouped $ \ (n, x) ->
+                -- mkLog "debug:valuesRecGrouped" $ pretty n <+> sep (map pretty x)
+            -- forM_ outputs $ \ (n, x) ->
+                -- mkLog "debug:outputs" $ pretty n <+> pretty x
+
+            return outputs
 
         helper
             name
