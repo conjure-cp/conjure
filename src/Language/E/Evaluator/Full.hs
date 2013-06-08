@@ -1073,8 +1073,9 @@ evalDontCare _ = return Nothing
 dontCare :: MonadConjure m => E -> m E
 dontCare p = do
     d <- domainOf p
-    v <- dontCareDom d
-    return [eMake| &p = &v |]
+    return $ case dontCareDom d of
+        Nothing -> [eMake| true |]
+        Just v  -> [eMake| &p = &v |]
     where
         dontCareDom [xMatch| _     := domain.bool                    |] = return [eMake| false |]
         dontCareDom [xMatch| [x]   := domain.int.ranges.range.single |] = return x
@@ -1082,7 +1083,7 @@ dontCare p = do
         dontCareDom [xMatch| [x]   := domain.int.ranges.range.to     |] = return x
         dontCareDom [xMatch| [x,_] := domain.int.ranges.range.fromTo |] = return x
         dontCareDom [xMatch| _     := domain.int                     |] = return [eMake| 0 |]
-        dontCareDom x = bug $ "dontCare" <+> prettyAsPaths x
+        dontCareDom _ = Nothing
 
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
