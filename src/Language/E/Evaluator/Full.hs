@@ -1077,9 +1077,10 @@ dontCare p = do
         Nothing -> [eMake| true |]
         Just v  -> [eMake| &p = &v |]
     where
-        dontCareDom [xMatch| _     := domain.bool       |] = return [eMake| false |]
-        dontCareDom [xMatch| (r:_) := domain.int.ranges |] = dontCareRange r
-        dontCareDom [xMatch| _     := domain.int        |] = return [eMake| 0 |]
+        dontCareDom [xMatch| _     := domain.bool         |] = return [eMake| false |]
+        dontCareDom [xMatch| (r:_) := domain.int.ranges   |] = dontCareRange r
+        dontCareDom [xMatch| _     := domain.int          |] = return [eMake| 0 |]
+        dontCareDom [xMatch| xs    := domain.tuple.inners |] = (\ ys -> [xMake| value.tuple.values := ys |] ) <$> mapM dontCareDom xs
         dontCareDom _ = Nothing
 
         dontCareRange [xMatch| [x]   := range.single |] = return x
