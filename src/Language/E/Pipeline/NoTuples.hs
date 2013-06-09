@@ -226,16 +226,7 @@ noTupleDomsInQuanE inp = do
                                            , let t' = constructMatrixDomain indices t
                                            ]
                             tell ([], [(quanVar, length indices)])
-                            let quanVarReplacement =
-                                    let xs = [ [xMake| structural.single.reference := [Prim (S i)] |]
-                                             | i <- map fst quanVars
-                                             ]
-                                    in  [xMake| value.tuple.values := xs |]
-                            let replacer = replace [xMake| reference := [Prim (S quanVar)] |]
-                                                   quanVarReplacement
-                            let guard' = replacer guard
-                            let body'  = replacer body
-                            let out = inQuans quantifier quanVars (guard', body')
+                            let out = inQuans quantifier quanVars (guard, body)
                             return (Just out)
                         Nothing -> return Nothing
         helper _ = return Nothing
