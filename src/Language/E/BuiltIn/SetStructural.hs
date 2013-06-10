@@ -41,7 +41,7 @@ setStructural
         unroll []  = bug "unrollQuantifiers.structural.set"
         unroll [i] =
             [xMake| quantified.quantifier := quantifier
-                  | quantified.quanVar.structural.single := [i]
+                  | quantified.quanVar := [i]
                   | quantified.quanOverDom := []
                   | quantified.quanOverOp.binOp.in := []
                   | quantified.quanOverExpr := quanOverExpr
@@ -50,7 +50,7 @@ setStructural
                   |]
         unroll (i:is) =
             [xMake| quantified.quantifier := quantifier
-                  | quantified.quanVar.structural.single := [i]
+                  | quantified.quanVar := [i]
                   | quantified.quanOverDom := []
                   | quantified.quanOverOp.binOp.in := []
                   | quantified.quanOverExpr := quanOverExpr

@@ -6,11 +6,22 @@ module Language.E.Pipeline.ExplodeStructuralVars
 
 import Bug
 import Language.E
+import Language.E.BuiltIn.SetStructural ( setStructural )
 
 
 explodeStructuralVars :: MonadConjure m => Spec -> m Spec
-explodeStructuralVars = quantificationOverTupleDomains >=> bottomUpSpec' helper
+explodeStructuralVars = makeIdempotentByEq
+     $  wrapper setStructural
+    >=> quantificationOverTupleDomains
+    >=> bottomUpSpec' helper
+
     where
+
+        makeIdempotentByEq f x = do
+            y <- f x
+            if x == y
+                then return x
+                else makeIdempotentByEq f y
 
         helper x@[xMatch| _ := quantified.quanVar.structural.single |] = return x
 
@@ -35,17 +46,27 @@ explodeStructuralVars = quantificationOverTupleDomains >=> bottomUpSpec' helper
                                                   , let new = mkIndexedExpr (map intToE is) uniq
                                                   , old /= [eMake| _ |]
                                                   ]
+                    let wash [xMatch| xs := structural.tuple |] = [xMake| value.tuple.values := xs |]
+                        wash (Tagged t xs) = Tagged t (map wash xs)
+                        wash t = t
                     let result = [xMake| quantified.quantifier   := quantifiers
                                        | quantified.quanVar      := [uniq]
                                        | quantified.quanOverDom  := quanOverDoms
                                        | quantified.quanOverOp   := quanOverOps
                                        | quantified.quanOverExpr := quanOverExprs
-                                       | quantified.guard        := map replacerFunc guards
-                                       | quantified.body         := map replacerFunc bodys
+                                       | quantified.guard        := map (wash . replacerFunc) guards
+                                       | quantified.body         := map (wash . replacerFunc) bodys
                                        |]
                     return result
 
         helper x = return x
+
+wrapper :: MonadConjure m => RefnFunc m -> Spec -> m Spec
+wrapper f = bottomUpSpec' $ \ x -> do
+    my <- f x
+    case my of
+        Just ((_, y):_) -> return y
+        _ -> return x
 
 
 -- i         --> i -> []

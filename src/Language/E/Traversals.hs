@@ -336,6 +336,7 @@ introduceStuff = helper
             let
                 getReferenceOut [xMatch| [Prim (S r)] := reference |] = Just r
                 getReferenceOut [xMatch| [Prim (S r)] := structural.single.reference |] = Just r
+                getReferenceOut [xMatch| [Prim (S r)] := structural.tuple.structural.single.reference |] = Just r
                 getReferenceOut _ = Nothing
             in
                 forM_ qs $ \ q -> case getReferenceOut q of
@@ -354,7 +355,7 @@ introduceStuff = helper
                             addReference r [xMake| quanVar.name   := [Prim (S r)]
                                                  | quanVar.within := [within]
                                                  |]
-                    Nothing -> error $ show $ prettyAsPaths q
+                    Nothing -> return ()
 
         helper _ = return ()
 
