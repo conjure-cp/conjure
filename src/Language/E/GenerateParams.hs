@@ -1,6 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports -fno-warn-unused-binds #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-module Language.E.GenerateParam where
+module Language.E.GenerateParams where
 
 import Bug
 import Language.E hiding (mkLog)
@@ -11,11 +11,11 @@ import Language.E.Up.IO(getSpec')
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
 import Language.E.Up.EprimeToEssence(convertUnamed)
-
 import Language.E.GenerateRandomParam.Common(mkLog)
-import Language.E.GenerateRandomParam.Data
-
 import Language.E.ValidateSolution(validateSolutionPure)
+
+import Language.E.GenerateParams.Typedefs
+import Language.E.GenerateParams.Toolchain(runSavilerow)
 
 import System.Directory(getCurrentDirectory)
 import System.FilePath((</>))
@@ -27,12 +27,18 @@ import Language.E.NormaliseSolution(normaliseSolutionEs)
 
 import qualified Data.Map as Map
 
+type EprimeDir    = FilePath
+type OutputDir    = FilePath
 
-generateParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
-generateParam essence = do
+generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
+generateParams essence eprimeDir outputDir = return ()
+
+generateParamsM :: (MonadConjure m, RandomM m) => Essence ->  m EssenceParam
+generateParamsM essence = do
     givens <- plumming essence
+    let es = [[eMake| 5 |]]
 
-    result <- wrapping givens [[eMake| 1 |]] 
+    result <- wrapping givens es
     mkLog "Result" (pretty result)
     return result
 
@@ -43,7 +49,6 @@ generateParam essence = do
               filterer [xMatch| _ := topLevel.suchThat           |] = False
               filterer [xMatch| _ := topLevel.declaration.find   |] = False
               filterer _                              = True
-
 
 plumming :: MonadConjure m => Spec -> m [E]
 plumming essence' = do
@@ -69,7 +74,7 @@ plumming essence' = do
 
 wrapping :: (MonadConjure m, RandomM m) => [E] -> [E] -> m EssenceParam
 wrapping givens vals = do
-    let lettings = zipWith makeLetting givens vals 
+    let lettings = zipWith makeLetting givens vals
     mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
@@ -106,14 +111,14 @@ stripDecVars (Spec v x) = Spec v y
      Run easily from GHCI with
      _a  <name>
 -}
-_a :: FilePath -> IO ()
-_a f = _x =<< _g  (_getTest  f)
+{-_a :: FilePath -> IO ()-}
+{-_a f = _x =<< _g  (_getTest  f)-}
 
-_g :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
-_g sp = do
-    seed <- getStdGen
-    spec <- sp
-    return $ runCompE "generateParam" (set_stdgen seed >> generateParam spec)
+{-_g :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]-}
+{-_g sp = do-}
+    {-seed <- getStdGen-}
+    {-spec <- sp-}
+    {-return $ runCompE "generateParams" (set_stdgen seed >> generateParams spec)-}
 
 _x :: [(Either Doc a, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)
@@ -121,11 +126,11 @@ _x _ = return ()
 
 _getTest :: FilePath -> IO Spec
 _getTest f = do
-    let dir = "/Users/bilalh/CS/paramgen/models/_other" 
+    let dir = "/Users/bilalh/CS/paramgen/models/_other"
     getSpec' False $ dir </>  f  </> f ++ ".essence"
 
 _bug :: String -> [E] -> t
-_bug  s = upBug  ("GenerateParam: " ++ s)
+_bug  s = upBug  ("GenerateParams: " ++ s)
 _bugg :: String -> t
 _bugg s = _bug s []
 
