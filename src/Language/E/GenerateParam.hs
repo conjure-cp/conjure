@@ -28,8 +28,8 @@ import Language.E.NormaliseSolution(normaliseSolutionEs)
 import qualified Data.Map as Map
 
 
-generateRandomParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
-generateRandomParam essence = do
+generateParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
+generateParam essence = do
     es <- plumming essence
     return emptySolution
 
@@ -64,13 +64,13 @@ plumming essence' = do
     return es
 
 
-wrapping :: (MonadConjure m, RandomM m) => [E] -> Version -> [E] -> m EssenceParam
-wrapping es v givens= do
+wrapping :: (MonadConjure m, RandomM m) => [E] -> [E] -> m EssenceParam
+wrapping es givens= do
     let lettings = zipWith makeLetting es givens
     mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
-    let essenceParam = Spec v (listAsStatement lettings )
+    let essenceParam = Spec ("Essence", [1,3]) (listAsStatement lettings )
     return essenceParam
 
 
@@ -84,6 +84,7 @@ makeLetting given val =
     getRef [xMatch|  _  := topLevel.declaration.given.name.reference
                   | [n] := topLevel.declaration.given.name |] = n
     getRef e = _bug "getRef: should not happen" [e]
+
 
 stripDecVars :: Essence -> Essence
 stripDecVars (Spec v x) = Spec v y
@@ -109,7 +110,7 @@ _g :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]
 _g sp = do
     seed <- getStdGen
     spec <- sp
-    return $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam spec)
+    return $ runCompE "generateParam" (set_stdgen seed >> generateParam spec)
 
 _x :: [(Either Doc a, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)
