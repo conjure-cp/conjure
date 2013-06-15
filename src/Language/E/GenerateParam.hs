@@ -30,8 +30,11 @@ import qualified Data.Map as Map
 
 generateParam :: (MonadConjure m, RandomM m) => Essence -> m EssenceParam
 generateParam essence = do
-    es <- plumming essence
-    return emptySolution
+    givens <- plumming essence
+
+    result <- wrapping givens [[eMake| 1 |]] 
+    mkLog "Result" (pretty result)
+    return result
 
     where
     emptySolution = Spec ("Essence", [1,3]) (listAsStatement [])
@@ -65,8 +68,8 @@ plumming essence' = do
 
 
 wrapping :: (MonadConjure m, RandomM m) => [E] -> [E] -> m EssenceParam
-wrapping es givens= do
-    let lettings = zipWith makeLetting es givens
+wrapping givens vals = do
+    let lettings = zipWith makeLetting givens vals 
     mkLog "Lettings" (vcat $ map pretty lettings)
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
