@@ -6,8 +6,8 @@
 
 module Language.E.GenerateParams.Toolchain where
 
-import Language.E.GenerateParams.Typedefs 
 
+import Language.E.GenerateParams.Typedefs 
 
 import Prelude hiding ( FilePath, reverse )
 import Shelly

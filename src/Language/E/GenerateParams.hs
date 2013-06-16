@@ -14,11 +14,13 @@ import Language.E.Up.EprimeToEssence(convertUnamed)
 import Language.E.GenerateRandomParam.Common(mkLog)
 import Language.E.ValidateSolution(validateSolutionPure)
 
+import Language.E.Pipeline.Driver ( driverConjureSingle )
+
 import Language.E.GenerateParams.Typedefs
 import Language.E.GenerateParams.Toolchain(runSavilerow)
 
 import System.Directory(getCurrentDirectory)
-import System.FilePath((</>))
+import System.FilePath((</>),(<.>))
 import Text.Groom(groom)
 
 import Data.List(permutations,transpose,mapAccumL,foldl1')
@@ -31,9 +33,20 @@ type EprimeDir    = FilePath
 type OutputDir    = FilePath
 
 generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
-generateParams essence eprimeDir outputDir = return ()
+generateParams essence eprimeDir outputDir = do
+    putStrLn  "Create a param"
 
-generateParamsM :: (MonadConjure m, RandomM m) => Essence ->  m EssenceParam
+    driverConjureSingle True True
+        paramPath
+        $ runCompE "generateParamsM" (generateParamsM essence)
+
+    return ()
+
+    where
+    paramPath = outputDir </> "5" <.> ".param"
+
+
+generateParamsM :: (MonadConjure m) => Essence ->  m EssenceParam
 generateParamsM essence = do
     givens <- plumming essence
     let es = [[eMake| 5 |]]
@@ -48,7 +61,7 @@ generateParamsM essence = do
         where es' = statementAsList es
               filterer [xMatch| _ := topLevel.suchThat           |] = False
               filterer [xMatch| _ := topLevel.declaration.find   |] = False
-              filterer _                              = True
+              filterer _                                            = True
 
 plumming :: MonadConjure m => Spec -> m [E]
 plumming essence' = do
@@ -72,7 +85,7 @@ plumming essence' = do
     return es
 
 
-wrapping :: (MonadConjure m, RandomM m) => [E] -> [E] -> m EssenceParam
+wrapping :: (MonadConjure m) => [E] -> [E] -> m EssenceParam
 wrapping givens vals = do
     let lettings = zipWith makeLetting givens vals
     mkLog "Lettings" (vcat $ map pretty lettings)
@@ -107,18 +120,14 @@ stripDecVars (Spec v x) = Spec v y
         stays _ = False
 
 
-{-
-     Run easily from GHCI with
-     _a  <name>
--}
-{-_a :: FilePath -> IO ()-}
-{-_a f = _x =<< _g  (_getTest  f)-}
+-- e.g _r "prob109-test"
 
-{-_g :: IO Essence -> IO [(Either Doc EssenceParam, LogTree)]-}
-{-_g sp = do-}
-    {-seed <- getStdGen-}
-    {-spec <- sp-}
-    {-return $ runCompE "generateParams" (set_stdgen seed >> generateParams spec)-}
+_r name = do
+    let mode = "df-compact-param-better"
+    let dir = "/Users/bilalh/CS/paramgen/models/_other" </> name
+    essence <-  getSpec' False $ dir </> name <.> "essence"
+    generateParams essence (dir </> name ++ mode) (dir </> "params")
+
 
 _x :: [(Either Doc a, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)
