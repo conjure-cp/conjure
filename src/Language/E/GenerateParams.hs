@@ -30,7 +30,6 @@ import Language.E.NormaliseSolution(normaliseSolutionEs)
 import qualified Data.Map as Map
 
 type EprimeDir    = FilePath
-type OutputDir    = FilePath
 
 generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
 generateParams essence eprimeDir outputDir = do
@@ -39,6 +38,9 @@ generateParams essence eprimeDir outputDir = do
     driverConjureSingle True True
         paramPath
         $ runCompE "generateParamsM" (generateParamsM essence)
+
+    putStrLn "Running SR on each eprime with the param"
+    runSavilerow 10 (eprimeDir </> "0001" <.> "eprime" ) paramPath 
 
     return ()
 
@@ -62,6 +64,9 @@ generateParamsM essence = do
               filterer [xMatch| _ := topLevel.suchThat           |] = False
               filterer [xMatch| _ := topLevel.declaration.find   |] = False
               filterer _                                            = True
+
+
+
 
 plumming :: MonadConjure m => Spec -> m [E]
 plumming essence' = do
@@ -122,8 +127,9 @@ stripDecVars (Spec v x) = Spec v y
 
 -- e.g _r "prob109-test"
 
+_r :: String -> IO ()
 _r name = do
-    let mode = "df-compact-param-better"
+    let mode = "-df-compact-param-better"
     let dir = "/Users/bilalh/CS/paramgen/models/_other" </> name
     essence <-  getSpec' False $ dir </> name <.> "essence"
     generateParams essence (dir </> name ++ mode) (dir </> "params")

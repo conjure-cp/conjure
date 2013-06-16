@@ -16,3 +16,5 @@ type EprimeSolutionFP  = FilePath
 type EssenceFP         = FilePath
 type EssenceParamFP    = FilePath
 type EssenceSolutionFP = FilePath
+
+type OutputDir    = FilePath

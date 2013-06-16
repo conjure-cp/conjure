@@ -39,7 +39,7 @@ savilerow in_eprime out_minion out_solution in_param timeout = run
                           ,"-out-minion",   out_minion
                           ,"-out-solution", out_solution
                           ,"-runsolver"
-                          ,"-minion-options", "-timelimit ", LT.pack . show $ timeout
+                          ,"-minion-options", LT.pack $  "-timelimit " ++   show timeout
                           ] ++ handleParam  in_param
 
     where
