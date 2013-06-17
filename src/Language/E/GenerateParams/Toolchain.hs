@@ -3,11 +3,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
 module Language.E.GenerateParams.Toolchain where
 
 
+import Language.E.Imports
+import Bug
 import Language.E.GenerateParams.Typedefs 
+
+import Data.Maybe(fromMaybe)
 
 import Prelude hiding ( FilePath, reverse )
 import Shelly
@@ -16,7 +19,20 @@ import qualified Data.Text.Lazy      as LT
 {-import qualified System.Directory    as FP-}
 import qualified System.FilePath     as FP
 
+default (LT.Text)
+
+
 type MinionTimeout = Int
+
+runModelsWithParam :: EprimeParamFP -> OutputDir -> IO ()
+runModelsWithParam param eprimeDir = do
+    _ <- shelly $ verbosely $ escaping False $ do
+        mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
+        let scriptDir =  fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
+        setenv "USE_MODE" "df-compact-param-better"
+        run "$PARAM_GEN_SCRIPTS/timeModel.sh" []
+        return ()
+    return ()
 
 runSavilerow :: MinionTimeout -> EprimeFP -> EprimeParamFP  -> IO ()
 runSavilerow minionTimeout eprime param  = do 

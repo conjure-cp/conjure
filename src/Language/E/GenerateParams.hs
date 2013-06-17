@@ -17,7 +17,7 @@ import Language.E.ValidateSolution(validateSolutionPure)
 import Language.E.Pipeline.Driver ( driverConjureSingle )
 
 import Language.E.GenerateParams.Typedefs
-import Language.E.GenerateParams.Toolchain(runSavilerow)
+import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam)
 
 import System.Directory(getCurrentDirectory)
 import System.FilePath((</>),(<.>))
@@ -40,7 +40,8 @@ generateParams essence eprimeDir outputDir = do
         $ runCompE "generateParamsM" (generateParamsM essence)
 
     putStrLn "Running SR on each eprime with the param"
-    runSavilerow 10 (eprimeDir </> "0001" <.> "eprime" ) paramPath 
+    {-runSavilerow 10 (eprimeDir </> "0001" <.> "eprime" ) paramPath -}
+    runModelsWithParam  paramPath eprimeDir
 
     return ()
 
