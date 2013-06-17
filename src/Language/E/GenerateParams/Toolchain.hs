@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-type-defaults  -fno-warn-unused-binds #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults  #-}
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
@@ -9,8 +9,6 @@ module Language.E.GenerateParams.Toolchain where
 import Language.E.Imports
 import Bug
 import Language.E.GenerateParams.Typedefs 
-
-import Data.Maybe(fromMaybe)
 
 import Prelude hiding ( FilePath, reverse )
 import Shelly
@@ -23,16 +21,25 @@ default (LT.Text)
 
 
 type MinionTimeout = Int
+type Mode          = String
 
-runModelsWithParam :: EprimeParamFP -> OutputDir -> IO ()
-runModelsWithParam param eprimeDir = do
-    _ <- shelly $ verbosely $ escaping False $ do
+runModelsWithParam :: Mode -> EprimeParamFP -> [EprimeFP] -> IO ()
+runModelsWithParam mode param eprimes = do
+   let eprimesVar = LT.pack .  unwords $ eprimes
+   _ <- shelly  $ escaping False $ do
         mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
-        let scriptDir =  fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
-        setenv "USE_MODE" "df-compact-param-better"
-        run "$PARAM_GEN_SCRIPTS/timeModel.sh" []
+        let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
+        echo "ScriptDir:"
+        echo scriptDir
+
+        setenv "USE_MODE"      (LT.pack mode)
+        setenv "PARAMS_TO_USE" (LT.pack param)
+        setenv "MODELS_TO_USE" eprimesVar
+
+        _ <- run "$PARAM_GEN_SCRIPTS/timeModel.sh" []
         return ()
-    return ()
+   return ()
+
 
 runSavilerow :: MinionTimeout -> EprimeFP -> EprimeParamFP  -> IO ()
 runSavilerow minionTimeout eprime param  = do 
