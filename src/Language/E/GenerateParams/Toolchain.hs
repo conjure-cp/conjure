@@ -25,7 +25,7 @@ type Mode          = String
 
 runModelsWithParam :: Mode -> EprimeParamFP -> [EprimeFP] -> IO ()
 runModelsWithParam mode param eprimes = do
-   let eprimesVar = LT.pack .  unwords $ eprimes
+   let eprimesVar = LT.pack .  unlines $ eprimes
    _ <- shelly  $ escaping False $ do
         mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
         let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir

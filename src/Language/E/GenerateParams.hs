@@ -19,7 +19,7 @@ import Language.E.Pipeline.Driver ( driverConjureSingle )
 import Language.E.GenerateParams.Typedefs
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam)
 
-import System.Directory(getCurrentDirectory,getDirectoryContents)
+import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
 import System.FilePath((</>),(<.>),takeExtension,takeBaseName)
 import Text.Groom(groom)
 
@@ -33,16 +33,17 @@ type EprimeDir    = FilePath
 
 generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
 generateParams essence eprimeDir outputDir = do
-    putStrLn  "Create a param"
     eprimes <- liftM  ( map ( eprimeDir </>  ) . filter  ( (==) ".eprime" . takeExtension ) ) 
                       (getDirectoryContents eprimeDir)
+    eprimes' <-  mapM makeRelativeToCurrentDirectory eprimes
 
+    putStrLn  "Create a param"
     driverConjureSingle True True
         paramPath
         $ runCompE "generateParamsM" (generateParamsM essence)
 
     putStrLn "Running SR on each eprime with the param"
-    runModelsWithParam eprimeDirName  paramPath eprimes
+    runModelsWithParam eprimeDirName  paramPath eprimes'
 
     return ()
 
