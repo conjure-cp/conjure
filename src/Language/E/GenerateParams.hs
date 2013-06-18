@@ -1,35 +1,37 @@
-{-# OPTIONS_GHC -fno-warn-unused-imports -fno-warn-unused-binds #-}
+{-# OPTIONS_GHC -fno-warn-unused-imports -fno-warn-unused-binds  #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateParams where
 
 import Bug
 import Language.E hiding (mkLog)
-import Language.E.Imports
 import Language.E.DomainOf(domainOf)
+import Language.E.GenerateRandomParam.Common(mkLog)
+import Language.E.Imports
+import Language.E.NormaliseSolution(normaliseSolutionEs)
+import Language.E.Pipeline.Driver ( driverConjureSingle )
 import Language.E.Up.Debug(upBug)
+import Language.E.Up.EprimeToEssence(convertUnamed)
+import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
 import Language.E.Up.IO(getSpec')
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
-import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
-import Language.E.Up.EprimeToEssence(convertUnamed)
-import Language.E.GenerateRandomParam.Common(mkLog)
 import Language.E.ValidateSolution(validateSolutionPure)
 
-import Language.E.Pipeline.Driver ( driverConjureSingle )
-
-import Language.E.GenerateParams.Typedefs
+import Language.E.GenerateParams.Data
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam,gatherData)
+import Language.E.GenerateParams.Typedefs
+
+import Control.Arrow((&&&),arr,(***),(|||),(+++))
+import Control.Monad.State
+import Data.List(permutations,transpose,mapAccumL,foldl1')
 
 import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
 import System.FilePath((</>),(<.>),takeExtension,takeBaseName)
 import Text.Groom(groom)
 
-import Data.List(permutations,transpose,mapAccumL,foldl1')
-import Control.Arrow((&&&),arr,(***),(|||),(+++))
-import Language.E.NormaliseSolution(normaliseSolutionEs)
-
 import qualified Data.Map as Map
 
-type EprimeDir    = FilePath
+
+type EprimeDir = FilePath
 
 generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
 generateParams essence eprimeDir outputDir = do
@@ -41,12 +43,13 @@ generateParams essence eprimeDir outputDir = do
     paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
 
     putStrLn  "Create a param"
-    driverConjureSingle True True
+    paramGen <- driverParamGen True True
         paramPath
+        startingParmGenState
         $ runCompE "generateParamsM" (generateParamsM essence)
 
     putStrLn "Running SR on each eprime with the param"
-    {-runModelsWithParam eprimeDirName  paramPath eprimes'-}
+    runModelsWithParam eprimeDirName  paramPath eprimes'
 
     putStrLn "Storing results in results.db"
     gatherData eprimeDirName
@@ -57,24 +60,23 @@ generateParams essence eprimeDir outputDir = do
     eprimeDirName = takeBaseName eprimeDir
 
 
-generateParamsM :: (MonadConjure m) => Essence ->  m EssenceParam
+generateParamsM :: (MonadConjure m) => Essence ->  m (MonadParamGen EssenceParam)
 generateParamsM essence = do
     givens <- plumming essence
     let es = [[eMake| 5 |]]
 
     result <- wrapping givens es
     mkLog "Result" (pretty result)
-    return result
+    return $ do 
+        put 1 
+        return result
 
     where
-    emptySolution = Spec ("Essence", [1,3]) (listAsStatement [])
     removeForValidate (Spec v es) = Spec v $ listAsStatement $  filter filterer es'
         where es' = statementAsList es
               filterer [xMatch| _ := topLevel.suchThat           |] = False
               filterer [xMatch| _ := topLevel.declaration.find   |] = False
               filterer _                                            = True
-
-
 
 
 plumming :: MonadConjure m => Spec -> m [E]

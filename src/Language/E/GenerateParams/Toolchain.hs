@@ -8,7 +8,7 @@ module Language.E.GenerateParams.Toolchain where
 
 import Bug
 import Language.E.Imports
-import Language.E.GenerateParams.Typedefs 
+import Language.E.GenerateParams.Typedefs
 
 import Prelude hiding ( FilePath, reverse )
 import Shelly
@@ -48,12 +48,12 @@ gatherData outputBase = do
         mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
         let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
         echo "ScriptDir:"
-        cur <- pwd
 
+        cur <- pwd
         setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
         setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
         setenv "REPOSITORY_BASE"           (toTextArg cur)
-        setenv "NO_MINION_STATS" "true"        
+        setenv "NO_MINION_STATS" "true"
         echo scriptDir
 
         _ <- run "$PARAM_GEN_SCRIPTS/db/gather_data.sh" []
@@ -62,10 +62,10 @@ gatherData outputBase = do
 
 
 runSavilerow :: MinionTimeout -> EprimeFP -> EprimeParamFP  -> IO ()
-runSavilerow minionTimeout eprime param  = do 
+runSavilerow minionTimeout eprime param  = do
     _ <- shelly $ verbosely $ do
         echo "Running Savilerow"
-        _ <- savilerow (LT.pack eprime) (LT.pack minion) (LT.pack eprimeSolution) 
+        _ <- savilerow (LT.pack eprime) (LT.pack minion) (LT.pack eprimeSolution)
                        (Just . LT.pack $ param ) minionTimeout
         return ()
     return ()
