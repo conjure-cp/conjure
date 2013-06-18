@@ -35,7 +35,10 @@ generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
 generateParams essence eprimeDir outputDir = do
     eprimes <- liftM  ( map ( eprimeDir </>  ) . filter  ( (==) ".eprime" . takeExtension ) ) 
                       (getDirectoryContents eprimeDir)
+
+    -- Make paths relative, to avoid hard coding 
     eprimes' <-  mapM makeRelativeToCurrentDirectory eprimes
+    paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
 
     putStrLn  "Create a param"
     driverConjureSingle True True
@@ -48,7 +51,6 @@ generateParams essence eprimeDir outputDir = do
     return ()
 
     where
-    paramPath = outputDir </> "5" <.> ".param"
     eprimeDirName = takeBaseName eprimeDir
 
 

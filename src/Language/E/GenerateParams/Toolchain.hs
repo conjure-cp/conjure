@@ -35,8 +35,9 @@ runModelsWithParam mode param eprimes = do
         setenv "USE_MODE"      (LT.pack mode)
         setenv "PARAMS_TO_USE" (LT.pack param)
         setenv "MODELS_TO_USE" eprimesVar
+        setenv "NO_MINION_STATS" "true"
 
-        _ <- run "$PARAM_GEN_SCRIPTS/timeModel.sh" []
+        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" []
         return ()
    return ()
 
