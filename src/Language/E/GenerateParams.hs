@@ -5,7 +5,6 @@ module Language.E.GenerateParams where
 import Bug
 import Language.E hiding (mkLog)
 import Language.E.DomainOf(domainOf)
-import Language.E.GenerateRandomParam.Common(mkLog)
 import Language.E.Imports
 import Language.E.NormaliseSolution(normaliseSolutionEs)
 import Language.E.Pipeline.Driver ( driverConjureSingle )
@@ -16,6 +15,7 @@ import Language.E.Up.IO(getSpec')
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.ValidateSolution(validateSolutionPure)
 
+import Language.E.GenerateRandomParam.Common(mkLog)
 import Language.E.GenerateParams.Data
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam,gatherData)
 import Language.E.GenerateParams.Typedefs
@@ -63,10 +63,14 @@ generateParams essence eprimeDir outputDir = do
 generateParamsM :: (MonadConjure m) => Essence ->  m (MonadParamGen EssenceParam)
 generateParamsM essence = do
     givens <- plumming essence
+    doms <- mapM domainOf givens
+    let vars = zip givens doms
+    mkLog "vars" (vcat $ map pretty vars)
+
     let es = [[eMake| 5 |]]
 
     result <- wrapping givens es
-    mkLog "Result" (pretty result)
+    {-mkLog "Result" (pretty result)-}
     return $ do 
         put 1 
         return result
@@ -96,7 +100,7 @@ plumming essence' = do
         es  = filter filterer (statementAsList e)
 
     mkLog "Reduced   " $ pretty es <+> "\n"
-    mkLog "enums" (pretty . groom $ enumMapping)
+    {-mkLog "enums" (pretty . groom $ enumMapping)-}
 
     return es
 

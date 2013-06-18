@@ -29,7 +29,7 @@ driverParamGen _ False _ _ [(Left x, _ )] = bug $ pretty x
 driverParamGen logsOut True pathOut _ [(Left  x, logs)] = do
     toFile (pathOut ++ ".error") (renderNormal x)
     when logsOut $ toFile (pathOut ++ ".logs" ) (renderWide logs)
-    bug "errors" 
+    bug $ pretty x 
 
 driverParamGen _ _ _ _ _ = error "could not happen"
 
