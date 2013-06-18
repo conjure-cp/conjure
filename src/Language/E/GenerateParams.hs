@@ -1,5 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports -fno-warn-unused-binds  #-}
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Language.E.GenerateParams where
 
 import Bug
@@ -15,10 +18,12 @@ import Language.E.Up.IO(getSpec')
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.ValidateSolution(validateSolutionPure)
 
-import Language.E.GenerateRandomParam.Common(mkLog)
+import Language.E.GenerateRandomParam.Common(mkLog,printPrettym,printPretty)
 import Language.E.GenerateParams.Data
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam,gatherData)
 import Language.E.GenerateParams.Typedefs
+
+import Language.E.Lenses(viewReference)
 
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Control.Monad.State
@@ -30,6 +35,8 @@ import Text.Groom(groom)
 
 import qualified Data.Map as Map
 
+import Database.SQLite.Simple
+import System.Environment(getEnv)
 
 type EprimeDir = FilePath
 
@@ -40,15 +47,14 @@ generateParams essence eprimeDir outputDir = do
 
     -- Make paths relative, to avoid hard coding 
     eprimes' <-  mapM makeRelativeToCurrentDirectory eprimes
-    paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
 
     putStrLn  "Create a param"
-    paramGen <- driverParamGen True True
-        paramPath
-        startingParmGenState
-        $ runCompE "generateParamsM" (generateParamsM essence)
+    vars <-  getRights $  runCompE "getVars" (getVars essence)
+    printPrettym  vars
+
 
     putStrLn "Running SR on each eprime with the param"
+    paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
     runModelsWithParam eprimeDirName  paramPath eprimes'
 
     putStrLn "Storing results in results.db"
@@ -59,28 +65,33 @@ generateParams essence eprimeDir outputDir = do
     where
     eprimeDirName = takeBaseName eprimeDir
 
+-- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum
+getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, Bool, Bool,Bool)]
+getData  essence param = do 
+    base_dir <- getEnv "REPOSITORY_BASE"
+    conn     <- open $ base_dir ++ "/results.db"
+    rawData ::[(String,Bool,Bool,Bool)]  <- query conn ( 
+        "Select eprime , Cast(MinionTimeout as Integer) as MinionTimeout,  Cast(MinionSatisfiable as Integer) as MinionSatisfiable, Cast(IsOptimum as Integer) as IsOptimum  From Timings2 where essence = ? and param = ? Order by eprime"
+     ) [essence,param]
+    return rawData
 
-generateParamsM :: (MonadConjure m) => Essence ->  m (MonadParamGen EssenceParam)
-generateParamsM essence = do
+getVars :: (MonadConjure m) => Essence ->  m [(Text,E)] 
+getVars essence = do
     givens <- plumming essence
     doms <- mapM domainOf givens
-    let vars = zip givens doms
+    let refs = map (fromMaybe "generateParamsM: no ref" . viewReference . getRef) givens
+
+    let vars = zip refs doms
     mkLog "vars" (vcat $ map pretty vars)
 
-    let es = [[eMake| 5 |]]
-
-    result <- wrapping givens es
+    {-let es = [[eMake| 5 |]]-}
+    {-result <- wrapping givens es-}
     {-mkLog "Result" (pretty result)-}
-    return $ do 
-        put 1 
-        return result
+    return vars
 
     where
-    removeForValidate (Spec v es) = Spec v $ listAsStatement $  filter filterer es'
-        where es' = statementAsList es
-              filterer [xMatch| _ := topLevel.suchThat           |] = False
-              filterer [xMatch| _ := topLevel.declaration.find   |] = False
-              filterer _                                            = True
+
+
 
 
 plumming :: MonadConjure m => Spec -> m [E]
@@ -120,11 +131,10 @@ makeLetting given val =
     [xMake| topLevel.letting.name := [getRef given]
           | topLevel.letting.expr := [val]|]
 
-    where
-    getRef :: E -> E
-    getRef [xMatch|  _  := topLevel.declaration.given.name.reference
-                  | [n] := topLevel.declaration.given.name |] = n
-    getRef e = _bug "getRef: should not happen" [e]
+getRef :: E -> E
+getRef [xMatch|  _  := topLevel.declaration.given.name.reference
+              | [n] := topLevel.declaration.given.name |] = n
+getRef e = _bug "getRef: should not happen" [e]
 
 
 stripDecVars :: Essence -> Essence
