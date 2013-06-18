@@ -15,7 +15,8 @@ import qualified Data.Map as M
 
 
 data ParamGenState = ParamGenState{
-    results :: Map EssenceParamFP (Map EprimeFP (Bool,Bool,Bool) )
+     results :: Map EssenceParamFP (Map EprimeFP (Bool,Bool,Bool) )
+    ,vars    :: [(Text,E)]
 } deriving (Show)
 
 
@@ -52,7 +53,8 @@ getRights [(Left x, _ )]     = bug $ pretty x
 getRights a                  = bug $ pretty $ show  a
 
 
-startingParmGenState :: ParamGenState
-startingParmGenState = ParamGenState{
-    results=M.empty
+startingParmGenState :: [(Text,E)] -> ParamGenState
+startingParmGenState vars = ParamGenState{
+    results=M.empty,
+    vars = vars
 }

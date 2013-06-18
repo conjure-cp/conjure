@@ -23,10 +23,10 @@ import Language.E.GenerateParams.Data
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam,gatherData)
 import Language.E.GenerateParams.Typedefs
 
-import Language.E.Lenses(viewReference)
+import Language.E.Lenses(viewReference,mkReference)
 
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
-import Control.Monad.State
+import Control.Monad.State(runState)
 import Data.List(permutations,transpose,mapAccumL,foldl1')
 
 import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
@@ -37,6 +37,9 @@ import qualified Data.Map as Map
 
 import Database.SQLite.Simple
 import System.Environment(getEnv)
+
+
+import Language.E.Pipeline.Driver(toFile)
 
 type EprimeDir = FilePath
 
@@ -52,9 +55,11 @@ generateParams essence eprimeDir outputDir = do
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym  vars
 
+    let (param,state)  = runState generateParam (startingParmGenState vars)  
+    paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
+    toFile paramPath (renderNormal param)
 
     putStrLn "Running SR on each eprime with the param"
-    paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
     runModelsWithParam eprimeDirName  paramPath eprimes'
 
     putStrLn "Storing results in results.db"
@@ -65,21 +70,29 @@ generateParams essence eprimeDir outputDir = do
     where
     eprimeDirName = takeBaseName eprimeDir
 
+generateParam :: MonadParamGen ( EssenceParam) 
+generateParam = do 
+    varsDoms <- gets vars
+    let vars = map (\(name,e) -> (name,[eMake| 5 |]) ) varsDoms
+    param <- wrapping vars
+    return param
+
 -- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum
 getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, Bool, Bool,Bool)]
 getData  essence param = do 
     base_dir <- getEnv "REPOSITORY_BASE"
     conn     <- open $ base_dir ++ "/results.db"
-    rawData ::[(String,Bool,Bool,Bool)]  <- query conn ( 
+    rawData ::[(String,Bool,Bool,Bool)]  <- query conn  
         "Select eprime , Cast(MinionTimeout as Integer) as MinionTimeout,  Cast(MinionSatisfiable as Integer) as MinionSatisfiable, Cast(IsOptimum as Integer) as IsOptimum  From Timings2 where essence = ? and param = ? Order by eprime"
-     ) [essence,param]
+        [essence,param]
     return rawData
+
 
 getVars :: (MonadConjure m) => Essence ->  m [(Text,E)] 
 getVars essence = do
     givens <- plumming essence
     doms <- mapM domainOf givens
-    let refs = map (fromMaybe "generateParamsM: no ref" . viewReference . getRef) givens
+    let refs = map getRef givens
 
     let vars = zip refs doms
     mkLog "vars" (vcat $ map pretty vars)
@@ -88,10 +101,6 @@ getVars essence = do
     {-result <- wrapping givens es-}
     {-mkLog "Result" (pretty result)-}
     return vars
-
-    where
-
-
 
 
 plumming :: MonadConjure m => Spec -> m [E]
@@ -116,25 +125,25 @@ plumming essence' = do
     return es
 
 
-wrapping :: (MonadConjure m) => [E] -> [E] -> m EssenceParam
-wrapping givens vals = do
-    let lettings = zipWith makeLetting givens vals
-    mkLog "Lettings" (vcat $ map pretty lettings)
+wrapping :: (Monad m) => [(Text,E)] -> m EssenceParam
+wrapping vars = do
+    let lettings = map (uncurry  makeLetting) vars
+    {-mkLog "Lettings" (vcat $ map pretty lettings)-}
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
     let essenceParam = Spec ("Essence", [1,3]) (listAsStatement lettings )
     return essenceParam
 
 
-makeLetting :: E -> E -> E
-makeLetting given val =
-    [xMake| topLevel.letting.name := [getRef given]
+makeLetting :: Text -> E -> E
+makeLetting name val =
+    [xMake| topLevel.letting.name := [mkReference name]
           | topLevel.letting.expr := [val]|]
 
-getRef :: E -> E
-getRef [xMatch|  _  := topLevel.declaration.given.name.reference
-              | [n] := topLevel.declaration.given.name |] = n
-getRef e = _bug "getRef: should not happen" [e]
+getRef :: E -> Text
+getRef [xMatch|  _           := topLevel.declaration.given.name.reference
+              | [Prim (S n)] := topLevel.declaration.given.name.reference |] = n
+getRef e = error . show . prettyAsTree $  e
 
 
 stripDecVars :: Essence -> Essence
