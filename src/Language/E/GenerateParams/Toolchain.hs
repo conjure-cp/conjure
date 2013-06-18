@@ -20,10 +20,12 @@ import qualified System.FilePath     as FP
 default (LT.Text)
 
 
-type MinionTimeout = Int
-type Mode          = String
+type MinionTimeout  = Int
+type OutputBaseName = String
 
-runModelsWithParam :: Mode -> EprimeParamFP -> [EprimeFP] -> IO ()
+-- Mode is really only needed to made the filenames look nice
+-- x
+runModelsWithParam :: OutputBaseName -> EprimeParamFP -> [EprimeFP] -> IO ()
 runModelsWithParam mode param eprimes = do
    let eprimesVar = LT.pack .  unlines $ eprimes
    _ <- shelly  $ escaping False $ do
@@ -32,7 +34,8 @@ runModelsWithParam mode param eprimes = do
         echo "ScriptDir:"
         echo scriptDir
 
-        setenv "USE_MODE"      (LT.pack mode)
+        setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ mode)
+        setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ mode)
         setenv "PARAMS_TO_USE" (LT.pack param)
         setenv "MODELS_TO_USE" eprimesVar
         setenv "NO_MINION_STATS" "true"
