@@ -6,8 +6,8 @@
 module Language.E.GenerateParams.Toolchain where
 
 
-import Language.E.Imports
 import Bug
+import Language.E.Imports
 import Language.E.GenerateParams.Typedefs 
 
 import Prelude hiding ( FilePath, reverse )
@@ -23,10 +23,8 @@ default (LT.Text)
 type MinionTimeout  = Int
 type OutputBaseName = String
 
--- Mode is really only needed to made the filenames look nice
--- x
 runModelsWithParam :: OutputBaseName -> EprimeParamFP -> [EprimeFP] -> IO ()
-runModelsWithParam mode param eprimes = do
+runModelsWithParam outputBase param eprimes = do
    let eprimesVar = LT.pack .  unlines $ eprimes
    _ <- shelly  $ escaping False $ do
         mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
@@ -34,13 +32,31 @@ runModelsWithParam mode param eprimes = do
         echo "ScriptDir:"
         echo scriptDir
 
-        setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ mode)
-        setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ mode)
+        setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
+        setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
         setenv "PARAMS_TO_USE" (LT.pack param)
         setenv "MODELS_TO_USE" eprimesVar
         setenv "NO_MINION_STATS" "true"
 
-        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" []
+        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["300", "400"]
+        return ()
+   return ()
+
+gatherData :: OutputBaseName -> IO ()
+gatherData outputBase = do
+   _ <- shelly  $ escaping False $ do
+        mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
+        let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
+        echo "ScriptDir:"
+        cur <- pwd
+
+        setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
+        setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
+        setenv "REPOSITORY_BASE"           (toTextArg cur)
+        setenv "NO_MINION_STATS" "true"        
+        echo scriptDir
+
+        _ <- run "$PARAM_GEN_SCRIPTS/db/gather_data.sh" []
         return ()
    return ()
 
