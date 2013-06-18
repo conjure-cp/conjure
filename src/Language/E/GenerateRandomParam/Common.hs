@@ -8,15 +8,15 @@ import Debug.Trace(trace)
 import Language.E.GenerateRandomParam.Data
 
 
-#ifdef UP_DEBUG 
 import qualified Language.E  as LE
+#ifdef UP_DEBUG_TRACE 
 mkLog :: MonadConjure m => String -> Doc -> m ()
 mkLog nm doc= do 
     let padding = replicate (12 - (length nm)) ' ' 
     LE.mkLog nm (trace (renderWide $ pretty (padding ++ nm) <> " " <+> doc) doc)
 #else
 mkLog :: MonadConjure m => String -> Doc -> m ()
-mkLog _ _ = return ()
+mkLog nm doc = LE.mkLog nm doc
 #endif
 
 countRanges :: [Range] -> Integer
@@ -26,4 +26,9 @@ countRange :: Range -> Integer
 countRange (RSingle _ ) = 1
 countRange (RRange a b) =  b - a + 1
 
+printPretty :: Pretty a => a -> IO ()
+printPretty = putStrLn . show . pretty
+
+printPrettym :: Pretty a => [a] -> IO ()
+printPrettym  = putStrLn . show . pretty . vcat . map pretty 
 
