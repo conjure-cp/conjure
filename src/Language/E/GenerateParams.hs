@@ -55,61 +55,79 @@ generateParams :: EssenceFP -> EprimeDir -> OutputDir -> IO ()
 generateParams essenceFP eprimeDir outputDir = do
     essence <- readSpecPreambleFromFile essenceFP
 
-    eprimes <- liftM  ( map ( eprimeDir </>  ) . filter  ( (==) ".eprime" . takeExtension ) ) 
+    eprimes <- liftM  ( map ( eprimeDir </>  ) . filter  ( (==) ".eprime" . takeExtension ) )
                       (getDirectoryContents eprimeDir)
 
-    -- Make paths relative, to avoid hard coding 
+    -- Make paths relative, to avoid hard coding
     eprimes' <-  mapM makeRelativeToCurrentDirectory eprimes
 
     putStrLn  "Create a param"
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
     let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 9) ) vars
+    let startingState = startingParmGenState varsWithState
 
-    let (param,state)  = runState generateParam (startingParmGenState varsWithState)  
-    paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
-    toFile paramPath (renderNormal param)
-
-    putStrLn "Running SR on each eprime with the param"
-    {-runModelsWithParam eprimeDirName  paramPath eprimes'-}
-
-    putStrLn "Storing results in results.db"
-    gatherData eprimeDirName
-    results <- getData essenceBaseName (takeBaseName  $ paramPath)
-    printPrettym "results" results
-
+    (paramPath,results) <- createParamAndRun eprimes' startingState
     return ()
 
     where
     eprimeDirName = takeBaseName eprimeDir
     essenceBaseName = takeBaseName essenceFP
 
-generateParam :: MonadParamGen  EssenceParam 
-generateParam = do 
+
+    createParamAndRun :: [EprimeFP] -> ParamGenState -> IO (EssenceParamFP, [(EprimeFP,ModelResults)])
+    createParamAndRun eprimes startingState = do
+        let ((param,name),state)  = runState generateParam startingState
+        paramPath <- makeRelativeToCurrentDirectory $ outputDir </> name <.> ".param"
+        toFile paramPath (renderNormal param)
+
+        putStrLn "Running SR on each eprime with the param"
+        {-runModelsWithParam eprimeDirName  paramPath eprimes-}
+
+        putStrLn "Storing results in results.db"
+        gatherData eprimeDirName
+        results <- getData essenceBaseName (takeBaseName  $ paramPath)
+
+        printPretty "paramPath" paramPath
+        printPrettym "results" results
+        return (paramPath,results)
+
+
+
+generateParam :: MonadParamGen  (EssenceParam,String)
+generateParam = do
     varsDoms <- gets vars
     let (newState,vars) = unzip $ map createValue varsDoms
-    modify (\p@ParamGenState{vars=v} -> p{vars=newState})
-    wrapping vars
+    {-modify (\p@ParamGenState{vars=v} -> p{vars=newState})-}
+    res <- wrapping vars
+    return (res, createName vars)
 
+    where
+    createName :: [(Text,E)] -> String
+    createName = concat . intersperse "-" . map createName'
+
+    createName' :: (Text,E) -> String 
+    createName' (_,e) = show . pretty $ e
 
 createValue :: (Text,Dom, VarState) -> ((Text,Dom,VarState), (Text,E) )
-createValue (name, e, s@(VarInt lower upper)) = 
+createValue (name, e, s@(VarInt lower upper)) =
     ( (name,e,s), (name, val) )
 
     where val = [xMake| value.literal := [Prim (I (lower + upper  `div` 2))] |]
 
 -- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum
-getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, Bool, Bool,Bool)]
-getData  essence param = do 
+getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, ModelResults)]
+getData  essence param = do
     base_dir <- getEnv "REPOSITORY_BASE"
     conn     <- open $ base_dir ++ "/results.db"
-    rawData ::[(String,Bool,Bool,Bool)]  <- query conn  
+    rawData ::[(String,Bool,Bool,Bool)]  <- query conn
         "Select eprime , Cast(MinionTimeout as Integer) as MinionTimeout,  Cast(MinionSatisfiable as Integer) as MinionSatisfiable, Cast(IsOptimum as Integer) as IsOptimum  From Timings2 where essence = ? and param = ? Order by eprime"
         [essence,param]
-    return rawData
+    return $ map convert rawData
 
+    where convert (e,b1,b2,b3) = (e, ModelResults b1 b2 b3)
 
-getVars :: (MonadConjure m) => Essence ->  m [(Text,E)] 
+getVars :: (MonadConjure m) => Essence ->  m [(Text,E)]
 getVars essence = do
     givens <- plumming essence
     doms <- mapM domainOf givens
@@ -117,10 +135,6 @@ getVars essence = do
 
     let vars = zip refs doms
     mkLog "vars" (vcat $ map pretty vars)
-
-    {-let es = [[eMake| 5 |]]-}
-    {-result <- wrapping givens es-}
-    {-mkLog "Result" (pretty result)-}
     return vars
 
 

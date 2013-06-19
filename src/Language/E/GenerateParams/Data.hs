@@ -11,17 +11,35 @@ import Control.Monad.State
 
 import Data.Map(Map)
 import qualified Data.Map as M
+import Text.Groom(groom)
 
 type Dom = E
 
-data VarState = 
+data VarState =
     VarInt Integer Integer  --- for binary Search lower upper bound
     deriving (Show)
 
+data ModelResults = ModelResults{
+     minionTimeout     :: Bool
+    ,minionSatisfiable :: Bool
+    ,isOptimum         :: Bool
+    }
+    deriving(Show)
+
+
+--TODO  use Sequence?
+
 data ParamGenState = ParamGenState{
-     results :: Map EssenceParamFP (Map EprimeFP (Bool,Bool,Bool) )
-    ,vars    :: [(Text,Dom,VarState)]
+     results         :: Map EssenceParamFP (Map EprimeFP ModelResults )
+    ,vars            :: [(Text,Dom,VarState)]
+    ,goodParams      :: [EssenceParamFP]
+    ,goodParamsCount :: Int
 } deriving (Show)
+
+
+instance Pretty VarState      where pretty = pretty . show
+instance Pretty ModelResults  where pretty = pretty . show
+instance Pretty ParamGenState where pretty = pretty . groom 
 
 
 type MonadParamGen a = State ParamGenState a
@@ -59,6 +77,8 @@ getRights a                  = bug $ pretty $ show  a
 
 startingParmGenState :: [(Text,Dom,VarState)] -> ParamGenState
 startingParmGenState vs = ParamGenState{
-    results=M.empty,
-    vars = vs
+    results    = M.empty,
+    vars       = vs,
+    goodParams = [],
+    goodParamsCount = 0
 }
