@@ -26,9 +26,9 @@ countRange :: Range -> Integer
 countRange (RSingle _ ) = 1
 countRange (RRange a b) =  b - a + 1
 
-printPretty :: Pretty a => a -> IO ()
-printPretty = putStrLn . show . pretty
+printPretty :: Pretty a => String ->  a -> IO ()
+printPretty s p = putStrLn $ s ++ '\n' : (show . pretty) p
 
-printPrettym :: Pretty a => [a] -> IO ()
-printPrettym  = putStrLn . show . pretty . vcat . map pretty 
+printPrettym :: Pretty a => String -> [a] -> IO ()
+printPrettym s arr= putStrLn  $ s ++ '\n' :  (show . pretty . vcat . map pretty) arr
 
