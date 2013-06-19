@@ -31,23 +31,26 @@ import Data.List(permutations,transpose,mapAccumL,foldl1')
 
 import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
 import System.FilePath((</>),(<.>),takeExtension,takeBaseName,takeFileName)
-import Text.Groom(groom)
+import Language.E.GenerateParams.Groom2(groom)
 
 import qualified Data.Map as Map
 
 import Database.SQLite.Simple
 import System.Environment(getEnv)
 
+import qualified Data.Map as M
+
 -- Moves this pretty stuff
+{-
 import Stuff.Pretty(prettyListDoc)
 import Text.PrettyPrint(parens)
-{-
-instance (Pretty a, Pretty b, Pretty c) => Pretty (a,b,c) where
-    pretty (a,b,c) = prettyListDoc parens "," [pretty a, pretty b, pretty c]
+]
 
 instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a,b,c,d) where
     pretty (a,b,c,d) = prettyListDoc parens "," [pretty a, pretty b, pretty c, pretty d]
 -}
+
+
 type EprimeDir = FilePath
 
 
@@ -65,17 +68,29 @@ generateParams essenceFP eprimeDir outputDir = do
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
     let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 9) ) vars
-    let startingState = startingParmGenState varsWithState
+    let startingState = startingParmGenState varsWithState (length eprimes')
+    printPretty "startingState" startingState
 
     (paramPath,results) <- createParamAndRun eprimes' startingState
-    let solvedLen = length . filter (\(_,ModelResults{minionTimeout =t}) -> t) $ results
-        allLen    = length results 
 
-    printPretty "solved,all" (solvedLen,allLen)
+    let newState = updateState paramPath startingState results  
+    printPretty "updated" newState
 
     return ()
 
     where
+
+    updateState :: EssenceParamFP -> ParamGenState -> [(EprimeFP,ModelResults)] -> ParamGenState
+    updateState paramFP state@ParamGenState{presults=pr} results = 
+        let resultsMap = (solvedLen, M.fromList results)
+            pr' = M.insert  paramFP resultsMap pr
+        in  state{presults=pr'}
+
+        where 
+        solvedLen = length . filter (\(_,ModelResults{minionTimeout =t}) -> t) $ results
+        allLen    = length results 
+
+
     eprimeDirName = takeBaseName eprimeDir
     essenceBaseName = takeBaseName essenceFP
 
@@ -87,7 +102,7 @@ generateParams essenceFP eprimeDir outputDir = do
         toFile paramPath (renderNormal param)
 
         putStrLn "Running SR on each eprime with the param"
-        runModelsWithParam eprimeDirName  paramPath eprimes
+        {-runModelsWithParam eprimeDirName  paramPath eprimes-}
 
         putStrLn "Storing results in results.db"
         gatherData eprimeDirName
@@ -101,7 +116,7 @@ generateParams essenceFP eprimeDir outputDir = do
 
 generateParam :: MonadParamGen  (EssenceParam,String)
 generateParam = do
-    varsDoms <- gets vars
+    varsDoms <- gets pvars
     let (newState,vars) = unzip $ map createValue varsDoms
     {-modify (\p@ParamGenState{vars=v} -> p{vars=newState})-}
     res <- wrapping vars

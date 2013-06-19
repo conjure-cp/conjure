@@ -11,7 +11,12 @@ import Control.Monad.State
 
 import Data.Map(Map)
 import qualified Data.Map as M
-import Text.Groom(groom)
+import Language.E.GenerateParams.Groom2(groom)
+import Text.Show.Pretty(ppShow, ppDoc)
+
+import Stuff.Pretty(prettyListDoc)
+import Text.PrettyPrint(parens,braces)
+import Data.Typeable(Typeable)
 
 type Dom = E
 
@@ -29,18 +34,44 @@ data ModelResults = ModelResults{
 
 --TODO  use Sequence?
 
--- results' int number of models solved
+-- results' int number of models solved 
 data ParamGenState = ParamGenState{
-     results         :: Map EssenceParamFP (Int, Map EprimeFP ModelResults )
-    ,vars            :: [(Text,Dom,VarState)]
-    ,goodParams      :: [EssenceParamFP]
-    ,goodParamsCount :: Int
+     presults         :: Map EssenceParamFP (Int, Map EprimeFP ModelResults )
+    ,pvars            :: [(Text,Dom,VarState)]
+    ,pgoodParams      :: [EssenceParamFP]
+    ,pgoodParamsCount :: Int
+    ,pprevSolved      :: Int
+    ,pmodels          :: Int
 } deriving (Show)
 
 
+instance (Pretty a, Pretty b, Pretty c) => Pretty (a,b,c) where
+    pretty (a,b,c) = prettyListDoc parens "," [pretty a, pretty b, pretty c]
+
+instance Pretty ParamGenState where
+    pretty p = "ParamGenState" <+>  braces ( prettyListDoc parens "," [
+         _pp "pprevSolved"  pprevSolved  p
+        ,_pp "pmodels"      pmodels      p
+        ,_pc "pvars"        pvars        p
+        ,_pc "pgoodParams"  pgoodParams  p
+        ,_pg "presults"     presults     p
+        ] )
+
+
+_pc ::  Pretty a1 => Doc -> (a -> [a1]) -> a -> Doc
+_pc s f a =  s <> "=" <+> (_pm . f)  a
+_pp :: Pretty b => Doc -> (a -> b) -> a -> Doc
+_pp s f a = s <> "=" <+> (pretty . f) a
+_pg :: Show b => Doc -> (a -> b) -> a -> Doc
+_pg s f a = s <> "=" <+> ( pretty . groom. f) a
+
+_pm :: Pretty a => [a] -> Doc
+_pm [] = "[]"
+_pm a  = vcat . map pretty $ a
+
 instance Pretty VarState      where pretty = pretty . show
 instance Pretty ModelResults  where pretty = pretty . show
-instance Pretty ParamGenState where pretty = pretty . groom 
+{-instance Pretty ParamGenState where pretty = pretty . groom -}
 
 
 type MonadParamGen a = State ParamGenState a
@@ -76,10 +107,13 @@ getRights [(Left x, _ )]     = bug $ pretty x
 getRights a                  = bug $ pretty $ show  a
 
 
-startingParmGenState :: [(Text,Dom,VarState)] -> ParamGenState
-startingParmGenState vs = ParamGenState{
-    results    = M.empty,
-    vars       = vs,
-    goodParams = [],
-    goodParamsCount = 0
+startingParmGenState :: [(Text,Dom,VarState)] -> Int -> ParamGenState
+startingParmGenState vs numEprime = ParamGenState{
+
+    presults         = M.empty,
+    pvars            = vs,
+    pgoodParams      = [],
+    pgoodParamsCount = 0,
+    pprevSolved      = numEprime,
+    pmodels          = numEprime 
 }
