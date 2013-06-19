@@ -12,11 +12,15 @@ import Control.Monad.State
 import Data.Map(Map)
 import qualified Data.Map as M
 
+type Dom = E
 
+data VarState = 
+    VarInt Integer Integer  --- for binary Search lower upper bound
+    deriving (Show)
 
 data ParamGenState = ParamGenState{
      results :: Map EssenceParamFP (Map EprimeFP (Bool,Bool,Bool) )
-    ,vars    :: [(Text,E)]
+    ,vars    :: [(Text,Dom,VarState)]
 } deriving (Show)
 
 
@@ -53,8 +57,8 @@ getRights [(Left x, _ )]     = bug $ pretty x
 getRights a                  = bug $ pretty $ show  a
 
 
-startingParmGenState :: [(Text,E)] -> ParamGenState
-startingParmGenState vars = ParamGenState{
+startingParmGenState :: [(Text,Dom,VarState)] -> ParamGenState
+startingParmGenState vs = ParamGenState{
     results=M.empty,
-    vars = vars
+    vars = vs
 }

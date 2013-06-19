@@ -10,11 +10,11 @@ import Language.E hiding (mkLog)
 import Language.E.DomainOf(domainOf)
 import Language.E.Imports
 import Language.E.NormaliseSolution(normaliseSolutionEs)
-import Language.E.Pipeline.Driver ( driverConjureSingle )
+import Language.E.Pipeline.Driver ( driverConjureSingle,toFile )
+import Language.E.Pipeline.ReadIn(readSpecPreambleFromFile)
 import Language.E.Up.Debug(upBug)
 import Language.E.Up.EprimeToEssence(convertUnamed)
 import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
-import Language.E.Up.IO(getSpec')
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.ValidateSolution(validateSolutionPure)
 
@@ -26,11 +26,11 @@ import Language.E.GenerateParams.Typedefs
 import Language.E.Lenses(viewReference,mkReference)
 
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
-import Control.Monad.State(runState)
+import Control.Monad.State(runState,modify)
 import Data.List(permutations,transpose,mapAccumL,foldl1')
 
 import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
-import System.FilePath((</>),(<.>),takeExtension,takeBaseName)
+import System.FilePath((</>),(<.>),takeExtension,takeBaseName,takeFileName)
 import Text.Groom(groom)
 
 import qualified Data.Map as Map
@@ -38,13 +38,23 @@ import qualified Data.Map as Map
 import Database.SQLite.Simple
 import System.Environment(getEnv)
 
+-- Moves this pretty stuff
+import Stuff.Pretty(prettyListDoc)
+import Text.PrettyPrint(parens)
 
-import Language.E.Pipeline.Driver(toFile)
+instance (Pretty a, Pretty b, Pretty c) => Pretty (a,b,c) where
+    pretty (a,b,c) = prettyListDoc parens "," [pretty a, pretty b, pretty c]
+
+instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a,b,c,d) where
+    pretty (a,b,c,d) = prettyListDoc parens "," [pretty a, pretty b, pretty c, pretty d]
 
 type EprimeDir = FilePath
 
-generateParams :: Essence -> EprimeDir -> OutputDir -> IO ()
-generateParams essence eprimeDir outputDir = do
+
+generateParams :: EssenceFP -> EprimeDir -> OutputDir -> IO ()
+generateParams essenceFP eprimeDir outputDir = do
+    essence <- readSpecPreambleFromFile essenceFP
+
     eprimes <- liftM  ( map ( eprimeDir </>  ) . filter  ( (==) ".eprime" . takeExtension ) ) 
                       (getDirectoryContents eprimeDir)
 
@@ -53,29 +63,40 @@ generateParams essence eprimeDir outputDir = do
 
     putStrLn  "Create a param"
     vars <-  getRights $  runCompE "getVars" (getVars essence)
-    printPrettym  vars
+    printPrettym "vars" vars
+    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 9) ) vars
 
-    let (param,state)  = runState generateParam (startingParmGenState vars)  
+    let (param,state)  = runState generateParam (startingParmGenState varsWithState)  
     paramPath <- makeRelativeToCurrentDirectory $ outputDir </> "5" <.> ".param"
     toFile paramPath (renderNormal param)
 
     putStrLn "Running SR on each eprime with the param"
-    runModelsWithParam eprimeDirName  paramPath eprimes'
+    {-runModelsWithParam eprimeDirName  paramPath eprimes'-}
 
     putStrLn "Storing results in results.db"
     gatherData eprimeDirName
+    results <- getData essenceBaseName (takeBaseName  $ paramPath)
+    printPrettym "results" results
 
     return ()
 
     where
     eprimeDirName = takeBaseName eprimeDir
+    essenceBaseName = takeBaseName essenceFP
 
-generateParam :: MonadParamGen ( EssenceParam) 
+generateParam :: MonadParamGen  EssenceParam 
 generateParam = do 
     varsDoms <- gets vars
-    let vars = map (\(name,e) -> (name,[eMake| 5 |]) ) varsDoms
-    param <- wrapping vars
-    return param
+    let (newState,vars) = unzip $ map createValue varsDoms
+    modify (\p@ParamGenState{vars=v} -> p{vars=newState})
+    wrapping vars
+
+
+createValue :: (Text,Dom, VarState) -> ((Text,Dom,VarState), (Text,E) )
+createValue (name, e, s@(VarInt lower upper)) = 
+    ( (name,e,s), (name, val) )
+
+    where val = [xMake| value.literal := [Prim (I (lower + upper  `div` 2))] |]
 
 -- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum
 getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, Bool, Bool,Bool)]
@@ -101,6 +122,8 @@ getVars essence = do
     {-result <- wrapping givens es-}
     {-mkLog "Result" (pretty result)-}
     return vars
+
+
 
 
 plumming :: MonadConjure m => Spec -> m [E]
@@ -165,18 +188,12 @@ _r :: String -> IO ()
 _r name = do
     let mode = "-df-compact-param-better"
     let dir = "/Users/bilalh/CS/paramgen/models/_other" </> name
-    essence <-  getSpec' False $ dir </> name <.> "essence"
-    generateParams essence (dir </> name ++ mode) (dir </> "params")
+    generateParams (dir </> name <.> "essence") (dir </> name ++ mode) (dir </> "params")
 
 
 _x :: [(Either Doc a, LogTree)] -> IO ()
 _x ((_, lg):_) =   print (pretty lg)
 _x _ = return ()
-
-_getTest :: FilePath -> IO Spec
-_getTest f = do
-    let dir = "/Users/bilalh/CS/paramgen/models/_other"
-    getSpec' False $ dir </>  f  </> f ++ ".essence"
 
 _bug :: String -> [E] -> t
 _bug  s = upBug  ("GenerateParams: " ++ s)
