@@ -29,8 +29,9 @@ data ModelResults = ModelResults{
 
 --TODO  use Sequence?
 
+-- results' int number of models solved
 data ParamGenState = ParamGenState{
-     results         :: Map EssenceParamFP (Map EprimeFP ModelResults )
+     results         :: Map EssenceParamFP (Int, Map EprimeFP ModelResults )
     ,vars            :: [(Text,Dom,VarState)]
     ,goodParams      :: [EssenceParamFP]
     ,goodParamsCount :: Int

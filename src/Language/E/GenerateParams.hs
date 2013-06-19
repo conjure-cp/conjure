@@ -41,13 +41,13 @@ import System.Environment(getEnv)
 -- Moves this pretty stuff
 import Stuff.Pretty(prettyListDoc)
 import Text.PrettyPrint(parens)
-
+{-
 instance (Pretty a, Pretty b, Pretty c) => Pretty (a,b,c) where
     pretty (a,b,c) = prettyListDoc parens "," [pretty a, pretty b, pretty c]
 
 instance (Pretty a, Pretty b, Pretty c, Pretty d) => Pretty (a,b,c,d) where
     pretty (a,b,c,d) = prettyListDoc parens "," [pretty a, pretty b, pretty c, pretty d]
-
+-}
 type EprimeDir = FilePath
 
 
@@ -68,6 +68,11 @@ generateParams essenceFP eprimeDir outputDir = do
     let startingState = startingParmGenState varsWithState
 
     (paramPath,results) <- createParamAndRun eprimes' startingState
+    let solvedLen = length . filter (\(_,ModelResults{minionTimeout =t}) -> t) $ results
+        allLen    = length results 
+
+    printPretty "solved,all" (solvedLen,allLen)
+
     return ()
 
     where
@@ -82,11 +87,11 @@ generateParams essenceFP eprimeDir outputDir = do
         toFile paramPath (renderNormal param)
 
         putStrLn "Running SR on each eprime with the param"
-        {-runModelsWithParam eprimeDirName  paramPath eprimes-}
+        runModelsWithParam eprimeDirName  paramPath eprimes
 
         putStrLn "Storing results in results.db"
         gatherData eprimeDirName
-        results <- getData essenceBaseName (takeBaseName  $ paramPath)
+        results <- getData essenceBaseName (takeBaseName  paramPath)
 
         printPretty "paramPath" paramPath
         printPrettym "results" results
@@ -104,7 +109,7 @@ generateParam = do
 
     where
     createName :: [(Text,E)] -> String
-    createName = concat . intersperse "-" . map createName'
+    createName = intercalate "-" . map createName'
 
     createName' :: (Text,E) -> String 
     createName' (_,e) = show . pretty $ e
