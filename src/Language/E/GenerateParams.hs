@@ -67,19 +67,31 @@ generateParams essenceFP eprimeDir outputDir = do
     putStrLn  "Create a param"
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
+
     let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 9) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
+    printPretty "StartingState" startingState
 
-    (paramPath,results) <- createParamAndRun eprimes' startingState
-
-    let newState = updateState paramPath startingState results
-    printPretty "updated" newState
-
+    process eprimes' startingState
     return ()
 
     where
     eprimeDirName   = takeBaseName eprimeDir
     essenceBaseName = takeBaseName essenceFP
+
+    process :: [EprimeFP] -> ParamGenState -> IO ()
+    process  eprimes state =  do
+        (paramPath,results) <- createParamAndRun eprimes state 
+        let newState = updateState paramPath state results
+        printPretty "updated" newState
+
+        unless (finished newState) $ process eprimes newState
+
+
+        where
+        finished s    = all finishedVar (pvars s)
+        finishedVar (_,_,VarInt lower upper) = lower > upper
+
 
 
     createParamAndRun :: [EprimeFP] -> ParamGenState -> IO (EssenceParamFP, [(EprimeFP,ModelResults)])
