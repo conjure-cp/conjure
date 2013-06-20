@@ -30,7 +30,7 @@ import Control.Monad.State(runState,modify)
 import Data.List(permutations,transpose,mapAccumL,foldl1')
 
 import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
-import System.FilePath((</>),(<.>),takeExtension,takeBaseName,takeFileName)
+import System.FilePath((</>),(<.>),takeExtension,takeBaseName,takeFileName,replaceExtension)
 import Language.E.GenerateParams.Groom2(groom)
 
 import qualified Data.Map as Map
@@ -72,21 +72,25 @@ generateParams essenceFP eprimeDir outputDir = do
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
-    process eprimes' startingState
+    {-endState <- process eprimes' startingState-}
+    let endState = startingState
+    toFile (replaceExtension essenceFP "goodParams") (unlines . pgoodParams $ endState)
     return ()
 
     where
     eprimeDirName   = takeBaseName eprimeDir
     essenceBaseName = takeBaseName essenceFP
 
-    process :: [EprimeFP] -> ParamGenState -> IO ()
+    process :: [EprimeFP] -> ParamGenState -> IO ParamGenState
     process  eprimes state =  do
-        (paramPath,results) <- createParamAndRun eprimes state 
+        (paramPath,results) <- createParamAndRun eprimes state
         let newState = updateState paramPath state results
         printPretty "updated" newState
 
-        unless (finished newState) $ process eprimes newState
-
+        if finished newState then
+            return newState
+        else
+            process eprimes newState
 
         where
         finished s    = all finishedVar (pvars s)
@@ -129,25 +133,25 @@ updateState paramFP state@ParamGenState{presults=pr} results =
     allLen    = length results
 
     updateVars :: [(Text,Dom,VarState)] -> Int -> Int -> Int -> [(Text,Dom,VarState)]
-    updateVars vars prevSolved curSolved  count= 
+    updateVars vars prevSolved curSolved  count=
         map (updateVar prevSolved curSolved count) vars
 
     updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
     -- None are solved
-    updateVar _  0 _ (name,dom,VarInt lower upper) = 
+    updateVar _  0 _ (name,dom,VarInt lower upper) =
         (name, dom, VarInt lower (lower + upper `quot` 2)  )
 
     -- All are solved
-    updateVar _ cur count (name,dom,VarInt lower upper) | cur == count = 
-        (name, dom, VarInt (lower + upper `quot` 2)  upper ) 
+    updateVar _ cur count (name,dom,VarInt lower upper) | cur == count =
+        (name, dom, VarInt (lower + upper `quot` 2)  upper )
 
     -- Some are solved, but less then the last param
-    updateVar prev cur _ (name,dom,VarInt lower upper) | cur <= prev = 
-        (name, dom, VarInt (lower + upper `quot` 2)  upper ) 
+    updateVar prev cur _ (name,dom,VarInt lower upper) | cur <= prev =
+        (name, dom, VarInt (lower + upper `quot` 2)  upper )
 
     -- Some are solved, but More then the last param
-    updateVar prev cur _ (name,dom,VarInt lower upper) | cur > prev = 
-        (name, dom, VarInt (lower + upper `quot` 2)  upper ) 
+    updateVar prev cur _ (name,dom,VarInt lower upper) | cur > prev =
+        (name, dom, VarInt (lower + upper `quot` 2)  upper )
 
 
 generateParam :: MonadParamGen  (EssenceParam,String)
@@ -169,7 +173,7 @@ createValue :: (Text,Dom, VarState) -> ((Text,Dom,VarState), (Text,E) )
 createValue (name, e, s@(VarInt lower upper)) =
     ( (name,e,s), (name, val) )
 
-    where val = [xMake| value.literal := [Prim (I (lower + upper  `div` 2))] |]
+    where val = [xMake| value.literal := [Prim (I (lower + upper  `quot` 2))] |]
 
 -- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum
 getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, ModelResults)]
