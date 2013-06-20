@@ -72,8 +72,8 @@ generateParams essenceFP eprimeDir outputDir = do
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
-    {-endState <- process eprimes' startingState-}
-    let endState = startingState
+    endState <- process eprimes' startingState
+    {-let endState = startingState-}
     toFile (replaceExtension essenceFP "goodParams") (unlines . pgoodParams $ endState)
     return ()
 
@@ -136,23 +136,22 @@ updateState paramFP state@ParamGenState{presults=pr} results =
     updateVars vars prevSolved curSolved  count=
         map (updateVar prevSolved curSolved count) vars
 
-    updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
-    -- None are solved
-    updateVar _  0 _ (name,dom,VarInt lower upper) =
-        (name, dom, VarInt lower (lower + upper `quot` 2)  )
+updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
+-- None are solved
+updateVar _  0 _ (name,dom,VarInt lower upper) =
+    (name, dom, VarInt lower ( ((lower + upper) `quot` 2) - 1) )
 
-    -- All are solved
-    updateVar _ cur count (name,dom,VarInt lower upper) | cur == count =
-        (name, dom, VarInt (lower + upper `quot` 2)  upper )
+-- All are solved
+updateVar _ cur count (name,dom,VarInt lower upper) | cur == count =
+    (name, dom, VarInt (((lower + upper) `quot` 2) + 1)  upper )
 
-    -- Some are solved, but less then the last param
-    updateVar prev cur _ (name,dom,VarInt lower upper) | cur <= prev =
-        (name, dom, VarInt (lower + upper `quot` 2)  upper )
+-- Some are solved, but less then the last param
+updateVar prev cur _ (name,dom,VarInt lower upper) | cur <= prev =
+    (name, dom, VarInt (((lower + upper) `quot` 2) + 1)  upper )
 
-    -- Some are solved, but More then the last param
-    updateVar prev cur _ (name,dom,VarInt lower upper) | cur > prev =
-        (name, dom, VarInt (lower + upper `quot` 2)  upper )
-
+-- Some are solved, but More then the last param
+updateVar prev cur _ (name,dom,VarInt lower upper) | cur > prev =
+    (name, dom, VarInt lower (((lower + upper) `quot` 2) - 1)  )
 
 generateParam :: MonadParamGen  (EssenceParam,String)
 generateParam = do
@@ -175,6 +174,7 @@ createValue (name, e, s@(VarInt lower upper)) =
 
     where val = [xMake| value.literal := [Prim (I (lower + upper  `quot` 2))] |]
 
+
 -- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum
 getData :: EssenceFP -> EssenceParamFP -> IO [(EprimeFP, ModelResults)]
 getData  essence param = do
@@ -183,6 +183,7 @@ getData  essence param = do
     rawData ::[(String,Bool,Bool,Bool)]  <- query conn
         "Select eprime , Cast(MinionTimeout as Integer) as MinionTimeout,  Cast(MinionSatisfiable as Integer) as MinionSatisfiable, Cast(IsOptimum as Integer) as IsOptimum  From Timings2 where essence = ? and param = ? Order by eprime"
         [essence,param]
+    close conn
     return $ map convert rawData
 
     where convert (e,b1,b2,b3) = (e, ModelResults b1 b2 b3)
