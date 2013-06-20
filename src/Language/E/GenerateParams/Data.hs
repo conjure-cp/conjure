@@ -50,24 +50,21 @@ instance (Pretty a, Pretty b, Pretty c) => Pretty (a,b,c) where
 
 instance Pretty ParamGenState where
     pretty p = "ParamGenState" <+>  braces ( prettyListDoc parens "," [
-         _pp "pprevSolved"  pprevSolved  p
-        ,_pp "pmodels"      pmodels      p
-        ,_pc "pvars"        pvars        p
-        ,_pc "pgoodParams"  pgoodParams  p
-        ,_pg "presults"     presults     p
+         _pp "pmodels"       pmodels           p
+        ,_pp "pprevSolved"   pprevSolved       p
+        ,_pc "pvars"         pvars             p
+        ,_pp "pgoodParams#"  pgoodParamsCount  p
+        ,_pc "pgoodParams"   pgoodParams       p
+        ,_pg "presults"      presults          p
         ] )
 
+        where
+        _pc s f a =  s <> "=" <+> (_pm . f)  a
+        _pp s f a = s <> "=" <+> (pretty . f) a
+        _pg s f a = s <> "=" <+> ( pretty . groom. f) a
 
-_pc ::  Pretty a1 => Doc -> (a -> [a1]) -> a -> Doc
-_pc s f a =  s <> "=" <+> (_pm . f)  a
-_pp :: Pretty b => Doc -> (a -> b) -> a -> Doc
-_pp s f a = s <> "=" <+> (pretty . f) a
-_pg :: Show b => Doc -> (a -> b) -> a -> Doc
-_pg s f a = s <> "=" <+> ( pretty . groom. f) a
-
-_pm :: Pretty a => [a] -> Doc
-_pm [] = "[]"
-_pm a  = vcat . map pretty $ a
+        _pm [] = "[]"
+        _pm a  = vcat . map pretty $ a
 
 instance Pretty VarState      where pretty = pretty . show
 instance Pretty ModelResults  where pretty = pretty . show
@@ -114,6 +111,6 @@ startingParmGenState vs numEprime = ParamGenState{
     pvars            = vs,
     pgoodParams      = [],
     pgoodParamsCount = 0,
-    pprevSolved      = numEprime,
+    pprevSolved      = (-1),
     pmodels          = numEprime 
 }

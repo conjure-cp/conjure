@@ -38,7 +38,7 @@ runModelsWithParam outputBase param eprimes = do
         setenv "MODELS_TO_USE" eprimesVar
         setenv "NO_MINION_STATS" "true"
 
-        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["300", "400"]
+        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["100", "150"]
         return ()
    return ()
 

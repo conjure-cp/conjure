@@ -69,29 +69,16 @@ generateParams essenceFP eprimeDir outputDir = do
     printPrettym "vars" vars
     let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 9) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
-    printPretty "startingState" startingState
 
     (paramPath,results) <- createParamAndRun eprimes' startingState
 
-    let newState = updateState paramPath startingState results  
+    let newState = updateState paramPath startingState results
     printPretty "updated" newState
 
     return ()
 
     where
-
-    updateState :: EssenceParamFP -> ParamGenState -> [(EprimeFP,ModelResults)] -> ParamGenState
-    updateState paramFP state@ParamGenState{presults=pr} results = 
-        let resultsMap = (solvedLen, M.fromList results)
-            pr' = M.insert  paramFP resultsMap pr
-        in  state{presults=pr'}
-
-        where 
-        solvedLen = length . filter (\(_,ModelResults{minionTimeout =t}) -> t) $ results
-        allLen    = length results 
-
-
-    eprimeDirName = takeBaseName eprimeDir
+    eprimeDirName   = takeBaseName eprimeDir
     essenceBaseName = takeBaseName essenceFP
 
 
@@ -102,16 +89,53 @@ generateParams essenceFP eprimeDir outputDir = do
         toFile paramPath (renderNormal param)
 
         putStrLn "Running SR on each eprime with the param"
-        {-runModelsWithParam eprimeDirName  paramPath eprimes-}
+        runModelsWithParam eprimeDirName  paramPath eprimes
 
         putStrLn "Storing results in results.db"
         gatherData eprimeDirName
         results <- getData essenceBaseName (takeBaseName  paramPath)
 
         printPretty "paramPath" paramPath
-        printPrettym "results" results
+        {-printPrettym "results" results-}
         return (paramPath,results)
 
+
+updateState :: EssenceParamFP -> ParamGenState -> [(EprimeFP,ModelResults)] -> ParamGenState
+updateState paramFP state@ParamGenState{presults=pr} results =
+    let resultsMap = (solvedLen, M.fromList results)
+        pr'        = M.insert  paramFP resultsMap pr
+
+    in  state{presults         = pr'
+             ,pgoodParams      = paramFP : pgoodParams  state
+             ,pgoodParamsCount = 1 + pgoodParamsCount state
+             ,pvars            = updateVars (pvars state) (pprevSolved state) solvedLen allLen
+             ,pprevSolved      = solvedLen
+             }
+
+    where
+    solvedLen = length . filter (\(_,ModelResults{minionTimeout =t}) -> not t) $ results
+    allLen    = length results
+
+    updateVars :: [(Text,Dom,VarState)] -> Int -> Int -> Int -> [(Text,Dom,VarState)]
+    updateVars vars prevSolved curSolved  count= 
+        map (updateVar prevSolved curSolved count) vars
+
+    updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
+    -- None are solved
+    updateVar _  0 _ (name,dom,VarInt lower upper) = 
+        (name, dom, VarInt lower (lower + upper `quot` 2)  )
+
+    -- All are solved
+    updateVar _ cur count (name,dom,VarInt lower upper) | cur == count = 
+        (name, dom, VarInt (lower + upper `quot` 2)  upper ) 
+
+    -- Some are solved, but less then the last param
+    updateVar prev cur _ (name,dom,VarInt lower upper) | cur <= prev = 
+        (name, dom, VarInt (lower + upper `quot` 2)  upper ) 
+
+    -- Some are solved, but More then the last param
+    updateVar prev cur _ (name,dom,VarInt lower upper) | cur > prev = 
+        (name, dom, VarInt (lower + upper `quot` 2)  upper ) 
 
 
 generateParam :: MonadParamGen  (EssenceParam,String)
@@ -126,7 +150,7 @@ generateParam = do
     createName :: [(Text,E)] -> String
     createName = intercalate "-" . map createName'
 
-    createName' :: (Text,E) -> String 
+    createName' :: (Text,E) -> String
     createName' (_,e) = show . pretty $ e
 
 createValue :: (Text,Dom, VarState) -> ((Text,Dom,VarState), (Text,E) )
