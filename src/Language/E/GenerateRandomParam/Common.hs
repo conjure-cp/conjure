@@ -6,7 +6,7 @@ import Language.E hiding(mkLog,trace)
 import Debug.Trace(trace)
 
 import Language.E.GenerateRandomParam.Data
-
+import qualified Text.PrettyPrint as Pr
 
 import qualified Language.E  as LE
 #ifdef UP_DEBUG_TRACE 
@@ -32,3 +32,10 @@ printPretty s p = putStrLn $ 'ː' :s ++ 'ː' : '\n' : (renderNormal) p
 printPrettym :: Pretty a => String -> [a] -> IO ()
 printPrettym s arr= putStrLn  $'ː' : s ++  'ː' : '\n' :  (renderNormal . vcat . map pretty) arr
 
+
+tracePretty ::  Pretty e => Doc -> e -> e
+#ifdef UP_DEBUG
+tracePretty s e = trace (show $ "\n" <+> (s <+> pretty e)  ) e
+#else
+tracePretty _ e =  e
+#endif
