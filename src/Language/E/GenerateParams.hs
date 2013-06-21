@@ -65,10 +65,11 @@ generateParams essenceFP eprimeDir outputDir = do
     eprimes' <-  mapM makeRelativeToCurrentDirectory eprimes
 
     putStrLn  "Create a param"
+    printPretty "essence" essence
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
 
-    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 50) ) vars
+    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 70) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
@@ -84,7 +85,7 @@ generateParams essenceFP eprimeDir outputDir = do
     process :: [EprimeFP] -> ParamGenState -> IO ParamGenState
     process  eprimes state =  do
         (paramPath,results) <- createParamAndRun eprimes state
-        let newState = updateState paramPath state results
+        let newState = updateState (length eprimes) paramPath state results
         printPretty "updated" newState
 
         if finished newState then
@@ -95,8 +96,6 @@ generateParams essenceFP eprimeDir outputDir = do
         where
         finished s    = all finishedVar (pvars s)
         finishedVar (_,_,VarInt lower upper) = lower > upper
-
-
 
     createParamAndRun :: [EprimeFP] -> ParamGenState -> IO (EssenceParamFP, [(EprimeFP,ModelResults)])
     createParamAndRun eprimes startingState = do
@@ -124,15 +123,15 @@ generateParams essenceFP eprimeDir outputDir = do
         return (paramPath,results)
 
 
-updateState :: EssenceParamFP -> ParamGenState -> [(EprimeFP,ModelResults)] -> ParamGenState
-updateState paramFP state@ParamGenState{presults=pr} results =
+updateState :: Int -> EssenceParamFP -> ParamGenState -> [(EprimeFP,ModelResults)] -> ParamGenState
+updateState numEprimes paramFP state@ParamGenState{presults=pr}  results =
     let resultsMap = (solvedLen, M.fromList results)
         pr'        = M.insert  paramFP resultsMap pr
 
     in  state{presults         = pr'
              ,pgoodParams      = paramFP : pgoodParams  state
              ,pgoodParamsCount = 1 + pgoodParamsCount state
-             ,pvars            = updateVars (pvars state) (pprevSolved state) solvedLen allLen
+             ,pvars            = updateVars (pvars state) (pprevSolved state) solvedLen numEprimes 
              ,pprevSolved      = solvedLen
              }
 
@@ -141,8 +140,8 @@ updateState paramFP state@ParamGenState{presults=pr} results =
     allLen    = length results
 
     updateVars :: [(Text,Dom,VarState)] -> Int -> Int -> Int -> [(Text,Dom,VarState)]
-    updateVars vars prevSolved curSolved  count=
-        map (updateVar prevSolved curSolved count) vars
+    updateVars vars prevSolved curSolved  total=
+        map (updateVar prevSolved curSolved total) vars
 
 updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
 
@@ -157,8 +156,10 @@ updateVar prev cur total (name,dom,VarInt lower upper) | cur <= 1 =
 
     where
     mid  = (lower + upper) `quot` 2
-    move = floor $ toRational (upper - mid ) * toRational cur / toRational total
-
+    move = floor $ toRational (upper - mid ) * frac prev cur total
+    frac :: Int -> Int -> Int -> Rational
+    frac 0 0 total  =  0.5
+    frac _ cur total =  toRational cur / toRational total
 
 -- Multiple models could solve the param, so try to find a harder param
 updateVar prev cur total (name,dom,VarInt lower upper) =
@@ -172,7 +173,10 @@ updateVar prev cur total (name,dom,VarInt lower upper) =
 
     where
     mid  = (lower + upper) `quot` 2
-    move = floor $ toRational (mid - lower) * toRational cur / toRational total
+    move = floor $ toRational (mid - lower) * frac prev cur total 
+    frac :: Int -> Int -> Int -> Rational
+    frac 0 0 total  =  0.5
+    frac _ cur total =  toRational cur / toRational total
 
 
 
@@ -233,9 +237,10 @@ plumming essence' = do
     {-mkLog "GivensSpec"   (vcat .  map (pretty . prettyAsTree) $  (statementAsList f))-}
     mkLog "GivensSpec" (pretty f)
 
-    let enumMapping1     = getEnumMapping essence
-        enums1           = getEnumsAndUnamed essence
-        (enumMapping, _) = convertUnamed enumMapping1 enums1
+    let 
+        {-enumMapping1     = getEnumMapping essence-}
+        {-enums1           = getEnumsAndUnamed essence-}
+        {-(enumMapping, _) = convertUnamed enumMapping1 enums1-}
         filterer [xMatch| _ := topLevel.where  |] = False
         filterer _ = True
         es  = filter filterer (statementAsList e)
@@ -275,7 +280,7 @@ stripDecVars (Spec v x) = Spec v y
         y  = listAsStatement ys
 
         stays [xMatch| _ := topLevel.declaration.given |] = True
-        stays [xMatch| _ := topLevel.letting           |] = True
+        {-stays [xMatch| _ := topLevel.letting           |] = True-}
         stays [xMatch| _ := topLevel.where             |] = True
         stays _ = False
 
@@ -284,7 +289,8 @@ stripDecVars (Spec v x) = Spec v y
 
 _r :: String -> IO ()
 _r name = do
-    let mode = "-df-compact-param-better"
+    {-let mode = "-df-compact-param-better"-}
+    let mode = "-df"
     let dir = "/Users/bilalh/CS/paramgen/models/_other" </> name
     generateParams (dir </> name <.> "essence") (dir </> name ++ mode) (dir </> "params")
 
