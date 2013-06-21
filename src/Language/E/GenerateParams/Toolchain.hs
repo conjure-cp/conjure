@@ -38,7 +38,7 @@ runModelsWithParam outputBase param eprimes = do
         setenv "NO_MINION_STATS" "true"
 
 
-        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["30", "60"]
+        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["90", "100"]
         return ()
    return ()
 
@@ -48,13 +48,13 @@ gatherData outputBase = do
         mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
         let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
         echo "ScriptDir:"
+        echo scriptDir
 
         cur <- pwd
         setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
         setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
         setenv "REPOSITORY_BASE"           (toTextArg cur)
         setenv "NO_MINION_STATS" "true"
-        echo scriptDir
 
         _ <- run "$PARAM_GEN_SCRIPTS/db/gather_data.sh" []
         return ()

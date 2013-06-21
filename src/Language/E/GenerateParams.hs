@@ -18,7 +18,7 @@ import Language.E.Up.GatherInfomation(getEnumMapping,getEnumsAndUnamed)
 import Language.E.Up.ReduceSpec(reduceSpec,removeNegatives)
 import Language.E.ValidateSolution(validateSolutionPure)
 
-import Language.E.GenerateRandomParam.Common(mkLog,printPrettym,printPretty)
+import Language.E.GenerateRandomParam.Common(mkLog,printPrettym,printPretty,tracePretty)
 import Language.E.GenerateParams.Data
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam,gatherData)
 import Language.E.GenerateParams.Typedefs
@@ -29,7 +29,7 @@ import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Control.Monad.State(runState,modify)
 import Data.List(permutations,transpose,mapAccumL,foldl1')
 
-import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory)
+import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory,doesFileExist)
 import System.FilePath((</>),(<.>),takeExtension,takeBaseName,takeFileName,replaceExtension)
 import Language.E.GenerateParams.Groom2(groom)
 
@@ -68,7 +68,7 @@ generateParams essenceFP eprimeDir outputDir = do
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
 
-    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 12) ) vars
+    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 50) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
@@ -102,6 +102,14 @@ generateParams essenceFP eprimeDir outputDir = do
     createParamAndRun eprimes startingState = do
         let ((param,name),state)  = runState generateParam startingState
         paramPath <- makeRelativeToCurrentDirectory $ outputDir </> name <.> ".param"
+        b <- doesFileExist paramPath
+        if b then do
+            printPretty "Skipping" ("Skipping " <+> pretty paramPath)
+            let  (a,mapping) = fromMaybe (error $ "This can not happen" ++ (groom  $ presults startingState) )
+                               $ M.lookup paramPath $ presults startingState
+            return (paramPath, M.toList mapping)
+        else do
+
         toFile paramPath (renderNormal param)
 
         putStrLn "Running SR on each eprime with the param"
@@ -139,20 +147,33 @@ updateState paramFP state@ParamGenState{presults=pr} results =
 updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
 
 updateVar prev cur total (name,dom,VarInt lower upper) | cur <= 1 =
-    (name, dom, VarInt lower (mid - 1)  )
+    {-(name, dom, VarInt lower (mid - 1)  )-}
+    tracePretty ("updateVar high" <+> "low=" <+> pretty lower
+                <+> "high="  <+> pretty upper <+> "mid=" <+> pretty mid
+                <+> "normal=" <+> pretty (mid - 1) <+> "bi="  <+> pretty (upper - move - 1)
+                <+> "c/t" <+> pretty (cur,total)
+                <+> "res=" ) $
+    (name, dom, VarInt lower (upper - move - 1)  )
 
-    where 
+    where
     mid  = (lower + upper) `quot` 2
-    move = floor $ toRational (upper - mid) * toRational cur / toRational total
+    move = floor $ toRational (upper - mid ) * toRational cur / toRational total
 
--- Multiple models could solve the param, so try to find a harder param 
+
+-- Multiple models could solve the param, so try to find a harder param
 updateVar prev cur total (name,dom,VarInt lower upper) =
-    (name, dom, VarInt (mid + 1)  upper )
+    {-(name, dom, VarInt (mid + 1)  upper )-}
+    tracePretty ("updateVar low" <+> "low=" <+> pretty lower
+                <+> "high="  <+> pretty upper <+> "mid=" <+> pretty mid
+                <+> "normal=" <+> pretty (mid + 1) <+> "bi="  <+> pretty (lower + move + 1)
+                <+> "c/t" <+> pretty (cur,total)
+                <+> "res=" ) $
+    (name, dom, VarInt (lower + move + 1)  upper )
 
-    where 
+    where
     mid  = (lower + upper) `quot` 2
     move = floor $ toRational (mid - lower) * toRational cur / toRational total
-    
+
 
 
 generateParam :: MonadParamGen  (EssenceParam,String)
