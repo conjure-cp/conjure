@@ -68,7 +68,7 @@ generateParams essenceFP eprimeDir outputDir = do
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
 
-    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 9) ) vars
+    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 20) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
@@ -137,21 +137,22 @@ updateState paramFP state@ParamGenState{presults=pr} results =
         map (updateVar prevSolved curSolved count) vars
 
 updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
--- None are solved
-updateVar _  0 _ (name,dom,VarInt lower upper) =
-    (name, dom, VarInt lower ( ((lower + upper) `quot` 2) - 1) )
-
--- All are solved
-updateVar _ cur count (name,dom,VarInt lower upper) | cur == count =
-    (name, dom, VarInt (((lower + upper) `quot` 2) + 1)  upper )
 
 -- Some are solved, but less then the last param
-updateVar prev cur _ (name,dom,VarInt lower upper) | cur <= prev =
-    (name, dom, VarInt (((lower + upper) `quot` 2) + 1)  upper )
+updateVar prev cur total (name,dom,VarInt lower upper) | cur <= prev =
+    (name, dom, VarInt (mid + 1)  upper )
 
+    where 
+    mid  = (lower + upper) `quot` 2
+    move = floor $ toRational (mid - lower) * toRational cur / toRational total
+    
 -- Some are solved, but More then the last param
-updateVar prev cur _ (name,dom,VarInt lower upper) | cur > prev =
-    (name, dom, VarInt lower (((lower + upper) `quot` 2) - 1)  )
+updateVar prev cur total (name,dom,VarInt lower upper) | cur > prev =
+    (name, dom, VarInt lower (mid - 1)  )
+
+    where 
+    mid  = (lower + upper) `quot` 2
+    move = floor $ toRational (upper - mid) * toRational cur / toRational total
 
 generateParam :: MonadParamGen  (EssenceParam,String)
 generateParam = do
@@ -172,7 +173,7 @@ createValue :: (Text,Dom, VarState) -> ((Text,Dom,VarState), (Text,E) )
 createValue (name, e, s@(VarInt lower upper)) =
     ( (name,e,s), (name, val) )
 
-    where val = [xMake| value.literal := [Prim (I (lower + upper  `quot` 2))] |]
+    where val = [xMake| value.literal := [Prim (I ( (lower + upper)  `quot` 2))] |]
 
 
 -- Returns eprime, MinionTimeout, MinionSatisfiable, IsOptimum

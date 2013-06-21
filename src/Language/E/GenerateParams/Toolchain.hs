@@ -14,7 +14,6 @@ import Prelude hiding ( FilePath, reverse )
 import Shelly
 
 import qualified Data.Text.Lazy      as LT
-{-import qualified System.Directory    as FP-}
 import qualified System.FilePath     as FP
 
 default (LT.Text)
@@ -38,7 +37,8 @@ runModelsWithParam outputBase param eprimes = do
         setenv "MODELS_TO_USE" eprimesVar
         setenv "NO_MINION_STATS" "true"
 
-        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["10", "30"]
+
+        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" ["30", "60"]
         return ()
    return ()
 
