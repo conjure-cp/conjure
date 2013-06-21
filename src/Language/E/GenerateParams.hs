@@ -68,7 +68,7 @@ generateParams essenceFP eprimeDir outputDir = do
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
 
-    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 20) ) vars
+    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 12) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
@@ -138,21 +138,22 @@ updateState paramFP state@ParamGenState{presults=pr} results =
 
 updateVar :: Int -> Int -> Int -> (Text, Dom, VarState) ->  (Text, Dom, VarState)
 
--- Some are solved, but less then the last param
-updateVar prev cur total (name,dom,VarInt lower upper) | cur <= prev =
+updateVar prev cur total (name,dom,VarInt lower upper) | cur <= 1 =
+    (name, dom, VarInt lower (mid - 1)  )
+
+    where 
+    mid  = (lower + upper) `quot` 2
+    move = floor $ toRational (upper - mid) * toRational cur / toRational total
+
+-- Multiple models could solve the param, so try to find a harder param 
+updateVar prev cur total (name,dom,VarInt lower upper) =
     (name, dom, VarInt (mid + 1)  upper )
 
     where 
     mid  = (lower + upper) `quot` 2
     move = floor $ toRational (mid - lower) * toRational cur / toRational total
     
--- Some are solved, but More then the last param
-updateVar prev cur total (name,dom,VarInt lower upper) | cur > prev =
-    (name, dom, VarInt lower (mid - 1)  )
 
-    where 
-    mid  = (lower + upper) `quot` 2
-    move = floor $ toRational (upper - mid) * toRational cur / toRational total
 
 generateParam :: MonadParamGen  (EssenceParam,String)
 generateParam = do
