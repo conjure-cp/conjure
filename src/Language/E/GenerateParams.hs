@@ -146,7 +146,7 @@ updateState numEprimes paramFP state@ParamGenState{presults=pr}  results =
              }
 
     where
-    solvedLen = length . filter (\(_,ModelResults{minionTimeout =t}) -> not t) $ results
+    solvedLen = length . filter (\(_,ModelResults{minionSatisfiable =t}) -> t) $ results
     allLen    = length results
 
     updateVars :: [(Text,Dom,VarState)] -> Int -> Int -> Int -> [(Text,Dom,VarState)]
