@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 
-module Language.E.GenerateParams where
+module Language.E.GenerateParams(generateParams) where
 
 import Bug
 import Language.E hiding (mkLog)
@@ -23,13 +23,11 @@ import Language.E.GenerateParams.Data
 import Language.E.GenerateParams.Toolchain(runSavilerow,runModelsWithParam,gatherData)
 import Language.E.GenerateParams.Typedefs
 
-import Language.E.Lenses(viewReference,mkReference)
-
 import Control.Arrow((&&&),arr,(***),(|||),(+++))
 import Control.Monad.State(runState,modify)
 import Data.List(permutations,transpose,mapAccumL,foldl1')
 
-import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory,doesFileExist)
+import System.Directory(getCurrentDirectory,getDirectoryContents,makeRelativeToCurrentDirectory,doesFileExist,createDirectoryIfMissing)
 import System.FilePath((</>),(<.>),takeExtension,takeBaseName,takeFileName,replaceExtension)
 import Language.E.GenerateParams.Groom2(groom)
 
@@ -63,6 +61,9 @@ generateParams essenceFP eprimeDir outputDir = do
 
     -- Make paths relative, to avoid hard coding
     eprimes' <-  mapM makeRelativeToCurrentDirectory eprimes
+
+    putStrLn  "Createing OutputDir "
+    createDirectoryIfMissing False outputDir
 
     putStrLn  "Create a param"
     printPretty "essence" essence
@@ -257,6 +258,9 @@ wrapping vars = do
     let essenceParam = Spec ("Essence", [1,3]) (listAsStatement lettings )
     return essenceParam
 
+
+mkReference :: Text -> E
+mkReference nm = [xMake| reference := [Prim (S nm)] |]
 
 makeLetting :: Text -> E -> E
 makeLetting name val =
