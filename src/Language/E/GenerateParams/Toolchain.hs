@@ -50,10 +50,8 @@ gatherData outputBase = do
         echo "ScriptDir:"
         echo scriptDir
 
-        cur <- pwd
         setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
         setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
-        setenv "REPOSITORY_BASE"           (toTextArg cur)
         setenv "NO_MINION_STATS" "true"
 
         _ <- run "$PARAM_GEN_SCRIPTS/db/gather_data.sh" []
