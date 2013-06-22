@@ -102,7 +102,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             solution <- readSpecFromFile pathSolution
             validateSolution essence param solution
 
-        helper (ModeGenerateParam pathInEssence pathOutParam) = do
+        helper (ModeGenerateRandomParam pathInEssence pathOutParam) = do
             seed <- getStdGen
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
@@ -110,7 +110,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
                 pathOutParam
                 $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
 
-        helper (ModeGenerateParam2 pathInEssence pathOutParam intermediateDir basename) = do
+        helper (ModeGenerateRandomParam2 pathInEssence pathOutParam intermediateDir basename) = do
             inEssence <- readSpecFromFile pathInEssence
             rulesDB <- getRulesDB
             typeCheckSpecIO inEssence
