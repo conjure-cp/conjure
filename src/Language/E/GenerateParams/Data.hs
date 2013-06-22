@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans  #-}
 module Language.E.GenerateParams.Data where
 
 import Bug
@@ -13,7 +14,6 @@ import Data.Map(Map)
 import qualified Data.Map as M
 import Language.E.GenerateParams.Groom2(groom)
 
-import Stuff.Pretty(prettyListDoc)
 import Text.PrettyPrint(parens,braces)
 
 type Dom = E

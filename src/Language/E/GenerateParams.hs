@@ -109,18 +109,18 @@ generateParams essenceFP eprimeDir outputDir = do
             return (paramPath, M.toList mapping)
         else do
 
-        toFile paramPath (renderNormal param)
+            toFile paramPath (renderNormal param)
 
-        putStrLn "Running SR on each eprime with the param"
-        runModelsWithParam eprimeDirName  paramPath eprimes
+            putStrLn "Running SR on each eprime with the param"
+            runModelsWithParam eprimeDirName  paramPath eprimes
 
-        putStrLn "Storing results in results.db"
-        gatherData eprimeDirName
-        results <- getData essenceBaseName (takeBaseName  paramPath)
+            putStrLn "Storing results in results.db"
+            gatherData eprimeDirName
+            results <- getData essenceBaseName (takeBaseName  paramPath)
 
-        printPretty "paramPath" paramPath
-        {-printPrettym "results" results-}
-        return (paramPath,results)
+            printPretty "paramPath" paramPath
+            {-printPrettym "results" results-}
+            return (paramPath,results)
 
 
 updateState :: Int -> EssenceParamFP -> ParamGenState -> [(EprimeFP,ModelResults)] -> ParamGenState
