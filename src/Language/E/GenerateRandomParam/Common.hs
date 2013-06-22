@@ -8,7 +8,7 @@ import Language.E.GenerateRandomParam.Data
 
 import qualified Language.E  as LE
 
-#ifdef UP_DEBUG
+#ifndef NO_GEN_PARAM_DEBUG
 import Debug.Trace(trace)
 tracePretty ::  Pretty e => Doc -> e -> e
 tracePretty s e = trace (show $ "\n" <+> (s <+> pretty e)  ) e

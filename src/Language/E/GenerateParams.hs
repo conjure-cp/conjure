@@ -70,7 +70,7 @@ generateParams essenceFP eprimeDir outputDir = do
     vars <-  getRights $  runCompE "getVars" (getVars essence)
     printPrettym "vars" vars
 
-    let varsWithState = map (\(e,dom) -> (e,dom,VarInt 1 70) ) vars
+    let varsWithState = map (\(e,dom) -> (e,dom,domToVarState dom) ) vars
     let startingState = startingParmGenState varsWithState (length eprimes')
     printPretty "StartingState" startingState
 
@@ -82,6 +82,14 @@ generateParams essenceFP eprimeDir outputDir = do
     where
     eprimeDirName   = takeBaseName eprimeDir
     essenceBaseName = takeBaseName essenceFP
+
+    domToVarState :: Dom -> VarState 
+    domToVarState [dMatch| int(&a..&b) |]  = VarInt (unwrapInt a) (unwrapInt b)
+    -- for int with range  keep the two 1 ..  (number of values)  and  list of value to index into
+
+    unwrapInt :: E -> Integer
+    unwrapInt [xMatch| [Prim (I j)] := value.literal  |] = j
+    unwrapInt  f = _bug "Not a int literal" [f]
 
     process :: [EprimeFP] -> ParamGenState -> IO ParamGenState
     process  eprimes state =  do
