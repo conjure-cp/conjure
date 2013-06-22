@@ -86,6 +86,7 @@ generateParams essenceFP eprimeDir outputDir = do
     domToVarState :: Dom -> VarState 
     domToVarState [dMatch| int(&a..&b) |]  = VarInt (unwrapInt a) (unwrapInt b)
     -- for int with range  keep the two 1 ..  (number of values)  and  list of value to index into
+    domToVarState  f = _bug "Not done yet" [f]
 
     unwrapInt :: E -> Integer
     unwrapInt [xMatch| [Prim (I j)] := value.literal  |] = j
