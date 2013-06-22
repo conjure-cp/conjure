@@ -3,12 +3,20 @@
 module Language.E.GenerateRandomParam.Common where
 
 import Language.E hiding(mkLog,trace)
-import Debug.Trace(trace)
 
 import Language.E.GenerateRandomParam.Data
-import qualified Text.PrettyPrint as Pr
 
 import qualified Language.E  as LE
+
+#ifdef UP_DEBUG
+import Debug.Trace(trace)
+tracePretty ::  Pretty e => Doc -> e -> e
+tracePretty s e = trace (show $ "\n" <+> (s <+> pretty e)  ) e
+#else
+tracePretty ::  Pretty e => Doc -> e -> e
+tracePretty _ e =  e
+#endif
+
 #ifdef UP_DEBUG_TRACE 
 mkLog :: MonadConjure m => String -> Doc -> m ()
 mkLog nm doc= do 
@@ -27,15 +35,10 @@ countRange (RSingle _ ) = 1
 countRange (RRange a b) =  b - a + 1
 
 printPretty :: Pretty a => String ->  a -> IO ()
-printPretty s p = putStrLn $ 'ː' :s ++ 'ː' : '\n' : (renderNormal) p
+printPretty s p = putStrLn $ 'ː' :s ++ 'ː' : '\n' : renderNormal p
 
 printPrettym :: Pretty a => String -> [a] -> IO ()
 printPrettym s arr= putStrLn  $'ː' : s ++  'ː' : '\n' :  (renderNormal . vcat . map pretty) arr
 
 
-tracePretty ::  Pretty e => Doc -> e -> e
-#ifdef UP_DEBUG
-tracePretty s e = trace (show $ "\n" <+> (s <+> pretty e)  ) e
-#else
-tracePretty _ e =  e
-#endif
+

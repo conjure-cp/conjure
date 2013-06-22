@@ -12,11 +12,9 @@ import Control.Monad.State
 import Data.Map(Map)
 import qualified Data.Map as M
 import Language.E.GenerateParams.Groom2(groom)
-import Text.Show.Pretty(ppShow, ppDoc)
 
 import Stuff.Pretty(prettyListDoc)
 import Text.PrettyPrint(parens,braces)
-import Data.Typeable(Typeable)
 
 type Dom = E
 

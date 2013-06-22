@@ -104,7 +104,7 @@ generateParams essenceFP eprimeDir outputDir = do
         b <- doesFileExist paramPath
         if b then do
             printPretty "Skipping" ("Skipping " <+> pretty paramPath)
-            let  (a,mapping) = fromMaybe (error $ "This can not happen" ++ (groom  $ presults startingState) )
+            let  (a,mapping) = fromMaybe (error $ "This can not happen param shoudld be removed" ++ groom (presults startingState) )
                                $ M.lookup paramPath $ presults startingState
             return (paramPath, M.toList mapping)
         else do
@@ -151,15 +151,13 @@ updateVar prev cur total (name,dom,VarInt lower upper) | cur <= 1 =
                 <+> "high="  <+> pretty upper <+> "mid=" <+> pretty mid
                 <+> "normal=" <+> pretty (mid - 1) <+> "bi="  <+> pretty (upper - move - 1)
                 <+> "c/t" <+> pretty (cur,total)
-                <+> "res=" ) $
+                <+> "res=" ) 
     (name, dom, VarInt lower (upper - move - 1)  )
 
     where
     mid  = (lower + upper) `quot` 2
     move = floor $ toRational (upper - mid ) * frac prev cur total
-    frac :: Int -> Int -> Int -> Rational
-    frac 0 0 total  =  0.5
-    frac _ cur total =  toRational cur / toRational total
+
 
 -- Multiple models could solve the param, so try to find a harder param
 updateVar prev cur total (name,dom,VarInt lower upper) =
@@ -168,17 +166,16 @@ updateVar prev cur total (name,dom,VarInt lower upper) =
                 <+> "high="  <+> pretty upper <+> "mid=" <+> pretty mid
                 <+> "normal=" <+> pretty (mid + 1) <+> "bi="  <+> pretty (lower + move + 1)
                 <+> "c/t" <+> pretty (cur,total)
-                <+> "res=" ) $
+                <+> "res=" ) 
     (name, dom, VarInt (lower + move + 1)  upper )
 
     where
     mid  = (lower + upper) `quot` 2
     move = floor $ toRational (mid - lower) * frac prev cur total 
-    frac :: Int -> Int -> Int -> Rational
-    frac 0 0 total  =  0.5
-    frac _ cur total =  toRational cur / toRational total
 
-
+frac :: Int -> Int -> Int -> Rational
+frac 0 0 _  =  0.5
+frac _ cur total =  toRational cur / toRational total
 
 generateParam :: MonadParamGen  (EssenceParam,String)
 generateParam = do
