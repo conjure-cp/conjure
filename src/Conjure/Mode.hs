@@ -93,6 +93,10 @@ data ConjureMode
         FilePath    -- Out: Essence Param file
         FilePath    -- Directory to store intermediate files
         (Maybe String) -- prefix so that GenerateParam2 can be run in parallel
+    | ModeGenerateParams
+        FilePath    -- Essence
+        FilePath    -- Directory of the eprimes
+        FilePath    -- Where to place the params
     deriving (Show)
 
 data ConjureModeWithFlags
@@ -204,6 +208,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeTypeCheck
     , modePrettify
     , modeValidateSolution
+    , modeGenerateParams
     , modeGenerateRandomParam
     , modeGenerateRandomParam2
     , modeDFAll
@@ -258,6 +263,13 @@ parseArgs (pairs, flags, rest) = msum
             param    <- optional $ key "--in-param"
             solution <- key "--in-solution"
             returnMode $ ModeValidateSolution essence param solution
+
+        modeGenerateParams = do
+            mode $ words "generateParams"
+            inEssence   <- anyKey $ words "--in-essence --in"
+            inEprimeDir <- anyKey $ words "--in-eprime-dir"
+            outParamDir <- anyKey $ words "--output-directory --out-dir"
+            returnMode $ ModeGenerateParams inEssence inEprimeDir outParamDir
 
         modeGenerateRandomParam = do
             mode $ words "generateRandomParam"

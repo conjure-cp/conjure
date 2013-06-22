@@ -25,6 +25,7 @@ import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
 import Language.E.Pipeline.RedArrow ( redArrow )
 import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
+import Language.E.GenerateParams ( generateParams )
 import Language.E.GenerateRandomParam ( generateRandomParam )
 import Language.E.GenerateRandomParam2 ( generateParam )
 
@@ -101,6 +102,9 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             param    <- maybe (return Nothing) (fmap Just . readSpecFromFile) pathParam
             solution <- readSpecFromFile pathSolution
             validateSolution essence param solution
+
+        helper (ModeGenerateParams inEssence inEprimeDir outParamDir) = 
+           generateParams  inEssence inEprimeDir outParamDir
 
         helper (ModeGenerateRandomParam pathInEssence pathOutParam) = do
             seed <- getStdGen
