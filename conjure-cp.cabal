@@ -162,7 +162,7 @@ Library
                      , pretty
                      , random
                      , safe
-                     , shelly
+                     , shelly == 0.15.*
                      , split
                      , template-haskell
                      , text
@@ -172,7 +172,7 @@ Library
                      , unordered-containers
 
                      , haskell-src-exts
-                 , sqlite-simple
+                     , sqlite-simple
     ghc-prof-options:
         -auto-all
         -caf-all
