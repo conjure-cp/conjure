@@ -85,14 +85,18 @@ data ConjureMode
         ConjureModeSingle
         FilePath    -- Essence
         FilePath    -- Essence'
-    | ModeGenerateParam
+    | ModeGenerateRandomParam
         FilePath    -- Essence
         FilePath    -- Essence Param file
-    | ModeGenerateParam2
+    | ModeGenerateRandomParam2
         FilePath    -- In:  Essence
         FilePath    -- Out: Essence Param file
         FilePath    -- Directory to store intermediate files
         (Maybe String) -- prefix so that GenerateParam2 can be run in parallel
+    | ModeGenerateParams
+        FilePath    -- Essence
+        FilePath    -- Directory of the eprimes
+        FilePath    -- Where to place the params
     deriving (Show)
 
 data ConjureModeWithFlags
@@ -111,8 +115,6 @@ conjureHelp =  Pr.vcat  $ helpStart :
     , modeTypeCheck
     , modePrettify
     , modeValidateSolution
-    , modeGenerateParam
-    , modeGenerateParam2
     , modeDFAll
     , modeDFCompactParam
     , modeDFNoChannel
@@ -166,18 +168,6 @@ conjureHelp =  Pr.vcat  $ helpStart :
         , key "--in-solution"
         ]
 
-    modeGenerateParam = mode "generateParam" [
-          anyKey $ words' "--in-essence --in"
-        , anyKey $ words' "--out-param --out-essence --out"
-        ]
-
-    modeGenerateParam2 = mode "generateParam2" [
-          anyKey $ words' "--in-essence --in"
-        , anyKey $ words' "--out-param --out"
-        , anyKey $ words' "--intermediate"
-        , optional $ key "--prefix"
-        ]
-
     modeDFAll = mode "df" [
          anyKey $ words' "--in-essence --in"
         ]
@@ -218,8 +208,9 @@ parseArgs (pairs, flags, rest) = msum
     , modeTypeCheck
     , modePrettify
     , modeValidateSolution
-    , modeGenerateParam
-    , modeGenerateParam2
+    , modeGenerateParams
+    , modeGenerateRandomParam
+    , modeGenerateRandomParam2
     , modeDFAll
     , modeDFCompactParam
     , modeDFNoChannel
@@ -273,19 +264,26 @@ parseArgs (pairs, flags, rest) = msum
             solution <- key "--in-solution"
             returnMode $ ModeValidateSolution essence param solution
 
-        modeGenerateParam = do
-            mode $ words "generateParam genParam"
+        modeGenerateParams = do
+            mode $ words "generateParams"
+            inEssence   <- anyKey $ words "--in-essence --in"
+            inEprimeDir <- anyKey $ words "--in-eprime-dir"
+            outParamDir <- anyKey $ words "--output-directory --out-dir"
+            returnMode $ ModeGenerateParams inEssence inEprimeDir outParamDir
+
+        modeGenerateRandomParam = do
+            mode $ words "generateRandomParam"
             inEssence <- anyKey $ words "--in-essence --in"
             outParam  <- anyKey $ words "--out-param --out-essence --out"
-            returnMode $ ModeGenerateParam inEssence outParam
+            returnMode $ ModeGenerateRandomParam inEssence outParam
 
-        modeGenerateParam2 = do
-            mode $ words "generateParam2 genParam2"
+        modeGenerateRandomParam2 = do
+            mode $ words "generateRandomParam2"
             inEssence       <- anyKey $ words "--in-essence --in"
             outParam        <- anyKey $ words "--out-param --out"
             intermediateDir <- anyKey $ words "--intermediate"
             basename        <- optional $ key "--prefix"
-            returnMode $ ModeGenerateParam2 inEssence outParam intermediateDir basename
+            returnMode $ ModeGenerateRandomParam2 inEssence outParam intermediateDir basename
 
         modeDFAll = do
             mode $ words "df depthfirst depth-first"
