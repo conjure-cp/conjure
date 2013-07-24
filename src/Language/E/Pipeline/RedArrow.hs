@@ -216,6 +216,27 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
+            [xMatch| [index] := domain.matrix.index
+                   | doms    := domain.matrix.inner.domain.tuple.inners
+                   |]
+            [xMatch| vs := value.matrix.values |]
+            Nothing = do
+                let tupleEtoH [xMatch| is := value.tuple.values |] = is
+                    tupleEtoH i = [i]
+                let vsInsideOut = map (\ is -> [xMake| value.matrix.values := is
+                                                     | value.matrix.indexrange := [index]
+                                                     |] )
+                                $ transpose $ map tupleEtoH vs
+                let outNames = [ mconcat [name, "_tuple", T.pack (show i)]
+                               | i <- [1 .. length doms]
+                               ]
+                liftM concat
+                    $ sequence [ callHelper n d v Nothing
+                               | (n,d,v) <- zip3 outNames doms vsInsideOut
+                               ]
+
+        helper
+            name
             _domain
             value@[xMatch| _ := value.matrix.values |]
             Nothing = do
