@@ -41,14 +41,14 @@ fi
 
 
 # installing cabal-install
-if [ "$(cabal --version | head -n 1)" != "cabal-install version 1.16.0.2" ]; then
+if [ "$(cabal --version | head -n 1)" != "cabal-install version 1.18.0.1" ]; then
     echo "Installing cabal-install"
-    wget -c http://hackage.haskell.org/packages/archive/cabal-install/1.16.0.2/cabal-install-1.16.0.2.tar.gz
-    tar -zxvf cabal-install-1.16.0.2.tar.gz
-    cd cabal-install-1.16.0.2
+    wget -c http://hackage.haskell.org/packages/archive/cabal-install/1.18.0.1/cabal-install-1.18.0.1.tar.gz
+    tar -zxvf cabal-install-1.18.0.1.tar.gz
+    cd cabal-install-1.18.0.1
     bash bootstrap.sh
     cd ..
-    rm -rf cabal-install-1.16.0.2.tar.gz cabal-install-1.16.0.2
+    rm -rf cabal-install-1.18.0.1.tar.gz cabal-install-1.18.0.1
 fi
 
 cd "$WD"
