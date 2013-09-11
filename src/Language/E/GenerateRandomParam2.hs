@@ -19,7 +19,7 @@ import Prelude hiding ( FilePath, reverse )
 import Shelly
 
 import qualified Data.HashMap.Strict as M
-import qualified Data.Text           as LT
+import qualified Data.Text           as T
 import qualified System.Directory    as FP
 import qualified System.FilePath     as FP
 
