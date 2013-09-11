@@ -19,7 +19,7 @@ import Prelude hiding ( FilePath, reverse )
 import Shelly
 
 import qualified Data.HashMap.Strict as M
-import qualified Data.Text.Lazy      as LT
+import qualified Data.Text           as LT
 import qualified System.Directory    as FP
 import qualified System.FilePath     as FP
 
@@ -66,7 +66,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
 
     _ <- shelly $ verbosely $ do
         echo "Running Savilerow"
-        _ <- savilerow (LT.pack param_eprime) (LT.pack param_minion) (LT.pack param_esolution) Nothing
+        _ <- savilerow (T.pack param_eprime) (T.pack param_minion) (T.pack param_esolution) Nothing
         return ()
 
     putStrLn "\nRunning translateSolution"
@@ -86,7 +86,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
     param_esolution = intermediateDir FP.</> (basename2 ++ ".eprime.solution")
 
 
-savilerow :: LT.Text -> LT.Text -> LT.Text -> Maybe LT.Text -> Sh LT.Text
+savilerow :: T.Text -> T.Text -> T.Text -> Maybe T.Text -> Sh T.Text
 savilerow in_eprime out_minion out_solution in_param= run
                           "savilerow" $
                           ["-in-eprime",    in_eprime

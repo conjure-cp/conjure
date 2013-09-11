@@ -13,10 +13,10 @@ import Language.E.GenerateParams.Typedefs
 import Prelude hiding ( FilePath, reverse )
 import Shelly
 
-import qualified Data.Text.Lazy      as LT
+import qualified Data.Text           as T
 import qualified System.FilePath     as FP
 
-default (LT.Text)
+default (T.Text)
 
 
 type MinionTimeout  = Int
@@ -24,16 +24,16 @@ type OutputBaseName = String
 
 runModelsWithParam :: OutputBaseName -> EprimeParamFP -> [EprimeFP] -> IO ()
 runModelsWithParam outputBase param eprimes = do
-   let eprimesVar = LT.pack .  unlines $ eprimes
+   let eprimesVar = T.pack .  unlines $ eprimes
    _ <- shelly  $ escaping False $ do
         mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
         let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
         echo "ScriptDir:"
         echo scriptDir
 
-        setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
-        setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
-        setenv "PARAMS_TO_USE" (LT.pack param)
+        setenv "GENERATED_OUTPUT_DIR"      (T.pack $ "results-" ++ outputBase)
+        setenv "STATS_OUTPUT_DIR"          (T.pack $ "stats-"   ++ outputBase)
+        setenv "PARAMS_TO_USE" (T.pack param)
         setenv "MODELS_TO_USE" eprimesVar
         setenv "NO_MINION_STATS" "true"
 
@@ -50,8 +50,8 @@ gatherData outputBase = do
         echo "ScriptDir:"
         echo scriptDir
 
-        setenv "GENERATED_OUTPUT_DIR"      (LT.pack $ "results-" ++ outputBase)
-        setenv "STATS_OUTPUT_DIR"          (LT.pack $ "stats-"   ++ outputBase)
+        setenv "GENERATED_OUTPUT_DIR"      (T.pack $ "results-" ++ outputBase)
+        setenv "STATS_OUTPUT_DIR"          (T.pack $ "stats-"   ++ outputBase)
         setenv "NO_MINION_STATS" "true"
 
         _ <- run "$PARAM_GEN_SCRIPTS/db/gather_data.sh" []
@@ -63,8 +63,8 @@ runSavilerow :: MinionTimeout -> EprimeFP -> EprimeParamFP  -> IO ()
 runSavilerow minionTimeout eprime param  = do
     _ <- shelly $ verbosely $ do
         echo "Running Savilerow"
-        _ <- savilerow (LT.pack eprime) (LT.pack minion) (LT.pack eprimeSolution)
-                       (Just . LT.pack $ param ) minionTimeout
+        _ <- savilerow (T.pack eprime) (T.pack minion) (T.pack eprimeSolution)
+                       (Just . T.pack $ param ) minionTimeout
         return ()
     return ()
 
@@ -73,14 +73,14 @@ runSavilerow minionTimeout eprime param  = do
     minion         = baseName FP.<.> "minion"
     eprimeSolution = baseName FP.<.> "eprime-solution"
 
-savilerow :: LT.Text -> LT.Text -> LT.Text ->  Maybe LT.Text -> Int -> Sh LT.Text
+savilerow :: T.Text -> T.Text -> T.Text ->  Maybe T.Text -> Int -> Sh T.Text
 savilerow in_eprime out_minion out_solution in_param timeout = run
                           "savilerow" $
                           ["-in-eprime",    in_eprime
                           ,"-out-minion",   out_minion
                           ,"-out-solution", out_solution
                           ,"-runsolver"
-                          ,"-minion-options", LT.pack $  "-timelimit " ++   show timeout
+                          ,"-minion-options", T.pack $  "-timelimit " ++   show timeout
                           ] ++ handleParam  in_param
 
     where
