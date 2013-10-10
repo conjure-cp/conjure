@@ -1,0 +1,23 @@
+
+[1000]
+
+&quan &i in toSet(&rel(&val1,&val2,&val3)) , &guard . &body
+
+~~>
+
+&quan j1 : &index1 .
+    &quan j2 : &index2
+        , &guard { &i --> (j1,j2) } /\ &refnrel[j1,j2,&val3]
+        . &body  { &i --> (j1,j2) }
+
+
+    where &rel hasRepr RelationIntMatrix3
+    where &val1  = _
+    where &val2  = _
+    where &val3 != _
+
+
+    letting &refnrel be refn(&rel)
+    letting &index1  be indices(&refnrel, 0)
+    letting &index2  be indices(&refnrel, 1)
+    letting &index3  be indices(&refnrel, 2)
