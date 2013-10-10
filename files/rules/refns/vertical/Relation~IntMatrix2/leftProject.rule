@@ -1,18 +1,20 @@
 
 [1000]
 
-&quan &i in toSet(&x(&j,_)) , &guard . &body
+&quan &i in toSet(&rel(&val1,&val2)) , &guard . &body
 
 ~~>
 
-&quan j1 : &index1
-    , &guard { &i[1] --> j1 } /\ &refnx[&j,j1]
-    . &body  { &i[1] --> j1 }
+&quan j2 : &index2
+    , &guard { &i[1] --> j2 } /\ &refnrel[&val1,j2]
+    . &body  { &i[1] --> j2 }
 
 
-    where &x hasRepr RelationIntMatrix2
-    where &j != _
+    where &rel hasRepr RelationIntMatrix2
+    where &val1 != _
+    where &val2  = _
 
-    letting &refnx be refn(&x)
-    letting &index1 be indices(&refnx, 1)
 
+    letting &refnrel be refn(&rel)
+    letting &index1  be indices(&refnrel, 0)
+    letting &index2  be indices(&refnrel, 1)
