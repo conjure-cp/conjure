@@ -5,14 +5,14 @@
 
 ~~>
 
-&quan j1 : &index1
-    , &guard { &i[1] --> j1 } /\ &refnx[j1,&j]
-    . &body  { &i[1] --> j1 }
+&quan j0 : &index0
+    , &guard { &i[1] --> j0 } /\ &refnx[j0,&j]
+    . &body  { &i[1] --> j0 }
 
 
     where &x hasRepr RelationIntMatrix2
     where &j != _
 
     letting &refnx be refn(&x)
-    letting &index1 be indices(&refnx, 0)
+    letting &index0 be indices(&refnx, 0)
 
