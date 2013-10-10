@@ -7,7 +7,7 @@ module Language.E.BuiltIn.SetStructural
 import Bug
 import Language.E
 
--- We want the following rule, but we want it ti work independent of how
+-- We want the following rule, but we want it to work independent of how
 -- many things are in the set structural variable.
 --
 -- conjure> cat files/rules/refns/horizontal/set/quantified-subsetEq-2.rule
