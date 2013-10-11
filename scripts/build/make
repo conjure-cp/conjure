@@ -70,7 +70,7 @@ end
 
 cmdBuild = []
 cmdBuild << "cabal" << "install" << "--force-reinstalls"
-cmdBuild << "--bindir=$HOME/.cabal/bin"
+cmdBuild << "--bindir=" + ENV['HOME'] + "/.cabal/bin"
 
 if options.jobs > 1
     cmdBuild << "-j#{options.jobs}"
