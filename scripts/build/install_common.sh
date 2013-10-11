@@ -77,21 +77,9 @@ echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
 # install conjure, finally
 if (( $HAS_LLVM > 0 )) && [ $OS = "Linux" ] ; then
     echo "Using LLVM"
-    cabal install -O2 \
-        --force-reinstalls \
-        --disable-library-profiling \
-        --disable-executable-profiling \
-        --disable-documentation \
-        --ghc-options="-funbox-strict-fields" \
-        --ghc-options="-fexpose-all-unfoldings" \
-        --ghc-options="-fllvm"
+    scripts/build/make -Ol
 else
     echo "Not using LLVM"
-    cabal install -O2 \
-        --force-reinstalls \
-        --disable-library-profiling \
-        --disable-executable-profiling \
-        --ghc-options="-funbox-strict-fields" \
-        --ghc-options="-fexpose-all-unfoldings"
+    scripts/build/make -O
 fi
 

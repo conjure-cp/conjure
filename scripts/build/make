@@ -7,7 +7,6 @@ options = OpenStruct.new
 options.dryRun = false
 options.jobs = 1                # nil means pass -j to cabal. otherwise -jNUMBER
 options.profiling = false
-options.tests = false
 options.optimisation = false
 options.documentation = false
 options.llvm = false
@@ -30,10 +29,6 @@ OptionParser.new do |opts|
 
     opts.on("-p", "--[no-]profiling", "Build with profiling enabled.") do |v|
         options.profiling = v
-    end
-
-    opts.on("-t", "--[no-]tests", "Build and run tests too.") do |v|
-        options.tests = v
     end
 
     opts.on("-O", "--[no-]optimisation", "Enable/disable optimisation.") do |v|
@@ -62,54 +57,56 @@ unless File.exists?("src/RepositoryVersion.hs") && contents == File.read("src/Re
     puts "Generated file: src/RepositoryVersion.hs with version #{version}"
 end
 
-paramsBuild = []
-paramsBuild << "cabal" << "install" << "--force-reinstalls"
+
+unless File.exists?(".cabal-sandbox")
+    puts "Creating cabal sandbox"
+    cmdSandboxInit = []
+    cmdSandboxInit << "cabal" << "sandbox" << "init"
+    exit $?.to_i unless system(*cmdSandboxInit)
+else
+    puts "Using existing cabal sandbox"
+end
+
+
+cmdBuild = []
+cmdBuild << "cabal" << "install" << "--force-reinstalls"
+cmdBuild << "--bindir=$HOME/.cabal/bin"
 
 if options.jobs > 1
-    paramsBuild << "-j#{options.jobs}"
+    cmdBuild << "-j#{options.jobs}"
 elsif options.jobs == 0
-    paramsBuild << "-j"
+    cmdBuild << "-j"
 end
 
 if options.documentation
-    paramsBuild << "--enable-documentation"
+    cmdBuild << "--enable-documentation"
 else
-    paramsBuild << "--disable-documentation"
+    cmdBuild << "--disable-documentation"
 end
 
 if options.profiling
-    paramsBuild << "--enable-library-profiling"
-    paramsBuild << "--enable-executable-profiling"
+    cmdBuild << "--enable-library-profiling"
+    cmdBuild << "--enable-executable-profiling"
 else
-    paramsBuild << "--disable-library-profiling"
-    paramsBuild << "--disable-executable-profiling"
+    cmdBuild << "--disable-library-profiling"
+    cmdBuild << "--disable-executable-profiling"
 end
 
 if options.optimisation
-    paramsBuild << "-O2"
-    paramsBuild << "--ghc-options=\"-funbox-strict-fields\""
+    cmdBuild << "-O2"
+    cmdBuild << "--ghc-options=\"-funbox-strict-fields\""
 else
-    paramsBuild << "-O0"
+    cmdBuild << "-O0"
 end
 
-paramsBuild << '--ghc-options="-fllvm"'      if options.llvm
-paramsBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
+cmdBuild << '--ghc-options="-fllvm"'      if options.llvm
+cmdBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
 
 if options.dryRun
-    paramsBuild << "--dry-run"
-    paramsBuild << "-v"
-    puts paramsBuild.join(" ")
+    cmdBuild << "--dry-run"
+    cmdBuild << "-v"
+    puts cmdBuild.join(" ")
 end
 
-exit $?.to_i unless system(*paramsBuild)
-
-if options.tests
-    paramsTestBuild = paramsBuild
-    paramsTestBuild << "--enable-tests"
-    exit $? unless system(*paramsTestBuild)
-
-    paramsTestRun = []
-    paramsTestRun << "cabal" << "test"
-    exit $? unless system(*paramsTestRun)
-end
+exit $?.to_i unless system(*cmdBuild)
 
