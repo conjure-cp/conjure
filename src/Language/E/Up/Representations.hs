@@ -31,6 +31,7 @@ leafRep kind =
       "Matrix1D"                      -> matrix1DRep
       "Function1D"                    -> matrix1DRep
       "RelationIntMatrix2"            -> relationIntMatrix2Rep
+      "RelationIntMatrix3"            -> relationIntMatrix3Rep
       "SetExplicit"                   -> explicitRep
       "SetExplicitVarSizeWithDefault" -> setExplicitVarSizeWithDefaultRep
       "SetOccurrence"                 -> setOccurrenceRep
@@ -145,6 +146,44 @@ relationIntMatrix2Rep v@VarData{vIndexes = (_:rest@(_:_)),
 
 relationIntMatrix2Rep v = _bug "relationIntMatrix2Rep" [v]
 
+
+relationIntMatrix3Rep :: VarData -> E
+relationIntMatrix3Rep VarData{vIndexes=[a,b,c],
+                              vEssence=[xMatch| vs := value.matrix.values |] } =
+  tracer "relationIntMatrix3d:" values
+  where
+  values =
+      wrapInRelation 
+    . map (tuples . flatten . unwrap)
+    . filter notEmpty
+    . zip a 
+    . map 
+     ( map unwrap . filter notEmpty . zip b 
+     . map (  map fst . filter f . zip c . unwrapMatrix ) 
+     . unwrapMatrix)
+     $ vs
+
+
+  tuples arr = [xMake| value.tuple.values := (map toIntLit arr) |]
+
+  unwrap (u,[v]) = (u,v)
+  unwrap v = _bug "relationIntMatrix3Rep unwrap" [groom v]  
+
+  notEmpty (_,[]) = False
+  notEmpty _      = True
+
+  flatten (i, (t1,t2)) =  [i,t1,t2]
+
+  f (_,[eMatch| true |])  = True
+  f (_,[eMatch| false |]) = False
+  f v = _bug "relationIntMatrix3Rep not boolean" [v]
+
+
+relationIntMatrix3Rep v@VarData{vIndexes = (_:rest@(_:_)),
+                                vEssence = [xMatch| vs := value.matrix.values |] } =
+    wrapInMatrix . map (\w ->  relationIntMatrix3Rep v{vIndexes=rest,vEssence=w} ) $ vs
+
+relationIntMatrix3Rep v = _bug "relationIntMatrix3Rep" [v] 
 
 {- Functions -}
 
