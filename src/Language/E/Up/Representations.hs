@@ -148,7 +148,7 @@ relationIntMatrix2Rep v = _bug "relationIntMatrix2Rep" [v]
 
 
 relationIntMatrix3Rep :: VarData -> E
-relationIntMatrix3Rep VarData{vIndexes=ix@[a,b,c],
+relationIntMatrix3Rep VarData{vIndexes=[a,b,c],
                               vEssence=[xMatch| vs := value.matrix.values |] } =
   tracer "relationIntMatrix3d:" values
   where
@@ -167,6 +167,7 @@ relationIntMatrix3Rep VarData{vIndexes=ix@[a,b,c],
   tuples arr = [xMake| value.tuple.values := (map toIntLit arr) |]
 
   unwrap (u,[v]) = (u,v)
+  unwrap v = _bug "relationIntMatrix3Rep unwrap" [groom v]  
 
   notEmpty (_,[]) = False
   notEmpty _      = True
