@@ -1339,7 +1339,12 @@ matrixEq [eMatch| &a = &b |] = do
             ret $ inForAll quanVarStr ia ( [xMake| emptyGuard := [] |]
                                          , [eMake| &a[&quanVar] = &b[&quanVar] |]
                                          )
-        _ -> return Nothing
+        _ -> case (a,b) of
+            ([xMatch| as := value.matrix.values |], [xMatch| bs := value.matrix.values |]) ->
+                ret $ conjunct [ [eMake| &i = &j |]
+                               | (i,j) <- zip as bs
+                               ]
+            _ -> return Nothing
 matrixEq [eMatch| &a != &b |] = do
     da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
     db <- (Just <$> domainOf b) `catchError` (\ _ -> return Nothing )
@@ -1356,7 +1361,13 @@ matrixEq [eMatch| &a != &b |] = do
                                              , [eMake| &a[&quanVar] = &b[&quanVar] |]
                                              )
             ret [eMake| !&res |]
-        _ -> return Nothing
+        _ -> case (a,b) of
+            ([xMatch| as := value.matrix.values |], [xMatch| bs := value.matrix.values |]) ->
+                let toNegate = conjunct [ [eMake| &i = &j |]
+                                        | (i,j) <- zip as bs
+                                        ]
+                in  ret [eMake| ! &toNegate |]
+            _ -> return Nothing
 matrixEq _ = return Nothing
 
 
