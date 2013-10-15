@@ -240,6 +240,7 @@ parseStructural = msum
         x <- parseReference
         return [xMake| structural.single := [x] |]
     , do
+        void $ optionMaybe $ lexeme L_tuple
         xs <- parens $ parseStructural `sepBy1` comma
         return [xMake| structural.tuple := xs |]
     , do
