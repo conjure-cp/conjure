@@ -153,12 +153,17 @@ relationIntMatrix3Rep VarData{vIndexes=[a,b,c],
   tracer "relationIntMatrix3d:" values
   where
   values =
-      wrapInRelation 
-    . map (tuples . flatten . unwrap)
+      wrapInRelation
+    . map tuples
+    . map flatten
+
+    . concatMap expand
     . filter notEmpty
     . zip a 
+
     . map 
-     ( map unwrap . filter notEmpty . zip b 
+     ( concatMap expand .  filter notEmpty .  zip b 
+
      . map (  map fst . filter f . zip c . unwrapMatrix ) 
      . unwrapMatrix)
      $ vs
@@ -166,13 +171,14 @@ relationIntMatrix3Rep VarData{vIndexes=[a,b,c],
 
   tuples arr = [xMake| value.tuple.values := (map toIntLit arr) |]
 
-  unwrap (u,[v]) = (u,v)
-  unwrap v = _bug "relationIntMatrix3Rep unwrap" [groom v]  
+  flatten :: (a,(a,a)) -> [a] 
+  flatten (a,(b,c)) = [a,b,c]
+
+  expand :: (a,[b]) -> [(a,b)]
+  expand (a,bs) =  [ (a,b) |  b <- bs  ]
 
   notEmpty (_,[]) = False
   notEmpty _      = True
-
-  flatten (i, (t1,t2)) =  [i,t1,t2]
 
   f (_,[eMatch| true |])  = True
   f (_,[eMatch| false |]) = False
