@@ -172,10 +172,10 @@ relationIntMatrix3Rep VarData{vIndexes=[a,b,c],
   tuples arr = [xMake| value.tuple.values := (map toIntLit arr) |]
 
   flatten :: (a,(a,a)) -> [a] 
-  flatten (a,(b,c)) = [a,b,c]
+  flatten (x,(y,z)) = [x,y,z]
 
   expand :: (a,[b]) -> [(a,b)]
-  expand (a,bs) =  [ (a,b) |  b <- bs  ]
+  expand (x,ys) =  [ (x,y) |  y <- ys  ]
 
   notEmpty (_,[]) = False
   notEmpty _      = True
