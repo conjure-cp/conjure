@@ -72,6 +72,7 @@ suppress = S.fromList
     , "Evaluator.unrollQuantifiers"
     , "Evaluator.instantiate"
     , "Simplify"
+    -- , "syntacticEq"
 
     , "missing:relationRepr"
     , "missing:mostKnown"
@@ -84,7 +85,7 @@ suppress = S.fromList
     , "builtIn.relationApply"
     , "builtIn.tupleExplode"
     , "builtIn.functionLiteralApply"
-    -- , "builtIn.quantificationOverTupleDomains "
+    -- , "builtIn.quantificationOverTupleDomains"
 
     -- process indicators for conjure-repr, uncomment if you want to suppress
     -- , "configuration"

@@ -217,20 +217,27 @@ localHandler name x lokal@[xMatch| [y] := topLevel.where |] = do
         Just i -> return i
     xBool <- toBool y'
     case xBool of
-        Just (True, newBindings) -> do
+        Right (True, newBindings) -> do
             modify $ \ st -> st { binders = newBindings ++ binders st }
             return True
-        Just (False, _) -> do
+        Right (False, _) -> do
             mkLog "rule-fail"
                 $ "where statement evaluated to false: " <++> vcat [ pretty lokal
                                                                    , "in rule" <+> pretty name
                                                                    , "at expression" <+> pretty x
                                                                    ]
             return False
-        Nothing    -> err ErrFatal
+        Left [eMatch| &a = &b |] | a == b -> do
+            mkLog "syntacticEq" $ vcat [ "falling back to syntactic equality"
+                                       , pretty a
+                                       , pretty b
+                                       ]
+            return True
+        Left almostBool -> err ErrFatal
                 $ "where statement cannot be fully evaluated: " <++> vcat [ pretty lokal
                                                                           , "in rule" <+> pretty name
                                                                           , "at expression" <+> pretty x
+                                                                          , "could only reduce it to" <+> pretty almostBool
                                                                           ]
 localHandler _ _ lokal = introduceStuff lokal >> return True
 
