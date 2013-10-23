@@ -17,6 +17,8 @@ import qualified Data.IntSet as IntSet ( insert, member )
 import qualified Data.IntMap as IntMap ( insert, lookup )
 
 
+useMemoisation :: Bool
+useMemoisation = False
 
 labelOf :: Pretty primitive => Generic primitive -> Doc
 labelOf (Prim   p  ) = pretty p
@@ -218,6 +220,7 @@ checkingMemo
     -> E
     -> (E -> WriterT Any m E)
     -> WriterT Any m E
+checkingMemo _ x f | not useMemoisation = f x
 checkingMemo level x f = do
     bs <- lift $ gets (binders >>> nubKeepOrderBy binderName >>> sortOn binderName)
     let hashX = hash (level, x, bs) -- hash x
