@@ -735,11 +735,15 @@ stripUnnecessaryTyped _ = return Nothing
 -- we generally don't and actually don't even want to, unroll quantifiers.
 -- but we need this for validateSolution
 unrollQuantifiers :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-unrollQuantifiers [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
+unrollQuantifiers [eMatch| &quan &iPre : int(&a..&b) , &guard . &body |]
     | [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     = do
+
+    let i = case iPre of
+                [xMatch| [single] := structural.single |] -> single
+                _ -> iPre
     xs <- forM [a'..b'] $ \ n' -> do
         let n = [xMake| value.literal := [Prim (I n')] |]
         newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
@@ -749,11 +753,14 @@ unrollQuantifiers [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
-unrollQuantifiers [eMatch| &quan &i : &dom , &guard . &body |]
+unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
     | [xMatch| rs := domain.int.ranges |] <- dom
     , Just numbers <- mapM singleRangeOut rs
     , [xMatch| [Prim (S quanStr)] := reference |] <- quan
     = do
+    let i = case iPre of
+                [xMatch| [single] := structural.single |] -> single
+                _ -> iPre
     xs <- forM numbers $ \ n' -> do
         let n = [xMake| value.literal := [Prim (I n')] |]
         newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
