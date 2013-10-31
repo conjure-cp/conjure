@@ -108,5 +108,8 @@ if options.dryRun
     puts cmdBuild.join(" ")
 end
 
-exit $?.to_i unless system(*cmdBuild)
+unless system(*cmdBuild)
+    puts "Build failed."
+    exit 1
+end
 

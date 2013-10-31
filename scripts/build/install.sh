@@ -8,9 +8,9 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
-    ${DIR}/install_common.sh "apple-darwin"
+    "${DIR}"/install_common.sh "apple-darwin"
 elif [ "$OS" == "Linux" ]; then
-    ${DIR}/install_common.sh "unknown-linux"
+    "${DIR}"/install_common.sh "unknown-linux"
 else
     echo "Cannot determine your OS, uname reports: ${OS}"
 fi
