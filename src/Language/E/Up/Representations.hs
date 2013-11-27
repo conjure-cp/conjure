@@ -35,6 +35,7 @@ leafRep kind =
       "SetExplicit"                   -> explicitRep
       "SetExplicitVarSizeWithDefault" -> setExplicitVarSizeWithDefaultRep
       "SetOccurrence"                 -> setOccurrenceRep
+      "SetGent"                       -> setGentRep
       _                               -> noRep
 
 
@@ -46,6 +47,17 @@ noRep  = vEssence
 explicitRep :: VarData -> E
 explicitRep VarData{vEssence=e} =
     tracee "explicitRep" $ e
+
+setGentRep :: VarData -> E
+setGentRep VarData{vIndexes=[ix],
+  vEssence=[xMatch| vs :=  value.matrix.values |]} =
+    let
+        gtZero [xMatch| [Prim (I x)] := value.literal |] = x > 0
+        gtZero _ = False
+    in
+        wrapInMatrix .  map (toIntLit . fst) . filter (gtZero . snd) . zip ix $
+            tracee "setGentRep" vs
+setGentRep v = error $  "setGentRep " ++  (show . pretty) v
 
 
 setOccurrenceRep :: VarData -> E

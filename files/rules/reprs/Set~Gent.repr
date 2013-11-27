@@ -1,0 +1,18 @@
+
+~~> Set~Gent
+~~> matrix indexed by [&tau] of int(0..&maxSize_)
+~~> forAll i : &tau . (refn[i] = 0) \/ (refn[i] = 1 + sum j : &tau, j < i /\ refn[j] > 0 . 1)
+
+    where &tau hasType `int`
+
+*** set (minSize &minSize_ , maxSize &maxSize_) of &tau
+    ~~> &minSize_ <= sum i : &tau . toInt(refn[i] = 0)
+
+*** set (maxSize &maxSize_) of &tau
+
+*** set (minSize &minSize_) of &tau
+    ~~> &minSize_ <= sum i : &tau . toInt(refn[i] = 0)
+    letting &maxSize_ be domSize(&tau)
+
+*** set () of &tau
+    letting &maxSize_ be domSize(&tau)
