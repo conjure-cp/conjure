@@ -42,6 +42,10 @@ import Language.Haskell.Meta.Parse.Careful
 import Stuff.Pretty ( Pretty(..) )
 import Text.PrettyPrint ( Doc, (<+>), hang, hcat, vcat, nest )
 
+-- aeson
+import Data.Aeson ( ToJSON(..), (.=) )
+import qualified Data.Aeson as JSON
+
 
 data Generic primitive
     = Prim primitive
@@ -55,6 +59,12 @@ instance Hashable primitive => Hashable (Generic primitive) where
 instance NFData primitive => NFData (Generic primitive) where
     rnf x = genericRnf x
     {-# INLINEABLE rnf #-}
+
+instance ToJSON primitive => ToJSON (Generic primitive) where
+    toJSON (Prim x) = JSON.object [ "primitive" .= toJSON x ]
+    toJSON (Tagged t xs) = JSON.object [ "tag" .= toJSON t
+                                       , "children" .= toJSON xs
+                                       ]
 
 universe :: Generic p -> [Generic p]
 universe t@(Tagged _ xs) = t : concatMap universe xs

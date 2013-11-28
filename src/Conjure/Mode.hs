@@ -72,6 +72,10 @@ data ConjureMode
     | ModePrettify
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
+    | ModeJSON
+        Bool                -- print or prettyPrint the JSON
+        (Maybe FilePath)    -- input
+        (Maybe FilePath)    -- output
     | ModeValidateSolution
         FilePath            -- Essence
         (Maybe FilePath)    -- Essence Param
@@ -114,6 +118,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
     , modeTranslateSolution
     , modeTypeCheck
     , modePrettify
+    , modeJSON
     , modeValidateSolution
     , modeDFAll
     , modeDFCompactParam
@@ -158,6 +163,11 @@ conjureHelp =  Pr.vcat  $ helpStart :
         ]
 
     modePrettify = mode "pretty" [
+         optional $ anyKey $ words' "--in-essence --in"
+        ,optional $ anyKey $ words' "--out-essence --out"
+        ]
+
+    modeJSON = mode "json" [
          optional $ anyKey $ words' "--in-essence --in"
         ,optional $ anyKey $ words' "--out-essence --out"
         ]
@@ -207,6 +217,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeTranslateSolution
     , modeTypeCheck
     , modePrettify
+    , modeJSON
     , modeValidateSolution
     , modeGenerateParams
     , modeGenerateRandomParam
@@ -256,6 +267,12 @@ parseArgs (pairs, flags, rest) = msum
             inp  <- optional $ anyKey $ words "--in-essence --in"
             out  <- optional $ anyKey $ words "--out-essence --out"
             returnMode $ ModePrettify inp out
+
+        modeJSON = do
+            mode $ words "json"
+            inp  <- optional $ anyKey $ words "--in-essence --in"
+            out  <- optional $ anyKey $ words "--out-essence --out"
+            returnMode $ ModeJSON (not $ flagSet "--pretty") inp out
 
         modeValidateSolution = do
             mode $ words "validateSolution validateSol validateSoln"
@@ -326,7 +343,7 @@ parseArgs (pairs, flags, rest) = msum
         key = (`M.lookup` pairs)
         readKey = key >=> readMay
         optional = return
-        _flag = (`S.member` flags)
+        flagSet = (`S.member` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
 
         returnMode m = return $ ConjureModeWithFlags m pairs flags rest
@@ -345,5 +362,6 @@ isFlag :: String -> Bool
 isFlag = (`elem` allFlags)
     where
         allFlags = [ "--better"
+                   , "--pretty"
                    ]
 

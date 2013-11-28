@@ -8,6 +8,7 @@ import Control.DeepSeq ( NFData(..) )
 import Control.DeepSeq.Generics ( genericRnf )
 import Data.Serialize ( Serialize(..) )
 import Data.Hashable ( Hashable(..) )
+import Data.Aeson ( ToJSON(..) )
 data Tag = Tactual
     | TallDiff
     | Tapart
@@ -141,6 +142,8 @@ instance NFData Tag where
     {-# INLINEABLE rnf #-}
 instance Pretty Tag where
     pretty = pretty . drop 1 . show
+instance ToJSON Tag where
+    toJSON = toJSON . drop 1 . show
 instance IsString Tag where
     fromString = fromString' . filter (not . isSpace)
         where

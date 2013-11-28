@@ -7,6 +7,10 @@ import System.Environment ( getArgs )
 import qualified Data.Text.IO as T
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
+import Data.Aeson.Encode.Pretty ( encodePretty )
+import qualified Data.Aeson as JSON ( encode )
+import qualified Data.ByteString.Lazy as BS ( writeFile )
+import qualified Data.ByteString.Lazy.Char8 as BS ( putStrLn )
 
 import Bug
 import Paths_conjure_cp ( getBinDir )
@@ -96,6 +100,16 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
             case pathOut of
                 Nothing -> putStrLn $ renderNormal (atMostOneSuchThat False inp)
                 Just fp -> writeSpec fp (atMostOneSuchThat False inp)
+
+        helper (ModeJSON b pathInp pathOut) = do
+            let printer = if b then JSON.encode else encodePretty
+            inp <- case pathInp of
+                Nothing -> readSpecFromStdIn
+                Just fp -> readSpecFromFile fp
+            typeCheckSpecIO inp
+            case pathOut of
+                Nothing -> BS.putStrLn     (printer $ atMostOneSuchThat False inp)
+                Just fp -> BS.writeFile fp (printer $ atMostOneSuchThat False inp)
 
         helper (ModeValidateSolution pathEssence pathParam pathSolution) = do
             essence  <- readSpecFromFile pathEssence
