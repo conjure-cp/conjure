@@ -27,6 +27,7 @@ import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
 import Language.E.Pipeline.RedArrow ( redArrow )
+import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
 import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
 import Language.E.GenerateParams ( generateParams )
@@ -108,8 +109,8 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
                 Just fp -> readSpecFromFile fp
             typeCheckSpecIO inp
             case pathOut of
-                Nothing -> BS.putStrLn     (printer $ atMostOneSuchThat False inp)
-                Just fp -> BS.writeFile fp (printer $ atMostOneSuchThat False inp)
+                Nothing -> BS.putStrLn     (printer $ uniqueQuanVars $ atMostOneSuchThat False inp)
+                Just fp -> BS.writeFile fp (printer $ uniqueQuanVars $ atMostOneSuchThat False inp)
 
         helper (ModeValidateSolution pathEssence pathParam pathSolution) = do
             essence  <- readSpecFromFile pathEssence

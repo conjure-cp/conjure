@@ -15,6 +15,8 @@ module Language.E.Definition
     , identifierSplit, identifierConstruct
     , identifierStripRegion
 
+    , collectQuanVars
+
     ) where
 
 import Stuff.Generic
@@ -47,8 +49,9 @@ instance Default Spec where
 instance ToJSON Spec where
     toJSON (Spec v x) =
         let xs = statementAsList x
-        in  JSON.object [ "essenceVersion" .= toJSON v
-                        , "statements"     .= toJSON xs
+        in  JSON.object [ "version"     .= toJSON v
+                        , "permutables" .= toJSON (permutables x)
+                        , "statements"  .= toJSON xs
                         ]
 
 
@@ -145,4 +148,19 @@ identifierStripRegion t =
     let (base, _, refn) = identifierSplit t
     in  identifierConstruct base Nothing refn
 
+permutables :: E -> [Text]
+permutables = go
+    where
+        go [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference |] = [name]
+        go [xMatch| [Prim (S name)] := topLevel.letting.name.reference          |] = [name]
+        go p@[xMatch| [quanVar] := quantified.quanVar |] = collectQuanVars quanVar ++ go' p
+        go x = go' x
 
+        go' (Tagged _ xs) = concatMap go xs
+        go' _ = []
+
+collectQuanVars :: E -> [Text]
+collectQuanVars [xMatch| xs := structural.tuple  |] = concatMap collectQuanVars xs
+collectQuanVars [xMatch| xs := structural.matrix |] = concatMap collectQuanVars xs
+collectQuanVars [xMatch| [Prim (S n)] := structural.single.reference |] = [n]
+collectQuanVars _ = []
