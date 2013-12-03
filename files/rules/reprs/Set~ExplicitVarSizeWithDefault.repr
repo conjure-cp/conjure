@@ -18,11 +18,11 @@
     letting &mx be domSize(&t)
 
 *** set (minSize &mn) of &t
-    ~~> (sum i : int(1..&mx) . refn[i] != &def) >= &mn
+    ~~> (sum i : int(1..&mx) . toInt(refn[i] != &def)) >= &mn
     letting &mx be domSize(&t)
 
 *** set (maxSize &mx) of &t
 
 *** set (minSize &mn, maxSize &mx) of &t
-    ~~> (sum i : int(1..&mx) . refn[i] != &def) >= &mn
+    ~~> (sum i : int(1..&mx) . toInt(refn[i] != &def)) >= &mn
 
