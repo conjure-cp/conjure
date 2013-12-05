@@ -47,11 +47,14 @@ instance Default Spec where
     def = Spec ("Essence", [1,3]) (Tagged TstatementEOF def)
 
 instance ToJSON Spec where
-    toJSON (Spec v x) =
-        let xs = statementAsList x
-        in  JSON.object [ "version"     .= toJSON v
-                        , "permutables" .= toJSON (permutables x)
-                        , "statements"  .= toJSON xs
+    toJSON s@(Spec v x) =
+        let
+            xs = statementAsList x
+            (permutables, quantifiedVars) = permutablesOfSpec s
+        in  JSON.object [ "version"        .= toJSON v
+                        , "permutables"    .= toJSON permutables
+                        , "quantifiedVars" .= toJSON quantifiedVars
+                        , "statements"     .= toJSON xs
                         ]
 
 
@@ -148,16 +151,16 @@ identifierStripRegion t =
     let (base, _, refn) = identifierSplit t
     in  identifierConstruct base Nothing refn
 
-permutables :: E -> [Text]
-permutables = go
+permutablesOfSpec :: Spec -> ([Text],[Text])
+permutablesOfSpec (Spec _ statements) = go statements
     where
-        go [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference |] = [name]
-        go [xMatch| [Prim (S name)] := topLevel.letting.name.reference          |] = [name]
-        go p@[xMatch| [quanVar] := quantified.quanVar |] = collectQuanVars quanVar ++ go' p
+        go [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference |] = ([name],[])
+        go [xMatch| [Prim (S name)] := topLevel.letting.name.reference          |] = ([name],[])
+        go p@[xMatch| [quanVar] := quantified.quanVar |] = ([],collectQuanVars quanVar) `mappend` go' p
         go x = go' x
 
-        go' (Tagged _ xs) = concatMap go xs
-        go' _ = []
+        go' (Tagged _ xs) = mconcat (map go xs)
+        go' _ = mempty
 
 collectQuanVars :: E -> [Text]
 collectQuanVars [xMatch| xs := structural.tuple  |] = concatMap collectQuanVars xs
