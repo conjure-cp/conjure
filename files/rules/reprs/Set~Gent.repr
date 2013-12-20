@@ -6,12 +6,12 @@
     where &tau hasType `int`
 
 *** set (minSize &minSize_ , maxSize &maxSize_) of &tau
-    ~~> &minSize_ <= sum i : &tau . toInt(refn[i] = 0)
+    ~~> &minSize_ <= sum i : &tau . toInt(refn[i] != 0)
 
 *** set (maxSize &maxSize_) of &tau
 
 *** set (minSize &minSize_) of &tau
-    ~~> &minSize_ <= sum i : &tau . toInt(refn[i] = 0)
+    ~~> &minSize_ <= sum i : &tau . toInt(refn[i] != 0)
     letting &maxSize_ be domSize(&tau)
 
 *** set () of &tau
