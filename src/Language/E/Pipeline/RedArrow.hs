@@ -456,15 +456,15 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                    | [domInnerTo] := domain.function.innerTo
                    |]
             [xMatch| values := value.function.values |]
-            (Just "AsReln")
+            (Just "Function~AsReln")
             = do
                 let
                     mappingToTuple [xMatch| [a,b] := mapping |] = [xMake| value.tuple.values := [a,b] |]
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.AsReln 1", pretty p ]
                     valuesOut = map mappingToTuple values
-                    nameOut = name `T.append` "_AsReln"
+                    nameOut = name `T.append` "_Function~AsReln"
                 case lookup nameOut lookupReprs of
-                    Nothing   -> bug $ vcat [ "workhorse.helper.AsReln 2", pretty name]
+                    Nothing   -> bug $ vcat [ "workhorse.helper.AsReln 2", pretty nameOut]
                     Just repr ->
                         helper
                             nameOut
@@ -478,7 +478,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             name
             [xMatch| [domInnerFr] := domain.function.innerFrom |]
             [xMatch| values := value.function.values |]
-            (Just "Matrix1D")
+            (Just "Function~Matrix1D")
             = do
                 let
                     mappingToTuple [xMatch| [a,b] := mapping |] = (a,b)
@@ -498,10 +498,10 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                    | domInners := domain.relation.inners
                    |]
             [xMatch| values := value.relation.values |]
-            (Just "RelationAsSet")
+            (Just "Relation~AsSet")
             = do
                 let
-                    nameOut = name `T.append` "_RelationAsSet"
+                    nameOut = name `T.append` "_Relation~AsSet"
                     domInnerOut = [xMake| domain.tuple.inners := domInners |]
                 case lookup nameOut lookupReprs of
                     Nothing   -> bug $ vcat [ "workhorse.helper.RelationAsSet", pretty name]
@@ -518,11 +518,11 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             name
             [xMatch| [da,db] := domain.relation.inners |]
             [xMatch| values  := value.relation.values |]
-            (Just "RelationIntMatrix2")
+            (Just "Relation~IntMatrix2")
             = do
                 da' <- instantiate [] da
                 db' <- instantiate [] db
-                let nameOut = name `T.append` "_RelationIntMatrix2"
+                let nameOut = name `T.append` "_Relation~IntMatrix2"
                 case (da', db') of
                     (  [xMatch| [aFr,aTo] := domain.int.ranges.range.fromTo |]
                      , [xMatch| [bFr,bTo] := domain.int.ranges.range.fromTo |]
@@ -542,7 +542,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                         let valueMatrix xs = [xMake| value.matrix.values := xs |]
                         let outMatrix' = valueMatrix $ map valueMatrix $ transpose outMatrix
                         return [(nameOut, outMatrix')]
-                    (_, _) -> bug $ vcat [ "workhorse.helper.RelationIntMatrix2", pretty name]
+                    (_, _) -> bug $ vcat [ "workhorse.helper.Relation~IntMatrix2", pretty name]
 
         helper
             name
