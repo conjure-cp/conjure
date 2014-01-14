@@ -3,7 +3,7 @@
 
 &r(&i,&j,&k) ~~> &refnr[&i,&j,&k]
 
-    where &r hasRepr RelationIntMatrix3
+    where &r hasRepr Relation~IntMatrix3
     where &r(&i,&j,&k) hasType `bool`
 
     letting &refnr be refn(&r)
