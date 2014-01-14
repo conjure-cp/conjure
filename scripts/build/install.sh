@@ -30,6 +30,16 @@ if [ $# -eq 1 ]; then
     JOBS="$1"
 fi
 
+if [ $JOBS -eq 0 ]; then
+    CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || 0 )
+    if [ $CORES -eq 0 ]; then
+        echo "Cannot tell how many cores the machine has. Will use only 1."
+    else
+        echo "This machine seems to have $CORES cores. Will use all."
+        JOBS=$CORES
+    fi
+fi
+
 WD="$(pwd)"
 mkdir -p dist/tools
 cd dist/tools
