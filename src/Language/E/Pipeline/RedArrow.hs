@@ -539,8 +539,10 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                                           ]
                                         | j <- [ bFr' .. bTo' ]
                                         ]
-                        let valueMatrix xs = [xMake| value.matrix.values := xs |]
-                        let outMatrix' = valueMatrix $ map valueMatrix $ transpose outMatrix
+                        let valueMatrix ind xs = [xMake| value.matrix.values     := xs
+                                                       | value.matrix.indexrange := [ind]
+                                                       |]
+                        let outMatrix' = valueMatrix da' $ map (valueMatrix db') $ transpose outMatrix
                         return [(nameOut, outMatrix')]
                     (_, _) -> bug $ vcat [ "workhorse.helper.Relation~IntMatrix2", pretty name]
 
