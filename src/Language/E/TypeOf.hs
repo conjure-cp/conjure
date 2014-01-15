@@ -795,6 +795,8 @@ innerTypeOf :: E -> Maybe E
 innerTypeOf [xMatch| [ty] := type.     set.inner  |] = return ty
 innerTypeOf [xMatch| [ty] := type.    mset.inner  |] = return ty
 innerTypeOf [xMatch| tys  := type.relation.inners |] = return [xMake| type.tuple.inners := tys |]
+innerTypeOf [xMatch| [fr] := type.function.innerFrom
+                   | [to] := type.function.innerTo |] = return [xMake| type.tuple.inners := [fr,to] |]
 innerTypeOf _ = Nothing
 
 
