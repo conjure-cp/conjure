@@ -478,13 +478,13 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             name
             [xMatch| [domInnerFr] := domain.function.innerFrom |]
             [xMatch| values := value.function.values |]
-            (Just "Function~Matrix1D")
+            (Just "Function~1D")
             = do
                 let
                     mappingToTuple [xMatch| [a,b] := mapping |] = (a,b)
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.Matrix1D", pretty p ]
                     (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
-                    nameOut = name `T.append` "_Matrix1D"
+                    nameOut = name `T.append` "_1D"
                 domInnerFr' <- instantiate [] domInnerFr
                 let
                     valueOut = [xMake| value.matrix.values     := actualValues
