@@ -81,11 +81,14 @@ cabal update
 HAS_HAPPY="$(which happy 2> /dev/null > /dev/null ; echo $?)" 
 if [ "$HAS_HAPPY" != 0 ] ; then
     echo "Installing happy"
+    mkdir -p dist/tools
+    pushd dist/tools
     cabal install happy -O2 \
         --force-reinstalls \
         --disable-documentation \
         --disable-library-profiling \
         --disable-executable-profiling
+    popd
 fi
 
 ghc --version
