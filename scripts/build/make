@@ -85,6 +85,7 @@ if options.jobs > 1
 else
     cmdBuildDeps << "-j1"
 end
+cmdBuild << "-j1"
 
 if options.documentation
     cmdBuildDeps << "--enable-documentation"
