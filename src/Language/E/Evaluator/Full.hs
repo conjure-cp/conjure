@@ -530,6 +530,11 @@ fullEvaluator [eMatch| preImage(&f,&x) |]
       in
         ret [xMake| value.set.values := ys |]
 
+fullEvaluator [eMatch| preImage(&f,&x) |]
+    | [xMatch| fValues := typed.left.value.function.values |] <- f
+    = let f' = [xMake| value.function.values := fValues |]
+      in  fullEvaluator [eMake| preImage(&f',&x) |]
+
 fullEvaluator [eMatch| defined(&f) |]
     | isFullyInstantiated f
     , [xMatch| fValues := value.function.values |] <- f
