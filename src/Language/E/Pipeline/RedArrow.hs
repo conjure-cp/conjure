@@ -673,7 +673,10 @@ instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
     case mdomain of
         Nothing -> return p
         Just [xMatch| _        := type.typeEnum             |] -> return p
-        Just [xMatch| _        := topLevel.letting.typeEnum |] -> return p
+        Just [xMatch| values := topLevel.letting.typeEnum.values |] -> do
+            let one = [eMake| 1 |]
+            let num = [xMake| value.literal := [Prim (I $ genericLength values)] |]
+            return [xMake| domain.int.ranges.range.fromTo := [one, num] |]
         Just [xMatch| [domain] := topLevel.letting.domain   |] -> instantiate (domId:seen) domain
         Just domain -> instantiate (domId:seen) domain
 
