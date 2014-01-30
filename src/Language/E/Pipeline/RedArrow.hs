@@ -485,7 +485,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.Matrix1D", pretty p ]
                     (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
                     nameOut = name `T.append` "_Function~1D"
-                domInnerFr' <- instantiate [] domInnerFr
+                domInnerFr' <- instantiateEnumDomains [] domInnerFr
                 let
                     valueOut = [xMake| value.matrix.values     := actualValues
                                      | value.matrix.indexrange := [domInnerFr']
@@ -520,8 +520,8 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             [xMatch| values  := value.relation.values |]
             (Just "Relation~IntMatrix2")
             = do
-                da' <- instantiate [] da
-                db' <- instantiate [] db
+                da' <- instantiateEnumDomains [] da
+                db' <- instantiateEnumDomains [] db
                 let nameOut = name `T.append` "_Relation~IntMatrix2"
                 case (da', db') of
                     (  [xMatch| [aFr,aTo] := domain.int.ranges.range.fromTo |]
@@ -673,14 +673,33 @@ instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
     case mdomain of
         Nothing -> return p
         Just [xMatch| _        := type.typeEnum             |] -> return p
-        Just [xMatch| values := topLevel.letting.typeEnum.values |] -> do
-            let one = [eMake| 1 |]
-            let num = [xMake| value.literal := [Prim (I $ genericLength values)] |]
-            return [xMake| domain.int.ranges.range.fromTo := [one, num] |]
+        Just [xMatch| _        := topLevel.letting.typeEnum |] -> return p
         Just [xMatch| [domain] := topLevel.letting.domain   |] -> instantiate (domId:seen) domain
         Just domain -> instantiate (domId:seen) domain
 
 instantiate seen (Tagged t xs) = Tagged t <$> mapM (instantiate seen) xs
 instantiate _ p = return p
+
+
+instantiateEnumDomains :: MonadConjure m => [Text] -> E -> m E
+
+instantiateEnumDomains _ p@[xMatch| _ := topLevel.letting  |] = return p
+
+instantiateEnumDomains seen [xMatch| [Prim (S domId)] := reference |]
+    | domId `elem` seen = userErr $ "Cyclic definition:" <+> fsep (map pretty seen)
+instantiateEnumDomains seen p@[xMatch| [Prim (S domId)] := reference |] = do
+    mdomain <- runMaybeT $ lookupReference domId
+    case mdomain of
+        Nothing -> return p
+        Just [xMatch| _        := type.typeEnum             |] -> return p
+        Just [xMatch| values := topLevel.letting.typeEnum.values |] -> do
+            let one = [eMake| 1 |]
+            let num = [xMake| value.literal := [Prim (I $ genericLength values)] |]
+            return [xMake| domain.int.ranges.range.fromTo := [one, num] |]
+        Just [xMatch| [domain] := topLevel.letting.domain   |] -> instantiateEnumDomains (domId:seen) domain
+        Just domain -> instantiate (domId:seen) domain
+
+instantiateEnumDomains seen (Tagged t xs) = Tagged t <$> mapM (instantiateEnumDomains seen) xs
+instantiateEnumDomains _ p = return p
 
 
