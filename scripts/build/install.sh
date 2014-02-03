@@ -18,6 +18,7 @@ export JOBS="$1"
 export GHC_VERSION="7.6.3"
 export OPTIMISED="optimised"
 export LLVM="llvm-off"
+export BIN_DIR="${HOME}/.cabal/bin"
 
 # where is this script?
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"

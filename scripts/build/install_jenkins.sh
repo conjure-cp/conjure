@@ -6,6 +6,7 @@
 # OPTIMISED:    set to "optimised" if you want an optimised build
 #               set to "non-optimised" if you don't
 # LLVM:         "llvm-on" / "llvm-off"
+# BIN_DIR:      where to save the conjure binary
 
 set -o errexit
 set -o nounset
@@ -22,6 +23,7 @@ else
 fi
 
 JOBS=${JOBS:-0}
+BIN_DIR=${BIN_DIR:-"dist/bin"}
 
 if [ $JOBS -le 0 ]; then
     echo "You didn't set JOBS to anything. Will try to use all CORES this machine has."
@@ -46,6 +48,7 @@ echo "GHC_VERSION   : ${GHC_VERSION}"
 echo "OPTIMISED     : ${OPTIMISED}"
 echo "LLVM          : ${LLVM}"
 echo "CABAL_VERSION : ${CABAL_VERSION}"
+echo "BIN_DIR       : ${BIN_DIR}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
@@ -108,18 +111,29 @@ echo "module RepositoryVersion where"       >  src/RepositoryVersion.hs
 echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
 echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
 
-# install conjure, finally
-if   [ $LLVM = "llvm-on"  ] && [ $OPTIMISED = "optimised"     ] ; then
-    scripts/build/make -Ol "-j${JOBS}"
-elif [ $LLVM = "llvm-on"  ] && [ $OPTIMISED = "non-optimised" ] ; then
-    scripts/build/make -l "-j${JOBS}"
-elif [ $LLVM = "llvm-off" ] && [ $OPTIMISED = "optimised"     ] ; then
-    scripts/build/make -O "-j${JOBS}"
-elif [ $LLVM = "llvm-off" ] && [ $OPTIMISED = "non-optimised" ] ; then
-    scripts/build/make "-j${JOBS}"
-else
-    echo "Something is wrong here."
-    echo "LLVM: ${LLVM}"
-    echo "OPTIMISED: ${OPTIMISED}"
+OPT="-O0"
+if [ $OPTIMISED = "optimised" ] ; then
+    OPT="-O2"
 fi
+
+if [ $LLVM = "llvm-on" ]; then
+    LLVM='--ghc-options="-fllvm"'
+else
+    LLVM=""
+fi
+
+# install conjure, finally
+
+cabal install                                                       \
+    --disable-documentation                                         \
+    --disable-library-profiling --disable-executable-profiling      \
+    --force-reinstalls                                              \
+    ${LLVM} ${OPT} --bindir="${BIN_DIR}" -j"${JOBS}"                \
+    --only-dependencies
+
+cabal install                                                       \
+    --disable-documentation                                         \
+    --disable-library-profiling --disable-executable-profiling      \
+    --force-reinstalls                                              \
+    ${LLVM} ${OPT} --bindir="${BIN_DIR}" -j1
 
