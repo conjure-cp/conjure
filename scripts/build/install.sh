@@ -15,10 +15,10 @@ set -o errexit
 set -o nounset
 
 export JOBS="$1"
-export GHC_VERSION="7.6.3"
-export OPTIMISED="optimised"
-export LLVM="llvm-off"
-export BIN_DIR="${HOME}/.cabal/bin"
+export GHC_VERSION=${GHC_VERSION:-"7.6.3"}
+export OPTIMISATION=${OPTIMISATION:-"-O2"}
+export LLVM=${LLVM:-"llvm-off"}
+export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 
 # where is this script?
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"

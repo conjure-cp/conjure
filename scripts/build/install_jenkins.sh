@@ -3,8 +3,7 @@
 # Use environment variables to configure this install script.
 # JOBS:         number of parallel jobs to use while compiling
 # GHC_VERSION:  version of ghc to use. the script will download and install ghc under ~/.tools/ghc if not installed.
-# OPTIMISED:    set to "optimised" if you want an optimised build
-#               set to "non-optimised" if you don't
+# OPTIMISATION: "-O0" / "-O1" / "-O2"
 # LLVM:         "llvm-on" / "llvm-off"
 # BIN_DIR:      where to save the conjure binary
 
@@ -45,7 +44,7 @@ CABAL_VERSION="1.18.0.2"
 echo "JOBS          : ${JOBS}"
 echo "CORES         : ${CORES}"
 echo "GHC_VERSION   : ${GHC_VERSION}"
-echo "OPTIMISED     : ${OPTIMISED}"
+echo "OPTIMISATION  : ${OPTIMISATION}"
 echo "LLVM          : ${LLVM}"
 echo "CABAL_VERSION : ${CABAL_VERSION}"
 echo "BIN_DIR       : ${BIN_DIR}"
@@ -112,10 +111,6 @@ echo "module RepositoryVersion where"       >  src/RepositoryVersion.hs
 echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
 echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
 
-OPT="-O0"
-if [ $OPTIMISED = "optimised" ] ; then
-    OPT="-O2"
-fi
 
 if [ $LLVM = "llvm-on" ]; then
     LLVM='--ghc-options="-fllvm"'
@@ -129,12 +124,12 @@ cabal install                                                       \
     --disable-documentation                                         \
     --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
-    ${LLVM} ${OPT} --bindir="${BIN_DIR}" -j"${JOBS}"                \
+    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${JOBS}"       \
     --only-dependencies
 
 cabal install                                                       \
     --disable-documentation                                         \
     --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
-    ${LLVM} ${OPT} --bindir="${BIN_DIR}" -j1
+    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j1
 
