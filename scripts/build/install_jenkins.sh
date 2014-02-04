@@ -118,6 +118,17 @@ else
     LLVM=""
 fi
 
+
+# init sandbox if it doesn't exist
+
+if [ -f cabal.sandbox.config ]; then
+    echo "Reusing existing cabal sandbox."
+else
+    echo "Initialising cabal sandbox."
+    cabal sandbox init
+fi
+
+
 # install conjure, finally
 
 cabal install                                                       \
