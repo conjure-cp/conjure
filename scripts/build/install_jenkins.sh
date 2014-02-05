@@ -67,7 +67,7 @@ else
     mkdir -p "${HOME}/.tools/ghc"
     ./configure --prefix="${HOME}/.tools/ghc/${GHC_VERSION}"
     make install
-    popd ..
+    popd
     rm -rf "ghc-${GHC_VERSION}-x86_64-${PLATFORM}.tar.bz2" "ghc-${GHC_VERSION}"
 fi
 
@@ -81,7 +81,7 @@ else
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
     bash bootstrap.sh
-    popd ..
+    popd
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
 fi
 
