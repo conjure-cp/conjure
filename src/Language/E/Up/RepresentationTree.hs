@@ -19,6 +19,7 @@ orgNames :: [String] -> M.Map String [[String]]
 orgNames arr = orgNames' M.empty $ map (recombine .  splitOn "_") arr
 
 --  list of all Representations 
+rep_names :: [String]
 rep_names = [
     "Function1D",
     "FunctionAsReln",
@@ -39,7 +40,7 @@ rep_names = [
     ]
 
 recombine :: [String] -> [String]
-recombine a@(c:x:_) | "tuple" `isPrefixOf` x  = a
+recombine a@(_:x:_) | "tuple" `isPrefixOf` x  = a
 recombine (c:x:xs) | x `notElem` rep_names  = (c ++ "_" ++  x) : xs
 recombine a  = a
 
