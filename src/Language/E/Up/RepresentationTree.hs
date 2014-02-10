@@ -34,7 +34,8 @@ rep_names = [
     "SetExplicitVarSizeWithMarker",
     "SetOccurrence",
     "AsReln",
-    "Matrix1D"
+    "Matrix1D",
+    "MSetOfSets"
     ]
 
 recombine :: [String] -> [String]
