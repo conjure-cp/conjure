@@ -251,6 +251,12 @@ fullEvaluator
 
 fullEvaluator
     [xMatch| [x] := operator.twoBars
+           | _   := operator.twoBars.domain
+           |]
+    = ret [eMake| domSize(&x) |]
+
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
            | xs  := operator.twoBars.value.set.values
            |]
     | isFullyInstantiated x
