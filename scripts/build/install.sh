@@ -14,7 +14,7 @@
 set -o errexit
 set -o nounset
 
-export JOBS="$1"
+export CORES=${CORES:-0}
 export GHC_VERSION=${GHC_VERSION:-"7.6.3"}
 export OPTIMISATION=${OPTIMISATION:-"-O2"}
 export LLVM=${LLVM:-"llvm-off"}

@@ -1,7 +1,7 @@
 #/bin/bash
 
 # Use environment variables to configure this install script.
-# JOBS:         number of parallel jobs to use while compiling
+# CORES:        number of cores to use while compiling
 # GHC_VERSION:  version of ghc to use. the script will download and install ghc under ~/.tools/ghc if not installed.
 # OPTIMISATION: "-O0" / "-O1" / "-O2"
 # LLVM:         "llvm-on" / "llvm-off"
@@ -21,33 +21,35 @@ else
     exit 1
 fi
 
-JOBS=${JOBS:-0}
 BIN_DIR=${BIN_DIR:-"dist/bin"}
 
-if [ $JOBS -le 0 ]; then
-    echo "You didn't set JOBS to anything. Will try to use all CORES this machine has."
-    CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || 0 )
-    if [ $CORES -eq 0 ]; then
+AVAILABLE_CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || 0 )
+
+if [ $CORES -le 0 ]; then
+    echo "CORES is set to 0. Will try to use all cores on the machine."
+    if [ $AVAILABLE_CORES -le 0 ]; then
         echo "Cannot tell how many cores the machine has. Will use only 1."
+        USE_CORES=1
     else
-        echo "This machine seems to have $CORES cores. Will use all."
-        JOBS=$CORES
+        echo "This machine seems to have $AVAILABLE_CORES cores. Will use all."
+        USE_CORES=$AVAILABLE_CORES
     fi
 else
-    CORES="${JOBS}"
-    echo "Using ${CORES} cores."
+    USE_CORES=$CORES
+    echo "Using ${USE_CORES} cores."
 fi
 
 CABAL_VERSION="1.18.0.2"
 
 
-echo "JOBS          : ${JOBS}"
-echo "CORES         : ${CORES}"
-echo "GHC_VERSION   : ${GHC_VERSION}"
-echo "OPTIMISATION  : ${OPTIMISATION}"
-echo "LLVM          : ${LLVM}"
-echo "CABAL_VERSION : ${CABAL_VERSION}"
-echo "BIN_DIR       : ${BIN_DIR}"
+echo "CORES           : ${CORES}"
+echo "AVAILABLE_CORES : ${AVAILABLE_CORES}"
+echo "USE_CORES       : ${USE_CORES}"
+echo "GHC_VERSION     : ${GHC_VERSION}"
+echo "OPTIMISATION    : ${OPTIMISATION}"
+echo "LLVM            : ${LLVM}"
+echo "CABAL_VERSION   : ${CABAL_VERSION}"
+echo "BIN_DIR         : ${BIN_DIR}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
@@ -130,7 +132,7 @@ cabal install                                                       \
     --disable-documentation                                         \
     --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
-    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${JOBS}"       \
+    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"  \
     --only-dependencies
 
 cabal install                                                       \

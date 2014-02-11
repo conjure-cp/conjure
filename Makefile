@@ -1,9 +1,7 @@
 .PHONY: install rules clean
 
-CORES = 0
-
 install:
-	bash scripts/build/install.sh $(CORES)
+	bash scripts/build/install.sh
 
 rules:
 	conjureBF makeRulesDB `find files/rules -type f`
