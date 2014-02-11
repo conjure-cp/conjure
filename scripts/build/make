@@ -45,18 +45,7 @@ OptionParser.new do |opts|
 
 end.parse!
 
-version  = `hg id -i | head -n 1`.strip[0..11]
-contents = [ "module RepositoryVersion where",
-             "repositoryVersion :: String",
-             "repositoryVersion = \"#{version}\""
-           ].join("\n")
-unless File.exists?("src/RepositoryVersion.hs") && contents == File.read("src/RepositoryVersion.hs")
-    File.open("src/RepositoryVersion.hs", "w") do |file|
-        file.write(contents)
-    end
-    puts "Generated file: src/RepositoryVersion.hs with version #{version}"
-end
-
+`scripts/build/version.sh`
 
 unless File.exists?(".cabal-sandbox")
     puts "Creating cabal sandbox"

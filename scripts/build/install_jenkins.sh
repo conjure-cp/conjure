@@ -105,12 +105,7 @@ ghc   --version
 cabal --version
 happy --version
 
-VERSION=$(hg id -i | head -n 1)
-echo "Generating src/RepositoryVersion.hs with version ${VERSION}."
-echo "module RepositoryVersion where"       >  src/RepositoryVersion.hs
-echo "repositoryVersion :: String"          >> src/RepositoryVersion.hs
-echo "repositoryVersion = \"${VERSION}\""   >> src/RepositoryVersion.hs
-
+scripts/build/version.sh
 
 if [ $LLVM = "llvm-on" ]; then
     LLVM='--ghc-options="-fllvm"'
