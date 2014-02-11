@@ -23,7 +23,7 @@ main = defaultMainWithHooks $ simpleUserHooks
 copyScripts :: PackageDescription -> LocalBuildInfo -> CopyDest -> IO ()
 copyScripts pkg local copy = do
     let dirs = absoluteInstallDirs pkg local copy
-    copyFile "scripts/run/conjure-server" (bindir dirs </> "conjure-server")
+    -- copyFile "scripts/run/conjure-server" (bindir dirs </> "conjure-server")
     ruleFiles <- filter (\ f -> ".rule" `isSuffixOf` f || ".repr" `isSuffixOf` f ) <$> allFiles "files/rules"
     void $ rawSystem "conjureBF" ("makeRulesDB" : ruleFiles)
 
