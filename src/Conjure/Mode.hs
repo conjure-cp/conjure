@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Conjure.Mode where
 
 import Control.Monad ( (>=>), guard, msum, mzero )
@@ -363,5 +364,6 @@ isFlag = (`elem` allFlags)
     where
         allFlags = [ "--better"
                    , "--pretty"
+                   , "--no-dontCare"
                    ]
 

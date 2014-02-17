@@ -1084,9 +1084,10 @@ domSize p =
 choose :: E -> E -> E
 choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
 
-evalDontCare :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-evalDontCare [eMatch| dontCare(&i) |] = ret =<< dontCare i
-evalDontCare _ = return Nothing
+evalDontCare :: MonadConjure m => Bool -> E -> m (Maybe (E,[Binder]))
+evalDontCare False [eMatch| dontCare(&_) |] = ret [eMake| true |]
+evalDontCare True  [eMatch| dontCare(&i) |] = ret =<< dontCare i
+evalDontCare _ _ = return Nothing
 
 dontCare :: MonadConjure m => E -> m E
 dontCare p = do
@@ -1099,7 +1100,24 @@ dontCare p = do
         dontCareDom [xMatch| (r:_) := domain.int.ranges   |] = dontCareRange r
         dontCareDom [xMatch| _     := domain.int          |] = return [eMake| 0 |]
         dontCareDom [xMatch| xs    := domain.tuple.inners |] = (\ ys -> [xMake| value.tuple.values := ys |] ) <$> mapM dontCareDom xs
+        dontCareDom [xMatch| [tau] := domain.set.inner
+                           | attrs := domain.set.attributes.attrCollection
+                           |] = dontCareDomSet tau attrs
+        -- dontCareDom dom = error $ show $ vcat [ "dontCareDom", pretty dom, prettyAsPaths dom ]
         dontCareDom _ = Nothing
+
+        dontCareDomSet tau attrs
+            | Just size <- lookupAttr "size" attrs
+            , [xMatch| [Prim (I sizeInt)] := value.literal |] <- size
+            = do x <- dontCareDom tau
+                 return [xMake| value.set.values := replicate (fromInteger sizeInt) x |]
+        dontCareDomSet tau attrs
+            | Just size <- lookupAttr "minSize" attrs
+            , [xMatch| [Prim (I sizeInt)] := value.literal |] <- size
+            = do x <- dontCareDom tau
+                 return [xMake| value.set.values := replicate (fromInteger sizeInt) x |]
+        dontCareDomSet _tau _
+            = return [xMake| value.set.values := [] |]
 
         dontCareRange [xMatch| [x]   := range.single |] = return x
         dontCareRange [xMatch| [x]   := range.from   |] = return x
