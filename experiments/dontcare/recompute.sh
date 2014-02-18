@@ -38,6 +38,11 @@ function srAll() {
 }
 export -f srAll
 
+function report_unsat() {
+    grep MinionSolutionsFound:0 */*/*/*.info | cut -d ':' -f 1 | cut -d '.' -f 1
+}
+export -f report_unsat
+
 
 function report_nodes() {
     grep MinionNodes */*/*/*.info
