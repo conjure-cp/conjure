@@ -1106,18 +1106,20 @@ dontCare p = do
         -- dontCareDom dom = error $ show $ vcat [ "dontCareDom", pretty dom, prettyAsPaths dom ]
         dontCareDom _ = Nothing
 
-        dontCareDomSet tau attrs
-            | Just size <- lookupAttr "size" attrs
-            , [xMatch| [Prim (I sizeInt)] := value.literal |] <- size
-            = do x <- dontCareDom tau
-                 return [xMake| value.set.values := replicate (fromInteger sizeInt) x |]
-        dontCareDomSet tau attrs
-            | Just size <- lookupAttr "minSize" attrs
-            , [xMatch| [Prim (I sizeInt)] := value.literal |] <- size
-            = do x <- dontCareDom tau
-                 return [xMake| value.set.values := replicate (fromInteger sizeInt) x |]
-        dontCareDomSet _tau _
-            = return [xMake| value.set.values := [] |]
+        dontCareDomSet tau attrs = do
+            let msize    = lookupAttr "size"    attrs
+            let mminSize = lookupAttr "minSize" attrs
+            case msize <|> mminSize of
+                Just size
+                    | [xMatch| [Prim (I sizeInt)] := value.literal |] <- size
+                    -> do
+                        x <- dontCareDom tau
+                        let xs = [ [eMake| &x + &i |]
+                                 | iInt <- [0..sizeInt-1]
+                                 , let i = [xMake| value.literal := [Prim (I iInt)] |]
+                                 ]
+                        return [xMake| value.set.values := xs |]
+                _ -> Nothing
 
         dontCareRange [xMatch| [x]   := range.single |] = return x
         dontCareRange [xMatch| [x]   := range.from   |] = return x
