@@ -19,16 +19,25 @@ export -f conjureInAllDirs
 
 function srOne() {
     BASE="$1"
+    DIR="$( cd "$( dirname "${BASE}.eprime" )" && pwd )"
     echo "Running Savile Row on ${BASE}"
     savilerow                                                           \
         -boundvars                                                      \
         -deletevars                                                     \
         -run-minion     minion                                          \
-        -in-eprime      "${BASE}.eprime"                                \
-        -out-minion     "${BASE}.minion"                                \
-        -out-info       "${BASE}.info"                                  \
-        -out-solution   "${BASE}.eprime-solution" 2> "${BASE}.stderr" | tee "${BASE}.stdout"
+        -in-eprime      ${BASE}.eprime                                  \
+        -out-minion     ${BASE}.minion                                  \
+        -out-info       ${BASE}.info                                    \
+        -out-solution   ${BASE}.eprime-solution 2> ${BASE}.stderr | tee ${BASE}.stdout
     rm -f "${BASE}.minion.aux" "${BASE}.infor"
+
+    echo "Running Conjure on the solutions"
+    conjure                                                             \
+        --mode translateSolution                                        \
+        --in-essence            ${DIR}/../*.essence                     \
+        --in-eprime             ${BASE}.eprime                          \
+        --in-eprime-solution    ${BASE}.eprime-solution                 \
+        --out-essence-solution  ${BASE}.solution
 }
 export -f srOne
 
