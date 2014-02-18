@@ -31,13 +31,13 @@ function srOne() {
         -out-solution   ${BASE}.eprime-solution 2> ${BASE}.stderr | tee ${BASE}.stdout
     rm -f "${BASE}.minion.aux" "${BASE}.infor"
 
-    echo "Running Conjure on the solutions"
-    conjure                                                             \
-        --mode translateSolution                                        \
-        --in-essence            ${DIR}/../*.essence                     \
-        --in-eprime             ${BASE}.eprime                          \
-        --in-eprime-solution    ${BASE}.eprime-solution                 \
-        --out-essence-solution  ${BASE}.solution
+    # echo "Running Conjure on the solutions"
+    # conjure                                                             \
+    #     --mode translateSolution                                        \
+    #     --in-essence            ${DIR}/../*.essence                     \
+    #     --in-eprime             ${BASE}.eprime                          \
+    #     --in-eprime-solution    ${BASE}.eprime-solution                 \
+    #     --out-essence-solution  ${BASE}.solution
 }
 export -f srOne
 
