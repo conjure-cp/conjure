@@ -14,7 +14,7 @@ export -f conjureInDir
 
 
 function conjureInAllDirs() {
-    parallel conjureInDir ::: Set-ExplicitVarSize/01 Set-ExplicitVarSize/02
+    parallel conjureInDir ::: Set-ExplicitVarSize/01 Set-ExplicitVarSize/02 Set-ExplicitVarSize/03 Set-ExplicitVarSize/04
 }
 export -f conjureInAllDirs
 
@@ -46,17 +46,28 @@ function report_nodes() {
 }
 export -f report_nodes
 
+
 function report_minionTimes() {
     grep MinionSolveTime Set-ExplicitVarSize/*/*/*.info
 }
 export -f report_minionTimes
 
+
 function recompute() {
+    echo "recomputing..."
     conjureInAllDirs
     srAll
     echo "recomputed, happy?"
 }
 export -f recompute
+
+
+function clean() {
+    rm -rf Set-ExplicitVarSize/*/*DontCare
+    rm -f Set-ExplicitVarSize/*/*.stdout
+    rm -f Set-ExplicitVarSize/*/*.stderr
+}
+export -f
 
 # report_nodes
 # report_minionTimes
