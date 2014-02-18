@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -o nounset
-
 
 function conjureInDir() {
     pushd "$1"
@@ -68,7 +66,4 @@ function clean() {
     rm -f Set-ExplicitVarSize/*/*.stderr
 }
 export -f
-
-# report_nodes
-# report_minionTimes
 
