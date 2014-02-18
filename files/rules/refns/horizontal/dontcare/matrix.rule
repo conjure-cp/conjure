@@ -1,6 +1,6 @@
 [1000]
 
-dontCare(&m) ~~> forAll i : &r . dontCare(&m[i])
+dontCare(&x) ~~> forAll i : &r . dontCare(&x[i])
 
-    where   &m hasDomain `matrix indexed by [&r] of _`
+    where &x hasDomain `matrix indexed by [&r] of _`
 

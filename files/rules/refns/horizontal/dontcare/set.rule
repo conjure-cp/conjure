@@ -1,6 +1,6 @@
 [1000]
 
-dontCare(&s) ~~> forAll i in &s . dontCare(i)
+dontCare(&x) ~~> forAll i in &x . dontCare(i)
 
-    where &s hasType `set of _`
+    where &x hasType `set of _`
 

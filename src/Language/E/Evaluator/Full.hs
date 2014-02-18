@@ -1087,14 +1087,30 @@ choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
 evalDontCare :: MonadConjure m => Bool -> E -> m (Maybe (E,[Binder]))
 evalDontCare False [eMatch| dontCare(&_) |] = ret [eMake| true |]
 evalDontCare True  [eMatch| dontCare(&a) |] = do
-    ta <- typeOf a
-    case ta of
-        [xMatch| is := type.tuple.inners |] ->
-            ret $ conjunct [ [eMake| dontCare(&a[&i]) |]
-                           | j <- [1..genericLength is]
-                           , let i = [xMake| value.literal := [Prim (I j)] |]
-                           ]
-        _ -> return Nothing
+    let
+        bottomOfDomain [xMatch| _     := domain.bool         |] = return [eMake| false |]
+        bottomOfDomain [xMatch| (r:_) := domain.int.ranges   |] = bottomOfRange r
+        bottomOfDomain [xMatch| _     := domain.int          |] = return [eMake| 0 |]
+        bottomOfDomain _ = Nothing
+
+        bottomOfRange [xMatch| [x]   := range.single |] = return x
+        bottomOfRange [xMatch| [x]   := range.from   |] = return x
+        bottomOfRange [xMatch| [x]   := range.to     |] = return x
+        bottomOfRange [xMatch| [x,_] := range.fromTo |] = return x
+        bottomOfRange _ = Nothing
+
+    da <- domainOf a
+    case bottomOfDomain da of
+        Just v  -> ret [eMake| &a = &v |]
+        Nothing -> do
+            ta <- typeOf a
+            case ta of
+                [xMatch| is := type.tuple.inners |] ->
+                    ret $ conjunct [ [eMake| dontCare(&a[&i]) |]
+                                   | j <- [1..genericLength is]
+                                   , let i = [xMake| value.literal := [Prim (I j)] |]
+                                   ]
+                _ -> return Nothing
 -- evalDontCare True  [eMatch| dontCare(&i) |] = ret [eMake| dontCare(&i) |]
     -- error $ show $ vcat [ "dontCareDom", pretty i, prettyAsPaths i ]
 evalDontCare _ _ = return Nothing
