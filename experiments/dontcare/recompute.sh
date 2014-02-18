@@ -12,7 +12,7 @@ export -f conjureInDir
 
 
 function conjureInAllDirs() {
-    parallel conjureInDir ::: Set-ExplicitVarSize/01 Set-ExplicitVarSize/02 Set-ExplicitVarSize/03 Set-ExplicitVarSize/04
+    parallel conjureInDir ::: */*
 }
 export -f conjureInAllDirs
 
@@ -34,19 +34,19 @@ export -f srOne
 
 
 function srAll() {
-    parallel srOne {.} ::: $(find Set-ExplicitVarSize -name "*.eprime")
+    parallel srOne {.} ::: $(find . -name "*.eprime")
 }
 export -f srAll
 
 
 function report_nodes() {
-    grep MinionNodes Set-ExplicitVarSize/*/*/*.info
+    grep MinionNodes */*/*/*.info
 }
 export -f report_nodes
 
 
 function report_minionTimes() {
-    grep MinionSolveTime Set-ExplicitVarSize/*/*/*.info
+    grep MinionSolveTime */*/*/*.info
 }
 export -f report_minionTimes
 
@@ -61,9 +61,9 @@ export -f recompute
 
 
 function clean() {
-    rm -rf Set-ExplicitVarSize/*/*DontCare
-    rm -f Set-ExplicitVarSize/*/*.stdout
-    rm -f Set-ExplicitVarSize/*/*.stderr
+    rm -rf */*/*DontCare    \
+           */*/*.stdout     \
+           */*/*.stderr
 }
 export -f
 

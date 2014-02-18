@@ -1,0 +1,22 @@
+
+~~> Function~1DPartial
+~~> matrix indexed by [&fr] of (bool,&to)
+
+    where &fr hasType `int`
+
+
+*** function &fr --> &to
+
+*** function (injective) &fr --> &to
+    ~~> (forAll i,j : &fr , i != j /\ refn[i,1] /\ refn[j,1] . refn[i,2] != refn[j,2])        $ injective
+
+*** function (surjective) &fr --> &to
+    ~~> (forAll i : &to . exists j : &fr , refn[j,1] . refn[j,2] = i)                         $ surjective
+
+*** function (injective, surjective) &fr --> &to
+    ~~> (forAll i,j : &fr , i != j /\ refn[i,1] /\ refn[j,1] . refn[i,2] != refn[j,2])        $ injective
+    /\  (forAll i : &to . exists j : &fr , refn[j,1] . refn[j,2] = i)                         $ surjective
+
+*** function (bijective) &fr --> &to
+    ~~> (forAll i,j : &fr , i != j /\ refn[i,1] /\ refn[j,1] . refn[i,2] != refn[j,2])        $ injective
+    /\  (forAll i : &to . exists j : &fr , refn[j,1] . refn[j,2] = i)                         $ surjective
