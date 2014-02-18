@@ -1086,46 +1086,18 @@ choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
 
 evalDontCare :: MonadConjure m => Bool -> E -> m (Maybe (E,[Binder]))
 evalDontCare False [eMatch| dontCare(&_) |] = ret [eMake| true |]
-evalDontCare True  [eMatch| dontCare(&i) |] = ret =<< dontCare i
+evalDontCare True  [eMatch| dontCare(&a) |] = do
+    ta <- typeOf a
+    case ta of
+        [xMatch| is := type.tuple.inners |] ->
+            ret $ conjunct [ [eMake| dontCare(&a[&i]) |]
+                           | j <- [1..genericLength is]
+                           , let i = [xMake| value.literal := [Prim (I j)] |]
+                           ]
+        _ -> return Nothing
+-- evalDontCare True  [eMatch| dontCare(&i) |] = ret [eMake| dontCare(&i) |]
+    -- error $ show $ vcat [ "dontCareDom", pretty i, prettyAsPaths i ]
 evalDontCare _ _ = return Nothing
-
-dontCare :: MonadConjure m => E -> m E
-dontCare p = do
-    d <- domainOf p
-    return $ case dontCareDom d of
-        Nothing -> [eMake| true |]
-        Just v  -> [eMake| &p = &v |]
-    where
-        dontCareDom [xMatch| _     := domain.bool         |] = return [eMake| false |]
-        dontCareDom [xMatch| (r:_) := domain.int.ranges   |] = dontCareRange r
-        dontCareDom [xMatch| _     := domain.int          |] = return [eMake| 0 |]
-        dontCareDom [xMatch| xs    := domain.tuple.inners |] = (\ ys -> [xMake| value.tuple.values := ys |] ) <$> mapM dontCareDom xs
-        dontCareDom [xMatch| [tau] := domain.set.inner
-                           | attrs := domain.set.attributes.attrCollection
-                           |] = dontCareDomSet tau attrs
-        -- dontCareDom dom = error $ show $ vcat [ "dontCareDom", pretty dom, prettyAsPaths dom ]
-        dontCareDom _ = Nothing
-
-        dontCareDomSet tau attrs = do
-            let msize    = lookupAttr "size"    attrs
-            let mminSize = lookupAttr "minSize" attrs
-            case msize <|> mminSize of
-                Just size
-                    | [xMatch| [Prim (I sizeInt)] := value.literal |] <- size
-                    -> do
-                        x <- dontCareDom tau
-                        let xs = [ [eMake| &x + &i |]
-                                 | iInt <- [0..sizeInt-1]
-                                 , let i = [xMake| value.literal := [Prim (I iInt)] |]
-                                 ]
-                        return [xMake| value.set.values := xs |]
-                _ -> Nothing
-
-        dontCareRange [xMatch| [x]   := range.single |] = return x
-        dontCareRange [xMatch| [x]   := range.from   |] = return x
-        dontCareRange [xMatch| [x]   := range.to     |] = return x
-        dontCareRange [xMatch| [x,_] := range.fromTo |] = return x
-        dontCareRange _ = Nothing
 
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))

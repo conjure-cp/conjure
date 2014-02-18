@@ -1,0 +1,6 @@
+[1000]
+
+dontCare(&m) ~~> forAll i : &r . dontCare(&m[i])
+
+    where   &m hasDomain `matrix indexed by [&r] of _`
+

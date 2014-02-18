@@ -1,0 +1,6 @@
+[1000]
+
+dontCare(&s) ~~> forAll i in &s . dontCare(i)
+
+    where &s hasType `set of _`
+

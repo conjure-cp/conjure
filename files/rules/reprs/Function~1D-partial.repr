@@ -1,6 +1,7 @@
 
 ~~> Function~1DPartial
 ~~> matrix indexed by [&fr] of (bool,&to)
+~~> forAll i : &fr , !refn[i,1] . dontCare(refn[i,2])
 
     where &fr hasType `int`
 
