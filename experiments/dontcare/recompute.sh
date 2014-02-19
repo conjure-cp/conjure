@@ -22,6 +22,7 @@ function srOne() {
     DIR="$( cd "$( dirname "${BASE}.eprime" )" && pwd )"
     echo "Running Savile Row on ${BASE}"
     savilerow                                                           \
+        -minion-options "-timelimit 600"                                \
         -boundvars                                                      \
         -deletevars                                                     \
         -run-minion     minion                                          \
