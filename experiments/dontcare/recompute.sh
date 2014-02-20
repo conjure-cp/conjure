@@ -1,18 +1,25 @@
 #!/bin/bash
 
 
-function conjureInDir() {
-    pushd "$1"
-    echo "conjureInDir working in directory: $(pwd)"
+function conjureInDir_noDontCare() {
+    pushd "$1" > /dev/null
+    echo "conjureInDir_noDontCare working in directory: $(pwd)"
     conjure --mode df --in *.essence --no-dontCare --out noDontCare   +RTS -s 2> "noDontCare.stderr"   | tee "noDontCare.stdout"
-    conjure --mode df --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.stderr" | tee "usesDontCare.stdout"
-    popd
+    popd > /dev/null
 }
-export -f conjureInDir
+export -f conjureInDir_noDontCare
+
+function conjureInDir_usesDontCare() {
+    pushd "$1" > /dev/null
+    echo "conjureInDir_usesDontCare working in directory: $(pwd)"
+    conjure --mode df --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.stderr" | tee "usesDontCare.stdout"
+    popd > /dev/null
+}
+export -f conjureInDir_usesDontCare
 
 
 function conjureInAllDirs() {
-    parallel conjureInDir ::: */*
+    parallel {1} {2} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*
 }
 export -f conjureInAllDirs
 
@@ -70,6 +77,7 @@ function recompute() {
     echo "recomputing..."
     conjureInAllDirs
     srAll
+    parallel -j1 "echo removing {} ; rm {}" ::: $(find . -size 0 )
     echo "recomputed, happy?"
 }
 export -f recompute
