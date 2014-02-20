@@ -7,6 +7,10 @@ import Language.E
 import Language.E.Pipeline.FreshNames
 import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
 
+import Safe ( lastNote )
+import qualified Data.Text as T
+
+
 
 -- given a list of RuleReprs, returns a function which
 -- accepts a domain and returns a list of domains
@@ -125,8 +129,33 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                         let renameTo = [xMake| reference := [Prim (S newName)] |]
                                         (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) (freshQuanVar "applyToInnerDomain")
                                         let renameToIndexed = mkIndexedExpr loopVars renameTo
+
+                                        let theGuard | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` origName
+                                                     = let b = mkIndexedExpr loopVars [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSize_tuple1"])] |]
+                                                       in  [eMake| &b = true |]
+                                                     | Just base <- "_Set~ExplicitVarSizeWithMarker_tuple2" `T.stripSuffix` origName
+                                                     = let b = [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
+                                                           lastLoopVar = lastNote "RuleRefnToFunction" loopVars
+                                                       in  [eMake| &lastLoopVar <= &b |]
+                                                     | otherwise = error $ show $ vcat [ "don't know which guard to use for structural!"
+                                                                                       , pretty origName
+                                                                                       ]
+
+                                        mkLog "RuleRefnToFunction theGuard" $ pretty theGuard
+
+                                        mkLog "RuleRefnToFunction 0.0" $ pretty origName
+                                        mkLog "RuleRefnToFunction 0.1" $ pretty renameTo
+                                        mkLog "RuleRefnToFunction 0.2" $ pretty renameToIndexed
+                                        mkLog "RuleRefnToFunction 1" $ vcat $ map pretty loopVarStrs
+                                        mkLog "RuleRefnToFunction 2" $ vcat $ map pretty is
+                                        mkLog "RuleRefnToFunction 3" $ pretty con
+                                        mkLog "RuleRefnToFunction 4" $ pretty $ renRefn renameToIndexed con
+                                        mkLog "RuleRefnToFunction 5" $ pretty $ inForAlls (zip loopVarStrs is) 
+                                                           ( theGuard
+                                                           , renRefn renameToIndexed con
+                                                           )
                                         return $ inForAlls (zip loopVarStrs is) 
-                                                           ( [xMake| emptyGuard := [] |]
+                                                           ( theGuard
                                                            , renRefn renameToIndexed con
                                                            )
 
