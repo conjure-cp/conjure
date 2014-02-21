@@ -1,8 +1,7 @@
 
 ~~> Function~1DPartial
 ~~> matrix indexed by [&fr] of (bool,&to)
-~~> (forAll i,j : &fr , i < j . refn[i,1] >= refn[j,1])
-/\  (forAll i : &fr , !refn[i,1] . dontCare(refn[i,2]))
+~~> (forAll i : &fr , !refn[i,1] . dontCare(refn[i,2]))
 
     where &fr hasType `int`
 
