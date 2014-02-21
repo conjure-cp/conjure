@@ -19,7 +19,7 @@ export -f conjureInDir_usesDontCare
 
 
 function conjureInAllDirs() {
-    parallel {1} {2} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*
+    parallel {1} {2} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: */*
 }
 export -f conjureInAllDirs
 
