@@ -130,7 +130,10 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                         (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) (freshQuanVar "applyToInnerDomain")
                                         let renameToIndexed = mkIndexedExpr loopVars renameTo
 
-                                        let theGuard | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` origName
+                                        useDontCare <- gets flag_UseDontCare
+                                        let emptyGuard = [xMake| emptyGuard := [] |]
+                                        let theGuard | not useDontCare = emptyGuard
+                                                     | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` origName
                                                      = let b = mkIndexedExpr loopVars [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSize_tuple1"])] |]
                                                        in  [eMake| &b = true |]
                                                      | Just base <- "_Set~ExplicitVarSizeWithMarker_tuple2" `T.stripSuffix` origName
@@ -138,7 +141,7 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                            lastLoopVar = lastNote "RuleRefnToFunction" loopVars
                                                        in  [eMake| &lastLoopVar <= &b |]
                                                      | Just _ <- "_Set~Explicit" `T.stripSuffix` origName
-                                                     = [xMake| emptyGuard := [] |]
+                                                     = emptyGuard
                                                      | otherwise = error $ show $ vcat [ "don't know which guard to use for structural!"
                                                                                        , pretty origName
                                                                                        ]
