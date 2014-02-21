@@ -137,6 +137,8 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                      = let b = [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
                                                            lastLoopVar = lastNote "RuleRefnToFunction" loopVars
                                                        in  [eMake| &lastLoopVar <= &b |]
+                                                     | Just _ <- "_Set~Explicit" `T.stripSuffix` origName
+                                                     = [xMake| emptyGuard := [] |]
                                                      | otherwise = error $ show $ vcat [ "don't know which guard to use for structural!"
                                                                                        , pretty origName
                                                                                        ]
