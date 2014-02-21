@@ -1,6 +1,10 @@
 [1000]
 
-dontCare(&x) ~~> forAll i in &x . dontCare(i)
+dontCare(&x) ~~> dontCare(refn(&x))
 
-    where &x hasType `set of _`
+    where (&x hasRepr Set~Explicit) \/
+          (&x hasRepr Set~ExplicitVarSize) \/
+          (&x hasRepr Set~ExplicitVarSizeWithMarker) \/
+          (&x hasRepr Set~ExplicitVarSizeWithDefault) \/
+          (&x hasRepr Set~Occurrence)
 
