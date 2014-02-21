@@ -1,0 +1,16 @@
+language Essence 1.3
+
+$ given n : int
+letting n be 4
+letting ROW, COL be domain int(1..n)
+
+find queenAtRow : function (injective) ROW --> COL
+$ find dominated  : relation (size n*n) of (ROW * COL)
+
+such that
+    3 = sum i in toSet(queenAtRow) . 1,
+    $ forAll (r,c) in toSet(queenAtRow) . (
+    $     (forAll r2 : ROW . dominated(r2,c)) /\
+    $     (forAll c2 : COL . dominated(r,c2)) /\
+    $     (forAll r2 : ROW . forAll c2 : COL . |r-r2| = |c-c2| -> dominated(r2,c2))
+    $ )

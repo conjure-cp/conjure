@@ -4,7 +4,7 @@
 function conjureInDir_noDontCare() {
     pushd "$1" > /dev/null
     echo "conjureInDir_noDontCare working in directory: $(pwd)"
-    conjure --mode df --in *.essence --no-dontCare --out noDontCare   +RTS -s 2> "noDontCare.stderr"   | tee "noDontCare.stdout"
+    conjure --mode df-no-channelling --in *.essence --no-dontCare --out noDontCare   +RTS -s 2> "noDontCare.stderr"   | tee "noDontCare.stdout"
     popd > /dev/null
 }
 export -f conjureInDir_noDontCare
@@ -12,14 +12,14 @@ export -f conjureInDir_noDontCare
 function conjureInDir_usesDontCare() {
     pushd "$1" > /dev/null
     echo "conjureInDir_usesDontCare working in directory: $(pwd)"
-    conjure --mode df --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.stderr" | tee "usesDontCare.stdout"
+    conjure --mode df-no-channelling --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.stderr" | tee "usesDontCare.stdout"
     popd > /dev/null
 }
 export -f conjureInDir_usesDontCare
 
 
 function conjureInAllDirs() {
-    parallel {1} {2} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: */*
+    parallel {1} {2//} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: $(find . -name "*.essence")
 }
 export -f conjureInAllDirs
 
@@ -56,19 +56,19 @@ function srAll() {
 export -f srAll
 
 function report_unsat() {
-    grep MinionSolutionsFound:0 */*/*/*.info | cut -d ':' -f 1 | cut -d '.' -f 1
+    grep MinionSolutionsFound:0 $(find . -name "*.info") | cut -d ':' -f 1 | cut -d '.' -f 1
 }
 export -f report_unsat
 
 
 function report_nodes() {
-    grep MinionNodes */*/*/*.info
+    grep MinionNodes $(find . -name "*.info")
 }
 export -f report_nodes
 
 
 function report_minionTimes() {
-    grep MinionSolveTime */*/*/*.info
+    grep MinionSolveTime $(find . -name "*.info")
 }
 export -f report_minionTimes
 
@@ -84,6 +84,9 @@ export -f recompute
 
 
 function clean() {
+    rm -rf */*DontCare       \
+           */*.stdout        \
+           */*.stderr
     rm -rf */*/*DontCare    \
            */*/*.stdout     \
            */*/*.stderr
