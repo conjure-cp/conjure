@@ -7,7 +7,6 @@ import Language.E
 import Language.E.Pipeline.FreshNames
 import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
 
-import Safe ( lastNote )
 import qualified Data.Text as T
 
 
@@ -131,22 +130,34 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                         let renameToIndexed = mkIndexedExpr loopVars renameTo
 
                                         useDontCare <- gets flag_UseDontCare
-                                        let emptyGuard = [xMake| emptyGuard := [] |]
-                                        let theGuard | not useDontCare = emptyGuard
-                                                     | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` origName
-                                                     = let b = mkIndexedExpr loopVars [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSize_tuple1"])] |]
-                                                       in  [eMake| &b = true |]
-                                                     | Just base <- "_Set~ExplicitVarSizeWithMarker_tuple2" `T.stripSuffix` origName
-                                                     = let b = [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
-                                                           lastLoopVar = lastNote "RuleRefnToFunction" loopVars
-                                                       in  [eMake| &lastLoopVar <= &b |]
-                                                     | Just _ <- "_Set~Explicit" `T.stripSuffix` origName
-                                                     = emptyGuard
-                                                     | otherwise = error $ show $ vcat [ "don't know which guard to use for structural!"
-                                                                                       , pretty origName
-                                                                                       ]
+                                        let
+                                            emptyGuard = [xMake| emptyGuard := [] |]
 
-                                        mkLog "RuleRefnToFunction theGuard" $ pretty theGuard
+                                            theGuard _ _ | not useDontCare = emptyGuard
+                                            theGuard (lv:lvs) name
+                                                | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSize_tuple1"])] |]
+                                                    g  = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in [eMake| &g /\ &gs |]
+                                                           
+                                                | Just base <- "_Set~ExplicitVarSizeWithMarker_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
+                                                    g  = [eMake| &lv <= &b |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+                                                | Just base <- "_Set~Explicit" `T.stripSuffix` name
+                                                = let
+                                                    gs = theGuard lvs base
+                                                  in  gs
+                                            theGuard _ _ = emptyGuard
+                                                     -- | otherwise = error $ show $ vcat [ "don't know which guard to use for structural!"
+                                                     --                                   , pretty origName
+                                                     --                                   ]
+
+                                        mkLog "RuleRefnToFunction theGuard" $ pretty $ theGuard (reverse loopVars) origName
 
                                         mkLog "RuleRefnToFunction 0.0" $ pretty origName
                                         mkLog "RuleRefnToFunction 0.1" $ pretty renameTo
@@ -156,11 +167,11 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                         mkLog "RuleRefnToFunction 3" $ pretty con
                                         mkLog "RuleRefnToFunction 4" $ pretty $ renRefn renameToIndexed con
                                         mkLog "RuleRefnToFunction 5" $ pretty $ inForAlls (zip loopVarStrs is) 
-                                                           ( theGuard
+                                                           ( theGuard (reverse loopVars) origName
                                                            , renRefn renameToIndexed con
                                                            )
                                         return $ inForAlls (zip loopVarStrs is) 
-                                                           ( theGuard
+                                                           ( theGuard (reverse loopVars) origName
                                                            , renRefn renameToIndexed con
                                                            )
 
