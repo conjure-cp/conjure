@@ -152,10 +152,23 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                 = let
                                                     gs = theGuard lvs base
                                                   in  gs
-                                            theGuard _ _ = emptyGuard
-                                                     -- | otherwise = error $ show $ vcat [ "don't know which guard to use for structural!"
-                                                     --                                   , pretty origName
-                                                     --                                   ]
+                                                | Just base <- "_Relation~AsSet_Set~ExplicitVarSize_tuple2_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Relation~AsSet_Set~ExplicitVarSize_tuple1"])] |]
+                                                    g = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+                                                | Just base <- "_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple2_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
+                                                    g = [eMake| &lv <= &b |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+                                            theGuard _lvs _name =
+                                                emptyGuard
+                                                -- error $ show $ vcat $ [ "don't know which guard to use for structural!"
+                                                --                       , pretty name
+                                                --                       ] ++ map pretty lvs
 
                                         mkLog "RuleRefnToFunction theGuard" $ pretty $ theGuard (reverse loopVars) origName
 
