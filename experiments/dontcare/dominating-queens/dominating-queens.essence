@@ -4,13 +4,20 @@ $ given n : int
 letting n be 4
 letting ROW, COL be domain int(1..n)
 
+$ there is at most one queen at every row.
+$ queens are at different columns thanks to injectivity of the function.
 find queenAtRow : function (injective) ROW --> COL
-$ find dominated  : relation (size n*n) of (ROW * COL)
+
+minimising |queenAtRow|
 
 such that
-    3 = sum i in toSet(queenAtRow) . 1,
-    $ forAll (r,c) in toSet(queenAtRow) . (
-    $     (forAll r2 : ROW . dominated(r2,c)) /\
-    $     (forAll c2 : COL . dominated(r,c2)) /\
-    $     (forAll r2 : ROW . forAll c2 : COL . |r-r2| = |c-c2| -> dominated(r2,c2))
-    $ )
+    $ queens are at different diagonals
+    forAll (r1,c1),(r2,c2) in toSet(queenAtRow)
+         , r1 < r2
+         . |c1-c2| != |r1-r2|,
+
+    forAll r : ROW
+        , !(r in defined(queenAtRow))                                           $ for all rows without a queen
+        . forAll c : COL .
+            (exists r2 : ROW , r != r2 . queenAtRow(r2) = c) \/                 $ each square must have a queen on the same column
+            (exists r2 : ROW , r != r2 . |queenAtRow(r2) - c| = |r2 - r|)       $ or a diagonal
