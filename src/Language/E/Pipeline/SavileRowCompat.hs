@@ -6,6 +6,7 @@ import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 
 import qualified Data.Text as T ( filter )
 
@@ -20,6 +21,7 @@ savilerowCompat b
     >=> allNoTuplesSpec                         >=> recordSpec "allNoTuplesSpec"
     >=> conjureNoGuards                         >=> recordSpec "conjureNoGuards"
     >=> sliceIfTooFewIndices                    >=> recordSpec "sliceIfTooFewIndices"
+    >=> bubbleUpSpec                            >=> recordSpec "bubbleUpSpec"
     >=> (return . onSpec toIntIsNoOp)           >=> recordSpec "toIntIsNoOp"
     >=> (return . onSpec factorialIsFactorial)  >=> recordSpec "factorialIsFactorial"
     >=> (return . onSpec dotOrderIsLex)         >=> recordSpec "dotOrderIsLex"
