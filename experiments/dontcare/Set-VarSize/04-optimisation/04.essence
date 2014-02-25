@@ -1,0 +1,4 @@
+language Essence 1.3
+
+find x : set (minSize 10, maxSize 20) of set (size 20) of int(13..100)
+minimising sum i in x . sum j in i . j
