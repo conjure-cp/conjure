@@ -25,38 +25,55 @@ export -f conjureInAllDirs
 
 
 function srOne() {
-    BASE="$1"
-    DIR="$( cd "$( dirname "${BASE}.eprime" )" && pwd )"
-    echo "Running Savile Row on ${BASE}"
-    savilerow                                                           \
-        -minion-options "-timelimit 600"                                \
-        -boundvars                                                      \
-        -deletevars                                                     \
-        -run-minion     minion                                          \
-        -in-eprime      ${BASE}.eprime                                  \
-        -out-minion     ${BASE}.minion                                  \
-        -out-info       ${BASE}.info                                    \
-        -out-solution   ${BASE}.eprime-solution 2> ${BASE}.stderr | tee ${BASE}.stdout
-    rm -f "${BASE}.minion.aux" "${BASE}.infor"
-
-    # echo "Running Conjure on the solutions"
-    # conjure                                                             \
-    #     --mode translateSolution                                        \
-    #     --in-essence            ${DIR}/../*.essence                     \
-    #     --in-eprime             ${BASE}.eprime                          \
-    #     --in-eprime-solution    ${BASE}.eprime-solution                 \
-    #     --out-essence-solution  ${BASE}.solution
+    EPRIME="$1"
+    PARAM="$2"
+    PARAM_FULL="$3"
+    if [ ${PARAM} = "none" ] ; then
+        OUTPUT="$EPRIME"
+        echo "Running Savile Row: ${OUTPUT}"
+        savilerow                                                           \
+            -minion-options "-timelimit 10"                                 \
+            -boundvars                                                      \
+            -deletevars                                                     \
+            -preprocess     None                                            \
+            -run-minion     minion                                          \
+            -in-eprime      ${EPRIME}.eprime                                \
+            -out-minion     ${OUTPUT}.minion                                \
+            -out-info       ${OUTPUT}.info                                  \
+            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.stderr | tee ${OUTPUT}.stdout
+        rm -f "${OUTPUT}.minion.aux" "${OUTPUT}.infor"
+    else
+        OUTPUT="$EPRIME-$PARAM"
+        echo "Running Savile Row: ${OUTPUT} $PARAM_FULL"
+        savilerow                                                           \
+            -minion-options "-timelimit 10"                                 \
+            -boundvars                                                      \
+            -deletevars                                                     \
+            -preprocess     None                                            \
+            -run-minion     minion                                          \
+            -in-eprime      ${EPRIME}.eprime                                \
+            -in-param       ${PARAM_FULL}                                   \
+            -out-minion     ${OUTPUT}.minion                                \
+            -out-info       ${OUTPUT}.info                                  \
+            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.stderr | tee ${OUTPUT}.stdout
+        rm -f "${OUTPUT}.minion.aux" "${OUTPUT}.infor"
+    fi
 }
 export -f srOne
 
 
 function srAll() {
-    parallel srOne {.} ::: $(find . -name "*.eprime")
+    rm -f argslist.txt
+    parallel -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
+    parallel -j1 echo {1.} "none" "none" ::: Set-VarSize/*/*/*.eprime                                      >> argslist.txt
+    parallel -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
+    parallel -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
+    parallel -j1 --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
 }
 export -f srAll
 
 function report_unsat() {
-    grep MinionSolutionsFound:0 $(find . -name "*.info") | cut -d ':' -f 1 | cut -d '.' -f 1
+    grep MinionSolutionsFound:0 $(find . -name "*.info") | cut -d ':' -f 1
 }
 export -f report_unsat
 
