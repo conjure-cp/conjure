@@ -32,7 +32,7 @@ function srOne() {
         OUTPUT="$EPRIME"
         echo "Running Savile Row: ${OUTPUT}"
         savilerow                                                           \
-            -minion-options "-timelimit 10"                                 \
+            -minion-options "-timelimit 3600"                               \
             -boundvars                                                      \
             -deletevars                                                     \
             -preprocess     None                                            \
@@ -46,7 +46,7 @@ function srOne() {
         OUTPUT="$EPRIME-$PARAM"
         echo "Running Savile Row: ${OUTPUT} $PARAM_FULL"
         savilerow                                                           \
-            -minion-options "-timelimit 10"                                 \
+            -minion-options "-timelimit 3600"                               \
             -boundvars                                                      \
             -deletevars                                                     \
             -preprocess     None                                            \
@@ -68,7 +68,7 @@ function srAll() {
     parallel -j1 echo {1.} "none" "none" ::: Set-VarSize/*/*/*.eprime                                      >> argslist.txt
     parallel -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
     parallel -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
-    parallel -j1 --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
+    parallel --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
 }
 export -f srAll
 
