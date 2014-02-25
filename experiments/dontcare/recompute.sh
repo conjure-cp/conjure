@@ -19,7 +19,7 @@ export -f conjureInDir_usesDontCare
 
 
 function conjureInAllDirs() {
-    parallel {1} {2//} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: $(find . -name "*.essence")
+    parallel --no-notice {1} {2//} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: $(find . -name "*.essence")
 }
 export -f conjureInAllDirs
 
@@ -64,11 +64,11 @@ export -f srOne
 
 function srAll() {
     rm -f argslist.txt
-    parallel -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
-    parallel -j1 echo {1.} "none" "none" ::: Set-VarSize/*/*/*.eprime                                      >> argslist.txt
-    parallel -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
-    parallel -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
-    parallel --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
+    parallel --no-notice -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
+    parallel --no-notice -j1 echo {1.} "none" "none" ::: Set-VarSize/*/*/*.eprime                                      >> argslist.txt
+    parallel --no-notice -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
+    parallel --no-notice -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
+    parallel --no-notice --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
 }
 export -f srAll
 
@@ -94,7 +94,7 @@ function recompute() {
     echo "recomputing..."
     conjureInAllDirs
     srAll
-    parallel -j1 "echo removing {} ; rm {}" ::: $(find . -size 0 )
+    parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0 )
     echo "recomputed, happy?"
 }
 export -f recompute

@@ -28,6 +28,6 @@ else
     do
         echo " true " >> $qFile
     done
-    tail -n 1024 -f $qFile | parallel -u
+    tail -n 1024 -f $qFile | parallel --no-notice -u
 fi
 

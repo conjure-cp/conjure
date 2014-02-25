@@ -7,4 +7,4 @@ function one() {
 
 export -f one
 
-parallel one ::: $(seq -w 4 15)
+parallel --no-notice one ::: $(seq -w 4 15)
