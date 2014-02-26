@@ -66,11 +66,12 @@ export -f srOne
 
 function srAll() {
     rm -f argslist.txt
-    parallel --no-notice -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
     parallel --no-notice -j1 echo {1.} "none" "none" ::: Set-VarSize/*/*/*.eprime                                      >> argslist.txt
     parallel --no-notice -j1 echo {1.} "none" "none" ::: MSet-VarSize/*/*/*.eprime                                     >> argslist.txt
     parallel --no-notice -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
     parallel --no-notice -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
+    parallel --no-notice -j1 echo {1.} "none" "none" ::: Partition-VarSize/*/*/*.eprime                                >> argslist.txt
+    parallel --no-notice -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
     parallel --no-notice --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
 }
 export -f srAll
