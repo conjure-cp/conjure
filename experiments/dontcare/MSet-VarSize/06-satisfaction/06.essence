@@ -1,0 +1,5 @@
+language Essence 1.3
+
+find x : mset (maxSize 8) of
+    mset (size 2) of mset (size 3) of int(1..10)
+such that |x| = 3
