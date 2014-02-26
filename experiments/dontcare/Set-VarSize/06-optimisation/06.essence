@@ -1,6 +1,6 @@
 language Essence 1.3
 
-find x : set (maxSize 7) of
-    set (size 2) of set (size 3) of int(1..9)
+find x : set (maxSize 8) of
+    set (size 2) of set (size 3) of int(1..10)
 minimising sum i in x . sum j in i . sum k in j . k
 such that |x| = 3
