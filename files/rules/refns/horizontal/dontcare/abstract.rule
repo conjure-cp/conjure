@@ -10,6 +10,7 @@ dontCare(&x) ~~> dontCare(refn(&x))
         ( &x hasRepr Set~Occurrence) \/
 
         ( &x hasRepr MSet~Explicit) \/
+        ( &x hasRepr MSet~ExplicitVarSize) \/
         ( &x hasRepr MSet~Occurrence) \/
 
         ( &x hasRepr Function~1D) \/
