@@ -2,10 +2,6 @@
 ~~> MSet~ExplicitVarSize
 ~~> matrix indexed by [int(1..&maxSize)] of (int(0..&maxSize), &tau)
 ~~> (
-        forAll i : int(1..&maxSize-1), refn[i][1] > 0 /\ refn[i+1][1] > 0 /\ refn[i][1] = refn[i+1][1] . refn[i][2] .< refn[i+1][2]
-    )
-        /\
-    (
         forAll i : int(1..&maxSize-1) . refn[i][1] >= refn[i+1][1]
     )
         /\
