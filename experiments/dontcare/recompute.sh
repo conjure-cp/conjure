@@ -32,6 +32,7 @@ function srOne() {
         OUTPUT="$EPRIME"
         echo "Running Savile Row: ${OUTPUT}"
         savilerow                                                           \
+            -timelimit      3600000                                         \
             -minion-options "-cpulimit 3600"                                \
             -boundvars                                                      \
             -deletevars                                                     \
@@ -46,6 +47,7 @@ function srOne() {
         OUTPUT="$EPRIME-$PARAM"
         echo "Running Savile Row: ${OUTPUT} $PARAM_FULL"
         savilerow                                                           \
+            -timelimit      3600000                                         \
             -minion-options "-cpulimit 3600"                                \
             -boundvars                                                      \
             -deletevars                                                     \
