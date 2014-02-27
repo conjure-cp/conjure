@@ -77,14 +77,15 @@ function srAll() {
     parallel --no-notice -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
     parallel --no-notice -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
     parallel --no-notice -j1 echo {1.} "none" "none" ::: Partition-VarSize/*/*/*.eprime                                >> argslist.txt
+    parallel --no-notice -j1 echo {1.} "none" "none" ::: $(find all-combinations -name "*.eprime")                     >> argslist.txt
     parallel --no-notice -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: Nested-Types/*/*/*.eprime                                     >> argslist.txt
+    # parallel --no-notice -j1 echo {1.} "none" "none" ::: Nested-Types/*/*/*.eprime                                     >> argslist.txt
     parallel --no-notice --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
 }
 export -f srAll
 
-function report_unsat() {
-    grep MinionSolutionsFound:0 $(find . -name "*.info") | cut -d ':' -f 1
+function report_timeout() {
+    grep "MinionTimeOut:1" $(find . -name "*.info") | cut -d ':' -f 1
 }
 export -f report_unsat
 
@@ -103,6 +104,7 @@ export -f report_minionTimes
 
 function recompute() {
     echo "recomputing..."
+    pushd all-combinations ; runhaskell create_essences.hs ; popd
     conjureInAllDirs
     srAll
     parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0 )
@@ -112,12 +114,8 @@ export -f recompute
 
 
 function clean() {
-    rm -rf */*DontCare       \
-           */*.stdout        \
-           */*.stderr
-    rm -rf */*/*DontCare    \
-           */*/*.stdout     \
-           */*/*.stderr
+    rm -rf   */*DontCare   */*.stdout   */*.stderr
+    rm -rf */*/*DontCare */*/*.stdout */*/*.stderr
 }
 export -f
 
