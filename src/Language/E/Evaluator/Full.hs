@@ -1069,6 +1069,13 @@ domSize [xMatch| [a] := domain.function.innerFrom
     bSize <- domSize b
     return [eMake| (&bSize + 1) ** &aSize |]
 
+domSize [xMatch| [a]   := domain.partition.inner
+               | attrs := domain.partition.attributes.attrCollection
+               |] = domSize [xMake| domain.set.inner := [a']
+                                  | domain.set.attributes := attrs
+                                  |]
+    where a' = [xMake| domain.set.inner := [a] |]
+
 domSize [xMatch| [] := topLevel.declaration.given.typeInt
                | [Prim (S nm)] := topLevel.declaration.given.name.reference
                |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
