@@ -1,12 +1,11 @@
-
 [1000]
 
-&quan &i in &s, &g . &k
+exists &i in &s, &g . &k
 
 ~~>
 
-&quan j : &r , &g { &i --> &m[j,2] } /\ &m[j,1] > 0
-             . &k { &i --> &m[j,2] }
+exists j : &r , &g { &i --> &m[j,2] } /\ &m[j,1] > 0
+              . &k { &i --> &m[j,2] }
 
     where &s hasType `mset of _`
     where &s hasRepr MSet~ExplicitVarSize
