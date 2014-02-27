@@ -13,6 +13,10 @@
     (   $ dontCare about those which have a 0 switch
         forAll i : int(1..&maxSize) , refn[i][1] = 0 . dontCare(refn[i][2])
     )
+        /\
+    (   $ maxSize
+        (sum i : int(1..&maxSize) . refn[i][1]) <= &maxSize
+    )
 
 
 *** mset (maxSize &maxSize) of &tau
