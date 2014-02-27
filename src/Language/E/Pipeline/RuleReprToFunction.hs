@@ -135,6 +135,7 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
 
                                             theGuard _ _ | not useDontCare = emptyGuard
                                             theGuard (lv:lvs) name
+
                                                 | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` name
                                                 = let
                                                     b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSize_tuple1"])] |]
@@ -148,27 +149,55 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                     g  = [eMake| &lv <= &b |]
                                                     gs = theGuard lvs base
                                                   in  [eMake| &g /\ &gs |]
+
                                                 | Just base <- "_Set~Explicit" `T.stripSuffix` name
                                                 = let
                                                     gs = theGuard lvs base
                                                   in  gs
+
+                                                | Just base <- "_MSet~ExplicitVarSize_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_MSet~ExplicitVarSize_tuple1"])] |]
+                                                    g  = [eMake| &b > 0 |]
+                                                    gs = theGuard lvs base
+                                                  in [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_MSet~ExplicitVarSize_tuple2_MSet~Explicit" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_MSet~ExplicitVarSize_tuple1"])] |]
+                                                    g = [eMake| &b > true |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_Function~1DPartial_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Function~1DPartial_tuple1"])] |]
+                                                    g  = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in [eMake| &g /\ &gs |]
+
+                                                | Just _base <- "_Function~AsReln" `T.stripSuffix` name
+                                                = emptyGuard
+
                                                 | Just base <- "_Relation~AsSet_Set~ExplicitVarSize_tuple2_tuple2" `T.stripSuffix` name
                                                 = let
                                                     b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Relation~AsSet_Set~ExplicitVarSize_tuple1"])] |]
                                                     g = [eMake| &b = true |]
                                                     gs = theGuard lvs base
                                                   in  [eMake| &g /\ &gs |]
+
                                                 | Just base <- "_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple2_tuple2" `T.stripSuffix` name
                                                 = let
                                                     b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
                                                     g = [eMake| &lv <= &b |]
                                                     gs = theGuard lvs base
                                                   in  [eMake| &g /\ &gs |]
+
                                             theGuard _lvs _name =
                                                 emptyGuard
                                                 -- error $ show $ vcat $ [ "don't know which guard to use for structural!"
-                                                --                       , pretty name
-                                                --                       ] ++ map pretty lvs
+                                                --                       , pretty _name
+                                                --                       ] ++ map pretty _lvs
 
                                         mkLog "RuleRefnToFunction theGuard" $ pretty $ theGuard (reverse loopVars) origName
 
