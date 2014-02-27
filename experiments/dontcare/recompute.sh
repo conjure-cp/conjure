@@ -1,17 +1,23 @@
 #!/bin/bash
 
+function relpath {
+    python -c "import os.path; print os.path.relpath('$2', '$1')"
+}
+export -f relpath
 
 function conjureInDir_noDontCare() {
+    OLDWD=$(pwd)
     pushd "$1" > /dev/null
-    echo "conjureInDir_noDontCare working in directory: $(pwd)"
+    echo "conjureInDir_usesDontCare working in directory: $(relpath $OLDWD $1)"
     conjure --mode df-no-channelling --in *.essence --no-dontCare --out noDontCare   +RTS -s 2> "noDontCare.stderr"   | tee "noDontCare.stdout"
     popd > /dev/null
 }
 export -f conjureInDir_noDontCare
 
 function conjureInDir_usesDontCare() {
+    OLDWD=$(pwd)
     pushd "$1" > /dev/null
-    echo "conjureInDir_usesDontCare working in directory: $(pwd)"
+    echo "conjureInDir_usesDontCare working in directory: $(relpath $OLDWD $1)"
     conjure --mode df-no-channelling --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.stderr" | tee "usesDontCare.stdout"
     popd > /dev/null
 }
