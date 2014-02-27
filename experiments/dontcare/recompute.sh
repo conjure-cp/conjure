@@ -25,7 +25,7 @@ export -f conjureInDir_usesDontCare
 
 
 function conjureInAllDirs() {
-    parallel --no-notice {1} {2//} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: $(find . -name "*.essence")
+    parallel --no-notice {1} {2//} ::: conjureInDir_usesDontCare conjureInDir_noDontCare ::: $(find . -name "*.essence" | grep 'Nested-Types' -v)
 }
 export -f conjureInAllDirs
 
