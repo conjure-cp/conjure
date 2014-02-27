@@ -11,7 +11,7 @@ domains =
     , ("mset"      , \ d -> "mset (maxSize 3) of " ++ d)
     , ("relation"  , \ d -> "relation (maxSize 3) of (" ++ intercalate " * " (replicate 2 d) ++ ")")
     , ("function"  , \ d -> "function (maxSize 3) int(1..3) --> " ++ d)
-    , ("partition" , \ d -> "partition (maxSize 3) from " ++ d)
+    , ("partition" , \ d -> "partition (maxNumParts 3) from " ++ d)
     ]
 
 main :: IO ()
