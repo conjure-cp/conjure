@@ -2,7 +2,20 @@
 ~~> MSetOfSets
 ~~> mset (maxSize &maxNumParts) of set of &tau
 
+
 *** partition (maxNumParts &maxNumParts) from &tau
-    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )    $ parts that aren't equal should have no common element
-                                                                $ i.e. a part can only be in one set
-    /\  ( forAll i : &tau . exists s in refn . i in s )         $ every element of the domain is in one set
+
+    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )                    $ parts that aren't equal should have no common element
+                                                                                $ i.e. a part can only be in one set
+
+    /\  ( forAll i in refn, |i| > 0 . 1 = (sum j in refn , i = j . 1) )         $ no duplicate parts
+
+
+*** partition (complete, maxNumParts &maxNumParts) from &tau
+
+    ~~> ( forAll i,j in refn, i != j . |i intersect j| = 0 )                    $ parts that aren't equal should have no common element
+                                                                                $ i.e. a part can only be in one set
+
+    /\  ( forAll i in refn, |i| > 0 . 1 = (sum j in refn , i = j . 1) )         $ no duplicate parts
+
+    /\  ( forAll i : &tau . exists s in refn . i in s )                         $ every element of the domain is in one set
