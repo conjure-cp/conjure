@@ -18,5 +18,5 @@
 *** mset (maxSize &maxSize) of &tau
 
 *** mset (minSize &minSize, maxSize &maxSize) of &tau
-    ~~> (sum i : int(1..&maxSize) . refn[i][1]) >= &mn
+    ~~> (sum i : int(1..&maxSize) . refn[i][1]) >= &minSize
 
