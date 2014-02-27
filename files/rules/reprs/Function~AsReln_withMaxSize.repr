@@ -1,69 +1,69 @@
 
 ~~> Function~AsReln
-~~> relation (size &size) of (&fr * &to)
+~~> relation (maxSize &maxSize) of (&fr * &to)
 
 
-*** function (size &size, total) &fr --> &to
+*** function (maxSize &maxSize, total) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
 
-*** function (size &size, total, injective) &fr --> &to
+*** function (maxSize &maxSize, total, injective) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
 
-*** function (size &size, total, surjective) &fr --> &to
+*** function (maxSize &maxSize, total, surjective) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
 
-*** function (size &size, total, injective, surjective) &fr --> &to
-    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
-    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
-    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
-
-*** function (size &size, total, bijective, ..) &fr --> &to
+*** function (maxSize &maxSize, total, injective, surjective) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
 
-
-*** function (size &size, partial) &fr --> &to
-    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
-
-*** function (size &size, partial, injective) &fr --> &to
-    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
-    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
-
-*** function (size &size, partial, surjective) &fr --> &to
-    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
-    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
-
-*** function (size &size, partial, injective, surjective) &fr --> &to
-    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
-    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
-    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
-
-*** function (size &size, partial, bijective, ..) &fr --> &to
-    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+*** function (maxSize &maxSize, total, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
 
 
-*** function (size &size) &fr --> &to
+*** function (maxSize &maxSize, partial) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
 
-*** function (size &size, injective) &fr --> &to
+*** function (maxSize &maxSize, partial, injective) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
 
-*** function (size &size, surjective) &fr --> &to
+*** function (maxSize &maxSize, partial, surjective) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
 
-*** function (size &size, injective, surjective) &fr --> &to
+*** function (maxSize &maxSize, partial, injective, surjective) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
 
-*** function (size &size, bijective, ..) &fr --> &to
+*** function (maxSize &maxSize, partial, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+
+*** function (maxSize &maxSize) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+
+*** function (maxSize &maxSize, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+
+*** function (maxSize &maxSize, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+*** function (maxSize &maxSize, injective, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+*** function (maxSize &maxSize, bijective, ..) &fr --> &to
     ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
     /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
     /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
