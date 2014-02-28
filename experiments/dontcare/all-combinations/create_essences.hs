@@ -3,7 +3,7 @@ import Data.List ( intercalate )
 import System.Directory ( createDirectoryIfMissing )
 
 maxSize :: String
-maxSize = "1"
+maxSize = "2"
 
 intDomain :: String
 intDomain = "int(1.." ++ maxSize ++ ")"

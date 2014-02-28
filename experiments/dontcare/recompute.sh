@@ -235,7 +235,7 @@ runhaskell create_essences.hs
 # conjure_compact
 parallel --no-notice conjure_compact {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
-parallel --no-notice conjure_compact_all_solutions {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+# parallel --no-notice conjure_compact_all_solutions {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
 # conjure_compact_all_solutions_count
 parallel --no-notice conjure_compact_all_solutions_count {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
