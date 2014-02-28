@@ -2,16 +2,19 @@
 import Data.List ( intercalate )
 import System.Directory ( createDirectoryIfMissing )
 
+maxSize :: String
+maxSize = "1"
+
 intDomain :: String
-intDomain = "int(1..3)"
+intDomain = "int(1.." ++ maxSize ++ ")"
 
 domains :: [(String, String -> String)]
 domains =
-    [ ("set"       , \ d -> "set (maxSize 3) of " ++ d)
-    , ("mset"      , \ d -> "mset (maxSize 3) of " ++ d)
-    , ("relation"  , \ d -> "relation (maxSize 3) of (" ++ intercalate " * " (replicate 2 d) ++ ")")
-    , ("function"  , \ d -> "function (maxSize 3) int(1..3) --> " ++ d)
-    , ("partition" , \ d -> "partition (maxNumParts 3) from " ++ d)
+    [ ("set"       , \ d -> "set (maxSize " ++ maxSize ++ ") of " ++ d)
+    , ("mset"      , \ d -> "mset (maxSize " ++ maxSize ++ ") of " ++ d)
+    , ("relation"  , \ d -> "relation (maxSize " ++ maxSize ++ ") of (" ++ intercalate " * " (replicate 2 d) ++ ")")
+    , ("function"  , \ d -> "function (maxSize " ++ maxSize ++ ") int(1..3) --> " ++ d)
+    , ("partition" , \ d -> "partition (maxNumParts " ++ maxSize ++ ") from " ++ d)
     ]
 
 main :: IO ()

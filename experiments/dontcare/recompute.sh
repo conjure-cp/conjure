@@ -239,11 +239,12 @@ parallel --no-notice conjure_compact {1} {2//} ::: noDontCare usesDontCare ::: *
 parallel --no-notice conjure_compact_all_solutions_count {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
 # conjure_all
-parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
+# parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
 
 # conjure_all_solve
-parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
+# parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
 
+# clean up
 if [ $(find . -size 0 | wc -l) -gt 0 ] ; then
     parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0)
 fi
