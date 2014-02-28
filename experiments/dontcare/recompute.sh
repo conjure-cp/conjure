@@ -9,7 +9,7 @@ function conjureInDir_noDontCare() {
     OLDWD=$(pwd)
     pushd "$1" > /dev/null
     echo "conjureInDir_usesDontCare working in directory: $(relpath $OLDWD $1)"
-    conjure --mode df-no-channelling --in *.essence --no-dontCare --out noDontCare   +RTS -s 2> "noDontCare.stderr"   | tee "noDontCare.stdout"
+    conjure --mode df-no-channelling --in *.essence --no-dontCare --out noDontCare   +RTS -s 2> "noDontCare.conjure-stderr"   | tee "noDontCare.conjure-stdout"
     popd > /dev/null
 }
 export -f conjureInDir_noDontCare
@@ -18,7 +18,7 @@ function conjureInDir_usesDontCare() {
     OLDWD=$(pwd)
     pushd "$1" > /dev/null
     echo "conjureInDir_usesDontCare working in directory: $(relpath $OLDWD $1)"
-    conjure --mode df-no-channelling --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.stderr" | tee "usesDontCare.stdout"
+    conjure --mode df-no-channelling --in *.essence               --out usesDontCare +RTS -s 2> "usesDontCare.conjure-stderr" | tee "usesDontCare.conjure-stdout"
     popd > /dev/null
 }
 export -f conjureInDir_usesDontCare
@@ -47,7 +47,7 @@ function srOne() {
             -in-eprime      ${EPRIME}.eprime                                \
             -out-minion     ${OUTPUT}.minion                                \
             -out-info       ${OUTPUT}.info                                  \
-            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.stderr | tee ${OUTPUT}.stdout
+            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
         rm -f "${OUTPUT}.minion.aux" "${OUTPUT}.infor"
     else
         OUTPUT="$EPRIME-$PARAM"
@@ -63,7 +63,7 @@ function srOne() {
             -in-param       ${PARAM_FULL}                                   \
             -out-minion     ${OUTPUT}.minion                                \
             -out-info       ${OUTPUT}.info                                  \
-            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.stderr | tee ${OUTPUT}.stdout
+            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
         rm -f "${OUTPUT}.minion.aux" "${OUTPUT}.infor"
     fi
 }
@@ -102,15 +102,15 @@ function report_minionTimes() {
 export -f report_minionTimes
 
 
-function recompute() {
-    echo "recomputing..."
-    pushd all-combinations ; runhaskell create_essences.hs ; popd
-    conjureInAllDirs
-    srAll
-    parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0 )
-    echo "recomputed, happy?"
-}
-export -f recompute
+# function recompute() {
+#     echo "recomputing..."
+#     pushd all-combinations ; runhaskell create_essences.hs ; popd
+#     conjureInAllDirs
+#     srAll
+#     parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0 )
+#     echo "recomputed, happy?"
+# }
+# export -f recompute
 
 
 function clean() {
@@ -118,4 +118,117 @@ function clean() {
     rm -rf */*/*DontCare */*/*.stdout */*/*.stderr
 }
 export -f
+
+
+
+function conjure_compact() {
+    echo "conjure_compact working on: $1"
+    mkdir -p $1/compact
+    conjure                             \
+        --mode compact                  \
+        --in  $1/$1.essence             \
+        --out $1/compact/$1.eprime      \
+        +RTS -s 2> $1/compact.conjure-stderr | tee $1/compact.conjure-stdout
+}
+export -f conjure_compact
+
+
+function conjure_compact_all_solutions {
+    ESSENCE=$1/$1
+    MODEL=$1/compact/$1
+
+    savilerow                                                               \
+        -in-eprime      $MODEL.eprime                                       \
+        -out-minion     $MODEL.minion                                       \
+        -out-solution   $MODEL.eprime-solution                              \
+        -timelimit      3600000                                             \
+        -minion-options "-cpulimit 3600"                                    \
+        -run-minion minion                                                  \
+        -all-solutions 2> $MODEL.savilerow-stderr | tee $MODEL.savilerow-stdout
+
+    cmd="conjure
+            --mode translateSolution
+            --in-essence            $ESSENCE.essence
+            --in-eprime             $MODEL.eprime
+            --in-eprime-solution    {}
+            --out-essence-solution  {}.solution"
+    parallel --no-notice $cmd ::: $MODEL.eprime-solution.*
+}
+export -f conjure_compact_all_solutions
+
+
+
+
+
+
+
+
+
+# experiment plan
+# - create essence files for "all combinations"
+# - conjure_compact on each (with dontCare)
+# - conjure_compact_all_solutions on each
+# - conjure_all on each both with and without dontCare
+# - conjure_all_solve on each
+
+
+# directory structure
+
+# - all-combinations
+
+# - all-combinations/<name>/<name>.essence
+
+# - all-combinations/<name>/compact.conjure-stderr
+# - all-combinations/<name>/compact.conjure-stdout
+# - all-combinations/<name>/compact/<name>.eprime
+# - all-combinations/<name>/compact/<name>.minion
+# - all-combinations/<name>/compact/<name>.eprime-solution.<number>
+# - all-combinations/<name>/compact/<name>.eprime-solution.<number>.solution
+
+# - all-combinations/<name>/noDontCare.conjure-stderr
+# - all-combinations/<name>/noDontCare.conjure-stdout
+# - all-combinations/<name>/noDontCare/<number>.eprime
+# - all-combinations/<name>/noDontCare/<number>.minion
+# - all-combinations/<name>/noDontCare/<number>.eprime.solution
+
+# - all-combinations/<name>/usesDontCare.conjure-stderr
+# - all-combinations/<name>/usesDontCare.conjure-stdout
+# - all-combinations/<name>/usesDontCare/<number>.eprime
+# - all-combinations/<name>/usesDontCare/<number>.minion
+# - all-combinations/<name>/usesDontCare/<number>.eprime.solution
+
+
+
+
+
+echo "recomputing..."
+
+pushd all-combinations
+
+runhaskell create_essences.hs
+
+# conjure_compact
+parallel --no-notice conjure_compact {//} ::: */*.essence
+
+# conjure_compact_all_solutions
+parallel --no-notice conjure_compact_all_solutions {//} ::: */*.essence
+
+# conjure_all
+parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
+
+# conjure_all_solve
+parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
+
+if [ $(find . -size 0 | wc -l) -gt 0 ] ; then
+    parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0)
+fi
+parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -name "*.minion.aux")
+
+popd
+
+
+echo "recomputed, happy?"
+
+
+
 
