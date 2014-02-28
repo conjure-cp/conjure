@@ -226,33 +226,35 @@ export -f conjure_compact_all_solutions_count
 
 
 
+
+
 echo "recomputing..."
 
 pushd all-combinations
 
-runhaskell create_essences.hs
+for size in {1..5}
+do
+    mkdir "size${size}" ; pushd "size${size}"
 
-parallel --no-notice conjure_compact                        {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
-parallel --no-notice conjure_compact_all_solutions_count    {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
-parallel --no-notice conjure_compact_all_solutions          {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+    runhaskell ../create_essences.hs $size
 
-# conjure_all
-# parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
+    parallel --no-notice conjure_compact                        {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+    parallel --no-notice conjure_compact_all_solutions_count    {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+    parallel --no-notice conjure_compact_all_solutions          {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
-# conjure_all_solve
-# parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
+    # conjure_all
+    # parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
 
-# clean up
-if [ $(find . -size 0 | wc -l) -gt 0 ] ; then
-    parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -size 0)
-fi
-parallel --no-notice -j1 "echo removing {} ; rm {}" ::: $(find . -name "*.minion.aux")
+    # conjure_all_solve
+    # parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
+
+    # clean up
+    find . -size 0                  -exec echo removing {} \; -exec rm {} \;
+    find . -name "*.minion.aux"     -exec echo removing {} \; -exec rm {} \;
+    popd
+done
 
 popd
 
-
 echo "recomputed, happy?"
-
-
-
 
