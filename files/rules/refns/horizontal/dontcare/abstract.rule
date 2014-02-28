@@ -18,7 +18,7 @@ dontCare(&x) ~~> dontCare(refn(&x))
         ( &x hasRepr Function~AsReln) \/
         ( &x hasRepr Function~AsReln_withSize) \/
 
-        ( &x hasRepr MSetOfSets) \/
+        ( &x hasRepr Partition~SetOfSets) \/
 
         ( &x hasRepr Relation~AsSet) \/
         ( &x hasRepr Relation~IntMatrix2) \/

@@ -176,8 +176,8 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                     gs = theGuard lvs base
                                                   in [eMake| &g /\ &gs |]
 
-                                                | Just _base <- "_Function~AsReln" `T.stripSuffix` name
-                                                = emptyGuard
+                                                | Just _base <- "_Function~AsReln"      `T.stripSuffix` name = emptyGuard
+                                                | Just _base <- "_Partition~SetOfSets"  `T.stripSuffix` name = emptyGuard
 
                                                 | Just base <- "_Relation~AsSet_Set~ExplicitVarSize_tuple2_tuple2" `T.stripSuffix` name
                                                 = let
@@ -192,6 +192,8 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                     g = [eMake| &lv <= &b |]
                                                     gs = theGuard lvs base
                                                   in  [eMake| &g /\ &gs |]
+
+                                            -- theGuard _lvs "x" = emptyGuard
 
                                             theGuard _lvs _name =
                                                 emptyGuard
