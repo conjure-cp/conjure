@@ -230,15 +230,7 @@ mkLog nm doc = case buildLog nm doc of
         }
 
 addReference :: MonadConjure m => Text -> E -> m ()
-addReference nm val = do
-    bsText1 <- bindersDocNamesOnly
-    modify $ \ st -> st { binders = Binder nm val : binders st }
-    bsText2 <- bindersDocNamesOnly
-    mkLog "addReference" $ pretty nm <+> "~~" <+> vcat [ pretty val
-                                                       , pretty bsText1
-                                                       , pretty bsText2
-                                                       ]
-
+addReference nm val = modify $ \ st -> st { binders = Binder nm val : binders st }
 
 addMetaVar :: MonadConjure m => Text -> E -> m ()
 addMetaVar nm = addReference ("&" `mappend` nm)
@@ -258,10 +250,9 @@ lookupMetaVar :: MonadConjure m => Text -> MaybeT m E
 lookupMetaVar nm = lookupReference ("&" `mappend` nm)
 
 errUndefinedRef :: (MonadConjure m, Pretty p) => Doc -> p -> m a
-errUndefinedRef place t = do
+errUndefinedRef _place t = do
     bsText <- bindersDocNamesOnly
     userErr $ vcat [ "Undefined reference:" <+> pretty t
-                   , "during:" <+> place
                    , nest 4 bsText
                    ]
 

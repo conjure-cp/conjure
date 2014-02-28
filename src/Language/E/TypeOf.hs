@@ -188,7 +188,7 @@ typeErrorIn' p d = err ErrFatal $ "Type error in: " <+> vcat [ pretty p
 
 typeOf :: MonadConjure m => E -> m E
 
-typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
+-- typeOf p | trace ("typeOf: " ++ (show $ pretty p)) False = undefined
 
 typeOf [eMatch| indices(&_) |] = return tyInt
 
