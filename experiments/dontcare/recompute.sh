@@ -148,7 +148,7 @@ function conjure_compact_all_solutions {
         -out-minion     $MODEL.minion                                       \
         -out-solution   $MODEL.eprime-solution                              \
         -timelimit      3600000                                             \
-        -minion-options "-cpulimit 3600"                                    \
+        -minion-options "-cpulimit 3600 -sollimit 10000"                    \
         -run-minion minion                                                  \
         -all-solutions 2> $MODEL.savilerow-stderr | tee $MODEL.savilerow-stdout
 
