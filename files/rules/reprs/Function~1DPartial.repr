@@ -24,6 +24,7 @@
 
 
 *** function (maxSize &maxSize) &fr --> &to
+    ~~> ((sum i : &fr . toInt(refn[i,1])) <= &maxSize)                                        $ maxSize
 
 *** function (maxSize &maxSize, injective) &fr --> &to
     ~~> (forAll i,j : &fr , i != j /\ refn[i,1] /\ refn[j,1] . refn[i,2] != refn[j,2])        $ injective
