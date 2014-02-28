@@ -3,7 +3,7 @@ import Data.List ( intercalate )
 import System.Directory ( createDirectoryIfMissing )
 
 maxSize :: String
-maxSize = "2"
+maxSize = "3"
 
 intDomain :: String
 intDomain = "int(1.." ++ maxSize ++ ")"
@@ -13,7 +13,7 @@ domains =
     [ ("set"       , \ d -> "set (maxSize " ++ maxSize ++ ") of " ++ d)
     , ("mset"      , \ d -> "mset (maxSize " ++ maxSize ++ ") of " ++ d)
     , ("relation"  , \ d -> "relation (maxSize " ++ maxSize ++ ") of (" ++ intercalate " * " (replicate 2 d) ++ ")")
-    , ("function"  , \ d -> "function (maxSize " ++ maxSize ++ ") int(1..3) --> " ++ d)
+    , ("function"  , \ d -> "function (maxSize " ++ maxSize ++ ") " ++ intDomain ++ " --> " ++ d)
     , ("partition" , \ d -> "partition (maxNumParts " ++ maxSize ++ ") from " ++ d)
     ]
 

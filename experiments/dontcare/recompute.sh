@@ -148,7 +148,7 @@ function conjure_compact_all_solutions {
         -out-minion     $MODEL.minion                                       \
         -out-solution   $MODEL.eprime-solution                              \
         -timelimit      3600000                                             \
-        -minion-options "-cpulimit 3600 -sollimit 10000"                    \
+        -minion-options "-cpulimit 3600 -sollimit 1000"                     \
         -run-minion minion                                                  \
         -all-solutions 2> $MODEL.savilerow-stderr | tee $MODEL.savilerow-stdout
 
@@ -232,13 +232,9 @@ pushd all-combinations
 
 runhaskell create_essences.hs
 
-# conjure_compact
-parallel --no-notice conjure_compact {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
-
-# parallel --no-notice conjure_compact_all_solutions {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
-
-# conjure_compact_all_solutions_count
-parallel --no-notice conjure_compact_all_solutions_count {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+parallel --no-notice conjure_compact                        {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+parallel --no-notice conjure_compact_all_solutions_count    {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+parallel --no-notice conjure_compact_all_solutions          {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
 # conjure_all
 # parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
