@@ -134,7 +134,7 @@ function conjure_compact() {
         --mode compact                  \
         --in  $2/$2.essence             \
         --out $2/compact/$1.eprime      \
-        +RTS -s 2> $2/compact/$1.conjure-stderr | tee $2/compact/$1conjure-stdout
+        +RTS -s 2> $2/compact/$1.conjure-stderr | tee $2/compact/$1.conjure-stdout
 }
 export -f conjure_compact
 
