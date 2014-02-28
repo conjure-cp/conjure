@@ -238,9 +238,14 @@ do
 
     runhaskell ../create_essences.hs $size
 
-    parallel --no-notice conjure_compact                        {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
-    parallel --no-notice conjure_compact_all_solutions_count    {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
-    parallel --no-notice conjure_compact_all_solutions          {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
+    parallel --no-notice conjure_compact {1} {2//}                                          \
+        ::: noDontCare usesDontCare                                                         \
+        ::: */*.essence
+
+    parallel --no-notice {1} {2} {3//}                                                      \
+        ::: conjure_compact_all_solutions_count conjure_compact_all_solutions               \
+        ::: noDontCare usesDontCare                                                         \
+        ::: */*.essence
 
     # conjure_all
     # parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence

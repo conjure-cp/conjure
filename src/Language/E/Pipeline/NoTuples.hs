@@ -21,11 +21,17 @@ allNoTuplesSpec (Spec v x) = Spec v <$> allNoTuplesE x
 allNoTuplesE :: MonadConjure m => E -> m E
 allNoTuplesE = makeIdempotent helper
     where helper s0 = do
+            mkLog "helper 0" $ pretty s0
             (s1, b1) <- noTuplesE s0
+            mkLog "helper 1" $ pretty s1
             (s2, b2) <- noTupleDomsInQuanEs s1
+            mkLog "helper 2" $ pretty s2
             (s3, b3) <- noTupleLiterals s2
+            mkLog "helper 3" $ pretty s3
             (s4, b4) <- unrollIfNeeded s3
+            mkLog "helper 4" $ pretty s4
             (s5, (Any b5, _)) <- runWriterT $ simplify s4
+            mkLog "helper 5" $ pretty s5
             let bFinal = or [b1,b2,b3,b4,b5]
             return (s5, bFinal)
 
@@ -96,7 +102,8 @@ noTuplesE :: MonadConjure m => E -> m (E, Bool)
 noTuplesE statementIn = do
     let statements = statementAsList statementIn
     (statements',(tuplesToExplode,matrixOfTuplesToExplode,directReplacements)) <-
-        runWriterT $ forM statements $ \ statement ->
+        runWriterT $ forM statements $ \ statement -> withBindingScope $ do
+            lift $ introduceStuff statement
             case checkTopLevel statement of
                 Nothing      -> return [statement]
                 Just (f,n,d) ->
@@ -161,12 +168,20 @@ noTuplesE statementIn = do
 
 
 noTupleDomsInQuanEs :: MonadConjure m => E -> m (E, Bool)
-noTupleDomsInQuanEs inp@(Tagged t xs) = do
+noTupleDomsInQuanEs inp@(Tagged t xs) = withBindingScope' $ do
+    introduceStuff inp
     (inp', flag) <- noTupleDomsInQuanE inp
     if flag
         then return (inp', True)
         else do
+            bsText1 <- bindersDocNamesOnly
+            introduceStuff inp
             (ys, bools) <- unzip <$> mapM noTupleDomsInQuanEs xs
+            bsText2 <- bindersDocNamesOnly
+            mkLog "noTupleDomsInQuanEs" $ vcat [ pretty inp, "~~", pretty bsText1
+                                               , "~~"
+                                               , pretty bsText2
+                                               ]
             return $ if or bools
                         then (Tagged t ys, True)
                         else (inp, False)
@@ -174,8 +189,21 @@ noTupleDomsInQuanEs x = return (x, False)
 
 
 noTupleDomsInQuanE :: MonadConjure m => E -> m (E, Bool)
-noTupleDomsInQuanE inp = do
+noTupleDomsInQuanE inp = withBindingScope' $ do
+    -- bsText0 <- bindersDocNamesOnly
+    introduceStuff inp
+    -- bsText1 <- bindersDocNamesOnly
     (mout, (tuplesToExplode, matrixOfTuplesToExplode)) <- runWriterT (helper inp)
+    -- bsText2 <- bindersDocNamesOnly
+    -- mkLog "noTupleDomsInQuanE" $ vcat [ pretty inp
+    --                                   , "~~"
+    --                                   , pretty bsText0
+    --                                   , "~~"
+    --                                   , pretty bsText1
+    --                                   , "~~"
+    --                                   , pretty bsText2
+    --                                   ]
+    
     case mout of
         Nothing  -> return (inp, False)
         Just out -> do

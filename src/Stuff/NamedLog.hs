@@ -108,7 +108,7 @@ suppress = S.fromList
 
     , "handleInfDom"
     , "addSlicing"
-    , "recordSpec"
+    -- , "recordSpec"
 
     ]
 
