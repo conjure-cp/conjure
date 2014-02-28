@@ -122,13 +122,19 @@ export -f
 
 
 function conjure_compact() {
-    echo "conjure_compact working on: $1"
-    mkdir -p $1/compact
-    conjure                             \
+    echo "conjure_compact working on: $1 $2"
+    mkdir -p $2/compact
+
+    FLAG=""
+    if [ $1 = "noDontCare" ]; then
+        FLAG="--no-dontCare"
+    fi
+
+    conjure $FLAG                       \
         --mode compact                  \
-        --in  $1/$1.essence             \
-        --out $1/compact/$1.eprime      \
-        +RTS -s 2> $1/compact.conjure-stderr | tee $1/compact.conjure-stdout
+        --in  $2/$2.essence             \
+        --out $2/compact/$1.eprime      \
+        +RTS -s 2> $2/compact/$1.conjure-stderr | tee $2/compact/$1conjure-stdout
 }
 export -f conjure_compact
 
@@ -157,6 +163,23 @@ function conjure_compact_all_solutions {
 export -f conjure_compact_all_solutions
 
 
+function conjure_compact_all_solutions_count {
+    ESSENCE=$2/$2
+    MODEL=$2/compact/$1
+
+    savilerow                                                               \
+        -in-eprime      $MODEL.eprime                                       \
+        -out-minion     $MODEL.minion                                       \
+        -timelimit      3600000 2> $MODEL.savilerow-stderr | tee $MODEL.savilerow-stdout
+
+    minion                                                                  \
+        -cpulimit 3600                                                      \
+        $MODEL.minion                                                       \
+        -findallsols                                                        \
+        -noprintsols 2> $MODEL.minion-stderr | tee $MODEL.minion-stdout
+}
+export -f conjure_compact_all_solutions_count
+
 
 
 
@@ -166,9 +189,9 @@ export -f conjure_compact_all_solutions
 
 # experiment plan
 # - create essence files for "all combinations"
-# - conjure_compact on each (with dontCare)
-# - conjure_compact_all_solutions on each
-# - conjure_all on each both with and without dontCare
+# - conjure_compact on each (with and without dontCare)
+# - conjure_compact_all_solutions_count on each
+# - conjure_all on each (with and without dontCare)
 # - conjure_all_solve on each
 
 
@@ -180,10 +203,12 @@ export -f conjure_compact_all_solutions
 
 # - all-combinations/<name>/compact.conjure-stderr
 # - all-combinations/<name>/compact.conjure-stdout
-# - all-combinations/<name>/compact/<name>.eprime
-# - all-combinations/<name>/compact/<name>.minion
-# - all-combinations/<name>/compact/<name>.eprime-solution.<number>
-# - all-combinations/<name>/compact/<name>.eprime-solution.<number>.solution
+# - all-combinations/<name>/compact/noDontCare.eprime
+# - all-combinations/<name>/compact/noDontCare.minion
+# - all-combinations/<name>/compact/noDontCare.savilerow-stdout
+# - all-combinations/<name>/compact/noDontCare.savilerow-stderr
+# - all-combinations/<name>/compact/noDontCare.minion-stdout
+# - all-combinations/<name>/compact/noDontCare.minion-stderr
 
 # - all-combinations/<name>/noDontCare.conjure-stderr
 # - all-combinations/<name>/noDontCare.conjure-stdout
@@ -208,10 +233,10 @@ pushd all-combinations
 runhaskell create_essences.hs
 
 # conjure_compact
-parallel --no-notice conjure_compact {//} ::: */*.essence
+parallel --no-notice conjure_compact {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
-# conjure_compact_all_solutions
-parallel --no-notice conjure_compact_all_solutions {//} ::: */*.essence
+# conjure_compact_all_solutions_count
+parallel --no-notice conjure_compact_all_solutions_count {1} {2//} ::: noDontCare usesDontCare ::: */*.essence
 
 # conjure_all
 parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
