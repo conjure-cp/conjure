@@ -48,3 +48,8 @@ function forTable_updateNumbers {
     forTable_minionNodes     > ../numbers/forTable_minionNodes.txt
     forTable_minionTimedOut  > ../numbers/forTable_minionTimedOut.txt
 }
+# timestamp: 20140301-104009
+function rsync_from_eno {
+    time rsync -av --checksum --exclude "*.minion" --exclude "*.minion.aux" --exclude ".MINIONS*" ozgur@eno.cs.st-andrews.ac.uk:repos/stacs_cp/conjure/experiments .
+}
+
