@@ -48,7 +48,7 @@ function srOne() {
             -out-minion     ${OUTPUT}.minion                                \
             -out-info       ${OUTPUT}.info                                  \
             -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
-        rm -f "${OUTPUT}.minion.aux" "${OUTPUT}.infor"
+        rm -f "${OUTPUT}.minion.aux"
     else
         OUTPUT="$EPRIME-$PARAM"
         echo "Running Savile Row: ${OUTPUT} $PARAM_FULL"
@@ -64,7 +64,7 @@ function srOne() {
             -out-minion     ${OUTPUT}.minion                                \
             -out-info       ${OUTPUT}.info                                  \
             -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
-        rm -f "${OUTPUT}.minion.aux" "${OUTPUT}.infor"
+        rm -f "${OUTPUT}.minion.aux"
     fi
 }
 export -f srOne
