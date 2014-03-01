@@ -1,0 +1,2 @@
+runhaskell build_db.hs $(find experiments/dontcare/all-combinations/size2 -name *.minion-stdout)
+grep MinionTimeOut:1 experiments/dontcare/dominating-queens/*DontCare/*.info | sort
