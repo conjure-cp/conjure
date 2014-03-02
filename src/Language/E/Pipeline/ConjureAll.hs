@@ -12,6 +12,8 @@ import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom ( groomSpec )
 
+import qualified Data.HashSet as S
+
 
 conjureWithMode
     :: StdGen
@@ -20,7 +22,7 @@ conjureWithMode
     -> ConjureModeWithFlags
     -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureWithMode seed limitLevels limitOut mode reprs refns spec
+conjureWithMode seed limitLevels limitOut mode@(ConjureModeWithFlags _ _ flags _) reprs refns spec
     = withLimit
     $ onlyOneError
     $ runCompE "conjure" $ do
@@ -28,6 +30,7 @@ conjureWithMode seed limitLevels limitOut mode reprs refns spec
         modifyGlobal $ \ gl -> gl { conjureMode  = mode
                                   , limitOutputs = limitOut
                                   }
+        modify $ \ st -> st { flag_UseDontCare = not ("--no-dontCare" `S.member` flags) }
         conjureAll limitLevels reprs refns spec
 
     where

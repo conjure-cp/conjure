@@ -1,0 +1,11 @@
+
+~~> Partition~SetOfSets
+~~> set of set (minSize 1) of &tau                                                  $ no part is emtpy
+
+
+*** partition from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) <= 1)        $ each item occurs at most once is only one of the parts
+
+
+*** partition (complete) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) = 1)         $ each item occurs exactly once is only one of the parts

@@ -1069,6 +1069,13 @@ domSize [xMatch| [a] := domain.function.innerFrom
     bSize <- domSize b
     return [eMake| (&bSize + 1) ** &aSize |]
 
+domSize [xMatch| [a]   := domain.partition.inner
+               | attrs := domain.partition.attributes.attrCollection
+               |] = domSize [xMake| domain.set.inner := [a']
+                                  | domain.set.attributes := attrs
+                                  |]
+    where a' = [xMake| domain.set.inner := [a] |]
+
 domSize [xMatch| [] := topLevel.declaration.given.typeInt
                | [Prim (S nm)] := topLevel.declaration.given.name.reference
                |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
@@ -1084,28 +1091,36 @@ domSize p =
 choose :: E -> E -> E
 choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
 
-evalDontCare :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-evalDontCare [eMatch| dontCare(&i) |] = ret =<< dontCare i
-evalDontCare _ = return Nothing
+evalDontCare :: MonadConjure m => Bool -> E -> m (Maybe (E,[Binder]))
+evalDontCare False [eMatch| dontCare(&_) |] = ret [eMake| true |]
+evalDontCare True  [eMatch| dontCare(&a) |] = do
+    let
+        bottomOfDomain [xMatch| _     := domain.bool         |] = return [eMake| false |]
+        bottomOfDomain [xMatch| (r:_) := domain.int.ranges   |] = bottomOfRange r
+        bottomOfDomain [xMatch| _     := domain.int          |] = return [eMake| 0 |]
+        bottomOfDomain _ = Nothing
 
-dontCare :: MonadConjure m => E -> m E
-dontCare p = do
-    d <- domainOf p
-    return $ case dontCareDom d of
-        Nothing -> [eMake| true |]
-        Just v  -> [eMake| &p = &v |]
-    where
-        dontCareDom [xMatch| _     := domain.bool         |] = return [eMake| false |]
-        dontCareDom [xMatch| (r:_) := domain.int.ranges   |] = dontCareRange r
-        dontCareDom [xMatch| _     := domain.int          |] = return [eMake| 0 |]
-        dontCareDom [xMatch| xs    := domain.tuple.inners |] = (\ ys -> [xMake| value.tuple.values := ys |] ) <$> mapM dontCareDom xs
-        dontCareDom _ = Nothing
+        bottomOfRange [xMatch| [x]   := range.single |] = return x
+        bottomOfRange [xMatch| [x]   := range.from   |] = return x
+        bottomOfRange [xMatch| [x]   := range.to     |] = return x
+        bottomOfRange [xMatch| [x,_] := range.fromTo |] = return x
+        bottomOfRange _ = Nothing
 
-        dontCareRange [xMatch| [x]   := range.single |] = return x
-        dontCareRange [xMatch| [x]   := range.from   |] = return x
-        dontCareRange [xMatch| [x]   := range.to     |] = return x
-        dontCareRange [xMatch| [x,_] := range.fromTo |] = return x
-        dontCareRange _ = Nothing
+    da <- domainOf a
+    case bottomOfDomain da of
+        Just v  -> ret [eMake| &a = &v |]
+        Nothing -> do
+            ta <- typeOf a
+            case ta of
+                [xMatch| is := type.tuple.inners |] ->
+                    ret $ conjunct [ [eMake| dontCare(&a[&i]) |]
+                                   | j <- [1..genericLength is]
+                                   , let i = [xMake| value.literal := [Prim (I j)] |]
+                                   ]
+                _ -> return Nothing
+-- evalDontCare True  [eMatch| dontCare(&i) |] = ret [eMake| dontCare(&i) |]
+    -- error $ show $ vcat [ "dontCareDom", pretty i, prettyAsPaths i ]
+evalDontCare _ _ = return Nothing
 
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))

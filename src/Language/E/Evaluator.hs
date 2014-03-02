@@ -57,14 +57,15 @@ fullySimplify x = do
 
         unrolling :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
         -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
-        unrolling i =
+        unrolling i = do
+            useDontCare <- gets flag_UseDontCare
             firstJustOr i
                 $ map ($ i) [ logged "Evaluator"                                fullEvaluator
                             , logged "Evaluator.hasRepr"                        evalHasRepr
                             , logged "Evaluator.hasType"                        evalHasType
                             , logged "Evaluator.hasDomain"                      evalHasDomain
                             , logged "Evaluator.domSize"                        evalDomSize
-                            , logged "Evaluator.dontCare"                       evalDontCare
+                            , logged "Evaluator.dontCare"                       (evalDontCare useDontCare)
                             , logged "Evaluator.indices"                        evalIndices
                             , logged "Evaluator.replace"                        evalReplace
                             , logged "Evaluator.tupleEq"                        tupleEq
@@ -104,14 +105,15 @@ simplify x = do
 
 allCombined :: MonadConjure m => E -> WriterT (Any, [Binder]) m E
 -- allCombined i = trace (show $ "allCombined:" <+> pretty i) $
-allCombined i =
+allCombined i = do
+    useDontCare <- gets flag_UseDontCare
     firstJustOr i
         $ map ($ i) [ logged "Evaluator"                                fullEvaluator
                     , logged "Evaluator.hasRepr"                        evalHasRepr
                     , logged "Evaluator.hasType"                        evalHasType
                     , logged "Evaluator.hasDomain"                      evalHasDomain
                     , logged "Evaluator.domSize"                        evalDomSize
-                    , logged "Evaluator.dontCare"                       evalDontCare
+                    , logged "Evaluator.dontCare"                       (evalDontCare useDontCare)
                     , logged "Evaluator.indices"                        evalIndices
                     , logged "Evaluator.replace"                        evalReplace
                     , logged "Evaluator.tupleEq"                        tupleEq

@@ -186,6 +186,7 @@ data ConjureState = ConjureState
         , lastSpec :: !(Maybe Spec) -- record the spec after changes, to report in case of an error.
         , localLogs :: !LogTree
         , allNamesPreConjure :: !(S.HashSet Text)  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
+        , flag_UseDontCare :: Bool
         }
 
 bindersDoc :: MonadConjure m => m Doc
@@ -216,7 +217,7 @@ instance Default (S.HashSet a) where
     def = S.empty
 
 instance Default ConjureState where
-    def = ConjureState def 1 def def def def def
+    def = ConjureState def 1 def def def def def True
 
 instance Pretty Binder where
     pretty (Binder nm val) = pretty nm <+> ":" <+> pretty val

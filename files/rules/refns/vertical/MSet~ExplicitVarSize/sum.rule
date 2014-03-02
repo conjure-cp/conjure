@@ -1,0 +1,14 @@
+[1000]
+
+sum &i in &s, &g . &k
+
+~~>
+
+sum j : &r , &g { &i --> &m[j,2] }
+           . &k { &i --> &m[j,2] } * &m[j,1]
+
+    where &s hasType `mset of _`
+    where &s hasRepr MSet~ExplicitVarSize
+
+    letting &m be refn(&s)
+    letting &r be indices(&m,0)

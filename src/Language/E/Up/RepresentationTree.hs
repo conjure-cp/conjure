@@ -36,7 +36,7 @@ rep_names = [
     "SetOccurrence",
     "AsReln",
     "Matrix1D",
-    "MSetOfSets"
+    "PartitionSetOfSets"
     ]
 
 recombine :: [String] -> [String]

@@ -1,0 +1,25 @@
+[1000]
+
+dontCare(&x) ~~> dontCare(refn(&x))
+
+    where
+        ( &x hasRepr Set~Explicit) \/
+        ( &x hasRepr Set~ExplicitVarSize) \/
+        ( &x hasRepr Set~ExplicitVarSizeWithDefault) \/
+        ( &x hasRepr Set~ExplicitVarSizeWithMarker) \/
+        ( &x hasRepr Set~Occurrence) \/
+
+        ( &x hasRepr MSet~Explicit) \/
+        ( &x hasRepr MSet~ExplicitVarSize) \/
+        ( &x hasRepr MSet~Occurrence) \/
+
+        ( &x hasRepr Function~1D) \/
+        ( &x hasRepr Function~1DPartial) \/
+        ( &x hasRepr Function~AsReln) \/
+        ( &x hasRepr Function~AsReln_withSize) \/
+
+        ( &x hasRepr Partition~SetOfSets) \/
+
+        ( &x hasRepr Relation~AsSet) \/
+        ( &x hasRepr Relation~IntMatrix2) \/
+        ( &x hasRepr Relation~IntMatrix3)

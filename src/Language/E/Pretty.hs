@@ -364,6 +364,7 @@ instance Pretty E where
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
         = prettyPrec 0 x
 
+    pretty [xMatch| xs := operator.dontCare     |] = "dontCare"     <> prettyList Pr.parens "," xs
     pretty [xMatch| xs := operator.allDiff      |] = "allDiff"      <> prettyList Pr.parens "," xs
     pretty [xMatch| xs := operator.apart        |] = "apart"        <> prettyList Pr.parens "," xs
     pretty [xMatch| xs := operator.defined      |] = "defined"      <> prettyList Pr.parens "," xs

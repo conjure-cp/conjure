@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find x :
+    set (maxSize 1) of 
+    mset (maxSize 1) of 
+    function int(1..1) --> 
+    partition (maxNumParts 2) from 
+    relation (maxSize 1) of (int(1..2) * int(1..2))

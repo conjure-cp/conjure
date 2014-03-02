@@ -2,7 +2,7 @@
 ~~> Set~ExplicitVarSizeWithDefault
 ~~> matrix indexed by [int(1..&mx)] of int(&lb..&def)
 ~~> (
-        forAll i : int(1..&mx-1), refn[i] != &def /\ refn[i+1] != &def . refn[i] < refn[i+1]
+        forAll i : int(1..&mx-1), refn[i] != &def . refn[i] < refn[i+1]
     )
         /\
     (
