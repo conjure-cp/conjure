@@ -717,6 +717,11 @@ fullEvaluator
                         | operator.index.right := [rhs]
                         |]
 
+fullEvaluator
+    [xMatch| [i]             := withLocals.actual
+           | [Prim (B True)] := withLocals.locals.topLevel.suchThat.value.literal
+           |] = ret i
+
 fullEvaluator _ = return Nothing
 
 
