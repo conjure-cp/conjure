@@ -97,22 +97,22 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
 
     -- bs <- bindersDoc
     -- mkLog "debug" $ vcat $
-        -- (
-            -- "essenceGivens" :
-                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
-                -- | (a,b) <- essenceGivens
-                -- ]
-        -- ) ++ (
-            -- "essenceParams" :
-                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
-                -- | (a,b) <- essenceParams
-                -- ]
-        -- ) ++ (
-            -- "lookupReprs"   :
-                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
-                -- | (a,b) <- lookupReprs
-                -- ]
-        -- ) ++ [bs]
+    --     (
+    --         "essenceGivens" :
+    --             [ nest 4 $ pretty a <+> ":" <+> pretty b
+    --             | (a,b) <- essenceGivens
+    --             ]
+    --     ) ++ (
+    --         "essenceParams" :
+    --             [ nest 4 $ pretty a <+> ":" <+> pretty b
+    --             | (a,b) <- essenceParams
+    --             ]
+    --     ) ++ (
+    --         "lookupReprs"   :
+    --             [ nest 4 $ pretty a <+> ":" <+> pretty b
+    --             | (a,b) <- lookupReprs
+    --             ]
+    --     ) ++ [bs]
 
     outPairs <- concatMapM (workhorse lookupReprs)
                 [ (nm, decl, val)
@@ -141,25 +141,42 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
     val <- instantiate [] valBefore
     let thisReprs = [ repr | (nm', repr) <- lookupReprs, nm == nm' ]
     result <- if null thisReprs
-                then helper nm dom val Nothing
-                else concatMapM (helper nm dom val . Just) thisReprs
+                then callHelper nm dom val Nothing
+                else concatMapM (callHelper nm dom val . Just) thisReprs
     -- unless (null thisReprs) $
-        -- mkLog "debug" $ sep
-            -- [ "workhorse"
-            -- , "~~" <+> sep (map pretty thisReprs)
-            -- , "~~" <+> pretty nm
-            -- , "~~" <+> pretty dom
-            -- , "~~" <+> pretty val
-            -- , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
-                            -- | (i,j) <- result
-                            -- ]
-            -- ]
+    --     mkLog "debug" $ sep
+    --         [ "workhorse"
+    --         , "~~" <+> sep (map pretty thisReprs)
+    --         , "~~" <+> pretty nm
+    --         , "~~" <+> pretty dom
+    --         , "~~" <+> pretty val
+    --         , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
+    --                         | (i,j) <- result
+    --                         ]
+    --         ]
     return result
 
     where
 
+        callHelper
+            :: MonadConjure m
+            => Text
+            -> E
+            -> E
+            -> Maybe Text
+            -> m [(Text, E)]
         callHelper name _      val@[xMatch| _ := value.literal |] _ = return [(name, val)]
-        callHelper name domain val repr = helper name domain val repr
+        callHelper name domain val repr = do
+            outs <- helper name domain val repr
+            -- mkLog "callHelper" $ vcat $ [ pretty name
+            --                             , "~~"
+            --                             , prettyAsPaths domain
+            --                             , "~~"
+            --                             , prettyAsPaths val
+            --                             , "~~"
+            --                             , pretty repr
+            --                             ] ++ map pretty outs
+            return outs
 
         helper
             :: MonadConjure m
@@ -170,11 +187,11 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             -> m [(Text, E)]
 
         -- helper name domain value _
-            -- | trace (show $ sep [ "helper"
-                                -- , pretty name
-                                -- , pretty domain
-                                -- , pretty value
-                                -- ]) False = undefined
+        --     | trace (show $ sep [ "helper"
+        --                         , pretty name
+        --                         , pretty domain
+        --                         , pretty value
+        --                         ]) False = undefined
 
         helper
             name
@@ -199,9 +216,6 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 dSize <- domSize d
                 return $ [ ( name `mappend` "_size"
                            , dSize
-                           )
-                         , ( name
-                           , d
                            )
                          ]
 
@@ -466,7 +480,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 case lookup nameOut lookupReprs of
                     Nothing   -> bug $ vcat [ "workhorse.helper.AsReln 2", pretty nameOut]
                     Just repr ->
-                        helper
+                        callHelper
                             nameOut
                             [xMake| domain.relation.attributes.attrCollection := attrs
                                   | domain.relation.inners := [domInnerFr, domInnerTo]
@@ -506,7 +520,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 case lookup nameOut lookupReprs of
                     Nothing   -> bug $ vcat [ "workhorse.helper.RelationAsSet", pretty name]
                     Just repr ->
-                        helper
+                        callHelper
                             nameOut
                             [xMake| domain.set.attributes.attrCollection := attrs
                                   | domain.set.inner := [domInnerOut]
@@ -576,7 +590,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper name domain value Nothing =
             case lookup name lookupReprs of
-                Just repr -> helper name domain value (Just repr)
+                Just repr -> callHelper name domain value (Just repr)
                 Nothing -> bug $ vcat
                     [ "missing case in RedArrow.workhorse"
                     , "name:"   <+> pretty name

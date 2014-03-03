@@ -28,6 +28,7 @@ savilerowCompat b
     >=> (return . onSpec tildeIsn'tSupported)   >=> recordSpec "tildeIsn'tSupported"
     >=> (return . (atMostOneSuchThat b))        >=> recordSpec "atMostOneSuchThat"
     >=> (return . removeMinMaxInt)              >=> recordSpec "removeMinMaxInt"
+    >=> (return . removeTypeInt)                >=> recordSpec "removeTypeInt"
     >=> (return . langEPrime)                   >=> recordSpec "langEPrime"
 
 
@@ -161,4 +162,10 @@ removeMinMaxInt (Spec v x) =
 
         Spec v $ transform stripFromRanges $ listAsStatement xs
 
+
+removeTypeInt :: Spec -> Spec
+removeTypeInt (Spec v x) = Spec v $ listAsStatement $ filter (not . isTypeInt) $ statementAsList x
+    where
+        isTypeInt [xMatch| _ := topLevel.declaration.given.typeInt |] = True
+        isTypeInt _ = False
 
