@@ -12,16 +12,6 @@
 *** function (total, surjective) &fr --> &to
     ~~> forAll i : &to . exists j : &fr . refn[j] = i           $ surjective
 
-
-*** function (total, injective, surjective) &fr --> &to
-    ~~> allDiff(refn)                                           $ injective
-    where domSize(&fr) = domSize(&to)                           $ surjective cons not needed
-
-*** function (total, injective, surjective) &fr --> &to
-    ~~> allDiff(refn)                                           $ injective
-    /\  forAll i : to . exists j : fr . refn[j] = i             $ surjective
-
-
 *** function (total, bijective, ..) &fr --> &to
     ~~> allDiff(refn)                                           $ injective
     where domSize(&fr) = domSize(&to)                           $ surjective cons not needed
@@ -37,10 +27,6 @@
 $ surjective when domSize(&fr) = domSize(&to) implies "injective" and "total"
 
 *** function (surjective) &fr --> &to
-    ~~> allDiff(refn)                                           $ injective
-    where domSize(&fr) = domSize(&to)
-
-*** function (injective, surjective) &fr --> &to
     ~~> allDiff(refn)                                           $ injective
     where domSize(&fr) = domSize(&to)
 
