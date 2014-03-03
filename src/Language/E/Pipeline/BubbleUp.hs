@@ -72,7 +72,7 @@ onChildren [xMatch| [actual] := withLocals.actual
     | let (varsList,consList) = partition isDeclaration locals
     , consList /= []
     = do
-        let cons = conjunct (map outOfSuchThat consList)
+        let cons = conjunct (concatMap outOfSuchThat consList)
         tyActual <- typeOf actual `catchError` (const $ return [xMake| type.unknown := [] |])
         case tyActual of
             [xMatch| [] := type.bool |] ->
@@ -101,9 +101,9 @@ isDeclaration :: E -> Bool
 isDeclaration [xMatch| _ := topLevel.declaration |] = True
 isDeclaration _ = False
 
-outOfSuchThat :: E -> E
-outOfSuchThat [xMatch| [x] := topLevel.suchThat |] = x
-outOfSuchThat x = x
+outOfSuchThat :: E -> [E]
+outOfSuchThat [xMatch| xs := topLevel.suchThat |] = xs
+outOfSuchThat x = [x]
 
 insertBeforeSuchThat :: [E] -> [E] -> [E]
 insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest
