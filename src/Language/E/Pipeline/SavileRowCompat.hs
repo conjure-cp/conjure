@@ -6,6 +6,7 @@ import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.DomainOf ( domainOf )
 -- import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 
 import qualified Data.Text as T ( filter )
@@ -85,14 +86,7 @@ sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
                           |] = first (right:) (go left)
                 go m = ([], m)
 
-        lookupDomain d@[xMatch| _ := domain |] = return $ Just d
-        lookupDomain [xMatch| [Prim (S nm)] := reference |] = do
-            res <- errMaybeT "lookupDomain" lookupReference nm
-            lookupDomain res
-        lookupDomain [xMatch| [d] := topLevel.declaration.find .domain |] = return $ Just d
-        lookupDomain [xMatch| [d] := topLevel.declaration.given.domain |] = return $ Just d
-        lookupDomain [xMatch| [d] := topLevel.letting          .domain |] = return $ Just d
-        lookupDomain _ = return Nothing
+        lookupDomain d = Just <$> domainOf d
 
         matrixDomainNbDims :: E -> Int
         matrixDomainNbDims [xMatch| [inner] := domain.matrix.inner |] = 1 + matrixDomainNbDims inner
