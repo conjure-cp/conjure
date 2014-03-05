@@ -317,6 +317,12 @@ class SelectByMode a where
 defSelectByMode :: RandomM m => ConjureMode -> GlobalState -> [a] -> m [a]
 defSelectByMode _                                   _ [] = return []
 defSelectByMode (ModeUnknown                    {}) s xs = return $ maybe id take (limitOutputs s) xs
+
+
+defSelectByMode (ModeMultipleOutput DFSample _ _ _ ) GlobalState{limitOutputs = Just l } xs =  do
+       vals <- mapM  ( return $ rangeRandomM (0, length xs - 1)   )   [1..l]
+       return $ map (\i ->  xs !! i )  vals 
+
 defSelectByMode (ModeMultipleOutput             {}) s xs = return $ maybe id take (limitOutputs s) xs
 defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) _ (x:_) = return [x]
 defSelectByMode (ModeSingleOutput ModeRandom _ _  ) _ xs = do

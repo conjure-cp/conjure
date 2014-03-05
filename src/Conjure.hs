@@ -145,7 +145,9 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper m
                     ++ (case multimode of
                             DFAll -> "-df"
                             DFCompactParam -> "-df-compact-param"
-                            DFNoChannelling -> "-df-no-channelling")
+                            DFNoChannelling -> "-df-no-channelling"
+                            DFSample -> "-sample"
+                       )
                     ++ (if S.member "--better" flags then "-better" else "")
             let outDirPath = fromMaybe defOutDirPath pathOutputDir
             driverConjure
