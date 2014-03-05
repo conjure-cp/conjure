@@ -225,7 +225,15 @@ export -f conjure_compact_all_solutions_count
 
 
 
+# for level 1 nesting
+# generate sizes 1..5
+# count number of all solutions
+# also enumerate all solutions
 
+# for level 2 nesting
+# generate sizes 1..2
+# count number of all solutions
+# do *not* enumerate all solutions
 
 
 echo "recomputing..."
@@ -236,7 +244,7 @@ for size in {1..5}
 do
     mkdir "size${size}" ; pushd "size${size}"
 
-    runhaskell ../create_essences.hs $size
+    runhaskell ../create_essences.hs 1 $size
 
     parallel --no-notice conjure_compact {1} {2//}                                          \
         ::: noDontCare usesDontCare                                                         \
@@ -244,6 +252,33 @@ do
 
     parallel --no-notice {1} {2} {3//}                                                      \
         ::: conjure_compact_all_solutions_count conjure_compact_all_solutions               \
+        ::: noDontCare usesDontCare                                                         \
+        ::: */*.essence
+
+    # conjure_all
+    # parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
+
+    # conjure_all_solve
+    # parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
+
+    # clean up
+    find . -size 0                  -exec echo removing {} \; -exec rm {} \;
+    find . -name "*.minion.aux"     -exec echo removing {} \; -exec rm {} \;
+    popd
+done
+
+for size in {1..2}
+do
+    mkdir "size${size}" ; pushd "size${size}"
+
+    runhaskell ../create_essences.hs 2 $size
+
+    parallel --no-notice conjure_compact {1} {2//}                                          \
+        ::: noDontCare usesDontCare                                                         \
+        ::: */*.essence
+
+    parallel --no-notice {1} {2} {3//}                                                      \
+        ::: conjure_compact_all_solutions_count                                             \
         ::: noDontCare usesDontCare                                                         \
         ::: */*.essence
 
