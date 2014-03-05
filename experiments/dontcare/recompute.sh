@@ -34,6 +34,8 @@ function srOne() {
     EPRIME="$1"
     PARAM="$2"
     PARAM_FULL="$3"
+    DIR=$(dirname ${EPRIME}.eprime)
+    ESSENCE="${DIR}/../*.essence"
     if [ ${PARAM} = "none" ] ; then
         OUTPUT="$EPRIME"
         echo "Running Savile Row: ${OUTPUT}"
@@ -49,6 +51,12 @@ function srOne() {
             -out-info       ${OUTPUT}.info                                  \
             -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
         rm -f "${OUTPUT}.minion.aux"
+        conjure
+                --mode translateSolution
+                --in-essence            ${ESSENCE}
+                --in-eprime             ${EPRIME}.eprime
+                --in-eprime-solution    ${OUTPUT}.eprime-solution
+                --out-essence-solution  ${OUTPUT}.solution
     else
         OUTPUT="$EPRIME-$PARAM"
         echo "Running Savile Row: ${OUTPUT} $PARAM_FULL"
@@ -65,24 +73,73 @@ function srOne() {
             -out-info       ${OUTPUT}.info                                  \
             -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
         rm -f "${OUTPUT}.minion.aux"
+        conjure
+                --mode translateSolution
+                --in-essence            ${ESSENCE}
+                --in-eprime             ${EPRIME}.eprime
+                --in-eprime-solution    ${OUTPUT}.eprime-solution
+                --out-essence-solution  ${OUTPUT}.solution
     fi
 }
 export -f srOne
 
 
-function srAll() {
-    rm -f argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: Set-VarSize/*/*/*.eprime                                      >> argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: MSet-VarSize/*/*/*.eprime                                     >> argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: Relation-VarSize/*/*/*.eprime                                 >> argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: Function-Partial/*/*/*.eprime                                 >> argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: Partition-VarSize/*/*/*.eprime                                >> argslist.txt
-    parallel --no-notice -j1 echo {1.} "none" "none" ::: $(find all-combinations -name "*.eprime")                     >> argslist.txt
-    parallel --no-notice -j1 echo {1.} {2/.}  {2}    ::: dominating-queens/*/*.eprime  ::: dominating-queens/*.param   >> argslist.txt
-    # parallel --no-notice -j1 echo {1.} "none" "none" ::: Nested-Types/*/*/*.eprime                                     >> argslist.txt
-    parallel --no-notice --colsep ' ' srOne {1} {2} {3} :::: argslist.txt
+function srOne_allsols() {
+    EPRIME="$1"
+    PARAM="$2"
+    PARAM_FULL="$3"
+    DIR=$(dirname ${EPRIME}.eprime)
+    ESSENCE="${DIR}/../*.essence"
+    if [ ${PARAM} = "none" ] ; then
+        OUTPUT="$EPRIME"
+        echo "Running Savile Row: ${OUTPUT}"
+        savilerow                                                           \
+            -all-solutions                                                  \
+            -timelimit      3600000                                         \
+            -minion-options "-cpulimit 3600"                                \
+            -boundvars                                                      \
+            -deletevars                                                     \
+            -preprocess     None                                            \
+            -run-minion     minion                                          \
+            -in-eprime      ${EPRIME}.eprime                                \
+            -out-minion     ${OUTPUT}.minion                                \
+            -out-info       ${OUTPUT}.info                                  \
+            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
+        rm -f "${OUTPUT}.minion.aux"
+        cmd="conjure
+                --mode translateSolution
+                --in-essence            ${ESSENCE}
+                --in-eprime             ${EPRIME}.eprime
+                --in-eprime-solution    {}
+                --out-essence-solution  {}.solution"
+        parallel --no-notice $cmd ::: ${OUTPUT}.eprime-solution.*
+    else
+        OUTPUT="$EPRIME-$PARAM"
+        echo "Running Savile Row: ${OUTPUT} $PARAM_FULL"
+        savilerow                                                           \
+            -all-solutions                                                  \
+            -timelimit      3600000                                         \
+            -minion-options "-cpulimit 3600"                                \
+            -boundvars                                                      \
+            -deletevars                                                     \
+            -preprocess     None                                            \
+            -run-minion     minion                                          \
+            -in-eprime      ${EPRIME}.eprime                                \
+            -in-param       ${PARAM_FULL}                                   \
+            -out-minion     ${OUTPUT}.minion                                \
+            -out-info       ${OUTPUT}.info                                  \
+            -out-solution   ${OUTPUT}.eprime-solution 2> ${OUTPUT}.savilerow-stderr | tee ${OUTPUT}.savilerow-stdout
+        rm -f "${OUTPUT}.minion.aux"
+        cmd="conjure
+                --mode translateSolution
+                --in-essence            ${ESSENCE}
+                --in-eprime             ${EPRIME}.eprime
+                --in-eprime-solution    {}
+                --out-essence-solution  {}.solution"
+        parallel --no-notice $cmd ::: ${OUTPUT}.eprime-solution.*
+    fi
 }
-export -f srAll
+export -f srOne_allsols
 
 function report_timeout() {
     grep "MinionTimeOut:1" $(find . -name "*.info") | cut -d ':' -f 1
@@ -226,21 +283,25 @@ export -f conjure_compact_all_solutions_count
 
 
 # for level 1 nesting
-# generate sizes 1..5
-# count number of all solutions
-# also enumerate all solutions
+# generate sizes 1..3
+# for compact
+#   count number of all solutions
+#   also enumerate all solutions
+# for all-models
+#   enumerate all solutions
 
 # for level 2 nesting
 # generate sizes 1..2
-# count number of all solutions
-# do *not* enumerate all solutions
+# for compact
+#   count number of all solutions
+#   do *not* enumerate all solutions
 
 
 echo "recomputing..."
 
 pushd all-combinations
 
-for size in {1..5}
+for size in {1..3}
 do
     mkdir "size${size}" ; pushd "size${size}"
 
@@ -256,10 +317,10 @@ do
         ::: */*.essence
 
     # conjure_all
-    # parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
+    parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
 
     # conjure_all_solve
-    # parallel --no-notice srOne {} "none" "none" ::: */*DontCare/*.eprime
+    parallel --no-notice srOne_allsols {.} "none" "none" ::: */*DontCare/*.eprime
 
     # clean up
     find . -size 0                  -exec echo removing {} \; -exec rm {} \;
