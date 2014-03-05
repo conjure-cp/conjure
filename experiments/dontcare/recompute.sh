@@ -96,7 +96,7 @@ function srOne_allsols() {
         savilerow                                                           \
             -all-solutions                                                  \
             -timelimit      3600000                                         \
-            -minion-options "-cpulimit 3600  -sollimit 1000"                \
+            -minion-options "-cpulimit 3600 -sollimit 1000"                 \
             -boundvars                                                      \
             -deletevars                                                     \
             -preprocess     None                                            \
@@ -119,7 +119,7 @@ function srOne_allsols() {
         savilerow                                                           \
             -all-solutions                                                  \
             -timelimit      3600000                                         \
-            -minion-options "-cpulimit 3600  -sollimit 1000"                \
+            -minion-options "-cpulimit 3600 -sollimit 1000"                 \
             -boundvars                                                      \
             -deletevars                                                     \
             -preprocess     None                                            \
