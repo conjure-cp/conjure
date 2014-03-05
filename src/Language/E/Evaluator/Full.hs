@@ -756,7 +756,6 @@ unrollQuantifiers [eMatch| &quan &iPre : int(&a..&b) , &guard . &body |]
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     = do
-
     let i = case iPre of
                 [xMatch| [single] := structural.single |] -> single
                 _ -> iPre
@@ -769,6 +768,25 @@ unrollQuantifiers [eMatch| &quan &iPre : int(&a..&b) , &guard . &body |]
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
+unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    , [xMatch| _ := domain.matrix |] <- dom
+    = do
+        let i = case iPre of
+                    [xMatch| [single] := structural.single |] -> single
+                    _ -> iPre
+        -- mkLog "unrollQuantifiers" $ prettyAsPaths dom
+        allValues <- getAllValues dom
+        xs <- forM allValues $ \ n -> do
+            -- mkLog "getAllValues" $ pretty n
+            newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
+            newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+            case (newGuard, newBody) of
+                (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
+                _ -> return Nothing
+        y <- unrollQuantifier quanStr (catMaybes xs)
+        -- mkLog "unrollQuantifiers" $ pretty y
+        ret y
 unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
     | [xMatch| rs := domain.int.ranges |] <- dom
     , Just numbers <- mapM singleRangeOut rs
@@ -1420,4 +1438,29 @@ stripStructuralSingle _ = return Nothing
 
 freqInList :: Eq a => a -> [a] -> Int
 freqInList y xs = length $ filter (y==) xs
+
+
+getAllValues :: MonadConjure m => E -> m [E]
+getAllValues [xMatch| [fr,to] := domain.matrix.index.domain.int.ranges.range.fromTo
+                 | [index] := domain.matrix.index
+                 | [inner] := domain.matrix.inner
+                 |]
+    | [xMatch| [Prim (I frI)] := value.literal |] <- fr
+    , [xMatch| [Prim (I toI)] := value.literal |] <- to
+    = do
+        i <- getAllValues inner
+        let vals = replicateM (fromInteger $ toI - frI + 1) i
+        let
+            wrap :: [E] -> E
+            wrap vs = [xMake| value.matrix.values := vs
+                            | value.matrix.indexrange := [index]
+                            |]
+        return $ map wrap vals
+getAllValues [xMatch| [fr,to] := domain.int.ranges.range.fromTo |]
+    | [xMatch| [Prim (I frI)] := value.literal |] <- fr
+    , [xMatch| [Prim (I toI)] := value.literal |] <- to
+    = do
+        let wrap i = [xMake| value.literal := [Prim (I i)] |]
+        return $ map wrap [frI .. toI]
+getAllValues d = bug $ "Don't know how to calculate all values of this domain: " <+> prettyAsPaths d
 
