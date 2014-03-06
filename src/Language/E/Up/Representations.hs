@@ -224,16 +224,16 @@ matrix1DRep  v = error $  "matrix1DRep! " ++  (show . pretty) v
 
 {- Partitions -}
 
-partitionMSetOfSetsRep :: VarData -> E
-partitionMSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} =
+partitionSetOfSetsRep :: VarData -> E
+partitionSetOfSetsRep VarData{vEssence=[xMatch| vs :=  value.matrix.values |]} =
     let parts = map toPart vs
-    in  tracee "partitionMSetOfSetsRep" [xMake| value.partition.values := parts |]
+    in  tracee "partitionSetOfSetsRep" [xMake| value.partition.values := parts |]
 
     where
     toPart [xMatch| es := value.matrix.values |] =  [xMake| part := es |]
-    toPart f = _bug "partitionMSetOfSetsRep: toPart unhandled" [f]
+    toPart f = _bug "partitionSetOfSetsRep: toPart unhandled" [f]
 
-partitionMSetOfSetsRep v =  _bug "partitionMSetOfSetsRep unhandled" [v]
+partitionSetOfSetsRep v =  _bug "partitionSetOfSetsRep unhandled" [v]
 
 {- End -}
 
@@ -267,7 +267,7 @@ getBranch s =
       "FunctionAsReln"     -> Just functionAsRelnRep
       "MSetExplicit"       -> Just explicitBranch
       "MSetOccurrence"     -> Just moccurrenceBranch
-      "MSetOfSets"         -> Just partitionMSetOfSetsBranch
+      "PartitionSetOfSets" -> Just partitionSetOfSetsBranch
       "Matrix1D"           -> Just matrix1DBranch
       "Function1D"         -> Just matrix1DBranch
       "RelationAsSet"      -> Just relationAsSetRep
@@ -284,7 +284,7 @@ isBranchRep "AsReln"             = True
 isBranchRep "FunctionAsReln"     = True
 isBranchRep "MSetExplicit"       = True
 isBranchRep "MSetOccurrence"     = True
-isBranchRep "MSetOfSets"         = True
+isBranchRep "PartitionSetOfSets" = True
 isBranchRep "Matrix1D"           = True
 isBranchRep "Function1D"         = True
 isBranchRep "RelationAsSet"      = True
@@ -415,13 +415,13 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 
 {- Partitions -}
 
-partitionMSetOfSetsBranch :: (Before,After)
-partitionMSetOfSetsBranch = ( tracee "partitionMSetOfSetsBranch" beforeUnchanged , after )
+partitionSetOfSetsBranch :: (Before,After)
+partitionSetOfSetsBranch = ( tracee "partitionSetOfSetsBranch" beforeUnchanged , after )
     where
-    after orgData [vs] = orgData{vEssence=partitionMSetOfSetsRep vs}
-        `_p` ("partitionMSetOfSetsBranch v", [vs])
+    after orgData [vs] = orgData{vEssence=partitionSetOfSetsRep vs}
+        `_p` ("partitionSetOfSetsBranch v", [vs])
 
-    after _ vvs = _bug "partitionMSetOfSetsBranch unhandled" vvs
+    after _ vvs = _bug "partitionSetOfSetsBranch unhandled" vvs
 
 
 {- End -}

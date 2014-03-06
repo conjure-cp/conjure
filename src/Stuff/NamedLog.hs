@@ -60,7 +60,7 @@ suppress = S.fromList
     , "Evaluator.hasType"
     , "Evaluator.hasDomain"
     , "Evaluator.domSize"
-    , "Evaluator.dontCare"
+    -- , "Evaluator.dontCare"
     , "Evaluator.indices"
     , "Evaluator.replace"
     , "Evaluator.tupleEq"

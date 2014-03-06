@@ -33,6 +33,7 @@ main = interact $ \ inp ->
             , "import Control.DeepSeq.Generics ( genericRnf )"
             , "import Data.Serialize ( Serialize(..) )"
             , "import Data.Hashable ( Hashable(..) )"
+            , "import Data.Aeson ( ToJSON(..) )"
             , "data Tag = " ++ constructors
             , "    deriving (Eq, Ord, Show, Generic)"
             , "instance Serialize Tag"
@@ -42,6 +43,8 @@ main = interact $ \ inp ->
             , "    {-# INLINEABLE rnf #-}"
             , "instance Pretty Tag where"
             , "    pretty = pretty . drop 1 . show"
+            , "instance ToJSON Tag where"
+            , "    toJSON = toJSON . drop 1 . show"
             , "instance IsString Tag where"
             , "    fromString = fromString' . filter (not . isSpace)"
             , "        where"

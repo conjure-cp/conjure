@@ -21,15 +21,15 @@ $ See ../../rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule for the implemen
 ~~> Set~ExplicitVarSize
 ~~> matrix indexed by [int(1..&mx)] of (bool,&t)
 ~~> (
-        forAll i : int(1..&mx-1), refn[i][1] /\ refn[i+1][1] . refn[i][2] .< refn[i+1][2]
+        forAll i : int(1..&mx-1) , refn[i+1,1] . refn[i,2] .< refn[i+1,2]
     )
         /\
     (
-        forAll i : int(1..&mx-1) . refn[i][1] >= refn[i+1][1]
+        forAll i : int(1..&mx-1) , refn[i+1,1] . refn[i,1]
     )
         /\
     (
-        forAll i : int(1..&mx) , refn[i][1] = false . dontCare(refn[i][2])
+        forAll i : int(1..&mx ) , !refn[i,1] . dontCare(refn[i,2])
     )
 
 
@@ -37,24 +37,24 @@ $ See ../../rules/refns/vertical/Set~ExplicitVarSize/DotLt.rule for the implemen
     letting &mx be domSize(&t)
 
 $ *** set (size n) of t
-$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
+$     ~~> (sum i : int(1..mx) . toInt(refn[i,1])) = n
 $     letting mx be domSize(t)
 
 *** set (minSize &mn) of &t
-    ~~> (sum i : int(1..&mx) . refn[i][1]) >= &mn
+    ~~> (sum i : int(1..&mx) . toInt(refn[i,1])) >= &mn
     letting &mx be domSize(&t)
 
 *** set (maxSize &mx) of &t
 
 $ *** set (size n, minSize b) of t
-$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
+$     ~~> (sum i : int(1..mx) . toInt(refn[i,1])) = n
 $     letting mx be domSize(t)
 
 $ *** set (size n, maxSize mx) of t
-$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
+$     ~~> (sum i : int(1..mx) . toInt(refn[i,1])) = n
 
 *** set (minSize &mn, maxSize &mx) of &t
-    ~~> (sum i : int(1..&mx) . refn[i][1]) >= &mn
+    ~~> (sum i : int(1..&mx) . toInt(refn[i,1])) >= &mn
 
 $ *** set (size n, minSize mn, maxSize mx) of t
-$     ~~> (sum i : int(1..mx) . refn[i][1]) = n
+$     ~~> (sum i : int(1..mx) . toInt(refn[i,1])) = n

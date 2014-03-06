@@ -1,5 +1,5 @@
 
-ls `figlet -I2`/*.flf | parallel "figlet -w 100 -f {.} Conjure > {/.}.figlet"
+ls `figlet -I2`/*.flf | parallel --no-notice "figlet -w 100 -f {.} Conjure > {/.}.figlet"
 ls *.figlet | xargs -I {} sh one.sh {}
 
 cat index-header.html >  index.html

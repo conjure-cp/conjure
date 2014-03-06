@@ -1,0 +1,16 @@
+
+[1000]
+
+&quan &i in toSet(&f), &g . &b
+
+    ~~>
+
+&quan k : &domFrom , &g { &i[1] --> k, &i[2] --> &m[k,2] } /\ &m[k,1]
+                   . &b { &i[1] --> k, &i[2] --> &m[k,2] }
+
+    where &f hasType   `function int --> _`
+    where &f hasDomain `function (..) &domFrom --> _`
+    where &f hasRepr    Function~1DPartial
+
+    letting &m be refn(&f)
+

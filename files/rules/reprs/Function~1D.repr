@@ -1,0 +1,36 @@
+
+~~> Function~1D
+~~> matrix indexed by [&fr] of &to
+
+    where &fr hasType `int`
+
+*** function (total) &fr --> &to
+
+*** function (total, injective) &fr --> &to
+    ~~> allDiff(refn)                                           $ injective
+
+*** function (total, surjective) &fr --> &to
+    ~~> forAll i : &to . exists j : &fr . refn[j] = i           $ surjective
+
+*** function (total, bijective, ..) &fr --> &to
+    ~~> allDiff(refn)                                           $ injective
+    where domSize(&fr) = domSize(&to)                           $ surjective cons not needed
+
+*** function (total, bijective, ..) &fr --> &to
+    ~~> allDiff(refn)                                           $ injective
+    /\  forAll i : &to . exists j : &fr . refn[j] = i           $ surjective
+
+
+
+
+
+$ surjective when domSize(&fr) = domSize(&to) implies "injective" and "total"
+
+*** function (surjective) &fr --> &to
+    ~~> allDiff(refn)                                           $ injective
+    where domSize(&fr) = domSize(&to)
+
+*** function (bijective) &fr --> &to
+    ~~> allDiff(refn)                                           $ injective
+    where domSize(&fr) = domSize(&to)
+

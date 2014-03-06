@@ -1,0 +1,45 @@
+
+~~> Partition~SetOfSets
+~~> set (size &n) of set (size &m) of &tau
+$ there are n parts in the partition
+$ each part has m things in it.
+
+
+*** partition (complete, regular, size &n) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) = 1)         $ each item occurs exactly once is only one of the parts
+
+    letting &m be domSize(&tau) / &n
+    $ where   domSize(&tau) = &n * &m
+
+
+*** partition (complete, regular, partSize &m) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) = 1)         $ each item occurs exactly once is only one of the parts
+
+    letting &n be domSize(&tau) / &m
+    $ where   domSize(&tau) = &n * &m
+
+
+*** partition (complete, size &n, partSize &m, ..) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) = 1)         $ each item occurs exactly once is only one of the parts
+
+    $ where   domSize(&tau) = &n * &m
+
+
+*** partition (regular, size &n) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) <= 1)        $ each item occurs at most once is only one of the parts
+
+    letting &m be domSize(&tau) / &n
+    $ where   domSize(&tau) = &n * &m
+
+
+*** partition (regular, partSize &m) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) <= 1)        $ each item occurs at most once is only one of the parts
+
+    letting &n be domSize(&tau) / &m
+    $ where   domSize(&tau) = &n * &m
+
+
+*** partition (size &n, partSize &m, ..) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) <= 1)        $ each item occurs at most once is only one of the parts
+
+    $ where   domSize(&tau) = &n * &m

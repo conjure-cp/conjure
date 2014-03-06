@@ -1,0 +1,33 @@
+
+~~> Relation~IntMatrix3
+~~> matrix indexed by [&a, &b, &c] of bool
+
+    where &a hasType `int`
+    where &b hasType `int`
+    where &c hasType `int`
+
+
+*** relation (size &size_ , minSize &minSize_ , maxSize &maxSize_) of (&a * &b * &c)
+    ~~> &size_ = sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k])
+
+*** relation (minSize &minSize_ , maxSize &maxSize_) of (&a * &b * &c)
+    ~~> (&minSize_ <= sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k]))
+    /\  (&maxSize_ >= sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k]))
+
+*** relation (size &size_ , maxSize &maxSize_) of (&a * &b * &c)
+    ~~> &size_     = sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k])
+
+*** relation (size &size_ , minSize &minSize_) of (&a * &b * &c)
+    ~~> &size_     = sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k])
+
+*** relation (maxSize &maxSize_) of (&a * &b * &c)
+    ~~> &maxSize_ >= sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k])
+
+*** relation (minSize &minSize_) of (&a * &b * &c)
+    ~~> &minSize_ <= sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k])
+
+*** relation (size &size_) of (&a * &b * &c)
+    ~~> &size_     = sum i : &a . sum j : &b . sum k : &c . toInt(refn[i,j,k])
+
+*** relation () of (&a * &b * &c)
+

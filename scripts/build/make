@@ -45,71 +45,91 @@ OptionParser.new do |opts|
 
 end.parse!
 
-version  = `hg id -i | head -n 1`.strip[0..11]
-contents = [ "module RepositoryVersion where",
-             "repositoryVersion :: String",
-             "repositoryVersion = \"#{version}\""
-           ].join("\n")
-unless File.exists?("src/RepositoryVersion.hs") && contents == File.read("src/RepositoryVersion.hs")
-    File.open("src/RepositoryVersion.hs", "w") do |file|
-        file.write(contents)
-    end
-    puts "Generated file: src/RepositoryVersion.hs with version #{version}"
-end
-
+`scripts/build/version.sh`
 
 unless File.exists?(".cabal-sandbox")
     puts "Creating cabal sandbox"
     cmdSandboxInit = []
     cmdSandboxInit << "cabal" << "sandbox" << "init"
-    exit $?.to_i unless system(*cmdSandboxInit)
+    unless system(*cmdSandboxInit)
+      puts "sandbox init failed."
+      exit 1
+    end
 else
     puts "Using existing cabal sandbox"
 end
 
 
+cmdBuildDeps = []
 cmdBuild = []
+
+cmdBuildDeps << "cabal" << "install" << "--force-reinstalls" << "--only-dependencies"
 cmdBuild << "cabal" << "install" << "--force-reinstalls"
+
+cmdBuildDeps << "--bindir=" + ENV['HOME'] + "/.cabal/bin"
 cmdBuild << "--bindir=" + ENV['HOME'] + "/.cabal/bin"
 
 if options.jobs > 1
-    cmdBuild << "-j#{options.jobs}"
-elsif options.jobs == 0
-    cmdBuild << "-j"
+    cmdBuildDeps << "-j#{options.jobs}"
+else
+    cmdBuildDeps << "-j1"
 end
+cmdBuild << "-j1"
 
 if options.documentation
+    cmdBuildDeps << "--enable-documentation"
     cmdBuild << "--enable-documentation"
 else
+    cmdBuildDeps << "--disable-documentation"
     cmdBuild << "--disable-documentation"
 end
 
 if options.profiling
+    cmdBuildDeps << "--enable-library-profiling"
+    cmdBuildDeps << "--enable-executable-profiling"
     cmdBuild << "--enable-library-profiling"
     cmdBuild << "--enable-executable-profiling"
 else
+    cmdBuildDeps << "--disable-library-profiling"
+    cmdBuildDeps << "--disable-executable-profiling"
     cmdBuild << "--disable-library-profiling"
     cmdBuild << "--disable-executable-profiling"
 end
 
 if options.optimisation
+    cmdBuildDeps << "-O2"
+    cmdBuildDeps << "--ghc-options=\"-funbox-strict-fields\""
     cmdBuild << "-O2"
     cmdBuild << "--ghc-options=\"-funbox-strict-fields\""
 else
+    cmdBuildDeps << "-O0"
     cmdBuild << "-O0"
 end
 
+cmdBuildDeps << '--ghc-options="-fllvm"'  if options.llvm
 cmdBuild << '--ghc-options="-fllvm"'      if options.llvm
+
 cmdBuild << '--ghc-options="-DTRACELOGS"' if options.traceLogs
 
 if options.dryRun
     cmdBuild << "--dry-run"
     cmdBuild << "-v"
     puts cmdBuild.join(" ")
-end
-
-unless system(*cmdBuild)
-    puts "Build failed."
-    exit 1
+    unless system(*cmdBuild)
+      puts "Build failed."
+      exit 1
+    end
+else
+    puts "[Building dependencies]"
+    unless system(*cmdBuildDeps)
+      puts "Build failed."
+      exit 1
+    end
+    puts "[Building Conjure]"
+    unless system(*cmdBuild)
+      puts "Build failed."
+      exit 1
+    end
+    puts "[Done]"
 end
 

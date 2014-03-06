@@ -47,6 +47,7 @@ functionals =
     , L_min
     , L_max
     , L_allDiff
+    , L_dontCare
     , L_hist
 
     , L_toSet
@@ -63,8 +64,6 @@ functionals =
     , L_participants
     , L_parts
     , L_freq
-    , L_hist
-    , L_allDiff
     , L_toInt
     , L_flatten
     , L_normIndices

@@ -120,6 +120,7 @@ Library
                      , Language.E.Pipeline.CheckIfAllRefined
                      , Language.E.Pipeline.AbstractDomsInQuans
                      , Language.E.Pipeline.RedArrow
+                     , Language.E.Pipeline.UniqueQuanVars
 
                      , Language.E.Pipeline.ConjureAll
 
@@ -143,6 +144,8 @@ Library
 
     build-depends    : base, ghc-prim
                      , AC-Random
+                     , aeson
+                     , aeson-pretty
                      , bytestring
                      , cereal
                      , containers >= 0.5.2

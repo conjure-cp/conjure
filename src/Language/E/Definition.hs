@@ -15,6 +15,8 @@ module Language.E.Definition
     , identifierSplit, identifierConstruct
     , identifierStripRegion
 
+    , collectQuanVars
+
     ) where
 
 import Stuff.Generic
@@ -25,6 +27,8 @@ import Language.E.Imports
 
 import qualified Data.Text as T
 import qualified GHC.Generics ( Generic )
+import Data.Aeson ( ToJSON(..), (.=) )
+import qualified Data.Aeson as JSON
 
 
 
@@ -41,6 +45,18 @@ instance NFData Spec where
 
 instance Default Spec where
     def = Spec ("Essence", [1,3]) (Tagged TstatementEOF def)
+
+instance ToJSON Spec where
+    toJSON s@(Spec v x) =
+        let
+            xs = statementAsList x
+            (permutables, quantifiedVars) = permutablesOfSpec s
+        in  JSON.object [ "version"        .= toJSON v
+                        , "permutables"    .= toJSON permutables
+                        , "quantifiedVars" .= toJSON quantifiedVars
+                        , "statements"     .= toJSON xs
+                        ]
+
 
 type Version = (Text,[Int])
 
@@ -83,6 +99,11 @@ instance Pretty BuiltIn where
     pretty (B x) = pretty x
     pretty (I x) = pretty x
     pretty (S x) = pretty x
+
+instance ToJSON BuiltIn where
+    toJSON (B x) = JSON.object [ "bool"   .= toJSON x ]
+    toJSON (I x) = JSON.object [ "int"    .= toJSON x ]
+    toJSON (S x) = JSON.object [ "string" .= toJSON x ]
 
 instance MetaVariable E where
     unnamedMV [xMatch| [Prim (S "_")] := reference |] = True
@@ -130,4 +151,19 @@ identifierStripRegion t =
     let (base, _, refn) = identifierSplit t
     in  identifierConstruct base Nothing refn
 
+permutablesOfSpec :: Spec -> ([Text],[Text])
+permutablesOfSpec (Spec _ statements) = go statements
+    where
+        go [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference |] = ([name],[])
+        go [xMatch| [Prim (S name)] := topLevel.letting.name.reference          |] = ([name],[])
+        go p@[xMatch| [quanVar] := quantified.quanVar |] = ([],collectQuanVars quanVar) `mappend` go' p
+        go x = go' x
 
+        go' (Tagged _ xs) = mconcat (map go xs)
+        go' _ = mempty
+
+collectQuanVars :: E -> [Text]
+collectQuanVars [xMatch| xs := structural.tuple  |] = concatMap collectQuanVars xs
+collectQuanVars [xMatch| xs := structural.matrix |] = concatMap collectQuanVars xs
+collectQuanVars [xMatch| [Prim (S n)] := structural.single.reference |] = [n]
+collectQuanVars _ = []

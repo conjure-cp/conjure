@@ -2,82 +2,97 @@
 
 module Language.E.Pipeline.BubbleUp ( bubbleUpSpec ) where
 
-import Bug
 import Language.E
 
 
 
 bubbleUpSpec :: MonadConjure m => Spec -> m Spec
-bubbleUpSpec (Spec v xsOrig) = withBindingScope' $ do
-    let xs = statementAsList xsOrig
-    (xs', locals) <- unzip <$> mapM bubbleUpE xs
-    let (newDecls, newCons) = partition isDeclaration $ concat locals
-    return $ Spec v $ listAsStatement $ insertBeforeSuchThat newDecls xs' ++ newCons
+bubbleUpSpec spec = do
+    (Spec v stmt, vars) <- runWriterT $ bottomUpSpec (logged bubbleUpE) spec
+    return $ Spec v $ listAsStatement $ insertBeforeSuchThat vars $ statementAsList stmt
+
+logged :: (Monad (t m), MonadTrans t, MonadConjure m) => (E -> t m (Maybe E)) -> E -> t m E
+logged f x = do
+    my <- f x
+    case my of
+        Nothing -> return x
+        Just y  -> do
+            -- lift $ mkLog "bubbleUp" $ sep [pretty x, "~~>", pretty y]
+            return y
 
 
-bubbleUpE :: MonadConjure m => E -> m (E, [E])
-bubbleUpE [xMatch| [a] := withLocals.actual
-                 | ls  := withLocals.locals
-                 |] = do
-    (a', aLocals) <- bubbleUpE a
-    return (a', aLocals ++ ls)
-bubbleUpE [xMatch| [quantifier] := quantified.quantifier
-                 | [quanVar]    := quantified.quanVar.structural.single
-                 | [dom]        := quantified.quanOverDom
-                 | []           := quantified.quanOverOp
-                 | []           := quantified.quanOverExpr
-                 | [guard]      := quantified.guard
-                 | [body]       := quantified.body
-                 |] = do
-    (body', locals) <- bubbleUpE body
-    let (newDecls, newCons) = partition isDeclaration locals
-    let declFix [xMatch| [Prim (S nm)] := topLevel.declaration.find.name.reference
-                       | [d]           := topLevel.declaration.find.domain
-                       |] = let ma = [xMake| domain.matrix.index := [dom]
-                                           | domain.matrix.inner := [d]
-                                           |]
-                            -- in  ( nm
-                            --     , [xMake| topLevel.declaration.dim.name.reference := [Prim (S nm)]
-                            --             | topLevel.declaration.dim.domain := [ma]
-                            --             |]
-                            --     )
-                            in  ( nm
-                                , [xMake| topLevel.declaration.find.name.reference := [Prim (S nm)]
-                                        | topLevel.declaration.find.domain := [ma]
-                                        |]
-                                )
+-- {a @ vars,cons} ~~> {a /\ cons @ vars}           where a is bool:    cons turned into a conjunction, vars stay in the bubble
+-- op {a @ vars,cons} ~~> {op a @ vars,cons}        where a isn't bool: vars&cons bubble up together
+-- op {a @ vars} ~~> {op a @ vars}                  when no cons is left, vars still bubble up
 
-        declFix x = bug $ "bubbleUpE.declFix" <+> pretty x
-    let (names,newDecls') = unzip $ map declFix newDecls
-
-    let liftName x = let f p@[xMatch| [Prim (S s)] := reference |]
-                            | s `elem` names = [xMake| operator.index.left  := [p]
-                                                     | operator.index.right := [quanVar]
-                                                     |]
-                         f p = p
-                     in  transform f x
-
-    let
-        inLoop [xMatch| [x] := topLevel.suchThat |]
-            = [xMake| topLevel.suchThat := [inLoop x]
-                    |]
-        inLoop b
-            = [xMake| quantified.quantifier                := [quantifier]
-                    | quantified.quanVar.structural.single := [quanVar]
-                    | quantified.quanOverDom               := [dom]
-                    | quantified.quanOverOp                := []
-                    | quantified.quanOverExpr              := []
-                    | quantified.guard                     := [guard]
-                    | quantified.body                      := [b]
-                    |]
-    return ( (inLoop . liftName) body'
-           , map (inLoop . liftName) newCons ++ newDecls'
-           )
-bubbleUpE p@[xMatch| _ := quantified |] = return (p, [])
+bubbleUpE :: MonadConjure m => E -> WriterT [E] m (Maybe E)
 bubbleUpE (Tagged t xs) = do
-    (xs', locals) <- unzip <$> mapM bubbleUpE xs
-    return (Tagged t xs', concat locals)
-bubbleUpE x = return (x, [])
+    ys <- lift $ mapM (\ x -> do y <- onChildren x
+                                 -- mkLog "onChildren" $ pretty y
+                                 return y
+                      )
+                      xs
+    let allKeep = all isKeep ys
+    let (zs,locals',vars) = unzip3
+            [ case y of
+                Keep z           -> (z,[],[])
+                ReplacedChild z  -> (z,[],[])
+                BubbleUp z ls    -> (z,ls,[])
+                DeclareVars z vs -> (z,[],vs)
+            | y <- ys
+            ]
+    let locals = concat locals'
+    tell $ concat vars
+    let out = Tagged t zs
+    if allKeep
+        then return Nothing
+        else if null locals
+                then return $ Just out
+                else return $ Just [xMake| withLocals.actual := [out]
+                                         | withLocals.locals := locals
+                                         |]
+bubbleUpE _ = return Nothing
+
+data OnChildrenResult = Keep E | ReplacedChild E | BubbleUp E [E] | DeclareVars E [E]
+
+instance Pretty OnChildrenResult where
+    pretty (Keep x) = "Keep:" <+> pretty x
+    pretty (ReplacedChild x) = "ReplacedChild:" <+> pretty x
+    pretty (BubbleUp x ys) = "BubbleUp:" <+> vcat (pretty x : map pretty ys)
+    pretty (DeclareVars x ys) = "DeclareVars:" <+> vcat (pretty x : map pretty ys)
+
+isKeep :: OnChildrenResult -> Bool
+isKeep Keep{} = True
+isKeep _ = False
+
+onChildren :: MonadConjure m => E -> m OnChildrenResult
+onChildren [xMatch| [actual] := withLocals.actual
+                  | locals   := withLocals.locals
+                  |]
+    | let (varsList,consList) = partition isDeclaration locals
+    , consList /= []
+    = do
+        let cons = conjunct (concatMap outOfSuchThat consList)
+        tyActual <- typeOf actual `catchError` (const $ return [xMake| type.unknown := [] |])
+        case tyActual of
+            [xMatch| [] := type.bool |] ->
+                let a = [eMake| &actual /\ &cons |]
+                in  if null varsList
+                        then return $ ReplacedChild a
+                        else return $ ReplacedChild [xMake| withLocals.actual := [a]
+                                                          | withLocals.locals := varsList
+                                                          |]
+            _ -> return $ BubbleUp actual locals
+onChildren [xMatch| [actual] := withLocals.actual
+                  | locals   := withLocals.locals
+                  |] = return $ BubbleUp actual locals
+onChildren [xMatch| [actual] := suchThat.withLocals.actual
+                  | locals   := suchThat.withLocals.locals
+                  |]
+    | let (varsList,consList) = partition isDeclaration locals
+    , consList == []
+    = return $ DeclareVars [xMake| suchThat := [actual] |] varsList
+onChildren p = return $ Keep p
 
 
 
@@ -86,6 +101,9 @@ isDeclaration :: E -> Bool
 isDeclaration [xMatch| _ := topLevel.declaration |] = True
 isDeclaration _ = False
 
+outOfSuchThat :: E -> [E]
+outOfSuchThat [xMatch| xs := topLevel.suchThat |] = xs
+outOfSuchThat x = [x]
 
 insertBeforeSuchThat :: [E] -> [E] -> [E]
 insertBeforeSuchThat toInsert rest@([xMatch| _ := topLevel.suchThat  |] : _) = toInsert ++ rest

@@ -1,0 +1,11 @@
+
+~~> Partition~SetOfSets
+~~> set (maxSize &maxNumParts) of set (minSize 1) of &tau
+
+
+*** partition (maxNumParts &maxNumParts) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) <= 1)        $ each item occurs at most once is only one of the parts
+
+
+*** partition (complete, maxNumParts &maxNumParts) from &tau
+    ~~> (forAll j : &tau . (sum p in refn . sum i in p . toInt(i = j)) = 1)         $ each item occurs exactly once is only one of the parts

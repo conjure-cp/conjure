@@ -95,24 +95,41 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
             $ mapMaybe (T.stripPrefix "[configuration]")
             $ T.lines modelLogs
 
+    forM_ essenceParams $ \ p -> case p of
+        (_, [xMatch| vs := topLevel.letting.typeEnum.values |]) -> do
+            let projectReference [xMatch| [Prim (S nm)] := reference |] = nm
+                projectReference r = bug $ "RedArrow.projectReference: not a reference" <+> pretty r
+            let is = map projectReference vs
+            forM_ (zip is [1..]) $ \ (i,n) -> do
+                addReference i [xMake| value.literal := [Prim (I n)] |]
+        _ -> return ()
+
     -- bs <- bindersDoc
     -- mkLog "debug" $ vcat $
-        -- (
-            -- "essenceGivens" :
-                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
-                -- | (a,b) <- essenceGivens
-                -- ]
-        -- ) ++ (
-            -- "essenceParams" :
-                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
-                -- | (a,b) <- essenceParams
-                -- ]
-        -- ) ++ (
-            -- "lookupReprs"   :
-                -- [ nest 4 $ pretty a <+> ":" <+> pretty b
-                -- | (a,b) <- lookupReprs
-                -- ]
-        -- ) ++ [bs]
+    --     (
+    --         "essenceGivens" :
+    --             [ nest 4 $ pretty a <+> ":" <+> pretty b
+    --             | (a,b) <- essenceGivens
+    --             ]
+    --     ) ++ (
+    --         "essenceParams" :
+    --             [ nest 4 $ pretty a <+> ":" <+> pretty b
+    --             | (a,b) <- essenceParams
+    --             ]
+    --     ) ++ (
+    --         "lookupReprs"   :
+    --             [ nest 4 $ pretty a <+> ":" <+> pretty b
+    --             | (a,b) <- lookupReprs
+    --             ]
+    --     ) ++ [bs]
+
+    -- mkLog "debug" $ sep $
+    --     "workhorse working on" : concat
+    --     [ [pretty nm, pretty decl, pretty val, "~~"]
+    --     | (nm, decl) <- essenceGivens
+    --     , (nm2, val) <- essenceParams
+    --     , nm == nm2
+    --     ]
 
     outPairs <- concatMapM (workhorse lookupReprs)
                 [ (nm, decl, val)
@@ -141,25 +158,42 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
     val <- instantiate [] valBefore
     let thisReprs = [ repr | (nm', repr) <- lookupReprs, nm == nm' ]
     result <- if null thisReprs
-                then helper nm dom val Nothing
-                else concatMapM (helper nm dom val . Just) thisReprs
+                then callHelper nm dom val Nothing
+                else concatMapM (callHelper nm dom val . Just) thisReprs
     -- unless (null thisReprs) $
-        -- mkLog "debug" $ sep
-            -- [ "workhorse"
-            -- , "~~" <+> sep (map pretty thisReprs)
-            -- , "~~" <+> pretty nm
-            -- , "~~" <+> pretty dom
-            -- , "~~" <+> pretty val
-            -- , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
-                            -- | (i,j) <- result
-                            -- ]
-            -- ]
+    --     mkLog "debug" $ sep
+    --         [ "workhorse"
+    --         , "~~" <+> sep (map pretty thisReprs)
+    --         , "~~" <+> pretty nm
+    --         , "~~" <+> pretty dom
+    --         , "~~" <+> pretty val
+    --         , "~~" <+> vcat [ "{" <+> pretty i <+> "|" <+> pretty j <+> "}"
+    --                         | (i,j) <- result
+    --                         ]
+    --         ]
     return result
 
     where
 
+        callHelper
+            :: MonadConjure m
+            => Text
+            -> E
+            -> E
+            -> Maybe Text
+            -> m [(Text, E)]
         callHelper name _      val@[xMatch| _ := value.literal |] _ = return [(name, val)]
-        callHelper name domain val repr = helper name domain val repr
+        callHelper name domain val repr = do
+            outs <- helper name domain val repr
+            -- mkLog "callHelper" $ vcat $ [ pretty name
+            --                             , "~~"
+            --                             , prettyAsPaths domain
+            --                             , "~~"
+            --                             , prettyAsPaths val
+            --                             , "~~"
+            --                             , pretty repr
+            --                             ] ++ map pretty outs
+            return outs
 
         helper
             :: MonadConjure m
@@ -170,11 +204,11 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             -> m [(Text, E)]
 
         -- helper name domain value _
-            -- | trace (show $ sep [ "helper"
-                                -- , pretty name
-                                -- , pretty domain
-                                -- , pretty value
-                                -- ]) False = undefined
+        --     | trace (show $ sep [ "helper"
+        --                         , pretty name
+        --                         , pretty domain
+        --                         , pretty value
+        --                         ]) False = undefined
 
         helper
             name
@@ -199,9 +233,6 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 dSize <- domSize d
                 return $ [ ( name `mappend` "_size"
                            , dSize
-                           )
-                         , ( name
-                           , d
                            )
                          ]
 
@@ -456,17 +487,17 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                    | [domInnerTo] := domain.function.innerTo
                    |]
             [xMatch| values := value.function.values |]
-            (Just "AsReln")
+            (Just "Function~AsReln")
             = do
                 let
                     mappingToTuple [xMatch| [a,b] := mapping |] = [xMake| value.tuple.values := [a,b] |]
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.AsReln 1", pretty p ]
                     valuesOut = map mappingToTuple values
-                    nameOut = name `T.append` "_AsReln"
+                    nameOut = name `T.append` "_Function~AsReln"
                 case lookup nameOut lookupReprs of
-                    Nothing   -> bug $ vcat [ "workhorse.helper.AsReln 2", pretty name]
+                    Nothing   -> bug $ vcat [ "workhorse.helper.AsReln 2", pretty nameOut]
                     Just repr ->
-                        helper
+                        callHelper
                             nameOut
                             [xMake| domain.relation.attributes.attrCollection := attrs
                                   | domain.relation.inners := [domInnerFr, domInnerTo]
@@ -478,16 +509,17 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             name
             [xMatch| [domInnerFr] := domain.function.innerFrom |]
             [xMatch| values := value.function.values |]
-            (Just "Matrix1D")
+            (Just "Function~1D")
             = do
                 let
                     mappingToTuple [xMatch| [a,b] := mapping |] = (a,b)
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.Matrix1D", pretty p ]
                     (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
-                    nameOut = name `T.append` "_Matrix1D"
-                domInnerFr' <- instantiate [] domInnerFr
+                    nameOut = name `T.append` "_Function~1D"
+                actualValues' <- mapM (instantiateEnumDomains []) actualValues
+                domInnerFr' <- instantiateEnumDomains [] domInnerFr
                 let
-                    valueOut = [xMake| value.matrix.values     := actualValues
+                    valueOut = [xMake| value.matrix.values     := actualValues'
                                      | value.matrix.indexrange := [domInnerFr']
                                      |]
                 return [(nameOut, valueOut)]
@@ -498,15 +530,15 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                    | domInners := domain.relation.inners
                    |]
             [xMatch| values := value.relation.values |]
-            (Just "RelationAsSet")
+            (Just "Relation~AsSet")
             = do
                 let
-                    nameOut = name `T.append` "_RelationAsSet"
+                    nameOut = name `T.append` "_Relation~AsSet"
                     domInnerOut = [xMake| domain.tuple.inners := domInners |]
                 case lookup nameOut lookupReprs of
                     Nothing   -> bug $ vcat [ "workhorse.helper.RelationAsSet", pretty name]
                     Just repr ->
-                        helper
+                        callHelper
                             nameOut
                             [xMake| domain.set.attributes.attrCollection := attrs
                                   | domain.set.inner := [domInnerOut]
@@ -518,11 +550,11 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             name
             [xMatch| [da,db] := domain.relation.inners |]
             [xMatch| values  := value.relation.values |]
-            (Just "RelationIntMatrix2")
+            (Just "Relation~IntMatrix2")
             = do
-                da' <- instantiate [] da
-                db' <- instantiate [] db
-                let nameOut = name `T.append` "_RelationIntMatrix2"
+                da' <- instantiateEnumDomains [] da
+                db' <- instantiateEnumDomains [] db
+                let nameOut = name `T.append` "_Relation~IntMatrix2"
                 case (da', db') of
                     (  [xMatch| [aFr,aTo] := domain.int.ranges.range.fromTo |]
                      , [xMatch| [bFr,bTo] := domain.int.ranges.range.fromTo |]
@@ -539,10 +571,12 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                                           ]
                                         | j <- [ bFr' .. bTo' ]
                                         ]
-                        let valueMatrix xs = [xMake| value.matrix.values := xs |]
-                        let outMatrix' = valueMatrix $ map valueMatrix $ transpose outMatrix
+                        let valueMatrix ind xs = [xMake| value.matrix.values     := xs
+                                                       | value.matrix.indexrange := [ind]
+                                                       |]
+                        let outMatrix' = valueMatrix da' $ map (valueMatrix db') $ transpose outMatrix
                         return [(nameOut, outMatrix')]
-                    (_, _) -> bug $ vcat [ "workhorse.helper.RelationIntMatrix2", pretty name]
+                    (_, _) -> bug $ vcat [ "workhorse.helper.Relation~IntMatrix2", pretty name]
 
         helper
             name
@@ -574,7 +608,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper name domain value Nothing =
             case lookup name lookupReprs of
-                Just repr -> helper name domain value (Just repr)
+                Just repr -> callHelper name domain value (Just repr)
                 Nothing -> bug $ vcat
                     [ "missing case in RedArrow.workhorse"
                     , "name:"   <+> pretty name
@@ -677,5 +711,27 @@ instantiate seen p@[xMatch| [Prim (S domId)] := reference |] = do
 
 instantiate seen (Tagged t xs) = Tagged t <$> mapM (instantiate seen) xs
 instantiate _ p = return p
+
+
+instantiateEnumDomains :: MonadConjure m => [Text] -> E -> m E
+
+instantiateEnumDomains _ p@[xMatch| _ := topLevel.letting  |] = return p
+
+instantiateEnumDomains seen [xMatch| [Prim (S domId)] := reference |]
+    | domId `elem` seen = userErr $ "Cyclic definition:" <+> fsep (map pretty seen)
+instantiateEnumDomains seen p@[xMatch| [Prim (S domId)] := reference |] = do
+    mdomain <- runMaybeT $ lookupReference domId
+    case mdomain of
+        Nothing -> return p
+        Just [xMatch| _        := type.typeEnum             |] -> return p
+        Just [xMatch| values := topLevel.letting.typeEnum.values |] -> do
+            let one = [eMake| 1 |]
+            let num = [xMake| value.literal := [Prim (I $ genericLength values)] |]
+            return [xMake| domain.int.ranges.range.fromTo := [one, num] |]
+        Just [xMatch| [domain] := topLevel.letting.domain   |] -> instantiateEnumDomains (domId:seen) domain
+        Just domain -> instantiate (domId:seen) domain
+
+instantiateEnumDomains seen (Tagged t xs) = Tagged t <$> mapM (instantiateEnumDomains seen) xs
+instantiateEnumDomains _ p = return p
 
 

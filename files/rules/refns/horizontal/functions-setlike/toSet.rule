@@ -1,0 +1,8 @@
+
+[1000]
+
+&quan &i in &f , &g . &b
+    ~~>
+&quan &i in toSet(&f) , &g . &b
+
+    where &f hasType `function _ --> _`

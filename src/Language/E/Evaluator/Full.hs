@@ -251,6 +251,12 @@ fullEvaluator
 
 fullEvaluator
     [xMatch| [x] := operator.twoBars
+           | _   := operator.twoBars.domain
+           |]
+    = ret [eMake| domSize(&x) |]
+
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
            | xs  := operator.twoBars.value.set.values
            |]
     | isFullyInstantiated x
@@ -530,6 +536,11 @@ fullEvaluator [eMatch| preImage(&f,&x) |]
       in
         ret [xMake| value.set.values := ys |]
 
+fullEvaluator [eMatch| preImage(&f,&x) |]
+    | [xMatch| fValues := typed.left.value.function.values |] <- f
+    = let f' = [xMake| value.function.values := fValues |]
+      in  fullEvaluator [eMake| preImage(&f',&x) |]
+
 fullEvaluator [eMatch| defined(&f) |]
     | isFullyInstantiated f
     , [xMatch| fValues := value.function.values |] <- f
@@ -706,6 +717,11 @@ fullEvaluator
                         | operator.index.right := [rhs]
                         |]
 
+fullEvaluator
+    [xMatch| [i]             := withLocals.actual
+           | [Prim (B True)] := withLocals.locals.topLevel.suchThat.value.literal
+           |] = ret i
+
 fullEvaluator _ = return Nothing
 
 
@@ -740,7 +756,6 @@ unrollQuantifiers [eMatch| &quan &iPre : int(&a..&b) , &guard . &body |]
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     = do
-
     let i = case iPre of
                 [xMatch| [single] := structural.single |] -> single
                 _ -> iPre
@@ -753,6 +768,25 @@ unrollQuantifiers [eMatch| &quan &iPre : int(&a..&b) , &guard . &body |]
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
+unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
+    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+    , [xMatch| _ := domain.matrix |] <- dom
+    = do
+        let i = case iPre of
+                    [xMatch| [single] := structural.single |] -> single
+                    _ -> iPre
+        -- mkLog "unrollQuantifiers" $ prettyAsPaths dom
+        allValues <- getAllValues dom
+        xs <- forM allValues $ \ n -> do
+            -- mkLog "getAllValues" $ pretty n
+            newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
+            newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+            case (newGuard, newBody) of
+                (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
+                _ -> return Nothing
+        y <- unrollQuantifier quanStr (catMaybes xs)
+        -- mkLog "unrollQuantifiers" $ pretty y
+        ret y
 unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
     | [xMatch| rs := domain.int.ranges |] <- dom
     , Just numbers <- mapM singleRangeOut rs
@@ -1058,6 +1092,13 @@ domSize [xMatch| [a] := domain.function.innerFrom
     bSize <- domSize b
     return [eMake| (&bSize + 1) ** &aSize |]
 
+domSize [xMatch| [a]   := domain.partition.inner
+               | attrs := domain.partition.attributes.attrCollection
+               |] = domSize [xMake| domain.set.inner := [a']
+                                  | domain.set.attributes := attrs
+                                  |]
+    where a' = [xMake| domain.set.inner := [a] |]
+
 domSize [xMatch| [] := topLevel.declaration.given.typeInt
                | [Prim (S nm)] := topLevel.declaration.given.name.reference
                |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
@@ -1073,28 +1114,36 @@ domSize p =
 choose :: E -> E -> E
 choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
 
-evalDontCare :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-evalDontCare [eMatch| dontCare(&i) |] = ret =<< dontCare i
-evalDontCare _ = return Nothing
+evalDontCare :: MonadConjure m => Bool -> E -> m (Maybe (E,[Binder]))
+evalDontCare False [eMatch| dontCare(&_) |] = ret [eMake| true |]
+evalDontCare True  [eMatch| dontCare(&a) |] = do
+    let
+        bottomOfDomain [xMatch| _     := domain.bool         |] = return [eMake| false |]
+        bottomOfDomain [xMatch| (r:_) := domain.int.ranges   |] = bottomOfRange r
+        bottomOfDomain [xMatch| _     := domain.int          |] = return [eMake| 0 |]
+        bottomOfDomain _ = Nothing
 
-dontCare :: MonadConjure m => E -> m E
-dontCare p = do
-    d <- domainOf p
-    return $ case dontCareDom d of
-        Nothing -> [eMake| true |]
-        Just v  -> [eMake| &p = &v |]
-    where
-        dontCareDom [xMatch| _     := domain.bool         |] = return [eMake| false |]
-        dontCareDom [xMatch| (r:_) := domain.int.ranges   |] = dontCareRange r
-        dontCareDom [xMatch| _     := domain.int          |] = return [eMake| 0 |]
-        dontCareDom [xMatch| xs    := domain.tuple.inners |] = (\ ys -> [xMake| value.tuple.values := ys |] ) <$> mapM dontCareDom xs
-        dontCareDom _ = Nothing
+        bottomOfRange [xMatch| [x]   := range.single |] = return x
+        bottomOfRange [xMatch| [x]   := range.from   |] = return x
+        bottomOfRange [xMatch| [x]   := range.to     |] = return x
+        bottomOfRange [xMatch| [x,_] := range.fromTo |] = return x
+        bottomOfRange _ = Nothing
 
-        dontCareRange [xMatch| [x]   := range.single |] = return x
-        dontCareRange [xMatch| [x]   := range.from   |] = return x
-        dontCareRange [xMatch| [x]   := range.to     |] = return x
-        dontCareRange [xMatch| [x,_] := range.fromTo |] = return x
-        dontCareRange _ = Nothing
+    da <- domainOf a
+    case bottomOfDomain da of
+        Just v  -> ret [eMake| &a = &v |]
+        Nothing -> do
+            ta <- typeOf a
+            case ta of
+                [xMatch| is := type.tuple.inners |] ->
+                    ret $ conjunct [ [eMake| dontCare(&a[&i]) |]
+                                   | j <- [1..genericLength is]
+                                   , let i = [xMake| value.literal := [Prim (I j)] |]
+                                   ]
+                _ -> return Nothing
+-- evalDontCare True  [eMatch| dontCare(&i) |] = ret [eMake| dontCare(&i) |]
+    -- error $ show $ vcat [ "dontCareDom", pretty i, prettyAsPaths i ]
+evalDontCare _ _ = return Nothing
 
 
 evalIndices :: MonadConjure m => E -> m (Maybe (E,[Binder]))
@@ -1389,4 +1438,29 @@ stripStructuralSingle _ = return Nothing
 
 freqInList :: Eq a => a -> [a] -> Int
 freqInList y xs = length $ filter (y==) xs
+
+
+getAllValues :: MonadConjure m => E -> m [E]
+getAllValues [xMatch| [fr,to] := domain.matrix.index.domain.int.ranges.range.fromTo
+                 | [index] := domain.matrix.index
+                 | [inner] := domain.matrix.inner
+                 |]
+    | [xMatch| [Prim (I frI)] := value.literal |] <- fr
+    , [xMatch| [Prim (I toI)] := value.literal |] <- to
+    = do
+        i <- getAllValues inner
+        let vals = replicateM (fromInteger $ toI - frI + 1) i
+        let
+            wrap :: [E] -> E
+            wrap vs = [xMake| value.matrix.values := vs
+                            | value.matrix.indexrange := [index]
+                            |]
+        return $ map wrap vals
+getAllValues [xMatch| [fr,to] := domain.int.ranges.range.fromTo |]
+    | [xMatch| [Prim (I frI)] := value.literal |] <- fr
+    , [xMatch| [Prim (I toI)] := value.literal |] <- to
+    = do
+        let wrap i = [xMake| value.literal := [Prim (I i)] |]
+        return $ map wrap [frI .. toI]
+getAllValues d = bug $ "Don't know how to calculate all values of this domain: " <+> prettyAsPaths d
 

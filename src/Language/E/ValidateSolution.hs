@@ -64,6 +64,7 @@ validateSolutionPure essence param solution =
                     >=> stripDecls              >=> recordSpec "stripDecls"
                     >=> handleEnums             >=> recordSpec "handleEnums"
                     >=> handleUnnameds          >=> recordSpec "handleUnnameds"
+                    >=> inlineLettings          >=> recordSpec "inlineLettings"
                     >=> stripDecls              >=> recordSpec "stripDecls"
                     >=> allNoTuplesSpec         >=> recordSpec "allNoTuplesSpec"
                     >=> fullyEvaluate           >=> recordSpec "fullyEvaluate"

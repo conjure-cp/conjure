@@ -1,0 +1,38 @@
+
+~~> Function~AsReln
+~~> relation of (&fr * &to)
+
+
+*** function (total) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+
+*** function (total, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+
+*** function (total, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+*** function (total, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+
+*** function &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+
+*** function (injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+
+*** function (surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+*** function (bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+

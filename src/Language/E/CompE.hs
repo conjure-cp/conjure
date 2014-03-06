@@ -186,6 +186,7 @@ data ConjureState = ConjureState
         , lastSpec :: !(Maybe Spec) -- record the spec after changes, to report in case of an error.
         , localLogs :: !LogTree
         , allNamesPreConjure :: !(S.HashSet Text)  -- all identifiers used in the spec, pre conjure. to avoid name clashes.
+        , flag_UseDontCare :: Bool
         }
 
 bindersDoc :: MonadConjure m => m Doc
@@ -216,7 +217,7 @@ instance Default (S.HashSet a) where
     def = S.empty
 
 instance Default ConjureState where
-    def = ConjureState def 1 def def def def def
+    def = ConjureState def 1 def def def def def True
 
 instance Pretty Binder where
     pretty (Binder nm val) = pretty nm <+> ":" <+> pretty val
@@ -317,6 +318,12 @@ class SelectByMode a where
 defSelectByMode :: RandomM m => ConjureMode -> GlobalState -> [a] -> m [a]
 defSelectByMode _                                   _ [] = return []
 defSelectByMode (ModeUnknown                    {}) s xs = return $ maybe id take (limitOutputs s) xs
+
+
+defSelectByMode (ModeMultipleOutput DFSample _ _ _ ) GlobalState{limitOutputs = Just l } xs =  do
+       vals <- mapM  ( return $ rangeRandomM (0, length xs - 1)   )   [1..l]
+       return $ map (\i ->  xs !! i )  vals 
+
 defSelectByMode (ModeMultipleOutput             {}) s xs = return $ maybe id take (limitOutputs s) xs
 defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) _ (x:_) = return [x]
 defSelectByMode (ModeSingleOutput ModeRandom _ _  ) _ xs = do

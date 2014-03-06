@@ -123,6 +123,10 @@ be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
     (spec,sol,org,orgP) <- getTestSpecs specs
     putStrLn "Solution"
     s specs
+    print . pretty $ spec
+    print . pretty $ sol
+    print . pretty $ org
+    print . pretty $ orgP
     putStrLn ""
 
     let logsF = addExtension specF "logs"

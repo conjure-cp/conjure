@@ -7,6 +7,9 @@ import Language.E
 import Language.E.Pipeline.FreshNames
 import Language.E.Pipeline.RuleRefnToFunction ( localHandler )
 
+import qualified Data.Text as T
+
+
 
 -- given a list of RuleReprs, returns a function which
 -- accepts a domain and returns a list of domains
@@ -125,8 +128,93 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                         let renameTo = [xMake| reference := [Prim (S newName)] |]
                                         (loopVarStrs, loopVars) <- unzip <$> replicateM (length is) (freshQuanVar "applyToInnerDomain")
                                         let renameToIndexed = mkIndexedExpr loopVars renameTo
+
+                                        useDontCare <- gets flag_UseDontCare
+                                        let
+                                            emptyGuard = [xMake| emptyGuard := [] |]
+
+                                            theGuard _ _ | not useDontCare = emptyGuard
+                                            theGuard (lv:lvs) name
+
+                                                | Just base <- "_Set~ExplicitVarSize_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSize_tuple1"])] |]
+                                                    g  = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in [eMake| &g /\ &gs |]
+                                                           
+                                                | Just base <- "_Set~ExplicitVarSizeWithMarker_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
+                                                    g  = [eMake| &lv <= &b |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_Set~Explicit" `T.stripSuffix` name
+                                                = let
+                                                    gs = theGuard lvs base
+                                                  in  gs
+
+                                                | Just base <- "_MSet~ExplicitVarSize_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_MSet~ExplicitVarSize_tuple1"])] |]
+                                                    g  = [eMake| &b > 0 |]
+                                                    gs = theGuard lvs base
+                                                  in [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_MSet~ExplicitVarSize_tuple2_MSet~Explicit" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_MSet~ExplicitVarSize_tuple1"])] |]
+                                                    g = [eMake| &b > true |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_Function~1DPartial_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Function~1DPartial_tuple1"])] |]
+                                                    g  = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in [eMake| &g /\ &gs |]
+
+                                                | Just _base <- "_Function~AsReln"      `T.stripSuffix` name = emptyGuard
+                                                | Just _base <- "_Partition~SetOfSets"  `T.stripSuffix` name = emptyGuard
+
+                                                | Just base <- "_Relation~AsSet_Set~ExplicitVarSize_tuple2_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Relation~AsSet_Set~ExplicitVarSize_tuple1"])] |]
+                                                    g = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple2_tuple2" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
+                                                    g = [eMake| &lv <= &b |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
+                                            -- theGuard _lvs "x" = emptyGuard
+
+                                            theGuard _lvs _name =
+                                                emptyGuard
+                                                -- error $ show $ vcat $ [ "don't know which guard to use for structural!"
+                                                --                       , pretty _name
+                                                --                       ] ++ map pretty _lvs
+
+                                        -- mkLog "RuleRefnToFunction theGuard" $ pretty $ theGuard (reverse loopVars) origName
+                                        -- mkLog "RuleRefnToFunction 0.0" $ pretty origName
+                                        -- mkLog "RuleRefnToFunction 0.1" $ pretty renameTo
+                                        -- mkLog "RuleRefnToFunction 0.2" $ pretty renameToIndexed
+                                        -- mkLog "RuleRefnToFunction 1" $ vcat $ map pretty loopVarStrs
+                                        -- mkLog "RuleRefnToFunction 2" $ vcat $ map pretty is
+                                        -- mkLog "RuleRefnToFunction 3" $ pretty con
+                                        -- mkLog "RuleRefnToFunction 4" $ pretty $ renRefn renameToIndexed con
+                                        -- mkLog "RuleRefnToFunction 5" $ pretty $ inForAlls (zip loopVarStrs is)
+                                        --                    ( theGuard (reverse loopVars) origName
+                                        --                    , renRefn renameToIndexed con
+                                        --                    )
                                         return $ inForAlls (zip loopVarStrs is) 
-                                                           ( [xMake| emptyGuard := [] |]
+                                                           ( theGuard (reverse loopVars) origName
                                                            , renRefn renameToIndexed con
                                                            )
 

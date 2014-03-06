@@ -35,7 +35,7 @@ relationRepr ( _name
     -- let refn = [xMake| reference := [Prim (S $ identifierConstruct
                                                     -- name
                                                     -- (Just "regionS")
-                                                    -- (Just "RelationAsSet")
+                                                    -- (Just "Relation~AsSet")
                                           -- )] |]
     -- let structurals = flip mapMaybe as $ \ a -> case a of
             -- [xMatch| [Prim (S "size")]    := attribute.nameValue.name.reference
@@ -50,7 +50,7 @@ relationRepr ( _name
             -- _ -> Nothing
     return [( decl
             , "builtIn.relationRepr"
-            , "RelationAsSet"
+            , "Relation~AsSet"
             , domOut
             -- , structurals
             , []
@@ -163,13 +163,13 @@ relationApply :: MonadConjure m => RefnFunc m
 relationApply p@[xMatch| [actual] := functionApply.actual
                        |  args    := functionApply.args
                        |]
-    | hasRepr "RelationAsSet" actual = do
+    | hasRepr "Relation~AsSet" actual = do
         actualTy <- typeOf actual
         argsTy   <- mapM typeOf args
         case actualTy of
             [xMatch| actualInners := type.relation.inners |] | actualInners == argsTy -> do
                 let theTuple = [xMake| value.tuple.values := args |]
-                let theSet   = refnOf "RelationAsSet" actual
+                let theSet   = refnOf "Relation~AsSet" actual
                 ret p "builtIn.relationApply" [eMake| &theTuple in &theSet |]
             _ -> return Nothing
 relationApply _ = return Nothing
@@ -185,8 +185,8 @@ quanOverToSetRelationProject
            | [guard]                    := quantified.guard
            | [body]                     := quantified.body
            |]
-    | hasRepr "RelationAsSet" relation = do
-        let theSet   = refnOf "RelationAsSet" relation
+    | hasRepr "Relation~AsSet" relation = do
+        let theSet   = refnOf "Relation~AsSet" relation
         (_newQuanVarStr, newQuanVar) <- freshQuanVar "quanOverToSetRelationProject"
 
         -- the rest of the items are available as output. sort of.

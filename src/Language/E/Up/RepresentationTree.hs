@@ -16,7 +16,33 @@ createVarTree varInfo =
 
 
 orgNames :: [String] -> M.Map String [[String]]
-orgNames arr = orgNames' M.empty $ map (splitOn "_") arr
+orgNames arr = orgNames' M.empty $ map (recombine .  splitOn "_") arr
+
+--  list of all Representations 
+rep_names :: [String]
+rep_names = [
+    "Function1D",
+    "FunctionAsReln",
+    "FunctionAsReln",
+    "MSetExplicit",
+    "MSetOccurrence",
+    "RelationAsSet",
+    "RelationIntMatrix2",
+    "RelationIntMatrix3",
+    "SetExplicit",
+    "SetExplicitVarSize",
+    "SetExplicitVarSizeWithDefault",
+    "SetExplicitVarSizeWithMarker",
+    "SetOccurrence",
+    "AsReln",
+    "Matrix1D",
+    "PartitionSetOfSets"
+    ]
+
+recombine :: [String] -> [String]
+recombine a@(_:x:_) | "tuple" `isPrefixOf` x  = a
+recombine (c:x:xs) | x `notElem` rep_names  = (c ++ "_" ++  x) : xs
+recombine a  = a
 
 orgNames' :: M.Map String [[String]] -> [[String]] ->  M.Map String [[String]]
 orgNames' ma [x:xs]      = M.insertWith (++) x [xs] ma

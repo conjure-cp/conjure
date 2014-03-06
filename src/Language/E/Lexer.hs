@@ -131,6 +131,7 @@ data Lexeme
 
     -- global constraints
     | L_allDiff
+    | L_dontCare
 
     -- matrix only operators
     | L_flatten
@@ -336,6 +337,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
     , ( L_hist, "hist" )
     , ( L_toInt, "toInt" )
     , ( L_allDiff, "allDiff" )
+    , ( L_dontCare, "dontCare" )
     , ( L_flatten, "flatten" )
     , ( L_normIndices, "normIndices" )
     , ( L_lambda, "lambda" )

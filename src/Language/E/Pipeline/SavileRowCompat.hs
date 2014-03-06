@@ -6,6 +6,8 @@ import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
+import Language.E.DomainOf ( domainOf )
+-- import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 
 import qualified Data.Text as T ( filter )
 
@@ -17,6 +19,7 @@ savilerowCompat
     -> m Spec
 savilerowCompat b
      =  recordSpec "entering savilerowCompat"
+    -- >=> bubbleUpSpec                            >=> recordSpec "bubbleUpSpec"
     >=> allNoTuplesSpec                         >=> recordSpec "allNoTuplesSpec"
     >=> conjureNoGuards                         >=> recordSpec "conjureNoGuards"
     >=> sliceIfTooFewIndices                    >=> recordSpec "sliceIfTooFewIndices"
@@ -26,6 +29,7 @@ savilerowCompat b
     >=> (return . onSpec tildeIsn'tSupported)   >=> recordSpec "tildeIsn'tSupported"
     >=> (return . (atMostOneSuchThat b))        >=> recordSpec "atMostOneSuchThat"
     >=> (return . removeMinMaxInt)              >=> recordSpec "removeMinMaxInt"
+    >=> (return . removeTypeInt)                >=> recordSpec "removeTypeInt"
     >=> (return . langEPrime)                   >=> recordSpec "langEPrime"
 
 
@@ -82,14 +86,7 @@ sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
                           |] = first (right:) (go left)
                 go m = ([], m)
 
-        lookupDomain d@[xMatch| _ := domain |] = return $ Just d
-        lookupDomain [xMatch| [Prim (S nm)] := reference |] = do
-            res <- errMaybeT "lookupDomain" lookupReference nm
-            lookupDomain res
-        lookupDomain [xMatch| [d] := topLevel.declaration.find .domain |] = return $ Just d
-        lookupDomain [xMatch| [d] := topLevel.declaration.given.domain |] = return $ Just d
-        lookupDomain [xMatch| [d] := topLevel.letting          .domain |] = return $ Just d
-        lookupDomain _ = return Nothing
+        lookupDomain d = Just <$> domainOf d
 
         matrixDomainNbDims :: E -> Int
         matrixDomainNbDims [xMatch| [inner] := domain.matrix.inner |] = 1 + matrixDomainNbDims inner
@@ -159,4 +156,10 @@ removeMinMaxInt (Spec v x) =
 
         Spec v $ transform stripFromRanges $ listAsStatement xs
 
+
+removeTypeInt :: Spec -> Spec
+removeTypeInt (Spec v x) = Spec v $ listAsStatement $ filter (not . isTypeInt) $ statementAsList x
+    where
+        isTypeInt [xMatch| _ := topLevel.declaration.given.typeInt |] = True
+        isTypeInt _ = False
 

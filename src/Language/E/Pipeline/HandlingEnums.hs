@@ -120,21 +120,19 @@ handleEnumsGiven spec
 -- adds a       given e_size : int(0..)
 -- returns      the new spec
 handleGivenIntDom :: MonadConjure m => Spec -> m Spec
-handleGivenIntDom spec
-    = withBindingScope'
-    $ flip evalStateT []
-    $ flip foreachStatement spec $ \ statement ->
+handleGivenIntDom spec = withBindingScope' $ do
+    (Spec v specOut, (_, typeInts)) <- flip runStateT ([],[]) $ flip foreachStatement spec $ \ statement ->
         case statement of
             [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                    | []              := topLevel.declaration.given.typeInt
                    |] -> do
                 let lb = [eMake| 1 |]
-                let newName = name `mappend` "_size"
+                let newName = [xMake| reference := [Prim (S (name `mappend` "_size"))] |]
                 let newDom  = [xMake| domain.int.ranges.range.from := [lb] |]
-                let newDecl = [xMake| topLevel.declaration.given.name.reference := [Prim (S newName)]
+                let newDecl = [xMake| topLevel.declaration.given.name           := [newName]
                                     | topLevel.declaration.given.domain         := [newDom]
                                     |]
-                befores <- get
+                (befores,_) <- get
                 -- only add this new given if this is the first time we are seeing it.
                 if statement `elem` befores || newDecl `elem` befores
                     then return [statement]
@@ -144,10 +142,15 @@ handleGivenIntDom spec
                                     , "~~>"
                                     , pretty newDecl
                                     ]
-                        modify ([newDecl, statement] ++) -- add these statements as seen.
-                        return [newDecl, statement]
+                        modify $ \ (seen, typeInts) -> ( [newDecl, statement] ++ seen       -- add these statements as seen.
+                                                       , ( [xMake| reference := [Prim (S name)] |]
+                                                         , [xMake| domain.int.ranges.range.fromTo := [lb,newName] |]
+                                                         ) : typeInts
+                                                       )
+                        return [newDecl]
             _ -> do
-                modify (statement :)
+                modify $ \ (seen, typeInts) -> (statement : seen, typeInts)
                 return [statement]
-
+    -- mkLog "debug:typeInts" $ vcat $ map pretty typeInts
+    return $ Spec v $ replaceAll typeInts specOut
 

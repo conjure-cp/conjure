@@ -1,0 +1,7 @@
+
+[500]
+
+&x in defined(&f) ~~> refn(&f)[&x,1]
+
+    where &f hasType   `function int --> _`
+    where &f hasRepr    Function~1DPartial
