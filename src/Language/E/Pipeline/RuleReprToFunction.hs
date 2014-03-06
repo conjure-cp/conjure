@@ -201,19 +201,18 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                 --                       , pretty _name
                                                 --                       ] ++ map pretty _lvs
 
-                                        mkLog "RuleRefnToFunction theGuard" $ pretty $ theGuard (reverse loopVars) origName
-
-                                        mkLog "RuleRefnToFunction 0.0" $ pretty origName
-                                        mkLog "RuleRefnToFunction 0.1" $ pretty renameTo
-                                        mkLog "RuleRefnToFunction 0.2" $ pretty renameToIndexed
-                                        mkLog "RuleRefnToFunction 1" $ vcat $ map pretty loopVarStrs
-                                        mkLog "RuleRefnToFunction 2" $ vcat $ map pretty is
-                                        mkLog "RuleRefnToFunction 3" $ pretty con
-                                        mkLog "RuleRefnToFunction 4" $ pretty $ renRefn renameToIndexed con
-                                        mkLog "RuleRefnToFunction 5" $ pretty $ inForAlls (zip loopVarStrs is) 
-                                                           ( theGuard (reverse loopVars) origName
-                                                           , renRefn renameToIndexed con
-                                                           )
+                                        -- mkLog "RuleRefnToFunction theGuard" $ pretty $ theGuard (reverse loopVars) origName
+                                        -- mkLog "RuleRefnToFunction 0.0" $ pretty origName
+                                        -- mkLog "RuleRefnToFunction 0.1" $ pretty renameTo
+                                        -- mkLog "RuleRefnToFunction 0.2" $ pretty renameToIndexed
+                                        -- mkLog "RuleRefnToFunction 1" $ vcat $ map pretty loopVarStrs
+                                        -- mkLog "RuleRefnToFunction 2" $ vcat $ map pretty is
+                                        -- mkLog "RuleRefnToFunction 3" $ pretty con
+                                        -- mkLog "RuleRefnToFunction 4" $ pretty $ renRefn renameToIndexed con
+                                        -- mkLog "RuleRefnToFunction 5" $ pretty $ inForAlls (zip loopVarStrs is)
+                                        --                    ( theGuard (reverse loopVars) origName
+                                        --                    , renRefn renameToIndexed con
+                                        --                    )
                                         return $ inForAlls (zip loopVarStrs is) 
                                                            ( theGuard (reverse loopVars) origName
                                                            , renRefn renameToIndexed con
