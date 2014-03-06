@@ -51,6 +51,7 @@ data ConjureModeMultiple
     = DFAll
     | DFCompactParam
     | DFNoChannelling
+    | DFSample
     deriving (Show)
 
 data ConjureMode
@@ -206,10 +207,10 @@ conjureHelp =  Pr.vcat  $ helpStart :
     anyKey   = id
 
     mode :: String -> [Doc] -> Doc
-    mode title docs = header title Pr.$+$ Pr.nest 4 (Pr.vcat docs) <> "\n" 
+    mode title docs = header title Pr.$+$ Pr.nest 4 (Pr.vcat docs) <> "\n"
 
     header :: String -> Doc
-    header title = pretty $ "--mode " ++  title 
+    header title = pretty $ "--mode " ++  title
 
 parseArgs :: GenericArgs -> Maybe ConjureModeWithFlags
 parseArgs (pairs, flags, rest) = msum
@@ -229,6 +230,7 @@ parseArgs (pairs, flags, rest) = msum
     , modeRandom
     , modeFirst
     , modeSmallest
+    , modeSample
     ]
     where
         modeDiff = do
@@ -327,6 +329,16 @@ parseArgs (pairs, flags, rest) = msum
         modeRandom = do
             mode $ words "random rand rnd"
             modeSingleOutput $ ModeSingleOutput ModeRandom
+
+
+
+        modeSample = do
+            mode $ words "sample"
+            inEssence <- anyKey $ words "--in-essence --in"
+            outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
+            limit     <- readKey "--limit-models"
+            returnMode $  ModeMultipleOutput DFSample inEssence outDir (Just limit)
+
 
         modeFirst = do
             mode $ words "first"
