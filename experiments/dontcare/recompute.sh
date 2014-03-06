@@ -284,15 +284,12 @@ export -f conjure_compact_all_solutions_count
 
 # for level 1 nesting
 # generate sizes 1..3
-# for compact
-#   count number of all solutions
-#   also enumerate all solutions
-# for all-models
+# for all-models (with dontCare)
 #   enumerate all solutions
 
 # for level 2 nesting
 # generate sizes 1..2
-# for compact
+# for compact (with and without dontCare)
 #   count number of all solutions
 #   do *not* enumerate all solutions
 
@@ -307,20 +304,11 @@ do
 
     runhaskell ../create_essences.hs 1 $size
 
-    parallel --no-notice conjure_compact {1} {2//}                                          \
-        ::: noDontCare usesDontCare                                                         \
-        ::: */*.essence
-
-    parallel --no-notice {1} {2} {3//}                                                      \
-        ::: conjure_compact_all_solutions_count conjure_compact_all_solutions               \
-        ::: noDontCare usesDontCare                                                         \
-        ::: */*.essence
-
     # conjure_all
-    parallel --no-notice {1} {2//} ::: conjureInDir_noDontCare conjureInDir_usesDontCare ::: */*.essence
+    parallel --no-notice {1} {2//} ::: conjureInDir_usesDontCare ::: */*.essence
 
     # conjure_all_solve
-    parallel --no-notice srOne_allsols {.} "none" "none" ::: */*DontCare/*.eprime
+    parallel --no-notice srOne_allsols {.} "none" "none" ::: */usesDontCare/*.eprime
 
     # clean up
     find . -size 0                  -exec echo removing {} \; -exec rm {} \;
