@@ -95,6 +95,15 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
             $ mapMaybe (T.stripPrefix "[configuration]")
             $ T.lines modelLogs
 
+    forM_ essenceParams $ \ p -> case p of
+        (_, [xMatch| vs := topLevel.letting.typeEnum.values |]) -> do
+            let projectReference [xMatch| [Prim (S nm)] := reference |] = nm
+                projectReference r = bug $ "RedArrow.projectReference: not a reference" <+> pretty r
+            let is = map projectReference vs
+            forM_ (zip is [1..]) $ \ (i,n) -> do
+                addReference i [xMake| value.literal := [Prim (I n)] |]
+        _ -> return ()
+
     -- bs <- bindersDoc
     -- mkLog "debug" $ vcat $
     --     (
@@ -113,6 +122,14 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
     --             | (a,b) <- lookupReprs
     --             ]
     --     ) ++ [bs]
+
+    -- mkLog "debug" $ sep $
+    --     "workhorse working on" : concat
+    --     [ [pretty nm, pretty decl, pretty val, "~~"]
+    --     | (nm, decl) <- essenceGivens
+    --     , (nm2, val) <- essenceParams
+    --     , nm == nm2
+    --     ]
 
     outPairs <- concatMapM (workhorse lookupReprs)
                 [ (nm, decl, val)
@@ -499,9 +516,10 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.Matrix1D", pretty p ]
                     (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
                     nameOut = name `T.append` "_Function~1D"
+                actualValues' <- mapM (instantiateEnumDomains []) actualValues
                 domInnerFr' <- instantiateEnumDomains [] domInnerFr
                 let
-                    valueOut = [xMake| value.matrix.values     := actualValues
+                    valueOut = [xMake| value.matrix.values     := actualValues'
                                      | value.matrix.indexrange := [domInnerFr']
                                      |]
                 return [(nameOut, valueOut)]
