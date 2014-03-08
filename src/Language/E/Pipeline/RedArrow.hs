@@ -203,11 +203,12 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             -> Maybe Text
             -> m [(Text, E)]
 
-        -- helper name domain value _
+        -- helper name domain value mrepr
         --     | trace (show $ sep [ "helper"
         --                         , pretty name
         --                         , pretty domain
         --                         , pretty value
+        --                         , pretty mrepr
         --                         ]) False = undefined
 
         helper
@@ -535,16 +536,17 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 let
                     nameOut = name `T.append` "_Relation~AsSet"
                     domInnerOut = [xMake| domain.tuple.inners := domInners |]
-                case lookup nameOut lookupReprs of
-                    Nothing   -> bug $ vcat [ "workhorse.helper.RelationAsSet", pretty name]
-                    Just repr ->
-                        callHelper
-                            nameOut
-                            [xMake| domain.set.attributes.attrCollection := attrs
-                                  | domain.set.inner := [domInnerOut]
-                                  |]
-                            [xMake| value.set.values := values |]
-                            (Just repr)
+                case [ r | (n,r) <- lookupReprs, nameOut == n ] of
+                    []    -> bug $ vcat [ "workhorse.helper.RelationAsSet", pretty name]
+                    reprs ->
+                        fmap concat $ forM reprs $ \ repr ->
+                            callHelper
+                                nameOut
+                                [xMake| domain.set.attributes.attrCollection := attrs
+                                      | domain.set.inner := [domInnerOut]
+                                      |]
+                                [xMake| value.set.values := values |]
+                                (Just repr)
 
         helper
             name

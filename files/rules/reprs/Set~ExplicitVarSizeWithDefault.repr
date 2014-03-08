@@ -1,28 +1,28 @@
 
 ~~> Set~ExplicitVarSizeWithDefault
-~~> matrix indexed by [int(1..&mx)] of int(&lb..&def)
+~~> matrix indexed by [int(1..&maxSize)] of int(&lb..&dummy)
 ~~> (
-        forAll i : int(1..&mx-1), refn[i] != &def . refn[i] < refn[i+1]
+        forAll i : int(1..&maxSize-1), refn[i] != &dummy . refn[i] < refn[i+1]
     )
         /\
     (
-        forAll i : int(1..&mx-1) . refn[i] <= refn[i+1]
+        forAll i : int(1..&maxSize-1) . refn[i] <= refn[i+1]
     )
 
     where &t hasType `int`
     where &t hasDomain `int(&lb..&ub)`
-    letting &def be &ub + 1
+    letting &dummy be &ub + 1
 
 
 *** set of &t
-    letting &mx be domSize(&t)
+    letting &maxSize be domSize(&t)
 
-*** set (minSize &mn) of &t
-    ~~> (sum i : int(1..&mx) . toInt(refn[i] != &def)) >= &mn
-    letting &mx be domSize(&t)
+*** set (minSize &minSize) of &t
+    ~~> (sum i : int(1..&maxSize) . toInt(refn[i] != &dummy)) >= &minSize
+    letting &maxSize be domSize(&t)
 
-*** set (maxSize &mx) of &t
+*** set (maxSize &maxSize) of &t
 
-*** set (minSize &mn, maxSize &mx) of &t
-    ~~> (sum i : int(1..&mx) . toInt(refn[i] != &def)) >= &mn
+*** set (minSize &minSize, maxSize &maxSize) of &t
+    ~~> (sum i : int(1..&maxSize) . toInt(refn[i] != &dummy)) >= &minSize
 

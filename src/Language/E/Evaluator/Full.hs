@@ -1123,10 +1123,11 @@ evalDontCare True  [eMatch| dontCare(&a) |] = do
         bottomOfDomain [xMatch| _     := domain.int          |] = return [eMake| 0 |]
         bottomOfDomain _ = Nothing
 
-        bottomOfRange [xMatch| [x]   := range.single |] = return x
-        bottomOfRange [xMatch| [x]   := range.from   |] = return x
-        bottomOfRange [xMatch| [x]   := range.to     |] = return x
-        bottomOfRange [xMatch| [x,_] := range.fromTo |] = return x
+        bottomOfRange   [xMatch| [x]   := range.single  |] = return x
+        bottomOfRange   [xMatch| [x]   := range.from    |] = return x
+        bottomOfRange   [xMatch| [x]   := range.to      |] = return x
+        bottomOfRange   [xMatch| [x,_] := range.fromTo  |] = return x
+        bottomOfRange x@[xMatch| _     := value.literal |] = return x
         bottomOfRange _ = Nothing
 
     da <- domainOf a
