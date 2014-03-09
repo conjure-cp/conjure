@@ -193,6 +193,20 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                                     gs = theGuard lvs base
                                                   in  [eMake| &g /\ &gs |]
 
+                                                | Just base <- "_Function~AsReln_Relation~AsSet_Set~ExplicitVarSize_tuple2_tuple1" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse (lv:lvs)) [xMake| reference := [Prim (S $ mconcat [base, "_Function~AsReln_Relation~AsSet_Set~ExplicitVarSize_tuple1"])] |]
+                                                    g = [eMake| &b = true |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
+                                                | Just base <- "_Function~AsReln_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple2_tuple1" `T.stripSuffix` name
+                                                = let
+                                                    b  = mkIndexedExpr (reverse lvs) [xMake| reference := [Prim (S $ mconcat [base, "_Function~AsReln_Relation~AsSet_Set~ExplicitVarSizeWithMarker_tuple1"])] |]
+                                                    g = [eMake| &lv <= &b |]
+                                                    gs = theGuard lvs base
+                                                  in  [eMake| &g /\ &gs |]
+
                                             -- theGuard _lvs "x" = emptyGuard
 
                                             theGuard _lvs _name =
