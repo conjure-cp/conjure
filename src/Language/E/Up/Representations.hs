@@ -4,6 +4,7 @@ module Language.E.Up.Representations(
       getBranch, isBranchRep
     , runBranchFuncs
     , RepName, After, Before
+    , representationsNames
     ) where
 
 import Bug
@@ -14,6 +15,27 @@ import Language.E.Up.Debug
 import Data.List(genericReplicate)
 
 import Data.List(genericTake)
+
+representationsNames :: [String]
+representationsNames = [
+    "Function1D",
+    "FunctionAsReln",
+    "FunctionAsReln",
+    "MSetExplicit",
+    "MSetOccurrence",
+    "RelationAsSet",
+    "RelationIntMatrix2",
+    "RelationIntMatrix3",
+    "SetExplicit",
+    "SetExplicitVarSize",
+    "SetExplicitVarSizeWithDefault",
+    "SetExplicitVarSizeWithMarker",
+    "SetOccurrence",
+    "AsReln",
+    "Matrix1D",
+    "PartitionSetOfSets",
+    "SetGent"
+    ]
 
 -- Types
 type LeafFunc   = (VarData ->  E)

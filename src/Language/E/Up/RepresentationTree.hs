@@ -8,6 +8,8 @@ import Language.E
 import Language.E.Up.Data
 import Language.E.Up.Debug
 
+import Language.E.Up.Representations(representationsNames)
+
 createVarTree ::  M.Map String a -> [Tree String]
 createVarTree varInfo =
     let keys = M.keys varInfo
@@ -18,30 +20,10 @@ createVarTree varInfo =
 orgNames :: [String] -> M.Map String [[String]]
 orgNames arr = orgNames' M.empty $ map (recombine .  splitOn "_") arr
 
---  list of all Representations 
-rep_names :: [String]
-rep_names = [
-    "Function1D",
-    "FunctionAsReln",
-    "FunctionAsReln",
-    "MSetExplicit",
-    "MSetOccurrence",
-    "RelationAsSet",
-    "RelationIntMatrix2",
-    "RelationIntMatrix3",
-    "SetExplicit",
-    "SetExplicitVarSize",
-    "SetExplicitVarSizeWithDefault",
-    "SetExplicitVarSizeWithMarker",
-    "SetOccurrence",
-    "AsReln",
-    "Matrix1D",
-    "PartitionSetOfSets"
-    ]
 
 recombine :: [String] -> [String]
 recombine a@(_:x:_) | "tuple" `isPrefixOf` x  = a
-recombine (c:x:xs) | x `notElem` rep_names  = (c ++ "_" ++  x) : xs
+recombine (c:x:xs) | x `notElem` representationsNames  = (c ++ "_" ++  x) : xs
 recombine a  = a
 
 orgNames' :: M.Map String [[String]] -> [[String]] ->  M.Map String [[String]]
