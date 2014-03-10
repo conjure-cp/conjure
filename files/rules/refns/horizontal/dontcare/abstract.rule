@@ -8,6 +8,7 @@ dontCare(&x) ~~> dontCare(refn(&x))
         ( &x hasRepr Set~ExplicitVarSizeWithDefault) \/
         ( &x hasRepr Set~ExplicitVarSizeWithMarker) \/
         ( &x hasRepr Set~Occurrence) \/
+        ( &x hasRepr Set~Gent) \/
 
         ( &x hasRepr MSet~Explicit) \/
         ( &x hasRepr MSet~ExplicitVarSize) \/
