@@ -96,7 +96,8 @@ noTuplesE :: MonadConjure m => E -> m (E, Bool)
 noTuplesE statementIn = do
     let statements = statementAsList statementIn
     (statements',(tuplesToExplode,matrixOfTuplesToExplode,directReplacements)) <-
-        runWriterT $ forM statements $ \ statement ->
+        runWriterT $ forM statements $ \ statement -> withBindingScope $ do
+            lift $ introduceStuff statement
             case checkTopLevel statement of
                 Nothing      -> return [statement]
                 Just (f,n,d) ->
@@ -161,7 +162,19 @@ noTuplesE statementIn = do
 
 
 noTupleDomsInQuanEs :: MonadConjure m => E -> m (E, Bool)
-noTupleDomsInQuanEs inp@(Tagged t xs) = do
+noTupleDomsInQuanEs [xMatch| [this] := statement.this
+                           | [next] := statement.next
+                           |] = withBindingScope' $ do
+    introduceStuff this
+    (this', b1) <- noTupleDomsInQuanEs this
+    (next', b2) <- noTupleDomsInQuanEs next
+    return ( [xMake| statement.this := [this']
+                   | statement.next := [next']
+                   |]
+           , b1 || b2
+           )
+noTupleDomsInQuanEs inp@(Tagged t xs) = withBindingScope' $ do
+    introduceStuff inp
     (inp', flag) <- noTupleDomsInQuanE inp
     if flag
         then return (inp', True)
@@ -174,7 +187,8 @@ noTupleDomsInQuanEs x = return (x, False)
 
 
 noTupleDomsInQuanE :: MonadConjure m => E -> m (E, Bool)
-noTupleDomsInQuanE inp = do
+noTupleDomsInQuanE inp = withBindingScope' $ do
+    introduceStuff inp
     (mout, (tuplesToExplode, matrixOfTuplesToExplode)) <- runWriterT (helper inp)
     case mout of
         Nothing  -> return (inp, False)
