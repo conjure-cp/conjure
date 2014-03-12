@@ -12,6 +12,7 @@ import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 import Safe ( readMay )
 
 import qualified Text.PrettyPrint as Pr
+import Bug ( userErr )
 import Stuff.Pretty
 import RepositoryVersion ( repositoryVersion )
 
@@ -111,6 +112,10 @@ data ConjureModeWithFlags
         (M.HashMap String String)       -- all key-value pairs
         (S.HashSet String)              -- all flags
         [String]                        -- all the rest
+        TimeLimit
+    deriving (Show)
+
+data TimeLimit = NoTimeLimit | TimeLimit Int -- seconds
     deriving (Show)
 
 conjureHelp :: Doc
@@ -359,7 +364,14 @@ parseArgs (pairs, flags, rest) = msum
         flagSet = (`S.member` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
 
-        returnMode m = return $ ConjureModeWithFlags m pairs flags rest
+        returnMode m = do
+            mtimelimit <- optional $ key "--timelimit"
+            let timelimit = case mtimelimit of
+                                Nothing -> NoTimeLimit
+                                Just str -> case readMay str of
+                                    Nothing -> userErr ("Cannot parse timelimit value as integer: " <+> pretty str)
+                                    Just i  -> TimeLimit i
+            return $ ConjureModeWithFlags m pairs flags rest timelimit
 
         modeSingleOutput mk = do
             inEssence <- anyKey $ words "--in --in-essence"

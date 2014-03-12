@@ -59,7 +59,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
                 param_eprime
                 (conjureWithMode
                     seed Nothing Nothing
-                    (ConjureModeWithFlags (ModeSingleOutput ModeCompact param_gen param_eprime) M.empty def def)
+                    (ConjureModeWithFlags (ModeSingleOutput ModeCompact param_gen param_eprime) M.empty def def NoTimeLimit)
                     ruleReprs ruleRefns paramEssence)
 
     _ <- runConjure paramEssenceOld

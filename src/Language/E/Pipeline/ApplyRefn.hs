@@ -22,7 +22,7 @@ applyRefn
     -> Spec
     -> m Spec
 applyRefn db' spec = do
-    ConjureModeWithFlags _ _ flags _ <- getsGlobal conjureMode
+    ConjureModeWithFlags _ _ flags _ _ <- getsGlobal conjureMode
     if "--better" `S.member` flags
         then Slower.applyRefn db' spec
         else withBindingScope' $ do
@@ -36,7 +36,7 @@ applyRefnE
     -> E
     -> m E
 applyRefnE db' x = do
-    ConjureModeWithFlags _ _ flags _ <- getsGlobal conjureMode
+    ConjureModeWithFlags _ _ flags _ _ <- getsGlobal conjureMode
     if "--better" `S.member` flags
         then Slower.applyRefnE db' x
         else return x

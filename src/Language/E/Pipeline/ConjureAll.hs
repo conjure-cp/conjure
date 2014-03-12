@@ -22,7 +22,7 @@ conjureWithMode
     -> ConjureModeWithFlags
     -> [RuleRepr] -> [RuleRefn] -> Spec
     -> [(Either Doc Spec, LogTree)]
-conjureWithMode seed limitLevels limitOut mode@(ConjureModeWithFlags _ _ flags _) reprs refns spec
+conjureWithMode seed limitLevels limitOut mode@(ConjureModeWithFlags _ _ flags _ _) reprs refns spec
     = withLimit
     $ onlyOneError
     $ runCompE "conjure" $ do

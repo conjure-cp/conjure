@@ -4,6 +4,9 @@ module Conjure ( getConjureMode, runConjureMode,conjureHelp ) where
 
 import System.Directory ( doesFileExist )
 import System.Environment ( getArgs )
+import System.Timeout ( timeout )
+import System.CPUTime ( getCPUTime )
+import Text.Printf ( printf )
 import qualified Data.Text.IO as T
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
@@ -56,7 +59,24 @@ getConjureMode :: IO (Maybe ConjureModeWithFlags)
 getConjureMode = (parseArgs . parseGenericArgs) `fmap` getArgs
 
 runConjureMode :: ConjureModeWithFlags -> IO ()
-runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest) = helper mode
+runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) =
+    case timelimit of
+        NoTimeLimit   -> helper mode
+        TimeLimit sec -> do
+            putStrLn $ "Running with a timelimit of " ++ show sec ++ " seconds."
+            res <- timeout (sec * 1000000) (helper mode)
+            case res of
+                Nothing -> do
+                    cputime <- getCPUTime
+                    let
+                        -- cputime is returned in pico-seconds. arbitrary precision integer.
+                        -- divide by 10^9 first. use arbitrary precision integer arithmetic.
+                        -- do the last 10^3 division via double to get 3 significant digits after the integer part.
+                        cputimeInSeconds :: Double
+                        cputimeInSeconds = fromInteger (cputime `div` 1000000000) / 1000
+                    putStrLn $ printf "Timed out. Total CPU time used is %.3f seconds." cputimeInSeconds
+                Just () -> return ()
+
     where
 
         limit = do

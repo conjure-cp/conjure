@@ -298,7 +298,7 @@ instance Default GlobalState where
     def = GlobalState
         { memoRefnChanged = def
         , memoRefnStaysTheSame = def
-        , conjureMode = ConjureModeWithFlags ModeUnknown M.empty def def
+        , conjureMode = ConjureModeWithFlags ModeUnknown M.empty def def NoTimeLimit
         , conjureSeed = error "Seed not initialised"
         , limitOutputs = def
         }
@@ -313,7 +313,7 @@ makeIdempotent f x = do
 
 class SelectByMode a where
     selectByMode :: RandomM m => ConjureModeWithFlags -> GlobalState -> [a] -> m [a]
-    selectByMode (ConjureModeWithFlags m _ _ _) s = defSelectByMode m s
+    selectByMode (ConjureModeWithFlags m _ _ _ _) s = defSelectByMode m s
 
 defSelectByMode :: RandomM m => ConjureMode -> GlobalState -> [a] -> m [a]
 defSelectByMode _                                   _ [] = return []
@@ -334,7 +334,7 @@ defSelectByMode _ _ _ = error "selectByMode: Shouldn't be used in this mode"
 
 instance SelectByMode E where
     selectByMode _ _ [] = return []
-    selectByMode (ConjureModeWithFlags mode _ _ _) s xs =
+    selectByMode (ConjureModeWithFlags mode _ _ _ _) s xs =
         case mode of
             ModeSingleOutput ModeCompact _ _ -> return [minimumBy (comparing eDepth) xs]
             _                                -> defSelectByMode mode s xs
@@ -394,7 +394,7 @@ compactIfParam xs = xs
 
 instance SelectByMode RuleReprResult where
     selectByMode _ _ [] = return []
-    selectByMode (ConjureModeWithFlags mode _ _ _) s xs =
+    selectByMode (ConjureModeWithFlags mode _ _ _ _) s xs =
         case mode of
             ModeSingleOutput ModeCompact      _ _   -> return [compactSelect xs]
             ModeMultipleOutput DFCompactParam _ _ _ -> return (compactIfParam xs)
