@@ -251,6 +251,8 @@ functionIntPair2DRep VarData{vIndexes=[a,b],
   expand :: (a,[b]) -> [(a,b)]
   expand (x,ys) =  [ (x,y) |  y <- ys  ]
 
+functionIntPair2DRep v = _bug "functionIntPair2DRep" [v] 
+
 
 matrix1DRep :: VarData -> E
 matrix1DRep v@VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
