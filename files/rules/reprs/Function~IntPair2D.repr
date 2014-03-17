@@ -1,0 +1,13 @@
+$  Idea is to turn a function from pairs of ints into a 2D matrix
+$       function (total)  tuple (int(1..a), int(1..b)) --> int(1..c)
+$  into a 2d matrix 
+$       matrix indexed by [int(1..a), int(1..b)] of int(1..c)
+
+
+~~>Function~IntPair2D
+~~> matrix indexed by [&a, &b] of &to
+
+    where &a hasType `int`
+    where &b hasType `int`
+
+*** function (total) tuple (&a, &b) --> &to

@@ -34,7 +34,8 @@ representationsNames = [
     "AsReln",
     "Matrix1D",
     "PartitionSetOfSets",
-    "SetGent"
+    "SetGent",
+    "FunctionIntPair2D"
     ]
 
 -- Types
@@ -58,6 +59,7 @@ leafRep kind =
       "SetExplicitVarSizeWithDefault" -> setExplicitVarSizeWithDefaultRep
       "SetOccurrence"                 -> setOccurrenceRep
       "SetGent"                       -> setGentRep
+      "FunctionIntPair2D"             -> functionIntPair2DRep
       _                               -> noRep
 
 
@@ -225,7 +227,32 @@ relationIntMatrix3Rep v@VarData{vIndexes = (_:rest@(_:_)),
 
 relationIntMatrix3Rep v = _bug "relationIntMatrix3Rep" [v] 
 
+
 {- Functions -}
+
+
+functionIntPair2DRep :: VarData -> E 
+functionIntPair2DRep VarData{vIndexes=[a,b],
+                              vEssence=[xMatch| vs := value.matrix.values |] } =  
+  tracer "functionIntPair2DRep" values
+  where
+  values =
+       wrapInFunction
+     . map f
+     . concatMap expand
+     . zip a
+     . map (  zip b . unwrapMatrix  )
+     $ vs
+
+  f :: (Integer, (Integer, E) ) -> E
+  f (i, (j, e) ) = [xMake| mapping := [ t,  e] |]
+    where t = [xMake| value.tuple.values := map toIntLit [i, j] |]
+
+  expand :: (a,[b]) -> [(a,b)]
+  expand (x,ys) =  [ (x,y) |  y <- ys  ]
+
+functionIntPair2DRep v = _bug "functionIntPair2DRep" [v] 
+
 
 matrix1DRep :: VarData -> E
 matrix1DRep v@VarData{vIndexes=[ix], vEssence=[xMatch| vs :=  value.matrix.values |]} =
