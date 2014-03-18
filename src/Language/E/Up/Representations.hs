@@ -18,24 +18,24 @@ import Data.List(genericTake)
 
 representationsNames :: [String]
 representationsNames = [
-    "Function1D",
-    "FunctionAsReln",
-    "FunctionAsReln",
-    "MSetExplicit",
-    "MSetOccurrence",
-    "RelationAsSet",
-    "RelationIntMatrix2",
-    "RelationIntMatrix3",
-    "SetExplicit",
-    "SetExplicitVarSize",
-    "SetExplicitVarSizeWithDefault",
-    "SetExplicitVarSizeWithMarker",
-    "SetOccurrence",
-    "AsReln",
-    "Matrix1D",
-    "PartitionSetOfSets",
-    "SetGent",
-    "FunctionIntPair2D"
+     "Function1D"
+    ,"FunctionAsReln"
+    ,"FunctionAsReln"
+    ,"MSetExplicit"
+    ,"MSetOccurrence"
+    ,"RelationAsSet"
+    ,"RelationIntMatrix2"
+    ,"RelationIntMatrix3"
+    ,"SetExplicit"
+    ,"SetExplicitVarSize"
+    ,"SetExplicitVarSizeWithDefault"
+    ,"SetExplicitVarSizeWithMarker"
+    ,"SetOccurrence"
+    ,"AsReln"
+    ,"Matrix1D"
+    ,"PartitionSetOfSets"
+    ,"SetGent"
+    ,"FunctionIntPair2D"
     ]
 
 -- Types
