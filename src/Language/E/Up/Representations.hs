@@ -20,7 +20,6 @@ representationsNames :: [String]
 representationsNames = [
      "Function1D"
     ,"FunctionAsReln"
-    ,"FunctionAsReln"
     ,"MSetExplicit"
     ,"MSetOccurrence"
     ,"RelationAsSet"
@@ -36,6 +35,7 @@ representationsNames = [
     ,"PartitionSetOfSets"
     ,"SetGent"
     ,"FunctionIntPair2D"
+    ,"Function1DPartial"
     ]
 
 -- Types
@@ -195,19 +195,19 @@ relationIntMatrix3Rep VarData{vIndexes=[a,b,c],
 
     . concatMap expand
     . filter notEmpty
-    . zip a 
+    . zip a
 
-    . map 
-     ( concatMap expand .  filter notEmpty .  zip b 
+    . map
+     ( concatMap expand .  filter notEmpty .  zip b
 
-     . map (  map fst . filter f . zip c . unwrapMatrix ) 
+     . map (  map fst . filter f . zip c . unwrapMatrix )
      . unwrapMatrix)
      $ vs
 
 
   tuples arr = [xMake| value.tuple.values := (map toIntLit arr) |]
 
-  flatten :: (a,(a,a)) -> [a] 
+  flatten :: (a,(a,a)) -> [a]
   flatten (x,(y,z)) = [x,y,z]
 
   expand :: (a,[b]) -> [(a,b)]
@@ -225,15 +225,15 @@ relationIntMatrix3Rep v@VarData{vIndexes = (_:rest@(_:_)),
                                 vEssence = [xMatch| vs := value.matrix.values |] } =
     wrapInMatrix . map (\w ->  relationIntMatrix3Rep v{vIndexes=rest,vEssence=w} ) $ vs
 
-relationIntMatrix3Rep v = _bug "relationIntMatrix3Rep" [v] 
+relationIntMatrix3Rep v = _bug "relationIntMatrix3Rep" [v]
 
 
 {- Functions -}
 
 
-functionIntPair2DRep :: VarData -> E 
+functionIntPair2DRep :: VarData -> E
 functionIntPair2DRep VarData{vIndexes=[a,b],
-                              vEssence=[xMatch| vs := value.matrix.values |] } =  
+                              vEssence=[xMatch| vs := value.matrix.values |] } =
   tracer "functionIntPair2DRep" values
   where
   values =
@@ -251,7 +251,7 @@ functionIntPair2DRep VarData{vIndexes=[a,b],
   expand :: (a,[b]) -> [(a,b)]
   expand (x,ys) =  [ (x,y) |  y <- ys  ]
 
-functionIntPair2DRep v = _bug "functionIntPair2DRep" [v] 
+functionIntPair2DRep v = _bug "functionIntPair2DRep" [v]
 
 
 matrix1DRep :: VarData -> E
@@ -325,6 +325,7 @@ getBranch s =
       "SetExplicitVarSizeWithMarker" -> Just setExplicitVarSizeWithMarkerBranch
       "SetOccurrence"      -> Just occurrenceBranch
       "unwrapBranch£"      -> Just unwrapBranch
+      "Function1DPartial"  -> Just function1DPartialBranch
       _                    -> Nothing
 
 
@@ -342,6 +343,7 @@ isBranchRep "SetExplicitVarSize" = True
 isBranchRep "SetExplicitVarSizeWithMarker" = True
 isBranchRep "SetOccurrence"      = True
 isBranchRep "unwrapBranch£"      = True
+isBranchRep "Function1DPartial"  = True
 isBranchRep _                    = False
 
 
@@ -439,10 +441,35 @@ matrix1DBranch = ( tracee "matrix1DBranch" unwrapSet, after )
                 {-trace "----------" $-}
                 {-(trace . show . pretty $ vs)-}
                 vs
-        -- FIXME hackish to only pass the first index and breaks some tests
         in orgData{vEssence=matrix1DRep orgData{vIndexes=[head ix], vEssence=wraped}}
 
 
+function1DPartialBranch :: (Before, After)
+function1DPartialBranch = ( tracee "function1DPartialBranch" before, after )
+
+    where
+    before v = [v]
+
+    after orgData@VarData{vIndexes=[ix]} [VarData{vEssence=f}] =
+        orgData{vEssence= removeFalses $  matrix1DRep orgData{vIndexes=[ix], vEssence=f}}
+
+    after orgData vs =
+        _bug "function1DPartialBranch after unhandled" (orgData : vs)
+
+    removeFalses :: E -> E
+    removeFalses [xMatch| vs := value.function.values |] =
+         let keep = mapMaybe f vs
+         {-in error . show $ prettyAsBoth $ [xMake| value.function.values := keep |] -}
+         in  [xMake| value.function.values := keep |]
+
+         where 
+         f ::E -> Maybe E
+         f [xMatch| [ Tagged Tliteral [Prim (B True)] , v] := mapping.value.tuple.values.value
+                    | from                                 := mapping.value.literal |] =
+            Just ([xMake|  mapping := [  Tagged Tvalue [Tagged Tliteral from],  Tagged Tvalue [v] ]  |])
+         f _ = Nothing
+
+    removeFalses a =  _bug "function1DPartialBranch removeFalses unhandled" [a]
 
 functionAsRelnRep :: (Before, After)
 functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
@@ -475,7 +502,7 @@ partitionSetOfSetsBranch = ( tracee "partitionSetOfSetsBranch" beforeUnchanged ,
 
 {- End -}
 
--- FIXME  reps should not try to refine marker, part 
+-- FIXME  reps should not try to refine marker, part
 unwrapBranch :: (Before,After)
 unwrapBranch = (tracee "unwrapBranch" unwrapSetMaybe, after)
     where
@@ -483,9 +510,9 @@ unwrapBranch = (tracee "unwrapBranch" unwrapSetMaybe, after)
     after orgData vs = orgData{vEssence=  wrapInMatrix $ map vEssence vs }
 
     unwrapSetMaybe :: Before
-    unwrapSetMaybe v@VarData{vEssence=[xMatch| _ := value.literal |]} = [v] 
+    unwrapSetMaybe v@VarData{vEssence=[xMatch| _ := value.literal |]} = [v]
     unwrapSetMaybe v@VarData{vEssence=e, vIndexes=ix} =
-        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix' "unwrapSet" e) 
+        map (\f -> v{vEssence=f, vIndexes=tail ix} )  (unwrapMatrix' "unwrapSet" e)
 
 
 beforeUnchanged :: VarData -> [VarData]
