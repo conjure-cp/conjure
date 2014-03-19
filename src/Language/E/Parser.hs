@@ -3,7 +3,7 @@ module Language.E.Parser
     , inCompleteFile
     , parseExpr, parseDomain
     , parseSpec, parseRuleRefn, parseRuleRepr
-    , runLexerAndParser, lexAndParseIO
+    , runLexerAndParser, lexAndParse, lexAndParseIO
     ) where
 
 import Language.E.Parser.Imports

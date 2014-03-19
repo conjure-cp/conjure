@@ -7,7 +7,7 @@ module Language.E.Parser.EssenceFile
     , parseRuleRepr
     , parseRuleRefn
     , parseTopLevels
-    , lexAndParseIO
+    , lexAndParse, lexAndParseIO
     , inCompleteFile
     ) where
 
@@ -31,11 +31,12 @@ _testParsePrint = _testParsePrint' (inCompleteFile parseExpr)
 
 lexAndParseIO :: Parser a -> T.Text -> IO a
 lexAndParseIO p t = do
-    let res = runLexerAndParser p "" t
-    case res of
-        Left  e -> error $ show e
+    case lexAndParse p t of
+        Left  e -> error  $ show e
         Right x -> return x
 
+lexAndParse :: Parser a -> T.Text -> Either Doc a
+lexAndParse p t = runLexerAndParser p "" t
 
 parseSpec :: Parser Spec
 parseSpec = inCompleteFile $ do
