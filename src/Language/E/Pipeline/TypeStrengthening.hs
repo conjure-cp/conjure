@@ -4,6 +4,7 @@
 module Language.E.Pipeline.TypeStrengthening ( typeStrengthening ) where
 
 import Language.E
+import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Bug
 
 import qualified Data.Text as T
@@ -11,7 +12,7 @@ import qualified Data.Text as T
 
 
 typeStrengthening :: MonadConjure m => Spec -> m Spec
-typeStrengthening spec = setCardinality spec
+typeStrengthening spec = fmap (atMostOneSuchThat False) $ setCardinality spec
 
 
 setCardinality :: MonadConjure m => Spec -> m Spec
@@ -26,11 +27,19 @@ setCardinality spec@(Spec v statements1) = do
         let cons = pullConstraints st
         if null cons
             then return ([], [st])
-            else fmap mconcat $ forM cons $ \case
-                [eMatch| |&x| =  &n |] | x `elem` setsToConsider -> return ([(x,"size"   ,n)],[])
-                [eMatch| |&x| >= &n |] | x `elem` setsToConsider -> return ([(x,"minSize",n)],[])
-                [eMatch| |&x| <= &n |] | x `elem` setsToConsider -> return ([(x,"maxSize",n)],[])
-                c -> return ([],[c])
+            else do
+                (attrs,cs) <- fmap mconcat $ forM cons $ \case
+                    [eMatch| |&x| =  &n |]                          | x `elem` setsToConsider -> return ([(x,"size"   ,n)],[])
+                    [eMatch| (sum &_ in &x . 1) =  &n |]            | x `elem` setsToConsider -> return ([(x,"size"   ,n)],[])
+
+                    [eMatch| |&x| >= &n |]                          | x `elem` setsToConsider -> return ([(x,"minSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) >=  &n |]           | x `elem` setsToConsider -> return ([(x,"minSize",n)],[])
+
+                    [eMatch| |&x| <= &n |]                          | x `elem` setsToConsider -> return ([(x,"maxSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) <=  &n |]           | x `elem` setsToConsider -> return ([(x,"maxSize",n)],[])
+
+                    c -> return ([],[c])
+                return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
 
     statements3 <- forM statements2 $ \ s  -> case s of
         [xMatch| [name  ] := topLevel.declaration.find.name
