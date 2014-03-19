@@ -31,6 +31,7 @@ import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
 import Language.E.Pipeline.RedArrow ( redArrow )
 import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
+import Language.E.Pipeline.TypeStrengthening ( typeStrengthening )
 import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
 import Language.E.GenerateParams ( generateParams )
@@ -97,7 +98,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             inParam   <- readSpecFromFile pathInParam
             inEprime  <- readSpecPreambleFromFile pathInEprime
             inLogs    <- T.readFile (pathInEprime ++ ".logs")
-            driverConjureSingle False False pathOutParam
+            driverConjureSingle False False (Just pathOutParam)
                 [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
 
         helper (ModeTranslateSolution pathInEssence pathInParam
@@ -121,6 +122,15 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             case pathOut of
                 Nothing -> putStrLn $ renderNormal (atMostOneSuchThat False inp)
                 Just fp -> writeSpec fp (atMostOneSuchThat False inp)
+
+        helper (ModeTypeStrengthening pathInp pathOut) = do
+            inp <- case pathInp of
+                Nothing -> readSpecFromStdIn
+                Just fp -> readSpecFromFile fp
+            typeCheckSpecIO inp
+            driverConjureSingle False False
+                pathOut
+                (runCompE "typeStrengthening" $ typeStrengthening inp)
 
         helper (ModeJSON b pathInp pathOut) = do
             let printer = if b then JSON.encode else encodePretty
@@ -146,7 +156,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             driverConjureSingle False False
-                pathOutParam
+                (Just pathOutParam)
                 $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
 
         helper (ModeGenerateRandomParam2 pathInEssence pathOutParam intermediateDir basename) = do
@@ -181,7 +191,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             driverConjureSingle True False
-                pathOutEprime
+                (Just pathOutEprime)
                 (conjureWithMode
                     seed limit Nothing fullmode
                     ruleReprs ruleRefns inEssence)

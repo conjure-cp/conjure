@@ -44,7 +44,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
 
     putStrLn  "Creating Essence specification of the param"
     driverConjureSingle False True
-        param_gen
+        (Just param_gen)
         $ runCompE "generateParamSolve" (prepareParamSpecification essence)
 
     paramEssence <- readSpecFromFile param_gen
@@ -56,7 +56,7 @@ generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
             seed <- getStdGen
             putStrLn "Running Conjure compact on created specification\n"
             driverConjureSingle True True
-                param_eprime
+                (Just param_eprime)
                 (conjureWithMode
                     seed Nothing Nothing
                     (ConjureModeWithFlags (ModeSingleOutput ModeCompact param_gen param_eprime) M.empty def def NoTimeLimit)

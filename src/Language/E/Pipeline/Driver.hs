@@ -11,18 +11,28 @@ import System.Mem ( performGC )
 
 
 driverConjureSingle
-    :: Bool     -- generate the *.logs file or not
-    -> Bool     -- generate *.errors file or not
-    -> FilePath -- the output filepath
+    :: Bool                 -- generate the *.logs file or not
+    -> Bool                 -- generate *.errors file or not
+    -> Maybe FilePath       -- the output filepath
     -> [(Either Doc Spec, LogTree)]
     -> IO ()
-driverConjureSingle logsOut _ pathOut [(Right x, logs)] = do
+
+-- don't generate *.error files
+driverConjureSingle _ False _ [(Left x, _ )] = bug $ pretty x
+
+-- to stdout
+driverConjureSingle _ _ Nothing [(Right x, _logs)] = putStrLn $ renderNormal x
+driverConjureSingle _ _ Nothing [(Left  x, _logs)] = bug $ pretty x
+
+-- to file
+driverConjureSingle logsOut _ (Just pathOut) [(Right x, logs)] = do
     toFile  pathOut              (renderNormal x)
     when logsOut $ toFile (pathOut ++ ".logs" ) (renderWide logs)
-driverConjureSingle _ False _ [(Left x, _ )] = bug $ pretty x
-driverConjureSingle logsOut True pathOut [(Left  x, logs)] = do
+driverConjureSingle logsOut True (Just pathOut) [(Left  x, logs)] = do
     toFile (pathOut ++ ".error") (renderNormal x)
     when logsOut $ toFile (pathOut ++ ".logs" ) (renderWide logs)
+
+-- multiple outputs generated
 driverConjureSingle _ _ _ _ = bug "Generates multiple outputs, must be a bug. Sorry."
 
 
