@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
-module Language.E.NormaliseSolution (normaliseSolution,normaliseSolutionEs) where
+
+module Language.E.NormaliseSolution ( normaliseSolution, normaliseSolutionEs ) where
 
 import Language.E
 import Language.E.Up.IO
@@ -12,68 +13,70 @@ import Language.E.Up.IO
 -}
 
 normaliseSolution :: Spec -> Spec
-normaliseSolution (Spec v e) =
-    let es  = statementAsList e
-        res = map normaliseSolution' es
-    in  Spec v (listAsStatement res)
-
+normaliseSolution (Spec v e) = Spec v (normaliseSolutionE e)
 
 normaliseSolutionEs :: [E] -> [E]
-normaliseSolutionEs = map normaliseSolution'
+normaliseSolutionEs = map normaliseSolutionE
 
-normaliseSolution' :: E -> E
-normaliseSolution' [xMatch|  [val] := topLevel.letting.expr
-                  |  name  := topLevel.letting.name |] =
-    let res = normaliseSolution' val
+normaliseSolutionE :: E -> E
+normaliseSolutionE [xMatch| [val] := topLevel.letting.expr
+                          | name  := topLevel.letting.name |] =
+    let res = normaliseSolutionE val
     in  [xMake| topLevel.letting.expr := [res]
               | topLevel.letting.name := name |]
 
 
-normaliseSolution' [xMatch| vs := value.set.values |] =
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := value.set.values |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| value.set.values := sort res |]
 
-normaliseSolution' [xMatch| vs := value.mset.values |] =
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := value.mset.values |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| value.mset.values := sort res |]
 
-normaliseSolution' [xMatch| vs := value.relation.values |] =
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := value.relation.values |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| value.relation.values := sort res |]
 
-normaliseSolution' [xMatch| vs := value.function.values |] =
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := value.function.values |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| value.function.values := sort res |]
 
-normaliseSolution' [xMatch| vs := mapping |] = 
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := mapping |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| mapping := res |]
 
 
-normaliseSolution' [xMatch| vs := value.partition.values |] =
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := value.partition.values |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| value.partition.values:= sort res |]
 
-normaliseSolution' [xMatch| vs := part |] = 
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := part |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| part := sort res |]
 
 
-normaliseSolution' [xMatch| vs   := value.matrix.values
+normaliseSolutionE [xMatch| vs   := value.matrix.values
                           | [ir] := value.matrix.indexrange
                           |] =
-    let res = map normaliseSolution' vs
-        ir' = normaliseSolution' ir
+    let res = map normaliseSolutionE vs
+        ir' = normaliseSolutionE ir
     in  [xMake| value.matrix.values := res
               | value.matrix.indexrange := [ir']
               |]
 
-normaliseSolution' [xMatch| vs := value.matrix.values |] =
-    let res = map normaliseSolution' vs
+normaliseSolutionE [xMatch| vs := value.matrix.values |] =
+    let res = map normaliseSolutionE vs
     in  [xMake| value.matrix.values := res |]
 
+normaliseSolutionE [xMatch| as := attrCollection |] = [xMake| attrCollection := bs |]
+    where bs = sortBy (comparing attributeName) as
+          attributeName [xMatch| [n] := attribute.nameValue.name |] = Just n
+          attributeName [xMatch| [n] := attribute.name           |] = Just n
+          attributeName _ = Nothing
 
-normaliseSolution' e = e
+normaliseSolutionE (Tagged t xs) = Tagged t (map normaliseSolutionE xs)
+normaliseSolutionE e = e
 
 
 _t :: FilePath -> IO()
