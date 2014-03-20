@@ -39,6 +39,11 @@ setCardinality spec@(Spec v statements1) = do
                     [eMatch| |&x| <= &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"maxSize",n)],[])
                     [eMatch| (sum &_ in &x . 1) <=  &n |]                   | _ <- x `lookup` findsToConsider -> return ([(x,"maxSize",n)],[])
 
+                    [eMatch| forAll &i : &dom . freq(&x,&j) >= &n |]        | i == j
+                                                                            , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ([(x,"minOccur",n)],[])
+
                     [eMatch| forAll &i : &dom . freq(&x,&j) <= &n |]        | i == j
                                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
                                                                             , dom == domX
