@@ -17,11 +17,11 @@ typeStrengthening spec = fmap (atMostOneSuchThat False) $ setCardinality spec
 
 setCardinality :: MonadConjure m => Spec -> m Spec
 setCardinality spec@(Spec v statements1) = do
-    let
-        domainPattern :: T.Text
-        domainPattern = "set (..) of &tau"
 
-    setsToConsider <- fmap (map fst) $ pullThoseWithDomain spec domainPattern
+    setsToConsider  <- fmap (map fst) $ pullThoseWithDomain spec "set (..) of &tau"
+    msetsToConsider <- fmap (map fst) $ pullThoseWithDomain spec "mset (..) of &tau"
+
+    let findsToConsider = setsToConsider ++ msetsToConsider
 
     (collectedAttributes, statements2) <- fmap mconcat $ forM (statementAsList statements1) $ \ st -> do
         let cons = pullConstraints st
@@ -29,14 +29,14 @@ setCardinality spec@(Spec v statements1) = do
             then return ([], [st])
             else do
                 (attrs,cs) <- fmap mconcat $ forM cons $ \case
-                    [eMatch| |&x| =  &n |]                          | x `elem` setsToConsider -> return ([(x,"size"   ,n)],[])
-                    [eMatch| (sum &_ in &x . 1) =  &n |]            | x `elem` setsToConsider -> return ([(x,"size"   ,n)],[])
+                    [eMatch| |&x| =  &n |]                          | x `elem` findsToConsider -> return ([(x,"size"   ,n)],[])
+                    [eMatch| (sum &_ in &x . 1) =  &n |]            | x `elem` findsToConsider -> return ([(x,"size"   ,n)],[])
 
-                    [eMatch| |&x| >= &n |]                          | x `elem` setsToConsider -> return ([(x,"minSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) >=  &n |]           | x `elem` setsToConsider -> return ([(x,"minSize",n)],[])
+                    [eMatch| |&x| >= &n |]                          | x `elem` findsToConsider -> return ([(x,"minSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) >=  &n |]           | x `elem` findsToConsider -> return ([(x,"minSize",n)],[])
 
-                    [eMatch| |&x| <= &n |]                          | x `elem` setsToConsider -> return ([(x,"maxSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) <=  &n |]           | x `elem` setsToConsider -> return ([(x,"maxSize",n)],[])
+                    [eMatch| |&x| <= &n |]                          | x `elem` findsToConsider -> return ([(x,"maxSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) <=  &n |]           | x `elem` findsToConsider -> return ([(x,"maxSize",n)],[])
 
                     c -> return ([],[c])
                 return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
@@ -94,7 +94,17 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
-updateAttributes _ dom = return dom
+updateAttributes newAttrs
+    [xMatch| [inner] := domain.mset.inner
+           | attrs   := domain.mset.attributes.attrCollection
+           |] = return [xMake| domain.mset.inner := [inner]
+                             | domain.mset.attributes.attrCollection := attrs'
+                             |]
+        where attrs' = newAttrs ++ attrs
+
+updateAttributes _ dom = bug $ vcat [ "don't know how to update this domain"
+                                    , pretty dom
+                                    ]
 
 mkAttr :: (T.Text, E) -> E
 mkAttr (n,v) = [xMake| attribute.nameValue.name.reference := [Prim (S n)]
