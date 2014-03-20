@@ -114,6 +114,14 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
+updateAttributes newAttrs
+    [xMatch| inners  := domain.relation.inners
+           | attrs   := domain.relation.attributes.attrCollection
+           |] = return [xMake| domain.relation.inners := inners
+                             | domain.relation.attributes.attrCollection := attrs'
+                             |]
+        where attrs' = newAttrs ++ attrs
+
 updateAttributes _ dom = bug $ vcat [ "don't know how to update this domain"
                                     , pretty dom
                                     ]

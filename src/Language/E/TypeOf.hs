@@ -474,6 +474,7 @@ typeOf p@[xMatch| [x] := operator.twoBars |] = do
         [xMatch| _  := type.set      |] -> return tyInt
         [xMatch| _  := type.mset     |] -> return tyInt
         [xMatch| _  := type.function |] -> return tyInt
+        [xMatch| _  := type.relation |] -> return tyInt
         [xMatch| _  := type.typeEnum |] -> return tyInt
         _ -> typeErrorIn p
 
