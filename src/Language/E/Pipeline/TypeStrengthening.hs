@@ -8,20 +8,18 @@ import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Bug
 
 import qualified Data.Text as T
--- import Text.Groom ( groom )
 
 
 typeStrengthening :: MonadConjure m => Spec -> m Spec
-typeStrengthening spec = fmap (atMostOneSuchThat False) $ setCardinality spec
+typeStrengthening spec = do
+    simplified <- simplifySpec spec
+    fmap (atMostOneSuchThat False) $ setCardinality simplified
 
 
 setCardinality :: MonadConjure m => Spec -> m Spec
 setCardinality spec@(Spec v statements1) = do
 
-    setsToConsider  <- pullThoseWithDomain spec "set (..) of &tau"
-    msetsToConsider <- pullThoseWithDomain spec "mset (..) of &tau"
-
-    let findsToConsider = setsToConsider ++ msetsToConsider
+    let findsToConsider = pullFinds spec
 
     (collectedAttributes, statements2) <- fmap mconcat $ forM (statementAsList statements1) $ \ st -> do
         let cons = pullConstraints st
@@ -30,14 +28,14 @@ setCardinality spec@(Spec v statements1) = do
             else do
                 (attrs,cs) <- fmap mconcat $ forM cons $ \case
 
-                    [eMatch| |&x| =  &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"size"   ,n)],[])
-                    [eMatch| (sum &_ in &x . 1) =  &n |]                    | _ <- x `lookup` findsToConsider -> return ([(x,"size"   ,n)],[])
+                    [eMatch| |&x| =  &n |]                                  -> return ([(x,"size"   ,n)],[])
+                    [eMatch| (sum &_ in &x . 1) =  &n |]                    -> return ([(x,"size"   ,n)],[])
 
-                    [eMatch| |&x| >= &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"minSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) >=  &n |]                   | _ <- x `lookup` findsToConsider -> return ([(x,"minSize",n)],[])
+                    [eMatch| |&x| >= &n |]                                  -> return ([(x,"minSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) >=  &n |]                   -> return ([(x,"minSize",n)],[])
 
-                    [eMatch| |&x| <= &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"maxSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) <=  &n |]                   | _ <- x `lookup` findsToConsider -> return ([(x,"maxSize",n)],[])
+                    [eMatch| |&x| <= &n |]                                  -> return ([(x,"maxSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) <=  &n |]                   -> return ([(x,"maxSize",n)],[])
 
                     [eMatch| forAll &i : &dom . freq(&x,&j) >= &n |]        | i == j
                                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
@@ -67,30 +65,32 @@ setCardinality spec@(Spec v statements1) = do
                                  |]
         _ -> return s
 
-    -- error $ groom setsToConsider
-    -- error $ groom constraints
-    -- error $ groom sizes
-
     return $ Spec v $ listAsStatement statements3
 
-pullThoseWithDomain :: MonadConjure m => Spec -> T.Text -> m [(E,E)]
-pullThoseWithDomain (Spec _ statements) domainStr =
-    case lexAndParse (inCompleteFile parseDomain) domainStr of
-        Left  parseError -> bug $ vcat [ "pullThoseWithDomain, parse error", pretty parseError ]
-        Right domain -> do
-            mkLog "typeStrengthening ~~ pullThoseWithDomain domain" $ pretty domain
-            fmap concat $ forM (statementAsList statements) $ \case
-                [xMatch| [name] := topLevel.declaration.find.name
-                       | [dom]  := topLevel.declaration.find.domain |] -> do
-                   (matches, _) <- patternMatch domain dom
-                   if matches
-                       then return [(name, dom)]
-                       else return []
-                _ -> return []
+-- pullThoseWithDomain :: MonadConjure m => Spec -> T.Text -> m [(E,E)]
+-- pullThoseWithDomain (Spec _ statements) domainStr =
+--     case lexAndParse (inCompleteFile parseDomain) domainStr of
+--         Left  parseError -> bug $ vcat [ "pullThoseWithDomain, parse error", pretty parseError ]
+--         Right domain -> do
+--             mkLog "typeStrengthening ~~ pullThoseWithDomain domain" $ pretty domain
+--             fmap concat $ forM (statementAsList statements) $ \case
+--                 [xMatch| [name] := topLevel.declaration.find.name
+--                        | [dom]  := topLevel.declaration.find.domain |] -> do
+--                    (matches, _) <- patternMatch domain dom
+--                    if matches
+--                        then return [(name, dom)]
+--                        else return []
+--                 _ -> return []
 
 pullConstraints :: E -> [E]
 pullConstraints [xMatch| xs := topLevel.suchThat |] = xs
 pullConstraints _ = []
+
+pullFinds :: Spec -> [(E,E)]
+pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
+    where pullFind [xMatch| [name] := topLevel.declaration.find.name
+                          | [dom]  := topLevel.declaration.find.domain |] = Just (name,dom)
+          pullFind _ = Nothing
 
 updateAttributes
     :: MonadConjure m
