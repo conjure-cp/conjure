@@ -18,8 +18,8 @@ typeStrengthening spec = fmap (atMostOneSuchThat False) $ setCardinality spec
 setCardinality :: MonadConjure m => Spec -> m Spec
 setCardinality spec@(Spec v statements1) = do
 
-    setsToConsider  <- fmap (map fst) $ pullThoseWithDomain spec "set (..) of &tau"
-    msetsToConsider <- fmap (map fst) $ pullThoseWithDomain spec "mset (..) of &tau"
+    setsToConsider  <- pullThoseWithDomain spec "set (..) of &tau"
+    msetsToConsider <- pullThoseWithDomain spec "mset (..) of &tau"
 
     let findsToConsider = setsToConsider ++ msetsToConsider
 
@@ -29,16 +29,23 @@ setCardinality spec@(Spec v statements1) = do
             then return ([], [st])
             else do
                 (attrs,cs) <- fmap mconcat $ forM cons $ \case
-                    [eMatch| |&x| =  &n |]                          | x `elem` findsToConsider -> return ([(x,"size"   ,n)],[])
-                    [eMatch| (sum &_ in &x . 1) =  &n |]            | x `elem` findsToConsider -> return ([(x,"size"   ,n)],[])
 
-                    [eMatch| |&x| >= &n |]                          | x `elem` findsToConsider -> return ([(x,"minSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) >=  &n |]           | x `elem` findsToConsider -> return ([(x,"minSize",n)],[])
+                    [eMatch| |&x| =  &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"size"   ,n)],[])
+                    [eMatch| (sum &_ in &x . 1) =  &n |]                    | _ <- x `lookup` findsToConsider -> return ([(x,"size"   ,n)],[])
 
-                    [eMatch| |&x| <= &n |]                          | x `elem` findsToConsider -> return ([(x,"maxSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) <=  &n |]           | x `elem` findsToConsider -> return ([(x,"maxSize",n)],[])
+                    [eMatch| |&x| >= &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"minSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) >=  &n |]                   | _ <- x `lookup` findsToConsider -> return ([(x,"minSize",n)],[])
+
+                    [eMatch| |&x| <= &n |]                                  | _ <- x `lookup` findsToConsider -> return ([(x,"maxSize",n)],[])
+                    [eMatch| (sum &_ in &x . 1) <=  &n |]                   | _ <- x `lookup` findsToConsider -> return ([(x,"maxSize",n)],[])
+
+                    [eMatch| forAll &i : &dom . freq(&x,&j) <= &n |]        | i == j
+                                                                            , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ([(x,"maxOccur",n)],[])
 
                     c -> return ([],[c])
+
                 return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
 
     statements3 <- forM statements2 $ \ s  -> case s of
