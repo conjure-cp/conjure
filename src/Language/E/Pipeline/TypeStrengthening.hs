@@ -115,10 +115,28 @@ updateAttributes newAttrs
         where attrs' = newAttrs ++ attrs
 
 updateAttributes newAttrs
+    [xMatch| attrs := domain.function.attributes.attrCollection
+           | [fr]  := domain.function.innerFrom
+           | [to]  := domain.function.innerTo
+           |] = return [xMake| domain.function.attributes.attrCollection := attrs'
+                             | domain.function.innerFrom := [fr]
+                             | domain.function.innerTo := [to]
+                             |]
+        where attrs' = newAttrs ++ attrs
+
+updateAttributes newAttrs
     [xMatch| inners  := domain.relation.inners
            | attrs   := domain.relation.attributes.attrCollection
            |] = return [xMake| domain.relation.inners := inners
                              | domain.relation.attributes.attrCollection := attrs'
+                             |]
+        where attrs' = newAttrs ++ attrs
+
+updateAttributes newAttrs
+    [xMatch| [inner] := domain.partition.inner
+           | attrs   := domain.partition.attributes.attrCollection
+           |] = return [xMake| domain.partition.inner := [inner]
+                             | domain.partition.attributes.attrCollection := attrs'
                              |]
         where attrs' = newAttrs ++ attrs
 
