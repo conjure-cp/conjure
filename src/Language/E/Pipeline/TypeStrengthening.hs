@@ -13,11 +13,11 @@ import qualified Data.Text as T
 typeStrengthening :: MonadConjure m => Spec -> m Spec
 typeStrengthening spec = do
     simplified <- simplifySpec spec
-    fmap (atMostOneSuchThat False) $ setCardinality simplified
+    fmap (atMostOneSuchThat False) $ (attributeAcquisition >=> typeChange) simplified
 
 
-setCardinality :: MonadConjure m => Spec -> m Spec
-setCardinality spec@(Spec v statements1) = do
+attributeAcquisition :: MonadConjure m => Spec -> m Spec
+attributeAcquisition spec@(Spec v statements1) = do
 
     let findsToConsider = pullFinds spec
 
@@ -84,6 +84,39 @@ setCardinality spec@(Spec v statements1) = do
         _ -> return s
 
     return $ Spec v $ listAsStatement statements3
+
+typeChange :: MonadConjure m => Spec -> m Spec
+typeChange spec@(Spec v statements1) = do
+
+    let findsToConsider = pullFinds spec
+
+    let maxOccur1 = mkAttr ("maxOccur", [eMake| 1 |])
+
+    replacements <- fmap catMaybes $ forM findsToConsider $ \ (name, domain) -> case domain of
+        [xMatch| [inner] := domain.mset.inner
+               | attrs   := domain.mset.attributes.attrCollection
+               |]
+            | maxOccur1 `elem` attrs
+            -> return $ Just (name, ( [xMake| domain.set.inner := [inner]
+                                            | domain.set.attributes.attrCollection := (attrs \\ [maxOccur1])
+                                            |]
+                                    , [eMake| toSet(&name) |]
+                                    ))
+        _ -> return Nothing
+
+    let decorate x | Just (_,y) <- x `lookup` replacements = y
+        decorate (Tagged t xs) = Tagged t (map decorate xs)
+        decorate x = x
+
+    statements2 <- forM (statementAsList statements1) $ \case
+        [xMatch| [name] := topLevel.declaration.find.name
+               |] | Just (domain,_) <- name `lookup` replacements
+            -> return [xMake| topLevel.declaration.find.name := [name]
+                            | topLevel.declaration.find.domain := [domain]
+                            |]
+        s -> return (decorate s)
+
+    return $ Spec v $ listAsStatement statements2
 
 -- pullThoseWithDomain :: MonadConjure m => Spec -> T.Text -> m [(E,E)]
 -- pullThoseWithDomain (Spec _ statements) domainStr =

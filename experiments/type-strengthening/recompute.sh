@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function list_all_essence() {
-    find . -name "*.essence"
+    find * -name "*.essence"
 }
 export -f list_all_essence
 
