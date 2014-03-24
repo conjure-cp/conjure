@@ -1,0 +1,11 @@
+
+[1000]
+
+freq(toMSet(&s),&x) ~~> toInt(&x in &s)
+
+    where &s hasType `set of _`
+
+$ take a set,
+$ turn it into an mset
+$ the result of freq will be 0/1
+$ and will be equivalent to membership test on the original set.
