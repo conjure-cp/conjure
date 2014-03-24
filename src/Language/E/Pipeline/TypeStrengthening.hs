@@ -28,43 +28,78 @@ attributeAcquisition spec@(Spec v statements1) = do
             else do
                 (attrs,cs) <- fmap mconcat $ forM cons $ \case
 
-                    [eMatch| |parts(&x)| = &n |]                            -> return ([(x, "numParts", n)], [])
-                    [eMatch| (sum &_ in parts(&x) . 1) = &n |]              -> return ([(x, "numParts", n)], [])
+                    -- numParts (min&max), partSize (min&max)
 
-                    [eMatch| |parts(&x)| >= &n |]                           -> return ([(x, "minNumParts", n)], [])
-                    [eMatch| (sum &_ in parts(&x) . 1) >= &n |]             -> return ([(x, "minNumParts", n)], [])
+                    [eMatch| |parts(&x)| = &n |]                            -> return ([(x, "numParts", Just n)], [])
+                    [eMatch| (sum &_ in parts(&x) . 1) = &n |]              -> return ([(x, "numParts", Just n)], [])
 
-                    [eMatch| |parts(&x)| <= &n |]                           -> return ([(x, "maxNumParts", n)], [])
-                    [eMatch| (sum &_ in parts(&x) . 1) <= &n |]             -> return ([(x, "maxNumParts", n)], [])
+                    [eMatch| |parts(&x)| >= &n |]                           -> return ([(x, "minNumParts", Just n)], [])
+                    [eMatch| (sum &_ in parts(&x) . 1) >= &n |]             -> return ([(x, "minNumParts", Just n)], [])
 
-                    [eMatch| forAll &i in parts(&x) . |&j| = &n |]                  | i == j -> return ([(x, "partSize", n)], [])
-                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) = &n |]    | i == j -> return ([(x, "partSize", n)], [])
+                    [eMatch| |parts(&x)| <= &n |]                           -> return ([(x, "maxNumParts", Just n)], [])
+                    [eMatch| (sum &_ in parts(&x) . 1) <= &n |]             -> return ([(x, "maxNumParts", Just n)], [])
 
-                    [eMatch| forAll &i in parts(&x) . |&j| >= &n |]                 | i == j -> return ([(x, "minPartSize", n)], [])
-                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) >= &n |]   | i == j -> return ([(x, "minPartSize", n)], [])
+                    [eMatch| forAll &i in parts(&x) . |&j| = &n |]                  | i == j -> return ([(x, "partSize", Just n)], [])
+                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) = &n |]    | i == j -> return ([(x, "partSize", Just n)], [])
 
-                    [eMatch| forAll &i in parts(&x) . |&j| <= &n |]                 | i == j -> return ([(x, "maxPartSize", n)], [])
-                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) <= &n |]   | i == j -> return ([(x, "maxPartSize", n)], [])
+                    [eMatch| forAll &i in parts(&x) . |&j| >= &n |]                 | i == j -> return ([(x, "minPartSize", Just n)], [])
+                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) >= &n |]   | i == j -> return ([(x, "minPartSize", Just n)], [])
 
-                    [eMatch| |&x| =  &n |]                                  -> return ([(x,"size"   ,n)],[])
-                    [eMatch| (sum &_ in &x . 1) =  &n |]                    -> return ([(x,"size"   ,n)],[])
+                    [eMatch| forAll &i in parts(&x) . |&j| <= &n |]                 | i == j -> return ([(x, "maxPartSize", Just n)], [])
+                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) <= &n |]   | i == j -> return ([(x, "maxPartSize", Just n)], [])
 
-                    [eMatch| |&x| >= &n |]                                  -> return ([(x,"minSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) >=  &n |]                   -> return ([(x,"minSize",n)],[])
 
-                    [eMatch| |&x| <= &n |]                                  -> return ([(x,"maxSize",n)],[])
-                    [eMatch| (sum &_ in &x . 1) <=  &n |]                   -> return ([(x,"maxSize",n)],[])
+                    -- size, minSize, maxSize
+
+                    [eMatch| |&x| =  &n |]                                  -> return ([(x, "size"   , Just n)],[])
+                    [eMatch| (sum &_ in &x . 1) =  &n |]                    -> return ([(x, "size"   , Just n)],[])
+
+                    [eMatch| |&x| >= &n |]                                  -> return ([(x, "minSize", Just n)],[])
+                    [eMatch| (sum &_ in &x . 1) >=  &n |]                   -> return ([(x, "minSize", Just n)],[])
+
+                    [eMatch| |&x| <= &n |]                                  -> return ([(x, "maxSize", Just n)],[])
+                    [eMatch| (sum &_ in &x . 1) <=  &n |]                   -> return ([(x, "maxSize", Just n)],[])
+
+
+                    -- minOccur, maxOccur
 
                     [eMatch| forAll &i : &dom . freq(&x,&j) >= &n |]        | i == j
                                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
                                                                             , dom == domX
-                                                                            -> return ([(x,"minOccur",n)],[])
+                                                                            -> return ([(x, "minOccur", Just n)],[])
 
                     [eMatch| forAll &i : &dom . freq(&x,&j) <= &n |]        | i == j
                                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
                                                                             , dom == domX
-                                                                            -> return ([(x,"maxOccur",n)],[])
+                                                                            -> return ([(x, "maxOccur", Just n)],[])
 
+
+                    -- functional
+                    [eMatch| forAll &i : &dom . |&x(&j,_)| = 1 |]           | i == j
+                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ( [ (x, "functional" , Just [eMake| 1 |] )
+                                                                                        , (x, "total"      , Nothing           )
+                                                                                        ], [])
+
+                    [eMatch| forAll &i : &dom . |&x(&j,_)| <= 1 |]          | i == j
+                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ( [ (x, "functional" , Just [eMake| 1 |] )
+                                                                                        ], [])
+
+                    [eMatch| forAll &i : &dom . |&x(_,&j)| = 1 |]           | i == j
+                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                                                        , (x, "total"      , Nothing           )
+                                                                                        ], [])
+
+                    [eMatch| forAll &i : &dom . |&x(_,&j)| <= 1 |]          | i == j
+                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                                                        ], [])
                     c -> return ([],[c])
 
                 return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
@@ -90,7 +125,9 @@ typeChange spec@(Spec v statements1) = do
 
     let findsToConsider = pullFinds spec
 
-    let maxOccur1 = mkAttr ("maxOccur", [eMake| 1 |])
+    let maxOccur1 = mkAttr ("maxOccur", Just [eMake| 1 |])
+    let functional1 = mkAttr ("functional", Just [eMake| 1 |])
+    let functional2 = mkAttr ("functional", Just [eMake| 2 |])
 
     replacements <- fmap catMaybes $ forM findsToConsider $ \ (name, domain) -> case domain of
         [xMatch| [inner] := domain.mset.inner
@@ -101,6 +138,26 @@ typeChange spec@(Spec v statements1) = do
                                             | domain.set.attributes.attrCollection := (attrs \\ [maxOccur1])
                                             |]
                                     , [eMake| toSet(&name) |]
+                                    ))
+        [xMatch| [fr,to] := domain.relation.inners
+               | attrs   := domain.relation.attributes.attrCollection
+               |]
+            | functional1 `elem` attrs
+            -> return $ Just (name, ( [xMake| domain.function.innerFrom := [fr]
+                                            | domain.function.innerTo   := [to]
+                                            | domain.function.attributes.attrCollection := (attrs \\ [functional1])
+                                            |]
+                                    , [eMake| toRelation(&name) |]
+                                    ))
+        [xMatch| [to,fr] := domain.relation.inners
+               | attrs   := domain.relation.attributes.attrCollection
+               |]
+            | functional2 `elem` attrs
+            -> return $ Just (name, ( [xMake| domain.function.innerFrom := [fr]
+                                            | domain.function.innerTo   := [to]
+                                            | domain.function.attributes.attrCollection := (attrs \\ [functional2])
+                                            |]
+                                    , [eMake| toRelation(&name) |]
                                     ))
         _ -> return Nothing
 
@@ -195,11 +252,11 @@ updateAttributes _ dom = bug $ vcat [ "don't know how to update this domain"
                                     , pretty dom
                                     ]
 
-mkAttr :: (T.Text, E) -> E
-mkAttr (n,v) = [xMake| attribute.nameValue.name.reference := [Prim (S n)]
-                     | attribute.nameValue.value          := [v]
-                     |]
-
+mkAttr :: (T.Text, Maybe E) -> E
+mkAttr (n, Nothing) = [xMake| attribute.name.reference := [Prim (S n)] |]
+mkAttr (n, Just v ) = [xMake| attribute.nameValue.name.reference := [Prim (S n)]
+                            | attribute.nameValue.value          := [v]
+                            |]
 
 
 
