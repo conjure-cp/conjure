@@ -28,6 +28,24 @@ setCardinality spec@(Spec v statements1) = do
             else do
                 (attrs,cs) <- fmap mconcat $ forM cons $ \case
 
+                    [eMatch| |parts(&x)| = &n |]                            -> return ([(x, "numParts", n)], [])
+                    [eMatch| (sum &_ in parts(&x) . 1) = &n |]              -> return ([(x, "numParts", n)], [])
+
+                    [eMatch| |parts(&x)| >= &n |]                           -> return ([(x, "minNumParts", n)], [])
+                    [eMatch| (sum &_ in parts(&x) . 1) >= &n |]             -> return ([(x, "minNumParts", n)], [])
+
+                    [eMatch| |parts(&x)| <= &n |]                           -> return ([(x, "maxNumParts", n)], [])
+                    [eMatch| (sum &_ in parts(&x) . 1) <= &n |]             -> return ([(x, "maxNumParts", n)], [])
+
+                    [eMatch| forAll &i in parts(&x) . |&j| = &n |]                  | i == j -> return ([(x, "partSize", n)], [])
+                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) = &n |]    | i == j -> return ([(x, "partSize", n)], [])
+
+                    [eMatch| forAll &i in parts(&x) . |&j| >= &n |]                 | i == j -> return ([(x, "minPartSize", n)], [])
+                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) >= &n |]   | i == j -> return ([(x, "minPartSize", n)], [])
+
+                    [eMatch| forAll &i in parts(&x) . |&j| <= &n |]                 | i == j -> return ([(x, "maxPartSize", n)], [])
+                    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) <= &n |]   | i == j -> return ([(x, "maxPartSize", n)], [])
+
                     [eMatch| |&x| =  &n |]                                  -> return ([(x,"size"   ,n)],[])
                     [eMatch| (sum &_ in &x . 1) =  &n |]                    -> return ([(x,"size"   ,n)],[])
 
