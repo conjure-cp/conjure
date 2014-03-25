@@ -48,6 +48,14 @@ attributeAcquisition spec@(Spec v statements1) = do
                     [eMatch| forAll &i in parts(&x) . |&j| <= &n |]                 | i == j -> return ([(x, "maxPartSize", Just n)], [])
                     [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) <= &n |]   | i == j -> return ([(x, "maxPartSize", Just n)], [])
 
+                    [eMatch| forAll &i in parts(&x) . forAll &j in parts(&x2) . |&i2| = |&j2| |]
+                        | i == i2, j == j2, x == x2
+                        -> return ([(x, "regular", Nothing)], [])
+
+                    [eMatch| forAll &i : &dom . &j in &x                       |]   | i == j
+                                                                                    , Just [xMatch| [domX] := domain.partition.inner |] <- x `lookup` findsToConsider
+                                                                                    , dom == domX
+                                                                                    -> return ([(x, "complete", Nothing)], [])
 
                     -- size, minSize, maxSize
 
@@ -74,7 +82,7 @@ attributeAcquisition spec@(Spec v statements1) = do
                                                                             -> return ([(x, "maxOccur", Just n)],[])
 
 
-                    -- functional
+                    -- functional, because cardinality
                     [eMatch| forAll &i : &dom . |&x(&j,_)| = 1 |]           | i == j
                                                                             , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                                             , dom == domX
@@ -100,6 +108,20 @@ attributeAcquisition spec@(Spec v statements1) = do
                                                                             , dom == domX
                                                                             -> return ( [ (x, "functional" , Just [eMake| 2 |] )
                                                                                         ], [])
+
+                    -- functional, because assigned
+                    c@[eMatch| forAll &i : &dom . &x(&j,_) = {&_} |]        | i == j
+                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , dom == domX
+                                                                            -> return ( [ (x, "functional" , Just [eMake| 1 |] )
+                                                                                        ], [c])
+                    c@[eMatch| forAll &i : &dom . &x(_,&j) = {&_} |]        | i == j
+                                                                            , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , error $ show $ vcat $ [ pretty domX, pretty dom ]
+                                                                            , dom == domX
+                                                                            -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                                                        ], [c])
+
                     c -> return ([],[c])
 
                 return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
@@ -137,7 +159,7 @@ typeChange spec@(Spec v statements1) = do
             -> return $ Just (name, ( [xMake| domain.set.inner := [inner]
                                             | domain.set.attributes.attrCollection := (attrs \\ [maxOccur1])
                                             |]
-                                    , [eMake| toSet(&name) |]
+                                    , [eMake| toMSet(&name) |]
                                     ))
         [xMatch| [fr,to] := domain.relation.inners
                | attrs   := domain.relation.attributes.attrCollection
