@@ -97,14 +97,14 @@ attributeAcquisition spec@(Spec v statements1) = do
                                                                                         ], [])
 
                     [eMatch| forAll &i : &dom . |&x(_,&j)| = 1 |]           | i == j
-                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                                             , dom == domX
                                                                             -> return ( [ (x, "functional" , Just [eMake| 2 |] )
                                                                                         , (x, "total"      , Nothing           )
                                                                                         ], [])
 
                     [eMatch| forAll &i : &dom . |&x(_,&j)| <= 1 |]          | i == j
-                                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
+                                                                            , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                                             , dom == domX
                                                                             -> return ( [ (x, "functional" , Just [eMake| 2 |] )
                                                                                         ], [])
