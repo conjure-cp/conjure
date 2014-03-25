@@ -114,12 +114,14 @@ attributeAcquisition spec@(Spec v statements1) = do
                                                                             , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                                             , dom == domX
                                                                             -> return ( [ (x, "functional" , Just [eMake| 1 |] )
+                                                                                        , (x, "total"      , Nothing           )
                                                                                         ], [c])
                     c@[eMatch| forAll &i : &dom . &x(_,&j) = {&_} |]        | i == j
                                                                             , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                                             , error $ show $ vcat $ [ pretty domX, pretty dom ]
                                                                             , dom == domX
                                                                             -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                                                        , (x, "total"      , Nothing           )
                                                                                         ], [c])
 
                     c -> return ([],[c])
