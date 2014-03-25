@@ -39,7 +39,7 @@ else
     echo "Using ${USE_CORES} cores."
 fi
 
-CABAL_VERSION="1.18.0.2"
+CABAL_VERSION="1.18.0.3"
 
 
 echo "CORES           : ${CORES}"
@@ -78,7 +78,7 @@ fi
 if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION})" ]; then
     echo "cabal install version ${CABAL_VERSION} found."
 else
-    echo "cabal install version ${GHC_VERSION} not found. Installing."
+    echo "cabal install version ${CABAL_VERSION} not found. Installing."
     wget -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
