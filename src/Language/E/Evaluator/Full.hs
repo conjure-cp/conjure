@@ -520,6 +520,14 @@ fullEvaluator
                 then ret [xMake| value.relation.values := ys |]
                 else returnBool zs
 
+fullEvaluator
+    [xMatch| [fn]  := functionApply.actual.typed.left
+           | []    := functionApply.actual.typed.left.value.relation.values
+           | args  := functionApply.args
+           |]
+        | isFullyInstantiated fn && all isFullyInstantiated args
+        = returnBool True
+
 fullEvaluator [eMatch| preImage(&f,&x) |]
     | isFullyInstantiated f && isFullyInstantiated x
     , [xMatch| fValues := value.function.values |] <- f
