@@ -1,0 +1,8 @@
+
+[1000]
+
+toRelation(&f)(&x,_)
+    ~~>
+{&f(&x)}
+
+    where &f hasType `function &_ --> &_`
