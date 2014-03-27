@@ -514,7 +514,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             = do
                 let
                     mappingToTuple [xMatch| [a,b] := mapping |] = (a,b)
-                    mappingToTuple p = bug $ vcat [ "workhorse.helper.Matrix1D", pretty p ]
+                    mappingToTuple p = bug $ vcat [ "workhorse.helper.Function~1D", pretty p ]
                     (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
                     nameOut = name `T.append` "_Function~1D"
                 actualValues' <- mapM (instantiateEnumDomains []) actualValues
@@ -524,6 +524,37 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                                      | value.matrix.indexrange := [domInnerFr']
                                      |]
                 return [(nameOut, valueOut)]
+
+        helper
+            name
+            [xMatch| [domInnerFr1,domInnerFr2] := domain.function.innerFrom.domain.tuple.inners |]
+            [xMatch| values := value.function.values |]
+            (Just "Function~IntPair2D")
+            = do
+                values' <- sequence
+                    [ do k' <- instantiateEnumDomains [] k
+                         return (iInt,jInt,k')
+                    | [xMatch| [ij,k] := mapping |]                <- values
+                    , [xMatch| [i,j] := value.tuple.values |]      <- [ij]
+                    , [xMatch| [Prim (I iInt)] := value.literal |] <- [i]
+                    , [xMatch| [Prim (I jInt)] := value.literal |] <- [j]
+                    ]
+
+                let values2D = map (map (\ (_,_,k) -> k )) $ groupBy (\ (i,_,_) (j,_,_) -> i == j ) values'
+
+                let valueOutLines =
+                        [ [xMake| value.matrix.values := line
+                                | value.matrix.indexrange := [domInnerFr2]
+                                |]
+                        | line <- values2D
+                        ]
+
+                let valueOut = [xMake| value.matrix.values := valueOutLines
+                                     | value.matrix.indexrange := [domInnerFr1]
+                                     |]
+                let nameOut = name `T.append` "_Function~IntPair2D"
+                return [(nameOut, valueOut)]
+
 
         helper
             name
