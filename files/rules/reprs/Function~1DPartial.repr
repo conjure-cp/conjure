@@ -36,6 +36,23 @@
     /\  ((sum i : &fr . toInt(refn[i,1])) <= &maxSize)                                        $ maxSize
 
 
+*** function (minSize &minSize) &fr --> &to
+    ~~> ((sum i : &fr . toInt(refn[i,1])) >= &minSize)                                        $ maxSize
+
+*** function (minSize &minSize, injective) &fr --> &to
+    ~~> (forAll i,j : &fr , i != j /\ refn[i,1] /\ refn[j,1] . refn[i,2] != refn[j,2])        $ injective
+    /\  ((sum i : &fr . toInt(refn[i,1])) >= &minSize)                                        $ maxSize
+
+*** function (minSize &minSize, surjective) &fr --> &to
+    ~~> (forAll i : &to . exists j : &fr , refn[j,1] . refn[j,2] = i)                         $ surjective
+    /\  ((sum i : &fr . toInt(refn[i,1])) >= &minSize)                                        $ maxSize
+
+*** function (minSize &minSize, bijective) &fr --> &to
+    ~~> (forAll i,j : &fr , i != j /\ refn[i,1] /\ refn[j,1] . refn[i,2] != refn[j,2])        $ injective
+    /\  (forAll i : &to . exists j : &fr , refn[j,1] . refn[j,2] = i)                         $ surjective
+    /\  ((sum i : &fr . toInt(refn[i,1])) >= &minSize)                                        $ maxSize
+
+
 $ find f : function int --> int
 $
 $ f(2) - x = y

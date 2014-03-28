@@ -1,0 +1,38 @@
+
+~~> Function~AsReln
+~~> relation (minSize &minSize) of (&fr * &to)
+
+
+*** function (minSize &minSize, total) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+
+*** function (minSize &minSize, total, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+
+*** function (minSize &minSize, total, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+*** function (minSize &minSize, total, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) = 1)        $ is total
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+
+*** function (minSize &minSize) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+
+*** function (minSize &minSize, injective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+
+*** function (minSize &minSize, surjective) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
+*** function (minSize &minSize, bijective, ..) &fr --> &to
+    ~~> (forAll i : &fr . (sum j in toSet(refn) . toInt(i = j[1])) <= 1)       $ is partial
+    /\  (forAll i,j in toSet(refn) , i[1] != j[1] . i[2] != j[2])              $ is injective
+    /\  (forAll i : &to . exists j in toSet(refn) . i = j[2])                  $ is surjective
+
