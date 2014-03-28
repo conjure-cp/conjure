@@ -1,0 +1,16 @@
+
+[1000]
+
+exists &i in toSet(&f), &g . &b
+
+    ~~>
+
+exists k : &domFrom , &g { &i[1] --> k, &i[2] --> &m[k] }
+                    . &b { &i[1] --> k, &i[2] --> &m[k] }
+
+    where &f hasType   `function int --> _`
+    where &f hasDomain `function (..) &domFrom --> _`
+    where &f hasRepr    Function~1D
+
+    letting &m be refn(&f)
+

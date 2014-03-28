@@ -1,12 +1,12 @@
 
 [1000]
 
-&quan &i in toSet(&f), &g . &b
+forAll &i in toSet(&f), &g . &b
 
     ~~>
 
-&quan k : &domFrom , &g { &i[1] --> k, &i[2] --> &m[k] }
-                   . &b { &i[1] --> k, &i[2] --> &m[k] }
+forAll k : &domFrom , &g { &i[1] --> k, &i[2] --> &m[k] }
+                    . &b { &i[1] --> k, &i[2] --> &m[k] }
 
     where &f hasType   `function int --> _`
     where &f hasDomain `function (..) &domFrom --> _`
