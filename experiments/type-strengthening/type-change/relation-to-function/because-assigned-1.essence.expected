@@ -1,5 +1,5 @@
 language Essence 1.3
 
-find x: function (total) int(0..9) --> int(10..20)
+find x: function (total) tuple (int(0..9)) --> tuple (int(10..20))
 such that forAll i : int(0..9) . toRelation(x)(i, _) = {20 - i}
 

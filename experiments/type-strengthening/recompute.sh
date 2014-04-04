@@ -11,6 +11,7 @@ function do_ts1() {
     conjure --mode diff "${ESSENCE}.typeStrengthening" "${ESSENCE}.expected" 2> /dev/null
     if [ $? -eq 0 ] ; then
         echo "pass ${ESSENCE}"
+        rm "${ESSENCE}.typeStrengthening"
     else
         echo "fail ${ESSENCE}"
     fi
@@ -28,8 +29,11 @@ function rm_output_files() {
 export -f do_ts
 
 function recompute() {
-    do_ts
-    rm_output_files
+    do_ts | tee stdout
+    NBFAIL=$(grep fail stdout | wc -l | tr -d ' ')
+    NBPASS=$(grep pass stdout | wc -l | tr -d ' ')
+    echo "Number of failing tests: ${NBFAIL}/${NBPASS}"
+    rm stdout
 }
 export -f recompute
 
