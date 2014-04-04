@@ -10,6 +10,7 @@ import Bug
 import qualified Data.Text as T
 
 
+
 typeStrengthening :: MonadConjure m => Spec -> m Spec
 typeStrengthening spec = do
     simplified <- simplifySpec spec
@@ -45,13 +46,14 @@ attributeAcquisition spec@(Spec v statements1) = do
 
     return $ Spec v $ listAsStatement statements3
 
-directMatch :: MonadConjure m => [(E,E)] -> E
-            -> m ( [ ( E            -- the decision variable
-                     , Text         -- the attribtue
-                     , Maybe E      -- value of the attribute, Nothing if flag
-                     ) ]
-                 , [E]              -- expressions to keep. [] if constraint isn't needed any more.
-                 )                  -- in general, if the first component is [], we've learned nothing from this constraint.
+directMatch
+    :: MonadConjure m => [(E,E)] -> E
+    -> m ( [ ( E            -- the decision variable
+             , Text         -- the attribtue
+             , Maybe E      -- value of the attribute, Nothing if flag
+             ) ]
+         , [E]              -- expressions to keep. [] if constraint isn't needed any more.
+         )                  -- in general, if the first component is [], we've learned nothing from this constraint.
 directMatch findsToConsider cons = case cons of
     -- numParts (min&max), partSize (min&max)
 
@@ -111,54 +113,103 @@ directMatch findsToConsider cons = case cons of
     [eMatch| forAll &i : &dom . |&x(&j,_)| = 1 |]           | i == j
                                                             , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| 1 |] )
-                                                                        , (x, "total"      , Nothing           )
+                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(1) |] )
+                                                                        , (x, "total"      , Nothing                  )
                                                                         ], [])
 
     [eMatch| forAll &i : &dom . |&x(&j,_)| <= 1 |]          | i == j
                                                             , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| 1 |] )
+                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(1) |] )
                                                                         ], [])
 
     [eMatch| forAll &i : &dom . |&x(_,&j)| = 1 |]           | i == j
                                                             , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
                                                                         , (x, "total"      , Nothing           )
                                                                         ], [])
 
     [eMatch| forAll &i : &dom . |&x(_,&j)| <= 1 |]          | i == j
                                                             , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
                                                                         ], [])
 
     -- functional, because assigned
     c@[eMatch| forAll &i : &dom . &x(&j,_) = {&_} |]        | i == j
                                                             , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| 1 |] )
+                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(1) |] )
                                                                         , (x, "total"      , Nothing           )
                                                                         ], [c])
     c@[eMatch| forAll &i : &dom . &x(_,&j) = {&_} |]        | i == j
                                                             , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
                                                             , error $ show $ vcat $ [ pretty domX, pretty dom ]
                                                             , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| 2 |] )
+                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
                                                                         , (x, "total"      , Nothing           )
                                                                         ], [c])
 
-    c -> return ([],[c])
+    c -> relationFunctional findsToConsider c
+
+
+relationFunctional
+    :: MonadConjure m => [(E,E)] -> E
+    -> m ( [ ( E            -- the decision variable
+             , Text         -- the attribtue
+             , Maybe E      -- value of the attribute, Nothing if flag
+             ) ]
+         , [E]              -- expressions to keep. [] if constraint isn't needed any more.
+         )                  -- in general, if the first component is [], we've learned nothing from this constraint.
+relationFunctional findsToConsider cons = go [] cons
+    where
+        go quans [eMatch| forAll &i : &dom . &body |] = go ((i,dom):quans) body
+        go quans [xMatch| [Prim (S "=")] := binOp.operator
+                        | [r]   := binOp.left.operator.twoBars.functionApply.actual
+                        | args  := binOp.left.operator.twoBars.functionApply.args
+                        | [Prim (I 1)] := binOp.right.value.literal
+                        |]
+            | Just [xMatch| domR := domain.relation.inners |] <- r `lookup` findsToConsider
+            = do
+                -- domR and {dom of args} need to be pair-wise equal
+                -- OR underscore.
+                -- output is those indices were it is equal.
+                let quantifiers = [ i
+                                  | (i,a,d) <- zip3 [ 1::Integer .. ] args domR
+                                  , a /= [eMake| _ |]
+                                  , let aDom = lookup a quans
+                                  , Just d == aDom
+                                  ]
+                let eInt i = [xMake| value.literal := [Prim (I i)] |]
+                return ( [ (r, "functional" , Just [xMake| value.tuple.values := (map eInt quantifiers) |] )
+                         , (r, "total"      , Nothing )
+                         ], [] )                                                                        
+        go quans [xMatch| [Prim (S "<=")] := binOp.operator
+                        | [r]   := binOp.left.operator.twoBars.functionApply.actual
+                        | args  := binOp.left.operator.twoBars.functionApply.args
+                        | [Prim (I 1)] := binOp.right.value.literal
+                        |]
+            | Just [xMatch| domR := domain.relation.inners |] <- r `lookup` findsToConsider
+            = do
+                -- same as above case, except not `total`
+                let quantifiers = [ i
+                                  | (i,a,d) <- zip3 [ 1::Integer .. ] args domR
+                                  , a /= [eMake| _ |]
+                                  , let aDom = lookup a quans
+                                  , Just d == aDom
+                                  ]
+                let eInt i = [xMake| value.literal := [Prim (I i)] |]
+                return ( [ (r, "functional" , Just [xMake| value.tuple.values := (map eInt quantifiers) |] )
+                         ], [] )                                                                        
+        go _ _ = return ([],[cons]) -- error $ show $ prettyAsPaths con
+
 
 typeChange :: MonadConjure m => Spec -> m Spec
 typeChange spec@(Spec v statements1) = do
 
     let findsToConsider = pullFinds spec
-
     let maxOccur1 = mkAttr ("maxOccur", Just [eMake| 1 |])
-    let functional1 = mkAttr ("functional", Just [eMake| 1 |])
-    let functional2 = mkAttr ("functional", Just [eMake| 2 |])
 
     replacements <- fmap catMaybes $ forM findsToConsider $ \ (name, domain) -> case domain of
         [xMatch| [inner] := domain.mset.inner
@@ -170,26 +221,37 @@ typeChange spec@(Spec v statements1) = do
                                             |]
                                     , [eMake| toMSet(&name) |]
                                     ))
-        [xMatch| [fr,to] := domain.relation.inners
-               | attrs   := domain.relation.attributes.attrCollection
+        [xMatch| inners := domain.relation.inners
+               | attrs  := domain.relation.attributes.attrCollection
                |]
-            | functional1 `elem` attrs
-            -> return $ Just (name, ( [xMake| domain.function.innerFrom := [fr]
-                                            | domain.function.innerTo   := [to]
-                                            | domain.function.attributes.attrCollection := (attrs \\ [functional1])
-                                            |]
-                                    , [eMake| toRelation(&name) |]
-                                    ))
-        [xMatch| [to,fr] := domain.relation.inners
-               | attrs   := domain.relation.attributes.attrCollection
-               |]
-            | functional2 `elem` attrs
-            -> return $ Just (name, ( [xMake| domain.function.innerFrom := [fr]
-                                            | domain.function.innerTo   := [to]
-                                            | domain.function.attributes.attrCollection := (attrs \\ [functional2])
-                                            |]
-                                    , [eMake| toRelation(&name) |]
-                                    ))
+            | functionalAttr'                                    <- "functional" `lookupAttr` attrs
+            , let functionalAttr = mkAttr ("functional", functionalAttr')
+            , Just [xMatch| functionals := value.tuple.values |] <- "functional" `lookupAttr` attrs
+            -> do
+                let
+                    eInt i = [xMake| value.literal := [Prim (I i)] |]
+                    eIntOut [xMatch| [Prim (I i)] := value.literal |] = i
+                    eIntOut _ = bug "eIntOut"
+                let functionals' = map eIntOut functionals
+                let nonfunctionals' = [1 .. genericLength inners] \\ functionals'
+                let nonfunctionals = map eInt nonfunctionals'
+                let frs = map (\ i -> genericIndex inners (i-1)) functionals'
+                let tos = inners \\ frs
+                let fr = [xMake| domain.tuple.inners := frs |]
+                let to = [xMake| domain.tuple.inners := tos |]
+                let permuteTuple = [xMake| value.tuple.values := functionals ++ nonfunctionals |]
+
+                -- wrap in a permute only if it is needed.
+                let decorator = if functionals' ++ nonfunctionals' == [1 .. genericLength inners]
+                                    then [eMake| toRelation(&name) |]
+                                    else [eMake| permute(toRelation(&name),&permuteTuple) |]
+
+                return $ Just (name, ( [xMake| domain.function.innerFrom := [fr]
+                                             | domain.function.innerTo   := [to]
+                                             | domain.function.attributes.attrCollection := (attrs \\ [functionalAttr])
+                                             |]
+                                     , decorator
+                                     ))
         _ -> return Nothing
 
     let decorate x | Just (_,y) <- x `lookup` replacements = y
@@ -206,6 +268,7 @@ typeChange spec@(Spec v statements1) = do
 
     return $ Spec v $ listAsStatement statements2
 
+
 -- pullThoseWithDomain :: MonadConjure m => Spec -> T.Text -> m [(E,E)]
 -- pullThoseWithDomain (Spec _ statements) domainStr =
 --     case lexAndParse (inCompleteFile parseDomain) domainStr of
@@ -221,9 +284,11 @@ typeChange spec@(Spec v statements1) = do
 --                        else return []
 --                 _ -> return []
 
+
 pullConstraints :: E -> [E]
 pullConstraints [xMatch| xs := topLevel.suchThat |] = xs
 pullConstraints _ = []
+
 
 pullFinds :: Spec -> [(E,E)]
 pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
@@ -283,16 +348,11 @@ updateAttributes _ dom = bug $ vcat [ "don't know how to update this domain"
                                     , pretty dom
                                     ]
 
+
 mkAttr :: (T.Text, Maybe E) -> E
 mkAttr (n, Nothing) = [xMake| attribute.name.reference := [Prim (S n)] |]
 mkAttr (n, Just v ) = [xMake| attribute.nameValue.name.reference := [Prim (S n)]
                             | attribute.nameValue.value          := [v]
                             |]
-
-
-
-
-
-
 
 
