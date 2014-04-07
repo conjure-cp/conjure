@@ -528,6 +528,21 @@ fullEvaluator
         | isFullyInstantiated fn && all isFullyInstantiated args
         = returnBool True
 
+fullEvaluator
+    p@[xMatch| _ := functionApply
+             | [Prim (S "permute")] := functionApply.actual.functionApply.actual.reference
+             | [rel,permuteTuple']  := functionApply.actual.functionApply.args
+             | idx                  := functionApply.args
+             |]
+        | [xMatch| permuteTuple := value.tuple.values |] <- permuteTuple'
+        = do
+            let eIntOut [xMatch| [Prim (I i)] := value.literal |] = i
+                eIntOut _ = bug "eIntOut"
+            let idx' = [ genericIndex idx (eIntOut i - 1) | i <- permuteTuple ]
+            ret [xMake| functionApply.actual := [rel]
+                      | functionApply.args   := idx'
+                      |]
+
 fullEvaluator [eMatch| preImage(&f,&x) |]
     | isFullyInstantiated f && isFullyInstantiated x
     , [xMatch| fValues := value.function.values |] <- f
