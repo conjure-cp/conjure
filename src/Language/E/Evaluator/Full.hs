@@ -529,11 +529,11 @@ fullEvaluator
         = returnBool True
 
 fullEvaluator
-    p@[xMatch| _ := functionApply
-             | [Prim (S "permute")] := functionApply.actual.functionApply.actual.reference
-             | [rel,permuteTuple']  := functionApply.actual.functionApply.args
-             | idx                  := functionApply.args
-             |]
+    [xMatch| _ := functionApply
+           | [Prim (S "permute")] := functionApply.actual.functionApply.actual.reference
+           | [rel,permuteTuple']  := functionApply.actual.functionApply.args
+           | idx                  := functionApply.args
+           |]
         | [xMatch| permuteTuple := value.tuple.values |] <- permuteTuple'
         = do
             let eIntOut [xMatch| [Prim (I i)] := value.literal |] = i
