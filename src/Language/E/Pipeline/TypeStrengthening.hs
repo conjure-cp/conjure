@@ -240,8 +240,12 @@ typeChange spec@(Spec v statements1) = do
                 let nonfunctionals = map eInt nonfunctionals'
                 let frs = map (\ i -> genericIndex inners (i-1)) functionals'
                 let tos = inners \\ frs
-                let fr = [xMake| domain.tuple.inners := frs |]
-                let to = [xMake| domain.tuple.inners := tos |]
+                let fr = case frs of
+                            [i] -> i
+                            _   -> [xMake| domain.tuple.inners := frs |]
+                let to = case tos of
+                            [i] -> i
+                            _   -> [xMake| domain.tuple.inners := tos |]
                 let permuteTuple = [xMake| value.tuple.values := functionals ++ nonfunctionals |]
 
                 -- wrap in a permute only if it is needed.
