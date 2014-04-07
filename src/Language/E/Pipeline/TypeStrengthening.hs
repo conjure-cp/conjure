@@ -21,7 +21,9 @@ typeStrengthening = return
 
 
 attributeAcquisition :: MonadConjure m => Spec -> m Spec
-attributeAcquisition spec@(Spec v statements1) = do
+attributeAcquisition spec@(Spec v statements0) = do
+
+    statements1 <- preprocess statements0
 
     let findsToConsider = pullFinds spec
 
@@ -49,6 +51,14 @@ attributeAcquisition spec@(Spec v statements1) = do
 
     return $ Spec v $ listAsStatement statements3
 
+preprocess :: MonadConjure m => E -> m E
+preprocess = sumAsCardinality
+
+sumAsCardinality :: MonadConjure m => E -> m E
+sumAsCardinality [eMatch| sum &_ in &x . 1 |] = return [eMake| |&x| |]
+sumAsCardinality (Tagged t xs) = Tagged t <$> mapM sumAsCardinality xs
+sumAsCardinality p = return p
+
 directMatch
     :: MonadConjure m => [(E,E)] -> E
     -> m ( [ ( E            -- the decision variable
@@ -61,22 +71,14 @@ directMatch findsToConsider cons = case cons of
     -- numParts (min&max), partSize (min&max)
 
     [eMatch| |parts(&x)| = &n |]                            -> return ([(x, "numParts", Just n)], [])
-    [eMatch| (sum &_ in parts(&x) . 1) = &n |]              -> return ([(x, "numParts", Just n)], [])
-
     [eMatch| |parts(&x)| >= &n |]                           -> return ([(x, "minNumParts", Just n)], [])
-    [eMatch| (sum &_ in parts(&x) . 1) >= &n |]             -> return ([(x, "minNumParts", Just n)], [])
-
     [eMatch| |parts(&x)| <= &n |]                           -> return ([(x, "maxNumParts", Just n)], [])
-    [eMatch| (sum &_ in parts(&x) . 1) <= &n |]             -> return ([(x, "maxNumParts", Just n)], [])
 
     [eMatch| forAll &i in parts(&x) . |&j| = &n |]                  | i == j -> return ([(x, "partSize", Just n)], [])
-    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) = &n |]    | i == j -> return ([(x, "partSize", Just n)], [])
 
     [eMatch| forAll &i in parts(&x) . |&j| >= &n |]                 | i == j -> return ([(x, "minPartSize", Just n)], [])
-    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) >= &n |]   | i == j -> return ([(x, "minPartSize", Just n)], [])
 
     [eMatch| forAll &i in parts(&x) . |&j| <= &n |]                 | i == j -> return ([(x, "maxPartSize", Just n)], [])
-    [eMatch| forAll &i in parts(&x) . (sum &_ in &j . 1) <= &n |]   | i == j -> return ([(x, "maxPartSize", Just n)], [])
 
     [eMatch| forAll &i in parts(&x) . forAll &j in parts(&x2) . |&i2| = |&j2| |]
         | i == i2, j == j2, x == x2
@@ -90,13 +92,8 @@ directMatch findsToConsider cons = case cons of
     -- size, minSize, maxSize
 
     [eMatch| |&x| =  &n |]                                  -> return ([(x, "size"   , Just n)],[])
-    [eMatch| (sum &_ in &x . 1) =  &n |]                    -> return ([(x, "size"   , Just n)],[])
-
     [eMatch| |&x| >= &n |]                                  -> return ([(x, "minSize", Just n)],[])
-    [eMatch| (sum &_ in &x . 1) >=  &n |]                   -> return ([(x, "minSize", Just n)],[])
-
     [eMatch| |&x| <= &n |]                                  -> return ([(x, "maxSize", Just n)],[])
-    [eMatch| (sum &_ in &x . 1) <=  &n |]                   -> return ([(x, "maxSize", Just n)],[])
 
 
     -- minOccur, maxOccur
