@@ -6,7 +6,7 @@ if ! [ -d .hg ] && [ -f src/RepositoryVersion.hs ] ; then
 else
     VERSION="unknown"
     if [ -d .hg ] ; then
-        VERSION=$(hg id -i | head -n 1)
+        VERSION=$(hg log -l1 --template "{date|isodate} -- {node|short}")
     fi
     if ( grep "repositoryVersion = \"${VERSION}\"" src/RepositoryVersion.hs 2> /dev/null > /dev/null ) ; then
         echo "Reusing src/RepositoryVersion.hs with version ${VERSION}."
