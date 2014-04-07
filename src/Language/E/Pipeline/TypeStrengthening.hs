@@ -12,9 +12,12 @@ import qualified Data.Text as T
 
 
 typeStrengthening :: MonadConjure m => Spec -> m Spec
-typeStrengthening spec = do
-    simplified <- simplifySpec spec
-    fmap (atMostOneSuchThat False) $ (attributeAcquisition >=> typeChange) simplified
+typeStrengthening = return
+    >=> simplifySpec
+    >=> attributeAcquisition
+    >=> typeChange
+    >=> simplifySpec
+    >=> return . atMostOneSuchThat False
 
 
 attributeAcquisition :: MonadConjure m => Spec -> m Spec
