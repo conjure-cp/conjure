@@ -483,6 +483,59 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
+            [xMatch| attrs      := domain.mset.attributes.attrCollection
+                   | [domInner] := domain.mset.inner
+                   |]
+            [xMatch| values := value.mset.values |]
+            (Just "MSet~ExplicitVarSize")
+            = do
+            nbValues <-
+                case lookupAttr "maxSize" attrs of
+                    Just i  -> return i
+                    Nothing -> domSize domInner
+            nbValuesInt <- valueIntOut nbValues
+            let indexOfMatrix_fr = [eMake| 1 |]
+            let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
+            let indexOfMatrix    = [xMake| domain.int.ranges.range.fromTo := [indexOfMatrix_fr,indexOfMatrix_to] |]
+
+            let nbTrues  = genericLength values
+            let nbFalses = nbValuesInt - nbTrues
+            let outTuple1_Name   = name `T.append` "_MSet~ExplicitVarSize_tuple1"
+            let outTuple1_Values = replicate (fromInteger nbTrues ) [eMake| true  |]
+                                ++ replicate (fromInteger nbFalses) [eMake| false |]
+            let outTuple1_Value  = [xMake| value.matrix.values := outTuple1_Values
+                                         | value.matrix.indexrange := [indexOfMatrix]
+                                         |]
+
+
+            valuesPadded <- do
+                padding <- zeroVal domInner
+                return $ values ++ replicate (fromInteger nbFalses) padding
+            values' <- concatMapM (workhorse lookupReprs)
+                        [ (nm', dom', val')
+                        | let nm'  = name `T.append` "_MSet~ExplicitVarSize_tuple2"
+                        , let dom' = domInner
+                        , val' <- valuesPadded
+                        ]
+            let nameValuePairs
+                    = map (\ xs -> (fst $ headNote "redArrow.nameValuePairs 2" xs, map snd xs) )
+                    $ groupBy ((==) `on` fst)
+                    $ sortBy  (comparing fst)
+                    $ values'
+
+            return
+                $ (outTuple1_Name, outTuple1_Value)
+                :
+                [ (nm', theMatrix)
+                | (nm', vals) <- nameValuePairs
+                , let valuesInMatrix = vals
+                , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
+                                             | value.matrix.indexrange := [indexOfMatrix]
+                                             |]
+                ]
+
+        helper
+            name
             [xMatch| attrs        := domain.function.attributes.attrCollection
                    | [domInnerFr] := domain.function.innerFrom
                    | [domInnerTo] := domain.function.innerTo
@@ -701,13 +754,21 @@ zeroVal [xMatch| [index] := domain.matrix.index
 zeroVal [xMatch| [inner] := domain.set.inner 
                | attrs   := domain.set.attributes.attrCollection
                |]
-    | Just size <- lookupAttr "size" attrs
+    | msize     <- lookupAttr "size" attrs
+    , mminSize  <- lookupAttr "minSize" attrs
+    , Just size <- msize <|> mminSize
     = do
     sizeInt  <- valueIntOut size
     valInner <- zeroVal inner
     let vals =  replicate (fromInteger sizeInt) valInner
     return [xMake| value.set.values := vals
                  |]
+zeroVal [xMatch| [_]   := domain.set.inner
+               | attrs := domain.set.attributes.attrCollection
+               |]
+    | Nothing <- lookupAttr "minSize" attrs
+    = do
+    return [xMake| value.set.values := [] |]
 
 zeroVal [xMatch| xs := domain.tuple.inners |] = do
     zeroes <- mapM zeroVal xs
