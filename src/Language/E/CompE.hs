@@ -250,9 +250,10 @@ lookupMetaVar :: MonadConjure m => Text -> MaybeT m E
 lookupMetaVar nm = lookupReference ("&" `mappend` nm)
 
 errUndefinedRef :: (MonadConjure m, Pretty p) => Doc -> p -> m a
-errUndefinedRef _place t = do
+errUndefinedRef place t = do
     bsText <- bindersDocNamesOnly
     userErr $ vcat [ "Undefined reference:" <+> pretty t
+                   , "(Called from" <+> place <> ")"
                    , nest 4 bsText
                    ]
 
