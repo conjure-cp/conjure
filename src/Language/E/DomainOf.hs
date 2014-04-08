@@ -1,6 +1,10 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 
-module Language.E.DomainOf where
+module Language.E.DomainOf
+    ( errDomainOf
+    , domainOf
+    , innerDomainOf
+    ) where
 
 import Stuff.Generic
 import Language.E.Imports
@@ -67,4 +71,13 @@ domainOf p@[xMatch| [x] := operator.index.left
 domainOf x = do
     mkLog "missing:domainOf" (pretty x)
     return x
+
+innerDomainOf :: E -> Maybe E
+innerDomainOf [xMatch| [ty] := domain.     set.inner  |] = return ty
+innerDomainOf [xMatch| [ty] := domain.    mset.inner  |] = return ty
+innerDomainOf [xMatch| tys  := domain.relation.inners |] = return [xMake| domain.tuple.inners := tys |]
+innerDomainOf [xMatch| [fr] := domain.function.innerFrom
+                     | [to] := domain.function.innerTo |] = return [xMake| domain.tuple.inners := [fr,to] |]
+innerDomainOf _ = Nothing
+
 

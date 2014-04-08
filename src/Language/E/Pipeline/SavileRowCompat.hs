@@ -6,7 +6,6 @@ import Language.E
 import Language.E.Pipeline.NoGuards ( conjureNoGuards )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Language.E.DomainOf ( domainOf )
 -- import Language.E.Pipeline.BubbleUp ( bubbleUpSpec )
 
 import qualified Data.Text as T ( filter )
