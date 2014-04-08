@@ -28,22 +28,27 @@ attributeAcquisition spec@(Spec v statements0) = do
     let findsToConsider = pullFinds spec
 
     (collectedAttributes, statements2) <- fmap mconcat $ forM (statementAsList statements1) $ \ st -> do
+        introduceStuff st
         let cons = pullConstraints st
         if null cons
             then return ([], [st])
             else do
-                (attrs,cs) <- fmap mconcat $ mapM (directMatch findsToConsider) cons
+                (attrs,cs) <- fmap mconcat $ mapM (nestedMatch findsToConsider) cons
                 return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
+
+    -- mkLog "attributeAcquisition" $ vcat $ [ pretty n <+> "~~" <+> pretty l <+> "~~" <+> pretty a <+> "~~" <+> pretty va
+    --                                       | (n,l,a,va) <- collectedAttributes ]
 
     statements3 <- forM statements2 $ \ s  -> case s of
         [xMatch| [name  ] := topLevel.declaration.find.name
                | [domain] := topLevel.declaration.find.domain
                |] -> do
-            let collectedAttributesForThis = [ (attr, val) | (name', attr, val) <- collectedAttributes, name == name' ]
+            let collectedAttributesForThis = [ (lvl, attr, val) | (name', lvl, attr, val) <- collectedAttributes, name == name' ]
             if null collectedAttributesForThis
                 then return s
                 else do
-                    domain' <- updateAttributes (map mkAttr collectedAttributesForThis) domain
+                    let fs = foldr1 (>=>) [ updateAttributes lvl [mkAttr (attr,val)] | (lvl, attr, val) <- collectedAttributesForThis ]
+                    domain' <- fs domain
                     return [xMake| topLevel.declaration.find.name   := [name]
                                  | topLevel.declaration.find.domain := [domain']
                                  |]
@@ -59,6 +64,39 @@ sumAsCardinality [eMatch| sum &_ in &x . 1 |] = return [eMake| |&x| |]
 sumAsCardinality (Tagged t xs) = Tagged t <$> mapM sumAsCardinality xs
 sumAsCardinality p = return p
 
+nestedMatch
+    :: MonadConjure m => [(E,E)] -> E
+    -> m ( [ ( E            -- the decision variable
+             , Int          -- levels of nesting
+             , Text         -- the attribtue
+             , Maybe E      -- value of the attribute, Nothing if flag
+             ) ]
+         , [E]              -- expressions to keep. [] if constraint isn't needed any more.
+         )                  -- in general, if the first component is [], we've learned nothing from this constraint.
+nestedMatch findsToConsider cons = do
+    out1 <- directMatch findsToConsider cons
+    case out1 of
+        ([], _) -> do
+            case cons of
+                [eMatch| forAll &i in &x . &body |] -> do
+                    introduceStuff cons
+                    domX <- domainOf x
+                    let findsToConsider' = case innerDomainOf domX of
+                                                Just t -> (i, t) : findsToConsider
+                                                Nothing -> bug $ vcat [ "nestedMatch-1", pretty x, pretty domX ]
+                    out2 <- nestedMatch findsToConsider' body
+                    case out2 of
+                        ([], _) -> return ([], [cons])
+                        ([(decvar, lvl, attr, val)], keeps) | i == decvar ->
+                            let
+                                liftKeep k  = [eMake| forAll &i in &x . &k |]
+                                keepsLifted = map liftKeep keeps
+                            in  return ([(x, 1+lvl, attr, val)], keepsLifted)
+                        _ -> bug $ vcat [ "nestedMatch-2", pretty cons ]
+                _ -> return ([], [cons])
+        (attrs, keep) -> do
+            return ([(decvar, 0, attr, val) | (decvar, attr, val) <- attrs ], keep)
+
 directMatch
     :: MonadConjure m => [(E,E)] -> E
     -> m ( [ ( E            -- the decision variable
@@ -70,30 +108,29 @@ directMatch
 directMatch findsToConsider cons = case cons of
     -- numParts (min&max), partSize (min&max)
 
-    [eMatch| |parts(&x)| = &n |]                            -> return ([(x, "numParts", Just n)], [])
-    [eMatch| |parts(&x)| >= &n |]                           -> return ([(x, "minNumParts", Just n)], [])
-    [eMatch| |parts(&x)| <= &n |]                           -> return ([(x, "maxNumParts", Just n)], [])
+    [eMatch| |parts(&x)| =  &n |]                                   -> return ([(x, "numParts"   , Just n)], [])
+    [eMatch| |parts(&x)| >= &n |]                                   -> return ([(x, "minNumParts", Just n)], [])
+    [eMatch| |parts(&x)| <= &n |]                                   -> return ([(x, "maxNumParts", Just n)], [])
 
-    [eMatch| forAll &i in parts(&x) . |&j| = &n |]                  | i == j -> return ([(x, "partSize", Just n)], [])
-
-    [eMatch| forAll &i in parts(&x) . |&j| >= &n |]                 | i == j -> return ([(x, "minPartSize", Just n)], [])
-
-    [eMatch| forAll &i in parts(&x) . |&j| <= &n |]                 | i == j -> return ([(x, "maxPartSize", Just n)], [])
+    [eMatch| forAll &i in parts(&x) . |&j| =  &n |]     | i == j    -> return ([(x, "partSize"   , Just n)], [])
+    [eMatch| forAll &i in parts(&x) . |&j| >= &n |]     | i == j    -> return ([(x, "minPartSize", Just n)], [])
+    [eMatch| forAll &i in parts(&x) . |&j| <= &n |]     | i == j    -> return ([(x, "maxPartSize", Just n)], [])
 
     [eMatch| forAll &i in parts(&x) . forAll &j in parts(&x2) . |&i2| = |&j2| |]
         | i == i2, j == j2, x == x2
         -> return ([(x, "regular", Nothing)], [])
 
-    [eMatch| forAll &i : &dom . &j in &x                       |]   | i == j
-                                                                    , Just [xMatch| [domX] := domain.partition.inner |] <- x `lookup` findsToConsider
-                                                                    , dom == domX
-                                                                    -> return ([(x, "complete", Nothing)], [])
+    [eMatch| forAll &i : &dom . &j in &x |]
+        | i == j
+        , Just [xMatch| [domX] := domain.partition.inner |] <- x `lookup` findsToConsider
+        , dom == domX
+        -> return ([(x, "complete", Nothing)], [])
 
     -- size, minSize, maxSize
 
-    [eMatch| |&x| =  &n |]                                  -> return ([(x, "size"   , Just n)],[])
-    [eMatch| |&x| >= &n |]                                  -> return ([(x, "minSize", Just n)],[])
-    [eMatch| |&x| <= &n |]                                  -> return ([(x, "maxSize", Just n)],[])
+    [eMatch| |&x| =  &n |] -> return ([(x, "size"   , Just n)], [])
+    [eMatch| |&x| >= &n |] -> return ([(x, "minSize", Just n)], [])
+    [eMatch| |&x| <= &n |] -> return ([(x, "maxSize", Just n)], [])
 
 
     -- minOccur, maxOccur
@@ -107,34 +144,6 @@ directMatch findsToConsider cons = case cons of
                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
                                                             , dom == domX
                                                             -> return ([(x, "maxOccur", Just n)],[])
-
-
-    -- functional, because cardinality
-    [eMatch| forAll &i : &dom . |&x(&j,_)| = 1 |]           | i == j
-                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(1) |] )
-                                                                        , (x, "total"      , Nothing                  )
-                                                                        ], [])
-
-    [eMatch| forAll &i : &dom . |&x(&j,_)| <= 1 |]          | i == j
-                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(1) |] )
-                                                                        ], [])
-
-    [eMatch| forAll &i : &dom . |&x(_,&j)| = 1 |]           | i == j
-                                                            , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
-                                                                        , (x, "total"      , Nothing           )
-                                                                        ], [])
-
-    [eMatch| forAll &i : &dom . |&x(_,&j)| <= 1 |]          | i == j
-                                                            , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , dom == domX
-                                                            -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
-                                                                        ], [])
 
     -- functional, because assigned
     c@[eMatch| forAll &i : &dom . &x(&j,_) = {&_} |]        | i == j
@@ -302,11 +311,12 @@ pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
 
 updateAttributes
     :: MonadConjure m
-    => [E]                  -- attributes
+    => Int                  -- nesting level, 0 for topmost
+    -> [E]                  -- attributes
     -> E                    -- domain
     -> m E                  -- modified domain
 
-updateAttributes newAttrs
+updateAttributes 0 newAttrs
     [xMatch| [inner] := domain.set.inner
            | attrs   := domain.set.attributes.attrCollection
            |] = return [xMake| domain.set.inner := [inner]
@@ -314,7 +324,7 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
-updateAttributes newAttrs
+updateAttributes 0 newAttrs
     [xMatch| [inner] := domain.mset.inner
            | attrs   := domain.mset.attributes.attrCollection
            |] = return [xMake| domain.mset.inner := [inner]
@@ -322,7 +332,7 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
-updateAttributes newAttrs
+updateAttributes 0 newAttrs
     [xMatch| attrs := domain.function.attributes.attrCollection
            | [fr]  := domain.function.innerFrom
            | [to]  := domain.function.innerTo
@@ -332,7 +342,7 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
-updateAttributes newAttrs
+updateAttributes 0 newAttrs
     [xMatch| inners  := domain.relation.inners
            | attrs   := domain.relation.attributes.attrCollection
            |] = return [xMake| domain.relation.inners := inners
@@ -340,7 +350,7 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
-updateAttributes newAttrs
+updateAttributes 0 newAttrs
     [xMatch| [inner] := domain.partition.inner
            | attrs   := domain.partition.attributes.attrCollection
            |] = return [xMake| domain.partition.inner := [inner]
@@ -348,9 +358,39 @@ updateAttributes newAttrs
                              |]
         where attrs' = newAttrs ++ attrs
 
-updateAttributes _ dom = bug $ vcat [ "don't know how to update this domain"
-                                    , pretty dom
-                                    ]
+
+updateAttributes lvl newAttrs
+    [xMatch| [inner] := domain.set.inner
+           | attrs   := domain.set.attributes.attrCollection
+           |] = do
+               inner' <- updateAttributes (lvl-1) newAttrs inner
+               return [xMake| domain.set.inner := [inner']
+                            | domain.set.attributes.attrCollection := attrs
+                            |]
+
+updateAttributes lvl newAttrs
+    [xMatch| [inner] := domain.mset.inner
+           | attrs   := domain.mset.attributes.attrCollection
+           |] = do
+               inner' <- updateAttributes (lvl-1) newAttrs inner
+               return [xMake| domain.mset.inner := [inner']
+                            | domain.mset.attributes.attrCollection := attrs
+                            |]
+
+updateAttributes lvl newAttrs
+    [xMatch| [inner] := domain.partition.inner
+           | attrs   := domain.partition.attributes.attrCollection
+           |] = do
+               inner' <- updateAttributes (lvl-1) newAttrs inner
+               return [xMake| domain.partition.inner := [inner']
+                            | domain.partition.attributes.attrCollection := attrs
+                            |]
+
+
+updateAttributes lvl _ dom = bug $ vcat [ "don't know how to update this domain"
+                                        , pretty lvl
+                                        , pretty dom
+                                        ]
 
 
 mkAttr :: (T.Text, Maybe E) -> E

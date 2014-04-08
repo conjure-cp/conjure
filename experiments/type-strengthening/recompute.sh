@@ -32,7 +32,8 @@ function recompute() {
     do_ts | tee stdout
     NBFAIL=$(grep fail stdout | wc -l | tr -d ' ')
     NBPASS=$(grep pass stdout | wc -l | tr -d ' ')
-    echo "Number of failing tests: ${NBFAIL}/${NBPASS}"
+    echo "Number of failing tests: ${NBFAIL}"
+    echo "Number of passing tests: ${NBPASS}"
     rm stdout
 }
 export -f recompute
