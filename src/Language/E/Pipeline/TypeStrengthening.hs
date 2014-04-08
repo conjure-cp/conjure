@@ -155,7 +155,6 @@ directMatch findsToConsider cons = case cons of
                                                                         ], [c])
     c@[eMatch| forAll &i : &dom . &x(_,&j) = {&_} |]        | i == j
                                                             , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , error $ show $ vcat $ [ pretty domX, pretty dom ]
                                                             , dom == domX
                                                             -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
                                                                         , (x, "total"      , Nothing           )

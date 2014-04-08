@@ -51,6 +51,19 @@ domainOf [xMatch| [Prim (S n1)] := quanVar.name
                 | [d]           := quanVar.within.quantified.quanOverDom
                 |] | n1 == n2 = return d
 
+domainOf inp@[xMatch| [Prim (S n1)] := quanVar.name
+                    | [Prim (S n2)] := quanVar.within.quantified.quanVar.structural.single.reference
+                    | []            := quanVar.within.quantified.quanOverDom
+                    | []            := quanVar.within.quantified.quanOverOp.binOp.in
+                    | [x]           := quanVar.within.quantified.quanOverExpr
+                    |] | n1 == n2 = do
+    domX <- domainOf x
+    case innerDomainOf domX of
+        Just i -> return i
+        Nothing -> do
+            mkLog "missing:domainOf" $ "Cannot calculate the inner domain of" <+> pretty domX
+            return inp
+
 domainOf p@[xMatch| [] := quanVar |] = return p
 
 domainOf p@[xMatch| [x] := operator.index.left
