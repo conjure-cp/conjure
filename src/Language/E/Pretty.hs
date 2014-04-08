@@ -6,6 +6,7 @@
 
 module Language.E.Pretty ( module Stuff.Pretty, prettySpecDebug ) where
 
+import Utils.DebugPretty
 import Stuff.Generic
 import Stuff.Pretty
 import Language.E.Definition
@@ -456,3 +457,6 @@ prettyQuantified x = prettyNotImplemented x
 prettyNotImplemented :: E -> Doc
 prettyNotImplemented (Tagged s _) = "{{" <> pretty s <> "}}"
 prettyNotImplemented x = "[pretty] catch all case" <++> prettyAsPaths x
+
+instance DebugPretty E where
+    debugPretty = pretty

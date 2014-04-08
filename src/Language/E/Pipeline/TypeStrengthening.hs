@@ -6,6 +6,7 @@ module Language.E.Pipeline.TypeStrengthening ( typeStrengthening ) where
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Bug
+-- import Utils.DebugPretty
 
 import qualified Data.Text as T
 
@@ -36,8 +37,7 @@ attributeAcquisition spec@(Spec v statements0) = do
                 (attrs,cs) <- fmap mconcat $ mapM (nestedMatch findsToConsider) cons
                 return (attrs, [ [xMake| topLevel.suchThat := cs |] ])
 
-    -- mkLog "attributeAcquisition" $ vcat $ [ pretty n <+> "~~" <+> pretty l <+> "~~" <+> pretty a <+> "~~" <+> pretty va
-    --                                       | (n,l,a,va) <- collectedAttributes ]
+    -- mkLog "attributeAcquisition" $ debugPretty collectedAttributes
 
     statements3 <- forM statements2 $ \ s  -> case s of
         [xMatch| [name  ] := topLevel.declaration.find.name
@@ -64,6 +64,7 @@ sumAsCardinality [eMatch| sum &_ in &x . 1 |] = return [eMake| |&x| |]
 sumAsCardinality (Tagged t xs) = Tagged t <$> mapM sumAsCardinality xs
 sumAsCardinality p = return p
 
+
 nestedMatch
     :: MonadConjure m => [(E,E)] -> E
     -> m ( [ ( E            -- the decision variable
@@ -87,7 +88,7 @@ nestedMatch findsToConsider cons = do
                     out2 <- nestedMatch findsToConsider' body
                     case out2 of
                         ([], _) -> return ([], [cons])
-                        ([(decvar, lvl, attr, val)], keeps) | i == decvar ->
+                        ([(decvar, lvl, attr, val)], keeps) | i == decvar ->        -- TODO!
                             let
                                 liftKeep k  = [eMake| forAll &i in &x . &k |]
                                 keepsLifted = map liftKeep keeps
@@ -360,6 +361,15 @@ updateAttributes 0 newAttrs
 
 
 updateAttributes lvl newAttrs
+    [xMatch| [index] := domain.matrix.index
+           | [inner] := domain.matrix.inner
+           |] = do
+               inner' <- updateAttributes (lvl-1) newAttrs inner
+               return [xMake| domain.matrix.index := [index]
+                            | domain.matrix.inner := [inner']
+                            |]
+
+updateAttributes lvl newAttrs
     [xMatch| [inner] := domain.set.inner
            | attrs   := domain.set.attributes.attrCollection
            |] = do
@@ -387,10 +397,11 @@ updateAttributes lvl newAttrs
                             |]
 
 
-updateAttributes lvl _ dom = bug $ vcat [ "don't know how to update this domain"
-                                        , pretty lvl
-                                        , pretty dom
-                                        ]
+updateAttributes lvl attrs dom = bug $ vcat [ "don't know how to update this domain"
+                                            , pretty lvl
+                                            , pretty dom
+                                            , pretty attrs
+                                            ]
 
 
 mkAttr :: (T.Text, Maybe E) -> E
