@@ -16,14 +16,14 @@ class DebugPretty a where
     debugPretty :: a -> Doc
 
 instance DebugPretty Doc     where debugPretty = id
-instance DebugPretty T.Text  where debugPretty = debugPretty . T.unpack
+instance DebugPretty T.Text  where debugPretty = text . T.unpack
 -- instance DebugPretty String  where debugPretty = text
-instance DebugPretty Char    where debugPretty = debugPretty . show
-instance DebugPretty ()      where debugPretty = debugPretty . show
-instance DebugPretty Bool    where debugPretty = debugPretty . show
-instance DebugPretty Int     where debugPretty = debugPretty . show
-instance DebugPretty Integer where debugPretty = debugPretty . show
-instance DebugPretty Double  where debugPretty x = debugPretty (printf "%.2f" x :: String)
+instance DebugPretty Char    where debugPretty = text . show
+instance DebugPretty ()      where debugPretty = text . show
+instance DebugPretty Bool    where debugPretty = text . show
+instance DebugPretty Int     where debugPretty = text . show
+instance DebugPretty Integer where debugPretty = text . show
+instance DebugPretty Double  where debugPretty x = text (printf "%.2f" x :: String)
 
 instance (DebugPretty a, DebugPretty b) => DebugPretty (a,b) where
     debugPretty (a,b) = debugPrettyListDoc parens "," [debugPretty a, debugPretty b]
