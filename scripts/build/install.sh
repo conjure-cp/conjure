@@ -16,7 +16,7 @@ set -o nounset
 
 export CORES=${CORES:-0}
 export GHC_VERSION=${GHC_VERSION:-"7.6.3"}
-export OPTIMISATION=${OPTIMISATION:-"-O2"}
+export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 
