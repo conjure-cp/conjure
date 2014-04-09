@@ -13,7 +13,11 @@ set -o nounset
 OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
-    PLATFORM="apple-darwin"
+    if [ "$GHC_VERSION" == "7.8.1" ] ; then
+        PLATFORM="apple-darwin-mavericks"
+    else
+        PLATFORM="apple-darwin"
+    fi
 elif [ "$OS" == "Linux" ]; then
     PLATFORM="unknown-linux"
 else
