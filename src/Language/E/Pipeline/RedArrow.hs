@@ -592,18 +592,20 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                     , [xMatch| [Prim (I iInt)] := value.literal |] <- [i]
                     , [xMatch| [Prim (I jInt)] := value.literal |] <- [j]
                     ]
+                domInnerFr1' <- instantiateEnumDomains [] domInnerFr1
+                domInnerFr2' <- instantiateEnumDomains [] domInnerFr2
 
                 let values2D = map (map (\ (_,_,k) -> k )) $ groupBy (\ (i,_,_) (j,_,_) -> i == j ) values'
 
                 let valueOutLines =
                         [ [xMake| value.matrix.values := line
-                                | value.matrix.indexrange := [domInnerFr2]
+                                | value.matrix.indexrange := [domInnerFr2']
                                 |]
                         | line <- values2D
                         ]
 
                 let valueOut = [xMake| value.matrix.values := valueOutLines
-                                     | value.matrix.indexrange := [domInnerFr1]
+                                     | value.matrix.indexrange := [domInnerFr1']
                                      |]
                 let nameOut = name `T.append` "_Function~IntPair2D"
                 return [(nameOut, valueOut)]
