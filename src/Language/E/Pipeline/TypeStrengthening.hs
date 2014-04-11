@@ -88,7 +88,7 @@ nestedMatch findsToConsider cons = do
                     out2 <- nestedMatch findsToConsider' body
                     case out2 of
                         ([], _) -> return ([], [cons])
-                        ([(decvar, lvl, attr, val)], keeps) | i == decvar ->        -- TODO!
+                        ([(decvar, lvl, attr, val)], keeps) | i == decvar ->
                             let
                                 liftKeep k  = [eMake| forAll &i in &x . &k |]
                                 keepsLifted = map liftKeep keeps
@@ -110,13 +110,13 @@ directMatch findsToConsider cons = case cons of
 
     -- numParts (min&max), partSize (min&max)
 
-    [eMatch| |parts(&x)| =  &n |]                                   -> return ([(x, "numParts"   , Just n)], [])
-    [eMatch| |parts(&x)| >= &n |]                                   -> return ([(x, "minNumParts", Just n)], [])
-    [eMatch| |parts(&x)| <= &n |]                                   -> return ([(x, "maxNumParts", Just n)], [])
+    c@[eMatch| |parts(&x)| =  &n |]                                   -> returnIfCat n c ([(x, "numParts"   , Just n)], [])
+    c@[eMatch| |parts(&x)| >= &n |]                                   -> returnIfCat n c ([(x, "minNumParts", Just n)], [])
+    c@[eMatch| |parts(&x)| <= &n |]                                   -> returnIfCat n c ([(x, "maxNumParts", Just n)], [])
 
-    [eMatch| forAll &i in parts(&x) . |&j| =  &n |]     | i == j    -> return ([(x, "partSize"   , Just n)], [])
-    [eMatch| forAll &i in parts(&x) . |&j| >= &n |]     | i == j    -> return ([(x, "minPartSize", Just n)], [])
-    [eMatch| forAll &i in parts(&x) . |&j| <= &n |]     | i == j    -> return ([(x, "maxPartSize", Just n)], [])
+    c@[eMatch| forAll &i in parts(&x) . |&j| =  &n |]     | i == j    -> returnIfCat n c ([(x, "partSize"   , Just n)], [])
+    c@[eMatch| forAll &i in parts(&x) . |&j| >= &n |]     | i == j    -> returnIfCat n c ([(x, "minPartSize", Just n)], [])
+    c@[eMatch| forAll &i in parts(&x) . |&j| <= &n |]     | i == j    -> returnIfCat n c ([(x, "maxPartSize", Just n)], [])
 
     -- regular & complete for partitions
 
@@ -140,22 +140,22 @@ directMatch findsToConsider cons = case cons of
 
     -- size, minSize, maxSize
 
-    [eMatch| |&x| =  &n |] -> return ([(x, "size"   , Just n)], [])
-    [eMatch| |&x| >= &n |] -> return ([(x, "minSize", Just n)], [])
-    [eMatch| |&x| <= &n |] -> return ([(x, "maxSize", Just n)], [])
+    c@[eMatch| |&x| =  &n |] -> returnIfCat n c ([(x, "size"   , Just n)], [])
+    c@[eMatch| |&x| >= &n |] -> returnIfCat n c ([(x, "minSize", Just n)], [])
+    c@[eMatch| |&x| <= &n |] -> returnIfCat n c ([(x, "maxSize", Just n)], [])
 
 
     -- minOccur, maxOccur
 
-    [eMatch| forAll &i : &dom . freq(&x,&j) >= &n |]        | i == j
+    c@[eMatch| forAll &i : &dom . freq(&x,&j) >= &n |]      | i == j
                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ([(x, "minOccur", Just n)],[])
+                                                            -> returnIfCat n c ([(x, "minOccur", Just n)],[])
 
-    [eMatch| forAll &i : &dom . freq(&x,&j) <= &n |]        | i == j
+    c@[eMatch| forAll &i : &dom . freq(&x,&j) <= &n |]      | i == j
                                                             , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
                                                             , dom == domX
-                                                            -> return ([(x, "maxOccur", Just n)],[])
+                                                            -> returnIfCat n c ([(x, "maxOccur", Just n)],[])
 
     -- functional, because assigned
     c@[eMatch| forAll &i : &dom . &x(&j,_) = {&_} |]        | i == j
@@ -224,6 +224,17 @@ relationFunctional findsToConsider cons = go [] cons
                          ], [] )                                                                        
         go _ _ = return ([],[cons]) -- error $ show $ prettyAsPaths con
 
+returnIfCat
+    :: MonadConjure m
+    => E                                -- the attribute value
+    -> E                                -- the original constraint
+    ->   ([(E, Text, Maybe E)], [E])    -- result of TS
+    -> m ([(E, Text, Maybe E)], [E])    -- result of TS-modulo-category-checking
+returnIfCat n cons ret = do
+    nCat <- categoryOf n
+    if nCat <= CatParameter
+        then return ret
+        else return ([],[cons])
 
 typeChange :: MonadConjure m => Spec -> m Spec
 typeChange spec@(Spec v statements1) = do

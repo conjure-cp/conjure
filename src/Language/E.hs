@@ -20,6 +20,7 @@ import Language.E.Traversals as X
 
 import Language.E.TypeOf as X
 import Language.E.DomainOf as X
+import Language.E.CategoryOf as X
 
 import Language.E.Evaluator as X
 import Language.E.Evaluator.Full as X ( domSize )
