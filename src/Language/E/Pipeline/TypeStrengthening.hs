@@ -107,6 +107,7 @@ directMatch
          , [E]              -- expressions to keep. [] if constraint isn't needed any more.
          )                  -- in general, if the first component is [], we've learned nothing from this constraint.
 directMatch findsToConsider cons = case cons of
+
     -- numParts (min&max), partSize (min&max)
 
     [eMatch| |parts(&x)| =  &n |]                                   -> return ([(x, "numParts"   , Just n)], [])
@@ -117,6 +118,8 @@ directMatch findsToConsider cons = case cons of
     [eMatch| forAll &i in parts(&x) . |&j| >= &n |]     | i == j    -> return ([(x, "minPartSize", Just n)], [])
     [eMatch| forAll &i in parts(&x) . |&j| <= &n |]     | i == j    -> return ([(x, "maxPartSize", Just n)], [])
 
+    -- regular & complete for partitions
+
     [eMatch| forAll &i in parts(&x) . forAll &j in parts(&x2) . |&i2| = |&j2| |]
         | i == i2, j == j2, x == x2
         -> return ([(x, "regular", Nothing)], [])
@@ -126,6 +129,14 @@ directMatch findsToConsider cons = case cons of
         , Just [xMatch| [domX] := domain.partition.inner |] <- x `lookup` findsToConsider
         , dom == domX
         -> return ([(x, "complete", Nothing)], [])
+
+    -- total function, because every value is assigned
+
+    c@[eMatch| forAll &i : &dom . &x(&j) = &_ |]
+        | i == j
+        , Just [xMatch| [domX] := domain.function.innerFrom |] <- x `lookup` findsToConsider
+        , dom == domX
+        -> return ([(x, "total", Nothing)], [c])
 
     -- size, minSize, maxSize
 
