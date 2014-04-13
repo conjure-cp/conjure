@@ -40,6 +40,7 @@ else
 fi
 
 CABAL_VERSION="1.18.0.3"
+HAPPY_VERSION="1.19.3"
 
 
 echo "CORES           : ${CORES}"
@@ -90,12 +91,13 @@ fi
 cabal update
 
 # installing happy
-HAS_HAPPY="$(which happy 2> /dev/null > /dev/null ; echo $?)" 
-if [ "$HAS_HAPPY" != 0 ] ; then
-    echo "Installing happy"
+if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION})" ]; then
+    echo "happy version ${HAPPY_VERSION} found."
+else
+    echo "Installing happy-${HAPPY_VERSION}"
     mkdir -p dist/tools
     pushd dist/tools
-    cabal install happy -O2 \
+    cabal install "happy-${HAPPY_VERSION}" -O1 \
         --force-reinstalls \
         --disable-documentation \
         --disable-library-profiling \
