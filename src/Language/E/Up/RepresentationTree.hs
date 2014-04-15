@@ -23,7 +23,9 @@ orgNames arr = orgNames' M.empty $ map (recombine .  splitOn "_") arr
 
 recombine :: [String] -> [String]
 recombine a@(_:x:_) | "tuple" `isPrefixOf` x  = a
-recombine (c:x:xs) | x `notElem` representationsNames  = (c ++ "_" ++  x) : xs
+recombine (c:x:xs) | x `notElem` representationsNames  = (recombine (n :xs))
+    where n = (c ++ "_" ++  x)
+recombine (x:xs)  =  (x : recombine xs)
 recombine a  = a
 
 orgNames' :: M.Map String [[String]] -> [[String]] ->  M.Map String [[String]]
