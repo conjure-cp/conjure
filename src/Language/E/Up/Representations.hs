@@ -36,6 +36,7 @@ representationsNames = [
     ,"SetGent"
     ,"FunctionIntPair2D"
     ,"Function1DPartial"
+    ,"MSetExplicitVarSize"
     ]
 
 -- Types
@@ -332,6 +333,7 @@ getBranch s =
       "unwrapBranch£"      -> Just unwrapBranch
       "Function1DPartial"  -> Just function1DPartialBranch
       "FunctionIntPair2D"  -> Just functionIntPair2DBranch
+      "MSetExplicitVarSize"-> Just msetExplicitVarSizeBranch
       _                    -> Nothing
 
 
@@ -351,6 +353,7 @@ isBranchRep "SetOccurrence"      = True
 isBranchRep "unwrapBranch£"      = True
 isBranchRep "Function1DPartial"  = True
 isBranchRep "FunctionIntPair2D"  = True
+isBranchRep "MSetExplicitVarSize"= True
 isBranchRep _                    = False
 
 
@@ -387,6 +390,26 @@ setExplicitVarSizeBranch = ( tracee "setExplicitVarSizeBranch" unwrapSet, after 
     getInSet [xMatch| vs := value.matrix.values |] = Just $ explicitVarSize vs
 
     getInSet e  = _bug "setExplicitVarSizeBranch: getInSet" [e]
+
+
+msetExplicitVarSizeBranch :: (Before,After)
+msetExplicitVarSizeBranch = ( tracee "msetExplicitVarSizeBranch" unwrapSet, after )
+
+    where
+    _before v = trace ("msetExplicitVarSizeVV\n" ++ (show . pretty)  v) $ unwrapSet v
+
+    after orgData vs = 
+        let res =  mexplicitVarSize (map vEssence vs)
+        in orgData{vEssence=res}
+        `_p` ("mexplicitVarSize", [res])
+
+    mexplicitVarSize :: [E] -> E
+    mexplicitVarSize vs =
+        wrapInMatrix $ concatMap expand (tracer "mafterVarSize vs" vs)
+
+    expand ::E -> [E]
+    expand [eMatch| (&size,&val)  |] = replicate (fromIntegral $ unwrapInt size) val 
+    expand e  = _bug "msetExplicitVarSizeBranch: expand" [e]
 
 
 setExplicitVarSizeWithMarkerBranch :: (Before,After)
