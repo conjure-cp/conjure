@@ -475,17 +475,17 @@ matrix1DBranch = ( tracee "matrix1DBranch" unwrapSet, after )
 
 
 function1DPartialBranch :: (Before, After)
-function1DPartialBranch = ( tracee "function1DPartialBranch" unwrapSet, after )
+function1DPartialBranch = ( tracee "function1DPartialBranch" beforeUnchanged, after )
 
     where
     after :: After
-    {-after orgData@VarData{vIndexes=[ix]} [VarData{vEssence=f}] =-}
-        {-orgData{vEssence= removeFalses $  matrix1DRep orgData{vIndexes=[ix], vEssence=f}}-}
+    after orgData@VarData{vIndexes=[ix]} [VarData{vEssence=f}] =
+        orgData{vEssence= removeFalses $  matrix1DRep orgData{vIndexes=[ix], vEssence=f}}
 
 
     after orgData@VarData{vIndexes=ix} vs =
         let 
-            ress = map g (vs)
+            ress = map g $ vs
          in orgData{vEssence=wrapInMatrix ress, vIndexes = [head ix] }
 
         where
