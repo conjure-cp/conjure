@@ -42,7 +42,7 @@ evalTree' mapping _ fs prefix (Leaf part) =
 
    where
    name    = intercalate "_" (prefix ++ [part])
-   lookUpE = fromMaybe (_bugg "fromMaybe: lookUpE evalTree'")  . flip M.lookup mapping
+   lookUpE e = fromMaybe (_bugg $ "fromMaybe: lookUpE evalTree' - " ++ (show .pretty $ e) ) . flip M.lookup mapping $ e
    vdata   = lookUpE  name
 
 evalTree' mapping set fs prefix (Tuple arr) =
