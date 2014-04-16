@@ -83,6 +83,11 @@ setGentRep VarData{vIndexes=[ix],
             tracee "setGentRep" vs
 setGentRep v = error $  "setGentRep " ++  (show . pretty) v
 
+setGentRep v@VarData{vIndexes=ix,
+  vEssence=[xMatch| vs :=  value.matrix.values |]} =
+    wrapInMatrix $ map (\f -> setGentRep v{vIndexes=tail ix, vEssence=f} ) $
+       tracee "setGentRepMulti" vs
+
 
 setOccurrenceRep :: VarData -> E
 setOccurrenceRep VarData{vIndexes=[ix],
