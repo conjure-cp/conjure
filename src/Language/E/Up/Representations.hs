@@ -81,13 +81,13 @@ setGentRep VarData{vIndexes=[ix],
     in
         wrapInMatrix .  map (toIntLit . fst) . filter (gtZero . snd) . zip ix $
             tracee "setGentRep" vs
-setGentRep v = error $  "setGentRep " ++  (show . pretty) v
 
 setGentRep v@VarData{vIndexes=ix,
   vEssence=[xMatch| vs :=  value.matrix.values |]} =
     wrapInMatrix $ map (\f -> setGentRep v{vIndexes=tail ix, vEssence=f} ) $
        tracee "setGentRepMulti" vs
 
+setGentRep v = error $  "setGentRep " ++  (show . pretty) v
 
 setOccurrenceRep :: VarData -> E
 setOccurrenceRep VarData{vIndexes=[ix],
