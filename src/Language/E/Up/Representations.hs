@@ -331,6 +331,7 @@ getBranch s =
       "SetOccurrence"      -> Just occurrenceBranch
       "unwrapBranch£"      -> Just unwrapBranch
       "Function1DPartial"  -> Just function1DPartialBranch
+      "FunctionIntPair2D"  -> Just functionIntPair2DBranch
       _                    -> Nothing
 
 
@@ -349,6 +350,7 @@ isBranchRep "SetExplicitVarSizeWithMarker" = True
 isBranchRep "SetOccurrence"      = True
 isBranchRep "unwrapBranch£"      = True
 isBranchRep "Function1DPartial"  = True
+isBranchRep "FunctionIntPair2D"  = True
 isBranchRep _                    = False
 
 
@@ -454,8 +456,8 @@ function1DPartialBranch = ( tracee "function1DPartialBranch" unwrapSet, after )
 
     where
     after :: After
-    after orgData@VarData{vIndexes=[ix]} [VarData{vEssence=f}] =
-        orgData{vEssence= removeFalses $  matrix1DRep orgData{vIndexes=[ix], vEssence=f}}
+    {-after orgData@VarData{vIndexes=[ix]} [VarData{vEssence=f}] =-}
+        {-orgData{vEssence= removeFalses $  matrix1DRep orgData{vIndexes=[ix], vEssence=f}}-}
 
 
     after orgData@VarData{vIndexes=ix} vs =
@@ -499,6 +501,16 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
     relnToFunc [eMatch| (&from,&to) |] = [xMake| mapping := [from,to] |]
 
     relnToFunc f =  _bug "functionAsRelnRep: relnToFunc unhandled" [f]
+
+
+functionIntPair2DBranch :: (Before, After)
+functionIntPair2DBranch = (  tracee "functionIntPair2DBranch" beforeUnchanged, after )
+
+    where
+    after :: After
+    after orgData [v] =
+        let res = functionIntPair2DRep  v
+        in orgData{vEssence=res}
 
 {- Partitions -}
 
