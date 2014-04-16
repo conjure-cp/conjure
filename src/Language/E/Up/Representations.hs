@@ -450,16 +450,22 @@ matrix1DBranch = ( tracee "matrix1DBranch" unwrapSet, after )
 
 
 function1DPartialBranch :: (Before, After)
-function1DPartialBranch = ( tracee "function1DPartialBranch" before, after )
+function1DPartialBranch = ( tracee "function1DPartialBranch" unwrapSet, after )
 
     where
-    before v = [v]
-
+    after :: After
     after orgData@VarData{vIndexes=[ix]} [VarData{vEssence=f}] =
         orgData{vEssence= removeFalses $  matrix1DRep orgData{vIndexes=[ix], vEssence=f}}
 
-    after orgData vs =
-        _bug "function1DPartialBranch after unhandled" (orgData : vs)
+
+    after orgData@VarData{vIndexes=ix} vs =
+        let 
+            ress = map g (vs)
+         in orgData{vEssence=wrapInMatrix ress, vIndexes = [head ix] }
+
+        where
+        g v =  removeFalses $ matrix1DRep orgData{vIndexes=[head ix], vEssence=(vEssence v) }
+
 
     removeFalses :: E -> E
     removeFalses [xMatch| vs := value.function.values |] =
@@ -467,7 +473,7 @@ function1DPartialBranch = ( tracee "function1DPartialBranch" before, after )
          {-in error . show $ prettyAsBoth $ [xMake| value.function.values := keep |] -}
          in  [xMake| value.function.values := keep |]
 
-         where 
+         where
          f ::E -> Maybe E
          f [xMatch| [ Tagged Tliteral [Prim (B True)] , v] := mapping.value.tuple.values.value
                     | from                                 := mapping.value.literal |] =
