@@ -23,7 +23,7 @@ upBugi :: (Show a, Pretty a1) => String -> (a, [a1]) -> t
 upBugi = erriM
 
 tracer :: Pretty a => String -> a -> a
-tracer s a = trace (s ++ '\n' : (show . pretty $ a)) a
+tracer s a = trace (s ++ '\n' : (show . pretty $ a) ++ "\n" ) a
 
 tracee :: String -> a -> a
 tracee s a = trace (s ++ "\n") a
