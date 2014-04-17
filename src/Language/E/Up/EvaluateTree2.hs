@@ -22,6 +22,7 @@ type IsTuplesOfMatrixes = Map [String] Int
 evalTree ::VarMap -> IsTuplesOfMatrixes -> Tree String  -> (String,E)
 evalTree mapping set (Branch name arr) =
     (name, evalTree' mapping set [] [name] (repSelector arr))
+    `_g` ("evalTree mapping", mapping)
     `_g` ("evalTree name", name)
 
 evalTree mapping set tree@(Leaf name) =
@@ -42,7 +43,8 @@ evalTree' mapping _ fs prefix (Leaf part) =
 
    where
    name    = intercalate "_" (prefix ++ [part])
-   lookUpE e = fromMaybe (_bugg $ "fromMaybe: lookUpE evalTree' - " ++ (show .pretty $ e) ) . flip M.lookup mapping $ e
+   lookUpE e = fromMaybe (_bugg $ "fromMaybe: lookUpE evalTree' - " ++ (show .pretty $ e) ++ " mapping: " ++ show mapping ) 
+               . flip M.lookup mapping $ e
    vdata   = lookUpE  name
 
 evalTree' mapping set fs prefix (Tuple arr) =
