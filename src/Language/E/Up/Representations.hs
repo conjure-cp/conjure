@@ -535,6 +535,9 @@ functionIntPair2DBranch = (  tracee "functionIntPair2DBranch" beforeUnchanged, a
         let res = functionIntPair2DRep  v
         in orgData{vEssence=res}
 
+    after _ vvs = _bug "functionIntPair2DBranch unhandled" vvs
+
+
 {- Partitions -}
 
 partitionSetOfSetsBranch :: (Before,After)
