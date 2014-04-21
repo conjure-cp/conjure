@@ -39,7 +39,7 @@ else
     echo "Using ${USE_CORES} cores."
 fi
 
-CABAL_VERSION="1.18.0.3"
+CABAL_VERSION="1.20.0.0"
 HAPPY_VERSION="1.19.3"
 
 
@@ -83,7 +83,7 @@ else
     wget -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
-    bash bootstrap.sh
+    bash bootstrap.sh --user --no-doc
     popd
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
 fi
