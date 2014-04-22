@@ -131,15 +131,17 @@ fi
 # install conjure, finally
 
 cabal install                                                       \
+    --only-dependencies                                             \
     --disable-documentation                                         \
     --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
-    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"  \
-    --only-dependencies
+    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
-cabal install                                                       \
-    --disable-documentation                                         \
+cabal configure                                                     \
     --disable-library-profiling --disable-executable-profiling      \
-    --force-reinstalls                                              \
-    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j1
+    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
+
+cabal build -j"${USE_CORES}"
+
+cabal copy                                  # install in ~/.cabal/bin
 
