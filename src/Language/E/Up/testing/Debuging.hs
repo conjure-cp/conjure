@@ -186,4 +186,5 @@ be specs@(specF, _, orgF ,Just paramF,Just orgParamF) = do
     (print . vcat . map pretty) resultEssence
     {-mapM_ (print . prettyAsPaths) resultEssence-}
     putStrLn "[Finished]"
+    (print . vcat . map pretty) resultEssence
 

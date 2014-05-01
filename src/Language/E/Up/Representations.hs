@@ -36,6 +36,7 @@ representationsNames = [
     ,"SetGent"
     ,"FunctionIntPair2D"
     ,"Function1DPartial"
+    ,"FunctionIntPair2DPartial"
     ,"MSetExplicitVarSize"
     ]
 
@@ -334,6 +335,7 @@ getBranch s =
       "Function1DPartial"  -> Just function1DPartialBranch
       "FunctionIntPair2D"  -> Just functionIntPair2DBranch
       "MSetExplicitVarSize"-> Just msetExplicitVarSizeBranch
+      "FunctionIntPair2DPartial"  -> Just functionIntPair2DPartialBranch
       _                    -> Nothing
 
 
@@ -354,6 +356,7 @@ isBranchRep "unwrapBranch£"      = True
 isBranchRep "Function1DPartial"  = True
 isBranchRep "FunctionIntPair2D"  = True
 isBranchRep "MSetExplicitVarSize"= True
+isBranchRep "FunctionIntPair2DPartial"  = True
 isBranchRep _                    = False
 
 
@@ -507,6 +510,48 @@ function1DPartialBranch = ( tracee "function1DPartialBranch" beforeUnchanged, af
 
     removeFalses a =  _bug "function1DPartialBranch removeFalses unhandled" [a]
 
+
+functionIntPair2DPartialBranch :: (Before, After)
+functionIntPair2DPartialBranch = (  tracee "functionIntPair2DPartialBranch" beforeUnchanged, after )
+
+    where
+    after :: After
+    after orgData [v] =
+        let res = functionIntPair2DRep  v
+        in orgData{vEssence= removeFalses res}
+
+    after _ vvs = _bug "functionIntPair2DPartialBranch unhandled" vvs
+
+    removeFalses :: E -> E
+    removeFalses [xMatch| vs := value.function.values |] =
+         let keep = mapMaybe f vs
+         {-in error . show $ prettyAsBoth $ [xMake| value.function.values := keep |] -}
+         in  [xMake| value.function.values := keep |]
+
+         where
+         f ::E -> Maybe E
+         f [xMatch| [from, to] :=  mapping |] = ff to
+            where ff [eMatch| (true, &v) |] =  Just [xMake|  mapping := [from, v] |]
+                  ff _ = Nothing
+
+         f a =  _bug "function1DPartialBranch removeFalses f unhandled" [a]
+        
+
+    removeFalses a =  _bug "function1DPartialBranch removeFalses unhandled" [a]
+
+
+functionIntPair2DBranch :: (Before, After)
+functionIntPair2DBranch = (  tracee "functionIntPair2DBranch" beforeUnchanged, after )
+
+    where
+    after :: After
+    after orgData [v] =
+        let res = functionIntPair2DRep  v
+        in orgData{vEssence=res}
+
+    after _ vvs = _bug "functionIntPair2DBranch unhandled" vvs
+
+
 functionAsRelnRep :: (Before, After)
 functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
 
@@ -526,16 +571,6 @@ functionAsRelnRep = (  tracee "functionAsRelnRep" beforeUnchanged, after )
     relnToFunc f =  _bug "functionAsRelnRep: relnToFunc unhandled" [f]
 
 
-functionIntPair2DBranch :: (Before, After)
-functionIntPair2DBranch = (  tracee "functionIntPair2DBranch" beforeUnchanged, after )
-
-    where
-    after :: After
-    after orgData [v] =
-        let res = functionIntPair2DRep  v
-        in orgData{vEssence=res}
-
-    after _ vvs = _bug "functionIntPair2DBranch unhandled" vvs
 
 
 {- Partitions -}
