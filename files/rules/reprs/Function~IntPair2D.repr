@@ -11,3 +11,24 @@ $       matrix indexed by [int(1..a), int(1..b)] of int(1..c)
     where &b hasType `int`
 
 *** function (total) tuple (&a, &b) --> &to
+
+
+*** function (total, injective) (&a, &b) --> &to
+    ~~> allDiff(refn)                                           $ injective
+
+*** function (total, bijective, ..) (&a, &b) --> &to
+    ~~> allDiff(refn)                                           $ injective
+    where domSize(&fr) = domSize(&to)                           $ surjective cons not needed
+
+
+
+$ surjective when domSize(&fr) = domSize(&to) implies "injective" and "total"
+
+*** function (surjective) (&a, &b) --> &to
+    ~~> allDiff(refn)                                           $ injective
+    where domSize(&fr) = domSize(&to)
+
+*** function (bijective) (&a, &b) --> &to
+    ~~> allDiff(refn)                                           $ injective
+    where domSize(&fr) = domSize(&to)
+
