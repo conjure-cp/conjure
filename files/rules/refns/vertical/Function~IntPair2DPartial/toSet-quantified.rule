@@ -1,0 +1,16 @@
+
+[1000]
+
+&quan &i in toSet(&f), &g . &e
+
+    ~~>
+
+&quan x : &a . 
+    &quan y : &b , &g { &i -->  ( (x,y), &m[x,y][2]  )  } /\ &m[x,y][1]
+                 . &e { &i -->  ( (x,y), &m[x,y][2]  )  }
+
+    where &f hasDomain `function (..) tuple(&a, &b) --> _`
+    where &f hasRepr    Function~IntPair2DPartial
+
+    letting &m be refn(&f)
+

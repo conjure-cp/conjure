@@ -1,0 +1,7 @@
+
+[1000]
+
+&f(tuple (&a, &b) ) ~~> { refn(&f)[&a,&b][2] @ such that refn(&f)[&a,&b][1] }
+
+    where &f hasType   `function tuple (&a, &b) --> _`
+    where &f hasRepr    Function~IntPair2DPartial
