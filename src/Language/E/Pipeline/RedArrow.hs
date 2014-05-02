@@ -610,6 +610,77 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 let nameOut = name `T.append` "_Function~IntPair2D"
                 return [(nameOut, valueOut)]
 
+        helper
+            name
+            [xMatch| [domInnerFr1,domInnerFr2] := domain.function.innerFrom.domain.tuple.inners
+                   | [domInnerTo]              := domain.function.innerTo
+                   |]
+            [xMatch| values := value.function.values |]
+            (Just "Function~IntPair2DPartial")
+            = do
+
+                domInnerFr1' <- instantiateEnumDomains [] domInnerFr1
+                domInnerFr2' <- instantiateEnumDomains [] domInnerFr2
+                case (domInnerFr1', domInnerFr2') of
+                    (  [xMatch| [aFr,aTo] := domain.int.ranges.range.fromTo |]
+                     , [xMatch| [bFr,bTo] := domain.int.ranges.range.fromTo |]
+                      ) -> do
+                        aFr' <- valueIntOut aFr
+                        aTo' <- valueIntOut aTo
+                        bFr' <- valueIntOut bFr
+                        bTo' <- valueIntOut bTo
+
+                        values' <- sequence
+                            [ do k' <- instantiateEnumDomains [] k
+                                 return ((iInt,jInt),k')
+                            | [xMatch| [ij,k] := mapping |]                <- values
+                            , [xMatch| [i,j] := value.tuple.values |]      <- [ij]
+                            , [xMatch| [Prim (I iInt)] := value.literal |] <- [i]
+                            , [xMatch| [Prim (I jInt)] := value.literal |] <- [j]
+                            ]
+        
+                        z <- zeroVal domInnerTo
+
+                        let values2D_bools =
+                                [ [ case lookup (i,j) values' of
+                                        Nothing -> [eMake| false |]
+                                        _       -> [eMake| true |]
+                                  | j <- [bFr' .. bTo']
+                                  ]
+                                | i <- [aFr' .. aTo']
+                                ]
+                        let boolOutLines =
+                                [ [xMake| value.matrix.values := line
+                                        | value.matrix.indexrange := [domInnerFr2']
+                                        |]
+                                | line <- values2D_bools
+                                ]
+                        let boolOut  = [xMake| value.matrix.values := boolOutLines
+                                             | value.matrix.indexrange := [domInnerFr1']
+                                             |]
+
+                        let values2D_vals  =
+                                [ [ case lookup (i,j) values' of
+                                        Nothing -> z
+                                        Just k  -> k
+                                  | j <- [bFr' .. bTo']
+                                  ]
+                                | i <- [aFr' .. aTo']
+                                ]
+                        let valueOutLines =
+                                [ [xMake| value.matrix.values := line
+                                        | value.matrix.indexrange := [domInnerFr2']
+                                        |]
+                                | line <- values2D_vals
+                                ]
+                        let valueOut = [xMake| value.matrix.values := valueOutLines
+                                             | value.matrix.indexrange := [domInnerFr1']
+                                             |]
+
+                        return [ ( name `T.append` "_Function~IntPair2DPartial_tuple1" , boolOut  )
+                               , ( name `T.append` "_Function~IntPair2DPartial_tuple2" , valueOut )
+                               ]
+                    (_, _) -> bug $ vcat [ "workhorse.helper.Function~IntPair2DPartial", pretty name]
 
         helper
             name
