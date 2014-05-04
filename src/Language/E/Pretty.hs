@@ -154,6 +154,9 @@ instance Pretty E where
         = let xs' = [ [xMake| atTopLevel := [x] |] | x <- xs ] in
             "such that" <++> vcat (punctuate comma $ map pretty xs')
 
+    pretty [xMatch| [x] := topLevel.branchingOn |]
+        = "branching on" <+> pretty [xMake| atTopLevel := [x] |]
+
     pretty [xMatch| [actual] := withLocals.actual 
                   | locals   := withLocals.locals
                   |]

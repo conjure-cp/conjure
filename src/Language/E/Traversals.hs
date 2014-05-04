@@ -312,9 +312,10 @@ introduceStuff = helper
         helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.reference |] = addReference name x
         helper x@[xMatch| [Prim (S name)] := topLevel.letting.name.metavar   |] = addMetaVar name x
 
-        helper   [xMatch| _ := topLevel.suchThat  |] = return ()
-        helper   [xMatch| _ := topLevel.objective |] = return ()
-        helper   [xMatch| _ := topLevel.where     |] = return ()
+        helper   [xMatch| _ := topLevel.suchThat    |] = return ()
+        helper   [xMatch| _ := topLevel.objective   |] = return ()
+        helper   [xMatch| _ := topLevel.where       |] = return ()
+        helper   [xMatch| _ := topLevel.branchingOn |] = return ()
 
         helper x@[xMatch| [Prim (S name)] := topLevel.declaration.dim  .name.reference |] = addReference name x
         helper   [xMatch| _  := topLevel.declaration.nestedDimFind |] = return ()

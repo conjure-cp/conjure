@@ -22,6 +22,7 @@ data Tag = Tactual
     | TbinOp
     | Tbody
     | Tbool
+    | TbranchingOn
     | Tdeclaration
     | Tdefined
     | Tdim
@@ -160,6 +161,7 @@ instance IsString Tag where
             fromString' "binOp" = TbinOp
             fromString' "body" = Tbody
             fromString' "bool" = Tbool
+            fromString' "branchingOn" = TbranchingOn
             fromString' "declaration" = Tdeclaration
             fromString' "defined" = Tdefined
             fromString' "dim" = Tdim

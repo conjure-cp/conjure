@@ -127,6 +127,7 @@ getEssenceVariable emap [xMatch| [Tagged t arr]  := topLevel.declaration.find.do
 getEssenceVariable _   [xMatch| _ := topLevel.letting     |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.given       |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.where       |] = Nothing
+getEssenceVariable _   [xMatch| _ := topLevel.branchingOn |] = Nothing
 getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = 
     _bug "getEssenceVariable unhandled declaration" [e]
 getEssenceVariable _ e = 

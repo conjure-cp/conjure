@@ -132,6 +132,7 @@ parseTopLevels = do
                                    |]
                            | i <- is
                            ]
+                    <?> "dim statement"
                 , do
                     let dimfind = do
                             lexeme L_find
@@ -146,29 +147,42 @@ parseTopLevels = do
                     return [ [xMake| topLevel.declaration.nestedDimFind := [i]
                                    |]
                            ]
+                    <?> "find statement"
                 , do
                     lexeme L_where
                     xs <- parseExpr `sepEndBy1` comma
                     return [ [xMake| topLevel.where := [x] |]
                            | x <- xs ]
+                    <?> "where statement"
                 , do
                     lexeme L_such
                     lexeme L_that
                     xs <- parseExpr `sepEndBy1` comma
                     return [ [xMake| topLevel.suchThat := [x] |]
                            | x <- xs ]
+                    <?> "such that statement"
                 , do
                     lexeme L_minimising
                     x <- parseExpr
                     return [ [xMake| topLevel.objective.minimising := [x]
                                    |]
                            ]
+                    <?> "objective"
                 , do
                     lexeme L_maximising
                     x <- parseExpr
                     return [ [xMake| topLevel.objective.maximising := [x]
                                    |]
                            ]
+                    <?> "objective"
+                , do
+                    lexeme L_branching
+                    lexeme L_on
+                    x <- parseExpr
+                    return [ [xMake| topLevel.branchingOn := [x]
+                                   |]
+                           ]
+                    <?> "branching on"
                 ]
     concat <$> some one
 

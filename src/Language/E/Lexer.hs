@@ -46,6 +46,8 @@ data Lexeme
     | L_that
     | L_minimising
     | L_maximising
+    | L_branching
+    | L_on
 
     -- type: boolean
     | L_bool
@@ -261,22 +263,25 @@ mapLexemeToText = M.fromList $ map swap lexemes
 
 lexemes :: [(T.Text, Lexeme)]
 lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
-    [ ( L_be       , "be"       )
-    , ( L_from     , "from"     )
-    , ( L_of       , "of"       )
-    , ( L_domain   , "domain"   )
-    , ( L_language , "language" )
-    , ( L_dim      , "dim"      )
-    , ( L_find     , "find"     )
-    , ( L_given    , "given"    )
-    , ( L_letting  , "letting"  )
-    , ( L_where    , "where"    )
-    , ( L_such, "such" )
-    , ( L_that, "that" )
-    , ( L_minimising, "minimising" )
-    , ( L_maximising, "maximising" )
-    , ( L_minimising, "minimizing" )
-    , ( L_maximising, "maximizing" )
+    [ ( L_be         , "be"         )
+    , ( L_from       , "from"       )
+    , ( L_of         , "of"         )
+    , ( L_domain     , "domain"     )
+    , ( L_language   , "language"   )
+    , ( L_dim        , "dim"        )
+    , ( L_find       , "find"       )
+    , ( L_given      , "given"      )
+    , ( L_letting    , "letting"    )
+    , ( L_where      , "where"      )
+    , ( L_such       , "such"       )
+    , ( L_that       , "that"       )
+    , ( L_minimising , "minimising" )
+    , ( L_maximising , "maximising" )
+    , ( L_minimising , "minimizing" )
+    , ( L_maximising , "maximizing" )
+    , ( L_branching  , "branching"  )
+    , ( L_on         , "on"         )
+
     , ( L_bool, "bool" )
     , ( L_false, "false" )
     , ( L_true, "true" )

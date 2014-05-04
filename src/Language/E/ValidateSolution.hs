@@ -85,7 +85,8 @@ validateSolutionPure essence param solution =
 isPartOfValidSolution :: E -> Maybe Bool
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.suchThat.value.literal |] = Just b
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.where   .value.literal |] = Just b
-isPartOfValidSolution [xMatch| _ := topLevel.objective |] = Just True
+isPartOfValidSolution [xMatch| _ := topLevel.objective   |] = Just True
+isPartOfValidSolution [xMatch| _ := topLevel.branchingOn |] = Just True
 isPartOfValidSolution _ = Nothing
 
 
