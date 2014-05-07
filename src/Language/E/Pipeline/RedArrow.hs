@@ -561,7 +561,9 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            [xMatch| [domInnerFr] := domain.function.innerFrom |]
+            [xMatch| [domInnerFr] := domain.function.innerFrom
+                   | [domInnerTo] := domain.function.innerTo
+                   |]
             [xMatch| values := value.function.values |]
             (Just "Function~1D")
             = do
@@ -569,14 +571,40 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                     mappingToTuple [xMatch| [a,b] := mapping |] = (a,b)
                     mappingToTuple p = bug $ vcat [ "workhorse.helper.Function~1D", pretty p ]
                     (_indexValues, actualValues) = unzip $ sortBy (comparing fst) $ map mappingToTuple values
-                    nameOut = name `T.append` "_Function~1D"
-                actualValues' <- mapM (instantiateEnumDomains []) actualValues
+
                 domInnerFr' <- instantiateEnumDomains [] domInnerFr
+                domInnerTo' <- instantiateEnumDomains [] domInnerTo
+                actualValues' <- mapM (instantiateEnumDomains []) actualValues
+
                 let
-                    valueOut = [xMake| value.matrix.values     := actualValues'
-                                     | value.matrix.indexrange := [domInnerFr']
-                                     |]
-                return [(nameOut, valueOut)]
+                    valuesRec' :: [(Text, E, E)]
+                    valuesRec' =
+                            [ (nm', dom', val')
+                            | let nm'  = name `T.append` "_Function~1D"
+                            , let dom' = domInnerTo'
+                            , val' <- actualValues'
+                            ]
+
+                valuesRec <- concatMapM (workhorse lookupReprs) valuesRec'
+
+                let
+                    valuesRecGrouped :: [(Text,[E])]
+                    valuesRecGrouped
+                            = map (\ xs -> (fst $ headNote "redArrow.valuesRecGrouped" xs, map snd xs) )
+                            $ groupBy ((==) `on` fst)
+                            $ sortBy (comparing fst)
+                              valuesRec
+
+                let outputs =
+                        [ (nm', theMatrix)
+                        | (nm', vals) <- valuesRecGrouped
+                        , let valuesInMatrix = vals
+                        , let theMatrix      = [xMake| value.matrix.values     := valuesInMatrix
+                                                     | value.matrix.indexrange := [domInnerFr']
+                                                     |]
+                        ]
+
+                return outputs
 
         helper
             name
