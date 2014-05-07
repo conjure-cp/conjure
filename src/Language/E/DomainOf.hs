@@ -81,6 +81,17 @@ domainOf p@[xMatch| [x] := operator.index.left
                 _ -> return p
         _ -> return p
 
+domainOf p@[xMatch| [f] := operator.range |] = do
+    fDom <- domainOf f
+    case fDom of
+        [xMatch| [innerDom] := domain.function.innerTo |] -> do
+            let out = [xMake| domain.set.attributes.attrCollection := []
+                            | domain.set.inner := [innerDom]
+                            |]
+            mkLog "domainOf returning" $ prettyAsPaths out
+            return out
+        _ -> return p
+
 domainOf x = do
     mkLog "missing:domainOf" (pretty x)
     return x
