@@ -6,3 +6,4 @@
     where &b hasType `int`
 
 *** function tuple (&a, &b) --> &to
+~~> forAll i : &a . forAll j : &b . refn[i,j][1] = false -> dontCare(refn[i,j][2])
