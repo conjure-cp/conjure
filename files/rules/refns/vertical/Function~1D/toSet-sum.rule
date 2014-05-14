@@ -6,9 +6,7 @@ sum &i in toSet(&f), &g . &b
     ~~>
 
 sum k : &domFrom , &g { &i[1] --> k, &i[2] --> &m[k] }
-                 . &b { &i[1] --> k, &i[2] --> &m[k] } *
-                     $ only include if this is the first time we see the value &m[k]
-                     (toInt(0 = sum j : &domFrom . toInt(j < k /\ &m[j] = &m[k])))
+                 . &b { &i[1] --> k, &i[2] --> &m[k] }
 
     where &f hasType   `function int --> _`
     where &f hasDomain `function (..) &domFrom --> _`
