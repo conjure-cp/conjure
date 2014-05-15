@@ -32,22 +32,6 @@ relationRepr ( _name
     let domOut = [xMake| domain.set.attributes.attrCollection := as
                        | domain.set.inner := [t]
                        |]
-    -- let refn = [xMake| reference := [Prim (S $ identifierConstruct
-                                                    -- name
-                                                    -- (Just "regionS")
-                                                    -- (Just "Relation~AsSet")
-                                          -- )] |]
-    -- let structurals = flip mapMaybe as $ \ a -> case a of
-            -- [xMatch| [Prim (S "size")]    := attribute.nameValue.name.reference
-                   -- | [num]                := attribute.nameValue.value
-                   -- |] -> Just [eMake| |toSet(&refn)| = &num |]
-            -- [xMatch| [Prim (S "minSize")] := attribute.nameValue.name.reference
-                   -- | [num]                := attribute.nameValue.value
-                   -- |] -> Just [eMake| |toSet(&refn)| >= &num |]
-            -- [xMatch| [Prim (S "maxSize")] := attribute.nameValue.name.reference
-                   -- | [num]                := attribute.nameValue.value
-                   -- |] -> Just [eMake| |toSet(&refn)| <= &num |]
-            -- _ -> Nothing
     return [( decl
             , "builtIn.relationRepr"
             , "Relation~AsSet"
@@ -213,10 +197,6 @@ quanOverToSetRelationProject
                   , arg /= [eMake| _ |]
                   , let i = [xMake| value.literal := [Prim (I i')] |]
                   ]
-                -- : [ [eMake| &newQuanVar[&i] = &args_Expr[&i] |]
-                  -- | i' <- projectedEqs
-                  -- , let i = [xMake| value.literal := [Prim (I i')] |]
-                  -- ]
         let newBody  = replace quanVar projectedElems_Expr body
 
         ret p "builtIn.quanOverToSetRelationProject"

@@ -470,9 +470,6 @@ matrix1DBranch = ( tracee "matrix1DBranch" unwrapSet, after )
     where
     after orgData@VarData{vIndexes=ix} vs =
         let wraped = wrapInMatrix $ map vEssence
-                {-$ (trace . show . pretty $ orgData)-}
-                {-trace "----------" $-}
-                {-(trace . show . pretty $ vs)-}
                 vs
         in orgData{vEssence=matrix1DRep orgData{vIndexes=[head ix], vEssence=wraped}}
 

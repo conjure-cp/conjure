@@ -99,7 +99,7 @@ else
     pushd dist/tools
     cabal install "happy-${HAPPY_VERSION}" -O1 \
         --force-reinstalls \
-        --disable-documentation \
+        --enable-documentation \
         --disable-library-profiling \
         --disable-executable-profiling
     popd
@@ -132,7 +132,7 @@ fi
 
 cabal install                                                       \
     --only-dependencies                                             \
-    --disable-documentation                                         \
+    --enable-documentation                                          \
     --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
     ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
@@ -142,6 +142,8 @@ cabal configure                                                     \
     ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
+
+cabal haddock --hyperlink-source
 
 cabal copy                                  # install in ~/.cabal/bin
 
