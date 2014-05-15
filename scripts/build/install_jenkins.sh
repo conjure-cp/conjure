@@ -41,6 +41,7 @@ fi
 
 CABAL_VERSION="1.20.0.0"
 HAPPY_VERSION="1.19.3"
+HSCOLOUR_VERSION="1.20.3"
 
 
 echo "CORES           : ${CORES}"
@@ -95,14 +96,33 @@ if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION})" ]; then
     echo "happy version ${HAPPY_VERSION} found."
 else
     echo "Installing happy-${HAPPY_VERSION}"
+    rm -rf dist/tools
     mkdir -p dist/tools
     pushd dist/tools
-    cabal install "happy-${HAPPY_VERSION}" -O1 \
+    cabal install "happy-${HAPPY_VERSION}" -O2 \
         --force-reinstalls \
         --enable-documentation \
         --disable-library-profiling \
         --disable-executable-profiling
     popd
+    rm -rf dist/tools
+fi
+
+# installing hscolour
+if [ "$(hscolour --version | head -n 1 | grep ${HSCOLOUR_VERSION})" ]; then
+    echo "hscolour version ${HSCOLOUR_VERSION} found."
+else
+    echo "Installing hscolour-${HSCOLOUR_VERSION}"
+    rm -rf dist/tools
+    mkdir -p dist/tools
+    pushd dist/tools
+    cabal install "hscolour-${HSCOLOUR_VERSION}" -O2 \
+        --force-reinstalls \
+        --enable-documentation \
+        --disable-library-profiling \
+        --disable-executable-profiling
+    popd
+    rm -rf dist/tools
 fi
 
 ghc   --version
