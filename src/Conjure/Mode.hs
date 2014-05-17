@@ -325,21 +325,21 @@ parseArgs (pairs, flags, rest) = msum
             inEssence <- anyKey $ words "--in-essence --in"
             outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
             limit     <- optional $ readKey "--limit-models"
-            returnMode $ ModeMultipleOutput DFAll inEssence outDir limit
+            returnMode $ ModeMultipleOutput DFAll inEssence outDir (limit >>= nothingIfZero)
 
         modeDFCompactParam = do
             mode $ words "df-compact-param"
             inEssence <- anyKey $ words "--in-essence --in"
             outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
             limit     <- optional $ readKey "--limit-models"
-            returnMode $ ModeMultipleOutput DFCompactParam inEssence outDir limit
+            returnMode $ ModeMultipleOutput DFCompactParam inEssence outDir (limit >>= nothingIfZero)
 
         modeDFNoChannel = do
             mode $ words "df-no-channelling"
             inEssence <- anyKey $ words "--in-essence --in"
             outDir    <- optional $ anyKey $ words "--output-directory --out-dir --out"
             limit     <- optional $ readKey "--limit-models"
-            returnMode $ ModeMultipleOutput DFNoChannelling inEssence outDir limit
+            returnMode $ ModeMultipleOutput DFNoChannelling inEssence outDir (limit >>= nothingIfZero)
 
         modeRandom = do
             mode $ words "random rand rnd"
@@ -400,4 +400,8 @@ isFlag = (`elem` allFlags)
                    , "--pretty"
                    , "--no-dontCare"
                    ]
+
+nothingIfZero :: Int -> Maybe Int
+nothingIfZero 0 = Nothing
+nothingIfZero x = Just x
 
