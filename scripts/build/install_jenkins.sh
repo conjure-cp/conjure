@@ -52,6 +52,7 @@ echo "OPTIMISATION    : ${OPTIMISATION}"
 echo "LLVM            : ${LLVM}"
 echo "CABAL_VERSION   : ${CABAL_VERSION}"
 echo "BIN_DIR         : ${BIN_DIR}"
+echo "BUILD_DOCS      : ${BUILD_DOCS}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
@@ -101,7 +102,7 @@ else
     pushd dist/tools
     cabal install "happy-${HAPPY_VERSION}" -O2 \
         --force-reinstalls \
-        --enable-documentation \
+        --disable-documentation \
         --disable-library-profiling \
         --disable-executable-profiling
     popd
@@ -109,20 +110,23 @@ else
 fi
 
 # installing hscolour
-if [ "$(hscolour --version | head -n 1 | grep ${HSCOLOUR_VERSION})" ]; then
-    echo "hscolour version ${HSCOLOUR_VERSION} found."
-else
-    echo "Installing hscolour-${HSCOLOUR_VERSION}"
-    rm -rf dist/tools
-    mkdir -p dist/tools
-    pushd dist/tools
-    cabal install "hscolour-${HSCOLOUR_VERSION}" -O2 \
-        --force-reinstalls \
-        --enable-documentation \
-        --disable-library-profiling \
-        --disable-executable-profiling
-    popd
-    rm -rf dist/tools
+if [ $BUILD_DOCS = "yes" ]; then
+    if [ "$(hscolour --version | head -n 1 | grep ${HSCOLOUR_VERSION})" ]; then
+        echo "hscolour version ${HSCOLOUR_VERSION} found."
+    else
+        echo "Installing hscolour-${HSCOLOUR_VERSION}"
+        rm -rf dist/tools
+        mkdir -p dist/tools
+        pushd dist/tools
+        cabal install "hscolour-${HSCOLOUR_VERSION}" -O2 \
+            --reinstall \
+            --force-reinstalls \
+            --disable-documentation \
+            --disable-library-profiling \
+            --disable-executable-profiling
+        popd
+        rm -rf dist/tools
+    fi
 fi
 
 ghc   --version
@@ -135,6 +139,12 @@ if [ $LLVM = "llvm-on" ]; then
     LLVM='--ghc-options="-fllvm"'
 else
     LLVM=""
+fi
+
+if [ $BUILD_DOCS = "yes" ]; then
+    DOCS="--enable-documentation"
+else
+    DOCS="--disable-documentation"
 fi
 
 
@@ -152,10 +162,9 @@ fi
 
 cabal install                                                       \
     --only-dependencies                                             \
-    --enable-documentation                                          \
     --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
-    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
+    ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                     \
     --disable-library-profiling --disable-executable-profiling      \
@@ -163,7 +172,9 @@ cabal configure                                                     \
 
 cabal build -j"${USE_CORES}"
 
-cabal haddock --hyperlink-source
+if [ $BUILD_DOCS == "yes" ]; then
+    cabal haddock --hyperlink-source
+fi
 
 cabal copy                                  # install in ~/.cabal/bin
 
