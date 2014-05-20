@@ -18,38 +18,31 @@ main = interact $ \ inp ->
         fromStrings  = intercalate "\n"
                         [ "            fromString' \"" ++ x ++ "\" = " ++ c
                         | x <- xs
-                        , let c = "T" ++ x
+                        , let c = "Tag $ T.pack $ " ++ show x
                         ]
 
     in
         unlines
-            [ "{-# LANGUAGE DeriveGeneric #-}"
+            [ "{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}"
             , "module Stuff.Generic.Tag where"
             , "import Stuff.Pretty"
-            , "import Data.Char ( isSpace )"
             , "import Data.String ( IsString(..) )"
             , "import GHC.Generics ( Generic )"
             , "import Control.DeepSeq ( NFData(..) )"
-            , "import Control.DeepSeq.Generics ( genericRnf )"
             , "import Data.Serialize ( Serialize(..) )"
             , "import Data.Hashable ( Hashable(..) )"
             , "import Data.Aeson ( ToJSON(..) )"
-            , "data Tag = " ++ constructors
-            , "    deriving (Eq, Ord, Show, Generic)"
-            , "instance Serialize Tag"
-            , "instance Hashable Tag where"
-            , "instance NFData Tag where"
-            , "    rnf x = genericRnf x"
-            , "    {-# INLINEABLE rnf #-}"
+            , "import qualified Data.Text as T"
+            , "newtype Tag = Tag T.Text "
+            , "    deriving (Eq, Ord, Show, Generic, Hashable, NFData, ToJSON)"
+            , "instance Serialize Tag where"
+            , "    put (Tag t) = put (T.unpack t)"
+            , "    get = fmap (Tag . T.pack) get"
             , "instance Pretty Tag where"
-            , "    pretty = pretty . drop 1 . show"
-            , "instance ToJSON Tag where"
-            , "    toJSON = toJSON . drop 1 . show"
+            , "    pretty (Tag t) = pretty t"
             , "instance IsString Tag where"
-            , "    fromString = fromString' . filter (not . isSpace)"
-            , "        where"
-            , fromStrings
-            , "            fromString' t = error $ \"Unknown tag: \" ++ t"
+            , "    fromString t | t `elem` " ++ show xs ++ " = Tag (T.pack t)"
+            , "    fromString t = error $ \"Unknown tag: \" ++ t"
             ]
 
 

@@ -47,14 +47,14 @@ mkMatchLike parser = qq {
             buildP :: E -> Q Pat
             buildP (Prim p) =
                 return $ ConP (mkName "Prim") [buildP' p]
-            buildP (Tagged "metavar" [Prim (S s)]) = return $
+            buildP (Tagged (Tag "metavar") [Prim (S s)]) = return $
                 if s == "_"
                     then WildP
                     else VarP (mkName $ T.unpack s)
-            buildP (Tagged t xs) = do
+            buildP (Tagged (Tag t) xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
-                              [ ConP (mkName $ show t) []
+                              [ ConP (mkName "Tag") [LitP (StringL (T.unpack t))]
                               , ListP ys
                               ]
 
@@ -92,13 +92,13 @@ eMake = qq {
             build :: E -> Q Exp
             build (Prim p) =
                 return $ ConE (mkName "Prim") `AppE` build' p
-            build (Tagged "metavar" [Prim (S s)]) =
+            build (Tagged (Tag "metavar") [Prim (S s)]) =
                 return $ VarE (mkName $ T.unpack s)
-            build (Tagged t xs) = do
+            build (Tagged (Tag t) xs) = do
                 ys <- mapM build xs
                 return $ (ConE $ mkName "Tagged")
                             `AppE`
-                         (ConE $ mkName $ show t)
+                         (ConE (mkName "Tag") `AppE` LitE (StringL $ T.unpack t))
                             `AppE`
                          ListE ys
 
