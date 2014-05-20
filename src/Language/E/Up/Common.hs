@@ -76,7 +76,7 @@ isLiteral [xMatch| _ := value.literal |] = True
 isLiteral  _ = False
 
 unwrapExpr ::  E -> E
-unwrapExpr  (Tagged Texpr [val]) =  val
+unwrapExpr  (Tagged "expr" [val]) =  val
 unwrapExpr e = _bug "unwrapExpr failed" [e]
 
 unwrapMatrix :: E -> [E]

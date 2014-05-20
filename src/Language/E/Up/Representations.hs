@@ -500,9 +500,9 @@ function1DPartialBranch = ( tracee "function1DPartialBranch" beforeUnchanged, af
 
          where
          f ::E -> Maybe E
-         f [xMatch| [ Tagged Tliteral [Prim (B True)] , v] := mapping.value.tuple.values.value
+         f [xMatch| [ Tagged "literal" [Prim (B True)] , v] := mapping.value.tuple.values.value
                     | from                                 := mapping.value.literal |] =
-            Just ([xMake|  mapping := [  Tagged Tvalue [Tagged Tliteral from],  Tagged Tvalue [v] ]  |])
+            Just ([xMake|  mapping := [  Tagged "value" [Tagged "literal" from],  Tagged "value" [v] ]  |])
          f _ = Nothing
 
     removeFalses a =  _bug "function1DPartialBranch removeFalses unhandled" [a]

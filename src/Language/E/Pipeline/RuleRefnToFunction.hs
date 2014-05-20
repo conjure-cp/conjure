@@ -172,11 +172,11 @@ single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.wor
 
 getKey :: E -> [Either Tag Text]
 getKey [xMatch| [Prim (S op)] := binOp.operator |] =
-    [ Left TbinOp, Left Toperator, Right op]
-getKey (Tagged TunaryOp  [Tagged op     _]) =
-    [Left TunaryOp , Left op    ]
-getKey (Tagged Toperator [Tagged Tindex _]) =
-    [Left Toperator, Left Tindex]
+    [ Left "binOp", Left "operator", Right op]
+getKey (Tagged "unaryOp"  [Tagged op     _]) =
+    [Left "unaryOp" , Left op    ]
+getKey (Tagged "operator" [Tagged "index" _]) =
+    [Left "operator", Left "index"]
 getKey (Tagged t _) = [Left t]
 getKey _ = []
 
