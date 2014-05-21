@@ -33,7 +33,8 @@ import Control.Category          as X ( (<<<), (>>>) )
 import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM, liftM )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
-import Control.Monad.Error          as X ( MonadError(throwError, catchError), ErrorT, runErrorT, Error(..) )
+import Control.Monad.Error          as X ( MonadError(throwError, catchError) )
+import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState(get, put), gets, modify, evalStateT, runStateT )
@@ -52,9 +53,6 @@ import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
 import Data.Tuple        as X ( swap )
-
-import Control.DeepSeq          as X ( NFData(..), force, ($!!) )
-import Control.DeepSeq.Generics as X ( genericRnf )
 
 import Data.Hashable         as X ( Hashable(..), hash )
 
@@ -166,8 +164,6 @@ isLeft _         = False
 isRight :: Either a b -> Bool
 isRight (Right {}) = True
 isRight _          = False
-
-instance Error Doc where strMsg = Pr.text
 
 allCombinations :: [(a,[b])] -> [[(a,b)]]
 allCombinations [] = [[]]

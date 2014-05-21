@@ -50,10 +50,6 @@ instance Serialize Spec
 
 instance Hashable Spec
 
-instance NFData Spec where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
-
 instance Default Spec where
     def = Spec (LanguageVersion "Essence" [1,3]) (Tagged "statementEOF" def)
 
@@ -65,9 +61,6 @@ instance Serialize LanguageVersion
 
 instance Hashable LanguageVersion
 
-instance NFData LanguageVersion where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
 
 instance ToJSON LanguageVersion where
     toJSON (LanguageVersion t is) = JSON.object [ "language" .= toJSON (t,is) ]
@@ -79,10 +72,6 @@ data RulesDB = RulesDB { reprRules :: [RuleRepr], refnRules :: [RuleRefn] }
 instance Serialize RulesDB
 
 instance Hashable RulesDB
-
-instance NFData RulesDB where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
 
 
 data RuleRefn = RuleRefn
@@ -97,10 +86,6 @@ data RuleRefn = RuleRefn
 instance Serialize RuleRefn
 
 instance Hashable RuleRefn
-
-instance NFData RuleRefn where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
 
 
 data RuleRepr = RuleRepr
@@ -117,10 +102,6 @@ instance Serialize RuleRepr
 
 instance Hashable RuleRepr
 
-instance NFData RuleRepr where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
-
 
 data RuleReprCase = RuleReprCase
     { ruleReprCaseDomainIn :: E             -- domain in.
@@ -132,10 +113,6 @@ data RuleReprCase = RuleReprCase
 instance Serialize RuleReprCase
 
 instance Hashable RuleReprCase
-
-instance NFData RuleReprCase where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
 
 
 data RuleReprResult = RuleReprResult
@@ -151,10 +128,6 @@ instance Serialize RuleReprResult
 
 instance Hashable RuleReprResult
 
-instance NFData RuleReprResult where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
-
 
 data E
     = Prim BuiltIn
@@ -164,10 +137,6 @@ data E
 instance Serialize E
 
 instance Hashable E
-
-instance NFData E where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
 
 instance ToJSON E where
     toJSON (Prim x) = JSON.object [ "primitive" .= toJSON x ]
@@ -182,10 +151,6 @@ data BuiltIn = B !Bool | I !Integer | S !Text
 instance Serialize BuiltIn
 
 instance Hashable BuiltIn
-
-instance NFData BuiltIn where
-    rnf x = genericRnf x
-    {-# INLINEABLE rnf #-}
 
 instance Pretty BuiltIn where
     pretty (B x) = pretty x

@@ -34,7 +34,7 @@ tests = do
 one :: FilePath -> IO ()
 one filepath = do
     content <- T.readFile filepath
-    result  <- runErrorT $ do
+    result  <- runExceptT $ do
         -- liftIO $ putStrLn "content"
         -- liftIO $ putStrLn $ T.unpack content
         parsed1 <- runLexerAndParser parseSpec filepath content
