@@ -33,29 +33,25 @@ savilerowCompat b
 
 
 onSpec :: (E -> E) -> Spec -> Spec
-onSpec f (Spec v xs) = Spec v $ f xs
+onSpec f (Spec v xs) = Spec v $ transform f xs
 
 
 toIntIsNoOp :: E -> E
 toIntIsNoOp [eMatch| toInt(&x) |] = toIntIsNoOp x
-toIntIsNoOp (Tagged t xs) = Tagged t $ map toIntIsNoOp xs
 toIntIsNoOp p = p
 
 factorialIsFactorial:: E -> E
 factorialIsFactorial [eMatch| (&x)! |] = let y = factorialIsFactorial x
                                          in  [eMake| factorial(&y) |]
-factorialIsFactorial (Tagged t xs) = Tagged t $ map factorialIsFactorial xs
 factorialIsFactorial p = p
 
 dotOrderIsLex :: E -> E
 dotOrderIsLex [eMatch| &a .<  &b |] = [eMake| flatten(&a) <lex  flatten(&b) |]
 dotOrderIsLex [eMatch| &a .<= &b |] = [eMake| flatten(&a) <=lex flatten(&b) |]
-dotOrderIsLex (Tagged t xs) = Tagged t $ map dotOrderIsLex xs
 dotOrderIsLex p = p
 
 tildeIsn'tSupported :: E -> E
 tildeIsn'tSupported (Prim (S nm)) = Prim $ S $ T.filter ('~'/=) nm
-tildeIsn'tSupported (Tagged t xs) = Tagged t $ map tildeIsn'tSupported xs
 tildeIsn'tSupported p = p
 
 sliceIfTooFewIndices :: MonadConjure m => Spec -> m Spec
@@ -90,10 +86,14 @@ sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
         matrixDomainNbDims :: E -> Int
         matrixDomainNbDims [xMatch| [inner] := domain.matrix.inner |] = 1 + matrixDomainNbDims inner
         matrixDomainNbDims _ = 0
+sliceIfTooFewIndicesE p@(Prim {}) = return p
 sliceIfTooFewIndicesE p@(Tagged t xs) = do
     introduceStuff p
     Tagged t <$> mapM sliceIfTooFewIndicesE xs
-sliceIfTooFewIndicesE p = return p
+sliceIfTooFewIndicesE p@(EOF {}) = return p
+sliceIfTooFewIndicesE p@(StatementAndNext this next) = do
+    introduceStuff p
+    StatementAndNext <$> sliceIfTooFewIndicesE this <*> sliceIfTooFewIndicesE next
 
 
 -- savilerow doesn't support inline value matrices.

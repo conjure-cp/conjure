@@ -73,8 +73,10 @@ unrollIfNeeded inp = do
             case mres of
                 Nothing -> return p
                 Just (out,_) -> do tell (Any True) ; helper out
+        helper t@(Prim {}) = return t
         helper (Tagged t xs) = Tagged t <$> mapM helper xs
-        helper t = return t
+        helper t@(EOF {}) = return t
+        helper (StatementAndNext this next) = StatementAndNext <$> helper this <*> helper next
 
         containsTupleIndexing' x@(Tagged _ xs) =
             containsTupleIndexing x || any containsTupleIndexing' xs

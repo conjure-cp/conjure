@@ -133,9 +133,10 @@ fullyInline inp = do
                                     |]
                         _           -> return x
                 f x@[xMatch| [_] := structural.single.reference |] = return x
-                f (Tagged t xs)
-                    = Tagged t <$> mapM f xs
-                f x = return x
+                f x@(Prim {}) = return x
+                f (Tagged t xs) = Tagged t <$> mapM f xs
+                f x@(EOF {}) = return x
+                f (StatementAndNext this next) = StatementAndNext <$> f this <*> f next
 
         getDecls (Spec _ x) =
             [ (nm, dom)
