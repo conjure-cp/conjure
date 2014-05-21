@@ -126,7 +126,7 @@ valueMatrixToLetting (Spec v statement) = do
 
 
 langEPrime :: Spec -> Spec
-langEPrime (Spec _ xs) = Spec ("ESSENCE'", [1,0]) xs
+langEPrime (Spec _ xs) = Spec (LanguageVersion "ESSENCE'" [1,0]) xs
 
 
 removeMinMaxInt :: Spec -> Spec

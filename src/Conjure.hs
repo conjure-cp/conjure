@@ -168,7 +168,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
 
         helper (ModeMultipleOutput multimode pathInEssence pathOutputDir mlimit) = do
             seed <- getStdGen
-            (ruleReprs, ruleRefns) <- getRulesDB
+            (RulesDB ruleReprs ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             let defOutDirPath = dropExtEssence pathInEssence
@@ -187,7 +187,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
 
         helper (ModeSingleOutput _ pathInEssence pathOutEprime) = do
             seed <- getStdGen
-            (ruleReprs, ruleRefns) <- getRulesDB
+            (RulesDB ruleReprs ruleRefns) <- getRulesDB
             inEssence <- readSpecFromFile pathInEssence
             typeCheckSpecIO inEssence
             driverConjureSingle True False

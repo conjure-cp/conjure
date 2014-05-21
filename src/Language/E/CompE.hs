@@ -379,8 +379,8 @@ domOrder x y = compare (eDepth x) (eDepth y)
 compactSelect :: [RuleReprResult] -> RuleReprResult
 compactSelect = minimumBy comparer
     where
-        comparer ( _origDecl1, _ruleName1, _reprName1, newDom1, structuralCons1)
-                 ( _origDecl2, _ruleName2, _reprName2, newDom2, structuralCons2) =
+        comparer (RuleReprResult _origDecl1 _ruleName1 _reprName1 newDom1 structuralCons1)
+                 (RuleReprResult _origDecl2 _ruleName2 _reprName2 newDom2 structuralCons2) =
             compareChain
                 [ domOrder newDom1 newDom2
                 , compare (length structuralCons1) (length structuralCons2)
@@ -389,7 +389,7 @@ compactSelect = minimumBy comparer
 -- uses compactSelect if the argument is a given,
 -- DfAll if the argument is a find.
 compactIfParam :: [RuleReprResult] -> [RuleReprResult]
-compactIfParam xs@(([xMatch| _ := topLevel.declaration.given |], _, _, _, _):_) = [compactSelect xs]
+compactIfParam xs@(RuleReprResult{ruleReprResultOriginalDecl=[xMatch| _ := topLevel.declaration.given |]}:_) = [compactSelect xs]
 compactIfParam xs = xs
 
 

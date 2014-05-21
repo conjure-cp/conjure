@@ -170,7 +170,7 @@ viewBinary arg = case arg of
         (x :: Spec, _ :: LogTree) <- decodeFromFile path
         putStrLn $ renderNormal x
     RulesDBPath path -> do
-        (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile path
+        (RulesDB ruleReprs ruleRefns) <- decodeFromFile path
         putStrLn $ renderNormal $ vcat
             [          pretty path               <+> "is a valid Conjure rules database file"
             , nest 4 $ pretty (length ruleReprs) <+> "representation selection rules"
@@ -195,7 +195,7 @@ makeRulesDB args = do
                         (readRuleRepr pair)
                 return ([x],[])
             _ -> return ([],[])
-    ByteString.writeFile outfile (encode (rulesdb :: RulesDB))
+    ByteString.writeFile outfile (encode (uncurry RulesDB rulesdb))
 
 -- this is the entry point of conjure.
 -- input is a single problem specification, an essence file
@@ -241,7 +241,7 @@ phaseRepr0 one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
-    (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    (RulesDB ruleReprs ruleRefns) <- decodeFromFile =<< rulesdbLoc
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]
@@ -282,7 +282,7 @@ phaseRepr one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
-    (ruleReprs, _) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    (RulesDB ruleReprs _) <- decodeFromFile =<< rulesdbLoc
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]
@@ -320,7 +320,7 @@ phaseRefn one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
 
     (essenceInp :: Spec, logsInp :: LogTree) <- decodeFromFile path
 
-    (ruleReprs, ruleRefns) :: RulesDB <- decodeFromFile =<< rulesdbLoc
+    (RulesDB ruleReprs ruleRefns) <- decodeFromFile =<< rulesdbLoc
 
     let
         results1 :: [(Either ConjureError Spec, LogTree)]

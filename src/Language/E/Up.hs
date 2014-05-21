@@ -31,7 +31,7 @@ translateSolution'
     -> IO EssenceSolution 
 translateSolution' essence param eprime eprimeParam eprimeSolution= do
     specs <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
-    return $ Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
+    return $ Spec (LanguageVersion "Essence" [1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
 
 
 type Essence   = Spec
@@ -52,7 +52,7 @@ translateSolutionM
 
 translateSolutionM essence param eprime eprimeParam eprimeSolution logs= do
     specs <- getSpecsM (eprime, eprimeSolution, essence, eprimeParam, param, logs)
-    return $ Spec ("Essence",[1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
+    return $ Spec (LanguageVersion "Essence" [1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
 
 type EssenceSolution = Spec
 

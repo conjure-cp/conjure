@@ -7,8 +7,8 @@
 module Language.E.Definition
     ( module Stuff.Generic
 
-    , Spec(..), Version, E, BuiltIn(..)
-    , RulesDB, RuleRefn, RuleRepr, RuleReprCase, RuleReprResult
+    , Spec(..), LanguageVersion(..), E, BuiltIn(..)
+    , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
 
     , listAsStatement, statementAsList
 
@@ -32,19 +32,19 @@ import qualified Data.Aeson as JSON
 
 
 
-data Spec = Spec Version E
+data Spec = Spec LanguageVersion E
     deriving (Eq, Show, GHC.Generics.Generic)
 
 instance Serialize Spec
 
-instance Hashable Spec where
+instance Hashable Spec
 
 instance NFData Spec where
     rnf x = genericRnf x
     {-# INLINEABLE rnf #-}
 
 instance Default Spec where
-    def = Spec ("Essence", [1,3]) (Tagged "statementEOF" def)
+    def = Spec (LanguageVersion "Essence" [1,3]) (Tagged "statementEOF" def)
 
 instance ToJSON Spec where
     toJSON s@(Spec v x) =
@@ -58,29 +58,101 @@ instance ToJSON Spec where
                         ]
 
 
-type Version = (Text,[Int])
+data LanguageVersion = LanguageVersion Text [Int]
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
 
-type RulesDB = ([RuleRepr], [RuleRefn])
+instance Serialize LanguageVersion
 
-type RuleRefn = (Text, Maybe Int, E)
-type RuleRepr = ( Text          -- name of the rule
-                , Text          -- name of the representation
-                , E             -- domain out.
-                , Maybe E       -- structural constraints
-                , [E]           -- locals
-                , [RuleReprCase]
-                )
-type RuleReprCase = ( E         -- domain in.
-                    , Maybe E   -- structural constraints
-                    , [E]       -- locals
-                    )
+instance Hashable LanguageVersion
 
-type RuleReprResult = ( E            -- original declaration
-                      , Text         -- rule name
-                      , Text         -- name of the representation
-                      , E            -- replacement domain
-                      , [E]          -- structural constraints
-                      )
+instance NFData LanguageVersion where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
+instance ToJSON LanguageVersion where
+    toJSON (LanguageVersion t is) = JSON.object [ "language" .= toJSON (t,is) ]
+
+
+data RulesDB = RulesDB { reprRules :: [RuleRepr], refnRules :: [RuleRefn] }
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize RulesDB
+
+instance Hashable RulesDB
+
+instance NFData RulesDB where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
+
+data RuleRefn = RuleRefn
+    { ruleRefnName  :: Text
+    , ruleRefnLevel :: Maybe Int
+    , ruleRefnBody  :: E
+    }
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize RuleRefn
+
+instance Hashable RuleRefn
+
+instance NFData RuleRefn where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
+
+data RuleRepr = RuleRepr
+    { ruleReprName :: Text                  -- name of the rule
+    , ruleReprReprName :: Text              -- name of the representation
+    , ruleReprDomainOut :: E                -- domain out.
+    , ruleReprStructural :: Maybe E         -- structural constraints
+    , ruleReprLocals :: [E]                 -- locals
+    , ruleReprCases :: [RuleReprCase]
+    }
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize RuleRepr
+
+instance Hashable RuleRepr
+
+instance NFData RuleRepr where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
+
+data RuleReprCase = RuleReprCase
+    { ruleReprCaseDomainIn :: E             -- domain in.
+    , ruleReprCaseStructural :: Maybe E     -- structural constraints
+    , ruleReprCaseLocals :: [E]             -- locals
+    }
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize RuleReprCase
+
+instance Hashable RuleReprCase
+
+instance NFData RuleReprCase where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
+
+data RuleReprResult = RuleReprResult
+    { ruleReprResultOriginalDecl :: E       -- original declaration
+    , ruleReprResultRuleName :: Text        -- rule name
+    , ruleReprResultReprName :: Text        -- name of the representation
+    , ruleReprResultReplacementDom :: E     -- replacement domain
+    , ruleReprResultStructurals :: [E]      -- structural constraints
+    }
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize RuleReprResult
+
+instance Hashable RuleReprResult
+
+instance NFData RuleReprResult where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
 
 type E = Generic BuiltIn
 
@@ -89,7 +161,7 @@ data BuiltIn = B !Bool | I !Integer | S !Text
 
 instance Serialize BuiltIn
 
-instance Hashable BuiltIn where
+instance Hashable BuiltIn
 
 instance NFData BuiltIn where
     rnf x = genericRnf x

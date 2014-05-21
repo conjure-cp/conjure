@@ -41,11 +41,11 @@ lexAndParse p t = runLexerAndParser p "" t
 parseSpec :: Parser Spec
 parseSpec = inCompleteFile $ do
     let
-        pLanguage :: Parser Version
+        pLanguage :: Parser LanguageVersion
         pLanguage = do
             l  <- lexeme L_language *> identifierText
             is <- sepBy1 integer dot
-            return (l, map fromInteger is)
+            return (LanguageVersion l (map fromInteger is))
     l  <- pLanguage
     xs <- many parseTopLevels
     return $ Spec l $ listAsStatement $ concat xs
@@ -58,13 +58,14 @@ parseRuleRefn t = inCompleteFile $ do
             pattern   <- parseExpr
             templates <- some (lexeme L_SquigglyArrow >> parseExpr)
             locals    <- concat <$> many parseTopLevels
-            return ( t
-                   , level
-                   , [xMake| rulerefn.pattern   := [pattern]
-                           | rulerefn.templates := templates
-                           | rulerefn.locals    := locals
-                           |]
-                   )
+            return RuleRefn { ruleRefnName = t
+                            , ruleRefnLevel = level
+                            , ruleRefnBody =
+                                [xMake| rulerefn.pattern   := [pattern]
+                                      | rulerefn.templates := templates
+                                      | rulerefn.locals    := locals
+                                      |]
+                            }
     some one
 
 parseRuleReprCase :: Parser RuleReprCase
@@ -73,7 +74,7 @@ parseRuleReprCase = do
     dom    <- parseDomain
     mcons  <- optionMaybe (lexeme L_SquigglyArrow >> parseExpr)
     locals <- concat <$> many parseTopLevels
-    return (dom, mcons, locals)
+    return (RuleReprCase dom mcons locals)
 
 
 parseRuleRepr :: T.Text -> Parser RuleRepr
@@ -84,10 +85,10 @@ parseRuleRepr t = inCompleteFile $ do
     mcons  <- optionMaybe $ arr parseExpr
     locals <- concat <$> many parseTopLevels
     cases  <- some parseRuleReprCase
-    return ( t
-           , nmRepr
-           , domOut
-           , mcons
-           , locals
-           , cases
-           )
+    return ( RuleRepr t
+             nmRepr
+             domOut
+             mcons
+             locals
+             cases )
+

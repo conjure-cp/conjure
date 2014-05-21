@@ -57,7 +57,7 @@ generateRandomParam essence = do
     return param
 
     where
-    emptySolution = Spec ("Essence", [1,3]) (listAsStatement [])
+    emptySolution = Spec (LanguageVersion "Essence" [1,3]) (listAsStatement [])
     removeForValidate (Spec v es) = Spec v $ listAsStatement $  filter filterer es'
         where es' = statementAsList es
               filterer [xMatch| _ := topLevel.suchThat           |] = False
@@ -76,7 +76,7 @@ generateAllParams essence = do
     {-mapM (wrapping es v) acs-}
 
 
-plumming :: MonadConjure m => Spec -> m ([Choice], [E], Version)
+plumming :: MonadConjure m => Spec -> m ([Choice], [E], LanguageVersion)
 plumming essence' = do
     essence <- removeNegatives essence'
     let stripped@(Spec v f) = stripDecVars essence
@@ -102,7 +102,7 @@ plumming essence' = do
     return (choices,es,v)
 
 
-wrapping :: (MonadConjure m, RandomM m) => [E] -> Version -> [E] -> m EssenceParam
+wrapping :: (MonadConjure m, RandomM m) => [E] -> LanguageVersion -> [E] -> m EssenceParam
 wrapping es v givens= do
     let lettings = zipWith makeLetting es givens
     mkLog "Lettings" (vcat $ map pretty lettings)

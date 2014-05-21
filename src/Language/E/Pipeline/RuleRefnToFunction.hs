@@ -56,8 +56,8 @@ ruleRefnToFunction fs =
         justsFirst Nothing  Nothing  = EQ
 
         fsGrouped :: [[RuleRefn]]
-        fsGrouped = groupBy (\ (_,a,_) (_,b,_) -> a == b )
-                  $ sortBy  (\ (_,a,_) (_,b,_) -> justsFirst a b )
+        fsGrouped = groupBy (\ a b -> ruleRefnLevel a == ruleRefnLevel b )
+                  $ sortBy  (\ a b -> justsFirst (ruleRefnLevel a) (ruleRefnLevel b) )
                     fs
 
         -- mresults :: MonadConjure m => [Either [ConjureError] (E -> m E)]
@@ -104,13 +104,11 @@ single
     -> Either
         ConjureError                        -- static errors in the rule
         (RuleRefnAsFunctionWithMap m)       -- the rule as a function.
-single ( name
-       , _
-       , [xMatch| [pattern] := rulerefn.pattern
+single (RuleRefn name _
+         [xMatch| [pattern] := rulerefn.pattern
                 | templates := rulerefn.templates
                 | locals    := rulerefn.locals
-                |]
-       ) = do
+                |]) = do
     let
         staticCheck :: Either ConjureError ()
         staticCheck = do

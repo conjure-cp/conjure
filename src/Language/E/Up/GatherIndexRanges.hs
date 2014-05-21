@@ -30,7 +30,7 @@ gatherIndexT [xMatch| [domRange] := domain.matrix.index
 
    where 
    sim :: E
-   sim = let (Spec _ es) = specSimplify (Spec ("Essence", [1,3])  domRange ) 
+   sim = let (Spec _ es) = specSimplify (Spec (LanguageVersion "Essence" [1,3]) domRange)
          in es
 
 gatherIndexT [xMatch| doms := domain.tuple.inners |] =

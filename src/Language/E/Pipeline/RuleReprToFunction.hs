@@ -43,7 +43,7 @@ one :: MonadConjure m
         ( (Text, E, E)
           -> m [RuleReprResult]
         )
-one repr@(_ruleName, _reprName, _domTemplate, _mcons, _locals, cases) =
+one repr@(RuleRepr {ruleReprCases=cases}) =
     let
         mresults = map (oneCase repr) cases
         errors   = concat $ lefts mresults
@@ -62,8 +62,8 @@ oneCase
         ( (Text, E, E)
           -> m [RuleReprResult]
         )
-oneCase (ruleName, reprName, domTemplate, mcons1, locals1, _)
-        (domPattern, mcons2, locals2) =
+oneCase (RuleRepr ruleName reprName domTemplate mcons1 locals1 _)
+        (RuleReprCase domPattern mcons2 locals2) =
     let
         -- mcons: list of all structural constraints
         mcons  = maybeToList mcons1 ++ maybeToList mcons2
@@ -238,7 +238,7 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                 maybe (errUndefinedRef "ruleReprCompile" $ pretty con'')
                                       return
                                       maybeCon
-                            return [(origDecl, ruleName, reprName, liftedRes, mcons')]
+                            return [RuleReprResult origDecl ruleName reprName liftedRes mcons']
 
 
 

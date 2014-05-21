@@ -44,12 +44,12 @@ abstractDomsInQuans
                 zs  <- case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty qnOverDom
                     _  -> do
-                        let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
+                        let ysNames = flip map ys $ \ (RuleReprResult { ruleReprResultReprName = reprName }) -> reprName
                         mkLog "representation" $ sep [ pretty qnOverDom
                                                      , "(#" <> pretty (length ys) <> ")"
                                                      , prettyList id "," ysNames
                                                      ]
-                        let zs = flip map ys $ \ (_origDecl, _ruleName, reprName, newDom, cons)
+                        let zs = flip map ys $ \ (RuleReprResult _origDecl _ruleName reprName newDom cons)
                                               -> (reprName, newDom, cons)
                         return zs
                 let mkOut qnVar' qnOverDom' guards body' =

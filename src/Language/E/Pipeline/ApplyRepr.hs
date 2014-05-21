@@ -47,13 +47,11 @@ applyRepr rules spec = do
                 <- forM topLevels $ \ (x,n,d) -> do
                 ys0 <- func (n,d,x)
                 ys1 <- selectByMode theMode gl ys0
-                let ys = sortBy (\ (_, _, reprName1, _, _)
-                                   (_, _, reprName2, _, _)
-                                   -> compare reprName1 reprName2) ys1
+                let ys = sortBy (comparing ruleReprResultReprName) ys1
                 case ys of
                     [] -> err ErrFatal $ "No representation rule matches domain:" <+> pretty x
                     _  -> do
-                        let ysNames = flip map ys $ \ (_origDecl, _ruleName, reprName, _newDom, _cons) -> reprName
+                        let ysNames = map ruleReprResultReprName ys
                         mkLog "representation" $ sep [ pretty x
                                                      , "(#" <> pretty (length ys) <> ")"
                                                      , prettyList id "," ysNames
@@ -95,8 +93,8 @@ applyRepr rules spec = do
             if M.null table
                 then err ErrGeneratesNone "repr1"
                 else do
-                    let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just rName))
-                                         | ((nm, region), (_,_,rName,_,_)) <- M.toList table
+                    let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just (ruleReprResultReprName repr)))
+                                         | ((nm, region), repr) <- M.toList table
                                          ]
                     mkLog "configuration" configStr
                     catchError
@@ -137,7 +135,7 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                 (base, Just region, Nothing) ->
                     case M.lookup (base,region) config of
                         Nothing -> return p
-                        Just (origDecl, _ruleName, reprName, newDom, cons) -> do
+                        Just (RuleReprResult origDecl _ruleName reprName newDom cons) -> do
                             let
                                 reregion e@[xMatch| [Prim (S i)] := reference |] = case identifierSplit i of
                                     (iBase, Just "regionS", mrepr)

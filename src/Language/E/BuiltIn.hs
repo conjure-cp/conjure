@@ -32,13 +32,12 @@ relationRepr ( _name
     let domOut = [xMake| domain.set.attributes.attrCollection := as
                        | domain.set.inner := [t]
                        |]
-    return [( decl
-            , "builtIn.relationRepr"
-            , "Relation~AsSet"
-            , domOut
-            -- , structurals
-            , []
-            )]
+    return [ RuleReprResult decl
+                "builtIn.relationRepr"
+                "Relation~AsSet"
+                domOut
+                []
+           ]
 relationRepr ( _, [xMatch| _ := domain.set      |], _ ) = return []
 relationRepr ( _, [xMatch| _ := domain.mset     |], _ ) = return []
 relationRepr ( _, [xMatch| _ := domain.function |], _ ) = return []
@@ -58,7 +57,7 @@ applyToInnerDomain'
 applyToInnerDomain' f (origName, origDomain, origDecl) = do
     let (is,x) = splitMatrixDomain origDomain
     results <- f (origName, x, origDecl)
-    liftM concat $ forM results $ \ (_, ruleName, reprName, res, mcons) -> do
+    liftM concat $ forM results $ \ (RuleReprResult _ ruleName reprName res mcons) -> do
         -- at this point, res is the refinement of the innerDomain
         -- mcons is the list of structural constraints
         -- if is /= []
@@ -94,7 +93,7 @@ applyToInnerDomain' f (origName, origDomain, origDecl) = do
             maybe (errUndefinedRef "builtIn.ruleReprCompile" $ pretty con'')
                   return
                   maybeCon
-        return [(origDecl, ruleName, reprName, liftedRes, mcons')]
+        return [RuleReprResult origDecl ruleName reprName liftedRes mcons']
 
 renRefn :: E -> E -> E
 renRefn newName [xMatch| [Prim (S "refn")] := reference |] = newName

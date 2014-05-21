@@ -264,7 +264,7 @@ wrapping vars = do
     {-mkLog "Lettings" (vcat $ map pretty lettings)-}
     --mkLog "Lettings" (vcat $ map (\a -> prettyAsTree a <+> "\n" ) lettings )
 
-    let essenceParam = Spec ("Essence", [1,3]) (listAsStatement lettings )
+    let essenceParam = Spec (LanguageVersion "Essence" [1,3]) (listAsStatement lettings )
     return essenceParam
 
 

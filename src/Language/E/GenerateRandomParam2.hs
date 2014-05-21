@@ -35,7 +35,7 @@ getSpecMaybe filepath  = getSpecMaybe' filepath =<<  FP.doesFileExist filepath
 
 
 generateParam  :: RulesDB -> Essence -> FP.FilePath -> Maybe String -> IO EssenceParam
-generateParam (ruleReprs,ruleRefns) essence intermediateDir prefix = do
+generateParam (RulesDB ruleReprs ruleRefns) essence intermediateDir prefix = do
 
     paramEssenceOld <- getSpecMaybe param_gen
 
