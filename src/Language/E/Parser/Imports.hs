@@ -2,10 +2,9 @@
 
 module Language.E.Parser.Imports where
 
-
-import Stuff.Generic
 import Language.E.Lexer ( Lexeme(..), LexemePos, lexemeFace, runLexer )
 import Language.E.Imports
+import Language.E.Definition
 import Language.E.Pretty ( Pretty, pretty )
 
 import Text.Parsec ( ParsecT, parse, tokenPrim, (<?>) )
@@ -17,10 +16,7 @@ import qualified Text.PrettyPrint as Pr
 
 type Parser a = ParsecT [LexemePos] () Identity a
 
-_testParsePrint' ::
-    ( Pretty primitive
-    , Pretty (Generic primitive)
-    ) => Parser (Generic primitive) -> T.Text -> IO ()
+_testParsePrint' :: Parser E -> T.Text -> IO ()
 _testParsePrint' p t = do
     let res = runLexerAndParser p "" t
     case res of
@@ -31,10 +27,7 @@ _testParsePrint' p t = do
             print $ prettyAsPaths x
             print $ pretty x
 
-_testParsePrint'' ::
-    ( Pretty primitive
-    , Pretty (Generic primitive)
-    ) => Parser [Generic primitive] -> T.Text -> IO ()
+_testParsePrint'' :: Parser [E] -> T.Text -> IO ()
 _testParsePrint'' p t = do
     let res = runLexerAndParser p "" t
     case res of

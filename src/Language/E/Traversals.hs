@@ -20,7 +20,7 @@ import qualified Data.IntMap as IntMap ( insert, lookup )
 useMemoisation :: Bool
 useMemoisation = False
 
-labelOf :: Pretty primitive => Generic primitive -> Doc
+labelOf :: E -> Doc
 labelOf (Prim   p  ) = pretty p
 labelOf (Tagged s _) = pretty s
 

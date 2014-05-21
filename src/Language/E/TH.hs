@@ -2,7 +2,7 @@
 
 module Language.E.TH where
 
-import Stuff.Generic
+import Stuff.Generic.Tag
 import Language.E.Definition
 import Language.E.Parser
 import Language.E.Parser.EssenceFile.Value () -- helping GHC's dependency resolution a a bit

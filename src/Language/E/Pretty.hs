@@ -7,7 +7,6 @@
 module Language.E.Pretty ( module Stuff.Pretty, prettySpecDebug ) where
 
 import Utils.DebugPretty
-import Stuff.Generic
 import Stuff.Pretty
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )

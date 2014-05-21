@@ -2,7 +2,6 @@
 
 module Language.E.Evaluator.ToBool where
 
-import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE

@@ -3,7 +3,7 @@
 module Language.E.Evaluator.Partial ( partialEvaluator, guardOp ) where
 
 import Bug
-import Stuff.Generic
+import Stuff.Generic.Tag
 
 import Language.E.Imports
 import Language.E.Definition

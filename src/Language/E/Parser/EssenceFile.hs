@@ -18,6 +18,7 @@ import Language.E.Parser.EssenceFile.Declaration ( parseTopLevels )
 
 import Language.E.Imports
 import Language.E.Definition
+-- import Language.E.Helpers
 import Language.E.Lexer ( Lexeme(..) )
 
 import Text.Parsec.Combinator ( optionMaybe, sepBy1 )

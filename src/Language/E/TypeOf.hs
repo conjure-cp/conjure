@@ -8,7 +8,7 @@ module Language.E.TypeOf
     ) where
 
 import Bug
-import Stuff.Generic
+import Stuff.Generic.Tag
 
 import Language.E.Imports
 import Language.E.Definition

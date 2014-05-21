@@ -3,32 +3,43 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Language.E.Definition
-    ( module Stuff.Generic
+    ( module Stuff.Generic.Tag
 
-    , Spec(..), LanguageVersion(..), E, BuiltIn(..)
+    , Spec(..), LanguageVersion(..), E(..), BuiltIn(..)
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
-
-    , listAsStatement, statementAsList
 
     , identifierSplit, identifierConstruct
     , identifierStripRegion
 
-    , collectQuanVars
+    , universe, transform, replace, replaceAll
+    , qq, xMake, xMatch
+    , viewTagged, viewTaggeds
+    , prettyAsTree, prettyAsPaths
+
+    , statementAsList, listAsStatement
 
     ) where
 
-import Stuff.Generic
+import Stuff.Generic.Tag
 import Stuff.Pretty
 import Stuff.MetaVariable
-
 import Language.E.Imports
 
+import Data.Maybe ( fromJust )
 import qualified Data.Text as T
 import qualified GHC.Generics ( Generic )
 import Data.Aeson ( ToJSON(..), (.=) )
 import qualified Data.Aeson as JSON
+
+-- template-haskell
+import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
+import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
+
+-- haskell-src-meta
+import Language.Haskell.Meta.Parse.Careful
 
 
 
@@ -45,17 +56,6 @@ instance NFData Spec where
 
 instance Default Spec where
     def = Spec (LanguageVersion "Essence" [1,3]) (Tagged "statementEOF" def)
-
-instance ToJSON Spec where
-    toJSON s@(Spec v x) =
-        let
-            xs = statementAsList x
-            (permutables, quantifiedVars) = permutablesOfSpec s
-        in  JSON.object [ "version"        .= toJSON v
-                        , "permutables"    .= toJSON permutables
-                        , "quantifiedVars" .= toJSON quantifiedVars
-                        , "statements"     .= toJSON xs
-                        ]
 
 
 data LanguageVersion = LanguageVersion Text [Int]
@@ -156,7 +156,25 @@ instance NFData RuleReprResult where
     {-# INLINEABLE rnf #-}
 
 
-type E = Generic BuiltIn
+data E
+    = Prim BuiltIn
+    | Tagged !Tag [E]
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize E
+
+instance Hashable E
+
+instance NFData E where
+    rnf x = genericRnf x
+    {-# INLINEABLE rnf #-}
+
+instance ToJSON E where
+    toJSON (Prim x) = JSON.object [ "primitive" .= toJSON x ]
+    toJSON (Tagged t xs) = JSON.object [ "tag" .= toJSON t
+                                       , "children" .= toJSON xs
+                                       ]
+
 
 data BuiltIn = B !Bool | I !Integer | S !Text
     deriving (Eq, Ord, Show, GHC.Generics.Generic)
@@ -180,28 +198,12 @@ instance ToJSON BuiltIn where
     toJSON (S x) = JSON.object [ "string" .= toJSON x ]
 
 instance MetaVariable E where
-    unnamedMV [xMatch| [Prim (S "_")] := reference |] = True
+    unnamedMV (Tagged "reference" [Prim (S "_")]) = True
     unnamedMV _ = False
-    namedMV   [xMatch| [Prim (S  s )] := metavar   |] = Just s
+    namedMV   (Tagged "metavar"   [Prim (S s  )]) = Just s
     namedMV   _ = Nothing
 
 
-
-listAsStatement :: [E] -> E
-listAsStatement []     = [xMake| statementEOF   := [] |]
-listAsStatement (x:xs) = [xMake| statement.this := [x]
-                               | statement.next := [listAsStatement xs]
-                               |]
-
-statementAsList :: E -> [E]
-statementAsList [xMatch| _ := statementEOF |] = []
-statementAsList [xMatch| []     := statement.this.statementEOF
-                       | [next] := statement.next
-                       |] = statementAsList next
-statementAsList [xMatch| [this] := statement.this
-                       | [next] := statement.next
-                       |] = this : statementAsList next
-statementAsList x = [x]
 
 identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)
 identifierSplit t =
@@ -225,19 +227,161 @@ identifierStripRegion t =
     let (base, _, refn) = identifierSplit t
     in  identifierConstruct base Nothing refn
 
-permutablesOfSpec :: Spec -> ([Text],[Text])
-permutablesOfSpec (Spec _ statements) = go statements
+listAsStatement :: [E] -> E
+listAsStatement []     = Tagged "statementEOF" []
+listAsStatement (x:xs) = Tagged "statement"
+    [ Tagged "this" [x]
+    , Tagged "next" [listAsStatement xs]
+    ]
+      
+statementAsList :: E -> [E]
+statementAsList (Tagged "statementEOF" []) = []
+statementAsList (Tagged "statement"
+    [ Tagged "this" [this]
+    , Tagged "next" [next]
+    ]) = if this /= (Tagged "statementEOF" [])
+            then this : statementAsList next
+            else        statementAsList next
+statementAsList x = [x]
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+universe :: E -> [E]
+universe t@(Tagged _ xs) = t : concatMap universe xs
+universe t = [t]
+
+transform :: (E -> E) -> E -> E
+transform f (Tagged t xs) = f $ Tagged t (map (transform f) xs)
+transform f t = f t
+
+replace :: E -> E -> E -> E
+replace old new = transform $ \ i -> if i == old then new else i
+
+replaceAll :: [(E, E)] -> E -> E
+replaceAll [] x = x
+replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
+
+prettyAsTree :: E -> Doc
+prettyAsTree (Prim p) = pretty p
+prettyAsTree (Tagged tag xs) = pretty tag `hang` 4 $ vcat (map (nest 4 . prettyAsTree) xs)
+
+prettyAsPaths :: E -> Doc
+prettyAsPaths = vcat . map pOne . toPaths
     where
-        go [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference |] = ([name],[])
-        go [xMatch| [Prim (S name)] := topLevel.letting.name.reference          |] = ([name],[])
-        go p@[xMatch| [quanVar] := quantified.quanVar |] = ([],collectQuanVars quanVar) `mappend` go' p
-        go x = go' x
+        pOne (ts,Nothing) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":= []"
+        pOne (ts,Just p ) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":=" <+> pretty p
 
-        go' (Tagged _ xs) = mconcat (map go xs)
-        go' _ = mempty
+        toPaths :: E -> [([Tag], Maybe BuiltIn)]
+        toPaths (Prim p) = [([], Just p)]
+        toPaths (Tagged s []) = [([s],Nothing)]
+        toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
 
-collectQuanVars :: E -> [Text]
-collectQuanVars [xMatch| xs := structural.tuple  |] = concatMap collectQuanVars xs
-collectQuanVars [xMatch| xs := structural.matrix |] = concatMap collectQuanVars xs
-collectQuanVars [xMatch| [Prim (S n)] := structural.single.reference |] = [n]
-collectQuanVars _ = []
+
+mkTaggedTH :: [String] -> Exp -> Exp
+mkTaggedTH []     _ = error "mkTaggedTH"
+mkTaggedTH [t]    g = AppE (AppE (ConE (mkName "Tagged")) (LitE (StringL t))) g
+mkTaggedTH (t:ts) g = AppE (AppE (ConE (mkName "Tagged")) (LitE (StringL t))) (ListE [mkTaggedTH ts g])
+
+mergeTaggedTH :: [Exp] -> [Exp]
+mergeTaggedTH []     = error "mergeTaggedTH"
+mergeTaggedTH [g]    = [g]
+mergeTaggedTH gs = 
+    let
+        extract (AppE (AppE (ConE conName) (LitE (StringL t))) (ListE xs))
+            | conName == mkName "Tagged"
+            = (t, xs)
+        extract (AppE (AppE (ConE conName) (LitE (StringL t))) xs)
+            | conName == mkName "Tagged"
+            = (t, [xs])
+        extract x = error $ "extract: " ++ show x
+        gs'    = map extract gs
+        tag    = fst $ head gs'
+        merged = mergeTaggedTH (concatMap snd gs')
+    in  if all (tag==) (map fst gs')
+            then [AppE (AppE (ConE (mkName "Tagged")) (LitE (StringL tag))) (ListE merged)]
+            else gs
+
+strip :: String -> String
+strip = filter (`notElem` " \n\t")
+
+stripComments :: String -> String
+stripComments = unlines . map stripComment . lines
+    where
+        stripComment :: String -> String
+        stripComment ('-':'-':' ':_) = ""
+        stripComment "" = ""
+        stripComment (x:xs) = x : stripComment xs
+
+qq :: QuasiQuoter
+qq = QuasiQuoter { quoteExp  = error "not implemented"
+                 , quoteType = error "not implemented"
+                 , quotePat  = error "not implemented"
+                 , quoteDec  = error "not implemented"
+                 }
+
+xMatch :: QuasiQuoter
+xMatch = qq {
+    quotePat = \ inp -> do
+        let
+            inps :: [String]
+            inps = splitOn "|" (stripComments inp)
+
+            each :: String -> Q (Exp, Pat)
+            each i = case splitOn ":=" i of
+                [patternS, tag] -> do
+                    let tags = splitOn "." $ strip tag
+                    case parsePat patternS of
+                        Left  e -> error $ "Malformed expression: " ++ e
+                        Right p -> do
+                            tags' <- [e| tags |]
+                            return (tags', p)
+                _ -> error $ "Malformed expression: " ++ i
+
+        xs <- mapM each inps
+        let lhs = AppE (VarE  $ mkName "viewTaggeds")
+                       (ListE $ map fst xs)
+        let rhs = ListP $ map (\ (_,i) -> ConP (mkName "Just") [i] ) xs
+        return (ViewP lhs rhs)
+    }
+
+xMake :: QuasiQuoter
+xMake = qq {
+    quoteExp = \ inp -> do
+        let
+            inps :: [String]
+            inps = splitOn "|" (stripComments inp)
+
+            each :: String -> Q Exp
+            each i = case splitOn ":=" i of
+                [lhs,rhs] -> do
+                    let stripped = strip lhs
+                    let tags = map strip $ splitOn "." stripped
+                    case parseExp rhs of
+                        Left  e -> error $ "Malformed expression: " ++ e
+                        Right x -> return $ mkTaggedTH tags x
+                _ -> error $ "Malformed expression: " ++ i
+
+        xs <- mapM each inps
+        case mergeTaggedTH xs of
+            [x] -> return x
+            _   -> error "These do not seem to have a common root."
+    }
+
+viewTagged :: [Tag] -> E -> Maybe [E]
+viewTagged [] g = Just [g]
+viewTagged [t] (Tagged i []) | t == i = Just []
+viewTagged (t:ts) (Tagged i xs) | t == i = do
+    let justs = filter isJust $ map (viewTagged ts) xs
+    if null justs
+        then Nothing
+        else return (concatMap fromJust justs)
+viewTagged _ _ = Nothing
+
+viewTaggeds :: [[Tag]] -> E -> [Maybe [E]]
+viewTaggeds as g = map (`viewTagged` g) as
+

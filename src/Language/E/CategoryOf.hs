@@ -2,10 +2,10 @@
 
 module Language.E.CategoryOf ( Category(..), categoryOf ) where
 
-import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
+
 
 data Category = CatConstant | CatParameter | CatQuantified | CatDecision
     deriving (Eq, Ord, Show)
@@ -26,3 +26,4 @@ categoryOf [xMatch| _ := quanVar.within             |] = return CatQuantified
 categoryOf Prim {} = return CatConstant
 categoryOf (Tagged _ []) = return CatConstant
 categoryOf (Tagged _ xs) = maximum <$> mapM categoryOf xs
+

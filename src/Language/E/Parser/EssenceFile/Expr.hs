@@ -14,7 +14,6 @@ import {-# SOURCE #-} Language.E.Parser.EssenceFile.Domain ( parseDomain )
 import {-# SOURCE #-} Language.E.Parser.EssenceFile.Value ( parseValue )
 import {-# SOURCE #-} Language.E.Parser.EssenceFile.Declaration ( parseTopLevels )
 
-import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Data ( operators, functionals )

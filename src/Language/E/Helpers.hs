@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.E.Helpers where
 
@@ -10,6 +11,42 @@ import Language.E.Pretty
 import Language.E.CompE
 import Language.E.TH
 
+import Data.Aeson ( ToJSON(..), (.=) )
+import qualified Data.Aeson as JSON
+
+
+permutablesOfSpec :: Spec -> ([Text],[Text])
+permutablesOfSpec (Spec _ statements) = go statements
+    where
+        go [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference |] = ([name],[])
+        go [xMatch| [Prim (S name)] := topLevel.letting.name.reference          |] = ([name],[])
+        go p@[xMatch| [quanVar] := quantified.quanVar |] = ([],collectQuanVars quanVar) `mappend` go' p
+        go x = go' x
+
+        go' (Tagged _ xs) = mconcat (map go xs)
+        go' _ = mempty
+
+collectQuanVars :: E -> [Text]
+collectQuanVars [xMatch| xs := structural.tuple  |] = concatMap collectQuanVars xs
+collectQuanVars [xMatch| xs := structural.matrix |] = concatMap collectQuanVars xs
+collectQuanVars [xMatch| [Prim (S n)] := structural.single.reference |] = [n]
+collectQuanVars _ = []
+
+instance ToJSON Spec where
+    toJSON s@(Spec v x) =
+        let
+            xs = statementAsList x
+            (permutables, quantifiedVars) = permutablesOfSpec s
+        in  JSON.object [ "version"        .= toJSON v
+                        , "permutables"    .= toJSON permutables
+                        , "quantifiedVars" .= toJSON quantifiedVars
+                        , "statements"     .= toJSON xs
+                        ]
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
 conjunct :: [E] -> E

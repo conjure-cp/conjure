@@ -6,7 +6,6 @@ import Language.E.Parser.Imports
 import Language.E.Parser.EssenceFile.Domain ( parseDomain )
 import Language.E.Parser.EssenceFile.Expr ( parseExpr, parseQuantifiedExpr, parseReference, parseMetaVariable )
 
-import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Lexer ( Lexeme(..) )

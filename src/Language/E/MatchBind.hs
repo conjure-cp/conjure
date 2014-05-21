@@ -2,9 +2,7 @@
 
 module Language.E.MatchBind ( patternMatch, patternBind ) where
 
-import Stuff.Generic
 import Stuff.MetaVariable
-
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE

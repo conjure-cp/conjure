@@ -7,6 +7,7 @@ module Stuff.Pretty ( Pretty(..)
                     , prettyList, prettyListDoc
                     , parensIf
                     , renderNormal, renderWide
+                    , hang, hcat
                     , Doc
                     ) where
 

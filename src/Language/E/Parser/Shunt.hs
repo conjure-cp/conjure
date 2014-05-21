@@ -3,12 +3,11 @@
 module Language.E.Parser.Shunt ( shuntingYardExpr, shuntingYardDomain ) where
 
 import Language.E.Parser.Imports
-
-import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )
 import Language.E.Lexer ( Lexeme(..), lexemeText )
+
 
 shuntingYardExpr :: Parser [Either Lexeme E] -> Parser E
 shuntingYardExpr = shuntingYard $ \ op before after ->
