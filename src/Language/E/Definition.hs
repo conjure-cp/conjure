@@ -23,6 +23,7 @@ module Language.E.Definition
 
     ) where
 
+import Bug
 import Stuff.Generic.Tag
 import Stuff.Pretty
 import Stuff.MetaVariable
@@ -51,7 +52,7 @@ instance Serialize Spec
 instance Hashable Spec
 
 instance Default Spec where
-    def = Spec (LanguageVersion "Essence" [1,3]) (Tagged "statementEOF" def)
+    def = Spec (LanguageVersion "Essence" [1,3]) EOF
 
 
 data LanguageVersion = LanguageVersion Text [Int]
@@ -132,6 +133,8 @@ instance Hashable RuleReprResult
 data E
     = Prim BuiltIn
     | Tagged !Tag [E]
+    | EOF
+    | StatementAndNext E E
     deriving (Eq, Ord, Show, GHC.Generics.Generic)
 
 instance Serialize E
@@ -143,6 +146,10 @@ instance ToJSON E where
     toJSON (Tagged t xs) = JSON.object [ "tag" .= toJSON t
                                        , "children" .= toJSON xs
                                        ]
+    toJSON EOF = toJSON ("EOF" :: String)
+    toJSON (StatementAndNext a b) = JSON.object [ "statement" .= toJSON a
+                                                , "next" .= toJSON b
+                                                ]
 
 
 data BuiltIn = B !Bool | I !Integer | S !Text
@@ -193,20 +200,15 @@ identifierStripRegion t =
     in  identifierConstruct base Nothing refn
 
 listAsStatement :: [E] -> E
-listAsStatement []     = Tagged "statementEOF" []
-listAsStatement (x:xs) = Tagged "statement"
-    [ Tagged "this" [x]
-    , Tagged "next" [listAsStatement xs]
-    ]
+listAsStatement []     = EOF
+listAsStatement (x:xs) = StatementAndNext x (listAsStatement xs)
       
 statementAsList :: E -> [E]
-statementAsList (Tagged "statementEOF" []) = []
-statementAsList (Tagged "statement"
-    [ Tagged "this" [this]
-    , Tagged "next" [next]
-    ]) = if this /= (Tagged "statementEOF" [])
-            then this : statementAsList next
-            else        statementAsList next
+statementAsList EOF = []
+statementAsList (StatementAndNext this next) =
+    if this /= EOF
+        then this : statementAsList next
+        else        statementAsList next
 statementAsList x = [x]
 
 
@@ -217,13 +219,17 @@ statementAsList x = [x]
 
 
 universe :: E -> [E]
+universe t@(Prim {}) = [t]
 universe t@(Tagged _ xs) = t : concatMap universe xs
-universe t = [t]
+universe t@(EOF {}) = [t]
+universe t@(StatementAndNext this next) = t : universe this ++ universe next
 
 transform :: (E -> E) -> E -> E
+transform f t@(Prim {}) = f t
 transform f (Tagged t xs) = f $ Tagged t (map (transform f) xs)
-transform f t = f t
-
+transform f t@(EOF {}) = f t
+transform f (StatementAndNext this next) = f $ StatementAndNext (transform f this) (transform f next)
+    
 replace :: E -> E -> E -> E
 replace old new = transform $ \ i -> if i == old then new else i
 
@@ -234,9 +240,13 @@ replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 prettyAsTree :: E -> Doc
 prettyAsTree (Prim p) = pretty p
 prettyAsTree (Tagged tag xs) = pretty tag `hang` 4 $ vcat (map (nest 4 . prettyAsTree) xs)
+prettyAsTree EOF = "EOF"
+prettyAsTree (StatementAndNext a b) = vcat [prettyAsTree a, "", prettyAsTree b]
 
 prettyAsPaths :: E -> Doc
-prettyAsPaths = vcat . map pOne . toPaths
+prettyAsPaths EOF = "EOF"
+prettyAsPaths (StatementAndNext a b) = vcat [prettyAsPaths a, "", prettyAsPaths b]
+prettyAsPaths e = (vcat . map pOne . toPaths) e
     where
         pOne (ts,Nothing) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":= []"
         pOne (ts,Just p ) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":=" <+> pretty p
@@ -245,6 +255,8 @@ prettyAsPaths = vcat . map pOne . toPaths
         toPaths (Prim p) = [([], Just p)]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
+        toPaths EOF {} = bug "prettyAsPaths.toPaths EOF"
+        toPaths StatementAndNext {} = bug "prettyAsPaths.toPaths StatementAndNext"
 
 
 mkTaggedTH :: [String] -> Exp -> Exp

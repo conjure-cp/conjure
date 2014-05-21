@@ -13,9 +13,7 @@ removeUnused
     -> m Spec
 removeUnused (Spec v statements) = Spec v <$> go statements
     where
-        go [xMatch| [this] := statement.this
-                  | [next] := statement.next
-                  |] = do
+        go (StatementAndNext this next) = do
             let maybeName = case this of
                     [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference
                            | [d]           := topLevel.declaration.find .domain
@@ -27,15 +25,11 @@ removeUnused (Spec v statements) = Spec v <$> go statements
             next' <- go next
             case maybeName of
                 Nothing -> do
-                    return [xMake| statement.this := [this]
-                                 | statement.next := [next']
-                                 |]
+                    return (StatementAndNext this next')
                 Just name -> do
                     if name `S.member` identifiersIn next
                         then do
-                            return [xMake| statement.this := [this]
-                                         | statement.next := [next']
-                                         |]
+                            return (StatementAndNext this next')
                         else do
                             mkLog "removedDecl" (pretty this)
                             return next'

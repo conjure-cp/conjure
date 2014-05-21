@@ -37,15 +37,16 @@ introduceFakeConstraints spec@(Spec v s) = do
     where
         inspect [xMatch| [Prim (S nm)] := topLevel.declaration.find .name.reference |] = tell [Introduced nm]
         inspect [xMatch| [Prim (S nm)] := topLevel.declaration.given.name.reference |] = tell [Introduced nm]
-        inspect [xMatch| [Prim (S nm)] := reference                       |] = tell [Used       nm]
+        inspect [xMatch| [Prim (S nm)] := reference                                 |] = tell [Used       nm]
+        inspect Prim {} = return ()
         inspect (Tagged _ xs) = mapM_ inspect xs
-        inspect _ = return ()
+        inspect EOF {} = return ()
+        inspect (StatementAndNext this next) = inspect this >> inspect next
 
 removeFakeConstraints :: Spec -> Spec
-removeFakeConstraints (Spec v s) = Spec v (helper s)
+removeFakeConstraints (Spec v s) = Spec v (transform helper s)
     where
         helper [eMatch| true(&_) |] = [eMake| true |]
         helper [eMatch| true(&_,&_) |] = [eMake| true |]
-        helper (Tagged t xs) = Tagged t (map helper xs)
         helper x = x
 

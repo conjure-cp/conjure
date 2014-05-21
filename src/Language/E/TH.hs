@@ -57,6 +57,7 @@ mkMatchLike parser = qq {
                               [ ConP (mkName "Tag") [LitP (StringL (T.unpack t))]
                               , ListP ys
                               ]
+            buildP p = error ("buildP: " ++ show p)
 
         case runLexerAndParser (inCompleteFile parser) "" (T.pack inp) of
             Left  e -> error $ show e
@@ -101,6 +102,7 @@ eMake = qq {
                          (ConE (mkName "Tag") `AppE` LitE (StringL $ T.unpack t))
                             `AppE`
                          ListE ys
+            build p = error ("eMake.build: " ++ show p)
 
         case runLexerAndParser (inCompleteFile parseExpr) "" (T.pack inp) of
             Left  e -> error $ show e

@@ -23,15 +23,19 @@ useMemoisation = False
 labelOf :: E -> Doc
 labelOf (Prim   p  ) = pretty p
 labelOf (Tagged s _) = pretty s
+labelOf EOF {} = "EOF"
+labelOf StatementAndNext {} = "StatementAndNext"
 
 
 
 universeExcept :: (E -> Bool) -> Spec -> [E]
 universeExcept p (Spec _ s) = f s
     where
-        f t | p t         = []
+        f t | p t = []
+        f t@(Prim {}) = [t]
         f t@(Tagged _ xs) = t : concatMap f xs
-        f t               = [t]
+        f t@(EOF {}) = [t]
+        f t@(StatementAndNext this next) = t : f this ++ f next
 
 universeSpecNoFindGiven :: Spec -> [E]
 universeSpecNoFindGiven = universeExcept p
@@ -162,16 +166,13 @@ bottomUpEExcept
     -> t m E
 bottomUpEExcept p func x = withBindingScope $ helper x
     where
-        helper [xMatch| [this] := statement.this
-                      | [next] := statement.next
-                      |] = do
+        helper EOF = return EOF
+        helper (StatementAndNext this next) = do
             lift $ introduceStuff this
             this' <- func =<< bottomUpEExcept p func this
             lift $ introduceStuff this'
             next' <- func =<< bottomUpEExcept p func next
-            return [xMake| statement.this := [this']
-                         | statement.next := [next']
-                         |]
+            return (StatementAndNext this' next')
         helper t | p t = return t
         helper t = do
             lift $ introduceStuff t
@@ -181,6 +182,12 @@ bottomUpEExcept p func x = withBindingScope $ helper x
                     let t' = Tagged s xs'
                     lift $ introduceStuff t'
                     func t'
+                (StatementAndNext this next) -> do
+                    lift $ introduceStuff this
+                    this' <- helper this
+                    lift $ introduceStuff this'
+                    next' <- helper next
+                    func (StatementAndNext this' next')
                 _           -> func t
 
 
@@ -192,16 +199,12 @@ bottomUpERefn
     -> WriterT Any m E
 bottomUpERefn level func = withBindingScope . helper
     where
-        helper [xMatch| [this] := statement.this
-                      | [next] := statement.next
-                      |] = do
+        helper (StatementAndNext this next) = do
             lift $ introduceStuff this
             this' <- func =<< bottomUpERefn level func this
             lift $ introduceStuff this'
             next' <- func =<< bottomUpERefn level func next
-            return [xMake| statement.this := [this']
-                         | statement.next := [next']
-                         |]
+            return (StatementAndNext this' next')
         helper i = do
             lift $ introduceStuff i
             checkingMemo level i $ \ t ->
@@ -262,9 +265,7 @@ foreachStatement
 foreachStatement f (Spec v s) = Spec v . listAsStatement <$> helper s
     where
         helper :: E -> t m [E]
-        helper [xMatch| [this] := statement.this
-                      | [next] := statement.next
-                      |] = do
+        helper (StatementAndNext this next) = do
             lift $ introduceStuff this
             this' <- f this
             lift $ mapM_ introduceStuff this'

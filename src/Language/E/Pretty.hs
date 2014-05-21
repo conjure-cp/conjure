@@ -53,12 +53,8 @@ instance Pretty E where
 
     -- pretty x | trace (show $ "pretty: " $+$ prettyAsPaths x) False = undefined
 
-    pretty [xMatch| [this] := statement.this
-                  | [next] := statement.next
-                  |]
-        = pretty this $$ pretty next
-
-    pretty [xMatch| _ := statementEOF |] = empty
+    pretty EOF = empty
+    pretty (StatementAndNext this next) = pretty this $$ pretty next
 
     pretty (Prim (B False)) = "false"
     pretty (Prim (B True )) = "true"

@@ -162,15 +162,11 @@ noTuplesE statementIn = do
 
 
 noTupleDomsInQuanEs :: MonadConjure m => E -> m (E, Bool)
-noTupleDomsInQuanEs [xMatch| [this] := statement.this
-                           | [next] := statement.next
-                           |] = withBindingScope' $ do
+noTupleDomsInQuanEs (StatementAndNext this next) = withBindingScope' $ do
     introduceStuff this
     (this', b1) <- noTupleDomsInQuanEs this
     (next', b2) <- noTupleDomsInQuanEs next
-    return ( [xMake| statement.this := [this']
-                   | statement.next := [next']
-                   |]
+    return ( StatementAndNext this' next'
            , b1 || b2
            )
 noTupleDomsInQuanEs inp@(Tagged t xs) = withBindingScope' $ do
