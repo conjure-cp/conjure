@@ -16,7 +16,6 @@ import Language.E.Parser.EssenceFile.Domain ( parseDomain )
 import Language.E.Parser.EssenceFile.Expr ( parseExpr )
 import Language.E.Parser.EssenceFile.Declaration ( parseTopLevels )
 
-import Stuff.Generic
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Lexer ( Lexeme(..) )
@@ -60,11 +59,9 @@ parseRuleRefn t = inCompleteFile $ do
             locals    <- concat <$> many parseTopLevels
             return RuleRefn { ruleRefnName = t
                             , ruleRefnLevel = level
-                            , ruleRefnBody =
-                                [xMake| rulerefn.pattern   := [pattern]
-                                      | rulerefn.templates := templates
-                                      | rulerefn.locals    := locals
-                                      |]
+                            , ruleRefnPattern = pattern
+                            , ruleRefnTemplates = templates
+                            , ruleRefnLocals = locals
                             }
     some one
 

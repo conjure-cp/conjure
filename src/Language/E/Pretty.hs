@@ -22,8 +22,7 @@ prettySpecDebug :: Spec -> Doc
 prettySpecDebug sp@(Spec _ st) = vcat $ pretty sp : map prettyAsPaths (statementAsList st)
 
 instance Pretty RuleRefn where
-    pretty (RuleRefn _ Nothing    x) = pretty x
-    pretty (RuleRefn _ (Just lvl) x) = vcat [Pr.brackets (pretty lvl), pretty x]
+    pretty ruleRefn = pretty (show ruleRefn)
 
 instance Pretty RuleRepr where
     pretty (RuleRepr _ reprName domOut mcons lcls cases) =

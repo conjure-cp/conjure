@@ -88,7 +88,9 @@ instance NFData RulesDB where
 data RuleRefn = RuleRefn
     { ruleRefnName  :: Text
     , ruleRefnLevel :: Maybe Int
-    , ruleRefnBody  :: E
+    , ruleRefnPattern :: E
+    , ruleRefnTemplates :: [E]
+    , ruleRefnLocals :: [E]
     }
     deriving (Eq, Ord, Show, GHC.Generics.Generic)
 

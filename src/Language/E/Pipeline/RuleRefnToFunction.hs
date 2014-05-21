@@ -104,11 +104,7 @@ single
     -> Either
         ConjureError                        -- static errors in the rule
         (RuleRefnAsFunctionWithMap m)       -- the rule as a function.
-single (RuleRefn name _
-         [xMatch| [pattern] := rulerefn.pattern
-                | templates := rulerefn.templates
-                | locals    := rulerefn.locals
-                |]) = do
+single (RuleRefn name _ pattern templates locals) = do
     let
         staticCheck :: Either ConjureError ()
         staticCheck = do
@@ -166,7 +162,7 @@ single (RuleRefn name _
                     localsHandler locals
                 else errRuleFail
     return $ M.singleton (getKey pattern) functionOut
-single _ = Left (ErrFatal, "This should never happen. (in RuleRefnToFunction.worker)", Nothing)
+
 
 getKey :: E -> [Either Tag Text]
 getKey [xMatch| [Prim (S op)] := binOp.operator |] =
