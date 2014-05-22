@@ -5,7 +5,7 @@ module Language.E.Parser.Imports where
 import Language.E.Lexer ( Lexeme(..), LexemePos, lexemeFace, runLexer )
 import Language.E.Imports
 import Language.E.Definition
-import Language.E.Pretty ( Pretty, pretty )
+import Language.E.Pretty ( Pretty(pretty) )
 
 import Text.Parsec ( ParsecT, parse, tokenPrim, (<?>) )
 import Text.Parsec.Combinator ( between, eof )
