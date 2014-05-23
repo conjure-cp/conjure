@@ -341,9 +341,15 @@ instance SelectByMode E where
             _                                -> defSelectByMode mode s xs
 
 eDepth :: E -> Int
+eDepth Prim{} = 1
 eDepth (Tagged _ []) = 1
 eDepth (Tagged _ ys) = 1 + maximum (map eDepth ys)
-eDepth _ = 1
+eDepth (D d) = dDepth d
+eDepth EOF = 0
+eDepth (StatementAndNext this next) = max (eDepth this) (eDepth next)
+
+dDepth :: Domain -> Int
+dDepth _ = error "uniplate me up, scotty"
 
 compareChain :: [Ordering] -> Ordering
 compareChain (EQ:xs) = compareChain xs
@@ -352,27 +358,26 @@ compareChain []      = EQ
 
 domOrder :: E -> E -> Ordering
 domOrder
-    [xMatch| _ := domain.bool |]
-    [xMatch| _ := domain.bool |] = EQ
+    (D DomainBool)
+    (D DomainBool) = EQ
 domOrder
-    [xMatch| _ := domain.int |]
-    [xMatch| _ := domain.int |] = EQ
+    (D DomainInt{})
+    (D DomainInt{}) = EQ
 domOrder
-    [xMatch| [indexA] := domain.matrix.index
-           | [innerA] := domain.matrix.inner
-           |]
-    [xMatch| [indexB] := domain.matrix.index
-           | [innerB] := domain.matrix.inner
-           |]
-    = compareChain [ domOrder indexA indexB
-                   , domOrder innerA innerB
+    (D (DomainMatrix indexA innerA))
+    (D (DomainMatrix indexB innerB))
+    = compareChain [ domOrder (D indexA) (D indexB)
+                   , domOrder (D innerA) (D innerB)
                    ]
-domOrder [xMatch| _ := domain.bool   |] _ = LT
-domOrder _ [xMatch| _ := domain.bool   |] = GT
-domOrder [xMatch| _ := domain.int    |] _ = LT
-domOrder _ [xMatch| _ := domain.int    |] = GT
-domOrder [xMatch| _ := domain.matrix |] _ = LT
-domOrder _ [xMatch| _ := domain.matrix |] = GT
+
+domOrder (D DomainBool) _ = LT
+domOrder _ (D DomainBool) = GT
+
+domOrder (D DomainInt{}) _ = LT
+domOrder _ (D DomainInt{}) = GT
+
+domOrder (D DomainMatrix{}) _ = LT
+domOrder _ (D DomainMatrix{}) = GT
 
 domOrder x y = compare (eDepth x) (eDepth y)
 
