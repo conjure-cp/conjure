@@ -1,7 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Language.E.GenerateRandomParam.Data where
 
-import Language.E
+module Language.E.GenerateRandomParam.Data
+    ( Choice(..)
+    , Range(..)
+    , Essence, EssenceParam, EnumMap
+    , FAttrs(..)
+    ) where
+
+import Language.E hiding ( Range )
 import qualified Text.PrettyPrint as Pr
 import Data.Map(Map)
 

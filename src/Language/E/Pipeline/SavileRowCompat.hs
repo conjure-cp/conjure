@@ -86,14 +86,9 @@ sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
         matrixDomainNbDims :: E -> Int
         matrixDomainNbDims [xMatch| [inner] := domain.matrix.inner |] = 1 + matrixDomainNbDims inner
         matrixDomainNbDims _ = 0
-sliceIfTooFewIndicesE p@(Prim {}) = return p
-sliceIfTooFewIndicesE p@(Tagged t xs) = do
+sliceIfTooFewIndicesE p = do
     introduceStuff p
-    Tagged t <$> mapM sliceIfTooFewIndicesE xs
-sliceIfTooFewIndicesE p@(EOF {}) = return p
-sliceIfTooFewIndicesE p@(StatementAndNext this next) = do
-    introduceStuff p
-    StatementAndNext <$> sliceIfTooFewIndicesE this <*> sliceIfTooFewIndicesE next
+    descendM sliceIfTooFewIndicesE p
 
 
 -- savilerow doesn't support inline value matrices.

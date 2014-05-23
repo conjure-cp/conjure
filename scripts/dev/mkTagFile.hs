@@ -23,17 +23,18 @@ main = interact $ \ inp ->
 
     in
         unlines
-            [ "{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}"
+            [ "{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, GeneralizedNewtypeDeriving #-}"
             , "module Stuff.Generic.Tag where"
             , "import Stuff.Pretty"
             , "import Data.String ( IsString(..) )"
+            , "import Data.Data ( Data, Typeable )"
             , "import GHC.Generics ( Generic )"
             , "import Data.Serialize ( Serialize(..) )"
             , "import Data.Hashable ( Hashable(..) )"
             , "import Data.Aeson ( ToJSON(..) )"
             , "import qualified Data.Text as T"
             , "newtype Tag = Tag T.Text "
-            , "    deriving (Eq, Ord, Show, Generic, Hashable, ToJSON)"
+            , "    deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable, ToJSON)"
             , "instance Serialize Tag where"
             , "    put (Tag t) = put (T.unpack t)"
             , "    get = fmap (Tag . T.pack) get"

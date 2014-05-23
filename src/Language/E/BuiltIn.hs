@@ -254,7 +254,7 @@ tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] = do
         D (DomainTuple xs) -> do
             ys <- forM xs $ \ x -> do
                 (_, quanvar) <- freshQuanVar "tupleDomInQuantification"
-                return (quanvar, x)
+                return (quanvar, D x)
             let quanvars = [xMake| value.tuple.values := map fst ys |]
             let out = transform (replacer quanvars) $ helper ys
             ret p "builtIn.tupleDomInQuantification" out

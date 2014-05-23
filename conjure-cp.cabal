@@ -157,6 +157,7 @@ Library
                      , filepath
                      , groom
                      , hashable
+                     , haskell-src-exts
                      , haskell-src-meta >= 0.6
                      , hspec
                      , HUnit
@@ -167,14 +168,14 @@ Library
                      , safe
                      , shelly >= 1.3
                      , split
+                     , sqlite-simple
                      , template-haskell
                      , text
                      , time
-                     , transformers
+                     , transformers >= 0.4
                      , transformers-base
+                     , uniplate
                      , unordered-containers
-                     , haskell-src-exts
-                     , sqlite-simple
     ghc-prof-options:
         -auto-all
         -caf-all

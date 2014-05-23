@@ -4,7 +4,7 @@ module Language.E.Up.RepresentationTree(
 
 import qualified Data.Map as M
 
-import Language.E
+import Language.E hiding ( children )
 import Language.E.Up.Data
 import Language.E.Up.Debug
 

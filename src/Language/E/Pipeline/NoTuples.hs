@@ -64,19 +64,16 @@ noTupleLiterals inp = do
 
 unrollIfNeeded :: MonadConjure m => E -> m (E, Bool)
 unrollIfNeeded inp = do
-    (outp, Any flag) <- runWriterT $ helper inp
+    (outp, Any flag) <- runWriterT $ rewriteM helper inp
     when flag $ mkLog "noTupleUnrollIfNeeded" $ sep [ pretty inp, "~~>", pretty outp ]
     return (outp, flag)
     where
         helper p@[xMatch| _ := quantified |] | containsTupleIndexing' p = do
             mres <- lift $ unrollQuantifiers p
             case mres of
-                Nothing -> return p
-                Just (out,_) -> do tell (Any True) ; helper out
-        helper t@(Prim {}) = return t
-        helper (Tagged t xs) = Tagged t <$> mapM helper xs
-        helper t@(EOF {}) = return t
-        helper (StatementAndNext this next) = StatementAndNext <$> helper this <*> helper next
+                Nothing -> return Nothing
+                Just (out,_) -> do tell (Any True) ; return (Just out)
+        helper _ = return Nothing
 
         containsTupleIndexing' x@(Tagged _ xs) =
             containsTupleIndexing x || any containsTupleIndexing' xs

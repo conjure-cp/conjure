@@ -111,17 +111,17 @@ fullyInline inp = do
 
     where
 
-        inliner typesMap bindingsMap (Spec v s) = Spec v <$> f s
+        inliner typesMap bindingsMap (Spec v s) = Spec v <$> rewriteM f s
             where
                 f x@[xMatch| [Prim (S nm)] := reference |]
                     = case (M.lookup nm typesMap, M.lookup nm bindingsMap) of
-                        (_, Just [xMatch| _ := type |]) -> return x
+                        (_, Just [xMatch| _ := type |]) -> return Nothing
                         (Just theType, Just binding) -> do
                             theType' <- typeOf x
                             if typeUnify theType theType'
-                                then f [xMake| typed.left               := [binding]
-                                             | typed.right.domainInExpr := [theType]
-                                             |]
+                                then return $ Just [xMake| typed.left               := [binding]
+                                                         | typed.right.domainInExpr := [theType]
+                                                         |]
                                 else error $ show $ vcat [ "Type mismatch for" <+> pretty nm
                                                          , "    Expected:" <+> pretty theType
                                                          , "    Found:   " <+> pretty theType'
@@ -131,12 +131,9 @@ fullyInline inp = do
                             f [xMake| typed.left               := [binding]
                                     | typed.right.domainInExpr := [theType]
                                     |]
-                        _           -> return x
-                f x@[xMatch| [_] := structural.single.reference |] = return x
-                f x@(Prim {}) = return x
-                f (Tagged t xs) = Tagged t <$> mapM f xs
-                f x@(EOF {}) = return x
-                f (StatementAndNext this next) = StatementAndNext <$> f this <*> f next
+                        _           -> return Nothing
+                f x@[xMatch| [_] := structural.single.reference |] = return (Just x)
+                f _ = return Nothing
 
         getDecls (Spec _ x) =
             [ (nm, dom)

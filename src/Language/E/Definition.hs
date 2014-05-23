@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Language.E.Definition
@@ -15,7 +15,12 @@ module Language.E.Definition
     , identifierSplit, identifierConstruct
     , identifierStripRegion
 
-    , universe, transform, replace, replaceAll
+    , universe, children
+    , descend, descendM
+    , transform, transformM
+    , rewrite, rewriteM
+    , replace, replaceAll
+
     , qq, xMake, xMatch
     , viewTagged, viewTaggeds
     , prettyAsTree, prettyAsPaths
@@ -37,7 +42,8 @@ import Data.Aeson ( ToJSON(..), (.=) )
 import qualified Data.Aeson as JSON
 
 -- uniplate
--- import Data.Uniplate
+import Data.Data ( Data, Typeable )
+import Data.Generics.Uniplate.Data ( Uniplate, universe, children, descend, descendM, transform, transformM, rewrite, rewriteM )
 
 -- template-haskell
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
@@ -49,7 +55,7 @@ import Language.Haskell.Meta.Parse.Careful
 
 
 data Spec = Spec LanguageVersion E
-    deriving (Eq, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize Spec
 
@@ -60,7 +66,7 @@ instance Default Spec where
 
 
 data LanguageVersion = LanguageVersion Text [Int]
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize LanguageVersion
 
@@ -72,7 +78,7 @@ instance ToJSON LanguageVersion where
 
 
 data RulesDB = RulesDB { reprRules :: [RuleRepr], refnRules :: [RuleRefn] }
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize RulesDB
 
@@ -86,7 +92,7 @@ data RuleRefn = RuleRefn
     , ruleRefnTemplates :: [E]
     , ruleRefnLocals :: [E]
     }
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize RuleRefn
 
@@ -101,7 +107,7 @@ data RuleRepr = RuleRepr
     , ruleReprLocals :: [E]                 -- locals
     , ruleReprCases :: [RuleReprCase]
     }
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize RuleRepr
 
@@ -113,7 +119,7 @@ data RuleReprCase = RuleReprCase
     , ruleReprCaseStructural :: Maybe E     -- structural constraints
     , ruleReprCaseLocals :: [E]             -- locals
     }
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize RuleReprCase
 
@@ -127,7 +133,7 @@ data RuleReprResult = RuleReprResult
     , ruleReprResultReplacementDom :: E     -- replacement domain
     , ruleReprResultStructurals :: [E]      -- structural constraints
     }
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize RuleReprResult
 
@@ -140,7 +146,7 @@ data E
     | D Domain
     | EOF
     | StatementAndNext E E
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize E
 
@@ -159,7 +165,7 @@ instance ToJSON E where
 
 
 data BuiltIn = B !Bool | I !Integer | S !Text
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize BuiltIn
 
@@ -193,7 +199,7 @@ data Domain
     | DomainFunction DomainAttributes Domain Domain
     | DomainRelation DomainAttributes [Domain]
     | DomainPartition DomainAttributes Domain
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize Domain
 
@@ -203,7 +209,7 @@ instance ToJSON Domain
 
 
 data DomainAttributes = DomainAttributes [DomainAttribute]
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize DomainAttributes
 
@@ -216,7 +222,7 @@ data DomainAttribute
     = DAName Text
     | DANameValue Text E
     | DADotDot
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize DomainAttribute
 
@@ -230,7 +236,7 @@ data Range
     | RangeLowerBounded E
     | RangeUpperBounded E
     | RangeBounded E E
-    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize Range
 
@@ -279,25 +285,10 @@ statementAsList x = [x]
 --------------------------------------------------------------------------------
 
 
-
-universe :: E -> [E]
-universe t@(Prim {}) = [t]
-universe t@(Tagged _ xs) = t : concatMap universe xs
-universe t@(D _) = t : undefined
-universe t@(EOF {}) = [t]
-universe t@(StatementAndNext this next) = t : universe this ++ universe next
-
-transform :: (E -> E) -> E -> E
-transform f t@(Prim {}) = f t
-transform f (Tagged t xs) = f $ Tagged t (map (transform f) xs)
-transform f (D _) = f $ D undefined
-transform f t@(EOF {}) = f t
-transform f (StatementAndNext this next) = f $ StatementAndNext (transform f this) (transform f next)
-
-replace :: E -> E -> E -> E
+replace :: (Uniplate a, Eq a) => a -> a -> a -> a
 replace old new = transform $ \ i -> if i == old then new else i
 
-replaceAll :: [(E, E)] -> E -> E
+replaceAll :: (Uniplate a, Eq a) => [(a, a)] -> a -> a
 replaceAll [] x = x
 replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 

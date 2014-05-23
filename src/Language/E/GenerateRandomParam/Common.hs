@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Language.E.GenerateRandomParam.Common where
 
-import Language.E hiding(mkLog,trace)
+import Language.E hiding(Range,mkLog,trace)
 
 import Language.E.GenerateRandomParam.Data
 

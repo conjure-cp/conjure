@@ -3,7 +3,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 module Language.E.GenerateRandomParam.EvalChoice(evalChoice,allChoices,permutationsN) where
 
-import Language.E hiding (mkLog)
+import Language.E hiding (Range, mkLog)
 import Language.E.GenerateRandomParam.Data
 import Language.E.GenerateRandomParam.Common(countRanges,countRange,mkLog)
 import Language.E.Up.Debug(upBug)
