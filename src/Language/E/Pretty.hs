@@ -53,6 +53,7 @@ instance Pretty E where
 
     -- pretty x | trace (show $ "pretty: " $+$ prettyAsPaths x) False = undefined
 
+    pretty (D d) = pretty d
     pretty EOF = empty
     pretty (StatementAndNext this next) = pretty this $$ pretty next
 
@@ -196,82 +197,12 @@ instance Pretty E where
         "relation" <+> prettyList Pr.parens "," ts
     pretty [xMatch| [x] := type.partition.inner |] = "partition from" <+> pretty x
 
-
-    -- domain.*
+-- domain.*
 
     pretty [xMatch| [d] := domainInExpr |] = "`" <> pretty d <> "`"
     pretty [xMatch| xs  := domain.binOp |] = pretty [xMake| binOp := xs |]
 
     pretty [xMatch| [Prim (S x)] := domain.reference   |] = pretty x
-
-    pretty [xMatch|      []      := domain.bool        |] = "bool"
-
-    pretty [xMatch|      []      := domain.int.ranges  |] = "int"
-    pretty [xMatch|    ranges    := domain.int.ranges  |] = "int" <> prettyList Pr.parens "," ranges
-
-    pretty [xMatch|    [name]    := domain.enum.name
-                  |      []      := domain.enum.ranges |] = pretty name
-    pretty [xMatch|    [name]    := domain.enum.name
-                  |    ranges    := domain.enum.ranges |] = pretty name <> prettyList Pr.parens "," ranges
-
-    pretty [xMatch| inners := domain.tuple.inners |]
-        = (if length inners < 2 then "tuple" else Pr.empty)
-        <+> prettyList Pr.parens "," inners
-
-    pretty [xMatch| [   index   ] := domain.matrix.index
-                  | [innerNested] := domain.matrix.inner
-                  |]
-        = "matrix indexed by" <+> prettyList Pr.brackets "," indices
-                              <+> "of" <+> pretty inner
-        where
-            (indices,inner) = first (index:) $ collect innerNested
-            collect [xMatch| [i] := domain.matrix.index
-                           | [j] := domain.matrix.inner
-                           |] = first (i:) $ collect j
-            collect x = ([],x)
-
-    pretty [xMatch| attrs       := domain.function.attributes
-                  | [innerFrom] := domain.function.innerFrom
-                  | [innerTo]   := domain.function.innerTo
-                  |]
-        = hang ("function" <+> pretty attrs) 4 $
-            hang (pretty innerFrom) 4 $
-                "-->" <+> pretty innerTo
-
-    pretty [xMatch| [attrs] := domain.set.attributes
-                  | [inner] := domain.set.inner
-                  |]
-        = hang ("set" <+> pretty attrs <+> "of") 4 (pretty inner)
-
-    pretty [xMatch| [attrs] := domain.mset.attributes
-                  | [inner] := domain.mset.inner
-                  |]
-        = hang ("mset" <+> pretty attrs <+> "of") 4 (pretty inner)
-
-    pretty [xMatch| [attrs] := domain.relation.attributes
-                  | inners  := domain.relation.inners
-                  |]
-        = hang ("relation" <+> pretty attrs <+> "of") 4 (prettyList Pr.parens " *" inners)
-
-    pretty [xMatch| [attrs] := domain.partition.attributes
-                  | [inner]  := domain.partition.inner
-                  |]
-        = hang ("partition" <+> pretty attrs <+> "from") 4 (pretty inner)
-
-
-    pretty [xMatch| []    := attrCollection |] = empty
-    pretty [xMatch| attrs := attrCollection |] = prettyList Pr.parens "," attrs
-
-    pretty [xMatch| [name ] := attribute.nameValue.name
-                  | [value] := attribute.nameValue.value
-                  |] = pretty name <+> pretty value
-    pretty [xMatch| [   name   ] := attribute.name      |] = pretty name
-    pretty [xMatch| [          ] := attribute.dontCare  |] = ".."
-
-    pretty [xMatch| [ x ] := range.single |] = pretty x
-    pretty [xMatch| [ x ] := range.from   |] = pretty x <> ".."
-    pretty [xMatch| [ x ] := range.to     |] = ".." <> pretty x
-    pretty [xMatch| [x,y] := range.fromTo |] = pretty x <> ".." <> pretty y
 
 -- value.*
 
@@ -390,6 +321,68 @@ instance Pretty E where
         = pretty actual <> prettyList Pr.parens "," args
 
     pretty (Tagged t xs) = "{-#" <+> pretty t <++> vcat (map pretty xs) <+> "#-}"
+
+
+instance Pretty Domain where
+    -- domain.*
+
+    pretty DomainBool = "bool"
+
+    pretty (DomainInt []) = "int"
+    pretty (DomainInt ranges) = "int" <> prettyList Pr.parens "," ranges
+
+    pretty (DomainEnum name []) = pretty name
+    pretty (DomainEnum name ranges) = pretty name <> prettyList Pr.parens "," ranges
+
+    pretty (DomainTuple inners)
+        = (if length inners < 2 then "tuple" else Pr.empty)
+        <+> prettyList Pr.parens "," inners
+
+    pretty (DomainMatrix index innerNested)
+        = "matrix indexed by" <+> prettyList Pr.brackets "," indices
+                              <+> "of" <+> pretty inner
+        where
+            (indices,inner) = first (index:) $ collect innerNested
+            collect (DomainMatrix i j) = first (i:) $ collect j
+            collect x = ([],x)
+
+    pretty (DomainSet attrs inner) =
+        hang ("set" <+> pretty attrs <+> "of") 4 (pretty inner)
+
+    pretty (DomainMSet attrs inner) =
+        hang ("mset" <+> pretty attrs <+> "of") 4 (pretty inner)
+
+    pretty (DomainFunction attrs innerFrom innerTo) =
+        hang ("function" <+> pretty attrs) 4 $
+            hang (pretty innerFrom) 4 $
+                "-->" <+> pretty innerTo
+
+    pretty (DomainRelation attrs inners)
+        = hang ("relation" <+> pretty attrs <+> "of") 4 (prettyList Pr.parens " *" inners)
+
+    pretty (DomainPartition attrs inner)
+        = hang ("partition" <+> pretty attrs <+> "from") 4 (pretty inner)
+
+    -- 
+    -- pretty [xMatch| [ x ] := range.single |] = pretty x
+    -- pretty [xMatch| [ x ] := range.from   |] = pretty x <> ".."
+    -- pretty [xMatch| [ x ] := range.to     |] = ".." <> pretty x
+    -- pretty [xMatch| [x,y] := range.fromTo |] = pretty x <> ".." <> pretty y
+
+instance Pretty DomainAttributes where
+    pretty (DomainAttributes []) = empty
+    pretty (DomainAttributes attrs) = prettyList Pr.parens "," attrs
+
+instance Pretty DomainAttribute where
+    pretty (DAName name) = pretty name
+    pretty (DANameValue name value) = pretty name <+> pretty value
+    pretty DADotDot = ".."
+
+instance Pretty Range where
+    pretty (RangeSingle x) = pretty x
+    pretty (RangeLowerBounded x) = pretty x <> ".."
+    pretty (RangeUpperBounded x) = ".." <> pretty x
+    pretty (RangeBounded x y) = pretty x <> ".." <> pretty y
 
 
 prettyPrec :: Int -> E -> Doc

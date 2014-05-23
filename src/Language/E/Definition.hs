@@ -8,7 +8,8 @@
 module Language.E.Definition
     ( module Stuff.Generic.Tag
 
-    , Spec(..), LanguageVersion(..), E(..), BuiltIn(..)
+    , Spec(..), LanguageVersion(..) , E(..), BuiltIn(..)
+    , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
 
     , identifierSplit, identifierConstruct
@@ -34,6 +35,9 @@ import qualified Data.Text as T
 import qualified GHC.Generics ( Generic )
 import Data.Aeson ( ToJSON(..), (.=) )
 import qualified Data.Aeson as JSON
+
+-- uniplate
+-- import Data.Uniplate
 
 -- template-haskell
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )
@@ -133,6 +137,7 @@ instance Hashable RuleReprResult
 data E
     = Prim BuiltIn
     | Tagged !Tag [E]
+    | D Domain
     | EOF
     | StatementAndNext E E
     deriving (Eq, Ord, Show, GHC.Generics.Generic)
@@ -146,6 +151,7 @@ instance ToJSON E where
     toJSON (Tagged t xs) = JSON.object [ "tag" .= toJSON t
                                        , "children" .= toJSON xs
                                        ]
+    toJSON (D d) = JSON.object [ "domain" .= toJSON d ]
     toJSON EOF = toJSON ("EOF" :: String)
     toJSON (StatementAndNext a b) = JSON.object [ "statement" .= toJSON a
                                                 , "next" .= toJSON b
@@ -175,6 +181,62 @@ instance MetaVariable E where
     namedMV   (Tagged "metavar"   [Prim (S s  )]) = Just s
     namedMV   _ = Nothing
 
+
+data Domain
+    = DomainBool
+    | DomainInt [Range]
+    | DomainEnum Text [Range]
+    | DomainTuple [Domain]
+    | DomainMatrix Domain Domain
+    | DomainSet DomainAttributes Domain
+    | DomainMSet DomainAttributes Domain
+    | DomainFunction DomainAttributes Domain Domain
+    | DomainRelation DomainAttributes [Domain]
+    | DomainPartition DomainAttributes Domain
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize Domain
+
+instance Hashable Domain
+
+instance ToJSON Domain
+
+
+data DomainAttributes = DomainAttributes [DomainAttribute]
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize DomainAttributes
+
+instance Hashable DomainAttributes
+
+instance ToJSON DomainAttributes
+
+
+data DomainAttribute
+    = DAName Text
+    | DANameValue Text E
+    | DADotDot
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize DomainAttribute
+
+instance Hashable DomainAttribute
+
+instance ToJSON DomainAttribute
+
+
+data Range
+    = RangeSingle E
+    | RangeLowerBounded E
+    | RangeUpperBounded E
+    | RangeBounded E E
+    deriving (Eq, Ord, Show, GHC.Generics.Generic)
+
+instance Serialize Range
+
+instance Hashable Range
+
+instance ToJSON Range
 
 
 identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)
@@ -221,15 +283,17 @@ statementAsList x = [x]
 universe :: E -> [E]
 universe t@(Prim {}) = [t]
 universe t@(Tagged _ xs) = t : concatMap universe xs
+universe t@(D _) = t : undefined
 universe t@(EOF {}) = [t]
 universe t@(StatementAndNext this next) = t : universe this ++ universe next
 
 transform :: (E -> E) -> E -> E
 transform f t@(Prim {}) = f t
 transform f (Tagged t xs) = f $ Tagged t (map (transform f) xs)
+transform f (D _) = f $ D undefined
 transform f t@(EOF {}) = f t
 transform f (StatementAndNext this next) = f $ StatementAndNext (transform f this) (transform f next)
-    
+
 replace :: E -> E -> E -> E
 replace old new = transform $ \ i -> if i == old then new else i
 
@@ -240,10 +304,12 @@ replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 prettyAsTree :: E -> Doc
 prettyAsTree (Prim p) = pretty p
 prettyAsTree (Tagged tag xs) = pretty tag `hang` 4 $ vcat (map (nest 4 . prettyAsTree) xs)
+prettyAsTree (D d) = "D" `hang` 4 $ pretty $ show d
 prettyAsTree EOF = "EOF"
 prettyAsTree (StatementAndNext a b) = vcat [prettyAsTree a, "", prettyAsTree b]
 
 prettyAsPaths :: E -> Doc
+prettyAsPaths (D d) = "D" `hang` 4 $ pretty $ show d
 prettyAsPaths EOF = "EOF"
 prettyAsPaths (StatementAndNext a b) = vcat [prettyAsPaths a, "", prettyAsPaths b]
 prettyAsPaths e = (vcat . map pOne . toPaths) e
@@ -255,6 +321,7 @@ prettyAsPaths e = (vcat . map pOne . toPaths) e
         toPaths (Prim p) = [([], Just p)]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
+        toPaths D {} = bug "prettyAsPaths.toPaths D"
         toPaths EOF {} = bug "prettyAsPaths.toPaths EOF"
         toPaths StatementAndNext {} = bug "prettyAsPaths.toPaths StatementAndNext"
 

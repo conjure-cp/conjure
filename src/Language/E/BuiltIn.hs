@@ -24,23 +24,19 @@ builtInRepr = [applyToInnerDomain' relationRepr]
 
 relationRepr :: MonadConjure m => ReprFunc m
 relationRepr ( _name
-             , [xMatch| ts := domain.relation.inners
-                      | as := domain.relation.attributes.attrCollection
-                      |]
+             , D (DomainRelation as ts)
              , decl) = do
-    let t = [xMake| domain.tuple.inners := ts |]
-    let domOut = [xMake| domain.set.attributes.attrCollection := as
-                       | domain.set.inner := [t]
-                       |]
+    let t = DomainTuple ts
+    let domOut = DomainSet as t
     return [ RuleReprResult decl
                 "builtIn.relationRepr"
                 "Relation~AsSet"
-                domOut
+                (D domOut)
                 []
            ]
-relationRepr ( _, [xMatch| _ := domain.set      |], _ ) = return []
-relationRepr ( _, [xMatch| _ := domain.mset     |], _ ) = return []
-relationRepr ( _, [xMatch| _ := domain.function |], _ ) = return []
+relationRepr ( _, D (DomainSet      {}), _ ) = return []
+relationRepr ( _, D (DomainMSet     {}), _ ) = return []
+relationRepr ( _, D (DomainFunction {}), _ ) = return []
 relationRepr ( _name, _dom, _ ) = do
     mkLog "missing:relationRepr" $ vcat [ pretty _name
                                         , prettyAsPaths _dom

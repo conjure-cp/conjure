@@ -26,6 +26,9 @@ categoryOf [xMatch| _ := quanVar.within             |] = return CatQuantified
 categoryOf Prim {} = return CatConstant
 categoryOf (Tagged _ []) = return CatConstant
 categoryOf (Tagged _ xs) = maximum <$> mapM categoryOf xs
+categoryOf (D d) = maximum <$> mapM categoryOf (universeBi d)
 categoryOf EOF {} = return CatConstant
 categoryOf (StatementAndNext a b) = maximum <$> mapM categoryOf [a,b]
 
+universeBi :: Domain -> [E]
+universeBi = undefined

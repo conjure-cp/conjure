@@ -23,6 +23,7 @@ useMemoisation = False
 labelOf :: E -> Doc
 labelOf (Prim   p  ) = pretty p
 labelOf (Tagged s _) = pretty s
+labelOf D {} = "D"
 labelOf EOF {} = "EOF"
 labelOf StatementAndNext {} = "StatementAndNext"
 
@@ -34,6 +35,7 @@ universeExcept p (Spec _ s) = f s
         f t | p t = []
         f t@(Prim {}) = [t]
         f t@(Tagged _ xs) = t : concatMap f xs
+        f t@(D {}) = t : f undefined
         f t@(EOF {}) = [t]
         f t@(StatementAndNext this next) = t : f this ++ f next
 
