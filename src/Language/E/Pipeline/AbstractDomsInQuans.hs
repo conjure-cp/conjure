@@ -25,7 +25,7 @@ abstractDomsInQuans
     reprs
     param@[xMatch| [qnQuan]         := quantified.quantifier
                  | [Prim (S qnVar)] := quantified.quanVar.structural.single.reference
-                 | [qnOverDom]      := quantified.quanOverDom
+                 | [D qnOverDom]    := quantified.quanOverDom
                  | []               := quantified.quanOverOp
                  | []               := quantified.quanOverExpr
                  | [guard]          := quantified.guard
@@ -60,7 +60,7 @@ abstractDomsInQuans
                         in
                             [xMake| quantified.quantifier   := [qnQuan]
                                   | quantified.quanVar.structural.single.reference := [Prim (S qnVar')]
-                                  | quantified.quanOverDom  := [qnOverDom']
+                                  | quantified.quanOverDom  := [D qnOverDom']
                                   | quantified.quanOverOp   := []
                                   | quantified.quanOverExpr := []
                                   | quantified.guard        := [conjunct guards']

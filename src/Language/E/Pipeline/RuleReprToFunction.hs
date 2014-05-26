@@ -15,17 +15,9 @@ import qualified Data.Text as T
 -- accepts a domain and returns a list of domains
 ruleReprToFunction
     :: ( MonadConjure m
-       , RandomM m
-       )
+       , RandomM m )
     => [RuleRepr]
-    -> Either
-        [ConjureError]                -- static errors
-        ( ( Text                      -- input: name of the variable
-          , E                         -- input: domain
-          , E                         -- input: declaration
-          )
-          -> m [RuleReprResult]
-        )
+    -> Either [ConjureError] (ReprFunc m)
 ruleReprToFunction fs =
     let
         mresults = map one fs
@@ -57,11 +49,7 @@ oneCase
     :: MonadConjure m
     => RuleRepr
     -> RuleReprCase
-    -> Either
-        [ConjureError]
-        ( (Text, Domain, E)
-          -> m [RuleReprResult]
-        )
+    -> Either [ConjureError] (ReprFunc m)
 oneCase (RuleRepr ruleName reprName domTemplate mcons1 locals1 _)
         (RuleReprCase domPattern mcons2 locals2) =
     let
@@ -85,25 +73,24 @@ oneCase (RuleRepr ruleName reprName domTemplate mcons1 locals1 _)
 -- an inner domain is a domain which isn't a matrix.
 applyToInnerDomain
     :: MonadConjure m
-    => Text -> Text -> E -> E
+    => Text -> Text -> Domain -> Domain
     -> [E] -> [E]
     -> Text -> E
-    -> [E] -> E
+    -> [Domain] -> Domain
     -> m [RuleReprResult]
 applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origName origDecl is x = do
-    (flagMatch, _) <- patternMatch domPattern x
+    (flagMatch, _) <- patternMatch (D domPattern) (D x)
     if not flagMatch
         then errRuleFail
         else do
-            bs <- mapM (localHandler ruleName domPattern) locals
+            bs <- mapM (localHandler ruleName (D domPattern)) locals
             if not $ and bs
                 then errRuleFail
                 else do
-                    domTemplate' <- freshNames domTemplate
-                    mres         <- runMaybeT $ patternBind domTemplate'
+                    D domTemplate' <- freshNames (D domTemplate)
+                    mres           <- runMaybeT $ patternBind (D domTemplate')
                     case mres of
-                        Nothing -> errRuleFail
-                        Just res -> do
+                        Just (D res) -> do
                             -- at this point, res is the refinement of the innerDomain
                             -- mcons is the list of structural constraints
                             -- if is /= []
@@ -239,7 +226,7 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                       return
                                       maybeCon
                             return [RuleReprResult origDecl ruleName reprName liftedRes mcons']
-
+                        _ -> errRuleFail
 
 
 renRefn :: E -> E -> E

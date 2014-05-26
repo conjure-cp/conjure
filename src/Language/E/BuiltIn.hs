@@ -18,8 +18,8 @@ mergeReprFunc [ ] =  bug "mergeReprFunc []"
 mergeReprFunc [f] = f
 mergeReprFunc fs = \ param -> concat <$> mapM ($ param) fs
 
-builtInRepr :: MonadConjure m => () -> [ReprFunc m]
-builtInRepr () = [applyToInnerDomain' relationRepr]
+builtInRepr :: MonadConjure m => [ReprFunc m]
+builtInRepr = [applyToInnerDomain' relationRepr]
 
 
 relationRepr :: MonadConjure m => ReprFunc m

@@ -33,10 +33,10 @@ applyRepr rules spec = do
 
             let topLevels'
                     =  [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.find .name.reference
-                                            | [d]          := topLevel.declaration.find .domain
+                                            | [D d]        := topLevel.declaration.find .domain
                                             |] <- statementAsList statements ]
                     ++ [ (x,n,d) | x@[xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
-                                            | [d]          := topLevel.declaration.given.domain
+                                            | [D d]        := topLevel.declaration.given.domain
                                             |] <- statementAsList statements ]
 
             let topLevels = [ (x,n,d) | (x,n,d) <- topLevels', domainNeedsRepresentation d ]
@@ -214,17 +214,17 @@ addChannellingFromLog (Spec v xs) = do
         insertNewDecls = foldr insertAfter
 
     let
-        mkWithNewDom :: (Text, Text, E, E) -> (E, E)
+        mkWithNewDom :: (Text, Text, E, Domain) -> (E, E)
         mkWithNewDom (origName, reprName, oldDecl@[xMatch| _ := topLevel.declaration.find |], newDom ) =
             ( oldDecl
             , [xMake| topLevel.declaration.find.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
-                    | topLevel.declaration.find.domain         := [newDom]
+                    | topLevel.declaration.find.domain         := [D newDom]
                     |]
             )
         mkWithNewDom (origName, reprName, oldDecl@[xMatch| _ := topLevel.declaration.given |], newDom ) =
             ( oldDecl
             , [xMake| topLevel.declaration.given.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
-                    | topLevel.declaration.given.domain         := [newDom]
+                    | topLevel.declaration.given.domain         := [D newDom]
                     |]
             )
         mkWithNewDom _ = bug "Impossible: addChannellingFromLog.mkWithNewDom"

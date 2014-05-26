@@ -34,9 +34,6 @@ import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
 import Language.E.Pipeline.TypeStrengthening ( typeStrengthening )
 import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
-import Language.E.GenerateParams ( generateParams )
-import Language.E.GenerateRandomParam ( generateRandomParam )
-import Language.E.GenerateRandomParam2 ( generateParam )
 
 
 rulesdbLoc :: IO [FilePath]
@@ -147,24 +144,6 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             param    <- maybe (return Nothing) (fmap Just . readSpecFromFile) pathParam
             solution <- readSpecFromFile pathSolution
             validateSolution essence param solution
-
-        helper (ModeGenerateParams inEssence inEprimeDir outParamDir) = 
-           generateParams  inEssence inEprimeDir outParamDir
-
-        helper (ModeGenerateRandomParam pathInEssence pathOutParam) = do
-            seed <- getStdGen
-            inEssence <- readSpecFromFile pathInEssence
-            typeCheckSpecIO inEssence
-            driverConjureSingle False False
-                (Just pathOutParam)
-                $ runCompE "generateParam" (set_stdgen seed >> generateRandomParam inEssence)
-
-        helper (ModeGenerateRandomParam2 pathInEssence pathOutParam intermediateDir basename) = do
-            inEssence <- readSpecFromFile pathInEssence
-            rulesDB <- getRulesDB
-            typeCheckSpecIO inEssence
-            param <- generateParam rulesDB inEssence intermediateDir basename
-            writeSpec pathOutParam param
 
         helper (ModeMultipleOutput multimode pathInEssence pathOutputDir mlimit) = do
             seed <- getStdGen

@@ -177,7 +177,7 @@ data ConjureState = ConjureState
         , representationLog :: ![ ( Text     -- original name
                                   , Text     -- representation name
                                   , E        -- original full declaration
-                                  , E        -- new domain
+                                  , Domain   -- new domain
                                   ) ]
         , structuralConsLog :: ![ ( Text     -- representation name
                                   , [E]
