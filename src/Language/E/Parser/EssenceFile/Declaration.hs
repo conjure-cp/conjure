@@ -24,7 +24,7 @@ parseTopLevels = do
                         is <- parseReference `sepBy1` comma
                         j  <- colon >> parseDomain
                         return [ [xMake| topLevel.declaration.find.name   := [i]
-                                       | topLevel.declaration.find.domain := [j]
+                                       | topLevel.declaration.find.domain := [D j]
                                        |]
                                | i <- is ]
                     return $ concat decls
@@ -38,7 +38,7 @@ parseTopLevels = do
                                 colon
                                 j <- parseDomain
                                 return [ [xMake| topLevel.declaration.given.name   := [i]
-                                               | topLevel.declaration.given.domain := [j]
+                                               | topLevel.declaration.given.domain := [D j]
                                                |]
                                        | i <- is ]
                             , do
@@ -94,7 +94,7 @@ parseTopLevels = do
                                 lexeme L_domain
                                 j <- parseDomain
                                 return [ [xMake| topLevel.letting.name   := [i]
-                                               | topLevel.letting.domain := [j]
+                                               | topLevel.letting.domain := [D j]
                                                |]
                                        | i <- is
                                        ]
@@ -127,7 +127,7 @@ parseTopLevels = do
                     is <- parseReference `sepBy1` comma
                     j  <- colon >> parseDomain
                     return [ [xMake| topLevel.declaration.dim.name   := [i]
-                                   | topLevel.declaration.dim.domain := [j]
+                                   | topLevel.declaration.dim.domain := [D j]
                                    |]
                            | i <- is
                            ]
@@ -139,7 +139,7 @@ parseTopLevels = do
                             colon
                             j <- parseDomain
                             return [xMake| dimFind.name   := [i]
-                                         | dimFind.domain := [j]
+                                         | dimFind.domain := [D j]
                                          |]
                     let nested = try dimfind <|> try (parseQuantifiedExpr nested) <|> parens nested
                     i <- nested

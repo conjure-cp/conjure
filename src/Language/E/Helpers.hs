@@ -66,13 +66,13 @@ summation [x]    = x
 summation (x:xs) = let y = summation xs in [eMake| &x + &y |]
 
 
-domainNeedsRepresentation :: E -> Bool
-domainNeedsRepresentation [xMatch|  _  := domain.set          |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.mset         |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.function     |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.relation     |] = True
-domainNeedsRepresentation [xMatch|  _  := domain.partition    |] = True
-domainNeedsRepresentation [xMatch| [i] := domain.matrix.inner |] = domainNeedsRepresentation i
+domainNeedsRepresentation :: Domain -> Bool
+domainNeedsRepresentation DomainSet{} = True
+domainNeedsRepresentation DomainMSet{} = True
+domainNeedsRepresentation DomainFunction{} = True
+domainNeedsRepresentation DomainRelation{} = True
+domainNeedsRepresentation DomainPartition{} = True
+domainNeedsRepresentation (DomainMatrix _ inner) = domainNeedsRepresentation inner
 domainNeedsRepresentation _ = False
 
 
@@ -83,16 +83,16 @@ freshQuanVar from = do
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
 
-inForAll :: Text -> E -> (E,E) -> E
+inForAll :: Text -> Domain -> (E, E) -> E
 inForAll = inQuan "forAll"
 
-inQuan :: Text -> Text -> E -> (E,E) -> E
+inQuan :: Text -> Text -> Domain -> (E, E) -> E
 inQuan quan quanVar quanOverDom (guard,body) =
     let
         out = 
             [xMake| quantified.quantifier.reference                := [Prim $ S quan]
                   | quantified.quanVar.structural.single.reference := [Prim $ S quanVar ]
-                  | quantified.quanOverDom                         := [quanOverDom]
+                  | quantified.quanOverDom                         := [D quanOverDom]
                   | quantified.quanOverOp                          := []
                   | quantified.quanOverExpr                        := []
                   | quantified.guard                               := [guard]
@@ -101,11 +101,11 @@ inQuan quan quanVar quanOverDom (guard,body) =
     -- in  fromMaybe out (tryUnrollForAll out)
     in  out
 
-inForAlls :: [(Text,E)] -> (E,E) -> E
+inForAlls :: [(Text, Domain)] -> (E, E) -> E
 inForAlls = inQuans "forAll"
 
 -- inQuans quanStr [(quanVar,quanOverDom)] -> (guard,body)
-inQuans :: Text -> [(Text,E)] -> (E,E) -> E
+inQuans :: Text -> [(Text, Domain)] -> (E, E) -> E
 inQuans quan = go . reverse
     where
         go [] _ = error "inQuans.go"
@@ -149,20 +149,16 @@ tryUnrollForAll _ = Nothing
 
 
 -- given a matrix domain, split it to its indices and the inner domain
-splitMatrixDomain :: E -> ([E], E)
-splitMatrixDomain [xMatch| [xIndex] := domain.matrix.index
-                         | [xInner] := domain.matrix.inner
-                         |] = first (xIndex:) (splitMatrixDomain xInner)
+splitMatrixDomain :: Domain -> ([Domain], Domain)
+splitMatrixDomain (DomainMatrix xIndex xInner) = first (xIndex:) (splitMatrixDomain xInner)
 splitMatrixDomain x = ([], x)
 
 
 -- given a list of index domains an and inner domain, construct a matrix
 -- domain
-mkMatrixDomain :: [E] -> E -> E
+mkMatrixDomain :: [Domain] -> Domain -> Domain
 mkMatrixDomain []     j = j
-mkMatrixDomain (i:is) j = [xMake| domain.matrix.index := [i]
-                                | domain.matrix.inner := [mkMatrixDomain is j]
-                                |]
+mkMatrixDomain (i:is) j = DomainMatrix i (mkMatrixDomain is j)
 
 
 splitOpIndex :: E -> (E, [E])
@@ -249,4 +245,9 @@ lookupAttr attrName attrs = listToMaybe $
              |] <- attrs
     , nm == attrName
     ]
+
+lookupDomainAttribute :: Text -> DomainAttributes -> Maybe E
+lookupDomainAttribute attrName (DomainAttributes as) = listToMaybe
+    $  [ v | DANameValue n v <- as, n == attrName ]
+    ++ [ [xMake| emptyGuard := [] |] | DAName n <- as, n == attrName ]
 

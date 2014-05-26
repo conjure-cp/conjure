@@ -4,7 +4,7 @@ module Language.E.Parser.EssenceFile.Domain ( parseDomain ) where
 
 import Language.E.Parser.Imports
 import Language.E.Parser.Shunt ( shuntingYardDomain )
-import Language.E.Parser.EssenceFile.Expr ( parseExpr, parseMetaVariable, parseReference )
+import Language.E.Parser.EssenceFile.Expr ( parseExpr, parseMetaVariable )
 
 import Language.E.Imports
 import Language.E.Definition
@@ -15,7 +15,7 @@ import Text.Parsec.Combinator ( optionMaybe, sepBy, sepBy1 )
 
 
 
-parseRange :: Parser E
+parseRange :: Parser Range
 parseRange = msum [try pRange, pSingle]
     where
         pRange = do
@@ -23,15 +23,15 @@ parseRange = msum [try pRange, pSingle]
             dot; dot
             to <- optionMaybe parseExpr
             return $ case (fr,to) of
-                (Nothing, Nothing) -> [xMake| range.open   := []    |]
-                (Just x , Nothing) -> [xMake| range.from   := [x]   |]
-                (Nothing, Just y ) -> [xMake| range.to     := [y]   |]
-                (Just x , Just y ) -> [xMake| range.fromTo := [x,y] |]
+                (Nothing, Nothing) -> RangeOpen
+                (Just x , Nothing) -> RangeLowerBounded x
+                (Nothing, Just y ) -> RangeUpperBounded y
+                (Just x , Just y ) -> RangeBounded x y
         pSingle = do
             x <- parseExpr
-            return [xMake| range.single := [x] |]
+            return (RangeSingle x)
 
-parseDomain :: Parser E
+parseDomain :: Parser Domain
 parseDomain
     = shuntingYardDomain
     $ some
@@ -46,29 +46,27 @@ parseDomain
             , pSet, pMSet, pFunction, pFunction'
             , pRelation, pRelation'
             , pPartition
-            , parseMetaVariable, pParens
+            , DomainHack <$> parseMetaVariable, pParens
             ]
 
         pParens = parens parseDomain
 
         pBool = do
             lexeme L_bool
-            return [xMake| domain.bool := [] |]
+            return DomainBool
 
         pInt = do
             lexeme L_int
             mxs <- optionMaybe $ parens $ parseRange `sepBy` comma
             let xs = fromMaybe [] mxs
-            return [xMake| domain.int.ranges := xs |]
+            return $ DomainInt xs
 
         pEnum = do
-            r <- parseReference
+            r <- identifierText
             xs <- optionMaybe $ parens $ parseRange `sepBy` comma
             case xs of
-                Nothing -> return r
-                Just ys -> return [xMake| domain.enum.name   := [r]
-                                        | domain.enum.ranges := ys
-                                        |]
+                Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
+                Just ys -> return $ DomainEnum r ys
 
         pMatrix = do
             lexeme L_matrix
@@ -77,44 +75,33 @@ parseDomain
             xs <- brackets (parseDomain `sepBy1` comma)
             lexeme L_of
             y  <- parseDomain
-            return $
-                foldr (\ i j -> [xMake| domain.matrix.index := [i]
-                                      | domain.matrix.inner := [j]
-                                      |]
-                      ) y xs
+            return $ foldr DomainMatrix y xs
 
         pTupleWith = do
             lexeme L_tuple
             xs <- parens $ parseDomain `sepBy` comma
-            return [xMake| domain.tuple.inners := xs |]
+            return $ DomainTuple xs
 
         pTupleWithout = do
             xs <- parens $ countSepAtLeast 2 parseDomain comma
-            return [xMake| domain.tuple.inners := xs |]
+            return $ DomainTuple xs
 
         pSet = do
             lexeme L_set
             x <- parseAttributes
             y <- lexeme L_of >> parseDomain
-            return [xMake| domain.set.attributes := [x]
-                         | domain.set.inner      := [y]
-                         |]
+            return $ DomainSet x y
 
         pMSet = do
             lexeme L_mset
             x <- parseAttributes
             y <- lexeme L_of >> parseDomain
-            return [xMake| domain.mset.attributes := [x]
-                         | domain.mset.inner      := [y]
-                         |]
+            return $ DomainMSet x y
 
         pFunction = do
             lexeme L_function
             (y,z) <- arrowedPair parseDomain
-            return [xMake| domain.function.attributes.attrCollection := []
-                         | domain.function.innerFrom  := [y]
-                         | domain.function.innerTo    := [z]
-                         |]
+            return $ DomainFunction (DomainAttributes []) y z
 
         pFunction' = do
             lexeme L_function
@@ -122,62 +109,33 @@ parseDomain
             y <- parseDomain
             lexeme L_LongArrow
             z <- parseDomain
-            return [xMake| domain.function.attributes := [x]
-                         | domain.function.innerFrom  := [y]
-                         | domain.function.innerTo    := [z]
-                         |]
+            return $ DomainFunction x y z
 
         pRelation' = do
             lexeme L_relation
-            return [xMake| type.relation.inners.type.unknown := [] |]
+            return $ DomainHack [xMake| type.relation.inners.type.unknown := [] |]
 
         pRelation = do
             lexeme L_relation
             x  <- parseAttributes
             lexeme L_of
             ys <- parens (parseDomain `sepBy` lexeme L_Times)
-            return [xMake| domain.relation.attributes := [x]
-                         | domain.relation.inners     := ys
-                         |]
+            return $ DomainRelation x ys
 
         pPartition = do
             lexeme L_partition
             x <- parseAttributes
             lexeme L_from
             y <- parseDomain
-            return [xMake| domain.partition.attributes := [x]
-                         | domain.partition.inner      := [y]
-                         |]
+            return $ DomainPartition x y
 
-parseAttributes :: Parser E
+parseAttributes :: Parser DomainAttributes
 parseAttributes = do
     xs <- parens (parseAttribute `sepBy` comma) <|> return []
-    return [xMake| attrCollection := map snd xs
-                 |]
-    -- return [xMake| attrCollection := map snd $ sortBy (comparing fst) xs
-    --              |]
+    return $ DomainAttributes xs
     where
         parseAttribute = msum [try parseNameValue, try parseName, parseDontCare]
-        parseNameValue = do
-            n <- parseReference
-            v <- parseExpr
-            return
-                ( Just n
-                , [xMake| attribute.nameValue.name  := [n]
-                        | attribute.nameValue.value := [v]
-                        |]
-                )
-        parseName = do
-            n <- parseReference
-            return
-                ( Just n
-                , [xMake| attribute.name := [n]
-                        |]
-                )
-        parseDontCare = do
-            dot; dot
-            return
-                ( Nothing
-                , [xMake| attribute.dontCare := []
-                        |]
-                )
+        parseNameValue = DANameValue <$> identifierText <*> parseExpr
+        parseName = DAName <$> identifierText
+        parseDontCare = do dot; dot ; return DADotDot
+

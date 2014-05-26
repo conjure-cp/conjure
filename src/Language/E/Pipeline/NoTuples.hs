@@ -126,7 +126,7 @@ noTuplesE statementIn = do
                                     -- returning newDecls:
                                     outs <- forM (zip [(1 :: Int) ..] tuples) $ \ (i,t) -> do
                                         let n' = mconcat [ n, "_tuple", stringToText (show i) ]
-                                        let t' = constructMatrixDomain indices t
+                                        let t' = mkMatrixDomain indices t
                                         return $ f n' t'
                                     lift $ mkLog "removedDecl" $ vcat $ [ pretty statement
                                                                         , "Added the following:"
@@ -202,7 +202,7 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
         helper
             [xMatch| [Prim (S quantifier)] := quantified.quantifier.reference
                    | [Prim (S quanVar)]    := quantified.quanVar.structural.single.reference
-                   | [domain]              := quantified.quanOverDom
+                   | [D domain]            := quantified.quanOverDom
                    | []                    := quantified.quanOverOp
                    | []                    := quantified.quanOverExpr
                    | [guard]               := quantified.guard
@@ -232,7 +232,7 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
                             let quanVars = [ (n, t')
                                            | (i,t) <- zip [ (1::Int) .. ] tuples
                                            , let n  = mconcat [ quanVar, "_tuple", stringToText (show i) ]
-                                           , let t' = constructMatrixDomain indices t
+                                           , let t' = mkMatrixDomain indices t
                                            ]
                             tell ([], [(quanVar, length indices)])
                             let out = inQuans quantifier quanVars (guard, body)
@@ -241,27 +241,27 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
         helper _ = return Nothing
 
 
-checkTopLevel :: E -> Maybe (Text -> E -> E, Text, E)
+checkTopLevel :: E -> Maybe (Text -> Domain -> E, Text, Domain)
 checkTopLevel [xMatch| [Prim (S n)] := topLevel.declaration.find.name.reference
-                     | [d]          := topLevel.declaration.find.domain |] =
+                     | [D d]        := topLevel.declaration.find.domain |] =
     let
         f n' d' = [xMake| topLevel.declaration.find.name.reference := [Prim (S n')]
-                        | topLevel.declaration.find.domain := [d']
+                        | topLevel.declaration.find.domain := [D d']
                         |]
     in  Just (f,n,d)
 checkTopLevel [xMatch| [Prim (S n)] := topLevel.declaration.given.name.reference
-                     | [d]          := topLevel.declaration.given.domain |] =
+                     | [D d]        := topLevel.declaration.given.domain |] =
     let
         f n' d' = [xMake| topLevel.declaration.given.name.reference := [Prim (S n')]
-                        | topLevel.declaration.given.domain := [d']
+                        | topLevel.declaration.given.domain := [D d']
                         |]
     in  Just (f,n,d)
 checkTopLevel _ = Nothing
 
 
 -- handling top level tuples
-checkTupleDomain :: E -> Maybe [E]
-checkTupleDomain [xMatch| is := domain.tuple.inners |] = Just is
+checkTupleDomain :: Domain -> Maybe [Domain]
+checkTupleDomain (DomainTuple is) = Just is
 checkTupleDomain _ = Nothing
 
 renameTupleIndexes :: MonadConjure m => S.HashSet Text -> E -> m E
@@ -282,26 +282,14 @@ renameTupleIndexes identifiers = bottomUpE' f
 
 
 -- handling top level "matrix of tuples"
-checkMatrixOfTupleDomain :: E -> Maybe ( [E]    -- indices
-                                       , [E]    -- tuple components
-                                       )
-checkMatrixOfTupleDomain [xMatch| is := domain.tuple.inners |] = Just ([], is)
-checkMatrixOfTupleDomain [xMatch| [i] := domain.matrix.index
-                                | [j] := domain.matrix.inner
-                                |] = do (is,js) <- checkMatrixOfTupleDomain j
-                                        return (i:is,js)
+checkMatrixOfTupleDomain :: Domain -> Maybe ( [Domain]    -- indices
+                                            , [Domain]    -- tuple components
+                                            ) 
+checkMatrixOfTupleDomain (DomainTuple is) = Just ([], is)
+checkMatrixOfTupleDomain (DomainMatrix i j) = do (is,js) <- checkMatrixOfTupleDomain j ; return (i:is,js)
 checkMatrixOfTupleDomain _ = Nothing
 
 
-constructMatrixDomain ::
-       [E] -- indices
-    -> E   -- inner domain
-    -> E
-constructMatrixDomain []     x = x
-constructMatrixDomain (i:is) x = let y  = constructMatrixDomain is x
-                                 in  [xMake| domain.matrix.index := [i]
-                                           | domain.matrix.inner := [y]
-                                           |]
 
 renameMatrixOfTupleIndexes :: MonadConjure m => M.HashMap Text Int -> E -> m E
 renameMatrixOfTupleIndexes identifiers = bottomUpE' f

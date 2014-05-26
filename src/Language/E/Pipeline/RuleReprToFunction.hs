@@ -40,7 +40,7 @@ one :: MonadConjure m
     => RuleRepr
     -> Either
         [ConjureError]
-        ( (Text, E, E)
+        ( (Text, Domain, E)
           -> m [RuleReprResult]
         )
 one repr@(RuleRepr {ruleReprCases=cases}) =
@@ -59,7 +59,7 @@ oneCase
     -> RuleReprCase
     -> Either
         [ConjureError]
-        ( (Text, E, E)
+        ( (Text, Domain, E)
           -> m [RuleReprResult]
         )
 oneCase (RuleRepr ruleName reprName domTemplate mcons1 locals1 _)

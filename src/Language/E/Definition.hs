@@ -19,7 +19,7 @@ module Language.E.Definition
     , descend, descendM
     , transform, transformM
     , rewrite, rewriteM
-    , replace, replaceAll
+    , replace, replaceAll, gdepth
 
     , qq, xMake, xMatch
     , viewTagged, viewTaggeds
@@ -102,7 +102,7 @@ instance Hashable RuleRefn
 data RuleRepr = RuleRepr
     { ruleReprName :: Text                  -- name of the rule
     , ruleReprReprName :: Text              -- name of the representation
-    , ruleReprDomainOut :: E                -- domain out.
+    , ruleReprDomainOut :: Domain           -- domain out.
     , ruleReprStructural :: Maybe E         -- structural constraints
     , ruleReprLocals :: [E]                 -- locals
     , ruleReprCases :: [RuleReprCase]
@@ -115,7 +115,7 @@ instance Hashable RuleRepr
 
 
 data RuleReprCase = RuleReprCase
-    { ruleReprCaseDomainIn :: E             -- domain in.
+    { ruleReprCaseDomainIn :: Domain        -- domain in.
     , ruleReprCaseStructural :: Maybe E     -- structural constraints
     , ruleReprCaseLocals :: [E]             -- locals
     }
@@ -127,11 +127,11 @@ instance Hashable RuleReprCase
 
 
 data RuleReprResult = RuleReprResult
-    { ruleReprResultOriginalDecl :: E       -- original declaration
-    , ruleReprResultRuleName :: Text        -- rule name
-    , ruleReprResultReprName :: Text        -- name of the representation
-    , ruleReprResultReplacementDom :: E     -- replacement domain
-    , ruleReprResultStructurals :: [E]      -- structural constraints
+    { ruleReprResultOriginalDecl :: E           -- original declaration
+    , ruleReprResultRuleName :: Text            -- rule name
+    , ruleReprResultReprName :: Text            -- name of the representation
+    , ruleReprResultReplacementDom :: Domain    -- replacement domain
+    , ruleReprResultStructurals :: [E]          -- structural constraints
     }
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
@@ -199,6 +199,8 @@ data Domain
     | DomainFunction DomainAttributes Domain Domain
     | DomainRelation DomainAttributes [Domain]
     | DomainPartition DomainAttributes Domain
+    | DomainOp Text [Domain]
+    | DomainHack E          -- this is an ugly hack to be able to use expressions as domains. will go away later.
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize Domain
@@ -217,6 +219,9 @@ instance Hashable DomainAttributes
 
 instance ToJSON DomainAttributes
 
+instance Default DomainAttributes where
+    def = DomainAttributes []
+
 
 data DomainAttribute
     = DAName Text
@@ -232,7 +237,8 @@ instance ToJSON DomainAttribute
 
 
 data Range
-    = RangeSingle E
+    = RangeOpen
+    | RangeSingle E
     | RangeLowerBounded E
     | RangeUpperBounded E
     | RangeBounded E E
@@ -284,6 +290,8 @@ statementAsList x = [x]
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+gdepth :: Uniplate a => a -> Int
+gdepth = (1+) . maximum . map gdepth . children
 
 replace :: (Uniplate a, Eq a) => a -> a -> a -> a
 replace old new = transform $ \ i -> if i == old then new else i

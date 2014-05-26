@@ -20,87 +20,87 @@ errDomainOf p = do
                         , bsText
                         ]
 
+class DomainOf a where
+    domainOf :: MonadConjure m => a -> m Domain
 
-domainOf :: MonadConjure m => E -> m E
+instance DomainOf E where
 
-domainOf x@[xMatch| _ := domain |] = return x
+    domainOf (D d) = return d
 
-domainOf [xMatch| [Prim (S i)] := reference |] =
-    if i `elem` ["_", "forAll", "exists", "sum"]
-        then return [xMake| type.unknown := [] |]
-        else do
-            x <- errMaybeT "domainOf" lookupReference i
-            domainOf x
+    domainOf [xMatch| [Prim (S i)] := reference |] =
+        if i `elem` ["_", "forAll", "exists", "sum"]
+            then return $ DomainHack [xMake| type.unknown := [] |]
+            else do
+                x <- errMaybeT "domainOf" lookupReference i
+                domainOf x
 
-domainOf p@[xMatch| [Prim (S i)] := metavar |] = do
-    mx <- runMaybeT $ lookupMetaVar i
-    case mx of
-        Just x  -> domainOf x
-        Nothing -> return p -- this is for hasDomain pattern matching in rules to work
+    domainOf p@[xMatch| [Prim (S i)] := metavar |] = do
+        mx <- runMaybeT $ lookupMetaVar i
+        case mx of
+            Just x  -> domainOf x
+            Nothing -> return (DomainHack p) -- this is for hasDomain pattern matching in rules to work
 
-domainOf [xMatch| [x] := topLevel.declaration.find .domain |] = domainOf x
-domainOf [xMatch| [x] := topLevel.declaration.given.domain |] = domainOf x
+    domainOf [xMatch| [x] := topLevel.declaration.find .domain |] = domainOf x
+    domainOf [xMatch| [x] := topLevel.declaration.given.domain |] = domainOf x
 
-domainOf [xMatch| [x] := domainInExpr |] = domainOf x
+    domainOf [xMatch| [x] := domainInExpr |] = domainOf x
 
-domainOf [xMatch| [x] := structural.single |] = domainOf x
+    domainOf [xMatch| [x] := structural.single |] = domainOf x
 
-domainOf [xMatch| [Prim (S n1)] := quanVar.name
-                | [Prim (S n2)] := quanVar.within.quantified.quanVar.structural.single.reference
-                | [d]           := quanVar.within.quantified.quanOverDom
-                |] | n1 == n2 = return d
-
-domainOf inp@[xMatch| [Prim (S n1)] := quanVar.name
+    domainOf [xMatch| [Prim (S n1)] := quanVar.name
                     | [Prim (S n2)] := quanVar.within.quantified.quanVar.structural.single.reference
-                    | []            := quanVar.within.quantified.quanOverDom
-                    | []            := quanVar.within.quantified.quanOverOp.binOp.in
-                    | [x]           := quanVar.within.quantified.quanOverExpr
-                    |] | n1 == n2 = do
-    domX <- domainOf x
-    case innerDomainOf domX of
-        Just i -> return i
-        Nothing -> do
-            mkLog "missing:domainOf" $ "Cannot calculate the inner domain of" <+> pretty domX
-            return inp
+                    | [D d]         := quanVar.within.quantified.quanOverDom
+                    |] | n1 == n2 = return d
 
-domainOf p@[xMatch| [] := quanVar |] = return p
+    domainOf inp@[xMatch| [Prim (S n1)] := quanVar.name
+                        | [Prim (S n2)] := quanVar.within.quantified.quanVar.structural.single.reference
+                        | []            := quanVar.within.quantified.quanOverDom
+                        | []            := quanVar.within.quantified.quanOverOp.binOp.in
+                        | [x]           := quanVar.within.quantified.quanOverExpr
+                        |] | n1 == n2 = do
+        domX <- domainOf x
+        case innerDomainOf domX of
+            Just i -> return i
+            Nothing -> do
+                mkLog "missing:domainOf" $ "Cannot calculate the inner domain of" <+> pretty domX
+                return (DomainHack inp)
 
-domainOf p@[xMatch| [x] := operator.index.left
-                  | [y] := operator.index.right
-                  |] = do
-    xDom <- domainOf x
-    case xDom of
-        [xMatch| [innerDom] := domain.matrix.inner |] -> return innerDom
-        [xMatch|  innerDoms := domain.tuple.inners |] -> do
-            yInt <- toInt y
-            case yInt of
-                Just (int, _)
-                    | int >= 1 && int <= genericLength innerDoms
-                    -> return $ innerDoms `genericIndex` (int - 1)
-                _ -> return p
-        _ -> return p
+    domainOf p@[xMatch| [] := quanVar |] = return (DomainHack p)
 
-domainOf p@[xMatch| [f] := operator.range |] = do
-    fDom <- domainOf f
-    case fDom of
-        [xMatch| [innerDom] := domain.function.innerTo |] -> do
-            let out = [xMake| domain.set.attributes.attrCollection := []
-                            | domain.set.inner := [innerDom]
-                            |]
-            mkLog "domainOf returning" $ prettyAsPaths out
-            return out
-        _ -> return p
+    domainOf p@[xMatch| [x] := operator.index.left
+                      | [y] := operator.index.right
+                      |] = do
+        xDom <- domainOf x
+        case xDom of
+            DomainMatrix _ innerDom -> return innerDom
+            DomainTuple innerDoms -> do
+                yInt <- toInt y
+                case yInt of
+                    Just (int, _)
+                        | int >= 1 && int <= genericLength innerDoms
+                        -> return $ innerDoms `genericIndex` (int - 1)
+                    _ -> return (DomainHack p)
+            _ -> return (DomainHack p)
 
-domainOf x = do
-    mkLog "missing:domainOf" (pretty x)
-    return x
+    domainOf p@[xMatch| [f] := operator.range |] = do
+        fDom <- domainOf f
+        case fDom of
+            DomainFunction _ _ innerDom -> do
+                let out = DomainSet def innerDom
+                mkLog "domainOf returning" $ pretty out
+                return out
+            _ -> return (DomainHack p)
 
-innerDomainOf :: E -> Maybe E
-innerDomainOf [xMatch| [ty] := domain.     set.inner  |] = return ty
-innerDomainOf [xMatch| [ty] := domain.    mset.inner  |] = return ty
-innerDomainOf [xMatch| tys  := domain.relation.inners |] = return [xMake| domain.tuple.inners := tys |]
-innerDomainOf [xMatch| [fr] := domain.function.innerFrom
-                     | [to] := domain.function.innerTo |] = return [xMake| domain.tuple.inners := [fr,to] |]
+    domainOf x = do
+        mkLog "missing:domainOf" (pretty x)
+        return (DomainHack x)
+
+
+innerDomainOf :: Domain -> Maybe Domain
+innerDomainOf (DomainSet _ inner) = return inner
+innerDomainOf (DomainMSet _ inner) = return inner
+innerDomainOf (DomainFunction _ fr to) = return (DomainTuple [fr,to])
+innerDomainOf (DomainRelation _ inners) = return (DomainTuple inners)
 innerDomainOf _ = Nothing
 
 

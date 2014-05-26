@@ -42,7 +42,7 @@ parseValue = msum ( map try
             lexeme L_SemiColon
             r <- parseDomain
             return [xMake| value.matrix.values     := xs
-                         | value.matrix.indexrange := [r]
+                         | value.matrix.indexrange := [D r]
                          |]
         pTupleWith = do
             lexeme L_tuple

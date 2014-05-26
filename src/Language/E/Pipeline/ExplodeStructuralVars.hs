@@ -97,13 +97,13 @@ quantificationOverTupleDomains :: MonadConjure m => Spec -> m Spec
 quantificationOverTupleDomains = bottomUpSpec' helper
     where
         helper
-          x@[xMatch| [Prim (S quan)] := quantified.quantifier.reference
-                   | [Prim (S nm  )] := quantified.quanVar.structural.single.reference
-                   | doms            := quantified.quanOverDom.domain.tuple.inners
-                   | []              := quantified.quanOverOp
-                   | []              := quantified.quanOverExpr
-                   | [guard]         := quantified.guard
-                   | [body]          := quantified.body
+          x@[xMatch| [Prim (S quan)]        := quantified.quantifier.reference
+                   | [Prim (S nm  )]        := quantified.quanVar.structural.single.reference
+                   | [D (DomainTuple doms)] := quantified.quanOverDom
+                   | []                     := quantified.quanOverOp
+                   | []                     := quantified.quanOverExpr
+                   | [guard]                := quantified.guard
+                   | [body]                 := quantified.body
                    |] = do
             let nmDoms = zip [ mconcat [nm, "_tuple", stringToText (show (i::Int))]
                              | i <- [1..] ]

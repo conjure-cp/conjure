@@ -62,7 +62,7 @@ sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
     let (is,j) = breakIndices p
     jDom <- lookupDomain j
     case jDom of
-        Just d@[xMatch| _ := domain.matrix |] -> do
+        Just d@(DomainMatrix {}) -> do
             let nb = matrixDomainNbDims d
             let nbSlicers = nb - length is
             if nbSlicers == 0

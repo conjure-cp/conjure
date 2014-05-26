@@ -363,11 +363,9 @@ instance Pretty Domain where
     pretty (DomainPartition attrs inner)
         = hang ("partition" <+> pretty attrs <+> "from") 4 (pretty inner)
 
-    -- 
-    -- pretty [xMatch| [ x ] := range.single |] = pretty x
-    -- pretty [xMatch| [ x ] := range.from   |] = pretty x <> ".."
-    -- pretty [xMatch| [ x ] := range.to     |] = ".." <> pretty x
-    -- pretty [xMatch| [x,y] := range.fromTo |] = pretty x <> ".." <> pretty y
+    pretty (DomainOp op xs) = Pr.parens $ foldr (<+>) empty $ intersperse (pretty op) (map pretty xs)
+
+    pretty (DomainHack x) = pretty x
 
 instance Pretty DomainAttributes where
     pretty (DomainAttributes []) = empty
@@ -379,6 +377,7 @@ instance Pretty DomainAttribute where
     pretty DADotDot = ".."
 
 instance Pretty Range where
+    pretty RangeOpen = ".."
     pretty (RangeSingle x) = pretty x
     pretty (RangeLowerBounded x) = pretty x <> ".."
     pretty (RangeUpperBounded x) = ".." <> pretty x

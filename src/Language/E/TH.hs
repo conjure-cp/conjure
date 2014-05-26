@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Language.E.TH where
+module Language.E.TH ( eMatch, eMake ) where
 
 import Stuff.Generic.Tag
 import Language.E.Definition
@@ -19,11 +19,6 @@ import Data.Text as T
 -- match by parsing an expression
 eMatch :: QuasiQuoter
 eMatch = mkMatchLike parseExpr
-
-
--- match by parsing a domain
-dMatch :: QuasiQuoter
-dMatch = mkMatchLike parseDomain
 
 
 mkMatchLike :: Parser E -> QuasiQuoter
@@ -45,12 +40,12 @@ mkMatchLike parser = qq {
                     [ LitP (StringL $ T.unpack s) ]
 
             buildP :: E -> Q Pat
-            buildP (Prim p) =
-                return $ ConP (mkName "Prim") [buildP' p]
-            buildP (Tagged (Tag "metavar") [Prim (S s)]) = return $
-                if s == "_"
-                    then WildP
-                    else VarP (mkName $ T.unpack s)
+            buildP (Tagged (Tag "metavar") [Prim (S s)])
+                = return $ if s == "_" then WildP else VarP (mkName $ T.unpack s)
+            buildP (D (DomainHack (Tagged (Tag "metavar") [Prim (S s)]))) -- oh boy, what a hack!
+                = return $ if s == "_" then WildP else VarP (mkName $ T.unpack s)
+            buildP (Prim p)
+                = return $ ConP (mkName "Prim") [buildP' p]
             buildP (Tagged (Tag t) xs) = do
                 ys <- mapM buildP xs
                 return $ ConP (mkName "Tagged")
@@ -91,10 +86,12 @@ eMake = qq {
                   )
 
             build :: E -> Q Exp
-            build (Prim p) =
-                return $ ConE (mkName "Prim") `AppE` build' p
-            build (Tagged (Tag "metavar") [Prim (S s)]) =
-                return $ VarE (mkName $ T.unpack s)
+            build (D (DomainHack (Tagged (Tag "metavar") [Prim (S s)]))) -- oh boy, what a hack!
+                = return $ VarE (mkName $ T.unpack s)
+            build (Tagged (Tag "metavar") [Prim (S s)])
+                = return $ VarE (mkName $ T.unpack s)
+            build (Prim p)
+                = return $ ConE (mkName "Prim") `AppE` build' p
             build (Tagged (Tag t) xs) = do
                 ys <- mapM build xs
                 return $ (ConE $ mkName "Tagged")

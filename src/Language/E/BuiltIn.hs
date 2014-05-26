@@ -18,38 +18,34 @@ mergeReprFunc [ ] =  bug "mergeReprFunc []"
 mergeReprFunc [f] = f
 mergeReprFunc fs = \ param -> concat <$> mapM ($ param) fs
 
-builtInRepr :: MonadConjure m => [ReprFunc m]
-builtInRepr = [applyToInnerDomain' relationRepr]
+builtInRepr :: MonadConjure m => () -> [ReprFunc m]
+builtInRepr () = [applyToInnerDomain' relationRepr]
 
 
 relationRepr :: MonadConjure m => ReprFunc m
 relationRepr ( _name
-             , D (DomainRelation as ts)
+             , DomainRelation as ts
              , decl) = do
     let t = DomainTuple ts
     let domOut = DomainSet as t
     return [ RuleReprResult decl
                 "builtIn.relationRepr"
                 "Relation~AsSet"
-                (D domOut)
+                domOut
                 []
            ]
-relationRepr ( _, D (DomainSet      {}), _ ) = return []
-relationRepr ( _, D (DomainMSet     {}), _ ) = return []
-relationRepr ( _, D (DomainFunction {}), _ ) = return []
+relationRepr ( _, DomainSet      {}, _ ) = return []
+relationRepr ( _, DomainMSet     {}, _ ) = return []
+relationRepr ( _, DomainFunction {}, _ ) = return []
 relationRepr ( _name, _dom, _ ) = do
     mkLog "missing:relationRepr" $ vcat [ pretty _name
-                                        , prettyAsPaths _dom
+                                        , pretty _dom
                                         ]
     return []
 
 
 
-applyToInnerDomain'
-    :: MonadConjure m
-    => ((Text, E, E) -> m [RuleReprResult])
-    -> (Text, E, E)
-    -> m [RuleReprResult]
+applyToInnerDomain' :: MonadConjure m => ReprFunc m -> ReprFunc m
 applyToInnerDomain' f (origName, origDomain, origDecl) = do
     let (is,x) = splitMatrixDomain origDomain
     results <- f (origName, x, origDecl)

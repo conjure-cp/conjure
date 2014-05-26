@@ -644,8 +644,9 @@ fullEvaluator p@[xMatch| vs           := operator.index.left .value.tuple.values
     | i >= 1 && i <= genericLength vs = ret (vs `genericIndex` (i-1))
     | otherwise = userErr $ "Tuple indexing out of range in:" <+> pretty p
 
-fullEvaluator [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
-    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+fullEvaluator [eMatch| &quan &i : &d , &guard . &body |]
+    | D (DomainInt [RangeBounded a b]) <- d
+    , [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     , a' == b'
@@ -654,8 +655,9 @@ fullEvaluator [eMatch| &quan &i : int(&a..&b) , &guard . &body |]
     let res2 = [eMake| &res1 { &i --> &a } |]
     evalReplace res2
 
-fullEvaluator [eMatch| &quan &_ : int(&a..&b) , &_ . &_ |]
-    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+fullEvaluator [eMatch| &quan &_ : &d , &_ . &_ |]
+    | D (DomainInt [RangeBounded a b]) <- d
+    , [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     , a' > b'
@@ -675,8 +677,9 @@ fullEvaluator [eMatch| &quan &_ in mset() , &_ . &_ |]
         res <- identityOp quanStr
         ret res
 
-fullEvaluator p@[eMatch| sum &i : int(&a..&b) , &guard . &body |]
-    | [xMatch| [Prim (I a')] := value.literal |] <- a
+fullEvaluator p@[eMatch| sum &i : &d , &guard . &body |]
+    | D (DomainInt [RangeBounded a b]) <- d
+    , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     , [xMake| emptyGuard := [] |] == guard
     , isFullyInstantiated p
@@ -685,8 +688,9 @@ fullEvaluator p@[eMatch| sum &i : int(&a..&b) , &guard . &body |]
                       , let j = [xMake| value.literal := [Prim (I j')] |]
                       ]
 
-fullEvaluator [eMatch| &_ &i : int(&a..&b) . &body |]
-    | a == b
+fullEvaluator [eMatch| &_ &i : &d . &body |]
+    | D (DomainInt [RangeBounded a b]) <- d
+    , a == b
     = ret $ replace i a body
 
 -- typed.* ones
@@ -774,8 +778,9 @@ stripUnnecessaryTyped _ = return Nothing
 -- we generally don't and actually don't even want to, unroll quantifiers.
 -- but we need this for validateSolution
 unrollQuantifiers :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-unrollQuantifiers [eMatch| &quan &iPre : int(&a..&b) , &guard . &body |]
-    | [xMatch| [Prim (S quanStr)] := reference |] <- quan
+unrollQuantifiers [eMatch| &quan &iPre : &d , &guard . &body |]
+    | D (DomainInt [RangeBounded a b]) <- d
+    , [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     = do
@@ -967,7 +972,7 @@ evalHasDomain :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 evalHasDomain [eMatch| &x hasDomain &y |] = do
     dx <- domainOf x
     dy <- domainOf y
-    (flag, bs) <- patternMatch dy dx
+    (flag, bs) <- patternMatch (D dy) (D dx)
     returnBool' flag bs
 evalHasDomain _ = return Nothing
 
@@ -1006,133 +1011,112 @@ mulE [x]    = x
 mulE [x,y]  = [eMake| &x * &y |]
 mulE (x:xs) = let mulxs = mulE xs in [eMake| &x * &mulxs |]
 
-domSize :: MonadConjure m => E -> m E
-domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
+class DomSize a where
+    domSize :: MonadConjure m => a -> m E
 
-domSize [xMatch| [d] := domainInExpr |] = domSize d
+instance DomSize E where
 
-domSize [xMatch| [x] := structural.single |] = domSize x
-domSize [xMatch| [d] := quanVar.within.quantified.body.quantified.quanOverDom |] = domSize d
+    domSize (D d) = domSize d
 
-domSize [xMatch| [Prim (S s)] := reference |] = do
-    x <- errMaybeT "domSize" lookupReference s
-    domSize x
-domSize [xMatch| [] := domain.bool |] = return [eMake| 2 |]
-domSize [xMatch| rs := domain.int.ranges |] = do
-    xs <- mapM domSize rs
-    return $ sumE xs
-domSize [xMatch| [fr,to] := range.fromTo |] =
-    return [eMake| &to - &fr + 1 |]
-domSize [xMatch| [_] := range.single |] =
-    return [eMake| 1 |]
+    domSize [xMatch| _ := value.literal |] = return [eMake| 1 |]
 
-domSize [xMatch| rs := domain.tuple.inners |] = do
-    xs <- mapM domSize rs
-    return $ mulE xs
+    domSize [xMatch| [d] := domainInExpr |] = domSize d
 
-domSize [xMatch| rs := domain.relation.inners
-               | attr := domain.relation.attributes.attrCollection
-               |] =
-    domSize [xMake| domain.set.attributes.attrCollection := attr
-                  | domain.set.inner.domain.tuple.inners := rs
-                  |]
+    domSize [xMatch| [x] := structural.single |] = domSize x
+    domSize [xMatch| [d] := quanVar.within.quantified.body.quantified.quanOverDom |] = domSize d
 
-domSize [xMatch| [index] := domain.matrix.index
-               | [inner] := domain.matrix.inner
-               |] = do
-    indexSize <- domSize index
-    innerSize <- domSize inner
-    return [eMake| &indexSize ** &innerSize |]
+    domSize [xMatch| [Prim (S s)] := reference |] = do
+        x <- errMaybeT "domSize" lookupReference s
+        domSize x
 
-domSize [xMatch| [t]   := domain.set.inner
-               | attrs := domain.set.attributes.attrCollection
-               |]
-    | Just size <- lookupAttr "size" attrs
-    = do
-    x <- domSize t
-    return $ x `choose` size
-domSize [xMatch| [t]   := domain.set.inner
-               | attrs := domain.set.attributes.attrCollection
-               |]
-    | Just minSize <- lookupAttr "minSize" attrs
-    , Just maxSize <- lookupAttr "maxSize" attrs
-    = do
-    x <- domSize t
-    (qStr, q) <- freshQuanVar "from domSize"
-    return $ inQuan "sum" qStr
-        [xMake| domain.int.ranges.range.fromTo := [minSize, maxSize] |]
-        ( [xMake| emptyGuard := [] |]
-        , x `choose` q
-        )
+    domSize [xMatch| [] := topLevel.declaration.given.typeInt
+                   | [Prim (S nm)] := topLevel.declaration.given.name.reference
+                   |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
 
-domSize [xMatch| [t] := domain.set.inner |] = do
-    x <- domSize t
-    return [eMake| 2 ** &x |]
+    domSize [xMatch| vs := topLevel.letting.typeEnum.values |] =
+        return [xMake| value.literal := [Prim (I (genericLength vs))] |]
 
-domSize [dMatch| mset (size &k) of &inn |] = do
-    n <- domSize inn
-    return [eMake| (&n + &k - 1)! / (&k! * (&n-1)!) |]
-domSize [xMatch| [t] := domain.mset.inner |] = do
-    x <- domSize t
-    return [eMake| 2 ** &x |]
+    domSize [xMatch| [d] := topLevel.letting.domain |] = domSize d
 
-domSize [xMatch| [a] := domain.function.innerFrom
-               | [b] := domain.function.innerTo
-               | attrs := domain.function.attributes.attrCollection
-               |]
-    | Just _ <- lookupAttr "total" attrs
-    , Just _ <- lookupAttr "injective" attrs
-    = do
-    aSize <- domSize a
-    bSize <- domSize b
-    return [eMake| &bSize! / (&bSize - &aSize)! |]
+    domSize p =
+        err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
-domSize [xMatch| [a] := domain.function.innerFrom
-               | [b] := domain.function.innerTo
-               | attrs := domain.function.attributes.attrCollection
-               |]
-    | Just _ <- lookupAttr "total" attrs
-    , Just _ <- lookupAttr "bijective" attrs
-    = do
-    aSize <- domSize a
-    bSize <- domSize b
-    return [eMake| &bSize! / (&bSize - &aSize)! |]
+instance DomSize Domain where
 
-domSize [xMatch| [a] := domain.function.innerFrom
-               | [b] := domain.function.innerTo
-               | attrs := domain.function.attributes.attrCollection
-               |]
-    | Just _ <- lookupAttr "total" attrs
-    = do
-    aSize <- domSize a
-    bSize <- domSize b
-    return [eMake| &bSize ** &aSize |]
+    domSize DomainBool = return [eMake| 2 |]
+    domSize (DomainInt rs) = sumE <$> mapM domSize rs
+    domSize (DomainEnum _ rs) = sumE <$> mapM domSize rs
+    domSize (DomainTuple rs) = mulE <$> mapM domSize rs
 
-domSize [xMatch| [a] := domain.function.innerFrom
-               | [b] := domain.function.innerTo
-               |] = do
-    aSize <- domSize a
-    bSize <- domSize b
-    return [eMake| (&bSize + 1) ** &aSize |]
+    domSize (DomainMatrix index inner) = do
+        indexSize <- domSize index
+        innerSize <- domSize inner
+        return [eMake| &indexSize ** &innerSize |]
 
-domSize [xMatch| [a]   := domain.partition.inner
-               | attrs := domain.partition.attributes.attrCollection
-               |] = domSize [xMake| domain.set.inner := [a']
-                                  | domain.set.attributes := attrs
-                                  |]
-    where a' = [xMake| domain.set.inner := [a] |]
+    domSize (DomainSet attrs inner)
+        | Just size <- lookupDomainAttribute "size" attrs = do
+            sInner <- domSize inner
+            return $ sInner `choose` size
+    domSize (DomainSet attrs inner)
+        | Just minSize <- lookupDomainAttribute "minSize" attrs
+        , Just maxSize <- lookupDomainAttribute "maxSize" attrs = do
+            sInner <- domSize inner
+            (qStr, q) <- freshQuanVar "from domSize"
+            return $ inQuan "sum" qStr
+                (DomainInt [RangeBounded minSize maxSize])
+                ( [xMake| emptyGuard := [] |]
+                , sInner `choose` q
+                )
+    domSize (DomainSet _ inner) = do
+        sInner <- domSize inner
+        return [eMake| 2 ** &sInner |]
 
-domSize [xMatch| [] := topLevel.declaration.given.typeInt
-               | [Prim (S nm)] := topLevel.declaration.given.name.reference
-               |] = return [xMake| reference := [Prim (S $ nm `mappend` "_size")] |]
+    domSize (DomainMSet attrs inn)
+        | Just k <- lookupDomainAttribute "size" attrs = do
+            n <- domSize inn
+            return [eMake| (&n + &k - 1)! / (&k! * (&n-1)!) |]
 
-domSize [xMatch| vs := topLevel.letting.typeEnum.values |] =
-    return [xMake| value.literal := [Prim (I (genericLength vs))] |]
+    domSize (DomainMSet _ inner) = do
+        sInner <- domSize inner
+        return [eMake| 2 ** &sInner |]
 
-domSize [xMatch| [d] := topLevel.letting.domain |] = domSize d
+    domSize (DomainFunction attrs a b)
+        | Just _ <- lookupDomainAttribute "total" attrs
+        , Just _ <- lookupDomainAttribute "injective" attrs = do
+            aSize <- domSize a
+            bSize <- domSize b
+            return [eMake| &bSize! / (&bSize - &aSize)! |]
+    domSize (DomainFunction attrs a b)
+        | Just _ <- lookupDomainAttribute "total" attrs
+        , Just _ <- lookupDomainAttribute "bijective" attrs = do
+            aSize <- domSize a
+            bSize <- domSize b
+            return [eMake| &bSize! / (&bSize - &aSize)! |]
+    domSize (DomainFunction attrs a b)
+        | Just _ <- lookupDomainAttribute "total" attrs = do
+            aSize <- domSize a
+            bSize <- domSize b
+            return [eMake| &bSize ** &aSize |]
+    domSize (DomainFunction _ a b) = do
+        aSize <- domSize a
+        bSize <- domSize b
+        return [eMake| (&bSize + 1) ** &aSize |]
 
-domSize p =
-    err ErrFatal $ "domSize:" <+> prettyAsPaths p
+    domSize (DomainRelation attrs rs)
+        = domSize (DomainSet attrs (DomainTuple rs))
+
+    domSize (DomainPartition attrs inner)
+        = domSize (DomainSet attrs (DomainSet def inner))
+
+    domSize p@(DomainOp{}) = bug $ "not implemented domSize for DomainOp:" <+> pretty p
+
+    domSize (DomainHack x) = domSize x
+
+instance DomSize Range where
+    domSize RangeSingle{} = return [eMake| 1 |]
+    domSize (RangeBounded fr to) = return [eMake| &to - &fr + 1 |]
+    domSize r = userErr $ "Infinite domain: " <+> pretty r
+    
 
 choose :: E -> E -> E
 choose n k = [eMake| &n! / (&k! * (&n - &k)!) |]
@@ -1141,16 +1125,15 @@ evalDontCare :: MonadConjure m => Bool -> E -> m (Maybe (E,[Binder]))
 evalDontCare False [eMatch| dontCare(&_) |] = ret [eMake| true |]
 evalDontCare True  [eMatch| dontCare(&a) |] = do
     let
-        bottomOfDomain [xMatch| _     := domain.bool         |] = return [eMake| false |]
-        bottomOfDomain [xMatch| (r:_) := domain.int.ranges   |] = bottomOfRange r
-        bottomOfDomain [xMatch| _     := domain.int          |] = return [eMake| 0 |]
+        bottomOfDomain DomainBool = return [eMake| false |]
+        bottomOfDomain (DomainInt []) = return [eMake| 0 |]
+        bottomOfDomain (DomainInt (r:_)) = bottomOfRange r
         bottomOfDomain _ = Nothing
 
-        bottomOfRange   [xMatch| [x]   := range.single  |] = return x
-        bottomOfRange   [xMatch| [x]   := range.from    |] = return x
-        bottomOfRange   [xMatch| [x]   := range.to      |] = return x
-        bottomOfRange   [xMatch| [x,_] := range.fromTo  |] = return x
-        bottomOfRange x@[xMatch| _     := value.literal |] = return x
+        bottomOfRange (RangeSingle x) = return x
+        bottomOfRange (RangeLowerBounded x) = return x
+        bottomOfRange (RangeUpperBounded x) = return x
+        bottomOfRange (RangeBounded x _) = return x
         bottomOfRange _ = Nothing
 
     da <- domainOf a
@@ -1188,9 +1171,9 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
         indicesCore [xMatch| [d] := topLevel.declaration.find .domain |] i = indices d i
         indicesCore [xMatch| [d] := topLevel.declaration.given.domain |] i = indices d i
         indicesCore [xMatch| [d] := quanVar.within.quantified.quanOverDom |] i = indices d i
-        indicesCore [xMatch| [index] := domain.matrix.index |] 0 = ret index
-        indicesCore [xMatch| [inner] := domain.matrix.inner |] i = indices inner (i-1)
-        indicesCore [eMatch| &m[&x]                         |] i = do
+        indicesCore (D (DomainMatrix index _)) 0 = ret (D index)
+        indicesCore (D (DomainMatrix _ inner)) i = indices (D inner) (i-1)
+        indicesCore [eMatch| &m[&x] |] i = do
             tym <- typeOf m
             case tym of
                 [xMatch| _ := type.matrix |] -> indices m (i+1)
@@ -1198,11 +1181,11 @@ evalIndices p@[xMatch| [a,b] := operator.indices |] = do
                     dm <- domainOf m
                     mxInt <- toInt x
                     case (dm, mxInt) of
-                        ( [xMatch| ds := domain.tuple.inners |] , Just (xInt, _) )
+                        ( DomainTuple ds , Just (xInt, _) )
                             | xInt >= 1 && xInt <= genericLength ds
                             -> do
                                 let next = ds `genericIndex` (xInt - 1)
-                                indices next i
+                                indices (D next) i
                         _ -> bug $ vcat [ "Full.indices", pretty m, pretty x ]
                 _ -> return Nothing
         indicesCore m i = do
@@ -1345,12 +1328,12 @@ dotOrderDecomposeForMatrices [eMatch| &a .< &b |] = do
         ([xMatch| [innerTy] := type.matrix.inner |], _) | isAbstractType innerTy -> do
             da <- domainOf a
             case da of
-                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                DomainMatrix ind _ -> return (Just ind)
                 _ -> return Nothing
         (_, [xMatch| [innerTy] := type.matrix.inner |]) | isAbstractType innerTy -> do
             db <- domainOf b
             case db of
-                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                DomainMatrix ind _ -> return (Just ind)
                 _ -> return Nothing
         _ -> return Nothing
     case mindex of
@@ -1374,12 +1357,12 @@ dotOrderDecomposeForMatrices [eMatch| &a .<= &b |] = do
         ([xMatch| [innerTy] := type.matrix.inner |], _) | isAbstractType innerTy -> do
             da <- domainOf a
             case da of
-                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                DomainMatrix ind _ -> return (Just ind)
                 _ -> return Nothing
         (_, [xMatch| [innerTy] := type.matrix.inner |]) | isAbstractType innerTy -> do
             db <- domainOf b
             case db of
-                [xMatch| [ind] := domain.matrix.index |] -> return (Just ind)
+                DomainMatrix ind _ -> return (Just ind)
                 _ -> return Nothing
         _ -> return Nothing
     case mindex of
@@ -1409,12 +1392,12 @@ matrixEq [eMatch| &a = &b |] = do
     da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
     db <- (Just <$> domainOf b) `catchError` (\ _ -> return Nothing )
     case (da,db) of
-        (Just [xMatch| [ia] := domain.matrix.index |],_) -> do
+        (Just (DomainMatrix ia _), _) -> do
             (quanVarStr, quanVar) <- freshQuanVar "matrixEq"
             ret $ inForAll quanVarStr ia ( [xMake| emptyGuard := [] |]
                                          , [eMake| &a[&quanVar] = &b[&quanVar] |]
                                          )
-        (_,Just [xMatch| [ia] := domain.matrix.index |]) -> do
+        (_, Just (DomainMatrix ia _)) -> do
             (quanVarStr, quanVar) <- freshQuanVar "matrixEq"
             ret $ inForAll quanVarStr ia ( [xMake| emptyGuard := [] |]
                                          , [eMake| &a[&quanVar] = &b[&quanVar] |]
@@ -1429,13 +1412,13 @@ matrixEq [eMatch| &a != &b |] = do
     da <- (Just <$> domainOf a) `catchError` (\ _ -> return Nothing )
     db <- (Just <$> domainOf b) `catchError` (\ _ -> return Nothing )
     case (da,db) of
-        (Just [xMatch| [ia] := domain.matrix.index |],_) -> do
+        (Just (DomainMatrix ia _), _) -> do
             (quanVarStr, quanVar) <- freshQuanVar "matrixEq"
             let res = inForAll quanVarStr ia ( [xMake| emptyGuard := [] |]
                                              , [eMake| &a[&quanVar] = &b[&quanVar] |]
                                              )
             ret [eMake| !&res |]
-        (_,Just [xMatch| [ia] := domain.matrix.index |]) -> do
+        (_, Just (DomainMatrix ia _)) -> do
             (quanVarStr, quanVar) <- freshQuanVar "matrixEq"
             let res = inForAll quanVarStr ia ( [xMake| emptyGuard := [] |]
                                              , [eMake| &a[&quanVar] = &b[&quanVar] |]

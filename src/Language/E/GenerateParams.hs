@@ -84,7 +84,7 @@ generateParams essenceFP eprimeDir outputDir = do
     essenceBaseName = takeBaseName essenceFP
 
     domToVarState :: Dom -> VarState 
-    domToVarState [dMatch| int(&a..&b) |]  = VarInt (unwrapInt a) (unwrapInt b)
+    domToVarState (D (DomainInt [RangeBounded a b])) = VarInt (unwrapInt a) (unwrapInt b)
     -- for int with range  keep the two 1 ..  (number of values)  and  list of value to index into
     domToVarState  f = _bug "Not done yet" [f]
 
@@ -222,7 +222,7 @@ getData  essence param = do
 
     where convert (e,b1,b2,b3) = (e, ModelResults b1 b2 b3)
 
-getVars :: (MonadConjure m) => Essence ->  m [(Text,E)]
+getVars :: (MonadConjure m) => Essence ->  m [(Text, Domain)]
 getVars essence = do
     givens <- plumming essence
     doms <- mapM domainOf givens

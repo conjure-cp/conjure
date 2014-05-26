@@ -349,37 +349,37 @@ eDepth EOF = 0
 eDepth (StatementAndNext this next) = max (eDepth this) (eDepth next)
 
 dDepth :: Domain -> Int
-dDepth _ = error "uniplate me up, scotty"
+dDepth  = gdepth
 
 compareChain :: [Ordering] -> Ordering
 compareChain (EQ:xs) = compareChain xs
 compareChain (x :_ ) = x
 compareChain []      = EQ
 
-domOrder :: E -> E -> Ordering
+domOrder :: Domain -> Domain -> Ordering
 domOrder
-    (D DomainBool)
-    (D DomainBool) = EQ
+    DomainBool
+    DomainBool = EQ
 domOrder
-    (D DomainInt{})
-    (D DomainInt{}) = EQ
+    DomainInt{}
+    DomainInt{} = EQ
 domOrder
-    (D (DomainMatrix indexA innerA))
-    (D (DomainMatrix indexB innerB))
-    = compareChain [ domOrder (D indexA) (D indexB)
-                   , domOrder (D innerA) (D innerB)
+    (DomainMatrix indexA innerA)
+    (DomainMatrix indexB innerB)
+    = compareChain [ domOrder indexA indexB
+                   , domOrder innerA innerB
                    ]
 
-domOrder (D DomainBool) _ = LT
-domOrder _ (D DomainBool) = GT
+domOrder DomainBool _ = LT
+domOrder _ DomainBool = GT
 
-domOrder (D DomainInt{}) _ = LT
-domOrder _ (D DomainInt{}) = GT
+domOrder DomainInt{} _ = LT
+domOrder _ DomainInt{} = GT
 
-domOrder (D DomainMatrix{}) _ = LT
-domOrder _ (D DomainMatrix{}) = GT
+domOrder DomainMatrix{} _ = LT
+domOrder _ DomainMatrix{} = GT
 
-domOrder x y = compare (eDepth x) (eDepth y)
+domOrder x y = compare (dDepth x) (dDepth y)
 
 compactSelect :: [RuleReprResult] -> RuleReprResult
 compactSelect = minimumBy comparer
@@ -409,7 +409,7 @@ instance SelectByMode RuleReprResult where
 
 type ReprFunc m =
     ( Text                                  -- input: name of the variable
-    , E                                     -- input: domain
+    , Domain                                -- input: domain
     , E                                     -- input: decl
     )
     -> m [RuleReprResult]

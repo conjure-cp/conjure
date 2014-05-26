@@ -33,9 +33,9 @@ introduceRegions useChannelling spec = withBindingScope' $
             (base, Nothing, repr) -> do
                 mx <- lift $ runMaybeT $ lookupReference s
                 case mx of
-                    Just [xMatch| [d] := topLevel.declaration.find .domain |]
+                    Just [xMatch| [D d] := topLevel.declaration.find .domain |]
                         | domainNeedsRepresentation d -> addRegion base repr
-                    Just [xMatch| [d] := topLevel.declaration.given.domain |]
+                    Just [xMatch| [D d] := topLevel.declaration.given.domain |]
                         | domainNeedsRepresentation d -> addRegion base repr
                     _ -> return p
         op p = return p

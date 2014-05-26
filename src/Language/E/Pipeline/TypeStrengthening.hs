@@ -40,8 +40,8 @@ attributeAcquisition spec@(Spec v statements0) = do
     -- mkLog "attributeAcquisition" $ debugPretty collectedAttributes
 
     statements3 <- forM statements2 $ \ s  -> case s of
-        [xMatch| [name  ] := topLevel.declaration.find.name
-               | [domain] := topLevel.declaration.find.domain
+        [xMatch| [name    ] := topLevel.declaration.find.name
+               | [D domain] := topLevel.declaration.find.domain
                |] -> do
             let collectedAttributesForThis = [ (lvl, attr, val) | (name', lvl, attr, val) <- collectedAttributes, name == name' ]
             if null collectedAttributesForThis
@@ -50,7 +50,7 @@ attributeAcquisition spec@(Spec v statements0) = do
                     let fs = foldr1 (>=>) [ updateAttributes lvl [mkAttr (attr,val)] | (lvl, attr, val) <- collectedAttributesForThis ]
                     domain' <- fs domain
                     return [xMake| topLevel.declaration.find.name   := [name]
-                                 | topLevel.declaration.find.domain := [domain']
+                                 | topLevel.declaration.find.domain := [D domain']
                                  |]
         _ -> return s
 
@@ -66,7 +66,7 @@ sumAsCardinality p = return p
 
 
 nestedMatch
-    :: MonadConjure m => [(E,E)] -> E
+    :: MonadConjure m => [(E, Domain)] -> E
     -> m ( [ ( E            -- the decision variable
              , Int          -- levels of nesting
              , Text         -- the attribtue
@@ -99,7 +99,7 @@ nestedMatch findsToConsider cons = do
             return ([(decvar, 0, attr, val) | (decvar, attr, val) <- attrs ], keep)
 
 directMatch
-    :: MonadConjure m => [(E,E)] -> E
+    :: MonadConjure m => [(E, Domain)] -> E
     -> m ( [ ( E            -- the decision variable
              , Text         -- the attribtue
              , Maybe E      -- value of the attribute, Nothing if flag
@@ -126,16 +126,16 @@ directMatch findsToConsider cons = case cons of
 
     [eMatch| forAll &i : &dom . &j in &x |]
         | i == j
-        , Just [xMatch| [domX] := domain.partition.inner |] <- x `lookup` findsToConsider
-        , dom == domX
+        , Just (DomainPartition _ domX) <- x `lookup` findsToConsider
+        , dom == D domX
         -> return ([(x, "complete", Nothing)], [])
 
     -- total function, because every value is assigned
 
     c@[eMatch| forAll &i : &dom . &x(&j) = &_ |]
         | i == j
-        , Just [xMatch| [domX] := domain.function.innerFrom |] <- x `lookup` findsToConsider
-        , dom == domX
+        , Just (DomainFunction _ domX _) <- x `lookup` findsToConsider
+        , dom == D domX
         -> return ([(x, "total", Nothing)], [c])
 
     -- size, minSize, maxSize
@@ -148,25 +148,25 @@ directMatch findsToConsider cons = case cons of
     -- minOccur, maxOccur
 
     c@[eMatch| forAll &i : &dom . freq(&x,&j) >= &n |]      | i == j
-                                                            , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
-                                                            , dom == domX
+                                                            , Just (DomainMSet _ domX) <- x `lookup` findsToConsider
+                                                            , dom == D domX
                                                             -> returnIfCat n c ([(x, "minOccur", Just n)],[])
 
     c@[eMatch| forAll &i : &dom . freq(&x,&j) <= &n |]      | i == j
-                                                            , Just [xMatch| [domX] := domain.mset.inner |] <- x `lookup` findsToConsider
-                                                            , dom == domX
+                                                            , Just (DomainMSet _ domX) <- x `lookup` findsToConsider
+                                                            , dom == D domX
                                                             -> returnIfCat n c ([(x, "maxOccur", Just n)],[])
 
     -- functional, because assigned
     c@[eMatch| forAll &i : &dom . &x(&j,_) = {&_} |]        | i == j
-                                                            , Just [xMatch| [domX,_] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , dom == domX
+                                                            , Just (DomainRelation _ [domX,_]) <- x `lookup` findsToConsider
+                                                            , dom == D domX
                                                             -> return ( [ (x, "functional" , Just [eMake| tuple(1) |] )
                                                                         , (x, "total"      , Nothing           )
                                                                         ], [c])
     c@[eMatch| forAll &i : &dom . &x(_,&j) = {&_} |]        | i == j
-                                                            , Just [xMatch| [_,domX] := domain.relation.inners |] <- x `lookup` findsToConsider
-                                                            , dom == domX
+                                                            , Just (DomainRelation _ [_,domX]) <- x `lookup` findsToConsider
+                                                            , dom == D domX
                                                             -> return ( [ (x, "functional" , Just [eMake| tuple(2) |] )
                                                                         , (x, "total"      , Nothing           )
                                                                         ], [c])
@@ -175,7 +175,7 @@ directMatch findsToConsider cons = case cons of
 
 
 relationFunctional
-    :: MonadConjure m => [(E,E)] -> E
+    :: MonadConjure m => [(E, Domain)] -> E
     -> m ( [ ( E            -- the decision variable
              , Text         -- the attribtue
              , Maybe E      -- value of the attribute, Nothing if flag
@@ -190,7 +190,7 @@ relationFunctional findsToConsider cons = go [] cons
                         | args  := binOp.left.operator.twoBars.functionApply.args
                         | [Prim (I 1)] := binOp.right.value.literal
                         |]
-            | Just [xMatch| domR := domain.relation.inners |] <- r `lookup` findsToConsider
+            | Just (DomainRelation _ domR) <- r `lookup` findsToConsider
             = do
                 -- domR and {dom of args} need to be pair-wise equal
                 -- OR underscore.
@@ -199,7 +199,7 @@ relationFunctional findsToConsider cons = go [] cons
                                   | (i,a,d) <- zip3 [ 1::Integer .. ] args domR
                                   , a /= [eMake| _ |]
                                   , let aDom = lookup a quans
-                                  , Just d == aDom
+                                  , Just (D d) == aDom
                                   ]
                 let eInt i = [xMake| value.literal := [Prim (I i)] |]
                 return ( [ (r, "functional" , Just [xMake| value.tuple.values := (map eInt quantifiers) |] )
@@ -210,14 +210,14 @@ relationFunctional findsToConsider cons = go [] cons
                         | args  := binOp.left.operator.twoBars.functionApply.args
                         | [Prim (I 1)] := binOp.right.value.literal
                         |]
-            | Just [xMatch| domR := domain.relation.inners |] <- r `lookup` findsToConsider
+            | Just (DomainRelation _ domR) <- r `lookup` findsToConsider
             = do
                 -- same as above case, except not `total`
                 let quantifiers = [ i
                                   | (i,a,d) <- zip3 [ 1::Integer .. ] args domR
                                   , a /= [eMake| _ |]
                                   , let aDom = lookup a quans
-                                  , Just d == aDom
+                                  , Just (D d) == aDom
                                   ]
                 let eInt i = [xMake| value.literal := [Prim (I i)] |]
                 return ( [ (r, "functional" , Just [xMake| value.tuple.values := (map eInt quantifiers) |] )
@@ -243,21 +243,16 @@ typeChange spec@(Spec v statements1) = do
     let maxOccur1 = mkAttr ("maxOccur", Just [eMake| 1 |])
 
     replacements <- fmap catMaybes $ forM findsToConsider $ \ (name, domain) -> case domain of
-        [xMatch| [inner] := domain.mset.inner
-               | attrs   := domain.mset.attributes.attrCollection
-               |]
+        DomainMSet (DomainAttributes attrs) inner
             | maxOccur1 `elem` attrs
-            -> return $ Just (name, ( [xMake| domain.set.inner := [inner]
-                                            | domain.set.attributes.attrCollection := (attrs \\ [maxOccur1])
-                                            |]
-                                    , [eMake| toMSet(&name) |]
-                                    ))
-        [xMatch| inners := domain.relation.inners
-               | attrs  := domain.relation.attributes.attrCollection
-               |]
-            | functionalAttr'                                    <- "functional" `lookupAttr` attrs
+            -> return $ Just ( name
+                             , ( DomainSet (DomainAttributes (attrs \\ [maxOccur1])) inner
+                               , [eMake| toMSet(&name) |]
+                               ) )
+        DomainRelation (DomainAttributes attrs) inners
+            | functionalAttr'                                    <- "functional" `lookupDomainAttribute` DomainAttributes attrs
             , let functionalAttr = mkAttr ("functional", functionalAttr')
-            , Just [xMatch| functionals := value.tuple.values |] <- "functional" `lookupAttr` attrs
+            , Just [xMatch| functionals := value.tuple.values |] <- "functional" `lookupDomainAttribute` DomainAttributes attrs
             -> do
                 let
                     eInt i = [xMake| value.literal := [Prim (I i)] |]
@@ -270,10 +265,10 @@ typeChange spec@(Spec v statements1) = do
                 let tos = inners \\ frs
                 let fr = case frs of
                             [i] -> i
-                            _   -> [xMake| domain.tuple.inners := frs |]
+                            _   -> DomainTuple frs
                 let to = case tos of
                             [i] -> i
-                            _   -> [xMake| domain.tuple.inners := tos |]
+                            _   -> DomainTuple tos
                 let permuteTuple = [xMake| value.tuple.values := functionals ++ nonfunctionals |]
 
                 -- wrap in a permute only if it is needed.
@@ -281,12 +276,10 @@ typeChange spec@(Spec v statements1) = do
                                     then [eMake| toRelation(&name) |]
                                     else [eMake| permute(toRelation(&name),&permuteTuple) |]
 
-                return $ Just (name, ( [xMake| domain.function.innerFrom := [fr]
-                                             | domain.function.innerTo   := [to]
-                                             | domain.function.attributes.attrCollection := (attrs \\ [functionalAttr])
-                                             |]
-                                     , decorator
-                                     ))
+                return $ Just ( name
+                              , ( DomainFunction (DomainAttributes (attrs \\ [functionalAttr])) fr to 
+                                , decorator
+                                ) )
         _ -> return Nothing
 
     let decorate x | Just (_,y) <- x `lookup` replacements = y
@@ -297,7 +290,7 @@ typeChange spec@(Spec v statements1) = do
         [xMatch| [name] := topLevel.declaration.find.name
                |] | Just (domain,_) <- name `lookup` replacements
             -> return [xMake| topLevel.declaration.find.name := [name]
-                            | topLevel.declaration.find.domain := [domain]
+                            | topLevel.declaration.find.domain := [D domain]
                             |]
         s -> return (decorate s)
 
@@ -325,110 +318,38 @@ pullConstraints [xMatch| xs := topLevel.suchThat |] = xs
 pullConstraints _ = []
 
 
-pullFinds :: Spec -> [(E,E)]
+pullFinds :: Spec -> [(E, Domain)]
 pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
-    where pullFind [xMatch| [name] := topLevel.declaration.find.name
-                          | [dom]  := topLevel.declaration.find.domain |] = Just (name,dom)
+    where pullFind [xMatch| [name]  := topLevel.declaration.find.name
+                          | [D dom] := topLevel.declaration.find.domain |] = Just (name, dom)
           pullFind _ = Nothing
 
 updateAttributes
     :: MonadConjure m
     => Int                  -- nesting level, 0 for topmost
-    -> [E]                  -- attributes
-    -> E                    -- domain
-    -> m E                  -- modified domain
+    -> [DomainAttribute]    -- attributes
+    -> Domain               -- domain
+    -> m Domain             -- modified domain
 
-updateAttributes 0 newAttrs
-    [xMatch| [inner] := domain.set.inner
-           | attrs   := domain.set.attributes.attrCollection
-           |] = return [xMake| domain.set.inner := [inner]
-                             | domain.set.attributes.attrCollection := attrs'
-                             |]
-        where attrs' = newAttrs ++ attrs
+updateAttributes 0 newAttrs (DomainSet       (DomainAttributes attrs) inner ) = return $ DomainSet       (DomainAttributes (newAttrs ++ attrs)) inner
+updateAttributes 0 newAttrs (DomainMSet      (DomainAttributes attrs) inner ) = return $ DomainMSet      (DomainAttributes (newAttrs ++ attrs)) inner
+updateAttributes 0 newAttrs (DomainFunction  (DomainAttributes attrs) fr to ) = return $ DomainFunction  (DomainAttributes (newAttrs ++ attrs)) fr to
+updateAttributes 0 newAttrs (DomainRelation  (DomainAttributes attrs) inners) = return $ DomainRelation  (DomainAttributes (newAttrs ++ attrs)) inners
+updateAttributes 0 newAttrs (DomainPartition (DomainAttributes attrs) inner ) = return $ DomainPartition (DomainAttributes (newAttrs ++ attrs)) inner
 
-updateAttributes 0 newAttrs
-    [xMatch| [inner] := domain.mset.inner
-           | attrs   := domain.mset.attributes.attrCollection
-           |] = return [xMake| domain.mset.inner := [inner]
-                             | domain.mset.attributes.attrCollection := attrs'
-                             |]
-        where attrs' = newAttrs ++ attrs
-
-updateAttributes 0 newAttrs
-    [xMatch| attrs := domain.function.attributes.attrCollection
-           | [fr]  := domain.function.innerFrom
-           | [to]  := domain.function.innerTo
-           |] = return [xMake| domain.function.attributes.attrCollection := attrs'
-                             | domain.function.innerFrom := [fr]
-                             | domain.function.innerTo := [to]
-                             |]
-        where attrs' = newAttrs ++ attrs
-
-updateAttributes 0 newAttrs
-    [xMatch| inners  := domain.relation.inners
-           | attrs   := domain.relation.attributes.attrCollection
-           |] = return [xMake| domain.relation.inners := inners
-                             | domain.relation.attributes.attrCollection := attrs'
-                             |]
-        where attrs' = newAttrs ++ attrs
-
-updateAttributes 0 newAttrs
-    [xMatch| [inner] := domain.partition.inner
-           | attrs   := domain.partition.attributes.attrCollection
-           |] = return [xMake| domain.partition.inner := [inner]
-                             | domain.partition.attributes.attrCollection := attrs'
-                             |]
-        where attrs' = newAttrs ++ attrs
-
-
-updateAttributes lvl newAttrs
-    [xMatch| [index] := domain.matrix.index
-           | [inner] := domain.matrix.inner
-           |] = do
-               inner' <- updateAttributes (lvl-1) newAttrs inner
-               return [xMake| domain.matrix.index := [index]
-                            | domain.matrix.inner := [inner']
-                            |]
-
-updateAttributes lvl newAttrs
-    [xMatch| [inner] := domain.set.inner
-           | attrs   := domain.set.attributes.attrCollection
-           |] = do
-               inner' <- updateAttributes (lvl-1) newAttrs inner
-               return [xMake| domain.set.inner := [inner']
-                            | domain.set.attributes.attrCollection := attrs
-                            |]
-
-updateAttributes lvl newAttrs
-    [xMatch| [inner] := domain.mset.inner
-           | attrs   := domain.mset.attributes.attrCollection
-           |] = do
-               inner' <- updateAttributes (lvl-1) newAttrs inner
-               return [xMake| domain.mset.inner := [inner']
-                            | domain.mset.attributes.attrCollection := attrs
-                            |]
-
-updateAttributes lvl newAttrs
-    [xMatch| [inner] := domain.partition.inner
-           | attrs   := domain.partition.attributes.attrCollection
-           |] = do
-               inner' <- updateAttributes (lvl-1) newAttrs inner
-               return [xMake| domain.partition.inner := [inner']
-                            | domain.partition.attributes.attrCollection := attrs
-                            |]
-
+updateAttributes lvl newAttrs (DomainMatrix    index inner) = DomainMatrix    index <$> (updateAttributes (lvl-1) newAttrs inner)
+updateAttributes lvl newAttrs (DomainSet       attrs inner) = DomainSet       attrs <$> (updateAttributes (lvl-1) newAttrs inner)
+updateAttributes lvl newAttrs (DomainMSet      attrs inner) = DomainMSet      attrs <$> (updateAttributes (lvl-1) newAttrs inner)
+updateAttributes lvl newAttrs (DomainPartition attrs inner) = DomainPartition attrs <$> (updateAttributes (lvl-1) newAttrs inner)
 
 updateAttributes lvl attrs dom = bug $ vcat [ "don't know how to update this domain"
                                             , pretty lvl
                                             , pretty dom
-                                            , pretty attrs
+                                            , vcat (map pretty attrs)
                                             ]
 
 
-mkAttr :: (T.Text, Maybe E) -> E
-mkAttr (n, Nothing) = [xMake| attribute.name.reference := [Prim (S n)] |]
-mkAttr (n, Just v ) = [xMake| attribute.nameValue.name.reference := [Prim (S n)]
-                            | attribute.nameValue.value          := [v]
-                            |]
-
+mkAttr :: (T.Text, Maybe E) -> DomainAttribute
+mkAttr (n, Nothing) = DAName n
+mkAttr (n, Just v ) = DANameValue n v
 

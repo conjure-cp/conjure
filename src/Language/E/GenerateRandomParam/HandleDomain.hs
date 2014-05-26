@@ -27,7 +27,7 @@ data ASize = ASize
 _c :: Choice
 _c = CInt 51  [RRange 0 49, RSingle 50 ]
 
-handleDomain :: MonadConjure m => EnumMap -> E -> m Choice
+handleDomain :: MonadConjure m => EnumMap -> Domain -> m Choice
 handleDomain _ [xMatch| _ := domain.bool |] =  return CBool
 
 handleDomain _ [xMatch| ranges := domain.int.ranges |] = do

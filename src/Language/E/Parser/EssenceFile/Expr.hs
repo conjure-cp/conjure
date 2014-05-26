@@ -72,7 +72,7 @@ parseAtomicExprNoPrePost = msum $ map try
 parseDomainAsExpr :: Parser E
 parseDomainAsExpr = do
     d <- betweenTicks parseDomain
-    return [xMake| domainInExpr := [d]
+    return [xMake| domainInExpr := [D d]
                  |]
 
 parsePrefixes :: [Parser (E -> E)]
@@ -206,7 +206,7 @@ parseQuantifiedExpr parseBody = do
             idenToSingleStructural i = i
 
         let
-            fixedQuanDoms  = map idenToSingleStructural $ case qnDom  of Just a     -> [a]; _ -> []
+            fixedQuanDoms  = map idenToSingleStructural $ case qnDom  of Just a     -> [D a]; _ -> []
             fixedQuanOps   = map idenToSingleStructural $ case qnExpr of Just (a,_) -> [a]; _ -> []
             fixedQuanExprs = map idenToSingleStructural $ case qnExpr of Just (_,a) -> [a]; _ -> []
             fixedGuards    = map idenToSingleStructural $ case qnGuard of Nothing -> emptyGuard ; Just g  -> [g]
