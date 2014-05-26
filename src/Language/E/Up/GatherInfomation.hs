@@ -8,15 +8,14 @@ module Language.E.Up.GatherInfomation(
     ,getEnumsAndUnamed
 ) where
 
+import Bug
 import Language.E
 import Language.E.Up.Data
 import Language.E.Up.Debug
 
 
-
 import qualified Data.Text as T
 import qualified Data.Map as M
-import qualified Data.Set as S
 
 
 -- get info about the bounds, names and indexes of the variables.
@@ -25,56 +24,39 @@ getVariables  (Spec _ xs) = M.fromList $ mapMaybe getVariable (statementAsList x
 
 
 getVariable :: E -> Maybe (String, VarInfo)
-getVariable  z =
-    case  getVariable' z of
-      Nothing -> Nothing
-      Just (name',domainRep) -> Just (name', VarInfo (getIndexes domainRep) (getBounds domainRep))
+getVariable z = case getVariable' z of
+    Nothing -> Nothing
+    Just (name', domainRep) -> Just (name', VarInfo (getIndexes domainRep) (getBounds domainRep))
 
 -- removed .matrix from check,  ?
-getVariable' ::  E -> Maybe (String, [E])
-getVariable' [xMatch|  [Prim (S name)] := topLevel.declaration.find.name.reference
-                    | f := topLevel.declaration.find.domain
-                    | _ := topLevel.declaration.find.domain.domain|] = Just(T.unpack name,f)
+getVariable' ::  E -> Maybe (String, Domain)
+getVariable' [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
+                    | [D domain]      := topLevel.declaration.find.domain
+                    |] = Just(T.unpack name, domain)
 
 getVariable' _ =  Nothing
 
 
-getBounds ::  [E] -> [Integer]
-getBounds e = case  getBounds' e of
-                [Tagged "bool" []] -> [0,1]
-                f -> getRangeList f
-    where
-    getBounds' :: [E] -> [E]
-    getBounds' [[xMatch| f := domain.matrix.inner |]] = getBounds' f
-    getBounds' [[xMatch| f := domain.int |]] = f
-    getBounds' [[xMatch| _ := domain.bool |]] = [Tagged "bool" []]
-    getBounds' es = _bug "GatherInfomation: getBounds'" es
+getBounds :: Domain -> [Integer]
+getBounds DomainBool = [0,1]
+getBounds (DomainInt rs) = sort $ nub $ concatMap getRangeList rs
+getBounds d = bug $ "Language.E.Up.GatherInfomation.getBounds:" <+> pretty d
 
 
-getIndexes :: [E]  -> [[Integer]]
+getIndexes :: Domain -> [[Integer]]
 getIndexes = getIndexes' []
     where
-    getIndexes' ::  [[Integer]] -> [E]  -> [[Integer]]
-    getIndexes' arr [[xMatch|
-         next := domain.matrix.inner
-       | r := domain.matrix.index.domain.int |]] = getRangeList r : getIndexes' arr next
+    getIndexes' ::  [[Integer]] -> Domain  -> [[Integer]]
+    getIndexes' arr (DomainMatrix next (DomainInt [ranges])) = getRangeList ranges : getIndexes' arr next
     getIndexes' arr _ = arr
 
 
-getRangeList :: [E] -> [Integer]
-getRangeList =  S.toAscList . getRange
+getRangeList :: Range -> [Integer]
+getRangeList (RangeSingle  [xMatch| [Prim (I x)] := value.literal |]) = [x]
+getRangeList (RangeBounded [xMatch| [Prim (I x)] := value.literal |]
+                           [xMatch| [Prim (I y)] := value.literal |]) = [x..y]
+getRangeList r = bug $ "Language.E.Up.GatherInfomation.getRangeList:" <+> pretty r
 
-getRange :: [E] -> S.Set Integer
-getRange [Tagged "ranges" arr] =
-    foldr ((\ a s -> (S.union s . S.fromList) a) . getRange') S.empty arr
-
-    where
-    getRange' [xMatch| [Prim (I a),Prim (I b)] := range.fromTo.value.literal |] = [a..b]
-    getRange' [xMatch| [Prim (I a)] := range.single.value.literal |] = [a]
-    getRange' [xMatch| [Prim (I a)] := range.single.unaryOp.negate.value.literal |] = [-a]
-    getRange' e = errr e  --  _bug " getRange'" [e]
-
-getRange e = _bug " getRange" e
 
 getEssenceVariables :: M.Map String [E] -> Spec ->  M.Map String [TagT]
 getEssenceVariables emap (Spec _ xs) =

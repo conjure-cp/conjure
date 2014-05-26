@@ -48,7 +48,7 @@ data TagT = TagSingle Tag
           | TagRel   [[TagT]]
     deriving (Show)
 
-type IndexRange = E
+type IndexRange = Domain
 
 data IndexT = IndexNone 
             | IndexMatrix IndexRange IndexT

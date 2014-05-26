@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
 module Language.E.Up.GatherIndexRanges(gatherIndexRanges) where
 
+import Bug
 import Language.E
 import Language.E.Up.Data
 import Language.E.Up.Debug(upBug)
@@ -24,38 +25,24 @@ gatherIndexRange _  = Nothing
 
 gatherIndexT :: E -> IndexT
 
-gatherIndexT [xMatch| [domRange] := domain.matrix.index 
-                    | [dom]      := domain.matrix.inner |] =
-   IndexMatrix sim (gatherIndexT dom) 
+gatherIndexT (D (DomainBool{})) = IndexNone
+gatherIndexT (D (DomainInt {}))= IndexNone
+gatherIndexT (D (DomainEnum{})) = IndexNone
+gatherIndexT (D (DomainTuple doms)) = IndexTuple (map (gatherIndexT . D) doms)
+gatherIndexT (D (DomainSet _ dom)) = IndexSet (gatherIndexT (D dom))
+gatherIndexT (D (DomainMSet _ dom)) = IndexSet (gatherIndexT (D dom))
+gatherIndexT (D (DomainFunction _ from to)) = IndexFunc (gatherIndexT (D from)) (gatherIndexT (D to))
+gatherIndexT (D (DomainRelation _ doms)) = IndexRel (map (gatherIndexT . D) doms)
+gatherIndexT (D (DomainPartition _ dom)) = IndexPar (gatherIndexT (D dom))
 
-   where 
-   sim :: E
-   sim = let (Spec _ es) = specSimplify (Spec (LanguageVersion "Essence" [1,3]) domRange)
-         in es
-
-gatherIndexT [xMatch| doms := domain.tuple.inners |] =
-   IndexTuple (map gatherIndexT doms)
-
-gatherIndexT [xMatch| doms := domain.relation.inners |] =
-   IndexRel (map gatherIndexT doms)
-
-gatherIndexT [xMatch| [from] := domain.function.innerFrom
-                    | [to]   := domain.function.innerTo|] =
-   IndexFunc (gatherIndexT from) (gatherIndexT to)
-
-gatherIndexT [xMatch| [dom] := domain.partition.inner |] =
-   IndexPar (gatherIndexT dom)
- 
-gatherIndexT [xMatch| [dom] := domain.set.inner |] =
-   IndexSet (gatherIndexT dom)
-
-gatherIndexT [xMatch| [dom] := domain.mset.inner |] =
-   IndexSet (gatherIndexT dom)
+gatherIndexT (D (DomainMatrix domRange dom)) = IndexMatrix sim (gatherIndexT (D dom))
+    where 
+        sim :: Domain
+        sim = case specSimplify (Spec (LanguageVersion "Essence" [1,3]) (D domRange)) of
+                Spec _ (D es) -> es
+                s -> bug $ "gatherIndexT" <+> pretty s
 
 gatherIndexT (Tagged "reference" _) = IndexNone 
-
-gatherIndexT (Tagged "domain" [Tagged tag _]) 
-    | tag `elem` ["int", "bool", "enum" ] = IndexNone
 
 gatherIndexT dom = upBug "gatherIndexRange: gatherIndexT domain not matched" [dom]
 

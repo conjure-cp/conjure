@@ -218,7 +218,7 @@ introduceIndexRange :: IndexT -> E -> E
 introduceIndexRange (IndexMatrix ir it) [xMatch| vs := value.matrix.values |] =
     let vs' = map (introduceIndexRange it) vs
     in  [xMake| value.matrix.values     := vs'
-              | value.matrix.indexrange := [ir] |]
+              | value.matrix.indexrange := [D ir] |]
 
 introduceIndexRange (IndexTuple its) [xMatch| vs := value.tuple.values |] =
     let vs' = zipWith introduceIndexRange its vs
