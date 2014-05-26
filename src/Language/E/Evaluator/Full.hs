@@ -38,14 +38,14 @@ fullEvaluator :: MonadConjure m => E -> m (Maybe (E,[Binder]))
 
 -- order integer domains given by a list of integers
 -- savilerow expects them ordered
-fullEvaluator [xMatch| rs := domain.int.ranges |]
+fullEvaluator (D (DomainInt rs))
     | Just xs <- view rs
     , let xsSorted = sortNub xs
     , xs /= xsSorted
-    , let rsSorted = map (\ i -> [xMake| value.literal := [Prim (I i)] |] ) xsSorted
-    = ret [xMake| domain.int.ranges := rsSorted |]
+    , let rsSorted = map (\ i -> RangeSingle [xMake| value.literal := [Prim (I i)] |] ) xsSorted
+    = ret $ D $ DomainInt rsSorted
     where
-        view1 [xMatch| [Prim (I i)] := range.single.value.literal |] = Just i
+        view1 (RangeSingle [xMatch| [Prim (I i)] := value.literal |]) = Just i
         view1 _ = Nothing
         view [] = Just []
         view (i:is) = (:) <$> view1 i <*> view is
