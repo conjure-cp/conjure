@@ -3,10 +3,7 @@ module Language.E.Up(translateSolution,translateSolution',translateSolutionM) wh
 
 import Language.E
 
-import Language.E.NormaliseSolution (normaliseSolutionEs)
 import Language.E.Pipeline.ReadIn(writeSpec)
-import Language.E.Up.EprimeToEssence(mainPure)
-import Language.E.Up.IO(getSpecs,getSpecsM)
 
 translateSolution
     :: EssenceFP
@@ -17,7 +14,7 @@ translateSolution
     -> EssenceSolutionFP  --Output
     -> IO ()
 translateSolution
-    essence param eprime eprimeParam eprimeSolution outSolution= 
+    essence param eprime eprimeParam eprimeSolution outSolution =
     translateSolution' essence param eprime eprimeParam eprimeSolution
     >>= writeSpec outSolution
     >>  return ()
@@ -29,9 +26,7 @@ translateSolution'
     -> Maybe EprimeParamFP
     -> EprimeSolutionFP
     -> IO EssenceSolution 
-translateSolution' essence param eprime eprimeParam eprimeSolution= do
-    specs <- getSpecs (eprime, eprimeSolution, essence, eprimeParam, param)
-    return $ Spec (LanguageVersion "Essence" [1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
+translateSolution' = undefined
 
 
 type Essence   = Spec
@@ -49,10 +44,7 @@ translateSolutionM
   -> ESolution
   -> [Text]
   -> m Spec
-
-translateSolutionM essence param eprime eprimeParam eprimeSolution logs= do
-    specs <- getSpecsM (eprime, eprimeSolution, essence, eprimeParam, param, logs)
-    return $ Spec (LanguageVersion "Essence" [1,3]) . listAsStatement . normaliseSolutionEs . mainPure $ specs
+translateSolutionM = undefined
 
 type EssenceSolution = Spec
 

@@ -323,9 +323,13 @@ instance Pretty E where
     pretty (Tagged t xs) = "{-#" <+> pretty t <++> vcat (map pretty xs) <+> "#-}"
 
 
-instance Pretty DomainDefinition where
-    pretty (DomainDefnUnnamed name size) = hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
-    pretty (DomainDefnEnum name values)  = hang ("letting" <+> pretty name <+> "be new type enum"   ) 8 (prettyList Pr.braces "," values)
+instance Pretty DomainDefnUnnamed where
+    pretty (DomainDefnUnnamed name size) =
+        hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
+
+instance Pretty DomainDefnEnum where
+    pretty (DomainDefnEnum name values) =
+        hang ("letting" <+> pretty name <+> "be new type enum"   ) 8 (prettyList Pr.braces "," values)
 
 
 instance Pretty Domain where

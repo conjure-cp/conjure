@@ -9,7 +9,8 @@ module Language.E.Definition
     ( module Stuff.Generic.Tag
 
     , Spec(..), LanguageVersion(..) , E(..), BuiltIn(..)
-    , Domain(..), DomainDefinition(..), DomainAttributes(..), DomainAttribute(..), Range(..)
+    , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
+    , DomainDefnEnum(..), DomainDefnUnnamed(..)
     , Representation(..)
     , Value
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
@@ -38,13 +39,17 @@ import Stuff.MetaVariable
 import Language.E.Imports
 
 import Data.Maybe ( fromJust )
+import Data.Data ( Data, Typeable )
+import GHC.Generics ( Generic )
+
+-- text
 import qualified Data.Text as T
-import qualified GHC.Generics ( Generic )
+
+-- aeson
 import Data.Aeson ( ToJSON(..), (.=) )
 import qualified Data.Aeson as JSON
 
 -- uniplate
-import Data.Data ( Data, Typeable )
 import Data.Generics.Uniplate.Data ( Uniplate, universe, children, descend, descendM, transform, transformM, rewrite, rewriteM )
 
 -- template-haskell
@@ -190,22 +195,30 @@ instance MetaVariable E where
     namedMV   _ = Nothing
 
 
-data DomainDefinition
-    = DomainDefnUnnamed Text E
-    | DomainDefnEnum Text [Text]
+data DomainDefnEnum = DomainDefnEnum Text [Text]
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize DomainDefinition
+instance Serialize DomainDefnEnum
 
-instance Hashable DomainDefinition
+instance Hashable DomainDefnEnum
 
-instance ToJSON DomainDefinition
+instance ToJSON DomainDefnEnum
+
+
+data DomainDefnUnnamed = DomainDefnUnnamed Text E
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+
+instance Serialize DomainDefnUnnamed
+
+instance Hashable DomainDefnUnnamed
+
+instance ToJSON DomainDefnUnnamed
 
 
 data Domain
     = DomainBool
     | DomainInt [Range]
-    | DomainEnum DomainDefinition [Range]
+    | DomainEnum DomainDefnEnum [Range]
     | DomainTuple [Domain]
     | DomainMatrix Domain Domain
     | DomainSet DomainAttributes Domain

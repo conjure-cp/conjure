@@ -754,7 +754,8 @@ instance TypeOf E where
 instance TypeOf Domain where
     typeOf DomainBool = return tyBool
     typeOf DomainInt{} = return [xMake| type.int  := [] |]
-    typeOf (DomainEnum nm _) = return [xMake| type.typeEnum := [Prim (S nm)] |]
+
+    typeOf (DomainEnum (DomainDefnEnum  nm _) _) = return [xMake| type.typeEnum := [Prim (S nm)] |]
 
     typeOf (DomainTuple ds) = do
         ts <- mapM typeOf ds

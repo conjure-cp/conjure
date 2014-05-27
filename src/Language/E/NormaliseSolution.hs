@@ -3,7 +3,6 @@
 module Language.E.NormaliseSolution ( normaliseSolution, normaliseSolutionEs ) where
 
 import Language.E
-import Language.E.Up.IO
 
 {-
   Normalise a spec e.g
@@ -78,8 +77,3 @@ normaliseSolutionE [xMatch| as := attrCollection |] = [xMake| attrCollection := 
 normaliseSolutionE (Tagged t xs) = Tagged t (map normaliseSolutionE xs)
 normaliseSolutionE e = e
 
-
-_t :: FilePath -> IO()
-_t file = do
-   ss <- getSpec file
-   (print . pretty) $ normaliseSolution ss
