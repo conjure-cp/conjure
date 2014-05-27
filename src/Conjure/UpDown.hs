@@ -48,28 +48,18 @@ upDown
          , Value -> m Value         -- value down
          , Value -> m Value         -- value up
          )
-upDown NoRepresentation d@(DomainBool{}) = upDownNoOp d
-upDown NoRepresentation d@(DomainInt {}) = upDownNoOp d
-upDown NoRepresentation d@(DomainEnum{}) = upDownEnum d
+upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
+upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
+upDown NoRepresentation d@(DomainEnum   {}) = upDownEnum d
+upDown NoRepresentation d@(DomainTuple  {}) = throwError $ NoRepresentationMatches $ vcat [ "tuples should be handled separately.", pretty d ]
 
--- upDown (DomainTuple [Domain])
--- 
 -- upDown (DomainMatrix Domain Domain)
--- 
 -- upDown (DomainSet DomainAttributes Domain)
--- 
 -- upDown (DomainMSet DomainAttributes Domain)
--- 
 -- upDown (DomainFunction DomainAttributes Domain Domain)
--- 
 -- upDown (DomainRelation DomainAttributes [Domain])
--- 
 -- upDown (DomainPartition DomainAttributes Domain)
--- 
 -- upDown (DomainOp Text [Domain])
--- 
--- upDown (DomainHack E          -- this is an ugly hack to be able to use expressions as domains. will go away later.)
--- 
 
 upDown representation domain =
     throwError $ NoRepresentationMatches $ vcat [ "bug in upDown"
@@ -123,15 +113,16 @@ test = hspec $ do
         let enumDomainDefn = DomainDefnEnum "fruits" enumValues
         let enumDomain = DomainEnum enumDomainDefn []
         let intDomain = DomainInt [RangeBounded [eMake| 1 |] [eMake| 4 |]]
-        it "enum domains should be turned into int domains" $ do
+
+        it "can convert enum domains into int domains" $ do
             downDomain NoRepresentation enumDomain `shouldBe` Right intDomain
 
-        it "enum values should be turned into int values, and back" $ do
-
+        it "can convert enum values into int values" $ do
             downValue NoRepresentation enumDomain [eMake| apple |] `shouldBe` Right [eMake| 1 |]
             downValue NoRepresentation enumDomain [eMake| peach |] `shouldBe` Right [eMake| 3 |]
             downValue NoRepresentation enumDomain [eMake| plum  |] `shouldBe` Left (ValueDownError "This identifier isn't a member of the enum: plum")
 
+        it "can reconstruct enum values from int values" $ do
             upValue NoRepresentation enumDomain [eMake| 1 |] `shouldBe` Right [eMake| apple |]
             upValue NoRepresentation enumDomain [eMake| 3 |] `shouldBe` Right [eMake| peach |]
             upValue NoRepresentation enumDomain [eMake| 0 |] `shouldBe` Left (ValueUpError "Integer value out of range for enum: 0")
