@@ -97,9 +97,9 @@ else
 end
 
 if options.optimisation
-    cmdBuildDeps << "-O2"
+    cmdBuildDeps << "-O1"
     cmdBuildDeps << "--ghc-options=\"-funbox-strict-fields\""
-    cmdBuild << "-O2"
+    cmdBuild << "-O1"
     cmdBuild << "--ghc-options=\"-funbox-strict-fields\""
 else
     cmdBuildDeps << "-O0"
