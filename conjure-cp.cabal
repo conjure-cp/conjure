@@ -114,10 +114,6 @@ Library
                      , Language.E.Pipeline.NoGuards
                      , Language.E.Pipeline.NoTuples
 
-                     , Language.E.Testing.ParsePrintSpec
-                     , Language.E.Testing.RuleEngine
-                     , Language.E.Testing.TopToBottom
-
 
     build-depends    : base, ghc-prim
                      , aeson
@@ -131,8 +127,6 @@ Library
                      , filepath
                      , hashable
                      , haskell-src-meta >= 0.6
-                     , hspec
-                     , HUnit
                      , mtl
                      , parsec >= 3
                      , pretty
