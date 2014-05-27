@@ -65,79 +65,53 @@ getEssenceVariables emap (Spec _ xs) =
 
 getEssenceVariable :: M.Map String [E] -> E -> Maybe (String, [TagT])
 
-getEssenceVariable emap [xMatch| arr := topLevel.declaration.find.domain.domain.tuple.inners
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagTuple (map (getTags emap) arr)])
-
-getEssenceVariable _ [xMatch| [Prim (S kind)] := topLevel.declaration.find.domain.domain.enum.name.reference
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagEnum (T.unpack  kind)])
-
-getEssenceVariable emap [xMatch|  _    := topLevel.declaration.find.domain.domain.function
-                            | [ins] := topLevel.declaration.find.domain.domain
-                                  .function.innerFrom
-                            | [tos] := topLevel.declaration.find.domain.domain
-                                  .function.innerTo
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagFunc ((getTags emap) ins) ((getTags emap) tos)] )
-
-getEssenceVariable emap [xMatch|  _    := topLevel.declaration.find.domain.domain.partition
-                            | [ins] := topLevel.declaration.find.domain.domain.partition.inner
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagPar ( (getTags emap) ins)] )
-
-
 getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
-                               | [Prim (S ref)]  := topLevel.declaration.find.domain.reference |]
-                               | Just _ <- M.lookup (T.unpack ref) emap  =
-    Just (T.unpack name, [TagEnum (T.unpack ref)] )
+                               | [D domain]      := topLevel.declaration.find.domain |] =
+    case domain of
+        DomainTuple arr -> Just (T.unpack name,  [TagTuple (map (getTags emap) arr)])
+        DomainEnum kind _ -> Just (T.unpack name, [TagEnum (T.unpack kind)])
+        DomainFunction _ ins tos -> Just (T.unpack name, [TagFunc ((getTags emap) ins) ((getTags emap) tos)] )
+        DomainPartition _ ins -> Just (T.unpack name, [TagPar ( (getTags emap) ins)] )
+        DomainRelation _ arr -> Just (T.unpack name, [TagRel (map (getTags emap) arr)])
+        DomainHack [xMatch| [Prim (S ref)] := reference |]
+            | Just _ <- M.lookup (T.unpack ref) emap -> Just (T.unpack name, [TagEnum (T.unpack ref)] )
+            | Just _ <- M.lookup ("__named_" ++ T.unpack ref) emap -> Just (T.unpack name, [TagUnamed (T.unpack ref)] )
+        _ -> Just (T.unpack name, [TagDomain domain])
 
-getEssenceVariable emap [xMatch| [Prim (S name)] := topLevel.declaration.find.name.reference
-                               | [Prim (S ref)]  := topLevel.declaration.find.domain.reference |]
-                               | Just _ <- M.lookup ("__named_" ++  T.unpack ref) emap  =
-    Just (T.unpack name, [TagUnamed (T.unpack ref)] )
-
-getEssenceVariable emap [xMatch| arr := topLevel.declaration.find.domain.domain.relation.inners
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  [TagRel (map (getTags emap) arr)])
-
-
-getEssenceVariable emap [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
-                            | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
-   Just (T.unpack name,  TagSingle t : concatMap (getTags emap) arr )
+-- getEssenceVariable emap [xMatch| [Tagged t arr]  := topLevel.declaration.find.domain.domain
+--                             | [Prim (S name)] := topLevel.declaration.find.name.reference |] =
+--    Just (T.unpack name,  TagSingle t : concatMap (getTags emap) arr )
 
 getEssenceVariable _   [xMatch| _ := topLevel.letting     |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.given       |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.where       |] = Nothing
 getEssenceVariable _   [xMatch| _ := topLevel.branchingOn |] = Nothing
-getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = 
-    _bug "getEssenceVariable unhandled declaration" [e]
-getEssenceVariable _ e = 
-    _bug "getEssenceVariable unhandled" [e]
+getEssenceVariable _ e@[xMatch| _ := topLevel.declaration |] = _bug "getEssenceVariable unhandled declaration" [e]
+getEssenceVariable _ e = _bug "getEssenceVariable unhandled" [e]
 
 
-getTags ::  M.Map String [E] -> E -> [TagT]
-getTags emap [xMatch|  _    := domain.function
-               | [ins] := domain.function.innerFrom
-               | [tos] := domain.function.innerTo |] =
-   [TagFunc (getTags emap ins) (getTags emap tos)]
-
-getTags emap [xMatch| [ins] := domain.partition.inner |] =
-     [TagPar (getTags emap ins)]
-
-getTags emap [xMatch| arr            := domain.tuple.inners |] = [TagTuple (map (getTags emap) arr)]
-getTags emap [xMatch| [dom]          := inner |]               = getTags emap dom
-getTags emap [xMatch| [Tagged t arr] := domain |]              = TagSingle t : concatMap (getTags emap) arr
-
-getTags emap (Tagged "reference" [Prim (S name)]) 
-    | Just _ <- M.lookup ("__named_" ++  T.unpack name) emap = [TagUnamed (T.unpack name)]
-getTags _ (Tagged "reference" [Prim (S name)])            = [TagEnum (T.unpack name)]
-
-getTags _ (Tagged "attributes" _) = []
-getTags _ (Tagged "index" _)      = []
-getTags _ (Tagged "range" _)      = []
-getTags _ (Tagged "ranges" _)     = []
-getTags _ (Tagged "inners" _)     = []
+getTags ::  M.Map String [E] -> Domain -> [TagT]
+-- getTags emap [xMatch|  _    := domain.function
+--                | [ins] := domain.function.innerFrom
+--                | [tos] := domain.function.innerTo |] =
+--    [TagFunc (getTags emap ins) (getTags emap tos)]
+-- 
+-- getTags emap [xMatch| [ins] := domain.partition.inner |] =
+--      [TagPar (getTags emap ins)]
+-- 
+-- getTags emap [xMatch| arr            := domain.tuple.inners |] = [TagTuple (map (getTags emap) arr)]
+-- getTags emap [xMatch| [dom]          := inner |]               = getTags emap dom
+-- getTags emap [xMatch| [Tagged t arr] := domain |]              = TagSingle t : concatMap (getTags emap) arr
+-- 
+-- getTags emap (Tagged "reference" [Prim (S name)]) 
+--     | Just _ <- M.lookup ("__named_" ++  T.unpack name) emap = [TagUnamed (T.unpack name)]
+-- getTags _ (Tagged "reference" [Prim (S name)])            = [TagEnum (T.unpack name)]
+-- 
+-- getTags _ (Tagged "attributes" _) = []
+-- getTags _ (Tagged "index" _)      = []
+-- getTags _ (Tagged "range" _)      = []
+-- getTags _ (Tagged "ranges" _)     = []
+-- getTags _ (Tagged "inners" _)     = []
 getTags _ _                       = []
 {-getTags _ e                       = errp [e]-}
 

@@ -66,7 +66,7 @@ parseDomain
             xs <- optionMaybe $ parens $ parseRange `sepBy` comma
             case xs of
                 Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
-                Just ys -> return $ DomainEnum r ys
+                Just ys -> return $ DomainEnum (DomainDefnEnum r (error "we need state in the parser")) ys
 
         pMatrix = do
             lexeme L_matrix

@@ -9,7 +9,9 @@ module Language.E.Definition
     ( module Stuff.Generic.Tag
 
     , Spec(..), LanguageVersion(..) , E(..), BuiltIn(..)
-    , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
+    , Domain(..), DomainDefinition(..), DomainAttributes(..), DomainAttribute(..), Range(..)
+    , Representation(..)
+    , Value
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
 
     , identifierSplit, identifierConstruct
@@ -188,10 +190,22 @@ instance MetaVariable E where
     namedMV   _ = Nothing
 
 
+data DomainDefinition
+    = DomainDefnUnnamed Text E
+    | DomainDefnEnum Text [Text]
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+
+instance Serialize DomainDefinition
+
+instance Hashable DomainDefinition
+
+instance ToJSON DomainDefinition
+
+
 data Domain
     = DomainBool
     | DomainInt [Range]
-    | DomainEnum Text [Range]
+    | DomainEnum DomainDefinition [Range]
     | DomainTuple [Domain]
     | DomainMatrix Domain Domain
     | DomainSet DomainAttributes Domain
@@ -249,6 +263,19 @@ instance Serialize Range
 instance Hashable Range
 
 instance ToJSON Range
+
+
+data Representation = NoRepresentation | Representation Text
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+
+instance Serialize Representation
+
+instance Hashable Representation
+
+instance ToJSON Representation
+
+
+type Value = E
 
 
 identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)

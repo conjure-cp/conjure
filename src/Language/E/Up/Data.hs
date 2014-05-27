@@ -39,7 +39,7 @@ data Tree a = Leaf a
     deriving (Show)
 
 
-data TagT = TagSingle Tag
+data TagT = TagDomain Domain
           | TagEnum   String
           | TagUnamed String
           | TagTuple  [[TagT]]

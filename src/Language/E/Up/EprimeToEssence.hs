@@ -125,6 +125,7 @@ convertRep arr =
   in  (or bs, res)
 
 convertRep' :: TagT -> (Bool,TagT)
+convertRep TagDomain DomainBool
 convertRep' (TagSingle t) =  (b', TagSingle res)
     where (b',res) = convertTag t
 
@@ -149,66 +150,64 @@ convertTag t      = (False, t)
 
 introduceTypes ::  M.Map String [E] -> [TagT] -> E -> E
 
-introduceTypes emap ts [xMatch| [val] := expr |] =
-    let res = introduceTypes emap ts val
-    in  [xMake| expr := [res] |]
-
-introduceTypes emap [TagEnum name] [xMatch| [Prim (I num)] := value.literal |] =
-    let res = fromMaybe (_bugg "fromMaybe enums") $ M.lookup name emap
-        selected = res !! fromInteger (num - 1)
-    in  selected
-
-introduceTypes emap [TagUnamed kind] e@[xMatch| [Prim (I _)] := value.literal |] =
-    introduceTypes emap [TagEnum ("__named_" ++ kind)] e
-
-introduceTypes _ [TagSingle "bool"] [xMatch| [Prim (I num)] := value.literal |] =
-    let bool = num == 1
-    in  [xMake| value.literal := [Prim (B bool)] |]
-
-introduceTypes emap (TagSingle "matrix":ts) [xMatch| vs := value.matrix.values |] =
-    let res = map (introduceTypes emap ts) vs
-    in  [xMake| value.matrix.values := res |]
-
-introduceTypes emap (TagSingle "set":ts) [xMatch| vs := value.matrix.values |] =
-    let res = map (introduceTypes emap ts) vs
-    in  [xMake| value.set.values := res |]
-
-introduceTypes emap (TagSingle "mset":ts) [xMatch| vs := value.matrix.values |] =
-    let res = map (introduceTypes emap ts) vs
-    in  [xMake| value.mset.values := res |]
-
-introduceTypes emap [TagTuple ts] [xMatch| vs := value.tuple.values |] =
-    let res = zipWith (introduceTypes emap) ts vs
-    in  [xMake| value.tuple.values := res |]
-
-introduceTypes emap [TagRel ts] [xMatch| vs := value.relation.values |] =
-    let res = map (zipWith (introduceTypes emap) ts . unwrapTuple ) vs
-    in  [xMake| value.relation.values := (map wrapInTuple res)   |]
-
-introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
-   let mappings =  map (func ins tos) arr
-   in  [xMake| value.function.values := mappings |]
-
-    where
-    func ins' tos' [xMatch| [a,b] := mapping |] =
-       let a' = introduceTypes emap ins' a
-           b' = introduceTypes emap tos' b
-       in   [xMake| mapping := [a',b'] |]
-    func _ _ _  = _bugg "EprimeToEssence: introduceTypes function"
-
-introduceTypes emap [TagPar ts] [xMatch| partsArr := value.partition.values |] =
-   let parts =  map par partsArr
-   in  [xMake| value.partition.values := parts |]
-
-    where
-    par [xMatch| ps := part |] =
-       let res = map (introduceTypes emap ts) ps
-       in  [xMake| part := res |]
-    par _ = _bugg "EprimeToEssence: introduceTypes partition"
-
-
-
-introduceTypes _ [TagSingle _] e = e
+-- introduceTypes emap ts [xMatch| [val] := expr |] =
+--     let res = introduceTypes emap ts val
+--     in  [xMake| expr := [res] |]
+-- 
+-- introduceTypes emap [TagEnum name] [xMatch| [Prim (I num)] := value.literal |] =
+--     let res = fromMaybe (_bugg "fromMaybe enums") $ M.lookup name emap
+--         selected = res !! fromInteger (num - 1)
+--     in  selected
+-- 
+-- introduceTypes emap [TagUnamed kind] e@[xMatch| [Prim (I _)] := value.literal |] =
+--     introduceTypes emap [TagEnum ("__named_" ++ kind)] e
+-- 
+-- introduceTypes _ [TagDomain DomainBool] [xMatch| [Prim (I num)] := value.literal |] =
+--     let bool = num == 1
+--     in  [xMake| value.literal := [Prim (B bool)] |]
+-- 
+-- introduceTypes emap (TagSingle "matrix":ts) [xMatch| vs := value.matrix.values |] =
+--     let res = map (introduceTypes emap ts) vs
+--     in  [xMake| value.matrix.values := res |]
+-- 
+-- introduceTypes emap (TagSingle "set":ts) [xMatch| vs := value.matrix.values |] =
+--     let res = map (introduceTypes emap ts) vs
+--     in  [xMake| value.set.values := res |]
+-- 
+-- introduceTypes emap (TagSingle "mset":ts) [xMatch| vs := value.matrix.values |] =
+--     let res = map (introduceTypes emap ts) vs
+--     in  [xMake| value.mset.values := res |]
+-- 
+-- introduceTypes emap [TagTuple ts] [xMatch| vs := value.tuple.values |] =
+--     let res = zipWith (introduceTypes emap) ts vs
+--     in  [xMake| value.tuple.values := res |]
+-- 
+-- introduceTypes emap [TagRel ts] [xMatch| vs := value.relation.values |] =
+--     let res = map (zipWith (introduceTypes emap) ts . unwrapTuple ) vs
+--     in  [xMake| value.relation.values := (map wrapInTuple res)   |]
+-- 
+-- introduceTypes emap [TagFunc ins tos] [xMatch| arr := value.function.values |] =
+--    let mappings =  map (func ins tos) arr
+--    in  [xMake| value.function.values := mappings |]
+-- 
+--     where
+--     func ins' tos' [xMatch| [a,b] := mapping |] =
+--        let a' = introduceTypes emap ins' a
+--            b' = introduceTypes emap tos' b
+--        in   [xMake| mapping := [a',b'] |]
+--     func _ _ _  = _bugg "EprimeToEssence: introduceTypes function"
+-- 
+-- introduceTypes emap [TagPar ts] [xMatch| partsArr := value.partition.values |] =
+--    let parts =  map par partsArr
+--    in  [xMake| value.partition.values := parts |]
+-- 
+--     where
+--     par [xMatch| ps := part |] =
+--        let res = map (introduceTypes emap ts) ps
+--        in  [xMake| part := res |]
+--     par _ = _bugg "EprimeToEssence: introduceTypes partition"
+-- 
+-- introduceTypes _ [TagSingle _] e = e
 {-introduceTypes _ ts e = e-}
 introduceTypes _ ts e = _bugi "introduceTypes not handled" (ts,[e])
 
