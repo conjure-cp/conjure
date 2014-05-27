@@ -53,6 +53,8 @@ echo "LLVM            : ${LLVM}"
 echo "CABAL_VERSION   : ${CABAL_VERSION}"
 echo "BIN_DIR         : ${BIN_DIR}"
 echo "BUILD_DOCS      : ${BUILD_DOCS}"
+echo "BUILD_TESTS     : ${BUILD_TESTS}"
+echo "RUN_TESTS       : ${RUN_TESTS}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
@@ -147,6 +149,12 @@ else
     DOCS="--disable-documentation"
 fi
 
+if [ $BUILD_TESTS = "yes" ]; then
+    TESTS="--enable-tests"
+else
+    TESTS=""
+fi
+
 
 # init sandbox if it doesn't exist
 
@@ -168,12 +176,16 @@ cabal install                                                       \
 
 cabal configure                                                     \
     --disable-library-profiling --disable-executable-profiling      \
-    ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
+    ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
 
 if [ $BUILD_DOCS == "yes" ]; then
     cabal haddock --hyperlink-source
+fi
+
+if [ $RUN_TESTS = "yes" ]; then
+    cabal test
 fi
 
 cabal copy                                  # install in ~/.cabal/bin
