@@ -7,6 +7,7 @@ import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
 
+import Data.Text ( pack )
 import Data.Generics.Uniplate.Data ( transformBiM )
 import Data.List ( findIndex )
 import Safe ( atMay, headNote )
@@ -28,13 +29,13 @@ instance Eq UpDownError where
 
 
 downDomain :: MonadError UpDownError m => Representation -> Domain -> m [Domain]
-downDomain representation domain = do (gen,_,_) <- upDown representation domain ; gen
+downDomain representation domain = do (_,gen,_,_) <- upDown representation domain ; gen
 
 downValue :: MonadError UpDownError m => Representation -> Domain -> Value -> m [Value]
-downValue representation domain value = do (_,gen,_) <- upDown representation domain ; gen value
+downValue representation domain value = do (_,_,gen,_) <- upDown representation domain ; gen value
 
 upValue :: MonadError UpDownError m => Representation -> Domain -> [Value] -> m Value
-upValue representation domain values = do (_,_,gen) <- upDown representation domain ; gen values
+upValue representation domain values = do (_,_,_,gen) <- upDown representation domain ; gen values
 
 -- | This is about one level.
 --   Describes how, for a representation, we can translate a given high level domain into a low level domain.
@@ -44,7 +45,8 @@ upDown
     :: MonadError UpDownError m
     => Representation
     -> Domain
-    -> m ( m [Domain]                 -- the low level domain
+    -> m ( [Text -> Text]             -- name modifiers for the generated stuff
+         , m [Domain]                 -- the low level domain
          , Value -> m [Value]         -- value down
          , [Value] -> m Value         -- value up
          )
@@ -67,21 +69,25 @@ upDown representation domain =
                                                 , pretty representation
                                                 ]
 
-upDownNoOp :: MonadError UpDownError m => Domain -> m (m [Domain], Value -> m [Value], [Value] -> m Value)
+upDownNoOp :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Value -> m [Value], [Value] -> m Value)
 upDownNoOp d =
-    return ( return [d]
+    return ( singletonList id
+           , return [d]
            , return . singletonList
            , return . headNote "Conjure.UpDown.upDownNoOp"
            )
 
-upDownEnum :: MonadError UpDownError m => Domain -> m (m [Domain], Value -> m [Value], [Value] -> m Value)
+upDownEnum :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Value -> m [Value], [Value] -> m Value)
 upDownEnum (DomainEnum (DomainDefnEnum _name values) ranges) =
-    return ( liftM singletonList domainOut
+    return ( names
+           , liftM singletonList domainOut
            , (liftM . liftM) singletonList down
            , up . headNote "Conjure.UpDown.upDownEnum"
            )
 
     where
+
+        names = singletonList (`mappend` "_enum")
 
         nbValues = genericLength values
         domainOut =
@@ -108,10 +114,14 @@ upDownEnum (DomainEnum (DomainDefnEnum _name values) ranges) =
 
 upDownEnum d = throwError $ RepresentationDoesntMatch $ "upDownEnum only works on enum domains. this is not one:" <+> pretty d
 
-upDownTuple :: MonadError UpDownError m => Domain -> m (m [Domain], Value -> m [Value], [Value] -> m Value)
-upDownTuple (DomainTuple ds) = return (return ds, down, up)
+upDownTuple :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Value -> m [Value], [Value] -> m Value)
+upDownTuple (DomainTuple ds) = return (names, return ds, down, up)
 
     where
+
+        names = [ \ n -> mconcat [n, "_", pack (show i) ]
+                | i <- [1 .. length ds]
+                ]
 
         down v =
             case v of
