@@ -51,7 +51,7 @@ upDown
 upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainEnum   {}) = upDownEnum d
-upDown NoRepresentation d@(DomainTuple  {}) = throwError $ NoRepresentationMatches $ vcat [ "tuples should be handled separately.", pretty d ]
+upDown NoRepresentation d@(DomainTuple  {}) = upDownTuple d
 
 -- upDown (DomainMatrix Domain Domain)
 -- upDown (DomainSet DomainAttributes Domain)
@@ -107,6 +107,22 @@ upDownEnum (DomainEnum (DomainDefnEnum _name values) ranges) =
                 _ -> throwError $ ValueUpError $ "upDownEnum.up:" <+> pretty v
 
 upDownEnum d = throwError $ RepresentationDoesntMatch $ "upDownEnum only works on enum domains. this is not one:" <+> pretty d
+
+upDownTuple :: MonadError UpDownError m => Domain -> m (m [Domain], Value -> m [Value], [Value] -> m Value)
+upDownTuple (DomainTuple ds) = return (return ds, down, up)
+
+    where
+
+        down v =
+            case v of
+                [xMatch| values := value.tuple.values |] -> return values
+                _ -> throwError $ ValueDownError $ "upDownTuple.down:" <+> pretty v
+
+        up vs = return [xMake| value.tuple.values := vs |]
+
+upDownTuple d = throwError $ RepresentationDoesntMatch $ "upDownTuple only works on tuple domains. this is not one:" <+> pretty d
+
+
 
 singletonList :: a -> [a]
 singletonList = return
