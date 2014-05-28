@@ -2,8 +2,7 @@
 module Language.E.PrepareParam(prepareParamSpecification) where
 
 import Bug
-import Language.E hiding (mkLog)
-import Language.E.GenerateRandomParam.Common(mkLog)
+import Language.E
 import Language.E.Up.IO(getSpec')
 
 

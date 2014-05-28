@@ -4,10 +4,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.E.GenerateParams.Toolchain where
-
-
-import Bug
-import Language.E.Imports
+    
 import Language.E.GenerateParams.Typedefs
 
 import Prelude hiding ( FilePath, reverse )
@@ -21,42 +18,6 @@ default (T.Text)
 
 type MinionTimeout  = Int
 type OutputBaseName = String
-
-runModelsWithParam :: OutputBaseName -> EprimeParamFP -> [EprimeFP] -> IO ()
-runModelsWithParam outputBase param eprimes = do
-   let eprimesVar = T.pack .  unlines $ eprimes
-   _ <- shelly  $ escaping False $ do
-        mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
-        let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
-        echo "ScriptDir:"
-        echo scriptDir
-
-        setenv "GENERATED_OUTPUT_DIR"      (T.pack $ "results-" ++ outputBase)
-        setenv "STATS_OUTPUT_DIR"          (T.pack $ "stats-"   ++ outputBase)
-        setenv "PARAMS_TO_USE" (T.pack param)
-        setenv "MODELS_TO_USE" eprimesVar
-        setenv "NO_MINION_STATS" "true"
-
-
-        _ <- run "$PARAM_GEN_SCRIPTS/run/timeModel.sh" []
-        return ()
-   return ()
-
-gatherData :: OutputBaseName -> IO ()
-gatherData outputBase = do
-   _ <- shelly  $ escaping False $ do
-        mScriptDir <- get_env "PARAM_GEN_SCRIPTS"
-        let scriptDir = fromMaybe (userErr "$PARAM_GEN_SCRIPTS not definded" ) mScriptDir
-        echo "ScriptDir:"
-        echo scriptDir
-
-        setenv "GENERATED_OUTPUT_DIR"      (T.pack $ "results-" ++ outputBase)
-        setenv "STATS_OUTPUT_DIR"          (T.pack $ "stats-"   ++ outputBase)
-        setenv "NO_MINION_STATS" "true"
-
-        _ <- run "$PARAM_GEN_SCRIPTS/db/gather_data.sh" []
-        return ()
-   return ()
 
 
 runSavilerow :: MinionTimeout -> EprimeFP -> EprimeParamFP  -> IO ()
