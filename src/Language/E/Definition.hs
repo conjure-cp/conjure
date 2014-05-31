@@ -12,7 +12,7 @@ module Language.E.Definition
     , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
     , DomainDefnEnum(..), DomainDefnUnnamed(..)
     , Representation(..)
-    , Value
+    , Constant(..)
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
 
     , identifierSplit, identifierConstruct
@@ -150,6 +150,7 @@ instance Hashable RuleReprResult
 data E
     = Prim BuiltIn
     | Tagged !Tag [E]
+    | C Constant
     | D Domain
     | EOF
     | StatementAndNext E E
@@ -164,7 +165,8 @@ instance ToJSON E where
     toJSON (Tagged t xs) = JSON.object [ "tag" .= toJSON t
                                        , "children" .= toJSON xs
                                        ]
-    toJSON (D d) = JSON.object [ "domain" .= toJSON d ]
+    toJSON (C x) = JSON.object [ "constant" .= toJSON x ]
+    toJSON (D x) = JSON.object [ "domain" .= toJSON x ]
     toJSON EOF = toJSON ("EOF" :: String)
     toJSON (StatementAndNext a b) = JSON.object [ "statement" .= toJSON a
                                                 , "next" .= toJSON b
@@ -288,7 +290,24 @@ instance Hashable Representation
 instance ToJSON Representation
 
 
-type Value = E
+data Constant
+    = ConstantBool Bool
+    | ConstantInt Int
+    | ConstantEnum DomainDefnEnum Text
+    | ConstantTuple [Constant]
+    | ConstantMatrix Domain [Constant]
+    | ConstantSet [Constant]
+    | ConstantMSet [Constant]
+    | ConstantFunction [(Constant, Constant)]
+    | ConstantRelation [[Constant]]
+    | ConstantPartition [[Constant]]
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+
+instance Serialize Constant
+
+instance Hashable Constant
+
+instance ToJSON Constant
 
 
 identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)
@@ -343,7 +362,8 @@ replaceAll ((old,new):rest) x = replaceAll rest $ replace old new x
 prettyAsTree :: E -> Doc
 prettyAsTree (Prim p) = pretty p
 prettyAsTree (Tagged tag xs) = pretty tag `hang` 4 $ vcat (map (nest 4 . prettyAsTree) xs)
-prettyAsTree (D d) = "D" `hang` 4 $ pretty $ show d
+prettyAsTree (C x) = "C" `hang` 4 $ pretty $ show x
+prettyAsTree (D x) = "D" `hang` 4 $ pretty $ show x
 prettyAsTree EOF = "EOF"
 prettyAsTree (StatementAndNext a b) = vcat [prettyAsTree a, "", prettyAsTree b]
 
@@ -360,6 +380,7 @@ prettyAsPaths e = (vcat . map pOne . toPaths) e
         toPaths (Prim p) = [([], Just p)]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
+        toPaths C {} = bug "prettyAsPaths.toPaths C"
         toPaths D {} = bug "prettyAsPaths.toPaths D"
         toPaths EOF {} = bug "prettyAsPaths.toPaths EOF"
         toPaths StatementAndNext {} = bug "prettyAsPaths.toPaths StatementAndNext"

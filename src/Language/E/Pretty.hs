@@ -53,7 +53,8 @@ instance Pretty E where
 
     -- pretty x | trace (show $ "pretty: " $+$ prettyAsPaths x) False = undefined
 
-    pretty (D d) = pretty d
+    pretty (C x) = pretty x
+    pretty (D x) = pretty x
     pretty EOF = empty
     pretty (StatementAndNext this next) = pretty this $$ pretty next
 
@@ -205,24 +206,6 @@ instance Pretty E where
     pretty [xMatch| [Prim (S x)] := domain.reference   |] = pretty x
 
 -- value.*
-
-    pretty [xMatch| [x] := value.literal      |] = pretty x
-    pretty [xMatch| xs  := value.tuple.values |]
-        = (if length xs < 2 then "tuple" else Pr.empty)
-        <+> prettyList Pr.parens "," xs
-    pretty [xMatch| xs  := value.matrix  .values
-                  | [d] := value.matrix.indexrange
-                  |] = let f i = Pr.brackets (i <> ";" <+> pretty d)
-                       in  prettyList f "," xs
-    pretty [xMatch| xs := value.matrix   .values |] =                prettyList Pr.brackets "," xs
-    pretty [xMatch| xs := value.set      .values |] =                prettyList Pr.braces   "," xs
-    pretty [xMatch| xs := value.mset     .values |] = "mset"      <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.function .values |] = "function"  <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.relation .values |] = "relation"  <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.partition.values |] = "partition" <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := part                   |] =                prettyList Pr.braces   "," xs
-
-    pretty [xMatch| [a,b] := mapping |] = pretty a <+> "-->" <+> pretty b
 
     pretty [xMatch| [app] := quantifierDecl.append
                   | [gua] := quantifierDecl.guard
@@ -395,6 +378,19 @@ instance Pretty Range where
 instance Pretty Representation where
     pretty NoRepresentation = "no representation"
     pretty (Representation r) = pretty r
+
+instance Pretty Constant where
+    pretty (ConstantBool False) = "false"
+    pretty (ConstantBool True) = "true"
+    pretty (ConstantInt x) = pretty x
+    pretty (ConstantEnum _ x) = pretty x
+    pretty (ConstantTuple xs) = (if length xs < 2 then "tuple" else Pr.empty) <+> prettyList Pr.parens "," xs
+    pretty (ConstantMatrix index xs) = let f i = Pr.brackets (i <> ";" <+> pretty index) in prettyList f "," xs
+    pretty (ConstantSet       xs ) =                prettyList Pr.braces "," xs
+    pretty (ConstantMSet      xs ) = "mset"      <> prettyList Pr.parens "," xs
+    pretty (ConstantFunction  xs ) = "function"  <> prettyListDoc Pr.parens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
+    pretty (ConstantPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
 
 
 prettyPrec :: Int -> E -> Doc

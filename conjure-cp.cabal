@@ -25,6 +25,8 @@ Library
                      , Conjure.Mode
 
                      , Conjure.UpDown
+                     , Conjure.RefineParam
+                     , Conjure.TranslateSolution
 
                      , Stuff.MonadList
 
@@ -218,6 +220,7 @@ test-suite conjure-testing
     hs-source-dirs   : src/test
     main-is          : Spec.hs
     build-depends    : conjure-cp, base
+                     , containers 
                      , hspec >= 1.3
                      , QuickCheck
     ghc-options:

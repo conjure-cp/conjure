@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.UpDown where
@@ -16,39 +16,39 @@ import Safe ( atMay, headNote )
 data UpDownError
     = NoRepresentationMatches Doc
     | RepresentationDoesntMatch Doc
-    | ValueDownError Doc
-    | ValueUpError Doc
+    | ConstantDownError Doc
+    | ConstantUpError Doc
     deriving (Show)
 
 instance Eq UpDownError where
     NoRepresentationMatches a == NoRepresentationMatches b = show a == show b
     RepresentationDoesntMatch a == RepresentationDoesntMatch b = show a == show b
-    ValueDownError a == ValueDownError b = show a == show b
-    ValueUpError a == ValueUpError b = show a == show b
+    ConstantDownError a == ConstantDownError b = show a == show b
+    ConstantUpError a == ConstantUpError b = show a == show b
     _ == _ = False
 
 
 downDomain :: MonadError UpDownError m => Representation -> Domain -> m [Domain]
 downDomain representation domain = do (_,gen,_,_) <- upDown representation domain ; gen
 
-downValue :: MonadError UpDownError m => Representation -> Domain -> Value -> m [Value]
-downValue representation domain value = do (_,_,gen,_) <- upDown representation domain ; gen value
+downConstant :: MonadError UpDownError m => Representation -> Domain -> Constant -> m [Constant]
+downConstant representation domain constant = do (_,_,gen,_) <- upDown representation domain ; gen constant
 
-upValue :: MonadError UpDownError m => Representation -> Domain -> [Value] -> m Value
-upValue representation domain values = do (_,_,_,gen) <- upDown representation domain ; gen values
+upConstant :: MonadError UpDownError m => Representation -> Domain -> [Constant] -> m Constant
+upConstant representation domain enums = do (_,_,_,gen) <- upDown representation domain ; gen enums
 
 -- | This is about one level.
 --   Describes how, for a representation, we can translate a given high level domain into a low level domain.
---   And how, for that representation and a domain, we can translate a given value of the high level domain into a value of the low level domain.
---   And how, for that representation and a domain, we can translate a given value of the low level domain into a value of the high level domain.
+--   And how, for that representation and a domain, we can translate a given constant of the high level domain into a constant of the low level domain.
+--   And how, for that representation and a domain, we can translate a given constant of the low level domain into a constant of the high level domain.
 upDown
     :: MonadError UpDownError m
     => Representation
     -> Domain
-    -> m ( [Text -> Text]             -- name modifiers for the generated stuff
-         , m [Domain]                 -- the low level domain
-         , Value -> m [Value]         -- value down
-         , [Value] -> m Value         -- value up
+    -> m ( [Text -> Text]                   -- name modifiers for the generated stuff
+         , m [Domain]                       -- the low level domain
+         , Constant -> m [Constant]         -- constant down
+         , [Constant] -> m Constant         -- constant up
          )
 upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
@@ -69,7 +69,7 @@ upDown representation domain =
                                                 , pretty representation
                                                 ]
 
-upDownNoOp :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Value -> m [Value], [Value] -> m Value)
+upDownNoOp :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Constant -> m [Constant], [Constant] -> m Constant)
 upDownNoOp d =
     return ( singletonList id
            , return [d]
@@ -77,8 +77,8 @@ upDownNoOp d =
            , return . headNote "Conjure.UpDown.upDownNoOp"
            )
 
-upDownEnum :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Value -> m [Value], [Value] -> m Value)
-upDownEnum (DomainEnum (DomainDefnEnum _name values) ranges) =
+upDownEnum :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Constant -> m [Constant], [Constant] -> m Constant)
+upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
     return ( names
            , liftM singletonList domainOut
            , (liftM . liftM) singletonList down
@@ -89,32 +89,31 @@ upDownEnum (DomainEnum (DomainDefnEnum _name values) ranges) =
 
         names = singletonList (`mappend` "_enum")
 
-        nbValues = genericLength values
+        nbConstants = genericLength enums
         domainOut =
             if null ranges
-                then return $ DomainInt [RangeBounded [xMake| value.literal := [Prim (I 1)] |]
-                                                                      [xMake| value.literal := [Prim (I nbValues)] |]]
+                then return $ DomainInt [RangeBounded (C (ConstantInt 1)) (C (ConstantInt nbConstants))]
                 else DomainInt `liftM` transformBiM down ranges
 
         down v =
             case v of
-                [xMatch| [Prim (S x)] := reference |] ->
-                    case findIndex (x==) values of
-                        Nothing -> throwError $ ValueDownError $ "This identifier isn't a member of the enum:" <+> pretty v
-                        Just y  -> return [xMake| value.literal := [Prim (I (fromIntegral y + 1))] |]
-                _ -> throwError $ ValueDownError $ "upDownEnum.down:" <+> pretty v
+                ConstantEnum _ x ->
+                    case findIndex (x==) enums of
+                        Nothing -> throwError $ ConstantDownError $ "This identifier isn't a member of the enum:" <+> pretty v
+                        Just y  -> return $ ConstantInt (y + 1)
+                _ -> throwError $ ConstantDownError $ "upDownEnum.down:" <+> pretty v
 
         up v =
             case v of
-                [xMatch| [Prim (I x)] := value.literal |] ->
-                    case atMay values (fromIntegral x - 1) of
-                        Nothing -> throwError $ ValueUpError $ "Integer value out of range for enum:" <+> pretty x
-                        Just y  -> return [xMake| reference := [Prim (S y)] |]
-                _ -> throwError $ ValueUpError $ "upDownEnum.up:" <+> pretty v
+                ConstantInt x ->
+                    case atMay enums (x - 1) of
+                        Nothing -> throwError $ ConstantUpError $ "Integer constant out of range for enum:" <+> pretty x
+                        Just y  -> return (ConstantEnum defn y)
+                _ -> throwError $ ConstantUpError $ "upDownEnum.up:" <+> pretty v
 
 upDownEnum d = throwError $ RepresentationDoesntMatch $ "upDownEnum only works on enum domains. this is not one:" <+> pretty d
 
-upDownTuple :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Value -> m [Value], [Value] -> m Value)
+upDownTuple :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Constant -> m [Constant], [Constant] -> m Constant)
 upDownTuple (DomainTuple ds) = return (names, return ds, down, up)
 
     where
@@ -125,10 +124,10 @@ upDownTuple (DomainTuple ds) = return (names, return ds, down, up)
 
         down v =
             case v of
-                [xMatch| values := value.tuple.values |] -> return values
-                _ -> throwError $ ValueDownError $ "upDownTuple.down:" <+> pretty v
+                ConstantTuple xs -> return xs
+                _ -> throwError $ ConstantDownError $ "upDownTuple.down:" <+> pretty v
 
-        up vs = return [xMake| value.tuple.values := vs |]
+        up vs = return (ConstantTuple vs)
 
 upDownTuple d = throwError $ RepresentationDoesntMatch $ "upDownTuple only works on tuple domains. this is not one:" <+> pretty d
 

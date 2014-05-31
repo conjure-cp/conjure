@@ -344,6 +344,7 @@ eDepth :: E -> Int
 eDepth Prim{} = 1
 eDepth (Tagged _ []) = 1
 eDepth (Tagged _ ys) = 1 + maximum (map eDepth ys)
+eDepth C{} = 1
 eDepth (D d) = dDepth d
 eDepth EOF = 0
 eDepth (StatementAndNext this next) = max (eDepth this) (eDepth next)

@@ -12,6 +12,8 @@ data Category = CatConstant | CatParameter | CatQuantified | CatDecision
 
 categoryOf :: MonadConjure m => E -> m Category
 
+categoryOf C {} = return CatConstant
+
 categoryOf [xMatch| [Prim (S i)] := reference |] =
     if i `elem` ["_", "forAll", "exists", "sum"]
         then return CatConstant
