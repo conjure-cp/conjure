@@ -104,7 +104,7 @@ single
     -> Either
         ConjureError                        -- static errors in the rule
         (RuleRefnAsFunctionWithMap m)       -- the rule as a function.
-single (RuleRefn name _ pattern templates locals) = do
+single (RuleRefn (Name name) _ pattern templates locals) = do
     let
         staticCheck :: Either ConjureError ()
         staticCheck = do

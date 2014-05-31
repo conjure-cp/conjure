@@ -174,12 +174,12 @@ recordSpec _msg sp = do
 data ConjureState = ConjureState
         { binders       :: ![Binder]
         , uniqueNameInt :: !Integer
-        , representationLog :: ![ ( Text     -- original name
-                                  , Text     -- representation name
+        , representationLog :: ![ ( Name     -- original name
+                                  , Name     -- representation name
                                   , E        -- original full declaration
                                   , Domain   -- new domain
                                   ) ]
-        , structuralConsLog :: ![ ( Text     -- representation name
+        , structuralConsLog :: ![ ( Name     -- representation name
                                   , [E]
                                   )
                                 ]

@@ -45,7 +45,7 @@ parseSpec = inCompleteFile $ do
         pLanguage = do
             l  <- lexeme L_language *> identifierText
             is <- sepBy1 integer dot
-            return (LanguageVersion l (map fromInteger is))
+            return (LanguageVersion (Name l) (map fromInteger is))
     l  <- pLanguage
     xs <- many parseTopLevels
     return $ Spec l $ listAsStatement $ concat xs
@@ -58,7 +58,7 @@ parseRuleRefn t = inCompleteFile $ do
             pattern   <- parseExpr
             templates <- some (lexeme L_SquigglyArrow >> parseExpr)
             locals    <- concat <$> many parseTopLevels
-            return RuleRefn { ruleRefnName = t
+            return RuleRefn { ruleRefnName = Name t
                             , ruleRefnLevel = level
                             , ruleRefnPattern = pattern
                             , ruleRefnTemplates = templates
@@ -83,8 +83,8 @@ parseRuleRepr t = inCompleteFile $ do
     mcons  <- optionMaybe $ arr parseExpr
     locals <- concat <$> many parseTopLevels
     cases  <- some parseRuleReprCase
-    return ( RuleRepr t
-             nmRepr
+    return ( RuleRepr (Name t)
+             (Name nmRepr)
              domOut
              mcons
              locals

@@ -93,8 +93,9 @@ applyRepr rules spec = do
             if M.null table
                 then err ErrGeneratesNone "repr1"
                 else do
-                    let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just (ruleReprResultReprName repr)))
+                    let configStr = hsep [ pretty (identifierConstruct nm (Just region) (Just reprName))
                                          | ((nm, region), repr) <- M.toList table
+                                         , let Name reprName = ruleReprResultReprName repr
                                          ]
                     mkLog "configuration" configStr
                     catchError
@@ -135,7 +136,7 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                 (base, Just region, Nothing) ->
                     case M.lookup (base,region) config of
                         Nothing -> return p
-                        Just (RuleReprResult origDecl _ruleName reprName newDom cons) -> do
+                        Just (RuleReprResult origDecl _ruleName (Name reprName) newDom cons) -> do
                             let
                                 reregion e@[xMatch| [Prim (S i)] := reference |] = case identifierSplit i of
                                     (iBase, Just "regionS", mrepr)
@@ -146,12 +147,12 @@ applyCongfigToSpec spec config = withBindingScope' $ do
                                 reregion e = e
                             let
                                 cons' = map (transform reregion) cons
-                            modify $ \ st -> st { representationLog = (base, reprName, origDecl, newDom)
+                            modify $ \ st -> st { representationLog = (Name base, Name reprName, origDecl, newDom)
                                                                     :  representationLog st
                                                 , structuralConsLog =
                                                     if isGiven origDecl
                                                         then structuralConsLog st
-                                                        else nub $ (reprName, cons') : structuralConsLog st
+                                                        else nub $ (Name reprName, cons') : structuralConsLog st
                                                 }
                             let nm' = identifierConstruct base (Just region) (Just reprName)
                             return [xMake| reference := [Prim (S nm')] |]
@@ -194,7 +195,7 @@ addChannellingFromLog (Spec v xs) = do
 
     let newCons = sortNub $ concat
             [ [ [xMake| topLevel.suchThat := [theCons] |]
-              | ((nm1,r1),(nm2,r2)) <- allPairs one
+              | ((Name nm1, Name r1), (Name nm2, Name r2)) <- allPairs one
               , let x1 = [xMake| reference := [ Prim $ S $ mconcat [nm1, "#", r1] ] |]
               , let x2 = [xMake| reference := [ Prim $ S $ mconcat [nm2, "#", r2] ] |]
               , let theCons = if x1 <= x2
@@ -214,14 +215,14 @@ addChannellingFromLog (Spec v xs) = do
         insertNewDecls = foldr insertAfter
 
     let
-        mkWithNewDom :: (Text, Text, E, Domain) -> (E, E)
-        mkWithNewDom (origName, reprName, oldDecl@[xMatch| _ := topLevel.declaration.find |], newDom ) =
+        mkWithNewDom :: (Name, Name, E, Domain) -> (E, E)
+        mkWithNewDom (Name origName, Name reprName, oldDecl@[xMatch| _ := topLevel.declaration.find |], newDom ) =
             ( oldDecl
             , [xMake| topLevel.declaration.find.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
                     | topLevel.declaration.find.domain         := [D newDom]
                     |]
             )
-        mkWithNewDom (origName, reprName, oldDecl@[xMatch| _ := topLevel.declaration.given |], newDom ) =
+        mkWithNewDom (Name origName, Name reprName, oldDecl@[xMatch| _ := topLevel.declaration.given |], newDom ) =
             ( oldDecl
             , [xMake| topLevel.declaration.given.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]
                     | topLevel.declaration.given.domain         := [D newDom]

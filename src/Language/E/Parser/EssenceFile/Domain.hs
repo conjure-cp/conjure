@@ -66,7 +66,7 @@ parseDomain
             xs <- optionMaybe $ parens $ parseRange `sepBy` comma
             case xs of
                 Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
-                Just ys -> return $ DomainEnum (DomainDefnEnum r (error "we need state in the parser")) ys
+                Just ys -> return $ DomainEnum (DomainDefnEnum (Name r) (error "we need state in the parser")) ys
 
         pMatrix = do
             lexeme L_matrix
@@ -135,7 +135,7 @@ parseAttributes = do
     return $ DomainAttributes xs
     where
         parseAttribute = msum [try parseNameValue, try parseName, parseDontCare]
-        parseNameValue = DANameValue <$> identifierText <*> parseExpr
-        parseName = DAName <$> identifierText
+        parseNameValue = DANameValue <$> (Name <$> identifierText) <*> parseExpr
+        parseName = DAName <$> (Name <$> identifierText)
         parseDontCare = do dot; dot ; return DADotDot
 

@@ -66,7 +66,7 @@ abstractDomsInQuans
                                   | quantified.guard        := [conjunct guards']
                                   | quantified.body         := [body']
                                   |]
-                outs <- forM zs $ \ (reprName, newDom, cons) -> do
+                outs <- forM zs $ \ (Name reprName, newDom, cons) -> do
                         let
                             qnVar'Hash       = identifierConstruct qnVar (Just "regionS") (Just reprName)
                             qnVar'Underscore = qnVar `mappend` "_" `mappend` reprName

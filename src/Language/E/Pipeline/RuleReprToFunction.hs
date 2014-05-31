@@ -73,12 +73,12 @@ oneCase (RuleRepr ruleName reprName domTemplate mcons1 locals1 _)
 -- an inner domain is a domain which isn't a matrix.
 applyToInnerDomain
     :: MonadConjure m
-    => Text -> Text -> Domain -> Domain
+    => Name -> Name -> Domain -> Domain
     -> [E] -> [E]
     -> Text -> E
     -> [Domain] -> Domain
     -> m [RuleReprResult]
-applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origName origDecl is x = do
+applyToInnerDomain (Name ruleName) (Name reprName) domPattern domTemplate mcons locals origName origDecl is x = do
     (flagMatch, _) <- patternMatch (D domPattern) (D x)
     if not flagMatch
         then errRuleFail
@@ -225,7 +225,7 @@ applyToInnerDomain ruleName reprName domPattern domTemplate mcons locals origNam
                                 maybe (errUndefinedRef "ruleReprCompile" $ pretty con'')
                                       return
                                       maybeCon
-                            return [RuleReprResult origDecl ruleName reprName liftedRes mcons']
+                            return [RuleReprResult origDecl (Name ruleName) (Name reprName) liftedRes mcons']
                         _ -> errRuleFail
 
 

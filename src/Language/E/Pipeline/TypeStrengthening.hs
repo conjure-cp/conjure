@@ -8,9 +8,6 @@ import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Bug
 -- import Utils.DebugPretty
 
-import qualified Data.Text as T
-
-
 
 typeStrengthening :: MonadConjure m => Spec -> m Spec
 typeStrengthening = return
@@ -47,7 +44,7 @@ attributeAcquisition spec@(Spec v statements0) = do
             if null collectedAttributesForThis
                 then return s
                 else do
-                    let fs = foldr1 (>=>) [ updateAttributes lvl [mkAttr (attr,val)] | (lvl, attr, val) <- collectedAttributesForThis ]
+                    let fs = foldr1 (>=>) [ updateAttributes lvl [mkAttr (Name attr, val)] | (lvl, attr, val) <- collectedAttributesForThis ]
                     domain' <- fs domain
                     return [xMake| topLevel.declaration.find.name   := [name]
                                  | topLevel.declaration.find.domain := [D domain']
@@ -349,7 +346,7 @@ updateAttributes lvl attrs dom = bug $ vcat [ "don't know how to update this dom
                                             ]
 
 
-mkAttr :: (T.Text, Maybe E) -> DomainAttribute
+mkAttr :: (Name, Maybe E) -> DomainAttribute
 mkAttr (n, Nothing) = DAName n
 mkAttr (n, Just v ) = DANameValue n v
 

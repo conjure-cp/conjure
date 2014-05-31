@@ -49,7 +49,7 @@ applyToInnerDomain' :: MonadConjure m => ReprFunc m -> ReprFunc m
 applyToInnerDomain' f (origName, origDomain, origDecl) = do
     let (is,x) = splitMatrixDomain origDomain
     results <- f (origName, x, origDecl)
-    liftM concat $ forM results $ \ (RuleReprResult _ ruleName reprName res mcons) -> do
+    liftM concat $ forM results $ \ (RuleReprResult _ ruleName (Name reprName) res mcons) -> do
         -- at this point, res is the refinement of the innerDomain
         -- mcons is the list of structural constraints
         -- if is /= []
@@ -85,7 +85,7 @@ applyToInnerDomain' f (origName, origDomain, origDecl) = do
             maybe (errUndefinedRef "builtIn.ruleReprCompile" $ pretty con'')
                   return
                   maybeCon
-        return [RuleReprResult origDecl ruleName reprName liftedRes mcons']
+        return [RuleReprResult origDecl ruleName (Name reprName) liftedRes mcons']
 
 renRefn :: E -> E -> E
 renRefn newName [xMatch| [Prim (S "refn")] := reference |] = newName

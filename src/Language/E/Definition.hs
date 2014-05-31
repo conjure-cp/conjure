@@ -14,6 +14,7 @@ module Language.E.Definition
     , Representation(..)
     , Constant(..)
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
+    , Name(..)
 
     , identifierSplit, identifierConstruct
     , identifierStripRegion
@@ -41,6 +42,7 @@ import Language.E.Imports
 import Data.Maybe ( fromJust )
 import Data.Data ( Data, Typeable )
 import GHC.Generics ( Generic )
+import Data.String ( IsString(..) )
 
 -- text
 import qualified Data.Text as T
@@ -59,6 +61,8 @@ import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 -- haskell-src-meta
 import Language.Haskell.Meta.Parse.Careful
 
+-- QuickCheck
+import Test.QuickCheck -- ( Arbitrary(..), choose )
 
 
 data Spec = Spec LanguageVersion E
@@ -72,7 +76,17 @@ instance Default Spec where
     def = Spec (LanguageVersion "Essence" [1,3]) EOF
 
 
-data LanguageVersion = LanguageVersion Text [Int]
+newtype Name = Name Text
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, IsString, Serialize, Hashable, ToJSON)
+
+instance Arbitrary Name where
+    arbitrary = do
+        ch <- choose ('a', 'z')
+        return $ Name $ T.pack [ch]
+    shrink (Name n) = if T.length n > 1 then [Name (T.drop 1 n)] else []
+
+
+data LanguageVersion = LanguageVersion Name [Int]
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize LanguageVersion
@@ -93,7 +107,7 @@ instance Hashable RulesDB
 
 
 data RuleRefn = RuleRefn
-    { ruleRefnName  :: Text
+    { ruleRefnName  :: Name
     , ruleRefnLevel :: Maybe Int
     , ruleRefnPattern :: E
     , ruleRefnTemplates :: [E]
@@ -107,8 +121,8 @@ instance Hashable RuleRefn
 
 
 data RuleRepr = RuleRepr
-    { ruleReprName :: Text                  -- name of the rule
-    , ruleReprReprName :: Text              -- name of the representation
+    { ruleReprName :: Name                  -- name of the rule
+    , ruleReprReprName :: Name              -- name of the representation
     , ruleReprDomainOut :: Domain           -- domain out.
     , ruleReprStructural :: Maybe E         -- structural constraints
     , ruleReprLocals :: [E]                 -- locals
@@ -135,8 +149,8 @@ instance Hashable RuleReprCase
 
 data RuleReprResult = RuleReprResult
     { ruleReprResultOriginalDecl :: E           -- original declaration
-    , ruleReprResultRuleName :: Text            -- rule name
-    , ruleReprResultReprName :: Text            -- name of the representation
+    , ruleReprResultRuleName :: Name            -- rule name
+    , ruleReprResultReprName :: Name            -- name of the representation
     , ruleReprResultReplacementDom :: Domain    -- replacement domain
     , ruleReprResultStructurals :: [E]          -- structural constraints
     }
@@ -196,8 +210,19 @@ instance MetaVariable E where
     namedMV   (Tagged "metavar"   [Prim (S s  )]) = Just s
     namedMV   _ = Nothing
 
+instance Arbitrary BuiltIn where
+    arbitrary = do
+        i <- choose (1 :: Int, 3)
+        case i of
+            1 -> B <$> arbitrary
+            2 -> I <$> arbitrary
+            3 -> do
+                Name n <- arbitrary
+                return (S n)
+            _ -> error "Impossible: BuiltIn.arbitrary"
 
-data DomainDefnEnum = DomainDefnEnum Text [Text]
+
+data DomainDefnEnum = DomainDefnEnum Name [Name]
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize DomainDefnEnum
@@ -207,7 +232,7 @@ instance Hashable DomainDefnEnum
 instance ToJSON DomainDefnEnum
 
 
-data DomainDefnUnnamed = DomainDefnUnnamed Text E
+data DomainDefnUnnamed = DomainDefnUnnamed Name E
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize DomainDefnUnnamed
@@ -228,7 +253,7 @@ data Domain
     | DomainFunction DomainAttributes Domain Domain
     | DomainRelation DomainAttributes [Domain]
     | DomainPartition DomainAttributes Domain
-    | DomainOp Text [Domain]
+    | DomainOp Name [Domain]
     | DomainHack E          -- this is an ugly hack to be able to use expressions as domains. will go away later.
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
@@ -253,8 +278,8 @@ instance Default DomainAttributes where
 
 
 data DomainAttribute
-    = DAName Text
-    | DANameValue Text E
+    = DAName Name
+    | DANameValue Name E
     | DADotDot
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
@@ -279,8 +304,17 @@ instance Hashable Range
 
 instance ToJSON Range
 
+instance Arbitrary Range where
+    arbitrary = oneof
+        [ return RangeOpen
+        , RangeSingle <$> (C <$> arbitrary)
+        , RangeLowerBounded <$> (C <$> arbitrary)
+        , RangeUpperBounded <$> (C <$> arbitrary)
+        , RangeBounded <$> (C <$> arbitrary) <*> (C <$> arbitrary)
+        ]
 
-data Representation = NoRepresentation | Representation Text
+
+data Representation = NoRepresentation | Representation Name
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
 instance Serialize Representation
@@ -293,7 +327,7 @@ instance ToJSON Representation
 data Constant
     = ConstantBool Bool
     | ConstantInt Int
-    | ConstantEnum DomainDefnEnum Text
+    | ConstantEnum DomainDefnEnum Name
     | ConstantTuple [Constant]
     | ConstantMatrix Domain [Constant]
     | ConstantSet [Constant]
@@ -308,6 +342,12 @@ instance Serialize Constant
 instance Hashable Constant
 
 instance ToJSON Constant
+
+instance Arbitrary Constant where
+    arbitrary = oneof
+        [ ConstantBool <$> arbitrary
+        , ConstantInt <$> arbitrary
+        ]
 
 
 identifierSplit :: Text -> (Text, Maybe Text, Maybe Text)

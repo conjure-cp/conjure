@@ -20,6 +20,9 @@ import Text.PrettyPrint as Pr
 prettySpecDebug :: Spec -> Doc
 prettySpecDebug sp@(Spec _ st) = vcat $ pretty sp : map prettyAsPaths (statementAsList st)
 
+instance Pretty Name where
+    pretty (Name n) = pretty n
+
 instance Pretty RuleRefn where
     pretty ruleRefn = pretty (show ruleRefn)
 
