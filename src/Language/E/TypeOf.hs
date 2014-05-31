@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Language.E.TypeOf
     ( typeCheckSpec
@@ -751,7 +752,7 @@ instance TypeOf E where
 
     typeOf p = typeErrorIn' p "default case"
 
-instance TypeOf Domain where
+instance TypeOf (Domain E) where
     typeOf DomainBool = return tyBool
     typeOf DomainInt{} = return [xMake| type.int  := [] |]
 

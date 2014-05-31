@@ -123,7 +123,7 @@ instance Hashable RuleRefn
 data RuleRepr = RuleRepr
     { ruleReprName :: Name                  -- name of the rule
     , ruleReprReprName :: Name              -- name of the representation
-    , ruleReprDomainOut :: Domain           -- domain out.
+    , ruleReprDomainOut :: Domain E         -- domain out.
     , ruleReprStructural :: Maybe E         -- structural constraints
     , ruleReprLocals :: [E]                 -- locals
     , ruleReprCases :: [RuleReprCase]
@@ -136,7 +136,7 @@ instance Hashable RuleRepr
 
 
 data RuleReprCase = RuleReprCase
-    { ruleReprCaseDomainIn :: Domain        -- domain in.
+    { ruleReprCaseDomainIn :: Domain E      -- domain in.
     , ruleReprCaseStructural :: Maybe E     -- structural constraints
     , ruleReprCaseLocals :: [E]             -- locals
     }
@@ -151,7 +151,7 @@ data RuleReprResult = RuleReprResult
     { ruleReprResultOriginalDecl :: E           -- original declaration
     , ruleReprResultRuleName :: Name            -- rule name
     , ruleReprResultReprName :: Name            -- name of the representation
-    , ruleReprResultReplacementDom :: Domain    -- replacement domain
+    , ruleReprResultReplacementDom :: Domain E  -- replacement domain
     , ruleReprResultStructurals :: [E]          -- structural constraints
     }
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
@@ -165,7 +165,7 @@ data E
     = Prim BuiltIn
     | Tagged !Tag [E]
     | C Constant
-    | D Domain
+    | D (Domain E)
     | EOF
     | StatementAndNext E E
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
@@ -242,26 +242,26 @@ instance Hashable DomainDefnUnnamed
 instance ToJSON DomainDefnUnnamed
 
 
-data Domain
+data Domain a
     = DomainBool
-    | DomainInt [Range]
-    | DomainEnum DomainDefnEnum [Range]
-    | DomainTuple [Domain]
-    | DomainMatrix Domain Domain
-    | DomainSet DomainAttributes Domain
-    | DomainMSet DomainAttributes Domain
-    | DomainFunction DomainAttributes Domain Domain
-    | DomainRelation DomainAttributes [Domain]
-    | DomainPartition DomainAttributes Domain
-    | DomainOp Name [Domain]
-    | DomainHack E          -- this is an ugly hack to be able to use expressions as domains. will go away later.
+    | DomainInt [Range a]
+    | DomainEnum DomainDefnEnum [Range a]
+    | DomainTuple [Domain a]
+    | DomainMatrix (Domain a) (Domain a)
+    | DomainSet DomainAttributes (Domain a)
+    | DomainMSet DomainAttributes (Domain a)
+    | DomainFunction DomainAttributes (Domain a) (Domain a)
+    | DomainRelation DomainAttributes [Domain a]
+    | DomainPartition DomainAttributes (Domain a)
+    | DomainOp Name [Domain a]
+    | DomainHack a          -- this is an ugly hack to be able to use expressions as domains. will go away later.
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize Domain
+instance Serialize a => Serialize (Domain a)
 
-instance Hashable Domain
+instance Hashable a => Hashable (Domain a)
 
-instance ToJSON Domain
+instance ToJSON a => ToJSON (Domain a)
 
 
 data DomainAttributes = DomainAttributes [DomainAttribute]
@@ -290,27 +290,27 @@ instance Hashable DomainAttribute
 instance ToJSON DomainAttribute
 
 
-data Range
+data Range a
     = RangeOpen
-    | RangeSingle E
-    | RangeLowerBounded E
-    | RangeUpperBounded E
-    | RangeBounded E E
+    | RangeSingle a
+    | RangeLowerBounded a
+    | RangeUpperBounded a
+    | RangeBounded a a
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize Range
+instance Serialize a => Serialize (Range a)
 
-instance Hashable Range
+instance Hashable a => Hashable (Range a)
 
-instance ToJSON Range
+instance ToJSON a => ToJSON (Range a)
 
-instance Arbitrary Range where
+instance Arbitrary a => Arbitrary (Range a) where
     arbitrary = oneof
         [ return RangeOpen
-        , RangeSingle <$> (C <$> arbitrary)
-        , RangeLowerBounded <$> (C <$> arbitrary)
-        , RangeUpperBounded <$> (C <$> arbitrary)
-        , RangeBounded <$> (C <$> arbitrary) <*> (C <$> arbitrary)
+        , RangeSingle <$> arbitrary
+        , RangeLowerBounded <$> arbitrary
+        , RangeUpperBounded <$> arbitrary
+        , RangeBounded <$> arbitrary <*> arbitrary
         ]
 
 
@@ -329,7 +329,7 @@ data Constant
     | ConstantInt Int
     | ConstantEnum DomainDefnEnum Name
     | ConstantTuple [Constant]
-    | ConstantMatrix Domain [Constant]
+    | ConstantMatrix (Domain Constant) [Constant]
     | ConstantSet [Constant]
     | ConstantMSet [Constant]
     | ConstantFunction [(Constant, Constant)]

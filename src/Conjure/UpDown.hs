@@ -27,29 +27,28 @@ instance Eq UpDownError where
     ConstantUpError a == ConstantUpError b = show a == show b
     _ == _ = False
 
-
-downDomain :: MonadError UpDownError m => Representation -> Domain -> m [Domain]
+type UpDownType m =
+       Domain Constant
+    -> m ( [Text -> Text]                   -- name modifiers for the generated stuff
+         , m [Domain Constant]                       -- the low level domain
+         , Constant -> m [Constant]         -- constant down
+         , [Constant] -> m Constant         -- constant up
+         )
+    
+downDomain :: MonadError UpDownError m => Representation -> Domain Constant -> m [Domain Constant]
 downDomain representation domain = do (_,gen,_,_) <- upDown representation domain ; gen
 
-downConstant :: MonadError UpDownError m => Representation -> Domain -> Constant -> m [Constant]
+downConstant :: MonadError UpDownError m => Representation -> Domain Constant -> Constant -> m [Constant]
 downConstant representation domain constant = do (_,_,gen,_) <- upDown representation domain ; gen constant
 
-upConstant :: MonadError UpDownError m => Representation -> Domain -> [Constant] -> m Constant
+upConstant :: MonadError UpDownError m => Representation -> Domain Constant -> [Constant] -> m Constant
 upConstant representation domain enums = do (_,_,_,gen) <- upDown representation domain ; gen enums
 
 -- | This is about one level.
 --   Describes how, for a representation, we can translate a given high level domain into a low level domain.
 --   And how, for that representation and a domain, we can translate a given constant of the high level domain into a constant of the low level domain.
 --   And how, for that representation and a domain, we can translate a given constant of the low level domain into a constant of the high level domain.
-upDown
-    :: MonadError UpDownError m
-    => Representation
-    -> Domain
-    -> m ( [Text -> Text]                   -- name modifiers for the generated stuff
-         , m [Domain]                       -- the low level domain
-         , Constant -> m [Constant]         -- constant down
-         , [Constant] -> m Constant         -- constant up
-         )
+upDown :: MonadError UpDownError m => Representation -> UpDownType m
 upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainEnum   {}) = upDownEnum d
@@ -69,7 +68,7 @@ upDown representation domain =
                                                 , pretty representation
                                                 ]
 
-upDownNoOp :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Constant -> m [Constant], [Constant] -> m Constant)
+upDownNoOp :: MonadError UpDownError m => UpDownType m
 upDownNoOp d =
     return ( singletonList id
            , return [d]
@@ -77,7 +76,7 @@ upDownNoOp d =
            , return . headNote "Conjure.UpDown.upDownNoOp"
            )
 
-upDownEnum :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Constant -> m [Constant], [Constant] -> m Constant)
+upDownEnum :: MonadError UpDownError m => UpDownType m
 upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
     return ( names
            , liftM singletonList domainOut
@@ -92,7 +91,7 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
         nbConstants = genericLength enums
         domainOut =
             if null ranges
-                then return $ DomainInt [RangeBounded (C (ConstantInt 1)) (C (ConstantInt nbConstants))]
+                then return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt nbConstants)]
                 else DomainInt `liftM` transformBiM down ranges
 
         down v =
@@ -113,7 +112,7 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
 
 upDownEnum d = throwError $ RepresentationDoesntMatch $ "upDownEnum only works on enum domains. this is not one:" <+> pretty d
 
-upDownTuple :: MonadError UpDownError m => Domain -> m ([Text -> Text], m [Domain], Constant -> m [Constant], [Constant] -> m Constant)
+upDownTuple :: MonadError UpDownError m => UpDownType m
 upDownTuple (DomainTuple ds) = return (names, return ds, down, up)
 
     where

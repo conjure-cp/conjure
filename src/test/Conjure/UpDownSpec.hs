@@ -22,7 +22,7 @@ spec = describe "enum up-down" $ do
     let enumValues = ["apple", "orange", "peach", "melon"]
     let enumDomainDefn = DomainDefnEnum "fruits" enumValues
     let enumDomain = DomainEnum enumDomainDefn []
-    let intDomain = DomainInt [RangeBounded (C (ConstantInt 1)) (C (ConstantInt 4))]
+    let intDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
 
     it "can convert enum domains into int domains" $ do
         downDomain NoRepresentation enumDomain `shouldBe` Right [intDomain]

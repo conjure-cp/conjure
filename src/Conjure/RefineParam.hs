@@ -15,8 +15,8 @@ import Data.Tree ( Tree(..) )
 refineSingleParam
     :: MonadError UpDownError m
     => Tree Representation
-    ->    (Text, Domain, Constant)
-    -> m [(Text, Domain, Constant)]
+    ->    (Text, Domain Constant, Constant)
+    -> m [(Text, Domain Constant, Constant)]
 refineSingleParam (Node NoRepresentation _) bundle = return [bundle]
 refineSingleParam (Node representation representations) (name, highDomain, highValue) = do
     (lowNamesGen, lowDomainsGen, lowValuesGen, _) <- upDown representation highDomain

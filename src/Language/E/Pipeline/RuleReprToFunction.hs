@@ -32,7 +32,7 @@ one :: MonadConjure m
     => RuleRepr
     -> Either
         [ConjureError]
-        ( (Text, Domain, E)
+        ( (Text, Domain E, E)
           -> m [RuleReprResult]
         )
 one repr@(RuleRepr {ruleReprCases=cases}) =
@@ -73,10 +73,10 @@ oneCase (RuleRepr ruleName reprName domTemplate mcons1 locals1 _)
 -- an inner domain is a domain which isn't a matrix.
 applyToInnerDomain
     :: MonadConjure m
-    => Name -> Name -> Domain -> Domain
+    => Name -> Name -> Domain E -> Domain E
     -> [E] -> [E]
     -> Text -> E
-    -> [Domain] -> Domain
+    -> [Domain E] -> Domain E
     -> m [RuleReprResult]
 applyToInnerDomain (Name ruleName) (Name reprName) domPattern domTemplate mcons locals origName origDecl is x = do
     (flagMatch, _) <- patternMatch (D domPattern) (D x)

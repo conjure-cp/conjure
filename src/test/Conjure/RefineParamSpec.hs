@@ -27,9 +27,9 @@ spec = describe "int parameter" $ do
     it "int parameters stay as is" $ do
         let intRange = [1..9]
         let intDomain1 = DomainInt []
-        let intDomain2 = DomainInt [ RangeBounded (C (ConstantInt (minimum intRange)))
-                                                  (C (ConstantInt (maximum intRange))) ]
-        let intDomain3 = DomainInt [ RangeSingle (C (ConstantInt i)) | i <- intRange ]
+        let intDomain2 = DomainInt [ RangeBounded (ConstantInt (minimum intRange))
+                                                  (ConstantInt (maximum intRange)) ]
+        let intDomain3 = DomainInt [ RangeSingle (ConstantInt i) | i <- intRange ]
         let intDomains = [intDomain1, intDomain2, intDomain3]
         let intValues  = [ ConstantInt i | i <- intRange ]
 

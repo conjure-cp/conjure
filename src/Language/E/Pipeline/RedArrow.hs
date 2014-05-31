@@ -10,6 +10,7 @@
 -- probably shouldn't be.
 
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Language.E.Pipeline.RedArrow ( redArrow ) where
 
@@ -49,7 +50,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
 
     let
         -- Givens in the Essence file
-        essenceGivens :: [(Text, Domain)]
+        essenceGivens :: [(Text, Domain E)]
         essenceGivens
             = catMaybes
               [ case full of
@@ -152,7 +153,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
     groomSpec False (Spec langEprime $ listAsStatement outLettings)
 
 
-workhorse :: MonadConjure m => [(Text, Text)] -> (Text, Domain, E) -> m [(Text, E)]
+workhorse :: MonadConjure m => [(Text, Text)] -> (Text, Domain E, E) -> m [(Text, E)]
 workhorse lookupReprs (nm, domBefore, valBefore) = do
     D dom <- instantiate [] (D domBefore)
     val   <- instantiate [] valBefore
@@ -178,7 +179,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
         callHelper
             :: MonadConjure m
             => Text
-            -> Domain
+            -> Domain E
             -> E
             -> Maybe Text
             -> m [(Text, E)]
@@ -198,7 +199,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
         helper
             :: MonadConjure m
             => Text
-            -> Domain
+            -> Domain E
             -> E
             -> Maybe Text
             -> m [(Text, E)]
@@ -307,7 +308,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 values = sort valuesIn
 
             let
-                valuesRec' :: [(Text, Domain, E)]
+                valuesRec' :: [(Text, Domain E, E)]
                 valuesRec' =
                         [ (nm', dom', val')
                         | let nm'  = name `T.append` "_Set~Explicit"
@@ -555,7 +556,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 actualValues' <- mapM (instantiateEnumDomains []) actualValues
 
                 let
-                    valuesRec' :: [(Text, Domain, E)]
+                    valuesRec' :: [(Text, Domain E, E)]
                     valuesRec' =
                             [ (nm', dom', val')
                             | let nm'  = name `T.append` "_Function~1D"
@@ -802,7 +803,7 @@ instance ZeroVal E where
     zeroVal (D d) = zeroVal d
     zeroVal x = bug ("RedArrow.zeroVal {E}" <+> pretty x)
 
-instance ZeroVal Domain where
+instance ZeroVal (Domain E) where
 
     zeroVal DomainBool = return [eMake| false |]
 
@@ -850,7 +851,7 @@ instance ZeroVal Domain where
 
     zeroVal x = bug ("RedArrow.zeroVal {Domain}" <+> pretty x)
 
-instance ZeroVal Range where
+instance ZeroVal (Range E) where
     zeroVal RangeOpen = return [eMake| 0 |]
     zeroVal (RangeSingle x) = fmap fst $ runWriterT $ fullySimplify x
     zeroVal (RangeLowerBounded x) = fmap fst $ runWriterT $ fullySimplify x

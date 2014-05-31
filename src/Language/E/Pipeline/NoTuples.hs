@@ -241,7 +241,7 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
         helper _ = return Nothing
 
 
-checkTopLevel :: E -> Maybe (Text -> Domain -> E, Text, Domain)
+checkTopLevel :: E -> Maybe (Text -> Domain E -> E, Text, Domain E)
 checkTopLevel [xMatch| [Prim (S n)] := topLevel.declaration.find.name.reference
                      | [D d]        := topLevel.declaration.find.domain |] =
     let
@@ -260,7 +260,7 @@ checkTopLevel _ = Nothing
 
 
 -- handling top level tuples
-checkTupleDomain :: Domain -> Maybe [Domain]
+checkTupleDomain :: Domain E -> Maybe [Domain E]
 checkTupleDomain (DomainTuple is) = Just is
 checkTupleDomain _ = Nothing
 
@@ -282,9 +282,9 @@ renameTupleIndexes identifiers = bottomUpE' f
 
 
 -- handling top level "matrix of tuples"
-checkMatrixOfTupleDomain :: Domain -> Maybe ( [Domain]    -- indices
-                                            , [Domain]    -- tuple components
-                                            ) 
+checkMatrixOfTupleDomain :: Domain E -> Maybe ( [Domain E]      -- indices
+                                              , [Domain E]      -- tuple components
+                                              ) 
 checkMatrixOfTupleDomain (DomainTuple is) = Just ([], is)
 checkMatrixOfTupleDomain (DomainMatrix i j) = do (is,js) <- checkMatrixOfTupleDomain j ; return (i:is,js)
 checkMatrixOfTupleDomain _ = Nothing

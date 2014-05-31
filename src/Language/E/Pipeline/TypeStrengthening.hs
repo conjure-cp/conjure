@@ -63,7 +63,7 @@ sumAsCardinality p = return p
 
 
 nestedMatch
-    :: MonadConjure m => [(E, Domain)] -> E
+    :: MonadConjure m => [(E, Domain E)] -> E
     -> m ( [ ( E            -- the decision variable
              , Int          -- levels of nesting
              , Text         -- the attribtue
@@ -96,7 +96,7 @@ nestedMatch findsToConsider cons = do
             return ([(decvar, 0, attr, val) | (decvar, attr, val) <- attrs ], keep)
 
 directMatch
-    :: MonadConjure m => [(E, Domain)] -> E
+    :: MonadConjure m => [(E, Domain E)] -> E
     -> m ( [ ( E            -- the decision variable
              , Text         -- the attribtue
              , Maybe E      -- value of the attribute, Nothing if flag
@@ -172,7 +172,7 @@ directMatch findsToConsider cons = case cons of
 
 
 relationFunctional
-    :: MonadConjure m => [(E, Domain)] -> E
+    :: MonadConjure m => [(E, Domain E)] -> E
     -> m ( [ ( E            -- the decision variable
              , Text         -- the attribtue
              , Maybe E      -- value of the attribute, Nothing if flag
@@ -315,7 +315,7 @@ pullConstraints [xMatch| xs := topLevel.suchThat |] = xs
 pullConstraints _ = []
 
 
-pullFinds :: Spec -> [(E, Domain)]
+pullFinds :: Spec -> [(E, Domain E)]
 pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
     where pullFind [xMatch| [name]  := topLevel.declaration.find.name
                           | [D dom] := topLevel.declaration.find.domain |] = Just (name, dom)
@@ -325,8 +325,8 @@ updateAttributes
     :: MonadConjure m
     => Int                  -- nesting level, 0 for topmost
     -> [DomainAttribute]    -- attributes
-    -> Domain               -- domain
-    -> m Domain             -- modified domain
+    -> Domain E             -- domain
+    -> m (Domain E)         -- modified domain
 
 updateAttributes 0 newAttrs (DomainSet       (DomainAttributes attrs) inner ) = return $ DomainSet       (DomainAttributes (newAttrs ++ attrs)) inner
 updateAttributes 0 newAttrs (DomainMSet      (DomainAttributes attrs) inner ) = return $ DomainMSet      (DomainAttributes (newAttrs ++ attrs)) inner

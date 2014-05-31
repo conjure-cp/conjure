@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Language.E.Evaluator.Full
     ( fullEvaluator
@@ -1041,7 +1042,7 @@ instance DomSize E where
     domSize p =
         err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
-instance DomSize Domain where
+instance DomSize (Domain E) where
 
     domSize DomainBool = return [eMake| 2 |]
     domSize (DomainInt rs) = sumE <$> mapM domSize rs
@@ -1112,7 +1113,7 @@ instance DomSize Domain where
 
     domSize (DomainHack x) = domSize x
 
-instance DomSize Range where
+instance DomSize (Range E) where
     domSize RangeSingle{} = return [eMake| 1 |]
     domSize (RangeBounded fr to) = return [eMake| &to - &fr + 1 |]
     domSize r = userErr $ "Infinite domain: " <+> pretty r

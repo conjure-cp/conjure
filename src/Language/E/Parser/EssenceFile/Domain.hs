@@ -15,7 +15,7 @@ import Text.Parsec.Combinator ( optionMaybe, sepBy, sepBy1 )
 
 
 
-parseRange :: Parser Range
+parseRange :: Parser (Range E)
 parseRange = msum [try pRange, pSingle]
     where
         pRange = do
@@ -31,7 +31,7 @@ parseRange = msum [try pRange, pSingle]
             x <- parseExpr
             return (RangeSingle x)
 
-parseDomain :: Parser Domain
+parseDomain :: Parser (Domain E)
 parseDomain
     = shuntingYardDomain
     $ some

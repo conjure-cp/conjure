@@ -83,7 +83,7 @@ sliceIfTooFewIndicesE p@[xMatch| _ := operator.index |] = do
 
         lookupDomain d = Just <$> domainOf d
 
-        matrixDomainNbDims :: Domain -> Int
+        matrixDomainNbDims :: Domain E -> Int
         matrixDomainNbDims (DomainMatrix _ inner) = 1 + matrixDomainNbDims inner
         matrixDomainNbDims _ = 0
 sliceIfTooFewIndicesE p = do

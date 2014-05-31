@@ -21,7 +21,7 @@ errDomainOf p = do
                         ]
 
 class DomainOf a where
-    domainOf :: MonadConjure m => a -> m Domain
+    domainOf :: MonadConjure m => a -> m (Domain E)
 
 instance DomainOf E where
 
@@ -96,7 +96,7 @@ instance DomainOf E where
         return (DomainHack x)
 
 
-innerDomainOf :: Domain -> Maybe Domain
+innerDomainOf :: Domain a -> Maybe (Domain a)
 innerDomainOf (DomainSet _ inner) = return inner
 innerDomainOf (DomainMSet _ inner) = return inner
 innerDomainOf (DomainFunction _ fr to) = return (DomainTuple [fr,to])

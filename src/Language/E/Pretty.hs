@@ -318,7 +318,7 @@ instance Pretty DomainDefnEnum where
         hang ("letting" <+> pretty name <+> "be new type enum"   ) 8 (prettyList Pr.braces "," values)
 
 
-instance Pretty Domain where
+instance Pretty a => Pretty (Domain a) where
     -- domain.*
 
     pretty DomainBool = "bool"
@@ -371,7 +371,7 @@ instance Pretty DomainAttribute where
     pretty (DANameValue name value) = pretty name <+> pretty value
     pretty DADotDot = ".."
 
-instance Pretty Range where
+instance Pretty a => Pretty (Range a) where
     pretty RangeOpen = ".."
     pretty (RangeSingle x) = pretty x
     pretty (RangeLowerBounded x) = pretty x <> ".."

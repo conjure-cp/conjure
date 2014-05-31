@@ -66,7 +66,7 @@ summation [x]    = x
 summation (x:xs) = let y = summation xs in [eMake| &x + &y |]
 
 
-domainNeedsRepresentation :: Domain -> Bool
+domainNeedsRepresentation :: Domain a -> Bool
 domainNeedsRepresentation DomainSet{} = True
 domainNeedsRepresentation DomainMSet{} = True
 domainNeedsRepresentation DomainFunction{} = True
@@ -83,10 +83,10 @@ freshQuanVar from = do
     let quanVar = [xMake| structural.single.reference := [Prim $ S quanVarStr] |]
     return (quanVarStr, quanVar)
 
-inForAll :: Text -> Domain -> (E, E) -> E
+inForAll :: Text -> Domain E -> (E, E) -> E
 inForAll = inQuan "forAll"
 
-inQuan :: Text -> Text -> Domain -> (E, E) -> E
+inQuan :: Text -> Text -> Domain E -> (E, E) -> E
 inQuan quan quanVar quanOverDom (guard,body) =
     let
         out = 
@@ -101,11 +101,11 @@ inQuan quan quanVar quanOverDom (guard,body) =
     -- in  fromMaybe out (tryUnrollForAll out)
     in  out
 
-inForAlls :: [(Text, Domain)] -> (E, E) -> E
+inForAlls :: [(Text, Domain E)] -> (E, E) -> E
 inForAlls = inQuans "forAll"
 
 -- inQuans quanStr [(quanVar,quanOverDom)] -> (guard,body)
-inQuans :: Text -> [(Text, Domain)] -> (E, E) -> E
+inQuans :: Text -> [(Text, Domain E)] -> (E, E) -> E
 inQuans quan = go . reverse
     where
         go [] _ = error "inQuans.go"
@@ -149,14 +149,14 @@ tryUnrollForAll _ = Nothing
 
 
 -- given a matrix domain, split it to its indices and the inner domain
-splitMatrixDomain :: Domain -> ([Domain], Domain)
+splitMatrixDomain :: Domain E -> ([Domain E], Domain E)
 splitMatrixDomain (DomainMatrix xIndex xInner) = first (xIndex:) (splitMatrixDomain xInner)
 splitMatrixDomain x = ([], x)
 
 
 -- given a list of index domains an and inner domain, construct a matrix
 -- domain
-mkMatrixDomain :: [Domain] -> Domain -> Domain
+mkMatrixDomain :: [Domain E] -> Domain E -> Domain E
 mkMatrixDomain []     j = j
 mkMatrixDomain (i:is) j = DomainMatrix i (mkMatrixDomain is j)
 

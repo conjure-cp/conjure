@@ -21,7 +21,7 @@ shuntingYardExpr p = do
         then fail "Malformed expression, Shunting Yard failed."
         else shunt mergeOp beforeShunt
 
-shuntingYardDomain :: Parser [Either Lexeme Domain] -> Parser Domain
+shuntingYardDomain :: Eq a => Parser [Either Lexeme (Domain a)] -> Parser (Domain a)
 shuntingYardDomain p = do
     let mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
     beforeShunt <- p

@@ -25,6 +25,7 @@ import qualified Data.HashMap.Strict as M
 import Data.IntMap ( IntMap )
 import Data.IntSet ( IntSet )
 
+import Data.Data ( Data )
 import qualified GHC.Generics ( Generic )
 
 
@@ -174,12 +175,12 @@ recordSpec _msg sp = do
 data ConjureState = ConjureState
         { binders       :: ![Binder]
         , uniqueNameInt :: !Integer
-        , representationLog :: ![ ( Name     -- original name
-                                  , Name     -- representation name
-                                  , E        -- original full declaration
-                                  , Domain   -- new domain
+        , representationLog :: ![ ( Name        -- original name
+                                  , Name        -- representation name
+                                  , E           -- original full declaration
+                                  , Domain E    -- new domain
                                   ) ]
-        , structuralConsLog :: ![ ( Name     -- representation name
+        , structuralConsLog :: ![ ( Name        -- representation name
                                   , [E]
                                   )
                                 ]
@@ -349,15 +350,15 @@ eDepth (D d) = dDepth d
 eDepth EOF = 0
 eDepth (StatementAndNext this next) = max (eDepth this) (eDepth next)
 
-dDepth :: Domain -> Int
-dDepth  = gdepth
+dDepth :: Data a => Domain a -> Int
+dDepth = gdepth
 
 compareChain :: [Ordering] -> Ordering
 compareChain (EQ:xs) = compareChain xs
 compareChain (x :_ ) = x
 compareChain []      = EQ
 
-domOrder :: Domain -> Domain -> Ordering
+domOrder :: Domain E -> Domain E -> Ordering
 domOrder
     DomainBool
     DomainBool = EQ
@@ -410,7 +411,7 @@ instance SelectByMode RuleReprResult where
 
 type ReprFunc m =
     ( Text                                  -- input: name of the variable
-    , Domain                                -- input: domain
+    , Domain E                              -- input: domain
     , E                                     -- input: decl
     )
     -> m [RuleReprResult]
