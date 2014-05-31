@@ -39,7 +39,7 @@ else
     echo "Using ${USE_CORES} cores."
 fi
 
-CABAL_VERSION="1.20.0.0"
+CABAL_VERSION="1.20.0.2"
 HAPPY_VERSION="1.19.3"
 HSCOLOUR_VERSION="1.20.3"
 
