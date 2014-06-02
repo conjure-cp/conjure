@@ -17,18 +17,25 @@ refineSingleParam
     => Tree Representation
     ->    (Text, Domain Constant, Constant)
     -> m [(Text, Domain Constant, Constant)]
-refineSingleParam (Node NoRepresentation _) bundle = return [bundle]
 refineSingleParam (Node representation representations) (name, highDomain, highValue) = do
-    (lowNamesGen, lowDomainsGen, lowValuesGen, _) <- upDown representation highDomain
+    (lowDomainsGen, lowNamesGen, _, lowValuesGen, _) <- upDown representation highDomain
     let lowNames = map ($ name) lowNamesGen
     lowDomains <- lowDomainsGen
     lowValues  <- lowValuesGen highValue
-    liftM concat $ sequence [ refineSingleParam r (n,d,v)
-        | r <- representations
-        | n <- lowNames
-        | d <- lowDomains
-        | v <- lowValues
-        ]
+    if null representations
+        then 
+            return [ (n,d,v)
+                | n <- lowNames
+                | d <- lowDomains
+                | v <- lowValues
+                ]
+        else
+            liftM concat $ sequence [ refineSingleParam r (n,d,v)
+                | r <- representations
+                | n <- lowNames
+                | d <- lowDomains
+                | v <- lowValues
+                ]
 
 
 refineParam

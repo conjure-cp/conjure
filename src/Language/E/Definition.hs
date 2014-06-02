@@ -272,7 +272,12 @@ instance Arbitrary a => Arbitrary (Domain a) where
                         ]
             f s = do
                 arity <- choose (2 :: Int, 10)
-                DomainTuple <$> vectorOf arity (f (s-1))
+                DomainTuple <$> vectorOf arity (f (div s 10))
+    shrink DomainBool = []
+    shrink (DomainInt []) = [DomainBool]
+    shrink (DomainInt [r]) = DomainBool : DomainInt [] : [DomainInt [r'] | r' <- shrink r]
+    shrink (DomainInt rs) = [DomainInt (init rs)]
+    shrink _ = []
 
 
 data DomainAttributes = DomainAttributes [DomainAttribute]

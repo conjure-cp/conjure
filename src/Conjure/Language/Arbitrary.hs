@@ -6,6 +6,9 @@ module Conjure.Language.Arbitrary
 -- conjure
 import Conjure.Language.Definition
 
+-- base
+import Data.List ( subsequences )
+
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, vectorOf )
 
@@ -18,6 +21,15 @@ instance Arbitrary a => Arbitrary (AnyDomainTuple a) where
         arity <- choose (2 :: Int, 10)
         xs    <- vectorOf arity arbitrary
         return $ AnyDomainTuple $ DomainTuple xs
+    shrink (AnyDomainTuple d) =
+        case d of
+            DomainTuple xs -> 
+                [ AnyDomainTuple (DomainTuple ys)
+                | ys <- subsequences xs
+                , length ys >= 1
+                , length ys < length xs
+                ]
+            _ -> []
 
 
 newtype AnyConstantTuple = AnyConstantTuple Constant
@@ -28,4 +40,13 @@ instance Arbitrary AnyConstantTuple where
         arity <- choose (2 :: Int, 10)
         xs    <- vectorOf arity arbitrary
         return $ AnyConstantTuple $ ConstantTuple xs
+    shrink (AnyConstantTuple c) =
+        case c of
+            ConstantTuple xs -> 
+                [ AnyConstantTuple (ConstantTuple ys)
+                | ys <- subsequences xs
+                , length ys >= 1
+                , length ys < length xs
+                ]
+            _ -> []
 
