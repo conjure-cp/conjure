@@ -62,7 +62,7 @@ import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 import Language.Haskell.Meta.Parse.Careful
 
 -- QuickCheck
-import Test.QuickCheck -- ( Arbitrary(..), choose )
+import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 
 
 data Spec = Spec LanguageVersion E
@@ -262,6 +262,17 @@ instance Serialize a => Serialize (Domain a)
 instance Hashable a => Hashable (Domain a)
 
 instance ToJSON a => ToJSON (Domain a)
+
+instance Arbitrary a => Arbitrary (Domain a) where
+    arbitrary = sized f
+        where
+            f 0 = oneof [ return DomainBool
+                        , DomainInt <$> arbitrary
+                        -- , DomainEnum <$> arbitrary <*> arbitrary
+                        ]
+            f s = do
+                arity <- choose (2 :: Int, 10)
+                DomainTuple <$> vectorOf arity (f (s-1))
 
 
 data DomainAttributes = DomainAttributes [DomainAttribute]

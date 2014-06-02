@@ -10,10 +10,9 @@ import Conjure.UpDown ( downDomain, downConstant, upConstant, UpDownError(..) )
 
 -- hspec
 import Test.Hspec ( Spec, describe, it, shouldBe )
-import Test.Hspec.QuickCheck ( property )
 
 -- QuickCheck
-import Test.QuickCheck ( NonNegative(..), verbose, (==>) )
+import Test.QuickCheck ( property, (==>), NonNegative(..) )
 
 
 spec :: Spec
@@ -39,7 +38,7 @@ spec = describe "enum up-down" $ do
         tUp [ConstantInt 3] (Right (ConstantEnum enumDomainDefn "peach"))
         tUp [ConstantInt 0] (Left (ConstantUpError "Integer constant out of range for enum: 0"))
 
-    it "enum down&up with quickcheck" $ property $ verbose $
+    it "enum down&up with quickcheck" $ property $
         let downAndUp = downConstant NoRepresentation enumDomain >=>
                         upConstant   NoRepresentation enumDomain
         in  \ (NonNegative i) -> i < length enumValues ==>
