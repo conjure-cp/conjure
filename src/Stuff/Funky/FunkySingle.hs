@@ -9,7 +9,7 @@ module Stuff.Funky.FunkySingle
 import Control.Applicative       ( Applicative(..) )
 import Control.Monad             ( ap )
 import Control.Monad.Base        ( MonadBase(..), liftBaseDefault )
-import Control.Monad.Error       ( MonadError(..) )
+import Control.Monad.Except      ( MonadError(..) )
 import Control.Monad.Identity    ( Identity )
 import Control.Monad.IO.Class    ( MonadIO, liftIO )
 import Control.Monad.State       ( MonadState(..) )

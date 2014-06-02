@@ -5,7 +5,7 @@
 module Language.E.Lexer where
 
 import Control.Applicative ( Applicative, (<$>) )
-import Control.Monad.Error ( MonadError(..) )
+import Control.Monad.Except ( MonadError(..) )
 import Data.Char ( isAlpha, isAlphaNum )
 import Data.List ( sortBy )
 import Data.Maybe ( catMaybes )
