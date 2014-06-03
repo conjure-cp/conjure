@@ -7,6 +7,7 @@ module Conjure.UpDown where
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
+import Language.E.Helpers
 
 -- base
 import Data.List ( findIndex )
@@ -64,6 +65,7 @@ upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainEnum   {}) = upDownEnum d
 upDown NoRepresentation d@(DomainTuple  {}) = upDownTuple d
+upDown (Representation "Explicit") d@(DomainSet {}) = upDownSetExplicit d
 
 -- upDown (DomainMatrix Domain Domain)
 -- upDown (DomainSet DomainAttributes Domain)
@@ -159,6 +161,41 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
 
 upDownTuple d = throwError $ RepresentationDoesntMatch $ "upDownTuple only works on tuple domains. this is not one:" <+> pretty d
 
+upDownSetExplicit :: MonadError UpDownError m => UpDownType m
+upDownSetExplicit (DomainSet attrs innerDomain)
+    | Just _ <- lookupDomainAttribute "size" attrs
+    = return ( return [domain]
+             , singletonList nameDown
+             , singletonList nameUp
+             , (liftM . liftM) singletonList constantDown
+             , constantUp . headNote "Conjure.UpDown.upDownEnum"
+             )
+
+    where
+
+        size = fromMaybe (error "upDownSetExplicit ~ size") (lookupDomainAttribute "size" attrs)
+
+        indexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
+        domain = DomainMatrix indexDomain innerDomain
+
+        nameDown = (`mappend` "_Explicit")
+
+        nameUp n =
+            case stripSuffix "_Explicit" n of
+                Nothing -> throwError $ NameDownError $ "upDownSetExplicit:" <+> pretty n
+                Just n' -> return n'
+
+        constantDown v =
+            case v of
+                ConstantSet xs -> return $ ConstantMatrix indexDomain xs
+                _ -> throwError $ ConstantDownError $ "upDownSetExplicit:" <+> pretty v
+
+        constantUp v =
+            case v of
+                ConstantMatrix _ xs -> return $ ConstantSet $ sort $ nub xs
+                _ -> throwError $ ConstantUpError $ "upDownSetExplicit:" <+> pretty v
+
+upDownSetExplicit d = throwError $ RepresentationDoesntMatch $ "upDownSetExplicit only works on set domains. this is not one:" <+> pretty d
 
 
 singletonList :: a -> [a]
