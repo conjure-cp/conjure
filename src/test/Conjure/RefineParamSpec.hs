@@ -26,7 +26,7 @@ import Data.Text ( pack )
 
 
 spec :: Spec
-spec = describe "int parameter" $ do
+spec = describe "refining parameters" $ do
 
     it "int parameters stay as is" $ do
         let intRange = [1..9]
