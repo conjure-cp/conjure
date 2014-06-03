@@ -26,6 +26,7 @@ data UpDownError
     = NoRepresentationMatches Doc
     | RepresentationDoesntMatch Doc
     | NameDownError Doc
+    | NameUpError Doc
     | ConstantDownError Doc
     | ConstantUpError Doc
     deriving (Show)
@@ -34,6 +35,7 @@ instance Eq UpDownError where
     NoRepresentationMatches a == NoRepresentationMatches b = show a == show b
     RepresentationDoesntMatch a == RepresentationDoesntMatch b = show a == show b
     NameDownError a == NameDownError b = show a == show b
+    NameUpError a == NameUpError b = show a == show b
     ConstantDownError a == ConstantDownError b = show a == show b
     ConstantUpError a == ConstantUpError b = show a == show b
     _ == _ = False
@@ -42,7 +44,7 @@ type UpDownType m =
        Domain Constant
     -> m ( m [Domain Constant]              -- the low level domain
          , [Text -> Text]                   -- names down
-         , [Text -> m Text]                 -- names up
+         , [Text] -> m Text                 -- names up
          , Constant -> m [Constant]         -- constant down
          , [Constant] -> m Constant         -- constant up
          )
@@ -76,7 +78,7 @@ upDown (Representation "Explicit") d@(DomainSet {}) = upDownSetExplicit d
 -- upDown (DomainOp Text [Domain])
 
 upDown representation domain =
-    throwError $ NoRepresentationMatches $ vcat [ "bug in upDown"
+    throwError $ NoRepresentationMatches $ vcat [ "[Conjure.UpDown.upDown]"
                                                 , pretty domain
                                                 , pretty representation
                                                 ]
@@ -85,7 +87,7 @@ upDownNoOp :: MonadError UpDownError m => UpDownType m
 upDownNoOp d =
     return ( return [d]
            , singletonList id
-           , singletonList return
+           , return . headNote "Conjure.UpDown.upDownNoOp"
            , return . singletonList
            , return . headNote "Conjure.UpDown.upDownNoOp"
            )
@@ -94,7 +96,7 @@ upDownEnum :: MonadError UpDownError m => UpDownType m
 upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
     return ( liftM singletonList domainOut
            , singletonList nameDown
-           , singletonList nameUp
+           , nameUp . headNote "Conjure.UpDown.upDownEnum"
            , (liftM . liftM) singletonList constantDown
            , constantUp . headNote "Conjure.UpDown.upDownEnum"
            )
@@ -105,7 +107,7 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
 
         nameUp n =
             case stripSuffix "_enum" n of
-                Nothing -> throwError $ NameDownError $ "upDownEnum:" <+> pretty n
+                Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownEnum]" <+> pretty n
                 Just n' -> return n'
 
         nbConstants = genericLength enums
@@ -118,19 +120,19 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
             case v of
                 ConstantEnum _ x ->
                     case findIndex (x==) enums of
-                        Nothing -> throwError $ ConstantDownError $ "This identifier isn't a member of the enum:" <+> pretty v
+                        Nothing -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownEnum] This identifier isn't a member of the enum:" <+> pretty v
                         Just y  -> return $ ConstantInt (y + 1)
-                _ -> throwError $ ConstantDownError $ "upDownEnum:" <+> pretty v
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownEnum]" <+> pretty v
 
         constantUp v =
             case v of
                 ConstantInt x ->
                     case atMay enums (x - 1) of
-                        Nothing -> throwError $ ConstantUpError $ "Integer constant out of range for enum:" <+> pretty x
+                        Nothing -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum] Integer constant out of range for enum:" <+> pretty x
                         Just y  -> return (ConstantEnum defn y)
-                _ -> throwError $ ConstantUpError $ "upDownEnum:" <+> pretty v
+                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum]" <+> pretty v
 
-upDownEnum d = throwError $ RepresentationDoesntMatch $ "upDownEnum only works on enum domains. this is not one:" <+> pretty d
+upDownEnum d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownEnum] Only works on enum domains. this is not one:" <+> pretty d
 
 upDownTuple :: MonadError UpDownError m => UpDownType m
 upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsDown, constantsUp)
@@ -143,32 +145,35 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
             , let suffix = "_" `mappend` pack (show i)
             ]
 
-        namesUp =
-            [ \ n ->
-                case stripSuffix suffix n of
-                    Nothing -> throwError $ NameDownError $ "upDownTuple:" <+> pretty n
+        namesUp names = do
+            allStripped <- sequence
+                [ case stripSuffix suffix n of
+                    Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownTuple]" <+> pretty n
                     Just n' -> return n'
-            | i <- [1 .. length ds]
-            , let suffix = "_" `mappend` pack (show i)
-            ]
+                | (n,i) <- zip names [1 .. length names]
+                , let suffix = "_" `mappend` pack (show i)
+                ]
+            if length (nub allStripped) == 1
+                then return (head allStripped)
+                else throwError $ NameUpError $ "[Conjure.UpDown.upDownTuple]" <+> pretty (show names)
 
         constantsDown v =
             case v of
                 ConstantTuple xs -> return xs
-                _ -> throwError $ ConstantDownError $ "upDownTuple.down:" <+> pretty v
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownTuple]" <+> pretty v
 
         constantsUp vs = return (ConstantTuple vs)
 
-upDownTuple d = throwError $ RepresentationDoesntMatch $ "upDownTuple only works on tuple domains. this is not one:" <+> pretty d
+upDownTuple d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownTuple] Only works on tuple domains. this is not one:" <+> pretty d
 
 upDownSetExplicit :: MonadError UpDownError m => UpDownType m
 upDownSetExplicit (DomainSet attrs innerDomain)
     | Just _ <- lookupDomainAttribute "size" attrs
     = return ( return [domain]
              , singletonList nameDown
-             , singletonList nameUp
+             , nameUp . headNote "Conjure.UpDown.upDownSetExplicit"
              , (liftM . liftM) singletonList constantDown
-             , constantUp . headNote "Conjure.UpDown.upDownEnum"
+             , constantUp . headNote "Conjure.UpDown.upDownSetExplicit"
              )
 
     where
@@ -182,20 +187,20 @@ upDownSetExplicit (DomainSet attrs innerDomain)
 
         nameUp n =
             case stripSuffix "_Explicit" n of
-                Nothing -> throwError $ NameDownError $ "upDownSetExplicit:" <+> pretty n
+                Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownSetExplicit]" <+> pretty n
                 Just n' -> return n'
 
         constantDown v =
             case v of
                 ConstantSet xs -> return $ ConstantMatrix indexDomain xs
-                _ -> throwError $ ConstantDownError $ "upDownSetExplicit:" <+> pretty v
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownSetExplicit]" <+> pretty v
 
         constantUp v =
             case v of
                 ConstantMatrix _ xs -> return $ ConstantSet $ sort $ nub xs
-                _ -> throwError $ ConstantUpError $ "upDownSetExplicit:" <+> pretty v
+                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownSetExplicit]" <+> pretty v
 
-upDownSetExplicit d = throwError $ RepresentationDoesntMatch $ "upDownSetExplicit only works on set domains. this is not one:" <+> pretty d
+upDownSetExplicit d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownSetExplicit] Only works on set domains. this is not one:" <+> pretty d
 
 
 singletonList :: a -> [a]

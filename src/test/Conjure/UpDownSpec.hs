@@ -30,13 +30,13 @@ spec = describe "enum up-down" $ do
         let tDown a b = downConstant NoRepresentation enumDomain a `shouldBe` b
         tDown (ConstantEnum enumDomainDefn "apple") (Right [ConstantInt 1])
         tDown (ConstantEnum enumDomainDefn "peach") (Right [ConstantInt 3])
-        tDown (ConstantEnum enumDomainDefn "plum" ) (Left (ConstantDownError "This identifier isn't a member of the enum: plum"))
+        tDown (ConstantEnum enumDomainDefn "plum" ) (Left (ConstantDownError "[Conjure.UpDown.upDownEnum] This identifier isn't a member of the enum: plum"))
 
     it "can reconstruct enum values from int values" $ do
         let tUp a b = upConstant NoRepresentation enumDomain a `shouldBe` b
         tUp [ConstantInt 1] (Right (ConstantEnum enumDomainDefn "apple"))
         tUp [ConstantInt 3] (Right (ConstantEnum enumDomainDefn "peach"))
-        tUp [ConstantInt 0] (Left (ConstantUpError "Integer constant out of range for enum: 0"))
+        tUp [ConstantInt 0] (Left (ConstantUpError "[Conjure.UpDown.upDownEnum] Integer constant out of range for enum: 0"))
 
     it "enum down&up with quickcheck" $ property $
         let downAndUp = downConstant NoRepresentation enumDomain >=>

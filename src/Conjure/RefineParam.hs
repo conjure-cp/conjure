@@ -3,10 +3,12 @@
 
 module Conjure.RefineParam ( refineSingleParam, refineParam ) where
 
+-- conjure
 import Conjure.UpDown
 import Language.E.Imports
 import Language.E.Definition
 
+-- containers
 import Data.Tree ( Tree(..) )
 
 
