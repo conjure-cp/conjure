@@ -81,4 +81,31 @@ spec = describe "int parameter" $ do
                   | c <- constants 
                   ]
 
+    it "Set Explicit" $
+        let
+            sizeAttr = DANameValue "size" (ConstantInt 4)
+            indexDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
+            innerDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)]
+            setDomain = DomainSet (DomainAttributes [sizeAttr]) innerDomain
+            setConstant = ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+            matrixDomain = DomainMatrix indexDomain innerDomain
+            matrixConstant = ConstantMatrix indexDomain [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+        in
+            refineSingleParam (Node (Representation "Explicit") [])
+                ("x", setDomain, setConstant) `shouldBe`
+                Right [ ("x_Explicit", matrixDomain, matrixConstant) ]
+
+    it "Set Explicit (quickcheck)" $
+        let
+            sizeAttr = DANameValue "size" (ConstantInt 4)
+            indexDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
+            innerDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)]
+            setDomain = DomainSet (DomainAttributes [sizeAttr]) innerDomain
+            setConstant = ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+            matrixDomain = DomainMatrix indexDomain innerDomain
+            matrixConstant = ConstantMatrix indexDomain [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+        in
+            refineSingleParam (Node (Representation "Explicit") [])
+                ("x", setDomain, setConstant) `shouldBe`
+                Right [ ("x_Explicit", matrixDomain, matrixConstant) ]
 
