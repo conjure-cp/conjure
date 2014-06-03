@@ -36,8 +36,8 @@ universeExcept p (Spec _ s) = f s
         f t | p t = []
         f t@(Prim {}) = [t]
         f t@(Tagged _ xs) = t : concatMap f xs
-        f t@(C {}) = t : f undefined
-        f t@(D {}) = t : f undefined
+        f t@(C {}) = t : f (error "universeExcept")
+        f t@(D {}) = t : f (error "universeExcept")
         f t@(EOF {}) = [t]
         f t@(StatementAndNext this next) = t : f this ++ f next
 

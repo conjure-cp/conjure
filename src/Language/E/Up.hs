@@ -26,7 +26,7 @@ translateSolution'
     -> Maybe EprimeParamFP
     -> EprimeSolutionFP
     -> IO EssenceSolution 
-translateSolution' = undefined
+translateSolution' = error "translateSolution'"
 
 
 type Essence   = Spec
@@ -44,7 +44,7 @@ translateSolutionM
   -> ESolution
   -> [Text]
   -> m Spec
-translateSolutionM = undefined
+translateSolutionM = error "translateSolutionM"
 
 type EssenceSolution = Spec
 
