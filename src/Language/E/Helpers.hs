@@ -246,8 +246,8 @@ lookupAttr attrName attrs = listToMaybe $
     , nm == attrName
     ]
 
-lookupDomainAttribute :: Text -> DomainAttributes -> Maybe E
+lookupDomainAttribute :: Text -> DomainAttributes a -> Maybe a
 lookupDomainAttribute attrName (DomainAttributes as) = listToMaybe
     $  [ v | DANameValue (Name n) v <- as, n == attrName ]
-    ++ [ [xMake| emptyGuard := [] |] | DAName (Name n) <- as, n == attrName ]
+    ++ [ error "lookupDomainAttribute" | DAName (Name n) <- as, n == attrName ]
 

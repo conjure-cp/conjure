@@ -248,11 +248,11 @@ data Domain a
     | DomainEnum DomainDefnEnum [Range a]
     | DomainTuple [Domain a]
     | DomainMatrix (Domain a) (Domain a)
-    | DomainSet DomainAttributes (Domain a)
-    | DomainMSet DomainAttributes (Domain a)
-    | DomainFunction DomainAttributes (Domain a) (Domain a)
-    | DomainRelation DomainAttributes [Domain a]
-    | DomainPartition DomainAttributes (Domain a)
+    | DomainSet       (DomainAttributes a) (Domain a)
+    | DomainMSet      (DomainAttributes a) (Domain a)
+    | DomainFunction  (DomainAttributes a) (Domain a) (Domain a)
+    | DomainRelation  (DomainAttributes a) [Domain a]
+    | DomainPartition (DomainAttributes a) (Domain a)
     | DomainOp Name [Domain a]
     | DomainHack a          -- this is an ugly hack to be able to use expressions as domains. will go away later.
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
@@ -280,30 +280,30 @@ instance Arbitrary a => Arbitrary (Domain a) where
     shrink _ = []
 
 
-data DomainAttributes = DomainAttributes [DomainAttribute]
+data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize DomainAttributes
+instance Serialize a => Serialize (DomainAttributes a)
 
-instance Hashable DomainAttributes
+instance Hashable a => Hashable (DomainAttributes a)
 
-instance ToJSON DomainAttributes
+instance ToJSON a => ToJSON (DomainAttributes a)
 
-instance Default DomainAttributes where
+instance Default (DomainAttributes a) where
     def = DomainAttributes []
 
 
-data DomainAttribute
+data DomainAttribute a
     = DAName Name
-    | DANameValue Name E
+    | DANameValue Name a
     | DADotDot
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize DomainAttribute
+instance Serialize a => Serialize (DomainAttribute a)
 
-instance Hashable DomainAttribute
+instance Hashable a => Hashable (DomainAttribute a)
 
-instance ToJSON DomainAttribute
+instance ToJSON a => ToJSON (DomainAttribute a)
 
 
 data Range a

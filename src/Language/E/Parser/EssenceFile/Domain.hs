@@ -129,7 +129,7 @@ parseDomain
             y <- parseDomain
             return $ DomainPartition x y
 
-parseAttributes :: Parser DomainAttributes
+parseAttributes :: Parser (DomainAttributes E)
 parseAttributes = do
     xs <- parens (parseAttribute `sepBy` comma) <|> return []
     return $ DomainAttributes xs

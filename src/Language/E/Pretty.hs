@@ -362,11 +362,11 @@ instance Pretty a => Pretty (Domain a) where
 
     pretty (DomainHack x) = pretty x
 
-instance Pretty DomainAttributes where
+instance Pretty a => Pretty (DomainAttributes a) where
     pretty (DomainAttributes []) = empty
     pretty (DomainAttributes attrs) = prettyList Pr.parens "," attrs
 
-instance Pretty DomainAttribute where
+instance Pretty a => Pretty (DomainAttribute a) where
     pretty (DAName name) = pretty name
     pretty (DANameValue name value) = pretty name <+> pretty value
     pretty DADotDot = ".."

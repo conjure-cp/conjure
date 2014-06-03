@@ -324,7 +324,7 @@ pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
 updateAttributes
     :: MonadConjure m
     => Int                  -- nesting level, 0 for topmost
-    -> [DomainAttribute]    -- attributes
+    -> [DomainAttribute E]  -- attributes
     -> Domain E             -- domain
     -> m (Domain E)         -- modified domain
 
@@ -346,7 +346,7 @@ updateAttributes lvl attrs dom = bug $ vcat [ "don't know how to update this dom
                                             ]
 
 
-mkAttr :: (Name, Maybe E) -> DomainAttribute
+mkAttr :: (Name, Maybe E) -> DomainAttribute E
 mkAttr (n, Nothing) = DAName n
 mkAttr (n, Just v ) = DANameValue n v
 
