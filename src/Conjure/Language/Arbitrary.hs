@@ -11,6 +11,7 @@ module Conjure.Language.Arbitrary
 -- conjure
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
+import Conjure.Language.DomainSize ( domainSizeConstant )
 
 -- base
 import Control.Applicative ( (<$>), (<*>) )
@@ -64,6 +65,12 @@ instance Arbitrary AnyConstantTuple where
                 ]
             _ -> []
 
+
+-- | Some of these arbitrary generators are a bit crap.
+--   They recursively call themselves if some property doesn't hold in the generated value.
+--   This is the number of maximum retries.
+maxRetries :: Int
+maxRetries = 10000
 
 -- | This is a great function!
 --   It generates a random domain, and a generator of random constants of that domain.
@@ -142,12 +149,12 @@ arbitraryDomainAndConstant = sized dispatch
                             , ConstantInt <$> pickFromList (head allVals) allVals
                             )
 
-        enum :: Gen (Domain Constant, Gen Constant)
-        enum = undefined
+        -- enum :: Gen (Domain Constant, Gen Constant)
+        -- enum = undefined
 
         tuple :: Int -> Gen (Domain Constant, Gen Constant)
         tuple depth = do
-            arity <- choose (2 :: Int, 10)
+            arity <- choose (2 :: Int, 4)
             (ds, cs) <- unzip <$> vectorOf arity (dispatch (smaller depth))
             return ( DomainTuple ds
                    , ConstantTuple <$> sequence cs
@@ -158,11 +165,13 @@ arbitraryDomainAndConstant = sized dispatch
 
         setFixed :: Int -> Gen (Domain Constant, Gen Constant)
         setFixed depth = do
-            size <- choose (2 :: Int, 10)
             (dom, constantGen) <- dispatch (smaller depth)
+            let sizeUpTo = case domainSizeConstant dom of
+                                Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
+                                Just s  -> min 10 s
+            size <- choose (2 :: Int, sizeUpTo)
             return ( DomainSet (DomainAttributes [DANameValue "size" (ConstantInt size)]) dom
-                   , let try 10 = fail "setBoundedMinMax: tried 10 times."
-                         try n = do
+                   , let try n = if n >= maxRetries then fail "setBoundedMinMax: maxRetries" else do
                            elems <- vectorOf size constantGen
                            let sorted = sort $ nub elems
                            if length sorted == length elems
@@ -176,8 +185,11 @@ arbitraryDomainAndConstant = sized dispatch
 
         setBoundedMax :: Int -> Gen (Domain Constant, Gen Constant)
         setBoundedMax depth = do
-            maxSize <- choose (2 :: Int, 10)
             (dom, constantGen) <- dispatch (smaller depth)
+            let sizeUpTo = case domainSizeConstant dom of
+                                Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
+                                Just s  -> min 10 s
+            maxSize <- choose (2 :: Int, sizeUpTo)
             return ( DomainSet (DomainAttributes [DANameValue "maxSize" (ConstantInt maxSize)]) dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf numElems constantGen
@@ -187,14 +199,16 @@ arbitraryDomainAndConstant = sized dispatch
 
         setBoundedMinMax :: Int -> Gen (Domain Constant, Gen Constant)
         setBoundedMinMax depth = do
-            minSize <- choose (2 :: Int, 10)
-            maxSize <- choose (minSize, 10)
             (dom, constantGen) <- dispatch (smaller depth)
+            let sizeUpTo = case domainSizeConstant dom of
+                                Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
+                                Just s  -> min 10 s
+            minSize <- choose (2 :: Int, sizeUpTo)
+            maxSize <- choose (minSize, sizeUpTo)
             return ( DomainSet (DomainAttributes [ DANameValue "minSize" (ConstantInt minSize)
                                                  , DANameValue "maxSize" (ConstantInt maxSize)
                                                  ]) dom
-                   , let try 10 = fail "setBoundedMinMax: tried 10 times."
-                         try n = do
+                   , let try n = if n >= maxRetries then fail "setBoundedMinMax: maxRetries" else do
                            numElems <- choose (minSize, maxSize)
                            elems <- vectorOf numElems constantGen
                            let sorted = sort $ nub elems
