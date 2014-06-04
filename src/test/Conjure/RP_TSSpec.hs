@@ -72,3 +72,12 @@ spec = describe "RefineParam & TranslateSolution" $ do
                 , Node NoRepresentation []
                 , Node NoRepresentation []
                 ])
+
+    allTheWay "x"
+        (DomainSet
+            (DomainAttributes [DANameValue "size" (ConstantInt 3)])
+            (DomainInt [RangeBounded (ConstantInt 3) (ConstantInt 7)]))
+        (ConstantSet [ConstantInt 3, ConstantInt 5, ConstantInt 6])
+        (Node (Representation "Explicit")
+            [ Node NoRepresentation [] ])
+

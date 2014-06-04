@@ -69,10 +69,13 @@ upConstant representation domain enums = do (_,_,_,_,gen) <- upDown representati
 --   And how, for that representation and a domain, we can translate a given constant of the high level domain into a constant of the low level domain.
 --   And how, for that representation and a domain, we can translate a given constant of the low level domain into a constant of the high level domain.
 upDown :: MonadError UpDownError m => Representation -> UpDownType m
+
 upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
 upDown NoRepresentation d@(DomainEnum   {}) = upDownEnum d
 upDown NoRepresentation d@(DomainTuple  {}) = upDownTuple d
+upDown NoRepresentation d = upDownNoOp d
+
 upDown (Representation "Explicit") d@(DomainSet {}) = upDownSetExplicit d
 
 -- upDown (DomainMatrix Domain Domain)
