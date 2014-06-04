@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Conjure.UpDownSpec where
+module Conjure.UpDownSpec ( spec ) where
 
 -- conjure
 import Language.E.Imports

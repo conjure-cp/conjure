@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ParallelListComp #-}
 
-module Conjure.RefineParamSpec where
+module Conjure.RefineParamSpec ( spec ) where
 
 -- conjure
 import Conjure.Language.Definition hiding ( Spec )

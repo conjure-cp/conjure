@@ -1,7 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Conjure.UpDown where
+module Conjure.UpDown
+    ( UpDownError(..)
+    -- essential
+    , upDown
+    -- derived
+    , downDomain, downConstant, upConstant
+    ) where
 
 -- conjure
 import Language.E.Imports

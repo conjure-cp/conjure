@@ -6,14 +6,21 @@
 
 module Language.E.Pretty ( module Stuff.Pretty, prettySpecDebug ) where
 
+-- conjure
 import Utils.DebugPretty
 import Stuff.Pretty
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )
 import Language.E.Lexer ( textToLexeme )
 
+-- base
 import Control.Arrow ( first, second )
 import Data.List ( intersperse )
+
+-- containers
+import Data.Tree ( Tree(..), drawTree )
+
+-- pretty
 import Text.PrettyPrint as Pr
 
 
@@ -394,6 +401,9 @@ instance Pretty Constant where
     pretty (ConstantFunction  xs ) = "function"  <> prettyListDoc Pr.parens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
     pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
+
+instance Pretty a => Pretty (Tree a) where
+    pretty = pretty . drawTree . fmap (show . pretty)
 
 
 prettyPrec :: Int -> E -> Doc
