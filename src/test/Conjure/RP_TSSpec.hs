@@ -6,6 +6,7 @@ module Conjure.RP_TSSpec ( spec ) where
 
 -- conjure
 import Conjure.Language.Definition hiding ( Spec )
+import Conjure.Language.Arbitrary ( AnyDomainAndConstant(..) )
 import Conjure.RefineParam ( refineSingleParam )
 import Conjure.TranslateSolution ( translateSingleSolution )
 import Language.E.Imports
@@ -18,7 +19,7 @@ import Data.Tree ( Tree(..) )
 import Test.Hspec ( Spec, describe, it, shouldBe )
 
 -- QuickCheck
--- import Test.QuickCheck ( property )
+import Test.QuickCheck ( property )
 
 
 allTheWay
@@ -80,4 +81,12 @@ spec = describe "RefineParam & TranslateSolution" $ do
         (ConstantSet [ConstantInt 3, ConstantInt 5, ConstantInt 6])
         (Node (Representation "Explicit")
             [ Node NoRepresentation [] ])
+
+    it "allTheWay (QuickCheck)" $ property $ \ (Name name) (AnyDomainAndConstant domain representation constant) ->
+        let
+            result = do
+                low <- refineSingleParam representation (name, domain, constant)
+                translateSingleSolution name domain representation [ (n,c) | (n,_,c) <- low ]
+        in
+            result `shouldBe` Right (name, constant)
 

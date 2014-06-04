@@ -95,17 +95,30 @@ spec = describe "refining parameters" $ do
                 ("x", setDomain, setConstant) `shouldBe`
                 Right [ ("x_Explicit", matrixDomain, matrixConstant) ]
 
-    it "Set Explicit (quickcheck)" $
+    it "Set Explicit (nested)" $
         let
-            sizeAttr = DANameValue "size" (ConstantInt 4)
-            indexDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
+            sizeAttr1 = DANameValue "size" (ConstantInt 4)
+            sizeAttr2 = DANameValue "size" (ConstantInt 3)
+            indexDomain1 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
+            indexDomain2 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 3)]
             innerDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)]
-            setDomain = DomainSet (DomainAttributes [sizeAttr]) innerDomain
-            setConstant = ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 5]
-            matrixDomain = DomainMatrix indexDomain innerDomain
-            matrixConstant = ConstantMatrix indexDomain [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+            setDomain = DomainSet (DomainAttributes [sizeAttr1])
+                            (DomainSet (DomainAttributes [sizeAttr2]) innerDomain)
+            setConstant = ConstantSet
+                [ ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+                , ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 6]
+                , ConstantSet [ConstantInt 1, ConstantInt 4, ConstantInt 5]
+                , ConstantSet [ConstantInt 1, ConstantInt 4, ConstantInt 6]
+                ]
+            matrixDomain = DomainMatrix indexDomain1 (DomainMatrix indexDomain2 innerDomain)
+            matrixConstant = ConstantMatrix indexDomain1
+                [ ConstantMatrix indexDomain2 [ConstantInt 1, ConstantInt 3, ConstantInt 5]
+                , ConstantMatrix indexDomain2 [ConstantInt 1, ConstantInt 3, ConstantInt 6]
+                , ConstantMatrix indexDomain2 [ConstantInt 1, ConstantInt 4, ConstantInt 5]
+                , ConstantMatrix indexDomain2 [ConstantInt 1, ConstantInt 4, ConstantInt 6]
+                ]
         in
-            refineSingleParam (Node (Representation "Explicit") [])
+            refineSingleParam (Node (Representation "Explicit") [Node (Representation "Explicit") []])
                 ("x", setDomain, setConstant) `shouldBe`
-                Right [ ("x_Explicit", matrixDomain, matrixConstant) ]
+                Right [ ("x_Explicit_Explicit", matrixDomain, matrixConstant) ]
 
