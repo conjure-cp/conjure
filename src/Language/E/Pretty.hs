@@ -18,7 +18,7 @@ import Control.Arrow ( first, second )
 import Data.List ( intersperse )
 
 -- containers
-import Data.Tree ( Tree(..), drawTree )
+import Data.Tree ( Tree(..) )
 
 -- pretty
 import Text.PrettyPrint as Pr
@@ -386,7 +386,7 @@ instance Pretty a => Pretty (Range a) where
     pretty (RangeBounded x y) = pretty x <> ".." <> pretty y
 
 instance Pretty Representation where
-    pretty NoRepresentation = "no representation"
+    pretty NoRepresentation = "∅"
     pretty (Representation r) = pretty r
 
 instance Pretty Constant where
@@ -402,8 +402,9 @@ instance Pretty Constant where
     pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
 
-instance Pretty a => Pretty (Tree a) where
-    pretty = pretty . drawTree . fmap (show . pretty)
+instance Pretty (Tree Representation) where
+    pretty (Node r []) = pretty r
+    pretty (Node r rs) = pretty r <+> prettyList Pr.brackets "," rs
 
 
 prettyPrec :: Int -> E -> Doc

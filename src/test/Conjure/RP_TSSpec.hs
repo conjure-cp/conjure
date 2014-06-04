@@ -28,7 +28,12 @@ allTheWay
     -> Tree Representation
     -> Spec
 allTheWay name domain constant representation =
-    it (show $ "allTheWay" <+> pretty domain <+> pretty constant <+> pretty representation) $
+    it (show $ sep [ "allTheWay"
+                   , "        name           :" <+> pretty name
+                   , "        domain         :" <+> pretty domain
+                   , "        constant       :" <+> pretty constant
+                   , "        representation :" <+> pretty representation
+                   ]) $
         let
             result = do
                 low <- refineSingleParam representation (name, domain, constant)
@@ -40,10 +45,30 @@ allTheWay name domain constant representation =
 spec :: Spec
 spec = describe "RefineParam & TranslateSolution" $ do
 
-    allTheWay
-        "x"
-        (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)])
-        (ConstantInt 3)
-        (Node NoRepresentation [])
+    let names = ["x", "x_y", "x_y_z"]
 
+    forM_ names $ \ name ->
+        allTheWay
+            name
+            (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)])
+            (ConstantInt 3)
+            (Node NoRepresentation [])
 
+    forM_ names $ \ name ->
+        allTheWay
+            name
+            (DomainTuple
+                [ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)]
+                , DomainBool
+                , DomainInt [RangeSingle (ConstantInt i) | i <- [1..9], odd i]
+                ])
+            (ConstantTuple
+                [ ConstantInt 3
+                , ConstantBool False
+                , ConstantInt 7
+                ])
+            (Node NoRepresentation
+                [ Node NoRepresentation []
+                , Node NoRepresentation []
+                , Node NoRepresentation []
+                ])
