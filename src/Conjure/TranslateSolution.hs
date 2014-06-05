@@ -8,9 +8,13 @@ module Conjure.TranslateSolution ( translateSingleSolution, translateSolution ) 
 import Conjure.UpDown
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Pretty
 
 -- containers
-import Data.Tree ( Tree(..), drawTree )
+import Data.Tree ( Tree(..) )
+
+-- safe
+-- import Safe ( headNote )
 
 
 -- | Translating a collection of low level values together with their low level domains to high level domains and values.
@@ -84,6 +88,7 @@ translateSingleSolution
     -> Tree Representation
     ->  [(Text, Constant)]
     -> m (Text, Constant)
+
 translateSingleSolution highName highDomain representations lows = do
     structuredNames <- structureLows highName highDomain representations
     let structuredLows = fmap (\ name -> (name, lookup name lows) ) structuredNames
@@ -96,11 +101,51 @@ singleHelper
     -> Tree Representation
     -> T (Text, Maybe Constant)
     -> m (Text, Constant)
+
 singleHelper highDomain (Node representation []) (Group [Single (lowName, Just lowConstant)]) = do
     (_, _, highNamesGen, _, highConstantGen) <- upDown representation highDomain
     highName <- highNamesGen [lowName]
     highConstant <- highConstantGen [lowConstant]
     return (highName, highConstant)
+
+
+-- temp
+
+singleHelper highDomain@(DomainMatrix index inner) representation@(Node r _) (Group [Group [Single (name, Just (ConstantMatrix _ lows))]]) = do
+    (midNames, constants) <- liftM unzip $ sequence
+        [ singleHelper inner representation (Group [Single (name, Just l)])
+        | l <- lows
+        ]
+    (_, _, highNamesGen, _, _) <- upDown r highDomain
+    highName <- highNamesGen midNames
+    return ( highName
+           , ConstantMatrix index constants
+           )
+
+singleHelper highDomain@(DomainMatrix index inner) representation@(Node r _) (Group [Single (name, Just (ConstantMatrix _ lows))]) = do
+    (midNames, constants) <- liftM unzip $ sequence
+        [ singleHelper inner representation (Group [Single (name, Just l)])
+        | l <- lows
+        ]
+    (_, _, highNamesGen, _, _) <- upDown r highDomain
+    highName <- highNamesGen midNames
+    return ( highName
+           , ConstantMatrix index constants
+           )
+
+singleHelper highDomain@(DomainMatrix index inner) representation@(Node r _) (Single (name, Just (ConstantMatrix _ lows))) = do
+    (midNames, constants) <- liftM unzip $ sequence
+        [ singleHelper inner representation (Group [Single (name, Just l)])
+        | l <- lows
+        ]
+    (_, _, highNamesGen, _, _) <- upDown r highDomain
+    highName <- highNamesGen midNames
+    return ( highName
+           , ConstantMatrix index constants
+           )
+
+
+
 singleHelper highDomain (Node representation rs) (Group lows) = do
     (lowDomainsGen, _, highNamesGen, _, highConstantGen) <- upDown representation highDomain
     lowDomains <- lowDomainsGen
@@ -113,12 +158,14 @@ singleHelper highDomain (Node representation rs) (Group lows) = do
     highName <- highNamesGen midNames
     highConstant <- highConstantGen midConstants
     return (highName, highConstant)
+
 singleHelper highDomain representations structuredLows =
-    error $ unlines [ "singleHelper"
-                    , show highDomain
-                    , drawTree $ fmap show representations
-                    , show structuredLows
-                    ]
+    error $ show $ vcat [ pretty "singleHelper"
+                        , pretty highDomain
+                        -- , pretty $ drawTree $ fmap show representations
+                        , pretty representations
+                        , pretty $ show structuredLows
+                        ]
 
 -- | A tree data type for a collection of constants.
 --   Matches the same structure with the tree of representations these constants collectively represent.
@@ -136,10 +183,14 @@ structureLows
     -> Domain Constant
     -> Tree Representation
     -> m (T Text)
+
 structureLows highName highDomain (Node representation []) = do
     (_, lowNamesGen, _, _, _) <- upDown representation highDomain
     let lowNames = [ Single (gen highName) | gen <- lowNamesGen ]
     return (Group lowNames)
+structureLows highName (DomainMatrix _ inner) representation = do
+    t <- structureLows highName inner representation
+    return (Group [t])
 structureLows highName highDomain (Node representation rs) = do
     (lowDomainsGen, lowNamesGen, _, _, _) <- upDown representation highDomain
     lowDomains <- lowDomainsGen

@@ -96,18 +96,18 @@ upDownNoOp :: MonadError UpDownError m => UpDownType m
 upDownNoOp d =
     return ( return [d]
            , singletonList id
-           , return . headNote "Conjure.UpDown.upDownNoOp"
+           , return . headNote "[Conjure.UpDown.upDownNoOp] nameUp"
            , return . singletonList
-           , return . headNote "Conjure.UpDown.upDownNoOp"
+           , return . headNote "[Conjure.UpDown.upDownNoOp] constantUp"
            )
 
 upDownEnum :: MonadError UpDownError m => UpDownType m
 upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
     return ( liftM singletonList domainOut
            , singletonList nameDown
-           , nameUp . headNote "Conjure.UpDown.upDownEnum"
+           , nameUp . headNote "[Conjure.UpDown.upDownEnum] nameUp"
            , (liftM . liftM) singletonList constantDown
-           , constantUp . headNote "Conjure.UpDown.upDownEnum"
+           , constantUp . headNote "[Conjure.UpDown.upDownEnum] constantUp"
            )
 
     where
@@ -116,7 +116,7 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
 
         nameUp n =
             case stripSuffix "_enum" n of
-                Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownEnum]" <+> pretty n
+                Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownEnum] nameUp:" <+> pretty n
                 Just n' -> return n'
 
         nbConstants = genericLength enums
@@ -131,7 +131,7 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
                     case findIndex (x==) enums of
                         Nothing -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownEnum] This identifier isn't a member of the enum:" <+> pretty v
                         Just y  -> return $ ConstantInt (y + 1)
-                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownEnum]" <+> pretty v
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownEnum] constantDown:" <+> pretty v
 
         constantUp v =
             case v of
@@ -139,7 +139,7 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
                     case atMay enums (x - 1) of
                         Nothing -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum] Integer constant out of range for enum:" <+> pretty x
                         Just y  -> return (ConstantEnum defn y)
-                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum]" <+> pretty v
+                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum] constantUp:" <+> pretty v
 
 upDownEnum d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownEnum] Only works on enum domains. this is not one:" <+> pretty d
 
@@ -157,19 +157,19 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
         namesUp names = do
             allStripped <- sequence
                 [ case stripSuffix suffix n of
-                    Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownTuple]" <+> pretty n
+                    Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownTuple] namesUp:" <+> pretty n
                     Just n' -> return n'
                 | (n,i) <- zip names [1 .. length names]
                 , let suffix = "_" `mappend` pack (show i)
                 ]
             if length (nub allStripped) == 1
                 then return (head allStripped)
-                else throwError $ NameUpError $ "[Conjure.UpDown.upDownTuple]" <+> pretty (show names)
+                else throwError $ NameUpError $ "[Conjure.UpDown.upDownTuple] namesUp:" <+> pretty (show names)
 
         constantsDown v =
             case v of
                 ConstantTuple xs -> return xs
-                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownTuple]" <+> pretty v
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownTuple] constantsDown:" <+> pretty v
 
         constantsUp vs = return (ConstantTuple vs)
 
@@ -180,9 +180,9 @@ upDownSetExplicit (DomainSet attrs innerDomain)
     | Just _ <- lookupDomainAttribute "size" attrs
     = return ( return [domain]
              , singletonList nameDown
-             , nameUp . headNote "Conjure.UpDown.upDownSetExplicit"
+             , nameUp . headNote "[Conjure.UpDown.upDownSetExplicit] nameUp:"
              , (liftM . liftM) singletonList constantDown
-             , constantUp . headNote "Conjure.UpDown.upDownSetExplicit"
+             , constantUp . headNote "[Conjure.UpDown.upDownSetExplicit] constantUp:"
              )
 
     where
@@ -196,18 +196,18 @@ upDownSetExplicit (DomainSet attrs innerDomain)
 
         nameUp n =
             case stripSuffix "_Explicit" n of
-                Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownSetExplicit]" <+> pretty n
+                Nothing -> throwError $ NameUpError $ "[Conjure.UpDown.upDownSetExplicit] nameUp:" <+> pretty n
                 Just n' -> return n'
 
         constantDown v =
             case v of
                 ConstantSet xs -> return $ ConstantMatrix indexDomain xs
-                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownSetExplicit]" <+> pretty v
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownSetExplicit] constantDown:" <+> pretty v
 
         constantUp v =
             case v of
                 ConstantMatrix _ xs -> return $ ConstantSet $ sort $ nub xs
-                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownSetExplicit]" <+> pretty v
+                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownSetExplicit] constantUp:" <+> pretty v
 
 upDownSetExplicit d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownSetExplicit] Only works on set domains. this is not one:" <+> pretty d
 

@@ -90,3 +90,47 @@ spec = describe "enum up-down" $ do
         in
             downAndUp setConstant `shouldBe` Right setConstant
 
+    it "regression 1 (downDomain)" $ do
+        downDomain
+            (Representation "Explicit")
+            (DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
+                (DomainTuple
+                    [ DomainBool
+                    , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+                    , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
+            )
+            `shouldBe` Right [ DomainMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) 
+                                (DomainTuple
+                                    [ DomainBool
+                                    , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+                                    , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
+                             ]
+
+    it "regression 1 (downConstant)" $ do
+        downConstant
+            (Representation "Explicit")
+            (DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
+                (DomainTuple
+                    [ DomainBool
+                    , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+                    , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
+            )
+            (ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]])
+            `shouldBe` Right [ ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)])
+                                [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
+                             ]
+
+    it "regression 1 (upConstant)" $ do
+        upConstant
+            (Representation "Explicit")
+            (DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
+                (DomainTuple
+                    [ DomainBool
+                    , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+                    , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
+            )
+            [ ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)])
+                [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
+            ]
+            `shouldBe` Right (ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]])
+

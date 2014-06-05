@@ -95,7 +95,7 @@ spec = describe "refining parameters" $ do
                 ("x", setDomain, setConstant) `shouldBe`
                 Right [ ("x_Explicit", matrixDomain, matrixConstant) ]
 
-    it "Set Explicit (nested)" $
+    it "Set Explicit (nested) #1" $
         let
             sizeAttr1 = DANameValue "size" (ConstantInt 4)
             sizeAttr2 = DANameValue "size" (ConstantInt 3)
@@ -121,4 +121,56 @@ spec = describe "refining parameters" $ do
             refineSingleParam (Node (Representation "Explicit") [Node (Representation "Explicit") []])
                 ("x", setDomain, setConstant) `shouldBe`
                 Right [ ("x_Explicit_Explicit", matrixDomain, matrixConstant) ]
+
+    it "Set Explicit (nested) #2" $
+        let
+            sizeAttr1 = DANameValue "size" (ConstantInt 2)
+            sizeAttr2 = DANameValue "size" (ConstantInt 1)
+            indexDomain1 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 2)]
+            indexDomain2 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]
+            innerDomain = DomainBool
+            setDomain = DomainSet (DomainAttributes [sizeAttr1])
+                            (DomainSet (DomainAttributes [sizeAttr2]) innerDomain)
+            setConstant = ConstantSet
+                [ ConstantSet [ConstantBool False]
+                , ConstantSet [ConstantBool True]
+                ]
+            matrixDomain = DomainMatrix indexDomain1 (DomainMatrix indexDomain2 innerDomain)
+            matrixConstant = ConstantMatrix indexDomain1
+                [ ConstantMatrix indexDomain2 [ConstantBool False]
+                , ConstantMatrix indexDomain2 [ConstantBool True]
+                ]
+        in
+            refineSingleParam (Node (Representation "Explicit") [Node (Representation "Explicit") []])
+                ("x", setDomain, setConstant) `shouldBe`
+                Right [ ("x_Explicit_Explicit", matrixDomain, matrixConstant) ]
+
+    it "regression 1" $ do
+        refineSingleParam
+            (Node (Representation "Explicit")
+                [ Node NoRepresentation
+                    [ Node NoRepresentation []
+                    , Node NoRepresentation []
+                    , Node NoRepresentation []
+                    ]])
+            ( "x", DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
+                    (DomainTuple
+                        [ DomainBool
+                        , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+                        , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
+                 , ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
+            )
+            `shouldBe` Right [ ( "x_Explicit_1"
+                               , DomainMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) DomainBool
+                               , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantBool False]
+                               )
+                             , ( "x_Explicit_2"
+                               , DomainMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) (DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)])
+                               , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 118]
+                               )
+                             , ( "x_Explicit_3"
+                               , DomainMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) (DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)])
+                               , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 79]
+                               )
+                             ]
 

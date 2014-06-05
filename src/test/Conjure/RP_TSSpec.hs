@@ -82,6 +82,30 @@ spec = describe "RefineParam & TranslateSolution" $ do
         (Node (Representation "Explicit")
             [ Node NoRepresentation [] ])
 
+    allTheWay "x"
+        (DomainSet
+            (DomainAttributes [DANameValue "size" (ConstantInt 2)])
+            (DomainSet
+                (DomainAttributes [DANameValue "size" (ConstantInt 1)])
+                DomainBool))
+        (ConstantSet
+            [ ConstantSet [ConstantBool False]
+            , ConstantSet [ConstantBool True]
+            ])
+        (Node (Representation "Explicit")
+            [ Node (Representation "Explicit") [
+                Node NoRepresentation [] ] ])
+
+    allTheWay "x"
+        (DomainMatrix
+            (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
+            DomainBool)
+        (ConstantMatrix
+            (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
+            [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ])
+        (Node NoRepresentation
+            [ Node NoRepresentation [] ])
+
     it "allTheWay (QuickCheck)" $ property $ \ (Name name) (AnyDomainAndConstant domain representation constant) ->
         let
             result = do
