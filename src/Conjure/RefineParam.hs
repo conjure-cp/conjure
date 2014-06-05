@@ -23,6 +23,10 @@ refineSingleParam
     ->    (Text, Domain Constant, Constant)
     -> m [(Text, Domain Constant, Constant)]
 
+-- if the domain is a matrix, we treat it as a container.
+-- - the matrix domain itself must have `NoRepresentation`. the tree doesn't even contain an entry for it.
+-- - the index domain will stay unchanged.
+-- - the inner domain will be handled with a call to `refineSingleParam`, and its results will be "lifted".
 refineSingleParam representation (name, DomainMatrix index highDomain, ConstantMatrix _ highConstants@(_:_)) = do
     mids <- sequence [ refineSingleParam representation (name, highDomain, c)
                      | c <- highConstants
@@ -36,6 +40,10 @@ refineSingleParam representation (name, DomainMatrix index highDomain, ConstantM
                        , ConstantMatrix index midConstants
                        )
             [] -> error "refineSingleParam []"
+
+-- the generic case.
+-- - use `upDown` to refine the domain down one level.
+-- - use a recursive call to `refineSingleParam` to handle the outputs.
 refineSingleParam (Node representation representations) (name, highDomain, highConstant) = do
     (lowDomainsGen, lowNamesGen, _, lowConstantsGen, _) <- upDown representation highDomain
     let lowNames = map ($ name) lowNamesGen
