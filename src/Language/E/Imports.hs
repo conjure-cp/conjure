@@ -33,7 +33,7 @@ import Control.Category          as X ( (<<<), (>>>) )
 import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM, liftM )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
-import Control.Monad.Error          as X ( MonadError(throwError, catchError) )
+import Control.Monad.Except         as X ( MonadError(throwError, catchError) )
 import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
