@@ -109,3 +109,47 @@ eMake = qq {
             Right x -> build x
     }
 
+
+dMake :: QuasiQuoter
+dMake = qq {
+    quoteExp = \ inp -> do
+        let
+            build' :: BuiltIn -> Exp
+            build' (B False)
+                = ConE (mkName "B")
+                    `AppE`
+                  ConE (mkName "False")
+            build' (B True)
+                = ConE (mkName "B")
+                    `AppE`
+                  ConE (mkName "True")
+            build' (I i)
+                = ConE (mkName "I")
+                    `AppE`
+                  LitE (IntegerL i)
+            build' (S s)
+                = ConE (mkName "S")
+                    `AppE`
+                  ( VarE (mkName "stringToText")
+                    `AppE`
+                    LitE (StringL $ T.unpack s)
+                  )
+
+            build :: E -> Q Exp
+            build (Prim p) =
+                return $ ConE (mkName "Prim") `AppE` build' p
+            build (Tagged (Tag "metavar") [Prim (S s)]) =
+                return $ VarE (mkName $ T.unpack s)
+            build (Tagged (Tag t) xs) = do
+                ys <- mapM build xs
+                return $ (ConE $ mkName "Tagged")
+                            `AppE`
+                         (ConE (mkName "Tag") `AppE` LitE (StringL $ T.unpack t))
+                            `AppE`
+                         ListE ys
+            build p = error ("eMake.build: " ++ show p)
+
+        case runLexerAndParser (inCompleteFile parseDomain) "" (T.pack inp) of
+            Left  e -> error $ show e
+            Right x -> build x
+    }
