@@ -10,19 +10,12 @@ import Conjure.RefineParam
 
 -- base
 import Control.Monad ( forM_ )
-import Data.Monoid ( mappend )
-
--- containers
-import Data.Tree ( Tree(..) )
 
 -- hspec
 import Test.Hspec ( Spec, describe, it, shouldBe )
 
 -- QuickCheck
 import Test.QuickCheck ( property )
-
--- text
-import Data.Text ( pack )
 
 
 spec :: Spec
@@ -40,7 +33,6 @@ spec = describe "refining parameters" $ do
         forM_ intDomains $ \ intDomain ->
             forM_ intValues $ \ intValue ->
                 refineSingleParam
-                    (Node NoRepresentation [])
                     ("x", intDomain, intValue) `shouldBe`
                     Right [ ("x", intDomain, intValue) ]
 
@@ -49,61 +41,52 @@ spec = describe "refining parameters" $ do
             domain = DomainInt ranges
             constant = ConstantInt int
         in
-            refineSingleParam (Node NoRepresentation [])
+            refineSingleParam
                 ("x", domain, constant) `shouldBe`
                 Right [ ("x", domain, constant) ]
 
     it "arbitrary tuples 0" $ do
-        refineSingleParam (Node NoRepresentation [])
+        refineSingleParam
             ("x", DomainTuple [], ConstantTuple []) `shouldBe`
             Right []
 
     it "arbitrary tuples 1" $ do
-        refineSingleParam (Node NoRepresentation [])
+        refineSingleParam
             ("x", DomainTuple [DomainBool], ConstantTuple [ConstantBool False]) `shouldBe`
             Right [ ("x_1", DomainBool, ConstantBool False) ]
 
     it "arbitrary tuples 2" $ do
-        refineSingleParam (Node NoRepresentation [])
+        refineSingleParam
             ("x", DomainTuple [DomainBool,DomainBool], ConstantTuple [ConstantBool False,ConstantBool True]) `shouldBe`
             Right [ ("x_1", DomainBool, ConstantBool False)
                   , ("x_2", DomainBool, ConstantBool True)
                   ]
 
-    it "arbitrary tuples (quickcheck)" $ property $ \ p -> do
-        -- p is a list of pairs here. first component is the domain, second component is the constant.
-        let (domains, constants) = unzip p        
-        refineSingleParam (Node NoRepresentation [])
-            ("x", DomainTuple domains, ConstantTuple constants) `shouldBe`
-            Right [ ("x_" `mappend` pack (show i), d, c)
-                  | i <- [1::Int ..]
-                  | d <- domains
-                  | c <- constants 
-                  ]
-
     it "Set Explicit" $
         let
-            sizeAttr = DANameValue "size" (ConstantInt 4)
             indexDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
             innerDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)]
-            setDomain = DomainSet (DomainAttributes [sizeAttr]) innerDomain
+            setDomain = DomainSet (Representation "Explicit") (SetAttrSize (ConstantInt 4)) innerDomain
             setConstant = ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 5]
             matrixDomain = DomainMatrix indexDomain innerDomain
             matrixConstant = ConstantMatrix indexDomain [ConstantInt 1, ConstantInt 3, ConstantInt 5]
         in
-            refineSingleParam (Node (Representation "Explicit") [])
+            refineSingleParam
                 ("x", setDomain, setConstant) `shouldBe`
                 Right [ ("x_Explicit", matrixDomain, matrixConstant) ]
 
     it "Set Explicit (nested) #1" $
         let
-            sizeAttr1 = DANameValue "size" (ConstantInt 4)
-            sizeAttr2 = DANameValue "size" (ConstantInt 3)
             indexDomain1 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
             indexDomain2 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 3)]
             innerDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)]
-            setDomain = DomainSet (DomainAttributes [sizeAttr1])
-                            (DomainSet (DomainAttributes [sizeAttr2]) innerDomain)
+            setDomain = DomainSet
+                            (Representation "Explicit")
+                            (SetAttrSize (ConstantInt 4))
+                            (DomainSet
+                                (Representation "Explicit")
+                                (SetAttrSize (ConstantInt 3))
+                                innerDomain)
             setConstant = ConstantSet
                 [ ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 5]
                 , ConstantSet [ConstantInt 1, ConstantInt 3, ConstantInt 6]
@@ -118,19 +101,22 @@ spec = describe "refining parameters" $ do
                 , ConstantMatrix indexDomain2 [ConstantInt 1, ConstantInt 4, ConstantInt 6]
                 ]
         in
-            refineSingleParam (Node (Representation "Explicit") [Node (Representation "Explicit") []])
+            refineSingleParam
                 ("x", setDomain, setConstant) `shouldBe`
                 Right [ ("x_Explicit_Explicit", matrixDomain, matrixConstant) ]
 
     it "Set Explicit (nested) #2" $
         let
-            sizeAttr1 = DANameValue "size" (ConstantInt 2)
-            sizeAttr2 = DANameValue "size" (ConstantInt 1)
             indexDomain1 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 2)]
             indexDomain2 = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]
             innerDomain = DomainBool
-            setDomain = DomainSet (DomainAttributes [sizeAttr1])
-                            (DomainSet (DomainAttributes [sizeAttr2]) innerDomain)
+            setDomain = DomainSet
+                            (Representation "Explicit")
+                            (SetAttrSize (ConstantInt 2))
+                            (DomainSet
+                                (Representation "Explicit")
+                                (SetAttrSize (ConstantInt 1))
+                                innerDomain)
             setConstant = ConstantSet
                 [ ConstantSet [ConstantBool False]
                 , ConstantSet [ConstantBool True]
@@ -141,23 +127,19 @@ spec = describe "refining parameters" $ do
                 , ConstantMatrix indexDomain2 [ConstantBool True]
                 ]
         in
-            refineSingleParam (Node (Representation "Explicit") [Node (Representation "Explicit") []])
+            refineSingleParam
                 ("x", setDomain, setConstant) `shouldBe`
                 Right [ ("x_Explicit_Explicit", matrixDomain, matrixConstant) ]
 
     it "regression 1" $ do
         refineSingleParam
-            (Node (Representation "Explicit")
-                [ Node NoRepresentation
-                    [ Node NoRepresentation []
-                    , Node NoRepresentation []
-                    , Node NoRepresentation []
-                    ]])
-            ( "x", DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
-                    (DomainTuple
-                        [ DomainBool
-                        , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
-                        , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
+            ( "x", DomainSet
+                        (Representation "Explicit")
+                        (SetAttrSize (ConstantInt 1))
+                        (DomainTuple
+                            [ DomainBool
+                            , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+                            , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]])
                  , ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
             )
             `shouldBe` Right [ ( "x_Explicit_1"

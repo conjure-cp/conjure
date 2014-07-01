@@ -28,9 +28,6 @@ import Safe ( at )
 -- pretty
 import Text.PrettyPrint ( vcat )
 
--- containers
-import Data.Tree ( Tree(..) )
-
 
 newtype AnyDomainTuple a = AnyDomainTuple (Domain () a)
     deriving (Show)
@@ -76,68 +73,60 @@ instance Arbitrary AnyConstantTuple where
 maxRetries :: Int
 maxRetries = 1000000
 
-data AnyDomainAndConstant = AnyDomainAndConstant (Domain () Constant) (Tree Representation) Constant
+data AnyDomainAndConstant = AnyDomainAndConstant (Domain Representation Constant) Constant
 
 instance Show AnyDomainAndConstant where
-    show (AnyDomainAndConstant domain representation constant) = show $ vcat
+    show (AnyDomainAndConstant domain constant) = show $ vcat
         [ "AnyDomainAndConstant"
-        , "        domain         :" <+> pretty domain
-        , "        representation :" <+> pretty representation
-        , "        constant       :" <+> pretty constant
-        -- , "        test-case      :" <+> pretty ("refineSingleParam (" ++ show representation ++ ") (\"x\", " ++ show domain ++ ", " ++ show constant ++ ")")
+        , "        domain   :" <+> pretty domain
+        , "        constant :" <+> pretty constant
         ]
 instance Arbitrary AnyDomainAndConstant where
     arbitrary = do
-        (domain, representationGen, constantGen) <- arbitraryDomainAndConstant
-        representation <- representationGen
+        (domain, constantGen) <- arbitraryDomainAndConstant
         constant <- constantGen
-        return (AnyDomainAndConstant domain representation constant)
+        return (AnyDomainAndConstant domain constant)
 
 -- | This is a great function!
 --   It generates a random domain, and a generator of random constants of that domain.
 --   Follow the function calls starting from dispatch to see how it's implemented. It is pretty straightforward really.
 --   Note: The nesting level is controlled via the `sized` combinator from QuickCheck.
-arbitraryDomainAndConstant :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+arbitraryDomainAndConstant :: Gen (Domain Representation Constant, Gen Constant)
 arbitraryDomainAndConstant = sized dispatch
 
     where
-
-        noRep :: Gen (Tree Representation)
-        noRep = return (Node NoRepresentation [])
 
         -- this is how size gets reduced in recursive calls
         smaller :: Int -> Int
         smaller depth = max 0 (div depth 10)
 
-        dispatch :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        dispatch :: Int -> Gen (Domain Representation Constant, Gen Constant)
         dispatch 0 = oneof [bool, int]
         dispatch d = oneof [bool, int, tuple d, matrix d, set d]
 
-        bool :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
-        bool = return (DomainBool, noRep, ConstantBool <$> arbitrary)
+        bool :: Gen (Domain Representation Constant, Gen Constant)
+        bool = return (DomainBool, ConstantBool <$> arbitrary)
 
-        int :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        int :: Gen (Domain r Constant, Gen Constant)
         int = oneof [intBounded, intSingles, intMixed]
 
-        intBounded :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        intBounded :: Gen (Domain r Constant, Gen Constant)
         intBounded = do
             l <- choose (0 :: Int, 100)
             u <- choose (l, 200)
             return ( DomainInt [RangeBounded (ConstantInt l) (ConstantInt u)]
-                   , noRep
                    , ConstantInt <$> choose (l,u)
                    )
 
-        intSingles :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        intSingles :: Gen (Domain r Constant, Gen Constant)
         intSingles = do
             count <- choose (1 :: Int, 20)
             vals  <- vectorOf count (choose (0 :: Int, 100))
             return ( DomainInt (map (RangeSingle . ConstantInt) vals)
-                   , noRep
                    , ConstantInt <$> pickFromList vals
                    )
 
-        intMixed :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        intMixed :: Gen (Domain r Constant, Gen Constant)
         intMixed = do
             let single = RangeSingle . ConstantInt <$> choose (0 :: Int, 100)
             let pair = do l <- choose (0 :: Int, 100)
@@ -173,51 +162,49 @@ arbitraryDomainAndConstant = sized dispatch
             if null allVals
                 then error "allVals null"
                 else return ( DomainInt rs
-                            , noRep
                             , ConstantInt <$> pickFromList allVals
                             )
 
-        -- enum :: Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        -- enum :: Gen (Domain Representation Constant, Gen Constant)
         -- enum = undefined
 
-        tuple :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        tuple :: Int -> Gen (Domain Representation Constant, Gen Constant)
         tuple depth = do
             arity <- choose (2 :: Int, 4)
-            (ds, rs, cs) <- unzip3 <$> vectorOf arity (dispatch (smaller depth))
+            (ds, cs) <- unzip <$> vectorOf arity (dispatch (smaller depth))
             return ( DomainTuple ds
-                   , Node NoRepresentation <$> sequence rs
                    , ConstantTuple <$> sequence cs
                    )
 
-        matrix :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        matrix :: Int -> Gen (Domain Representation Constant, Gen Constant)
         matrix depth = do
-            (indexDomain, _, _) <- int
+            (indexDomain, _) <- int
             case domainSizeConstant indexDomain of
                 Nothing -> fail $ show $ "Cannot calculate the domain size of:" <+> pretty indexDomain
                 Just indexSize -> do
-                    (innerDomain, innerReprGen, innerConstantGen) <- dispatch (smaller depth)
+                    (innerDomain, innerConstantGen) <- dispatch (smaller depth)
                     return ( DomainMatrix indexDomain innerDomain
-                           , innerReprGen
                            , do innerConstants <- vectorOf indexSize innerConstantGen
                                 return $ ConstantMatrix indexDomain innerConstants
                            )
 
-        set :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        set :: Int -> Gen (Domain Representation Constant, Gen Constant)
         set depth = oneof [setFixed depth, setBounded depth]
 
-        setFixed :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        setFixed :: Int -> Gen (Domain Representation Constant, Gen Constant)
         setFixed depth = do
-            (dom, reprGen, constantGen) <- dispatch (smaller depth)
+            (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
                                 Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
                                 Just s  -> min 10 s
             size <- choose (0 :: Int, sizeUpTo)
+            repr <- pickFromList ["Explicit"] -- no other representation yet!
             let domainOut =
-                    DomainSet () (SetAttrSize (ConstantInt size)) dom
+                    DomainSet
+                        (Representation repr)
+                        (SetAttrSize (ConstantInt size))
+                        dom
             return ( domainOut
-                   , do r <- pickFromList ["Explicit"] -- no other representation yet!
-                        repr <- reprGen
-                        return (Node (Representation r) [repr])
                    , let try n =
                             if n >= maxRetries
                                 then fail (show $ vcat [ "setFixed: maxRetries"
@@ -232,45 +219,43 @@ arbitraryDomainAndConstant = sized dispatch
                      in try (1 :: Int)
                    )
 
-        setBounded :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        setBounded :: Int -> Gen (Domain Representation Constant, Gen Constant)
         setBounded depth = oneof [setBoundedMax depth, setBoundedMinMax depth]
 
-        setBoundedMax :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        setBoundedMax :: Int -> Gen (Domain Representation Constant, Gen Constant)
         setBoundedMax depth = do
-            (dom, reprGen, constantGen) <- dispatch (smaller depth)
+            (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
                                 Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
                                 Just s  -> min 10 s
             maxSize <- choose (0 :: Int, sizeUpTo)
-            return ( DomainSet () (SetAttrMaxSize (ConstantInt maxSize)) dom
-                   , do r <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
-                        repr <- reprGen
-                        return (Node (Representation r) [repr])
+            repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
+            return ( DomainSet (Representation repr)
+                               (SetAttrMaxSize (ConstantInt maxSize))
+                               dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf numElems constantGen
                         let sorted = sort $ nub elems
                         return (ConstantSet sorted)
                    )
 
-        setBoundedMinMax :: Int -> Gen (Domain () Constant, Gen (Tree Representation), Gen Constant)
+        setBoundedMinMax :: Int -> Gen (Domain Representation Constant, Gen Constant)
         setBoundedMinMax depth = do
-            (dom, reprGen, constantGen) <- dispatch (smaller depth)
+            (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
                                 Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
                                 Just s  -> min 10 s
             minSize <- choose (0 :: Int, sizeUpTo)
             maxSize <- choose (minSize, sizeUpTo)
+            repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             let domainOut =
                     DomainSet
-                        ()
+                        (Representation repr)
                         (SetAttrMinMaxSize
                             (ConstantInt minSize)
                             (ConstantInt maxSize))
                         dom
             return ( domainOut
-                   , do r <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
-                        repr <- reprGen
-                        return (Node (Representation r) [repr])
                    , let try n =
                             if n >= maxRetries
                                 then fail (show $ vcat [ "setFixed: maxRetries"
@@ -295,10 +280,8 @@ pickFromList xs = do
 sampleArbitraryDomainAndConstant :: IO ()
 sampleArbitraryDomainAndConstant = do
     samples <- sample' arbitraryDomainAndConstant
-    forM_ samples $ \ (dom, reprGen, consGen) -> do
+    forM_ samples $ \ (dom, consGen) -> do
         print $ "domain          :" <+> pretty dom
-        reprs <- sample' reprGen
-        print $ "representations :" <+> vcat (map (("-" <+>) . pretty) reprs)
         constants <- sample' consGen
         print $ "constants       :" <+> vcat (map (("-" <+>) . pretty) constants)
 

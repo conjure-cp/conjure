@@ -9,17 +9,10 @@ import Conjure.Language.Definition hiding ( Spec )
 import Conjure.TranslateSolution
 
 -- base
--- import Control.Monad ( forM_ )
 import Data.Monoid ( mappend )
-
--- containers
-import Data.Tree ( Tree(..) )
 
 -- hspec
 import Test.Hspec ( Spec, describe, it, shouldBe )
-
--- QuickCheck
--- import Test.QuickCheck ( property )
 
 -- text
 import Data.Text ( Text )
@@ -32,7 +25,6 @@ spec = describe "translating solutions" $ do
         translateSingleSolution
             "x"
             (DomainInt [])
-            (Node NoRepresentation []) 
             [("x", ConstantInt 1)] `shouldBe`
             Right ("x", ConstantInt 1)
 
@@ -40,9 +32,6 @@ spec = describe "translating solutions" $ do
         translateSingleSolution
             "x"
             (DomainTuple [DomainInt [], DomainBool])
-            (Node NoRepresentation [ Node NoRepresentation []
-                                   , Node NoRepresentation []
-                                   ])
             [ ("x_1", ConstantInt 1)
             , ("x_2", ConstantBool False)
             ] `shouldBe`
@@ -55,35 +44,6 @@ spec = describe "translating solutions" $ do
     it "tuples nested 2 x"   $ nested2 "x"
     it "tuples nested 2 x_y" $ nested2 "x_y"
 
-    -- it "regression 1" $ do
-    --     translateSingleSolution
-    --         "x"
-    --         (DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
-    --             (DomainTuple
-    --                 [ DomainBool
-    --                 , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
-    --                 , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]
-    --                 ]))
-    --         (Node (Representation "Explicit")
-    --             [ Node NoRepresentation
-    --                 [ Node NoRepresentation []
-    --                 , Node NoRepresentation []
-    --                 , Node NoRepresentation []
-    --                 ]])
-    --         [ ( "x_Explicit_1"
-    --           , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantBool False]
-    --           )
-    --         , ( "x_Explicit_2"
-    --           , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 118]
-    --           )
-    --         , ( "x_Explicit_3"
-    --           , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 79]
-    --           )
-    --         ] `shouldBe`
-    --         Right ( "x"
-    --               , ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
-    --               )
-
 
 nested1 :: Text -> IO ()
 nested1 x =
@@ -94,13 +54,6 @@ nested1 x =
             , DomainTuple
                 [ DomainBool
                 , DomainBool
-                ]
-            ])
-        (Node NoRepresentation
-            [ Node NoRepresentation []
-            , Node NoRepresentation
-                [ Node NoRepresentation []
-                , Node NoRepresentation []
                 ]
             ])
         [ (x `mappend` "_1"  , ConstantInt 1)
@@ -127,13 +80,6 @@ nested2 x =
                 , DomainBool
                 ]
             , DomainInt []
-            ])
-        (Node NoRepresentation
-            [ Node NoRepresentation
-                [ Node NoRepresentation []
-                , Node NoRepresentation []
-                ]
-            , Node NoRepresentation []
             ])
         [ (x `mappend` "_1_1", ConstantBool False)
         , (x `mappend` "_1_2", ConstantBool True)

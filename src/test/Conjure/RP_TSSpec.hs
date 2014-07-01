@@ -12,9 +12,6 @@ import Conjure.TranslateSolution ( translateSingleSolution )
 import Language.E.Imports
 import Language.E.Pretty
 
--- containers
-import Data.Tree ( Tree(..) )
-
 -- hspec
 import Test.Hspec ( Spec, describe, it, shouldBe )
 
@@ -24,21 +21,19 @@ import Test.QuickCheck ( property )
 
 allTheWay
     :: Text
-    -> Domain Constant
+    -> Domain Representation Constant
     -> Constant
-    -> Tree Representation
     -> Spec
-allTheWay name domain constant representation =
+allTheWay name domain constant =
     it (show $ sep [ "allTheWay"
                    , "        name           :" <+> pretty name
                    , "        domain         :" <+> pretty domain
                    , "        constant       :" <+> pretty constant
-                   , "        representation :" <+> pretty representation
                    ]) $
         let
             result = do
-                low <- refineSingleParam representation (name, domain, constant)
-                translateSingleSolution name domain representation [ (n,c) | (n,_,c) <- low ]
+                low <- refineSingleParam (name, domain, constant)
+                translateSingleSolution name domain [ (n,c) | (n,_,c) <- low ]
         in
             result `shouldBe` Right (name, constant)
 
@@ -53,7 +48,6 @@ spec = describe "RefineParam & TranslateSolution" $ do
             name
             (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 9)])
             (ConstantInt 3)
-            (Node NoRepresentation [])
 
     forM_ names $ \ name ->
         allTheWay
@@ -68,33 +62,26 @@ spec = describe "RefineParam & TranslateSolution" $ do
                 , ConstantBool False
                 , ConstantInt 7
                 ])
-            (Node NoRepresentation
-                [ Node NoRepresentation []
-                , Node NoRepresentation []
-                , Node NoRepresentation []
-                ])
 
     allTheWay "x"
         (DomainSet
-            (DomainAttributes [DANameValue "size" (ConstantInt 3)])
+            (Representation "Explicit")
+            (SetAttrSize (ConstantInt 3))
             (DomainInt [RangeBounded (ConstantInt 3) (ConstantInt 7)]))
         (ConstantSet [ConstantInt 3, ConstantInt 5, ConstantInt 6])
-        (Node (Representation "Explicit")
-            [ Node NoRepresentation [] ])
 
     allTheWay "x"
         (DomainSet
-            (DomainAttributes [DANameValue "size" (ConstantInt 2)])
+            (Representation "Explicit")
+            (SetAttrSize (ConstantInt 2))
             (DomainSet
-                (DomainAttributes [DANameValue "size" (ConstantInt 1)])
+                (Representation "Explicit")
+                (SetAttrSize (ConstantInt 1))
                 DomainBool))
         (ConstantSet
             [ ConstantSet [ConstantBool False]
             , ConstantSet [ConstantBool True]
             ])
-        (Node (Representation "Explicit")
-            [ Node (Representation "Explicit") [
-                Node NoRepresentation [] ] ])
 
     allTheWay "x"
         (DomainMatrix
@@ -103,7 +90,6 @@ spec = describe "RefineParam & TranslateSolution" $ do
         (ConstantMatrix
             (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 0)])
             [])
-        (Node NoRepresentation [])
 
     allTheWay "x"
         (DomainMatrix
@@ -112,13 +98,12 @@ spec = describe "RefineParam & TranslateSolution" $ do
         (ConstantMatrix
             (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
             [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ])
-        (Node NoRepresentation [])
 
-    it "allTheWay (QuickCheck)" $ property $ \ (Name name) (AnyDomainAndConstant domain representation constant) ->
+    it "allTheWay (QuickCheck)" $ property $ \ (Name name) (AnyDomainAndConstant domain constant) ->
         let
             result = do
-                low <- refineSingleParam representation (name, domain, constant)
-                translateSingleSolution name domain representation [ (n,c) | (n,_,c) <- low ]
+                low <- refineSingleParam (name, domain, constant)
+                translateSingleSolution name domain [ (n,c) | (n,_,c) <- low ]
         in
             result `shouldBe` Right (name, constant)
 

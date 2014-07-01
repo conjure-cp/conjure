@@ -32,6 +32,8 @@ module Language.E.Definition
 
     , statementAsList, listAsStatement
 
+    , forgetRepr
+
     ) where
 
 import Bug
@@ -280,6 +282,19 @@ instance (Arbitrary r, Arbitrary a) => Arbitrary (Domain r a) where
     shrink (DomainInt rs) = [DomainInt (init rs)]
     shrink _ = []
 
+forgetRepr :: Domain r a -> Domain () a
+forgetRepr DomainBool = DomainBool
+forgetRepr (DomainInt rs) = DomainInt rs
+forgetRepr (DomainEnum defn rs) = DomainEnum defn rs
+forgetRepr (DomainTuple ds) = DomainTuple (map forgetRepr ds)
+forgetRepr (DomainMatrix index inner) = DomainMatrix index (forgetRepr inner)
+forgetRepr (DomainSet       _ attr d) = DomainSet () attr (forgetRepr d)
+forgetRepr (DomainMSet      _ attr d) = DomainMSet () attr (forgetRepr d)
+forgetRepr (DomainFunction  _ attr d1 d2) = DomainFunction () attr (forgetRepr d1) (forgetRepr d2)
+forgetRepr (DomainRelation  _ attr ds) = DomainRelation () attr (map forgetRepr ds)
+forgetRepr (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
+forgetRepr (DomainOp op ds) = DomainOp op (map forgetRepr ds)
+forgetRepr (DomainHack a) = DomainHack a
 
 data SetAttr a
     = SetAttrNone
