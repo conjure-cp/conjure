@@ -215,7 +215,7 @@ addChannellingFromLog (Spec v xs) = do
         insertNewDecls = foldr insertAfter
 
     let
-        mkWithNewDom :: (Name, Name, E, Domain E) -> (E, E)
+        mkWithNewDom :: (Name, Name, E, Domain () E) -> (E, E)
         mkWithNewDom (Name origName, Name reprName, oldDecl@[xMatch| _ := topLevel.declaration.find |], newDom ) =
             ( oldDecl
             , [xMake| topLevel.declaration.find.name.reference := [Prim (S $ mconcat [origName, "_", reprName])]

@@ -8,13 +8,13 @@ import Language.E.Definition
 
 
 -- Nothing means an infinite domain
-domainSizeConstant :: Domain Constant -> Maybe Int
+domainSizeConstant :: Domain r Constant -> Maybe Int
 domainSizeConstant DomainBool = Just 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainEnum _ rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
-domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant index <*> domainSizeConstant inner
-domainSizeConstant (DomainSet (DomainAttributes attrs) inner) =
+domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
+domainSizeConstant (DomainSet _ (DomainAttributes attrs) inner) =
     case attrs of
         [DANameValue "size" (ConstantInt size)] -> do
             innerSize <- domainSizeConstant inner

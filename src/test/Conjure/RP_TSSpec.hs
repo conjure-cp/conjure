@@ -98,13 +98,21 @@ spec = describe "RefineParam & TranslateSolution" $ do
 
     allTheWay "x"
         (DomainMatrix
+            (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 0)])
+            DomainBool)
+        (ConstantMatrix
+            (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 0)])
+            [])
+        (Node NoRepresentation [])
+
+    allTheWay "x"
+        (DomainMatrix
             (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
             DomainBool)
         (ConstantMatrix
             (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
             [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ])
-        (Node NoRepresentation
-            [ Node NoRepresentation [] ])
+        (Node NoRepresentation [])
 
     it "allTheWay (QuickCheck)" $ property $ \ (Name name) (AnyDomainAndConstant domain representation constant) ->
         let

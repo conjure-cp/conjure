@@ -31,7 +31,7 @@ parseRange = msum [try pRange, pSingle]
             x <- parseExpr
             return (RangeSingle x)
 
-parseDomain :: Parser (Domain E)
+parseDomain :: Parser (Domain () E)
 parseDomain
     = shuntingYardDomain
     $ some
@@ -90,18 +90,18 @@ parseDomain
             lexeme L_set
             x <- parseAttributes
             y <- lexeme L_of >> parseDomain
-            return $ DomainSet x y
+            return $ DomainSet () x y
 
         pMSet = do
             lexeme L_mset
             x <- parseAttributes
             y <- lexeme L_of >> parseDomain
-            return $ DomainMSet x y
+            return $ DomainMSet () x y
 
         pFunction = do
             lexeme L_function
             (y,z) <- arrowedPair parseDomain
-            return $ DomainFunction (DomainAttributes []) y z
+            return $ DomainFunction () (DomainAttributes []) y z
 
         pFunction' = do
             lexeme L_function
@@ -109,7 +109,7 @@ parseDomain
             y <- parseDomain
             lexeme L_LongArrow
             z <- parseDomain
-            return $ DomainFunction x y z
+            return $ DomainFunction () x y z
 
         pRelation' = do
             lexeme L_relation
@@ -120,14 +120,14 @@ parseDomain
             x  <- parseAttributes
             lexeme L_of
             ys <- parens (parseDomain `sepBy` lexeme L_Times)
-            return $ DomainRelation x ys
+            return $ DomainRelation () x ys
 
         pPartition = do
             lexeme L_partition
             x <- parseAttributes
             lexeme L_from
             y <- parseDomain
-            return $ DomainPartition x y
+            return $ DomainPartition () x y
 
 parseAttributes :: Parser (DomainAttributes E)
 parseAttributes = do

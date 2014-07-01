@@ -21,7 +21,7 @@ errDomainOf p = do
                         ]
 
 class DomainOf a where
-    domainOf :: MonadConjure m => a -> m (Domain E)
+    domainOf :: MonadConjure m => a -> m (Domain () E)
 
 instance DomainOf E where
 
@@ -85,8 +85,8 @@ instance DomainOf E where
     domainOf p@[xMatch| [f] := operator.range |] = do
         fDom <- domainOf f
         case fDom of
-            DomainFunction _ _ innerDom -> do
-                let out = DomainSet def innerDom
+            DomainFunction _ _ _ innerDom -> do
+                let out = DomainSet () def innerDom
                 mkLog "domainOf returning" $ pretty out
                 return out
             _ -> return (DomainHack p)
@@ -96,11 +96,11 @@ instance DomainOf E where
         return (DomainHack x)
 
 
-innerDomainOf :: Domain a -> Maybe (Domain a)
-innerDomainOf (DomainSet _ inner) = return inner
-innerDomainOf (DomainMSet _ inner) = return inner
-innerDomainOf (DomainFunction _ fr to) = return (DomainTuple [fr,to])
-innerDomainOf (DomainRelation _ inners) = return (DomainTuple inners)
+innerDomainOf :: Domain r a -> Maybe (Domain r a)
+innerDomainOf (DomainSet _ _ inner) = return inner
+innerDomainOf (DomainMSet _ _ inner) = return inner
+innerDomainOf (DomainFunction _ _ fr to) = return (DomainTuple [fr,to])
+innerDomainOf (DomainRelation _ _ inners) = return (DomainTuple inners)
 innerDomainOf _ = Nothing
 
 

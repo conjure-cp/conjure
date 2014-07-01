@@ -50,7 +50,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
 
     let
         -- Givens in the Essence file
-        essenceGivens :: [(Text, Domain E)]
+        essenceGivens :: [(Text, Domain () E)]
         essenceGivens
             = catMaybes
               [ case full of
@@ -153,7 +153,7 @@ redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) mode
     groomSpec False (Spec langEprime $ listAsStatement outLettings)
 
 
-workhorse :: MonadConjure m => [(Text, Text)] -> (Text, Domain E, E) -> m [(Text, E)]
+workhorse :: MonadConjure m => [(Text, Text)] -> (Text, Domain () E, E) -> m [(Text, E)]
 workhorse lookupReprs (nm, domBefore, valBefore) = do
     D dom <- instantiate [] (D domBefore)
     val   <- instantiate [] valBefore
@@ -179,7 +179,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
         callHelper
             :: MonadConjure m
             => Text
-            -> Domain E
+            -> Domain () E
             -> E
             -> Maybe Text
             -> m [(Text, E)]
@@ -199,7 +199,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
         helper
             :: MonadConjure m
             => Text
-            -> Domain E
+            -> Domain () E
             -> E
             -> Maybe Text
             -> m [(Text, E)]
@@ -275,7 +275,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainSet _ domInner@(DomainInt [RangeBounded fr to]))
+            (DomainSet () _ domInner@(DomainInt [RangeBounded fr to]))
             [xMatch| values := value.set.values |]
             (Just "Set~Occurrence") = do
             D domInner' <- fmap fst $ runWriterT $ fullySimplify (D domInner)
@@ -293,7 +293,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainSet attrs domInner)
+            (DomainSet () attrs domInner)
             [xMatch| valuesIn := value.set.values |]
             (Just "Set~Explicit")
             | Just size <- lookupDomainAttribute "size" attrs
@@ -308,7 +308,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 values = sort valuesIn
 
             let
-                valuesRec' :: [(Text, Domain E, E)]
+                valuesRec' :: [(Text, Domain () E, E)]
                 valuesRec' =
                         [ (nm', dom', val')
                         | let nm'  = name `T.append` "_Set~Explicit"
@@ -344,7 +344,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainSet attrs domInner)
+            (DomainSet () attrs domInner)
             [xMatch| values := value.set.values |]
             (Just "Set~ExplicitVarSize")
             = do
@@ -395,7 +395,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainSet attrs domInner)
+            (DomainSet () attrs domInner)
             [xMatch| values := value.set.values |]
             (Just "Set~ExplicitVarSizeWithMarker")
             = do
@@ -441,7 +441,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainSet attrs domInner@(DomainInt [RangeBounded _ to]))
+            (DomainSet () attrs domInner@(DomainInt [RangeBounded _ to]))
             [xMatch| values := value.set.values |]
             (Just "Set~ExplicitVarSizeWithDefault")
             = do
@@ -471,7 +471,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainMSet attrs domInner)
+            (DomainMSet () attrs domInner)
             [xMatch| values := value.mset.values |]
             (Just "MSet~ExplicitVarSize")
             = do
@@ -522,7 +522,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainFunction attrs domInnerFr domInnerTo)
+            (DomainFunction () attrs domInnerFr domInnerTo)
             [xMatch| values := value.function.values |]
             (Just "Function~AsReln")
             = do
@@ -536,13 +536,13 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                     Just repr ->
                         callHelper
                             nameOut
-                            (DomainRelation attrs [domInnerFr, domInnerTo])
+                            (DomainRelation () attrs [domInnerFr, domInnerTo])
                             [xMake| value.relation.values := valuesOut |]
                             (Just repr)
 
         helper
             name
-            (DomainFunction _ domInnerFr domInnerTo)
+            (DomainFunction () _ domInnerFr domInnerTo)
             [xMatch| values := value.function.values |]
             (Just "Function~1D")
             = do
@@ -556,7 +556,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                 actualValues' <- mapM (instantiateEnumDomains []) actualValues
 
                 let
-                    valuesRec' :: [(Text, Domain E, E)]
+                    valuesRec' :: [(Text, Domain () E, E)]
                     valuesRec' =
                             [ (nm', dom', val')
                             | let nm'  = name `T.append` "_Function~1D"
@@ -587,7 +587,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainFunction _ (DomainTuple [domInnerFr1,domInnerFr2]) _)
+            (DomainFunction () _ (DomainTuple [domInnerFr1,domInnerFr2]) _)
             [xMatch| values := value.function.values |]
             (Just "Function~IntPair2D")
             = do
@@ -619,7 +619,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainFunction _ (DomainTuple [domInnerFr1,domInnerFr2]) domInnerTo)
+            (DomainFunction () _ (DomainTuple [domInnerFr1,domInnerFr2]) domInnerTo)
             [xMatch| values := value.function.values |]
             (Just "Function~IntPair2DPartial")
             = do
@@ -687,7 +687,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainRelation attrs domInners)
+            (DomainRelation () attrs domInners)
             [xMatch| values := value.relation.values |]
             (Just "Relation~AsSet")
             = do
@@ -700,13 +700,13 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                         fmap concat $ forM reprs $ \ repr ->
                             callHelper
                                 nameOut
-                                (DomainSet attrs domInnerOut)
+                                (DomainSet () attrs domInnerOut)
                                 [xMake| value.set.values := values |]
                                 (Just repr)
 
         helper
             name
-            (DomainRelation _ [da,db])
+            (DomainRelation () _ [da,db])
             [xMatch| values  := value.relation.values |]
             (Just "Relation~IntMatrix2")
             = do
@@ -803,7 +803,7 @@ instance ZeroVal E where
     zeroVal (D d) = zeroVal d
     zeroVal x = bug ("RedArrow.zeroVal {E}" <+> pretty x)
 
-instance ZeroVal (Domain E) where
+instance (Pretty r) => ZeroVal (Domain r E) where
 
     zeroVal DomainBool = return [eMake| false |]
 
@@ -819,7 +819,7 @@ instance ZeroVal (Domain E) where
                      | value.matrix.indexrange := [D index]
                      |]
 
-    zeroVal (DomainSet attrs inner)
+    zeroVal (DomainSet _ attrs inner)
         | msize     <- lookupDomainAttribute "size" attrs
         , mminSize  <- lookupDomainAttribute "minSize" attrs
         , Just size <- msize <|> mminSize
@@ -829,7 +829,7 @@ instance ZeroVal (Domain E) where
         let vals =  replicate (fromInteger sizeInt) valInner
         return [xMake| value.set.values := vals
                      |]
-    zeroVal (DomainSet attrs _)
+    zeroVal (DomainSet _ attrs _)
         | Nothing <- lookupDomainAttribute "minSize" attrs
         = do
         return [xMake| value.set.values := [] |]

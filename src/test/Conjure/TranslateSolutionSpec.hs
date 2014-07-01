@@ -55,34 +55,34 @@ spec = describe "translating solutions" $ do
     it "tuples nested 2 x"   $ nested2 "x"
     it "tuples nested 2 x_y" $ nested2 "x_y"
 
-    it "regression 1" $ do
-        translateSingleSolution
-            "x"
-            (DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
-                (DomainTuple
-                    [ DomainBool
-                    , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
-                    , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]
-                    ]))
-            (Node (Representation "Explicit")
-                [ Node NoRepresentation
-                    [ Node NoRepresentation []
-                    , Node NoRepresentation []
-                    , Node NoRepresentation []
-                    ]])
-            [ ( "x_Explicit_1"
-              , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantBool False]
-              )
-            , ( "x_Explicit_2"
-              , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 118]
-              )
-            , ( "x_Explicit_3"
-              , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 79]
-              )
-            ] `shouldBe`
-            Right ( "x"
-                  , ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
-                  )
+    -- it "regression 1" $ do
+    --     translateSingleSolution
+    --         "x"
+    --         (DomainSet (DomainAttributes [DANameValue (Name "size") (ConstantInt 1)])
+    --             (DomainTuple
+    --                 [ DomainBool
+    --                 , DomainInt [RangeBounded (ConstantInt 95) (ConstantInt 171)]
+    --                 , DomainInt [RangeBounded (ConstantInt 33) (ConstantInt 85)]
+    --                 ]))
+    --         (Node (Representation "Explicit")
+    --             [ Node NoRepresentation
+    --                 [ Node NoRepresentation []
+    --                 , Node NoRepresentation []
+    --                 , Node NoRepresentation []
+    --                 ]])
+    --         [ ( "x_Explicit_1"
+    --           , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantBool False]
+    --           )
+    --         , ( "x_Explicit_2"
+    --           , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 118]
+    --           )
+    --         , ( "x_Explicit_3"
+    --           , ConstantMatrix (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 1)]) [ConstantInt 79]
+    --           )
+    --         ] `shouldBe`
+    --         Right ( "x"
+    --               , ConstantSet [ConstantTuple [ConstantBool False,ConstantInt 118,ConstantInt 79]]
+    --               )
 
 
 nested1 :: Text -> IO ()

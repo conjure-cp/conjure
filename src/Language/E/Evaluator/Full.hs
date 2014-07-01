@@ -1042,7 +1042,7 @@ instance DomSize E where
     domSize p =
         err ErrFatal $ "domSize:" <+> prettyAsPaths p
 
-instance DomSize (Domain E) where
+instance DomSize (Domain () E) where
 
     domSize DomainBool = return [eMake| 2 |]
     domSize (DomainInt rs) = sumE <$> mapM domSize rs
@@ -1054,11 +1054,11 @@ instance DomSize (Domain E) where
         innerSize <- domSize inner
         return [eMake| &indexSize ** &innerSize |]
 
-    domSize (DomainSet attrs inner)
+    domSize (DomainSet _ attrs inner)
         | Just size <- lookupDomainAttribute "size" attrs = do
             sInner <- domSize inner
             return $ sInner `choose` size
-    domSize (DomainSet attrs inner)
+    domSize (DomainSet _ attrs inner)
         | Just minSize <- lookupDomainAttribute "minSize" attrs
         , Just maxSize <- lookupDomainAttribute "maxSize" attrs = do
             sInner <- domSize inner
@@ -1068,46 +1068,46 @@ instance DomSize (Domain E) where
                 ( [xMake| emptyGuard := [] |]
                 , sInner `choose` q
                 )
-    domSize (DomainSet _ inner) = do
+    domSize (DomainSet _ _ inner) = do
         sInner <- domSize inner
         return [eMake| 2 ** &sInner |]
 
-    domSize (DomainMSet attrs inn)
+    domSize (DomainMSet _ attrs inn)
         | Just k <- lookupDomainAttribute "size" attrs = do
             n <- domSize inn
             return [eMake| (&n + &k - 1)! / (&k! * (&n-1)!) |]
 
-    domSize (DomainMSet _ inner) = do
+    domSize (DomainMSet _ _ inner) = do
         sInner <- domSize inner
         return [eMake| 2 ** &sInner |]
 
-    domSize (DomainFunction attrs a b)
+    domSize (DomainFunction _ attrs a b)
         | Just _ <- lookupDomainAttribute "total" attrs
         , Just _ <- lookupDomainAttribute "injective" attrs = do
             aSize <- domSize a
             bSize <- domSize b
             return [eMake| &bSize! / (&bSize - &aSize)! |]
-    domSize (DomainFunction attrs a b)
+    domSize (DomainFunction _ attrs a b)
         | Just _ <- lookupDomainAttribute "total" attrs
         , Just _ <- lookupDomainAttribute "bijective" attrs = do
             aSize <- domSize a
             bSize <- domSize b
             return [eMake| &bSize! / (&bSize - &aSize)! |]
-    domSize (DomainFunction attrs a b)
+    domSize (DomainFunction _ attrs a b)
         | Just _ <- lookupDomainAttribute "total" attrs = do
             aSize <- domSize a
             bSize <- domSize b
             return [eMake| &bSize ** &aSize |]
-    domSize (DomainFunction _ a b) = do
+    domSize (DomainFunction _ _ a b) = do
         aSize <- domSize a
         bSize <- domSize b
         return [eMake| (&bSize + 1) ** &aSize |]
 
-    domSize (DomainRelation attrs rs)
-        = domSize (DomainSet attrs (DomainTuple rs))
+    domSize (DomainRelation r attrs rs)
+        = domSize (DomainSet r attrs (DomainTuple rs))
 
-    domSize (DomainPartition attrs inner)
-        = domSize (DomainSet attrs (DomainSet def inner))
+    domSize (DomainPartition r attrs inner)
+        = domSize (DomainSet r attrs (DomainSet r def inner))
 
     domSize p@(DomainOp{}) = bug $ "not implemented domSize for DomainOp:" <+> pretty p
 

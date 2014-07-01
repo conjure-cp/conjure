@@ -178,7 +178,7 @@ data ConjureState = ConjureState
         , representationLog :: ![ ( Name        -- original name
                                   , Name        -- representation name
                                   , E           -- original full declaration
-                                  , Domain E    -- new domain
+                                  , Domain () E -- new domain
                                   ) ]
         , structuralConsLog :: ![ ( Name        -- representation name
                                   , [E]
@@ -350,7 +350,7 @@ eDepth (D d) = dDepth d
 eDepth EOF = 0
 eDepth (StatementAndNext this next) = max (eDepth this) (eDepth next)
 
-dDepth :: Data a => Domain a -> Int
+dDepth :: (Data r, Data a) => Domain r a -> Int
 dDepth = gdepth
 
 compareChain :: [Ordering] -> Ordering
@@ -358,7 +358,7 @@ compareChain (EQ:xs) = compareChain xs
 compareChain (x :_ ) = x
 compareChain []      = EQ
 
-domOrder :: Domain E -> Domain E -> Ordering
+domOrder :: Data r => Domain r E -> Domain r E -> Ordering
 domOrder
     DomainBool
     DomainBool = EQ
@@ -411,7 +411,7 @@ instance SelectByMode RuleReprResult where
 
 type ReprFunc m =
     ( Text                                  -- input: name of the variable
-    , Domain E                              -- input: domain
+    , Domain () E                           -- input: domain
     , E                                     -- input: decl
     )
     -> m [RuleReprResult]

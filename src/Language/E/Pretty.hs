@@ -325,7 +325,7 @@ instance Pretty DomainDefnEnum where
         hang ("letting" <+> pretty name <+> "be new type enum"   ) 8 (prettyList Pr.braces "," values)
 
 
-instance Pretty a => Pretty (Domain a) where
+instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     -- domain.*
 
     pretty DomainBool = "bool"
@@ -348,22 +348,22 @@ instance Pretty a => Pretty (Domain a) where
             collect (DomainMatrix i j) = first (i:) $ collect j
             collect x = ([],x)
 
-    pretty (DomainSet attrs inner) =
-        hang ("set" <+> pretty attrs <+> "of") 4 (pretty inner)
+    pretty (DomainSet r attrs inner) =
+        hang ("set" <+> pretty (r,attrs) <+> "of") 4 (pretty inner)
 
-    pretty (DomainMSet attrs inner) =
-        hang ("mset" <+> pretty attrs <+> "of") 4 (pretty inner)
+    pretty (DomainMSet r attrs inner) =
+        hang ("mset" <+> pretty (r,attrs) <+> "of") 4 (pretty inner)
 
-    pretty (DomainFunction attrs innerFrom innerTo) =
-        hang ("function" <+> pretty attrs) 4 $
+    pretty (DomainFunction r attrs innerFrom innerTo) =
+        hang ("function" <+> pretty (r,attrs)) 4 $
             hang (pretty innerFrom) 4 $
                 "-->" <+> pretty innerTo
 
-    pretty (DomainRelation attrs inners)
-        = hang ("relation" <+> pretty attrs <+> "of") 4 (prettyList Pr.parens " *" inners)
+    pretty (DomainRelation r attrs inners)
+        = hang ("relation" <+> pretty (r,attrs) <+> "of") 4 (prettyList Pr.parens " *" inners)
 
-    pretty (DomainPartition attrs inner)
-        = hang ("partition" <+> pretty attrs <+> "from") 4 (pretty inner)
+    pretty (DomainPartition r attrs inner)
+        = hang ("partition" <+> pretty (r,attrs) <+> "from") 4 (pretty inner)
 
     pretty (DomainOp op xs) = Pr.parens $ foldr (<+>) empty $ intersperse (pretty op) (map pretty xs)
 

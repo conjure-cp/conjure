@@ -752,7 +752,7 @@ instance TypeOf E where
 
     typeOf p = typeErrorIn' p "default case"
 
-instance TypeOf (Domain E) where
+instance Pretty r => TypeOf (Domain r E) where
     typeOf DomainBool = return tyBool
     typeOf DomainInt{} = return [xMake| type.int  := [] |]
 
@@ -769,26 +769,26 @@ instance TypeOf (Domain E) where
                      | type.matrix.inner := [tInner]
                      |]
 
-    typeOf (DomainSet _ i) = do
+    typeOf (DomainSet _ _ i) = do
         ti <- typeOf i
         return [xMake| type.set.inner := [ti] |]
 
-    typeOf (DomainMSet _ i) = do
+    typeOf (DomainMSet _ _ i) = do
         ti <- typeOf i
         return [xMake| type.mset.inner := [ti] |]
 
-    typeOf (DomainFunction _ fr to) = do
+    typeOf (DomainFunction _ _ fr to) = do
         frTy <- typeOf fr
         toTy <- typeOf to
         return [xMake| type.function.innerFrom := [frTy]
                      | type.function.innerTo   := [toTy]
                      |]
 
-    typeOf (DomainRelation _ xs) = do
+    typeOf (DomainRelation _ _ xs) = do
         txs <- mapM typeOf xs
         return [xMake| type.relation.inners := txs |]
 
-    typeOf (DomainPartition _ i) = do
+    typeOf (DomainPartition _ _ i) = do
         ti <- typeOf i
         return [xMake| type.partition.inner := [ti] |]
 

@@ -47,21 +47,21 @@ instance Eq UpDownError where
     _ == _ = False
 
 type UpDownType m =
-       Domain Constant
-    -> m ( m [Domain Constant]              -- the low level domain
+       Domain () Constant
+    -> m ( m [Domain () Constant]           -- the low level domain
          , [Text -> Text]                   -- names down
          , [Text] -> m Text                 -- names up
          , Constant -> m [Constant]         -- constant down
          , [Constant] -> m Constant         -- constant up
          )
     
-downDomain :: MonadError UpDownError m => Representation -> Domain Constant -> m [Domain Constant]
+downDomain :: MonadError UpDownError m => Representation -> Domain () Constant -> m [Domain () Constant]
 downDomain representation domain = do (gen,_,_,_,_) <- upDown representation domain ; gen
 
-downConstant :: MonadError UpDownError m => Representation -> Domain Constant -> Constant -> m [Constant]
+downConstant :: MonadError UpDownError m => Representation -> Domain () Constant -> Constant -> m [Constant]
 downConstant representation domain constant = do (_,_,_,gen,_) <- upDown representation domain ; gen constant
 
-upConstant :: MonadError UpDownError m => Representation -> Domain Constant -> [Constant] -> m Constant
+upConstant :: MonadError UpDownError m => Representation -> Domain () Constant -> [Constant] -> m Constant
 upConstant representation domain enums = do (_,_,_,_,gen) <- upDown representation domain ; gen enums
 
 -- | This is about one level.
@@ -176,7 +176,7 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
 upDownTuple d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownTuple] Only works on tuple domains. this is not one:" <+> pretty d
 
 upDownSetExplicit :: MonadError UpDownError m => UpDownType m
-upDownSetExplicit (DomainSet attrs innerDomain)
+upDownSetExplicit (DomainSet _ attrs innerDomain)
     | Just _ <- lookupDomainAttribute "size" attrs
     = return ( return [domain]
              , singletonList nameDown

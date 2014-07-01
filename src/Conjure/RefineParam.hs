@@ -20,8 +20,8 @@ import Data.Tree ( Tree(..) )
 refineSingleParam
     :: MonadError UpDownError m
     => Tree Representation
-    ->    (Text, Domain Constant, Constant)
-    -> m [(Text, Domain Constant, Constant)]
+    ->    (Text, Domain () Constant, Constant)
+    -> m [(Text, Domain () Constant, Constant)]
 
 -- if the domain is a matrix, we treat it as a container.
 -- - the matrix domain itself must have `NoRepresentation`. the tree doesn't even contain an entry for it.
@@ -51,13 +51,15 @@ refineSingleParam (Node representation representations) (name, highDomain, highC
     lowConstants <- lowConstantsGen highConstant
     if null representations
         then 
-            return [ (n,d,c)
+            return
+                [ (n,d,c)
                 | n <- lowNames
                 | d <- lowDomains
                 | c <- lowConstants
                 ]
         else
-            liftM concat $ sequence [ refineSingleParam r (n,d,c)
+            liftM concat $ sequence
+                [ refineSingleParam r (n,d,c)
                 | r <- representations
                 | n <- lowNames
                 | d <- lowDomains

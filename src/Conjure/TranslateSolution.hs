@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.TranslateSolution ( translateSingleSolution, translateSolution ) where
 
@@ -84,7 +85,7 @@ import Data.Tree ( Tree(..) )
 translateSingleSolution
     :: MonadError UpDownError m
     => Text
-    -> Domain Constant
+    -> Domain () Constant
     -> Tree Representation
     ->  [(Text, Constant)]
     -> m (Text, Constant)
@@ -97,53 +98,38 @@ translateSingleSolution highName highDomain representations lows = do
 
 singleHelper
     :: MonadError UpDownError m
-    => Domain Constant
+    => Domain () Constant
     -> Tree Representation
     -> T (Text, Maybe Constant)
     -> m (Text, Constant)
+
+-- empty matrices, I assume the following should be it. we'll see.
+singleHelper (DomainMatrix index _) _ (Group [Single (name, Just (ConstantMatrix _ []))]) = do
+    return (name, ConstantMatrix index [])
+
+singleHelper (DomainMatrix index inner) representation structuredLows = do
+    let
+        getFromGroups :: T (Text, Maybe Constant) -> (Text, [Constant])
+        getFromGroups (Single (name, Just (ConstantMatrix _ constants))) = (name, constants)
+        getFromGroups (Group [a]) = getFromGroups a
+        getFromGroups g = error $ unlines [ "BUG: getFromSingletonGroups"
+                                          , show g
+                                          ]
+
+    let (name, constants) = getFromGroups structuredLows
+
+    (highName, highConstants) <- liftM unzip $ sequence
+        [ singleHelper inner representation (Group [Single (name, Just c)])
+        | c <- constants
+        ]
+
+    return (head highName, ConstantMatrix index highConstants)
 
 singleHelper highDomain (Node representation []) (Group [Single (lowName, Just lowConstant)]) = do
     (_, _, highNamesGen, _, highConstantGen) <- upDown representation highDomain
     highName <- highNamesGen [lowName]
     highConstant <- highConstantGen [lowConstant]
     return (highName, highConstant)
-
-
--- temp
-
-singleHelper highDomain@(DomainMatrix index inner) representation@(Node r _) (Group [Group [Single (name, Just (ConstantMatrix _ lows))]]) = do
-    (midNames, constants) <- liftM unzip $ sequence
-        [ singleHelper inner representation (Group [Single (name, Just l)])
-        | l <- lows
-        ]
-    (_, _, highNamesGen, _, _) <- upDown r highDomain
-    highName <- highNamesGen midNames
-    return ( highName
-           , ConstantMatrix index constants
-           )
-
-singleHelper highDomain@(DomainMatrix index inner) representation@(Node r _) (Group [Single (name, Just (ConstantMatrix _ lows))]) = do
-    (midNames, constants) <- liftM unzip $ sequence
-        [ singleHelper inner representation (Group [Single (name, Just l)])
-        | l <- lows
-        ]
-    (_, _, highNamesGen, _, _) <- upDown r highDomain
-    highName <- highNamesGen midNames
-    return ( highName
-           , ConstantMatrix index constants
-           )
-
-singleHelper highDomain@(DomainMatrix index inner) representation@(Node r _) (Single (name, Just (ConstantMatrix _ lows))) = do
-    (midNames, constants) <- liftM unzip $ sequence
-        [ singleHelper inner representation (Group [Single (name, Just l)])
-        | l <- lows
-        ]
-    (_, _, highNamesGen, _, _) <- upDown r highDomain
-    highName <- highNamesGen midNames
-    return ( highName
-           , ConstantMatrix index constants
-           )
-
 
 
 singleHelper highDomain (Node representation rs) (Group lows) = do
@@ -174,33 +160,33 @@ data T a = Single a | Group [T a]
 
 instance Show a => Show (T a) where
     show (Single a) = "Single " ++ show a
-    show (Group xs) = unlines $ ("Group " ++ show l) : map (unlines . map ("---- " ++) . lines . show) xs
+    show (Group xs) = intercalate "\n" $ ("Group " ++ show l) : map (intercalate "\n" . map ("---- " ++) . lines . show) xs
         where l = length xs
 
 structureLows
     :: MonadError UpDownError m
     => Text
-    -> Domain Constant
+    -> Domain () Constant
     -> Tree Representation
     -> m (T Text)
 
-structureLows highName highDomain (Node representation []) = do
-    (_, lowNamesGen, _, _, _) <- upDown representation highDomain
-    let lowNames = [ Single (gen highName) | gen <- lowNamesGen ]
-    return (Group lowNames)
-structureLows highName (DomainMatrix _ inner) representation = do
-    t <- structureLows highName inner representation
-    return (Group [t])
+structureLows highName (DomainMatrix _ inner) representation =
+    structureLows highName inner representation
+
 structureLows highName highDomain (Node representation rs) = do
     (lowDomainsGen, lowNamesGen, _, _, _) <- upDown representation highDomain
-    lowDomains <- lowDomainsGen
     let lowNames = [ gen highName | gen <- lowNamesGen ]
-    expects <- sequence
-        [ structureLows n d r
-        | n <- lowNames
-        | d <- lowDomains
-        | r <- rs
-        ]
+    expects <-
+        if null rs
+            then return $ map Single lowNames
+            else do
+                lowDomains <- lowDomainsGen
+                sequence
+                    [ structureLows n d r
+                    | n <- lowNames
+                    | d <- lowDomains
+                    | r <- rs
+                    ]
     return (Group expects)
 
 translateSolution

@@ -123,7 +123,7 @@ instance Hashable RuleRefn
 data RuleRepr = RuleRepr
     { ruleReprName :: Name                  -- name of the rule
     , ruleReprReprName :: Name              -- name of the representation
-    , ruleReprDomainOut :: Domain E         -- domain out.
+    , ruleReprDomainOut :: Domain () E      -- domain out.
     , ruleReprStructural :: Maybe E         -- structural constraints
     , ruleReprLocals :: [E]                 -- locals
     , ruleReprCases :: [RuleReprCase]
@@ -136,7 +136,7 @@ instance Hashable RuleRepr
 
 
 data RuleReprCase = RuleReprCase
-    { ruleReprCaseDomainIn :: Domain E      -- domain in.
+    { ruleReprCaseDomainIn :: Domain () E   -- domain in.
     , ruleReprCaseStructural :: Maybe E     -- structural constraints
     , ruleReprCaseLocals :: [E]             -- locals
     }
@@ -148,11 +148,11 @@ instance Hashable RuleReprCase
 
 
 data RuleReprResult = RuleReprResult
-    { ruleReprResultOriginalDecl :: E           -- original declaration
-    , ruleReprResultRuleName :: Name            -- rule name
-    , ruleReprResultReprName :: Name            -- name of the representation
-    , ruleReprResultReplacementDom :: Domain E  -- replacement domain
-    , ruleReprResultStructurals :: [E]          -- structural constraints
+    { ruleReprResultOriginalDecl :: E               -- original declaration
+    , ruleReprResultRuleName :: Name                -- rule name
+    , ruleReprResultReprName :: Name                -- name of the representation
+    , ruleReprResultReplacementDom :: Domain () E   -- replacement domain
+    , ruleReprResultStructurals :: [E]              -- structural constraints
     }
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
@@ -165,7 +165,7 @@ data E
     = Prim BuiltIn
     | Tagged !Tag [E]
     | C Constant
-    | D (Domain E)
+    | D (Domain () E)
     | EOF
     | StatementAndNext E E
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
@@ -242,28 +242,28 @@ instance Hashable DomainDefnUnnamed
 instance ToJSON DomainDefnUnnamed
 
 
-data Domain a
+data Domain r a
     = DomainBool
     | DomainInt [Range a]
     | DomainEnum DomainDefnEnum [Range a]
-    | DomainTuple [Domain a]
-    | DomainMatrix (Domain a) (Domain a)
-    | DomainSet       (DomainAttributes a) (Domain a)
-    | DomainMSet      (DomainAttributes a) (Domain a)
-    | DomainFunction  (DomainAttributes a) (Domain a) (Domain a)
-    | DomainRelation  (DomainAttributes a) [Domain a]
-    | DomainPartition (DomainAttributes a) (Domain a)
-    | DomainOp Name [Domain a]
+    | DomainTuple [Domain r a]
+    | DomainMatrix (Domain () a) (Domain r a)
+    | DomainSet       r (DomainAttributes a) (Domain r a)
+    | DomainMSet      r (DomainAttributes a) (Domain r a)
+    | DomainFunction  r (DomainAttributes a) (Domain r a) (Domain r a)
+    | DomainRelation  r (DomainAttributes a) [Domain r a]
+    | DomainPartition r (DomainAttributes a) (Domain r a)
+    | DomainOp Name [Domain r a]
     | DomainHack a          -- this is an ugly hack to be able to use expressions as domains. will go away later.
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize a => Serialize (Domain a)
+instance (Serialize r, Serialize a) => Serialize (Domain r a)
 
-instance Hashable a => Hashable (Domain a)
+instance (Hashable r, Hashable a) => Hashable (Domain r a)
 
-instance ToJSON a => ToJSON (Domain a)
+instance (ToJSON r, ToJSON a) => ToJSON (Domain r a)
 
-instance Arbitrary a => Arbitrary (Domain a) where
+instance (Arbitrary r, Arbitrary a) => Arbitrary (Domain r a) where
     arbitrary = sized f
         where
             f 0 = oneof [ return DomainBool
@@ -345,7 +345,7 @@ data Constant
     | ConstantInt Int
     | ConstantEnum DomainDefnEnum Name
     | ConstantTuple [Constant]
-    | ConstantMatrix (Domain Constant) [Constant]
+    | ConstantMatrix (Domain () Constant) [Constant]
     | ConstantSet [Constant]
     | ConstantMSet [Constant]
     | ConstantFunction [(Constant, Constant)]
