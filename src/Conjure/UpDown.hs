@@ -13,7 +13,6 @@ module Conjure.UpDown
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
-import Language.E.Helpers
 
 -- base
 import Data.List ( findIndex )
@@ -46,37 +45,37 @@ instance Eq UpDownError where
     ConstantUpError a == ConstantUpError b = show a == show b
     _ == _ = False
 
-type UpDownType m =
-       Domain () Constant
-    -> m ( m [Domain () Constant]           -- the low level domain
-         , [Text -> Text]                   -- names down
-         , [Text] -> m Text                 -- names up
-         , Constant -> m [Constant]         -- constant down
-         , [Constant] -> m Constant         -- constant up
-         )
+type UpDownResultType m =
+    m ( m [Domain Representation Constant]          -- the low level domain
+      , [Text -> Text]                              -- names down
+      , [Text] -> m Text                            -- names up
+      , Constant -> m [Constant]                    -- constant down
+      , [Constant] -> m Constant                    -- constant up
+      )
+
+type UpDownType m = Domain Representation Constant -> UpDownResultType m
     
-downDomain :: MonadError UpDownError m => Representation -> Domain () Constant -> m [Domain () Constant]
-downDomain representation domain = do (gen,_,_,_,_) <- upDown representation domain ; gen
+downDomain :: MonadError UpDownError m => Domain Representation Constant -> m [Domain Representation Constant]
+downDomain domain = do (gen,_,_,_,_) <- upDown domain ; gen
 
-downConstant :: MonadError UpDownError m => Representation -> Domain () Constant -> Constant -> m [Constant]
-downConstant representation domain constant = do (_,_,_,gen,_) <- upDown representation domain ; gen constant
+downConstant :: MonadError UpDownError m => Domain Representation Constant -> Constant -> m [Constant]
+downConstant domain constant = do (_,_,_,gen,_) <- upDown domain ; gen constant
 
-upConstant :: MonadError UpDownError m => Representation -> Domain () Constant -> [Constant] -> m Constant
-upConstant representation domain enums = do (_,_,_,_,gen) <- upDown representation domain ; gen enums
+upConstant :: MonadError UpDownError m => Domain Representation Constant -> [Constant] -> m Constant
+upConstant domain enums = do (_,_,_,_,gen) <- upDown domain ; gen enums
 
 -- | This is about one level.
 --   Describes how, for a representation, we can translate a given high level domain into a low level domain.
 --   And how, for that representation and a domain, we can translate a given constant of the high level domain into a constant of the low level domain.
 --   And how, for that representation and a domain, we can translate a given constant of the low level domain into a constant of the high level domain.
-upDown :: MonadError UpDownError m => Representation -> UpDownType m
+upDown :: MonadError UpDownError m => UpDownType m
 
-upDown NoRepresentation d@(DomainBool   {}) = upDownNoOp d
-upDown NoRepresentation d@(DomainInt    {}) = upDownNoOp d
-upDown NoRepresentation d@(DomainEnum   {}) = upDownEnum d
-upDown NoRepresentation d@(DomainTuple  {}) = upDownTuple d
-upDown NoRepresentation d = upDownNoOp d
+upDown d@(DomainBool   {}) = upDownNoOp d
+upDown d@(DomainInt    {}) = upDownNoOp d
+upDown d@(DomainEnum   {}) = upDownEnum d
+upDown d@(DomainTuple  {}) = upDownTuple d
 
-upDown (Representation "Explicit") d@(DomainSet {}) = upDownSetExplicit d
+upDown (DomainSet (Representation "Explicit") (SetAttrSize size) innerDomain) = upDownSetExplicit size innerDomain
 
 -- upDown (DomainMatrix Domain Domain)
 -- upDown (DomainSet DomainAttributes Domain)
@@ -86,10 +85,9 @@ upDown (Representation "Explicit") d@(DomainSet {}) = upDownSetExplicit d
 -- upDown (DomainPartition DomainAttributes Domain)
 -- upDown (DomainOp Text [Domain])
 
-upDown representation domain =
+upDown domain =
     throwError $ NoRepresentationMatches $ vcat [ "[Conjure.UpDown.upDown]"
                                                 , pretty domain
-                                                , pretty representation
                                                 ]
 
 upDownNoOp :: MonadError UpDownError m => UpDownType m
@@ -175,9 +173,8 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
 
 upDownTuple d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownTuple] Only works on tuple domains. this is not one:" <+> pretty d
 
-upDownSetExplicit :: MonadError UpDownError m => UpDownType m
-upDownSetExplicit (DomainSet _ attrs innerDomain)
-    | Just _ <- lookupDomainAttribute "size" attrs
+upDownSetExplicit :: MonadError UpDownError m => Constant -> Domain Representation Constant -> UpDownResultType m
+upDownSetExplicit size innerDomain
     = return ( return [domain]
              , singletonList nameDown
              , nameUp . headNote "[Conjure.UpDown.upDownSetExplicit] nameUp:"
@@ -186,8 +183,6 @@ upDownSetExplicit (DomainSet _ attrs innerDomain)
              )
 
     where
-
-        size = fromMaybe (error "upDownSetExplicit ~ size") (lookupDomainAttribute "size" attrs)
 
         indexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
         domain = DomainMatrix indexDomain innerDomain
@@ -209,7 +204,6 @@ upDownSetExplicit (DomainSet _ attrs innerDomain)
                 ConstantMatrix _ xs -> return $ ConstantSet $ sort $ nub xs
                 _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownSetExplicit] constantUp:" <+> pretty v
 
-upDownSetExplicit d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownSetExplicit] Only works on set domains. this is not one:" <+> pretty d
 
 
 singletonList :: a -> [a]

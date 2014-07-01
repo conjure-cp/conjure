@@ -85,7 +85,7 @@ import Data.Tree ( Tree(..) )
 translateSingleSolution
     :: MonadError UpDownError m
     => Text
-    -> Domain () Constant
+    -> Domain Representation Constant
     -> Tree Representation
     ->  [(Text, Constant)]
     -> m (Text, Constant)
@@ -98,7 +98,7 @@ translateSingleSolution highName highDomain representations lows = do
 
 singleHelper
     :: MonadError UpDownError m
-    => Domain () Constant
+    => Domain Representation Constant
     -> Tree Representation
     -> T (Text, Maybe Constant)
     -> m (Text, Constant)
@@ -125,15 +125,15 @@ singleHelper (DomainMatrix index inner) representation structuredLows = do
 
     return (head highName, ConstantMatrix index highConstants)
 
-singleHelper highDomain (Node representation []) (Group [Single (lowName, Just lowConstant)]) = do
-    (_, _, highNamesGen, _, highConstantGen) <- upDown representation highDomain
+singleHelper highDomain (Node _representation []) (Group [Single (lowName, Just lowConstant)]) = do
+    (_, _, highNamesGen, _, highConstantGen) <- upDown highDomain
     highName <- highNamesGen [lowName]
     highConstant <- highConstantGen [lowConstant]
     return (highName, highConstant)
 
 
-singleHelper highDomain (Node representation rs) (Group lows) = do
-    (lowDomainsGen, _, highNamesGen, _, highConstantGen) <- upDown representation highDomain
+singleHelper highDomain (Node _representation rs) (Group lows) = do
+    (lowDomainsGen, _, highNamesGen, _, highConstantGen) <- upDown highDomain
     lowDomains <- lowDomainsGen
     (midNames, midConstants) <- liftM unzip $ sequence
         [ singleHelper d r low
@@ -166,15 +166,15 @@ instance Show a => Show (T a) where
 structureLows
     :: MonadError UpDownError m
     => Text
-    -> Domain () Constant
+    -> Domain Representation Constant
     -> Tree Representation
     -> m (T Text)
 
 structureLows highName (DomainMatrix _ inner) representation =
     structureLows highName inner representation
 
-structureLows highName highDomain (Node representation rs) = do
-    (lowDomainsGen, lowNamesGen, _, _, _) <- upDown representation highDomain
+structureLows highName highDomain (Node _representation rs) = do
+    (lowDomainsGen, lowNamesGen, _, _, _) <- upDown highDomain
     let lowNames = [ gen highName | gen <- lowNamesGen ]
     expects <-
         if null rs

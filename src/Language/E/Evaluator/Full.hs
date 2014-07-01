@@ -1054,20 +1054,17 @@ instance DomSize (Domain () E) where
         innerSize <- domSize inner
         return [eMake| &indexSize ** &innerSize |]
 
-    domSize (DomainSet _ attrs inner)
-        | Just size <- lookupDomainAttribute "size" attrs = do
-            sInner <- domSize inner
-            return $ sInner `choose` size
-    domSize (DomainSet _ attrs inner)
-        | Just minSize <- lookupDomainAttribute "minSize" attrs
-        , Just maxSize <- lookupDomainAttribute "maxSize" attrs = do
-            sInner <- domSize inner
-            (qStr, q) <- freshQuanVar "from domSize"
-            return $ inQuan "sum" qStr
-                (DomainInt [RangeBounded minSize maxSize])
-                ( [xMake| emptyGuard := [] |]
-                , sInner `choose` q
-                )
+    domSize (DomainSet _ (SetAttrSize size) inner) = do
+        sInner <- domSize inner
+        return $ sInner `choose` size
+    domSize (DomainSet _ (SetAttrMinMaxSize minSize maxSize) inner) = do
+        sInner <- domSize inner
+        (qStr, q) <- freshQuanVar "from domSize"
+        return $ inQuan "sum" qStr
+            (DomainInt [RangeBounded minSize maxSize])
+            ( [xMake| emptyGuard := [] |]
+            , sInner `choose` q
+            )
     domSize (DomainSet _ _ inner) = do
         sInner <- domSize inner
         return [eMake| 2 ** &sInner |]
@@ -1103,11 +1100,11 @@ instance DomSize (Domain () E) where
         bSize <- domSize b
         return [eMake| (&bSize + 1) ** &aSize |]
 
-    domSize (DomainRelation r attrs rs)
-        = domSize (DomainSet r attrs (DomainTuple rs))
+    domSize (DomainRelation r _attrs rs)
+        = domSize (DomainSet r (error "TODO need to convert relation attributes to set attributes here") (DomainTuple rs))
 
-    domSize (DomainPartition r attrs inner)
-        = domSize (DomainSet r attrs (DomainSet r def inner))
+    domSize (DomainPartition r _attrs inner)
+        = domSize (DomainSet r (error "TODO need to convert partition attributes to set attributes here") (DomainSet r def inner))
 
     domSize p@(DomainOp{}) = bug $ "not implemented domSize for DomainOp:" <+> pretty p
 

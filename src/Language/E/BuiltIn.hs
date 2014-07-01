@@ -24,10 +24,10 @@ builtInRepr = [applyToInnerDomain' relationRepr]
 
 relationRepr :: MonadConjure m => ReprFunc m
 relationRepr ( _name
-             , DomainRelation _ as ts
+             , DomainRelation _ _ ts
              , decl) = do
     let t = DomainTuple ts
-    let domOut = DomainSet () as t
+    let domOut = DomainSet () (error "TODO need to convert relation attributes to set attributes here") t
     return [ RuleReprResult decl
                 "builtIn.relationRepr"
                 "Relation~AsSet"

@@ -243,7 +243,7 @@ typeChange spec@(Spec v statements1) = do
         DomainMSet _ (DomainAttributes attrs) inner
             | maxOccur1 `elem` attrs
             -> return $ Just ( name
-                             , ( DomainSet () (DomainAttributes (attrs \\ [maxOccur1])) inner
+                             , ( DomainSet () (error "TODO all attrs except maxOccur1 here") inner
                                , [eMake| toMSet(&name) |]
                                ) )
         DomainRelation _ (DomainAttributes attrs) inners
@@ -328,7 +328,7 @@ updateAttributes
     -> Domain () E             -- domain
     -> m (Domain () E)         -- modified domain
 
-updateAttributes 0 newAttrs (DomainSet       () (DomainAttributes attrs) inner ) = return $ DomainSet       () (DomainAttributes (newAttrs ++ attrs)) inner
+updateAttributes 0 _newAttrs (DomainSet () _attrs _inner) = error "TODO updateAttributes for DomainSet"
 updateAttributes 0 newAttrs (DomainMSet      () (DomainAttributes attrs) inner ) = return $ DomainMSet      () (DomainAttributes (newAttrs ++ attrs)) inner
 updateAttributes 0 newAttrs (DomainFunction  () (DomainAttributes attrs) fr to ) = return $ DomainFunction  () (DomainAttributes (newAttrs ++ attrs)) fr to
 updateAttributes 0 newAttrs (DomainRelation  () (DomainAttributes attrs) inners) = return $ DomainRelation  () (DomainAttributes (newAttrs ++ attrs)) inners

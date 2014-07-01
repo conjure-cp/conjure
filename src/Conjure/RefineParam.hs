@@ -20,8 +20,8 @@ import Data.Tree ( Tree(..) )
 refineSingleParam
     :: MonadError UpDownError m
     => Tree Representation
-    ->    (Text, Domain () Constant, Constant)
-    -> m [(Text, Domain () Constant, Constant)]
+    ->    (Text, Domain Representation Constant, Constant)
+    -> m [(Text, Domain Representation Constant, Constant)]
 
 -- if the domain is a matrix, we treat it as a container.
 -- - the matrix domain itself must have `NoRepresentation`. the tree doesn't even contain an entry for it.
@@ -44,8 +44,8 @@ refineSingleParam representation (name, DomainMatrix index highDomain, ConstantM
 -- the generic case.
 -- - use `upDown` to refine the domain down one level.
 -- - use a recursive call to `refineSingleParam` to handle the outputs.
-refineSingleParam (Node representation representations) (name, highDomain, highConstant) = do
-    (lowDomainsGen, lowNamesGen, _, lowConstantsGen, _) <- upDown representation highDomain
+refineSingleParam (Node _representation representations) (name, highDomain, highConstant) = do
+    (lowDomainsGen, lowNamesGen, _, lowConstantsGen, _) <- upDown highDomain
     let lowNames = map ($ name) lowNamesGen
     lowDomains <- lowDomainsGen
     lowConstants <- lowConstantsGen highConstant

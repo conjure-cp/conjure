@@ -213,7 +213,7 @@ arbitraryDomainAndConstant = sized dispatch
                                 Just s  -> min 10 s
             size <- choose (0 :: Int, sizeUpTo)
             let domainOut =
-                    DomainSet () (DomainAttributes [DANameValue "size" (ConstantInt size)]) dom
+                    DomainSet () (SetAttrSize (ConstantInt size)) dom
             return ( domainOut
                    , do r <- pickFromList ["Explicit"] -- no other representation yet!
                         repr <- reprGen
@@ -242,7 +242,7 @@ arbitraryDomainAndConstant = sized dispatch
                                 Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
                                 Just s  -> min 10 s
             maxSize <- choose (0 :: Int, sizeUpTo)
-            return ( DomainSet () (DomainAttributes [DANameValue "maxSize" (ConstantInt maxSize)]) dom
+            return ( DomainSet () (SetAttrMaxSize (ConstantInt maxSize)) dom
                    , do r <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
                         repr <- reprGen
                         return (Node (Representation r) [repr])
@@ -263,10 +263,9 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         ()
-                        (DomainAttributes
-                            [ DANameValue "minSize" (ConstantInt minSize)
-                            , DANameValue "maxSize" (ConstantInt maxSize)
-                            ])
+                        (SetAttrMinMaxSize
+                            (ConstantInt minSize)
+                            (ConstantInt maxSize))
                         dom
             return ( domainOut
                    , do r <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!

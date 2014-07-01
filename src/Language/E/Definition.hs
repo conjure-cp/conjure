@@ -10,6 +10,7 @@ module Language.E.Definition
 
     , Spec(..), LanguageVersion(..) , E(..), BuiltIn(..)
     , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
+    , SetAttr(..)
     , DomainDefnEnum(..), DomainDefnUnnamed(..)
     , Representation(..)
     , Constant(..)
@@ -248,7 +249,7 @@ data Domain r a
     | DomainEnum DomainDefnEnum [Range a]
     | DomainTuple [Domain r a]
     | DomainMatrix (Domain () a) (Domain r a)
-    | DomainSet       r (DomainAttributes a) (Domain r a)
+    | DomainSet       r (SetAttr a) (Domain r a)
     | DomainMSet      r (DomainAttributes a) (Domain r a)
     | DomainFunction  r (DomainAttributes a) (Domain r a) (Domain r a)
     | DomainRelation  r (DomainAttributes a) [Domain r a]
@@ -278,6 +279,25 @@ instance (Arbitrary r, Arbitrary a) => Arbitrary (Domain r a) where
     shrink (DomainInt [r]) = DomainBool : DomainInt [] : [DomainInt [r'] | r' <- shrink r]
     shrink (DomainInt rs) = [DomainInt (init rs)]
     shrink _ = []
+
+
+data SetAttr a
+    = SetAttrNone
+    | SetAttrSize a
+    | SetAttrMinSize a
+    | SetAttrMaxSize a
+    | SetAttrMinMaxSize a a
+    | SetAttrDotDot (SetAttr a)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+
+instance Serialize a => Serialize (SetAttr a)
+
+instance Hashable a => Hashable (SetAttr a)
+
+instance ToJSON a => ToJSON (SetAttr a)
+
+instance Default (SetAttr a) where
+    def = SetAttrNone
 
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]

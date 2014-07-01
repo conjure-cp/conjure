@@ -12,6 +12,7 @@ import Stuff.Pretty
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )
 import Language.E.Lexer ( textToLexeme )
+import Bug
 
 -- base
 import Control.Arrow ( first, second )
@@ -368,6 +369,20 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainOp op xs) = Pr.parens $ foldr (<+>) empty $ intersperse (pretty op) (map pretty xs)
 
     pretty (DomainHack x) = pretty x
+
+instance Pretty a => Pretty (SetAttr a) where
+    pretty attr =
+        let
+            prettyNoDotDot SetAttrDotDot{} = bug "nested SetAttrDotDot"
+            prettyNoDotDot SetAttrNone = ""
+            prettyNoDotDot (SetAttrSize       a  ) = "size" <+> pretty a
+            prettyNoDotDot (SetAttrMinSize    a  ) = "minSize" <+> pretty a
+            prettyNoDotDot (SetAttrMaxSize    a  ) = "maxSize" <+> pretty a
+            prettyNoDotDot (SetAttrMinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
+        in
+            case attr of
+                SetAttrDotDot without -> Pr.parens (prettyNoDotDot without <+> ", ..")
+                _ -> Pr.parens (prettyNoDotDot attr)
 
 instance Pretty a => Pretty (DomainAttributes a) where
     pretty (DomainAttributes []) = empty

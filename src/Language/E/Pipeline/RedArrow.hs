@@ -293,10 +293,9 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainSet () attrs domInner)
+            (DomainSet () (SetAttrSize size) domInner)
             [xMatch| valuesIn := value.set.values |]
             (Just "Set~Explicit")
-            | Just size <- lookupDomainAttribute "size" attrs
             = do
             sizeInt <- valueIntOut size
             let indexOfMatrix_fr = [eMake| 1 |]
@@ -349,9 +348,10 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             (Just "Set~ExplicitVarSize")
             = do
             nbValues <-
-                case lookupDomainAttribute "maxSize" attrs of
-                    Just i  -> return i
-                    Nothing -> domSize domInner
+                case attrs of
+                    SetAttrMaxSize a -> return a
+                    SetAttrMinMaxSize _ a -> return a
+                    _ -> domSize domInner
             nbValuesInt <- valueIntOut nbValues
             let indexOfMatrix_fr = [eMake| 1 |]
             let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
@@ -400,9 +400,10 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             (Just "Set~ExplicitVarSizeWithMarker")
             = do
             nbValues <-
-                case lookupDomainAttribute "maxSize" attrs of
-                    Just i  -> return i
-                    Nothing -> domSize domInner
+                case attrs of
+                    SetAttrMaxSize a -> return a
+                    SetAttrMinMaxSize _ a -> return a
+                    _ -> domSize domInner
             nbValuesInt <- valueIntOut nbValues
             let indexOfMatrix_fr = [eMake| 1 |]
             let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
@@ -445,11 +446,11 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
             [xMatch| values := value.set.values |]
             (Just "Set~ExplicitVarSizeWithDefault")
             = do
-
             nbValues <-
-                case lookupDomainAttribute "maxSize" attrs of
-                    Just i  -> return i
-                    Nothing -> domSize domInner
+                case attrs of
+                    SetAttrMaxSize a -> return a
+                    SetAttrMinMaxSize _ a -> return a
+                    _ -> domSize domInner
             nbValuesInt <- valueIntOut nbValues
             let indexOfMatrix_fr = [eMake| 1 |]
             let indexOfMatrix_to = [xMake| value.literal := [Prim (I nbValuesInt)] |]
@@ -687,7 +688,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
-            (DomainRelation () attrs domInners)
+            (DomainRelation () _attrs domInners)
             [xMatch| values := value.relation.values |]
             (Just "Relation~AsSet")
             = do
@@ -700,7 +701,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                         fmap concat $ forM reprs $ \ repr ->
                             callHelper
                                 nameOut
-                                (DomainSet () attrs domInnerOut)
+                                (DomainSet () (error "TODO need to convert relation attributes to set attributes here") domInnerOut)
                                 [xMake| value.set.values := values |]
                                 (Just repr)
 
@@ -819,20 +820,20 @@ instance (Pretty r) => ZeroVal (Domain r E) where
                      | value.matrix.indexrange := [D index]
                      |]
 
-    zeroVal (DomainSet _ attrs inner)
-        | msize     <- lookupDomainAttribute "size" attrs
-        , mminSize  <- lookupDomainAttribute "minSize" attrs
-        , Just size <- msize <|> mminSize
-        = do
-        sizeInt  <- valueIntOut size
-        valInner <- zeroVal inner
-        let vals =  replicate (fromInteger sizeInt) valInner
-        return [xMake| value.set.values := vals
-                     |]
-    zeroVal (DomainSet _ attrs _)
-        | Nothing <- lookupDomainAttribute "minSize" attrs
-        = do
-        return [xMake| value.set.values := [] |]
+    zeroVal (DomainSet _ attrs inner) = do
+        let msize = case attrs of
+                SetAttrSize a -> return a
+                SetAttrMinSize a -> return a
+                SetAttrMinMaxSize a _ -> return a
+                _ -> Nothing
+        case msize of
+            Nothing -> return [xMake| value.set.values := [] |]
+            Just size -> do
+                sizeInt  <- valueIntOut size
+                valInner <- zeroVal inner
+                let vals =  replicate (fromInteger sizeInt) valInner
+                return [xMake| value.set.values := vals
+                             |]
 
     zeroVal (DomainTuple xs) = do
         zeroes <- mapM zeroVal xs

@@ -14,21 +14,20 @@ domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainEnum _ rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
 domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
-domainSizeConstant (DomainSet _ (DomainAttributes attrs) inner) =
+domainSizeConstant (DomainSet _ attrs inner) =
     case attrs of
-        [DANameValue "size" (ConstantInt size)] -> do
+        SetAttrNone -> do
+            innerSize <- domainSizeConstant inner
+            return (2 ^ innerSize)
+        SetAttrSize (ConstantInt size) -> do
             innerSize <- domainSizeConstant inner
             return (nchoosek innerSize size)
-        [DANameValue "maxSize" (ConstantInt maxSize)] -> do
+        SetAttrMaxSize (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [0 .. maxSize] ]
-        [DANameValue "minSize" (ConstantInt minSize), DANameValue "maxSize" (ConstantInt maxSize)] -> do
+        SetAttrMinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
-        [] -> do
-            innerSize <- domainSizeConstant inner
-            -- return $ sum [ nchoosek innerSize k | k <- [0 .. innerSize] ]
-            return (2 ^ innerSize)
         _ -> error "domainSizeConstant"
 domainSizeConstant (DomainMSet      {}) = error "not implemented: domainSizeConstant"
 domainSizeConstant (DomainFunction  {}) = error "not implemented: domainSizeConstant"
