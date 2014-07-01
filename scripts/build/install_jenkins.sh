@@ -39,10 +39,13 @@ else
     echo "Using ${USE_CORES} cores."
 fi
 
-CABAL_VERSION="1.20.0.2"
+CABAL_VERSION="1.20.0.3"
 HAPPY_VERSION="1.19.3"
 HSCOLOUR_VERSION="1.20.3"
 
+CABAL_VERSION_CHECK="1.20"
+HAPPY_VERSION_CHECK="1.19.3"
+HSCOLOUR_VERSION_CHECK="1.20.3"
 
 echo "CORES           : ${CORES}"
 echo "AVAILABLE_CORES : ${AVAILABLE_CORES}"
@@ -80,10 +83,10 @@ else
 fi
 
 # installing cabal-install
-if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION})" ]; then
-    echo "cabal install version ${CABAL_VERSION} found."
+if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION_CHECK})" ]; then
+    echo "cabal-install version ${CABAL_VERSION_CHECK} found."
 else
-    echo "cabal install version ${CABAL_VERSION} not found. Installing."
+    echo "cabal-install version ${CABAL_VERSION_CHECK} not found. Installing version ${CABAL_VERSION}."
     wget -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
@@ -95,10 +98,10 @@ fi
 cabal update
 
 # installing happy
-if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION})" ]; then
-    echo "happy version ${HAPPY_VERSION} found."
+if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION_CHECK})" ]; then
+    echo "happy version ${HAPPY_VERSION_CHECK} found."
 else
-    echo "Installing happy-${HAPPY_VERSION}"
+    echo "happy version ${CABAL_VERSION_CHECK} not found. Installing version ${HAPPY_VERSION}."
     rm -rf dist/tools
     mkdir -p dist/tools
     pushd dist/tools
@@ -113,10 +116,10 @@ fi
 
 # installing hscolour
 if [ $BUILD_DOCS = "yes" ]; then
-    if [ "$(hscolour --version | head -n 1 | grep ${HSCOLOUR_VERSION})" ]; then
-        echo "hscolour version ${HSCOLOUR_VERSION} found."
+    if [ "$(hscolour --version | head -n 1 | grep ${HSCOLOUR_VERSION_CHECK})" ]; then
+        echo "hscolour version ${HSCOLOUR_VERSION_CHECK} found."
     else
-        echo "Installing hscolour-${HSCOLOUR_VERSION}"
+        echo "hscolour version ${HSCOLOUR_VERSION_CHECK} not found. Installing version ${HSCOLOUR_VERSION}."
         rm -rf dist/tools
         mkdir -p dist/tools
         pushd dist/tools
