@@ -611,10 +611,6 @@ fullEvaluator [xMatch| xs := domain.int.ranges.range.single.value.set.values |]
     = let ys = map (\ i -> [xMake| range.single := [i] |] ) xs
       in  ret [xMake| domain.int.ranges := ys |]
 
-fullEvaluator [xMatch| []  := operator.index.right.slicer
-                     | [x] := operator.index.left
-                     |] = ret x
-
 fullEvaluator p@[xMatch| vs           := operator.index.left .value.matrix.values
                        | ranges       := operator.index.left .value.matrix.indexrange.domain.int.ranges
                        | [Prim (I a)] := operator.index.right.value.literal
