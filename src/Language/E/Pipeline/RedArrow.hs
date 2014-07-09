@@ -608,6 +608,55 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
+            [xMatch| [domInnerFr] := domain.function.innerFrom
+                   | [domInnerTo] := domain.function.innerTo
+                   |]
+            [xMatch| values := value.function.values |]
+            (Just "Function~1DPartial")
+            = do
+                domInnerFr' <- instantiateEnumDomains [] domInnerFr
+                domInnerTo' <- instantiateEnumDomains [] domInnerTo
+
+                case domInnerFr' of
+                    [xMatch| [aFr,aTo] := domain.int.ranges.range.fromTo |] -> do
+                        aFr' <- valueIntOut aFr
+                        aTo' <- valueIntOut aTo
+                        values' <- sequence
+                            [ return (iInt,jInt)
+                            | [xMatch| [i,j] := mapping |] <- values
+                            , [xMatch| [Prim (I iInt)] := value.literal |] <- [i]
+                            , [xMatch| [Prim (I jInt)] := value.literal |] <- [j]
+                            ]
+                        z <- zeroVal domInnerTo'
+
+                        let values_bools =
+                                [ case lookup i values' of
+                                    Nothing -> [eMake| false |]
+                                    _       -> [eMake| true |]
+                                | i <- [aFr' .. aTo']
+                                ]
+                        let boolOut  = [xMake| value.matrix.values := values_bools
+                                             | value.matrix.indexrange := [domInnerFr']
+                                             |]
+
+                        let values_vals =
+                                [ case lookup i values' of
+                                    Nothing -> z
+                                    Just j  -> [xMake| value.literal := [Prim (I j)] |]
+                                | i <- [aFr' .. aTo']
+                                ]
+                        let valsOut  = [xMake| value.matrix.values := values_vals
+                                             | value.matrix.indexrange := [domInnerFr']
+                                             |]
+
+                        return [ ( name `T.append` "_Function~1DPartial_tuple1" , boolOut )
+                               , ( name `T.append` "_Function~1DPartial_tuple2" , valsOut )
+                               ]
+
+                    _ -> bug $ vcat [ "workhorse.helper.Function~1DPartial", pretty name ]
+
+        helper
+            name
             [xMatch| [domInnerFr1,domInnerFr2] := domain.function.innerFrom.domain.tuple.inners |]
             [xMatch| values := value.function.values |]
             (Just "Function~IntPair2D")
