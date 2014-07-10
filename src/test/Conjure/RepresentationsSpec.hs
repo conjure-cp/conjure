@@ -6,7 +6,10 @@ module Conjure.RepresentationsSpec where
 -- conjure
 import Language.E.Imports
 import Language.E.Definition hiding ( Spec )
-import Conjure.Representations ( ReprActions(down1, up), down, primitive, tuple )
+import Conjure.Representations
+    ( ReprActions(down1, down1_, up1)
+    , down, down_, up
+    , primitive, tuple )
 
 -- hspec
 import Test.Hspec ( Spec, describe, it, shouldBe, Expectation, expectationFailure )
@@ -238,7 +241,7 @@ down1Test
     -> Maybe [(Text, Domain Representation Constant, Constant)]
     -> Expectation
 down1Test repr high low' =
-    case down1 repr high of
+    case down1_ repr high of
         Left err -> expectationFailure (show err)
         Right low -> low `shouldBe` low'
 
@@ -248,7 +251,7 @@ downTest
     -> [(Text, Domain Representation Constant, Constant)]
     -> Expectation
 downTest repr high lows' =
-    case down repr high of
+    case down_ repr high of
         Left err -> expectationFailure (show err)
         Right lows -> lows `shouldBe` lows'
 
