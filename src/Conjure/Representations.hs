@@ -5,7 +5,7 @@
 
 module Conjure.Representations
     ( down, down_, up
-    , down1_, dispatch
+    , down1, down1_, up1, dispatch
     ) where
 
 -- conjure

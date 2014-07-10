@@ -6,7 +6,7 @@ module Conjure.RepresentationsSpec where
 -- conjure
 import Language.E.Imports
 import Language.E.Definition hiding ( Spec )
-import Conjure.Representations ( down_, up, down1_, dispatch )
+import Conjure.Representations ( down_, up, down1_, up1, dispatch )
 
 
 -- hspec
@@ -30,6 +30,11 @@ spec = do
             ("x", DomainBool, ConstantBool False)
            [("x", DomainBool, ConstantBool False)]
 
+        it "up1" $ up1Test
+            ("x", DomainBool)
+           [("x", ConstantBool False)]
+            ("x", ConstantBool False)
+
         it "up" $ upTest
             ("x", DomainBool)
            [("x", ConstantBool False)]
@@ -45,6 +50,11 @@ spec = do
             ("x", DomainBool, ConstantBool True)
            [("x", DomainBool, ConstantBool True)]
 
+        it "up1" $ up1Test
+            ("x", DomainBool)
+           [("x", ConstantBool True)]
+            ("x", ConstantBool True)
+
         it "up" $ upTest
             ("x", DomainBool)
            [("x", ConstantBool True)]
@@ -59,6 +69,11 @@ spec = do
         it "down" $ downTest
             ("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)], ConstantInt 3)
            [("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)], ConstantInt 3)]
+
+        it "up1" $ up1Test
+            ("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
+           [("x", ConstantInt 3)]
+            ("x", ConstantInt 3)
 
         it "up" $ upTest
             ("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
@@ -84,6 +99,11 @@ spec = do
             , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
             ) ]
 
+        it "up1" $ up1Test
+            ( "x", DomainMatrix (intDomain 1 3) DomainBool )
+           [("x", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True])]
+            ("x", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True])
+
         it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) DomainBool )
            [("x", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True])]
@@ -106,6 +126,11 @@ spec = do
             , DomainMatrix (intDomain 1 3) (intDomain 1 5)
             , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
             ) ]
+
+        it "up1" $ up1Test
+            ( "x", DomainMatrix (intDomain 1 3) (intDomain 1 5) )
+           [("x", ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5])]
+            ("x", ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5])
 
         it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) (intDomain 1 5) )
@@ -142,6 +167,21 @@ spec = do
                 , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool True ]
                 ]
             ) ]
+
+        it "up1" $ up1Test
+            ( "x", DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool) )
+          [ ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantMatrix (intDomain 1 2) [ConstantBool False, ConstantBool True ]
+                    , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool False]
+                    , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool True ]
+                    ]
+            ) ]
+            ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantMatrix (intDomain 1 2) [ConstantBool False, ConstantBool True ]
+                    , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool False]
+                    , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool True ]
+                    ]
+            )
 
         it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool) )
@@ -189,6 +229,21 @@ spec = do
                 ]
             ) ]
 
+        it "up1" $ up1Test
+            ( "x", DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9)) )
+          [ ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 7]
+                    , ConstantMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 8]
+                    , ConstantMatrix (intDomain 1 2) [ConstantInt 0, ConstantInt 1]
+                    ]
+            ) ]
+            ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 7]
+                    , ConstantMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 8]
+                    , ConstantMatrix (intDomain 1 2) [ConstantInt 0, ConstantInt 1]
+                    ]
+            )
+
         it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9)) )
           [ ( "x", ConstantMatrix (intDomain 1 3)
@@ -224,6 +279,13 @@ spec = do
             , ( "x_2", intDomain 1 3, ConstantInt 2      )
             ]
 
+        it "up1" $ up1Test
+            ( "x", DomainTuple [DomainBool, intDomain 1 3] )
+            [ ( "x_1", ConstantBool False )
+            , ( "x_2", ConstantInt 2      )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantInt 2] )
+
         it "up" $ upTest
             ( "x", DomainTuple [DomainBool, intDomain 1 3] )
             [ ( "x_1", ConstantBool False )
@@ -253,6 +315,14 @@ spec = do
             , ( "x_3", DomainBool   , ConstantBool True  )
             ]
 
+        it "up1" $ up1Test
+            ( "x", DomainTuple [DomainBool, intDomain 1 3, DomainBool] )
+            [ ( "x_1", ConstantBool False )
+            , ( "x_2", ConstantInt 2      )
+            , ( "x_3", ConstantBool True  )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True] )
+
         it "up" $ upTest
             ( "x", DomainTuple [DomainBool, intDomain 1 3, DomainBool] )
             [ ( "x_1", ConstantBool False )
@@ -260,6 +330,42 @@ spec = do
             , ( "x_3", ConstantBool True  )
             ]
             ( "x", ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True] )
+
+    describe "((bool, int), bool)" $ do
+
+        it "down1" $ down1Test
+            ( "x"
+            , DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]
+            , ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
+            )
+            (Just [ ( "x_1" , DomainTuple [DomainBool, intDomain 1 3], ConstantTuple [ConstantBool False, ConstantInt 2] )
+                  , ( "x_2" , DomainBool, ConstantBool True )
+                  ])
+
+        it "down" $ downTest
+            ( "x"
+            , DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]
+            , ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
+            )
+            [ ( "x_1_1", DomainBool   , ConstantBool False )
+            , ( "x_1_2", intDomain 1 3, ConstantInt 2      )
+            , ( "x_2"  , DomainBool   , ConstantBool True  )
+            ]
+
+        it "up1" $ up1Test
+            ( "x", DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool] )
+            [ ( "x_1", ConstantTuple [ConstantBool False, ConstantInt 2] )
+            , ( "x_2", ConstantBool True  )
+            ]
+            ( "x", ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
+
+        it "up" $ upTest
+            ( "x", DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool] )
+            [ ( "x_1_1", ConstantBool False )
+            , ( "x_1_2", ConstantInt 2      )
+            , ( "x_2"  , ConstantBool True  )
+            ]
+            ( "x", ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
 
 
 down1Test
@@ -279,6 +385,16 @@ downTest high lows' =
     case down_ high of
         Left err -> expectationFailure (show err)
         Right lows -> lows `shouldBe` lows'
+
+up1Test
+    :: (Text, Domain Representation Constant)
+    -> [(Text, Constant)]
+    -> (Text, Constant)
+    -> Expectation
+up1Test info lows high' =
+    case up1 dispatch info lows of
+        Left err -> expectationFailure (show err)
+        Right high -> high `shouldBe` high'
 
 upTest
     :: (Text, Domain Representation Constant)
