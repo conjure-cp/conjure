@@ -3,7 +3,7 @@
 
 module Conjure.Representations
     ( ReprActions(down1, up), down
-    , primitive
+    , primitive, tuple
     ) where
 
 -- conjure
@@ -34,7 +34,18 @@ primitive = ReprActions
     { down1 = const $ return Nothing
     , up = \ (name, _) ctxt ->
         case lookup name ctxt of
-            Nothing -> throwError $ sep
+            Nothing -> throwError $ vcat
+                $ ("[Conjure.Representations.noOp] name not found:" <+> pretty name)
+                : prettyContext ctxt
+            Just c  -> return (name, c)
+    }
+
+tuple :: MonadError Doc m => ReprActions m
+tuple = ReprActions
+    { down1 = const $ return Nothing
+    , up = \ (name, _) ctxt ->
+        case lookup name ctxt of
+            Nothing -> throwError $ vcat
                 $ ("[Conjure.Representations.noOp] name not found:" <+> pretty name)
                 : prettyContext ctxt
             Just c  -> return (name, c)

@@ -490,7 +490,7 @@ prettyNotImplemented (Tagged s _) = "{{" <> pretty s <> "}}"
 prettyNotImplemented x = "[pretty] catch all case" <++> prettyAsPaths x
 
 prettyContext :: (Pretty a, Pretty b) => [(a,b)] -> [Doc]
-prettyContext = map (\ (a,b) -> pretty a <> ":" <+> pretty b )
+prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
 
 instance DebugPretty E where
     debugPretty = pretty
