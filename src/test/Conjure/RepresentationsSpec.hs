@@ -367,6 +367,42 @@ spec = do
             ]
             ( "x", ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
 
+    describe "(bool, (int, bool))" $ do
+
+        it "down1" $ down1Test
+            ( "x"
+            , DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool]]
+            , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True]]
+            )
+            (Just [ ( "x_1" , DomainBool, ConstantBool False )
+                  , ( "x_2" , DomainTuple [intDomain 1 3, DomainBool], ConstantTuple [ConstantInt 2, ConstantBool True] )
+                  ])
+
+        it "down" $ downTest
+            ( "x"
+            , DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool]]
+            , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True]]
+            )
+            [ ( "x_1"  , DomainBool   , ConstantBool False )
+            , ( "x_2_1", intDomain 1 3, ConstantInt 2      )
+            , ( "x_2_2", DomainBool   , ConstantBool True  )
+            ]
+
+        it "up1" $ up1Test
+            ( "x", DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool]] )
+            [ ( "x_1", ConstantBool False )
+            , ( "x_2", ConstantTuple [ConstantInt 2, ConstantBool True] )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True]] )
+
+        it "up" $ upTest
+            ( "x", DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool]] )
+            [ ( "x_1"  , ConstantBool False )
+            , ( "x_2_1", ConstantInt 2      )
+            , ( "x_2_2", ConstantBool True  )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True]] )
+
 
 down1Test
     :: (Text, Domain Representation Constant, Constant)
