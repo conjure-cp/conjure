@@ -4,7 +4,11 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Language.E.Pretty ( module Stuff.Pretty, prettySpecDebug ) where
+module Language.E.Pretty
+    ( module Stuff.Pretty
+    , prettySpecDebug
+    , prettyContext
+    ) where
 
 -- conjure
 import Utils.DebugPretty
@@ -484,6 +488,9 @@ prettyQuantified x = prettyNotImplemented x
 prettyNotImplemented :: E -> Doc
 prettyNotImplemented (Tagged s _) = "{{" <> pretty s <> "}}"
 prettyNotImplemented x = "[pretty] catch all case" <++> prettyAsPaths x
+
+prettyContext :: (Pretty a, Pretty b) => [(a,b)] -> [Doc]
+prettyContext = map (\ (a,b) -> pretty a <> ":" <+> pretty b )
 
 instance DebugPretty E where
     debugPretty = pretty

@@ -15,7 +15,7 @@ import Language.E.Definition
 import Language.E.Pretty
 
 -- base
-import Data.List ( findIndex )
+import Data.List ( findIndex, transpose )
 
 -- text
 import Data.Text ( pack, stripSuffix )
@@ -47,22 +47,28 @@ instance Eq UpDownError where
 
 type UpDownResultType m =
     m ( m [Domain Representation Constant]          -- the low level domain
-      , [Text -> Text]                              -- names down
+      , Text -> [Text]                              -- names down
       , [Text] -> m Text                            -- names up
-      , Constant -> m [Constant]                    -- constant down
-      , [Constant] -> m Constant                    -- constant up
+      , Text -> Constant -> m [(Text,Constant)]     -- constant down
+      , Text -> [(Text,Constant)] -> m Constant     -- constant up
       )
 
 type UpDownType m = Domain Representation Constant -> UpDownResultType m
     
 downDomain :: MonadError UpDownError m => Domain Representation Constant -> m [Domain Representation Constant]
-downDomain domain = do (gen,_,_,_,_) <- upDown domain ; gen
+downDomain domain = do
+    (gen,_,_,_,_) <- upDown domain
+    gen
 
-downConstant :: MonadError UpDownError m => Domain Representation Constant -> Constant -> m [Constant]
-downConstant domain constant = do (_,_,_,gen,_) <- upDown domain ; gen constant
+downConstant :: MonadError UpDownError m => Domain Representation Constant -> Text -> Constant -> m [(Text, Constant)]
+downConstant domain name constant = do
+    (_,_,_,gen,_) <- upDown domain
+    gen name constant
 
-upConstant :: MonadError UpDownError m => Domain Representation Constant -> [Constant] -> m Constant
-upConstant domain enums = do (_,_,_,_,gen) <- upDown domain ; gen enums
+upConstant :: MonadError UpDownError m => Domain Representation Constant -> Text -> [(Text, Constant)] -> m Constant
+upConstant domain name constants = do
+    (_,_,_,_,gen) <- upDown domain
+    gen name constants
 
 -- | This is about one level.
 --   Describes how, for a representation, we can translate a given high level domain into a low level domain.
@@ -72,6 +78,8 @@ upDown :: MonadError UpDownError m => UpDownType m
 
 upDown d@(DomainBool   {}) = upDownNoOp d
 upDown d@(DomainInt    {}) = upDownNoOp d
+upDown (DomainMatrix index inner) = upDownMatrix index inner
+
 upDown d@(DomainEnum   {}) = upDownEnum d
 upDown d@(DomainTuple  {}) = upDownTuple d
 
@@ -91,30 +99,37 @@ upDown domain =
                                                 ]
 
 upDownNoOp :: MonadError UpDownError m => UpDownType m
-upDownNoOp d =
-    return ( return [d]
-           , singletonList id
-           , return . headNote "[Conjure.UpDown.upDownNoOp] nameUp"
-           , return . singletonList
-           , return . headNote "[Conjure.UpDown.upDownNoOp] constantUp"
-           )
+upDownNoOp domain = return 
+    ( return [domain]
+    , singletonList
+    , return . headNote "[Conjure.UpDown.upDownNoOp] nameUp"
+    , \ name constant -> return [(name, constant)]
+    , \ name ctxt ->
+            case lookup name ctxt of
+                Nothing -> throwError $ ConstantUpError $ sep
+                                [ "upDownNoOp"
+                                , "name  :" <+> pretty name
+                                , "ctxt  :" <+> sep (map pretty ctxt)
+                                ]
+                Just c -> return c
+    )
 
 upDownEnum :: MonadError UpDownError m => UpDownType m
-upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
-    return ( liftM singletonList domainOut
-           , singletonList nameDown
-           , nameUp . headNote "[Conjure.UpDown.upDownEnum] nameUp"
-           , (liftM . liftM) singletonList constantDown
-           , constantUp . headNote "[Conjure.UpDown.upDownEnum] constantUp"
-           )
+upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) = return
+    ( liftM singletonList domainOut
+    , nameDown
+    , nameUp . headNote "[Conjure.UpDown.upDownEnum] nameUp"
+    , \ name constant -> do constant' <- constantDown constant ; return [(name, constant')]
+    , constantUp
+    )
 
     where
 
-        nameDown = (`mappend` "_enum")
+        nameDown name = [ name `mappend` "_enum" ]
 
         nameUp n =
             case stripSuffix "_enum" n of
-                Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownEnum] nameUp:" <+> pretty n
+                Nothing -> throwError $ NameUpError $ "[Conjure.UpDown.upDownEnum] nameUp:" <+> pretty n
                 Just n' -> return n'
 
         nbConstants = genericLength enums
@@ -131,23 +146,90 @@ upDownEnum (DomainEnum defn@(DomainDefnEnum _name enums) ranges) =
                         Just y  -> return $ ConstantInt (y + 1)
                 _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownEnum] constantDown:" <+> pretty v
 
-        constantUp v =
-            case v of
-                ConstantInt x ->
+        constantUp name ctxt =
+            case lookup name ctxt of
+                Just (ConstantInt x) ->
                     case atMay enums (x - 1) of
                         Nothing -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum] Integer constant out of range for enum:" <+> pretty x
                         Just y  -> return (ConstantEnum defn y)
-                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum] constantUp:" <+> pretty v
+                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownEnum] constantUp:" <+> pretty name <+> sep (map pretty ctxt)
 
 upDownEnum d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownEnum] Only works on enum domains. this is not one:" <+> pretty d
 
+upDownMatrix :: MonadError UpDownError m => Domain () Constant -> Domain Representation Constant -> UpDownResultType m
+upDownMatrix index inner = do
+    (innerDomainsDownGen, innerNamesDown, innerNamesUp, innerConstantsDown, innerConstantsUp) <- upDown inner
+    innerDomainsDown <- innerDomainsDownGen
+    return
+        ( return [ DomainMatrix index i | i <- innerDomainsDown ]
+        , error "namesDown"
+        , error "namesUp"
+        , \ name constant -> 
+            case constant of
+                ConstantMatrix _ cs -> do
+                    foo <- liftM transpose $ sequence [ innerConstantsDown name c | c <- cs ]
+                    let bar = [ (fst (head i), map snd i) | i <- foo ]
+                    return [ (name, ConstantMatrix index cs') | (name, cs') <- bar ]
+                _ -> throwError $ ConstantDownError $ "upDownMatrix"
+        , \ name ctxt -> do
+            let names' = innerNamesDown name
+            forM names' $ \ name' -> do
+                ctxt' <- constantUpMatrix name name' inner ctxt
+                throwError $ ConstantUpError $ sep $
+                            [ "upDownMatrix constantsUp Just"
+                            , "name  :" <+> pretty name
+                            , "ctxt  :" <+> sep (map pretty ctxt)
+                            , "ctxt' :" <+> sep (map pretty ctxt')
+                            ]
+            --
+            -- constants <- forM names' $ \ name' ->
+            --     case lookup name' ctxt of
+            --         Just (ConstantMatrix _ cs) -> do
+            --             cs' <- innerConstantsUp name' ctxt
+            --             throwError $ ConstantUpError $ sep $
+            --                         [ "upDownMatrix constantsUp Just"
+            --                         , "name  :" <+> pretty name
+            --                         , "ctxt  :" <+> sep (map pretty ctxt)
+            --                         , "names':" <+> sep (map pretty names')
+            --                         , "cs    :" <+> sep (map pretty cs)
+            --                         , "cs'   :" <+> pretty cs'
+            --                         -- , "ctxt' :" <+> sep (map pretty ctxt')
+            --                         ]
+            --         _ ->
+            --             throwError $ ConstantUpError $ sep $
+            --                         [ "upDownMatrix constantsUp Nothing"
+            --                         , "name  :" <+> pretty name
+            --                         , "ctxt  :" <+> sep (map pretty ctxt)
+            --                         , "names':" <+> sep (map pretty names')
+            --                         -- , "ctxt' :" <+> sep (map pretty ctxt')
+            --                         ]
+            error "foo"
+            -- return (ConstantMatrix index constants)
+        )
+
+-- type UpDownResultType m =
+--     m ( m [Domain Representation Constant]          -- the low level domain
+--       , Text -> [Text]                              -- names down
+--       , [Text] -> m Text                            -- names up
+--       , Text -> Constant -> m [(Text,Constant)]     -- constant down
+--       , Text -> [(Text,Constant)] -> m Constant     -- constant up
+--       )
+
+-- constantUpMatrix :: MonadError UpDownError m => Text -> Text -> Domain Representation Constant -> [(Text, Constant)] -> m [(Text, Constant)]
+
 upDownTuple :: MonadError UpDownError m => UpDownType m
-upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsDown, constantsUp)
+upDownTuple (DomainTuple ds) = return
+    ( return ds
+    , namesDown
+    , namesUp
+    , constantsDown
+    , constantsUp
+    )
 
     where
 
-        namesDown =
-            [ (`mappend` suffix)
+        namesDown name =
+            [ name `mappend` suffix
             | i <- [1 .. length ds]
             , let suffix = "_" `mappend` pack (show i)
             ]
@@ -155,7 +237,7 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
         namesUp names = do
             allStripped <- sequence
                 [ case stripSuffix suffix n of
-                    Nothing -> throwError $ NameDownError $ "[Conjure.UpDown.upDownTuple] namesUp:" <+> pretty n
+                    Nothing -> throwError $ NameUpError $ "[Conjure.UpDown.upDownTuple] namesUp:" <+> pretty n
                     Just n' -> return n'
                 | (n,i) <- zip names [1 .. length names]
                 , let suffix = "_" `mappend` pack (show i)
@@ -164,23 +246,23 @@ upDownTuple (DomainTuple ds) = return (return ds, namesDown, namesUp, constantsD
                 then return (head allStripped)
                 else throwError $ NameUpError $ "[Conjure.UpDown.upDownTuple] namesUp:" <+> pretty (show names)
 
-        constantsDown v =
-            case v of
-                ConstantTuple xs -> return xs
-                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownTuple] constantsDown:" <+> pretty v
+        constantsDown name constant =
+            case constant of
+                ConstantTuple cs -> liftM concat $ sequence [ downConstant d n c | (n,d,c) <- zip3 (namesDown name) ds cs ]
+                _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownTuple] constantsDown:" <+> pretty constant
 
-        constantsUp vs = return (ConstantTuple vs)
+        constantsUp _name ctxt = return (ConstantTuple (map snd ctxt))
 
 upDownTuple d = throwError $ RepresentationDoesntMatch $ "[Conjure.UpDown.upDownTuple] Only works on tuple domains. this is not one:" <+> pretty d
 
 upDownSetExplicit :: MonadError UpDownError m => Constant -> Domain Representation Constant -> UpDownResultType m
-upDownSetExplicit size innerDomain
-    = return ( return [domain]
-             , singletonList nameDown
-             , nameUp . headNote "[Conjure.UpDown.upDownSetExplicit] nameUp:"
-             , (liftM . liftM) singletonList constantDown
-             , constantUp . headNote "[Conjure.UpDown.upDownSetExplicit] constantUp:"
-             )
+upDownSetExplicit size innerDomain = return
+    ( return [domain]
+    , singletonList . nameDown
+    , nameUp . headNote "[Conjure.UpDown.upDownSetExplicit] nameUp:"
+    , \ name constant -> do constant' <- constantDown constant ; return [(nameDown name, constant')]
+    , constantUp
+    )
 
     where
 
@@ -199,11 +281,35 @@ upDownSetExplicit size innerDomain
                 ConstantSet xs -> return $ ConstantMatrix indexDomain xs
                 _ -> throwError $ ConstantDownError $ "[Conjure.UpDown.upDownSetExplicit] constantDown:" <+> pretty v
 
-        constantUp v =
-            case v of
-                ConstantMatrix _ xs -> return $ ConstantSet $ sort $ nub xs
-                _ -> throwError $ ConstantUpError $ "[Conjure.UpDown.upDownSetExplicit] constantUp:" <+> pretty v
+        constantUp name ctxt = do
+            ctxt' <- constantUpMatrix name (nameDown name) innerDomain ctxt
+            case lookup name ctxt' of
+                Just (ConstantMatrix _ xs) -> return $ ConstantSet $ sort $ nub xs
+                _ -> throwError $ ConstantUpError $ sep $
+                        [ "[Conjure.UpDown.upDownSetExplicit] constantUp:"
+                        , "name  :" <+> pretty name
+                        , "ctxt  :" <+> sep (map pretty ctxt)
+                        , "ctxt' :" <+> sep (map pretty ctxt')
+                        ]
 
+constantUpMatrix :: MonadError UpDownError m => Text -> Text -> Domain Representation Constant -> [(Text, Constant)] -> m [(Text, Constant)]
+constantUpMatrix name name' domain ctxt = do
+    (_,_,_,constantDown,_) <- upDown domain
+    case lookup name' ctxt of
+        Just (ConstantMatrix index vals) -> do
+            vals' <- sequence [ constantDown name' val | val <- vals ]
+            return $ (name, ConstantMatrix index (map (snd . head) vals')) : ctxt
+        Just c  -> throwError $ ConstantUpError $ sep
+                        [ "constantUpMatrix -- found, but not a matrix"
+                        , "found :" <+> pretty c
+                        , "name  :" <+> pretty name
+                        , "ctxt  :" <+> sep (map pretty ctxt)
+                        ]
+        Nothing -> throwError $ ConstantUpError $ sep
+                        [ "constantUpMatrix -- not found"
+                        , "name  :" <+> pretty name
+                        , "ctxt  :" <+> sep (map pretty ctxt)
+                        ]
 
 
 singletonList :: a -> [a]

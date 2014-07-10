@@ -44,6 +44,24 @@ spec = describe "translating solutions" $ do
     it "tuples nested 2 x"   $ nested2 "x"
     it "tuples nested 2 x_y" $ nested2 "x_y"
 
+    it "set Explicit #1" $
+        translateSingleSolution "x"
+            (DomainSet
+                (Representation "Explicit")
+                (SetAttrSize (ConstantInt 3))
+                (DomainInt [RangeBounded (ConstantInt 2) (ConstantInt 6)])
+            )
+            [ ( "x_Explicit"
+              , ConstantMatrix
+                  (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 3)])
+                  [ConstantInt 2, ConstantInt 3, ConstantInt 5]
+              )
+            ] `shouldBe`
+            Right ( "x"
+                  , ConstantSet
+                      [ConstantInt 2, ConstantInt 3, ConstantInt 5]
+                  )
+
 
 nested1 :: Text -> IO ()
 nested1 x =

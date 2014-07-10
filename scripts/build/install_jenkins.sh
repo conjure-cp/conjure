@@ -95,7 +95,7 @@ else
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
 fi
 
-cabal update
+# cabal update
 
 # installing happy
 if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION_CHECK})" ]; then
