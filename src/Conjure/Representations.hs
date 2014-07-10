@@ -4,8 +4,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Conjure.Representations
-    ( ReprActions(down1, down1_, up1), down, down_, up
-    , primitive, tuple, dispatch
+    ( down, down_, up
+    , down1_, dispatch
     ) where
 
 -- conjure
@@ -28,37 +28,34 @@ data ReprActions m = ReprActions
 
 
 down
-    :: Monad m
-    => ReprActions m
-    ->    (Text, Domain Representation Constant)
+    :: MonadError Doc m
+    =>    (Text, Domain Representation Constant)
     -> m [(Text, Domain Representation Constant)]
-down repr inp = do
-    mout <- down1 repr inp
+down inp = do
+    mout <- down1 dispatch inp
     case mout of
         Nothing -> return [inp]
-        Just outs -> liftM concat $ mapM (down repr) outs
+        Just outs -> liftM concat $ mapM down outs
 
 down_
-    :: Monad m
-    => ReprActions m
-    ->    (Text, Domain Representation Constant, Constant)
+    :: MonadError Doc m
+    =>    (Text, Domain Representation Constant, Constant)
     -> m [(Text, Domain Representation Constant, Constant)]
-down_ repr inp = do
-    mout <- down1_ repr inp
+down_ inp = do
+    mout <- down1_ dispatch inp
     case mout of
         Nothing -> return [inp]
-        Just outs -> liftM concat $ mapM (down_ repr) outs
+        Just outs -> liftM concat $ mapM down_ outs
 
 up
     :: MonadError Doc m
-    => ReprActions m
-    -> (Text, Domain Representation Constant)
+    => (Text, Domain Representation Constant)
     ->  [(Text, Constant)]
     -> m (Text, Constant)
-up repr (name, highDomain) ctxt = do
+up (name, highDomain) ctxt = do
     toDescend'
         :: Maybe [(Text, Domain Representation Constant)]
-        <- down1 repr (name, highDomain)
+        <- down1 dispatch (name, highDomain)
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
@@ -70,8 +67,8 @@ up repr (name, highDomain) ctxt = do
         Just toDescend -> do
             midConstants
                  :: [(Text, Constant)]
-                 <- sequence [ up repr (n,d) ctxt | (n,d) <- toDescend ]
-            up1 repr (name, highDomain) midConstants
+                 <- sequence [ up (n,d) ctxt | (n,d) <- toDescend ]
+            up1 dispatch (name, highDomain) midConstants
 
 dispatch :: MonadError Doc m => ReprActions m
 dispatch = ReprActions
@@ -147,6 +144,7 @@ tuple = ReprActions
                         , "With domain:" <+> pretty (DomainTuple ds)
                         ]
                     Just val -> return val
+            -- TODO: check if (length ds == length vals)
             return (name, ConstantTuple vals)
         tupleUp _ _ = throwError "tupleUp def"
 

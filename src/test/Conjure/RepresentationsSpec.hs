@@ -6,10 +6,8 @@ module Conjure.RepresentationsSpec where
 -- conjure
 import Language.E.Imports
 import Language.E.Definition hiding ( Spec )
-import Conjure.Representations
-    ( ReprActions(down1, down1_, up1)
-    , down, down_, up
-    , primitive, tuple )
+import Conjure.Representations ( down_, up, down1_, dispatch )
+
 
 -- hspec
 import Test.Hspec ( Spec, describe, it, shouldBe, Expectation, expectationFailure )
@@ -24,59 +22,59 @@ spec = do
 
     describe "bool #1" $ do
 
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ("x", DomainBool, ConstantBool False)
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ("x", DomainBool, ConstantBool False)
            [("x", DomainBool, ConstantBool False)]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ("x", DomainBool)
            [("x", ConstantBool False)]
             ("x", ConstantBool False)
 
     describe "bool #2" $ do
 
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ("x", DomainBool, ConstantBool True)
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ("x", DomainBool, ConstantBool True)
            [("x", DomainBool, ConstantBool True)]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ("x", DomainBool)
            [("x", ConstantBool True)]
             ("x", ConstantBool True)
 
     describe "int #1" $ do
 
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)], ConstantInt 3)
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)], ConstantInt 3)
            [("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)], ConstantInt 3)]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ("x", DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)])
            [("x", ConstantInt 3)]
             ("x", ConstantInt 3)
 
     describe "matrix of bool" $ do
 
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ( "x"
             , DomainMatrix (intDomain 1 3) DomainBool
             , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
             )
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ( "x"
             , DomainMatrix (intDomain 1 3) DomainBool
             , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
@@ -86,20 +84,20 @@ spec = do
             , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
             ) ]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) DomainBool )
            [("x", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True])]
             ("x", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True])
 
     describe "matrix of int" $ do
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ( "x"
             , DomainMatrix (intDomain 1 3) (intDomain 1 5)
             , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
             )
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ( "x"
             , DomainMatrix (intDomain 1 3) (intDomain 1 5)
             , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
@@ -109,14 +107,14 @@ spec = do
             , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
             ) ]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) (intDomain 1 5) )
            [("x", ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5])]
             ("x", ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5])
 
     describe "matrix 2d of bool" $ do
 
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ( "x"
             , DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool)
             , ConstantMatrix (intDomain 1 3)
@@ -127,7 +125,7 @@ spec = do
             )
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ( "x"
             , DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool)
             , ConstantMatrix (intDomain 1 3)
@@ -145,7 +143,7 @@ spec = do
                 ]
             ) ]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool) )
           [ ( "x", ConstantMatrix (intDomain 1 3)
                     [ ConstantMatrix (intDomain 1 2) [ConstantBool False, ConstantBool True ]
@@ -162,7 +160,7 @@ spec = do
 
     describe "matrix 2d of int" $ do
 
-        it "down1" $ down1Test primitive
+        it "down1" $ down1Test
             ( "x"
             , DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
             , ConstantMatrix (intDomain 1 3)
@@ -173,7 +171,7 @@ spec = do
             )
             Nothing
 
-        it "down" $ downTest primitive
+        it "down" $ downTest
             ( "x"
             , DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
             , ConstantMatrix (intDomain 1 3)
@@ -191,7 +189,7 @@ spec = do
                 ]
             ) ]
 
-        it "up" $ upTest primitive
+        it "up" $ upTest
             ( "x", DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9)) )
           [ ( "x", ConstantMatrix (intDomain 1 3)
                     [ ConstantMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 7]
@@ -208,7 +206,7 @@ spec = do
 
     describe "(bool, int)" $ do
 
-        it "down1" $ down1Test tuple
+        it "down1" $ down1Test
             ( "x"
             , DomainTuple [DomainBool, intDomain 1 3]
             , ConstantTuple [ConstantBool False, ConstantInt 2]
@@ -217,7 +215,7 @@ spec = do
                   , ( "x_2", intDomain 1 3, ConstantInt 2      )
                   ])
 
-        it "down" $ downTest tuple
+        it "down" $ downTest
             ( "x"
             , DomainTuple [DomainBool, intDomain 1 3]
             , ConstantTuple [ConstantBool False, ConstantInt 2]
@@ -226,43 +224,69 @@ spec = do
             , ( "x_2", intDomain 1 3, ConstantInt 2      )
             ]
 
-        it "up" $ upTest tuple
+        it "up" $ upTest
             ( "x", DomainTuple [DomainBool, intDomain 1 3] )
             [ ( "x_1", ConstantBool False )
             , ( "x_2", ConstantInt 2      )
             ]
             ( "x", ConstantTuple [ConstantBool False, ConstantInt 2] )
 
+    describe "(bool, int, bool)" $ do
+
+        it "down1" $ down1Test
+            ( "x"
+            , DomainTuple [DomainBool, intDomain 1 3, DomainBool]
+            , ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
+            )
+            (Just [ ( "x_1", DomainBool   , ConstantBool False )
+                  , ( "x_2", intDomain 1 3, ConstantInt 2      )
+                  , ( "x_3", DomainBool   , ConstantBool True  )
+                  ])
+
+        it "down" $ downTest
+            ( "x"
+            , DomainTuple [DomainBool, intDomain 1 3, DomainBool]
+            , ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
+            )
+            [ ( "x_1", DomainBool   , ConstantBool False )
+            , ( "x_2", intDomain 1 3, ConstantInt 2      )
+            , ( "x_3", DomainBool   , ConstantBool True  )
+            ]
+
+        it "up" $ upTest
+            ( "x", DomainTuple [DomainBool, intDomain 1 3, DomainBool] )
+            [ ( "x_1", ConstantBool False )
+            , ( "x_2", ConstantInt 2      )
+            , ( "x_3", ConstantBool True  )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True] )
 
 
 down1Test
-    :: ReprActions (Either Doc)
-    -> (Text, Domain Representation Constant, Constant)
+    :: (Text, Domain Representation Constant, Constant)
     -> Maybe [(Text, Domain Representation Constant, Constant)]
     -> Expectation
-down1Test repr high low' =
-    case down1_ repr high of
+down1Test high low' =
+    case down1_ dispatch high of
         Left err -> expectationFailure (show err)
         Right low -> low `shouldBe` low'
 
 downTest
-    :: ReprActions (Either Doc)
-    -> (Text, Domain Representation Constant, Constant)
+    :: (Text, Domain Representation Constant, Constant)
     -> [(Text, Domain Representation Constant, Constant)]
     -> Expectation
-downTest repr high lows' =
-    case down_ repr high of
+downTest high lows' =
+    case down_ high of
         Left err -> expectationFailure (show err)
         Right lows -> lows `shouldBe` lows'
 
 upTest
-    :: ReprActions (Either Doc)
-    -> (Text, Domain Representation Constant)
+    :: (Text, Domain Representation Constant)
     -> [(Text, Constant)]
     -> (Text, Constant)
     -> Expectation
-upTest repr info lows high' =
-    case up repr info lows of
+upTest info lows high' =
+    case up info lows of
         Left err -> expectationFailure (show err)
         Right high -> high `shouldBe` high'
 
