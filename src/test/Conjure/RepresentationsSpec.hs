@@ -9,12 +9,11 @@ import Language.E.Definition hiding ( Spec )
 import Conjure.Representations ( ReprActions(down1, up), down, primitive )
 
 -- hspec
-import Test.Hspec ( hspec, Spec, describe, it, shouldBe, Expectation, expectationFailure )
+import Test.Hspec ( Spec, describe, it, shouldBe, Expectation, expectationFailure )
+-- import Test.Hspec ( hspec )
 
 -- QuickCheck
-import Test.QuickCheck ( property, (==>), NonNegative(..) )
-
-import Data.Text ( Text )
+-- import Test.QuickCheck ( property, (==>), NonNegative(..) )
 
 
 spec :: Spec
