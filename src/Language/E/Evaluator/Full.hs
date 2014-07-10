@@ -543,6 +543,23 @@ fullEvaluator
                       | functionApply.args   := idx'
                       |]
 
+fullEvaluator [eMatch| (&a,&b) in &f |]
+    | isFullyInstantiated f && isFullyInstantiated a && isFullyInstantiated b
+    , [xMatch| fValues := value.function.values |] <- f
+    = do
+        let
+            getPair [xMatch| [i,j] := mapping |] = (i,j)
+            getPair _ = bug $ vcat [ "fullEvaluator (&a,&b) in &f"
+                                   , "f:" <+> pretty f
+                                   , "a:" <+> pretty a
+                                   , "b:" <+> pretty b
+                                   ]
+        let result =
+                (a, b) `elem` [ (i,j) | val <- fValues
+                                      , let (i,j) = getPair val
+                                      ]
+        ret [xMake| value.literal := [Prim (B result)] |]
+
 fullEvaluator [eMatch| preImage(&f,&x) |]
     | isFullyInstantiated f && isFullyInstantiated x
     , [xMatch| fValues := value.function.values |] <- f

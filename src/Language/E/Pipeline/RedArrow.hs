@@ -622,10 +622,9 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                         aFr' <- valueIntOut aFr
                         aTo' <- valueIntOut aTo
                         values' <- sequence
-                            [ return (iInt,jInt)
+                            [ return (iInt,j)
                             | [xMatch| [i,j] := mapping |] <- values
                             , [xMatch| [Prim (I iInt)] := value.literal |] <- [i]
-                            , [xMatch| [Prim (I jInt)] := value.literal |] <- [j]
                             ]
                         z <- zeroVal domInnerTo'
 
@@ -642,7 +641,7 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
                         let values_vals =
                                 [ case lookup i values' of
                                     Nothing -> z
-                                    Just j  -> [xMake| value.literal := [Prim (I j)] |]
+                                    Just j  -> j
                                 | i <- [aFr' .. aTo']
                                 ]
                         let valsOut  = [xMake| value.matrix.values := values_vals
