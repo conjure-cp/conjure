@@ -462,12 +462,116 @@ tests = testGroup "representations"
             ( "x", ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantTuple [ConstantBool True, ConstantInt 4]] )
         ]
 
+    , testGroup "(bool, (int, (bool, int)))"
+        [ testCase "down1" $ down1Test
+            ( "x"
+            , DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]]
+            , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]]]
+            )
+            (Just [ ( "x_1", DomainBool   , ConstantBool False )
+                  , ( "x_2", DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]
+                           , ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]] )
+                  ])
+        , testCase "down" $ downTest
+            ( "x"
+            , DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]]
+            , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]]]
+            )
+            [ ( "x_1"    , DomainBool   , ConstantBool False )
+            , ( "x_2_1"  , intDomain 1 3, ConstantInt 2      )
+            , ( "x_2_2_1", DomainBool   , ConstantBool True  )
+            , ( "x_2_2_2", intDomain 2 5, ConstantInt 4      )
+            ]
+        , testCase "up1" $ up1Test
+            ( "x", DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]] )
+            [ ( "x_1", ConstantBool False )
+            , ( "x_2", ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]] )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]]] )
+        , testCase "up" $ upTest
+            ( "x", DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]] )
+            [ ( "x_1"    , ConstantBool False )
+            , ( "x_2_1"  , ConstantInt 2      )
+            , ( "x_2_2_1", ConstantBool True  )
+            , ( "x_2_2_2", ConstantInt 4      )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]]] )
+        ]
+
+    , testGroup "(bool, (int, bool), int)"
+        [ testCase "down1" $ down1Test
+            ( "x"
+            , DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5]
+            , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True], ConstantInt 4]
+            )
+            (Just [ ( "x_1", DomainBool   , ConstantBool False )
+                  , ( "x_2", DomainTuple [intDomain 1 3, DomainBool], ConstantTuple [ConstantInt 2, ConstantBool True] )
+                  , ( "x_3", intDomain 2 5, ConstantInt 4      )
+                  ])
+        , testCase "down" $ downTest
+            ( "x"
+            , DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5]
+            , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True], ConstantInt 4]
+            )
+            [ ( "x_1"  , DomainBool   , ConstantBool False )
+            , ( "x_2_1", intDomain 1 3, ConstantInt 2      )
+            , ( "x_2_2", DomainBool   , ConstantBool True  )
+            , ( "x_3"  , intDomain 2 5, ConstantInt 4      )
+            ]
+        , testCase "up1" $ up1Test
+            ( "x", DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5] )
+            [ ( "x_1", ConstantBool False )
+            , ( "x_2", ConstantTuple [ConstantInt 2, ConstantBool True] )
+            , ( "x_3", ConstantInt 4      )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True], ConstantInt 4] )
+        , testCase "up" $ upTest
+            ( "x", DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5] )
+            [ ( "x_1"  , ConstantBool False )
+            , ( "x_2_1", ConstantInt 2      )
+            , ( "x_2_2", ConstantBool True  )
+            , ( "x_3"  , ConstantInt 4      )
+            ]
+            ( "x", ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True], ConstantInt 4] )
+        ]
+
+    , testGroup "(((bool, int), bool), int)"
+        [ testCase "down1" $ down1Test
+            ( "x"
+            , DomainTuple [DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5]
+            , ConstantTuple [ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4]
+            )
+            (Just [ ( "x_1", DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool]
+                           , ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
+                  , ( "x_2", intDomain 2 5, ConstantInt 4      )
+                  ])
+        , testCase "down" $ downTest
+            ( "x"
+            , DomainTuple [DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5]
+            , ConstantTuple [ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4]
+            )
+            [ ( "x_1_1_1", DomainBool   , ConstantBool False )
+            , ( "x_1_1_2", intDomain 1 3, ConstantInt 2      )
+            , ( "x_1_2"  , DomainBool   , ConstantBool True  )
+            , ( "x_2"    , intDomain 2 5, ConstantInt 4      )
+            ]
+        , testCase "up1" $ up1Test
+            ( "x", DomainTuple [DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5] )
+            [ ( "x_1", ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
+            , ( "x_2", ConstantInt 4 )
+            ]
+            ( "x", ConstantTuple [ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4] )
+        , testCase "up" $ upTest
+            ( "x", DomainTuple [DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5] )
+            [ ( "x_1_1_1", ConstantBool False )
+            , ( "x_1_1_2", ConstantInt 2      )
+            , ( "x_1_2"  , ConstantBool True  )
+            , ( "x_2"    , ConstantInt 4      )
+            ]
+            ( "x", ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4] )
+        ]
+
     ]
-
-
-    -- testGroup "(bool, (int, (bool, int)))" $ do
-    -- testGroup "(bool, (int, bool), int)" $ do
-    -- testGroup "(((bool, int), bool), int)" $ do
 
 
 down1Test

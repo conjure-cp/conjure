@@ -61,7 +61,7 @@ up (name, highDomain) ctxt = do
             case lookup name ctxt of
                 Nothing -> throwError $ vcat
                     $ ("No value for:" <+> pretty name)
-                    : "In context:"
+                    : "Bindings in context:"
                     : prettyContext ctxt
                 Just val -> return (name, val)
         Just toDescend -> do
@@ -102,7 +102,7 @@ primitive = ReprActions
         case lookup name ctxt of
             Nothing -> throwError $ vcat
                 $ ("No value for:" <+> pretty name)
-                : "In context:"
+                : "Bindings in context:"
                 : prettyContext ctxt
             Just c  -> return (name, c)
     }
@@ -138,11 +138,12 @@ tuple = ReprActions
             let names = map (mkName name) [1 .. length ds]
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
-                    Nothing -> throwError $ vcat
+                    Nothing -> throwError $ vcat $
                         [ "No value for:" <+> pretty n
                         , "When working on:" <+> pretty name
                         , "With domain:" <+> pretty (DomainTuple ds)
-                        ]
+                        ] ++
+                        ("Bindings in context:" : prettyContext ctxt)
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
             return (name, ConstantTuple vals)
