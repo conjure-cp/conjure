@@ -571,6 +571,119 @@ tests = testGroup "representations"
             ( "x", ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4] )
         ]
 
+    , testGroup "matrix of (bool, int)"
+        [ testCase "down1" $ down1Test
+            ( "x"
+            , DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 0 9])
+            , ConstantMatrix (intDomain 1 3)
+                [ ConstantTuple [ConstantBool False, ConstantInt 0]
+                , ConstantTuple [ConstantBool True , ConstantInt 3]
+                , ConstantTuple [ConstantBool False, ConstantInt 4]
+                ]
+            )
+            (Just [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool
+                           , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+                  , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 0 9)
+                           , ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+                  ])
+        , testCase "down" $ downTest
+            ( "x"
+            , DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 0 9])
+            , ConstantMatrix (intDomain 1 3)
+                [ ConstantTuple [ConstantBool False, ConstantInt 0]
+                , ConstantTuple [ConstantBool True , ConstantInt 3]
+                , ConstantTuple [ConstantBool False, ConstantInt 4]
+                ]
+            )
+            [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool
+                     , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+            , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 0 9)
+                     , ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+            ]
+        , testCase "up1" $ up1Test
+            ( "x", DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 0 9]) )
+            [ ( "x_1", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+            , ( "x_2", ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+            ]
+            ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantTuple [ConstantBool False, ConstantInt 0]
+                    , ConstantTuple [ConstantBool True , ConstantInt 3]
+                    , ConstantTuple [ConstantBool False, ConstantInt 4]
+                    ] )
+        , testCase "up" $ upTest
+            ( "x", DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 0 9]) )
+            [ ( "x_1", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+            , ( "x_2", ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+            ]
+            ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantTuple [ConstantBool False, ConstantInt 0]
+                    , ConstantTuple [ConstantBool True , ConstantInt 3]
+                    , ConstantTuple [ConstantBool False, ConstantInt 4]
+                    ] )
+        ]
+
+    , testGroup "matrix of (bool, (int, bool))"
+        [ testCase "down1" $ down1Test
+            ( "x"
+            , DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 0 9, DomainBool]])
+            , ConstantMatrix (intDomain 1 3)
+                [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 0, ConstantBool True]]
+                , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 3, ConstantBool False]]
+                , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 4, ConstantBool True]]
+                ]
+            )
+            (Just [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool
+                           , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+                  , ( "x_2", DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9, DomainBool])
+                           , ConstantMatrix (intDomain 1 3)
+                               [ ConstantTuple [ConstantInt 0, ConstantBool True]
+                               , ConstantTuple [ConstantInt 3, ConstantBool False]
+                               , ConstantTuple [ConstantInt 4, ConstantBool True]
+                               ] )
+                  ])
+        , testCase "down" $ downTest
+            ( "x"
+            , DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 0 9, DomainBool]])
+            , ConstantMatrix (intDomain 1 3)
+                [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 0, ConstantBool True]]
+                , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 3, ConstantBool False]]
+                , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 4, ConstantBool True]]
+                ]
+            )
+            [ ( "x_1"  , DomainMatrix (intDomain 1 3) DomainBool
+                       , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+            , ( "x_2_1", DomainMatrix (intDomain 1 3) (intDomain 0 9)
+                       , ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+            , ( "x_2_2", DomainMatrix (intDomain 1 3) DomainBool
+                       , ConstantMatrix (intDomain 1 3) [ConstantBool True, ConstantBool False, ConstantBool True] )
+            ]
+        , testCase "up1" $ up1Test
+            ( "x", DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 0 9, DomainBool]]) )
+            [ ( "x_1", ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+            , ( "x_2", ConstantMatrix (intDomain 1 3)
+                           [ ConstantTuple [ConstantInt 0, ConstantBool True]
+                           , ConstantTuple [ConstantInt 3, ConstantBool False]
+                           , ConstantTuple [ConstantInt 4, ConstantBool True]
+                           ] )
+            ]
+            ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 0, ConstantBool True]]
+                    , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 3, ConstantBool False]]
+                    , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 4, ConstantBool True]]
+                    ] )
+        , testCase "up" $ upTest
+            ( "x", DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 0 9, DomainBool]]) )
+            [ ( "x_1"  , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+            , ( "x_2_1", ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+            , ( "x_2_2", ConstantMatrix (intDomain 1 3) [ConstantBool True, ConstantBool False, ConstantBool True] )
+            ]
+            ( "x", ConstantMatrix (intDomain 1 3)
+                    [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 0, ConstantBool True]]
+                    , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 3, ConstantBool False]]
+                    , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 4, ConstantBool True]]
+                    ] )
+        ]
+
     ]
 
 
