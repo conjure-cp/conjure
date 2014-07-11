@@ -20,7 +20,6 @@ import Language.E
 import Language.E.Pipeline.Groom ( groomSpec )
 
 import qualified Data.Text as T
-import Data.List ( findIndex, transpose )
 
 
 
