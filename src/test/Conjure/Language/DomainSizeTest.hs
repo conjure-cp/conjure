@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Conjure.Language.DomainSizeSpec ( tests ) where
+module Conjure.Language.DomainSizeTest ( tests ) where
 
 -- conjure
 import Language.E.Definition hiding ( Spec )

@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Conjure.RepresentationsSpec ( tests ) where
+module Conjure.RepresentationsTest ( tests ) where
 
 -- conjure
 import Language.E.Imports
