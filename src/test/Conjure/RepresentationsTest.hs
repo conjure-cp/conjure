@@ -1187,15 +1187,26 @@ tests = testGroup "representations"
                                   , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
                                   ] )
                 ]
-        in
-        [ testCase "down1" $ down1Test ("x", highDomain, highConstant) (Just mid)
-        , testCase "down"  $ downTest  ("x", highDomain, highConstant) low
-        , testCase "up1"   $ up1Test   ("x", highDomain) (dropDomain mid) ("x", highConstant)
-        , testCase "up"    $ upTest    ("x", highDomain) (dropDomain low) ("x", highConstant)
-        ]
+        in testCases "x" highDomain highConstant Just mid low
 
     ]
 
+
+testCases
+    :: Text                                                                                     -- high level variable name
+    -> Domain Representation Constant                                                           -- high level domain
+    -> Constant                                                                                 -- high level value (constant)
+    -> ([(Text, a, Constant)] -> Maybe [(Text, Domain Representation Constant, Constant)])      -- `const Nothing` -- if going one level down produces Nothing
+                                                                                                -- `Just`          -- if going one level down produces (Just mid)
+    ->  [(Text, a, Constant)]                                                                   -- "mid" result, if we go one level down
+    -> [(Text, Domain Representation Constant, Constant)]                                       -- "low" result, if we go all the way down
+    -> [TestTree]
+testCases highName highDomain highConstant mkMid mid low =
+    [ testCase "down1" $ down1Test (highName, highDomain, highConstant) (mkMid mid)
+    , testCase "down"  $ downTest  (highName, highDomain, highConstant) low
+    , testCase "up1"   $ up1Test   (highName, highDomain) (dropDomain mid) ("x", highConstant)
+    , testCase "up"    $ upTest    (highName, highDomain) (dropDomain low) ("x", highConstant)
+    ]
 
 down1Test
     :: (Text, Domain Representation Constant, Constant)
