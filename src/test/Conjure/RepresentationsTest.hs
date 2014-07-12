@@ -477,6 +477,10 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
+    , testGroup "(bool, bool, bool)" $ testCasesAuto "x"
+        ( DomainTuple [DomainBool, DomainBool, DomainBool] )
+        ( ConstantTuple [ConstantBool False, ConstantBool False, ConstantBool True] )
+
     ]
 
 
@@ -492,8 +496,8 @@ testCases
 testCases highName highDomain highConstant mkMid mid low =
     [ testCase "down1" $ down1Test (highName, highDomain, highConstant) (mkMid mid)
     , testCase "down"  $ downTest  (highName, highDomain, highConstant) low
-    , testCase "up1"   $ up1Test   (highName, highDomain) (dropDomain mid) (highName, highConstant)
-    , testCase "up"    $ upTest    (highName, highDomain) (dropDomain low) (highName, highConstant)
+    , testCase "up1"   $ up1Test   (highName, highDomain) (map dropDomain mid) (highName, highConstant)
+    , testCase "up"    $ upTest    (highName, highDomain) (map dropDomain low) (highName, highConstant)
     ]
 
 down1Test
@@ -535,11 +539,48 @@ upTest info lows high' =
         Right high -> Pr high @?= Pr high'
 
 
+testCasesAuto
+    :: Text                                                      -- high level variable name
+    -> Domain Representation Constant                            -- high level domain
+    -> Constant                                                  -- high level value (constant)
+    -> [TestTree]
+testCasesAuto highName highDomain highConstant =
+    [ testCase "downUp1" $ downUp1Test (highName, highDomain, highConstant)
+    , testCase "downUp"  $ downUpTest  (highName, highDomain, highConstant)
+    ]
+
+downUp1Test
+    :: (Text, Domain Representation Constant, Constant)
+    -> Assertion
+downUp1Test high =
+    case down1_ dispatch high of
+        Left err -> assertFailure (show err)
+        Right mlows -> do
+            let lows = maybe [dropDomain high] (map dropDomain) mlows   -- use high if we cannot go down1
+            case up1 dispatch (dropConstant high) lows of
+                Left err -> assertFailure (show err)
+                Right high' -> high' @?= dropDomain high
+
+downUpTest
+    :: (Text, Domain Representation Constant, Constant)
+    -> Assertion
+downUpTest high =
+    case down_ high of
+        Left err -> assertFailure (show err)
+        Right lows ->
+            case up (dropConstant high) (map dropDomain lows) of
+                Left err -> assertFailure (show err)
+                Right high' -> high' @?= dropDomain high
+
+
 intDomain :: Int -> Int -> Domain r Constant
 intDomain lb ub = DomainInt [RangeBounded (ConstantInt lb) (ConstantInt ub)]
 
-dropDomain :: [(a,b,c)] -> [(a,c)]
-dropDomain xs = [ (a,c) | (a,_,c) <- xs ]
+dropConstant :: (a,b,c) -> (a,b)
+dropConstant (a,b,_) = (a,b)
+
+dropDomain :: (a,b,c) -> (a,c)
+dropDomain (a,_,c) = (a,c)
 
 
 data Pr a = Pr a
