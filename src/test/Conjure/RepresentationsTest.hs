@@ -1141,95 +1141,57 @@ tests = testGroup "representations"
                         , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 6], ConstantBool False], ConstantInt 9]
                         ]
                     ]
-        in
-        [ testCase "down1" $ down1Test
-            ("x", highDomain, highConstant)
-            (Just [ ( "x_1" , DomainMatrix (intDomain 1 2)
-                                (DomainMatrix (intDomain 1 3)
-                                    (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]))
-                            , ConstantMatrix (intDomain 1 2)
-                                [ ConstantMatrix (intDomain 1 3)
-                                    [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 2],ConstantBool True]
-                                    , ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 3],ConstantBool False]
-                                    , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 4],ConstantBool False]
-                                    ]
-                                , ConstantMatrix (intDomain 1 3)
-                                    [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 4],ConstantBool True]
-                                    , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 5],ConstantBool False]
-                                    , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 6],ConstantBool False]
-                                    ]
+            mid =
+                [ ( "x_1" , DomainMatrix (intDomain 1 2)
+                              (DomainMatrix (intDomain 1 3)
+                                  (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]))
+                          , ConstantMatrix (intDomain 1 2)
+                              [ ConstantMatrix (intDomain 1 3)
+                                  [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 2],ConstantBool True]
+                                  , ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 3],ConstantBool False]
+                                  , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 4],ConstantBool False]
+                                  ]
+                              , ConstantMatrix (intDomain 1 3)
+                                  [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 4],ConstantBool True]
+                                  , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 5],ConstantBool False]
+                                  , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 6],ConstantBool False]
+                                  ]
+                              ] )
+                , ( "x_2" , DomainMatrix (intDomain 1 2)
+                                  (DomainMatrix (intDomain 1 3)
+                                      (intDomain 2 5))
+                          , ConstantMatrix (intDomain 1 2)
+                                [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
+                                , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
                                 ] )
-                  , ( "x_2" , DomainMatrix (intDomain 1 2)
-                                    (DomainMatrix (intDomain 1 3)
-                                        (intDomain 2 5))
-                            , ConstantMatrix (intDomain 1 2)
+                ]
+            low =
+                [ ( "x_1_1_1" , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) DomainBool)
+                              , ConstantMatrix (intDomain 1 2)
+                                  [ ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool True]
+                                  , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool True]
+                                  ] )
+                , ( "x_1_1_2" , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) (intDomain 1 3))
+                              , ConstantMatrix (intDomain 1 2)
+                                  [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 3,ConstantInt 4]
+                                  , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 5,ConstantInt 6]
+                                  ] )
+                , ( "x_1_2"   , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) DomainBool)
+                              , ConstantMatrix (intDomain 1 2)
+                                  [ ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
+                                  , ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
+                                  ] )
+                , ( "x_2"     , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) (intDomain 2 5))
+                              , ConstantMatrix (intDomain 1 2)
                                   [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
                                   , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
                                   ] )
-                  ] )
-        , testCase "down" $ downTest
-            ("x", highDomain, highConstant)
-            [ ( "x_1_1_1" , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) DomainBool)
-                          , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool True]
-                              , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool True]
-                              ] )
-            , ( "x_1_1_2" , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) (intDomain 1 3))
-                          , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 3,ConstantInt 4]
-                              , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 5,ConstantInt 6]
-                              ] )
-            , ( "x_1_2"   , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) DomainBool)
-                          , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
-                              , ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
-                              ] )
-            , ( "x_2"     , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) (intDomain 2 5))
-                          , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
-                              , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
-                              ] )
-            ]
-        , testCase "up1" $ up1Test
-            ("x", highDomain)
-            [ ( "x_1" , ConstantMatrix (intDomain 1 2)
-                         [ ConstantMatrix (intDomain 1 3)
-                            [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 2],ConstantBool True]
-                            , ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 3],ConstantBool False]
-                            , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 4],ConstantBool False]
-                            ]
-                         , ConstantMatrix (intDomain 1 3)
-                            [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 4],ConstantBool True]
-                            , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 5],ConstantBool False]
-                            , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 6],ConstantBool False]
-                            ]
-                         ] )
-            , ( "x_2" , ConstantMatrix (intDomain 1 2)
-                            [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
-                            , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
-                            ] )
-            ]
-            ("x", highConstant)
-        , testCase "up" $ upTest
-            ("x", highDomain)
-            [ ( "x_1_1_1" , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool True]
-                              , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool True]
-                              ] )
-            , ( "x_1_1_2" , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 3,ConstantInt 4]
-                              , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 5,ConstantInt 6]
-                              ] )
-            , ( "x_1_2"   , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
-                              , ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
-                              ] )
-            , ( "x_2"     , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
-                              , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
-                              ] )
-            ]
-            ("x", highConstant)
+                ]
+        in
+        [ testCase "down1" $ down1Test ("x", highDomain, highConstant) (Just mid)
+        , testCase "down"  $ downTest  ("x", highDomain, highConstant) low
+        , testCase "up1"   $ up1Test   ("x", highDomain) (dropDomain mid) ("x", highConstant)
+        , testCase "up"    $ upTest    ("x", highDomain) (dropDomain low) ("x", highConstant)
         ]
 
     ]
@@ -1276,6 +1238,9 @@ upTest info lows high' =
 
 intDomain :: Int -> Int -> Domain r Constant
 intDomain lb ub = DomainInt [RangeBounded (ConstantInt lb) (ConstantInt ub)]
+
+dropDomain :: [(a,b,c)] -> [(a,c)]
+dropDomain xs = [ (a,c) | (a,_,c) <- xs ]
 
 
 data Pr a = Pr a
