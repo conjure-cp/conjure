@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Conjure.RepresentationsTest ( tests ) where
 
@@ -20,39 +21,19 @@ import Test.Tasty.HUnit
 tests :: TestTree
 tests = testGroup "representations"
 
-    [ testGroup "bool #1"
-        [ testCase "down1" $ down1Test
-            ("x", DomainBool, ConstantBool False)
-            Nothing
-        , testCase "down" $ downTest
-            ("x", DomainBool, ConstantBool False)
-           [("x", DomainBool, ConstantBool False)]
-        , testCase "up1" $ up1Test
-            ("x", DomainBool)
-           [("x", ConstantBool False)]
-            ("x", ConstantBool False)
-        , testCase "up" $ upTest
-            ("x", DomainBool)
-           [("x", ConstantBool False)]
-            ("x", ConstantBool False)
-        ]
+    [ testGroup "bool #1" $
+        let
+            highDomain = DomainBool
+            highConstant = ConstantBool False
+            low = [("x", DomainBool, ConstantBool False)]
+        in testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "bool #2"
-        [ testCase "down1" $ down1Test
-            ("x", DomainBool, ConstantBool True)
-            Nothing
-        , testCase "down" $ downTest
-            ("x", DomainBool, ConstantBool True)
-           [("x", DomainBool, ConstantBool True)]
-        , testCase "up1" $ up1Test
-            ("x", DomainBool)
-           [("x", ConstantBool True)]
-            ("x", ConstantBool True)
-        , testCase "up" $ upTest
-            ("x", DomainBool)
-           [("x", ConstantBool True)]
-            ("x", ConstantBool True)
-        ]
+    , testGroup "bool #2" $
+        let
+            highDomain = DomainBool
+            highConstant = ConstantBool True
+            low = [("x", DomainBool, ConstantBool True)]
+        in testCases "x" highDomain highConstant (const Nothing) low low
 
     , testGroup "int #1"
         [ testCase "down1" $ down1Test
@@ -1193,19 +1174,19 @@ tests = testGroup "representations"
 
 
 testCases
-    :: Text                                                                                     -- high level variable name
-    -> Domain Representation Constant                                                           -- high level domain
-    -> Constant                                                                                 -- high level value (constant)
-    -> ([(Text, a, Constant)] -> Maybe [(Text, Domain Representation Constant, Constant)])      -- `const Nothing` -- if going one level down produces Nothing
-                                                                                                -- `Just`          -- if going one level down produces (Just mid)
-    ->  [(Text, a, Constant)]                                                                   -- "mid" result, if we go one level down
-    -> [(Text, Domain Representation Constant, Constant)]                                       -- "low" result, if we go all the way down
+    :: Text                                                      -- high level variable name
+    -> Domain Representation Constant                            -- high level domain
+    -> Constant                                                  -- high level value (constant)
+    -> (forall a . a -> Maybe a)                                 -- `const Nothing` -- if going one level down produces Nothing
+                                                                 -- `Just`          -- if going one level down produces (Just mid)
+    -> [(Text, Domain Representation Constant, Constant)]        -- "mid" result, if we go one level down
+    -> [(Text, Domain Representation Constant, Constant)]        -- "low" result, if we go all the way down
     -> [TestTree]
 testCases highName highDomain highConstant mkMid mid low =
     [ testCase "down1" $ down1Test (highName, highDomain, highConstant) (mkMid mid)
     , testCase "down"  $ downTest  (highName, highDomain, highConstant) low
-    , testCase "up1"   $ up1Test   (highName, highDomain) (dropDomain mid) ("x", highConstant)
-    , testCase "up"    $ upTest    (highName, highDomain) (dropDomain low) ("x", highConstant)
+    , testCase "up1"   $ up1Test   (highName, highDomain) (dropDomain mid) (highName, highConstant)
+    , testCase "up"    $ upTest    (highName, highDomain) (dropDomain low) (highName, highConstant)
     ]
 
 down1Test
