@@ -494,10 +494,12 @@ testCases
     -> [(Text, Domain Representation Constant, Constant)]        -- "low" result, if we go all the way down
     -> [TestTree]
 testCases highName highDomain highConstant mkMid mid low =
-    [ testCase "down1" $ down1Test (highName, highDomain, highConstant) (mkMid mid)
-    , testCase "down"  $ downTest  (highName, highDomain, highConstant) low
-    , testCase "up1"   $ up1Test   (highName, highDomain) (map dropDomain mid) (highName, highConstant)
-    , testCase "up"    $ upTest    (highName, highDomain) (map dropDomain low) (highName, highConstant)
+    [ testCase "down1"   $ down1Test   (highName, highDomain, highConstant) (mkMid mid)
+    , testCase "down"    $ downTest    (highName, highDomain, highConstant) low
+    , testCase "up1"     $ up1Test     (highName, highDomain) (map dropDomain mid) (highName, highConstant)
+    , testCase "up"      $ upTest      (highName, highDomain) (map dropDomain low) (highName, highConstant)
+    , testCase "downUp1" $ downUp1Test (highName, highDomain, highConstant)
+    , testCase "downUp"  $ downUpTest  (highName, highDomain, highConstant)
     ]
 
 down1Test
@@ -559,7 +561,7 @@ downUp1Test high =
             let lows = maybe [dropDomain high] (map dropDomain) mlows   -- use high if we cannot go down1
             case up1 dispatch (dropConstant high) lows of
                 Left err -> assertFailure (show err)
-                Right high' -> high' @?= dropDomain high
+                Right high' -> Pr high' @?= Pr (dropDomain high)
 
 downUpTest
     :: (Text, Domain Representation Constant, Constant)
@@ -570,7 +572,7 @@ downUpTest high =
         Right lows ->
             case up (dropConstant high) (map dropDomain lows) of
                 Left err -> assertFailure (show err)
-                Right high' -> high' @?= dropDomain high
+                Right high' -> Pr high' @?= Pr (dropDomain high)
 
 
 intDomain :: Int -> Int -> Domain r Constant
