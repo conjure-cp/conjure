@@ -481,6 +481,67 @@ tests = testGroup "representations"
         ( DomainTuple [DomainBool, DomainBool, DomainBool] )
         ( ConstantTuple [ConstantBool False, ConstantBool False, ConstantBool True] )
 
+    , testGroup "(bool, matrix of int) {auto}" $ testCasesAuto "x"
+        ( DomainTuple
+            [ DomainBool
+            , DomainMatrix (intDomain 1 3) (intDomain 0 9)
+            ] )
+        ( ConstantTuple
+            [ ConstantBool False
+            , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
+            ] )
+
+    , testGroup "(bool, matrix of int)" $
+        let
+            highDomain =
+                DomainTuple
+                    [ DomainBool
+                    , DomainMatrix (intDomain 1 3) (intDomain 0 9)
+                    ]
+            highConstant =
+                ConstantTuple
+                    [ ConstantBool False
+                    , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
+                    ]
+            low =
+                [ ( "x_1", DomainBool,ConstantBool False)
+                , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 0 9)
+                         , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5] )
+                ]
+        in  testCases "x" highDomain highConstant Just low low
+
+    , testGroup "(bool, matrix of (int, bool))" $
+        let
+            highDomain =
+                DomainTuple
+                    [ DomainBool
+                    , DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9, DomainBool])
+                    ]
+            highConstant =
+                ConstantTuple
+                    [ ConstantBool False
+                    , ConstantMatrix (intDomain 1 3)
+                        [ ConstantTuple [ConstantInt 2, ConstantBool False]
+                        , ConstantTuple [ConstantInt 4, ConstantBool True]
+                        , ConstantTuple [ConstantInt 5, ConstantBool False]
+                        ]
+                    ]
+            mid =
+                [ ( "x_1" , DomainBool , ConstantBool False )
+                , ( "x_2" , DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9,DomainBool])
+                          , ConstantMatrix (intDomain 1 3)
+                              [ ConstantTuple [ConstantInt 2,ConstantBool False]
+                              , ConstantTuple [ConstantInt 4,ConstantBool True]
+                              , ConstantTuple [ConstantInt 5,ConstantBool False]
+                              ] )
+                ]
+            low =
+                [ ( "x_1"   , DomainBool , ConstantBool False )
+                , ( "x_2_1" , DomainMatrix (intDomain 1 3) (intDomain 0 9) , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5] )
+                , ( "x_2_2" , DomainMatrix (intDomain 1 3) DomainBool      , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool False] )
+                ]
+        in  testCases "x" highDomain highConstant Just mid low
+
     ]
 
 
