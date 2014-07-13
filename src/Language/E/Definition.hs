@@ -12,7 +12,7 @@ module Language.E.Definition
     , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
     , SetAttr(..)
     , DomainDefnEnum(..), DomainDefnUnnamed(..)
-    , Representation(..)
+    , HasRepresentation(..)
     , Constant(..)
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
     , Name(..)
@@ -365,14 +365,14 @@ instance Arbitrary a => Arbitrary (Range a) where
         ]
 
 
-data Representation = NoRepresentation | Representation Name
+data HasRepresentation = NoRepresentation | HasRepresentation Name
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
-instance Serialize Representation
+instance Serialize HasRepresentation
 
-instance Hashable Representation
+instance Hashable HasRepresentation
 
-instance ToJSON Representation
+instance ToJSON HasRepresentation
 
 
 data Constant

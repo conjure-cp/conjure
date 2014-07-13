@@ -73,7 +73,7 @@ instance Arbitrary AnyConstantTuple where
 maxRetries :: Int
 maxRetries = 1000000
 
-data AnyDomainAndConstant = AnyDomainAndConstant (Domain Representation Constant) Constant
+data AnyDomainAndConstant = AnyDomainAndConstant (Domain HasRepresentation Constant) Constant
 
 instance Show AnyDomainAndConstant where
     show (AnyDomainAndConstant domain constant) = show $ vcat
@@ -91,7 +91,7 @@ instance Arbitrary AnyDomainAndConstant where
 --   It generates a random domain, and a generator of random constants of that domain.
 --   Follow the function calls starting from dispatch to see how it's implemented. It is pretty straightforward really.
 --   Note: The nesting level is controlled via the `sized` combinator from QuickCheck.
-arbitraryDomainAndConstant :: Gen (Domain Representation Constant, Gen Constant)
+arbitraryDomainAndConstant :: Gen (Domain HasRepresentation Constant, Gen Constant)
 arbitraryDomainAndConstant = sized dispatch
 
     where
@@ -100,11 +100,11 @@ arbitraryDomainAndConstant = sized dispatch
         smaller :: Int -> Int
         smaller depth = max 0 (div depth 10)
 
-        dispatch :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        dispatch :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         dispatch 0 = oneof [bool, int]
         dispatch d = oneof [bool, int, tuple d, matrix d, set d]
 
-        bool :: Gen (Domain Representation Constant, Gen Constant)
+        bool :: Gen (Domain HasRepresentation Constant, Gen Constant)
         bool = return (DomainBool, ConstantBool <$> arbitrary)
 
         int :: Gen (Domain r Constant, Gen Constant)
@@ -165,10 +165,10 @@ arbitraryDomainAndConstant = sized dispatch
                             , ConstantInt <$> pickFromList allVals
                             )
 
-        -- enum :: Gen (Domain Representation Constant, Gen Constant)
+        -- enum :: Gen (Domain HasRepresentation Constant, Gen Constant)
         -- enum = undefined
 
-        tuple :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        tuple :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         tuple depth = do
             arity <- choose (2 :: Int, 4)
             (ds, cs) <- unzip <$> vectorOf arity (dispatch (smaller depth))
@@ -176,7 +176,7 @@ arbitraryDomainAndConstant = sized dispatch
                    , ConstantTuple <$> sequence cs
                    )
 
-        matrix :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        matrix :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         matrix depth = do
             (indexDomain, _) <- int
             case domainSizeConstant indexDomain of
@@ -188,10 +188,10 @@ arbitraryDomainAndConstant = sized dispatch
                                 return $ ConstantMatrix indexDomain innerConstants
                            )
 
-        set :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        set :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         set depth = oneof [setFixed depth, setBounded depth]
 
-        setFixed :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        setFixed :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setFixed depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
@@ -201,7 +201,7 @@ arbitraryDomainAndConstant = sized dispatch
             repr <- pickFromList ["Explicit"] -- no other representation yet!
             let domainOut =
                     DomainSet
-                        (Representation repr)
+                        (HasRepresentation repr)
                         (SetAttrSize (ConstantInt size))
                         dom
             return ( domainOut
@@ -219,10 +219,10 @@ arbitraryDomainAndConstant = sized dispatch
                      in try (1 :: Int)
                    )
 
-        setBounded :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        setBounded :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBounded depth = oneof [setBoundedMax depth, setBoundedMinMax depth]
 
-        setBoundedMax :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        setBoundedMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBoundedMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
@@ -230,7 +230,7 @@ arbitraryDomainAndConstant = sized dispatch
                                 Just s  -> min 10 s
             maxSize <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
-            return ( DomainSet (Representation repr)
+            return ( DomainSet (HasRepresentation repr)
                                (SetAttrMaxSize (ConstantInt maxSize))
                                dom
                    , do numElems <- choose (0, maxSize)
@@ -239,7 +239,7 @@ arbitraryDomainAndConstant = sized dispatch
                         return (ConstantSet sorted)
                    )
 
-        setBoundedMinMax :: Int -> Gen (Domain Representation Constant, Gen Constant)
+        setBoundedMinMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBoundedMinMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
@@ -250,7 +250,7 @@ arbitraryDomainAndConstant = sized dispatch
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             let domainOut =
                     DomainSet
-                        (Representation repr)
+                        (HasRepresentation repr)
                         (SetAttrMinMaxSize
                             (ConstantInt minSize)
                             (ConstantInt maxSize))

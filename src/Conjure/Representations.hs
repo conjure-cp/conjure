@@ -17,20 +17,47 @@ import Language.E.Pretty
 import Data.Text ( pack )
 
 
-data ReprActions m = ReprActions
-    { down1  ::      (Text, Domain Representation Constant)
-        -> m (Maybe [(Text, Domain Representation Constant)])
-    , down1_ ::      (Text, Domain Representation Constant, Constant)
-        -> m (Maybe [(Text, Domain Representation Constant, Constant)])
-    , up1    :: (Text, Domain Representation Constant)
-             -> [(Text, Constant)] -> m (Text, Constant)
-    }
+type D = Domain HasRepresentation Constant
+
+type Representation m
+    =  Text
+    -> D
+    -> RepresentationResult m
+
+type RepresentationResult m =
+    ( m (Maybe [(Text, D)])
+    , Constant -> m (Maybe [(Text, D, Constant)])
+    , [(Text, Constant)] -> m (Text, Constant)
+    )
+
+
+down1
+    :: MonadError Doc m
+    => Representation m
+    ->           (Text, D)
+    -> m (Maybe [(Text, D)])
+down1 repr (name, domain) = fst3 (repr name domain)
+
+down1_
+    :: MonadError Doc m
+    => Representation m
+    ->           (Text, D, Constant)
+    -> m (Maybe [(Text, D, Constant)])
+down1_ repr (name, domain, constant) = snd3 (repr name domain) constant
+
+up1
+    :: MonadError Doc m
+    => Representation m
+    ->   (Text, D)
+    ->  [(Text, Constant)]
+    -> m (Text, Constant)
+up1 repr (name, domain) ctxt = thd3 (repr name domain) ctxt
 
 
 down
     :: MonadError Doc m
-    =>    (Text, Domain Representation Constant)
-    -> m [(Text, Domain Representation Constant)]
+    =>    (Text, D)
+    -> m [(Text, D)]
 down inp = do
     mout <- down1 dispatch inp
     case mout of
@@ -39,8 +66,8 @@ down inp = do
 
 down_
     :: MonadError Doc m
-    =>    (Text, Domain Representation Constant, Constant)
-    -> m [(Text, Domain Representation Constant, Constant)]
+    =>    (Text, D, Constant)
+    -> m [(Text, D, Constant)]
 down_ inp = do
     mout <- down1_ dispatch inp
     case mout of
@@ -49,12 +76,12 @@ down_ inp = do
 
 up
     :: MonadError Doc m
-    => (Text, Domain Representation Constant)
+    =>   (Text, D)
     ->  [(Text, Constant)]
     -> m (Text, Constant)
 up (name, highDomain) ctxt = do
     toDescend'
-        :: Maybe [(Text, Domain Representation Constant)]
+        :: Maybe [(Text, D)]
         <- down1 dispatch (name, highDomain)
     case toDescend' of
         Nothing ->
@@ -70,75 +97,56 @@ up (name, highDomain) ctxt = do
                  <- sequence [ up (n,d) ctxt | (n,d) <- toDescend ]
             up1 dispatch (name, highDomain) midConstants
 
-dispatch :: MonadError Doc m => ReprActions m
-dispatch = ReprActions
-    { down1 = dispatchDown
-    , down1_ = dispatchDown_
-    , up1 = dispatchUp
-    }
 
-    where
+dispatch :: MonadError Doc m => Representation m
+dispatch name domain =
+    case domain of
+        DomainTuple ds -> tuple name ds
+        DomainMatrix index inner -> matrix name index inner
+        _ -> primitive name
 
-        dispatchDown p@(_, domain) =
-            case domain of
-                DomainTuple{} -> down1 tuple p
-                DomainMatrix{} -> down1 matrix p
-                _ -> down1 primitive p
 
-        dispatchDown_ p@(_, domain, _) =
-            case domain of
-                DomainTuple{} -> down1_ tuple p
-                DomainMatrix{} -> down1_ matrix p
-                _ -> down1_ primitive p
-
-        dispatchUp p@(_, domain) ctxt =
-            case domain of
-                DomainTuple{} -> up1 tuple p ctxt
-                DomainMatrix{} -> up1 matrix p ctxt
-                _ -> up1 primitive p ctxt
-
-primitive :: MonadError Doc m => ReprActions m
-primitive = ReprActions
-    { down1  = const $ return Nothing
-    , down1_ = const $ return Nothing
-    , up1 = \ (name, _) ctxt ->
+primitive :: MonadError Doc m => Text -> RepresentationResult m
+primitive name =
+    ( return Nothing
+    , const $ return Nothing
+    , \ ctxt ->
         case lookup name ctxt of
             Nothing -> throwError $ vcat
                 $ ("No value for:" <+> pretty name)
                 : "Bindings in context:"
                 : prettyContext ctxt
             Just c  -> return (name, c)
-    }
+    )
 
-tuple :: MonadError Doc m => ReprActions m
-tuple = ReprActions
-    { down1 = tupleDown
-    , down1_ = tupleDown_
-    , up1 = tupleUp
-    }
+tuple :: MonadError Doc m => Text -> [D] -> RepresentationResult m
+tuple name ds = 
+    ( tupleDown
+    , tupleDown_
+    , tupleUp
+    )
 
     where
 
-        mkName name i = mconcat [name, "_", pack (show (i :: Int))]
+        mkName i = mconcat [name, "_", pack (show (i :: Int))]
 
-        tupleDown (name, DomainTuple ds) = return $ Just
-            [ (mkName name i, d)
+        tupleDown = return $ Just
+            [ (mkName i, d)
             | i <- [1..]
             | d <- ds
             ]
-        tupleDown _ = return Nothing
 
         -- TODO: check if (length ds == length cs)
-        tupleDown_ (name, DomainTuple ds, ConstantTuple cs) = return $ Just
-            [ (mkName name i, d, c)
+        tupleDown_ (ConstantTuple cs) = return $ Just
+            [ (mkName i, d, c)
             | i <- [1..]
             | d <- ds
             | c <- cs
             ]
         tupleDown_ _ = return Nothing
 
-        tupleUp (name, DomainTuple ds) ctxt = do
-            let names = map (mkName name) [1 .. length ds]
+        tupleUp ctxt = do
+            let names = map mkName [1 .. length ds]
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
                     Nothing -> throwError $ vcat $
@@ -150,29 +158,28 @@ tuple = ReprActions
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
             return (name, ConstantTuple vals)
-        tupleUp _ _ = throwError "tupleUp def"
 
-matrix :: MonadError Doc m => ReprActions m
-matrix = ReprActions
-    { down1 = matrixDown
-    , down1_ = matrixDown_
-    , up1 = matrixUp
-    }
+
+matrix :: MonadError Doc m => Text -> Domain () Constant -> D -> RepresentationResult m
+matrix name indexDomain innerDomain = 
+    ( matrixDown
+    , matrixDown_
+    , matrixUp
+    )
 
     where
 
-        matrixDown (name, DomainMatrix index inner) = do
-            mres <- down1 dispatch (name, inner)
+        matrixDown = do
+            mres <- down1 dispatch (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
-                Just mids -> return $ Just [ (n, DomainMatrix index d) | (n, d) <- mids ]
-        matrixDown _ = return Nothing
+                Just mids -> return $ Just [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
 
         -- TODO: check if indices are the same
-        matrixDown_ (name, DomainMatrix index inner, ConstantMatrix _index2 constants) = do
+        matrixDown_ (ConstantMatrix _indexDomain2 constants) = do
             mids1
-                :: [Maybe [(Text, Domain Representation Constant, Constant)]]
-                <- sequence [ down1_ dispatch (name, inner, c) | c <- constants ]
+                :: [Maybe [(Text, D, Constant)]]
+                <- sequence [ down1_ dispatch (name, innerDomain, c) | c <- constants ]
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
                 then return Nothing
@@ -180,7 +187,7 @@ matrix = ReprActions
                     if length mids2 == length mids1             -- if all were `Just`s
                         then do
                             let
-                                mids3 :: [(Text, Domain Representation Constant, [Constant])]
+                                mids3 :: [(Text, D, [Constant])]
                                 mids3 = [ ( head [ n | (n,_,_) <- line ]
                                           , head [ d | (_,d,_) <- line ]
                                           ,      [ c | (_,_,c) <- line ]
@@ -189,8 +196,8 @@ matrix = ReprActions
                                         ]
                             return $ Just
                                 [ ( n
-                                  , DomainMatrix index d
-                                  , ConstantMatrix index cs
+                                  , DomainMatrix indexDomain d
+                                  , ConstantMatrix indexDomain cs
                                   )
                                 | (n, d, cs) <- mids3
                                 ]
@@ -198,15 +205,15 @@ matrix = ReprActions
                             throwError $ vcat
                                 [ "This is weird. Heterogeneous matrix literal?"
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty (DomainMatrix index inner)
+                                , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                 ]
         matrixDown_ _ = return Nothing
 
-        matrixUp (name, DomainMatrix index inner) ctxt = do
+        matrixUp ctxt = do
 
             mid1
-                :: Maybe [(Text, Domain Representation Constant)]
-                <- down1 dispatch (name, inner)
+                :: Maybe [(Text, D)]
+                <- down1 dispatch (name, innerDomain)
 
             case mid1 of
                 Nothing ->
@@ -216,7 +223,7 @@ matrix = ReprActions
                     case lookup name ctxt of
                         Nothing -> throwError $ vcat $
                             [ "No value for:" <+> pretty name
-                            , "With domain:" <+> pretty (DomainMatrix index inner)
+                            , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                             ] ++
                             ("Bindings in context:" : prettyContext ctxt)
                         Just constant -> return (name, constant)
@@ -231,7 +238,7 @@ matrix = ReprActions
                                 Nothing -> throwError $ vcat $
                                     [ "No value for:" <+> pretty n
                                     , "When working on:" <+> pretty name
-                                    , "With domain:" <+> pretty (DomainMatrix index inner)
+                                    , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                     ] ++
                                     ("Bindings in context:" : prettyContext ctxt)
                                 Just constant ->
@@ -242,7 +249,7 @@ matrix = ReprActions
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant
                                             , "When working on:" <+> pretty name
-                                            , "With domain:" <+> pretty (DomainMatrix index inner)
+                                            , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                             ]
 
                     let midNames     = map fst mid3
@@ -251,16 +258,9 @@ matrix = ReprActions
                     mid4
                         :: [(Text, Constant)]
                         <- sequence
-                            [ up1 dispatch (name, inner) (zip midNames cs)
+                            [ up1 dispatch (name, innerDomain) (zip midNames cs)
                             | cs <- transpose midConstants
                             ]
                     let values = map snd mid4
-                    return (name, ConstantMatrix index values)
-
-        matrixUp _ _ = throwError "matrixUp def"
-
-
-
-
-
+                    return (name, ConstantMatrix indexDomain values)
 

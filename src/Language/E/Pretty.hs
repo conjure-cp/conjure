@@ -404,9 +404,9 @@ instance Pretty a => Pretty (Range a) where
     pretty (RangeUpperBounded x) = ".." <> pretty x
     pretty (RangeBounded x y) = pretty x <> ".." <> pretty y
 
-instance Pretty Representation where
+instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
-    pretty (Representation r) = pretty r
+    pretty (HasRepresentation r) = pretty r
 
 instance Pretty Constant where
     pretty (ConstantBool False) = "false"
@@ -421,7 +421,7 @@ instance Pretty Constant where
     pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
 
-instance Pretty (Tree Representation) where
+instance Pretty (Tree HasRepresentation) where
     pretty (Node r []) = pretty r
     pretty (Node r rs) = pretty r <+> prettyList Pr.brackets "," rs
 

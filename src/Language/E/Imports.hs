@@ -25,6 +25,7 @@ module Language.E.Imports
     , padShowInt
     , decodeFromFile
     , RandomM(..)
+    , fst3, snd3, thd3
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -199,4 +200,13 @@ class Monad m => RandomM m where
     get_stdgen :: m StdGen
     set_stdgen :: StdGen -> m ()
 
+
+fst3 :: (a,b,c) -> a
+fst3 (a,_,_) = a
+
+snd3 :: (a,b,c) -> b
+snd3 (_,b,_) = b
+
+thd3 :: (a,b,c) -> c
+thd3 (_,_,c) = c
 
