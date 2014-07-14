@@ -307,7 +307,7 @@ setExplicit name size innerDomain =
                 Just constant ->
                     case constant of
                         ConstantMatrix _ vals ->
-                            return (name, ConstantSet (sortNub vals))
+                            return (name, ConstantSet (nub vals))
                         _ -> throwError $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty outName
                                 , "But got:" <+> pretty constant

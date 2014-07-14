@@ -37,7 +37,7 @@ tests = testGroup "representations"
 
     , testGroup "int #1" $
         let
-            highDomain = DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 4)]
+            highDomain = intDomain 1 4
             highConstant = ConstantInt 3
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
@@ -638,6 +638,107 @@ tests = testGroup "representations"
                                      [ConstantInt 2,ConstantInt 3,ConstantInt 5,ConstantInt 6]
                   ) ]
         in  testCases "x" highDomain highConstant Just low low
+
+    , testGroup "set (size 4) of set (size 2) of int {auto}" $ testCasesAuto "x"
+        ( DomainSet "Explicit" (SetAttrSize (ConstantInt 4))
+            ( DomainSet "Explicit" (SetAttrSize (ConstantInt 2))
+                (intDomain 0 9)
+            )
+        )
+        ( ConstantSet
+            [ ConstantSet [ConstantInt 2, ConstantInt 3]
+            , ConstantSet [ConstantInt 5, ConstantInt 6]
+            , ConstantSet [ConstantInt 5, ConstantInt 7]
+            , ConstantSet [ConstantInt 5, ConstantInt 8]
+            ] )
+
+    , testGroup "set (size 4) of set (size 2) of int" $
+        let
+            highDomain =
+                DomainSet "Explicit" (SetAttrSize (ConstantInt 4))
+                    (DomainSet "Explicit" (SetAttrSize (ConstantInt 2))
+                        (intDomain 0 9))
+            highConstant =
+                ConstantSet
+                    [ ConstantSet [ConstantInt 2, ConstantInt 3]
+                    , ConstantSet [ConstantInt 5, ConstantInt 6]
+                    , ConstantSet [ConstantInt 5, ConstantInt 7]
+                    , ConstantSet [ConstantInt 5, ConstantInt 8]
+                    ]
+            mid =
+                [ ( "x_Explicit"
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "Explicit" (SetAttrSize (ConstantInt 2)) (intDomain 0 9))
+                  , ConstantMatrix (intDomain 1 4)
+                        [ ConstantSet [ConstantInt 2, ConstantInt 3]
+                        , ConstantSet [ConstantInt 5, ConstantInt 6]
+                        , ConstantSet [ConstantInt 5, ConstantInt 7]
+                        , ConstantSet [ConstantInt 5, ConstantInt 8]
+                        ]
+                  ) ]
+            low =
+                [ ( "x_Explicit_Explicit"
+                  , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
+                  , ConstantMatrix (intDomain 1 4)
+                        [ ConstantMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 3]
+                        , ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]
+                        , ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 7]
+                        , ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 8]
+                        ]
+                  ) ]
+        in  testCases "x" highDomain highConstant Just mid low
+
+    , testGroup "set (size 4) of set (size 2) of (int, bool) {auto}" $ testCasesAuto "x"
+        ( DomainSet "Explicit" (SetAttrSize (ConstantInt 4))
+            ( DomainSet "Explicit" (SetAttrSize (ConstantInt 2))
+                (DomainTuple [intDomain 0 9, DomainBool])
+            )
+        )
+        ( ConstantSet
+            [ ConstantSet [ ConstantTuple [ConstantInt 2, ConstantBool False]
+                          , ConstantTuple [ConstantInt 3, ConstantBool True ]
+                          ]
+            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
+                          , ConstantTuple [ConstantInt 6, ConstantBool True ]
+                          ]
+            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
+                          , ConstantTuple [ConstantInt 7, ConstantBool False]
+                          ]
+            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool False]
+                          , ConstantTuple [ConstantInt 8, ConstantBool False]
+                          ]
+            ] )
+
+    , testGroup "set (size 4) of (int, set (size 2) of (int, bool)) {auto}" $ testCasesAuto "x"
+        ( DomainSet "Explicit" (SetAttrSize (ConstantInt 4))
+            ( DomainTuple
+                [ intDomain 0 8
+                , DomainSet "Explicit" (SetAttrSize (ConstantInt 2))
+                    (DomainTuple [intDomain 0 9, DomainBool])
+                ]
+            )
+        )
+        ( ConstantSet
+            [ ConstantTuple [ ConstantInt 1
+                            , ConstantSet [ ConstantTuple [ConstantInt 2, ConstantBool False]
+                                          , ConstantTuple [ConstantInt 3, ConstantBool True ]
+                                          ]
+                            ]
+            , ConstantTuple [ ConstantInt 2
+                            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
+                                          , ConstantTuple [ConstantInt 6, ConstantBool True ]
+                                          ]
+                            ]
+            , ConstantTuple [ ConstantInt 3
+                            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
+                                          , ConstantTuple [ConstantInt 7, ConstantBool False]
+                                          ]
+                            ]
+            , ConstantTuple [ ConstantInt 4
+                            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool False]
+                                          , ConstantTuple [ConstantInt 8, ConstantBool False]
+                                          ]
+                            ]
+            ] )
 
     ]
 
