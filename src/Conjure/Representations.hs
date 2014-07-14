@@ -108,7 +108,8 @@ dispatch name domain =
         DomainTuple ds -> return $ tuple name ds
         DomainMatrix index inner -> return $ matrix name index inner
         DomainSet "Explicit" (SetAttrSize size) inner -> return $ setExplicit name size inner
-        DomainSet "ExplicitVarSizeInt" attrs inner -> return $ setExplicitVarSizeInt name attrs inner
+        DomainSet "ExplicitVarSizeWithMarker" attrs inner -> return $ setExplicitVarSizeWithMarker name attrs inner
+        DomainSet "ExplicitVarSizeWithFlags" attrs inner -> return $ setExplicitVarSizeWithFlags name attrs inner
         _ -> throwError $ vcat
                 [ "No representation for the domain of:" <+> pretty name
                 , "The domain:" <+> pretty domain
@@ -318,8 +319,9 @@ setExplicit name size innerDomain =
                                 , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
                                 ]
 
-setExplicitVarSizeInt :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> D -> RepresentationResult m
-setExplicitVarSizeInt name attrs innerDomain = 
+
+setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> D -> RepresentationResult m
+setExplicitVarSizeWithMarker name attrs innerDomain = 
     ( setDown
     , setDown_
     , setUp
@@ -327,8 +329,11 @@ setExplicitVarSizeInt name attrs innerDomain =
 
     where
 
-        nameMarker = mconcat [name, "_ExplicitVarSizeInt_Marker"] 
-        nameMatrix = mconcat [name, "_ExplicitVarSizeInt_Main"]
+        thisRepr = "ExplicitVarSizeWithMarker"
+        thisFullDomain = DomainSet (HasRepresentation (Name thisRepr)) attrs innerDomain
+
+        nameMarker = mconcat [name, "_", thisRepr, "_Marker"]
+        nameMain   = mconcat [name, "_", thisRepr, "_Main"  ]
 
         maxSize = case attrs of
             SetAttrMaxSize x -> return x
@@ -343,7 +348,7 @@ setExplicitVarSizeInt name attrs innerDomain =
                 [ ( nameMarker
                   , indexDomain
                   )
-                , ( nameMatrix
+                , ( nameMain
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
@@ -356,8 +361,7 @@ setExplicitVarSizeInt name attrs innerDomain =
                 x <- maxSize
                 case x of
                     ConstantInt i -> return i
-                    _ -> throwError $ "Attribute expected to be an int in:" <+>
-                                      pretty (DomainSet "ExplicitVarSizeInt" attrs innerDomain)
+                    _ -> throwError $ "Attribute expected to be an int in:" <+> pretty thisFullDomain
             let zeroes = replicate (maxSizeInt - length constants) z
 
             return $ Just
@@ -365,7 +369,7 @@ setExplicitVarSizeInt name attrs innerDomain =
                   , indexDomain
                   , ConstantInt (length constants)
                   )
-                , ( nameMatrix
+                , ( nameMain
                   , DomainMatrix   (forgetRepr indexDomain) innerDomain
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
@@ -373,7 +377,7 @@ setExplicitVarSizeInt name attrs innerDomain =
         setDown_ _ = return Nothing
 
         setUp ctxt =
-            case (lookup nameMarker ctxt, lookup nameMatrix ctxt) of
+            case (lookup nameMarker ctxt, lookup nameMain ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
@@ -381,27 +385,124 @@ setExplicitVarSizeInt name attrs innerDomain =
                                 ConstantMatrix _ vals ->
                                     return (name, ConstantSet (take card vals))
                                 _ -> throwError $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty nameMatrix
+                                        [ "Expecting a matrix literal for:" <+> pretty nameMain
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
-                                        , "With domain:" <+> pretty (DomainSet "ExplicitVarSizeInt" attrs innerDomain)
+                                        , "With domain:" <+> pretty thisFullDomain
                                         ]
                         _ -> throwError $ vcat
                                 [ "Expecting an integer literal for:" <+> pretty nameMarker
                                 , "But got:" <+> pretty marker
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty (DomainSet "ExplicitVarSizeInt" attrs innerDomain)
+                                , "With domain:" <+> pretty thisFullDomain
                                 ]
                 (Nothing, _) -> throwError $ vcat $
                     [ "No value for:" <+> pretty nameMarker
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty (DomainSet "ExplicitVarSizeInt" attrs innerDomain)
+                    , "With domain:" <+> pretty thisFullDomain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> throwError $ vcat $
-                    [ "No value for:" <+> pretty nameMatrix
+                    [ "No value for:" <+> pretty nameMain
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty (DomainSet "ExplicitVarSizeInt" attrs innerDomain)
+                    , "With domain:" <+> pretty thisFullDomain
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
+
+
+setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> D -> RepresentationResult m
+setExplicitVarSizeWithFlags name attrs innerDomain = 
+    ( setDown
+    , setDown_
+    , setUp
+    )
+
+    where
+
+        thisRepr = "ExplicitVarSizeWithFlags"
+        thisFullDomain = DomainSet (HasRepresentation (Name thisRepr)) attrs innerDomain
+
+        nameFlag = mconcat [name, "_", thisRepr, "_Flags"]
+        nameMain = mconcat [name, "_", thisRepr, "_Main"]
+
+        maxSize = case attrs of
+            SetAttrMaxSize x -> return x
+            SetAttrMinMaxSize _ x -> return x
+            _ -> ConstantInt <$> domainSizeConstant innerDomain
+
+        genIndexDomain = maxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) x]
+
+        setDown = do
+            indexDomain :: D <- genIndexDomain
+            return $ Just
+                [ ( nameFlag
+                  , DomainMatrix (forgetRepr indexDomain) DomainBool
+                  )
+                , ( nameMain
+                  , DomainMatrix (forgetRepr indexDomain) innerDomain
+                  )
+                ]
+
+        setDown_ (ConstantSet constants) = do
+            indexDomain :: D <- genIndexDomain
+
+            z <- zeroVal innerDomain
+            maxSizeInt <- do
+                x <- maxSize
+                case x of
+                    ConstantInt i -> return i
+                    _ -> throwError $ "Attribute expected to be an int in:" <+> pretty thisFullDomain
+            let zeroes = replicate (maxSizeInt - length constants) z
+
+            let trues  = replicate (length constants)              (ConstantBool True)
+            let falses = replicate (maxSizeInt - length constants) (ConstantBool False)
+
+            return $ Just
+                [ ( nameFlag
+                  , DomainMatrix   (forgetRepr indexDomain) DomainBool
+                  , ConstantMatrix (forgetRepr indexDomain) (trues ++ falses)
+                  )
+                , ( nameMain
+                  , DomainMatrix   (forgetRepr indexDomain) innerDomain
+                  , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
+                  )
+                ]
+        setDown_ _ = return Nothing
+
+        setUp ctxt =
+            case (lookup nameFlag ctxt, lookup nameMain ctxt) of
+                (Just flagMatrix, Just constantMatrix) ->
+                    case flagMatrix of
+                        -- TODO: check if indices match
+                        ConstantMatrix _ flags ->
+                            case constantMatrix of
+                                ConstantMatrix _ vals ->
+                                    return (name, ConstantSet [ v
+                                                              | (i,v) <- zip flags vals
+                                                              , i == ConstantBool True
+                                                              ] )
+                                _ -> throwError $ vcat
+                                        [ "Expecting a matrix literal for:" <+> pretty nameMain
+                                        , "But got:" <+> pretty constantMatrix
+                                        , "When working on:" <+> pretty name
+                                        , "With domain:" <+> pretty thisFullDomain
+                                        ]
+                        _ -> throwError $ vcat
+                                [ "Expecting a matrix literal for:" <+> pretty nameFlag
+                                , "But got:" <+> pretty flagMatrix
+                                , "When working on:" <+> pretty name
+                                , "With domain:" <+> pretty thisFullDomain
+                                ]
+                (Nothing, _) -> throwError $ vcat $
+                    [ "No value for:" <+> pretty nameFlag
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty thisFullDomain
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
+                (_, Nothing) -> throwError $ vcat $
+                    [ "No value for:" <+> pretty nameMain
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty thisFullDomain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
 
