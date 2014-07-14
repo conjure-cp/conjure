@@ -22,7 +22,7 @@ type D = Domain HasRepresentation Constant
 type Representation m
     =  Text
     -> D
-    -> RepresentationResult m
+    -> m (RepresentationResult m)
 
 type RepresentationResult m =
     ( m (Maybe [(Text, D)])
@@ -36,14 +36,14 @@ down1
     => Representation m
     ->           (Text, D)
     -> m (Maybe [(Text, D)])
-down1 repr (name, domain) = fst3 (repr name domain)
+down1 repr (name, domain) = repr name domain >>= fst3
 
 down1_
     :: MonadError Doc m
     => Representation m
     ->           (Text, D, Constant)
     -> m (Maybe [(Text, D, Constant)])
-down1_ repr (name, domain, constant) = snd3 (repr name domain) constant
+down1_ repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constant
 
 up1
     :: MonadError Doc m
@@ -51,7 +51,7 @@ up1
     ->   (Text, D)
     ->  [(Text, Constant)]
     -> m (Text, Constant)
-up1 repr (name, domain) ctxt = thd3 (repr name domain) ctxt
+up1 repr (name, domain) ctxt = repr name domain >>= \ r -> thd3 r ctxt
 
 
 down
@@ -101,9 +101,15 @@ up (name, highDomain) ctxt = do
 dispatch :: MonadError Doc m => Representation m
 dispatch name domain =
     case domain of
-        DomainTuple ds -> tuple name ds
-        DomainMatrix index inner -> matrix name index inner
-        _ -> primitive name
+        DomainBool{} -> return $ primitive name
+        DomainInt {} -> return $ primitive name
+        DomainTuple ds -> return $ tuple name ds
+        DomainMatrix index inner -> return $ matrix name index inner
+        DomainSet "Explicit" (SetAttrSize size) inner -> return $ setExplicit name size inner
+        _ -> throwError $ vcat
+                [ "No representation for the domain of:" <+> pretty name
+                , "The domain:" <+> pretty domain
+                ]
 
 
 primitive :: MonadError Doc m => Text -> RepresentationResult m
@@ -118,6 +124,7 @@ primitive name =
                 : prettyContext ctxt
             Just c  -> return (name, c)
     )
+
 
 tuple :: MonadError Doc m => Text -> [D] -> RepresentationResult m
 tuple name ds = 
@@ -263,4 +270,48 @@ matrix name indexDomain innerDomain =
                             ]
                     let values = map snd mid4
                     return (name, ConstantMatrix indexDomain values)
+
+
+setExplicit :: MonadError Doc m => Text -> Constant -> D -> RepresentationResult m
+setExplicit name size innerDomain = 
+    ( setDown
+    , setDown_
+    , setUp
+    )
+
+    where
+
+        outName = mconcat [name, "_Explicit"] 
+        outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
+
+        setDown = return $ Just
+            [ ( outName
+              , DomainMatrix outIndexDomain innerDomain
+              ) ]
+
+        setDown_ (ConstantSet constants) = return $ Just
+            [ ( outName
+              , DomainMatrix   outIndexDomain innerDomain
+              , ConstantMatrix outIndexDomain constants
+              ) ]
+        setDown_ _ = return Nothing
+
+        setUp ctxt =
+            case lookup outName ctxt of
+                Nothing -> throwError $ vcat $
+                    [ "No value for:" <+> pretty outName
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
+                Just constant ->
+                    case constant of
+                        ConstantMatrix _ vals ->
+                            return (name, ConstantSet (sortNub vals))
+                        _ -> throwError $ vcat
+                                [ "Expecting a matrix literal for:" <+> pretty outName
+                                , "But got:" <+> pretty constant
+                                , "When working on:" <+> pretty name
+                                , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
+                                ]
 

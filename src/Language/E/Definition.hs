@@ -374,6 +374,9 @@ instance Hashable HasRepresentation
 
 instance ToJSON HasRepresentation
 
+instance IsString HasRepresentation where
+    fromString = HasRepresentation . Name . T.pack
+
 
 data Constant
     = ConstantBool Bool

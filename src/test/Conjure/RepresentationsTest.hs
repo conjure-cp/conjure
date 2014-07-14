@@ -614,6 +614,31 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
+    , testGroup "set (size 4) of int {auto}" $ testCasesAuto "x"
+        ( DomainSet
+            "Explicit"
+            (SetAttrSize (ConstantInt 4))
+            (intDomain 0 9) )
+        ( ConstantSet
+            [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6] )
+
+    , testGroup "set (size 4) of int" $
+        let
+            highDomain =
+                DomainSet
+                    "Explicit"
+                    (SetAttrSize (ConstantInt 4))
+                    (intDomain 0 9)
+            highConstant =
+                ConstantSet
+                    [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6]
+            low =
+                [ ( "x_Explicit" , DomainMatrix   (intDomain 1 4) (intDomain 0 9)
+                                 , ConstantMatrix (intDomain 1 4)
+                                     [ConstantInt 2,ConstantInt 3,ConstantInt 5,ConstantInt 6]
+                  ) ]
+        in  testCases "x" highDomain highConstant Just low low
+
     ]
 
 
