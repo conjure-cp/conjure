@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -33,6 +34,8 @@ module Language.E.Definition
     , statementAsList, listAsStatement
 
     , forgetRepr
+
+    , rangesInts
 
     ) where
 
@@ -363,6 +366,14 @@ instance Arbitrary a => Arbitrary (Range a) where
         , RangeUpperBounded <$> arbitrary
         , RangeBounded <$> arbitrary <*> arbitrary
         ]
+
+rangeInts :: MonadError Doc m => Range Constant -> m [Int]
+rangeInts (RangeSingle (ConstantInt x)) = return [x]
+rangeInts (RangeBounded (ConstantInt x) (ConstantInt y)) = return [x .. y]
+rangeInts _ = throwError "Infinite range (or not an integer range)"
+
+rangesInts :: MonadError Doc m => [Range Constant] -> m [Int]
+rangesInts = liftM (sortNub . concat) . mapM rangeInts
 
 
 data HasRepresentation = NoRepresentation | HasRepresentation Name

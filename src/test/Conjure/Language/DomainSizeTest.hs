@@ -16,13 +16,13 @@ import Test.Tasty.HUnit
 tests :: TestTree
 tests = testGroup "domain size"
     [ testCase "domain size of bool is 2" $
-        domainSizeConstant DomainBool @?= Just 2
+        domainSizeConstant DomainBool @?= Right 2
     , testCase "domain size of int" $
-        domainSizeConstant (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 100)]) @?= Just 100
+        domainSizeConstant (DomainInt [RangeBounded (ConstantInt 1) (ConstantInt 100)]) @?= Right 100
     , testCase "domain size of set of bool #1" $
-        domainSizeConstant (DomainSet () SetAttrNone DomainBool) @?= Just 4
+        domainSizeConstant (DomainSet () SetAttrNone DomainBool) @?= Right 4
     , testCase "domain size of set of bool #2" $
         let setOfSize n inner = DomainSet () (SetAttrSize n) inner
-        in  domainSizeConstant (setOfSize (ConstantInt 2) DomainBool) @?= Just 1
+        in  domainSizeConstant (setOfSize (ConstantInt 2) DomainBool) @?= Right 1
     ]
 

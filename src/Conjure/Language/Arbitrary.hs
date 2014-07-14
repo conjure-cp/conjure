@@ -180,8 +180,8 @@ arbitraryDomainAndConstant = sized dispatch
         matrix depth = do
             (indexDomain, _) <- int
             case domainSizeConstant indexDomain of
-                Nothing -> fail $ show $ "Cannot calculate the domain size of:" <+> pretty indexDomain
-                Just indexSize -> do
+                Left err -> error $ show err
+                Right indexSize -> do
                     (innerDomain, innerConstantGen) <- dispatch (smaller depth)
                     return ( DomainMatrix indexDomain innerDomain
                            , do innerConstants <- vectorOf indexSize innerConstantGen
@@ -195,8 +195,8 @@ arbitraryDomainAndConstant = sized dispatch
         setFixed depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
-                                Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
-                                Just s  -> min 10 s
+                                Left err -> error $ show err
+                                Right s  -> min 10 s
             size <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["Explicit"] -- no other representation yet!
             let domainOut =
@@ -226,8 +226,8 @@ arbitraryDomainAndConstant = sized dispatch
         setBoundedMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
-                                Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
-                                Just s  -> min 10 s
+                                Left err -> error $ show err
+                                Right s  -> min 10 s
             maxSize <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             return ( DomainSet (HasRepresentation repr)
@@ -243,8 +243,8 @@ arbitraryDomainAndConstant = sized dispatch
         setBoundedMinMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
-                                Nothing -> error $ show $ "This domain seems to be infinite:" <+> pretty dom
-                                Just s  -> min 10 s
+                                Left err -> error $ show err
+                                Right s  -> min 10 s
             minSize <- choose (0 :: Int, sizeUpTo)
             maxSize <- choose (minSize, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!

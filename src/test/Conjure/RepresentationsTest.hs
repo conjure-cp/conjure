@@ -633,9 +633,10 @@ tests = testGroup "representations"
                 ConstantSet
                     [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6]
             low =
-                [ ( "x_Explicit" , DomainMatrix   (intDomain 1 4) (intDomain 0 9)
-                                 , ConstantMatrix (intDomain 1 4)
-                                     [ConstantInt 2,ConstantInt 3,ConstantInt 5,ConstantInt 6]
+                [ ( "x_Explicit"
+                  , DomainMatrix   (intDomain 1 4) (intDomain 0 9)
+                  , ConstantMatrix (intDomain 1 4)
+                        [ConstantInt 2,ConstantInt 3,ConstantInt 5,ConstantInt 6]
                   ) ]
         in  testCases "x" highDomain highConstant Just low low
 
@@ -739,6 +740,92 @@ tests = testGroup "representations"
                                           ]
                             ]
             ] )
+
+    , testGroup "set (maxSize 4) of int {auto}" $ testCasesAuto "x"
+        ( DomainSet
+            "ExplicitVarSizeInt"
+            (SetAttrMaxSize (ConstantInt 4))
+            (intDomain 0 9) )
+        ( ConstantSet [ConstantInt 2, ConstantInt 5] )
+
+    , testGroup "set (maxSize 4) of int" $
+        let
+            highDomain =
+                DomainSet "ExplicitVarSizeInt" (SetAttrMaxSize (ConstantInt 4)) (intDomain 0 9)
+            highConstant =
+                ConstantSet [ConstantInt 2, ConstantInt 5]
+            low =
+                [ ( "x_ExplicitVarSizeInt_Marker"
+                  , intDomain 1 4
+                  , ConstantInt 2
+                  )
+                , ( "x_ExplicitVarSizeInt_Main"
+                  , DomainMatrix (intDomain 1 4) (intDomain 0 9)
+                  , ConstantMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
+                  )
+                ]
+        in  testCases "x" highDomain highConstant Just low low
+
+    , testGroup "set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+        ( DomainSet "ExplicitVarSizeInt" (SetAttrMaxSize (ConstantInt 4))
+            ( DomainSet "ExplicitVarSizeInt" (SetAttrMaxSize (ConstantInt 3))
+                (intDomain 0 9)
+            )
+        )
+        ( ConstantSet
+            [ ConstantSet [ConstantInt 2]
+            , ConstantSet [ConstantInt 2, ConstantInt 5]
+            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+            ]
+        )
+
+    , testGroup "set (maxSize 4) of set (maxSize 3) int" $
+        let
+            highDomain =
+                DomainSet "ExplicitVarSizeInt" (SetAttrMaxSize (ConstantInt 4))
+                    ( DomainSet "ExplicitVarSizeInt" (SetAttrMaxSize (ConstantInt 3))
+                        (intDomain 0 9) )
+            highConstant =
+                ConstantSet
+                    [ ConstantSet [ConstantInt 2]
+                    , ConstantSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                    ]
+            mid =
+                [ ( "x_ExplicitVarSizeInt_Marker"
+                  , intDomain 1 4
+                  , ConstantInt 3
+                  )
+                , ( "x_ExplicitVarSizeInt_Main"
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeInt" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
+                  , ConstantMatrix (intDomain 1 4)
+                      [ ConstantSet [ConstantInt 2]
+                      , ConstantSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantSet []
+                      ]
+                  )
+                ]
+            low =
+                [ ( "x_ExplicitVarSizeInt_Marker"
+                  , intDomain 1 4
+                  , ConstantInt 3
+                  )
+                , ( "x_ExplicitVarSizeInt_Main_ExplicitVarSizeInt_Marker"
+                  , DomainMatrix   (intDomain 1 4) (intDomain 1 3)
+                  , ConstantMatrix (intDomain 1 4) [ConstantInt 1,ConstantInt 2,ConstantInt 3,ConstantInt 0]
+                  )
+                , ( "x_ExplicitVarSizeInt_Main_ExplicitVarSizeInt_Main"
+                  , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
+                  , ConstantMatrix (intDomain 1 4)
+                      [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
+                      , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 5,ConstantInt 0]
+                      , ConstantMatrix (intDomain 1 3) [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantMatrix (intDomain 1 3) [ConstantInt 0,ConstantInt 0,ConstantInt 0]
+                      ]
+                  )
+                ]
+        in  testCases "x" highDomain highConstant Just mid low
 
     ]
 

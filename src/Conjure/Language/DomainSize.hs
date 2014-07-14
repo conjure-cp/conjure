@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Conjure.Language.DomainSize ( domainSizeConstant ) where
@@ -5,11 +6,12 @@ module Conjure.Language.DomainSize ( domainSizeConstant ) where
 -- conjure
 import Language.E.Imports
 import Language.E.Definition
+import Language.E.Pretty
 
 
 -- Nothing means an infinite domain
-domainSizeConstant :: Domain r Constant -> Maybe Int
-domainSizeConstant DomainBool = Just 2
+domainSizeConstant :: (Applicative m, MonadError Doc m) => Domain r Constant -> m Int
+domainSizeConstant DomainBool = return 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainEnum _ rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
@@ -28,18 +30,18 @@ domainSizeConstant (DomainSet _ attrs inner) =
         SetAttrMinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
-        _ -> error "domainSizeConstant"
-domainSizeConstant (DomainMSet      {}) = error "not implemented: domainSizeConstant"
-domainSizeConstant (DomainFunction  {}) = error "not implemented: domainSizeConstant"
-domainSizeConstant (DomainRelation  {}) = error "not implemented: domainSizeConstant"
-domainSizeConstant (DomainPartition {}) = error "not implemented: domainSizeConstant"
-domainSizeConstant _ = error "not implemented: domainSizeConstantRanges"
+        _ -> throwError "domainSizeConstant"
+domainSizeConstant (DomainMSet      {}) = throwError "not implemented: domainSizeConstant"
+domainSizeConstant (DomainFunction  {}) = throwError "not implemented: domainSizeConstant"
+domainSizeConstant (DomainRelation  {}) = throwError "not implemented: domainSizeConstant"
+domainSizeConstant (DomainPartition {}) = throwError "not implemented: domainSizeConstant"
+domainSizeConstant _ = throwError "not implemented: domainSizeConstantRanges"
 
-domainSizeConstantRanges :: [Range Constant] -> Maybe Int
+domainSizeConstantRanges :: MonadError Doc m => [Range Constant] -> m Int
 domainSizeConstantRanges ranges =
     if isFinite
-        then Just (length allValues)
-        else Nothing
+        then return (length allValues)
+        else throwError $ "Infinite integer range:" <+> prettyList id "," ranges
 
     where
 
@@ -48,8 +50,8 @@ domainSizeConstantRanges ranges =
             [ vals
             | r <- ranges
             , let vals = case r of
-                    RangeSingle (ConstantInt x) -> Just [x]
-                    RangeBounded (ConstantInt l) (ConstantInt u) -> Just [l..u]
+                    RangeSingle (ConstantInt x) -> return [x]
+                    RangeBounded (ConstantInt l) (ConstantInt u) -> return [l..u]
                     _ -> Nothing
             ]
 
