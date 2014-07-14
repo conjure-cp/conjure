@@ -1,7 +1,11 @@
 
 [1000]
 
-&f(&x) ~~> forAll i in toSet(refn(&f)) , i[1] = &x . i[2]
+&f(&x) ~~>
+    { fx
+    @ find fx : bool
+      such that (&x,fx) in &f
+    }
 
     where &f hasType   `function _ --> bool`
     where &f hasRepr    Function~AsReln
