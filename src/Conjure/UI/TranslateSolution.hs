@@ -1,9 +1,15 @@
 {-# LANGUAGE OverloadedStrings  #-}
-module Language.E.Up(translateSolution,translateSolution',translateSolutionM) where
+
+module Conjure.UI.TranslateSolution
+    ( translateSolution
+    , translateSolution'
+    , translateSolutionM
+    ) where
+
 
 import Language.E
-
 import Language.E.Pipeline.ReadIn(writeSpec)
+
 
 translateSolution
     :: EssenceFP

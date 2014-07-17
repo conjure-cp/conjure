@@ -12,7 +12,7 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Language.E.Pipeline.RedArrow ( redArrow ) where
+module Conjure.UI.RefineParam ( refineParam ) where
 
 
 import Bug
@@ -30,12 +30,12 @@ type EssenceParam = Spec
 type Essence'Param = Spec
 
 
-redArrow
+refineParam
     :: MonadConjure m
     => EssenceSpec -> EssenceParam
     -> Essence'Model -> Essence'Logs
     -> m Essence'Param
-redArrow (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) modelLogs = do
+refineParam (Spec _ essenceStmt) (Spec _ essenceParamStmt) (Spec langEprime _) modelLogs = do
 
     forM_ (statementAsList essenceStmt ++ statementAsList essenceParamStmt) $ \ s -> do
         introduceStuff s

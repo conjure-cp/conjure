@@ -25,14 +25,15 @@ import Language.E.Pipeline.ReadIn
     , writeSpec, dropExtEssence
     )
 
+import Conjure.UI.RefineParam ( refineParam )
+import Conjure.UI.TranslateSolution ( translateSolution )
+
 import Language.E.NormaliseSolution ( normaliseSolution )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
-import Language.E.Pipeline.RedArrow ( redArrow )
 import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
 import Language.E.Pipeline.TypeStrengthening ( typeStrengthening )
-import Language.E.Up ( translateSolution )
 import Language.E.ValidateSolution ( validateSolution )
 
 
@@ -96,7 +97,7 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             inEprime  <- readSpecPreambleFromFile pathInEprime
             inLogs    <- T.readFile (pathInEprime ++ ".logs")
             driverConjureSingle False False (Just pathOutParam)
-                [runCompESingle "refineParam" $ redArrow inEssence inParam inEprime inLogs]
+                [runCompESingle "refineParam" $ refineParam inEssence inParam inEprime inLogs]
 
         helper (ModeTranslateSolution pathInEssence pathInParam
                                               pathInEprime pathInEprimeParam pathInEprimeSolution

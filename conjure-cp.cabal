@@ -33,6 +33,10 @@ Library
 
                      , Conjure.Representations
 
+                     , Conjure.UI.RefineParam
+                     , Conjure.UI.TranslateSolution
+
+
                      , Stuff.MonadList
 
                      , Stuff.Funky.FunkySingle
@@ -81,8 +85,6 @@ Library
                      , Language.E.Evaluator.ToBool
                      , Language.E.Evaluator.ToInt
 
-                     , Language.E.Up
-
                      , Language.E.Pipeline.ReadIn
                      , Language.E.Pipeline.Driver
                      , Language.E.Pipeline.InitialiseSpecState
@@ -102,7 +104,6 @@ Library
                      , Language.E.Pipeline.RemoveDuplicateCons
                      , Language.E.Pipeline.CheckIfAllRefined
                      , Language.E.Pipeline.AbstractDomsInQuans
-                     , Language.E.Pipeline.RedArrow
                      , Language.E.Pipeline.UniqueQuanVars
                      , Language.E.Pipeline.TypeStrengthening
 
