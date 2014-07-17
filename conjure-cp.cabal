@@ -17,13 +17,9 @@ Library
 
     exposed-modules  : Paths_conjure_cp
                      , RepositoryVersion
-                     , Bug
 
-                     , Utils.DebugPretty
-
-                     , Conjure
-                     , Conjure.Mode
-
+                     -- definitions of language constructs
+                     -- and some common operations on them
                      , Conjure.Language
                      , Conjure.Language.Definition
                      , Conjure.Language.Pretty
@@ -31,11 +27,18 @@ Library
                      , Conjure.Language.DomainSize
                      , Conjure.Language.ZeroVal
 
+                     -- definitions of representations: how to go down and up
                      , Conjure.Representations
 
+                     -- supporting modules for the user interfacing parts
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
 
+                     , Bug
+                     , Utils.DebugPretty
+
+                     , Conjure
+                     , Conjure.Mode
 
                      , Stuff.MonadList
 
@@ -122,8 +125,7 @@ Library
                      , Language.E.Pipeline.NoGuards
                      , Language.E.Pipeline.NoTuples
 
-
-    build-depends    : base, ghc-prim
+    build-depends    : base
                      , aeson
                      , aeson-pretty
                      , bytestring
@@ -149,9 +151,7 @@ Library
                      , transformers-base
                      , uniplate
                      , unordered-containers
-    ghc-prof-options:
-        -auto-all
-        -caf-all
+
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -174,9 +174,6 @@ Executable conjureBF
                      , bytestring
                      , directory
                      , filepath
-    ghc-prof-options:
-        -auto-all
-        -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -199,9 +196,6 @@ Executable conjure
     main-is          : Main.hs
     build-depends    : conjure-cp
                      , base
-    ghc-prof-options:
-        -auto-all
-        -caf-all
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -223,7 +217,8 @@ test-suite conjure-testing
     default-language : Haskell2010
     hs-source-dirs   : src/test
     main-is          : TestsMain.hs
-    build-depends    : conjure-cp, base
+    build-depends    : conjure-cp
+                     , base
                      , containers 
                      , tasty
                      , tasty-hunit
