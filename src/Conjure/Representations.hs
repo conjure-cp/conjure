@@ -12,7 +12,7 @@ module Conjure.Representations
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
-import Conjure.Language.DomainSize ( domainSizeConstant )
+import Conjure.Language.DomainSize ( domainSizeConstant, valuesInIntDomain )
 import Conjure.Language.ZeroVal ( zeroVal )
 
 -- text
@@ -107,6 +107,7 @@ dispatch name domain =
         DomainInt {} -> return $ primitive name
         DomainTuple ds -> return $ tuple name ds
         DomainMatrix index inner -> return $ matrix name index inner
+        DomainSet "Occurrence" attrs (DomainInt ranges) -> return $ setOccurrence name attrs ranges
         DomainSet "Explicit" (SetAttrSize size) inner -> return $ setExplicit name size inner
         DomainSet "ExplicitVarSizeWithMarker" attrs inner -> return $ setExplicitVarSizeWithMarker name attrs inner
         DomainSet "ExplicitVarSizeWithFlags" attrs inner -> return $ setExplicitVarSizeWithFlags name attrs inner
@@ -276,6 +277,67 @@ matrix name indexDomain innerDomain =
                     return (name, ConstantMatrix indexDomain values)
 
 
+setOccurrence :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> [Range Constant] -> RepresentationResult m
+setOccurrence name attrs intRanges = 
+    ( setDown
+    , setDown_
+    , setUp
+    )
+
+    where
+
+        thisRepr = "Occurrence"
+        innerDomain = DomainInt intRanges
+        thisFullDomain = DomainSet (HasRepresentation (Name thisRepr)) attrs innerDomain
+
+        outName = mconcat [name, "_", thisRepr]
+
+        setDown = do
+            return $ Just
+                [ ( outName
+                  , DomainMatrix (forgetRepr innerDomain) DomainBool
+                  )
+                ]
+
+        setDown_ (ConstantSet constants) = do
+            innerDomainVals <- valuesInIntDomain intRanges
+            return $ Just
+                [ ( outName
+                  , DomainMatrix   (forgetRepr innerDomain) DomainBool
+                  , ConstantMatrix (forgetRepr innerDomain)
+                      [ ConstantBool isIn
+                      | v <- innerDomainVals
+                      , let isIn = ConstantInt v `elem` constants
+                      ]
+                  )
+                ]
+        setDown_ _ = return Nothing
+
+        setUp ctxt =
+            case lookup outName ctxt of
+                Just constantMatrix ->
+                    case constantMatrix of
+                        ConstantMatrix _ vals -> do
+                            innerDomainVals <- valuesInIntDomain intRanges
+                            return (name, ConstantSet
+                                            [ ConstantInt v
+                                            | (v,b) <- zip innerDomainVals vals
+                                            , b == ConstantBool True
+                                            ] )
+                        _ -> throwError $ vcat
+                                [ "Expecting a matrix literal for:" <+> pretty outName
+                                , "But got:" <+> pretty constantMatrix
+                                , "When working on:" <+> pretty name
+                                , "With domain:" <+> pretty thisFullDomain
+                                ]
+                Nothing -> throwError $ vcat $
+                    [ "No value for:" <+> pretty outName
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty thisFullDomain
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
+
+
 setExplicit :: MonadError Doc m => Text -> Constant -> D -> RepresentationResult m
 setExplicit name size innerDomain = 
     ( setDown
@@ -335,15 +397,17 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
         nameMarker = mconcat [name, "_", thisRepr, "_Marker"]
         nameMain   = mconcat [name, "_", thisRepr, "_Main"  ]
 
-        maxSize = case attrs of
-            SetAttrMaxSize x -> return x
-            SetAttrMinMaxSize _ x -> return x
-            _ -> ConstantInt <$> domainSizeConstant innerDomain
+        getMaxSize = case attrs of
+            SetAttrMaxSize (ConstantInt x) -> return x
+            SetAttrMaxSize _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
+            SetAttrMinMaxSize _ (ConstantInt x) -> return x
+            SetAttrMinMaxSize _ _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
+            _ -> domainSizeConstant innerDomain
 
-        genIndexDomain = maxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) x]
+        getIndexDomain = getMaxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt x)]
 
         setDown = do
-            indexDomain :: D <- genIndexDomain
+            indexDomain :: D <- getIndexDomain
             return $ Just
                 [ ( nameMarker
                   , indexDomain
@@ -354,15 +418,11 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
                 ]
 
         setDown_ (ConstantSet constants) = do
-            indexDomain :: D <- genIndexDomain
+            indexDomain :: D <- getIndexDomain
 
             z <- zeroVal innerDomain
-            maxSizeInt <- do
-                x <- maxSize
-                case x of
-                    ConstantInt i -> return i
-                    _ -> throwError $ "Attribute expected to be an int in:" <+> pretty thisFullDomain
-            let zeroes = replicate (maxSizeInt - length constants) z
+            maxSize <- getMaxSize
+            let zeroes = replicate (maxSize - length constants) z
 
             return $ Just
                 [ ( nameMarker
@@ -425,15 +485,17 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
         nameFlag = mconcat [name, "_", thisRepr, "_Flags"]
         nameMain = mconcat [name, "_", thisRepr, "_Main"]
 
-        maxSize = case attrs of
-            SetAttrMaxSize x -> return x
-            SetAttrMinMaxSize _ x -> return x
-            _ -> ConstantInt <$> domainSizeConstant innerDomain
+        getMaxSize = case attrs of
+            SetAttrMaxSize (ConstantInt x) -> return x
+            SetAttrMaxSize _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
+            SetAttrMinMaxSize _ (ConstantInt x) -> return x
+            SetAttrMinMaxSize _ _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
+            _ -> domainSizeConstant innerDomain
 
-        genIndexDomain = maxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) x]
+        getIndexDomain = getMaxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt x)]
 
         setDown = do
-            indexDomain :: D <- genIndexDomain
+            indexDomain :: D <- getIndexDomain
             return $ Just
                 [ ( nameFlag
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
@@ -444,18 +506,14 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
                 ]
 
         setDown_ (ConstantSet constants) = do
-            indexDomain :: D <- genIndexDomain
+            indexDomain :: D <- getIndexDomain
 
             z <- zeroVal innerDomain
-            maxSizeInt <- do
-                x <- maxSize
-                case x of
-                    ConstantInt i -> return i
-                    _ -> throwError $ "Attribute expected to be an int in:" <+> pretty thisFullDomain
-            let zeroes = replicate (maxSizeInt - length constants) z
+            maxSize <- getMaxSize
+            let zeroes = replicate (maxSize - length constants) z
 
-            let trues  = replicate (length constants)              (ConstantBool True)
-            let falses = replicate (maxSizeInt - length constants) (ConstantBool False)
+            let trues  = replicate (length constants)           (ConstantBool True)
+            let falses = replicate (maxSize - length constants) (ConstantBool False)
 
             return $ Just
                 [ ( nameFlag

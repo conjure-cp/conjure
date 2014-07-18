@@ -920,6 +920,169 @@ tests = testGroup "representations"
                   ) ]
         in  testCases "x" highDomain highConstant Just mid low
 
+-- Occurrence
+    , testGroup "Occurrence: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
+        ( DomainSet
+            "Occurrence"
+            (SetAttrMaxSize (ConstantInt 4))
+            (intDomain 0 9) )
+        ( ConstantSet [ConstantInt 2, ConstantInt 5] )
+
+    , testGroup "Occurrence: set (maxSize 4) of int" $
+        let
+            highDomain =
+                DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 4)) (intDomain 0 9)
+            highConstant =
+                ConstantSet [ConstantInt 2, ConstantInt 5]
+            low =
+                [ ( "x_Occurrence"
+                  , DomainMatrix   (intDomain 0 9) DomainBool
+                  , ConstantMatrix (intDomain 0 9)
+                      [ ConstantBool False
+                      , ConstantBool False
+                      , ConstantBool True -- 2
+                      , ConstantBool False
+                      , ConstantBool False
+                      , ConstantBool True -- 5
+                      , ConstantBool False
+                      , ConstantBool False
+                      , ConstantBool False
+                      , ConstantBool False
+                      ]
+                  )
+                ]
+        in  testCases "x" highDomain highConstant Just low low
+
+    , testGroup "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+        ( DomainSet "ExplicitVarSizeWithMarker" (SetAttrMaxSize (ConstantInt 4))
+            ( DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3))
+                (intDomain 0 9)
+            )
+        )
+        ( ConstantSet
+            [ ConstantSet [ConstantInt 2]
+            , ConstantSet [ConstantInt 2, ConstantInt 5]
+            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+            ]
+        )
+
+    , testGroup "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
+        let
+            highDomain =
+                DomainSet "ExplicitVarSizeWithMarker" (SetAttrMaxSize (ConstantInt 4))
+                    ( DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3))
+                        (intDomain 0 9) )
+            highConstant =
+                ConstantSet
+                    [ ConstantSet [ConstantInt 2]
+                    , ConstantSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                    ]
+            mid =
+                [ ( "x_ExplicitVarSizeWithMarker_Marker"
+                  , intDomain 1 4
+                  , ConstantInt 3
+                  )
+                , ( "x_ExplicitVarSizeWithMarker_Main"
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
+                  , ConstantMatrix (intDomain 1 4)
+                      [ ConstantSet [ConstantInt 2]
+                      , ConstantSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantSet []
+                      ]
+                  )
+                ]
+            low =
+                [ ( "x_ExplicitVarSizeWithMarker_Marker"
+                  , intDomain 1 4
+                  , ConstantInt 3
+                  )
+                , ( "x_ExplicitVarSizeWithMarker_Main_Occurrence"
+                  , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
+                  , ConstantMatrix (intDomain 1 4)
+                      [ ConstantMatrix (intDomain 0 9) -- 2
+                          [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
+                          , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantMatrix (intDomain 0 9) -- 2,5
+                          [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
+                          , ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantMatrix (intDomain 0 9) -- 3,4,6
+                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
+                          , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantMatrix (intDomain 0 9) -- {}
+                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False
+                          , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
+                      ]
+                  )
+                ]
+        in  testCases "x" highDomain highConstant Just mid low
+
+    , testGroup "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+        ( DomainSet "ExplicitVarSizeWithFlags" (SetAttrMaxSize (ConstantInt 4))
+            ( DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3))
+                (intDomain 0 9)
+            )
+        )
+        ( ConstantSet
+            [ ConstantSet [ConstantInt 2]
+            , ConstantSet [ConstantInt 2, ConstantInt 5]
+            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+            ]
+        )
+
+    , testGroup "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
+        let
+            highDomain =
+                DomainSet "ExplicitVarSizeWithFlags" (SetAttrMaxSize (ConstantInt 4))
+                    ( DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3))
+                        (intDomain 0 9) )
+            highConstant =
+                ConstantSet
+                    [ ConstantSet [ConstantInt 2]
+                    , ConstantSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                    ]
+            mid =
+                [ ( "x_ExplicitVarSizeWithFlags_Flags"
+                  , DomainMatrix   (intDomain 1 4) DomainBool
+                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
+                  )
+                , ( "x_ExplicitVarSizeWithFlags_Main"
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
+                  , ConstantMatrix (intDomain 1 4)
+                      [ ConstantSet [ConstantInt 2]
+                      , ConstantSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantSet []
+                      ]
+                  )
+                ]
+            low =
+                [ ( "x_ExplicitVarSizeWithFlags_Flags"
+                  , DomainMatrix   (intDomain 1 4) DomainBool
+                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
+                  )
+                , ( "x_ExplicitVarSizeWithFlags_Main_Occurrence"
+                  , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
+                  , ConstantMatrix (intDomain 1 4)
+                      [ ConstantMatrix (intDomain 0 9) -- 2
+                          [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
+                          , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantMatrix (intDomain 0 9) -- 2,5
+                          [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
+                          , ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantMatrix (intDomain 0 9) -- 3,4,6
+                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
+                          , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
+                      , ConstantMatrix (intDomain 0 9) -- {}
+                          [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False
+                          , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
+                      ]
+                  )
+                ]
+        in  testCases "x" highDomain highConstant Just mid low
+
     ]
 
 
