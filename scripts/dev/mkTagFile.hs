@@ -34,6 +34,8 @@ main = interact $ \ inp ->
             , "import Data.Aeson ( ToJSON(..) )"
             , "import qualified Data.Text as T"
             , "import Test.QuickCheck ( Arbitrary(..), oneof )"
+            , "allTags :: [String]"
+            , "allTags = " ++ show xs
             , "newtype Tag = Tag T.Text "
             , "    deriving (Eq, Ord, Show, Data, Typeable, Generic, Hashable, ToJSON)"
             , "instance Serialize Tag where"
@@ -42,10 +44,10 @@ main = interact $ \ inp ->
             , "instance Pretty Tag where"
             , "    pretty (Tag t) = pretty t"
             , "instance IsString Tag where"
-            , "    fromString t | t `elem` " ++ show xs ++ " = Tag (T.pack t)"
+            , "    fromString t | t `elem` allTags = Tag (T.pack t)"
             , "    fromString t = error $ \"Unknown tag: \" ++ t"
             , "instance Arbitrary Tag where"
-            , "    arbitrary = fmap (Tag . T.pack) $ oneof $ map return " ++ show xs
+            , "    arbitrary = fmap (Tag . T.pack) $ oneof $ map return allTags"
             ]
 
 
