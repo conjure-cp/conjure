@@ -22,15 +22,18 @@ Library
                      -- and some common operations on them
                      , Conjure.Language
                      , Conjure.Language.Definition
+                     , Conjure.Language.Parser
                      , Conjure.Language.Pretty
                      , Conjure.Language.Arbitrary
                      , Conjure.Language.DomainSize
                      , Conjure.Language.ZeroVal
+                     , Conjure.Language.Instantiate
 
                      -- definitions of representations: how to go down and up
                      , Conjure.Representations
 
                      -- supporting modules for the user interfacing parts
+                     , Conjure.UI.IO
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
 

@@ -59,7 +59,6 @@ data ConjureMode
     = ModeUnknown
     | ModeDiff FilePath FilePath
     | ModeRefineParam
-        FilePath    -- Essence
         FilePath    -- Essence Param
         FilePath    -- Essence'
         FilePath    -- Essence' Param
@@ -235,11 +234,10 @@ parseArgs (pairs, flags, rest) = msum
 
         modeRefineParam = do
             mode $ words "refineParam"
-            inEssence <- key "--in-essence"
             inParam   <- key "--in-essence-param"
             inEprime  <- key "--in-eprime"
             outParam  <- key "--out-eprime-param"
-            returnMode $ ModeRefineParam inEssence inParam inEprime outParam
+            returnMode $ ModeRefineParam inParam inEprime outParam
 
         modeTranslateSolution = do
             mode $ words "transSol translateSol translateSolution"

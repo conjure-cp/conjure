@@ -26,6 +26,7 @@ module Language.E.Imports
     , decodeFromFile
     , RandomM(..)
     , fst3, snd3, thd3
+    , (|>)
     ) where
 
 import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
@@ -212,4 +213,7 @@ thd3 (_,_,c) = c
 
 instance Eq Doc where
     (==) = (==) `on` show
+
+(|>) :: a -> (a -> b) -> b
+(|>) = flip ($)
 

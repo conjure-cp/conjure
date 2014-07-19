@@ -1,7 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Conjure.Language.DomainSize ( domainSizeConstant ) where
+module Conjure.Language.DomainSize
+    ( domainSizeConstant
+    , valuesInIntDomain
+    ) where
 
 -- conjure
 import Language.E.Imports
@@ -38,9 +41,12 @@ domainSizeConstant (DomainPartition {}) = throwError "not implemented: domainSiz
 domainSizeConstant _ = throwError "not implemented: domainSizeConstantRanges"
 
 domainSizeConstantRanges :: MonadError Doc m => [Range Constant] -> m Int
-domainSizeConstantRanges ranges =
+domainSizeConstantRanges = liftM length . valuesInIntDomain
+
+valuesInIntDomain :: MonadError Doc m => [Range Constant] -> m [Int]
+valuesInIntDomain ranges =
     if isFinite
-        then return (length allValues)
+        then return allValues
         else throwError $ "Infinite integer range:" <+> prettyList id "," ranges
 
     where

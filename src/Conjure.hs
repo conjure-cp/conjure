@@ -2,26 +2,15 @@
 
 module Conjure ( getConjureMode, runConjureMode,conjureHelp ) where
 
-import System.Directory ( doesFileExist )
-import System.Environment ( getArgs )
-import System.Timeout ( timeout )
-import System.CPUTime ( getCPUTime )
-import Text.Printf ( printf )
-import qualified Data.Text.IO as T
-import qualified Data.HashSet as S
-import qualified Data.HashMap.Strict as M
-import Data.Aeson.Encode.Pretty ( encodePretty )
-import qualified Data.Aeson as JSON ( encode )
-import qualified Data.ByteString.Lazy as BS ( writeFile )
-import qualified Data.ByteString.Lazy.Char8 as BS ( putStrLn )
+-- conjure
+import Conjure.UI.IO
 
-import Bug
 import Paths_conjure_cp ( getBinDir )
+import Bug
 import Conjure.Mode
 import Language.E
 import Language.E.Pipeline.ReadIn
     ( readSpecFromStdIn, readSpecFromFile
-    , readSpecPreambleFromFile
     , writeSpec, dropExtEssence
     )
 
@@ -35,6 +24,18 @@ import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
 import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
 import Language.E.Pipeline.TypeStrengthening ( typeStrengthening )
 import Language.E.ValidateSolution ( validateSolution )
+
+import System.Directory ( doesFileExist )
+import System.Environment ( getArgs )
+import System.Timeout ( timeout )
+import System.CPUTime ( getCPUTime )
+import Text.Printf ( printf )
+import qualified Data.HashSet as S
+import qualified Data.HashMap.Strict as M
+import Data.Aeson.Encode.Pretty ( encodePretty )
+import qualified Data.Aeson as JSON ( encode )
+import qualified Data.ByteString.Lazy as BS ( writeFile )
+import qualified Data.ByteString.Lazy.Char8 as BS ( putStrLn )
 
 
 rulesdbLoc :: IO [FilePath]
@@ -91,13 +92,13 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             unless ( sort (statementAsList in1) == sort (statementAsList in2) )
                 $  error "Files differ."
 
-        helper (ModeRefineParam pathInEssence pathInParam pathInEprime pathOutParam) = do
-            inEssence <- readSpecPreambleFromFile pathInEssence
-            inParam   <- readSpecFromFile pathInParam
-            inEprime  <- readSpecPreambleFromFile pathInEprime
-            inLogs    <- T.readFile (pathInEprime ++ ".logs")
-            driverConjureSingle False False (Just pathOutParam)
-                [runCompESingle "refineParam" $ refineParam inEssence inParam inEprime inLogs]
+        helper (ModeRefineParam pathInParam pathInEprime pathOutParam) = do
+            inParam   <- readModelFromFile pathInParam
+            inEprime  <- readModelPreambleFromFile pathInEprime
+            either
+                userErr
+                (writeModel (Just pathOutParam))
+                (refineParam inEprime inParam)
 
         helper (ModeTranslateSolution pathInEssence pathInParam
                                               pathInEprime pathInEprimeParam pathInEprimeSolution

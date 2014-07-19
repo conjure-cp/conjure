@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Language.E.Definition
@@ -83,7 +83,7 @@ instance Default Spec where
 
 
 newtype Name = Name Text
-    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, IsString, Serialize, Hashable, ToJSON)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, IsString, Serialize, Hashable, ToJSON, Monoid)
 
 instance Arbitrary Name where
     arbitrary = do
@@ -306,7 +306,7 @@ data SetAttr a
     | SetAttrMaxSize a
     | SetAttrMinMaxSize a a
     | SetAttrDotDot (SetAttr a)
-    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, Functor)
 
 instance Serialize a => Serialize (SetAttr a)
 
