@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module Bug
     ( bug
     , headNote
@@ -11,9 +9,8 @@ import RepositoryVersion ( repositoryVersion )
 import Stuff.Pretty ( Doc, renderNormal )
 
 -- call this function instead of "error"
--- the String argument is only printed if compiled with --trace-logs
 bug :: Doc -> a
-bug _message = error $ unlines
+bug message = error $ unlines
     [ "This should never happen, sorry!"
     , ""
     , "Please report a bug."
@@ -22,9 +19,7 @@ bug _message = error $ unlines
     , "Also include repository version for this build: " ++ repositoryVersion
     , ""
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
-#ifdef TRACELOGS
-    , "", "" , renderNormal _message
-#endif
+    , "", "" , renderNormal message
     ]
 
 headNote :: Doc -> [a] -> a
@@ -33,7 +28,6 @@ headNote _   (x:_) = x
 
 -- call this function instead of "error"
 -- in case of a user error.
--- parsing, type checking errors are of this kind.
 userErr :: Doc -> a
 userErr = error . renderNormal
 
