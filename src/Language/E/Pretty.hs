@@ -222,6 +222,22 @@ instance Pretty E where
 
 -- value.*
 
+    pretty [xMatch| [x] := value.literal      |] = pretty x
+    pretty [xMatch| xs  := value.tuple.values |]
+        = (if length xs < 2 then "tuple" else Pr.empty)
+        <+> prettyList Pr.parens "," xs
+    pretty [xMatch| xs  := value.matrix  .values
+                  | [d] := value.matrix.indexrange
+                  |] = let f i = Pr.brackets (i <> ";" <+> pretty d)
+                       in  prettyList f "," xs
+    pretty [xMatch| xs := value.matrix   .values |] =                prettyList Pr.brackets "," xs
+    pretty [xMatch| xs := value.set      .values |] =                prettyList Pr.braces   "," xs
+    pretty [xMatch| xs := value.mset     .values |] = "mset"      <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.function .values |] = "function"  <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.relation .values |] = "relation"  <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := value.partition.values |] = "partition" <> prettyList Pr.parens   "," xs
+    pretty [xMatch| xs := part                   |] =                prettyList Pr.braces   "," xs
+
     pretty [xMatch| [app] := quantifierDecl.append
                   | [gua] := quantifierDecl.guard
                   | [ide] := quantifierDecl.identity
