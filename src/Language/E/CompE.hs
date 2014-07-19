@@ -141,7 +141,7 @@ toError msg = prettyError (pretty msg)
 
 -- errors
 
-type ConjureError = (ErrEnum, Doc, Maybe Spec)
+data ConjureError = ConjureError ErrEnum Doc (Maybe Spec)
 
 data ErrEnum = ErrFatal        -- means execution cannot continue.
              | ErrGeneratesNone
@@ -150,15 +150,15 @@ data ErrEnum = ErrFatal        -- means execution cannot continue.
 err :: MonadConjure m => ErrEnum -> Doc -> m a
 err e d = do
     sp <- gets lastSpec
-    throwError (e,d,sp)
+    throwError $ ConjureError e d sp
 
 prettyError :: Doc -> ConjureError -> Doc
-prettyError msg (_, d, Nothing) = vcat [msg, nest 4 d, ""]
-prettyError msg (_, d, Just sp) = vcat [msg, nest 4 d, nest 4 (pretty sp), ""] 
+prettyError msg (ConjureError _ d  Nothing ) = vcat [msg, nest 4 d, ""]
+prettyError msg (ConjureError _ d (Just sp)) = vcat [msg, nest 4 d, nest 4 (pretty sp), ""] 
 
 instance Pretty ConjureError where
-    pretty (_, d, Nothing) = vcat [ nest 4 d,                     "" ]
-    pretty (_, d, Just sp) = vcat [ nest 4 d, nest 4 (pretty sp), "" ]
+    pretty (ConjureError _ d  Nothing ) = vcat [ nest 4 d,                     "" ]
+    pretty (ConjureError _ d (Just sp)) = vcat [ nest 4 d, nest 4 (pretty sp), "" ]
 
 recordSpec :: MonadConjure m => Doc -> Spec -> m Spec
 recordSpec _msg sp = do

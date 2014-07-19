@@ -29,8 +29,11 @@ instance Pretty Int     where pretty = pretty . show
 instance Pretty Integer where pretty = pretty . show
 instance Pretty Double  where pretty x = pretty (printf "%.2f" x :: String)
 
-instance (Pretty a, Pretty b) => Pretty (a,b) where
-    pretty (a,b) = prettyListDoc parens "," [pretty a, pretty b]
+instance (Pretty a, Pretty b) => Pretty (a, b) where
+    pretty (a, b) = prettyListDoc parens "," [pretty a, pretty b]
+
+instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
+    pretty (a, b, c) = prettyListDoc parens "," [pretty a, pretty b, pretty c]
 
 instance Pretty a => Pretty (Maybe a) where
     pretty Nothing  = "Nothing"

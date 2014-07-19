@@ -124,13 +124,12 @@ single (RuleRefn (Name name) _ pattern templates locals) = do
                                              ]
             let i `isSubsetOf` j = S.null (i `S.difference` j)
             unless (templateMetaVars `isSubsetOf` S.unions [patternMetaVars,hasDomainMetaVars,lettingMetaVars])
-                $ Left ( ErrFatal
-                       , vcat [ "in rule:" <+> pretty name
-                              , "Pattern meta variables:"  <+> prettyListDoc id "," (map pretty $ S.toList patternMetaVars)
-                              , "Template meta variables:" <+> prettyListDoc id "," (map pretty $ S.toList templateMetaVars)
-                              ]
-                       , Nothing
-                       )
+                $ Left $ ConjureError ErrFatal
+                         ( vcat [ "in rule:" <+> pretty name
+                                , "Pattern meta variables:"  <+> prettyListDoc id "," (map pretty $ S.toList patternMetaVars)
+                                , "Template meta variables:" <+> prettyListDoc id "," (map pretty $ S.toList templateMetaVars)
+                                ] )
+                         Nothing
     staticCheck
 
     let functionOut x = withBindingScope' $ do

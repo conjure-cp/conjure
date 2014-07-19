@@ -248,7 +248,7 @@ phaseRepr0 one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         results1 = takeOne $ runComp logsInp $ conjureRepr ruleReprs essenceInp
 
         final1 :: Bool
-        final1 = not $ null [ () | (Left (ErrGeneratesNone, _, _), _) <- results1 ]
+        final1 = not $ null [ () | (Left (ConjureError ErrGeneratesNone _ _), _) <- results1 ]
 
     if final1
 
@@ -289,7 +289,7 @@ phaseRepr one (Just outDirPath) (Just queuePath) [EssenceBinPath path] = do
         results1 = takeOne $ runComp logsInp $ conjureRepr ruleReprs essenceInp
 
         final1 :: Bool
-        final1 = not $ null [ () | (Left (ErrGeneratesNone, _, _), _) <- results1 ]
+        final1 = not $ null [ () | (Left (ConjureError ErrGeneratesNone _ _), _) <- results1 ]
 
     if final1
 

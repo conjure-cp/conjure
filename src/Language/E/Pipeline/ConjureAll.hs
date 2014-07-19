@@ -62,8 +62,8 @@ conjureAll limit reprs refns = phaseRepr0
         ifNone ma mIf mElse s = do
             (s',w) <- catchError (fmap (,GeneratesSome) (ma s)) $ \ e ->
                     case e of
-                        (ErrGeneratesNone,_,_) -> fmap (,GeneratesNone) (mIf s)
-                        _                      -> fmap (,GeneratesSome) (throwError e)
+                        (ConjureError ErrGeneratesNone _ _) -> fmap (,GeneratesNone) (mIf s)
+                        _                                   -> fmap (,GeneratesSome) (throwError e)
             case w of
                 GeneratesNone -> return s'
                 GeneratesSome -> mElse s'

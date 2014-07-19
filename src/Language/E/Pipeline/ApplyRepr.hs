@@ -100,11 +100,10 @@ applyRepr rules spec = do
                     mkLog "configuration" configStr
                     catchError
                         (applyCongfigToSpec spec table)
-                        (\ (eu, em, _) ->
-                            throwError ( eu
-                                       , vcat [ "Error in applyConfigToSpec", pretty em ]
-                                       , Just spec
-                                       )
+                        (\ (ConjureError eu em _) ->
+                            throwError $ ConjureError eu
+                                (vcat [ "Error in applyConfigToSpec", pretty em ])
+                                (Just spec)
                         )
 
 
