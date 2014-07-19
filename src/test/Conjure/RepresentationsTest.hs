@@ -1087,13 +1087,13 @@ tests = testGroup "representations"
 
 
 testCases
-    :: Text                                                      -- high level variable name
+    :: Name                                                      -- high level variable name
     -> Domain HasRepresentation Constant                         -- high level domain
     -> Constant                                                  -- high level value (constant)
     -> (forall a . a -> Maybe a)                                 -- `const Nothing` -- if going one level down produces Nothing
                                                                  -- `Just`          -- if going one level down produces (Just mid)
-    -> [(Text, Domain HasRepresentation Constant, Constant)]     -- "mid" result, if we go one level down
-    -> [(Text, Domain HasRepresentation Constant, Constant)]     -- "low" result, if we go all the way down
+    -> [(Name, Domain HasRepresentation Constant, Constant)]     -- "mid" result, if we go one level down
+    -> [(Name, Domain HasRepresentation Constant, Constant)]     -- "low" result, if we go all the way down
     -> [TestTree]
 testCases highName highDomain highConstant mkMid mid low =
     [ testCase "down1"   $ down1Test   (highName, highDomain, highConstant) (mkMid mid)
@@ -1105,8 +1105,8 @@ testCases highName highDomain highConstant mkMid mid low =
     ]
 
 down1Test
-    :: (Text, Domain HasRepresentation Constant, Constant)
-    -> Maybe [(Text, Domain HasRepresentation Constant, Constant)]
+    :: (Name, Domain HasRepresentation Constant, Constant)
+    -> Maybe [(Name, Domain HasRepresentation Constant, Constant)]
     -> Assertion
 down1Test high low' =
     case down1_ dispatch high of
@@ -1114,8 +1114,8 @@ down1Test high low' =
         Right low -> Pr low @?= Pr low'
 
 downTest
-    :: (Text, Domain HasRepresentation Constant, Constant)
-    -> [(Text, Domain HasRepresentation Constant, Constant)]
+    :: (Name, Domain HasRepresentation Constant, Constant)
+    -> [(Name, Domain HasRepresentation Constant, Constant)]
     -> Assertion
 downTest high lows' =
     case down_ high of
@@ -1123,9 +1123,9 @@ downTest high lows' =
         Right lows -> Pr lows @?= Pr lows'
 
 up1Test
-    :: (Text, Domain HasRepresentation Constant)
-    -> [(Text, Constant)]
-    -> (Text, Constant)
+    :: (Name, Domain HasRepresentation Constant)
+    -> [(Name, Constant)]
+    -> (Name, Constant)
     -> Assertion
 up1Test info lows high' =
     case up1 dispatch info lows of
@@ -1133,9 +1133,9 @@ up1Test info lows high' =
         Right high -> Pr high @?= Pr high'
 
 upTest
-    :: (Text, Domain HasRepresentation Constant)
-    -> [(Text, Constant)]
-    -> (Text, Constant)
+    :: (Name, Domain HasRepresentation Constant)
+    -> [(Name, Constant)]
+    -> (Name, Constant)
     -> Assertion
 upTest info lows high' =
     case up info lows of
@@ -1144,7 +1144,7 @@ upTest info lows high' =
 
 
 testCasesAuto
-    :: Text                                                      -- high level variable name
+    :: Name                                                      -- high level variable name
     -> Domain HasRepresentation Constant                         -- high level domain
     -> Constant                                                  -- high level value (constant)
     -> [TestTree]
@@ -1154,7 +1154,7 @@ testCasesAuto highName highDomain highConstant =
     ]
 
 downUp1Test
-    :: (Text, Domain HasRepresentation Constant, Constant)
+    :: (Name, Domain HasRepresentation Constant, Constant)
     -> Assertion
 downUp1Test high =
     case down1_ dispatch high of
@@ -1166,7 +1166,7 @@ downUp1Test high =
                 Right high' -> Pr high' @?= Pr (dropDomain high)
 
 downUpTest
-    :: (Text, Domain HasRepresentation Constant, Constant)
+    :: (Name, Domain HasRepresentation Constant, Constant)
     -> Assertion
 downUpTest high =
     case down_ high of
@@ -1190,7 +1190,7 @@ dropDomain (a,_,c) = (a,c)
 data Pr a = Pr a
     deriving Eq
 
-instance Show (Pr [(Text, Domain HasRepresentation Constant, Constant)]) where
+instance Show (Pr [(Name, Domain HasRepresentation Constant, Constant)]) where
     show (Pr xs) = show $ vcat $ concatMap sh xs
         where
             sh (name, dom, cons) = [ hang (pretty name) 4 $ vcat
@@ -1199,14 +1199,14 @@ instance Show (Pr [(Text, Domain HasRepresentation Constant, Constant)]) where
                                         ]
                                    ]
 
-instance Show (Pr (Maybe [(Text, Domain HasRepresentation Constant, Constant)])) where
+instance Show (Pr (Maybe [(Name, Domain HasRepresentation Constant, Constant)])) where
     show (Pr Nothing) = "Nothing"
     show (Pr (Just xs)) = show (Pr xs)
 
-instance Show (Pr (Text, Constant)) where
+instance Show (Pr (Name, Constant)) where
     show (Pr (name, cons)) = show $ pretty name <+> "=" <+> pretty cons
 
-instance Show (Pr [(Text, Constant)]) where
+instance Show (Pr [(Name, Constant)]) where
     show (Pr xs) = intercalate "\n" $ map (show . Pr) xs
 
 

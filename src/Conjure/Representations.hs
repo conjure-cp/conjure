@@ -22,44 +22,44 @@ import Data.Text ( pack )
 type D = Domain HasRepresentation Constant
 
 type Representation m
-    =  Text
+    =  Name
     -> D
     -> m (RepresentationResult m)
 
 type RepresentationResult m =
-    ( m (Maybe [(Text, D)])
-    , Constant -> m (Maybe [(Text, D, Constant)])
-    , [(Text, Constant)] -> m (Text, Constant)
+    ( m (Maybe [(Name, D)])
+    , Constant -> m (Maybe [(Name, D, Constant)])
+    , [(Name, Constant)] -> m (Name, Constant)
     )
 
 
 down1
     :: (Applicative m, MonadError Doc m)
     => Representation m
-    ->           (Text, D)
-    -> m (Maybe [(Text, D)])
+    ->           (Name, D)
+    -> m (Maybe [(Name, D)])
 down1 repr (name, domain) = repr name domain >>= fst3
 
 down1_
     :: (Applicative m, MonadError Doc m)
     => Representation m
-    ->           (Text, D, Constant)
-    -> m (Maybe [(Text, D, Constant)])
+    ->           (Name, D, Constant)
+    -> m (Maybe [(Name, D, Constant)])
 down1_ repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constant
 
 up1
     :: (Applicative m, MonadError Doc m)
     => Representation m
-    ->   (Text, D)
-    ->  [(Text, Constant)]
-    -> m (Text, Constant)
+    ->   (Name, D)
+    ->  [(Name, Constant)]
+    -> m (Name, Constant)
 up1 repr (name, domain) ctxt = repr name domain >>= \ r -> thd3 r ctxt
 
 
 down
     :: (Applicative m, MonadError Doc m)
-    =>    (Text, D)
-    -> m [(Text, D)]
+    =>    (Name, D)
+    -> m [(Name, D)]
 down inp = do
     mout <- down1 dispatch inp
     case mout of
@@ -68,8 +68,8 @@ down inp = do
 
 down_
     :: (Applicative m, MonadError Doc m)
-    =>    (Text, D, Constant)
-    -> m [(Text, D, Constant)]
+    =>    (Name, D, Constant)
+    -> m [(Name, D, Constant)]
 down_ inp = do
     mout <- down1_ dispatch inp
     case mout of
@@ -78,12 +78,12 @@ down_ inp = do
 
 up
     :: (Applicative m, MonadError Doc m)
-    =>   (Text, D)
-    ->  [(Text, Constant)]
-    -> m (Text, Constant)
+    =>   (Name, D)
+    ->  [(Name, Constant)]
+    -> m (Name, Constant)
 up (name, highDomain) ctxt = do
     toDescend'
-        :: Maybe [(Text, D)]
+        :: Maybe [(Name, D)]
         <- down1 dispatch (name, highDomain)
     case toDescend' of
         Nothing ->
@@ -95,7 +95,7 @@ up (name, highDomain) ctxt = do
                 Just val -> return (name, val)
         Just toDescend -> do
             midConstants
-                 :: [(Text, Constant)]
+                 :: [(Name, Constant)]
                  <- sequence [ up (n,d) ctxt | (n,d) <- toDescend ]
             up1 dispatch (name, highDomain) midConstants
 
@@ -117,7 +117,7 @@ dispatch name domain =
                 ]
 
 
-primitive :: MonadError Doc m => Text -> RepresentationResult m
+primitive :: MonadError Doc m => Name -> RepresentationResult m
 primitive name =
     ( return Nothing
     , const $ return Nothing
@@ -131,7 +131,7 @@ primitive name =
     )
 
 
-tuple :: MonadError Doc m => Text -> [D] -> RepresentationResult m
+tuple :: MonadError Doc m => Name -> [D] -> RepresentationResult m
 tuple name ds = 
     ( tupleDown
     , tupleDown_
@@ -140,7 +140,7 @@ tuple name ds =
 
     where
 
-        mkName i = mconcat [name, "_", pack (show (i :: Int))]
+        mkName i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
         tupleDown = return $ Just
             [ (mkName i, d)
@@ -172,7 +172,7 @@ tuple name ds =
             return (name, ConstantTuple vals)
 
 
-matrix :: (Applicative m, MonadError Doc m) => Text -> Domain () Constant -> D -> RepresentationResult m
+matrix :: (Applicative m, MonadError Doc m) => Name -> Domain () Constant -> D -> RepresentationResult m
 matrix name indexDomain innerDomain = 
     ( matrixDown
     , matrixDown_
@@ -190,7 +190,7 @@ matrix name indexDomain innerDomain =
         -- TODO: check if indices are the same
         matrixDown_ (ConstantMatrix _indexDomain2 constants) = do
             mids1
-                :: [Maybe [(Text, D, Constant)]]
+                :: [Maybe [(Name, D, Constant)]]
                 <- sequence [ down1_ dispatch (name, innerDomain, c) | c <- constants ]
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
@@ -199,7 +199,7 @@ matrix name indexDomain innerDomain =
                     if length mids2 == length mids1             -- if all were `Just`s
                         then do
                             let
-                                mids3 :: [(Text, D, [Constant])]
+                                mids3 :: [(Name, D, [Constant])]
                                 mids3 = [ ( head [ n | (n,_,_) <- line ]
                                           , head [ d | (_,d,_) <- line ]
                                           ,      [ c | (_,_,c) <- line ]
@@ -224,7 +224,7 @@ matrix name indexDomain innerDomain =
         matrixUp ctxt = do
 
             mid1
-                :: Maybe [(Text, D)]
+                :: Maybe [(Name, D)]
                 <- down1 dispatch (name, innerDomain)
 
             case mid1 of
@@ -244,7 +244,7 @@ matrix name indexDomain innerDomain =
                     -- there needs to be bindings for each name in (map fst mid2)
                     -- we find those bindings, call (up1 dispatch name inner) on them, then lift
                     mid3
-                        :: [(Text, [Constant])]
+                        :: [(Name, [Constant])]
                         <- forM mid2 $ \ (n, _) -> do
                             case lookup n ctxt of
                                 Nothing -> throwError $ vcat $
@@ -268,7 +268,7 @@ matrix name indexDomain innerDomain =
                     let midConstants = map snd mid3
 
                     mid4
-                        :: [(Text, Constant)]
+                        :: [(Name, Constant)]
                         <- sequence
                             [ up1 dispatch (name, innerDomain) (zip midNames cs)
                             | cs <- transpose midConstants
@@ -277,7 +277,7 @@ matrix name indexDomain innerDomain =
                     return (name, ConstantMatrix indexDomain values)
 
 
-setOccurrence :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> [Range Constant] -> RepresentationResult m
+setOccurrence :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> [Range Constant] -> RepresentationResult m
 setOccurrence name attrs intRanges = 
     ( setDown
     , setDown_
@@ -288,7 +288,7 @@ setOccurrence name attrs intRanges =
 
         thisRepr = "Occurrence"
         innerDomain = DomainInt intRanges
-        thisFullDomain = DomainSet (HasRepresentation (Name thisRepr)) attrs innerDomain
+        thisFullDomain = DomainSet (HasRepresentation thisRepr) attrs innerDomain
 
         outName = mconcat [name, "_", thisRepr]
 
@@ -338,7 +338,7 @@ setOccurrence name attrs intRanges =
                     ("Bindings in context:" : prettyContext ctxt)
 
 
-setExplicit :: MonadError Doc m => Text -> Constant -> D -> RepresentationResult m
+setExplicit :: MonadError Doc m => Name -> Constant -> D -> RepresentationResult m
 setExplicit name size innerDomain = 
     ( setDown
     , setDown_
@@ -382,7 +382,7 @@ setExplicit name size innerDomain =
                                 ]
 
 
-setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> D -> RepresentationResult m
+setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> D -> RepresentationResult m
 setExplicitVarSizeWithMarker name attrs innerDomain = 
     ( setDown
     , setDown_
@@ -392,7 +392,7 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
     where
 
         thisRepr = "ExplicitVarSizeWithMarker"
-        thisFullDomain = DomainSet (HasRepresentation (Name thisRepr)) attrs innerDomain
+        thisFullDomain = DomainSet (HasRepresentation thisRepr) attrs innerDomain
 
         nameMarker = mconcat [name, "_", thisRepr, "_Marker"]
         nameMain   = mconcat [name, "_", thisRepr, "_Main"  ]
@@ -470,7 +470,7 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
                     ("Bindings in context:" : prettyContext ctxt)
 
 
-setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Text -> SetAttr Constant -> D -> RepresentationResult m
+setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> D -> RepresentationResult m
 setExplicitVarSizeWithFlags name attrs innerDomain = 
     ( setDown
     , setDown_
@@ -480,7 +480,7 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
     where
 
         thisRepr = "ExplicitVarSizeWithFlags"
-        thisFullDomain = DomainSet (HasRepresentation (Name thisRepr)) attrs innerDomain
+        thisFullDomain = DomainSet (HasRepresentation thisRepr) attrs innerDomain
 
         nameFlag = mconcat [name, "_", thisRepr, "_Flags"]
         nameMain = mconcat [name, "_", thisRepr, "_Main"]
