@@ -78,10 +78,10 @@ down_ inp = do
 
 up
     :: (Applicative m, MonadError Doc m)
-    =>   (Name, D)
-    ->  [(Name, Constant)]
+    =>  [(Name, Constant)]
+    ->   (Name, D)
     -> m (Name, Constant)
-up (name, highDomain) ctxt = do
+up ctxt (name, highDomain) = do
     toDescend'
         :: Maybe [(Name, D)]
         <- down1 dispatch (name, highDomain)
@@ -96,7 +96,7 @@ up (name, highDomain) ctxt = do
         Just toDescend -> do
             midConstants
                  :: [(Name, Constant)]
-                 <- sequence [ up (n,d) ctxt | (n,d) <- toDescend ]
+                 <- sequence [ up ctxt (n,d) | (n,d) <- toDescend ]
             up1 dispatch (name, highDomain) midConstants
 
 

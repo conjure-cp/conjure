@@ -32,7 +32,7 @@ translateSolution eprimeModel essenceParam eprimeSolution = do
         constant <- instantiateDomain eprimeLettings dom
         return (name, constant)
 
-    essenceLettings <- mapM (\ g -> up g eprimeLettings') essenceGivens'
+    essenceLettings <- mapM (up eprimeLettings') essenceGivens'
 
     return $ Model [ Declaration (Letting n (C x))
                    | (n, x) <- essenceLettings

@@ -1138,7 +1138,7 @@ upTest
     -> (Name, Constant)
     -> Assertion
 upTest info lows high' =
-    case up info lows of
+    case up lows info of
         Left err -> assertFailure (show err)
         Right high -> Pr high @?= Pr high'
 
@@ -1172,7 +1172,7 @@ downUpTest high =
     case down_ high of
         Left err -> assertFailure (show err)
         Right lows ->
-            case up (dropConstant high) (map dropDomain lows) of
+            case up (map dropDomain lows) (dropConstant high) of
                 Left err -> assertFailure (show err)
                 Right high' -> Pr high' @?= Pr (dropDomain high)
 
