@@ -27,6 +27,9 @@ data Model = Model
     }
     deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
 
+instance Default Model where
+    def = Model [] def
+
 data Statement
     = Declaration Declaration
     | Where Expression

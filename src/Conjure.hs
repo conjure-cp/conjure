@@ -100,12 +100,16 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
                 (writeModel (Just pathOutParam))
                 (refineParam inEprime inParam)
 
-        helper (ModeTranslateSolution pathInEssence pathInParam
-                                              pathInEprime pathInEprimeParam pathInEprimeSolution
-                                              pathOutSolution) =
-            translateSolution pathInEssence pathInParam
-                              pathInEprime pathInEprimeParam pathInEprimeSolution
-                              pathOutSolution
+        helper (ModeTranslateSolution pathInParam pathInEprime pathInEprimeSolution pathOutSolution) = do
+            inParam          <- case pathInParam of
+                                    Nothing -> return def
+                                    Just fp -> readModelFromFile fp
+            inEprime         <- readModelPreambleFromFile pathInEprime
+            inEprimeSolution <- readModelFromFile pathInEprimeSolution
+            either
+                userErr
+                (writeModel (Just pathOutSolution))
+                (translateSolution inEprime inParam inEprimeSolution)
 
         helper (ModeTypeCheck pathInp) = do
             inp <- case pathInp of

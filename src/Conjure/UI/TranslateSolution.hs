@@ -1,63 +1,45 @@
-{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module Conjure.UI.TranslateSolution
-    ( translateSolution
-    , translateSolution'
-    , translateSolutionM
-    ) where
+module Conjure.UI.TranslateSolution ( translateSolution ) where
 
-
-import Language.E
-import Language.E.Pipeline.ReadIn(writeSpec)
+-- conjure
+import Conjure.Language.Definition
+import Conjure.Language.Instantiate
+import Conjure.Representations ( up )
+import Language.E.Imports
 
 
 translateSolution
-    :: EssenceFP
-    -> Maybe EssenceParamFP
-    -> EprimeFP
-    -> Maybe EprimeParamFP
-    -> EprimeSolutionFP
-    -> EssenceSolutionFP  --Output
-    -> IO ()
-translateSolution
-    essence param eprime eprimeParam eprimeSolution outSolution =
-    translateSolution' essence param eprime eprimeParam eprimeSolution
-    >>= writeSpec outSolution
-    >>  return ()
+    :: ( Functor m
+       , Applicative m
+       , MonadError Doc m
+       )
+    => Model      -- eprime model
+    -> Model      -- essence param
+    -> Model      -- eprime solution
+    -> m Model    -- essence solution
+translateSolution eprimeModel essenceParam eprimeSolution = do
 
-translateSolution'
-    :: EssenceFP
-    -> Maybe EssenceParamFP
-    -> EprimeFP
-    -> Maybe EprimeParamFP
-    -> EprimeSolutionFP
-    -> IO EssenceSolution 
-translateSolution' = error "translateSolution'"
+    let eprimeLettings = extractLettings essenceParam ++
+                         extractLettings eprimeSolution
+    let essenceGivens = eprimeModel |> mInfo |> miRepresentations
 
+    eprimeLettings' <- forM eprimeLettings $ \ (name, val) -> do
+        constant <- instantiateExpression eprimeLettings val
+        return (name, constant)
 
-type Essence   = Spec
-type Eprime    = Spec
-type ESolution = Spec
-type Param = Spec
-type EssenceParam = Spec
+    essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
+        constant <- instantiateDomain eprimeLettings dom
+        return (name, constant)
 
-translateSolutionM
-  :: Monad m =>
-  Essence
-  -> Maybe EssenceParam
-  -> Eprime
-  -> Maybe Param
-  -> ESolution
-  -> [Text]
-  -> m Spec
-translateSolutionM = error "translateSolutionM"
+    essenceLettings <- mapM (\ g -> up g eprimeLettings') essenceGivens'
 
-type EssenceSolution = Spec
+    return $ Model [ Declaration (Letting n (C x))
+                   | (n, x) <- essenceLettings
+                   ]
+                   def
 
-type EssenceFP         = FilePath
-type EprimeFP          = FilePath
-type EssenceParamFP    = FilePath
-type EprimeParamFP     = FilePath
-type EprimeSolutionFP  = FilePath
-type EssenceSolutionFP = FilePath
+extractLettings :: Model -> [(Name, Expression)]
+extractLettings model =
+    [ (n, x) | Declaration (Letting n x) <- mStatements model ]
 

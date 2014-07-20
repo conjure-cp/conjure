@@ -1,26 +1,15 @@
-
--- Given
---     * An Essence spec
---     * An Essence' model for the spec
---     * An EssenceParam file
--- Generate
---     * An Essence'Param file
-
--- This module is named after the diagram we drew in IanM's room. It
--- probably shouldn't be.
-
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Conjure.UI.RefineParam ( refineParam ) where
 
 -- conjure
 import Conjure.Language.Definition
+import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Representations ( down_ )
 import Bug
-import Language.E
+import Language.E.Imports
 
 
 refineParam
@@ -28,8 +17,8 @@ refineParam
        , Applicative m
        , MonadError Doc m
        )
-    => Model     -- eprime model
-    -> Model     -- essence param
+    => Model      -- eprime model
+    -> Model      -- essence param
     -> m Model    -- eprime param
 refineParam eprimeModel essenceParam = do
 

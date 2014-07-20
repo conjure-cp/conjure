@@ -63,10 +63,8 @@ data ConjureMode
         FilePath    -- Essence'
         FilePath    -- Essence' Param
     | ModeTranslateSolution
-        FilePath            -- Input:  Essence
         (Maybe FilePath)    -- Input:  Essence Param
         FilePath            -- Input:  Essence'
-        (Maybe FilePath)    -- Input:  Essence' Param
         FilePath            -- Input:  Essence' Solution
         FilePath            -- Output: Essence  Solution
     | ModeTypeCheck
@@ -241,15 +239,14 @@ parseArgs (pairs, flags, rest) = msum
 
         modeTranslateSolution = do
             mode $ words "transSol translateSol translateSolution"
-            inEssence        <- key "--in-essence"
             inParam          <- optional $ key "--in-essence-param"
             inEprime         <- key "--in-eprime"
-            inEprimeParam    <- optional $ key "--in-eprime-param"
             inEprimeSolution <- key "--in-eprime-solution"
             outSolution      <- anyKey $ words "--out-solution --out-essence-solution"
             returnMode $ ModeTranslateSolution
-                        inEssence inParam
-                        inEprime inEprimeParam inEprimeSolution
+                        inParam
+                        inEprime
+                        inEprimeSolution
                         outSolution
 
         modeTypeCheck = do
