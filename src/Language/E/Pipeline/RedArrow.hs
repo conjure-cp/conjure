@@ -276,6 +276,20 @@ workhorse lookupReprs (nm, domBefore, valBefore) = do
 
         helper
             name
+            [xMatch| [domIndex] := domain.matrix.index
+                   | [domInner] := domain.matrix.inner
+                   |]
+            [xMatch| values := value.matrix.values |]
+            repr@(Just "Set~Occurrence") = do
+                mid <- sequence [ map snd <$> callHelper name domInner v repr | v <- values ]
+                let outName = name `T.append` "_Set~Occurrence"
+                let theMatrix = [xMake| value.matrix.values := concat mid
+                                      | value.matrix.indexrange := [domIndex]
+                                      |]
+                return [(outName, theMatrix)]
+
+        helper
+            name
             [xMatch| [fr,to]    := domain.set.inner.domain.int.ranges.range.fromTo 
                    | [domInner] := domain.set.inner
                    |]
