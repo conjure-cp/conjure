@@ -140,12 +140,12 @@ validateSpec spec = do
     let validateBinder bb@(Binder name val) | Just f <- lookup name finds  = do
             mkLog "dom" $ pretty f
             mkLog "val" $ pretty val
-            res <-  validateVal f val
+            res <-  validateVal (sortAttrs f) val
             return $ case res of
                 Just doc -> Just $ vcat [
-                     "Error for: " <+> pretty bb
+                      "Error for value" <+> pretty bb
                     , "Domain: " <+> pretty f
-                    , doc
+                    , hang "Details:" 2 doc
                     , "---"]
                 Nothing -> Nothing
 
@@ -158,20 +158,53 @@ validateSpec spec = do
         [] -> return ()
         xs -> bug $ vcat xs
 
+-- Attributes must be listed in sorted order for dMatch
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
 validateVal
-    -- dom@[dMatch| set of &innerDom  |]
     dom@[xMatch| _          := domain.set.attributes.attrCollection
-               | [innerdom] := domain.set.inner |]
+               | [innerDom] := domain.set.inner |]
     val@[xMatch| vs         := value.set.values |] = do
-    checkAtts dom
+
+    let vsLength = mkInt $ genericLength vs
+
+        checkAtts [dMatch| set (maxSize &ms) of &_ |] =
+            satisfied [eMake| &vsLength <= &ms |] "Too many elements in set" errorDoc
+
+        checkAtts [dMatch| set (minSize &ms) of &_ |] =
+            satisfied [eMake| &vsLength >= &ms |] "Too few elements in set" errorDoc
+
+        checkAtts [dMatch| set (size &s) of &_ |] =
+            satisfied [eMake| &vsLength = &s |]
+            "Wrong number of elements in set" errorDoc
+
+        checkAtts [dMatch| set (maxSize &b, minSize &a) of &_ |] =
+            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b |]
+            "Wrong number of elements in set" errorDoc
+
+        checkAtts [dMatch| set (maxSize &b, minSize &a, size &s) of &_ |] =
+            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b /\ &vsLength = &s |]
+            "Wrong number of elements in set" errorDoc
+
+        checkAtts [dMatch| set (minSize &a, size &s) of &_ |] =
+            satisfied [eMake| &vsLength >= &a /\ &vsLength = &s |]
+            "Wrong number of elements in set" errorDoc
+
+        checkAtts [dMatch| set (maxSize &b, size &s) of &_ |] =
+            satisfied [eMake| &vsLength <= &b /\ &vsLength = &s |]
+            "Wrong number of elements in set" errorDoc
+
+        checkAtts dd = bug $ vcat ["Could not check set", pretty dd]
+
+
+    attrCheck <- checkAtts dom
+    case attrCheck  of
+        Just d  -> return . Just $  d
+        Nothing -> do
+            vsDocs <- mapM (validateVal innerDom) vs
+            return $ joinDoc vsDocs
 
     where
-        checkAtts [dMatch| set (maxSize &ms) of &inn  |] =
-            undefined
-
-        checkAtts dd = bug $ vcat [ pretty dd]
-
+    errorDoc = vcat [pretty dom, pretty val]
 
 
 validateVal
@@ -193,7 +226,7 @@ validateVal
     d2 <- case ir == irDom of
        True ->  return Nothing
        False -> do
-           return . Just $ hang "Index ranges not the same for matrix" 4 errorDoc
+           return . Just $ hang "Index range not the same for matrix" 4 errorDoc
 
 
     let vsSize = mkInt $ genericLength vs
@@ -242,9 +275,45 @@ satisfied e  header idoc = do
         Right (True, _) -> return Nothing
         Right (False, _) -> do
            return $ Just doc
-        Left l -> bug $ vcat ["Could not reduce ", pretty e, "When checking for", doc ]
+        Left _ -> bug $ vcat ["Could not reduce ", pretty e, "When checking for", doc ]
 
     where doc = hang header 4 $ idoc
+
+
+-- Sort all attributes in a domain recursively
+sortAttrs :: Dom -> Dom
+sortAttrs [xMatch| attrs      := domain.set.attributes.attrCollection
+                 | [innerDom] := domain.set.inner |] =
+     [xMake| domain.set.attributes.attrCollection := sort attrs
+           | domain.set.inner                     := [sortAttrs innerDom] |]
+
+sortAttrs [xMatch| attrs      := domain.mset.attributes.attrCollection
+                 | [innerDom] := domain.mset.inner |] =
+     [xMake| domain.mset.attributes.attrCollection := sort attrs
+           | domain.mset.inner                     := [sortAttrs innerDom] |]
+
+sortAttrs [xMatch| attrs      := domain.partition.attributes.attrCollection
+                 | [innerDom] := domain.partition.inner |] =
+     [xMake| domain.partition.attributes.attrCollection := sort attrs
+           | domain.partition.inner                     := [sortAttrs innerDom] |]
+
+sortAttrs [xMatch| attrs       := domain.function.attributes.attrCollection
+                 | [innerFrom] := domain.function.innerFrom
+                 | [innerTo]   := domain.function.innerTo |] =
+     [xMake| domain.function.attributes.attrCollection := sort attrs
+           | domain.function.innerFrom                 := [sortAttrs innerFrom]
+           | domain.function.innerTo                   := [sortAttrs innerTo] |]
+
+sortAttrs [xMatch| attrs  := domain.relation.attributes.attrCollection
+                 | doms   := domain.relation.inner |] =
+     [xMake| domain.relation.attributes.attrCollection := sort attrs
+           | domain.relation.inner                     := map sortAttrs doms |]
+
+sortAttrs [dMatch| matrix indexed by [&ir] of &inner |] =
+    let newInner = sortAttrs inner in
+    [dMake| matrix indexed by [&ir] of &newInner |]
+
+sortAttrs d = d
 
 
 joinDoc :: [Maybe Doc] -> Maybe Doc
