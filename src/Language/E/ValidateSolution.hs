@@ -137,57 +137,71 @@ validateSpec spec = do
     mkLog "binders" $ vcat $ map pretty bs
     mkLog "finds" $ vcat $ map pretty finds
 
-    let validateBinder (Binder name val) | Just f <- lookup name finds  = do
+    let validateBinder bs@(Binder name val) | Just f <- lookup name finds  = do
             mkLog "dom" $ pretty f
             mkLog "val" $ pretty val
-            validateVal f val
+            res <-  validateVal f val
+            return $ case res of
+                Just doc -> Just $ vcat [
+                     "Error for: " <+> pretty bs
+                    , "Domain: " <+> pretty f
+                    , doc
+                    , "---"]
+                Nothing -> Nothing
 
-    _ <-  mapM validateBinder bs
-    return ()
+    docs <-  mapM validateBinder bs
+    case catMaybes docs of
+        [] -> return ()
+        xs -> bug $ vcat xs
 
-    where
-    validateVal :: MonadConjure m => Dom -> E -> m ()
-    validateVal
-        dom@[dMatch| matrix indexed by [&irDom] of &innerDom |]
-        val@[xMatch| vs := value.matrix.values
-               | [ir] := value.matrix.indexrange |]
-        = do
 
-        -- Checking the index range
-        irSize <- domSize ir
-        irDomSize <- domSize irDom
-        mkLog "irSize" . pretty $ irSize
-        mkLog "indexSize" . pretty $ irDomSize
+validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
+validateVal
+    dom@[dMatch| matrix indexed by [&irDom] of &innerDom |]
+    val@[xMatch| vs := value.matrix.values
+           | [ir] := value.matrix.indexrange |]
+    = do
 
-        check <- toBool [eMake| &irSize = &irDomSize |]
-        case check of
-            Right (True, _) -> return ()
-            Right (False, _) -> do
-               bug $ vcat [ "Index range difference sizes for matrix"
-                            , pretty dom
-                            , pretty val
-                            ]
+    -- Checking the index range
+    irSize <- domSize ir
+    irDomSize <- domSize irDom
+    mkLog "irSize" . pretty $ irSize
+    mkLog "indexSize" . pretty $ irDomSize
 
-        -- TODO domain written in different ways e.g. 1,2,3 insead of 1..3
-        case ir == irDom of
-           True -> return ()
-           False -> do
-               bug $ vcat [ "Index ranges not the same for matrix"
-                            , pretty dom
-                            , pretty val
-                            ]
 
-        let vsSize = mkInt $ genericLength vs
-        check2 <- toBool [eMake| &vsSize = &irDomSize |]
-        case check2 of
-           Right (True, _) -> return ()
-           Right (False, _) -> do
-               bug $ vcat [ "Invaild number of matrix elements"
-                            , pretty dom
-                            , pretty val
-                            ]
 
-        return ()
+    check <- toBool [eMake| &irSize = &irDomSize |]
+    d1 <- case check of
+        Right (True, _) -> return Nothing
+        Right (False, _) -> do
+           return . Just $ vcat [ "Index range difference sizes for matrix"
+                        , pretty dom
+                        , pretty val
+                        ]
+
+    -- TODO domain written in different ways e.g. 1,2,3 insead of 1..3
+    d2 <- case ir == irDom of
+       True ->  return Nothing
+       False -> do
+           return . Just $ vcat [ "Index ranges not the same for matrix"
+                        , pretty dom
+                        , pretty val
+                        ]
+
+    let vsSize = mkInt $ genericLength vs
+    check2 <- toBool [eMake| &vsSize = &irDomSize |]
+    d3 <- case check2 of
+       Right (True, _) ->  return Nothing
+       Right (False, _) -> do
+           return . Just $ hang "Invaild number of matrix elements" 4 $ vcat
+                        [
+                          pretty dom
+                        , pretty val
+                        ]
+
+    case catMaybes [d1,d2,d3] of
+        [] -> return Nothing
+        xs -> return . Just $ vcat xs
 
 getInt :: E -> Integer
 getInt  [xMatch| [Prim (I j)] :=  value.literal  |] = j
