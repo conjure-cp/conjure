@@ -164,12 +164,37 @@ validateSpec spec = do
         case check of
             Right (True, _) -> return ()
             Right (False, _) -> do
-               bug $ vcat [ "Index range not consistent"
+               bug $ vcat [ "Index range difference sizes"
                             , pretty dom
                             , pretty val
                             ]
+
+        -- TODO domain written in different ways e.g. 1,2,3 insead of 1..3
+        case ir == irDom of
+           True -> return ()
+           False -> do
+               bug $ vcat [ "Index ranges not the same"
+                            , pretty dom
+                            , pretty val
+                            ]
+
+        let vsSize = mkInt $ genericLength vs
+        check <- toBool [eMake| &vsSize = &irDomSize |]
+        case check of
+           Right (True, _) -> return ()
+           Right (False, _) -> do
+               bug $ vcat [ "Invaild number of matrix elements"
+                            , pretty dom
+                            , pretty val
+                            ]
+
         return ()
 
+getInt :: E -> Integer
+getInt  [xMatch| [Prim (I j)] :=  value.literal  |] = j
+
+mkInt :: Integer -> E
+mkInt j =  [xMake| value.literal := [Prim (I j)] |]
 
 pullFinds :: Spec -> [(Text,E)]
 pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
