@@ -32,57 +32,11 @@ validateSolution essence param solution =
 
 -- this will return True is it's valid, False if not
 -- the validator might use error
+
+
 validateSolutionPure :: Essence -> Param -> Solution -> Bool
 validateSolutionPure essence param solution =
-    let
-        (mresult, _logs) = runCompESingle "validating solution" helper
-    in
-        case mresult of
-            Left  x      -> userErr x
-            Right result -> result
-
-    where
-
-
-        helper = do
-
-            case param of
-                Nothing -> return ()
-                Just (Spec _ s) -> mapM_ introduceStuff (statementAsList s)
-            -- bindersDoc >>= mkLog "binders 1"
-
-            case solution of
-                Spec _ s        -> mapM_ introduceStuff (statementAsList s)
-            -- bindersDoc >>= mkLog "binders 2"
-
-            let essenceCombined =
-                    case (essence, param) of
-                        (Spec l s, Just (Spec _ p)) -> Spec l (listAsStatement $ statementAsList p ++ statementAsList s)
-                        _ -> essence
-
-            let pipeline0 = recordSpec "init"
-                    >=> explodeStructuralVars   >=> recordSpec "explodeStructuralVars"
-                    >=> inlineLettings          >=> recordSpec "inlineLettings"
-                    >=> fullyInline             >=> recordSpec "fullyInline"
-                    >=> stripDecls              >=> recordSpec "stripDecls"
-                    >=> handleEnums             >=> recordSpec "handleEnums"
-                    >=> handleUnnameds          >=> recordSpec "handleUnnameds"
-                    >=> inlineLettings          >=> recordSpec "inlineLettings"
-                    >=> stripDecls              >=> recordSpec "stripDecls"
-                    >=> allNoTuplesSpec         >=> recordSpec "allNoTuplesSpec"
-                    >=> fullyEvaluate           >=> recordSpec "fullyEvaluate"
-
-            Spec _ s <- pipeline0 essenceCombined
-
-            let checks = map isPartOfValidSolution (statementAsList s)
-            if all isJust checks
-                then return (and $ catMaybes checks)
-                else bug $ vcat [ "Cannot fully evaluate."
-                                , pretty s
-                                , prettyAsTree s
-                                , prettyAsPaths s
-                                ]
-
+    fst $ validateSolutionPureNew essence param solution
 
 validateSolutionPureNew :: Essence -> Param ->  Solution -> (Bool,LogTree)
 validateSolutionPureNew essence param solution =
