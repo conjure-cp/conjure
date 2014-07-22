@@ -16,10 +16,13 @@ import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 
+import Language.E.Pipeline.ReadIn(readSpecFromFile)
+import Language.E.Evaluator.ToBool(toBool)
 
 type Essence  = Spec
 type Param    = Maybe Spec
 type Solution = Spec
+type Dom = E
 
 validateSolution :: Essence -> Param -> Solution -> IO ()
 validateSolution essence param solution =
@@ -40,6 +43,7 @@ validateSolutionPure essence param solution =
             Right result -> result
 
     where
+
 
         helper = do
 
@@ -80,6 +84,110 @@ validateSolutionPure essence param solution =
                                 , prettyAsPaths s
                                 ]
 
+
+pipeTest :: Essence -> Solution -> (Bool,LogTree )
+pipeTest essence solution =
+    let
+        (mresult, _logs) = runCompESingle "validating solution" helper
+    in
+        case mresult of
+            Left  x      -> userErr x
+            Right b -> (b, _logs)
+
+    where
+    helper = do
+        case solution of
+            Spec _ s        -> mapM_ introduceStuff (statementAsList s)
+        bindersDoc >>= mkLog "binders 2"
+
+        let pipeline0 = recordSpec "init"
+                >=> explodeStructuralVars   >=> recordSpec "explodeStructuralVars"
+                >=> inlineLettings          >=> recordSpec "inlineLettings"
+
+        let pipeTest1 = recordSpec "init2"
+                >=> fullyInline             >=> recordSpec "fullyInline"
+                >=> stripDecls              >=> recordSpec "stripDecls"
+                >=> handleEnums             >=> recordSpec "handleEnums"
+                >=> handleUnnameds          >=> recordSpec "handleUnnameds"
+                >=> inlineLettings          >=> recordSpec "inlineLettings"
+                >=> stripDecls              >=> recordSpec "stripDecls"
+                >=> allNoTuplesSpec         >=> recordSpec "allNoTuplesSpec"
+                >=> fullyEvaluate           >=> recordSpec "fullyEvaluate"
+
+
+        inlined <-  pipeline0 essence
+        mkLog "inlined" (pretty inlined)
+        validateSpec inlined
+
+
+        sp@(Spec _ s) <- pipeTest1 inlined
+        let checks = map isPartOfValidSolution (statementAsList s)
+        if all isJust checks
+            then return (and $ catMaybes checks)
+            else bug $ vcat [ "Cannot fully evaluate."
+                            , pretty s
+                            , prettyAsTree s
+                            , prettyAsPaths s
+                            ]
+
+
+validateSpec :: MonadConjure m => Spec -> m ()
+validateSpec spec = do
+    bs <- gets binders
+    let finds = pullFinds spec
+    mkLog "binders" $ vcat $ map pretty bs
+    mkLog "finds" $ vcat $ map pretty finds
+
+    let validateBinder (Binder name val) | Just f <- lookup name finds  = do
+            mkLog "dom" $ pretty f
+            mkLog "val" $ pretty val
+            validateVal f val
+
+    _ <-  mapM validateBinder bs
+    return ()
+
+    where
+    validateVal :: MonadConjure m => Dom -> E -> m ()
+    validateVal
+        dom@[dMatch| matrix indexed by [&irDom] of &innerDom |]
+        val@[xMatch| vs := value.matrix.values
+               | [ir] := value.matrix.indexrange |]
+        = do
+
+        -- Checking the index range
+        irSize <- domSize ir
+        irDomSize <- domSize irDom
+        mkLog "irSize" . pretty $ irSize
+        mkLog "indexSize" . pretty $ irDomSize
+
+        check <- toBool [eMake| &irSize = &irDomSize |]
+        case check of
+            Right (True, _) -> return ()
+            Right (False, _) -> do
+               bug $ vcat [ "Index range not consistent"
+                            , pretty dom
+                            , pretty val
+                            ]
+        return ()
+
+
+pullFinds :: Spec -> [(Text,E)]
+pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
+    where pullFind [xMatch| [name] := topLevel.declaration.find.name
+                          | [dom]  := topLevel.declaration.find.domain |] = Just (getName name,dom)
+          pullFind _ = Nothing
+
+getName :: E -> Text
+getName [xMatch| [Prim (S name)] := reference  |] = name
+getName e = error . show $ "getName: not a name" <+> pretty e
+
+_aa :: FilePath -> FilePath -> IO ()
+_aa e s = do
+    ee <- readSpecFromFile e
+    ss <- readSpecFromFile s
+    let (b, logs) = pipeTest ee ss
+    putStrLn . show .pretty $ b
+    putStrLn . show . pretty $ logs
 
 
 isPartOfValidSolution :: E -> Maybe Bool
