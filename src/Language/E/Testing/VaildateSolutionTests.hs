@@ -9,57 +9,82 @@ import Language.E.ValidateSolution(validateSolutionPureNew,validateSolution)
 import Language.E.Pipeline.ReadIn(readSpecFromFile)
 
 import qualified Control.Exception as Exc
-
+import qualified Data.Text as T
 
 
 type Dom = E
 
-singleVarErrors :: [(Dom, E)]
-singleVarErrors = [
+-- Test cases which should be found to be invaild
+singleVarErrors :: [([Dom], [E])]
+singleVarErrors = map ( \(d,e) -> ([d], [e]) )  [
       ([dMake| set (size 2) of int(1..2) |]   , [eMake| {3} |])
     , ([dMake| set (minSize 2) of int(1..2) |], [eMake| {1} |])
     ]
 
-singleVarCorrect :: [(Dom, E)]
-singleVarCorrect = [
+-- Test cases which should be found to be vaild
+singleVarCorrect :: [([Dom], [E])]
+singleVarCorrect = map ( \(d,e) -> ([d], [e]) ) [
        ([dMake| set (minSize 2) of int(1..2) |], [eMake| {1,2} |])
      , ([dMake| set  of int(1..2) |], [eMake| {1,2,4} |])
     ]
 
+
+-- Test cases which should be found to be invaild
+varErrors :: [([Dom], [E])]
+varErrors = []
+
+-- Test cases which should be found to be vaild
+varCorrect :: [([Dom], [E])]
+varCorrect = []
+
+
 runTests :: IO ()
 runTests = do
-    mapM_ ( runVaildate "MISSING ERROR" "" ) singleVarErrors
-    mapM_ ( runVaildate "" "UNEXPECTED ERROR" ) singleVarCorrect
+    mapM_ ( runVaildate (Just "MISSING ERROR") Nothing ) singleVarErrors
+    mapM_ ( runVaildate Nothing (Just "UNEXPECTED ERROR") ) singleVarCorrect
+
+    mapM_ ( runVaildate (Just "MISSING ERROR") Nothing ) varErrors
+    mapM_ ( runVaildate Nothing (Just "UNEXPECTED ERROR") ) varCorrect
 
     return ()
 
     where
-    runVaildate :: Doc -> Doc -> (Dom, E) -> IO ()
+    runVaildate :: Maybe Doc -> Maybe Doc -> ([Dom], [E]) -> IO ()
     runVaildate success failure (dom, e) = do
-        let [domS, solS]  = map mkSpec [ [mkFind ("var0", dom)], [mkLetting ("var0", e)] ]
+        let [domS, solS]  = map mkSpec [
+                    zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show b) a ) dom [0..],
+                    zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show b) a ) e   [0..]
+                ]
         Exc.handle (handler dom e failure) $ do
             validateSolution domS Nothing solS
-            putStrLn . show $
-                vcat  [ success
-                      ,"\tDomain:" <+>  pretty dom
-                      ,"\tValue: " <+>  pretty e
-                      , ""
-                      , "~~~~~~"
-                      , ""
-                      ]
+            case success of
+                Nothing -> return ()
+                Just doc ->
+                    putStrLn . show $
+                        vcat  [ doc
+                              ,"\tDomain:" <+>  pretty dom
+                              ,"\tValue: " <+>  pretty e
+                              , ""
+                              , "~~~~~~"
+                              , ""
+                              ]
 
         return ()
 
-    handler :: Dom -> E -> Doc -> Exc.ErrorCall -> IO ()
-    handler dom e doc (Exc.ErrorCall i) = putStrLn . show $
-        vcat  [ doc
-              , "\tDomain:" <+>  pretty dom
-              ,"\tValue: " <+>  pretty e
-              , ""
-              , pretty i
-              , "~~~~~~"
-              , ""
-              ]
+    handler :: [Dom] -> [E] -> Maybe Doc -> Exc.ErrorCall -> IO ()
+    handler dom e mdoc (Exc.ErrorCall i) =
+        case mdoc of
+            Nothing -> return ()
+            Just doc -> do
+                putStrLn . show $
+                    vcat  [ doc
+                          , "\tDomain:" <+>  pretty dom
+                          ,"\tValue: " <+>  pretty e
+                          , ""
+                          , pretty i
+                          , "~~~~~~"
+                          , ""
+                          ]
 
 
 
@@ -67,15 +92,15 @@ mkSpec :: [E] -> Spec
 mkSpec es =
     Spec (LanguageVersion "Essence" [1,3]) . listAsStatement $ es
 
-mkFind :: (Text,Dom) -> E
-mkFind (name,dom) =[xMake| topLevel.declaration.find.name   := [mkName name]
+mkFind :: Text -> Dom -> E
+mkFind  name dom = [xMake| topLevel.declaration.find.name   := [mkName name]
                          | topLevel.declaration.find.domain := [dom]
                          |]
 
-mkLetting :: (Text,E) -> E
-mkLetting (name,expr) =[xMake| topLevel.letting.name := [mkName name]
-                             | topLevel.letting.expr := [expr]
-                             |]
+mkLetting :: Text -> E  -> E
+mkLetting name expr = [xMake| topLevel.letting.name := [mkName name]
+                            | topLevel.letting.expr := [expr]
+                            |]
 
 mkName :: Text -> E
 mkName name = [xMake| reference :=  [Prim (S name)]  |]
