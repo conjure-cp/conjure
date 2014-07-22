@@ -389,6 +389,26 @@ instance IsString HasRepresentation where
     fromString = HasRepresentation . Name . T.pack
 
 
+data Type
+    = TypeBool
+    | TypeInt
+    | TypeEnum DomainDefnEnum
+    | TypeTuple [Type]
+    | TypeMatrix Type Type
+    | TypeSet       Type
+    | TypeMSet      Type
+    | TypeFunction  Type Type
+    | TypeRelation  [Type]
+    | TypePartition Type
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+
+instance Serialize Type
+
+instance Hashable Type
+
+instance ToJSON Type
+
+
 data Constant
     = ConstantBool Bool
     | ConstantInt Int
