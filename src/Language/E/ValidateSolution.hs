@@ -3,6 +3,7 @@
 module Language.E.ValidateSolution
     ( validateSolution
     , validateSolutionPure
+    , validateSolutionPureNew
     ) where
 
 import qualified Data.HashMap.Strict as M
@@ -16,7 +17,6 @@ import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 
-import Language.E.Pipeline.ReadIn(readSpecFromFile)
 
 type Essence  = Spec
 type Param    = Maybe Spec
@@ -124,7 +124,7 @@ validateSpec spec = do
     docs <-  mapM validateBinder bs
     case catMaybes docs of
         [] -> return ()
-        xs -> bug $ vcat xs
+        xs -> userErr $ vcat xs
 
 -- Attributes must be listed in sorted order for dMatch
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
@@ -355,15 +355,6 @@ pullFinds (Spec _ x) = mapMaybe pullFind (statementAsList x)
 getName :: E -> Text
 getName [xMatch| [Prim (S name)] := reference  |] = name
 getName e = error . show $ "getName: not a name" <+> pretty e
-
-_aa :: FilePath -> FilePath -> IO ()
-_aa e s = do
-    ee <- readSpecFromFile e
-    ss <- readSpecFromFile s
-    let (b, logs) = validateSolutionPureNew ee Nothing ss
-    putStrLn . show . pretty $ b
-    putStrLn . show . pretty $ logs
-
 
 isPartOfValidSolution :: E -> Maybe Bool
 isPartOfValidSolution [xMatch| [Prim (B b)] := topLevel.suchThat.value.literal |] = Just b
