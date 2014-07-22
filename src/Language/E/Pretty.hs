@@ -372,25 +372,32 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
             collect x = ([],x)
 
     pretty (DomainSet r attrs inner) =
-        hang ("set" <+> pretty (r,attrs) <+> "of") 4 (pretty inner)
+        hang ("set" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
 
     pretty (DomainMSet r attrs inner) =
-        hang ("mset" <+> pretty (r,attrs) <+> "of") 4 (pretty inner)
+        hang ("mset" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
 
     pretty (DomainFunction r attrs innerFrom innerTo) =
-        hang ("function" <+> pretty (r,attrs)) 4 $
+        hang ("function" <+> prettyAttrs r attrs) 4 $
             hang (pretty innerFrom) 4 $
                 "-->" <+> pretty innerTo
 
     pretty (DomainRelation r attrs inners)
-        = hang ("relation" <+> pretty (r,attrs) <+> "of") 4 (prettyList Pr.parens " *" inners)
+        = hang ("relation" <+> prettyAttrs r attrs <+> "of") 4 (prettyList Pr.parens " *" inners)
 
     pretty (DomainPartition r attrs inner)
-        = hang ("partition" <+> pretty (r,attrs) <+> "from") 4 (pretty inner)
+        = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
 
     pretty (DomainOp op xs) = Pr.parens $ foldr (<+>) empty $ intersperse (pretty op) (map pretty xs)
 
     pretty (DomainHack x) = pretty x
+
+prettyAttrs :: (Pretty a, Pretty b) => a -> b -> Doc
+prettyAttrs a bs =
+    let prettya = pretty a
+    in  if prettya == "()"
+            then pretty bs
+            else Pr.braces prettya <+> pretty bs
 
 instance Pretty a => Pretty (SetAttr a) where
     pretty attr =
