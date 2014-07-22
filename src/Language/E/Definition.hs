@@ -252,6 +252,7 @@ data Domain r a
     = DomainBool
     | DomainInt [Range a]
     | DomainEnum DomainDefnEnum [Range a]
+    | DomainUnnamed DomainDefnUnnamed
     | DomainTuple [Domain r a]
     | DomainMatrix (Domain () a) (Domain r a)
     | DomainSet       r (SetAttr a) (Domain r a)
@@ -289,6 +290,7 @@ forgetRepr :: Domain r a -> Domain () a
 forgetRepr DomainBool = DomainBool
 forgetRepr (DomainInt rs) = DomainInt rs
 forgetRepr (DomainEnum defn rs) = DomainEnum defn rs
+forgetRepr (DomainUnnamed defn) = DomainUnnamed defn
 forgetRepr (DomainTuple ds) = DomainTuple (map forgetRepr ds)
 forgetRepr (DomainMatrix index inner) = DomainMatrix index (forgetRepr inner)
 forgetRepr (DomainSet       _ attr d) = DomainSet () attr (forgetRepr d)
@@ -393,6 +395,7 @@ data Type
     = TypeBool
     | TypeInt
     | TypeEnum DomainDefnEnum
+    | TypeUnnamed DomainDefnUnnamed
     | TypeTuple [Type]
     | TypeMatrix Type Type
     | TypeSet       Type

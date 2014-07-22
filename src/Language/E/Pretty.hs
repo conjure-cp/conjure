@@ -357,6 +357,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainEnum name []) = pretty name
     pretty (DomainEnum name ranges) = pretty name <> prettyList Pr.parens "," ranges
 
+    pretty (DomainUnnamed name) = pretty name
+
     pretty (DomainTuple inners)
         = (if length inners < 2 then "tuple" else Pr.empty)
         <+> prettyList Pr.parens "," inners
