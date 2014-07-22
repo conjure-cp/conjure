@@ -154,7 +154,6 @@ validateSpec spec = do
         [] -> return ()
         xs -> bug $ vcat xs
 
-
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
 validateVal
     dom@[dMatch| matrix indexed by [&irDom] of &innerDom |]
@@ -199,9 +198,27 @@ validateVal
                         , pretty val
                         ]
 
-    case catMaybes [d1,d2,d3] of
-        [] -> return Nothing
-        xs -> return . Just $ vcat xs
+    case joinDoc [d1,d2,d3] of
+        Just s -> return . Just $ s
+        Nothing -> do
+            vsDocs <- mapM (validateVal innerDom) vs
+            return $ joinDoc vsDocs
+
+-- TODO check if the ints are in the domain
+validateVal [xMatch| _ := domain.int |] [xMatch| [Prim (I _)] :=  value.literal |]  = do
+    return Nothing
+
+validateVal [xMatch| _ := domain.bool |] [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
+
+validateVal dom es = bug $ vcat [
+      "domain:" <+> pretty dom
+    , "val:"    <+> pretty es
+    ]
+
+joinDoc :: [Maybe Doc] -> Maybe Doc
+joinDoc ds = case catMaybes ds of
+    [] -> Nothing
+    xs -> Just . vcat $ xs
 
 getInt :: E -> Integer
 getInt  [xMatch| [Prim (I j)] :=  value.literal  |] = j
