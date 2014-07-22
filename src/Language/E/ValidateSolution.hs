@@ -17,7 +17,6 @@ import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
 
 import Language.E.Pipeline.ReadIn(readSpecFromFile)
-import Language.E.Evaluator.ToBool(toBool)
 
 type Essence  = Spec
 type Param    = Maybe Spec
@@ -85,8 +84,8 @@ validateSolutionPure essence param solution =
                                 ]
 
 
-pipeTest :: Essence -> Solution -> (Bool,LogTree )
-pipeTest essence solution =
+validateSolutionPureNew :: Essence -> Solution -> (Bool,LogTree)
+validateSolutionPureNew essence solution =
     let
         (mresult, _logs) = runCompESingle "validating solution" helper
     in
@@ -120,7 +119,7 @@ pipeTest essence solution =
         validateSpec inlined
 
 
-        sp@(Spec _ s) <- pipeTest1 inlined
+        (Spec _ s) <- pipeTest1 inlined
         let checks = map isPartOfValidSolution (statementAsList s)
         if all isJust checks
             then return (and $ catMaybes checks)
@@ -164,7 +163,7 @@ validateSpec spec = do
         case check of
             Right (True, _) -> return ()
             Right (False, _) -> do
-               bug $ vcat [ "Index range difference sizes"
+               bug $ vcat [ "Index range difference sizes for matrix"
                             , pretty dom
                             , pretty val
                             ]
@@ -173,14 +172,14 @@ validateSpec spec = do
         case ir == irDom of
            True -> return ()
            False -> do
-               bug $ vcat [ "Index ranges not the same"
+               bug $ vcat [ "Index ranges not the same for matrix"
                             , pretty dom
                             , pretty val
                             ]
 
         let vsSize = mkInt $ genericLength vs
-        check <- toBool [eMake| &vsSize = &irDomSize |]
-        case check of
+        check2 <- toBool [eMake| &vsSize = &irDomSize |]
+        case check2 of
            Right (True, _) -> return ()
            Right (False, _) -> do
                bug $ vcat [ "Invaild number of matrix elements"
@@ -210,7 +209,7 @@ _aa :: FilePath -> FilePath -> IO ()
 _aa e s = do
     ee <- readSpecFromFile e
     ss <- readSpecFromFile s
-    let (b, logs) = pipeTest ee ss
+    let (b, logs) = validateSolutionPureNew ee ss
     putStrLn . show .pretty $ b
     putStrLn . show . pretty $ logs
 
