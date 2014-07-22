@@ -84,8 +84,8 @@ validateSolutionPure essence param solution =
                                 ]
 
 
-validateSolutionPureNew :: Essence -> Solution -> (Bool,LogTree)
-validateSolutionPureNew essence solution =
+validateSolutionPureNew :: Essence -> Param ->  Solution -> (Bool,LogTree)
+validateSolutionPureNew essence param solution =
     let
         (mresult, _logs) = runCompESingle "validating solution" helper
     in
@@ -95,9 +95,23 @@ validateSolutionPureNew essence solution =
 
     where
     helper = do
+
+        case param of
+            Nothing -> return ()
+            Just (Spec _ s) -> mapM_ introduceStuff (statementAsList s)
+        -- bindersDoc >>= mkLog "binders 1"
+
         case solution of
             Spec _ s        -> mapM_ introduceStuff (statementAsList s)
         bindersDoc >>= mkLog "binders 2"
+
+        let essenceCombined =
+                case (essence, param) of
+                    (Spec l s, Just (Spec _ p)) ->
+                        Spec l (listAsStatement $ statementAsList p ++ statementAsList s)
+                    _ -> essence
+
+
 
         let pipeline0 = recordSpec "init"
                 >=> explodeStructuralVars   >=> recordSpec "explodeStructuralVars"
@@ -114,7 +128,7 @@ validateSolutionPureNew essence solution =
                 >=> fullyEvaluate           >=> recordSpec "fullyEvaluate"
 
 
-        inlined <-  pipeline0 essence
+        inlined <-  pipeline0 essenceCombined
         mkLog "inlined" (pretty inlined)
         validateSpec inlined
 
@@ -208,6 +222,53 @@ validateVal
 
 
 validateVal
+    dom@[xMatch| _          := domain.mset.attributes.attrCollection
+               | [innerDom] := domain.mset.inner |]
+    val@[xMatch| vs         := value.mset.values |] = do
+
+    let vsLength = mkInt $ genericLength vs
+
+        checkAtts [dMatch| mset (maxSize &ms) of &_ |] =
+            satisfied [eMake| &vsLength <= &ms |] "Too many elements in mset" errorDoc
+
+        checkAtts [dMatch| mset (minSize &ms) of &_ |] =
+            satisfied [eMake| &vsLength >= &ms |] "Too few elements in mset" errorDoc
+
+        checkAtts [dMatch| mset (size &s) of &_ |] =
+            satisfied [eMake| &vsLength = &s |]
+            "Wrong number of elements in mset" errorDoc
+
+        checkAtts [dMatch| mset (maxSize &b, minSize &a) of &_ |] =
+            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b |]
+            "Wrong number of elements in mset" errorDoc
+
+        checkAtts [dMatch| mset (maxSize &b, minSize &a, size &s) of &_ |] =
+            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b /\ &vsLength = &s |]
+            "Wrong number of elements in mset" errorDoc
+
+        checkAtts [dMatch| mset (minSize &a, size &s) of &_ |] =
+            satisfied [eMake| &vsLength >= &a /\ &vsLength = &s |]
+            "Wrong number of elements in mset" errorDoc
+
+        checkAtts [dMatch| mset (maxSize &b, size &s) of &_ |] =
+            satisfied [eMake| &vsLength <= &b /\ &vsLength = &s |]
+            "Wrong number of elements in mset" errorDoc
+
+        checkAtts dd = bug $ vcat ["Could not check mset", pretty dd]
+
+
+    attrCheck <- checkAtts dom
+    case attrCheck  of
+        Just d  -> return . Just $  d
+        Nothing -> do
+            vsDocs <- mapM (validateVal innerDom) vs
+            return $ joinDoc vsDocs
+
+    where
+    errorDoc = vcat [pretty dom, pretty val]
+
+
+validateVal
     dom@[dMatch| matrix indexed by [&irDom] of &innerDom  |]
     val@[xMatch| vs   := value.matrix.values
                | [ir] := value.matrix.indexrange |]
@@ -241,6 +302,7 @@ validateVal
 
     where errorDoc = vcat [pretty dom, pretty val]
 
+
 validateVal d@[xMatch| rs := domain.int.ranges |]
             v@[xMatch| [Prim (I i)] :=  value.literal |]  = do
     case (rs, any (inDomain i) rs) of
@@ -258,8 +320,10 @@ validateVal d@[xMatch| rs := domain.int.ranges |]
             k >= l && k <= u
         inDomain _ _ = False
 
+
 validateVal [xMatch| _ := domain.bool |]
             [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
+
 
 validateVal dom es = bug $ vcat [
      "validateVal not handled"
@@ -342,7 +406,7 @@ _aa :: FilePath -> FilePath -> IO ()
 _aa e s = do
     ee <- readSpecFromFile e
     ss <- readSpecFromFile s
-    let (b, logs) = validateSolutionPureNew ee ss
+    let (b, logs) = validateSolutionPureNew ee Nothing ss
     putStrLn . show . pretty $ b
     putStrLn . show . pretty $ logs
 
