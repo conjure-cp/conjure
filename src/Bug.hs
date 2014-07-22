@@ -22,9 +22,7 @@ bug _message = error $ unlines
     , "Also include repository version for this build: " ++ repositoryVersion
     , ""
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
-#ifdef TRACELOGS
     , "", "" , renderNormal _message
-#endif
     ]
 
 headNote :: Doc -> [a] -> a
