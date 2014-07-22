@@ -204,9 +204,21 @@ validateVal
             vsDocs <- mapM (validateVal innerDom) vs
             return $ joinDoc vsDocs
 
--- TODO check if the ints are in the domain
-validateVal [xMatch| _ := domain.int |] [xMatch| [Prim (I _)] :=  value.literal |]  = do
-    return Nothing
+validateVal d@[xMatch| rs := domain.int.ranges |]
+            v@[xMatch| [Prim (I i)] :=  value.literal |]  = do
+    case any (inDomain i) rs of
+        True -> return Nothing
+        False -> return . Just $ vcat [
+             "Value not in int domain"
+            ,pretty d
+            ,pretty v
+            ]
+
+    where
+        inDomain k [xMatch| [Prim (I j)] := range.single.value.literal |] = j == k
+        inDomain k [xMatch| [Prim (I l), Prim(I u)] := range.fromTo.value.literal |] =
+            k >= l && k <= u
+        inDomain _ _ = False
 
 validateVal [xMatch| _ := domain.bool |] [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
 
