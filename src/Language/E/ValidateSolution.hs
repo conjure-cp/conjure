@@ -137,17 +137,21 @@ validateSpec spec = do
     mkLog "binders" $ vcat $ map pretty bs
     mkLog "finds" $ vcat $ map pretty finds
 
-    let validateBinder bs@(Binder name val) | Just f <- lookup name finds  = do
+    let validateBinder bb@(Binder name val) | Just f <- lookup name finds  = do
             mkLog "dom" $ pretty f
             mkLog "val" $ pretty val
             res <-  validateVal f val
             return $ case res of
                 Just doc -> Just $ vcat [
-                     "Error for: " <+> pretty bs
+                     "Error for: " <+> pretty bb
                     , "Domain: " <+> pretty f
                     , doc
                     , "---"]
                 Nothing -> Nothing
+
+        validateBinder v = do
+            bdoc <- bindersDoc
+            bug $ vcat [ pretty v,  bdoc, pretty spec ]
 
     docs <-  mapM validateBinder bs
     case catMaybes docs of
@@ -156,9 +160,24 @@ validateSpec spec = do
 
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
 validateVal
-    dom@[dMatch| matrix indexed by [&irDom] of &innerDom |]
-    val@[xMatch| vs := value.matrix.values
-           | [ir] := value.matrix.indexrange |]
+    -- dom@[dMatch| set of &innerDom  |]
+    dom@[xMatch| _          := domain.set.attributes.attrCollection
+               | [innerdom] := domain.set.inner |]
+    val@[xMatch| vs         := value.set.values |] = do
+    checkAtts dom
+
+    where
+        checkAtts [dMatch| set (maxSize &ms) of &inn  |] =
+            undefined
+
+        checkAtts dd = bug $ vcat [ pretty dd]
+
+
+
+validateVal
+    dom@[dMatch| matrix indexed by [&irDom] of &innerDom  |]
+    val@[xMatch| vs   := value.matrix.values
+               | [ir] := value.matrix.indexrange |]
     = do
 
     -- Checking the index range
@@ -167,36 +186,19 @@ validateVal
     mkLog "irSize" . pretty $ irSize
     mkLog "indexSize" . pretty $ irDomSize
 
-
-
-    check <- toBool [eMake| &irSize = &irDomSize |]
-    d1 <- case check of
-        Right (True, _) -> return Nothing
-        Right (False, _) -> do
-           return . Just $ vcat [ "Index range difference sizes for matrix"
-                        , pretty dom
-                        , pretty val
-                        ]
+    d1 <- satisfied [eMake| &irSize = &irDomSize |]
+        "Index range difference sizes for matrix" errorDoc
 
     -- TODO domain written in different ways e.g. 1,2,3 insead of 1..3
     d2 <- case ir == irDom of
        True ->  return Nothing
        False -> do
-           return . Just $ vcat [ "Index ranges not the same for matrix"
-                        , pretty dom
-                        , pretty val
-                        ]
+           return . Just $ hang "Index ranges not the same for matrix" 4 errorDoc
+
 
     let vsSize = mkInt $ genericLength vs
-    check2 <- toBool [eMake| &vsSize = &irDomSize |]
-    d3 <- case check2 of
-       Right (True, _) ->  return Nothing
-       Right (False, _) -> do
-           return . Just $ hang "Invaild number of matrix elements" 4 $ vcat
-                        [
-                          pretty dom
-                        , pretty val
-                        ]
+    d3 <- satisfied [eMake| &vsSize = &irDomSize |]
+        "Invaild number of matrix elements" errorDoc
 
     case joinDoc [d1,d2,d3] of
         Just s -> return . Just $ s
@@ -204,11 +206,14 @@ validateVal
             vsDocs <- mapM (validateVal innerDom) vs
             return $ joinDoc vsDocs
 
+    where errorDoc = vcat [pretty dom, pretty val]
+
 validateVal d@[xMatch| rs := domain.int.ranges |]
             v@[xMatch| [Prim (I i)] :=  value.literal |]  = do
-    case any (inDomain i) rs of
-        True -> return Nothing
-        False -> return . Just $ vcat [
+    case (rs, any (inDomain i) rs) of
+        ([],_)   -> return Nothing
+        (_,True) -> return Nothing
+        (_,False) -> return . Just $ vcat [
              "Value not in int domain"
             ,pretty d
             ,pretty v
@@ -220,12 +225,27 @@ validateVal d@[xMatch| rs := domain.int.ranges |]
             k >= l && k <= u
         inDomain _ _ = False
 
-validateVal [xMatch| _ := domain.bool |] [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
+validateVal [xMatch| _ := domain.bool |]
+            [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
 
 validateVal dom es = bug $ vcat [
-      "domain:" <+> pretty dom
-    , "val:"    <+> pretty es
+     "validateVal not handled"
+    ,"domain:" <+> pretty dom
+    ,"val:"    <+> pretty es
     ]
+
+
+satisfied :: MonadConjure m => E -> Doc -> Doc -> m (Maybe Doc)
+satisfied e  header idoc = do
+    check <- toBool e
+    case check of
+        Right (True, _) -> return Nothing
+        Right (False, _) -> do
+           return $ Just doc
+        Left l -> bug $ vcat ["Could not reduce ", pretty e, "When checking for", doc ]
+
+    where doc = hang header 4 $ idoc
+
 
 joinDoc :: [Maybe Doc] -> Maybe Doc
 joinDoc ds = case catMaybes ds of
@@ -234,6 +254,7 @@ joinDoc ds = case catMaybes ds of
 
 getInt :: E -> Integer
 getInt  [xMatch| [Prim (I j)] :=  value.literal  |] = j
+getInt e = bug $ vcat [ "Not an int" <+> pretty e ]
 
 mkInt :: Integer -> E
 mkInt j =  [xMake| value.literal := [Prim (I j)] |]
@@ -253,7 +274,7 @@ _aa e s = do
     ee <- readSpecFromFile e
     ss <- readSpecFromFile s
     let (b, logs) = validateSolutionPureNew ee ss
-    putStrLn . show .pretty $ b
+    putStrLn . show . pretty $ b
     putStrLn . show . pretty $ logs
 
 
