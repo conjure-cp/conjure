@@ -48,7 +48,7 @@ refineParam eprimeModel essenceParam = do
 
     eprimeLettings <- liftM concat $ mapM down_ essenceGivensAndLettings
 
-    return $ Model [ Declaration (Letting n (C x))
+    return $ Model [ Declaration (Letting n (Constant x))
                    | (n, _, x) <- eprimeLettings
                    ]
                    def

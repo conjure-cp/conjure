@@ -34,7 +34,7 @@ translateSolution eprimeModel essenceParam eprimeSolution = do
 
     essenceLettings <- mapM (up eprimeLettings') essenceGivens'
 
-    return $ Model [ Declaration (Letting n (C x))
+    return $ Model [ Declaration (Letting n (Constant x))
                    | (n, x) <- essenceLettings
                    ]
                    def

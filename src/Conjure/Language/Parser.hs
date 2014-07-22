@@ -34,18 +34,22 @@ specToModel (Spec _ stmt) = Model
 
     where
 
+        convStmt :: E -> Statement
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                         | [D domain     ] := topLevel.declaration.given.domain
-                        |] = Declaration (Given (Name name) domain)
+                        |] = Declaration (Given (Name name) (convDomain domain))
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference
                         | [D domain     ] := topLevel.declaration.find .domain
-                        |] = Declaration (Find (Name name) domain)
+                        |] = Declaration (Find (Name name) (convDomain domain))
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [expr         ] := topLevel.letting.expr
                         |] = Declaration (Letting (Name name) (convExpr expr))
         convStmt x = bug $ "convStmt" <+> pretty (show x)
 
-        convExpr [xMatch| [Prim (B x)] := value.literal |] = C (ConstantBool x)
-        convExpr [xMatch| [Prim (I x)] := value.literal |] = C (ConstantInt (fromInteger x))
-        convExpr x = x
+        convExpr :: E -> Expression
+        convExpr [xMatch| [Prim (B x)] := value.literal |] = Constant (ConstantBool x)
+        convExpr [xMatch| [Prim (I x)] := value.literal |] = Constant (ConstantInt (fromInteger x))
+        convExpr x = bug $ "convExpr" <+> pretty (show x)
 
+        convDomain :: Domain () E -> Domain () Expression
+        convDomain = fmap convExpr

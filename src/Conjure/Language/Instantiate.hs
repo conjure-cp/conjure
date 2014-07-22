@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Language.Instantiate
@@ -38,18 +38,16 @@ instantiateE
        )
     => Expression
     -> m Constant
-instantiateE (C c) = return c
-instantiateE [xMatch| [Prim (S name)] := reference |] = do
+instantiateE (Constant c) = return c
+instantiateE (Reference name) = do
     ctxt <- get
-    case Name name `lookup` ctxt of
+    case name `lookup` ctxt of
         Nothing -> throwError $ vcat
             $ ("No value for:" <+> pretty name)
             : "Bindings in context:"
             : prettyContext ctxt
         Just x -> instantiateE x
-instantiateE [xMatch| [Prim (B x)] := value.literal |] = return $ ConstantBool x
-instantiateE [xMatch| [Prim (I x)] := value.literal |] = return $ ConstantInt $ fromInteger x
-instantiateE x = throwError $ "instantiateE:" <+> prettyAsPaths x
+instantiateE x = throwError $ "instantiateE:" <+> pretty (show x)
 
 
 instantiateD

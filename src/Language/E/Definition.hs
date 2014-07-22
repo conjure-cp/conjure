@@ -14,6 +14,7 @@ module Language.E.Definition
     , SetAttr(..)
     , DomainDefnEnum(..), DomainDefnUnnamed(..)
     , HasRepresentation(..)
+    , Type(..)
     , Constant(..)
     , RulesDB(..), RuleRefn(..), RuleRepr(..), RuleReprCase(..), RuleReprResult(..)
     , Name(..)
@@ -262,7 +263,7 @@ data Domain r a
     | DomainPartition r (DomainAttributes a) (Domain r a)
     | DomainOp Name [Domain r a]
     | DomainHack a          -- this is an ugly hack to be able to use expressions as domains. will go away later.
-    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, Functor)
 
 instance (Serialize r, Serialize a) => Serialize (Domain r a)
 
@@ -321,7 +322,7 @@ instance Default (SetAttr a) where
 
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
-    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttributes a)
 
@@ -337,7 +338,7 @@ data DomainAttribute a
     = DAName Name
     | DANameValue Name a
     | DADotDot
-    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttribute a)
 
@@ -352,7 +353,7 @@ data Range a
     | RangeLowerBounded a
     | RangeUpperBounded a
     | RangeBounded a a
-    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, GHC.Generics.Generic, Functor)
 
 instance Serialize a => Serialize (Range a)
 
