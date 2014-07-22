@@ -2,7 +2,7 @@
 -- |
 -- Lots of test cases for vaildate solution
 
-module Language.E.Testing.VaildateSolutionTests where
+module Language.E.Testing.VaildateSolutionTests(runTests) where
 
 import Language.E
 import Language.E.ValidateSolution(validateSolutionPureNew,validateSolution)
@@ -52,8 +52,10 @@ runTests = do
     runVaildate :: Maybe Doc -> Maybe Doc -> ([Dom], [E]) -> IO ()
     runVaildate success failure (dom, e) = do
         let [domS, solS]  = map mkSpec [
-                    zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show b) a ) dom [0..],
-                    zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show b) a ) e   [0..]
+                zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
+                    dom [0..],
+                zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show (b :: Integer)) a )
+                    e   [0..]
                 ]
         Exc.handle (handler dom e failure) $ do
             validateSolution domS Nothing solS
