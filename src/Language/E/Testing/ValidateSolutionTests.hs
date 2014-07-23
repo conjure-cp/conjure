@@ -1,8 +1,5 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
--- |
--- Lots of test cases for vaildate solution
-
-module Language.E.Testing.VaildateSolutionTests(runTests) where
+module Language.E.Testing.ValidateSolutionTests(runTests) where
 
 import Language.E
 import Language.E.ValidateSolution(validateSolutionPureNew,validateSolution)
@@ -11,62 +8,97 @@ import Language.E.Pipeline.ReadIn(readSpecFromFile)
 import qualified Control.Exception as Exc
 import qualified Data.Text as T
 
+-- Lots of test cases for vaildate solution
 
 type Dom = E
 
 -- Test cases which should be found to be invaild
 singleVarErrors :: [([Dom], [[E]] )]
 singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
-      ([dMake| set (size 2) of int(1..2) |], [
-             [eMake| {3} |]
-            ,[eMake| {4} |]
-        ])
-    , ([dMake| set (minSize 2) of int(1..2) |], [
-            [eMake| {1} |]
-        ])
-    , ([dMake| mset (maxSize 3, minSize 2, size 3) of int(1..4) |], [
-           [eMake| mset(1,2) |]
-       ])
-    , ([dMake| set (maxSize 2) of int(1..4) |], [
-           [eMake| {1,2,3} |]
-       ])
-    , ([dMake| set (maxSize 3, minSize 2, size 3) of int(1..4) |], [
-           [eMake| {1,4} |]
-       ])
-    , ([dMake| set of int(1..2) |], [
-             [eMake| {4} |]
-            ,[eMake| {1,1} |]
-       ])
-    , ([dMake| relation of (int(5..5)) |], [
+   ([dMake| set (size 2) of int(1..2) |], [
+          [eMake| {3} |]
+         ,[eMake| {4} |]
+     ])
+ , ([dMake| set (minSize 2) of int(1..2) |], [
+         [eMake| {1} |]
+     ])
+ , ([dMake| mset (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+        [eMake| mset(1,2) |]
+    ])
+ , ([dMake| set (maxSize 2) of int(1..4) |], [
+        [eMake| {1,2,3} |]
+    ])
+ , ([dMake| set (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+        [eMake| {1,4} |]
+    ])
+ , ([dMake| set of int(1..2) |], [
+          [eMake| {4} |]
+         ,[eMake| {1,1} |]
+    ])
+ , ([dMake| relation of (int(5..5)) |], [
 
-       ])
-    ]
+    ])
+ ]
 
 -- Test cases which should be found to be vaild
 singleVarCorrect :: [([Dom], [[E]])]
 singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
-       ([dMake| set (minSize 2) of int(1..2) |], [
-            [eMake| {1,2} |]
-        ])
-     , ([dMake| mset (maxSize 3, minSize 2, size 3) of int(1..4) |], [
-            [eMake| mset(1,2,3) |]
-        ])
-     , ([dMake| set (maxSize 2) of int(1..4) |], [
-            [eMake| {1,2} |]
-        ])
-     , ([dMake| set (maxSize 3, minSize 2, size 3) of int(1..4) |], [
-            [eMake| {1,2,4} |]
-        ])
-     , ([dMake| set  of int(1..2) |], [
-            [eMake| {1,2} |]
-        ])
-     , ([dMake| mset  of int(1..2) |], [
-            [eMake| mset(1,2,2) |]
-        ])
-     , ([dMake| relation of (int(5..5)) |], [
+   ([dMake| set (minSize 2) of int(1..2) |], [
+        [eMake| {1,2} |]
+    ])
+ , ([dMake| mset (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+        [eMake| mset(1,2,3) |]
+    ])
+ , ([dMake| set (maxSize 2) of int(1..4) |], [
+        [eMake| {1,2} |]
+    ])
+ , ([dMake| set (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+        [eMake| {1,2,4} |]
+    ])
+ , ([dMake| set  of int(1..2) |], [
+        [eMake| {1,2} |]
+    ])
+ , ([dMake| mset  of int(1..2) |], [
+        [eMake| mset(1,2,2) |]
+    ])
+ , ([dMake| matrix indexed by [int(1..3)] of int(3,4..5) |], [
+        [eMake| [3,4,5] |]
+    ])
+ , ([dMake| partition (complete, maxPartSize 5, minNumParts 3) from int(5..5) |], [
 
-        ])
-    ]
+    ])
+ , ([dMake| partition from int(4..5) |], [
+
+    ])
+ , ([dMake| relation of (int(5..5)) |], [
+
+    ])
+ , ([dMake| relation (total) of (int(5..5) * int(2..3)) |], [
+
+    ])
+ , ([dMake| partition (PartSize 1, minNumParts 2, Regular, maxPartSize 5, numParts 5)
+        from int(1..1) |], [
+
+    ])
+ , ([dMake| relation of (set of int(4..4) * matrix indexed by [int(3..3)]
+        of int(4..4)) |], [
+
+    ])
+ , ([dMake| function set of int(2..2) --> set of int(5..5) |], [
+
+    ])
+ , ([dMake| function int(2..4) --> int(5..5) |], [
+
+    ])
+ , ([dMake| set (size 4) of relation
+        of (relation (functional, total) of (int(4..4) * int(3..3))) |], [
+
+    ])
+ , ([dMake| function (maxSize 0, minSize 1, size 5, injective, surjective)
+        int(2..4) --> int(3..3) |], [
+
+    ])
+ ]
 
 
 -- Test cases which should be found to be invaild
