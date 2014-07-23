@@ -24,6 +24,22 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
     , ([dMake| set (minSize 2) of int(1..2) |], [
             [eMake| {1} |]
         ])
+    , ([dMake| mset (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+           [eMake| mset(1,2) |]
+       ])
+    , ([dMake| set (maxSize 2) of int(1..4) |], [
+           [eMake| {1,2,3} |]
+       ])
+    , ([dMake| set (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+           [eMake| {1,4} |]
+       ])
+    , ([dMake| set of int(1..2) |], [
+             [eMake| {4} |]
+            ,[eMake| {1,1} |]
+       ])
+    , ([dMake| relation of (int(5..5)) |], [
+
+       ])
     ]
 
 -- Test cases which should be found to be vaild
@@ -32,8 +48,23 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
        ([dMake| set (minSize 2) of int(1..2) |], [
             [eMake| {1,2} |]
         ])
-     , ([dMake| set  of int(1..2) |], [
+     , ([dMake| mset (maxSize 3, minSize 2, size 3) of int(1..4) |], [
+            [eMake| mset(1,2,3) |]
+        ])
+     , ([dMake| set (maxSize 2) of int(1..4) |], [
+            [eMake| {1,2} |]
+        ])
+     , ([dMake| set (maxSize 3, minSize 2, size 3) of int(1..4) |], [
             [eMake| {1,2,4} |]
+        ])
+     , ([dMake| set  of int(1..2) |], [
+            [eMake| {1,2} |]
+        ])
+     , ([dMake| mset  of int(1..2) |], [
+            [eMake| mset(1,2,2) |]
+        ])
+     , ([dMake| relation of (int(5..5)) |], [
+
         ])
     ]
 
