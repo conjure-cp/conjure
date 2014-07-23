@@ -27,7 +27,7 @@ validateSolution :: Essence -> Param -> Solution -> IO ()
 validateSolution essence param solution =
     if validateSolutionPure essence param solution
         then return ()
-        else error "Not a valid solution."
+        else userErr "Not a valid solution."
 
 
 -- this will return True is it's valid, False if not
@@ -266,18 +266,6 @@ validateVal
 
     where errorDoc = vcat [pretty dom, pretty val]
 
-
-validateVal dom@[dMatch| matrix indexed by [&irDom] of &innerDom  |]
-                [xMatch| vs   := value.matrix.values |] = do
-
-    let vsSize = mkInt $ genericLength vs
-    let ir = [dMake| int(1..&vsSize) |]
-
-    let irE = [xMake|  value.matrix.values := vs
-                    |  value.matrix.indexrange := [ir] |]
-
-    validateVal dom irE
-
 --ints
 validateVal d@[xMatch| rs := domain.int.ranges |]
             v@[xMatch| [Prim (I i)] :=  value.literal |]  = do
@@ -299,6 +287,19 @@ validateVal d@[xMatch| rs := domain.int.ranges |]
 --bool
 validateVal [xMatch| _ := domain.bool |]
             [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
+
+-- matrix
+validateVal dom@[dMatch| matrix indexed by [&_] of &_  |]
+                [xMatch| vs   := value.matrix.values |] = do
+
+    let vsSize = mkInt $ genericLength vs
+    let ir = [dMake| int(1..&vsSize) |]
+
+    let irE = [xMake|  value.matrix.values := vs
+                    |  value.matrix.indexrange := [ir] |]
+
+    validateVal dom irE
+
 
 --error
 validateVal dom es = bug $ vcat [
@@ -418,10 +419,11 @@ fullyInline inp = do
                                 then f [xMake| typed.left               := [binding]
                                              | typed.right.domainInExpr := [theType]
                                              |]
-                                else error $ show $ vcat [ "Type mismatch for" <+> pretty nm
-                                                         , "    Expected:" <+> pretty theType
-                                                         , "    Found:   " <+> pretty theType'
-                                                         ]
+                                else userErr $
+                                    vcat [ "Type mismatch for" <+> pretty nm
+                                             , "    Expected:" <+> pretty theType
+                                             , "    Found:   " <+> pretty theType'
+                                             ]
                         (Nothing, Just binding) -> do
                             theType <- typeOf x
                             f [xMake| typed.left               := [binding]
