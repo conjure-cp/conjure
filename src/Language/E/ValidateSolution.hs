@@ -16,7 +16,7 @@ import Language.E.Pipeline.HandlingEnums ( handleEnums )
 import Language.E.Pipeline.HandlingUnnameds ( handleUnnameds )
 import Language.E.Pipeline.InlineLettings ( inlineLettings )
 import Language.E.Pipeline.NoTuples ( allNoTuplesSpec )
-
+import Language.E.NormaliseSolution(normaliseSolutionE)
 
 type Essence  = Spec
 type Param    = Maybe Spec
@@ -108,7 +108,7 @@ validateSpec spec = do
     let validateBinder bb@(Binder name val) | Just f <- lookup name finds  = do
             mkLog "dom" $ pretty f
             mkLog "val" $ pretty val
-            res <-  validateVal (sortAttrs f) val
+            res <-  validateVal (sortAttrs f) (normaliseSolutionE val)
             return $ case res of
                 Just doc -> Just $ vcat [
                       "Error for value" <+> pretty bb
@@ -119,7 +119,7 @@ validateSpec spec = do
 
         validateBinder v = do
             bdoc <- bindersDoc
-            bug $ vcat [ pretty v,  bdoc, pretty spec ]
+            bug $ vcat [ "Find not found ", pretty v,  bdoc, pretty spec ]
 
     docs <-  mapM validateBinder bs
     case catMaybes docs of
@@ -128,6 +128,7 @@ validateSpec spec = do
 
 -- Attributes must be listed in sorted order for dMatch
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
+--set
 validateVal
     dom@[xMatch| _          := domain.set.attributes.attrCollection
                | [innerDom] := domain.set.inner |]
@@ -161,12 +162,19 @@ validateVal
             satisfied [eMake| &vsLength <= &b /\ &vsLength = &s |]
             "Wrong number of elements in set" errorDoc
 
+        checkAtts [dMatch| set of &_ |] = return Nothing
+
         checkAtts dd = bug $ vcat ["Could not check set", pretty dd]
 
-
+    
+    let checkForDuplicates mdoc = do
+            case (length (nub vs) == length vs)  of
+                True  -> mdoc
+                False -> joinDoc [mdoc, Just ""]
+                
     attrCheck <- checkAtts dom
-    case attrCheck  of
-        Just d  -> return . Just $  d
+    checkForDuplicates <$> case attrCheck of
+        Just d  ->  return $ Just d
         Nothing -> do
             vsDocs <- mapM (validateVal innerDom) vs
             return $ joinDoc vsDocs
@@ -174,7 +182,7 @@ validateVal
     where
     errorDoc = vcat [pretty dom, pretty val]
 
-
+-- mset TODO minOccur, maxOccur,
 validateVal
     dom@[xMatch| _          := domain.mset.attributes.attrCollection
                | [innerDom] := domain.mset.inner |]
@@ -208,6 +216,8 @@ validateVal
             satisfied [eMake| &vsLength <= &b /\ &vsLength = &s |]
             "Wrong number of elements in mset" errorDoc
 
+        checkAtts [dMatch| mset of &_ |] = return Nothing
+
         checkAtts dd = bug $ vcat ["Could not check mset", pretty dd]
 
 
@@ -221,7 +231,7 @@ validateVal
     where
     errorDoc = vcat [pretty dom, pretty val]
 
-
+-- Matrix
 validateVal
     dom@[dMatch| matrix indexed by [&irDom] of &innerDom  |]
     val@[xMatch| vs   := value.matrix.values
@@ -256,7 +266,7 @@ validateVal
 
     where errorDoc = vcat [pretty dom, pretty val]
 
-
+--ints
 validateVal d@[xMatch| rs := domain.int.ranges |]
             v@[xMatch| [Prim (I i)] :=  value.literal |]  = do
     case (rs, any (inDomain i) rs) of
@@ -274,11 +284,11 @@ validateVal d@[xMatch| rs := domain.int.ranges |]
             k >= l && k <= u
         inDomain _ _ = False
 
-
+--bool
 validateVal [xMatch| _ := domain.bool |]
             [xMatch| [Prim (B _)] :=  value.literal |] = return Nothing
 
-
+--error
 validateVal dom es = bug $ vcat [
      "validateVal not handled"
     ,"domain:" <+> pretty dom

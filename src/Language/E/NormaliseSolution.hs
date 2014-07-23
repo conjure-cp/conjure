@@ -1,6 +1,10 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings  #-}
 
-module Language.E.NormaliseSolution ( normaliseSolution, normaliseSolutionEs ) where
+module Language.E.NormaliseSolution (
+      normaliseSolution
+    , normaliseSolutionEs
+    , normaliseSolutionE
+    ) where
 
 import Language.E
 import Language.E.Up.IO
