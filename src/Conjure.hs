@@ -6,7 +6,7 @@ module Conjure ( getConjureMode, runConjureMode,conjureHelp ) where
 import Conjure.UI.IO
 
 import Paths_conjure_cp ( getBinDir )
-import Bug
+import Conjure.Bug
 import Conjure.Mode
 import Language.E
 import Language.E.Pipeline.ReadIn

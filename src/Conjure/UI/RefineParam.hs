@@ -4,11 +4,11 @@
 module Conjure.UI.RefineParam ( refineParam ) where
 
 -- conjure
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Representations ( down_ )
-import Bug
 import Language.E.Imports
 
 
@@ -48,7 +48,8 @@ refineParam eprimeModel essenceParam = do
 
     eprimeLettings <- liftM concat $ mapM down_ essenceGivensAndLettings
 
-    return $ Model [ Declaration (Letting n (Constant x))
+    return $ Model def
+                   [ Declaration (Letting n (Constant x))
                    | (n, _, x) <- eprimeLettings
                    ]
                    def

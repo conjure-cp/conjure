@@ -21,7 +21,7 @@ module Language.E.Evaluator.Full
     , domSize
     ) where
 
-import Bug
+import Conjure.Bug
 import Language.E.Imports
 import Language.E.Definition
 import Language.E.Helpers
@@ -1047,7 +1047,7 @@ instance DomSize (Domain () E) where
     domSize DomainBool = return [eMake| 2 |]
     domSize (DomainInt rs) = sumE <$> mapM domSize rs
     domSize (DomainEnum _ rs) = sumE <$> mapM domSize rs
-    domSize (DomainUnnamed (DomainDefnUnnamed _ s)) = return s
+    domSize d@(DomainUnnamed {}) = error $ show $ "domSize:" <+> pretty d
     domSize (DomainTuple rs) = mulE <$> mapM domSize rs
 
     domSize (DomainMatrix index inner) = do

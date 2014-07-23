@@ -8,7 +8,7 @@ module Language.E.TypeOf
     , typeUnify
     ) where
 
-import Bug
+import Conjure.Bug
 import Stuff.Generic.Tag
 
 import Language.E.Imports

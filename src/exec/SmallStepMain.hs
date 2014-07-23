@@ -11,7 +11,7 @@ import System.Directory
 import System.FilePath ( (</>) )
 import qualified Data.ByteString as ByteString
 
-import Bug
+import Conjure.Bug
 import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRepr

@@ -16,7 +16,9 @@ Library
     hs-source-dirs   : src
 
     exposed-modules  : Paths_conjure_cp
-                     , RepositoryVersion
+
+                     , Conjure.RepositoryVersion
+                     , Conjure.Bug
 
                      -- definitions of language constructs
                      -- and some common operations on them
@@ -36,9 +38,6 @@ Library
                      , Conjure.UI.IO
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
-
-                     , Bug
-                     , Utils.DebugPretty
 
                      , Conjure
                      , Conjure.Mode

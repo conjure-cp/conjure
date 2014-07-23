@@ -1,6 +1,6 @@
 module Main where
 
-import Conjure ( getConjureMode, runConjureMode,conjureHelp )
+import Conjure ( getConjureMode, runConjureMode, conjureHelp )
 
 main :: IO ()
 main = do

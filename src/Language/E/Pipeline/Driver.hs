@@ -2,7 +2,7 @@
 
 module Language.E.Pipeline.Driver where
 
-import Bug
+import Conjure.Bug
 import Language.E
 
 import Data.Time.Clock ( getCurrentTime )

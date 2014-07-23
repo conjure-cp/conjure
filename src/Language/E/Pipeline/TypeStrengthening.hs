@@ -5,7 +5,7 @@ module Language.E.Pipeline.TypeStrengthening ( typeStrengthening ) where
 
 import Language.E
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
-import Bug
+import Conjure.Bug
 -- import Utils.DebugPretty
 
 

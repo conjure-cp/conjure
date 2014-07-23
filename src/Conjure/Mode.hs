@@ -12,9 +12,9 @@ import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 import Safe ( readMay )
 
 import qualified Text.PrettyPrint as Pr
-import Bug ( userErr )
+import Conjure.Bug ( userErr )
 import Stuff.Pretty
-import RepositoryVersion ( repositoryVersion )
+import Conjure.RepositoryVersion ( repositoryVersion )
 
 
 type GenericArgs

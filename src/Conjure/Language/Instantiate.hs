@@ -9,7 +9,7 @@ module Conjure.Language.Instantiate
 -- conjure
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Bug
+import Conjure.Bug
 import Language.E.Imports
 
 

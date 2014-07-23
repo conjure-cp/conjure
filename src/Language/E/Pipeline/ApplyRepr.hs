@@ -4,7 +4,7 @@
 
 module Language.E.Pipeline.ApplyRepr ( applyRepr ) where
 
-import Bug
+import Conjure.Bug
 import Language.E
 import Language.E.Pipeline.RuleReprToFunction ( ruleReprToFunction )
 import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )

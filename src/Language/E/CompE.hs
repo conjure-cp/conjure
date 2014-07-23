@@ -8,7 +8,7 @@
 
 module Language.E.CompE where
 
-import Bug
+import Conjure.Bug
 import Stuff.Funky.FunkySingle
 import Stuff.Funky.FunkyMulti
 import Stuff.NamedLog
@@ -25,7 +25,6 @@ import qualified Data.HashMap.Strict as M
 import Data.IntMap ( IntMap )
 import Data.IntSet ( IntSet )
 
-import Data.Data ( Data )
 import qualified GHC.Generics ( Generic )
 
 
@@ -346,19 +345,19 @@ eDepth Prim{} = 1
 eDepth (Tagged _ []) = 1
 eDepth (Tagged _ ys) = 1 + maximum (map eDepth ys)
 eDepth C{} = 1
-eDepth (D d) = dDepth d
+eDepth D{} = 1
 eDepth EOF = 0
 eDepth (StatementAndNext this next) = max (eDepth this) (eDepth next)
 
-dDepth :: (Data r, Data a) => Domain r a -> Int
-dDepth = gdepth
+dDepth :: Domain r a -> Int
+dDepth _ = 0
 
 compareChain :: [Ordering] -> Ordering
 compareChain (EQ:xs) = compareChain xs
 compareChain (x :_ ) = x
 compareChain []      = EQ
 
-domOrder :: Data r => Domain r E -> Domain r E -> Ordering
+domOrder :: Domain r E -> Domain r E -> Ordering
 domOrder
     DomainBool
     DomainBool = EQ

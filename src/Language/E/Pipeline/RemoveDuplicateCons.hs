@@ -6,7 +6,7 @@ module Language.E.Pipeline.RemoveDuplicateCons
     , renameQuantifiedVarsTopLevel
     ) where
 
-import Bug
+import Conjure.Bug
 import Language.E
 import qualified Data.Text as T
 

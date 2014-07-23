@@ -9,22 +9,24 @@ module Conjure.Language.Parser
     ) where
 
 -- conjure
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
+import Language.E.Imports
+import Language.E ( Spec(..), E(..), BuiltIn(..), xMatch, viewTaggeds, statementAsList )
 
-import Bug
 import Language.E.Parser.Imports
 import Language.E.Parser.EssenceFile
 
-import Language.E.Imports
 
 
 parseModel :: Parser Model
 parseModel = specToModel <$> parseSpec
 
 specToModel :: Spec -> Model
-specToModel (Spec _ stmt) = Model
-    { mStatements = map convStmt (statementAsList stmt)
+specToModel (Spec lang stmt) = Model
+    { mLanguage = lang
+    , mStatements = map convStmt (statementAsList stmt)
     , mInfo =
         ModelInfo
             { miRepresentations = []

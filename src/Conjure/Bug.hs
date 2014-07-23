@@ -1,10 +1,10 @@
-module Bug
+module Conjure.Bug
     ( bug
     , headNote
     , userErr
     ) where
 
-import RepositoryVersion ( repositoryVersion )
+import Conjure.RepositoryVersion ( repositoryVersion )
 
 import Stuff.Pretty ( Doc, renderNormal )
 

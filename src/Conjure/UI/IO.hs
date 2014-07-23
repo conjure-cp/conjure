@@ -3,12 +3,12 @@
 module Conjure.UI.IO where
 
 -- conjure
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
-
-import Bug
 import Language.E.Imports
+import Language.E.Definition
 
 -- directory
 import System.Directory ( createDirectoryIfMissing )

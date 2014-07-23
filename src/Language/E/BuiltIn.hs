@@ -5,7 +5,7 @@ module Language.E.BuiltIn
     , RefnFunc, builtInRefn
     ) where
 
-import Bug
+import Conjure.Bug
 import Language.E
 import Language.E.Pipeline.FreshNames
 

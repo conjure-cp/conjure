@@ -5,7 +5,7 @@ module Language.E.Pipeline.NoTuples
     , allNoTuplesE
     ) where
 
-import Bug
+import Conjure.Bug
 import Language.E
 import Language.E.Evaluator.Full ( unrollQuantifiers )
 
