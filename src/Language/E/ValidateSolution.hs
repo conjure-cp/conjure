@@ -166,12 +166,12 @@ validateVal
 
         checkAtts dd = bug $ vcat ["Could not check set", pretty dd]
 
-    
+
     let checkForDuplicates mdoc = do
             case (length (nub vs) == length vs)  of
                 True  -> mdoc
                 False -> joinDoc [mdoc, Just ""]
-                
+
     attrCheck <- checkAtts dom
     checkForDuplicates <$> case attrCheck of
         Just d  ->  return $ Just d
@@ -265,6 +265,18 @@ validateVal
             return $ joinDoc vsDocs
 
     where errorDoc = vcat [pretty dom, pretty val]
+
+
+validateVal dom@[dMatch| matrix indexed by [&irDom] of &innerDom  |]
+                [xMatch| vs   := value.matrix.values |] = do
+
+    let vsSize = mkInt $ genericLength vs
+    let ir = [dMake| int(1..&vsSize) |]
+
+    let irE = [xMake|  value.matrix.values := vs
+                    |  value.matrix.indexrange := [ir] |]
+
+    validateVal dom irE
 
 --ints
 validateVal d@[xMatch| rs := domain.int.ranges |]
