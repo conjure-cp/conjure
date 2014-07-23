@@ -15,26 +15,35 @@ import qualified Data.Text as T
 type Dom = E
 
 -- Test cases which should be found to be invaild
-singleVarErrors :: [([Dom], [E])]
-singleVarErrors = map ( \(d,e) -> ([d], [e]) )  [
-      ([dMake| set (size 2) of int(1..2) |]   , [eMake| {3} |])
-    , ([dMake| set (minSize 2) of int(1..2) |], [eMake| {1} |])
+singleVarErrors :: [([Dom], [[E]] )]
+singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
+      ([dMake| set (size 2) of int(1..2) |], [
+             [eMake| {3} |]
+            ,[eMake| {4} |]
+        ])
+    , ([dMake| set (minSize 2) of int(1..2) |], [
+            [eMake| {1} |]
+        ])
     ]
 
 -- Test cases which should be found to be vaild
-singleVarCorrect :: [([Dom], [E])]
-singleVarCorrect = map ( \(d,e) -> ([d], [e]) ) [
-       ([dMake| set (minSize 2) of int(1..2) |], [eMake| {1,2} |])
-     , ([dMake| set  of int(1..2) |], [eMake| {1,2,4} |])
+singleVarCorrect :: [([Dom], [[E]])]
+singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
+       ([dMake| set (minSize 2) of int(1..2) |], [
+            [eMake| {1,2} |]
+        ])
+     , ([dMake| set  of int(1..2) |], [
+            [eMake| {1,2,4} |]
+        ])
     ]
 
 
 -- Test cases which should be found to be invaild
-varErrors :: [([Dom], [E])]
+varErrors :: [([Dom], [[E]])]
 varErrors = []
 
 -- Test cases which should be found to be vaild
-varCorrect :: [([Dom], [E])]
+varCorrect :: [([Dom], [[E]])]
 varCorrect = []
 
 
@@ -49,8 +58,12 @@ runTests = do
     return ()
 
     where
-    runVaildate :: Maybe Doc -> Maybe Doc -> ([Dom], [E]) -> IO ()
-    runVaildate success failure (dom, e) = do
+    runVaildate :: Maybe Doc -> Maybe Doc -> ([Dom], [[E]]) -> IO ()
+    runVaildate success failure (dom, es) =
+       mapM_ (runVaildate' success failure dom) es
+
+    runVaildate' :: Maybe Doc -> Maybe Doc -> [Dom] -> [E] -> IO ()
+    runVaildate' success failure dom e = do
         let [domS, solS]  = map mkSpec [
                 zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
                     dom [0..],
