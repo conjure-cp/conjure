@@ -282,7 +282,6 @@ data SetAttr a
     | SetAttrMinSize a
     | SetAttrMaxSize a
     | SetAttrMinMaxSize a a
-    | SetAttrDotDot (SetAttr a)
     deriving (Eq, Ord, Show, Generic, Functor)
 
 instance Serialize a => Serialize (SetAttr a)

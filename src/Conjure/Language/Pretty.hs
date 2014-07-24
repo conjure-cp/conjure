@@ -7,7 +7,6 @@ module Conjure.Language.Pretty
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Stuff.Pretty
 
@@ -154,19 +153,11 @@ prettyAttrs a bs =
             else Pr.braces prettya <+> pretty bs
 
 instance Pretty a => Pretty (SetAttr a) where
-    pretty attr =
-        let
-            prettyNoDotDot SetAttrDotDot{} = bug "nested SetAttrDotDot"
-            prettyNoDotDot SetAttrNone = ""
-            prettyNoDotDot (SetAttrSize       a  ) = "size" <+> pretty a
-            prettyNoDotDot (SetAttrMinSize    a  ) = "minSize" <+> pretty a
-            prettyNoDotDot (SetAttrMaxSize    a  ) = "maxSize" <+> pretty a
-            prettyNoDotDot (SetAttrMinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
-        in
-            case attr of
-                SetAttrNone -> ""
-                SetAttrDotDot without -> Pr.parens (prettyNoDotDot without <+> ", ..")
-                _ -> Pr.parens (prettyNoDotDot attr)
+    pretty SetAttrNone = ""
+    pretty (SetAttrSize       a  ) = Pr.parens ("size"    <+> pretty a)
+    pretty (SetAttrMinSize    a  ) = Pr.parens ("minSize" <+> pretty a)
+    pretty (SetAttrMaxSize    a  ) = Pr.parens ("maxSize" <+> pretty a)
+    pretty (SetAttrMinMaxSize a b) = Pr.parens ("minSize" <+> pretty a <+> ", maxSize" <+> pretty b)
 
 instance Pretty a => Pretty (DomainAttributes a) where
     pretty (DomainAttributes []) = empty

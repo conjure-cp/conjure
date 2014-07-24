@@ -33,7 +33,6 @@ instance Pretty r => ZeroVal (Domain r Constant) where
             getMin (SetAttrMinSize x) = returnInt x
             getMin (SetAttrMaxSize _) = return 0
             getMin (SetAttrMinMaxSize x _) = returnInt x
-            getMin (SetAttrDotDot as) = getMin as
         z <- zeroVal inner
         minSize <- getMin attrs
         return (ConstantSet (replicate minSize z))

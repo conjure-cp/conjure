@@ -87,7 +87,6 @@ instantiateSetAttr (SetAttrSize x) = SetAttrSize <$> instantiateE x
 instantiateSetAttr (SetAttrMinSize x) = SetAttrMinSize <$> instantiateE x
 instantiateSetAttr (SetAttrMaxSize x) = SetAttrMaxSize <$> instantiateE x
 instantiateSetAttr (SetAttrMinMaxSize x y) = SetAttrMinMaxSize <$> instantiateE x <*> instantiateE y
-instantiateSetAttr (SetAttrDotDot x) = SetAttrDotDot <$> instantiateSetAttr x
 
 
 instantiateDAs

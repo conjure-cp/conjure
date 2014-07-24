@@ -142,14 +142,11 @@ parseAttributes = do
 parseSetAttr :: Parser (SetAttr E)
 parseSetAttr = do
     DomainAttributes attrs <- parseAttributes
-    withoutDotDot <- case filter (/=DADotDot) (sort attrs) of
-        [DANameValue "size" a] -> return (SetAttrSize a)
+    case sort attrs of
+        [DANameValue "size"    a] -> return (SetAttrSize a)
         [DANameValue "minSize" a] -> return (SetAttrMinSize a)
         [DANameValue "maxSize" a] -> return (SetAttrMaxSize a)
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SetAttrMinMaxSize a b)
         [] -> return SetAttrNone
         _ -> fail ("parseSetAttr: " ++ show attrs)
-    if DADotDot `elem` attrs
-        then return (SetAttrDotDot withoutDotDot)
-        else return withoutDotDot
 
