@@ -187,7 +187,7 @@ validateVal
     let checkForDuplicates mdoc = do
             case (length (nub vs) == length vs)  of
                 True  -> mdoc
-                False -> joinDoc [mdoc, Just ""]
+                False -> joinDoc [mdoc, Just $ hang "Duplicates in set" 4 errorDoc ]
 
     attrCheck <- checkAtts dom
     checkForDuplicates <$> case attrCheck of

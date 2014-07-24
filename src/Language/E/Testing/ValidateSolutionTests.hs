@@ -72,6 +72,9 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
         int(2..4) --> int(3..3) |], [
 
     ])
+ , ([dMake| function int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1,4}) |]
+    ])
  ]
 
 
@@ -133,6 +136,9 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
         int(2..4) --> int(3..3) |], [
 
     ])
+ , ([dMake| function int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1}) |]
+    ])
  ]
 
 
@@ -168,6 +174,7 @@ runVaildate' success failure dom e = do
                 e   [0..]
             ]
     Exc.handle (handler dom e failure) $ do
+        putStrLn ""
         validateSolution domS Nothing solS
         case success of
             Nothing -> return ()
