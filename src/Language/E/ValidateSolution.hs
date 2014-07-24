@@ -142,7 +142,6 @@ validateVal
         let innerDom  = [innerFrom, innerTo]
             vsLength  = mkInt $ genericLength mvs
 
-
             checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
             checkAttr ("size", Just s) =
                 satisfied [eMake| &vsLength = &s |]
@@ -160,19 +159,34 @@ validateVal
                 satisfied [eMake| &vsLength = &fromLength |]
                 "Not total" errorDoc
 
+            checkAttr ("injective", Nothing) =
+                checkForDuplicates tos "Not injective"
+
+            checkAttr ("surjective", Nothing) =
+                let elemsLen = mkInt . genericLength $
+                        nubBy ( \(_,b) (_,d) -> b == d) (zip froms tos) in
+                satisfied [eMake| &elemsLen >= &toLength |]
+                "Not surjective" errorDoc
+
+            checkAttr ("bijective", Nothing) = do
+                    joinDoc <$> mapM checkAttr [
+                          ("surjective", Nothing)
+                        , ("injective",  Nothing) ]
+
+
             checkAttr t = bug $ vcat [
                    "Not handled, function attribute " <+> pretty t
                  , "in " <+> errorDoc
                  ]
 
-            checkForDuplicates :: MonadConjure m => m (Maybe Doc)
-            checkForDuplicates = do
-                case (length (nub froms) == length froms)  of
+            checkForDuplicates :: MonadConjure m => [E] -> Doc -> m (Maybe Doc)
+            checkForDuplicates elems doc = do
+                case (length (nub elems) == length elems)  of
                     True  -> return Nothing
                     False -> return $ Just $
-                        hang "Duplicates in domain of function" 4 errorDoc
+                        hang doc 4 errorDoc
 
-        dupError   <- checkForDuplicates
+        dupError   <- checkForDuplicates froms "Duplicates in domain of function"
         innerErrors <- mapM (checkMappings innerDom) mvs
         attrChecked <- mapM (checkAttr . getAttr) attrs
 
@@ -183,6 +197,9 @@ validateVal
 
     froms = map f mvs
         where f [xMatch| (x:_) := mapping |] = x
+
+    tos = map f mvs
+        where f [xMatch| (_:y:_) := mapping |] = y
 
     checkMappings innerDom [xMatch| vs := mapping |]  =
         joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs

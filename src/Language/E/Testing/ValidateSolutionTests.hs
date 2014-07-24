@@ -81,6 +81,15 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
  , ([dMake| function  int(1..2) --> set of int(1..2) |], [
         [eMake| function(1 --> {1}, 1 --> {1}) |]
     ])
+ , ([dMake| function (total)  int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1} ) |]
+    ])
+ , ([dMake| function (injective) int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1}, 2 --> {1}) |]
+    ])
+ , ([dMake| function (surjective, injective,  total )  int(1..2) -->  int(1..2) |], [
+        [eMake| function(1 --> 1 ) |]
+    ])
  ]
 
 
@@ -144,6 +153,15 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
     ])
  , ([dMake| function int(1..2) --> set of int(1..2) |], [
         [eMake| function(1 --> {1}) |]
+    ])
+ , ([dMake| function (total)  int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1},  2 --> {1} ) |]
+    ])
+ , ([dMake| function (injective) int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1}, 2 --> {2}) |]
+    ])
+ , ([dMake| function (surjective, injective,  total )  int(1..2) -->  int(1..2) |], [
+        [eMake| function(1 --> 1, 2 --> 2 ) |]
     ])
  ]
 
