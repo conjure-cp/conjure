@@ -35,10 +35,45 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
           [eMake| {4} |]
          ,[eMake| {1,1} |]
     ])
+ , ([dMake| matrix indexed by [int(2..4)] of int(3,4..5) |], [
+        [eMake| [3,4,5] |]
+    ])
+ , ([dMake| partition (complete, maxPartSize 5, minNumParts 3) from int(5..5) |], [
+
+    ])
+ , ([dMake| partition from int(4..5) |], [
+
+    ])
  , ([dMake| relation of (int(5..5)) |], [
 
     ])
+ , ([dMake| relation (total) of (int(5..5) * int(2..3)) |], [
+
+    ])
+ , ([dMake| partition (PartSize 1, minNumParts 2, Regular, maxPartSize 5, numParts 5)
+        from int(1..1) |], [
+
+    ])
+ , ([dMake| relation of (set of int(4..4) * matrix indexed by [int(3..3)]
+        of int(4..4)) |], [
+
+    ])
+ , ([dMake| function set of int(2..2) --> set of int(5..5) |], [
+
+    ])
+ , ([dMake| function int(2..4) --> int(5..5) |], [
+
+    ])
+ , ([dMake| set (size 4) of relation
+        of (relation (functional, total) of (int(4..4) * int(3..3))) |], [
+
+    ])
+ , ([dMake| function (maxSize 0, minSize 1, size 5, injective, surjective)
+        int(2..4) --> int(3..3) |], [
+
+    ])
  ]
+
 
 -- Test cases which should be found to be vaild
 singleVarCorrect :: [([Dom], [[E]])]
@@ -88,7 +123,7 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
 
     ])
  , ([dMake| function int(2..4) --> int(5..5) |], [
-
+        [eMake| function( 2 --> 5, 3 -->5) |]
     ])
  , ([dMake| set (size 4) of relation
         of (relation (functional, total) of (int(4..4) * int(3..3))) |], [
@@ -120,49 +155,48 @@ runTests = do
 
     return ()
 
-    where
-    runVaildate :: Maybe Doc -> Maybe Doc -> ([Dom], [[E]]) -> IO ()
-    runVaildate success failure (dom, es) =
-       mapM_ (runVaildate' success failure dom) es
+runVaildate :: Maybe Doc -> Maybe Doc -> ([Dom], [[E]]) -> IO ()
+runVaildate success failure (dom, es) =
+   mapM_ (runVaildate' success failure dom) es
 
-    runVaildate' :: Maybe Doc -> Maybe Doc -> [Dom] -> [E] -> IO ()
-    runVaildate' success failure dom e = do
-        let [domS, solS]  = map mkSpec [
-                zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
-                    dom [0..],
-                zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show (b :: Integer)) a )
-                    e   [0..]
-                ]
-        Exc.handle (handler dom e failure) $ do
-            validateSolution domS Nothing solS
-            case success of
-                Nothing -> return ()
-                Just doc ->
-                    putStrLn . show $
-                        vcat  [ doc
-                              ,"\tDomain:" <+>  pretty dom
-                              ,"\tValue: " <+>  pretty e
-                              , ""
-                              , "~~~~~~"
-                              , ""
-                              ]
-
-        return ()
-
-    handler :: [Dom] -> [E] -> Maybe Doc -> Exc.ErrorCall -> IO ()
-    handler dom e mdoc (Exc.ErrorCall i) =
-        case mdoc of
+runVaildate' :: Maybe Doc -> Maybe Doc -> [Dom] -> [E] -> IO ()
+runVaildate' success failure dom e = do
+    let [domS, solS]  = map mkSpec [
+            zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
+                dom [0..],
+            zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show (b :: Integer)) a )
+                e   [0..]
+            ]
+    Exc.handle (handler dom e failure) $ do
+        validateSolution domS Nothing solS
+        case success of
             Nothing -> return ()
-            Just doc -> do
+            Just doc ->
                 putStrLn . show $
                     vcat  [ doc
-                          , "\tDomain:" <+>  pretty dom
+                          ,"\tDomain:" <+>  pretty dom
                           ,"\tValue: " <+>  pretty e
                           , ""
-                          , pretty i
                           , "~~~~~~"
                           , ""
                           ]
+
+    return ()
+
+handler :: [Dom] -> [E] -> Maybe Doc -> Exc.ErrorCall -> IO ()
+handler dom e mdoc (Exc.ErrorCall i) =
+    case mdoc of
+        Nothing -> return ()
+        Just doc -> do
+            putStrLn . show $
+                vcat  [ doc
+                      , "\tDomain:" <+>  pretty dom
+                      ,"\tValue: " <+>  pretty e
+                      , ""
+                      , pretty i
+                      , "~~~~~~"
+                      , ""
+                      ]
 
 
 
@@ -192,4 +226,17 @@ _aa e s = do
     putStrLn . show . pretty $ b
     putStrLn . show . pretty $ logs
 
+_bb :: Dom -> E -> IO ()
+_bb d e = do
+
+    let [domS, solS]  = map mkSpec [
+            zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
+                [d] [0..],
+            zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show (b :: Integer)) a )
+                [e]   [0..]
+            ]
+
+    let (b, logs) = validateSolutionPureNew domS Nothing solS
+    putStrLn . show . pretty $ b
+    putStrLn . show . pretty $ logs
 

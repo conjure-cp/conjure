@@ -128,6 +128,23 @@ validateSpec spec = do
 
 -- Attributes must be listed in sorted order for dMatch
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
+
+--function
+validateVal
+    dom@[xMatch| attrs       := domain.function.attributes.attrCollection
+               | [innerFrom] := domain.function.innerFrom
+               | [innerTo]   := domain.function.innerTo |]
+    val@[xMatch| mvs         := value.function.values  |] = do
+        let innerDom = [innerFrom, innerTo]
+
+        res <- mapM (checkMappings innerDom) mvs
+        return $ joinDoc res
+
+
+    where
+        checkMappings innerDom [xMatch| vs := mapping |]  =
+            joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs
+
 --set
 validateVal
     dom@[xMatch| _          := domain.set.attributes.attrCollection
