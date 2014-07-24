@@ -135,8 +135,13 @@ validateVal
                | [innerFrom] := domain.function.innerFrom
                | [innerTo]   := domain.function.innerTo |]
     val@[xMatch| mvs         := value.function.values  |] = do
+
+        fromLength <- domSize innerFrom
+        toLength   <- domSize innerTo
+
         let innerDom  = [innerFrom, innerTo]
-            vsLength = mkInt $ genericLength mvs
+            vsLength  = mkInt $ genericLength mvs
+
 
             checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
             checkAttr ("size", Just s) =
@@ -150,6 +155,10 @@ validateVal
             checkAttr ("maxSize", Just s) =
                 satisfied [eMake| &vsLength < &s |]
                 "Too many elements" errorDoc
+
+            checkAttr ("total", Nothing) =
+                satisfied [eMake| &vsLength = &fromLength |]
+                "Not total" errorDoc
 
             checkAttr t = bug $ vcat [
                    "Not handled, function attribute " <+> pretty t
