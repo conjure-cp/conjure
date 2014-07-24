@@ -148,11 +148,11 @@ validateVal
                 "Wrong number of elements in set" errorDoc
 
             checkAttr ("minSize", Just s) =
-                satisfied [eMake| &vsLength > &s |]
+                satisfied [eMake| &vsLength >= &s |]
                 "Too few elements" errorDoc
 
             checkAttr ("maxSize", Just s) =
-                satisfied [eMake| &vsLength < &s |]
+                satisfied [eMake| &vsLength <= &s |]
                 "Too many elements" errorDoc
 
             checkAttr ("total", Nothing) =
@@ -230,17 +230,29 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
             "Part of invaild size in partition" errorDoc
 
         checkAttr ("minPartSize", Just s) =
-            satisfied [eMake| forAll p in parts(&val) . |p| > &s |]
+            satisfied [eMake| forAll p in parts(&val) . |p| >= &s |]
             "A part is too larger in partition" errorDoc
 
         checkAttr ("maxPartSize", Just s) =
-            satisfied [eMake| forAll p in parts(&val) . |p| < &s |]
+            satisfied [eMake| forAll p in parts(&val) . |p| <= &s |]
             "A part is too small in partition" errorDoc
 
         checkAttr ("complete", Nothing) =
             satisfied [eMake| (sum p in parts(&val) . |p|) = &domLength |]
             "Partition is not complete" errorDoc
 
+        checkAttr ("size", Just s) =
+            satisfied [eMake| (sum p in parts(&val) . |p|) = &s |]
+            "Wrong number of elements in partition" errorDoc
+
+        checkAttr ("minSize", Just s) =
+            satisfied [eMake| (sum p in parts(&val) . |p|) >= &s |]
+            "Too many elements in partition" errorDoc
+
+        checkAttr ("maxSize", Just s) =
+            satisfied [eMake| (sum p in parts(&val) . |p|) <= &s |]
+            "Too few elements in partition" errorDoc
+            --
         -- TODO what a regular partition?
 
         checkAttr t = bug $ vcat [
