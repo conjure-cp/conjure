@@ -144,6 +144,7 @@ instance Arbitrary Name where
 
 data Expression
     = Constant Constant
+    | Domain (Domain () Expression)
     | Reference Name
     | Op Name [Expression]
     | Lambda Name Type Expression (Expression -> Expression)
@@ -151,6 +152,7 @@ data Expression
 
 instance Eq Expression where
     Constant a == Constant b = a == b
+    Domain a == Domain b = a == b
     Reference a == Reference b = a == b
     Op n1 xs1 == Op n2 xs2 = n1 == n2 && and (zipWith (==) xs1 xs2)
     Lambda {} == Lambda {} = bug "Lambda's cannot be compared for equality. There you go."
@@ -159,6 +161,8 @@ instance Eq Expression where
 instance Ord Expression where
     Constant  a  `compare` Constant b  = a `compare` b
     Constant  {} `compare` _ = LT
+    Domain    a  `compare` Domain b    = a `compare` b
+    Domain    {} `compare` _ = LT
     Reference a  `compare` Reference b = a `compare` b
     Reference {} `compare` _ = LT
     Op nm1 xs1   `compare` Op nm2 xs2 =
@@ -170,6 +174,7 @@ instance Ord Expression where
 
 instance Show Expression where
     showsPrec pr (Constant x       ) = showParen (pr >= 11) (showString "Constant "  . showsPrec 11 x)
+    showsPrec pr (Domain   x       ) = showParen (pr >= 11) (showString "Domain "    . showsPrec 11 x)
     showsPrec pr (Reference x      ) = showParen (pr >= 11) (showString "Reference " . showsPrec 11 x)
     showsPrec pr (Op op xs         ) = showParen (pr >= 11) (showString "Op "        . showsPrec 11 op
                                                                          . showSpace . showsPrec 11 xs)
@@ -180,26 +185,30 @@ instance Show Expression where
 
 instance Serialize Expression where
     put (Constant x       ) = Serialize.put (0 :: Int) >> Serialize.put x
-    put (Reference x      ) = Serialize.put (1 :: Int) >> Serialize.put x
-    put (Op op xs         ) = Serialize.put (2 :: Int) >> Serialize.put op  >> Serialize.put xs
-    put (Lambda arg ty x _) = Serialize.put (3 :: Int) >> Serialize.put arg >> Serialize.put ty >> Serialize.put x
+    put (Domain x         ) = Serialize.put (1 :: Int) >> Serialize.put x
+    put (Reference x      ) = Serialize.put (2 :: Int) >> Serialize.put x
+    put (Op op xs         ) = Serialize.put (3 :: Int) >> Serialize.put op  >> Serialize.put xs
+    put (Lambda arg ty x _) = Serialize.put (4 :: Int) >> Serialize.put arg >> Serialize.put ty >> Serialize.put x
     get = do
         tag <- Serialize.get
         case tag :: Int of
             0 -> Constant <$> Serialize.get
-            1 -> Reference <$> Serialize.get
-            2 -> Op <$> Serialize.get <*> Serialize.get
-            3 -> Lambda <$> Serialize.get <*> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
+            1 -> Domain <$> Serialize.get
+            2 -> Reference <$> Serialize.get
+            3 -> Op <$> Serialize.get <*> Serialize.get
+            4 -> Lambda <$> Serialize.get <*> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
             _ -> bug "While deserialising an expression"
 
 instance Hashable Expression where
     hashWithSalt salt (Constant x       ) = hashWithSalt salt x
+    hashWithSalt salt (Domain x         ) = hashWithSalt salt x
     hashWithSalt salt (Reference x      ) = hashWithSalt salt x
     hashWithSalt salt (Op op xs         ) = hashWithSalt salt (op,xs)
     hashWithSalt salt (Lambda arg ty x _) = hashWithSalt salt (arg,ty,x)
 
 instance ToJSON Expression where
     toJSON (Constant x       ) = JSON.object [ "Constant"       .= toJSON x  ]
+    toJSON (Domain x         ) = JSON.object [ "Domain"         .= toJSON x  ]
     toJSON (Reference x      ) = JSON.object [ "Reference"      .= toJSON x  ]
     toJSON (Op op xs         ) = JSON.object [ "Op-Name"        .= toJSON op
                                              , "Op-Args"        .= toJSON xs ]
@@ -356,7 +365,8 @@ instance IsString HasRepresentation where
 
 
 data Type
-    = TypeBool
+    = TypeAny
+    | TypeBool
     | TypeInt
     | TypeEnum DomainDefnEnum
     | TypeUnnamed DomainDefnUnnamed

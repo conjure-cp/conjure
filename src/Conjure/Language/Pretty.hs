@@ -7,8 +7,11 @@ module Conjure.Language.Pretty
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Stuff.Pretty
+import Language.E.Data ( Fixity(..), operators )
+import Language.E.Lexer ( textToLexeme )
 
 -- pretty
 import Text.PrettyPrint as Pr
@@ -70,11 +73,42 @@ instance Pretty Constant where
 
 instance Pretty Expression where
     pretty (Constant x) = pretty x
+    pretty (Domain x) = "`" <> pretty x <> "`"
     pretty (Reference x) = pretty x
-    pretty (Op op xs) = pretty op <> prettyList Pr.parens "," xs
     pretty (Lambda nm ty x _) = "lambda" <> Pr.parens (pretty nm <+> ":" <+> pretty ty <+> "-->" <+> pretty x)
 
+    pretty x@(Op (Name op) [_,_])
+        | let lexeme = textToLexeme op
+        , lexeme `elem` [ Just l | (l,_,_) <- operators ]
+        = prettyPrec 0 x
+
+    pretty (Op op xs) = pretty op <> prettyList Pr.parens "," xs
+
+prettyPrec :: Int -> Expression -> Doc
+prettyPrec envPrec (Op (Name op) [a,b])
+    | let lexeme = textToLexeme op
+    , lexeme `elem` [ Just l | (l,_,_) <- operators ]
+    = case lexeme of
+        Nothing -> bug "prettyPrec"
+        Just l  -> case [ (fixity,prec) | (l',fixity,prec) <- operators, l == l' ] of
+            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
+                                                                  , pretty op
+                                                                  , prettyPrec (prec+1) b
+                                                                  ]
+            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) a
+                                                                  , pretty op
+                                                                  , prettyPrec (prec+1) b
+                                                                  ]
+            [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
+                                                                  , pretty op
+                                                                  , prettyPrec (prec+1) b
+                                                                  ]
+            _ -> bug "prettyPrec"
+prettyPrec _ x = pretty x
+
+
 instance Pretty Type where
+    pretty TypeAny = "?"
     pretty TypeBool = "bool"
     pretty TypeInt = "int"
     pretty (TypeEnum (DomainDefnEnum nm _)) = pretty nm

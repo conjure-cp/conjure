@@ -296,8 +296,8 @@ prettyAsPaths e = (vcat . map pOne . toPaths) e
         toPaths (Prim p) = [([], Just p)]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
-        toPaths C {} = bug "prettyAsPaths.toPaths C"
-        toPaths D {} = bug "prettyAsPaths.toPaths D"
+        toPaths (C x) = bug $ "prettyAsPaths.toPaths C" <+> pretty (show x)
+        toPaths (D x) = bug $ "prettyAsPaths.toPaths D" <+> pretty (show x)
         toPaths EOF {} = bug "prettyAsPaths.toPaths EOF"
         toPaths StatementAndNext {} = bug "prettyAsPaths.toPaths StatementAndNext"
 
