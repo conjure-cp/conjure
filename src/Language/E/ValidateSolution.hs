@@ -4,6 +4,7 @@ module Language.E.ValidateSolution
     ( validateSolution
     , validateSolutionPure
     , validateSolutionPureNew
+    , satisfied
     ) where
 
 import qualified Data.HashMap.Strict as M
@@ -211,10 +212,49 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
 
     let numParts = mkInt $ genericLength parts
 
+        checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
+        checkAttr ("numParts", Just s) =
+            satisfied [eMake| &numParts = &s |]
+            "Wrong number of parts in partition" errorDoc
+
+        checkAttr ("minNumParts", Just s) =
+            satisfied [eMake| &numParts >= &s |]
+            "Too few parts in partition" errorDoc
+
+        checkAttr ("maxNumParts", Just s) =
+            satisfied [eMake| &numParts <= &s |]
+            "Too many parts in partition" errorDoc
+
+        checkAttr ("partSize", Just s) =
+            satisfied [eMake| forAll p in parts(&val) . |p| = &s |]
+            "Part of invaild size in partition" errorDoc
+
+        checkAttr ("minPartSize", Just s) =
+            satisfied [eMake| forAll p in parts(&val) . |p| > &s |]
+            "A part is too larger in partition" errorDoc
+
+        checkAttr ("maxPartSize", Just s) =
+            satisfied [eMake| forAll p in parts(&val) . |p| < &s |]
+            "A part is too small in partition" errorDoc
+
+        checkAttr ("complete", Nothing) =
+            satisfied [eMake| (sum p in parts(&val) . |p|) = &domLength |]
+            "Partition is not complete" errorDoc
+
+        -- TODO what a regular partition?
+
+        checkAttr t = bug $ vcat [
+               "Not handled, function attribute " <+> pretty t
+             , "in " <+> errorDoc
+             ]
+
+
     dupError   <- checkForDuplicates allVs  "Duplicates in partition"
     innerErrors <- mapM (checkParts innerDom) parts
+    attrChecked <- mapM (checkAttr . getAttr) attrs
 
-    return $ joinDoc $ dupError : innerErrors
+
+    return $ joinDoc $ dupError : innerErrors ++ attrChecked
 
     where
     errorDoc = vcat [pretty dom, pretty val]

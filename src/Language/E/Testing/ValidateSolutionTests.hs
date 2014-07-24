@@ -2,7 +2,7 @@
 module Language.E.Testing.ValidateSolutionTests(runTests) where
 
 import Language.E
-import Language.E.ValidateSolution(validateSolutionPureNew,validateSolution)
+import Language.E.ValidateSolution(validateSolutionPureNew,validateSolution,satisfied)
 import Language.E.Pipeline.ReadIn(readSpecFromFile)
 
 import qualified Control.Exception as Exc
@@ -91,6 +91,9 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
     ])
  , ([dMake| function (surjective, injective,  total )  int(1..2) -->  int(1..2) |], [
         [eMake| function(1 --> 1 ) |]
+    ])
+ , ([dMake| partition (partSize 2, numParts 2, maxNumParts 2) from int(1..5) |], [
+        [eMake| partition( {1,2}, {3} ) |]
     ])
  ]
 
