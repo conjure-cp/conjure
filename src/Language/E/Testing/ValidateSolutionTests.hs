@@ -2,7 +2,7 @@
 module Language.E.Testing.ValidateSolutionTests(runTests) where
 
 import Language.E
-import Language.E.ValidateSolution(validateSolutionPureNew,validateSolution,satisfied)
+import Language.E.ValidateSolution
 import Language.E.Pipeline.ReadIn(readSpecFromFile)
 
 import qualified Control.Exception as Exc

@@ -129,6 +129,18 @@ validateSpec spec = do
 -- Attributes must be listed in sorted order for dMatch
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
 
+-- Tuple
+validateVal
+    dom@[xMatch| innerDoms := domain.tuple.inners|]
+    val@[xMatch| vs        := value.tuple.values |] = do
+
+    innerErrors <- zipWithM validateVal innerDoms vs
+
+    return $ joinDoc innerErrors
+
+    where
+    errorDoc = vcat [pretty dom, pretty val]
+
 --Function
 validateVal
     dom@[xMatch| attrs       := domain.function.attributes.attrCollection
@@ -173,10 +185,11 @@ validateVal
                           ("surjective", Nothing)
                         , ("injective",  Nothing) ]
 
-            checkAttr t = bug $ vcat [
-                   "Not handled, function attribute " <+> pretty t
-                 , "in " <+> errorDoc
-                 ]
+            checkAttr t = bug $
+                vcat [
+                       "Not handled, function attribute " <+> pretty t
+                     , "in " <+> errorDoc
+                     ]
 
         dupError    <- checkForDuplicates froms "Duplicates in domain of function"
         innerErrors <- mapM (checkMappings innerDom) mvs
@@ -189,12 +202,15 @@ validateVal
 
     froms = map f mvs
         where f [xMatch| (x:_) := mapping |] = x
+              f _ = bug $ vcat [ "function mapping" ]
 
     tos = map f mvs
         where f [xMatch| (_:y:_) := mapping |] = y
+              f _ = bug $ vcat [ "function mapping," ]
 
     checkMappings innerDom [xMatch| vs := mapping |]  =
         joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs
+    checkMappings _ _ = bug $ vcat [ "checkMappings"  ]
 
     checkForDuplicates :: MonadConjure m => [E] -> Doc -> m (Maybe Doc)
     checkForDuplicates elems doc = do
@@ -203,9 +219,11 @@ validateVal
             False -> return $ Just $
                 hang doc 4 errorDoc
 
+
+
 --Partition
 validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollection
-                       | [innerDom] := domain.partition.inner   |]
+                       | [innerDom] := domain.partition.inner |]
             val@[xMatch| parts      := value.partition.values |] = do
 
     domLength <- domSize innerDom
@@ -272,10 +290,13 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
     errorDoc = vcat [pretty dom, pretty val]
     allVs = concatMap f parts
         where f [xMatch| vs := part|] = vs
+              f _ = bug $ vcat [ "part"]
 
     checkParts :: MonadConjure m => Dom -> E -> m (Maybe Doc)
-    checkParts innerDom [xMatch| vs := part |]  =
-        joinDoc <$> mapM (validateVal innerDom) vs
+    checkParts idom [xMatch| vs := part |]  =
+        joinDoc <$> mapM (validateVal idom) vs
+    checkParts _ _ = bug $ vcat [ "checkParts"]
+
 
     checkForDuplicates :: MonadConjure m => [E] -> Doc -> m (Maybe Doc)
     checkForDuplicates elems doc = do
@@ -457,7 +478,6 @@ validateVal dom@[dMatch| matrix indexed by [&_] of &_  |]
 
     validateVal dom irE
 
-
 --error
 validateVal dom es = bug $ vcat [
      "validateVal not handled"
@@ -490,6 +510,9 @@ sortAttrs [xMatch| attrs      := domain.mset.attributes.attrCollection
      [xMake| domain.mset.attributes.attrCollection := sort attrs
            | domain.mset.inner                     := [sortAttrs innerDom] |]
 
+sortAttrs [xMatch| vs := domain.tuple.inners |] =
+    [xMake| domain.tuple.inners := map sortAttrs vs |]
+
 sortAttrs [xMatch| attrs      := domain.partition.attributes.attrCollection
                  | [innerDom] := domain.partition.inner |] =
      [xMake| domain.partition.attributes.attrCollection := sort attrs
@@ -507,6 +530,7 @@ sortAttrs [xMatch| attrs  := domain.relation.attributes.attrCollection
      [xMake| domain.relation.attributes.attrCollection := sort attrs
            | domain.relation.inner                     := map sortAttrs doms |]
 
+
 sortAttrs [dMatch| matrix indexed by [&ir] of &inner |] =
     let newInner = sortAttrs inner in
     [dMake| matrix indexed by [&ir] of &newInner |]
@@ -521,14 +545,12 @@ getAttr [xMatch| [Prim (S n)] := attribute.nameValue.name.reference
 getAttr [xMatch| [Prim (S n)] := attribute.name.reference
                |] = (n,Nothing)
 
+getAttr _ = bug $ vcat [ "getAttr" ]
+
 joinDoc :: [Maybe Doc] -> Maybe Doc
 joinDoc ds = case catMaybes ds of
     [] -> Nothing
     xs -> Just . vcat $ xs
-
-getInt :: E -> Integer
-getInt  [xMatch| [Prim (I j)] :=  value.literal  |] = j
-getInt e = bug $ vcat [ "Not an int" <+> pretty e ]
 
 mkInt :: Integer -> E
 mkInt j =  [xMake| value.literal := [Prim (I j)] |]
