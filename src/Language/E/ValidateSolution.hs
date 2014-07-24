@@ -139,7 +139,6 @@ validateVal
             vsLength = mkInt $ genericLength mvs
 
             checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
-
             checkAttr ("size", Just s) =
                 satisfied [eMake| &vsLength = &s |]
                 "Wrong number of elements in set" errorDoc
@@ -152,15 +151,29 @@ validateVal
                 satisfied [eMake| &vsLength < &s |]
                 "Too many elements" errorDoc
 
-            checkAttr t = error . show . pretty $ t
+            checkAttr t = bug $ vcat [
+                   "Not handled, function attribute " <+> pretty t
+                 , "in " <+> errorDoc
+                 ]
 
+            checkForDuplicates :: MonadConjure m => m (Maybe Doc)
+            checkForDuplicates = do
+                case (length (nub froms) == length froms)  of
+                    True  -> return Nothing
+                    False -> return $ Just $
+                        hang "Duplicates in domain of function" 4 errorDoc
+
+        dupError   <- checkForDuplicates
         innerErrors <- mapM (checkMappings innerDom) mvs
         attrChecked <- mapM (checkAttr . getAttr) attrs
 
-        return $ joinDoc (innerErrors ++ attrChecked)
+        return $ joinDoc (dupError : innerErrors ++ attrChecked)
 
     where
     errorDoc = vcat [pretty dom, pretty val]
+
+    froms = map f mvs
+        where f [xMatch| (x:_) := mapping |] = x
 
     checkMappings innerDom [xMatch| vs := mapping |]  =
         joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs
@@ -169,7 +182,7 @@ validateVal
                    |           [v] := attribute.nameValue.value
                    |] = (n,Just v)
 
-    getAttr [xMatch| [Prim (S n)] := attribute.nameValue.name.reference
+    getAttr [xMatch| [Prim (S n)] := attribute.name.reference
                    |] = (n,Nothing)
 
 
