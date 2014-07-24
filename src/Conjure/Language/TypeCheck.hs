@@ -1,8 +1,7 @@
 module Conjure.Language.TypeCheck
     ( typeCheckModel
     , typeCheckModelIO
-    , typeOfDomain
-    , typeOfExpression
+    , typeOf
     ) where
 
 -- conjure
@@ -24,43 +23,60 @@ typeCheckModel :: Model -> Maybe Doc
 typeCheckModel _ = Nothing
 -- typeCheckModel _ = Just "Just Plain Wrong (TM)"
 
-typeOfDomain :: Domain r c -> Type
-typeOfDomain DomainBool                = TypeBool
-typeOfDomain DomainInt{}               = TypeInt
-typeOfDomain (DomainEnum    defn _   ) = TypeEnum defn
-typeOfDomain (DomainUnnamed defn     ) = TypeUnnamed defn
-typeOfDomain (DomainTuple         xs ) = TypeTuple      (map typeOfDomain xs)
-typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     (typeOfDomain ind) (typeOfDomain inn)
-typeOfDomain (DomainSet       _ _ x  ) = TypeSet        (typeOfDomain x)
-typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       (typeOfDomain x)
-typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   (typeOfDomain x) (typeOfDomain y)
-typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   (map typeOfDomain xs)
-typeOfDomain (DomainPartition _ _ x  ) = TypePartition  (typeOfDomain x)
-typeOfDomain DomainOp{}                = bug "typeOfDomain"
-typeOfDomain DomainHack{}              = bug "typeOfDomain"
+class TypeOf a where
+    typeOf :: a -> Type
 
-typeOfExpression :: Expression -> Type
-typeOfExpression (Constant x) = typeOfConstant x
-typeOfExpression (Domain x)   = typeOfDomain x
-typeOfExpression Reference{}  = TypeAny -- TODO: fix
-typeOfExpression Op{}         = TypeAny -- TODO: fix
-typeOfExpression Lambda{}     = TypeAny -- TODO: fix
+instance TypeOf (Domain r c) where
+    typeOf DomainBool                = TypeBool
+    typeOf DomainInt{}               = TypeInt
+    typeOf (DomainEnum    defn _   ) = TypeEnum defn
+    typeOf (DomainUnnamed defn     ) = TypeUnnamed defn
+    typeOf (DomainTuple         xs ) = TypeTuple      (map typeOf xs)
+    typeOf (DomainMatrix ind inn   ) = TypeMatrix     (typeOf ind) (typeOf inn)
+    typeOf (DomainSet       _ _ x  ) = TypeSet        (typeOf x)
+    typeOf (DomainMSet      _ _ x  ) = TypeMSet       (typeOf x)
+    typeOf (DomainFunction  _ _ x y) = TypeFunction   (typeOf x) (typeOf y)
+    typeOf (DomainRelation  _ _ xs ) = TypeRelation   (map typeOf xs)
+    typeOf (DomainPartition _ _ x  ) = TypePartition  (typeOf x)
+    typeOf DomainOp{}                = bug "typeOf"
+    typeOf DomainHack{}              = bug "typeOf"
 
-typeOfConstant :: Constant -> Type
-typeOfConstant ConstantBool{}            = TypeBool
-typeOfConstant ConstantInt{}             = TypeInt
-typeOfConstant (ConstantEnum defn _    ) = TypeEnum defn
-typeOfConstant (ConstantTuple        xs) = TypeTuple (map typeOfConstant xs)
-typeOfConstant (ConstantMatrix ind inn ) = TypeMatrix (typeOfDomain ind) (homoType (map typeOfConstant inn))
-typeOfConstant (ConstantSet         xs ) = TypeSet  (homoType (map typeOfConstant xs))
-typeOfConstant (ConstantMSet        xs ) = TypeMSet (homoType (map typeOfConstant xs))
-typeOfConstant (ConstantFunction    xs ) = TypeFunction (homoType (map (typeOfConstant . fst) xs))
-                                                        (homoType (map (typeOfConstant . fst) xs))
-typeOfConstant (ConstantRelation    xss) =
-    case homoType $ map (typeOfConstant . ConstantTuple) xss of
-        TypeTuple ts -> TypeRelation ts
-        _ -> bug "expecting TypeTuple in typeOfConstant"
-typeOfConstant (ConstantPartition   xss) = TypePartition (homoType (map typeOfConstant (concat xss)))
+instance TypeOf Expression where
+    typeOf (Constant x) = typeOf x
+    typeOf (AbstractLiteral x) = typeOf x
+    typeOf (Domain x)   = typeOf x
+    typeOf Reference{}  = TypeAny -- TODO: fix
+    typeOf Op{}         = TypeAny -- TODO: fix
+    typeOf Lambda{}     = TypeAny -- TODO: fix
+
+instance TypeOf Constant where
+    typeOf ConstantBool{}            = TypeBool
+    typeOf ConstantInt{}             = TypeInt
+    typeOf (ConstantEnum defn _    ) = TypeEnum defn
+    typeOf (ConstantTuple        xs) = TypeTuple    (map typeOf xs)
+    typeOf (ConstantMatrix ind inn ) = TypeMatrix   (typeOf ind) (homoType (map typeOf inn))
+    typeOf (ConstantSet         xs ) = TypeSet      (homoType (map typeOf xs))
+    typeOf (ConstantMSet        xs ) = TypeMSet     (homoType (map typeOf xs))
+    typeOf (ConstantFunction    xs ) = TypeFunction (homoType (map (typeOf . fst) xs))
+                                                    (homoType (map (typeOf . fst) xs))
+    typeOf (ConstantRelation    xss) =
+        case homoType $ map (typeOf . ConstantTuple) xss of
+            TypeTuple ts -> TypeRelation ts
+            _ -> bug "expecting TypeTuple in typeOf"
+    typeOf (ConstantPartition   xss) = TypePartition (homoType (map typeOf (concat xss)))
+
+instance TypeOf a => TypeOf (AbstractLiteral a) where
+    typeOf (AbsLitTuple        xs) = TypeTuple    (map typeOf xs)
+    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   (typeOf ind) (homoType (map typeOf inn))
+    typeOf (AbsLitSet         xs ) = TypeSet      (homoType (map typeOf xs))
+    typeOf (AbsLitMSet        xs ) = TypeMSet     (homoType (map typeOf xs))
+    typeOf (AbsLitFunction    xs ) = TypeFunction (homoType (map (typeOf . fst) xs))
+                                                  (homoType (map (typeOf . fst) xs))
+    typeOf (AbsLitRelation    xss) =
+        case homoType $ map (typeOf . AbsLitTuple) xss of
+            TypeTuple ts -> TypeRelation ts
+            _ -> bug "expecting TypeTuple in typeOf"
+    typeOf (AbsLitPartition   xss) = TypePartition (homoType (map typeOf (concat xss)))
 
 homoType :: [Type] -> Type
 homoType [] = userErr "empty collection, what's the type?"

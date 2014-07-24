@@ -12,6 +12,7 @@ module Conjure.Language.Definition
     , Name(..)
     , Expression(..)
     , Constant(..)
+    , AbstractLiteral(..)
 
     , Domain(..), Range(..)
     , DomainDefnEnum(..), DomainDefnUnnamed(..)
@@ -144,6 +145,7 @@ instance Arbitrary Name where
 
 data Expression
     = Constant Constant
+    | AbstractLiteral (AbstractLiteral Expression)
     | Domain (Domain () Expression)
     | Reference Name
     | Op Name [Expression]
@@ -151,70 +153,78 @@ data Expression
     deriving (Generic)
 
 instance Eq Expression where
-    Constant a == Constant b = a == b
-    Domain a == Domain b = a == b
-    Reference a == Reference b = a == b
-    Op n1 xs1 == Op n2 xs2 = n1 == n2 && and (zipWith (==) xs1 xs2)
-    Lambda {} == Lambda {} = bug "Lambda's cannot be compared for equality. There you go."
-    _ == _ = False
+    Constant a        == Constant b        = a == b
+    AbstractLiteral a == AbstractLiteral b = a == b
+    Domain a          == Domain b          = a == b
+    Reference a       == Reference b       = a == b
+    Op n1 xs1         == Op n2 xs2         = n1 == n2 && and (zipWith (==) xs1 xs2)
+    Lambda {}         == Lambda {}         = bug "Lambda's cannot be compared for equality. There you go."
+    _                 == _                 = False
 
 instance Ord Expression where
-    Constant  a  `compare` Constant b  = a `compare` b
-    Constant  {} `compare` _ = LT
-    Domain    a  `compare` Domain b    = a `compare` b
-    Domain    {} `compare` _ = LT
-    Reference a  `compare` Reference b = a `compare` b
-    Reference {} `compare` _ = LT
-    Op nm1 xs1   `compare` Op nm2 xs2 =
+    Constant a          `compare` Constant b        = a `compare` b
+    Constant {}         `compare` _                 = LT
+    AbstractLiteral a   `compare` AbstractLiteral b = a `compare` b
+    AbstractLiteral {}  `compare` _                 = LT
+    Domain a            `compare` Domain b          = a `compare` b
+    Domain {}           `compare` _                 = LT
+    Reference a         `compare` Reference b       = a `compare` b
+    Reference {}        `compare` _                 = LT
+    Op nm1 xs1          `compare` Op nm2 xs2        =
         case nm1 `compare` nm2 of
             EQ -> xs1 `compare` xs2
             ow -> ow
-    Op {} `compare` _ = LT
-    Lambda {} `compare` _ = bug "Lambda's cannot be compared for ordering. There you go."
+    Op {}               `compare` _                 = LT
+    Lambda {}           `compare` _                 = bug "Lambda's cannot be compared for ordering. There you go."
 
 instance Show Expression where
-    showsPrec pr (Constant x       ) = showParen (pr >= 11) (showString "Constant "  . showsPrec 11 x)
-    showsPrec pr (Domain   x       ) = showParen (pr >= 11) (showString "Domain "    . showsPrec 11 x)
-    showsPrec pr (Reference x      ) = showParen (pr >= 11) (showString "Reference " . showsPrec 11 x)
-    showsPrec pr (Op op xs         ) = showParen (pr >= 11) (showString "Op "        . showsPrec 11 op
-                                                                         . showSpace . showsPrec 11 xs)
-    showsPrec pr (Lambda arg ty x _) = showParen (pr >= 11) (showString "Lambda "    . showsPrec 11 arg
-                                                                         . showSpace . showsPrec 11 ty
-                                                                         . showSpace . showsPrec 11 x)
+    showsPrec pr (Constant x       ) = showParen (pr >= 11) (showString "Constant "         . showsPrec 11 x)
+    showsPrec pr (AbstractLiteral x) = showParen (pr >= 11) (showString "AbstractLiteral "  . showsPrec 11 x)
+    showsPrec pr (Domain   x       ) = showParen (pr >= 11) (showString "Domain "           . showsPrec 11 x)
+    showsPrec pr (Reference x      ) = showParen (pr >= 11) (showString "Reference "        . showsPrec 11 x)
+    showsPrec pr (Op op xs         ) = showParen (pr >= 11) (showString "Op "               . showsPrec 11 op
+                                                                                . showSpace . showsPrec 11 xs)
+    showsPrec pr (Lambda arg ty x _) = showParen (pr >= 11) (showString "Lambda "           . showsPrec 11 arg
+                                                                                . showSpace . showsPrec 11 ty
+                                                                                . showSpace . showsPrec 11 x)
     showList = showList__ (showsPrec 0)
 
 instance Serialize Expression where
     put (Constant x       ) = Serialize.put (0 :: Int) >> Serialize.put x
-    put (Domain x         ) = Serialize.put (1 :: Int) >> Serialize.put x
-    put (Reference x      ) = Serialize.put (2 :: Int) >> Serialize.put x
-    put (Op op xs         ) = Serialize.put (3 :: Int) >> Serialize.put op  >> Serialize.put xs
-    put (Lambda arg ty x _) = Serialize.put (4 :: Int) >> Serialize.put arg >> Serialize.put ty >> Serialize.put x
+    put (AbstractLiteral x) = Serialize.put (1 :: Int) >> Serialize.put x
+    put (Domain x         ) = Serialize.put (2 :: Int) >> Serialize.put x
+    put (Reference x      ) = Serialize.put (3 :: Int) >> Serialize.put x
+    put (Op op xs         ) = Serialize.put (4 :: Int) >> Serialize.put op  >> Serialize.put xs
+    put (Lambda arg ty x _) = Serialize.put (5 :: Int) >> Serialize.put arg >> Serialize.put ty >> Serialize.put x
     get = do
         tag <- Serialize.get
         case tag :: Int of
             0 -> Constant <$> Serialize.get
-            1 -> Domain <$> Serialize.get
-            2 -> Reference <$> Serialize.get
-            3 -> Op <$> Serialize.get <*> Serialize.get
-            4 -> Lambda <$> Serialize.get <*> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
+            1 -> AbstractLiteral <$> Serialize.get
+            2 -> Domain <$> Serialize.get
+            3 -> Reference <$> Serialize.get
+            4 -> Op <$> Serialize.get <*> Serialize.get
+            5 -> Lambda <$> Serialize.get <*> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
             _ -> bug "While deserialising an expression"
 
 instance Hashable Expression where
     hashWithSalt salt (Constant x       ) = hashWithSalt salt x
+    hashWithSalt salt (AbstractLiteral x) = hashWithSalt salt x
     hashWithSalt salt (Domain x         ) = hashWithSalt salt x
     hashWithSalt salt (Reference x      ) = hashWithSalt salt x
     hashWithSalt salt (Op op xs         ) = hashWithSalt salt (op,xs)
     hashWithSalt salt (Lambda arg ty x _) = hashWithSalt salt (arg,ty,x)
 
 instance ToJSON Expression where
-    toJSON (Constant x       ) = JSON.object [ "Constant"       .= toJSON x  ]
-    toJSON (Domain x         ) = JSON.object [ "Domain"         .= toJSON x  ]
-    toJSON (Reference x      ) = JSON.object [ "Reference"      .= toJSON x  ]
-    toJSON (Op op xs         ) = JSON.object [ "Op-Name"        .= toJSON op
-                                             , "Op-Args"        .= toJSON xs ]
-    toJSON (Lambda arg ty x _) = JSON.object [ "Lambda-Arg"     .= toJSON arg
-                                             , "Lambda-ArgType" .= toJSON ty
-                                             , "Lambda-Body"    .= toJSON x  ]
+    toJSON (Constant x       ) = JSON.object [ "Constant"        .= toJSON x  ]
+    toJSON (AbstractLiteral x) = JSON.object [ "AbstractLiteral" .= toJSON x  ]
+    toJSON (Domain x         ) = JSON.object [ "Domain"          .= toJSON x  ]
+    toJSON (Reference x      ) = JSON.object [ "Reference"       .= toJSON x  ]
+    toJSON (Op op xs         ) = JSON.object [ "Op-Name"         .= toJSON op
+                                             , "Op-Args"         .= toJSON xs ]
+    toJSON (Lambda arg ty x _) = JSON.object [ "Lambda-Arg"      .= toJSON arg
+                                             , "Lambda-ArgType"  .= toJSON ty
+                                             , "Lambda-Body"     .= toJSON x  ]
 
 
 data DomainDefnEnum = DomainDefnEnum Name [Name]
@@ -406,4 +416,20 @@ instance Arbitrary Constant where
         [ ConstantBool <$> arbitrary
         , ConstantInt <$> arbitrary
         ]
+
+
+data AbstractLiteral a
+    = AbsLitTuple [a]
+    | AbsLitMatrix (Domain () a) [a]
+    | AbsLitSet [a]
+    | AbsLitMSet [a]
+    | AbsLitFunction [(a, a)]
+    | AbsLitRelation [[a]]
+    | AbsLitPartition [[a]]
+    deriving (Eq, Ord, Show, Generic)
+
+instance Serialize a => Serialize (AbstractLiteral a)
+instance Hashable a => Hashable (AbstractLiteral a)
+instance ToJSON a => ToJSON (AbstractLiteral a)
+
 

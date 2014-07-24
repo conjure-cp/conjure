@@ -19,7 +19,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Language.TypeCheck ( typeOfDomain, typeOfExpression )
+import Conjure.Language.TypeCheck ( typeOf )
 import Language.E ( Spec(..), E(..), BuiltIn(..), xMatch, xMake, viewTaggeds, statementAsList, prettyAsPaths )
 
 import Language.E.Parser.Imports
@@ -77,11 +77,13 @@ specToModel (Spec lang stmt) = Model
 
         convExpr [xMatch| [Prim (S x)] := reference |] = Reference (Name x)
 
+-- binary operators
         convExpr [xMatch| [Prim (S op)] := binOp.operator
                         | [left]        := binOp.left
                         | [right]       := binOp.right
                         |] = Op (Name op) [convExpr left, convExpr right]
 
+-- quantified
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
                         | [Prim (S nm)]     := quantified.quanVar.structural.single.reference
                         | [D quanOverDom]   := quantified.quanOverDom
@@ -91,7 +93,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = typeOfDomain (convDomain quanOverDom)
+                ty = typeOf (convDomain quanOverDom)
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
@@ -116,7 +118,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = typeOfExpression (convExpr quanOverExpr)
+                ty = typeOf (convExpr quanOverExpr)
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
@@ -133,6 +135,7 @@ specToModel (Spec lang stmt) = Model
                             , convExpr quanOverExpr
                             ] ) ]
 
+-- unary operators
         convExpr [xMatch| xs := operator.dontCare     |] = Op "dontCare"     (map convExpr xs)
         convExpr [xMatch| xs := operator.allDiff      |] = Op "allDiff"      (map convExpr xs)
         convExpr [xMatch| xs := operator.apart        |] = Op "apart"        (map convExpr xs)
@@ -155,6 +158,51 @@ specToModel (Spec lang stmt) = Model
         convExpr [xMatch| xs := operator.toRelation   |] = Op "toRelation"   (map convExpr xs)
         convExpr [xMatch| xs := operator.toSet        |] = Op "toSet"        (map convExpr xs)
 
+        convExpr [xMatch| [actual] := functionApply.actual
+                      |   args   := functionApply.args
+                      |]
+            = Op "function_image" (map convExpr (actual : args))
+
+        convExpr [xMatch| [x] := structural.single |] = convExpr x
+
+-- values
+        convExpr [xMatch| xs := value.tuple.values  |] =
+            AbstractLiteral $ AbsLitTuple (map convExpr xs)
+
+        convExpr [xMatch| xs      := value.matrix.values
+                        | [D ind] := value.matrix.indexrange
+                        |] =
+            AbstractLiteral $ AbsLitMatrix (convDomain ind) (map convExpr xs)
+
+        convExpr [xMatch| xs      := value.matrix.values
+                        |] =
+            AbstractLiteral $ AbsLitMatrix (DomainInt []) (map convExpr xs)
+
+        convExpr [xMatch| xs := value.set.values |] =
+            AbstractLiteral $ AbsLitSet (map convExpr xs)
+
+        convExpr [xMatch| xs := value.mset.values |] =
+            AbstractLiteral $ AbsLitMSet (map convExpr xs)
+
+        convExpr [xMatch| xs := value.function.values |] =
+            AbstractLiteral $ AbsLitFunction
+                [ (convExpr i, convExpr j)
+                | [xMatch| [i,j] := mapping |] <- xs
+                ]
+
+        convExpr [xMatch| xss := value.relation.values |] =
+            AbstractLiteral $ AbsLitRelation
+                [ map convExpr xs
+                | [xMatch| xs := value.tuple.values |] <- xss
+                ]
+
+        convExpr [xMatch| xss := value.partition.values |] =
+            AbstractLiteral $ AbsLitPartition
+                [ map convExpr xs
+                | [xMatch| xs := part |] <- xss
+                ]
+
+-- D
         convExpr (D x) = Domain (convDomain x)
 
         convExpr x = bug $ "convExpr" <+> prettyAsPaths x

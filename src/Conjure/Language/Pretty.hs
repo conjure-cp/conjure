@@ -71,8 +71,18 @@ instance Pretty Constant where
     pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
 
+instance Pretty a => Pretty (AbstractLiteral a) where
+    pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else Pr.empty) <+> prettyList Pr.parens "," xs
+    pretty (AbsLitMatrix index xs) = let f i = Pr.brackets (i <> ";" <+> pretty index) in prettyList f "," xs
+    pretty (AbsLitSet       xs ) =                prettyList Pr.braces "," xs
+    pretty (AbsLitMSet      xs ) = "mset"      <> prettyList Pr.parens "," xs
+    pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc Pr.parens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
+    pretty (AbsLitPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
+
 instance Pretty Expression where
     pretty (Constant x) = pretty x
+    pretty (AbstractLiteral x) = pretty x
     pretty (Domain x) = "`" <> pretty x <> "`"
     pretty (Reference x) = pretty x
     pretty (Lambda nm ty x _) = "lambda" <> Pr.parens (pretty nm <+> ":" <+> pretty ty <+> "-->" <+> pretty x)
