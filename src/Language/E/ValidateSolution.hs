@@ -131,12 +131,42 @@ validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
 
 -- Tuple
 validateVal
-    dom@[xMatch| innerDoms := domain.tuple.inners|]
-    val@[xMatch| vs        := value.tuple.values |] = do
+    [xMatch| innerDoms := domain.tuple.inners|]
+    [xMatch| vs        := value.tuple.values |] =
 
-    innerErrors <- zipWithM validateVal innerDoms vs
+    joinDoc <$> zipWithM validateVal innerDoms vs
 
-    return $ joinDoc innerErrors
+validateVal
+    dom@[xMatch| attrs     := domain.relation.attributes.attrCollection
+               | innerDoms := domain.relation.inners |]
+    val@[xMatch| vs        := value.relation.values  |] = do
+
+        let
+            vsLength  = mkInt $ genericLength vs
+
+            checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
+            checkAttr ("size", Just s) =
+                satisfied [eMake| &vsLength = &s |]
+                "Wrong number of elements in relation" errorDoc
+
+            checkAttr ("minSize", Just s) =
+                satisfied [eMake| &vsLength >= &s |]
+                "Too few elements" errorDoc
+
+            checkAttr ("maxSize", Just s) =
+                satisfied [eMake| &vsLength <= &s |]
+                "Too many elements" errorDoc
+
+            checkAttr t = bug $
+                vcat [
+                       "Not handled, function attribute " <+> pretty t
+                     , "in " <+> errorDoc
+                     ]
+
+        innerErrors <- mapM (validateVal [xMake| domain.tuple.inners := innerDoms |] ) vs
+        attrChecked <- mapM (checkAttr . getAttr) attrs
+
+        return $ joinDoc $ innerErrors ++ attrChecked
 
     where
     errorDoc = vcat [pretty dom, pretty val]
@@ -458,6 +488,7 @@ validateVal d@[xMatch| rs := domain.int.ranges |]
 
     where
         inDomain k [xMatch| [Prim (I j)] := range.single.value.literal |] = j == k
+        inDomain k [xMatch| [Prim (I j)] := range.from.value.literal |]   = k >= j
         inDomain k [xMatch| [Prim (I l), Prim(I u)] := range.fromTo.value.literal |] =
             k >= l && k <= u
         inDomain _ _ = False
