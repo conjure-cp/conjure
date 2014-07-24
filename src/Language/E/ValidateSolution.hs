@@ -30,8 +30,7 @@ validateSolution essence param solution =
         else userErr "Not a valid solution."
 
 
--- this will return True is it's valid, False if not
--- the validator might use error
+-- this will return True is it's valid, False if not the validator might use error
 
 
 validateSolutionPure :: Essence -> Param -> Solution -> Bool
@@ -173,20 +172,12 @@ validateVal
                           ("surjective", Nothing)
                         , ("injective",  Nothing) ]
 
-
             checkAttr t = bug $ vcat [
                    "Not handled, function attribute " <+> pretty t
                  , "in " <+> errorDoc
                  ]
 
-            checkForDuplicates :: MonadConjure m => [E] -> Doc -> m (Maybe Doc)
-            checkForDuplicates elems doc = do
-                case (length (nub elems) == length elems)  of
-                    True  -> return Nothing
-                    False -> return $ Just $
-                        hang doc 4 errorDoc
-
-        dupError   <- checkForDuplicates froms "Duplicates in domain of function"
+        dupError    <- checkForDuplicates froms "Duplicates in domain of function"
         innerErrors <- mapM (checkMappings innerDom) mvs
         attrChecked <- mapM (checkAttr . getAttr) attrs
 
@@ -204,13 +195,42 @@ validateVal
     checkMappings innerDom [xMatch| vs := mapping |]  =
         joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs
 
-    getAttr [xMatch| [Prim (S n)] := attribute.nameValue.name.reference
-                   |           [v] := attribute.nameValue.value
-                   |] = (n,Just v)
+    checkForDuplicates :: MonadConjure m => [E] -> Doc -> m (Maybe Doc)
+    checkForDuplicates elems doc = do
+        case (length (nub elems) == length elems)  of
+            True  -> return Nothing
+            False -> return $ Just $
+                hang doc 4 errorDoc
 
-    getAttr [xMatch| [Prim (S n)] := attribute.name.reference
-                   |] = (n,Nothing)
+--Partition
+validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollection
+                       | [innerDom] := domain.partition.inner   |]
+            val@[xMatch| parts      := value.partition.values |] = do
 
+    domLength <- domSize innerDom
+
+    let numParts = mkInt $ genericLength parts
+
+    dupError   <- checkForDuplicates allVs  "Duplicates in partition"
+    innerErrors <- mapM (checkParts innerDom) parts
+
+    return $ joinDoc $ dupError : innerErrors
+
+    where
+    errorDoc = vcat [pretty dom, pretty val]
+    allVs = concatMap f parts
+        where f [xMatch| vs := part|] = vs
+
+    checkParts :: MonadConjure m => Dom -> E -> m (Maybe Doc)
+    checkParts innerDom [xMatch| vs := part |]  =
+        joinDoc <$> mapM (validateVal innerDom) vs
+
+    checkForDuplicates :: MonadConjure m => [E] -> Doc -> m (Maybe Doc)
+    checkForDuplicates elems doc = do
+        case (length (nub elems) == length elems)  of
+            True  -> return Nothing
+            False -> return $ Just $
+                hang doc 4 errorDoc
 
 
 --set
@@ -441,6 +461,13 @@ sortAttrs [dMatch| matrix indexed by [&ir] of &inner |] =
 
 sortAttrs d = d
 
+getAttr :: Dom -> (Text, Maybe E)
+getAttr [xMatch| [Prim (S n)] := attribute.nameValue.name.reference
+               |          [v] := attribute.nameValue.value
+               |] = (n,Just v)
+
+getAttr [xMatch| [Prim (S n)] := attribute.name.reference
+               |] = (n,Nothing)
 
 joinDoc :: [Maybe Doc] -> Maybe Doc
 joinDoc ds = case catMaybes ds of

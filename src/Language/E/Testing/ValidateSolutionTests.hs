@@ -42,7 +42,9 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
 
     ])
  , ([dMake| partition from int(4..5) |], [
-
+          [eMake| partition( {4}, {4,5} ) |]
+        , [eMake| partition( {4,4} ) |]
+        , [eMake| partition( {6} ) |]
     ])
  , ([dMake| relation of (int(5..5)) |], [
 
@@ -50,7 +52,7 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
  , ([dMake| relation (total) of (int(5..5) * int(2..3)) |], [
 
     ])
- , ([dMake| partition (PartSize 1, minNumParts 2, Regular, maxPartSize 5, numParts 5)
+ , ([dMake| partition (partSize 1, minNumParts 2, regular, maxPartSize 5, numParts 5)
         from int(1..1) |], [
 
     ])
@@ -121,7 +123,8 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
 
     ])
  , ([dMake| partition from int(4..5) |], [
-
+         [eMake| partition( {4}, {5} ) |]
+        ,[eMake| partition( {4} ) |]
     ])
  , ([dMake| relation of (int(5..5)) |], [
 
@@ -129,7 +132,7 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
  , ([dMake| relation (total) of (int(5..5) * int(2..3)) |], [
 
     ])
- , ([dMake| partition (PartSize 1, minNumParts 2, Regular, maxPartSize 5, numParts 5)
+ , ([dMake| partition (partSize 1, minNumParts 2, regular, maxPartSize 5, numParts 5)
         from int(1..1) |], [
 
     ])
