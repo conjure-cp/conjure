@@ -129,21 +129,50 @@ validateSpec spec = do
 -- Attributes must be listed in sorted order for dMatch
 validateVal :: MonadConjure m => Dom -> E -> m (Maybe Doc)
 
---function
+--Function
 validateVal
     dom@[xMatch| attrs       := domain.function.attributes.attrCollection
                | [innerFrom] := domain.function.innerFrom
                | [innerTo]   := domain.function.innerTo |]
     val@[xMatch| mvs         := value.function.values  |] = do
-        let innerDom = [innerFrom, innerTo]
+        let innerDom  = [innerFrom, innerTo]
+            vsLength = mkInt $ genericLength mvs
 
-        res <- mapM (checkMappings innerDom) mvs
-        return $ joinDoc res
+            checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
 
+            checkAttr ("size", Just s) =
+                satisfied [eMake| &vsLength = &s |]
+                "Wrong number of elements in set" errorDoc
+
+            checkAttr ("minSize", Just s) =
+                satisfied [eMake| &vsLength > &s |]
+                "Too few elements" errorDoc
+
+            checkAttr ("maxSize", Just s) =
+                satisfied [eMake| &vsLength < &s |]
+                "Too many elements" errorDoc
+
+            checkAttr t = error . show . pretty $ t
+
+        innerErrors <- mapM (checkMappings innerDom) mvs
+        attrChecked <- mapM (checkAttr . getAttr) attrs
+
+        return $ joinDoc (innerErrors ++ attrChecked)
 
     where
-        checkMappings innerDom [xMatch| vs := mapping |]  =
-            joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs
+    errorDoc = vcat [pretty dom, pretty val]
+
+    checkMappings innerDom [xMatch| vs := mapping |]  =
+        joinDoc <$> zipWithM (\d v -> validateVal d v ) innerDom vs
+
+    getAttr [xMatch| [Prim (S n)] := attribute.nameValue.name.reference
+                   |           [v] := attribute.nameValue.value
+                   |] = (n,Just v)
+
+    getAttr [xMatch| [Prim (S n)] := attribute.nameValue.name.reference
+                   |] = (n,Nothing)
+
+
 
 --set
 validateVal

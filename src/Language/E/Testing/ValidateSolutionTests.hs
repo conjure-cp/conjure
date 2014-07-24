@@ -75,6 +75,9 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
  , ([dMake| function int(1..2) --> set of int(1..2) |], [
         [eMake| function(1 --> {1,4}) |]
     ])
+ , ([dMake| function (size 2) int(1..2) --> set of int(1..2) |], [
+        [eMake| function(1 --> {1,4}) |]
+    ])
  ]
 
 
