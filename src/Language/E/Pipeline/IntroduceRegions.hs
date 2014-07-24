@@ -47,8 +47,8 @@ introduceRegions useChannelling spec = withBindingScope' $
             return [xMake| reference := [Prim (S s')] |]
 
         nextRegion = do
-            (i:is) <- get
-            put is
+            i <- gets head
+            modify tail
             return i
 
 removeRegions :: MonadConjure m => Spec -> m Spec

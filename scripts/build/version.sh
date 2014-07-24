@@ -13,6 +13,7 @@ else
     else
         echo "Generating src/Conjure/RepositoryVersion.hs with version ${VERSION}."
         echo "module Conjure.RepositoryVersion where"   >  src/Conjure/RepositoryVersion.hs
+        echo "import Prelude"                           >> src/Conjure/RepositoryVersion.hs
         echo "repositoryVersion :: String"              >> src/Conjure/RepositoryVersion.hs
         echo "repositoryVersion = \"${VERSION}\""       >> src/Conjure/RepositoryVersion.hs
     fi

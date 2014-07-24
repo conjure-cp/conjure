@@ -8,9 +8,9 @@ module Language.E.Evaluator
     , fullySimplifySpec
     ) where
 
+import Conjure.Prelude
 import Stuff.Pretty
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.Traversals

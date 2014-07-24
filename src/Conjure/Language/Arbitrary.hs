@@ -10,23 +10,16 @@ module Conjure.Language.Arbitrary
     ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( domainSizeConstant )
-
--- base
-import Control.Applicative ( (<$>), (<*>) )
-import Control.Monad ( forM_ )
-import Data.List ( nub, sort, subsequences )
 
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), Gen, sized, choose, oneof, vectorOf, sample' )
 
 -- safe
 import Safe ( at )
-
--- pretty
-import Text.PrettyPrint ( vcat )
 
 
 newtype AnyDomainTuple a = AnyDomainTuple (Domain () a)

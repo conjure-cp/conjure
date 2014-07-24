@@ -4,19 +4,20 @@
 
 module Main where
 
+-- conjure
 import Paths_conjure_cp ( getBinDir )
-import Data.Char ( toLower )
-import System.Environment ( getArgs, getProgName )
-import System.Directory
-import System.FilePath ( (</>) )
-import qualified Data.ByteString as ByteString
-
+import Conjure.Prelude
 import Conjure.Bug
 import Language.E
 import Language.E.Pipeline.ReadIn
 import Language.E.Pipeline.ConjureRepr
 import Language.E.Pipeline.ConjureRefn
 import Language.E.Pipeline.Groom
+
+import System.Environment ( getArgs, getProgName )
+import System.Directory
+import System.FilePath ( (</>) )
+import qualified Data.ByteString as ByteString
 
 
 rulesdbLoc :: IO FilePath

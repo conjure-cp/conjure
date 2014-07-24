@@ -2,10 +2,10 @@
 
 module Language.E.Evaluator.Partial ( partialEvaluator, guardOp ) where
 
+import Conjure.Prelude
 import Conjure.Bug
 import Stuff.Generic.Tag
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.Pretty

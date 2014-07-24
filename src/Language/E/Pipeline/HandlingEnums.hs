@@ -132,7 +132,7 @@ handleGivenIntDom spec = withBindingScope' $ do
                 let newDecl = [xMake| topLevel.declaration.given.name           := [newName]
                                     | topLevel.declaration.given.domain         := [newDom]
                                     |]
-                (befores,_) <- get
+                befores <- gets fst
                 -- only add this new given if this is the first time we are seeing it.
                 if statement `elem` befores || newDecl `elem` befores
                     then return [statement]

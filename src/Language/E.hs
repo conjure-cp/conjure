@@ -1,5 +1,7 @@
 module Language.E ( module X ) where
 
+import Conjure.Prelude as X
+
 import Stuff.Generic.Tag as X
 import Stuff.NamedLog as X
 import Stuff.MonadList as X
@@ -7,7 +9,6 @@ import Stuff.MonadList as X
 import Stuff.Funky.FunkySingle as X
 import Stuff.Funky.FunkyMulti as X
 
-import Language.E.Imports as X
 import Language.E.Definition as X
 import Language.E.Helpers as X
 import Language.E.CompE as X

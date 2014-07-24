@@ -1,12 +1,6 @@
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- mostly for library dependencies.
--- defines a specialised prelude. kind-of.
--- things in Language.E.* should import this.
--- also see "Language.E", which imports and re-exports this module.
-
-module Language.E.Imports
+module Conjure.Prelude
     ( module X
     , stringToDoc
     , padRight, padLeft, padCenter
@@ -18,7 +12,7 @@ module Language.E.Imports
     , allFiles, allFilesWithSuffix
     , timedIO
     , isLeft, isRight
-    , trace, tracing
+    , tracing
     , allCombinations
     , sortOn, sortNub
     , maybeRead
@@ -29,36 +23,67 @@ module Language.E.Imports
     , (|>)
     ) where
 
-import Control.Applicative       as X ( Applicative(..), (<$>), (<$), (<*), (*>), (<|>), many, some )
-import Control.Arrow             as X ( first, second, (***) )
-import Control.Category          as X ( (<<<), (>>>) )
-import Control.Monad             as X ( MonadPlus, void, mzero, msum, when, unless, zipWithM, (<=<), (>=>), foldM, ap, replicateM, liftM )
+import GHC.Err as X ( error )
+
+-- basic data types
+import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
+import Data.Int as X ( Int )
+import GHC.Integer as X ( Integer )
+import GHC.Exts as X ( Double )
+import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^) )
+import Data.Char as X ( Char, toLower )
+import Data.String as X ( String )
+
+-- basic type classes
+import Data.Eq as X ( Eq(..) )
+import Data.Ord as X ( Ord(..), Ordering(..), comparing )
+import Text.Show as X ( Show(..), showString, showParen )
+import Text.Read as X ( Read(..), reads )
+import GHC.Num as X ( Num(..) )
+
+-- some more type classes
+import Data.Functor as X ( Functor(..) )
+import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
+import Control.Monad as X ( Monad(..), mapM, mapM_, MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
+                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence
+                          )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
 import Control.Monad.Except         as X ( MonadError(throwError, catchError) )
 import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
-import Control.Monad.State.Strict   as X ( MonadState(get, put), gets, modify, evalStateT, runStateT )
+import Control.Monad.State.Strict   as X ( MonadState, gets, modify, evalStateT, runStateT )
 import Control.Monad.Trans.Identity as X ( runIdentityT )
 import Control.Monad.Trans.Maybe    as X ( MaybeT, runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT, runWriterT, execWriterT, runWriter )
+import Control.Arrow             as X ( first, second, (***) )
+import Control.Category          as X ( (<<<), (>>>) )
+
+
 
 import Data.Default      as X ( Default, def )
-import Data.Either       as X ( lefts, rights )
+import Data.Either       as X ( Either(..), either, lefts, rights )
 import Data.Foldable     as X ( forM_, fold, foldMap, toList )
-import Data.Function     as X ( on )
+import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy, partition
                               , genericLength, genericIndex
                               , isSuffixOf, isPrefixOf
-                              , subsequences, transpose, findIndex )
+                              , subsequences, transpose, findIndex
+                              , replicate, length
+                              , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head
+                              , init, and, or, zipWith, maximum, concatMap, all, lines, notElem, foldr
+                              , sum, product, unzip, zip, zip3, take, (!!), foldr1, foldl, drop, any, tail
+                              , unzip3, repeat, dropWhile
+                              )
 import Data.List.Split   as X ( splitOn )
-import Data.Maybe        as X ( catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
+import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
-import Data.Ord          as X ( comparing )
 import Data.Traversable  as X ( forM )
-import Data.Tuple        as X ( swap )
+import Data.Tuple        as X ( fst, snd, swap, uncurry )
+
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents )
 
 import Data.Hashable         as X ( Hashable(..), hash )
 
@@ -80,17 +105,7 @@ import System.Directory ( getDirectoryContents )
 import System.FilePath ( (</>) )
 import System.CPUTime ( getCPUTime )
 
-import Stuff.Pretty
-
-
-#ifdef TRACELOGS
-import qualified Debug.Trace ( trace )
-trace :: String -> a -> a
-trace = Debug.Trace.trace
-#else
-trace :: String -> a -> a
-trace = const id
-#endif
+import Debug.Trace as X ( trace )
 
 tracing :: Show a => a -> a
 tracing a = trace (show a) a

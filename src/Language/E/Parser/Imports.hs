@@ -2,8 +2,8 @@
 
 module Language.E.Parser.Imports where
 
+import Conjure.Prelude
 import Language.E.Lexer ( Lexeme(..), LexemePos, lexemeFace, runLexer )
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty ( Pretty(pretty) )
 

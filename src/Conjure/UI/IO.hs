@@ -3,11 +3,11 @@
 module Conjure.UI.IO where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
-import Language.E.Imports
 import Language.E.Definition
 
 -- directory

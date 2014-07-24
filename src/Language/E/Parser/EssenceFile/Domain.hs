@@ -2,11 +2,11 @@
 
 module Language.E.Parser.EssenceFile.Domain ( parseDomain ) where
 
+import Conjure.Prelude
 import Language.E.Parser.Imports
 import Language.E.Parser.Shunt ( shuntingYardDomain )
 import Language.E.Parser.EssenceFile.Expr ( parseExpr, parseMetaVariable )
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Lexer ( Lexeme(..) )
 

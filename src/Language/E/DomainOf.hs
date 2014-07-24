@@ -6,7 +6,7 @@ module Language.E.DomainOf
     , innerDomainOf
     ) where
 
-import Language.E.Imports
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.Pretty

@@ -25,12 +25,12 @@ main = interact $ \ inp ->
         unlines
             [ "{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, GeneralizedNewtypeDeriving #-}"
             , "module Stuff.Generic.Tag where"
+            , "import Conjure.Prelude"
             , "import Stuff.Pretty"
             , "import Data.String ( IsString(..) )"
             , "import Data.Data ( Data, Typeable )"
             , "import GHC.Generics ( Generic )"
             , "import Data.Serialize ( Serialize(..) )"
-            , "import Data.Hashable ( Hashable(..) )"
             , "import Data.Aeson ( ToJSON(..) )"
             , "import qualified Data.Text as T"
             , "import Test.QuickCheck ( Arbitrary(..), oneof )"

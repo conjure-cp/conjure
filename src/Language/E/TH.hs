@@ -2,6 +2,7 @@
 
 module Language.E.TH ( eMatch, eMake ) where
 
+import Conjure.Prelude
 import Stuff.Generic.Tag
 import Language.E.Definition
 import Language.E.Parser

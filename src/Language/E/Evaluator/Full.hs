@@ -21,8 +21,8 @@ module Language.E.Evaluator.Full
     , domSize
     ) where
 
+import Conjure.Prelude
 import Conjure.Bug
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Helpers
 import Language.E.CompE
@@ -645,14 +645,14 @@ fullEvaluator p@[xMatch| vs           := operator.index.left .value.tuple.values
     | i >= 1 && i <= genericLength vs = ret (vs `genericIndex` (i-1))
     | otherwise = userErr $ "Tuple indexing out of range in:" <+> pretty p
 
-fullEvaluator [eMatch| &quan &i : &d , &guard . &body |]
+fullEvaluator [eMatch| &quan &i : &d , &guardE . &body |]
     | D (DomainInt [RangeBounded a b]) <- d
     , [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
     , a' == b'
     = do
-    res1 <- guardOp quanStr [guard] body
+    res1 <- guardOp quanStr [guardE] body
     let res2 = [eMake| &res1 { &i --> &a } |]
     evalReplace res2
 
@@ -678,11 +678,11 @@ fullEvaluator [eMatch| &quan &_ in mset() , &_ . &_ |]
         res <- identityOp quanStr
         ret res
 
-fullEvaluator p@[eMatch| sum &i : &d , &guard . &body |]
+fullEvaluator p@[eMatch| sum &i : &d , &guardE . &body |]
     | D (DomainInt [RangeBounded a b]) <- d
     , [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
-    , [xMake| emptyGuard := [] |] == guard
+    , [xMake| emptyGuard := [] |] == guardE
     , isFullyInstantiated p
     = ret $ summation [ replace i j body
                       | j' <- [a'..b']
@@ -779,7 +779,7 @@ stripUnnecessaryTyped _ = return Nothing
 -- we generally don't and actually don't even want to, unroll quantifiers.
 -- but we need this for validateSolution
 unrollQuantifiers :: MonadConjure m => E -> m (Maybe (E,[Binder]))
-unrollQuantifiers [eMatch| &quan &iPre : &d , &guard . &body |]
+unrollQuantifiers [eMatch| &quan &iPre : &d , &guardE . &body |]
     | D (DomainInt [RangeBounded a b]) <- d
     , [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| [Prim (I a')] := value.literal |] <- a
@@ -790,14 +790,14 @@ unrollQuantifiers [eMatch| &quan &iPre : &d , &guard . &body |]
                 _ -> iPre
     xs <- forM [a'..b'] $ \ n' -> do
         let n = [xMake| value.literal := [Prim (I n')] |]
-        newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
-        newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+        newGuard <- evalReplace [eMake| &guardE { &i --> &n } |]
+        newBody  <- evalReplace [eMake| &body   { &i --> &n } |]
         case (newGuard, newBody) of
             (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
             _ -> return Nothing
     y <- unrollQuantifier quanStr (catMaybes xs)
     ret y
-unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
+unrollQuantifiers [eMatch| &quan &iPre : &dom , &guardE . &body |]
     | [xMatch| [Prim (S quanStr)] := reference |] <- quan
     , [xMatch| _ := domain.matrix |] <- dom
     = do
@@ -808,15 +808,15 @@ unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
         allValues <- getAllValues dom
         xs <- forM allValues $ \ n -> do
             -- mkLog "getAllValues" $ pretty n
-            newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
-            newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+            newGuard <- evalReplace [eMake| &guardE { &i --> &n } |]
+            newBody  <- evalReplace [eMake| &body   { &i --> &n } |]
             case (newGuard, newBody) of
                 (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
                 _ -> return Nothing
         y <- unrollQuantifier quanStr (catMaybes xs)
         -- mkLog "unrollQuantifiers" $ pretty y
         ret y
-unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
+unrollQuantifiers [eMatch| &quan &iPre : &dom , &guardE . &body |]
     | [xMatch| rs := domain.int.ranges |] <- dom
     , Just numbers <- mapM singleRangeOut rs
     , [xMatch| [Prim (S quanStr)] := reference |] <- quan
@@ -826,8 +826,8 @@ unrollQuantifiers [eMatch| &quan &iPre : &dom , &guard . &body |]
                 _ -> iPre
     xs <- forM numbers $ \ n' -> do
         let n = [xMake| value.literal := [Prim (I n')] |]
-        newGuard <- evalReplace [eMake| &guard { &i --> &n } |]
-        newBody  <- evalReplace [eMake| &body  { &i --> &n } |]
+        newGuard <- evalReplace [eMake| &guardE { &i --> &n } |]
+        newBody  <- evalReplace [eMake| &body   { &i --> &n } |]
         case (newGuard, newBody) of
             (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
             _ -> return Nothing
@@ -845,8 +845,8 @@ unrollQuantifiers
            | [a,b]              := quantified.quanOverDom.domain.set.inner.domain.int.ranges.range.fromTo
            | []                 := quantified.quanOverOp
            | []                 := quantified.quanOverExpr
-           | [guard]            := quantified.guard
-           | [body ]            := quantified.body
+           | [guardE]           := quantified.guard
+           | [body  ]           := quantified.body
            |]
     | [xMatch| [Prim (I a')] := value.literal |] <- a
     , [xMatch| [Prim (I b')] := value.literal |] <- b
@@ -874,8 +874,8 @@ unrollQuantifiers
              $ filter (predicateMaxSize . genericLength)
              $ subsequences [a'..b']
     xs <- forM sets $ \ n -> do
-        newGuard <- evalReplace [eMake| &guard { &quanVar --> &n } |]
-        newBody  <- evalReplace [eMake| &body  { &quanVar --> &n } |]
+        newGuard <- evalReplace [eMake| &guardE { &quanVar --> &n } |]
+        newBody  <- evalReplace [eMake| &body   { &quanVar --> &n } |]
         case (newGuard, newBody) of
             (Just (x,_), Just (y,_)) -> return $ Just ([x],y)
             _ -> return Nothing
@@ -888,7 +888,7 @@ unrollQuantifiers
            | []            := quantified.quanOverDom
            | []            := quantified.quanOverOp.binOp.subsetEq
            | quanOverExpr  := quantified.quanOverExpr
-           | [guard]       := quantified.guard
+           | [guardE]      := quantified.guard
            | body          := quantified.body
            |] =
     let
@@ -896,7 +896,7 @@ unrollQuantifiers
             [ [eMake| &i .< &j |]
             | (i,j) <- zip qs (tail qs)
             ]
-        guard' = [eMake| &guard /\ &newGuard |]
+        guardE' = [eMake| &guardE /\ &newGuard |]
 
         unroll []  = bug "unrollQuantifiers.structural.set"
         unroll [i] =
@@ -905,7 +905,7 @@ unrollQuantifiers
                   | quantified.quanOverDom := []
                   | quantified.quanOverOp.binOp.in := []
                   | quantified.quanOverExpr := quanOverExpr
-                  | quantified.guard := [guard']
+                  | quantified.guard := [guardE']
                   | quantified.body := body
                   |]
         unroll (i:is) =

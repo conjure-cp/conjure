@@ -1,5 +1,7 @@
 module Language.E.Data where
 
+-- conjure
+import Conjure.Prelude
 import Language.E.Lexer
 
 

@@ -5,9 +5,9 @@
 module Conjure.Language.ZeroVal ( zeroVal ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Language.E.Imports
 
 
 class ZeroVal a where

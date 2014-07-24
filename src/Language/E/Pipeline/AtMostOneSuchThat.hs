@@ -4,6 +4,7 @@ module Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat ) where
 
 -- transform a spec so that it contains only one "such that" statement.
 
+import Conjure.Prelude
 import Language.E
 
 

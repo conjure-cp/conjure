@@ -7,9 +7,9 @@ module Conjure.Language.DomainSize
     ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Language.E.Imports
 
 
 -- Nothing means an infinite domain

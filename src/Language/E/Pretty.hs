@@ -10,15 +10,12 @@ module Language.E.Pretty
     ) where
 
 -- conjure
+import Conjure.Prelude
 import Stuff.Pretty
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )
 import Language.E.Lexer ( textToLexeme )
 import Conjure.Language.Pretty ()
-
--- base
-import Control.Arrow ( first, second )
-import Data.List ( intersperse )
 
 -- containers
 import Data.Tree ( Tree(..) )
@@ -375,7 +372,7 @@ prettyQuantified
            | overDom      := quantified.quanOverDom
            | overOp       := quantified.quanOverOp
            | overExpr     := quantified.quanOverExpr
-           | guard        := quantified.guard
+           | guardE       := quantified.guard
            | body         := quantified.body
            |] = 
     let
@@ -389,7 +386,7 @@ prettyQuantified
                         ([op], [i]) -> pretty op <+> pretty i
                         _ -> Pr.empty
                   )
-        hangGuard x = case guard of
+        hangGuard x = case guardE of
                         [ [xMatch| [] := emptyGuard |] ] -> x
                         [ i                            ] -> x <++> (Pr.comma <+> pretty i)
                         _                                -> x

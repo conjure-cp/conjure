@@ -28,7 +28,7 @@ setStructural
            | []            := quantified.quanOverDom
            | []            := quantified.quanOverOp.binOp.subsetEq
            | quanOverExpr  := quantified.quanOverExpr
-           | [guard]       := quantified.guard
+           | [guardE]      := quantified.guard
            | body          := quantified.body
            |] =
     let
@@ -36,7 +36,7 @@ setStructural
             [ [eMake| &i .< &j |]
             | (i,j) <- zip qs (tail qs)
             ]
-        guard' = [eMake| &guard /\ &newGuard |]
+        guardE' = [eMake| &guardE /\ &newGuard |]
 
         unroll []  = bug "unrollQuantifiers.structural.set"
         unroll [i] =
@@ -45,7 +45,7 @@ setStructural
                   | quantified.quanOverDom := []
                   | quantified.quanOverOp.binOp.in := []
                   | quantified.quanOverExpr := quanOverExpr
-                  | quantified.guard := [guard']
+                  | quantified.guard := [guardE']
                   | quantified.body := body
                   |]
         unroll (i:is) =

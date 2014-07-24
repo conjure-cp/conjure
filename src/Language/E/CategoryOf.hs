@@ -2,7 +2,7 @@
 
 module Language.E.CategoryOf ( Category(..), categoryOf ) where
 
-import Language.E.Imports
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.CompE
 
@@ -33,4 +33,4 @@ categoryOf EOF {} = return CatConstant
 categoryOf (StatementAndNext a b) = maximum <$> mapM categoryOf [a,b]
 
 universeBi :: Domain () E -> [E]
-universeBi = undefined
+universeBi = error "universeBi"

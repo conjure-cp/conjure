@@ -2,7 +2,7 @@
 
 module Language.E.Parser.LogFile where
 
-import Language.E.Imports
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.Parser.Imports
 import Language.E.Parser.EssenceFile

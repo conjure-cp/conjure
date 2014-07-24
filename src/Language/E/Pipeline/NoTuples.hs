@@ -205,7 +205,7 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
                    | [D domain]            := quantified.quanOverDom
                    | []                    := quantified.quanOverOp
                    | []                    := quantified.quanOverExpr
-                   | [guard]               := quantified.guard
+                   | [guardE]              := quantified.guard
                    | [body]                := quantified.body
                    |] =
             case checkTupleDomain domain of
@@ -222,9 +222,9 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
                             in  [xMake| value.tuple.values := xs |]
                     let replacer = replace [xMake| reference := [Prim (S quanVar)] |]
                                            quanVarReplacement
-                    let guard' = replacer guard
-                    let body'  = replacer body
-                    let out = inQuans quantifier quanVars (guard', body')
+                    let guardE' = replacer guardE
+                    let body'   = replacer body
+                    let out = inQuans quantifier quanVars (guardE', body')
                     return (Just out)
                 Nothing ->
                     case checkMatrixOfTupleDomain domain of
@@ -235,7 +235,7 @@ noTupleDomsInQuanE inp = withBindingScope' $ do
                                            , let t' = mkMatrixDomain indices t
                                            ]
                             tell ([], [(quanVar, length indices)])
-                            let out = inQuans quantifier quanVars (guard, body)
+                            let out = inQuans quantifier quanVars (guardE, body)
                             return (Just out)
                         Nothing -> return Nothing
         helper _ = return Nothing

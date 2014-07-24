@@ -102,7 +102,7 @@ quantificationOverTupleDomains = bottomUpSpec' helper
                    | [D (DomainTuple doms)] := quantified.quanOverDom
                    | []                     := quantified.quanOverOp
                    | []                     := quantified.quanOverExpr
-                   | [guard]                := quantified.guard
+                   | [guardE]               := quantified.guard
                    | [body]                 := quantified.body
                    |] = do
             let nmDoms = zip [ mconcat [nm, "_tuple", stringToText (show (i::Int))]
@@ -112,13 +112,13 @@ quantificationOverTupleDomains = bottomUpSpec' helper
                     where
                         newInner = map (\ (i,_) -> [xMake| reference := [Prim (S i)] |] ) nmDoms
                         new = [xMake| value.tuple.values := newInner |]
-            let guard' = replacerFunc guard
-            let body'  = replacerFunc body
+            let guardE' = replacerFunc guardE
+            let body'   = replacerFunc body
             let
                 go [] = bug "quantificationOverTupleDomains"
                 go [(quanVar, quanOverDom)] =
                     inQuan quan quanVar quanOverDom
-                        ( guard'
+                        ( guardE'
                         , body'
                         )
                 go ((quanVar, quanOverDom):rest) =

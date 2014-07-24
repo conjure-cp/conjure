@@ -4,9 +4,10 @@ module Conjure.Bug
     , userErr
     ) where
 
+import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
 
-import Stuff.Pretty ( Doc, renderNormal )
+import Stuff.Pretty ( renderNormal )
 
 -- call this function instead of "error"
 bug :: Doc -> a

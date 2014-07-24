@@ -4,7 +4,7 @@
 
 module Language.E.Helpers where
 
-import Language.E.Imports
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.Definition.Literal
 import Language.E.Pretty
@@ -87,7 +87,7 @@ inForAll :: Text -> Domain () E -> (E, E) -> E
 inForAll = inQuan "forAll"
 
 inQuan :: Text -> Text -> Domain () E -> (E, E) -> E
-inQuan quan quanVar quanOverDom (guard,body) =
+inQuan quan quanVar quanOverDom (guardE,body) =
     let
         out = 
             [xMake| quantified.quantifier.reference                := [Prim $ S quan]
@@ -95,7 +95,7 @@ inQuan quan quanVar quanOverDom (guard,body) =
                   | quantified.quanOverDom                         := [D quanOverDom]
                   | quantified.quanOverOp                          := []
                   | quantified.quanOverExpr                        := []
-                  | quantified.guard                               := [guard]
+                  | quantified.guard                               := [guardE]
                   | quantified.body                                := [body]
                   |]
     -- in  fromMaybe out (tryUnrollForAll out)
@@ -109,10 +109,10 @@ inQuans :: Text -> [(Text, Domain () E)] -> (E, E) -> E
 inQuans quan = go . reverse
     where
         go [] _ = error "inQuans.go"
-        go [(i,j)]    this         = inQuan quan i j this
-        go ((i,j):ks) (guard,body) = go ks ( [xMake| emptyGuard := [] |]
-                                           , inQuan quan i j (guard, body)
-                                           )
+        go [(i,j)]    this          = inQuan quan i j this
+        go ((i,j):ks) (guardE,body) = go ks ( [xMake| emptyGuard := [] |]
+                                            , inQuan quan i j (guardE, body)
+                                            )
 
 tryUnrollForAll :: E -> Maybe E
 tryUnrollForAll

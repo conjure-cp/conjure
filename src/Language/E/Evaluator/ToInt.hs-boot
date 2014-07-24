@@ -1,5 +1,6 @@
 module Language.E.Evaluator.ToInt where
 
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.CompE
 

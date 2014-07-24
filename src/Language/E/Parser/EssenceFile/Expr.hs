@@ -7,6 +7,7 @@ module Language.E.Parser.EssenceFile.Expr
     , parseReference
     ) where
 
+import Conjure.Prelude
 import Conjure.Bug
 import Language.E.Parser.Imports
 import Language.E.Parser.Shunt ( shuntingYardExpr )
@@ -14,7 +15,6 @@ import {-# SOURCE #-} Language.E.Parser.EssenceFile.Domain ( parseDomain )
 import {-# SOURCE #-} Language.E.Parser.EssenceFile.Value ( parseValue )
 import {-# SOURCE #-} Language.E.Parser.EssenceFile.Declaration ( parseTopLevels )
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Data ( operators, functionals )
 import Language.E.Lexer ( Lexeme(..), lexemeFace )

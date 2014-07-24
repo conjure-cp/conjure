@@ -6,9 +6,9 @@
 module Conjure.RepresentationsTest ( tests ) where
 
 -- conjure
-import Language.E.Imports
-import Language.E.Definition hiding ( Spec )
-import Language.E.Pretty
+import Conjure.Prelude
+import Conjure.Language.Definition
+import Conjure.Language.Pretty
 import Conjure.Representations ( down_, up, down1_, up1, dispatch )
 
 -- tasty

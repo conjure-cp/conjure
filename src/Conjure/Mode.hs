@@ -2,19 +2,16 @@
 
 module Conjure.Mode where
 
-import Control.Monad ( (>=>), guard, msum, mzero )
-import Data.Char ( toLower )
-import Data.Maybe ( listToMaybe, mapMaybe )
+-- conjure
+import Conjure.Prelude
+import Conjure.Bug
+import Conjure.RepositoryVersion ( repositoryVersion )
+import Stuff.Pretty
 
 import Data.HashSet as S ( HashSet, fromList, member )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
-
 import Safe ( readMay )
-
 import qualified Text.PrettyPrint as Pr
-import Conjure.Bug ( userErr )
-import Stuff.Pretty
-import Conjure.RepositoryVersion ( repositoryVersion )
 
 
 type GenericArgs

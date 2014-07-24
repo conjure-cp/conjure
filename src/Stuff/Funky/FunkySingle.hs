@@ -6,14 +6,11 @@ module Stuff.Funky.FunkySingle
     ( FunkySingle(..), runFunkySingle
     ) where
 
-import Control.Applicative       ( Applicative(..) )
-import Control.Monad             ( ap )
+-- conjure
+import Conjure.Prelude
+
 import Control.Monad.Base        ( MonadBase(..), liftBaseDefault )
-import Control.Monad.Except      ( MonadError(..) )
-import Control.Monad.Identity    ( Identity )
-import Control.Monad.IO.Class    ( MonadIO, liftIO )
 import Control.Monad.State       ( MonadState(..) )
-import Control.Monad.Trans.Class ( MonadTrans, lift )
 
 
 newtype FunkySingle st err m a = FunkySingle (st -> m (Either err a, st))

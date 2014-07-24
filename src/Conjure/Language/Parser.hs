@@ -9,10 +9,10 @@ module Conjure.Language.Parser
     ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Language.E.Imports
 import Language.E ( Spec(..), E(..), BuiltIn(..), xMatch, viewTaggeds, statementAsList )
 
 import Language.E.Parser.Imports

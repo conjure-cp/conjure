@@ -9,11 +9,11 @@ module Conjure.Representations
     ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( domainSizeConstant, valuesInIntDomain )
 import Conjure.Language.ZeroVal ( zeroVal )
-import Language.E.Imports
 
 -- text
 import Data.Text ( pack )

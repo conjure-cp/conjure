@@ -7,9 +7,9 @@ module Conjure.Language.Pretty
     ) where
 
 -- conjure
-import Conjure.Language.Definition
+import Conjure.Prelude
 import Conjure.Bug
-import Language.E.Imports
+import Conjure.Language.Definition
 import Stuff.Pretty
 
 -- pretty

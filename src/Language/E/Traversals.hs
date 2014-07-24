@@ -4,9 +4,8 @@
 
 module Language.E.Traversals where
 
+import Conjure.Prelude
 import Stuff.NamedLog ( nubKeepOrderBy )
-
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.Pretty
@@ -339,7 +338,7 @@ introduceStuff = helper
                         | []            := quantified.quanOverDom
                         | []            := quantified.quanOverOp.binOp.subsetEq
                         | quanOverExpr  := quantified.quanOverExpr
-                        | guard         := quantified.guard
+                        | guardE        := quantified.guard
                         | body          := quantified.body
                         |] =
             let
@@ -357,7 +356,7 @@ introduceStuff = helper
                                       | quantified.quanOverDom := []
                                       | quantified.quanOverOp.binOp.in := []
                                       | quantified.quanOverExpr := quanOverExpr
-                                      | quantified.guard := guard
+                                      | quantified.guard := guardE
                                       | quantified.body := body
                                       |]
                         in

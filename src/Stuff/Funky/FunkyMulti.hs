@@ -10,17 +10,15 @@ module Stuff.Funky.FunkyMulti
     , seqListSpine
     ) where
 
-import Control.Applicative       ( Applicative(..) )
-import Control.Arrow             ( first )
-import Control.Monad             ( ap, liftM )
-import Control.Monad.Base        ( MonadBase(..), liftBaseDefault )
-import Control.Monad.Except      ( MonadError(..) )
-import Control.Monad.Identity    ( Identity )
-import Control.Monad.IO.Class    ( MonadIO, liftIO )
-import Control.Monad.State       ( MonadState(..) )
-import Control.Monad.Trans.Class ( MonadTrans, lift )
-
+-- conjure
+import Conjure.Prelude
 import Stuff.MonadList
+
+import Control.Monad.Base        ( MonadBase(..), liftBaseDefault )
+import Control.Monad.State       ( MonadState(..) )
+
+-- base
+import GHC.Prim ( seq )
 
 
 data Tree a

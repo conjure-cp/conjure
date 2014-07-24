@@ -2,8 +2,8 @@
 
 module Language.E.MatchBind ( patternMatch, patternBind ) where
 
+import Conjure.Prelude
 import Stuff.MetaVariable
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.Pretty

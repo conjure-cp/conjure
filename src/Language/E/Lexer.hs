@@ -4,20 +4,15 @@
 
 module Language.E.Lexer where
 
-import Control.Applicative ( Applicative, (<$>) )
-import Control.Monad.Except ( MonadError(..) )
+import Conjure.Prelude
+
 import Data.Char ( isAlpha, isAlphaNum )
-import Data.List ( sortBy )
-import Data.Maybe ( catMaybes )
-import Data.Ord ( comparing )
-import Data.Tuple ( swap )
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
 
 import GHC.Generics ( Generic )
-import Data.Hashable ( Hashable(..) )
 
 import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
 

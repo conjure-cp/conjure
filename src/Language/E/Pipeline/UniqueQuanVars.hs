@@ -30,8 +30,8 @@ uniqueQuanVars (Spec v x) = Spec v x'
         f t = return t
 
         nextQ = do
-            (q:qs) <- get
-            put qs
+            q <- gets head
+            modify tail
             return $ stringToText $ "q_" ++ show q
 
         replaceIdentifiers these = transform $ \ i -> case i of

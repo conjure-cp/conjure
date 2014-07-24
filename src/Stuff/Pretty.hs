@@ -11,6 +11,7 @@ module Stuff.Pretty ( Pretty(..)
                     , Doc
                     ) where
 
+import Conjure.Prelude
 import qualified Data.Text as T
 import Text.PrettyPrint
 

@@ -1,5 +1,6 @@
 module Language.E.Definition.Literal where
 
+import Conjure.Prelude
 import Language.E.Definition
 
 data EssenceLiteral

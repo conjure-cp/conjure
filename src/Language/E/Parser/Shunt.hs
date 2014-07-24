@@ -2,8 +2,8 @@
 
 module Language.E.Parser.Shunt ( shuntingYardExpr, shuntingYardDomain ) where
 
+import Conjure.Prelude
 import Language.E.Parser.Imports
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )
 import Language.E.Lexer ( Lexeme(..), lexemeText )

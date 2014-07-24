@@ -11,12 +11,12 @@ module Language.E.Parser.EssenceFile
     , inCompleteFile
     ) where
 
+import Conjure.Prelude
 import Language.E.Parser.Imports
 import Language.E.Parser.EssenceFile.Domain ( parseDomain )
 import Language.E.Parser.EssenceFile.Expr ( parseExpr )
 import Language.E.Parser.EssenceFile.Declaration ( parseTopLevels )
 
-import Language.E.Imports
 import Language.E.Definition
 -- import Language.E.Helpers
 import Language.E.Lexer ( Lexeme(..) )

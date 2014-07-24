@@ -9,15 +9,15 @@ module Stuff.NamedLog
     , nubKeepOrder, nubKeepOrderBy
     ) where
 
-import Data.Default
-import Data.Hashable
+import Conjure.Prelude
+import Stuff.Pretty
+
 import Data.Serialize
 import Text.PrettyPrint
 import qualified Data.HashSet as S
 import qualified Data.DList as DList
 import qualified GHC.Generics
 
-import Stuff.Pretty
 
 #ifdef TRACELOGS
 import Debug.Trace ( trace ) 

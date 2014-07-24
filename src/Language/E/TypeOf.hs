@@ -8,10 +8,10 @@ module Language.E.TypeOf
     , typeUnify
     ) where
 
+import Conjure.Prelude
 import Conjure.Bug
 import Stuff.Generic.Tag
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.CompE
 import Language.E.TH

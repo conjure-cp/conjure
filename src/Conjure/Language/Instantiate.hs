@@ -7,10 +7,10 @@ module Conjure.Language.Instantiate
     ) where
 
 -- conjure
+import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Bug
-import Language.E.Imports
 
 
 instantiateExpression
@@ -40,7 +40,7 @@ instantiateE
     -> m Constant
 instantiateE (Constant c) = return c
 instantiateE (Reference name) = do
-    ctxt <- get
+    ctxt <- gets id
     case name `lookup` ctxt of
         Nothing -> throwError $ vcat
             $ ("No value for:" <+> pretty name)

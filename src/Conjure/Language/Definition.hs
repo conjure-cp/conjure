@@ -27,8 +27,8 @@ module Conjure.Language.Definition
     ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Bug
-import Language.E.Imports
 
 -- base
 import GHC.Generics ( Generic )

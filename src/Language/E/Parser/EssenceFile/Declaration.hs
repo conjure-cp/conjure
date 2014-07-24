@@ -2,11 +2,11 @@
 
 module Language.E.Parser.EssenceFile.Declaration ( parseTopLevels ) where
 
+import Conjure.Prelude
 import Language.E.Parser.Imports
 import Language.E.Parser.EssenceFile.Domain ( parseDomain )
 import Language.E.Parser.EssenceFile.Expr ( parseExpr, parseQuantifiedExpr, parseReference, parseMetaVariable )
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Lexer ( Lexeme(..) )
 
@@ -201,9 +201,9 @@ parseQuanDecl = do
     lexeme L_quantifier
     braces $ do
         append   <- parseLambda $ LIdentifier "append"
-        guard    <- parseLambda $ LIdentifier "guard"
+        guardE   <- parseLambda $ LIdentifier "guard"
         identity <- lexeme (LIdentifier "identity") *> parseExpr
         return [xMake| quantifierDecl.append   := [append]
-                     | quantifierDecl.guard    := [guard]
+                     | quantifierDecl.guard    := [guardE]
                      | quantifierDecl.identity := [identity]
                      |]

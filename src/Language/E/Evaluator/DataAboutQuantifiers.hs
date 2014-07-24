@@ -2,7 +2,7 @@
 
 module Language.E.Evaluator.DataAboutQuantifiers where
 
-import Language.E.Imports
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.Helpers
 import Language.E.CompE

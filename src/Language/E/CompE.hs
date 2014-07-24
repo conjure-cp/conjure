@@ -8,6 +8,7 @@
 
 module Language.E.CompE where
 
+import Conjure.Prelude
 import Conjure.Bug
 import Stuff.Funky.FunkySingle
 import Stuff.Funky.FunkyMulti
@@ -16,7 +17,6 @@ import Stuff.MonadList
 
 import Conjure.Mode
 
-import Language.E.Imports
 import Language.E.Definition
 import Language.E.Pretty
 

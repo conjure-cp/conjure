@@ -157,7 +157,7 @@ quanOverToSetRelationProject
            | []                         := quantified.quanOverOp.binOp.in
            | [quantifier]               := quantified.quantifier
            | [quanVar]                  := quantified.quanVar.structural.single
-           | [guard]                    := quantified.guard
+           | [guardE]                   := quantified.guard
            | [body]                     := quantified.body
            |]
     | hasRepr "Relation~AsSet" relation = do
@@ -182,7 +182,7 @@ quanOverToSetRelationProject
                 [xMake| value.tuple.values := projectedElems_Values |]
 
         let newGuard = conjunct
-                $ replace quanVar projectedElems_Expr guard
+                $ replace quanVar projectedElems_Expr guardE
                 : [ [eMake| &newQuanVar[&i] = &arg |]
                   | (i',arg) <- zip [ 1::Integer .. ] args
                   , arg /= [eMake| _ |]
@@ -230,7 +230,7 @@ tupleExplode p@[eMatch| &a != &b |] = do
 tupleExplode _ = return Nothing
 
 tupleDomInQuantification :: MonadConjure m => RefnFunc m
-tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] = do
+tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guardE . &body |] = do
     let
         replacer out inp@[xMatch| [Prim (S nm)] := reference |] =
             let (base, _, _) = identifierSplit nm
@@ -242,7 +242,7 @@ tupleDomInQuantification p@[eMatch| &quan &i : &dom , &guard . &body |] = do
         replacer _ inp = inp
 
         helper [] = bug "this should never happen, tupleDomInQuantification"
-        helper [(quanvar,quandom)] = [eMake| &quan &quanvar : &quandom , &guard . &body |]
+        helper [(quanvar,quandom)] = [eMake| &quan &quanvar : &quandom , &guardE . &body |]
         helper ((quanvar,quandom):rest) =
             let body' = helper rest
             in  [eMake| &quan &quanvar : &quandom . &body' |]
@@ -270,20 +270,20 @@ functionLiteralApply
             let overs = [ [xMake| value.tuple.values := [i,j] |]
                         | [xMatch| [i,j] := mapping |] <- mappings
                         ]
-            let over  = [xMake| value.set.values := overs |]
-            let guard = [eMake| &quanVar[1] = &arg |]
-            let body  = [eMake| &quanVar[2] |]
-            let out   = [xMake| quantified.quantifier.reference                := [Prim $ S "sum" ]
-                              | quantified.quanVar.structural.single.reference := [Prim $ S quanVarStr ]
-                              | quantified.quanOverDom                         := []
-                              | quantified.quanOverOp.binOp.in                 := []
-                              | quantified.quanOverExpr                        := [over]
-                              | quantified.guard                               := [guard]
-                              | quantified.body                                := [body]
-                              |]
+            let over   = [xMake| value.set.values := overs |]
+            let guardE = [eMake| &quanVar[1] = &arg |]
+            let body   = [eMake| &quanVar[2] |]
+            let out    = [xMake| quantified.quantifier.reference                := [Prim $ S "sum" ]
+                               | quantified.quanVar.structural.single.reference := [Prim $ S quanVarStr ]
+                               | quantified.quanOverDom                         := []
+                               | quantified.quanOverOp.binOp.in                 := []
+                               | quantified.quanOverExpr                        := [over]
+                               | quantified.guard                               := [guardE]
+                               | quantified.body                                := [body]
+                               |]
             ret p "builtIn.functionLiteralApply" out
         _ -> return Nothing
-functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guard . &body |] =
+functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guardE . &body |] =
     case quanOverExpr of
         [xMatch| vsMappings := functionApply.actual.value.function.values
                | [actual]   := functionApply.actual
@@ -300,7 +300,7 @@ functionLiteralApply p@[eMatch| &quan &i in &quanOverExpr , &guard . &body |] =
                         [xMatch| [a,b] := mapping |] -> return [xMake| value.tuple.values := [a,b] |]
                         _ -> err ErrFatal "builtIn.functionLiteralApply"
                     let newQuanOverExpr = [xMake| value.set.values := vs |]
-                    let newGuard = conjunct [ replace i [eMake| &i[2] |] guard
+                    let newGuard = conjunct [ replace i [eMake| &i[2] |] guardE
                                             , [eMake| &i[1] = &arg |]
                                             ]
                     (_, j) <- freshQuanVar "functionLiteralApply"

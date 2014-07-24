@@ -2,7 +2,7 @@
 
 module Language.E.Pipeline.FreshNames ( freshNames ) where
 
-import Language.E.Imports
+import Conjure.Prelude
 import Language.E.Definition
 import Language.E.Pretty
 import Language.E.CompE

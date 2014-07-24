@@ -28,7 +28,7 @@ abstractDomsInQuans
                  | [D qnOverDom]    := quantified.quanOverDom
                  | []               := quantified.quanOverOp
                  | []               := quantified.quanOverExpr
-                 | [guard]          := quantified.guard
+                 | [guardE]         := quantified.guard
                  | [body]           := quantified.body
                  |]
     | domainNeedsRepresentation qnOverDom
@@ -79,7 +79,7 @@ abstractDomsInQuans
                         let out = mkOut
                                     qnVar'Underscore
                                     newDom
-                                    [ qnVarReplacer i | i <- guard : cons
+                                    [ qnVarReplacer i | i <- guardE : cons
                                                       , i /= [xMake| emptyGuard := [] |]
                                                       , i /= [eMake| true |]
                                                   ]
@@ -97,7 +97,7 @@ quanDomAndSubsetEq x = return $ case go x of
     Nothing -> Nothing
     Just y  -> Just [("builtIn.quanDomAndSubsetEq", y)]
     where
-        go [eMatch| &quan &i : &dom subsetEq &blah , &guard . &body |] = Just
-           [eMake|  &quan &i : &dom , &i subsetEq &blah /\ &guard . &body |]
+        go [eMatch| &quan &i : &dom subsetEq &blah , &guardE . &body |] = Just
+           [eMake|  &quan &i : &dom , &i subsetEq &blah /\ &guardE . &body |]
         go _ = Nothing
 

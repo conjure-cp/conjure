@@ -38,11 +38,11 @@ module Language.E.Definition
 
     ) where
 
+import Conjure.Prelude
 import Conjure.Bug
 import Stuff.Generic.Tag
 import Stuff.Pretty
 import Stuff.MetaVariable
-import Language.E.Imports
 import Conjure.Language.Definition
     ( Domain(..), Range(..)
     , DomainDefnEnum(..), DomainDefnUnnamed(..)

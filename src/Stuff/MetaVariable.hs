@@ -1,6 +1,6 @@
 module Stuff.MetaVariable where
 
-import Data.Text ( Text )
+import Conjure.Prelude
 
 class MetaVariable a where
     unnamedMV :: a -> Bool

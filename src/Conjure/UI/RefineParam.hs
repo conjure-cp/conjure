@@ -4,12 +4,12 @@
 module Conjure.UI.RefineParam ( refineParam ) where
 
 -- conjure
+import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Representations ( down_ )
-import Language.E.Imports
 
 
 refineParam
