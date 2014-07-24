@@ -31,6 +31,8 @@ Library
                      , Conjure.Language.DomainSize
                      , Conjure.Language.ZeroVal
                      , Conjure.Language.Instantiate
+                     , Conjure.Language.ModelDiff
+                     , Conjure.Language.TypeCheck
 
                      -- definitions of representations: how to go down and up
                      , Conjure.Representations
@@ -158,6 +160,7 @@ Library
 
     default-extensions:
         NoImplicitPrelude
+        OverloadedStrings
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

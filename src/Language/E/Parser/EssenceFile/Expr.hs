@@ -19,8 +19,6 @@ import Language.E.Definition
 import Language.E.Data ( operators, functionals )
 import Language.E.Lexer ( Lexeme(..), lexemeFace )
 
-import Data.String ( fromString )
-
 import Text.Parsec ( (<?>), try )
 import Text.Parsec.Combinator ( between, optionMaybe, sepBy1 )
 

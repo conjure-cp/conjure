@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Conjure.Language.Pretty
@@ -15,9 +14,44 @@ import Stuff.Pretty
 -- pretty
 import Text.PrettyPrint as Pr
 
+-- aeson
+import Data.Aeson.Encode.Pretty ( encodePretty )
+
+-- bytestring
+import Data.ByteString.Lazy.Char8 ( unpack )
+
 
 instance Pretty Model where
-    pretty = bug "pretty Model"
+    pretty (Model lang stmts info) = vcat $ concat
+        [ [pretty lang, ""]
+        , map pretty stmts
+        , ["", "$ Conjure's"]
+        , [pretty info]
+        ]
+
+instance Pretty LanguageVersion where
+    pretty (LanguageVersion language version) =
+        "language" <+> pretty language
+                   <+> Pr.hcat (intersperse "." (map pretty version))
+
+instance Pretty Statement where
+    pretty (Declaration x) = pretty x
+    pretty (Where x) = "where" <+> pretty x
+    pretty (Objective obj x) = pretty obj <+> pretty x
+    pretty (SuchThat x) = "such that" <+> pretty x
+
+instance Pretty Declaration where
+    pretty (Find    nm d) = hang ("find"    <+> pretty nm <>  ":" ) 8 (pretty d)
+    pretty (Given   nm d) = hang ("given"   <+> pretty nm <>  ":" ) 8 (pretty d)
+    pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
+
+instance Pretty Objective where
+    pretty Minimising = "minimising"
+    pretty Maximising = "maximising"
+
+instance Pretty ModelInfo where
+    pretty = pretty . commentLines . unpack . encodePretty . toJSON
+        where commentLines = unlines . map ("$ "++) . lines
 
 instance Pretty Name where
     pretty (Name n) = pretty n
@@ -130,6 +164,7 @@ instance Pretty a => Pretty (SetAttr a) where
             prettyNoDotDot (SetAttrMinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
         in
             case attr of
+                SetAttrNone -> ""
                 SetAttrDotDot without -> Pr.parens (prettyNoDotDot without <+> ", ..")
                 _ -> Pr.parens (prettyNoDotDot attr)
 

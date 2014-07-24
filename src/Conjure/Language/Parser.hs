@@ -36,7 +36,9 @@ specToModel (Spec lang stmt) = Model
 
     where
 
+
         convStmt :: E -> Statement
+
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                         | [D domain     ] := topLevel.declaration.given.domain
                         |] = Declaration (Given (Name name) (convDomain domain))
@@ -46,12 +48,31 @@ specToModel (Spec lang stmt) = Model
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [expr         ] := topLevel.letting.expr
                         |] = Declaration (Letting (Name name) (convExpr expr))
+
+        convStmt [xMatch| [expr] := topLevel.objective.minimising |] = Objective Minimising (convExpr expr)
+        convStmt [xMatch| [expr] := topLevel.objective.maximising |] = Objective Maximising (convExpr expr)
+
+        convStmt [xMatch| [expr] := topLevel.where    |] = Where    (convExpr expr)
+        convStmt [xMatch| [expr] := topLevel.suchThat |] = SuchThat (convExpr expr)
+
         convStmt x = bug $ "convStmt" <+> pretty (show x)
 
+
         convExpr :: E -> Expression
+
         convExpr [xMatch| [Prim (B x)] := value.literal |] = Constant (ConstantBool x)
         convExpr [xMatch| [Prim (I x)] := value.literal |] = Constant (ConstantInt (fromInteger x))
+
+        convExpr [xMatch| [Prim (S x)] := reference |] = Reference (Name x)
+
+        convExpr [xMatch| [Prim (S op)] := binOp.operator
+                        | [left]        := binOp.left
+                        | [right]       := binOp.right
+                        |] = Op (Name op) [convExpr left, convExpr right]
+
         convExpr x = bug $ "convExpr" <+> pretty (show x)
+
 
         convDomain :: Domain () E -> Domain () Expression
         convDomain = fmap convExpr
+

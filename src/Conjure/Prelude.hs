@@ -32,7 +32,7 @@ import GHC.Integer as X ( Integer )
 import GHC.Exts as X ( Double )
 import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^) )
 import Data.Char as X ( Char, toLower )
-import Data.String as X ( String )
+import Data.String as X ( String, IsString(..) )
 
 -- basic type classes
 import Data.Eq as X ( Eq(..) )
@@ -85,10 +85,15 @@ import Data.Tuple        as X ( fst, snd, swap, uncurry )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents )
 
-import Data.Hashable         as X ( Hashable(..), hash )
+-- hashable
+import Data.Hashable as X ( Hashable(..), hash )
 
+-- cereal
 import Data.Serialize as X ( Serialize, encode, decode )
 import qualified Data.Serialize
+
+-- aeson
+import Data.Aeson as X ( toJSON )
 
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, fsep, hsep, vcat, (<+>), ($$) )
 

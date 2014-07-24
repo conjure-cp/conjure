@@ -2,7 +2,6 @@
 module Stuff.Generic.Tag where
 import Conjure.Prelude
 import Stuff.Pretty
-import Data.String ( IsString(..) )
 import Data.Data ( Data, Typeable )
 import GHC.Generics ( Generic )
 import Data.Serialize ( Serialize(..) )

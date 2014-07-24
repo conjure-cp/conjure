@@ -3,21 +3,23 @@
 module Conjure ( getConjureMode, runConjureMode,conjureHelp ) where
 
 -- conjure
+import Conjure.Prelude
+import Conjure.Bug
 import Conjure.UI.IO
+import Conjure.Language.ModelDiff ( modelDiffIO )
+import Conjure.Language.TypeCheck ( typeCheckModelIO )
 
 import Paths_conjure_cp ( getBinDir )
-import Conjure.Bug
 import Conjure.Mode
 import Language.E
 import Language.E.Pipeline.ReadIn
     ( readSpecFromStdIn, readSpecFromFile
-    , writeSpec, dropExtEssence
+    , dropExtEssence
     )
 
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 
-import Language.E.NormaliseSolution ( normaliseSolution )
 import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
@@ -84,13 +86,11 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
             maybeRead s
 
         helper ModeUnknown = error "Unknown mode"
+
         helper (ModeDiff pathIn1 pathIn2) = do
-            s1 <- readSpecFromFile pathIn1
-            let Spec _ in1 = normaliseSolution s1
-            s2 <- readSpecFromFile pathIn2
-            let Spec _ in2 = normaliseSolution s2
-            unless ( sort (statementAsList in1) == sort (statementAsList in2) )
-                $  error "Files differ."
+            m1 <- readModelFromFile pathIn1
+            m2 <- readModelFromFile pathIn2
+            modelDiffIO m1 m2
 
         helper (ModeRefineParam pathInParam pathInEprime pathOutParam) = do
             inParam   <- readModelFromFile pathInParam
@@ -119,12 +119,10 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
 
         helper (ModePrettify pathInp pathOut) = do
             inp <- case pathInp of
-                Nothing -> readSpecFromStdIn
-                Just fp -> readSpecFromFile fp
-            typeCheckSpecIO inp
-            case pathOut of
-                Nothing -> putStrLn $ renderNormal (atMostOneSuchThat False inp)
-                Just fp -> writeSpec fp (atMostOneSuchThat False inp)
+                Nothing -> readModelFromStdIn
+                Just fp -> readModelFromFile fp
+            typeCheckModelIO inp
+            writeModel pathOut inp
 
         helper (ModeTypeStrengthening pathInp pathOut) = do
             inp <- case pathInp of

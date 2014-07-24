@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveFunctor #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Language.Definition
@@ -33,7 +32,6 @@ import Conjure.Bug
 -- base
 import GHC.Generics ( Generic )
 import GHC.Show ( showSpace, showList__ )
-import Data.String ( IsString(..) )
 
 -- text
 import qualified Data.Text as T
@@ -56,6 +54,10 @@ data Model = Model
     }
     deriving (Eq, Ord, Show, Generic)
 
+instance Serialize Model
+instance Hashable Model
+instance ToJSON Model
+
 instance Default Model where
     def = Model def [] def
 
@@ -64,7 +66,6 @@ data LanguageVersion = LanguageVersion Name [Int]
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize LanguageVersion
-
 instance Hashable LanguageVersion
 
 instance ToJSON LanguageVersion where
@@ -81,9 +82,17 @@ data Statement
     | SuchThat Expression
     deriving (Eq, Ord, Show, Generic)
 
+instance Serialize Statement
+instance Hashable Statement
+instance ToJSON Statement
 
-data Objective = Minimising | Maximisinig
+
+data Objective = Minimising | Maximising
     deriving (Eq, Ord, Show, Generic)
+
+instance Serialize Objective
+instance Hashable Objective
+instance ToJSON Objective
 
 
 data Declaration
@@ -92,12 +101,20 @@ data Declaration
     | Letting Name Expression
     deriving (Eq, Ord, Show, Generic)
 
+instance Serialize Declaration
+instance Hashable Declaration
+instance ToJSON Declaration
+
 
 data ModelInfo = ModelInfo
     { miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
     }
     deriving (Eq, Ord, Show, Generic)
+
+instance Serialize ModelInfo
+instance Hashable ModelInfo
+instance ToJSON ModelInfo
 
 instance Default ModelInfo where
     def = ModelInfo [] []
@@ -109,6 +126,10 @@ data Decision = Decision
     , dDecision :: Int
     }
     deriving (Eq, Ord, Show, Generic)
+
+instance Serialize Decision
+instance Hashable Decision
+instance ToJSON Decision
 
 
 newtype Name = Name Text
@@ -191,9 +212,7 @@ data DomainDefnEnum = DomainDefnEnum Name [Name]
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize DomainDefnEnum
-
 instance Hashable DomainDefnEnum
-
 instance ToJSON DomainDefnEnum
 
 
@@ -201,9 +220,7 @@ data DomainDefnUnnamed = DomainDefnUnnamed Name Expression
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize DomainDefnUnnamed
-
 instance Hashable DomainDefnUnnamed
-
 instance ToJSON DomainDefnUnnamed
 
 
@@ -224,9 +241,7 @@ data Domain r a
     deriving (Eq, Ord, Show, Generic, Functor)
 
 instance (Serialize r, Serialize a) => Serialize (Domain r a)
-
 instance (Hashable r, Hashable a) => Hashable (Domain r a)
-
 instance (ToJSON r, ToJSON a) => ToJSON (Domain r a)
 
 instance (Arbitrary r, Arbitrary a) => Arbitrary (Domain r a) where
@@ -271,9 +286,7 @@ data SetAttr a
     deriving (Eq, Ord, Show, Generic, Functor)
 
 instance Serialize a => Serialize (SetAttr a)
-
 instance Hashable a => Hashable (SetAttr a)
-
 instance ToJSON a => ToJSON (SetAttr a)
 
 instance Default (SetAttr a) where
@@ -284,9 +297,7 @@ data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttributes a)
-
 instance Hashable a => Hashable (DomainAttributes a)
-
 instance ToJSON a => ToJSON (DomainAttributes a)
 
 instance Default (DomainAttributes a) where
@@ -300,9 +311,7 @@ data DomainAttribute a
     deriving (Eq, Ord, Show, Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttribute a)
-
 instance Hashable a => Hashable (DomainAttribute a)
-
 instance ToJSON a => ToJSON (DomainAttribute a)
 
 
@@ -315,9 +324,7 @@ data Range a
     deriving (Eq, Ord, Show, Generic, Functor)
 
 instance Serialize a => Serialize (Range a)
-
 instance Hashable a => Hashable (Range a)
-
 instance ToJSON a => ToJSON (Range a)
 
 instance Arbitrary a => Arbitrary (Range a) where
@@ -342,9 +349,7 @@ data HasRepresentation = NoRepresentation | HasRepresentation Name
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize HasRepresentation
-
 instance Hashable HasRepresentation
-
 instance ToJSON HasRepresentation
 
 instance IsString HasRepresentation where
@@ -366,9 +371,7 @@ data Type
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize Type
-
 instance Hashable Type
-
 instance ToJSON Type
 
 
@@ -386,9 +389,7 @@ data Constant
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize Constant
-
 instance Hashable Constant
-
 instance ToJSON Constant
 
 instance Arbitrary Constant where
