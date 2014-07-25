@@ -196,11 +196,15 @@ mkName :: Text -> E
 mkName name = [xMake| reference :=  [Prim (S name)]  |]
 
 
-_aa :: FilePath -> FilePath -> IO ()
-_aa e s = do
+_aa :: FilePath -> FilePath -> Maybe FilePath -> IO ()
+_aa e s p = do
     ee <- readSpecFromFile e
     ss <- readSpecFromFile s
-    let (b, logs) = validateSolutionPureNew ee Nothing ss
+    pp <- case p of
+        Nothing -> return Nothing
+        Just q  -> do
+            return <$> readSpecFromFile q
+    let (b, logs) = validateSolutionPureNew ee pp ss
     putStrLn . show . pretty $ b
     putStrLn . show . pretty $ logs
 

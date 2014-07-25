@@ -108,24 +108,28 @@ validateSpec spec = do
     let finds = pullFinds spec
     mkLog "binders" $ vcat $ map pretty bs
     mkLog "finds" $ vcat $ map pretty finds
+    -- mkLog "spec" $ vcat $ map pretty $ map (prettyAsTree  ) (statementAsList s)
 
-    let validateBinder bb@(Binder name val) | Just f <- lookup name finds  = do
+    let validateFinds (name,f)  = do
+            mval <- runMaybeT $ lookupReference name
             mkLog "dom" $ pretty f
-            mkLog "val" $ pretty val
-            res <-  validateVal (sortAttrs f) (normaliseSolutionE val)
-            return $ case res of
-                Just doc -> Just $ vcat [
-                      "Error for value" <+> pretty bb
-                    , "Domain: " <+> pretty f
-                    , hang "Details:" 2 doc
-                    , "---"]
-                Nothing -> Nothing
+            case mval of
+                Just val -> do
+                    mkLog "val" $ pretty val
+                    res <-  validateVal (sortAttrs f) (normaliseSolutionE val)
+                    return $ case res of
+                        Just doc -> Just $ vcat [
+                              "Error for value" <+> pretty val
+                            , "Domain: " <+> pretty f
+                            , hang "Details:" 2 doc
+                            , "---"]
+                        Nothing -> Nothing
+                Nothing -> do
+                    bdoc <- bindersDoc
+                    bug $ vcat [ "Value not found ", bdoc, pretty spec]
 
-        validateBinder v = do
-            bdoc <- bindersDoc
-            bug $ vcat [ "Find not found ", pretty v,  bdoc, pretty spec ]
 
-    docs <-  mapM validateBinder bs
+    docs <-  mapM validateFinds finds
     case catMaybes docs of
         [] -> return True
         xs -> userErr $ vcat xs
@@ -673,5 +677,3 @@ stripDecls (Spec language stmt) = return $ Spec language $ listAsStatement
         [xMatch| _ := topLevel.letting.domain |] -> False
         _ -> True
     ]
-
-
