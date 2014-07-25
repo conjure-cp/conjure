@@ -353,103 +353,84 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
 
 --set
 validateVal
-    dom@[xMatch| _          := domain.set.attributes.attrCollection
+    dom@[xMatch| attrs      := domain.set.attributes.attrCollection
                | [innerDom] := domain.set.inner |]
     val@[xMatch| vs         := value.set.values |] = do
 
     let vsLength = mkInt $ genericLength vs
 
-        checkAtts [dMatch| set (maxSize &ms) of &_ |] =
-            satisfied [eMake| &vsLength <= &ms |] "Too many elements in set" errorDoc
+        checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
+        checkAttr ("size", Just s) =
+            satisfied [eMake|  &vsLength = &s |]
+            "Wrong number of elements in mset" errorDoc
 
-        checkAtts [dMatch| set (minSize &ms) of &_ |] =
-            satisfied [eMake| &vsLength >= &ms |] "Too few elements in set" errorDoc
+        checkAttr ("minSize", Just s) =
+            satisfied [eMake| &vsLength >= &s |]
+            "Too many elements in mset" errorDoc
 
-        checkAtts [dMatch| set (size &s) of &_ |] =
-            satisfied [eMake| &vsLength = &s |]
-            "Wrong number of elements in set" errorDoc
+        checkAttr ("maxSize", Just s) =
+            satisfied [eMake| &vsLength <= &s |]
+            "Too few elements in mset" errorDoc
 
-        checkAtts [dMatch| set (maxSize &b, minSize &a) of &_ |] =
-            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b |]
-            "Wrong number of elements in set" errorDoc
+        checkAttr t = bug $ vcat [
+               "Not handled, function attribute " <+> pretty t
+             , "in " <+> errorDoc
+             ]
 
-        checkAtts [dMatch| set (maxSize &b, minSize &a, size &s) of &_ |] =
-            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b /\ &vsLength = &s |]
-            "Wrong number of elements in set" errorDoc
-
-        checkAtts [dMatch| set (minSize &a, size &s) of &_ |] =
-            satisfied [eMake| &vsLength >= &a /\ &vsLength = &s |]
-            "Wrong number of elements in set" errorDoc
-
-        checkAtts [dMatch| set (maxSize &b, size &s) of &_ |] =
-            satisfied [eMake| &vsLength <= &b /\ &vsLength = &s |]
-            "Wrong number of elements in set" errorDoc
-
-        checkAtts [dMatch| set of &_ |] = return Nothing
-
-        checkAtts dd = bug $ vcat ["Could not check set", pretty dd]
-
-
-    let checkForDuplicates mdoc = do
+        checkForDuplicates =
             case (length (nub vs) == length vs)  of
-                True  -> mdoc
-                False -> joinDoc [mdoc, Just $ hang "Duplicates in set" 4 errorDoc ]
+                True  -> Nothing
+                False -> Just $ hang "Duplicates in set" 4 errorDoc
 
-    attrCheck <- checkAtts dom
-    checkForDuplicates <$> case attrCheck of
-        Just d  ->  return $ Just d
-        Nothing -> do
-            vsDocs <- mapM (validateVal innerDom) vs
-            return $ joinDoc vsDocs
+    let dupError = checkForDuplicates
+    innerErrors <- mapM (validateVal innerDom) vs
+    attrChecked <- mapM (checkAttr . getAttr) attrs
+
+    return $ joinDoc $ dupError : innerErrors ++ attrChecked
 
     where
     errorDoc = vcat [pretty dom, pretty val]
 
 -- mset TODO minOccur, maxOccur,
 validateVal
-    dom@[xMatch| _          := domain.mset.attributes.attrCollection
+    dom@[xMatch| attrs      := domain.mset.attributes.attrCollection
                | [innerDom] := domain.mset.inner |]
     val@[xMatch| vs         := value.mset.values |] = do
 
     let vsLength = mkInt $ genericLength vs
 
-        checkAtts [dMatch| mset (maxSize &ms) of &_ |] =
-            satisfied [eMake| &vsLength <= &ms |] "Too many elements in mset" errorDoc
-
-        checkAtts [dMatch| mset (minSize &ms) of &_ |] =
-            satisfied [eMake| &vsLength >= &ms |] "Too few elements in mset" errorDoc
-
-        checkAtts [dMatch| mset (size &s) of &_ |] =
-            satisfied [eMake| &vsLength = &s |]
+        checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
+        checkAttr ("size", Just s) =
+            satisfied [eMake|  &vsLength = &s |]
             "Wrong number of elements in mset" errorDoc
 
-        checkAtts [dMatch| mset (maxSize &b, minSize &a) of &_ |] =
-            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b |]
-            "Wrong number of elements in mset" errorDoc
+        checkAttr ("minSize", Just s) =
+            satisfied [eMake| &vsLength >= &s |]
+            "Too many elements in mset" errorDoc
 
-        checkAtts [dMatch| mset (maxSize &b, minSize &a, size &s) of &_ |] =
-            satisfied [eMake| &vsLength >= &a /\ &vsLength <= &b /\ &vsLength = &s |]
-            "Wrong number of elements in mset" errorDoc
+        checkAttr ("maxSize", Just s) =
+            satisfied [eMake| &vsLength <= &s |]
+            "Too few elements in mset" errorDoc
 
-        checkAtts [dMatch| mset (minSize &a, size &s) of &_ |] =
-            satisfied [eMake| &vsLength >= &a /\ &vsLength = &s |]
-            "Wrong number of elements in mset" errorDoc
+        checkAttr ("minOccur", Just [xMatch| [Prim (I j)] := value.literal |] ) =
+            case all (\a -> genericLength a >= j  ) (group . sort $ vs)  of
+                True -> return Nothing
+                False -> return $ Just $ hang "minOccur not satisfied" 4 errorDoc
 
-        checkAtts [dMatch| mset (maxSize &b, size &s) of &_ |] =
-            satisfied [eMake| &vsLength <= &b /\ &vsLength = &s |]
-            "Wrong number of elements in mset" errorDoc
+        checkAttr ("maxOccur", Just [xMatch| [Prim (I j)] := value.literal |] ) =
+            case all (\a -> genericLength a <= j  ) (group . sort $ vs)  of
+                True -> return Nothing
+                False -> return $ Just $ hang "maxOccur not satisfied" 4 errorDoc
 
-        checkAtts [dMatch| mset of &_ |] = return Nothing
+        checkAttr t = bug $ vcat [
+               "Not handled, function attribute " <+> pretty t
+             , "in " <+> errorDoc
+             ]
 
-        checkAtts dd = bug $ vcat ["Could not check mset", pretty dd]
+    innerErrors <- mapM (validateVal innerDom) vs
+    attrChecked <- mapM (checkAttr . getAttr) attrs
 
-
-    attrCheck <- checkAtts dom
-    case attrCheck  of
-        Just d  -> return . Just $  d
-        Nothing -> do
-            vsDocs <- mapM (validateVal innerDom) vs
-            return $ joinDoc vsDocs
+    return $ joinDoc $ innerErrors ++ attrChecked
 
     where
     errorDoc = vcat [pretty dom, pretty val]
