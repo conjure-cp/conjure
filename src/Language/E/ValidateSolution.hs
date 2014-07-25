@@ -395,7 +395,7 @@ validateVal
     where
     errorDoc = vcat [pretty dom, pretty val]
 
--- mset TODO minOccur, maxOccur,
+-- mset
 validateVal
     dom@[xMatch| attrs      := domain.mset.attributes.attrCollection
                | [innerDom] := domain.mset.inner |]
