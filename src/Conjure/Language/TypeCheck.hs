@@ -38,8 +38,8 @@ instance TypeOf (Domain r c) where
     typeOf (DomainFunction  _ _ x y) = TypeFunction   (typeOf x) (typeOf y)
     typeOf (DomainRelation  _ _ xs ) = TypeRelation   (map typeOf xs)
     typeOf (DomainPartition _ _ x  ) = TypePartition  (typeOf x)
-    typeOf DomainOp{}                = bug "typeOf"
-    typeOf DomainHack{}              = bug "typeOf"
+    typeOf DomainOp{}                = TypeAny -- TODO: fix
+    typeOf DomainHack{}              = TypeAny -- TODO: fix
 
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x

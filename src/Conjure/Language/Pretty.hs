@@ -93,7 +93,7 @@ instance Pretty Expression where
     pretty (AbstractLiteral x) = pretty x
     pretty (Domain x) = "`" <> pretty x <> "`"
     pretty (Reference x) = pretty x
-    pretty (Lambda nm ty x _) = "lambda" <> Pr.parens (pretty nm <+> ":" <+> pretty ty <+> "-->" <+> pretty x)
+    pretty (Lambda arg x _) = "lambda" <> Pr.parens (pretty arg <+> "-->" <+> pretty x)
 
     pretty x@(Op (Name op) [_,_])
         | let lexeme = textToLexeme op
@@ -133,6 +133,11 @@ prettyPrec envPrec (Op (Name op) [a,b])
             _ -> bug "prettyPrec"
 prettyPrec _ x = pretty x
 
+instance Pretty AbstractPattern where
+    pretty (Single nm ty   ) = pretty nm <+> ":" <+> pretty ty
+    pretty (AbsPatTuple  xs) = (if length xs <= 1 then "tuple" else "")
+                            <> prettyList Pr.parens "," xs
+    pretty (AbsPatMatrix xs) = prettyList Pr.brackets "," xs
 
 instance Pretty Type where
     pretty TypeAny = "?"

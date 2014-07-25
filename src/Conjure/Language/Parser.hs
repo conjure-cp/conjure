@@ -96,7 +96,7 @@ specToModel (Spec lang stmt) = Model
 
 -- quantified
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
-                        | [Prim (S nm)]     := quantified.quanVar.structural.single.reference
+                        | [pat]             := quantified.quanVar
                         | [D quanOverDom]   := quantified.quanOverDom
                         | []                := quantified.quanOverOp
                         | []                := quantified.quanOverExpr
@@ -109,19 +109,23 @@ specToModel (Spec lang stmt) = Model
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
                         else Op "filter"
-                                [ Lambda (Name nm) ty (convExpr guardE) (bug $ "lambda:" <+> pretty (convExpr guardE))
+                                [ Lambda (convPat ty pat)
+                                         (convExpr guardE)
+                                         (bug $ "lambda:" <+> pretty (convExpr guardE))
                                 , b
                                 ]
             in
                 Op (Name qnName)
                     [ filterOr
                         ( Op "map_domain"
-                            [ Lambda (Name nm) ty (convExpr body) (bug $ "lambda:" <+> pretty (convExpr body))
+                            [ Lambda (convPat ty pat)
+                                     (convExpr body)
+                                     (bug $ "lambda:" <+> pretty (convExpr body))
                             , (Domain (convDomain quanOverDom))
                             ] ) ]
 
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
-                        | [Prim (S nm)]     := quantified.quanVar.structural.single.reference
+                        | [pat]             := quantified.quanVar
                         | []                := quantified.quanOverDom
                         | []                := quantified.quanOverOp.binOp.in
                         | [quanOverExpr]    := quantified.quanOverExpr
@@ -134,7 +138,9 @@ specToModel (Spec lang stmt) = Model
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
                         else Op "filter"
-                                [ Lambda (Name nm) ty (convExpr guardE) (bug $ "lambda:" <+> pretty (convExpr guardE))
+                                [ Lambda (convPat ty pat)
+                                         (convExpr guardE)
+                                         (bug $ "lambda:" <+> pretty (convExpr guardE))
                                 , b
                                 ]
 
@@ -142,7 +148,9 @@ specToModel (Spec lang stmt) = Model
                 Op (Name qnName)
                     [ filterOr
                         ( Op "map_in_expr"
-                            [ Lambda (Name nm) ty (convExpr body) (bug $ "lambda:" <+> pretty (convExpr body))
+                            [ Lambda (convPat ty pat)
+                                     (convExpr body)
+                                     (bug $ "lambda:" <+> pretty (convExpr body))
                             , convExpr quanOverExpr
                             ] ) ]
 
@@ -226,6 +234,11 @@ specToModel (Spec lang stmt) = Model
 
         convExpr x = bug $ "convExpr" <+> prettyAsPaths x
 
+        convPat :: Type -> E -> AbstractPattern
+        convPat ty [xMatch| [Prim (S nm)] := structural.single.reference |] = Single (Name nm) ty
+        convPat _  [xMatch| ts := structural.tuple  |] = AbsPatTuple  (map (convPat TypeAny) ts)
+        convPat _  [xMatch| ts := structural.matrix |] = AbsPatMatrix (map (convPat TypeAny) ts)
+        convPat _ x = bug $ "convPat" <+> prettyAsPaths x
 
         convDomain :: Domain () E -> Domain () Expression
         convDomain = fmap convExpr

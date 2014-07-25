@@ -13,6 +13,7 @@ module Conjure.Language.Definition
     , Expression(..)
     , Constant(..)
     , AbstractLiteral(..)
+    , AbstractPattern(..)
 
     , Domain(..), Range(..)
     , DomainDefn(..), DomainDefnEnum(..), DomainDefnUnnamed(..)
@@ -150,7 +151,7 @@ data Expression
     | Domain (Domain () Expression)
     | Reference Name
     | Op Name [Expression]
-    | Lambda Name Type Expression (Expression -> Expression)
+    | Lambda AbstractPattern Expression (Expression -> Expression)
     deriving (Generic)
 
 instance Eq Expression where
@@ -185,8 +186,7 @@ instance Show Expression where
     showsPrec pr (Reference x      ) = showParen (pr >= 11) (showString "Reference "        . showsPrec 11 x)
     showsPrec pr (Op op xs         ) = showParen (pr >= 11) (showString "Op "               . showsPrec 11 op
                                                                                 . showSpace . showsPrec 11 xs)
-    showsPrec pr (Lambda arg ty x _) = showParen (pr >= 11) (showString "Lambda "           . showsPrec 11 arg
-                                                                                . showSpace . showsPrec 11 ty
+    showsPrec pr (Lambda arg x _   ) = showParen (pr >= 11) (showString "Lambda "           . showsPrec 11 arg
                                                                                 . showSpace . showsPrec 11 x)
     showList = showList__ (showsPrec 0)
 
@@ -196,7 +196,7 @@ instance Serialize Expression where
     put (Domain x         ) = Serialize.put (2 :: Int) >> Serialize.put x
     put (Reference x      ) = Serialize.put (3 :: Int) >> Serialize.put x
     put (Op op xs         ) = Serialize.put (4 :: Int) >> Serialize.put op  >> Serialize.put xs
-    put (Lambda arg ty x _) = Serialize.put (5 :: Int) >> Serialize.put arg >> Serialize.put ty >> Serialize.put x
+    put (Lambda arg x _   ) = Serialize.put (5 :: Int) >> Serialize.put arg >> Serialize.put x
     get = do
         tag <- Serialize.get
         case tag :: Int of
@@ -205,7 +205,7 @@ instance Serialize Expression where
             2 -> Domain <$> Serialize.get
             3 -> Reference <$> Serialize.get
             4 -> Op <$> Serialize.get <*> Serialize.get
-            5 -> Lambda <$> Serialize.get <*> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
+            5 -> Lambda <$> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
             _ -> bug "While deserialising an expression"
 
 instance Hashable Expression where
@@ -214,7 +214,7 @@ instance Hashable Expression where
     hashWithSalt salt (Domain x         ) = hashWithSalt salt x
     hashWithSalt salt (Reference x      ) = hashWithSalt salt x
     hashWithSalt salt (Op op xs         ) = hashWithSalt salt (op,xs)
-    hashWithSalt salt (Lambda arg ty x _) = hashWithSalt salt (arg,ty,x)
+    hashWithSalt salt (Lambda arg x _   ) = hashWithSalt salt (arg,x)
 
 instance ToJSON Expression where
     toJSON (Constant x       ) = JSON.object [ "Constant"        .= toJSON x  ]
@@ -223,8 +223,7 @@ instance ToJSON Expression where
     toJSON (Reference x      ) = JSON.object [ "Reference"       .= toJSON x  ]
     toJSON (Op op xs         ) = JSON.object [ "Op-Name"         .= toJSON op
                                              , "Op-Args"         .= toJSON xs ]
-    toJSON (Lambda arg ty x _) = JSON.object [ "Lambda-Arg"      .= toJSON arg
-                                             , "Lambda-ArgType"  .= toJSON ty
+    toJSON (Lambda arg x _   ) = JSON.object [ "Lambda-Arg"      .= toJSON arg
                                              , "Lambda-Body"     .= toJSON x  ]
 
 
@@ -442,5 +441,24 @@ data AbstractLiteral a
 instance Serialize a => Serialize (AbstractLiteral a)
 instance Hashable a => Hashable (AbstractLiteral a)
 instance ToJSON a => ToJSON (AbstractLiteral a)
+
+
+data AbstractPattern
+    = Single Name Type
+    | AbsPatTuple [AbstractPattern]
+    | AbsPatMatrix
+            -- (Domain () a)          -- TODO: Should there be a domain here?
+            [AbstractPattern]
+    -- | AbsPatSet [a]
+    -- | AbsPatMSet [a]
+    -- | AbsPatFunction [(a, a)]
+    -- | AbsPatRelation [[a]]
+    -- | AbsPatPartition [[a]]
+    -- TODO: Consider introducing the above as abstract patterns...
+    deriving (Eq, Ord, Show, Generic)
+
+instance Serialize AbstractPattern
+instance Hashable AbstractPattern
+instance ToJSON AbstractPattern
 
 
