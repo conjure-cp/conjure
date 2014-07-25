@@ -84,13 +84,15 @@ validateSolutionPureNew essence param solution =
 
         inlined <-  pipeline0 essenceCombined
         mkLog "inlined" (pretty inlined)
-        validateSpec inlined
 
 
         (Spec _ s) <- pipeTest1 inlined
         let checks = map isPartOfValidSolution (statementAsList s)
         if all isJust checks
-            then return (and $ catMaybes checks)
+            then do
+                c <- validateSpec inlined
+                return $ (and $ catMaybes checks) && c
+
             else bug $ vcat [ "Cannot fully evaluate."
                             , pretty s
                             , prettyAsTree s
@@ -98,7 +100,9 @@ validateSolutionPureNew essence param solution =
                             ]
 
 
-validateSpec :: MonadConjure m => Spec -> m ()
+
+
+validateSpec :: MonadConjure m => Spec -> m Bool
 validateSpec spec = do
     bs <- gets binders
     let finds = pullFinds spec
@@ -123,7 +127,7 @@ validateSpec spec = do
 
     docs <-  mapM validateBinder bs
     case catMaybes docs of
-        [] -> return ()
+        [] -> return True
         xs -> userErr $ vcat xs
 
 -- Attributes must be listed in sorted order for dMatch
@@ -300,8 +304,8 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
         checkAttr ("maxSize", Just s) =
             satisfied [eMake| (sum p in parts(&val) . |p|) <= &s |]
             "Too few elements in partition" errorDoc
-            --
-        -- TODO what a regular partition?
+
+        -- TODO what is a regular partition?
 
         checkAttr t = bug $ vcat [
                "Not handled, function attribute " <+> pretty t
@@ -455,7 +459,8 @@ validateVal
     d1 <- satisfied [eMake| &irSize = &irDomSize |]
         "Index range difference sizes for matrix" errorDoc
 
-    -- TODO domain written in different ways e.g. 1,2,3 insead of 1..3
+    -- TODO should domain written in different ways e.g. 1,2,3 insead of 1..3
+    -- be treated as being equal?
     d2 <- case ir == irDom of
        True ->  return Nothing
        False -> do
@@ -510,12 +515,13 @@ validateVal dom@[dMatch| matrix indexed by [&_] of &_  |]
     validateVal dom irE
 
 --error
-validateVal dom es = bug $ vcat [
-     "validateVal not handled"
-    ,"domain:" <+> pretty dom
-    ,"val:"    <+> pretty es
-    ]
+-- validateVal dom es = bug $ vcat [
+--      "validateVal not handled"
+--     ,"domain:" <+> pretty dom
+--     ,"val:"    <+> pretty es
+--     ]
 
+validateVal _ _ = return Nothing
 
 satisfied :: MonadConjure m => E -> Doc -> Doc -> m (Maybe Doc)
 satisfied e  header idoc = do

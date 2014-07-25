@@ -38,41 +38,10 @@ singleVarErrors = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
  , ([dMake| matrix indexed by [int(2..4)] of int(3,4..5) |], [
         [eMake| [3,4,5] |]
     ])
- , ([dMake| partition (complete, maxPartSize 5, minNumParts 3) from int(5..5) |], [
-
-    ])
  , ([dMake| partition from int(4..5) |], [
           [eMake| partition( {4}, {4,5} ) |]
         , [eMake| partition( {4,4} ) |]
         , [eMake| partition( {6} ) |]
-    ])
- , ([dMake| relation of (int(5..5)) |], [
-
-    ])
- , ([dMake| relation (total) of (int(5..5) * int(2..3)) |], [
-
-    ])
- , ([dMake| partition (partSize 1, minNumParts 2, regular, maxPartSize 5, numParts 5)
-        from int(1..1) |], [
-
-    ])
- , ([dMake| relation of (set of int(4..4) * matrix indexed by [int(3..3)]
-        of int(4..4)) |], [
-
-    ])
- , ([dMake| function set of int(2..2) --> set of int(5..5) |], [
-
-    ])
- , ([dMake| function int(2..4) --> int(5..5) |], [
-
-    ])
- , ([dMake| set (size 4) of relation
-        of (relation (functional, total) of (int(4..4) * int(3..3))) |], [
-
-    ])
- , ([dMake| function (maxSize 0, minSize 1, size 5, injective, surjective)
-        int(2..4) --> int(3..3) |], [
-
     ])
  , ([dMake| function int(1..2) --> set of int(1..2) |], [
         [eMake| function(1 --> {1,4}) |]
@@ -122,40 +91,12 @@ singleVarCorrect = map ( \(d,e) -> ([d], (map (\f -> [f]) e) ) )  [
  , ([dMake| matrix indexed by [int(1..3)] of int(3,4..5) |], [
         [eMake| [3,4,5] |]
     ])
- , ([dMake| partition (complete, maxPartSize 5, minNumParts 3) from int(5..5) |], [
-
-    ])
  , ([dMake| partition from int(4..5) |], [
          [eMake| partition( {4}, {5} ) |]
         ,[eMake| partition( {4} ) |]
     ])
- , ([dMake| relation of (int(5..5)) |], [
-
-    ])
- , ([dMake| relation (total) of (int(5..5) * int(2..3)) |], [
-
-    ])
- , ([dMake| partition (partSize 1, minNumParts 2, regular, maxPartSize 5, numParts 5)
-        from int(1..1) |], [
-
-    ])
- , ([dMake| relation of (set of int(4..4) * matrix indexed by [int(3..3)]
-        of int(4..4)) |], [
-
-    ])
- , ([dMake| function set of int(2..2) --> set of int(5..5) |], [
-
-    ])
  , ([dMake| function int(2..4) --> int(5..5) |], [
         [eMake| function( 2 --> 5, 3 -->5) |]
-    ])
- , ([dMake| set (size 4) of relation
-        of (relation (functional, total) of (int(4..4) * int(3..3))) |], [
-
-    ])
- , ([dMake| function (maxSize 0, minSize 1, size 5, injective, surjective)
-        int(2..4) --> int(3..3) |], [
-
     ])
  , ([dMake| function int(1..2) --> set of int(1..2) |], [
         [eMake| function(1 --> {1}) |]
@@ -197,7 +138,7 @@ runVaildate success failure (dom, es) =
 
 runVaildate' :: Maybe Doc -> Maybe Doc -> [Dom] -> [E] -> IO ()
 runVaildate' success failure dom e = do
-    let [domS, solS]  = map mkSpec [
+    let (domS, solS)  = matrixSize2 $ map mkSpec [
             zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
                 dom [0..],
             zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show (b :: Integer)) a )
@@ -266,7 +207,7 @@ _aa e s = do
 _bb :: Dom -> E -> IO ()
 _bb d e = do
 
-    let [domS, solS]  = map mkSpec [
+    let (domS, solS)  = matrixSize2 $ map mkSpec [
             zipWith (\a b ->  mkFind    (T.pack $ "var" ++ show (b :: Integer)) a )
                 [d] [0..],
             zipWith (\a b ->  mkLetting (T.pack $ "var" ++ show (b :: Integer)) a )
@@ -277,3 +218,6 @@ _bb d e = do
     putStrLn . show . pretty $ b
     putStrLn . show . pretty $ logs
 
+matrixSize2 :: [a] -> (a,a)
+matrixSize2 [a,b] = (a,b)
+matrixSize2 _ = error "Matrix is not size two"
