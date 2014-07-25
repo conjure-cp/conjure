@@ -38,10 +38,10 @@ instance Pretty LanguageVersion where
 
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
-    pretty (SearchOrder nms) = "branching on" <+> prettyList Pr.brackets "," nms
-    pretty (Where x) = "where" <+> pretty x
-    pretty (Objective obj x) = pretty obj <+> pretty x
-    pretty (SuchThat x) = "such that" <+> pretty x
+    pretty (SearchOrder nms) = "branching on" <++> prettyList Pr.brackets "," nms
+    pretty (Where xs) = "where" <++> vcat (punctuate comma $ map pretty xs)
+    pretty (Objective obj x) = pretty obj <++> pretty x
+    pretty (SuchThat xs) = "such that" <++> vcat (punctuate comma $ map pretty xs)
 
 instance Pretty Declaration where
     pretty (Find    nm d) = hang ("find"    <+> pretty nm <>  ":" ) 8 (pretty d)
@@ -140,7 +140,7 @@ prettyPrec _ x = pretty x
 
 instance Pretty AbstractPattern where
     pretty (Single nm TypeAny) = pretty nm
-    pretty (Single nm ty     ) = pretty nm <+> ":" <+> pretty ty
+    pretty (Single nm ty     ) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
     pretty (AbsPatTuple    xs) = (if length xs <= 1 then "tuple" else "")
                               <> prettyList Pr.parens "," xs
     pretty (AbsPatMatrix   xs) = prettyList Pr.brackets "," xs

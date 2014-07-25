@@ -30,6 +30,7 @@ module Conjure.Language.Definition
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Stuff.Pretty ( (<++>), pretty )
 
 -- base
 import GHC.Generics ( Generic )
@@ -39,8 +40,9 @@ import GHC.Show ( showSpace, showList__ )
 import qualified Data.Text as T
 
 -- aeson
-import Data.Aeson ( ToJSON(..), (.=) )
+import Data.Aeson ( ToJSON(..), (.=), FromJSON(..), (.:) )
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Types as JSON
 
 -- cereal
 import Data.Serialize as Serialize ( Serialize(..) )
@@ -59,6 +61,7 @@ data Model = Model
 instance Serialize Model
 instance Hashable Model
 instance ToJSON Model
+instance FromJSON Model
 
 instance Default Model where
     def = Model def [] def
@@ -71,7 +74,16 @@ instance Serialize LanguageVersion
 instance Hashable LanguageVersion
 
 instance ToJSON LanguageVersion where
-    toJSON (LanguageVersion t is) = JSON.object [ "language" .= toJSON (t,is) ]
+    toJSON (LanguageVersion t is) =
+        JSON.object [ "language" .= toJSON t
+                    , "version"  .= toJSON is
+                    ]
+
+instance FromJSON LanguageVersion where
+    parseJSON (JSON.Object x) =
+        LanguageVersion <$> x .: "language"
+                        <*> x .: "version"
+    parseJSON x = bug $ "Error while parsing JSON:" <++> pretty (show x)
 
 instance Default LanguageVersion where
     def = LanguageVersion "Essence" [2,0]
@@ -80,14 +92,15 @@ instance Default LanguageVersion where
 data Statement
     = Declaration Declaration
     | SearchOrder [Name]
-    | Where Expression
+    | Where [Expression]
     | Objective Objective Expression
-    | SuchThat Expression
+    | SuchThat [Expression]
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize Statement
 instance Hashable Statement
 instance ToJSON Statement
+instance FromJSON Statement
 
 
 data Objective = Minimising | Maximising
@@ -96,6 +109,7 @@ data Objective = Minimising | Maximising
 instance Serialize Objective
 instance Hashable Objective
 instance ToJSON Objective
+instance FromJSON Objective
 
 
 data Declaration
@@ -108,6 +122,7 @@ data Declaration
 instance Serialize Declaration
 instance Hashable Declaration
 instance ToJSON Declaration
+instance FromJSON Declaration
 
 
 data ModelInfo = ModelInfo
@@ -116,9 +131,15 @@ data ModelInfo = ModelInfo
     }
     deriving (Eq, Ord, Show, Generic)
 
+modelInfoJSONOptions :: JSON.Options
+modelInfoJSONOptions = JSON.defaultOptions
+    { JSON.fieldLabelModifier = map toLower . drop 2
+    }
+
 instance Serialize ModelInfo
 instance Hashable ModelInfo
-instance ToJSON ModelInfo
+instance ToJSON ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
+instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
     def = ModelInfo [] []
@@ -134,10 +155,11 @@ data Decision = Decision
 instance Serialize Decision
 instance Hashable Decision
 instance ToJSON Decision
+instance FromJSON Decision
 
 
 newtype Name = Name Text
-    deriving (Eq, Ord, Show, Generic, IsString, Serialize, Hashable, ToJSON, Monoid)
+    deriving (Eq, Ord, Show, Generic, IsString, Serialize, Hashable, ToJSON, FromJSON, Monoid)
 
 instance Arbitrary Name where
     arbitrary = do
@@ -239,6 +261,9 @@ instance ToJSON Expression where
     toJSON (Lambda arg x _   ) = JSON.object [ "Lambda-Arg"       .= toJSON arg
                                              , "Lambda-Body"      .= toJSON x  ]
 
+instance FromJSON Expression where
+    parseJSON x = bug $ "fromJSON Expression" <+> stringToDoc (show x)
+
 
 data DomainDefn
     = DDEnum DomainDefnEnum
@@ -248,6 +273,7 @@ data DomainDefn
 instance Serialize DomainDefn
 instance Hashable DomainDefn
 instance ToJSON DomainDefn
+instance FromJSON DomainDefn
 
 
 data DomainDefnEnum = DomainDefnEnum Name [Name]
@@ -256,6 +282,7 @@ data DomainDefnEnum = DomainDefnEnum Name [Name]
 instance Serialize DomainDefnEnum
 instance Hashable DomainDefnEnum
 instance ToJSON DomainDefnEnum
+instance FromJSON DomainDefnEnum
 
 
 data DomainDefnUnnamed = DomainDefnUnnamed Name Expression
@@ -264,6 +291,7 @@ data DomainDefnUnnamed = DomainDefnUnnamed Name Expression
 instance Serialize DomainDefnUnnamed
 instance Hashable DomainDefnUnnamed
 instance ToJSON DomainDefnUnnamed
+instance FromJSON DomainDefnUnnamed
 
 
 data Domain r a
@@ -285,6 +313,7 @@ data Domain r a
 instance (Serialize r, Serialize a) => Serialize (Domain r a)
 instance (Hashable r, Hashable a) => Hashable (Domain r a)
 instance (ToJSON r, ToJSON a) => ToJSON (Domain r a)
+instance (FromJSON r, FromJSON a) => FromJSON (Domain r a)
 
 instance (Arbitrary r, Arbitrary a) => Arbitrary (Domain r a) where
     arbitrary = sized f
@@ -329,6 +358,7 @@ data SetAttr a
 instance Serialize a => Serialize (SetAttr a)
 instance Hashable a => Hashable (SetAttr a)
 instance ToJSON a => ToJSON (SetAttr a)
+instance FromJSON a => FromJSON (SetAttr a)
 
 instance Default (SetAttr a) where
     def = SetAttrNone
@@ -340,6 +370,7 @@ data DomainAttributes a = DomainAttributes [DomainAttribute a]
 instance Serialize a => Serialize (DomainAttributes a)
 instance Hashable a => Hashable (DomainAttributes a)
 instance ToJSON a => ToJSON (DomainAttributes a)
+instance FromJSON a => FromJSON (DomainAttributes a)
 
 instance Default (DomainAttributes a) where
     def = DomainAttributes []
@@ -354,6 +385,7 @@ data DomainAttribute a
 instance Serialize a => Serialize (DomainAttribute a)
 instance Hashable a => Hashable (DomainAttribute a)
 instance ToJSON a => ToJSON (DomainAttribute a)
+instance FromJSON a => FromJSON (DomainAttribute a)
 
 
 data Range a
@@ -367,6 +399,7 @@ data Range a
 instance Serialize a => Serialize (Range a)
 instance Hashable a => Hashable (Range a)
 instance ToJSON a => ToJSON (Range a)
+instance FromJSON a => FromJSON (Range a)
 
 instance Arbitrary a => Arbitrary (Range a) where
     arbitrary = oneof
@@ -392,6 +425,7 @@ data HasRepresentation = NoRepresentation | HasRepresentation Name
 instance Serialize HasRepresentation
 instance Hashable HasRepresentation
 instance ToJSON HasRepresentation
+instance FromJSON HasRepresentation
 
 instance IsString HasRepresentation where
     fromString = HasRepresentation . Name . T.pack

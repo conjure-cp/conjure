@@ -82,8 +82,8 @@ specToModel (Spec lang stmt) = Model
         convStmt [xMatch| [expr] := topLevel.objective.minimising |] = Objective Minimising (convExpr expr)
         convStmt [xMatch| [expr] := topLevel.objective.maximising |] = Objective Maximising (convExpr expr)
 
-        convStmt [xMatch| [expr] := topLevel.where    |] = Where    (convExpr expr)
-        convStmt [xMatch| [expr] := topLevel.suchThat |] = SuchThat (convExpr expr)
+        convStmt [xMatch| xs := topLevel.where    |] = Where    (map convExpr xs)
+        convStmt [xMatch| xs := topLevel.suchThat |] = SuchThat (map convExpr xs)
 
         convStmt x = bug $ "convStmt" <+> prettyAsPaths x
 
