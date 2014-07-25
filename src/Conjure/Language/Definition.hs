@@ -79,6 +79,7 @@ instance Default LanguageVersion where
 
 data Statement
     = Declaration Declaration
+    | SearchOrder [Name]
     | Where Expression
     | Objective Objective Expression
     | SuchThat Expression
@@ -449,7 +450,7 @@ data AbstractPattern
     | AbsPatMatrix
             -- (Domain () a)          -- TODO: Should there be a domain here?
             [AbstractPattern]
-    -- | AbsPatSet [a]
+    | AbsPatSet [AbstractPattern]
     -- | AbsPatMSet [a]
     -- | AbsPatFunction [(a, a)]
     -- | AbsPatRelation [[a]]

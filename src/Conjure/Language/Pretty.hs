@@ -38,6 +38,7 @@ instance Pretty LanguageVersion where
 
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
+    pretty (SearchOrder nms) = "branching on" <+> prettyList Pr.brackets "," nms
     pretty (Where x) = "where" <+> pretty x
     pretty (Objective obj x) = pretty obj <+> pretty x
     pretty (SuchThat x) = "such that" <+> pretty x
@@ -138,6 +139,7 @@ instance Pretty AbstractPattern where
     pretty (AbsPatTuple  xs) = (if length xs <= 1 then "tuple" else "")
                             <> prettyList Pr.parens "," xs
     pretty (AbsPatMatrix xs) = prettyList Pr.brackets "," xs
+    pretty (AbsPatSet    xs) = prettyList Pr.braces "," xs
 
 instance Pretty Type where
     pretty TypeAny = "?"

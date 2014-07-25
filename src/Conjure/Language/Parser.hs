@@ -71,6 +71,15 @@ specToModel (Spec lang stmt) = Model
             Declaration $ LettingDomainDefn $
                 DDEnum $ DomainDefnEnum (Name name) (map convName values)
 
+        convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
+                        | [expr]          := topLevel.letting.typeUnnamed
+                        |] =
+            Declaration $ LettingDomainDefn $
+                DDUnnamed $ DomainDefnUnnamed (Name name) (convExpr expr)
+
+        convStmt [xMatch| xs := topLevel.branchingOn.value.matrix.values |] = SearchOrder (map convName xs)
+
+
         convStmt [xMatch| [expr] := topLevel.objective.minimising |] = Objective Minimising (convExpr expr)
         convStmt [xMatch| [expr] := topLevel.objective.maximising |] = Objective Maximising (convExpr expr)
 
@@ -127,7 +136,7 @@ specToModel (Spec lang stmt) = Model
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
                         | [pat]             := quantified.quanVar
                         | []                := quantified.quanOverDom
-                        | []                := quantified.quanOverOp.binOp.in
+                        | [op]              := quantified.quanOverOp.binOp
                         | [quanOverExpr]    := quantified.quanOverExpr
                         | [guardE]          := quantified.guard
                         | [body]            := quantified.body
@@ -143,11 +152,16 @@ specToModel (Spec lang stmt) = Model
                                          (bug $ "lambda:" <+> pretty (convExpr guardE))
                                 , b
                                 ]
+                op' = case op of
+                    [xMatch| [] := in       |] -> "map_in_expr"
+                    [xMatch| [] := subset   |] -> "map_subset_expr"
+                    [xMatch| [] := subsetEq |] -> "map_subsetEq_expr"
+                    _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
 
             in
                 Op (Name qnName)
                     [ filterOr
-                        ( Op "map_in_expr"
+                        ( Op op'
                             [ Lambda (convPat ty pat)
                                      (convExpr body)
                                      (bug $ "lambda:" <+> pretty (convExpr body))
@@ -187,6 +201,10 @@ specToModel (Spec lang stmt) = Model
             = Op "function_image" (map convExpr (actual : args))
 
         convExpr [xMatch| [x] := structural.single |] = convExpr x
+
+        convExpr [xMatch| [left]  := operator.index.left
+                        | []      := operator.index.right.slicer
+                        |] = Op "slicing" [convExpr left]
 
         convExpr [xMatch| [left]  := operator.index.left
                         | [right] := operator.index.right
@@ -238,6 +256,7 @@ specToModel (Spec lang stmt) = Model
         convPat ty [xMatch| [Prim (S nm)] := structural.single.reference |] = Single (Name nm) ty
         convPat _  [xMatch| ts := structural.tuple  |] = AbsPatTuple  (map (convPat TypeAny) ts)
         convPat _  [xMatch| ts := structural.matrix |] = AbsPatMatrix (map (convPat TypeAny) ts)
+        convPat _  [xMatch| ts := structural.set    |] = AbsPatSet    (map (convPat TypeAny) ts)
         convPat _ x = bug $ "convPat" <+> prettyAsPaths x
 
         convDomain :: Domain () E -> Domain () Expression
