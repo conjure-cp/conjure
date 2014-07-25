@@ -46,6 +46,14 @@ instance Pretty Declaration where
     pretty (Find    nm d) = hang ("find"    <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Given   nm d) = hang ("given"   <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
+    pretty (LettingDomainDefn (DDEnum (DomainDefnEnum name values))) =
+        if null values
+            then hang ("given"   <+> pretty name) 8 "new type enum"
+            else hang ("letting" <+> pretty name <+> "be new type enum") 8
+                   (prettyList Pr.braces "," values)
+    pretty (LettingDomainDefn (DDUnnamed (DomainDefnUnnamed name size))) =
+        hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
+
 
 instance Pretty Objective where
     pretty Minimising = "minimising"
@@ -91,6 +99,15 @@ instance Pretty Expression where
         | let lexeme = textToLexeme op
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
         = prettyPrec 0 x
+
+    pretty (Op (Name "indexing") [a,b])
+        = pretty a <> Pr.brackets (pretty b)
+    -- pretty x@(Op (Name "indexing") _)
+    --     = pretty actual <> prettyListDoc Pr.brackets Pr.comma (map pretty indices)
+    --     where
+    --         (actual,indices) = second reverse $ collect x
+    --         collect (Op (Name "indexing") [a,b]) = second (b:) $ collect a
+    --         collect b = (b,[])
 
     pretty (Op op xs) = pretty op <> prettyList Pr.parens "," xs
 

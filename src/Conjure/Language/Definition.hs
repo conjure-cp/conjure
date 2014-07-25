@@ -15,7 +15,7 @@ module Conjure.Language.Definition
     , AbstractLiteral(..)
 
     , Domain(..), Range(..)
-    , DomainDefnEnum(..), DomainDefnUnnamed(..)
+    , DomainDefn(..), DomainDefnEnum(..), DomainDefnUnnamed(..)
 
     , SetAttr(..)
     , DomainAttributes(..), DomainAttribute(..)
@@ -100,6 +100,7 @@ data Declaration
     = Find    Name (Domain () Expression)
     | Given   Name (Domain () Expression)
     | Letting Name Expression
+    | LettingDomainDefn DomainDefn
     deriving (Eq, Ord, Show, Generic)
 
 instance Serialize Declaration
@@ -225,6 +226,16 @@ instance ToJSON Expression where
     toJSON (Lambda arg ty x _) = JSON.object [ "Lambda-Arg"      .= toJSON arg
                                              , "Lambda-ArgType"  .= toJSON ty
                                              , "Lambda-Body"     .= toJSON x  ]
+
+
+data DomainDefn
+    = DDEnum DomainDefnEnum
+    | DDUnnamed DomainDefnUnnamed
+    deriving (Eq, Ord, Show, Generic)
+
+instance Serialize DomainDefn
+instance Hashable DomainDefn
+instance ToJSON DomainDefn
 
 
 data DomainDefnEnum = DomainDefnEnum Name [Name]

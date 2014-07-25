@@ -60,6 +60,17 @@ specToModel (Spec lang stmt) = Model
                         | [domain       ] := topLevel.letting.domain
                         |] = Declaration (Letting (Name name) (convExpr domain))
 
+        convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
+                        | []              := topLevel.declaration.given.typeEnum
+                        |] =
+            Declaration $ LettingDomainDefn $
+                DDEnum $ DomainDefnEnum (Name name) []
+        convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
+                        | values          := topLevel.letting.typeEnum.values
+                        |] =
+            Declaration $ LettingDomainDefn $
+                DDEnum $ DomainDefnEnum (Name name) (map convName values)
+
         convStmt [xMatch| [expr] := topLevel.objective.minimising |] = Objective Minimising (convExpr expr)
         convStmt [xMatch| [expr] := topLevel.objective.maximising |] = Objective Maximising (convExpr expr)
 
@@ -157,6 +168,10 @@ specToModel (Spec lang stmt) = Model
         convExpr [xMatch| xs := operator.toMSet       |] = Op "toMSet"       (map convExpr xs)
         convExpr [xMatch| xs := operator.toRelation   |] = Op "toRelation"   (map convExpr xs)
         convExpr [xMatch| xs := operator.toSet        |] = Op "toSet"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.twoBars      |] = Op "twoBars"      (map convExpr xs)
+        convExpr [xMatch| xs := unaryOp.not           |] = Op "not"          (map convExpr xs)
+        convExpr [xMatch| xs := unaryOp.negate        |] = Op "negate"       (map convExpr xs)
+        convExpr [xMatch| xs := unaryOp.factorial     |] = Op "factorial"    (map convExpr xs)
 
         convExpr [xMatch| [actual] := functionApply.actual
                       |   args   := functionApply.args
@@ -164,6 +179,10 @@ specToModel (Spec lang stmt) = Model
             = Op "function_image" (map convExpr (actual : args))
 
         convExpr [xMatch| [x] := structural.single |] = convExpr x
+
+        convExpr [xMatch| [left]  := operator.index.left
+                        | [right] := operator.index.right
+                        |] = Op "indexing" [convExpr left, convExpr right]
 
 -- values
         convExpr [xMatch| xs := value.tuple.values  |] =
@@ -210,4 +229,8 @@ specToModel (Spec lang stmt) = Model
 
         convDomain :: Domain () E -> Domain () Expression
         convDomain = fmap convExpr
+
+        convName :: E -> Name
+        convName [xMatch| [Prim (S nm)] := reference |] = Name nm
+        convName x = bug $ "convName" <+> prettyAsPaths x
 
