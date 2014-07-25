@@ -305,7 +305,10 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
             satisfied [eMake| (sum p in parts(&val) . |p|) <= &s |]
             "Too few elements in partition" errorDoc
 
-        -- TODO what is a regular partition?
+        checkAttr ("regular", Nothing) =
+            case allEqual partLengths of
+                True  -> return $ Nothing
+                False -> return $ Just $ hang "Not a regular partition" 4 errorDoc
 
         checkAttr t = bug $ vcat [
                "Not handled, function attribute " <+> pretty t
@@ -325,6 +328,14 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
     allVs = concatMap f parts
         where f [xMatch| vs := part|] = vs
               f _ = bug $ vcat [ "part"]
+
+    partLengths :: [Integer]
+    partLengths = map f parts
+        where f [xMatch| vs := part|] = genericLength vs
+              f _ = bug $ vcat [ "partLengths"]
+
+    allEqual [] = True
+    allEqual xs = all ( == head xs) (tail xs)
 
     checkParts :: MonadConjure m => Dom -> E -> m (Maybe Doc)
     checkParts idom [xMatch| vs := part |]  =
