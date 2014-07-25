@@ -151,6 +151,7 @@ data Expression
     | AbstractLiteral (AbstractLiteral Expression)
     | Domain (Domain () Expression)
     | Reference Name
+    | WithLocals Expression [Statement]
     | Op Name [Expression]
     | Lambda AbstractPattern Expression (Expression -> Expression)
     deriving (Generic)
@@ -160,6 +161,7 @@ instance Eq Expression where
     AbstractLiteral a == AbstractLiteral b = a == b
     Domain a          == Domain b          = a == b
     Reference a       == Reference b       = a == b
+    WithLocals x1 s1  == WithLocals x2 s2  = (x1,s1) == (x2,s2)
     Op n1 xs1         == Op n2 xs2         = n1 == n2 && and (zipWith (==) xs1 xs2)
     Lambda {}         == Lambda {}         = bug "Lambda's cannot be compared for equality. There you go."
     _                 == _                 = False
@@ -173,6 +175,8 @@ instance Ord Expression where
     Domain {}           `compare` _                 = LT
     Reference a         `compare` Reference b       = a `compare` b
     Reference {}        `compare` _                 = LT
+    WithLocals x1 s1    `compare` WithLocals x2 s2  = (x1,s1) `compare` (x2,s2)
+    WithLocals {}       `compare` _                 = LT
     Op nm1 xs1          `compare` Op nm2 xs2        =
         case nm1 `compare` nm2 of
             EQ -> xs1 `compare` xs2
@@ -185,6 +189,8 @@ instance Show Expression where
     showsPrec pr (AbstractLiteral x) = showParen (pr >= 11) (showString "AbstractLiteral "  . showsPrec 11 x)
     showsPrec pr (Domain   x       ) = showParen (pr >= 11) (showString "Domain "           . showsPrec 11 x)
     showsPrec pr (Reference x      ) = showParen (pr >= 11) (showString "Reference "        . showsPrec 11 x)
+    showsPrec pr (WithLocals x ss  ) = showParen (pr >= 11) (showString "WithLocals "       . showsPrec 11 x
+                                                                                . showSpace . showsPrec 11 ss)
     showsPrec pr (Op op xs         ) = showParen (pr >= 11) (showString "Op "               . showsPrec 11 op
                                                                                 . showSpace . showsPrec 11 xs)
     showsPrec pr (Lambda arg x _   ) = showParen (pr >= 11) (showString "Lambda "           . showsPrec 11 arg
@@ -196,8 +202,9 @@ instance Serialize Expression where
     put (AbstractLiteral x) = Serialize.put (1 :: Int) >> Serialize.put x
     put (Domain x         ) = Serialize.put (2 :: Int) >> Serialize.put x
     put (Reference x      ) = Serialize.put (3 :: Int) >> Serialize.put x
-    put (Op op xs         ) = Serialize.put (4 :: Int) >> Serialize.put op  >> Serialize.put xs
-    put (Lambda arg x _   ) = Serialize.put (5 :: Int) >> Serialize.put arg >> Serialize.put x
+    put (WithLocals x ss  ) = Serialize.put (4 :: Int) >> Serialize.put x   >> Serialize.put ss
+    put (Op op xs         ) = Serialize.put (5 :: Int) >> Serialize.put op  >> Serialize.put xs
+    put (Lambda arg x _   ) = Serialize.put (6 :: Int) >> Serialize.put arg >> Serialize.put x
     get = do
         tag <- Serialize.get
         case tag :: Int of
@@ -205,8 +212,9 @@ instance Serialize Expression where
             1 -> AbstractLiteral <$> Serialize.get
             2 -> Domain <$> Serialize.get
             3 -> Reference <$> Serialize.get
-            4 -> Op <$> Serialize.get <*> Serialize.get
-            5 -> Lambda <$> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
+            4 -> WithLocals <$> Serialize.get <*> Serialize.get
+            5 -> Op <$> Serialize.get <*> Serialize.get
+            6 -> Lambda <$> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
             _ -> bug "While deserialising an expression"
 
 instance Hashable Expression where
@@ -214,18 +222,22 @@ instance Hashable Expression where
     hashWithSalt salt (AbstractLiteral x) = hashWithSalt salt x
     hashWithSalt salt (Domain x         ) = hashWithSalt salt x
     hashWithSalt salt (Reference x      ) = hashWithSalt salt x
+    hashWithSalt salt (WithLocals x ss  ) = hashWithSalt salt (x,ss)
     hashWithSalt salt (Op op xs         ) = hashWithSalt salt (op,xs)
     hashWithSalt salt (Lambda arg x _   ) = hashWithSalt salt (arg,x)
 
 instance ToJSON Expression where
-    toJSON (Constant x       ) = JSON.object [ "Constant"        .= toJSON x  ]
-    toJSON (AbstractLiteral x) = JSON.object [ "AbstractLiteral" .= toJSON x  ]
-    toJSON (Domain x         ) = JSON.object [ "Domain"          .= toJSON x  ]
-    toJSON (Reference x      ) = JSON.object [ "Reference"       .= toJSON x  ]
-    toJSON (Op op xs         ) = JSON.object [ "Op-Name"         .= toJSON op
-                                             , "Op-Args"         .= toJSON xs ]
-    toJSON (Lambda arg x _   ) = JSON.object [ "Lambda-Arg"      .= toJSON arg
-                                             , "Lambda-Body"     .= toJSON x  ]
+    toJSON (Constant x       ) = JSON.object [ "Constant"         .= toJSON x  ]
+    toJSON (AbstractLiteral x) = JSON.object [ "AbstractLiteral"  .= toJSON x  ]
+    toJSON (Domain x         ) = JSON.object [ "Domain"           .= toJSON x  ]
+    toJSON (Reference x      ) = JSON.object [ "Reference"        .= toJSON x  ]
+    toJSON (WithLocals x ss  ) = JSON.object [ "WithLocals-Expr"  .= toJSON x
+                                             , "WithLocals-Stmts" .= toJSON ss
+                                             ]
+    toJSON (Op op xs         ) = JSON.object [ "Op-Name"          .= toJSON op
+                                             , "Op-Args"          .= toJSON xs ]
+    toJSON (Lambda arg x _   ) = JSON.object [ "Lambda-Arg"       .= toJSON arg
+                                             , "Lambda-Body"      .= toJSON x  ]
 
 
 data DomainDefn

@@ -46,6 +46,7 @@ instance TypeOf Expression where
     typeOf (AbstractLiteral x) = typeOf x
     typeOf (Domain x)   = typeOf x
     typeOf Reference{}  = TypeAny -- TODO: fix
+    typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
     typeOf Op{}         = TypeAny -- TODO: fix
     typeOf Lambda{}     = TypeAny -- TODO: fix
 

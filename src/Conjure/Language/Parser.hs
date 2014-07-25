@@ -79,7 +79,6 @@ specToModel (Spec lang stmt) = Model
 
         convStmt [xMatch| xs := topLevel.branchingOn.value.matrix.values |] = SearchOrder (map convName xs)
 
-
         convStmt [xMatch| [expr] := topLevel.objective.minimising |] = Objective Minimising (convExpr expr)
         convStmt [xMatch| [expr] := topLevel.objective.maximising |] = Objective Maximising (convExpr expr)
 
@@ -246,6 +245,11 @@ specToModel (Spec lang stmt) = Model
                 [ map convExpr xs
                 | [xMatch| xs := part |] <- xss
                 ]
+
+-- bubble
+        convExpr [xMatch| [actual] := withLocals.actual
+                        | locals   := withLocals.locals
+                        |] = WithLocals (convExpr actual) (map convStmt locals)
 
 -- D
         convExpr (D x) = Domain (convDomain x)
