@@ -1,0 +1,8 @@
+
+[1000]
+
+&quan &i subsetEq &a , &guard . &body
+    ~~>
+&quan &i : &aDom , &guard /\ &i subsetEq &a . &body
+
+    where &a hasDomain `&aDom`
