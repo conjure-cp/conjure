@@ -370,11 +370,11 @@ validateVal
 
         checkAttr ("minSize", Just s) =
             satisfied [eMake| &vsLength >= &s |]
-            "Too many elements in mset" errorDoc
+            "Too many elements in set" errorDoc
 
         checkAttr ("maxSize", Just s) =
             satisfied [eMake| &vsLength <= &s |]
-            "Too few elements in mset" errorDoc
+            "Too few elements in set" errorDoc
 
         checkAttr t = bug $ vcat [
                "Not handled, function attribute " <+> pretty t
