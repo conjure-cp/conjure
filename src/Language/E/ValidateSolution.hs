@@ -119,7 +119,8 @@ validateSpec spec = do
                     res <-  validateVal (sortAttrs f) (normaliseSolutionE val)
                     return $ case res of
                         Just doc -> Just $ vcat [
-                              "Error for value" <+> pretty val
+                              "Error for"
+                            , "Value:  " <+> pretty val
                             , "Domain: " <+> pretty f
                             , hang "Details:" 2 doc
                             , "---"]
@@ -153,17 +154,17 @@ validateVal
             vsLength  = mkInt $ genericLength vs
 
             checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
-            checkAttr ("size", Just s) =
+            checkAttr a@("size", Just s) =
                 satisfied [eMake| &vsLength = &s |]
-                "Wrong number of elements in relation" errorDoc
+               (attrError a  "Wrong number of elements in relation") errorDoc
 
-            checkAttr ("minSize", Just s) =
+            checkAttr a@("minSize", Just s) =
                 satisfied [eMake| &vsLength >= &s |]
-                "Too few elements" errorDoc
+               (attrError a  "Too few elements") errorDoc
 
-            checkAttr ("maxSize", Just s) =
+            checkAttr a@("maxSize", Just s) =
                 satisfied [eMake| &vsLength <= &s |]
-                "Too many elements" errorDoc
+               (attrError a  "Too many elements") errorDoc
 
             checkAttr t = bug $
                 vcat [
@@ -193,30 +194,30 @@ validateVal
             vsLength  = mkInt $ genericLength mvs
 
             checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
-            checkAttr ("size", Just s) =
+            checkAttr a@("size", Just s) =
                 satisfied [eMake| &vsLength = &s |]
-                "Wrong number of elements in set" errorDoc
+               (attrError a  "Wrong number of elements in set") errorDoc
 
-            checkAttr ("minSize", Just s) =
+            checkAttr a@("minSize", Just s) =
                 satisfied [eMake| &vsLength >= &s |]
-                "Too few elements" errorDoc
+                (attrError a "Too few elements") errorDoc
 
-            checkAttr ("maxSize", Just s) =
+            checkAttr a@("maxSize", Just s) =
                 satisfied [eMake| &vsLength <= &s |]
-                "Too many elements" errorDoc
+               (attrError a  "Too many elements") errorDoc
 
-            checkAttr ("total", Nothing) =
+            checkAttr a@("total", Nothing) =
                 satisfied [eMake| &vsLength = &fromLength |]
-                "Not total" errorDoc
+               (attrError a  "Not total") errorDoc
 
-            checkAttr ("injective", Nothing) =
-                checkForDuplicates tos "Not injective"
+            checkAttr a@("injective", Nothing) =
+                checkForDuplicates tos (attrError a "")
 
-            checkAttr ("surjective", Nothing) =
+            checkAttr a@("surjective", Nothing) =
                 let elemsLen = mkInt . genericLength $
                         nubBy ( \(_,b) (_,d) -> b == d) (zip froms tos) in
                 satisfied [eMake| &elemsLen >= &toLength |]
-                "Not surjective" errorDoc
+               (attrError a  "") errorDoc
 
             checkAttr ("bijective", Nothing) = do
                     joinDoc <$> mapM checkAttr [
@@ -269,45 +270,45 @@ validateVal dom@[xMatch| attrs      := domain.partition.attributes.attrCollectio
     let numParts = mkInt $ genericLength parts
 
         checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
-        checkAttr ("numParts", Just s) =
+        checkAttr a@("numParts", Just s) =
             satisfied [eMake| &numParts = &s |]
-            "Wrong number of parts in partition" errorDoc
+           (attrError a  "Wrong number of parts in partition") errorDoc
 
-        checkAttr ("minNumParts", Just s) =
+        checkAttr a@("minNumParts", Just s) =
             satisfied [eMake| &numParts >= &s |]
-            "Too few parts in partition" errorDoc
+           (attrError a  "Too few parts in partition") errorDoc
 
-        checkAttr ("maxNumParts", Just s) =
+        checkAttr a@("maxNumParts", Just s) =
             satisfied [eMake| &numParts <= &s |]
-            "Too many parts in partition" errorDoc
+           (attrError a  "Too many parts in partition") errorDoc
 
-        checkAttr ("partSize", Just s) =
+        checkAttr a@("partSize", Just s) =
             satisfied [eMake| forAll p in parts(&val) . |p| = &s |]
-            "Part of invaild size in partition" errorDoc
+           (attrError a  "Part of invaild size in partition") errorDoc
 
-        checkAttr ("minPartSize", Just s) =
+        checkAttr a@("minPartSize", Just s) =
             satisfied [eMake| forAll p in parts(&val) . |p| >= &s |]
-            "A part is too larger in partition" errorDoc
+           (attrError a  "A part is too larger in partition") errorDoc
 
-        checkAttr ("maxPartSize", Just s) =
+        checkAttr a@("maxPartSize", Just s) =
             satisfied [eMake| forAll p in parts(&val) . |p| <= &s |]
-            "A part is too small in partition" errorDoc
+           (attrError a  "A part is too small in partition") errorDoc
 
-        checkAttr ("complete", Nothing) =
+        checkAttr a@("complete", Nothing) =
             satisfied [eMake| (sum p in parts(&val) . |p|) = &domLength |]
-            "Partition is not complete" errorDoc
+           (attrError a  "Partition is not complete") errorDoc
 
-        checkAttr ("size", Just s) =
+        checkAttr a@("size", Just s) =
             satisfied [eMake| (sum p in parts(&val) . |p|) = &s |]
-            "Wrong number of elements in partition" errorDoc
+           (attrError a  "Wrong number of elements in partition") errorDoc
 
-        checkAttr ("minSize", Just s) =
+        checkAttr a@("minSize", Just s) =
             satisfied [eMake| (sum p in parts(&val) . |p|) >= &s |]
-            "Too many elements in partition" errorDoc
+           (attrError a  "Too many elements in partition") errorDoc
 
-        checkAttr ("maxSize", Just s) =
+        checkAttr a@("maxSize", Just s) =
             satisfied [eMake| (sum p in parts(&val) . |p|) <= &s |]
-            "Too few elements in partition" errorDoc
+           (attrError a  "Too few elements in partition") errorDoc
 
         checkAttr ("regular", Nothing) =
             case allEqual partLengths of
@@ -364,17 +365,17 @@ validateVal
     let vsLength = mkInt $ genericLength vs
 
         checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
-        checkAttr ("size", Just s) =
+        checkAttr a@("size", Just s) =
             satisfied [eMake|  &vsLength = &s |]
-            "Wrong number of elements in mset" errorDoc
+            (attrError a "Wrong number of elements in set") errorDoc
 
-        checkAttr ("minSize", Just s) =
+        checkAttr a@("minSize", Just s) =
             satisfied [eMake| &vsLength >= &s |]
-            "Too many elements in set" errorDoc
+            (attrError a "Too few elements in set") errorDoc
 
-        checkAttr ("maxSize", Just s) =
+        checkAttr a@("maxSize", Just s) =
             satisfied [eMake| &vsLength <= &s |]
-            "Too few elements in set" errorDoc
+            (attrError a  "Too many elements in set") errorDoc
 
         checkAttr t = bug $ vcat [
                "Not handled, function attribute " <+> pretty t
@@ -404,27 +405,27 @@ validateVal
     let vsLength = mkInt $ genericLength vs
 
         checkAttr :: MonadConjure m => (Text, Maybe E) -> m (Maybe Doc)
-        checkAttr ("size", Just s) =
+        checkAttr a@("size", Just s) =
             satisfied [eMake|  &vsLength = &s |]
-            "Wrong number of elements in mset" errorDoc
+           (attrError a  "Wrong number of elements in mset") errorDoc
 
-        checkAttr ("minSize", Just s) =
+        checkAttr a@("minSize", Just s) =
             satisfied [eMake| &vsLength >= &s |]
-            "Too many elements in mset" errorDoc
+           (attrError a  "Too many elements in mset") errorDoc
 
-        checkAttr ("maxSize", Just s) =
+        checkAttr a@("maxSize", Just s) =
             satisfied [eMake| &vsLength <= &s |]
-            "Too few elements in mset" errorDoc
+           (attrError a  "Too few elements in mset") errorDoc
 
-        checkAttr ("minOccur", Just [xMatch| [Prim (I j)] := value.literal |] ) =
-            case all (\a -> genericLength a >= j  ) (group . sort $ vs)  of
+        checkAttr a@("minOccur", Just [xMatch| [Prim (I j)] := value.literal |] ) =
+            case all (\e -> genericLength e >= j  ) (group . sort $ vs)  of
                 True -> return Nothing
-                False -> return $ Just $ hang "minOccur not satisfied" 4 errorDoc
+                False -> return $ Just $ hang (attrError a "") 4 errorDoc
 
-        checkAttr ("maxOccur", Just [xMatch| [Prim (I j)] := value.literal |] ) =
-            case all (\a -> genericLength a <= j  ) (group . sort $ vs)  of
+        checkAttr a@("maxOccur", Just [xMatch| [Prim (I j)] := value.literal |] ) =
+            case all (\e -> genericLength e <= j  ) (group . sort $ vs)  of
                 True -> return Nothing
-                False -> return $ Just $ hang "maxOccur not satisfied" 4 errorDoc
+                False -> return $ Just $ hang  (attrError a "") 4 errorDoc
 
         checkAttr t = bug $ vcat [
                "Not handled, function attribute " <+> pretty t
@@ -453,7 +454,7 @@ validateVal
     mkLog "indexSize" . pretty $ irDomSize
 
     d1 <- satisfied [eMake| &irSize = &irDomSize |]
-        "Index range difference sizes for matrix" errorDoc
+       "Index range difference sizes for matrix" errorDoc
 
     -- TODO should domain written in different ways e.g. 1,2,3 insead of 1..3
     -- be treated as being equal?
@@ -465,7 +466,7 @@ validateVal
 
     let vsSize = mkInt $ genericLength vs
     d3 <- satisfied [eMake| &vsSize = &irDomSize |]
-        "Invaild number of matrix elements" errorDoc
+       "Invaild number of matrix elements" errorDoc
 
     case joinDoc [d1,d2,d3] of
         Just s -> return . Just $ s
@@ -579,6 +580,11 @@ getAttr [xMatch| [Prim (S n)] := attribute.name.reference
                |] = (n,Nothing)
 
 getAttr _ = bug $ vcat [ "getAttr" ]
+
+attrError :: (Text, Maybe E) -> Doc -> Doc
+attrError (t, Just e)  msg = parensIf True (pretty t <+> pretty e) <+> "not satisfied;" <+> msg
+attrError (t, Nothing) msg = parensIf True (pretty t) <+>  "not satisfied;" <+> msg
+
 
 joinDoc :: [Maybe Doc] -> Maybe Doc
 joinDoc ds = case catMaybes ds of
