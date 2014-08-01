@@ -283,6 +283,12 @@ fullEvaluator
     | isFullyInstantiated x
     = returnInt (genericLength xs)
 
+fullEvaluator
+    [xMatch| [x] := operator.twoBars
+           |  _  := operator.twoBars.value.function
+           |]
+    | isFullyInstantiated x
+    = fullEvaluator [xMake| operator.twoBars.defined := [x] |]
 
 fullEvaluator
     [xMatch| xs := operator.allDiff.value.matrix.values |]
