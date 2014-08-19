@@ -34,11 +34,11 @@ domainSizeConstant (DomainSet _ attrs inner) =
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
         _ -> throwError "domainSizeConstant"
-domainSizeConstant (DomainMSet      {}) = throwError "not implemented: domainSizeConstant"
-domainSizeConstant (DomainFunction  {}) = throwError "not implemented: domainSizeConstant"
-domainSizeConstant (DomainRelation  {}) = throwError "not implemented: domainSizeConstant"
-domainSizeConstant (DomainPartition {}) = throwError "not implemented: domainSizeConstant"
-domainSizeConstant _ = throwError "not implemented: domainSizeConstantRanges"
+domainSizeConstant (DomainMSet      {}) = throwError "not implemented: domainSizeConstant DomainMSet"
+domainSizeConstant (DomainFunction  {}) = throwError "not implemented: domainSizeConstant DomainFunction"
+domainSizeConstant (DomainRelation  {}) = throwError "not implemented: domainSizeConstant DomainRelation"
+domainSizeConstant (DomainPartition {}) = throwError "not implemented: domainSizeConstant DomainPartition"
+domainSizeConstant _                    = throwError "not implemented: domainSizeConstant"
 
 domainSizeConstantRanges :: MonadError Doc m => [Range Constant] -> m Int
 domainSizeConstantRanges = liftM length . valuesInIntDomain
@@ -47,7 +47,7 @@ valuesInIntDomain :: MonadError Doc m => [Range Constant] -> m [Int]
 valuesInIntDomain ranges =
     if isFinite
         then return allValues
-        else throwError $ "Infinite integer range:" <+> prettyList id "," ranges
+        else throwError $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
 
     where
 
