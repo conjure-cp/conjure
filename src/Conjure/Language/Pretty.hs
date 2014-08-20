@@ -98,7 +98,7 @@ instance Pretty Expression where
     pretty (WithLocals x ss) =
         Pr.braces $ pretty x <+> "@" <+> vcat (map pretty ss)
 
-    pretty (Lambda arg x _) = "lambda" <> Pr.parens (pretty arg <+> "-->" <+> pretty x)
+    pretty (Lambda arg x _) = "lambda" <> Pr.parens (fsep [pretty arg, "-->", pretty x])
 
     pretty x@(Op (Name op) [_,_])
         | let lexeme = textToLexeme op
@@ -123,18 +123,18 @@ prettyPrec envPrec (Op (Name op) [a,b])
     = case lexeme of
         Nothing -> bug "prettyPrec"
         Just l  -> case [ (fixity,prec) | (l',fixity,prec) <- operators, l == l' ] of
-            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
-                                                                  , pretty op
-                                                                  , prettyPrec (prec+1) b
-                                                                  ]
-            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) a
-                                                                  , pretty op
-                                                                  , prettyPrec (prec+1) b
-                                                                  ]
-            [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
-                                                                  , pretty op
-                                                                  , prettyPrec (prec+1) b
-                                                                  ]
+            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec  prec    a
+                                                                   , pretty op
+                                                                   , prettyPrec (prec+1) b
+                                                                   ]
+            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec (prec+1) a
+                                                                   , pretty op
+                                                                   , prettyPrec (prec+1) b
+                                                                   ]
+            [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec  prec    a
+                                                                   , pretty op
+                                                                   , prettyPrec (prec+1) b
+                                                                   ]
             _ -> bug "prettyPrec"
 prettyPrec _ x = pretty x
 
