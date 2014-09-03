@@ -1,0 +1,21 @@
+
+[900]
+
+&a != &b
+
+    ~~>
+
+(exists i : &ra . &ma[i] != &mb[i]) \/ (&sa != &sb)
+
+    where &a hasRepr Set~Explicit
+    where &b hasRepr Set~Explicit
+
+    where &a hasDomain `set (size &sa, ..) of &t1`
+    where &b hasDomain `set (size &sb, ..) of &t2`
+
+    letting &ma be refn(&a)
+    letting &mb be refn(&b)
+
+    letting &ra be indices(&ma,0)
+    letting &rb be indices(&mb,0)
+
