@@ -124,13 +124,12 @@ specToModel (Spec lang stmt) = Model
                                 ]
             in
                 Op (Name qnName)
-                    [ filterOr
-                        ( Op "map_domain"
-                            [ Lambda (convPat ty pat)
+                    [ Op "map_domain"
+                        [ Lambda (convPat ty pat)
                                      (convExpr body)
                                      (bug $ "lambda:" <+> pretty (convExpr body))
-                            , (Domain (convDomain quanOverDom))
-                            ] ) ]
+                        , filterOr (Domain (convDomain quanOverDom))
+                        ] ]
 
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
                         | [pat]             := quantified.quanVar
@@ -159,13 +158,12 @@ specToModel (Spec lang stmt) = Model
 
             in
                 Op (Name qnName)
-                    [ filterOr
-                        ( Op op'
-                            [ Lambda (convPat ty pat)
-                                     (convExpr body)
-                                     (bug $ "lambda:" <+> pretty (convExpr body))
-                            , convExpr quanOverExpr
-                            ] ) ]
+                    [ Op op'
+                        [ Lambda (convPat ty pat)
+                                 (convExpr body)
+                                 (bug $ "lambda:" <+> pretty (convExpr body))
+                        , filterOr (convExpr quanOverExpr)
+                        ] ]
 
 -- unary operators
         convExpr [xMatch| xs := operator.dontCare     |] = Op "dontCare"     (map convExpr xs)
