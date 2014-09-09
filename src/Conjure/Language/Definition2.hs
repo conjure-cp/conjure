@@ -76,7 +76,7 @@ data ExpressionConstant k
 instance (Kind k, Kind k2, k ~ k2) => ExpressionClass (ExpressionConstant k) k2 where
     data Expression (ExpressionConstant k) = MkExpressionConstant (Constant k)
         -- deriving Show
-    typeOfExpression (MkExpressionConstant c) = typeOfDomain undefined
+    typeOfExpression (MkExpressionConstant _) = typeOfDomain undefined
 
 -- | OpPlus is an ExpressionClass
 -- 
@@ -86,7 +86,9 @@ instance (Kind k, Kind k2, k ~ k2) => ExpressionClass (ExpressionConstant k) k2 
 instance (k ~ KindInt) => ExpressionClass OpPlus k where
     data Expression OpPlus = MkOpPlus (Operands OpPlus)
         -- deriving Show
-    typeOfExpression (MkOpPlus (OpPlusOperands a b)) = TypeInt
+    typeOfExpression (MkOpPlus (OpPlusOperands a b)) =
+        case (typeOfExpression a, typeOfExpression b) of
+            (TypeInt, TypeInt) -> TypeInt
 
 
 
