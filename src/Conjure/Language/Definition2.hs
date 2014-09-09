@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls, TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module Conjure.Language.Definition2 where
     
@@ -49,7 +50,11 @@ class OpC a k where
 
 data OpPlus
 instance OpC OpPlus KindInt where
-    data Operands OpPlus = OpPlusOperands Int Int           deriving Show
+    data Operands OpPlus = forall x k .
+                            ( ExpressionClass x k
+                            , k ~ KindInt
+                            ) => OpPlusOperands (Expression x) (Expression x)
+        -- deriving Show
     fixity _ = Infix AssocL 600
     typeOfOp (OpPlusOperands _ _) = TypeInt
 
@@ -75,12 +80,12 @@ instance (Kind k, Kind k2, k ~ k2) => ExpressionClass (ExpressionConstant k) k2 
 
 -- | OpPlus is an ExpressionClass
 -- 
--- >>> typeOfExpression (MkOpPlus (OpPlusOperands 1 3))
+-- >>> typeOfExpression (MkOpPlus (OpPlusOperands (MkExpressionConstant $ ConstantInt 1) (MkExpressionConstant $ ConstantInt 3)))
 -- TypeInt
 -- 
 instance (k ~ KindInt) => ExpressionClass OpPlus k where
     data Expression OpPlus = MkOpPlus (Operands OpPlus)
-        deriving Show
+        -- deriving Show
     typeOfExpression (MkOpPlus (OpPlusOperands a b)) = TypeInt
 
 
