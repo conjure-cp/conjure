@@ -84,14 +84,19 @@ instance ( kInps ~ [KindInt,KindInt]
             (TypeInt, TypeInt) -> TypeInt
 
 
-
--- data OpTimes
--- instance OpC OpTimes x where
---     data Op OpTimes x = OpTimes (Expression x) (Expression x)
---     fixity Proxy = Infix AssocL 700
---     typeOfOp (OpTimes a b) =
---         case (typeOfExpression a, typeOfExpression b) of
---             (TypeInt, TypeInt) -> TypeInt
+-- | OpEq
+--
+-- >>> typeOfOp (OpEq (MkXConstant $ ConstantInt 1) (MkXConstant $ ConstantInt 3))
+-- TypeBool
+--
+data OpEq
+instance ( kInps ~ [a,b]
+         , kOut  ~ KindBool
+         , ExpressionC x kOut
+         ) => OpC OpEq x kInps kOut where
+    data Op OpEq x kInps kOut = OpEq (Expression x) (Expression x)
+    fixity Proxy = Infix AssocN 400
+    typeOfOp (OpEq _ _) = TypeBool
 
 
 class ExpressionC a k where
