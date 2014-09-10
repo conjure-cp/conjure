@@ -56,7 +56,7 @@ class OpC a x (kInps :: [*]) kOut where
 -- TypeInt
 --
 data OpPlus
-instance ( ExpressionClass x KindInt
+instance ( ExpressionC x KindInt
          , kInps ~ [KindInt,KindInt]
          , kOut  ~ KindInt
          ) => OpC OpPlus x kInps kOut where
@@ -75,7 +75,7 @@ instance ( ExpressionClass x KindInt
 data OpTimes
 instance ( kInps ~ [KindInt,KindInt]
          , kOut  ~ KindInt
-         , ExpressionClass x kOut
+         , ExpressionC x kOut
          ) => OpC OpTimes x kInps kOut where
     data Op OpTimes x kInps kOut = OpTimes (Expression x) (Expression x)
     fixity Proxy = Infix AssocL 600
@@ -94,7 +94,7 @@ instance ( kInps ~ [KindInt,KindInt]
 --             (TypeInt, TypeInt) -> TypeInt
 
 
-class ExpressionClass a k where
+class ExpressionC a k where
     data Expression a
     typeOfExpression :: Expression a -> Type k
 
@@ -108,12 +108,13 @@ class ExpressionClass a k where
 -- TypeInt
 --
 data ExpressionConstant k
-instance (Kind k, Kind k2, k ~ k2) => ExpressionClass (ExpressionConstant k) k2 where
+instance (Kind k, Kind k2, k ~ k2) => ExpressionC (ExpressionConstant k) k2 where
     data Expression (ExpressionConstant k) = MkXConstant (Constant k)
         -- deriving Show
     typeOfExpression (MkXConstant _) = typeOfDomain Proxy
 
--- | OpPlus is an ExpressionClass
+-- | `ExpressionOp` and the associated instance for `ExpressionC` represent how to inject things
+-- constructed using an operator (`OpC`) into expressions.
 --
 -- >>> typeOfExpression (MkXOp (OpPlus (MkXConstant $ ConstantInt 1) (MkXConstant $ ConstantInt 3))) :: Type KindInt
 -- TypeInt
@@ -123,9 +124,9 @@ instance (Kind k, Kind k2, k ~ k2) => ExpressionClass (ExpressionConstant k) k2 
 --
 data ExpressionOp op x (kInps :: [*]) kOut
 instance ( OpC op x kInps kOut
-         , ExpressionClass x kOut
+         , ExpressionC x kOut
          , kOut ~ kOut2
-         ) => ExpressionClass (ExpressionOp op x kInps kOut) kOut2 where
+         ) => ExpressionC (ExpressionOp op x kInps kOut) kOut2 where
     data Expression (ExpressionOp op x kInps kOut) = MkXOp (Op op x kInps kOut)
         -- deriving Show
     typeOfExpression (MkXOp op) = typeOfOp op
