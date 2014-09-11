@@ -58,6 +58,7 @@ echo "BIN_DIR         : ${BIN_DIR}"
 echo "BUILD_DOCS      : ${BUILD_DOCS}"
 echo "BUILD_TESTS     : ${BUILD_TESTS}"
 echo "RUN_TESTS       : ${RUN_TESTS}"
+echo "COVERAGE        : ${COVERAGE}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
@@ -168,6 +169,13 @@ else
     cabal sandbox init
 fi
 
+# use: hpc markup conjure.tix --destdir=.hpc to generate the html report
+# (or hpc markup conjure-testing.tix --destdir=whatevs)
+if [ $COVERAGE = "yes" ]; then
+    HPC="--ghc-options \"-fhpc\""
+else
+    HPC=""
+fi
 
 # install conjure, finally
 
@@ -179,7 +187,7 @@ cabal install                                                       \
 
 cabal configure                                                     \
     --disable-library-profiling --disable-executable-profiling      \
-    ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
+    ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
 

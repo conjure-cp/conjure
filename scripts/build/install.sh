@@ -22,6 +22,7 @@ export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 export BUILD_DOCS=${BUILD_DOCS:-no}
 export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
+export COVERAGE=${COVERAGE:-no}
 
 # where is this script?
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
