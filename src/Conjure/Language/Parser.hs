@@ -295,10 +295,11 @@ specToModel (Spec lang stmt) = Model
         convExpr x = bug $ "convExpr" <+> prettyAsPaths x
 
         convPat :: Type -> E -> AbstractPattern
-        convPat ty [xMatch| [Prim (S nm)] := structural.single.reference |] = Single (Name nm) ty
-        convPat _  [xMatch| ts := structural.tuple  |] = AbsPatTuple  (map (convPat TypeAny) ts)
-        convPat _  [xMatch| ts := structural.matrix |] = AbsPatMatrix (map (convPat TypeAny) ts)
-        convPat _  [xMatch| ts := structural.set    |] = AbsPatSet    (map (convPat TypeAny) ts)
+        convPat ty [xMatch| [Prim (S nm)] := reference |] = Single (Name nm) ty
+        convPat ty [xMatch| [x] := structural.single   |] = convPat ty x
+        convPat _  [xMatch| ts  := structural.tuple    |] = AbsPatTuple  (map (convPat TypeAny) ts)
+        convPat _  [xMatch| ts  := structural.matrix   |] = AbsPatMatrix (map (convPat TypeAny) ts)
+        convPat _  [xMatch| ts  := structural.set      |] = AbsPatSet    (map (convPat TypeAny) ts)
         convPat _ x = bug $ "convPat" <+> prettyAsPaths x
 
         convDomain :: Domain () E -> Domain () Expression
