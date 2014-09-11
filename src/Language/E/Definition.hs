@@ -289,15 +289,16 @@ prettyAsPaths EOF = "EOF"
 prettyAsPaths (StatementAndNext a b) = vcat [prettyAsPaths a, "", prettyAsPaths b]
 prettyAsPaths e = (vcat . map pOne . toPaths) e
     where
+        pOne :: ([Tag], Maybe Doc) -> Doc
         pOne (ts,Nothing) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":= []"
-        pOne (ts,Just p ) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":=" <+> pretty p
+        pOne (ts,Just p ) = hcat (map pretty $ intersperse "." $ map pretty ts) <+> ":=" <+> p
 
-        toPaths :: E -> [([Tag], Maybe BuiltIn)]
-        toPaths (Prim p) = [([], Just p)]
+        toPaths :: E -> [([Tag], Maybe Doc)]
+        toPaths (Prim p) = [([], Just (pretty p))]
         toPaths (Tagged s []) = [([s],Nothing)]
         toPaths (Tagged s xs) = map (first (s:)) (concatMap toPaths xs)
-        toPaths (C x) = bug $ "prettyAsPaths.toPaths C" <+> pretty (show x)
-        toPaths (D x) = bug $ "prettyAsPaths.toPaths D" <+> pretty (show x)
+        toPaths (C x) = [([], Just $ pretty $ show x)]
+        toPaths (D x) = [([], Just $ pretty $ show x)]
         toPaths EOF {} = bug "prettyAsPaths.toPaths EOF"
         toPaths StatementAndNext {} = bug "prettyAsPaths.toPaths StatementAndNext"
 

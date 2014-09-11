@@ -165,6 +165,46 @@ specToModel (Spec lang stmt) = Model
                         , filterOr (convExpr quanOverExpr)
                         ] ]
 
+        convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
+                        | [pat]             := quantified.quanVar
+                        | [D quanOverDom]   := quantified.quanOverDom
+                        | [op]              := quantified.quanOverOp.binOp
+                        | [expr]            := quantified.quanOverExpr
+                        | [guardE]          := quantified.guard
+                        | [body]            := quantified.body
+                        |] =
+            let
+                ty = typeOf (convDomain quanOverDom)
+                filterOr b =
+                    if guardE == [xMake| emptyGuard := [] |]
+                        then Op "filter"
+                                [ Lambda (convPat ty pat)
+                                         (Op op' [convExpr pat, convExpr expr])
+                                         (bug "lambda")
+                                , b
+                                ]
+                        else Op "filter"
+                                [ Lambda (convPat ty pat)
+                                         (Op "/\\" [ convExpr guardE
+                                                   , Op op' [convExpr pat, convExpr expr]
+                                                   ] )
+                                         (bug "lambda")
+                                , b
+                                ]
+                op' = case op of
+                    [xMatch| [] := in       |] -> "in"
+                    [xMatch| [] := subset   |] -> "subset"
+                    [xMatch| [] := subsetEq |] -> "subsetEq"
+                    _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
+            in
+                Op (Name qnName)
+                    [ Op "map_domain"
+                        [ Lambda (convPat ty pat)
+                                     (convExpr body)
+                                     (bug $ "lambda:" <+> pretty (convExpr body))
+                        , filterOr (Domain (convDomain quanOverDom))
+                        ] ]
+
 -- unary operators
         convExpr [xMatch| xs := operator.dontCare     |] = Op "dontCare"     (map convExpr xs)
         convExpr [xMatch| xs := operator.allDiff      |] = Op "allDiff"      (map convExpr xs)
