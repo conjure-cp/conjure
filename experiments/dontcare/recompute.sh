@@ -298,25 +298,7 @@ echo "recomputing..."
 
 pushd all-combinations
 
-for size in {1..3}
-do
-    mkdir "size${size}" ; pushd "size${size}"
-
-    runhaskell ../create_essences.hs 1 $size
-
-    # conjure_all
-    parallel --no-notice {1} {2//} ::: conjureInDir_usesDontCare ::: */*.essence
-
-    # conjure_all_solve
-    parallel --no-notice srOne_allsols {.} "none" "none" ::: */usesDontCare/*.eprime
-
-    # clean up
-    find . -size 0                  -exec echo removing {} \; -exec rm {} \;
-    find . -name "*.minion.aux"     -exec echo removing {} \; -exec rm {} \;
-    popd
-done
-
-for size in {1..2}
+for size in {2..2}
 do
     mkdir "size${size}" ; pushd "size${size}"
 
@@ -345,5 +327,7 @@ done
 
 popd
 
-echo "recomputed, happy?"
+pushd all-combinations/size2
+grep "Solutions Found" */compact/*.minion-stdout
+popd
 
