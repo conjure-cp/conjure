@@ -43,10 +43,7 @@ isTestDir baseDir possiblyDir =
 --                + D/expected for the expected output files
 testSingleDir :: FilePath -> TestName -> IO TestTree
 testSingleDir baseDir basename = do
-    checkingExpected <- checkExpected (baseDir </> basename </> "expected")
-                                      (baseDir </> basename </> "outputs" )
-    return $ testGroup basename
-        [ testCase "Conjuring" $ do
+    let conjuring = testCase "Conjuring" $ do
             let wd = baseDir </> basename
             let outputsDir = wd </> "outputs"
             removeDirectoryRecursive outputsDir
@@ -61,8 +58,11 @@ testSingleDir baseDir basename = do
                 else shelly $ print_stdout False
                             $ print_stderr False
                             $ testSingleDirWithParams outputsDir models wd params
-        , checkingExpected
-        ]
+
+    checkingExpected <- checkExpected (baseDir </> basename </> "expected")
+                                      (baseDir </> basename </> "outputs" )
+
+    return $ testGroup basename (conjuring : checkingExpected)
 
 
 testSingleDirNoParam :: FilePath -> [FilePath] -> Sh ()
@@ -134,10 +134,10 @@ testSingleDirWithParams outputsDir models paramsDir params =
                             writeFile filename (renderWide s)
 
 
-checkExpected :: FilePath -> FilePath -> IO TestTree
+checkExpected :: FilePath -> FilePath -> IO [TestTree]
 checkExpected expected generated = do
     expecteds <- filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents expected
-    cases <- forM expecteds $ \ item -> do
+    forM expecteds $ \ item -> do
         let expectedPath  = expected  </> item
         let generatedPath = generated </> item
         isFile <- doesFileExist generatedPath
@@ -150,8 +150,7 @@ checkExpected expected generated = do
                         Nothing -> return ()
                         Just msg -> assertFailure $ show $ "models differ: " <+> msg
             else
-                return $ testCase item (assertFailure $ "file doesn't exist:" ++ generatedPath)
-    return (testGroup (expected ++ " ~~ " ++ generated) cases)
+                return $ testCase ("Diff, " ++ item) (assertFailure $ "file doesn't exist: " ++ generatedPath)
 
 
 modelAll :: FilePath -> Model -> IO ()
