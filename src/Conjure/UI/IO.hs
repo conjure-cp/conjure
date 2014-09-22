@@ -10,9 +10,6 @@ import Conjure.Language.Parser
 import Conjure.Language.Pretty
 import Language.E.Definition
 
--- directory
-import System.Directory ( createDirectoryIfMissing )
-
 -- text
 import qualified Data.Text as T
 

@@ -19,5 +19,8 @@ modelDiffIO m1 m2 =
 -- | returns `Just msg` if the models are different, msg being an explanation of what's diff.
 --   returns `Nothing` if the models are the same.
 modelDiff :: Model -> Model -> Maybe Doc
-modelDiff _ _ = Just "Just Plain Wrong (TM)"
+modelDiff m1 m2 =
+    if mStatements m1 == mStatements m2
+        then Nothing
+        else Just "Just Plain Wrong (TM)"
 

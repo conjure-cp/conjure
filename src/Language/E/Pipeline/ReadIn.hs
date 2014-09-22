@@ -5,7 +5,6 @@ module Language.E.Pipeline.ReadIn where
 import Language.E
 
 import qualified Data.Text as T
-import System.Directory ( createDirectoryIfMissing )
 
 
 readSpecFromFile :: FilePath -> IO Spec

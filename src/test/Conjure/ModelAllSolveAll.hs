@@ -4,6 +4,7 @@ module Conjure.ModelAllSolveAll ( tests ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
+import Conjure.Language.ModelDiff
 import Conjure.UI.IO
 import Conjure.UI.Model
 import Conjure.UI.RefineParam
@@ -14,7 +15,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 -- shelly
-import Shelly ( Sh, shelly, run, lastStderr, print_stdout )
+import Shelly ( Sh, shelly, run, lastStderr, print_stdout, print_stderr )
 
 -- text
 import qualified Data.Text as T ( null, unpack )
@@ -24,7 +25,7 @@ tests :: IO TestTree
 tests = do
     let baseDir = "src/test/exhaustive"
     dirs <- filterM (isTestDir baseDir) =<< getDirectoryContents baseDir
-    let testCases = map (testSingleDir baseDir) dirs
+    testCases <- mapM (testSingleDir baseDir) dirs
     return (testGroup "exhaustive" testCases)
 
 
@@ -40,20 +41,28 @@ isTestDir baseDir possiblyDir =
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: FilePath -> TestName -> TestTree
-testSingleDir baseDir basename = testCase basename $ do
-    let wd = baseDir </> basename
-    let outputsDir = wd </> "outputs"
-    -- removeDirectoryRecursive outputsDir
-    essence <- readModelFromFile (wd </> basename ++ ".essence")
-    modelAll outputsDir essence
-    models <- filter (".eprime" `isSuffixOf`) <$> getDirectoryContents outputsDir
-    params <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents wd
-    if null params
-        then shelly $ print_stdout False
-                    $ testSingleDirNoParam outputsDir models
-        else shelly $ print_stdout False
-                    $ testSingleDirWithParams outputsDir models wd params
+testSingleDir :: FilePath -> TestName -> IO TestTree
+testSingleDir baseDir basename = do
+    checkingExpected <- checkExpected (baseDir </> basename </> "expected")
+                                      (baseDir </> basename </> "outputs" )
+    return $ testGroup basename
+        [ testCase "Conjuring" $ do
+            let wd = baseDir </> basename
+            let outputsDir = wd </> "outputs"
+            removeDirectoryRecursive outputsDir
+            essence <- readModelFromFile (wd </> basename ++ ".essence")
+            modelAll outputsDir essence
+            models <- filter (".eprime" `isSuffixOf`) <$> getDirectoryContents outputsDir
+            params <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents wd
+            if null params
+                then shelly $ print_stdout False
+                            $ print_stderr False
+                            $ testSingleDirNoParam outputsDir models
+                else shelly $ print_stdout False
+                            $ print_stderr False
+                            $ testSingleDirWithParams outputsDir models wd params
+        , checkingExpected
+        ]
 
 
 testSingleDirNoParam :: FilePath -> [FilePath] -> Sh ()
@@ -96,7 +105,7 @@ testSingleDirWithParams outputsDir models paramsDir params =
             Left err -> liftIO $ assertFailure $ renderNormal err
             Right eprimeParam -> do
                 let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
-                -- liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
+                liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
                 _stdoutSR <- run "savilerow"
                     [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
                     , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
@@ -123,6 +132,26 @@ testSingleDirWithParams outputsDir models paramsDir params =
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
                             writeFile filename (renderWide s)
+
+
+checkExpected :: FilePath -> FilePath -> IO TestTree
+checkExpected expected generated = do
+    expecteds <- filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents expected
+    cases <- forM expecteds $ \ item -> do
+        let expectedPath  = expected  </> item
+        let generatedPath = generated </> item
+        isFile <- doesFileExist generatedPath
+        if isFile
+            then do
+                e <- readModelFromFile expectedPath
+                g <- readModelFromFile generatedPath
+                return $ testCase item $
+                    case modelDiff e g of
+                        Nothing -> return ()
+                        Just msg -> assertFailure $ show $ "models differ: " <+> msg
+            else
+                return $ testCase item (assertFailure $ "file doesn't exist:" ++ generatedPath)
+    return (testGroup (expected ++ " ~~ " ++ generated) cases)
 
 
 modelAll :: FilePath -> Model -> IO ()
