@@ -1,5 +1,6 @@
 module Main where
 
+import Conjure.Prelude
 import Conjure ( getConjureMode, runConjureMode, conjureHelp )
 
 main :: IO ()

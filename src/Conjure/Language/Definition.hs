@@ -4,6 +4,7 @@
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
+    , languageEprime, oneSuchThat
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
@@ -65,6 +66,18 @@ instance FromJSON Model
 
 instance Default Model where
     def = Model def [] def
+
+languageEprime :: Model -> Model
+languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
+
+oneSuchThat :: Model -> Model
+oneSuchThat m = m { mStatements = others ++ [suchThat] }
+    where collect (SuchThat s) = ([], s)
+          collect s = ([s], [])
+          (others, suchThats) = mconcat (map collect (mStatements m))
+          suchThat = if null suchThats
+                      then SuchThat [Constant (ConstantBool True)]
+                      else SuchThat suchThats
 
 
 data LanguageVersion = LanguageVersion Name [Int]

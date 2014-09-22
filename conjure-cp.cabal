@@ -40,6 +40,7 @@ Library
 
                      -- supporting modules for the user interfacing parts
                      , Conjure.UI.IO
+                     , Conjure.UI.Model
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
 
@@ -175,37 +176,15 @@ Library
         -Wall
 
 
-Executable conjureBF
-    default-language : Haskell2010
-    hs-source-dirs   : src/exec
-    main-is          : SmallStepMain.hs
-    build-depends    : conjure-cp
-                     , base
-                     , bytestring
-                     , directory
-                     , filepath
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-incomplete-uni-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -rtsopts
-        -with-rtsopts=-K200M
-        -with-rtsopts=-M4G
-
-
 Executable conjure
     default-language : Haskell2010
     hs-source-dirs   : src/exec
     main-is          : Main.hs
     build-depends    : conjure-cp
                      , base
+    default-extensions:
+        NoImplicitPrelude
+        OverloadedStrings
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -230,9 +209,13 @@ test-suite conjure-testing
     build-depends    : conjure-cp
                      , base
                      , containers 
+                     , shelly
                      , tasty
                      , tasty-hunit
                      , text
+    default-extensions:
+        NoImplicitPrelude
+        OverloadedStrings
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

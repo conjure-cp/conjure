@@ -48,11 +48,20 @@ refineParam eprimeModel essenceParam = do
 
     eprimeLettings <- liftM concat $ mapM down_ essenceGivensAndLettings
 
-    return $ Model def
-                   [ Declaration (Letting n (Constant x))
-                   | (n, _, x) <- eprimeLettings
-                   ]
-                   def
+    -- void $ throwError $ vcat
+    --     [ "essenceLettings:" <+> vcat (map pretty essenceLettings)
+    --     , "essenceGivens:" <+> vcat (map pretty essenceGivens)
+    --     , "essenceGivensAndLettings:" <+> vcat (map pretty essenceGivensAndLettings)
+    --     , "eprimeLettings:" <+> vcat (map pretty eprimeLettings)
+    --     ]
+
+    return $ languageEprime $
+        Model
+            def
+            [ Declaration (Letting n (Constant x))
+            | (n, _, x) <- eprimeLettings
+            ]
+            def
 
 extractLettings :: Model -> [(Name, Expression)]
 extractLettings model =

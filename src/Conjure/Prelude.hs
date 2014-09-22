@@ -21,6 +21,7 @@ module Conjure.Prelude
     , RandomM(..)
     , fst3, snd3, thd3
     , (|>)
+    , allNats
     ) where
 
 import GHC.Err as X ( error )
@@ -46,6 +47,7 @@ import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
 import Control.Monad as X ( Monad(..), mapM, mapM_, MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
                           , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence
+                          , filterM
                           )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
@@ -106,8 +108,11 @@ import qualified Text.PrettyPrint as Pr
 
 import qualified Data.Set as S
 
-import System.Directory ( getDirectoryContents )
-import System.FilePath ( (</>) )
+import System.Directory as X
+    ( getDirectoryContents, doesDirectoryExist, doesFileExist
+    , createDirectoryIfMissing, removeDirectoryRecursive
+    )
+import System.FilePath as X ( (</>) )
 import System.CPUTime ( getCPUTime )
 
 import Debug.Trace as X ( trace )
@@ -236,4 +241,7 @@ instance Eq Doc where
 
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
+
+allNats :: [Integer]
+allNats = [1..]
 
