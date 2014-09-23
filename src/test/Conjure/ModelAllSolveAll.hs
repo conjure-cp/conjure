@@ -148,7 +148,7 @@ checkExpected expected generated = do
                 return $ testCase item $
                     case modelDiff e g of
                         Nothing -> return ()
-                        Just msg -> assertFailure $ show $ "models differ: " <+> msg
+                        Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
             else
                 return $ testCase ("Diff, " ++ item) (assertFailure $ "file doesn't exist: " ++ generatedPath)
 
