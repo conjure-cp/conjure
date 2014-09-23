@@ -4,8 +4,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Conjure.Representations
-    ( down, down_, up
-    , down1, down1_, up1, dispatch
+    ( down_, down, up
+    , down1_, down1, up1, dispatch
     ) where
 
 -- conjure
@@ -33,19 +33,19 @@ type RepresentationResult m =
     )
 
 
-down1
+down1_
     :: (Applicative m, MonadError Doc m)
     => Representation m
     ->           (Name, D)
     -> m (Maybe [(Name, D)])
-down1 repr (name, domain) = repr name domain >>= fst3
+down1_ repr (name, domain) = repr name domain >>= fst3
 
-down1_
+down1
     :: (Applicative m, MonadError Doc m)
     => Representation m
     ->           (Name, D, Constant)
     -> m (Maybe [(Name, D, Constant)])
-down1_ repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constant
+down1 repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constant
 
 up1
     :: (Applicative m, MonadError Doc m)
@@ -56,25 +56,25 @@ up1
 up1 repr (name, domain) ctxt = repr name domain >>= \ r -> thd3 r ctxt
 
 
-down
+down_
     :: (Applicative m, MonadError Doc m)
     =>    (Name, D)
     -> m [(Name, D)]
-down inp = do
-    mout <- down1 dispatch inp
-    case mout of
-        Nothing -> return [inp]
-        Just outs -> liftM concat $ mapM down outs
-
-down_
-    :: (Applicative m, MonadError Doc m)
-    =>    (Name, D, Constant)
-    -> m [(Name, D, Constant)]
 down_ inp = do
     mout <- down1_ dispatch inp
     case mout of
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down_ outs
+
+down
+    :: (Applicative m, MonadError Doc m)
+    =>    (Name, D, Constant)
+    -> m [(Name, D, Constant)]
+down inp = do
+    mout <- down1 dispatch inp
+    case mout of
+        Nothing -> return [inp]
+        Just outs -> liftM concat $ mapM down outs
 
 up
     :: (Applicative m, MonadError Doc m)
@@ -84,7 +84,7 @@ up
 up ctxt (name, highDomain) = do
     toDescend'
         :: Maybe [(Name, D)]
-        <- down1 dispatch (name, highDomain)
+        <- down1_ dispatch (name, highDomain)
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
@@ -182,7 +182,7 @@ matrix name indexDomain innerDomain =
     where
 
         matrixDown = do
-            mres <- down1 dispatch (name, innerDomain)
+            mres <- down1_ dispatch (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
                 Just mids -> return $ Just [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
@@ -191,7 +191,7 @@ matrix name indexDomain innerDomain =
         matrixDown_ (ConstantMatrix _indexDomain2 constants) = do
             mids1
                 :: [Maybe [(Name, D, Constant)]]
-                <- sequence [ down1_ dispatch (name, innerDomain, c) | c <- constants ]
+                <- sequence [ down1 dispatch (name, innerDomain, c) | c <- constants ]
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
                 then return Nothing
@@ -225,7 +225,7 @@ matrix name indexDomain innerDomain =
 
             mid1
                 :: Maybe [(Name, D)]
-                <- down1 dispatch (name, innerDomain)
+                <- down1_ dispatch (name, innerDomain)
 
             case mid1 of
                 Nothing ->
@@ -340,8 +340,8 @@ setOccurrence name attrs intRanges =
 
 setExplicit :: MonadError Doc m => Name -> Constant -> D -> RepresentationResult m
 setExplicit name size innerDomain = 
-    ( setDown
-    , setDown_
+    ( setDown_
+    , setDown
     , setUp
     )
 
@@ -350,17 +350,17 @@ setExplicit name size innerDomain =
         outName = mconcat [name, "_Explicit"] 
         outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
 
-        setDown = return $ Just
+        setDown_ = return $ Just
             [ ( outName
               , DomainMatrix outIndexDomain innerDomain
               ) ]
 
-        setDown_ (ConstantSet constants) = return $ Just
+        setDown (ConstantSet constants) = return $ Just
             [ ( outName
               , DomainMatrix   outIndexDomain innerDomain
               , ConstantMatrix outIndexDomain constants
               ) ]
-        setDown_ _ = return Nothing
+        setDown _ = return Nothing
 
         setUp ctxt =
             case lookup outName ctxt of
@@ -384,8 +384,8 @@ setExplicit name size innerDomain =
 
 setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> D -> RepresentationResult m
 setExplicitVarSizeWithMarker name attrs innerDomain = 
-    ( setDown
-    , setDown_
+    ( setDown_
+    , setDown
     , setUp
     )
 
@@ -406,7 +406,7 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
 
         getIndexDomain = getMaxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt x)]
 
-        setDown = do
+        setDown_ = do
             indexDomain :: D <- getIndexDomain
             return $ Just
                 [ ( nameMarker
@@ -417,7 +417,7 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
                   )
                 ]
 
-        setDown_ (ConstantSet constants) = do
+        setDown (ConstantSet constants) = do
             indexDomain :: D <- getIndexDomain
 
             z <- zeroVal innerDomain
@@ -434,7 +434,7 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        setDown_ _ = return Nothing
+        setDown _ = return Nothing
 
         setUp ctxt =
             case (lookup nameMarker ctxt, lookup nameMain ctxt) of
@@ -472,8 +472,8 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
 
 setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> D -> RepresentationResult m
 setExplicitVarSizeWithFlags name attrs innerDomain = 
-    ( setDown
-    , setDown_
+    ( setDown_
+    , setDown
     , setUp
     )
 
@@ -494,7 +494,7 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
 
         getIndexDomain = getMaxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt x)]
 
-        setDown = do
+        setDown_ = do
             indexDomain :: D <- getIndexDomain
             return $ Just
                 [ ( nameFlag
@@ -505,7 +505,7 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
                   )
                 ]
 
-        setDown_ (ConstantSet constants) = do
+        setDown (ConstantSet constants) = do
             indexDomain :: D <- getIndexDomain
 
             z <- zeroVal innerDomain
@@ -525,7 +525,7 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        setDown_ _ = return Nothing
+        setDown _ = return Nothing
 
         setUp ctxt =
             case (lookup nameFlag ctxt, lookup nameMain ctxt) of

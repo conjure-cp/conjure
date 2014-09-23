@@ -9,7 +9,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
-import Conjure.Representations ( down_ )
+import Conjure.Representations ( down )
 
 
 refineParam
@@ -46,7 +46,7 @@ refineParam eprimeModel essenceParam = do
             | (n, d) <- essenceGivens'
             ]
 
-    eprimeLettings <- liftM concat $ mapM down_ essenceGivensAndLettings
+    eprimeLettings <- liftM concat $ mapM down essenceGivensAndLettings
 
     -- void $ throwError $ vcat
     --     [ "essenceLettings:" <+> vcat (map pretty essenceLettings)
