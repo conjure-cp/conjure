@@ -32,7 +32,9 @@ type RepresentationResult m =
     , [(Name, Constant)] -> m (Name, Constant)
     )
 
-
+-- | refine a domain, one level.
+--   the domain is allowed to be at the class level.
+--   the trailing underscore signals that.
 down1_
     :: (Applicative m, MonadError Doc m)
     => Representation m
@@ -40,6 +42,8 @@ down1_
     -> m (Maybe [(Name, D)])
 down1_ repr (name, domain) = repr name domain >>= fst3
 
+-- | refine a domain, together with a constant, one level.
+--   the domain has to be fully instantiated.
 down1
     :: (Applicative m, MonadError Doc m)
     => Representation m
@@ -47,6 +51,9 @@ down1
     -> m (Maybe [(Name, D, Constant)])
 down1 repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constant
 
+-- | translate a bunch of low level constants up, one level.
+--   the high level domain (i.e. the target domain) has to be given.
+--   the domain has to be fully instantiated.
 up1
     :: (Applicative m, MonadError Doc m)
     => Representation m
@@ -56,6 +63,9 @@ up1
 up1 repr (name, domain) ctxt = repr name domain >>= \ r -> thd3 r ctxt
 
 
+-- | refine a domain, all the way.
+--   the domain is allowed to be at the class level.
+--   the trailing underscore signals that.
 down_
     :: (Applicative m, MonadError Doc m)
     =>    (Name, D)
@@ -66,6 +76,8 @@ down_ inp = do
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down_ outs
 
+-- | refine a domain, together with a constant, all the way.
+--   the domain has to be fully instantiated.
 down
     :: (Applicative m, MonadError Doc m)
     =>    (Name, D, Constant)
@@ -76,6 +88,9 @@ down inp = do
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down outs
 
+-- | translate a bunch of low level constants up, all the way.
+--   the high level domain (i.e. the target domain) has to be given.
+--   the domain has to be fully instantiated.
 up
     :: (Applicative m, MonadError Doc m)
     =>  [(Name, Constant)]
@@ -100,6 +115,7 @@ up ctxt (name, highDomain) = do
             up1 dispatch (name, highDomain) midConstants
 
 
+-- | combine all known representations into one.
 dispatch :: (Applicative m, MonadError Doc m) => Representation m
 dispatch name domain =
     case domain of
