@@ -1,14 +1,23 @@
 module Main where
 
 import Conjure.Prelude
-import Conjure ( getConjureMode, runConjureMode, conjureHelp )
+import Conjure.UI.IO ( readModelFromFile )
+import Conjure.UI.Model ( initialise, outputAllModels )
+import Conjure.Language.ModelStats ( modelInfo )
+import Conjure.Language.Pretty ( renderWide )
 
 main :: IO ()
 main = do
-    maybeMode <- getConjureMode
-    case maybeMode of
-        Nothing -> error $  "Cannot parse command line arguments.\n" ++ show conjureHelp
-        Just mode -> runConjureMode mode
+    args <- getArgs
+    let essencePaths = [ a | a <- args, ".essence" `isSuffixOf` a ]
+    -- let paramPaths   = [ a | a <- args, ".param"   `isSuffixOf` a ]
+    essencePath <- case essencePaths of
+        [a] -> return a
+        []  -> error "Provide a *.essence file."
+        _   -> error "Provide a single *.essence file."
+    essence <- readModelFromFile essencePath
+    putStrLn $ renderWide $ modelInfo essence
+    outputAllModels "conjure-output" 1 (initialise essence)
 
 
 

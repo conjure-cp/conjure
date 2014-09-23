@@ -112,6 +112,7 @@ import System.Directory as X
     ( getDirectoryContents, doesDirectoryExist, doesFileExist
     , createDirectoryIfMissing, removeDirectoryRecursive
     )
+import System.Environment as X ( getArgs )
 import System.FilePath as X ( (</>) )
 import System.CPUTime ( getCPUTime )
 

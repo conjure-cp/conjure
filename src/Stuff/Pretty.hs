@@ -5,7 +5,7 @@
 module Stuff.Pretty ( Pretty(..)
                     , (<++>), (<+>), (<>)
                     , prettyList, prettyListDoc
-                    , parensIf
+                    , parens, parensIf
                     , renderNormal, renderWide
                     , hang, hcat
                     , Doc

@@ -27,7 +27,6 @@ import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
 import Language.E.Pipeline.TypeStrengthening ( typeStrengthening )
 import Language.E.ValidateSolution ( validateSolution )
 
-import System.Environment ( getArgs )
 import System.Timeout ( timeout )
 import System.CPUTime ( getCPUTime )
 import Text.Printf ( printf )
