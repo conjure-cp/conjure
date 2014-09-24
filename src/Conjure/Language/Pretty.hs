@@ -141,7 +141,7 @@ prettyPrec _ x = pretty x
 instance Pretty AbstractPattern where
     pretty (Single nm TypeAny) = pretty nm
     pretty (Single nm ty     ) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
-    pretty (AbsPatTuple    xs) = (if length xs <= 1 then "tuple" else "")
+    pretty (AbsPatTuple    xs) = (if length xs <= 1 then "tuple" else empty)
                               <> prettyList Pr.parens "," xs
     pretty (AbsPatMatrix   xs) = prettyList Pr.brackets "," xs
     pretty (AbsPatSet      xs) = prettyList Pr.braces "," xs
@@ -152,7 +152,7 @@ instance Pretty Type where
     pretty TypeInt = "int"
     pretty (TypeEnum (DomainDefnEnum nm _)) = pretty nm
     pretty (TypeUnnamed (DomainDefnUnnamed nm _)) = pretty nm
-    pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else "")
+    pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else empty)
                          <> prettyList Pr.parens "," xs
     pretty (TypeMatrix index inner) = "matrix indexed by"
                                   <+> Pr.brackets (pretty index)
@@ -226,7 +226,7 @@ prettyAttrs a bs =
             else Pr.braces prettya <+> pretty bs
 
 instance Pretty a => Pretty (SetAttr a) where
-    pretty SetAttrNone = ""
+    pretty SetAttrNone = empty
     pretty (SetAttrSize       a  ) = Pr.parens ("size"    <+> pretty a)
     pretty (SetAttrMinSize    a  ) = Pr.parens ("minSize" <+> pretty a)
     pretty (SetAttrMaxSize    a  ) = Pr.parens ("maxSize" <+> pretty a)
