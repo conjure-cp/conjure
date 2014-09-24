@@ -6,7 +6,8 @@
 
 module Conjure.Representations
     ( down_, down, up
-    , down1_, down1, up1, dispatch
+    , down1_, down1, up1
+    , dispatch, reprOptions
     ) where
 
 -- conjure
@@ -28,8 +29,11 @@ type DomainC = Domain HasRepresentation Constant
 -- the maybe for rDown_ and rDown is Nothing when representation doesn't change anything.
 -- like for primitives.
 data Representation m = Representation
-    -- { rCheck :: Domain r Expression -> [DomainX]
-    { rDown_ :: forall x . (Pretty x, ExpressionLike x)
+    { rCheck :: forall x r . (Pretty x, ExpressionLike x)
+             => (Domain r x -> [Domain HasRepresentation x])        -- other checkers for inner domains
+             -> Domain r x                                          -- this domain
+             -> [Domain HasRepresentation x]                        -- with all repr options
+    , rDown_ :: forall x . (Pretty x, ExpressionLike x)
              => (Name, DomainX x)                     -> m (Maybe [(Name, DomainX x)])
     , rDown  :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
     , rUp    :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
@@ -136,10 +140,25 @@ dispatch domain =
                 _ -> bug $ "No representation for the domain:" <+> pretty domain
         _ -> bug $ "No representation for the domain:" <+> pretty domain
 
+allReprs :: [Representation (Either Doc)]
+allReprs =
+    [ primitive, tuple, matrix
+    , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+    ]
+
+
+reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
+reprOptions domain = allChcks domain
+    where allChcks d = concat [ rCheck r allChcks d | r <- allReprs ]
 
 primitive :: MonadError Doc m => Representation m
 primitive = Representation
-    { rDown_ = const $ return Nothing
+    { rCheck = \ _ domain ->
+        case domain of
+            DomainBool -> [DomainBool]
+            DomainInt rs -> [DomainInt rs]
+            _ -> []
+    , rDown_ = const $ return Nothing
     , rDown  = const $ return Nothing
     , rUp    = \ ctxt (name, _) ->
         case lookup name ctxt of
@@ -152,9 +171,12 @@ primitive = Representation
 
 
 tuple :: MonadError Doc m => Representation m
-tuple = Representation tupleDown_ tupleDown tupleUp
+tuple = Representation chck tupleDown_ tupleDown tupleUp
 
     where
+
+        chck f (DomainTuple ds) = DomainTuple <$> mapM f ds
+        chck _ _ = []
 
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
@@ -191,9 +213,12 @@ tuple = Representation tupleDown_ tupleDown tupleUp
 
 
 matrix :: (Applicative m, MonadError Doc m) => Representation m
-matrix = Representation matrixDown_ matrixDown matrixUp
+matrix = Representation chck matrixDown_ matrixDown matrixUp
 
     where
+
+        chck f (DomainMatrix indexDomain innerDomain) = DomainMatrix indexDomain <$> f innerDomain
+        chck _ _ = []
 
         matrixDown_ (name, DomainMatrix indexDomain innerDomain) = do
             mres <- down1_ (dispatch innerDomain) (name, innerDomain)
@@ -294,9 +319,12 @@ matrix = Representation matrixDown_ matrixDown matrixUp
 
 
 setOccurrence :: (Applicative m, MonadError Doc m) => Representation m
-setOccurrence = Representation setDown_ setDown setUp
+setOccurrence = Representation chck setDown_ setDown setUp
 
     where
+
+        chck f (DomainSet _ attrs innerDomain@(DomainInt{})) = DomainSet "Occurrence" attrs <$> f innerDomain
+        chck _ _ = []
 
         outName name = mconcat [name, "_", "Occurrence"]
 
@@ -349,9 +377,12 @@ setOccurrence = Representation setDown_ setDown setUp
 
 
 setExplicit :: MonadError Doc m => Representation m
-setExplicit = Representation setDown_ setDown setUp
+setExplicit = Representation chck setDown_ setDown setUp
 
     where
+
+        chck f (DomainSet _ attrs@(SetAttrSize{}) innerDomain) = DomainSet "Explicit" attrs <$> f innerDomain
+        chck _ _ = []
 
         outName name = mconcat [name, "_", "Explicit"]
 
@@ -395,9 +426,13 @@ setExplicit = Representation setDown_ setDown setUp
 
 
 setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Representation m
-setExplicitVarSizeWithMarker = Representation setDown_ setDown setUp
+setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
 
     where
+
+        chck _ (DomainSet _ (SetAttrSize{}) _) = []
+        chck f (DomainSet _ attrs innerDomain) = DomainSet "ExplicitVarSizeWithMarker" attrs <$> f innerDomain
+        chck _ _ = []
 
         nameMarker name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Marker"]
         nameMain   name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Main"  ]
@@ -481,9 +516,13 @@ setExplicitVarSizeWithMarker = Representation setDown_ setDown setUp
 
 
 setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Representation m
-setExplicitVarSizeWithFlags = Representation setDown setDown_ setUp
+setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
 
     where
+
+        chck _ (DomainSet _ (SetAttrSize{}) _) = []
+        chck f (DomainSet _ attrs innerDomain) = DomainSet "ExplicitVarSizeWithFlags" attrs <$> f innerDomain
+        chck _ _ = []
 
         nameFlag name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Flags"]
         nameMain name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Main"]
@@ -494,7 +533,7 @@ setExplicitVarSizeWithFlags = Representation setDown setDown_ setUp
             _ -> bug $ "domainSize of:" <+> pretty innerDomain
 
 
-        setDown (name, DomainSet _ attrs innerDomain) = do
+        setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
             return $ Just
@@ -505,9 +544,9 @@ setExplicitVarSizeWithFlags = Representation setDown setDown_ setUp
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
-        setDown _ = throwError "N/A {setDown}"
+        setDown_ _ = throwError "N/A {setDown_}"
 
-        setDown_ (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
+        setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
 
@@ -536,7 +575,7 @@ setExplicitVarSizeWithFlags = Representation setDown setDown_ setUp
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        setDown_ _ = throwError "N/A {setDown_}"
+        setDown _ = throwError "N/A {setDown}"
 
         setUp ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameMain name) ctxt) of
