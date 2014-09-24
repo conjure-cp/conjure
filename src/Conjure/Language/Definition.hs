@@ -26,6 +26,8 @@ module Conjure.Language.Definition
 
     , Type(..)
 
+    , ExpressionLike(..)
+
     ) where
 
 -- conjure
@@ -520,5 +522,42 @@ data AbstractPattern
 instance Serialize AbstractPattern
 instance Hashable AbstractPattern
 instance ToJSON AbstractPattern
+
+
+class ExpressionLike a where
+    fromInt :: Int -> a
+
+instance ExpressionLike Constant where
+    fromInt = ConstantInt
+
+instance ExpressionLike Expression where
+    fromInt = Constant . fromInt
+
+
+instance Num Expression where
+    a + b = Op "+" [a,b]
+    a - b = Op "-" [a,b]
+    a * b = Op "*" [a,b]
+    abs a = Op "abs" [a]
+    signum _ = bug "signum {Expression}"
+    fromInteger = fromInt . fromInteger
+
+instance Integral Expression where
+    divMod a b = (Op "/" [a,b], Op "%" [a,b])
+    quotRem = divMod
+    toInteger = bug "toInteger {Expression}"
+
+instance Real Expression where
+    toRational = bug "toRational {Expression}"
+
+instance Enum Expression where
+    fromEnum = bug "fromEnum {Expression}"
+    toEnum = fromInt
+    succ a = a + 1
+    pred a = a - 1
+    enumFrom x = x : enumFrom (succ x)
+    enumFromThen x n = x : enumFromThen (x+n) n
+    enumFromTo _x _y = bug "enumFromTo {Expression}"
+    enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
 
 
