@@ -1108,8 +1108,8 @@ down1Test
     :: (Name, Domain HasRepresentation Constant, Constant)
     -> Maybe [(Name, Domain HasRepresentation Constant, Constant)]
     -> Assertion
-down1Test high low' =
-    case down1 dispatch high of
+down1Test high@(_,domain,_) low' =
+    case down1 (dispatch domain) high of
         Left err -> assertFailure (show err)
         Right low -> Pr low @?= Pr low'
 
@@ -1127,8 +1127,8 @@ up1Test
     -> [(Name, Constant)]
     -> (Name, Constant)
     -> Assertion
-up1Test info lows high' =
-    case up1 dispatch info lows of
+up1Test info@(_,domain) lows high' =
+    case up1 (dispatch domain) info lows of
         Left err -> assertFailure (show err)
         Right high -> Pr high @?= Pr high'
 
@@ -1156,12 +1156,12 @@ testCasesAuto highName highDomain highConstant =
 downup1Test
     :: (Name, Domain HasRepresentation Constant, Constant)
     -> Assertion
-downup1Test high =
-    case down1 dispatch high of
+downup1Test high@(_,domain,_) =
+    case down1 (dispatch domain) high of
         Left err -> assertFailure (show err)
         Right mlows -> do
             let lows = maybe [dropDomain high] (map dropDomain) mlows   -- use high if we cannot go down1
-            case up1 dispatch (dropConstant high) lows of
+            case up1 (dispatch domain) (dropConstant high) lows of
                 Left err -> assertFailure (show err)
                 Right high' -> Pr high' @?= Pr (dropDomain high)
 

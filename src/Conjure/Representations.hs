@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Conjure.Representations
     ( down_, down, up
@@ -10,46 +11,49 @@ module Conjure.Representations
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Language.DomainSize ( domainSizeConstant, valuesInIntDomain )
+import Conjure.Language.DomainSize ( valuesInIntDomain )
 import Conjure.Language.ZeroVal ( zeroVal )
 
 -- text
 import Data.Text ( pack )
 
 
-type D = Domain HasRepresentation Constant
+type DomainX x = Domain HasRepresentation x
+type DomainC = Domain HasRepresentation Constant
 
-type Representation m
-    =  Name
-    -> D
-    -> m (RepresentationResult m)
-
-type RepresentationResult m =
-    ( m (Maybe [(Name, D)])
-    , Constant -> m (Maybe [(Name, D, Constant)])
-    , [(Name, Constant)] -> m (Name, Constant)
-    )
+-- the rDown_, rDown, and rUp all work one level at a time.
+-- the maybe for rDown_ and rDown is Nothing when representation doesn't change anything.
+-- like for primitives.
+data Representation m = Representation
+    -- { rCheck :: Domain r Expression -> [DomainX]
+    { rDown_ :: forall x . (Pretty x, ExpressionLike x)
+             => (Name, DomainX x)                     -> m (Maybe [(Name, DomainX x)])
+    , rDown  :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
+    , rUp    :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
+    }
+    
 
 -- | refine a domain, one level.
 --   the domain is allowed to be at the class level.
 --   the trailing underscore signals that.
 down1_
-    :: (Applicative m, MonadError Doc m)
+    :: (Applicative m, MonadError Doc m, Pretty x, ExpressionLike x)
     => Representation m
-    ->           (Name, D)
-    -> m (Maybe [(Name, D)])
-down1_ repr (name, domain) = repr name domain >>= fst3
+    ->           (Name, DomainX x)
+    -> m (Maybe [(Name, DomainX x)])
+down1_ repr p = rDown_ repr p
 
 -- | refine a domain, together with a constant, one level.
 --   the domain has to be fully instantiated.
 down1
     :: (Applicative m, MonadError Doc m)
     => Representation m
-    ->           (Name, D, Constant)
-    -> m (Maybe [(Name, D, Constant)])
-down1 repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constant
+    ->           (Name, DomainC, Constant)
+    -> m (Maybe [(Name, DomainC, Constant)])
+down1 repr p = rDown repr p
 
 -- | translate a bunch of low level constants up, one level.
 --   the high level domain (i.e. the target domain) has to be given.
@@ -57,21 +61,21 @@ down1 repr (name, domain, constant) = repr name domain >>= \ r -> snd3 r constan
 up1
     :: (Applicative m, MonadError Doc m)
     => Representation m
-    ->   (Name, D)
+    ->   (Name, DomainC)
     ->  [(Name, Constant)]
     -> m (Name, Constant)
-up1 repr (name, domain) ctxt = repr name domain >>= \ r -> thd3 r ctxt
+up1 repr p ctxt = rUp repr ctxt p
 
 
 -- | refine a domain, all the way.
 --   the domain is allowed to be at the class level.
 --   the trailing underscore signals that.
 down_
-    :: (Applicative m, MonadError Doc m)
-    =>    (Name, D)
-    -> m [(Name, D)]
-down_ inp = do
-    mout <- down1_ dispatch inp
+    :: (Applicative m, MonadError Doc m, Pretty x, ExpressionLike x)
+    =>    (Name, DomainX x)
+    -> m [(Name, DomainX x)]
+down_ inp@(_, domain) = do
+    mout <- down1_ (dispatch domain) inp
     case mout of
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down_ outs
@@ -80,10 +84,10 @@ down_ inp = do
 --   the domain has to be fully instantiated.
 down
     :: (Applicative m, MonadError Doc m)
-    =>    (Name, D, Constant)
-    -> m [(Name, D, Constant)]
-down inp = do
-    mout <- down1 dispatch inp
+    =>    (Name, DomainC, Constant)
+    -> m [(Name, DomainC, Constant)]
+down inp@(_, domain, _) = do
+    mout <- down1 (dispatch domain) inp
     case mout of
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down outs
@@ -94,12 +98,12 @@ down inp = do
 up
     :: (Applicative m, MonadError Doc m)
     =>  [(Name, Constant)]
-    ->   (Name, D)
+    ->   (Name, DomainC)
     -> m (Name, Constant)
 up ctxt (name, highDomain) = do
     toDescend'
-        :: Maybe [(Name, D)]
-        <- down1_ dispatch (name, highDomain)
+        -- :: Maybe [(Name, DomainX x)]
+        <- down1_ (dispatch highDomain) (name, highDomain)
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
@@ -112,69 +116,66 @@ up ctxt (name, highDomain) = do
             midConstants
                  :: [(Name, Constant)]
                  <- sequence [ up ctxt (n,d) | (n,d) <- toDescend ]
-            up1 dispatch (name, highDomain) midConstants
+            up1 (dispatch highDomain) (name, highDomain) midConstants
 
 
 -- | combine all known representations into one.
-dispatch :: (Applicative m, MonadError Doc m) => Representation m
-dispatch name domain =
+dispatch :: (Applicative m, MonadError Doc m, Pretty x) => Domain HasRepresentation x -> Representation m
+dispatch domain =
     case domain of
-        DomainBool{} -> return $ primitive name
-        DomainInt {} -> return $ primitive name
-        DomainTuple ds -> return $ tuple name ds
-        DomainMatrix index inner -> return $ matrix name index inner
-        DomainSet "Occurrence" attrs (DomainInt ranges) -> return $ setOccurrence name attrs ranges
-        DomainSet "Explicit" (SetAttrSize size) inner -> return $ setExplicit name size inner
-        DomainSet "ExplicitVarSizeWithMarker" attrs inner -> return $ setExplicitVarSizeWithMarker name attrs inner
-        DomainSet "ExplicitVarSizeWithFlags" attrs inner -> return $ setExplicitVarSizeWithFlags name attrs inner
-        _ -> throwError $ vcat
-                [ "No representation for the domain of:" <+> pretty name
-                , "The domain:" <+> pretty domain
-                ]
+        DomainBool{}    -> primitive
+        DomainInt{}     -> primitive
+        DomainTuple{}   -> tuple
+        DomainMatrix{}  -> matrix
+        DomainSet r _ _ ->
+            case r of
+                "Occurrence"                -> setOccurrence
+                "Explicit"                  -> setExplicit
+                "ExplicitVarSizeWithMarker" -> setExplicitVarSizeWithMarker
+                "ExplicitVarSizeWithFlags"  -> setExplicitVarSizeWithFlags
+                _ -> bug $ "No representation for the domain:" <+> pretty domain
+        _ -> bug $ "No representation for the domain:" <+> pretty domain
 
 
-primitive :: MonadError Doc m => Name -> RepresentationResult m
-primitive name =
-    ( return Nothing
-    , const $ return Nothing
-    , \ ctxt ->
+primitive :: MonadError Doc m => Representation m
+primitive = Representation
+    { rDown_ = const $ return Nothing
+    , rDown  = const $ return Nothing
+    , rUp    = \ ctxt (name, _) ->
         case lookup name ctxt of
             Nothing -> throwError $ vcat
                 $ ("No value for:" <+> pretty name)
                 : "Bindings in context:"
                 : prettyContext ctxt
             Just c  -> return (name, c)
-    )
+    }
 
 
-tuple :: MonadError Doc m => Name -> [D] -> RepresentationResult m
-tuple name ds = 
-    ( tupleDown
-    , tupleDown_
-    , tupleUp
-    )
+tuple :: MonadError Doc m => Representation m
+tuple = Representation tupleDown_ tupleDown tupleUp
 
     where
 
-        mkName i = mconcat [name, "_", Name (pack (show (i :: Int)))]
+        mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
-        tupleDown = return $ Just
-            [ (mkName i, d)
+        tupleDown_ (name, DomainTuple ds) = return $ Just
+            [ (mkName name i, d)
             | i <- [1..]
             | d <- ds
             ]
+        tupleDown_ _ = throwError "N/A {tupleDown_}"
 
         -- TODO: check if (length ds == length cs)
-        tupleDown_ (ConstantTuple cs) = return $ Just
-            [ (mkName i, d, c)
+        tupleDown (name, DomainTuple ds, ConstantTuple cs) = return $ Just
+            [ (mkName name i, d, c)
             | i <- [1..]
             | d <- ds
             | c <- cs
             ]
-        tupleDown_ _ = return Nothing
+        tupleDown _ = throwError "N/A {tupleDown}"
 
-        tupleUp ctxt = do
-            let names = map mkName [1 .. length ds]
+        tupleUp ctxt (name, DomainTuple ds) = do
+            let names = map (mkName name) [1 .. length ds]
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
                     Nothing -> throwError $ vcat $
@@ -186,28 +187,26 @@ tuple name ds =
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
             return (name, ConstantTuple vals)
+        tupleUp _ _ = throwError "N/A {tupleUp}"
 
 
-matrix :: (Applicative m, MonadError Doc m) => Name -> Domain () Constant -> D -> RepresentationResult m
-matrix name indexDomain innerDomain = 
-    ( matrixDown
-    , matrixDown_
-    , matrixUp
-    )
+matrix :: (Applicative m, MonadError Doc m) => Representation m
+matrix = Representation matrixDown_ matrixDown matrixUp
 
     where
 
-        matrixDown = do
-            mres <- down1_ dispatch (name, innerDomain)
+        matrixDown_ (name, DomainMatrix indexDomain innerDomain) = do
+            mres <- down1_ (dispatch innerDomain) (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
                 Just mids -> return $ Just [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
+        matrixDown_ _ = throwError "N/A {matrixDown_}"
 
         -- TODO: check if indices are the same
-        matrixDown_ (ConstantMatrix _indexDomain2 constants) = do
+        matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do
             mids1
-                :: [Maybe [(Name, D, Constant)]]
-                <- sequence [ down1 dispatch (name, innerDomain, c) | c <- constants ]
+                :: [Maybe [(Name, DomainC, Constant)]]
+                <- sequence [ down1 (dispatch innerDomain) (name, innerDomain, c) | c <- constants ]
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
                 then return Nothing
@@ -215,7 +214,7 @@ matrix name indexDomain innerDomain =
                     if length mids2 == length mids1             -- if all were `Just`s
                         then do
                             let
-                                mids3 :: [(Name, D, [Constant])]
+                                mids3 :: [(Name, DomainC, [Constant])]
                                 mids3 = [ ( head [ n | (n,_,_) <- line ]
                                           , head [ d | (_,d,_) <- line ]
                                           ,      [ c | (_,_,c) <- line ]
@@ -235,13 +234,13 @@ matrix name indexDomain innerDomain =
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                 ]
-        matrixDown_ _ = return Nothing
+        matrixDown _ = throwError "N/A {matrixDown}"
 
-        matrixUp ctxt = do
+        matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
 
             mid1
-                :: Maybe [(Name, D)]
-                <- down1_ dispatch (name, innerDomain)
+                :: Maybe [(Name, DomainC)]
+                <- down1_ (dispatch innerDomain) (name, innerDomain)
 
             case mid1 of
                 Nothing ->
@@ -258,7 +257,7 @@ matrix name indexDomain innerDomain =
                 Just mid2 -> do
                     -- the inner domain needs refinement
                     -- there needs to be bindings for each name in (map fst mid2)
-                    -- we find those bindings, call (up1 dispatch name inner) on them, then lift
+                    -- we find those bindings, call (up1 name inner) on them, then lift
                     mid3
                         :: [(Name, [Constant])]
                         <- forM mid2 $ \ (n, _) -> do
@@ -272,7 +271,7 @@ matrix name indexDomain innerDomain =
                                 Just constant ->
                                     -- this constant is a ConstantMatrix, containing one component of the things to go into up1
                                     case constant of
-                                        ConstantMatrix _ c -> return (n,c)
+                                        ConstantMatrix _ c -> return (n, c)
                                         _ -> throwError $ vcat
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant
@@ -286,51 +285,45 @@ matrix name indexDomain innerDomain =
                     mid4
                         :: [(Name, Constant)]
                         <- sequence
-                            [ up1 dispatch (name, innerDomain) (zip midNames cs)
+                            [ up1 (dispatch innerDomain) (name, innerDomain) (zip midNames cs)
                             | cs <- transpose midConstants
                             ]
                     let values = map snd mid4
                     return (name, ConstantMatrix indexDomain values)
+        matrixUp _ _ = throwError "N/A {matrixUp}"
 
 
-setOccurrence :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> [Range Constant] -> RepresentationResult m
-setOccurrence name attrs intRanges = 
-    ( setDown
-    , setDown_
-    , setUp
-    )
+setOccurrence :: (Applicative m, MonadError Doc m) => Representation m
+setOccurrence = Representation setDown_ setDown setUp
 
     where
 
-        thisRepr = "Occurrence"
-        innerDomain = DomainInt intRanges
-        thisFullDomain = DomainSet (HasRepresentation thisRepr) attrs innerDomain
+        outName name = mconcat [name, "_", "Occurrence"]
 
-        outName = mconcat [name, "_", thisRepr]
-
-        setDown = do
+        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = do
             return $ Just
-                [ ( outName
+                [ ( outName name
                   , DomainMatrix (forgetRepr innerDomain) DomainBool
                   )
                 ]
+        setDown_ _ = throwError "N/A {setDown_}"
 
-        setDown_ (ConstantSet constants) = do
-            innerDomainVals <- valuesInIntDomain intRanges
-            return $ Just
-                [ ( outName
-                  , DomainMatrix   (forgetRepr innerDomain) DomainBool
-                  , ConstantMatrix (forgetRepr innerDomain)
-                      [ ConstantBool isIn
-                      | v <- innerDomainVals
-                      , let isIn = ConstantInt v `elem` constants
-                      ]
-                  )
-                ]
-        setDown_ _ = return Nothing
+        setDown (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
+                innerDomainVals <- valuesInIntDomain intRanges
+                return $ Just
+                    [ ( outName name
+                      , DomainMatrix   (forgetRepr innerDomain) DomainBool
+                      , ConstantMatrix (forgetRepr innerDomain)
+                          [ ConstantBool isIn
+                          | v <- innerDomainVals
+                          , let isIn = ConstantInt v `elem` constants
+                          ]
+                      )
+                    ]
+        setDown _ = throwError "N/A {setDown}"
 
-        setUp ctxt =
-            case lookup outName ctxt of
+        setUp ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
+            case lookup (outName name) ctxt of
                 Just constantMatrix ->
                     case constantMatrix of
                         ConstantMatrix _ vals -> do
@@ -341,49 +334,51 @@ setOccurrence name attrs intRanges =
                                             , b == ConstantBool True
                                             ] )
                         _ -> throwError $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty outName
+                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constantMatrix
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty thisFullDomain
+                                , "With domain:" <+> pretty domain
                                 ]
                 Nothing -> throwError $ vcat $
-                    [ "No value for:" <+> pretty outName
+                    [ "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty thisFullDomain
+                    , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+        setUp _ _ = throwError "N/A {setUp}"
 
 
-setExplicit :: MonadError Doc m => Name -> Constant -> D -> RepresentationResult m
-setExplicit name size innerDomain = 
-    ( setDown_
-    , setDown
-    , setUp
-    )
+setExplicit :: MonadError Doc m => Representation m
+setExplicit = Representation setDown_ setDown setUp
 
     where
 
-        outName = mconcat [name, "_Explicit"] 
-        outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
+        outName name = mconcat [name, "_", "Explicit"]
 
-        setDown_ = return $ Just
-            [ ( outName
-              , DomainMatrix outIndexDomain innerDomain
-              ) ]
+        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain)
+            = return $ Just
+                [ ( outName name
+                  , DomainMatrix
+                      (DomainInt [RangeBounded (fromInt 1) size])
+                      innerDomain
+                  ) ]
+        setDown_ _ = throwError "N/A {setDown_}"
 
-        setDown (ConstantSet constants) = return $ Just
-            [ ( outName
-              , DomainMatrix   outIndexDomain innerDomain
-              , ConstantMatrix outIndexDomain constants
-              ) ]
-        setDown _ = return Nothing
+        setDown (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =
+            let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
+            in  return $ Just
+                    [ ( outName name
+                      , DomainMatrix   outIndexDomain innerDomain
+                      , ConstantMatrix outIndexDomain constants
+                      ) ]
+        setDown _ = throwError "N/A {setDown}"
 
-        setUp ctxt =
-            case lookup outName ctxt of
+        setUp ctxt (name, domain@(DomainSet "Explicit" (SetAttrSize size) innerDomain)) =
+            case lookup (outName name) ctxt of
                 Nothing -> throwError $ vcat $
-                    [ "No value for:" <+> pretty outName
+                    [ "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
+                    , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
@@ -391,69 +386,68 @@ setExplicit name size innerDomain =
                         ConstantMatrix _ vals ->
                             return (name, ConstantSet vals)
                         _ -> throwError $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty outName
+                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
                                 ]
+        setUp _ _ = throwError "N/A {setUp}"
 
 
-setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> D -> RepresentationResult m
-setExplicitVarSizeWithMarker name attrs innerDomain = 
-    ( setDown_
-    , setDown
-    , setUp
-    )
+setExplicitVarSizeWithMarker :: (Applicative m, MonadError Doc m) => Representation m
+setExplicitVarSizeWithMarker = Representation setDown_ setDown setUp
 
     where
 
-        thisRepr = "ExplicitVarSizeWithMarker"
-        thisFullDomain = DomainSet (HasRepresentation thisRepr) attrs innerDomain
+        nameMarker name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Marker"]
+        nameMain   name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Main"  ]
 
-        nameMarker = mconcat [name, "_", thisRepr, "_Marker"]
-        nameMain   = mconcat [name, "_", thisRepr, "_Main"  ]
+        getMaxSize attrs innerDomain = case attrs of
+            SetAttrMaxSize x -> return x
+            SetAttrMinMaxSize _ x -> return x
+            _ -> bug $ "domainSize of:" <+> pretty innerDomain
 
-        getMaxSize = case attrs of
-            SetAttrMaxSize (ConstantInt x) -> return x
-            SetAttrMaxSize _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
-            SetAttrMinMaxSize _ (ConstantInt x) -> return x
-            SetAttrMinMaxSize _ _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
-            _ -> domainSizeConstant innerDomain
-
-        getIndexDomain = getMaxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt x)]
-
-        setDown_ = do
-            indexDomain :: D <- getIndexDomain
+        setDown_ (name, DomainSet _ attrs innerDomain) = do
+            maxSize <- getMaxSize attrs innerDomain
+            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
             return $ Just
-                [ ( nameMarker
+                [ ( nameMarker name
                   , indexDomain
                   )
-                , ( nameMain
+                , ( nameMain name
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
+        setDown_ _ = throwError "N/A {setDown_}"
 
-        setDown (ConstantSet constants) = do
-            indexDomain :: D <- getIndexDomain
-
+        setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
+            maxSize <- getMaxSize attrs innerDomain
+            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+            maxSizeInt <-
+                case maxSize of
+                    ConstantInt x -> return x
+                    _ -> throwError $ vcat
+                            [ "Expecting an integer for the maxSize attribute."
+                            , "But got:" <+> pretty maxSize
+                            , "When working on:" <+> pretty name
+                            , "With domain:" <+> pretty domain
+                            ]
             z <- zeroVal innerDomain
-            maxSize <- getMaxSize
-            let zeroes = replicate (maxSize - length constants) z
-
+            let zeroes = replicate (maxSizeInt - length constants) z
             return $ Just
-                [ ( nameMarker
+                [ ( nameMarker name
                   , indexDomain
                   , ConstantInt (length constants)
                   )
-                , ( nameMain
+                , ( nameMain name
                   , DomainMatrix   (forgetRepr indexDomain) innerDomain
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        setDown _ = return Nothing
+        setDown _ = throwError "N/A {setDown}"
 
-        setUp ctxt =
-            case (lookup nameMarker ctxt, lookup nameMain ctxt) of
+        setUp ctxt (name, domain) =
+            case (lookup (nameMarker name) ctxt, lookup (nameMain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
@@ -461,90 +455,91 @@ setExplicitVarSizeWithMarker name attrs innerDomain =
                                 ConstantMatrix _ vals ->
                                     return (name, ConstantSet (take card vals))
                                 _ -> throwError $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty nameMain
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameMain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
-                                        , "With domain:" <+> pretty thisFullDomain
+                                        , "With domain:" <+> pretty domain
                                         ]
                         _ -> throwError $ vcat
-                                [ "Expecting an integer literal for:" <+> pretty nameMarker
+                                [ "Expecting an integer literal for:" <+> pretty (nameMarker name)
                                 , "But got:" <+> pretty marker
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty thisFullDomain
+                                , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> throwError $ vcat $
-                    [ "No value for:" <+> pretty nameMarker
+                    [ "No value for:" <+> pretty (nameMarker name)
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty thisFullDomain
+                    , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> throwError $ vcat $
-                    [ "No value for:" <+> pretty nameMain
+                    [ "No value for:" <+> pretty (nameMain name)
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty thisFullDomain
+                    , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
 
 
-setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Name -> SetAttr Constant -> D -> RepresentationResult m
-setExplicitVarSizeWithFlags name attrs innerDomain = 
-    ( setDown_
-    , setDown
-    , setUp
-    )
+setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Representation m
+setExplicitVarSizeWithFlags = Representation setDown setDown_ setUp
 
     where
 
-        thisRepr = "ExplicitVarSizeWithFlags"
-        thisFullDomain = DomainSet (HasRepresentation thisRepr) attrs innerDomain
+        nameFlag name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Flags"]
+        nameMain name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Main"]
 
-        nameFlag = mconcat [name, "_", thisRepr, "_Flags"]
-        nameMain = mconcat [name, "_", thisRepr, "_Main"]
+        getMaxSize attrs innerDomain = case attrs of
+            SetAttrMaxSize x -> return x
+            SetAttrMinMaxSize _ x -> return x
+            _ -> bug $ "domainSize of:" <+> pretty innerDomain
 
-        getMaxSize = case attrs of
-            SetAttrMaxSize (ConstantInt x) -> return x
-            SetAttrMaxSize _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
-            SetAttrMinMaxSize _ (ConstantInt x) -> return x
-            SetAttrMinMaxSize _ _ -> throwError $ "Attribute 'maxSize' is expected to have an int value:" <+> pretty thisFullDomain
-            _ -> domainSizeConstant innerDomain
 
-        getIndexDomain = getMaxSize >>= \ x -> return $ DomainInt [RangeBounded (ConstantInt 1) (ConstantInt x)]
-
-        setDown_ = do
-            indexDomain :: D <- getIndexDomain
+        setDown (name, DomainSet _ attrs innerDomain) = do
+            maxSize <- getMaxSize attrs innerDomain
+            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
             return $ Just
-                [ ( nameFlag
+                [ ( nameFlag name
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
                   )
-                , ( nameMain
+                , ( nameMain name
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
+        setDown _ = throwError "N/A {setDown}"
 
-        setDown (ConstantSet constants) = do
-            indexDomain :: D <- getIndexDomain
+        setDown_ (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
+            maxSize <- getMaxSize attrs innerDomain
+            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
 
+            maxSizeInt <-
+                case maxSize of
+                    ConstantInt x -> return x
+                    _ -> throwError $ vcat
+                            [ "Expecting an integer for the maxSize attribute."
+                            , "But got:" <+> pretty maxSize
+                            , "When working on:" <+> pretty name
+                            , "With domain:" <+> pretty domain
+                            ]
             z <- zeroVal innerDomain
-            maxSize <- getMaxSize
-            let zeroes = replicate (maxSize - length constants) z
+            let zeroes = replicate (maxSizeInt - length constants) z
 
-            let trues  = replicate (length constants)           (ConstantBool True)
-            let falses = replicate (maxSize - length constants) (ConstantBool False)
+            let trues  = replicate (length constants)              (ConstantBool True)
+            let falses = replicate (maxSizeInt - length constants) (ConstantBool False)
 
             return $ Just
-                [ ( nameFlag
+                [ ( nameFlag name
                   , DomainMatrix   (forgetRepr indexDomain) DomainBool
                   , ConstantMatrix (forgetRepr indexDomain) (trues ++ falses)
                   )
-                , ( nameMain
+                , ( nameMain name
                   , DomainMatrix   (forgetRepr indexDomain) innerDomain
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        setDown _ = return Nothing
+        setDown_ _ = throwError "N/A {setDown_}"
 
-        setUp ctxt =
-            case (lookup nameFlag ctxt, lookup nameMain ctxt) of
+        setUp ctxt (name, domain) =
+            case (lookup (nameFlag name) ctxt, lookup (nameMain name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
                     case flagMatrix of
                         -- TODO: check if indices match
@@ -556,27 +551,27 @@ setExplicitVarSizeWithFlags name attrs innerDomain =
                                                               , i == ConstantBool True
                                                               ] )
                                 _ -> throwError $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty nameMain
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameMain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
-                                        , "With domain:" <+> pretty thisFullDomain
+                                        , "With domain:" <+> pretty domain
                                         ]
                         _ -> throwError $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty nameFlag
+                                [ "Expecting a matrix literal for:" <+> pretty (nameFlag name)
                                 , "But got:" <+> pretty flagMatrix
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty thisFullDomain
+                                , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> throwError $ vcat $
-                    [ "No value for:" <+> pretty nameFlag
+                    [ "No value for:" <+> pretty (nameFlag name)
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty thisFullDomain
+                    , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> throwError $ vcat $
-                    [ "No value for:" <+> pretty nameMain
+                    [ "No value for:" <+> pretty (nameMain name)
                     , "When working on:" <+> pretty name
-                    , "With domain:" <+> pretty thisFullDomain
+                    , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
 
