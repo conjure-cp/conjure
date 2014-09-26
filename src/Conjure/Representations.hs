@@ -123,7 +123,8 @@ up ctxt (name, highDomain) = do
             up1 (dispatch highDomain) (name, highDomain) midConstants
 
 
--- | combine all known representations into one.
+-- | Combine all known representations into one.
+--   Dispatch into the actual implementation of the representation depending on the provided domain.
 dispatch :: (Applicative m, MonadError Doc m, Pretty x) => Domain HasRepresentation x -> Representation m
 dispatch domain =
     case domain of
@@ -140,6 +141,8 @@ dispatch domain =
                 _ -> bug $ "No representation for the domain:" <+> pretty domain
         _ -> bug $ "No representation for the domain:" <+> pretty domain
 
+
+-- | A list of all representations.
 allReprs :: [Representation (Either Doc)]
 allReprs =
     [ primitive, tuple, matrix
@@ -147,9 +150,11 @@ allReprs =
     ]
 
 
+-- | For a domain, produce a list of domains with different representation options.
+--   This function should never return an empty list.
 reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
-reprOptions domain = allChcks domain
-    where allChcks d = concat [ rCheck r allChcks d | r <- allReprs ]
+reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
+
 
 primitive :: MonadError Doc m => Representation m
 primitive = Representation
