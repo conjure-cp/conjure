@@ -7,6 +7,7 @@ module Conjure.Language.ModelDiff
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Pretty
 
 
 modelDiffIO :: Model -> Model -> IO ()
@@ -20,7 +21,15 @@ modelDiffIO m1 m2 =
 --   returns `Nothing` if the models are the same.
 modelDiff :: Model -> Model -> Maybe Doc
 modelDiff m1 m2 =
-    if mStatements m1 == mStatements m2
-        then Nothing
-        else Just "Just Plain Wrong (TM)"
+    let
+        m1Extra = mStatements m1 \\ mStatements m2
+        m2Extra = mStatements m2 \\ mStatements m1
+    in
+        if null m1Extra && null m2Extra
+            then Nothing
+            else Just $ vcat $ concat
+                [ [ "These models seem to be different." ]
+                , [ hang "Only in the 1st:" 8 (vcat (map pretty m1Extra)) | not (null m1Extra) ]
+                , [ hang "Only in the 2nd:" 8 (vcat (map pretty m2Extra)) | not (null m2Extra) ]
+                ]
 
