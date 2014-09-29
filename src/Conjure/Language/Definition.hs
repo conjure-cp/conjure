@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveFunctor #-}
+{-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -37,7 +37,6 @@ import Stuff.Pretty ( (<++>), pretty )
 
 -- base
 import GHC.Generics ( Generic )
-import GHC.Show ( showSpace, showList__ )
 
 -- text
 import qualified Data.Text as T
@@ -46,9 +45,6 @@ import qualified Data.Text as T
 import Data.Aeson ( ToJSON(..), (.=), FromJSON(..), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
-
--- cereal
-import Data.Serialize as Serialize ( Serialize(..) )
 
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
@@ -59,7 +55,7 @@ data Model = Model
     , mStatements :: [Statement]
     , mInfo :: ModelInfo
     }
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Model
 instance Hashable Model
@@ -83,7 +79,7 @@ oneSuchThat m = m { mStatements = others ++ [suchThat] }
 
 
 data LanguageVersion = LanguageVersion Name [Int]
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize LanguageVersion
 instance Hashable LanguageVersion
@@ -110,7 +106,7 @@ data Statement
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
 instance Hashable Statement
@@ -119,7 +115,7 @@ instance FromJSON Statement
 
 
 data Objective = Minimising | Maximising
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Objective
 instance Hashable Objective
@@ -132,7 +128,7 @@ data Declaration
     | Given   Name (Domain () Expression)
     | Letting Name Expression
     | LettingDomainDefn DomainDefn
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Declaration
 instance Hashable Declaration
@@ -144,7 +140,7 @@ data ModelInfo = ModelInfo
     { miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
     }
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 modelInfoJSONOptions :: JSON.Options
 modelInfoJSONOptions = JSON.defaultOptions
@@ -165,7 +161,7 @@ data Decision = Decision
     , dOptions :: [Int]
     , dDecision :: Int
     }
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Decision
 instance Hashable Decision
@@ -174,7 +170,7 @@ instance FromJSON Decision
 
 
 newtype Name = Name Text
-    deriving (Eq, Ord, Show, Generic, IsString, Serialize, Hashable, ToJSON, FromJSON, Monoid)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, IsString, Serialize, Hashable, ToJSON, FromJSON, Monoid)
 
 instance Arbitrary Name where
     arbitrary = do
@@ -190,100 +186,19 @@ data Expression
     | Reference Name
     | WithLocals Expression [Statement]
     | Op Name [Expression]
-    | Lambda AbstractPattern Expression (Expression -> Expression)
-    deriving (Generic)
+    | Lambda AbstractPattern Expression
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-instance Eq Expression where
-    Constant a        == Constant b        = a == b
-    AbstractLiteral a == AbstractLiteral b = a == b
-    Domain a          == Domain b          = a == b
-    Reference a       == Reference b       = a == b
-    WithLocals x1 s1  == WithLocals x2 s2  = (x1,s1) == (x2,s2)
-    Op n1 xs1         == Op n2 xs2         = n1 == n2 && and (zipWith (==) xs1 xs2)
-    Lambda {}         == Lambda {}         = bug "Lambda's cannot be compared for equality. There you go."
-    _                 == _                 = False
-
-instance Ord Expression where
-    Constant a          `compare` Constant b        = a `compare` b
-    Constant {}         `compare` _                 = LT
-    AbstractLiteral a   `compare` AbstractLiteral b = a `compare` b
-    AbstractLiteral {}  `compare` _                 = LT
-    Domain a            `compare` Domain b          = a `compare` b
-    Domain {}           `compare` _                 = LT
-    Reference a         `compare` Reference b       = a `compare` b
-    Reference {}        `compare` _                 = LT
-    WithLocals x1 s1    `compare` WithLocals x2 s2  = (x1,s1) `compare` (x2,s2)
-    WithLocals {}       `compare` _                 = LT
-    Op nm1 xs1          `compare` Op nm2 xs2        =
-        case nm1 `compare` nm2 of
-            EQ -> xs1 `compare` xs2
-            ow -> ow
-    Op {}               `compare` _                 = LT
-    Lambda {}           `compare` _                 = bug "Lambda's cannot be compared for ordering. There you go."
-
-instance Show Expression where
-    showsPrec pr (Constant x       ) = showParen (pr >= 11) (showString "Constant "         . showsPrec 11 x)
-    showsPrec pr (AbstractLiteral x) = showParen (pr >= 11) (showString "AbstractLiteral "  . showsPrec 11 x)
-    showsPrec pr (Domain   x       ) = showParen (pr >= 11) (showString "Domain "           . showsPrec 11 x)
-    showsPrec pr (Reference x      ) = showParen (pr >= 11) (showString "Reference "        . showsPrec 11 x)
-    showsPrec pr (WithLocals x ss  ) = showParen (pr >= 11) (showString "WithLocals "       . showsPrec 11 x
-                                                                                . showSpace . showsPrec 11 ss)
-    showsPrec pr (Op op xs         ) = showParen (pr >= 11) (showString "Op "               . showsPrec 11 op
-                                                                                . showSpace . showsPrec 11 xs)
-    showsPrec pr (Lambda arg x _   ) = showParen (pr >= 11) (showString "Lambda "           . showsPrec 11 arg
-                                                                                . showSpace . showsPrec 11 x)
-    showList = showList__ (showsPrec 0)
-
-instance Serialize Expression where
-    put (Constant x       ) = Serialize.put (0 :: Int) >> Serialize.put x
-    put (AbstractLiteral x) = Serialize.put (1 :: Int) >> Serialize.put x
-    put (Domain x         ) = Serialize.put (2 :: Int) >> Serialize.put x
-    put (Reference x      ) = Serialize.put (3 :: Int) >> Serialize.put x
-    put (WithLocals x ss  ) = Serialize.put (4 :: Int) >> Serialize.put x   >> Serialize.put ss
-    put (Op op xs         ) = Serialize.put (5 :: Int) >> Serialize.put op  >> Serialize.put xs
-    put (Lambda arg x _   ) = Serialize.put (6 :: Int) >> Serialize.put arg >> Serialize.put x
-    get = do
-        tag <- Serialize.get
-        case tag :: Int of
-            0 -> Constant <$> Serialize.get
-            1 -> AbstractLiteral <$> Serialize.get
-            2 -> Domain <$> Serialize.get
-            3 -> Reference <$> Serialize.get
-            4 -> WithLocals <$> Serialize.get <*> Serialize.get
-            5 -> Op <$> Serialize.get <*> Serialize.get
-            6 -> Lambda <$> Serialize.get <*> Serialize.get <*> error "Serialize.get for Lambda"
-            _ -> bug "While deserialising an expression"
-
-instance Hashable Expression where
-    hashWithSalt salt (Constant x       ) = hashWithSalt salt x
-    hashWithSalt salt (AbstractLiteral x) = hashWithSalt salt x
-    hashWithSalt salt (Domain x         ) = hashWithSalt salt x
-    hashWithSalt salt (Reference x      ) = hashWithSalt salt x
-    hashWithSalt salt (WithLocals x ss  ) = hashWithSalt salt (x,ss)
-    hashWithSalt salt (Op op xs         ) = hashWithSalt salt (op,xs)
-    hashWithSalt salt (Lambda arg x _   ) = hashWithSalt salt (arg,x)
-
-instance ToJSON Expression where
-    toJSON (Constant x       ) = JSON.object [ "Constant"         .= toJSON x  ]
-    toJSON (AbstractLiteral x) = JSON.object [ "AbstractLiteral"  .= toJSON x  ]
-    toJSON (Domain x         ) = JSON.object [ "Domain"           .= toJSON x  ]
-    toJSON (Reference x      ) = JSON.object [ "Reference"        .= toJSON x  ]
-    toJSON (WithLocals x ss  ) = JSON.object [ "WithLocals-Expr"  .= toJSON x
-                                             , "WithLocals-Stmts" .= toJSON ss
-                                             ]
-    toJSON (Op op xs         ) = JSON.object [ "Op-Name"          .= toJSON op
-                                             , "Op-Args"          .= toJSON xs ]
-    toJSON (Lambda arg x _   ) = JSON.object [ "Lambda-Arg"       .= toJSON arg
-                                             , "Lambda-Body"      .= toJSON x  ]
-
-instance FromJSON Expression where
-    parseJSON x = bug $ "fromJSON Expression" <+> stringToDoc (show x)
+instance Serialize Expression
+instance Hashable Expression
+instance ToJSON Expression
+instance FromJSON Expression
 
 
 data DomainDefn
     = DDEnum DomainDefnEnum
     | DDUnnamed DomainDefnUnnamed
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize DomainDefn
 instance Hashable DomainDefn
@@ -292,7 +207,7 @@ instance FromJSON DomainDefn
 
 
 data DomainDefnEnum = DomainDefnEnum Name [Name]
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize DomainDefnEnum
 instance Hashable DomainDefnEnum
@@ -301,7 +216,7 @@ instance FromJSON DomainDefnEnum
 
 
 data DomainDefnUnnamed = DomainDefnUnnamed Name Expression
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize DomainDefnUnnamed
 instance Hashable DomainDefnUnnamed
@@ -323,7 +238,7 @@ data Domain r a
     | DomainPartition r (DomainAttributes a) (Domain r a)
     | DomainOp Name [Domain r a]
     | DomainHack a          -- this is an ugly hack to be able to use expressions as domains. will go away later.
-    deriving (Eq, Ord, Show, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance (Serialize r, Serialize a) => Serialize (Domain r a)
 instance (Hashable r, Hashable a) => Hashable (Domain r a)
@@ -368,7 +283,7 @@ data SetAttr a
     | SetAttrMinSize a
     | SetAttrMaxSize a
     | SetAttrMinMaxSize a a
-    deriving (Eq, Ord, Show, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (SetAttr a)
 instance Hashable a => Hashable (SetAttr a)
@@ -380,7 +295,7 @@ instance Default (SetAttr a) where
 
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
-    deriving (Eq, Ord, Show, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttributes a)
 instance Hashable a => Hashable (DomainAttributes a)
@@ -395,7 +310,7 @@ data DomainAttribute a
     = DAName Name
     | DANameValue Name a
     | DADotDot
-    deriving (Eq, Ord, Show, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttribute a)
 instance Hashable a => Hashable (DomainAttribute a)
@@ -409,7 +324,7 @@ data Range a
     | RangeLowerBounded a
     | RangeUpperBounded a
     | RangeBounded a a
-    deriving (Eq, Ord, Show, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (Range a)
 instance Hashable a => Hashable (Range a)
@@ -435,7 +350,7 @@ rangesInts = liftM (sortNub . concat) . mapM rangeInts
 
 
 data HasRepresentation = NoRepresentation | HasRepresentation Name
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize HasRepresentation
 instance Hashable HasRepresentation
@@ -459,11 +374,12 @@ data Type
     | TypeFunction  Type Type
     | TypeRelation  [Type]
     | TypePartition Type
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Type
 instance Hashable Type
 instance ToJSON Type
+instance FromJSON Type
 
 
 data Constant
@@ -477,11 +393,12 @@ data Constant
     | ConstantFunction [(Constant, Constant)]
     | ConstantRelation [[Constant]]
     | ConstantPartition [[Constant]]
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Constant
 instance Hashable Constant
 instance ToJSON Constant
+instance FromJSON Constant
 
 instance Arbitrary Constant where
     arbitrary = oneof
@@ -498,11 +415,12 @@ data AbstractLiteral a
     | AbsLitFunction [(a, a)]
     | AbsLitRelation [[a]]
     | AbsLitPartition [[a]]
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize a => Serialize (AbstractLiteral a)
 instance Hashable a => Hashable (AbstractLiteral a)
 instance ToJSON a => ToJSON (AbstractLiteral a)
+instance FromJSON a => FromJSON (AbstractLiteral a)
 
 
 data AbstractPattern
@@ -517,11 +435,12 @@ data AbstractPattern
     -- | AbsPatRelation [[a]]
     -- | AbsPatPartition [[a]]
     -- TODO: Consider introducing the above as abstract patterns...
-    deriving (Eq, Ord, Show, Generic)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize AbstractPattern
 instance Hashable AbstractPattern
 instance ToJSON AbstractPattern
+instance FromJSON AbstractPattern
 
 
 class ExpressionLike a where

@@ -55,7 +55,6 @@ import Conjure.Language.Definition
     )
 
 import Data.Maybe ( fromJust )
-import Data.Data ( Data(..), Typeable )
 import GHC.Generics ( Generic )
 
 -- text
@@ -177,18 +176,6 @@ instance ToJSON E where
     toJSON (StatementAndNext a b) = JSON.object [ "statement" .= toJSON a
                                                 , "next" .= toJSON b
                                                 ]
-
-instance Data (Domain () E) where
-    gunfold = error "gunfold Domain"
-    dataTypeOf = error "dataTypeOf Domain"
-    toConstr = error "toConstr Domain"
-deriving instance Typeable Domain
-
-instance Data Constant where
-    gunfold = error "gunfold Constant"
-    dataTypeOf = error "dataTypeOf Constant"
-    toConstr = error "toConstr Constant"
-deriving instance Typeable Constant
 
 
 data BuiltIn = B !Bool | I !Integer | S !Text

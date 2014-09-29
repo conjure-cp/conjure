@@ -64,7 +64,7 @@ import Control.Arrow             as X ( first, second, (***) )
 import Control.Category          as X ( (<<<), (>>>) )
 
 
-
+import Data.Data         as X ( Data, Typeable )
 import Data.Default      as X ( Default, def )
 import Data.Either       as X ( Either(..), either, lefts, rights )
 import Data.Foldable     as X ( forM_, fold, foldMap, toList )

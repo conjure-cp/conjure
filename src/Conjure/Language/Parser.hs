@@ -117,17 +117,13 @@ specToModel (Spec lang stmt) = Model
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
                         else Op "filter"
-                                [ Lambda (convPat ty pat)
-                                         (convExpr guardE)
-                                         (bug $ "lambda:" <+> pretty (convExpr guardE))
+                                [ Lambda (convPat ty pat) (convExpr guardE)
                                 , b
                                 ]
             in
                 Op (Name qnName)
                     [ Op "map_domain"
-                        [ Lambda (convPat ty pat)
-                                     (convExpr body)
-                                     (bug $ "lambda:" <+> pretty (convExpr body))
+                        [ Lambda (convPat ty pat) (convExpr body)
                         , filterOr (Domain (convDomain quanOverDom))
                         ] ]
 
@@ -145,9 +141,7 @@ specToModel (Spec lang stmt) = Model
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
                         else Op "filter"
-                                [ Lambda (convPat ty pat)
-                                         (convExpr guardE)
-                                         (bug $ "lambda:" <+> pretty (convExpr guardE))
+                                [ Lambda (convPat ty pat) (convExpr guardE)
                                 , b
                                 ]
                 op' = case op of
@@ -159,9 +153,7 @@ specToModel (Spec lang stmt) = Model
             in
                 Op (Name qnName)
                     [ Op op'
-                        [ Lambda (convPat ty pat)
-                                 (convExpr body)
-                                 (bug $ "lambda:" <+> pretty (convExpr body))
+                        [ Lambda (convPat ty pat) (convExpr body)
                         , filterOr (convExpr quanOverExpr)
                         ] ]
 
@@ -180,7 +172,6 @@ specToModel (Spec lang stmt) = Model
                         then Op "filter"
                                 [ Lambda (convPat ty pat)
                                          (Op op' [convExpr pat, convExpr expr])
-                                         (bug "lambda")
                                 , b
                                 ]
                         else Op "filter"
@@ -188,7 +179,6 @@ specToModel (Spec lang stmt) = Model
                                          (Op "/\\" [ convExpr guardE
                                                    , Op op' [convExpr pat, convExpr expr]
                                                    ] )
-                                         (bug "lambda")
                                 , b
                                 ]
                 op' = case op of
@@ -199,9 +189,7 @@ specToModel (Spec lang stmt) = Model
             in
                 Op (Name qnName)
                     [ Op "map_domain"
-                        [ Lambda (convPat ty pat)
-                                     (convExpr body)
-                                     (bug $ "lambda:" <+> pretty (convExpr body))
+                        [ Lambda (convPat ty pat) (convExpr body)
                         , filterOr (Domain (convDomain quanOverDom))
                         ] ]
 

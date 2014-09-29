@@ -98,7 +98,7 @@ instance Pretty Expression where
     pretty (WithLocals x ss) =
         Pr.braces $ pretty x <+> "@" <+> vcat (map pretty ss)
 
-    pretty (Lambda arg x _) = "lambda" <> Pr.parens (fsep [pretty arg, "-->", pretty x])
+    pretty (Lambda arg x) = "lambda" <> Pr.parens (fsep [pretty arg, "-->", pretty x])
 
     pretty x@(Op (Name op) [_,_])
         | let lexeme = textToLexeme op
