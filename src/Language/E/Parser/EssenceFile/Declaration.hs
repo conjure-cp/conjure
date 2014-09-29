@@ -11,7 +11,7 @@ import Language.E.Definition
 import Language.E.Lexer ( Lexeme(..) )
 
 import Text.Parsec ( (<?>), try )
-import Text.Parsec.Combinator ( sepBy, sepBy1, sepEndBy1 )
+import Text.Parsec.Combinator ( sepBy, sepEndBy1 )
 
 
 
@@ -20,8 +20,8 @@ parseTopLevels = do
     let one = msum $ map try
                 [ do
                     lexeme L_find
-                    decls <- flip sepBy1 comma $ do
-                        is <- parseReference `sepBy1` comma
+                    decls <- flip sepEndBy1 comma $ do
+                        is <- parseReference `sepEndBy1` comma
                         j  <- colon >> parseDomain
                         return [ [xMake| topLevel.declaration.find.name   := [i]
                                        | topLevel.declaration.find.domain := [j]
@@ -31,8 +31,8 @@ parseTopLevels = do
                     <?> "find statement"
                 , do
                     lexeme L_given
-                    decls <- flip sepBy1 comma $ do
-                        is <- parseReference `sepBy1` comma
+                    decls <- flip sepEndBy1 comma $ do
+                        is <- parseReference `sepEndBy1` comma
                         msum
                             [ do
                                 colon
@@ -64,8 +64,8 @@ parseTopLevels = do
                     <?> "given statement"
                 , do
                     lexeme L_letting
-                    decls <- flip sepBy1 comma $ do
-                        is <- (try parseMetaVariable <|> parseReference) `sepBy1` comma
+                    decls <- flip sepEndBy1 comma $ do
+                        is <- (try parseMetaVariable <|> parseReference) `sepEndBy1` comma
                         lexeme L_be
                         msum
                             [ do
@@ -124,7 +124,7 @@ parseTopLevels = do
                     <?> "letting statement"
                 , do
                     lexeme L_dim
-                    is <- parseReference `sepBy1` comma
+                    is <- parseReference `sepEndBy1` comma
                     j  <- colon >> parseDomain
                     return [ [xMake| topLevel.declaration.dim.name   := [i]
                                    | topLevel.declaration.dim.domain := [j]
