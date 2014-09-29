@@ -51,13 +51,11 @@ testSingleDir baseDir basename = do
             modelAll outputsDir essence
             models <- filter (".eprime" `isSuffixOf`) <$> getDirectoryContents outputsDir
             params <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents wd
-            if null params
-                then shelly $ print_stdout False
-                            $ print_stderr False
-                            $ testSingleDirNoParam outputsDir models
-                else shelly $ print_stdout False
-                            $ print_stderr False
-                            $ testSingleDirWithParams outputsDir models wd params
+            shelly $ print_stdout False
+                   $ print_stderr False
+                   $ if null params
+                        then testSingleDirNoParam outputsDir models
+                        else testSingleDirWithParams outputsDir models wd params
 
     checkingExpected <- checkExpected (baseDir </> basename </> "expected")
                                       (baseDir </> basename </> "outputs" )
