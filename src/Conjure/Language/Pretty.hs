@@ -61,7 +61,7 @@ instance Pretty Objective where
     pretty Maximising = "maximising"
 
 instance Pretty ModelInfo where
-    pretty = pretty . commentLines . unpack . encodePretty . toJSON
+    pretty = pretty . commentLines . unpack . encodePretty
         where commentLines = unlines . map ("$ "++) . lines
 
 instance Pretty Name where

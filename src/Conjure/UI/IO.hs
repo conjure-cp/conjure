@@ -10,8 +10,15 @@ import Conjure.Language.Parser
 import Conjure.Language.Pretty
 import Language.E.Definition
 
+-- aeson
+import qualified Data.Aeson ( decode )
+
 -- text
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T ( encodeUtf8 )
+
+-- bytestring
+import qualified Data.ByteString.Lazy as BS
 
 
 readModelFromFile :: FilePath -> IO Model
@@ -33,7 +40,21 @@ readModel :: (FilePath, Text) -> Model
 readModel (fp, con) =
     case runLexerAndParser parseModel fp con of
         Left  e -> userErr e
-        Right x -> x
+        Right x ->
+            let
+                infoBlock = con
+                    |> T.lines
+                    |> dropWhile ("$ Conjure's" /=)     -- info block heading line
+                    |> drop 1                           -- drop the heading
+                    |> map (T.drop 2)                   -- uncomment
+                    |> T.unlines
+                    |> T.encodeUtf8                     -- convert Text to ByteString
+                    |> (BS.fromChunks . return)         -- convert to Lazy ByteString
+                    |> Data.Aeson.decode
+   
+            in case infoBlock of
+                Nothing -> x
+                Just i  -> x { mInfo = i }
 
 
 readModelPreamble :: (FilePath, Text) -> Model
