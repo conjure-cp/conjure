@@ -22,8 +22,10 @@ refineParam
     -> m Model    -- eprime param
 refineParam eprimeModel essenceParam = do
 
-    let essenceLettings = extractLettings essenceParam
-    let essenceGivens = eprimeModel |> mInfo |> miRepresentations
+    let essenceLettings   = extractLettings essenceParam
+    let essenceGivenNames = eprimeModel |> mInfo |> miGivens
+    let essenceGivens     = eprimeModel |> mInfo |> miRepresentations
+                                        |> filter (\ (n,_) -> n `elem` essenceGivenNames )
 
     -- TODO: check if for every given there is a letting (there can be more)
     -- TODO: check if the same letting has multiple values for it
@@ -48,20 +50,12 @@ refineParam eprimeModel essenceParam = do
 
     eprimeLettings <- liftM concat $ mapM down essenceGivensAndLettings
 
-    -- void $ throwError $ vcat
-    --     [ "essenceLettings:" <+> vcat (map pretty essenceLettings)
-    --     , "essenceGivens:" <+> vcat (map pretty essenceGivens)
-    --     , "essenceGivensAndLettings:" <+> vcat (map pretty essenceGivensAndLettings)
-    --     , "eprimeLettings:" <+> vcat (map pretty eprimeLettings)
-    --     ]
-
-    return $ languageEprime $
-        Model
-            def
+    return $ languageEprime def
+        { mStatements =
             [ Declaration (Letting n (Constant x))
             | (n, _, x) <- eprimeLettings
             ]
-            def
+        }
 
 extractLettings :: Model -> [(Name, Expression)]
 extractLettings model =

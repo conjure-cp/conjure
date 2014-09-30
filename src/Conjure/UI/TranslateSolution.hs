@@ -22,23 +22,26 @@ translateSolution eprimeModel essenceParam eprimeSolution = do
 
     let eprimeLettings = extractLettings essenceParam ++
                          extractLettings eprimeSolution
-    let essenceGivens = eprimeModel |> mInfo |> miRepresentations
+    let essenceFindNames = eprimeModel |> mInfo |> miFinds
+    let essenceFinds     = eprimeModel |> mInfo |> miRepresentations
+                                       |> filter (\ (n,_) -> n `elem` essenceFindNames )
 
     eprimeLettings' <- forM eprimeLettings $ \ (name, val) -> do
         constant <- instantiateExpression eprimeLettings val
         return (name, constant)
 
-    essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
+    essenceFinds' <- forM essenceFinds $ \ (name, dom) -> do
         constant <- instantiateDomain eprimeLettings dom
         return (name, constant)
 
-    essenceLettings <- mapM (up eprimeLettings') essenceGivens'
+    essenceLettings <- mapM (up eprimeLettings') essenceFinds'
 
-    return $ Model def
-                   [ Declaration (Letting n (Constant x))
-                   | (n, x) <- essenceLettings
-                   ]
-                   def
+    return def
+        { mStatements =
+            [ Declaration (Letting n (Constant x))
+            | (n, x) <- essenceLettings
+            ]
+        }
 
 extractLettings :: Model -> [(Name, Expression)]
 extractLettings model =

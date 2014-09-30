@@ -5,10 +5,10 @@ module Conjure.UI.Model where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Language.ModelStats ( declarations )
+import Conjure.Language.ModelStats ( givens, finds, declarations )
 import Conjure.Representations
 
-import Data.Generics.Uniplate.Data ( transformBiM )
+import Data.Generics.Uniplate.Data ( transformBiM, rewriteBiM )
 
 
 data ModelGen = ModelGen
@@ -17,7 +17,7 @@ data ModelGen = ModelGen
     }
 
 initialise :: Model -> ModelGen
-initialise m = ModelGen m []
+initialise m = ModelGen (addTrueConstraints m) []
 
 -- | repeatedly call `nextModel` to generate all models
 outputAllModels :: FilePath -> Int -> ModelGen -> IO ()
@@ -52,16 +52,7 @@ nextModel (ModelGen essence pastInfos) = do
 genNextModel :: Model -> [ModelInfo] -> IO (Maybe Model)
 genNextModel initialEssence _pastInfos = do
 
-    putStrLn "" >> putStrLn ""
-
     let decls = declarations initialEssence
-
-    forM_ decls $ \ (n,d) -> do
-        let ds = reprOptions d
-        print $ vcat $ (pretty n <> ":" <+> pretty d)
-                     : map (nest 4 . pretty) ds
-
-    putStrLn "" >> putStrLn ""
 
     let
         f :: (MonadState St m, MonadIO m) => Expression -> m Expression
@@ -86,7 +77,14 @@ genNextModel initialEssence _pastInfos = do
                                 }
             return x
 
-    (statements', st) <- runStateT (transformBiM f (mStatements initialEssence)) (St 1 [] def)
+    let initInfo = def { miGivens = map fst (givens initialEssence)
+                       , miFinds  = map fst (finds  initialEssence)
+                       }
+    let pipeline =  transformBiM f
+                >=> rewriteBiM rule_TrueIsNoOp 
+    (statements', st) <- runStateT (pipeline (mStatements initialEssence))
+                                   (St 1 [] initInfo)
+                                   
     let model = initialEssence { mStatements = statements'
                                , mInfo = currInfo st
                                }
@@ -101,7 +99,41 @@ data St = St
 
 addReprToSt :: Name -> Domain HasRepresentation Expression -> St -> St
 addReprToSt nm dom st = st { currInfo = addReprToInfo (currInfo st) }
-    where addReprToInfo i = i { miRepresentations = (nm, dom) : miRepresentations i }
+    where addReprToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
 
 
+-- | For every parameter and decision variable add a true-constraint.
+--   A true-constraint has no effect, other than forcing Conjure to produce a representation.
+--   It can be used to make sure that the decision variable doesn't get lost when it isn't mentioned anywhere.
+--   It can also be used to produce "extra" representations.
+--   Currently this function will add a true for every declaration, no matter if it is mentioned or not.
+addTrueConstraints :: Model -> Model
+addTrueConstraints m =
+    let
+        declarationNames = map fst (declarations m)
+        mkTrueConstraint nm = Op "true" [Reference nm]
+        trueConstraints = map mkTrueConstraint declarationNames
+    in
+        m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
+
+
+oneSuchThat :: Model -> Model
+oneSuchThat m = m { mStatements = others ++ [suchThat] }
+    where collect (SuchThat s) = ([], s)
+          collect s = ([s], [])
+          (others, suchThats) = mStatements m
+                |> map collect
+                |> mconcat
+                |> second (filter (/= (Constant (ConstantBool True))))
+                |> second nub
+          suchThat = if null suchThats
+                      then SuchThat [Constant (ConstantBool True)]
+                      else SuchThat suchThats
+
+
+rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)
+rule_TrueIsNoOp = return . rule_TrueIsNoOp_pure
+    where
+        rule_TrueIsNoOp_pure (Op "true" _) = Just $ Constant $ ConstantBool True
+        rule_TrueIsNoOp_pure _ = Nothing
 

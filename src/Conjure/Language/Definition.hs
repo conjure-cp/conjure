@@ -4,7 +4,7 @@
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
-    , languageEprime, oneSuchThat
+    , languageEprime
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
@@ -59,23 +59,15 @@ data Model = Model
 
 instance Serialize Model
 instance Hashable Model
-instance ToJSON Model
-instance FromJSON Model
+instance ToJSON Model where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Model where parseJSON = JSON.genericParseJSON jsonOptions
+
 
 instance Default Model where
     def = Model def [] def
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
-
-oneSuchThat :: Model -> Model
-oneSuchThat m = m { mStatements = others ++ [suchThat] }
-    where collect (SuchThat s) = ([], s)
-          collect s = ([s], [])
-          (others, suchThats) = mconcat (map collect (mStatements m))
-          suchThat = if null suchThats
-                      then SuchThat [Constant (ConstantBool True)]
-                      else SuchThat suchThats
 
 
 data LanguageVersion = LanguageVersion Name [Int]
@@ -110,8 +102,8 @@ data Statement
 
 instance Serialize Statement
 instance Hashable Statement
-instance ToJSON Statement
-instance FromJSON Statement
+instance ToJSON Statement where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Statement where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Objective = Minimising | Maximising
@@ -119,8 +111,8 @@ data Objective = Minimising | Maximising
 
 instance Serialize Objective
 instance Hashable Objective
-instance ToJSON Objective
-instance FromJSON Objective
+instance ToJSON Objective where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Objective where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Declaration
@@ -132,20 +124,27 @@ data Declaration
 
 instance Serialize Declaration
 instance Hashable Declaration
-instance ToJSON Declaration
-instance FromJSON Declaration
+instance ToJSON Declaration where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data ModelInfo = ModelInfo
-    { miRepresentations :: [(Name, Domain HasRepresentation Expression)]
+    { miGivens :: [Name]
+    , miFinds :: [Name]
+    , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-modelInfoJSONOptions :: JSON.Options
-modelInfoJSONOptions = JSON.defaultOptions
-    { JSON.fieldLabelModifier = map toLower . drop 2
+jsonOptions :: JSON.Options
+jsonOptions = JSON.defaultOptions
+    { JSON.allNullaryToStringTag = True
+    , JSON.omitNothingFields = True
+    , JSON.sumEncoding = JSON.ObjectWithSingleField
     }
+
+modelInfoJSONOptions :: JSON.Options
+modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop 2 }
 
 instance Serialize ModelInfo
 instance Hashable ModelInfo
@@ -153,7 +152,7 @@ instance ToJSON ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
 instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo [] []
+    def = ModelInfo def def def def
 
 
 data Decision = Decision
@@ -163,10 +162,13 @@ data Decision = Decision
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
+decisionJSONOptions :: JSON.Options
+decisionJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop 1 }
+
 instance Serialize Decision
 instance Hashable Decision
-instance ToJSON Decision
-instance FromJSON Decision
+instance ToJSON Decision where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Decision where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 newtype Name = Name Text
@@ -191,8 +193,8 @@ data Expression
 
 instance Serialize Expression
 instance Hashable Expression
-instance ToJSON Expression
-instance FromJSON Expression
+instance ToJSON Expression where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data DomainDefn
@@ -202,8 +204,8 @@ data DomainDefn
 
 instance Serialize DomainDefn
 instance Hashable DomainDefn
-instance ToJSON DomainDefn
-instance FromJSON DomainDefn
+instance ToJSON DomainDefn where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON DomainDefn where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data DomainDefnEnum = DomainDefnEnum Name [Name]
@@ -211,8 +213,8 @@ data DomainDefnEnum = DomainDefnEnum Name [Name]
 
 instance Serialize DomainDefnEnum
 instance Hashable DomainDefnEnum
-instance ToJSON DomainDefnEnum
-instance FromJSON DomainDefnEnum
+instance ToJSON DomainDefnEnum where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON DomainDefnEnum where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data DomainDefnUnnamed = DomainDefnUnnamed Name Expression
@@ -220,8 +222,9 @@ data DomainDefnUnnamed = DomainDefnUnnamed Name Expression
 
 instance Serialize DomainDefnUnnamed
 instance Hashable DomainDefnUnnamed
-instance ToJSON DomainDefnUnnamed
-instance FromJSON DomainDefnUnnamed
+instance ToJSON DomainDefnUnnamed where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON DomainDefnUnnamed where parseJSON = JSON.genericParseJSON jsonOptions
+
 
 
 data Domain r a
@@ -242,8 +245,8 @@ data Domain r a
 
 instance (Serialize r, Serialize a) => Serialize (Domain r a)
 instance (Hashable r, Hashable a) => Hashable (Domain r a)
-instance (ToJSON r, ToJSON a) => ToJSON (Domain r a)
-instance (FromJSON r, FromJSON a) => FromJSON (Domain r a)
+instance (ToJSON r, ToJSON a) => ToJSON (Domain r a) where toJSON = JSON.genericToJSON jsonOptions
+instance (FromJSON r, FromJSON a) => FromJSON (Domain r a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance (Arbitrary r, Arbitrary a) => Arbitrary (Domain r a) where
     arbitrary = sized f
@@ -287,8 +290,9 @@ data SetAttr a
 
 instance Serialize a => Serialize (SetAttr a)
 instance Hashable a => Hashable (SetAttr a)
-instance ToJSON a => ToJSON (SetAttr a)
-instance FromJSON a => FromJSON (SetAttr a)
+instance ToJSON a => ToJSON (SetAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON a => FromJSON (SetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+
 
 instance Default (SetAttr a) where
     def = SetAttrNone
@@ -299,8 +303,8 @@ data DomainAttributes a = DomainAttributes [DomainAttribute a]
 
 instance Serialize a => Serialize (DomainAttributes a)
 instance Hashable a => Hashable (DomainAttributes a)
-instance ToJSON a => ToJSON (DomainAttributes a)
-instance FromJSON a => FromJSON (DomainAttributes a)
+instance ToJSON a => ToJSON (DomainAttributes a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON a => FromJSON (DomainAttributes a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Default (DomainAttributes a) where
     def = DomainAttributes []
@@ -314,8 +318,8 @@ data DomainAttribute a
 
 instance Serialize a => Serialize (DomainAttribute a)
 instance Hashable a => Hashable (DomainAttribute a)
-instance ToJSON a => ToJSON (DomainAttribute a)
-instance FromJSON a => FromJSON (DomainAttribute a)
+instance ToJSON a => ToJSON (DomainAttribute a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON a => FromJSON (DomainAttribute a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Range a
@@ -328,8 +332,8 @@ data Range a
 
 instance Serialize a => Serialize (Range a)
 instance Hashable a => Hashable (Range a)
-instance ToJSON a => ToJSON (Range a)
-instance FromJSON a => FromJSON (Range a)
+instance ToJSON a => ToJSON (Range a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON a => FromJSON (Range a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Arbitrary a => Arbitrary (Range a) where
     arbitrary = oneof
@@ -354,8 +358,8 @@ data HasRepresentation = NoRepresentation | HasRepresentation Name
 
 instance Serialize HasRepresentation
 instance Hashable HasRepresentation
-instance ToJSON HasRepresentation
-instance FromJSON HasRepresentation
+instance ToJSON HasRepresentation where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON HasRepresentation where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance IsString HasRepresentation where
     fromString = HasRepresentation . Name . T.pack
@@ -378,8 +382,8 @@ data Type
 
 instance Serialize Type
 instance Hashable Type
-instance ToJSON Type
-instance FromJSON Type
+instance ToJSON Type where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Type where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Constant
@@ -397,8 +401,8 @@ data Constant
 
 instance Serialize Constant
 instance Hashable Constant
-instance ToJSON Constant
-instance FromJSON Constant
+instance ToJSON Constant where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON Constant where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Arbitrary Constant where
     arbitrary = oneof
@@ -419,8 +423,8 @@ data AbstractLiteral a
 
 instance Serialize a => Serialize (AbstractLiteral a)
 instance Hashable a => Hashable (AbstractLiteral a)
-instance ToJSON a => ToJSON (AbstractLiteral a)
-instance FromJSON a => FromJSON (AbstractLiteral a)
+instance ToJSON a => ToJSON (AbstractLiteral a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON a => FromJSON (AbstractLiteral a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data AbstractPattern
@@ -439,8 +443,8 @@ data AbstractPattern
 
 instance Serialize AbstractPattern
 instance Hashable AbstractPattern
-instance ToJSON AbstractPattern
-instance FromJSON AbstractPattern
+instance ToJSON AbstractPattern where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON AbstractPattern where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 class ExpressionLike a where

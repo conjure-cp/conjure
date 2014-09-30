@@ -34,11 +34,7 @@ specToModel :: Spec -> Model
 specToModel (Spec lang stmt) = Model
     { mLanguage = lang
     , mStatements = map convStmt (statementAsList stmt)
-    , mInfo =
-        ModelInfo
-            { miRepresentations = []
-            , miTrail = []
-            }
+    , mInfo = def
     }
 
     where
