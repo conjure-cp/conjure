@@ -163,20 +163,16 @@ specToModel (Spec lang stmt) = Model
                         |] =
             let
                 ty = typeOf (convDomain quanOverDom)
-                filterOr b =
+                conjunctWithGuard p =
                     if guardE == [xMake| emptyGuard := [] |]
-                        then Op "filter"
-                                [ Lambda (convPat ty pat)
-                                         (Op op' [convExpr pat, convExpr expr])
-                                , b
-                                ]
-                        else Op "filter"
-                                [ Lambda (convPat ty pat)
-                                         (Op "/\\" [ convExpr guardE
-                                                   , Op op' [convExpr pat, convExpr expr]
-                                                   ] )
-                                , b
-                                ]
+                        then p
+                        else Op "/\\" [convExpr guardE, p]
+                filterOr b =
+                    Op "filter"
+                        [ Lambda (convPat ty pat)
+                                 (conjunctWithGuard (Op op' [convExpr pat, convExpr expr]))
+                        , b
+                        ]
                 op' = case op of
                     [xMatch| [] := in       |] -> "in"
                     [xMatch| [] := subset   |] -> "subset"

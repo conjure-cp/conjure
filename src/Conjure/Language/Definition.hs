@@ -178,7 +178,7 @@ instance Arbitrary Name where
     arbitrary = do
         ch <- choose ('a', 'z')
         return $ Name $ T.pack [ch]
-    shrink (Name n) = if T.length n > 1 then [Name (T.drop 1 n)] else []
+    shrink (Name n) = [ Name (T.drop 1 n) | T.length n > 1 ]
 
 
 data Expression

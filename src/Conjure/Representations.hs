@@ -48,7 +48,7 @@ down1_
     => Representation m
     ->           (Name, DomainX x)
     -> m (Maybe [(Name, DomainX x)])
-down1_ repr p = rDown_ repr p
+down1_ = rDown_
 
 -- | refine a domain, together with a constant, one level.
 --   the domain has to be fully instantiated.
@@ -57,7 +57,7 @@ down1
     => Representation m
     ->           (Name, DomainC, Constant)
     -> m (Maybe [(Name, DomainC, Constant)])
-down1 repr p = rDown repr p
+down1 = rDown
 
 -- | translate a bunch of low level constants up, one level.
 --   the high level domain (i.e. the target domain) has to be given.
@@ -290,7 +290,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                     -- we find those bindings, call (up1 name inner) on them, then lift
                     mid3
                         :: [(Name, [Constant])]
-                        <- forM mid2 $ \ (n, _) -> do
+                        <- forM mid2 $ \ (n, _) ->
                             case lookup n ctxt of
                                 Nothing -> throwError $ vcat $
                                     [ "No value for:" <+> pretty n
@@ -333,7 +333,7 @@ setOccurrence = Representation chck setDown_ setDown setUp
 
         outName name = mconcat [name, "_", "Occurrence"]
 
-        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = do
+        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) =
             return $ Just
                 [ ( outName name
                   , DomainMatrix (forgetRepr innerDomain) DomainBool

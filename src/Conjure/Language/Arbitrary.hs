@@ -35,7 +35,7 @@ instance Arbitrary a => Arbitrary (AnyDomainTuple a) where
             DomainTuple xs -> 
                 [ AnyDomainTuple (DomainTuple ys)
                 | ys <- subsequences xs
-                , length ys >= 1
+                , not (null ys)
                 , length ys < length xs
                 ]
             _ -> []
@@ -54,7 +54,7 @@ instance Arbitrary AnyConstantTuple where
             ConstantTuple xs -> 
                 [ AnyConstantTuple (ConstantTuple ys)
                 | ys <- subsequences xs
-                , length ys >= 1
+                , not (null ys)
                 , length ys < length xs
                 ]
             _ -> []

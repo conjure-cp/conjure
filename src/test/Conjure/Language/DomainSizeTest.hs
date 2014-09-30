@@ -33,7 +33,7 @@ tests = testGroup "domain size"
     , testCase "domain size of set of bool #1" $
         domainSizeConstant (DomainSet () SetAttrNone DomainBool) @?= Right 4
     , testCase "domain size of set of bool #2" $
-        let setOfSize n inner = DomainSet () (SetAttrSize n) inner
+        let setOfSize n = DomainSet () (SetAttrSize n)
         in  domainSizeConstant (setOfSize (ConstantInt 2) DomainBool) @?= Right 1
     ]
 

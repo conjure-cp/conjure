@@ -118,17 +118,17 @@ addTrueConstraints m =
 
 
 oneSuchThat :: Model -> Model
-oneSuchThat m = m { mStatements = others ++ [suchThat] }
+oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
     where collect (SuchThat s) = ([], s)
           collect s = ([s], [])
           (others, suchThats) = mStatements m
                 |> map collect
                 |> mconcat
-                |> second (filter (/= (Constant (ConstantBool True))))
+                |> second (filter (/= Constant (ConstantBool True)))
                 |> second nub
           suchThat = if null suchThats
-                      then SuchThat [Constant (ConstantBool True)]
-                      else SuchThat suchThats
+                      then [Constant (ConstantBool True)]
+                      else suchThats
 
 
 rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)

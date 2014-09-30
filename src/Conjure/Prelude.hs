@@ -168,7 +168,7 @@ sameLength (_:xs) (_:ys) = sameLength xs ys
 sameLength _ _ = False
 
 concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
-concatMapM f xs = fmap concat $ mapM f xs
+concatMapM f xs = concat <$> mapM f xs
 
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do

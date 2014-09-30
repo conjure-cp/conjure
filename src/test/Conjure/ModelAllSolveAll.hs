@@ -32,8 +32,8 @@ tests = do
 -- returns True if the argument points to a directory that is not hidden
 isTestDir :: FilePath -> FilePath -> IO Bool
 isTestDir baseDir possiblyDir =
-    (&&) <$> (doesDirectoryExist (baseDir </> possiblyDir))
-         <*> (doesFileExist (baseDir </> possiblyDir </> possiblyDir ++ ".essence"))
+    (&&) <$> doesDirectoryExist (baseDir </> possiblyDir)
+         <*> doesFileExist (baseDir </> possiblyDir </> possiblyDir ++ ".essence")
 
 
 -- the first FilePath is the base directory for the exhaustive tests
@@ -97,9 +97,8 @@ testSingleDirNoParam outputsDir models =
             , "-O0"
             , "-all-solutions"
             ]
-        stderrSR <- lastStderr
-        unless (T.null stderrSR)
-               (liftIO $ assertFailure $ T.unpack stderrSR)
+        lastStderr >>= \ stderrSR -> unless (T.null stderrSR) $
+            liftIO $ assertFailure $ T.unpack stderrSR
         eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                   <$> liftIO (getDirectoryContents outputsDir)
         forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
@@ -135,9 +134,8 @@ testSingleDirWithParams outputsDir models paramsDir params =
                     , "-O0"
                     , "-all-solutions"
                     ]
-                stderrSR <- lastStderr
-                unless (T.null stderrSR)
-                       (liftIO $ assertFailure $ T.unpack stderrSR)
+                lastStderr >>= \ stderrSR -> unless (T.null stderrSR) $
+                    liftIO $ assertFailure $ T.unpack stderrSR
                 eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> liftIO (getDirectoryContents outputsDir)
                 forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
