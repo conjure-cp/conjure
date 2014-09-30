@@ -1,6 +1,7 @@
 module Conjure.Language.ModelStats
     ( givens, nbGivens, nbAbstractGivens
     , finds, nbFinds, nbAbstractFinds
+    , declarations, nbDeclarations, nbAbstractDeclarations
     , domainNeedsRepresentation
     , modelInfo
     ) where
@@ -20,6 +21,7 @@ nbGivens = length . givens
 nbAbstractGivens :: Model -> Int
 nbAbstractGivens = length . filter domainNeedsRepresentation . map snd . givens
 
+
 finds :: Model -> [(Name, Domain () Expression)]
 finds m = [ (nm,d) | Declaration (Find nm d) <- mStatements m ]
 
@@ -28,6 +30,17 @@ nbFinds = length . finds
 
 nbAbstractFinds :: Model -> Int
 nbAbstractFinds = length . filter domainNeedsRepresentation . map snd . finds
+
+
+declarations :: Model -> [(Name, Domain () Expression)]
+declarations m = givens m ++ finds m
+
+nbDeclarations :: Model -> Int
+nbDeclarations = length . declarations
+
+nbAbstractDeclarations :: Model -> Int
+nbAbstractDeclarations = length . filter domainNeedsRepresentation . map snd . declarations
+
 
 domainNeedsRepresentation :: (Pretty r, Pretty x) => Domain r x -> Bool
 domainNeedsRepresentation DomainBool{} = False
@@ -42,6 +55,7 @@ domainNeedsRepresentation DomainFunction{}  = True
 domainNeedsRepresentation DomainRelation{}  = True
 domainNeedsRepresentation DomainPartition{} = True
 domainNeedsRepresentation d = bug $ "domainNeedsRepresentation:" <+> pretty d
+
 
 modelInfo :: Model -> Doc
 modelInfo m = vcat
