@@ -167,8 +167,8 @@ decisionJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop
 
 instance Serialize Decision
 instance Hashable Decision
-instance ToJSON Decision where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON Decision where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON Decision where toJSON = JSON.genericToJSON decisionJSONOptions
+instance FromJSON Decision where parseJSON = JSON.genericParseJSON decisionJSONOptions
 
 
 newtype Name = Name Text
