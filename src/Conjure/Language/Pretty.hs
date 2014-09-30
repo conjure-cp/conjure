@@ -25,10 +25,11 @@ import Data.ByteString.Lazy.Char8 ( unpack )
 
 instance Pretty Model where
     pretty (Model lang stmts info) = vcat $ concat
-        [ [pretty lang, ""]
+        [ [pretty lang]
+        , [""]
         , map pretty stmts
-        , ["", "$ Conjure's"]
-        , [pretty info]
+        , [""]
+        , [pretty info | info /= def]
         ]
 
 instance Pretty LanguageVersion where
@@ -62,7 +63,7 @@ instance Pretty Objective where
 
 instance Pretty ModelInfo where
     pretty = pretty . commentLines . unpack . encodePretty
-        where commentLines = unlines . map ("$ "++) . lines
+        where commentLines = unlines . map ("$ "++) . ("Conjure's" :) . lines
 
 instance Pretty Name where
     pretty (Name n) = pretty n
