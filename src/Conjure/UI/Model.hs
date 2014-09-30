@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Conjure.UI.Model where
 
@@ -8,7 +9,8 @@ import Conjure.Language.Pretty
 import Conjure.Language.ModelStats ( givens, finds, declarations )
 import Conjure.Representations
 
-import Data.Generics.Uniplate.Data ( transformBiM, rewriteBiM )
+import Data.Generics.Uniplate.Data ( rewriteBiM, uniplate, biplate )
+import Data.Generics.Str ( Str )
 
 
 data ModelGen = ModelGen
@@ -22,6 +24,7 @@ initialise m = ModelGen (addTrueConstraints m) []
 -- | repeatedly call `nextModel` to generate all models
 outputAllModels :: FilePath -> Int -> ModelGen -> IO ()
 outputAllModels dir i gen = do
+    putStrLn $ "Working on model #" ++ show i
     createDirectoryIfMissing True dir
     may <- nextModel gen
     case may of
@@ -29,12 +32,15 @@ outputAllModels dir i gen = do
         Just (eprime,gen') -> do
             let filename = dir </> "model" ++ show i ++ ".eprime"
             writeFile filename (renderWide eprime)
+            print $ vcat
+                [ pretty sel <+> "out of" <+> pretty (show opts) <+> "~~" <+> pretty txt
+                | Decision txt opts sel <- miTrail (mInfo eprime)
+                ]
             outputAllModels dir (i+1) gen'
 
 -- | given a `ModelGen`, which contains info about previously generated models,
 --   generate the next model.
 nextModel :: ModelGen -> IO (Maybe (Model, ModelGen))
-nextModel (ModelGen _ (_:_)) = return Nothing                       -- only generate one model and stop. for now.
 nextModel (ModelGen essence pastInfos) = do
     meprime <- genNextModel essence pastInfos                       -- the workhorse
     case meprime of
@@ -50,7 +56,7 @@ nextModel (ModelGen essence pastInfos) = do
 --   generate the next model
 --   or return Nothing if no other model can be generated
 genNextModel :: Model -> [ModelInfo] -> IO (Maybe Model)
-genNextModel initialEssence _pastInfos = do
+genNextModel initialEssence pastInfos = do
 
     let decls = declarations initialEssence
 
@@ -60,47 +66,138 @@ genNextModel initialEssence _pastInfos = do
             case lookup nm decls of
                 Nothing -> error $ "what's this a reference to? " ++ show nm
                 Just inpDom -> do
+                    contexts <- gets stAscendants
+                    explored <- gets alreadyExplored
+
                     let domOpts = reprOptions inpDom
-                    let domSelected = head domOpts
-                    liftIO $ do
-                        print $ "Options for the domain of" <+> pretty nm
-                        mapM_ (print . nest 4 . pretty) domOpts
-                        print $ "    Picking:" <+> pretty domSelected
-                    modify $ addReprToSt nm domSelected
-                    return (Reference nm)
+                    let numOptions = [1 .. length domOpts]
+
+                    case numOptions \\ explored of
+                        [] -> do
+                            modify $ \ st -> st { stExhausted = True }
+                            liftIO $ putStrLn "exhausted=true"
+                            -- st <- gets id
+                            -- liftIO $ print st
+                            return (Reference nm)
+                        (numSelected:_) -> do
+                            let domSelected = domOpts !! (numSelected - 1)
+                            let descr = vcat
+                                    $ ("Selecting representation for:" <+> pretty nm)
+                                    : map (nest 4) (
+                                       [ "Options: " <+> (vcat (map (nest 4 . pretty) domOpts))
+                                       , "Selected:" <+> pretty domSelected
+                                       , "# Options: " <+> pretty (show numOptions)
+                                       , "# Explored:" <+> pretty (show explored)
+                                       , "# Selected:" <+> pretty numSelected
+                                       ] ++
+                                       [ "Context #" <> pretty i <> ":" <+> either pretty pretty c
+                                       | (i,c) <- zip allNats contexts
+                                       ] )
+                            modify $ addReprToSt nm domSelected
+                            modify $ addDecisionToSt descr numOptions numSelected
+                            liftIO $ print descr
+                            return (Reference nm)
         f x = do
-            gets nbExpression >>= \ nb -> liftIO $ print $ "--" <+> pretty nb <> ":" <+> pretty (show x)
-            -- gets ascendants   >>= \ xs -> liftIO $ print $ vcat [ "----" <+> pretty (show i) | i <- xs ]
-            -- liftIO $ putStrLn ""
-            modify $ \ st -> st { nbExpression = 1 + nbExpression st
-                                , ascendants   = x : ascendants st
-                                }
-            return x
+            exhausted <- gets stExhausted
+            if exhausted
+                then return x
+                else do
+                    gets stNbExpression >>= \ nb -> liftIO $ print $ "--" <+> pretty nb <> ":" <+> pretty (show x)
+                    -- gets stAscendants   >>= \ xs -> liftIO $ print $ vcat [ "----" <+> pretty (show i) | i <- xs ]
+                    -- liftIO $ putStrLn ""
+                    modify $ \ st -> st { stNbExpression = 1 + stNbExpression st }
+                    return x
 
     let initInfo = def { miGivens = map fst (givens initialEssence)
                        , miFinds  = map fst (finds  initialEssence)
                        }
-    let pipeline =  transformBiM f
-                >=> rewriteBiM rule_TrueIsNoOp 
+    let pipeline =  tr f
+                >=> ifNotExhausted (rewriteBiM rule_TrueIsNoOp)
     (statements', st) <- runStateT (pipeline (mStatements initialEssence))
-                                   (St 1 [] initInfo)
-                                   
-    let model = initialEssence { mStatements = statements'
-                               , mInfo = currInfo st
-                               }
-    return (Just model)
+                                   (def { stCurrInfo = initInfo
+                                        , stPastInfos = map miTrail pastInfos
+                                        })
 
+    if stExhausted st
+        then return Nothing
+        else do
+            let model = initialEssence { mStatements = statements'
+                                       , mInfo = stCurrInfo st
+                                       }
+            return (Just model)
+
+
+class ExpressionContainer a where
+    tr :: MonadState St m => (Expression -> m Expression) -> a -> m a
+
+instance ExpressionContainer Statement where
+    tr f x = do
+        modify $ \ st -> st { stAscendants = Right x : stAscendants st }
+        let (current, generate) = biplate x
+        x' <- liftM generate $ mapM (tr f) (current :: Str Expression)
+        modify $ \ st -> st { stAscendants = drop 1 (stAscendants st) }
+        return x'
+
+instance ExpressionContainer Expression where
+    tr f x = do
+        modify $ \ st -> st { stAscendants = Left x : stAscendants st }
+        let (current, generate) = uniplate x
+        x' <- liftM generate $ mapM (tr f) current
+        modify $ \ st -> st { stAscendants = drop 1 (stAscendants st) }
+        f x'
+
+instance ExpressionContainer [Statement] where
+    tr f = mapM (tr f)
+        
 
 data St = St
-    { nbExpression :: !Int
-    , ascendants :: [Expression]
-    , currInfo :: !ModelInfo
+    { stNbExpression :: !Int
+    , stReprsSoFar :: [ ( Name                                        -- for the declaration with this name
+                        , ( Int                                       -- number of occurrences so far
+                          , [Domain HasRepresentation Expression]     -- distinct reprs so far
+                          ) ) ]
+    , stAscendants :: [Either Expression Statement]
+    , stCurrInfo :: !ModelInfo
+    , stPastInfos :: [[Decision]]                                     -- each [Decision] is a trail of decisions
+    , stExhausted :: Bool
     }
+    deriving Show
+
+instance Default St where
+    def = St 0 [] [] def [] False
 
 addReprToSt :: Name -> Domain HasRepresentation Expression -> St -> St
-addReprToSt nm dom st = st { currInfo = addReprToInfo (currInfo st) }
-    where addReprToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
+addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st) }
+    where addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
 
+addDecisionToSt :: Doc -> [Int] -> Int -> St -> St
+addDecisionToSt doc opts selected st =
+    st { stCurrInfo = addToInfo (stCurrInfo st)
+       , stPastInfos = advancePastInfos (stPastInfos st)
+       }
+    where addToInfo i = i { miTrail = miTrail i ++ [dec] }
+          dec = Decision (stringToText $ renderWide doc) opts selected
+          advancePastInfos trails =
+              [ tail trail                      -- we drop the head to advance in the trail
+              | trail <- trails
+              , not (null trail)                -- check if this trail is already exhausted
+              , let this = head trail
+              , dDecision this == selected      -- only those which picked the same option are relevant.
+              ]
+
+alreadyExplored :: St -> [Int]
+alreadyExplored st =
+    [ dDecision (head trail)
+    | trail <- stPastInfos st
+    , not (null trail)
+    ]
+
+ifNotExhausted :: MonadState St m => (a -> m a) -> a -> m a
+ifNotExhausted f x = do
+    exhausted <- gets stExhausted
+    if exhausted
+        then return x
+        else f x
 
 -- | For every parameter and decision variable add a true-constraint.
 --   A true-constraint has no effect, other than forcing Conjure to produce a representation.

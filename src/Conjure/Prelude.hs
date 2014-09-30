@@ -244,6 +244,6 @@ instance Eq Doc where
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
 
-allNats :: [Integer]
+allNats :: [Int]
 allNats = [1..]
 
