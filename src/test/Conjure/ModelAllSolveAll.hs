@@ -44,22 +44,40 @@ isTestDir baseDir possiblyDir =
 testSingleDir :: FilePath -> TestName -> IO TestTree
 testSingleDir baseDir basename = do
     let conjuring = testCase "Conjuring" $ do
+
+            -- the working directory and the outputs directory
             let wd = baseDir </> basename
             let outputsDir = wd </> "outputs"
-            removeDirectoryRecursive outputsDir
+
+            -- tl;dr: rm -rf outputsDir
+            -- removeDirectoryRecursive gets upset if the dir doesn't exist.
+            -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
+            createDirectoryIfMissing True outputsDir >> removeDirectoryRecursive outputsDir
+
+            -- read in the essence, generate the eprimes
             essence <- readModelFromFile (wd </> basename ++ ".essence")
             modelAll outputsDir essence
+
+            -- eprime's generates, and stored under outputs/*.eprime
             models <- filter (".eprime" `isSuffixOf`) <$> getDirectoryContents outputsDir
+            -- essence params will be at *.param, if they exist
             params <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents wd
+
+            -- SavileRow+Minion for every model and every param
             shelly $ print_stdout False
                    $ print_stderr False
                    $ if null params
                         then testSingleDirNoParam outputsDir models
                         else testSingleDirWithParams outputsDir models wd params
 
+    -- check if the output models+solutions are the same as
+    --          the expected ones
     checkingExpected <- checkExpected (baseDir </> basename </> "expected")
                                       (baseDir </> basename </> "outputs" )
 
+    -- "checkingExpected" tests do depend on "conjuring" being run first
+    -- hence we cannot exploit parallelism with this kind of a test description.
+    -- will use -j1 for now.
     return $ testGroup basename (conjuring : checkingExpected)
 
 
