@@ -46,7 +46,7 @@ import GHC.Num as X ( Num(..) )
 -- some more type classes
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
-import Control.Monad as X ( Monad(..), mapM, mapM_, MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
+import Control.Monad as X ( Monad(..), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
                           , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence
                           , filterM
                           )
@@ -67,7 +67,7 @@ import Control.Category          as X ( (<<<), (>>>) )
 import Data.Data         as X ( Data, Typeable )
 import Data.Default      as X ( Default, def )
 import Data.Either       as X ( Either(..), either, lefts, rights )
-import Data.Foldable     as X ( forM_, fold, foldMap, toList )
+import Data.Foldable     as X ( forM_, fold, foldMap, toList, mapM_ )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy, partition
@@ -83,7 +83,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
 import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
-import Data.Traversable  as X ( forM )
+import Data.Traversable  as X ( mapM, forM )
 import Data.Tuple        as X ( fst, snd, swap, uncurry )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents )
