@@ -2,6 +2,7 @@ module Conjure.Language.ModelStats
     ( givens, nbGivens, nbAbstractGivens
     , finds, nbFinds, nbAbstractFinds
     , declarations, nbDeclarations, nbAbstractDeclarations
+    , lettings
     , domainNeedsRepresentation
     , modelInfo
     ) where
@@ -40,6 +41,10 @@ nbDeclarations = length . declarations
 
 nbAbstractDeclarations :: Model -> Int
 nbAbstractDeclarations = length . filter domainNeedsRepresentation . map snd . declarations
+
+
+lettings :: Model -> [(Name, Expression)]
+lettings m = [ (nm,x) | Declaration (Letting nm x) <- mStatements m ]
 
 
 domainNeedsRepresentation :: (Pretty r, Pretty x) => Domain r x -> Bool

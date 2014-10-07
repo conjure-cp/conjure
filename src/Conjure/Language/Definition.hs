@@ -6,6 +6,8 @@ module Conjure.Language.Definition
     ( forgetRepr, rangesInts
     , languageEprime
 
+    , lambdaToFunction
+
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
     , Statement(..), Objective(..), Declaration(..)
@@ -48,6 +50,9 @@ import qualified Data.Aeson.Types as JSON
 
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
+
+-- uniplate
+import Data.Generics.Uniplate.Data ( transform )
 
 
 data Model = Model
@@ -195,6 +200,22 @@ instance Serialize Expression
 instance Hashable Expression
 instance ToJSON Expression where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
+
+
+-- TODO: Add support for AbsPatTuple
+-- TODO: Add support for AbsPatMatrix
+-- TODO: Add support for AbsPatSet
+lambdaToFunction :: AbstractPattern -> Expression -> (AbstractPattern -> Expression)
+lambdaToFunction (Single nm _) body =
+    let
+        replacer nm2 (Reference n) | n == nm = Reference nm2
+        replacer _ x = x
+
+        newBody (Single nm2 _) = transform (replacer nm2) body
+        newBody p = bug $ "Incompatible AbstractPattern, expecting `Single` but got " <+> pretty (show p)
+    in
+        newBody
+lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
 
 data DomainDefn

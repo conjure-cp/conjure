@@ -6,7 +6,7 @@ module Conjure.UI.Model where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Language.ModelStats ( givens, finds, declarations )
+import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
 import Conjure.Representations
 
 import Data.Generics.Uniplate.Data ( rewriteBiM, uniplate, biplate )
@@ -58,13 +58,19 @@ nextModel (ModelGen essence pastInfos) = do
 genNextModel :: Model -> [ModelInfo] -> IO (Maybe Model)
 genNextModel initialEssence pastInfos = do
 
+    let lets  = lettings initialEssence
     let decls = declarations initialEssence
 
     let
         f :: (MonadState St m, MonadIO m) => Expression -> m Expression
         f (Reference nm) =
             case lookup nm decls of
-                Nothing -> error $ "what's this a reference to? " ++ show nm
+                Nothing ->
+                    case lookup nm lets of
+                        Nothing -> do
+                            liftIO $ putStrLn $ "what's this a reference to? " ++ show nm
+                            return (Reference nm)
+                        Just _  -> return (Reference nm)
                 Just inpDom -> do
                     contexts <- gets stAscendants
                     explored <- gets alreadyExplored
@@ -112,7 +118,10 @@ genNextModel initialEssence pastInfos = do
                        , miFinds  = map fst (finds  initialEssence)
                        }
     let pipeline =  tr f
-                >=> ifNotExhausted (rewriteBiM rule_TrueIsNoOp)
+                >=> ifNotExhausted (rewriteBiM $ firstOfRules [ rule_TrueIsNoOp
+                                                              , rule_InlineFilterInsideMap
+                                                              ]
+                                   )
     (statements', st) <- runStateT (pipeline (mStatements initialEssence))
                                    (def { stCurrInfo = initInfo
                                         , stPastInfos = map miTrail pastInfos
@@ -228,9 +237,28 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
                       else suchThats
 
 
+firstOfRules :: Monad m => [Expression -> m (Maybe Expression)] -> Expression -> m (Maybe Expression)
+firstOfRules [] _ = return Nothing
+firstOfRules (r:rs) x = r x >>= maybe (firstOfRules rs x) (return . Just)
+
+
 rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)
-rule_TrueIsNoOp = return . rule_TrueIsNoOp_pure
+rule_TrueIsNoOp = return . theRule
     where
-        rule_TrueIsNoOp_pure (Op "true" _) = Just $ Constant $ ConstantBool True
-        rule_TrueIsNoOp_pure _ = Nothing
+        theRule (Op "true" _) = Just $ Constant $ ConstantBool True
+        theRule _ = Nothing
+
+
+rule_InlineFilterInsideMap :: Monad m => Expression -> m (Maybe Expression)
+rule_InlineFilterInsideMap = return . theRule
+    where
+        theRule (Op "map_domain" [Lambda vBody body, Op "filter" [Lambda vGuard guard_, domain]]) =
+            let
+                fGuard  = lambdaToFunction vGuard guard_
+                fBody   = lambdaToFunction vBody  body
+                newBody = Lambda vBody (Op "/\\" [fGuard vBody, fBody vBody])
+            in
+                Just $ Op "map_domain" [newBody, domain]
+        theRule _ = Nothing
+
 

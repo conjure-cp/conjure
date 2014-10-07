@@ -16,6 +16,7 @@ main = do
         []  -> error "Provide a *.essence file."
         _   -> error "Provide a single *.essence file."
     essence <- readModelFromFile essencePath
+    putStrLn $ renderWide essence
     putStrLn $ renderWide $ modelInfo essence
     outputAllModels "conjure-output" 1 (initialise essence)
 
