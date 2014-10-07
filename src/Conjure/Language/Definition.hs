@@ -161,7 +161,7 @@ instance Default ModelInfo where
 
 
 data Decision = Decision
-    { dDescription :: Text
+    { dDescription :: [Text]
     , dOptions :: [Int]
     , dDecision :: Int
     }

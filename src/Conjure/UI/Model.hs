@@ -11,6 +11,7 @@ import Conjure.Representations
 
 import Data.Generics.Uniplate.Data ( rewriteBiM, uniplate, biplate )
 import Data.Generics.Str ( Str )
+import qualified Data.Text as T
 
 
 data ModelGen = ModelGen
@@ -33,8 +34,8 @@ outputAllModels dir i gen = do
             let filename = dir </> "model" ++ show i ++ ".eprime"
             writeFile filename (renderWide eprime)
             print $ vcat
-                [ pretty sel <+> "out of" <+> pretty (show opts) <+> "~~" <+> pretty txt
-                | Decision txt opts sel <- miTrail (mInfo eprime)
+                [ pretty sel <+> "out of" <+> pretty (show opts) <+> "~~" <+> vcat (map pretty txts)
+                | Decision txts opts sel <- miTrail (mInfo eprime)
                 ]
             outputAllModels dir (i+1) gen'
 
@@ -60,6 +61,12 @@ genNextModel initialEssence pastInfos = do
 
     let lets  = lettings initialEssence
     let decls = declarations initialEssence
+
+    let
+        reportNode :: (MonadState St m, MonadIO m) => Expression -> m ()
+        reportNode x = do
+            gets stNbExpression >>= \ nb -> liftIO $ print $ "--" <+> pretty nb <> ":" <+> pretty (show x)
+            modify $ \ st -> st { stNbExpression = 1 + stNbExpression st }
 
     let
         f :: (MonadState St m, MonadIO m) => Expression -> m Expression
@@ -103,21 +110,12 @@ genNextModel initialEssence pastInfos = do
                             modify $ addDecisionToSt descr numOptions numSelected
                             liftIO $ print descr
                             return (Reference nm)
-        f x = do
-            exhausted <- gets stExhausted
-            if exhausted
-                then return x
-                else do
-                    gets stNbExpression >>= \ nb -> liftIO $ print $ "--" <+> pretty nb <> ":" <+> pretty (show x)
-                    -- gets stAscendants   >>= \ xs -> liftIO $ print $ vcat [ "----" <+> pretty (show i) | i <- xs ]
-                    -- liftIO $ putStrLn ""
-                    modify $ \ st -> st { stNbExpression = 1 + stNbExpression st }
-                    return x
+        f x = return x
 
     let initInfo = def { miGivens = map fst (givens initialEssence)
                        , miFinds  = map fst (finds  initialEssence)
                        }
-    let pipeline =  tr f
+    let pipeline =  tr (\ x -> do reportNode x; f x )
                 >=> ifNotExhausted (rewriteBiM $ firstOfRules [ rule_TrueIsNoOp
                                                               , rule_InlineFilterInsideMap
                                                               ]
@@ -185,7 +183,7 @@ addDecisionToSt doc opts selected st =
        , stPastInfos = advancePastInfos (stPastInfos st)
        }
     where addToInfo i = i { miTrail = miTrail i ++ [dec] }
-          dec = Decision (stringToText $ renderWide doc) opts selected
+          dec = Decision (doc |> renderWide |> stringToText |> T.lines) opts selected
           advancePastInfos trails =
               [ tail trail                      -- we drop the head to advance in the trail
               | trail <- trails
