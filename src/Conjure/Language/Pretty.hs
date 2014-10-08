@@ -45,8 +45,7 @@ instance Pretty Statement where
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate comma $ map pretty xs)
 
 instance Pretty Declaration where
-    pretty (Find    nm d) = hang ("find"    <+> pretty nm <>  ":" ) 8 (pretty d)
-    pretty (Given   nm d) = hang ("given"   <+> pretty nm <>  ":" ) 8 (pretty d)
+    pretty (FindOrGiven h nm d) = hang (pretty h <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (LettingDomainDefn (DDEnum (DomainDefnEnum name values))) =
         if null values
@@ -56,6 +55,9 @@ instance Pretty Declaration where
     pretty (LettingDomainDefn (DDUnnamed (DomainDefnUnnamed name size))) =
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
+instance Pretty FindOrGiven where
+    pretty Find = "find"
+    pretty Given = "given"
 
 instance Pretty Objective where
     pretty Minimising = "minimising"

@@ -45,10 +45,10 @@ specToModel (Spec lang stmt) = Model
 
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                         | [D domain     ] := topLevel.declaration.given.domain
-                        |] = Declaration (Given (Name name) (convDomain domain))
+                        |] = Declaration (FindOrGiven Given (Name name) (convDomain domain))
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference
                         | [D domain     ] := topLevel.declaration.find .domain
-                        |] = Declaration (Find (Name name) (convDomain domain))
+                        |] = Declaration (FindOrGiven Find (Name name) (convDomain domain))
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [expr         ] := topLevel.letting.expr
                         |] = Declaration (Letting (Name name) (convExpr expr))

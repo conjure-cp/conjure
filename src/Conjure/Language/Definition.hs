@@ -10,7 +10,8 @@ module Conjure.Language.Definition
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
-    , Statement(..), Objective(..), Declaration(..)
+    , Statement(..), Objective(..)
+    , Declaration(..), FindOrGiven(..)
 
     , Name(..)
     , Expression(..)
@@ -121,8 +122,7 @@ instance FromJSON Objective where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Declaration
-    = Find    Name (Domain () Expression)
-    | Given   Name (Domain () Expression)
+    = FindOrGiven FindOrGiven Name (Domain () Expression)
     | Letting Name Expression
     | LettingDomainDefn DomainDefn
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -131,6 +131,16 @@ instance Serialize Declaration
 instance Hashable Declaration
 instance ToJSON Declaration where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOptions
+
+
+data FindOrGiven = Find | Given
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize FindOrGiven
+instance Hashable FindOrGiven
+instance ToJSON FindOrGiven where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON FindOrGiven where parseJSON = JSON.genericParseJSON jsonOptions
+
 
 
 data ModelInfo = ModelInfo

@@ -267,22 +267,14 @@ updateDeclarations statements = do
     reprs <- gets stAllReprs
     liftM concat $ forM statements $ \ st ->
         case st of
-            Declaration (Find nm _) ->
+            Declaration (FindOrGiven h nm _) ->
                 case lookup nm reprs of
                     Nothing -> bug $ "No representation chosen for: " <+> pretty nm
                     Just domain -> do
                         mouts <- runExceptT $ down_ (nm, domain)
                         case mouts of
                             Left err -> bug err
-                            Right outs -> return [Declaration (Find n (forgetRepr d)) | (n,d) <- outs]
-            Declaration (Given nm _) ->
-                case lookup nm reprs of
-                    Nothing -> bug $ "No representation chosen for: " <+> pretty nm
-                    Just domain -> do
-                        mouts <- runExceptT $ down_ (nm, domain)
-                        case mouts of
-                            Left err -> bug err
-                            Right outs -> return [Declaration (Given n (forgetRepr d)) | (n,d) <- outs]
+                            Right outs -> return [Declaration (FindOrGiven h n (forgetRepr d)) | (n,d) <- outs]
             _ -> return [st]
 
 

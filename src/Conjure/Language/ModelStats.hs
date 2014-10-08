@@ -14,7 +14,7 @@ import Conjure.Language.Pretty
 
 
 givens :: Model -> [(Name, Domain () Expression)]
-givens m = [ (nm,d) | Declaration (Given nm d) <- mStatements m ]
+givens m = [ (nm,d) | Declaration (FindOrGiven Given nm d) <- mStatements m ]
 
 nbGivens :: Model -> Int
 nbGivens = length . givens
@@ -24,7 +24,7 @@ nbAbstractGivens = length . filter domainNeedsRepresentation . map snd . givens
 
 
 finds :: Model -> [(Name, Domain () Expression)]
-finds m = [ (nm,d) | Declaration (Find nm d) <- mStatements m ]
+finds m = [ (nm,d) | Declaration (FindOrGiven Find nm d) <- mStatements m ]
 
 nbFinds :: Model -> Int
 nbFinds = length . finds
@@ -34,7 +34,7 @@ nbAbstractFinds = length . filter domainNeedsRepresentation . map snd . finds
 
 
 declarations :: Model -> [(Name, Domain () Expression)]
-declarations m = givens m ++ finds m
+declarations m = [ (nm,d) | Declaration (FindOrGiven _ nm d) <- mStatements m ]
 
 nbDeclarations :: Model -> Int
 nbDeclarations = length . declarations
