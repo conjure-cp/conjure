@@ -169,17 +169,32 @@ data St = St
                           ) ) ]
     , stAscendants :: [Either Expression Statement]
     , stCurrInfo :: !ModelInfo
+    , stAllReprs :: [(Name, Domain HasRepresentation Expression)]     -- repr lookup, including *ALL* levels
     , stPastInfos :: [[Decision]]                                     -- each [Decision] is a trail of decisions
     , stExhausted :: Bool
     }
     deriving Show
 
 instance Default St where
-    def = St 0 [] [] def [] False
+    def = St 0 [] [] def [] [] False
 
 addReprToSt :: Name -> Domain HasRepresentation Expression -> St -> St
-addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st) }
-    where addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
+addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
+                           , stAllReprs = (nm, dom) : inners ++ (stAllReprs st)
+                           }
+    where
+        addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
+        inners = case mkInners (nm,dom) of
+            Left err -> bug err
+            Right res -> res
+        mkInners p = do
+            mmids <- down1_ p
+            case mmids of
+                Nothing -> return []
+                Just mids -> do
+                    lows <- mapM mkInners mids
+                    return (concat (mids:lows))
+            
 
 addDecisionToSt :: Doc -> [Int] -> Int -> St -> St
 addDecisionToSt doc opts selected st =
@@ -249,27 +264,25 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
 
 updateDeclarations :: (Functor m, MonadState St m) => [Statement] -> m [Statement]
 updateDeclarations statements = do
-    reprs <- gets (miRepresentations . stCurrInfo)
+    reprs <- gets stAllReprs
     liftM concat $ forM statements $ \ st ->
         case st of
             Declaration (Find nm _) ->
                 case lookup nm reprs of
                     Nothing -> bug $ "No representation chosen for: " <+> pretty nm
                     Just domain -> do
-                        mouts <- runExceptT $ down1_ (nm, domain)
+                        mouts <- runExceptT $ down_ (nm, domain)
                         case mouts of
                             Left err -> bug err
-                            Right Nothing -> return [st]
-                            Right (Just outs) -> return [Declaration (Find n (forgetRepr d)) | (n,d) <- outs]
+                            Right outs -> return [Declaration (Find n (forgetRepr d)) | (n,d) <- outs]
             Declaration (Given nm _) ->
                 case lookup nm reprs of
                     Nothing -> bug $ "No representation chosen for: " <+> pretty nm
                     Just domain -> do
-                        mouts <- runExceptT $ down1_ (nm, domain)
+                        mouts <- runExceptT $ down_ (nm, domain)
                         case mouts of
                             Left err -> bug err
-                            Right Nothing -> return [st]
-                            Right (Just outs) -> return [Declaration (Given n (forgetRepr d)) | (n,d) <- outs]
+                            Right outs -> return [Declaration (Given n (forgetRepr d)) | (n,d) <- outs]
             _ -> return [st]
 
 
@@ -313,7 +326,7 @@ rule_TupleIndex x = do
         theRule p@(Op "indexing" [Reference nm, Constant (ConstantInt i')]) = do
             liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty (show x)
             let i = i' - 1
-            reprs <- gets (miRepresentations . stCurrInfo)
+            reprs <- gets stAllReprs
             case lookup nm reprs of
                 Just domain@(DomainTuple{}) -> do
                     mpieces <- runExceptT $ down1_ (nm, domain)

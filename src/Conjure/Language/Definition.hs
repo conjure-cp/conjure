@@ -94,7 +94,7 @@ instance FromJSON LanguageVersion where
     parseJSON x = bug $ "Error while parsing JSON:" <++> pretty (show x)
 
 instance Default LanguageVersion where
-    def = LanguageVersion "Essence" [2,0]
+    def = LanguageVersion "Essence" [1,3]
 
 
 data Statement
