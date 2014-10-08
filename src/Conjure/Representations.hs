@@ -7,7 +7,7 @@
 module Conjure.Representations
     ( down_, down, up
     , down1_, down1, up1
-    , dispatch, reprOptions
+    , reprOptions
     ) where
 
 -- conjure
@@ -45,30 +45,27 @@ data Representation m = Representation
 --   the trailing underscore signals that.
 down1_
     :: (Applicative m, MonadError Doc m, Pretty x, ExpressionLike x)
-    => Representation m
-    ->           (Name, DomainX x)
+    =>           (Name, DomainX x)
     -> m (Maybe [(Name, DomainX x)])
-down1_ = rDown_
+down1_ (name, domain) = rDown_ (dispatch domain) (name, domain)
 
 -- | refine a domain, together with a constant, one level.
 --   the domain has to be fully instantiated.
 down1
     :: (Applicative m, MonadError Doc m)
-    => Representation m
-    ->           (Name, DomainC, Constant)
+    =>           (Name, DomainC, Constant)
     -> m (Maybe [(Name, DomainC, Constant)])
-down1 = rDown
+down1 (name, domain, constant) = rDown (dispatch domain) (name, domain, constant)
 
 -- | translate a bunch of low level constants up, one level.
 --   the high level domain (i.e. the target domain) has to be given.
 --   the domain has to be fully instantiated.
 up1
     :: (Applicative m, MonadError Doc m)
-    => Representation m
-    ->   (Name, DomainC)
+    =>   (Name, DomainC)
     ->  [(Name, Constant)]
     -> m (Name, Constant)
-up1 repr p ctxt = rUp repr ctxt p
+up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 
 
 -- | refine a domain, all the way.
@@ -79,7 +76,7 @@ down_
     =>    (Name, DomainX x)
     -> m [(Name, DomainX x)]
 down_ inp@(_, domain) = do
-    mout <- down1_ (dispatch domain) inp
+    mout <- rDown_ (dispatch domain) inp
     case mout of
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down_ outs
@@ -90,8 +87,8 @@ down
     :: (Applicative m, MonadError Doc m)
     =>    (Name, DomainC, Constant)
     -> m [(Name, DomainC, Constant)]
-down inp@(_, domain, _) = do
-    mout <- down1 (dispatch domain) inp
+down inp = do
+    mout <- down1 inp
     case mout of
         Nothing -> return [inp]
         Just outs -> liftM concat $ mapM down outs
@@ -107,7 +104,7 @@ up
 up ctxt (name, highDomain) = do
     toDescend'
         -- :: Maybe [(Name, DomainX x)]
-        <- down1_ (dispatch highDomain) (name, highDomain)
+        <- down1_ (name, highDomain)
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
@@ -120,7 +117,7 @@ up ctxt (name, highDomain) = do
             midConstants
                  :: [(Name, Constant)]
                  <- sequence [ up ctxt (n,d) | (n,d) <- toDescend ]
-            up1 (dispatch highDomain) (name, highDomain) midConstants
+            up1 (name, highDomain) midConstants
 
 
 -- | Combine all known representations into one.
@@ -226,7 +223,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
         chck _ _ = []
 
         matrixDown_ (name, DomainMatrix indexDomain innerDomain) = do
-            mres <- down1_ (dispatch innerDomain) (name, innerDomain)
+            mres <- down1_ (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
                 Just mids -> return $ Just [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
@@ -236,7 +233,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
         matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do
             mids1
                 :: [Maybe [(Name, DomainC, Constant)]]
-                <- sequence [ down1 (dispatch innerDomain) (name, innerDomain, c) | c <- constants ]
+                <- sequence [ down1 (name, innerDomain, c) | c <- constants ]
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
                 then return Nothing
@@ -270,7 +267,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
 
             mid1
                 :: Maybe [(Name, DomainC)]
-                <- down1_ (dispatch innerDomain) (name, innerDomain)
+                <- down1_ (name, innerDomain)
 
             case mid1 of
                 Nothing ->
@@ -315,7 +312,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                     mid4
                         :: [(Name, Constant)]
                         <- sequence
-                            [ up1 (dispatch innerDomain) (name, innerDomain) (zip midNames cs)
+                            [ up1 (name, innerDomain) (zip midNames cs)
                             | cs <- transpose midConstants
                             ]
                     let values = map snd mid4

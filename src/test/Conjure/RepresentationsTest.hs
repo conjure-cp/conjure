@@ -9,7 +9,7 @@ module Conjure.RepresentationsTest ( tests ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Representations ( down, up, down1, up1, dispatch )
+import Conjure.Representations ( down, up, down1, up1 )
 
 -- tasty
 import Test.Tasty
@@ -1100,16 +1100,16 @@ testCases highName highDomain highConstant mkMid mid low =
     , testCase "down"    $ downTest    (highName, highDomain, highConstant) low
     , testCase "up1"     $ up1Test     (highName, highDomain) (map dropDomain mid) (highName, highConstant)
     , testCase "up"      $ upTest      (highName, highDomain) (map dropDomain low) (highName, highConstant)
-    , testCase "downup1" $ downup1Test (highName, highDomain, highConstant)
-    , testCase "downup"  $ downupTest  (highName, highDomain, highConstant)
+    , testCase "downUp1" $ downUp1Test (highName, highDomain, highConstant)
+    , testCase "downUp"  $ downUpTest  (highName, highDomain, highConstant)
     ]
 
 down1Test
     :: (Name, Domain HasRepresentation Constant, Constant)
     -> Maybe [(Name, Domain HasRepresentation Constant, Constant)]
     -> Assertion
-down1Test high@(_,domain,_) low' =
-    case down1 (dispatch domain) high of
+down1Test high low' =
+    case down1 high of
         Left err -> assertFailure (show err)
         Right low -> Pr low @?= Pr low'
 
@@ -1127,8 +1127,8 @@ up1Test
     -> [(Name, Constant)]
     -> (Name, Constant)
     -> Assertion
-up1Test info@(_,domain) lows high' =
-    case up1 (dispatch domain) info lows of
+up1Test info lows high' =
+    case up1 info lows of
         Left err -> assertFailure (show err)
         Right high -> Pr high @?= Pr high'
 
@@ -1149,26 +1149,26 @@ testCasesAuto
     -> Constant                                                  -- high level value (constant)
     -> [TestTree]
 testCasesAuto highName highDomain highConstant =
-    [ testCase "downup1" $ downup1Test (highName, highDomain, highConstant)
-    , testCase "downup"  $ downupTest  (highName, highDomain, highConstant)
+    [ testCase "downUp1" $ downUp1Test (highName, highDomain, highConstant)
+    , testCase "downUp"  $ downUpTest  (highName, highDomain, highConstant)
     ]
 
-downup1Test
+downUp1Test
     :: (Name, Domain HasRepresentation Constant, Constant)
     -> Assertion
-downup1Test high@(_,domain,_) =
-    case down1 (dispatch domain) high of
+downUp1Test high =
+    case down1 high of
         Left err -> assertFailure (show err)
         Right mlows -> do
             let lows = maybe [dropDomain high] (map dropDomain) mlows   -- use high if we cannot go down1
-            case up1 (dispatch domain) (dropConstant high) lows of
+            case up1 (dropConstant high) lows of
                 Left err -> assertFailure (show err)
                 Right high' -> Pr high' @?= Pr (dropDomain high)
 
-downupTest
+downUpTest
     :: (Name, Domain HasRepresentation Constant, Constant)
     -> Assertion
-downupTest high =
+downUpTest high =
     case down high of
         Left err -> assertFailure (show err)
         Right lows ->
