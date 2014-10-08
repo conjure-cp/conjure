@@ -14,7 +14,9 @@ import Conjure.Language.Pretty
 
 
 instantiateExpression
-    :: MonadError Doc m
+    :: ( Functor m
+       , MonadError Doc m
+       )
     => [(Name, Expression)]
     -> Expression
     -> m Constant
@@ -33,12 +35,15 @@ instantiateDomain ctxt x = evalStateT (instantiateD x) ctxt
 
 
 instantiateE
-    :: ( MonadError Doc m
+    :: ( Functor m
+       , Applicative m
+       , MonadError Doc m
        , MonadState [(Name, Expression)] m
        )
     => Expression
     -> m Constant
 instantiateE (Constant c) = return c
+instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
 instantiateE (Reference name) = do
     ctxt <- gets id
     case name `lookup` ctxt of
@@ -48,6 +53,26 @@ instantiateE (Reference name) = do
             : prettyContext ctxt
         Just x -> instantiateE x
 instantiateE x = throwError $ "instantiateE:" <+> pretty (show x)
+
+
+instantiateAbsLit
+    :: ( Functor m
+       , Applicative m
+       , MonadError Doc m
+       , MonadState [(Name, Expression)] m
+       )
+    => AbstractLiteral Expression
+    -> m Constant
+instantiateAbsLit (AbsLitTuple xs) = ConstantTuple <$> mapM instantiateE xs
+instantiateAbsLit (AbsLitMatrix index vals) = ConstantMatrix <$> instantiateD index <*> mapM instantiateE vals
+instantiateAbsLit (AbsLitSet vals) = ConstantSet <$> mapM instantiateE vals
+instantiateAbsLit (AbsLitMSet vals) = ConstantMSet <$> mapM instantiateE vals
+instantiateAbsLit (AbsLitFunction vals) = ConstantFunction <$> forM vals (\ (a,b) -> do a' <- instantiateE a
+                                                                                        b' <- instantiateE b
+                                                                                        return (a',b')
+                                                                         )
+instantiateAbsLit (AbsLitRelation vals) = ConstantRelation <$> mapM (mapM instantiateE) vals
+instantiateAbsLit (AbsLitPartition vals) = ConstantPartition <$> mapM (mapM instantiateE) vals
 
 
 instantiateD
