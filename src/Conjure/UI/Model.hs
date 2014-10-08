@@ -80,7 +80,7 @@ genNextModel initialEssence pastInfos = do
                             return (Reference nm)
                         Just _  -> return (Reference nm)
                 Just inpDom -> do
-                    contexts <- gets stAscendants
+                    ascendants <- reportAscendants
                     explored <- gets alreadyExplored
 
                     let domOpts = reprOptions inpDom
@@ -106,10 +106,7 @@ genNextModel initialEssence pastInfos = do
                                        , "# Options: " <+> pretty (show numOptions)
                                        , "# Explored:" <+> pretty (show explored)
                                        , "# Selected:" <+> pretty numSelected
-                                       ] ++
-                                       [ "Context #" <> pretty i <> ":" <+> either pretty pretty c
-                                       | (i,c) <- zip allNats contexts
-                                       ] )
+                                       ] ++ ascendants )
                             modify $ addReprToSt nm domSelected
                             modify $ addDecisionToSt descr numOptions numSelected
                             liftIO $ print descr
@@ -121,9 +118,12 @@ genNextModel initialEssence pastInfos = do
                        }
     let pipeline =  tr (\ x -> do reportNode x; f x )
                 >=> ifNotExhausted (rewriteBiM $ firstOfRules [ rule_TrueIsNoOp
+                                                              , rule_ToIntIsNoOp
                                                               , rule_InlineFilterInsideMap
+                                                              , rule_TupleIndex
                                                               ]
                                    )
+                >=> ifNotExhausted updateDeclarations
     (statements', st) <- runStateT (pipeline (mStatements initialEssence))
                                    (def { stCurrInfo = initInfo
                                         , stPastInfos = map miTrail pastInfos
@@ -196,6 +196,14 @@ addDecisionToSt doc opts selected st =
               , dDecision this == selected      -- only those which picked the same option are relevant.
               ]
 
+reportAscendants :: MonadState St m => m [Doc]
+reportAscendants = do
+    contexts <- gets stAscendants
+    return
+        [ "Context #" <> pretty i <> ":" <+> either pretty pretty c
+        | (i,c) <- zip allNats contexts
+        ]
+
 alreadyExplored :: St -> [Int]
 alreadyExplored st =
     [ dDecision (head trail)
@@ -239,6 +247,32 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
                       else suchThats
 
 
+updateDeclarations :: (Functor m, MonadState St m) => [Statement] -> m [Statement]
+updateDeclarations statements = do
+    reprs <- gets (miRepresentations . stCurrInfo)
+    liftM concat $ forM statements $ \ st ->
+        case st of
+            Declaration (Find nm _) ->
+                case lookup nm reprs of
+                    Nothing -> bug $ "No representation chosen for: " <+> pretty nm
+                    Just domain -> do
+                        mouts <- runExceptT $ down1_ (nm, domain)
+                        case mouts of
+                            Left err -> bug err
+                            Right Nothing -> return [st]
+                            Right (Just outs) -> return [Declaration (Find n (forgetRepr d)) | (n,d) <- outs]
+            Declaration (Given nm _) ->
+                case lookup nm reprs of
+                    Nothing -> bug $ "No representation chosen for: " <+> pretty nm
+                    Just domain -> do
+                        mouts <- runExceptT $ down1_ (nm, domain)
+                        case mouts of
+                            Left err -> bug err
+                            Right Nothing -> return [st]
+                            Right (Just outs) -> return [Declaration (Given n (forgetRepr d)) | (n,d) <- outs]
+            _ -> return [st]
+
+
 firstOfRules :: Monad m => [Expression -> m (Maybe Expression)] -> Expression -> m (Maybe Expression)
 firstOfRules [] _ = return Nothing
 firstOfRules (r:rs) x = r x >>= maybe (firstOfRules rs x) (return . Just)
@@ -248,6 +282,13 @@ rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)
 rule_TrueIsNoOp = return . theRule
     where
         theRule (Op "true" _) = Just $ Constant $ ConstantBool True
+        theRule _ = Nothing
+
+
+rule_ToIntIsNoOp :: Monad m => Expression -> m (Maybe Expression)
+rule_ToIntIsNoOp = return . theRule
+    where
+        theRule (Op "toInt" [b]) = Just b
         theRule _ = Nothing
 
 
@@ -263,4 +304,30 @@ rule_InlineFilterInsideMap = return . theRule
                 Just $ Op "map_domain" [newBody, domain]
         theRule _ = Nothing
 
+
+rule_TupleIndex :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_TupleIndex x = do
+    liftIO $ print $ "rule_TupleIndex:" <+> pretty x
+    theRule x
+    where
+        theRule p@(Op "indexing" [Reference nm, Constant (ConstantInt i')]) = do
+            liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty (show x)
+            let i = i' - 1
+            reprs <- gets (miRepresentations . stCurrInfo)
+            case lookup nm reprs of
+                Just domain@(DomainTuple{}) -> do
+                    mpieces <- runExceptT $ down1_ (nm, domain)
+                    case mpieces of
+                        Left err      -> bug err
+                        Right Nothing -> bug $ "tuple domain, cannot go down:" <++> pretty domain
+                        Right (Just pieces) ->
+                            if i >= 0 && i < length pieces
+                                then return $ Just $ Reference $ fst (pieces !! i)
+                                else do
+                                    ascendants <- reportAscendants
+                                    bug $ vcat
+                                        $ ("tuple indexing out of bounds: " <++> pretty p)
+                                        : ascendants
+                _ -> return Nothing
+        theRule _ = return Nothing
 
