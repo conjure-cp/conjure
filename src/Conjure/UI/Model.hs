@@ -4,6 +4,7 @@
 module Conjure.UI.Model where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
@@ -84,6 +85,9 @@ genNextModel initialEssence pastInfos = do
 
                     let domOpts = reprOptions inpDom
                     let numOptions = [1 .. length domOpts]
+
+                    when (null domOpts) $
+                        bug $ "No representation matches this beast:" <++> pretty inpDom
 
                     case numOptions \\ explored of
                         [] -> do
