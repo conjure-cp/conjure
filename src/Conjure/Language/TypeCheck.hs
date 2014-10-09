@@ -39,13 +39,13 @@ instance TypeOf (Domain r c) where
     typeOf DomainInt{}               = return TypeInt
     typeOf (DomainEnum    defn _   ) = return (TypeEnum defn)
     typeOf (DomainUnnamed defn     ) = return (TypeUnnamed defn)
-    typeOf (DomainTuple         xs ) = TypeTuple      <$> (mapM typeOf xs)
-    typeOf (DomainMatrix ind inn   ) = TypeMatrix     <$> (typeOf ind) <*> (typeOf inn)
-    typeOf (DomainSet       _ _ x  ) = TypeSet        <$> (typeOf x)
-    typeOf (DomainMSet      _ _ x  ) = TypeMSet       <$> (typeOf x)
-    typeOf (DomainFunction  _ _ x y) = TypeFunction   <$> (typeOf x) <*> (typeOf y)
-    typeOf (DomainRelation  _ _ xs ) = TypeRelation   <$> (mapM typeOf xs)
-    typeOf (DomainPartition _ _ x  ) = TypePartition  <$> (typeOf x)
+    typeOf (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
+    typeOf (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
+    typeOf (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
+    typeOf (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
+    typeOf (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf y
+    typeOf (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
+    typeOf (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
     typeOf DomainOp{}                = return TypeAny -- TODO: fix
     typeOf DomainHack{}              = return TypeAny -- TODO: fix
 
@@ -83,32 +83,32 @@ instance TypeOf Constant where
     typeOf ConstantBool{}            = return TypeBool
     typeOf ConstantInt{}             = return TypeInt
     typeOf (ConstantEnum defn _    ) = return (TypeEnum defn)
-    typeOf (ConstantTuple        xs) = TypeTuple    <$> (mapM typeOf xs)
-    typeOf (ConstantMatrix ind inn ) = TypeMatrix   <$> (typeOf ind) <*> (homoType <$> (mapM typeOf inn))
-    typeOf (ConstantSet         xs ) = TypeSet      <$> (homoType <$> (mapM typeOf xs))
-    typeOf (ConstantMSet        xs ) = TypeMSet     <$> (homoType <$> (mapM typeOf xs))
-    typeOf (ConstantFunction    xs ) = TypeFunction <$> (homoType <$> (mapM (typeOf . fst) xs))
-                                                    <*> (homoType <$> (mapM (typeOf . fst) xs))
+    typeOf (ConstantTuple        xs) = TypeTuple    <$> mapM typeOf xs
+    typeOf (ConstantMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
+    typeOf (ConstantSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
+    typeOf (ConstantMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
+    typeOf (ConstantFunction    xs ) = TypeFunction <$> (homoType <$> mapM (typeOf . fst) xs)
+                                                    <*> (homoType <$> mapM (typeOf . fst) xs)
     typeOf (ConstantRelation    xss) = do
         ty <- homoType <$> mapM (typeOf . ConstantTuple) xss
         case ty of
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
-    typeOf (ConstantPartition   xss) = TypePartition <$> (homoType <$> (mapM typeOf (concat xss)))
+    typeOf (ConstantPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
 
 instance TypeOf a => TypeOf (AbstractLiteral a) where
-    typeOf (AbsLitTuple        xs) = TypeTuple    <$> (mapM typeOf xs)
-    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> (typeOf ind) <*> (homoType <$> (mapM typeOf inn))
-    typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> (mapM typeOf xs))
-    typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> (mapM typeOf xs))
-    typeOf (AbsLitFunction    xs ) = TypeFunction <$> (homoType <$> (mapM (typeOf . fst) xs))
-                                                  <*> (homoType <$> (mapM (typeOf . fst) xs))
+    typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
+    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
+    typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
+    typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
+    typeOf (AbsLitFunction    xs ) = TypeFunction <$> (homoType <$> mapM (typeOf . fst) xs)
+                                                  <*> (homoType <$> mapM (typeOf . fst) xs)
     typeOf (AbsLitRelation    xss) = do
         ty <- homoType <$> mapM (typeOf . AbsLitTuple) xss
         case ty of
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
-    typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> (mapM typeOf (concat xss)))
+    typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
 
 homoType :: [Type] -> Type
 homoType [] = userErr "empty collection, what's the type?"
