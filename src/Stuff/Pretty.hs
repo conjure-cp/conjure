@@ -18,8 +18,12 @@ import Text.PrettyPrint
 import Text.Printf (printf)
 
 
-class Pretty a where
+class Show a => Pretty a where
     pretty :: a -> Doc
+    prettyPrec :: Int -> a -> Doc
+
+    pretty = prettyPrec 0
+    prettyPrec _ = pretty
 
 instance Pretty Doc     where pretty = id
 instance Pretty T.Text  where pretty = pretty . T.unpack

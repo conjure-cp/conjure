@@ -18,6 +18,7 @@ module Conjure.Language.Parser
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.TypeCheck ( typeOf )
 import Language.E ( Spec(..), E(..), BuiltIn(..), xMatch, xMake, viewTaggeds, statementAsList, prettyAsPaths )
@@ -59,19 +60,20 @@ specToModel (Spec lang stmt) = Model
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                         | []              := topLevel.declaration.given.typeEnum
                         |] =
-            Declaration $ LettingDomainDefn $
-                DDEnum $ DomainDefnEnum (Name name) []
+            Declaration $ LettingDomainDefnEnum
+                $ DomainDefnEnum (Name name) []
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | values          := topLevel.letting.typeEnum.values
                         |] =
-            Declaration $ LettingDomainDefn $
-                DDEnum $ DomainDefnEnum (Name name) (map convName values)
+            Declaration $ LettingDomainDefnEnum
+                $ DomainDefnEnum (Name name) (map convName values)
 
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [expr]          := topLevel.letting.typeUnnamed
                         |] =
-            Declaration $ LettingDomainDefn $
-                DDUnnamed $ DomainDefnUnnamed (Name name) (convExpr expr)
+            Declaration $ LettingDomainDefnUnnamed
+                (DomainDefnUnnamed (Name name))
+                (convExpr expr)
 
         convStmt [xMatch| xs := topLevel.branchingOn.value.matrix.values |] = SearchOrder (map convName xs)
 
@@ -96,7 +98,7 @@ specToModel (Spec lang stmt) = Model
         convExpr [xMatch| [Prim (S op)] := binOp.operator
                         | [left]        := binOp.left
                         | [right]       := binOp.right
-                        |] = Op (Name op) [convExpr left, convExpr right]
+                        |] = mkBinOp op (convExpr left) (convExpr right)
 
 -- quantified
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
@@ -112,16 +114,14 @@ specToModel (Spec lang stmt) = Model
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
-                        else Op "filter"
-                                [ Lambda (convPat ty pat) (convExpr guardE)
-                                , b
-                                ]
+                        else Op $ MkOpFilter $ OpFilter
+                                (Lambda (convPat ty pat) (convExpr guardE))
+                                b
             in
-                Op (Name qnName)
-                    [ Op "map_domain"
-                        [ Lambda (convPat ty pat) (convExpr body)
-                        , filterOr (Domain (convDomain quanOverDom))
-                        ] ]
+                mkOp qnName
+                    [ Op $ MkOpMapOverDomain $ OpMapOverDomain
+                        (Lambda (convPat ty pat) (convExpr body))
+                        (filterOr (Domain (convDomain quanOverDom))) ]
 
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
                         | [pat]             := quantified.quanVar
@@ -132,26 +132,24 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = fst (runState (typeOf (convExpr quanOverExpr)) [])
+                ty = fst (runState (typeOf (convExpr quanOverExpr)) ([] :: [(Name, Domain () Expression)]))
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
-                        else Op "filter"
-                                [ Lambda (convPat ty pat) (convExpr guardE)
-                                , b
-                                ]
-                op' = case op of
-                    [xMatch| [] := in       |] -> "map_in_expr"
-                    [xMatch| [] := subset   |] -> "map_subset_expr"
-                    [xMatch| [] := subsetEq |] -> "map_subsetEq_expr"
+                        else Op $ MkOpFilter $ OpFilter
+                                (Lambda (convPat ty pat) (convExpr guardE))
+                                b
+                op' = \ i j -> case op of
+                    [xMatch| [] := in       |] -> Op $ MkOpMapInExpr       $ OpMapInExpr       i j
+                    [xMatch| [] := subset   |] -> Op $ MkOpMapSubsetExpr   $ OpMapSubsetExpr   i j
+                    [xMatch| [] := subsetEq |] -> Op $ MkOpMapSubsetEqExpr $ OpMapSubsetEqExpr i j
                     _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
 
             in
-                Op (Name qnName)
-                    [ Op op'
-                        [ Lambda (convPat ty pat) (convExpr body)
-                        , filterOr (convExpr quanOverExpr)
-                        ] ]
+                mkOp qnName
+                    [ op'
+                        (Lambda (convPat ty pat) (convExpr body))
+                        (filterOr (convExpr quanOverExpr)) ]
 
         convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
                         | [pat]             := quantified.quanVar
@@ -166,66 +164,65 @@ specToModel (Spec lang stmt) = Model
                 conjunctWithGuard p =
                     if guardE == [xMake| emptyGuard := [] |]
                         then p
-                        else Op "/\\" [convExpr guardE, p]
+                        else Op $ MkOpLAnd $ OpLAnd (convExpr guardE) p
                 filterOr b =
-                    Op "filter"
-                        [ Lambda (convPat ty pat)
-                                 (conjunctWithGuard (Op op' [convExpr pat, convExpr expr]))
-                        , b
-                        ]
-                op' = case op of
-                    [xMatch| [] := in       |] -> "in"
-                    [xMatch| [] := subset   |] -> "subset"
-                    [xMatch| [] := subsetEq |] -> "subsetEq"
+                    Op $ MkOpFilter $ OpFilter
+                        (Lambda (convPat ty pat)
+                                (conjunctWithGuard (op' (convExpr pat) (convExpr expr))))
+                        b
+                op' = \ i j -> case op of
+                    [xMatch| [] := in       |] -> Op $ MkOpMapInExpr       $ OpMapInExpr       i j
+                    [xMatch| [] := subset   |] -> Op $ MkOpMapSubsetExpr   $ OpMapSubsetExpr   i j
+                    [xMatch| [] := subsetEq |] -> Op $ MkOpMapSubsetEqExpr $ OpMapSubsetEqExpr i j
                     _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
+
             in
-                Op (Name qnName)
-                    [ Op "map_domain"
-                        [ Lambda (convPat ty pat) (convExpr body)
-                        , filterOr (Domain (convDomain quanOverDom))
-                        ] ]
+                mkOp qnName
+                    [ Op $ MkOpMapOverDomain $ OpMapOverDomain
+                        (Lambda (convPat ty pat) (convExpr body))
+                        (filterOr (Domain (convDomain quanOverDom))) ]
 
 -- unary operators
-        convExpr [xMatch| xs := operator.dontCare     |] = Op "dontCare"     (map convExpr xs)
-        convExpr [xMatch| xs := operator.allDiff      |] = Op "allDiff"      (map convExpr xs)
-        convExpr [xMatch| xs := operator.apart        |] = Op "apart"        (map convExpr xs)
-        convExpr [xMatch| xs := operator.defined      |] = Op "defined"      (map convExpr xs)
-        convExpr [xMatch| xs := operator.flatten      |] = Op "flatten"      (map convExpr xs)
-        convExpr [xMatch| xs := operator.freq         |] = Op "freq"         (map convExpr xs)
-        convExpr [xMatch| xs := operator.hist         |] = Op "hist"         (map convExpr xs)
-        convExpr [xMatch| xs := operator.inverse      |] = Op "inverse"      (map convExpr xs)
-        convExpr [xMatch| xs := operator.max          |] = Op "max"          (map convExpr xs)
-        convExpr [xMatch| xs := operator.min          |] = Op "min"          (map convExpr xs)
-        convExpr [xMatch| xs := operator.normIndices  |] = Op "normIndices"  (map convExpr xs)
-        convExpr [xMatch| xs := operator.participants |] = Op "participants" (map convExpr xs)
-        convExpr [xMatch| xs := operator.parts        |] = Op "parts"        (map convExpr xs)
-        convExpr [xMatch| xs := operator.party        |] = Op "party"        (map convExpr xs)
-        convExpr [xMatch| xs := operator.preImage     |] = Op "preImage"     (map convExpr xs)
-        convExpr [xMatch| xs := operator.range        |] = Op "range"        (map convExpr xs)
-        convExpr [xMatch| xs := operator.together     |] = Op "together"     (map convExpr xs)
-        convExpr [xMatch| xs := operator.toInt        |] = Op "toInt"        (map convExpr xs)
-        convExpr [xMatch| xs := operator.toMSet       |] = Op "toMSet"       (map convExpr xs)
-        convExpr [xMatch| xs := operator.toRelation   |] = Op "toRelation"   (map convExpr xs)
-        convExpr [xMatch| xs := operator.toSet        |] = Op "toSet"        (map convExpr xs)
-        convExpr [xMatch| xs := operator.twoBars      |] = Op "twoBars"      (map convExpr xs)
-        convExpr [xMatch| xs := unaryOp.not           |] = Op "not"          (map convExpr xs)
-        convExpr [xMatch| xs := unaryOp.negate        |] = Op "negate"       (map convExpr xs)
-        convExpr [xMatch| xs := unaryOp.factorial     |] = Op "factorial"    (map convExpr xs)
+        convExpr [xMatch| xs := operator.dontCare     |] = mkOp "dontCare"     (map convExpr xs)
+        convExpr [xMatch| xs := operator.allDiff      |] = mkOp "allDiff"      (map convExpr xs)
+        convExpr [xMatch| xs := operator.apart        |] = mkOp "apart"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.defined      |] = mkOp "defined"      (map convExpr xs)
+        convExpr [xMatch| xs := operator.flatten      |] = mkOp "flatten"      (map convExpr xs)
+        convExpr [xMatch| xs := operator.freq         |] = mkOp "freq"         (map convExpr xs)
+        convExpr [xMatch| xs := operator.hist         |] = mkOp "hist"         (map convExpr xs)
+        convExpr [xMatch| xs := operator.inverse      |] = mkOp "inverse"      (map convExpr xs)
+        convExpr [xMatch| xs := operator.max          |] = mkOp "max"          (map convExpr xs)
+        convExpr [xMatch| xs := operator.min          |] = mkOp "min"          (map convExpr xs)
+        convExpr [xMatch| xs := operator.normIndices  |] = mkOp "normIndices"  (map convExpr xs)
+        convExpr [xMatch| xs := operator.participants |] = mkOp "participants" (map convExpr xs)
+        convExpr [xMatch| xs := operator.parts        |] = mkOp "parts"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.party        |] = mkOp "party"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.preImage     |] = mkOp "preImage"     (map convExpr xs)
+        convExpr [xMatch| xs := operator.range        |] = mkOp "range"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.together     |] = mkOp "together"     (map convExpr xs)
+        convExpr [xMatch| xs := operator.toInt        |] = mkOp "toInt"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.toMSet       |] = mkOp "toMSet"       (map convExpr xs)
+        convExpr [xMatch| xs := operator.toRelation   |] = mkOp "toRelation"   (map convExpr xs)
+        convExpr [xMatch| xs := operator.toSet        |] = mkOp "toSet"        (map convExpr xs)
+        convExpr [xMatch| xs := operator.twoBars      |] = mkOp "twoBars"      (map convExpr xs)
+        convExpr [xMatch| xs := unaryOp.not           |] = mkOp "not"          (map convExpr xs)
+        convExpr [xMatch| xs := unaryOp.negate        |] = mkOp "negate"       (map convExpr xs)
+        convExpr [xMatch| xs := unaryOp.factorial     |] = mkOp "factorial"    (map convExpr xs)
 
         convExpr [xMatch| [actual] := functionApply.actual
                       |   args   := functionApply.args
                       |]
-            = Op "function_image" (map convExpr (actual : args))
+            = Op $ MkOpFunctionImage $ OpFunctionImage (convExpr actual) (map convExpr args)
 
         convExpr [xMatch| [x] := structural.single |] = convExpr x
 
         convExpr [xMatch| [left]  := operator.index.left
                         | []      := operator.index.right.slicer
-                        |] = Op "slicing" [convExpr left]
+                        |] = Op $ MkOpSlicing $ OpSlicing (convExpr left)
 
         convExpr [xMatch| [left]  := operator.index.left
                         | [right] := operator.index.right
-                        |] = Op "indexing" [convExpr left, convExpr right]
+                        |] = Op $ MkOpIndexing $ OpIndexing (convExpr left) (convExpr right)
 
 -- values
         convExpr [xMatch| xs := value.tuple.values  |] =

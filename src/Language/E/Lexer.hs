@@ -12,8 +12,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
 
-import GHC.Generics ( Generic )
-
 import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
 
 

@@ -55,6 +55,7 @@ bubbleUpE (Tagged t xs) = do
 bubbleUpE _ = return Nothing
 
 data OnChildrenResult = Keep E | ReplacedChild E | BubbleUp E [E] | DeclareVars E [E]
+    deriving Show
 
 instance Pretty OnChildrenResult where
     pretty (Keep x) = "Keep:" <+> pretty x

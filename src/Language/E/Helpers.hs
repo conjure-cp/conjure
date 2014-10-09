@@ -11,7 +11,7 @@ import Language.E.Pretty
 import Language.E.CompE
 import Language.E.TH
 
-import Data.Aeson ( ToJSON(..), (.=) )
+import Data.Aeson ( (.=) )
 import qualified Data.Aeson as JSON
 
 

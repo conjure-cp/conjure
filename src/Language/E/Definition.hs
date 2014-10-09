@@ -61,7 +61,7 @@ import GHC.Generics ( Generic )
 import qualified Data.Text as T
 
 -- aeson
-import Data.Aeson ( ToJSON(..), (.=) )
+import Data.Aeson ( (.=) )
 import qualified Data.Aeson as JSON
 
 -- uniplate

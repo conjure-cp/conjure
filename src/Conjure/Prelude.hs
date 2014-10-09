@@ -22,6 +22,7 @@ module Conjure.Prelude
     , fst3, snd3, thd3
     , (|>)
     , allNats
+    , jsonOptions
     ) where
 
 import GHC.Err as X ( error )
@@ -44,6 +45,7 @@ import Text.Read as X ( Read(..), reads )
 import GHC.Num as X ( Num(..) )
 
 -- some more type classes
+import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
 import Control.Monad as X ( Monad(..), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
@@ -96,7 +98,8 @@ import Data.Serialize as X ( Serialize, encode, decode )
 import qualified Data.Serialize
 
 -- aeson
-import Data.Aeson as X ( toJSON )
+import Data.Aeson as X ( ToJSON(..), FromJSON(..) )
+import qualified Data.Aeson.Types as JSON
 
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, fsep, hsep, vcat, (<+>), ($$) )
 
@@ -246,4 +249,12 @@ instance Eq Doc where
 
 allNats :: [Int]
 allNats = [1..]
+
+
+jsonOptions :: JSON.Options
+jsonOptions = JSON.defaultOptions
+    { JSON.allNullaryToStringTag = True
+    , JSON.omitNothingFields = True
+    , JSON.sumEncoding = JSON.ObjectWithSingleField
+    }
 

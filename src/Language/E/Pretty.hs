@@ -261,13 +261,13 @@ instance Pretty E where
                   |] = braces (pretty n <+> "|" <+> pretty w)
 
     pretty [xMatch| [x] := unaryOp.negate |]
-        = "-" <> prettyPrec 10000 x
+        = "-" <> prettyPrecE 10000 x
 
     pretty [xMatch| [x] := unaryOp.factorial |]
-        = prettyPrec 10000 x <> "!"
+        = prettyPrecE 10000 x <> "!"
 
     pretty [xMatch| [x] := unaryOp.not |]
-        = "!" <> prettyPrec 10000 x
+        = "!" <> prettyPrecE 10000 x
 
     pretty [xMatch| [x] := operator.twoBars |]
         = "|" <> pretty x <> "|"
@@ -298,7 +298,7 @@ instance Pretty E where
                     |]
         | let lexeme = textToLexeme t
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
-        = prettyPrec 0 x
+        = prettyPrecE 0 x
 
     pretty [xMatch| xs := operator.dontCare     |] = "dontCare"     <> prettyList Pr.parens "," xs
     pretty [xMatch| xs := operator.allDiff      |] = "allDiff"      <> prettyList Pr.parens "," xs
@@ -335,8 +335,8 @@ instance Pretty (Tree HasRepresentation) where
     pretty (Node r rs) = pretty r <+> prettyList Pr.brackets "," rs
 
 
-prettyPrec :: Int -> E -> Doc
-prettyPrec envPrec x@([xMatch| [Prim (S t)] := binOp.operator
+prettyPrecE :: Int -> E -> Doc
+prettyPrecE envPrec x@([xMatch| [Prim (S t)] := binOp.operator
                              | [a]          := binOp.left
                              | [b]          := binOp.right
                              |])
@@ -345,21 +345,20 @@ prettyPrec envPrec x@([xMatch| [Prim (S t)] := binOp.operator
     = case lexeme of
         Nothing -> prettyAsTree x
         Just l  -> case [ (fixity,prec) | (l',fixity,prec) <- operators, l == l' ] of
-            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
+            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrecE  prec    a
                                                                   , pretty t
-                                                                  , prettyPrec (prec+1) b
+                                                                  , prettyPrecE (prec+1) b
                                                                   ]
-            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec (prec+1) a
+            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrecE (prec+1) a
                                                                   , pretty t
-                                                                  , prettyPrec (prec+1) b
+                                                                  , prettyPrecE (prec+1) b
                                                                   ]
-            [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrec  prec    a
+            [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrecE  prec    a
                                                                   , pretty t
-                                                                  , prettyPrec (prec+1) b
+                                                                  , prettyPrecE (prec+1) b
                                                                   ]
             _ -> error $ show $ "error in prettyPrec:" <+> prettyAsTree x
--- prettyPrec _ c | trace (show $ "prettyPrec" <+> prettyAsPaths c) False = undefined
-prettyPrec _ x = pretty x
+prettyPrecE _ x = pretty x
 
 prettyAtTopLevel :: E -> Doc
 prettyAtTopLevel x@[xMatch| _ := quantified |] = prettyQuantified x

@@ -141,6 +141,7 @@ toError msg = prettyError (pretty msg)
 -- errors
 
 data ConjureError = ConjureError ErrEnum Doc (Maybe Spec)
+    deriving (Eq, Show)
 
 data ErrEnum = ErrFatal        -- means execution cannot continue.
              | ErrGeneratesNone

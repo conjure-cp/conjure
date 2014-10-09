@@ -25,15 +25,22 @@ Library
                      -- and some common operations on them
                      , Conjure.Language
                      , Conjure.Language.Definition
-                     , Conjure.Language.Parser
-                     , Conjure.Language.Pretty
+                     , Conjure.Language.Constant
+                     , Conjure.Language.Domain
+                     , Conjure.Language.DomainDefn
+                     , Conjure.Language.Name
+                     , Conjure.Language.Ops
+                     , Conjure.Language.Type
+
                      , Conjure.Language.Arbitrary
                      , Conjure.Language.DomainSize
-                     , Conjure.Language.ZeroVal
                      , Conjure.Language.Instantiate
                      , Conjure.Language.ModelDiff
-                     , Conjure.Language.TypeCheck
                      , Conjure.Language.ModelStats
+                     , Conjure.Language.Parser
+                     , Conjure.Language.Pretty
+                     , Conjure.Language.TypeCheck
+                     , Conjure.Language.ZeroVal
 
                      -- definitions of representations: how to go down and up
                      , Conjure.Representations

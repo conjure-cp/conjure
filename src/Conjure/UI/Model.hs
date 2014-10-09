@@ -6,6 +6,7 @@ module Conjure.UI.Model where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.TypeCheck
 import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
@@ -243,7 +244,7 @@ addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
         declarationNames = map fst (declarations m)
-        mkTrueConstraint nm = Op "true" [Reference nm]
+        mkTrueConstraint nm = Op $ MkOpTrue $ OpTrue [Reference nm]
         trueConstraints = map mkTrueConstraint declarationNames
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
@@ -287,34 +288,38 @@ firstOfRules (r:rs) x = r x >>= maybe (firstOfRules rs x) (return . Just)
 rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)
 rule_TrueIsNoOp = return . theRule
     where
-        theRule (Op "true" _) = Just $ Constant $ ConstantBool True
+        theRule (Op (MkOpTrue (OpTrue _))) = Just $ Constant $ ConstantBool True
         theRule _ = Nothing
 
 
 rule_ToIntIsNoOp :: Monad m => Expression -> m (Maybe Expression)
 rule_ToIntIsNoOp = return . theRule
     where
-        theRule (Op "toInt" [b]) = Just b
+        theRule (Op (MkOpToInt (OpToInt b))) = Just b
         theRule _ = Nothing
 
 
 rule_InlineFilterInsideMap :: Monad m => Expression -> m (Maybe Expression)
 rule_InlineFilterInsideMap = return . theRule
     where
-        theRule (Op "map_domain" [Lambda vBody body, Op "filter" [Lambda vGuard guard_, domain]]) =
+        theRule (Op (MkOpMapOverDomain (OpMapOverDomain
+                        (Lambda vBody body)
+                        (Op (MkOpFilter (OpFilter
+                                (Lambda vGuard guard_)
+                                domain)))))) =
             let
                 fGuard  = lambdaToFunction vGuard guard_
                 fBody   = lambdaToFunction vBody  body
-                newBody = Lambda vBody (Op "/\\" [fGuard vBody, fBody vBody])
+                newBody = Lambda vBody (Op $ MkOpLAnd $ OpLAnd (fGuard vBody) (fBody vBody))
             in
-                Just $ Op "map_domain" [newBody, domain]
+                Just $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
         theRule _ = Nothing
 
 
 rule_TupleIndex :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_TupleIndex p =
     case p of
-        Op "indexing" [t, Constant (ConstantInt i)] -> theRule t i
+        Op (MkOpIndexing (OpIndexing t (Constant (ConstantInt i)))) -> theRule t i
         _ -> return Nothing
 
     where
@@ -337,9 +342,8 @@ rule_TupleIndex p =
             case ty of
                 TypeTuple{} -> do
                     liftIO $ putStrLn "this is a tuple."
+                    return Nothing
                 _ -> return Nothing
-
-            return Nothing
 
             -- case ty of
             --     TypeTuple{} -> do
@@ -375,9 +379,9 @@ rule_TupleIndex p =
 
 getName :: Expression -> Maybe (Name, Name -> Expression)
 getName (Reference nm) = Just (nm, Reference)
-getName (Op "indexing" [m,i]) = do
+getName (Op (MkOpIndexing (OpIndexing m i))) = do
     (nm, f) <- getName m
-    return (nm, \ nm' -> Op "indexing" [f nm',i])
+    return (nm, \ nm' -> Op (MkOpIndexing (OpIndexing (f nm') i)))
 getName _ = Nothing
 
 

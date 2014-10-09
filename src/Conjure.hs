@@ -7,7 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UI.IO
 import Conjure.Language.ModelDiff ( modelDiffIO )
-import Conjure.Language.TypeCheck ( typeCheckModelIO )
+import Conjure.Language.Definition ( typeCheckModelIO )
 
 import Paths_conjure_cp ( getBinDir )
 import Conjure.Mode
