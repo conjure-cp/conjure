@@ -312,34 +312,65 @@ rule_InlineFilterInsideMap = return . theRule
 
 
 rule_TupleIndex :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
-rule_TupleIndex x = do
-    liftIO $ print $ "rule_TupleIndex:" <+> pretty x
-    theRule x
+rule_TupleIndex p =
+    case p of
+        Op "indexing" [t, Constant (ConstantInt i)] -> theRule t i
+        _ -> return Nothing
+
     where
-        theRule p@(Op "indexing" [tupley, Constant (ConstantInt i')]) = do
-            let i = i' - 1
+
+        theRule (Constant (ConstantTuple xs)) i =
+            Just . Constant <$> tupleIndex p xs i
+
+        theRule (AbstractLiteral (AbsLitTuple xs)) i =
+            Just <$> tupleIndex p xs i
+
+        theRule tupley i = do
             reprs <- gets stAllReprs
             let ty = fst (runState (typeOf tupley) reprs)
-            liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty
-            case getName tupley of
-                Nothing -> return Nothing
-                Just (nm, mkTupley) -> do
-                    case lookup nm reprs of
-                        Just domain@(DomainTuple{}) -> do
-                            mpieces <- runExceptT $ down1_ (nm, domain)
-                            case mpieces of
-                                Left err      -> bug err
-                                Right Nothing -> bug $ "tuple domain, cannot go down:" <++> pretty domain
-                                Right (Just pieces) ->
-                                    if i >= 0 && i < length pieces
-                                        then return $ Just $ mkTupley $ fst (pieces !! i)
-                                        else do
-                                            ascendants <- reportAscendants
-                                            bug $ vcat
-                                                $ ("tuple indexing out of bounds: " <++> pretty p)
-                                                : ascendants
-                        _ -> return Nothing        
-        theRule _ = return Nothing
+            liftIO $ print $ "rule_TupleIndex:" <+> vcat
+                [ pretty p
+                , pretty ty
+                , pretty i
+                ]
+
+            case ty of
+                TypeTuple{} -> do
+                    liftIO $ putStrLn "this is a tuple."
+                _ -> return Nothing
+
+            return Nothing
+
+            -- case ty of
+            --     TypeTuple{} -> do
+            --         case getName tupley of
+            --             Nothing -> return Nothing
+            --             Just (nm, mkTupley) -> do
+
+                    
+            -- case getName tupley of
+            --     Nothing -> return Nothing
+            --     Just (nm, mkTupley) -> do
+            --         liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty <++> pretty nm
+            --         case lookup nm reprs of
+            --             Just domain@(DomainTuple{}) -> do
+            --                 liftIO $ print $ "rule_TupleIndex {domain}:" <+> pretty domain
+            --                 mpieces <- runExceptT $ down1_ (nm, domain)
+            --                 case mpieces of
+            --                     Left err      -> bug err
+            --                     Right Nothing -> return Nothing
+            --                     Right (Just pieces) -> do
+            --                         liftIO $ print $ "rule_TupleIndex {pieces}:" <+> vcat (map pretty pieces)
+            --                         if i >= 0 && i < length pieces
+            --                             then do
+            --                                 liftIO $ print $ "rule_TupleIndex {out}:" <+> pretty (mkTupley $ fst (pieces !! i))
+            --                                 return $ Just $ mkTupley $ fst (pieces !! i)
+            --                             else do
+            --                                 ascendants <- reportAscendants
+            --                                 bug $ vcat
+            --                                     $ ("tuple indexing out of bounds: " <++> pretty p)
+            --                                     : ascendants
+            --             _ -> return Nothing
 
 
 getName :: Expression -> Maybe (Name, Name -> Expression)
@@ -349,5 +380,16 @@ getName (Op "indexing" [m,i]) = do
     return (nm, \ nm' -> Op "indexing" [f nm',i])
 getName _ = Nothing
 
+
+tupleIndex :: MonadState St m => Expression -> [a] -> Int -> m a
+tupleIndex p xs i' = do
+    let i = i' - 1
+    if i >= 0 && i < length xs
+        then return (xs !! i)
+        else do
+            ascendants <- reportAscendants
+            bug $ vcat
+                $ ("tuple indexing out of bounds: " <++> pretty p)
+                : ascendants
 
 
