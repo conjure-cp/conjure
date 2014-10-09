@@ -7,6 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
+import Conjure.Language.TypeCheck
 import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
 import Conjure.Representations
 
@@ -315,24 +316,38 @@ rule_TupleIndex x = do
     liftIO $ print $ "rule_TupleIndex:" <+> pretty x
     theRule x
     where
-        theRule p@(Op "indexing" [Reference nm, Constant (ConstantInt i')]) = do
-            liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty (show x)
+        theRule p@(Op "indexing" [tupley, Constant (ConstantInt i')]) = do
             let i = i' - 1
-            reprs <- gets stAllReprs
-            case lookup nm reprs of
-                Just domain@(DomainTuple{}) -> do
-                    mpieces <- runExceptT $ down1_ (nm, domain)
-                    case mpieces of
-                        Left err      -> bug err
-                        Right Nothing -> bug $ "tuple domain, cannot go down:" <++> pretty domain
-                        Right (Just pieces) ->
-                            if i >= 0 && i < length pieces
-                                then return $ Just $ Reference $ fst (pieces !! i)
-                                else do
-                                    ascendants <- reportAscendants
-                                    bug $ vcat
-                                        $ ("tuple indexing out of bounds: " <++> pretty p)
-                                        : ascendants
-                _ -> return Nothing
+            let ty = typeOf tupley
+            liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty
+            case getName tupley of
+                Nothing -> return Nothing
+                Just (nm, mkTupley) -> do
+                    reprs <- gets stAllReprs
+                    case lookup nm reprs of
+                        Just domain@(DomainTuple{}) -> do
+                            mpieces <- runExceptT $ down1_ (nm, domain)
+                            case mpieces of
+                                Left err      -> bug err
+                                Right Nothing -> bug $ "tuple domain, cannot go down:" <++> pretty domain
+                                Right (Just pieces) ->
+                                    if i >= 0 && i < length pieces
+                                        then return $ Just $ mkTupley $ fst (pieces !! i)
+                                        else do
+                                            ascendants <- reportAscendants
+                                            bug $ vcat
+                                                $ ("tuple indexing out of bounds: " <++> pretty p)
+                                                : ascendants
+                        _ -> return Nothing        
         theRule _ = return Nothing
+
+
+getName :: Expression -> Maybe (Name, Name -> Expression)
+getName (Reference nm) = Just (nm, Reference)
+getName (Op "indexing" [m,i]) = do
+    (nm, f) <- getName m
+    return (nm, \ nm' -> Op "indexing" [f nm',i])
+getName _ = Nothing
+
+
 
