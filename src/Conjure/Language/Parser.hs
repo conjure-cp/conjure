@@ -108,7 +108,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = typeOf (convDomain quanOverDom)
+                ty = fst (runState (typeOf (convDomain quanOverDom)) [])
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
@@ -132,7 +132,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = typeOf (convExpr quanOverExpr)
+                ty = fst (runState (typeOf (convExpr quanOverExpr)) [])
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
@@ -162,7 +162,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = typeOf (convDomain quanOverDom)
+                ty = fst (runState (typeOf (convDomain quanOverDom)) [])
                 conjunctWithGuard p =
                     if guardE == [xMake| emptyGuard := [] |]
                         then p

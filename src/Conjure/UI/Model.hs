@@ -318,12 +318,12 @@ rule_TupleIndex x = do
     where
         theRule p@(Op "indexing" [tupley, Constant (ConstantInt i')]) = do
             let i = i' - 1
-            let ty = typeOf tupley
+            reprs <- gets stAllReprs
+            let ty = fst (runState (typeOf tupley) reprs)
             liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty
             case getName tupley of
                 Nothing -> return Nothing
                 Just (nm, mkTupley) -> do
-                    reprs <- gets stAllReprs
                     case lookup nm reprs of
                         Just domain@(DomainTuple{}) -> do
                             mpieces <- runExceptT $ down1_ (nm, domain)
