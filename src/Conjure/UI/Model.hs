@@ -342,8 +342,7 @@ rule_TupleIndex p =
             case ty of
                 TypeTuple{} -> do
                     liftIO $ putStrLn "this is a tuple."
-                    return Nothing
-                _ -> return Nothing
+                _ -> return ()
 
             -- case ty of
             --     TypeTuple{} -> do
@@ -352,29 +351,21 @@ rule_TupleIndex p =
             --             Just (nm, mkTupley) -> do
 
                     
-            -- case getName tupley of
-            --     Nothing -> return Nothing
-            --     Just (nm, mkTupley) -> do
-            --         liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty <++> pretty nm
-            --         case lookup nm reprs of
-            --             Just domain@(DomainTuple{}) -> do
-            --                 liftIO $ print $ "rule_TupleIndex {domain}:" <+> pretty domain
-            --                 mpieces <- runExceptT $ down1_ (nm, domain)
-            --                 case mpieces of
-            --                     Left err      -> bug err
-            --                     Right Nothing -> return Nothing
-            --                     Right (Just pieces) -> do
-            --                         liftIO $ print $ "rule_TupleIndex {pieces}:" <+> vcat (map pretty pieces)
-            --                         if i >= 0 && i < length pieces
-            --                             then do
-            --                                 liftIO $ print $ "rule_TupleIndex {out}:" <+> pretty (mkTupley $ fst (pieces !! i))
-            --                                 return $ Just $ mkTupley $ fst (pieces !! i)
-            --                             else do
-            --                                 ascendants <- reportAscendants
-            --                                 bug $ vcat
-            --                                     $ ("tuple indexing out of bounds: " <++> pretty p)
-            --                                     : ascendants
-            --             _ -> return Nothing
+            case getName tupley of
+                Nothing -> return Nothing
+                Just (nm, mkTupley) -> do
+                    -- liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty <++> pretty nm
+                    case lookup nm reprs of
+                        Just domain@(DomainTuple{}) -> do
+                            liftIO $ print $ "rule_TupleIndex {domain}:" <+> pretty domain
+                            mpieces <- runExceptT $ down1_ (nm, domain)
+                            case mpieces of
+                                Left err      -> bug err
+                                Right Nothing -> return Nothing
+                                Right (Just pieces) -> do
+                                    liftIO $ print $ "rule_TupleIndex {pieces}:" <+> vcat (map pretty pieces)
+                                    Just . mkTupley . fst <$> tupleIndex p pieces i
+                        _ -> return Nothing
 
 
 getName :: Expression -> Maybe (Name, Name -> Expression)

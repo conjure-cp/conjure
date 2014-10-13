@@ -394,31 +394,30 @@ mkBinOp op a b =
     case textToLexeme op of
         Nothing -> bug ("Unknown binary operator:" <+> pretty op)
         Just l  ->
-            case l of
-                L_Plus  -> injectOp $ MkOpPlus  $ OpPlus  a b
-                L_Minus -> injectOp $ MkOpMinus $ OpMinus a b
-                L_Times -> injectOp $ MkOpTimes $ OpTimes a b
-                L_Div   -> injectOp $ MkOpDiv   $ OpDiv   a b
-                L_Mod   -> injectOp $ MkOpMod   $ OpMod   a b
-                L_Eq    -> injectOp $ MkOpEq    $ OpEq    a b
-                L_Neq   -> injectOp $ MkOpNeq   $ OpNeq   a b
-                L_Lt    -> injectOp $ MkOpLt    $ OpLt    a b
-                L_Leq   -> injectOp $ MkOpLeq   $ OpLeq   a b
-                L_Gt    -> injectOp $ MkOpGt    $ OpGt    a b
-                L_Geq   -> injectOp $ MkOpGeq   $ OpGeq   a b
-                _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
-
+            let
+                f = case l of
+                    L_Plus  -> opPlus
+                    L_Minus -> opMinus
+                    L_Times -> opTimes
+                    L_Div   -> opDiv
+                    L_Mod   -> opMod
+                    L_Eq    -> opEq
+                    L_Neq   -> opNeq
+                    L_Lt    -> opLt
+                    L_Leq   -> opLeq
+                    L_Gt    -> opGt
+                    L_Geq   -> opGeq
+                    _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
+            in
+                f a b
 
 mkOp :: OperatorContainer x => Text -> [x] -> x
-mkOp op _xs =
+mkOp op xs =
     case textToLexeme op of
         Nothing -> bug ("Unknown operator:" <+> pretty op)
-        Just l  ->
-            case l of
-                -- L_Plus  -> injectOp $ MkOpPlus  $ OpPlus a b
-                -- L_Minus -> injectOp $ MkOpMinus $ OpMinus a b
-                -- L_Times -> injectOp $ MkOpTimes $ OpTimes a b
-                -- L_Div   -> injectOp $ MkOpDiv   $ OpDiv a b
-                -- L_Mod   -> injectOp $ MkOpMod   $ OpMod a b
-                _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
+        Just l -> case l of
+            L_toInt -> case xs of
+                [x] -> opToInt x
+                _   -> bug "toInt takes a single argument."
+            _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
