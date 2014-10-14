@@ -318,6 +318,12 @@ rule_InlineFilterInsideMap = return . theRule
 
 rule_TupleIndex :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_TupleIndex p =
+-- rule_TupleIndex p = runMaybeT $ do
+--     (t,i) <- view tupleIndexing p
+--     iInt  <- view constantInt i
+--     ts    <- downX t
+--     return (atNote "Tuple indexing" ts iInt)
+
     case p of
         Op (MkOpIndexing (OpIndexing t (Constant (ConstantInt i)))) -> theRule t i
         _ -> return Nothing
@@ -339,18 +345,6 @@ rule_TupleIndex p =
                 , pretty i
                 ]
 
-            case ty of
-                TypeTuple{} -> do
-                    liftIO $ putStrLn "this is a tuple."
-                _ -> return ()
-
-            -- case ty of
-            --     TypeTuple{} -> do
-            --         case getName tupley of
-            --             Nothing -> return Nothing
-            --             Just (nm, mkTupley) -> do
-
-                    
             case getName tupley of
                 Nothing -> return Nothing
                 Just (nm, mkTupley) -> do
