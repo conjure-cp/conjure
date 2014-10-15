@@ -8,15 +8,12 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Type
 import Conjure.Language.TypeCheck
-import Stuff.Pretty
+import Conjure.Language.Pretty
 import Language.E.Lexer
 import Language.E.Data
 
 -- aeson
 import qualified Data.Aeson as JSON
-
--- pretty
-import Text.PrettyPrint as Pr
 
 
 class OperatorContainer x where
@@ -118,14 +115,14 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpOr   op@(OpOr   a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec _ (MkOpIndexing (OpIndexing a b)) = pretty a <> "[" <> pretty b <> "]"
     prettyPrec _ (MkOpSlicing  (OpSlicing  a  )) = pretty a <> "[..]"
-    prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList Pr.parens "," [a,b]
-    prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList Pr.parens "," [a,b]
-    prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList Pr.parens "," [a,b]
-    prettyPrec _ (MkOpMapSubsetExpr   (OpMapSubsetExpr   a b)) = "map_subset_expr"   <> prettyList Pr.parens "," [a,b]
-    prettyPrec _ (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr a b)) = "map_subsetEq_expr" <> prettyList Pr.parens "," [a,b]
-    prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList Pr.parens "," (a:b)
-    prettyPrec _ (MkOpTrue  (OpTrue xs)) = "true" <> prettyList Pr.parens "," xs
-    prettyPrec _ (MkOpToInt (OpToInt a)) = "toInt" <> Pr.parens (pretty a)
+    prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
+    prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
+    prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
+    prettyPrec _ (MkOpMapSubsetExpr   (OpMapSubsetExpr   a b)) = "map_subset_expr"   <> prettyList prParens "," [a,b]
+    prettyPrec _ (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr a b)) = "map_subsetEq_expr" <> prettyList prParens "," [a,b]
+    prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList prParens "," (a:b)
+    prettyPrec _ (MkOpTrue  (OpTrue xs)) = "true" <> prettyList prParens "," xs
+    prettyPrec _ (MkOpToInt (OpToInt a)) = "toInt" <> prParens (pretty a)
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -134,18 +131,18 @@ prettyPrecBinOp envPrec op a b =
         (fixity, prec) = opFixityPrec op
     in
         case fixity of
-            FLeft  -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec  prec    a
-                                                          , opPretty op
-                                                          , prettyPrec (prec+1) b
-                                                          ]
-            FNone  -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec (prec+1) a
-                                                          , opPretty op
-                                                          , prettyPrec (prec+1) b
-                                                          ]
-            FRight -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec  prec    a
-                                                          , opPretty op
-                                                          , prettyPrec (prec+1) b
-                                                          ]
+            FLeft  -> parensIf (envPrec > prec) $ fsep [ prettyPrec  prec    a
+                                                       , opPretty op
+                                                       , prettyPrec (prec+1) b
+                                                       ]
+            FNone  -> parensIf (envPrec > prec) $ fsep [ prettyPrec (prec+1) a
+                                                       , opPretty op
+                                                       , prettyPrec (prec+1) b
+                                                       ]
+            FRight -> parensIf (envPrec > prec) $ fsep [ prettyPrec  prec    a
+                                                       , opPretty op
+                                                       , prettyPrec (prec+1) b
+                                                       ]
 
 
 data OpPlus x = OpPlus x x

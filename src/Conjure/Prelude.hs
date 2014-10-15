@@ -114,7 +114,13 @@ import Test.QuickCheck ( Gen )
 -- parsec
 import Text.Parsec ( ParsecT )
 
-import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, fsep, hsep, vcat, (<+>), ($$) )
+-- pretty
+import Text.PrettyPrint as X
+    ( Doc
+    , (<>), (<+>), ($$)
+    , hang, nest, punctuate 
+    , hcat, vcat, fsep, hsep, sep
+    )
 
 import System.Random as X ( StdGen, getStdGen, randomR )
 

@@ -8,7 +8,7 @@ module Language.E.Evaluator
     ) where
 
 import Conjure.Prelude
-import Stuff.Pretty
+import Conjure.Language.Pretty
 
 import Language.E.Definition
 import Language.E.CompE

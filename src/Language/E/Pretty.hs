@@ -3,13 +3,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.E.Pretty
-    ( module Stuff.Pretty
+    ( module Conjure.Language.Pretty
     , prettySpecDebug
     ) where
 
 -- conjure
 import Conjure.Prelude
-import Stuff.Pretty
+import Conjure.Language.Pretty
 import Language.E.Definition
 import Language.E.Data ( Fixity(..), operators )
 import Language.E.Lexer ( textToLexeme )
@@ -17,9 +17,6 @@ import Conjure.Language.Pretty ()
 
 -- containers
 import Data.Tree ( Tree(..) )
-
--- pretty
-import Text.PrettyPrint as Pr
 
 
 prettySpecDebug :: Spec -> Doc
@@ -33,20 +30,20 @@ instance Pretty RuleRepr where
     pretty (RuleRepr _ reprName domOut mcons lcls cases) =
         vcat $ [ "~~>" <+> pretty reprName
                , "~~>" <+> pretty domOut
-               , maybe Pr.empty (\ x -> "~~>" <+> pretty x) mcons
+               , maybe prEmpty (\ x -> "~~>" <+> pretty x) mcons
                ] ++ map (nest 4 . pretty) lcls
                  ++ map pretty cases
 
 instance Pretty RuleReprCase where
     pretty (RuleReprCase domIn mcons lcls) =
         vcat $ [ "***" <+> pretty domIn
-               , maybe Pr.empty (\ x -> "~~>" <+> pretty x) mcons
+               , maybe prEmpty (\ x -> "~~>" <+> pretty x) mcons
                ] ++ map (nest 4 . pretty) lcls
 
 instance Pretty Spec where
     pretty (Spec (LanguageVersion language version) statements)
         = vcat [ "language" <+> pretty language
-                            <+> Pr.hcat (intersperse "." (map Pr.int version))
+                            <+> hcat (intersperse "." (map pretty version))
                , ""
                , pretty statements
                , ""
@@ -61,7 +58,7 @@ instance Pretty E where
 
     pretty (C x) = pretty x
     pretty (D x) = pretty x
-    pretty EOF = empty
+    pretty EOF = prEmpty
     pretty (StatementAndNext this next) = pretty this $$ pretty next
 
     pretty (Prim (B False)) = "false"
@@ -134,7 +131,7 @@ instance Pretty E where
                   |  values  := topLevel.letting.typeEnum.values
                   |]
         = hang ("letting" <+> pretty name <+> "be new type enum") 8
-               (prettyList Pr.braces "," values)
+               (prettyList prBraces "," values)
 
     pretty [xMatch| [ name ] := topLevel.letting.name
                   | [thingy] := topLevel.letting.typeUnnamed
@@ -150,11 +147,11 @@ instance Pretty E where
 
     pretty [xMatch| xs := topLevel.where |]
         = let xs' = [ [xMake| atTopLevel := [x] |] | x <- xs ] in
-            "where" <++> vcat (punctuate comma $ map pretty xs')
+            "where" <++> vcat (punctuate "," $ map pretty xs')
 
     pretty [xMatch| xs := topLevel.suchThat |]
         = let xs' = [ [xMake| atTopLevel := [x] |] | x <- xs ] in
-            "such that" <++> vcat (punctuate comma $ map pretty xs')
+            "such that" <++> vcat (punctuate "," $ map pretty xs')
 
     pretty [xMatch| [x] := topLevel.branchingOn |]
         = "branching on" <+> pretty [xMake| atTopLevel := [x] |]
@@ -163,12 +160,12 @@ instance Pretty E where
                   | locals   := withLocals.locals
                   |]
         = let locals' = [ [xMake| atTopLevel := [x] |] | x <- locals ] in
-            Pr.braces $ pretty actual <+> "@" <+> vcat (map pretty locals')
+            prBraces $ pretty actual <+> "@" <+> vcat (map pretty locals')
 
     pretty [xMatch| [a] := typed.left
                   | [b] := typed.right
                   |]
-        = Pr.parens $ pretty a <+> ":" <+> pretty b
+        = prParens $ pretty a <+> ":" <+> pretty b
 
 
 -- type.*
@@ -187,7 +184,7 @@ instance Pretty E where
     pretty [xMatch| [   index   ] := type.matrix.index
                   | [innerNested] := type.matrix.inner
                   |]
-        = "matrix indexed by" <+> prettyList Pr.brackets "," indices
+        = "matrix indexed by" <+> prettyList prBrackets "," indices
                               <+> "of" <+> pretty inner
         where
             (indices,inner) = first (index:) $ collect innerNested
@@ -198,10 +195,10 @@ instance Pretty E where
 
     pretty [xMatch| ts := type.tuple.inners |] =
         if length ts >= 2
-            then prettyList Pr.parens "," ts
-            else "tuple" <+> prettyList Pr.parens "," ts
+            then prettyList prParens "," ts
+            else "tuple" <+> prettyList prParens "," ts
     pretty [xMatch| ts := type.relation.inners |] =
-        "relation" <+> prettyList Pr.parens "," ts
+        "relation" <+> prettyList prParens "," ts
     pretty [xMatch| [x] := type.partition.inner |] = "partition from" <+> pretty x
 
 -- domain.*
@@ -215,48 +212,48 @@ instance Pretty E where
 
     pretty [xMatch| [x] := value.literal      |] = pretty x
     pretty [xMatch| xs  := value.tuple.values |]
-        = (if length xs < 2 then "tuple" else Pr.empty)
-        <+> prettyList Pr.parens "," xs
+        = (if length xs < 2 then "tuple" else prEmpty)
+        <+> prettyList prParens "," xs
     pretty [xMatch| xs  := value.matrix  .values
                   | [d] := value.matrix.indexrange
-                  |] = let f i = Pr.brackets (i <> ";" <+> pretty d)
+                  |] = let f i = prBrackets (i <> ";" <+> pretty d)
                        in  prettyList f "," xs
-    pretty [xMatch| xs := value.matrix   .values |] =                prettyList Pr.brackets "," xs
-    pretty [xMatch| xs := value.set      .values |] =                prettyList Pr.braces   "," xs
-    pretty [xMatch| xs := value.mset     .values |] = "mset"      <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.function .values |] = "function"  <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.relation .values |] = "relation"  <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := value.partition.values |] = "partition" <> prettyList Pr.parens   "," xs
-    pretty [xMatch| xs := part                   |] =                prettyList Pr.braces   "," xs
+    pretty [xMatch| xs := value.matrix   .values |] =                prettyList prBrackets "," xs
+    pretty [xMatch| xs := value.set      .values |] =                prettyList prBraces   "," xs
+    pretty [xMatch| xs := value.mset     .values |] = "mset"      <> prettyList prParens   "," xs
+    pretty [xMatch| xs := value.function .values |] = "function"  <> prettyList prParens   "," xs
+    pretty [xMatch| xs := value.relation .values |] = "relation"  <> prettyList prParens   "," xs
+    pretty [xMatch| xs := value.partition.values |] = "partition" <> prettyList prParens   "," xs
+    pretty [xMatch| xs := part                   |] =                prettyList prBraces   "," xs
 
     pretty [xMatch| [app] := quantifierDecl.append
                   | [gua] := quantifierDecl.guard
                   | [ide] := quantifierDecl.identity
                   |]
-        = "quantifier" Pr.$$ Pr.braces (
-                    Pr.nest 4 ("append  " <+> pretty app) Pr.$$
-                    Pr.nest 4 ("guard   " <+> pretty gua) Pr.$$
-                    Pr.nest 4 ("identity" <+> pretty ide)
+        = "quantifier" $$ prBraces (
+                    nest 4 ("append  " <+> pretty app) $$
+                    nest 4 ("guard   " <+> pretty gua) $$
+                    nest 4 ("identity" <+> pretty ide)
                     )
 
     pretty [xMatch| [x] := lambda.param
                  | [y] := lambda.body
                  |]
-        = Pr.braces $ pretty x <+> "-->" <+> pretty y
+        = prBraces $ pretty x <+> "-->" <+> pretty y
 
     pretty [xMatch| [x] := structural.single |] = pretty x
-    pretty [xMatch| xs  := structural.tuple  |] = prettyList Pr.parens "," xs
-    pretty [xMatch| xs  := structural.matrix |] = prettyList Pr.brackets "," xs
-    pretty [xMatch| xs  := structural.set    |] = prettyList Pr.braces "," xs
+    pretty [xMatch| xs  := structural.tuple  |] = prettyList prParens "," xs
+    pretty [xMatch| xs  := structural.matrix |] = prettyList prBrackets "," xs
+    pretty [xMatch| xs  := structural.set    |] = prettyList prBraces "," xs
 
-    -- :atTopLevel is only used to indicate whether we want a Pr.parens
+    -- :atTopLevel is only used to indicate whether we want a prParens
     -- around a expr-quantified or not.
     pretty [xMatch| [x] := atTopLevel |] = prettyAtTopLevel x
 
-    pretty x@[xMatch| _ := quantified |] = Pr.parens $ prettyQuantified x
+    pretty x@[xMatch| _ := quantified |] = prParens $ prettyQuantified x
     pretty [xMatch| [n] := quanVar.name
                   | [w] := quanVar.within
-                  |] = braces (pretty n <+> "|" <+> pretty w)
+                  |] = prBraces (pretty n <+> "|" <+> pretty w)
 
     pretty [xMatch| [x] := unaryOp.negate |]
         = "-" <> prettyPrecE 10000 x
@@ -274,7 +271,7 @@ instance Pretty E where
         = "indices" <> parens (pretty a <> "," <+> pretty b)
 
     pretty x@[xMatch| _ := operator.index |]
-        = pretty actual <> prettyListDoc Pr.brackets Pr.comma (map pretty indices)
+        = pretty actual <> prettyListDoc prBrackets "," (map pretty indices)
         where
             (actual,indices) = second reverse $ collect x
             collect [xMatch| [a] := operator.index.left
@@ -284,7 +281,7 @@ instance Pretty E where
     pretty [xMatch| [ a ] := operator.replace.arg1
                   | [old] := operator.replace.old
                   | [new] := operator.replace.new
-                  |] = parens $ parens (pretty a) <+> braces ( pretty old <+> "-->" <+> pretty new )
+                  |] = parens $ parens (pretty a) <+> prBraces ( pretty old <+> "-->" <+> pretty new )
 
     pretty [xMatch| [] := binOp.in       |] = "in"
     pretty [xMatch| [] := binOp.subset   |] = "subset"
@@ -298,39 +295,39 @@ instance Pretty E where
         , lexeme `elem` [ Just l | (l,_,_) <- operators ]
         = prettyPrecE 0 x
 
-    pretty [xMatch| xs := operator.dontCare     |] = "dontCare"     <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.allDiff      |] = "allDiff"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.apart        |] = "apart"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.defined      |] = "defined"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.flatten      |] = "flatten"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.freq         |] = "freq"         <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.hist         |] = "hist"         <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.inverse      |] = "inverse"      <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.max          |] = "max"          <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.min          |] = "min"          <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.normIndices  |] = "normIndices"  <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.participants |] = "participants" <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.parts        |] = "parts"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.party        |] = "party"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.preImage     |] = "preImage"     <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.range        |] = "range"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.together     |] = "together"     <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toInt        |] = "toInt"        <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toMSet       |] = "toMSet"       <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toRelation   |] = "toRelation"   <> prettyList Pr.parens "," xs
-    pretty [xMatch| xs := operator.toSet        |] = "toSet"        <> prettyList Pr.parens "," xs
+    pretty [xMatch| xs := operator.dontCare     |] = "dontCare"     <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.allDiff      |] = "allDiff"      <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.apart        |] = "apart"        <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.defined      |] = "defined"      <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.flatten      |] = "flatten"      <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.freq         |] = "freq"         <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.hist         |] = "hist"         <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.inverse      |] = "inverse"      <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.max          |] = "max"          <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.min          |] = "min"          <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.normIndices  |] = "normIndices"  <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.participants |] = "participants" <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.parts        |] = "parts"        <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.party        |] = "party"        <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.preImage     |] = "preImage"     <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.range        |] = "range"        <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.together     |] = "together"     <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.toInt        |] = "toInt"        <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.toMSet       |] = "toMSet"       <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.toRelation   |] = "toRelation"   <> prettyList prParens "," xs
+    pretty [xMatch| xs := operator.toSet        |] = "toSet"        <> prettyList prParens "," xs
 
     pretty [xMatch| [actual] := functionApply.actual
                   |   args   := functionApply.args
                   |]
-        = pretty actual <> prettyList Pr.parens "," args
+        = pretty actual <> prettyList prParens "," args
 
     pretty (Tagged t xs) = "{-#" <+> pretty t <++> vcat (map pretty xs) <+> "#-}"
 
 
 instance Pretty (Tree HasRepresentation) where
     pretty (Node r []) = pretty r
-    pretty (Node r rs) = pretty r <+> prettyList Pr.brackets "," rs
+    pretty (Node r rs) = pretty r <+> prettyList prBrackets "," rs
 
 
 prettyPrecE :: Int -> E -> Doc
@@ -343,18 +340,18 @@ prettyPrecE envPrec x@([xMatch| [Prim (S t)] := binOp.operator
     = case lexeme of
         Nothing -> prettyAsTree x
         Just l  -> case [ (fixity,prec) | (l',fixity,prec) <- operators, l == l' ] of
-            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrecE  prec    a
-                                                                  , pretty t
-                                                                  , prettyPrecE (prec+1) b
-                                                                  ]
-            [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrecE (prec+1) a
-                                                                  , pretty t
-                                                                  , prettyPrecE (prec+1) b
-                                                                  ]
-            [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.sep [ prettyPrecE  prec    a
-                                                                  , pretty t
-                                                                  , prettyPrecE (prec+1) b
-                                                                  ]
+            [(FLeft ,prec)] -> parensIf (envPrec > prec) $ sep [ prettyPrecE  prec    a
+                                                               , pretty t
+                                                               , prettyPrecE (prec+1) b
+                                                               ]
+            [(FNone ,prec)] -> parensIf (envPrec > prec) $ sep [ prettyPrecE (prec+1) a
+                                                               , pretty t
+                                                               , prettyPrecE (prec+1) b
+                                                               ]
+            [(FRight,prec)] -> parensIf (envPrec > prec) $ sep [ prettyPrecE  prec    a
+                                                               , pretty t
+                                                               , prettyPrecE (prec+1) b
+                                                               ]
             _ -> error $ show $ "error in prettyPrec:" <+> prettyAsTree x
 prettyPrecE _ x = pretty x
 
@@ -376,16 +373,16 @@ prettyQuantified
         header =  pretty quantifier
               <+> pretty var
               <+> ( case overDom of
-                        [i] -> Pr.colon  <+> pretty i
-                        _ -> Pr.empty
+                        [i] -> ":" <+> pretty i
+                        _ -> prEmpty
                   )
               <+> ( case (overOp,overExpr) of
                         ([op], [i]) -> pretty op <+> pretty i
-                        _ -> Pr.empty
+                        _ -> prEmpty
                   )
         hangGuard x = case guardE of
                         [ [xMatch| [] := emptyGuard |] ] -> x
-                        [ i                            ] -> x <++> (Pr.comma <+> pretty i)
+                        [ i                            ] -> x <++> ("," <+> pretty i)
                         _                                -> x
         hangBody x = x <++> ("." <+> pretty body)
     in hangBody $ hangGuard header

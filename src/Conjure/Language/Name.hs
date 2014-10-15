@@ -5,7 +5,7 @@ module Conjure.Language.Name where
 
 -- conjure
 import Conjure.Prelude
-import Stuff.Pretty
+import Conjure.Language.Pretty
 
 -- text
 import qualified Data.Text as T

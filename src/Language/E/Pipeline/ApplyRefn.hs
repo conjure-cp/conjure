@@ -7,7 +7,7 @@ import Language.E.BuiltIn
 import qualified Language.E.Pipeline.ApplyRefnSlower as Slower ( applyRefn, applyRefnE )
 
 import qualified Data.HashSet as S
-import qualified Text.PrettyPrint as Pr
+
 
 
 type RuleRefnDB m = [E -> m (Maybe [(Text, E)])]
@@ -149,8 +149,8 @@ tryApply db mode gl x = do
                 Just ys -> do
                     ys' <- forM ys $ \ (n,y) -> do (y', _) <- simply y ; return (n,y')
                     let msg = vcat $ pretty x
-                               : [ "multiple:" <+> Pr.parens (pretty n) | let n = length ys', n > 1 ]
-                              ++ [ Pr.braces (pretty n) $$ nest 4 (pretty y)
+                               : [ "multiple:" <+> prParens (pretty n) | let n = length ys', n > 1 ]
+                              ++ [ prBraces (pretty n) $$ nest 4 (pretty y)
                                  | (n,y) <- ys'
                                  ]
                     mkLog "applied" msg

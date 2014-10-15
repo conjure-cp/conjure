@@ -6,7 +6,7 @@ module Conjure.Bug
 import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
 
-import Stuff.Pretty ( renderNormal )
+import Conjure.Language.Pretty ( renderNormal )
 
 -- call this function instead of "error"
 bug :: Doc -> a

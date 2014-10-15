@@ -10,10 +10,9 @@ module Stuff.NamedLog
     ) where
 
 import Conjure.Prelude
-import Stuff.Pretty
+import Conjure.Language.Pretty
 
 import Data.Serialize
-import Text.PrettyPrint
 import qualified Data.HashSet as S
 import qualified Data.DList as DList
 import qualified GHC.Generics
@@ -121,7 +120,7 @@ buildLog nm doc = Just (NamedLog nm doc)
 #endif
 
 instance Pretty NamedLog where
-    pretty (NamedLog nm doc) = brackets (text nm) <+> doc
+    pretty (NamedLog nm doc) = prBrackets (pretty nm) <+> doc
 
 instance Pretty LogTree where
     pretty = id

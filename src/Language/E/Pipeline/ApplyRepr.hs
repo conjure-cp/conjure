@@ -12,7 +12,6 @@ import Language.E.BuiltIn ( builtInRepr, mergeReprFunc )
 import qualified Data.HashMap.Strict as M
 import qualified Data.HashSet as S
 import qualified Data.Text as T
-import qualified Text.PrettyPrint as Pr
 
 
 applyRepr
@@ -174,7 +173,7 @@ addStructuralFromLog (Spec v xs) = do
             if null cs
                 then return []
                 else do
-                    mkLog "addedStructuralCons" $ vcat $ Pr.braces (pretty reprName) : map pretty cs
+                    mkLog "addedStructuralCons" $ vcat $ prBraces (pretty reprName) : map pretty cs
                     return cs
     return $ Spec v $ listAsStatement $ statementAsList xs ++ map mk (concat allStructural)
 

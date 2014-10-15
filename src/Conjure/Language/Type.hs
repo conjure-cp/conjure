@@ -10,6 +10,7 @@ module Conjure.Language.Type
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.DomainDefn
+import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
@@ -34,6 +35,23 @@ instance Serialize Type
 instance Hashable  Type
 instance ToJSON    Type where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  Type where parseJSON = JSON.genericParseJSON jsonOptions
+
+instance Pretty Type where
+    pretty TypeAny = "?"
+    pretty TypeBool = "bool"
+    pretty TypeInt = "int"
+    pretty (TypeEnum (DomainDefnEnum nm _)) = pretty nm
+    pretty (TypeUnnamed (DomainDefnUnnamed nm)) = pretty nm
+    pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
+                         <> prettyList prParens "," xs
+    pretty (TypeMatrix index inner) = "matrix indexed by"
+                                  <+> prBrackets (pretty index)
+                                  <+> "of" <+> pretty inner
+    pretty (TypeSet x) = "set of" <+> pretty x
+    pretty (TypeMSet x) = "mset of" <+> pretty x
+    pretty (TypeFunction fr to) = "function" <+> pretty fr <+> "-->" <+> pretty to
+    pretty (TypePartition x) = "partition from" <+> pretty x
+    pretty (TypeRelation xs) = prettyList prParens " *" xs
 
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool

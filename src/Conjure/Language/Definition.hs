@@ -38,7 +38,7 @@ module Conjure.Language.Definition
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Stuff.Pretty ( (<++>), pretty )
+import Conjure.Language.Pretty
 
 import Conjure.Language.Name
 import Conjure.Language.Constant
@@ -53,8 +53,14 @@ import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 
+-- aeson-pretty
+import Data.Aeson.Encode.Pretty ( encodePretty )
+
 -- uniplate
 import Data.Generics.Uniplate.Data ( transform )
+
+-- bytestring
+import Data.ByteString.Lazy.Char8 ( unpack )
 
 
 data Model = Model
@@ -71,6 +77,15 @@ instance FromJSON Model where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Default Model where
     def = Model def [] def
+
+instance Pretty Model where
+    pretty (Model lang stmts info) = vcat $ concat
+        [ [pretty lang]
+        , [""]
+        , map pretty stmts
+        , [""]
+        , [pretty info | info /= def]
+        ]
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
@@ -110,6 +125,11 @@ instance FromJSON LanguageVersion where
 instance Default LanguageVersion where
     def = LanguageVersion "Essence" [1,3]
 
+instance Pretty LanguageVersion where
+    pretty (LanguageVersion language version) =
+        "language" <+> pretty language
+                   <+> hcat (intersperse "." (map pretty version))
+
 
 data Statement
     = Declaration Declaration
@@ -124,6 +144,13 @@ instance Hashable Statement
 instance ToJSON Statement where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Statement where parseJSON = JSON.genericParseJSON jsonOptions
 
+instance Pretty Statement where
+    pretty (Declaration x) = pretty x
+    pretty (SearchOrder nms) = "branching on" <++> prettyList prBrackets "," nms
+    pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
+    pretty (Objective obj x) = pretty obj <++> pretty x
+    pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
+
 
 data Objective = Minimising | Maximising
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -132,6 +159,10 @@ instance Serialize Objective
 instance Hashable Objective
 instance ToJSON Objective where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Objective where parseJSON = JSON.genericParseJSON jsonOptions
+
+instance Pretty Objective where
+    pretty Minimising = "minimising"
+    pretty Maximising = "maximising"
 
 
 data Declaration
@@ -146,6 +177,17 @@ instance Hashable Declaration
 instance ToJSON Declaration where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOptions
 
+instance Pretty Declaration where
+    pretty (FindOrGiven h nm d) = hang (pretty h <+> pretty nm <>  ":" ) 8 (pretty d)
+    pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
+    pretty (LettingDomainDefnEnum (DomainDefnEnum name values)) =
+        if null values
+            then hang ("given"   <+> pretty name) 8 "new type enum"
+            else hang ("letting" <+> pretty name <+> "be new type enum") 8
+                   (prettyList prBraces "," values)
+    pretty (LettingDomainDefnUnnamed (DomainDefnUnnamed name) size) =
+        hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
+
 
 data FindOrGiven = Find | Given
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -155,6 +197,9 @@ instance Hashable FindOrGiven
 instance ToJSON FindOrGiven where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON FindOrGiven where parseJSON = JSON.genericParseJSON jsonOptions
 
+instance Pretty FindOrGiven where
+    pretty Find = "find"
+    pretty Given = "given"
 
 
 data ModelInfo = ModelInfo
@@ -175,6 +220,10 @@ instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSO
 
 instance Default ModelInfo where
     def = ModelInfo def def def def
+
+instance Pretty ModelInfo where
+    pretty = pretty . commentLines . unpack . encodePretty
+        where commentLines = unlines . map ("$ "++) . ("Conjure's" :) . lines
 
 
 data Decision = Decision
@@ -208,6 +257,15 @@ instance Serialize Expression
 instance Hashable Expression
 instance ToJSON Expression where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
+
+instance Pretty Expression where
+    pretty (Constant x) = pretty x
+    pretty (AbstractLiteral x) = pretty x
+    pretty (Domain x) = "`" <> pretty x <> "`"
+    pretty (Reference x) = pretty x
+    pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
+    pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])
+    pretty (Op op) = pretty op
 
 instance OperatorContainer Expression where
     injectOp = Op
@@ -282,6 +340,15 @@ instance Hashable  x => Hashable  (AbstractLiteral x)
 instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = JSON.genericParseJSON jsonOptions
 
+instance Pretty a => Pretty (AbstractLiteral a) where
+    pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
+    pretty (AbsLitMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
+    pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
+    pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
+    pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
+    pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
+
 
 data AbstractPattern
     = Single Name Type
@@ -301,6 +368,14 @@ instance Serialize AbstractPattern
 instance Hashable AbstractPattern
 instance ToJSON AbstractPattern where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON AbstractPattern where parseJSON = JSON.genericParseJSON jsonOptions
+
+instance Pretty AbstractPattern where
+    pretty (Single nm TypeAny) = pretty nm
+    pretty (Single nm ty     ) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
+    pretty (AbsPatTuple    xs) = (if length xs <= 1 then "tuple" else prEmpty)
+                              <> prettyList prParens   "," xs
+    pretty (AbsPatMatrix   xs) = prettyList prBrackets "," xs
+    pretty (AbsPatSet      xs) = prettyList prBraces   "," xs
 
 
 class ExpressionLike a where

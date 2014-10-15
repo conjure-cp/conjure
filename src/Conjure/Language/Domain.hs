@@ -11,7 +11,7 @@ import Conjure.Language.DomainDefn
 import Conjure.Language.Type
 import Conjure.Language.TypeCheck
 import Conjure.Language.IntContainer
-import Stuff.Pretty
+import Conjure.Language.Pretty
 
 -- text
 import qualified Data.Text as T
@@ -21,9 +21,6 @@ import qualified Data.Aeson as JSON
 
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
-
--- pretty
-import Text.PrettyPrint as Pr
 
 
 data Domain r x
@@ -186,19 +183,19 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty DomainBool = "bool"
 
     pretty (DomainInt []) = "int"
-    pretty (DomainInt ranges) = "int" <> prettyList Pr.parens "," ranges
+    pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
     pretty (DomainEnum (DomainDefnEnum name _) []) = pretty name
-    pretty (DomainEnum (DomainDefnEnum name _) ranges) = pretty name <> prettyList Pr.parens "," ranges
+    pretty (DomainEnum (DomainDefnEnum name _) ranges) = pretty name <> prettyList prParens "," ranges
 
     pretty (DomainUnnamed (DomainDefnUnnamed name)) = pretty name
 
     pretty (DomainTuple inners)
-        = (if length inners < 2 then "tuple" else Pr.empty)
-        <+> prettyList Pr.parens "," inners
+        = (if length inners < 2 then "tuple" else prEmpty)
+        <+> prettyList prParens "," inners
 
     pretty (DomainMatrix index innerNested)
-        = "matrix indexed by" <+> prettyList Pr.brackets "," indices
+        = "matrix indexed by" <+> prettyList prBrackets "," indices
                               <+> "of" <+> pretty inner
         where
             (indices,inner) = first (index:) $ collect innerNested
@@ -217,7 +214,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
                 "-->" <+> pretty innerTo
 
     pretty (DomainRelation r attrs inners)
-        = hang ("relation" <+> prettyAttrs r attrs <+> "of") 4 (prettyList Pr.parens " *" inners)
+        = hang ("relation" <+> prettyAttrs r attrs <+> "of") 4 (prettyList prParens " *" inners)
 
     pretty (DomainPartition r attrs inner)
         = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
@@ -232,18 +229,18 @@ prettyAttrs a bs =
     let prettya = pretty a
     in  if prettya == "()"
             then pretty bs
-            else Pr.braces prettya <+> pretty bs
+            else prBraces prettya <+> pretty bs
 
 instance Pretty a => Pretty (SetAttr a) where
-    pretty SetAttrNone = empty
-    pretty (SetAttrSize       a  ) = Pr.parens ("size"    <+> pretty a)
-    pretty (SetAttrMinSize    a  ) = Pr.parens ("minSize" <+> pretty a)
-    pretty (SetAttrMaxSize    a  ) = Pr.parens ("maxSize" <+> pretty a)
-    pretty (SetAttrMinMaxSize a b) = Pr.parens ("minSize" <+> pretty a <+> ", maxSize" <+> pretty b)
+    pretty SetAttrNone = prEmpty
+    pretty (SetAttrSize       a  ) = prParens ("size"    <+> pretty a)
+    pretty (SetAttrMinSize    a  ) = prParens ("minSize" <+> pretty a)
+    pretty (SetAttrMaxSize    a  ) = prParens ("maxSize" <+> pretty a)
+    pretty (SetAttrMinMaxSize a b) = prParens ("minSize" <+> pretty a <+> ", maxSize" <+> pretty b)
 
 instance Pretty a => Pretty (DomainAttributes a) where
-    pretty (DomainAttributes []) = empty
-    pretty (DomainAttributes attrs) = prettyList Pr.parens "," attrs
+    pretty (DomainAttributes []) = prEmpty
+    pretty (DomainAttributes attrs) = prettyList prParens "," attrs
 
 instance Pretty a => Pretty (DomainAttribute a) where
     pretty (DAName name) = pretty name

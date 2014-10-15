@@ -35,7 +35,7 @@ module Language.E.Definition
 import Conjure.Prelude
 import Conjure.Bug
 import Stuff.Generic.Tag
-import Stuff.Pretty
+import Conjure.Language.Pretty
 import Stuff.MetaVariable
 import Conjure.Language.Definition
     ( Domain(..), Range(..)

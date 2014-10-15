@@ -4,7 +4,7 @@ module Conjure.Mode where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.RepositoryVersion ( repositoryVersion )
-import Stuff.Pretty
+import Conjure.Language.Pretty
 
 import Data.HashSet as S ( HashSet, fromList, member )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
@@ -189,7 +189,7 @@ conjureHelp =  Pr.vcat  $ helpStart :
         ]
 
     key flag = flag
-    optional = Pr.brackets
+    optional = prBrackets
     words'   = pretty . head . words
     anyKey   = id
 

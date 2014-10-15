@@ -26,7 +26,7 @@ main = interact $ \ inp ->
             [ "{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, GeneralizedNewtypeDeriving #-}"
             , "module Stuff.Generic.Tag where"
             , "import Conjure.Prelude"
-            , "import Stuff.Pretty"
+            , "import Conjure.Language.Pretty"
             , "import Data.Serialize ( Serialize(..) )"
             , "import qualified Data.Text as T"
             , "import Test.QuickCheck ( Arbitrary(..), oneof )"

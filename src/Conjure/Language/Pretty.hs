@@ -1,159 +1,94 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Conjure.Language.Pretty
-    ( module Stuff.Pretty
+    ( Pretty(..)
+    , (<++>), (<+>), (<>)
+    , prettyList, prettyListDoc
+    , parens, parensIf
+    , renderNormal, renderWide
+    , hang, hcat
+    , prEmpty, prParens, prBrackets, prBraces
+    , Doc
     , prettyContext
     ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Stuff.Pretty
+
+-- base
+import Text.Printf ( printf )
+
+-- text
+import qualified Data.Text as T ( Text, unpack )
 
 -- pretty
-import Text.PrettyPrint as Pr
-
--- aeson
-import Data.Aeson.Encode.Pretty ( encodePretty )
-
--- bytestring
-import Data.ByteString.Lazy.Char8 ( unpack )
+import Text.PrettyPrint
+    ( parens, brackets, braces, empty       -- will be exported with new names
+    , text                                  -- only used in this module
+    , style, renderStyle, lineLength
+    )
 
 
-instance Pretty Model where
-    pretty (Model lang stmts info) = vcat $ concat
-        [ [pretty lang]
-        , [""]
-        , map pretty stmts
-        , [""]
-        , [pretty info | info /= def]
-        ]
+class Show a => Pretty a where
+    pretty :: a -> Doc
+    prettyPrec :: Int -> a -> Doc
 
-instance Pretty LanguageVersion where
-    pretty (LanguageVersion language version) =
-        "language" <+> pretty language
-                   <+> Pr.hcat (intersperse "." (map pretty version))
+    pretty = prettyPrec 0
+    prettyPrec _ = pretty
 
-instance Pretty Statement where
-    pretty (Declaration x) = pretty x
-    pretty (SearchOrder nms) = "branching on" <++> prettyList Pr.brackets "," nms
-    pretty (Where xs) = "where" <++> vcat (punctuate comma $ map pretty xs)
-    pretty (Objective obj x) = pretty obj <++> pretty x
-    pretty (SuchThat xs) = "such that" <++> vcat (punctuate comma $ map pretty xs)
+instance Pretty Doc     where pretty = id
+instance Pretty T.Text  where pretty = pretty . T.unpack
+instance Pretty String  where pretty = text
+instance Pretty ()      where pretty = pretty . show
+instance Pretty Bool    where pretty = pretty . show
+instance Pretty Int     where pretty = pretty . show
+instance Pretty Integer where pretty = pretty . show
+instance Pretty Double  where pretty x = pretty (printf "%.2f" x :: String)
 
-instance Pretty Declaration where
-    pretty (FindOrGiven h nm d) = hang (pretty h <+> pretty nm <>  ":" ) 8 (pretty d)
-    pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
-    pretty (LettingDomainDefnEnum (DomainDefnEnum name values)) =
-        if null values
-            then hang ("given"   <+> pretty name) 8 "new type enum"
-            else hang ("letting" <+> pretty name <+> "be new type enum") 8
-                   (prettyList Pr.braces "," values)
-    pretty (LettingDomainDefnUnnamed (DomainDefnUnnamed name) size) =
-        hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
+instance (Pretty a, Pretty b) => Pretty (a, b) where
+    pretty (a, b) = prettyListDoc parens "," [pretty a, pretty b]
 
-instance Pretty FindOrGiven where
-    pretty Find = "find"
-    pretty Given = "given"
+instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
+    pretty (a, b, c) = prettyListDoc parens "," [pretty a, pretty b, pretty c]
 
-instance Pretty Objective where
-    pretty Minimising = "minimising"
-    pretty Maximising = "maximising"
+instance Pretty a => Pretty (Maybe a) where
+    pretty Nothing  = "Nothing"
+    pretty (Just x) = "Just" <+> parens (pretty x)
 
-instance Pretty ModelInfo where
-    pretty = pretty . commentLines . unpack . encodePretty
-        where commentLines = unlines . map ("$ "++) . ("Conjure's" :) . lines
 
-instance Pretty a => Pretty (AbstractLiteral a) where
-    pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else Pr.empty) <+> prettyList Pr.parens "," xs
-    pretty (AbsLitMatrix index xs) = let f i = Pr.brackets (i <> ";" <+> pretty index) in prettyList f "," xs
-    pretty (AbsLitSet       xs ) =                prettyList Pr.braces "," xs
-    pretty (AbsLitMSet      xs ) = "mset"      <> prettyList Pr.parens "," xs
-    pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc Pr.parens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
-    pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
-    pretty (AbsLitPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
+(<++>) :: Doc -> Doc -> Doc
+a <++> b = hang a 4 b
 
-instance Pretty Expression where
-    pretty (Constant x) = pretty x
-    pretty (AbstractLiteral x) = pretty x
-    pretty (Domain x) = "`" <> pretty x <> "`"
-    pretty (Reference x) = pretty x
+prettyList :: Pretty a => (Doc -> Doc) -> Doc -> [a] -> Doc
+prettyList wrap punc = prettyListDoc wrap punc . map pretty
 
-    pretty (WithLocals x ss) =
-        Pr.braces $ pretty x <+> "@" <+> vcat (map pretty ss)
+prettyListDoc :: (Doc -> Doc) -> Doc -> [Doc] -> Doc
+prettyListDoc wrap punc = wrap . fsep . punctuate punc
 
-    pretty (Lambda arg x) = "lambda" <> Pr.parens (fsep [pretty arg, "-->", pretty x])
+parensIf :: Bool -> Doc -> Doc
+parensIf = wrapIf parens
+    where
+        wrapIf :: (Doc -> Doc) -> Bool -> Doc -> Doc
+        wrapIf wrap c = if c then wrap else id
 
-    pretty (Op op) = pretty op
+renderNormal :: Pretty a => a -> String
+renderNormal = renderStyle (style { lineLength = 120 }) . pretty
 
-    -- pretty x@(Op (Name op) [_,_])
-    --     | let lexeme = textToLexeme op
-    --     , lexeme `elem` [ Just l | (l,_,_) <- operators ]
-    --     = prettyPrec 0 x
-    --
-    -- pretty (Op (Name "indexing") [a,b])
-    --     = pretty a <> Pr.brackets (pretty b)
-    -- -- pretty x@(Op (Name "indexing") _)
-    -- --     = pretty actual <> prettyListDoc Pr.brackets Pr.comma (map pretty indices)
-    -- --     where
-    -- --         (actual,indices) = second reverse $ collect x
-    -- --         collect (Op (Name "indexing") [a,b]) = second (b:) $ collect a
-    -- --         collect b = (b,[])
-    --
-    -- pretty (Op op xs) = pretty op <> prettyList Pr.parens "," xs
+renderWide :: Pretty a => a -> String
+renderWide = renderStyle (style { lineLength = 240 }) . pretty
 
--- prettyPrec :: Int -> Expression -> Doc
--- prettyPrec envPrec (Op (Name op) [a,b])
---     | let lexeme = textToLexeme op
---     , lexeme `elem` [ Just l | (l,_,_) <- operators ]
---     = case lexeme of
---         Nothing -> bug "prettyPrec"
---         Just l  -> case [ (fixity,prec) | (l',fixity,prec) <- operators, l == l' ] of
---             [(FLeft ,prec)] -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec  prec    a
---                                                                    , pretty op
---                                                                    , prettyPrec (prec+1) b
---                                                                    ]
---             [(FNone ,prec)] -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec (prec+1) a
---                                                                    , pretty op
---                                                                    , prettyPrec (prec+1) b
---                                                                    ]
---             [(FRight,prec)] -> parensIf (envPrec > prec) $ Pr.fsep [ prettyPrec  prec    a
---                                                                    , pretty op
---                                                                    , prettyPrec (prec+1) b
---                                                                    ]
---             _ -> bug "prettyPrec"
--- prettyPrec _ x = pretty x
+prEmpty :: Doc
+prEmpty = empty
 
-instance Pretty AbstractPattern where
-    pretty (Single nm TypeAny) = pretty nm
-    pretty (Single nm ty     ) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
-    pretty (AbsPatTuple    xs) = (if length xs <= 1 then "tuple" else empty)
-                              <> prettyList Pr.parens "," xs
-    pretty (AbsPatMatrix   xs) = prettyList Pr.brackets "," xs
-    pretty (AbsPatSet      xs) = prettyList Pr.braces "," xs
+prParens :: Doc -> Doc
+prParens = parens
 
-instance Pretty Type where
-    pretty TypeAny = "?"
-    pretty TypeBool = "bool"
-    pretty TypeInt = "int"
-    pretty (TypeEnum (DomainDefnEnum nm _)) = pretty nm
-    pretty (TypeUnnamed (DomainDefnUnnamed nm)) = pretty nm
-    pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else empty)
-                         <> prettyList Pr.parens "," xs
-    pretty (TypeMatrix index inner) = "matrix indexed by"
-                                  <+> Pr.brackets (pretty index)
-                                  <+> "of" <+> pretty inner
-    pretty (TypeSet x) = "set of" <+> pretty x
-    pretty (TypeMSet x) = "mset of" <+> pretty x
-    pretty (TypeFunction fr to) = "function" <+> pretty fr <+> "-->" <+> pretty to
-    pretty (TypePartition x) = "partition from" <+> pretty x
-    pretty (TypeRelation xs) = prettyList Pr.parens " *" xs
+prBrackets :: Doc -> Doc
+prBrackets = brackets
 
-instance Pretty DomainDefnUnnamed where
-    pretty (DomainDefnUnnamed name) = "unnamed" <+> pretty name
-
-instance Pretty DomainDefnEnum where
-    pretty (DomainDefnEnum name _) = "enumerated" <+> pretty name
+prBraces :: Doc -> Doc
+prBraces = braces
 
 prettyContext :: (Pretty a, Pretty b) => [(a,b)] -> [Doc]
 prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )

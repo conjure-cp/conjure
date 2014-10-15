@@ -13,7 +13,7 @@ import Conjure.Language.Type
 
 import Conjure.Language.TypeCheck
 import Conjure.Language.IntContainer
-import Stuff.Pretty
+import Conjure.Language.Pretty
 
 -- aeson
 import qualified Data.Aeson as JSON
@@ -21,8 +21,6 @@ import qualified Data.Aeson as JSON
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), oneof )
 
--- pretty
-import Text.PrettyPrint as Pr
 
 
 data Constant
@@ -71,13 +69,13 @@ instance Pretty Constant where
     pretty (ConstantBool True) = "true"
     pretty (ConstantInt x) = pretty x
     pretty (ConstantEnum _ x) = pretty x
-    pretty (ConstantTuple xs) = (if length xs < 2 then "tuple" else Pr.empty) <+> prettyList Pr.parens "," xs
-    pretty (ConstantMatrix index xs) = let f i = Pr.brackets (i <> ";" <+> pretty index) in prettyList f "," xs
-    pretty (ConstantSet       xs ) =                prettyList Pr.braces "," xs
-    pretty (ConstantMSet      xs ) = "mset"      <> prettyList Pr.parens "," xs
-    pretty (ConstantFunction  xs ) = "function"  <> prettyListDoc Pr.parens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
-    pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc Pr.parens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
-    pretty (ConstantPartition xss) = "partition" <> prettyListDoc Pr.parens "," [ prettyList Pr.braces "," xs     | xs <- xss   ]
+    pretty (ConstantTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
+    pretty (ConstantMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
+    pretty (ConstantSet       xs ) =                prettyList prBraces "," xs
+    pretty (ConstantMSet      xs ) = "mset"      <> prettyList prParens "," xs
+    pretty (ConstantFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
+    pretty (ConstantPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
 instance IntContainer Constant where
     intOut (ConstantInt x) = x

@@ -8,7 +8,6 @@ import Conjure.Mode
 import Language.E
 import Language.E.BuiltIn
 
-import qualified Text.PrettyPrint as Pr
 
 
 type RuleRefnDB m = [E -> m (Maybe [(Text, E)])]
@@ -164,7 +163,7 @@ tryApply db mode gl x = do
                 Just ys -> do
                     ys' <- forM ys $ \ (n,y) -> do (y', _) <- simply y ; return (n,y')
                     let msg = vcat $ pretty x
-                               : [ Pr.braces (pretty n) $$ nest 4 (pretty y)
+                               : [ prBraces (pretty n) $$ nest 4 (pretty y)
                                  | (n,y) <- ys'
                                  ]
                     mkLog "applied" msg
