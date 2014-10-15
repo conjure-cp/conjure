@@ -39,6 +39,8 @@ operators =
     , ( L_HasDomain , FNone  ,   10 )
     , ( L_LexLt     , FNone  ,  400 )
     , ( L_LexLeq    , FNone  ,  400 )
+    , ( L_LexGt     , FNone  ,  400 )
+    , ( L_LexGeq    , FNone  ,  400 )
     , ( L_DotLt     , FNone  ,  400 )
     , ( L_DotLeq    , FNone  ,  400 )
     ]
