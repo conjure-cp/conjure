@@ -7,7 +7,7 @@ module Conjure.Language.Ops where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Type
-import Conjure.Language.TypeCheck
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Language.E.Lexer
 import Language.E.Data
@@ -102,20 +102,23 @@ opFixityPrec op =
         _ -> bug "opFixityPrec"
 
 instance Pretty x => Pretty (Ops x) where
-    prettyPrec prec (MkOpPlus  op@(OpPlus  a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpMinus op@(OpMinus a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpTimes op@(OpTimes a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpDiv   op@(OpDiv   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpMod   op@(OpMod   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpAbs      (OpAbs   a  )) = "|" <> pretty a <> "|"
-    prettyPrec prec (MkOpEq    op@(OpEq    a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpNeq   op@(OpNeq   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpLt    op@(OpLt    a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpLeq   op@(OpLeq   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpGt    op@(OpGt    a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpGeq   op@(OpGeq   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpAnd   op@(OpAnd   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpOr    op@(OpOr    a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpPlus  op@(OpPlus [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpPlus     (OpPlus  xs  )) = "sum" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpMinus op@(OpMinus a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpTimes op@(OpTimes a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpDiv   op@(OpDiv   a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpMod   op@(OpMod   a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpAbs      (OpAbs   a   )) = "|" <> pretty a <> "|"
+    prettyPrec prec (MkOpEq    op@(OpEq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpNeq   op@(OpNeq   a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLt    op@(OpLt    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLeq   op@(OpLeq   a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpGt    op@(OpGt    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpGeq   op@(OpGeq   a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpAnd   op@(OpAnd  [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpAnd      (OpAnd  xs   )) = "and" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpOr    op@(OpOr   [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpOr       (OpOr   xs   )) = "or"  <> prettyList prParens "," xs
     prettyPrec _ (MkOpIndexing (OpIndexing a b)) = pretty a <> "[" <> pretty b <> "]"
     prettyPrec _ (MkOpSlicing  (OpSlicing  a  )) = pretty a <> "[..]"
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
@@ -149,18 +152,23 @@ prettyPrecBinOp envPrec op a b =
                                                        ]
 
 
-data OpPlus x = OpPlus x x
+data OpPlus x = OpPlus [x]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpPlus x)
 instance Hashable  x => Hashable  (OpPlus x)
 instance ToJSON    x => ToJSON    (OpPlus x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpPlus x) where parseJSON = JSON.genericParseJSON jsonOptions
 opPlus :: OperatorContainer x => x -> x -> x
-opPlus x y = injectOp (MkOpPlus (OpPlus x y))
+opPlus x y = injectOp (MkOpPlus (OpPlus [x,y]))
 instance BinaryOperator (OpPlus x) where
     opLexeme _ = L_Plus
 instance TypeOf st x => TypeOf st (OpPlus x) where
-    typeOf (OpPlus a b) = intToIntToInt a b
+    typeOf (OpPlus [a,b]) = intToIntToInt a b
+    typeOf (OpPlus xs) = do
+        tys <- mapM typeOf xs
+        if typesUnify (TypeInt:tys)
+            then return TypeInt
+            else bug "Type error in OpPlus"
 
 
 data OpMinus x = OpMinus x x
@@ -315,32 +323,42 @@ instance TypeOf st x => TypeOf st (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
 
 
-data OpAnd x = OpAnd x x
+data OpAnd x = OpAnd [x]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpAnd x)
 instance Hashable  x => Hashable  (OpAnd x)
 instance ToJSON    x => ToJSON    (OpAnd x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAnd x) where parseJSON = JSON.genericParseJSON jsonOptions
 opAnd :: OperatorContainer x => x -> x -> x
-opAnd x y = injectOp (MkOpAnd (OpAnd x y))
+opAnd x y = injectOp (MkOpAnd (OpAnd [x,y]))
 instance BinaryOperator (OpAnd x) where
     opLexeme _ = L_And
 instance TypeOf st x => TypeOf st (OpAnd x) where
-    typeOf (OpAnd a b) = boolToBoolToBool a b
+    typeOf (OpAnd [a,b]) = boolToBoolToBool a b
+    typeOf (OpAnd xs) = do
+        tys <- mapM typeOf xs
+        if typesUnify (TypeBool:tys)
+            then return TypeBool
+            else bug "Type error in OpAnd"
 
 
-data OpOr x = OpOr x x
+data OpOr x = OpOr [x]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpOr x)
 instance Hashable  x => Hashable  (OpOr x)
 instance ToJSON    x => ToJSON    (OpOr x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpOr x) where parseJSON = JSON.genericParseJSON jsonOptions
 opOr :: OperatorContainer x => x -> x -> x
-opOr x y = injectOp (MkOpOr (OpOr x y))
+opOr x y = injectOp (MkOpOr (OpOr [x,y]))
 instance BinaryOperator (OpOr x) where
     opLexeme _ = L_Or
 instance TypeOf st x => TypeOf st (OpOr x) where
-    typeOf (OpOr a b) = boolToBoolToBool a b
+    typeOf (OpOr [a,b]) = boolToBoolToBool a b
+    typeOf (OpOr xs) = do
+        tys <- mapM typeOf xs
+        if typesUnify (TypeBool:tys)
+            then return TypeBool
+            else bug "Type error in OpOr"
 
 
 data OpIndexing x = OpIndexing x x
@@ -482,7 +500,12 @@ opIn x y = injectOp (MkOpIn (OpIn x y))
 instance BinaryOperator (OpIn x) where
     opLexeme _ = L_in
 instance TypeOf st x => TypeOf st (OpIn x) where
-    typeOf (OpIn a b) = bug "typeOf for OpIn"
+    typeOf (OpIn a b) = do
+        tyA <- typeOf a
+        TypeSet tyB <- typeOf b
+        if tyA `typeUnify` tyB
+            then return TypeBool
+            else userErr "Type error"
 
 
 intToInt :: (Applicative m, MonadState st m, TypeOf st a) => a -> m Type

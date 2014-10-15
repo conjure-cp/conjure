@@ -7,10 +7,12 @@ module Conjure.UI.Model where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops
+import Conjure.Language.Ops hiding ( opOr, opIn, opEq, opMapOverDomain )
 import Conjure.Language.Lenses
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
-import Conjure.Language.TypeCheck
+import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
 import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
 import Conjure.Representations
 
@@ -75,14 +77,14 @@ genNextModel initialEssence pastInfos = do
 
     let
         f :: (MonadState St m, MonadIO m) => Expression -> m Expression
-        f (Reference nm) =
+        f (Reference nm Nothing) =
             case lookup nm decls of
                 Nothing ->
                     case lookup nm lets of
                         Nothing -> do
                             liftIO $ putStrLn $ "what's this a reference to? " ++ show nm
-                            return (Reference nm)
-                        Just _  -> return (Reference nm)
+                            return (Reference nm Nothing)
+                        Just _  -> return (Reference nm Nothing)
                 Just inpDom -> do
                     ascendants <- reportAscendants
                     explored <- gets alreadyExplored
@@ -99,7 +101,7 @@ genNextModel initialEssence pastInfos = do
                             liftIO $ putStrLn "exhausted=true"
                             -- st <- gets id
                             -- liftIO $ print st
-                            return (Reference nm)
+                            return (Reference nm Nothing)
                         _ -> do
                             liftIO $ print $ vcat
                                 $ ("Selecting representation for:" <+> pretty nm)
@@ -126,7 +128,7 @@ genNextModel initialEssence pastInfos = do
                             modify $ addReprToSt nm domSelected
                             modify $ addDecisionToSt descr numOptions numSelected
                             liftIO $ print descr
-                            return (Reference nm)
+                            return (Reference nm (Just domSelected))
         f x = return x
 
     let initInfo = def { miGivens = map fst (givens initialEssence)
@@ -137,6 +139,8 @@ genNextModel initialEssence pastInfos = do
                                                               , rule_ToIntIsNoOp
                                                               , rule_InlineFilterInsideMap
                                                               , rule_TupleIndex
+                                                              , rule_SetIn_Explicit
+                                                              , rule_SetIn_Occurrence
                                                               ]
                                    )
                 >=> updateDeclarations
@@ -179,7 +183,7 @@ instance ExpressionContainer [Statement] where
 
 addReprToSt :: Name -> Domain HasRepresentation Expression -> St -> St
 addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
-                           , stAllReprs = (nm, dom) : inners ++ (stAllReprs st)
+                           , stAllReprs = nub $ (nm, dom) : inners ++ stAllReprs st
                            }
     where
         addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
@@ -194,7 +198,6 @@ addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
                     lows <- mapM mkInners mids
                     return (concat (mids:lows))
             
-
 addDecisionToSt :: Doc -> [Int] -> Int -> St -> St
 addDecisionToSt doc opts selected st =
     st { stCurrInfo = addToInfo (stCurrInfo st)
@@ -241,7 +244,7 @@ addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
         declarationNames = map fst (declarations m)
-        mkTrueConstraint nm = Op $ MkOpTrue $ OpTrue [Reference nm]
+        mkTrueConstraint nm = Op $ MkOpTrue $ OpTrue [Reference nm Nothing]
         trueConstraints = map mkTrueConstraint declarationNames
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
@@ -277,6 +280,16 @@ updateDeclarations statements = do
             _ -> return [st]
 
 
+representationOf :: (MonadFail m, MonadState St m) => Expression -> m Name
+representationOf (Reference _ Nothing) = fail "doesn't seem to have a representation"
+representationOf (Reference _ (Just d)) =
+    case reprAtTopLevel d of
+        Nothing -> fail "doesn't seem to have a representation"
+        Just NoRepresentation -> fail "doesn't seem to have a representation"
+        Just (HasRepresentation r) -> return r
+representationOf _ = fail "not a reference"
+
+
 firstOfRules :: Monad m => [Expression -> m (Maybe Expression)] -> Expression -> m (Maybe Expression)
 firstOfRules [] _ = return Nothing
 firstOfRules (r:rs) x = r x >>= maybe (firstOfRules rs x) (return . Just)
@@ -307,24 +320,48 @@ rule_InlineFilterInsideMap = return . theRule
             let
                 fGuard  = lambdaToFunction vGuard guard_
                 fBody   = lambdaToFunction vBody  body
-                newBody = Lambda vBody (Op $ MkOpAnd $ OpAnd (fGuard vBody) (fBody vBody))
+                newBody = Lambda vBody (Op $ MkOpAnd $ OpAnd [fGuard vBody, fBody vBody])
             in
                 Just $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
         theRule _ = Nothing
 
 
-rule_TupleIndex :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_TupleIndex :: (Functor m, MonadState St m) => Expression -> m (Maybe Expression)
 rule_TupleIndex p = runMaybeT $ do
-    let view = snd
-    (t,i)       <- view opIndexing p
+    (t,i)       <- match opIndexing p
     TypeTuple{} <- typeOf t
-    iInt        <- view constantInt i
+    iInt        <- match constantInt i
     ts          <- down1X t
     return (atNote "Tuple indexing" ts (iInt-1))
 
 
+rule_SetIn_Explicit :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_Explicit p = runMaybeT $ do
+    (x,s)                <- match opIn p
+    TypeSet{}            <- typeOf s
+    "Explicit"           <- representationOf s
+    [m]                  <- down1X s
+    DomainMatrix index _ <- domainOf (Proxy :: Proxy ()) m
+    -- exists i : index . m[i] = x
+    -- or([ m[i] = x | i : index ])
+    -- or(map_domain(i --> m[i]))
+    let i    = "i" :: Name
+    let body = Lambda (Single i TypeInt)
+                      (make opEq (make opIndexing m (Reference i Nothing))
+                                 x)
+    return $ make opOr [make opMapOverDomain body (Domain index)]
+
+rule_SetIn_Occurrence :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_Occurrence p = runMaybeT $ do
+    (x,s)                <- match opIn p
+    TypeSet{}            <- typeOf s
+    "Occurrence"         <- representationOf s
+    [m]                  <- down1X s
+    return $ make opIndexing m x
+
+
 getName :: Expression -> Maybe (Name, Name -> Expression)
-getName (Reference nm) = Just (nm, Reference)
+getName (Reference nm d) = Just (nm, \ n -> Reference n d)
 getName (Op (MkOpIndexing (OpIndexing m i))) = do
     (nm, f) <- getName m
     return (nm, \ nm' -> Op (MkOpIndexing (OpIndexing (f nm') i)))

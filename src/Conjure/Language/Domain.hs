@@ -9,7 +9,7 @@ import Conjure.Bug
 import Conjure.Language.Name
 import Conjure.Language.DomainDefn
 import Conjure.Language.Type
-import Conjure.Language.TypeCheck
+import Conjure.Language.TypeOf
 import Conjure.Language.IntContainer
 import Conjure.Language.Pretty
 
@@ -89,6 +89,21 @@ forgetRepr (DomainRelation  _ attr ds) = DomainRelation () attr (map forgetRepr 
 forgetRepr (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
 forgetRepr (DomainOp op ds) = DomainOp op (map forgetRepr ds)
 forgetRepr (DomainHack x) = DomainHack x
+
+reprAtTopLevel :: Domain r x -> Maybe r
+reprAtTopLevel DomainBool{} = Nothing
+reprAtTopLevel DomainInt{} = Nothing
+reprAtTopLevel DomainEnum{} = Nothing
+reprAtTopLevel DomainUnnamed{} = Nothing
+reprAtTopLevel DomainTuple{} = Nothing
+reprAtTopLevel DomainMatrix{} = Nothing
+reprAtTopLevel (DomainSet       r _ _  ) = return r
+reprAtTopLevel (DomainMSet      r _ _  ) = return r
+reprAtTopLevel (DomainFunction  r _ _ _) = return r
+reprAtTopLevel (DomainRelation  r _ _  ) = return r
+reprAtTopLevel (DomainPartition r _ _  ) = return r
+reprAtTopLevel DomainOp{} = Nothing
+reprAtTopLevel DomainHack{} = Nothing
 
 data SetAttr a
     = SetAttrNone

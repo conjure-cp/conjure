@@ -22,7 +22,6 @@ Library
                      , Conjure.Bug
 
                      -- definitions of language constructs
-                     -- and some common operations on them
                      , Conjure.Language
                      , Conjure.Language.Definition
                      , Conjure.Language.Constant
@@ -33,6 +32,7 @@ Library
                      , Conjure.Language.Lenses
                      , Conjure.Language.Type
 
+                     -- and some operations on the language constructs
                      , Conjure.Language.Arbitrary
                      , Conjure.Language.DomainSize
                      , Conjure.Language.Instantiate
@@ -40,7 +40,8 @@ Library
                      , Conjure.Language.ModelStats
                      , Conjure.Language.Parser
                      , Conjure.Language.Pretty
-                     , Conjure.Language.TypeCheck
+                     , Conjure.Language.TypeOf
+                     , Conjure.Language.DomainOf
                      , Conjure.Language.ZeroVal
                      , Conjure.Language.IntContainer
 

@@ -46,7 +46,8 @@ import Conjure.Language.Type
 import Conjure.Language.DomainDefn
 import Conjure.Language.Domain
 import Conjure.Language.Ops
-import Conjure.Language.TypeCheck
+import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
 
 -- aeson
 import Data.Aeson ( (.=), (.:) )
@@ -247,7 +248,7 @@ data Expression
     = Constant Constant
     | AbstractLiteral (AbstractLiteral Expression)
     | Domain (Domain () Expression)
-    | Reference Name
+    | Reference Name (Maybe (Domain HasRepresentation Expression))
     | WithLocals Expression [Statement]
     | Op (Ops Expression)
     | Lambda AbstractPattern Expression
@@ -262,7 +263,7 @@ instance Pretty Expression where
     pretty (Constant x) = pretty x
     pretty (AbstractLiteral x) = pretty x
     pretty (Domain x) = "`" <> pretty x <> "`"
-    pretty (Reference x) = pretty x
+    pretty (Reference x _) = pretty x
     pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
     pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])
     pretty (Op op) = pretty op
@@ -279,7 +280,7 @@ instance OperatorContainer Expression where
 lambdaToFunction :: AbstractPattern -> Expression -> (AbstractPattern -> Expression)
 lambdaToFunction (Single nm _) body =
     let
-        replacer nm2 (Reference n) | n == nm = Reference nm2
+        replacer nm2 (Reference n d) | n == nm = Reference nm2 d
         replacer _ x = x
 
         newBody (Single nm2 _) = transform (replacer nm2) body
@@ -299,7 +300,7 @@ instance TypeOf [(Name, Domain r Expression)] Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
     typeOf (Domain x)   = typeOf x
-    typeOf (Reference nm) = do
+    typeOf (Reference nm _) = do
         mdom <- gets (lookup nm)
         case mdom of
              Nothing -> bug ("Type error:" <+> pretty nm)
@@ -307,7 +308,6 @@ instance TypeOf [(Name, Domain r Expression)] Expression where
     typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
     typeOf (Op op) = typeOf op
     typeOf Lambda{}     = return TypeAny -- TODO: fix
-
 
 instance TypeOf [(Name, Domain r Expression)] a =>
          TypeOf [(Name, Domain r Expression)] (AbstractLiteral a) where
@@ -323,6 +323,15 @@ instance TypeOf [(Name, Domain r Expression)] a =>
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
     typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
+
+instance DomainOf St HasRepresentation Expression Expression where
+    domainOf _ (Reference _ (Just dom)) = return dom
+    domainOf _ x = bug ("domainOf{Expression}:" <+> pretty x)
+
+instance DomainOf St () Expression Expression where
+    -- domainOf _ (Reference nm Nothing) =
+    domainOf _ (Reference _ (Just dom)) = return (forgetRepr dom)
+    domainOf _ x = bug ("domainOf{Expression}:" <+> pretty x)
 
 
 data AbstractLiteral x

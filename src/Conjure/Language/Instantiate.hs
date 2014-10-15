@@ -38,7 +38,7 @@ instantiateE
     -> m Constant
 instantiateE (Constant c) = return c
 instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
-instantiateE (Reference name) = do
+instantiateE (Reference name _) = do
     ctxt <- gets id
     case name `lookup` ctxt of
         Nothing -> fail $ vcat

@@ -19,7 +19,7 @@ import Conjure.Representations.Combined
 down1X :: (MonadFail m, MonadState St m) => Expression -> m [Expression]
 down1X (Constant x) = onConstant x
 down1X (AbstractLiteral x) = onAbstractLiteral x
-down1X (Reference x) = onReference x
+down1X (Reference x (Just dom)) = onReference x dom
 down1X (Op x) = onOp x
 down1X x = bug ("down1X:" <++> pretty (show x))
 
@@ -31,17 +31,13 @@ onAbstractLiteral :: MonadFail m => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
 onAbstractLiteral x = bug ("down1X.onAbstractLiteral:" <++> pretty (show x))
 
-onReference :: (MonadState St m, MonadFail m) => Name -> m [Expression]
-onReference nm = do
-    mdomain <- gets (lookup nm . stAllReprs)
-    case mdomain of
-        Nothing -> bug ("down1X.onReference, not in stAllReprs:" <++> pretty nm)
-        Just domain -> do
-            mpairs <- runExceptT $ down1_ (nm, domain)
-            case mpairs of
-                Left err -> bug err
-                Right Nothing -> bug ("down1X.onReference, down1_ doesn't work:" <++> pretty nm)
-                Right (Just pairs) -> return (map (Reference . fst) pairs)
+onReference :: (MonadState St m, MonadFail m) => Name -> Domain HasRepresentation Expression -> m [Expression]
+onReference nm domain = do
+    mpairs <- runExceptT $ down1_ (nm, domain)
+    case mpairs of
+        Left err -> bug err
+        Right Nothing -> bug ("down1X.onReference, down1_ doesn't work:" <++> pretty nm)
+        Right (Just pairs) -> return [ Reference n (Just d) | (n,d) <- pairs ]
 
 onOp :: (MonadState St m, MonadFail m) => Ops Expression -> m [Expression]
 onOp (MkOpIndexing (OpIndexing m i)) = do

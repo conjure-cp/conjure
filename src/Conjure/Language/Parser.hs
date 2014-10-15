@@ -20,7 +20,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
-import Conjure.Language.TypeCheck ( typeOf )
+import Conjure.Language.TypeOf ( typeOf )
 import Language.E ( Spec(..), E(..), BuiltIn(..), xMatch, xMake, viewTaggeds, statementAsList, prettyAsPaths )
 
 import Language.E.Parser.Imports
@@ -92,7 +92,7 @@ specToModel (Spec lang stmt) = Model
         convExpr [xMatch| [Prim (B x)] := value.literal |] = Constant (ConstantBool x)
         convExpr [xMatch| [Prim (I x)] := value.literal |] = Constant (ConstantInt (fromInteger x))
 
-        convExpr [xMatch| [Prim (S x)] := reference |] = Reference (Name x)
+        convExpr [xMatch| [Prim (S x)] := reference |] = Reference (Name x) Nothing
 
 -- binary operators
         convExpr [xMatch| [Prim (S op)] := binOp.operator
@@ -164,7 +164,7 @@ specToModel (Spec lang stmt) = Model
                 conjunctWithGuard p =
                     if guardE == [xMake| emptyGuard := [] |]
                         then p
-                        else Op $ MkOpAnd $ OpAnd (convExpr guardE) p
+                        else Op $ MkOpAnd $ OpAnd [convExpr guardE, p]
                 filterOr b =
                     Op $ MkOpFilter $ OpFilter
                         (Lambda (convPat ty pat)

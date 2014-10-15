@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE PolyKinds #-}
 
 module Conjure.Prelude
     ( module X
@@ -25,6 +26,7 @@ module Conjure.Prelude
     , (|>)
     , allNats
     , jsonOptions
+    , Proxy(..)
     , MonadFail(..)
     ) where
 
@@ -90,7 +92,7 @@ import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Traversable  as X ( mapM, forM )
-import Data.Tuple        as X ( fst, snd, swap, uncurry )
+import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
 
@@ -278,11 +280,14 @@ jsonOptions = JSON.defaultOptions
     }
 
 
-
+data Proxy a = Proxy
 
 
 class (Functor m, Applicative m, Monad m) => MonadFail m where
     fail :: Doc -> m a
+
+instance MonadFail Identity where
+    fail = error . show
 
 instance MonadFail Maybe where
     fail = const Nothing
@@ -304,5 +309,3 @@ instance MonadFail Gen where
 
 instance MonadFail (ParsecT g l m) where
     fail = Control.Monad.fail . show
-
-

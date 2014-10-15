@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Conjure.Language.TypeCheck where
+module Conjure.Language.TypeOf where
 
 -- conjure
 import Conjure.Prelude
@@ -17,4 +17,3 @@ homoType (x:xs) =
     if all (==x) xs
         then x
         else userErr "not a homoType"
-
