@@ -40,10 +40,8 @@ instance Monad m => Applicative (FunkySingle st err m) where
 instance Monad m => Monad (FunkySingle st err m) where
     {-# SPECIALISE instance Monad (FunkySingle st err Identity) #-}
     {-# SPECIALISE instance Monad (FunkySingle st err IO      ) #-}
-    {-# INLINEABLE fail #-}
     {-# INLINEABLE return #-}
     {-# INLINEABLE (>>=) #-}
-    fail = error
     return = pure
     FunkySingle g >>= f = FunkySingle $ \ st -> do
         (mx, st') <- g st

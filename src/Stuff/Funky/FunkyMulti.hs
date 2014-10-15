@@ -98,10 +98,8 @@ instance (Functor m, Monad m) => Applicative (FunkyMulti g st err m) where
 instance (Functor m, Monad m) => Monad (FunkyMulti g st err m) where
     {-# SPECIALISE instance Monad (FunkyMulti g st err Identity) #-}
     {-# SPECIALISE instance Monad (FunkyMulti g st err IO      ) #-}
-    {-# INLINEABLE fail #-}
     {-# INLINEABLE return #-}
     {-# INLINEABLE (>>=) #-}
-    fail = error
     return = pure
     FunkyMulti g >>= f = FunkyMulti $ \ glob st -> do
         (results, global') <- g glob st

@@ -150,5 +150,5 @@ parseSetAttr = do
         [DANameValue "maxSize" a] -> return (SetAttrMaxSize a)
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SetAttrMinMaxSize a b)
         [] -> return SetAttrNone
-        _ -> fail ("parseSetAttr: " ++ show attrs)
+        _ -> fail ("parseSetAttr: " <+> stringToDoc (show attrs))
 

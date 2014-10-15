@@ -139,6 +139,8 @@ reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresen
 reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 
 
+-- | This is here because it recursively calls the other representations via `allReprs`.
+--   And it is also included in `allReprs`.
 matrix :: (Applicative m, MonadError Doc m) => Representation m
 matrix = Representation chck matrixDown_ matrixDown matrixUp
 

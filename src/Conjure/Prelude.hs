@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Conjure.Prelude
     ( module X
@@ -23,6 +24,7 @@ module Conjure.Prelude
     , (|>)
     , allNats
     , jsonOptions
+    , MonadFail(..)
     ) where
 
 import GHC.Err as X ( error )
@@ -48,19 +50,20 @@ import GHC.Num as X ( Num(..) )
 import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
-import Control.Monad as X ( Monad(..), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
+import qualified Control.Monad ( fail )
+import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
                           , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence
                           , filterM
                           )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
-import Control.Monad.Except         as X ( MonadError(throwError, catchError) )
+import Control.Monad.Except         as X ( MonadError(throwError, catchError), ExceptT )
 import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
-import Control.Monad.State.Strict   as X ( MonadState, gets, modify, evalStateT, runStateT, runState )
+import Control.Monad.State.Strict   as X ( MonadState, gets, modify, evalStateT, runStateT, evalState, runState )
 import Control.Monad.Trans.Identity as X ( runIdentityT )
-import Control.Monad.Trans.Maybe    as X ( MaybeT, runMaybeT )
+import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT, runWriterT, execWriterT, runWriter )
 import Control.Arrow             as X ( first, second, (***) )
 import Control.Category          as X ( (<<<), (>>>) )
@@ -79,7 +82,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , replicate, length
                               , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head
                               , init, and, or, zipWith, maximum, concatMap, all, lines, notElem, foldr
-                              , sum, product, unzip, zip, zip3, take, (!!), foldr1, foldl, drop, any, tail
+                              , sum, product, unzip, zip, zip3, take, foldr1, foldl, drop, any, tail
                               , unzip3, repeat, dropWhile
                               )
 import Data.List.Split   as X ( splitOn )
@@ -89,6 +92,9 @@ import Data.Traversable  as X ( mapM, forM )
 import Data.Tuple        as X ( fst, snd, swap, uncurry )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents )
+
+-- safe
+import Safe as X ( at, atNote, readMay, headNote )
 
 -- hashable
 import Data.Hashable as X ( Hashable(..), hash )
@@ -100,6 +106,12 @@ import qualified Data.Serialize
 -- aeson
 import Data.Aeson as X ( ToJSON(..), FromJSON(..) )
 import qualified Data.Aeson.Types as JSON
+
+-- QuickCheck
+import Test.QuickCheck ( Gen )
+
+-- parsec
+import Text.Parsec ( ParsecT )
 
 import Text.PrettyPrint as X ( Doc, nest, punctuate, sep, fsep, hsep, vcat, (<+>), ($$) )
 
@@ -257,4 +269,27 @@ jsonOptions = JSON.defaultOptions
     , JSON.omitNothingFields = True
     , JSON.sumEncoding = JSON.ObjectWithSingleField
     }
+
+
+
+
+
+class (Functor m, Applicative m, Monad m) => MonadFail m where
+    fail :: Doc -> m a
+
+instance MonadFail Maybe where
+    fail = const Nothing
+
+instance (Functor m, Monad m) => MonadFail (MaybeT m) where
+    fail = const $ MaybeT $ return Nothing
+
+instance (Functor m, Monad m) => MonadFail (ExceptT Doc m) where
+    fail = throwError
+
+instance MonadFail Gen where
+    fail = Control.Monad.fail . show
+
+instance MonadFail (ParsecT g l m) where
+    fail = Control.Monad.fail . show
+
 

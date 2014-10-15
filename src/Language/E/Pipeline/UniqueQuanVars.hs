@@ -6,7 +6,6 @@ module Language.E.Pipeline.UniqueQuanVars
 
 import Language.E
 
-import Control.Monad.State ( evalState )
 import qualified Data.Text as T
 
 

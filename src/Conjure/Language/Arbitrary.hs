@@ -18,9 +18,6 @@ import Conjure.Language.DomainSize ( domainSizeConstant )
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), Gen, sized, choose, oneof, vectorOf, sample' )
 
--- safe
-import Safe ( at )
-
 
 newtype AnyDomainTuple a = AnyDomainTuple (Domain () a)
     deriving (Show)
@@ -200,9 +197,9 @@ arbitraryDomainAndConstant = sized dispatch
             return ( domainOut
                    , let try n =
                             if n >= maxRetries
-                                then fail (show $ vcat [ "setFixed: maxRetries"
-                                                       , pretty domainOut
-                                                       ])
+                                then fail (vcat [ "setFixed: maxRetries"
+                                                , pretty domainOut
+                                                ])
                                 else do
                                     elems <- vectorOf size constantGen
                                     let sorted = sort $ nub elems
@@ -251,9 +248,9 @@ arbitraryDomainAndConstant = sized dispatch
             return ( domainOut
                    , let try n =
                             if n >= maxRetries
-                                then fail (show $ vcat [ "setFixed: maxRetries"
-                                                       , pretty domainOut
-                                                       ])
+                                then fail (vcat [ "setFixed: maxRetries"
+                                                , pretty domainOut
+                                                ])
                                 else do
                                     numElems <- choose (minSize, maxSize)
                                     elems <- vectorOf numElems constantGen

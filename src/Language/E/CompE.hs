@@ -324,13 +324,13 @@ defSelectByMode (ModeUnknown                    {}) s xs = return $ maybe id tak
 
 defSelectByMode (ModeMultipleOutput DFSample _ _ _ ) GlobalState{limitOutputs = Just l } xs =  do
        vals <- mapM  ( return $ rangeRandomM (0, length xs - 1)   )   [1..l]
-       return $ map (\i ->  xs !! i )  vals 
+       return $ map (at xs) vals
 
 defSelectByMode (ModeMultipleOutput             {}) s xs = return $ maybe id take (limitOutputs s) xs
 defSelectByMode (ModeSingleOutput ModeFirst  _ _  ) _ (x:_) = return [x]
 defSelectByMode (ModeSingleOutput ModeRandom _ _  ) _ xs = do
     i <- rangeRandomM (0, length xs - 1)
-    return [xs !! i]
+    return [xs `at` i]
 defSelectByMode (ModeSingleOutput               {}) _ (x:_) = return [x]
 defSelectByMode _ _ _ = error "selectByMode: Shouldn't be used in this mode"
 

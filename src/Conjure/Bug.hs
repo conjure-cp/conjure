@@ -1,6 +1,5 @@
 module Conjure.Bug
     ( bug
-    , headNote
     , userErr
     ) where
 
@@ -22,10 +21,6 @@ bug message = error $ unlines
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
     , "", "" , renderNormal message
     ]
-
-headNote :: Doc -> [a] -> a
-headNote msg [] = bug msg
-headNote _   (x:_) = x
 
 -- call this function instead of "error"
 -- in case of a user error.

@@ -270,7 +270,7 @@ instance TypeOf E where
         let tInt = tyInt
         txs <- mapM typeOf xs
         return [xMake| type.matrix.index := [tInt]
-                     | type.matrix.inner := [headNote ("typeOf" <+> prettyAsPaths p) txs]
+                     | type.matrix.inner := [headNote (show $ "typeOf" <+> prettyAsPaths p) txs]
                      |]
 
     typeOf   [xMatch| [] := value.set.values |] = return [xMake| type.set.inner.type.unknown := [] |]

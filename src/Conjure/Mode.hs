@@ -10,7 +10,6 @@ import Stuff.Pretty
 
 import Data.HashSet as S ( HashSet, fromList, member )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
-import Safe ( readMay )
 import qualified Text.PrettyPrint as Pr
 
 

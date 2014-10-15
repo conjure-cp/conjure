@@ -164,7 +164,7 @@ specToModel (Spec lang stmt) = Model
                 conjunctWithGuard p =
                     if guardE == [xMake| emptyGuard := [] |]
                         then p
-                        else Op $ MkOpLAnd $ OpLAnd (convExpr guardE) p
+                        else Op $ MkOpAnd $ OpAnd (convExpr guardE) p
                 filterOr b =
                     Op $ MkOpFilter $ OpFilter
                         (Lambda (convPat ty pat)

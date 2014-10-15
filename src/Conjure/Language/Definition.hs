@@ -32,8 +32,7 @@ module Conjure.Language.Definition
 
     , ExpressionLike(..)
 
-    , opPlus, opMinus, opTimes, opDiv, opMod
-    , opAbs
+    , St(..)
 
     ) where
 
@@ -213,6 +212,8 @@ instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance OperatorContainer Expression where
     injectOp = Op
+    projectOp (Op op) = return op
+    projectOp x = fail ("not an op: " <++> pretty (show x))
 
 
 -- TODO: Add support for AbsPatTuple
@@ -230,6 +231,12 @@ lambdaToFunction (Single nm _) body =
         newBody
 lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
+
+instance TypeOf St Expression where
+    typeOf x = do
+        st <- gets stAllReprs
+        ty <- evalStateT (typeOf x) st
+        return ty
 
 instance TypeOf [(Name, Domain r Expression)] Expression where
     typeOf (Constant x) = typeOf x
@@ -333,4 +340,24 @@ instance Enum Expression where
     enumFromTo _x _y = bug "enumFromTo {Expression}"
     enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
 
+
+
+
+
+data St = St
+    { stNbExpression :: !Int
+    , stReprsSoFar :: [ ( Name                                        -- for the declaration with this name
+                        , ( Int                                       -- number of occurrences so far
+                          , [Domain HasRepresentation Expression]     -- distinct reprs so far
+                          ) ) ]
+    , stAscendants :: [Either Expression Statement]
+    , stCurrInfo :: !ModelInfo
+    , stAllReprs :: [(Name, Domain HasRepresentation Expression)]     -- repr lookup, including *ALL* levels
+    , stPastInfos :: [[Decision]]                                     -- each [Decision] is a trail of decisions
+    , stExhausted :: Bool
+    }
+    deriving Show
+
+instance Default St where
+    def = St 0 [] [] def [] [] False
 

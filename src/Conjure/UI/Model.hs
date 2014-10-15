@@ -7,6 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Ops
+import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Language.TypeCheck
 import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
@@ -40,7 +41,7 @@ outputAllModels dir i gen = do
                 [ pretty sel <+> "out of" <+> pretty (show opts) <+> "~~" <+> vcat (map pretty txts)
                 | Decision txts opts sel <- miTrail (mInfo eprime)
                 ]
-            outputAllModels dir (i+1) gen'
+            -- outputAllModels dir (i+1) gen'
 
 -- | given a `ModelGen`, which contains info about previously generated models,
 --   generate the next model.
@@ -99,7 +100,7 @@ genNextModel initialEssence pastInfos = do
                             -- liftIO $ print st
                             return (Reference nm)
                         (numSelected:_) -> do
-                            let domSelected = domOpts !! (numSelected - 1)
+                            let domSelected = domOpts `at` (numSelected - 1)
                             let descr = vcat
                                     $ ("Selecting representation for:" <+> pretty nm)
                                     : map (nest 4) (
@@ -161,24 +162,7 @@ instance ExpressionContainer Expression where
 
 instance ExpressionContainer [Statement] where
     tr f = mapM (tr f)
-        
 
-data St = St
-    { stNbExpression :: !Int
-    , stReprsSoFar :: [ ( Name                                        -- for the declaration with this name
-                        , ( Int                                       -- number of occurrences so far
-                          , [Domain HasRepresentation Expression]     -- distinct reprs so far
-                          ) ) ]
-    , stAscendants :: [Either Expression Statement]
-    , stCurrInfo :: !ModelInfo
-    , stAllReprs :: [(Name, Domain HasRepresentation Expression)]     -- repr lookup, including *ALL* levels
-    , stPastInfos :: [[Decision]]                                     -- each [Decision] is a trail of decisions
-    , stExhausted :: Bool
-    }
-    deriving Show
-
-instance Default St where
-    def = St 0 [] [] def [] [] False
 
 addReprToSt :: Name -> Domain HasRepresentation Expression -> St -> St
 addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
@@ -310,56 +294,20 @@ rule_InlineFilterInsideMap = return . theRule
             let
                 fGuard  = lambdaToFunction vGuard guard_
                 fBody   = lambdaToFunction vBody  body
-                newBody = Lambda vBody (Op $ MkOpLAnd $ OpLAnd (fGuard vBody) (fBody vBody))
+                newBody = Lambda vBody (Op $ MkOpAnd $ OpAnd (fGuard vBody) (fBody vBody))
             in
                 Just $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
         theRule _ = Nothing
 
 
 rule_TupleIndex :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
-rule_TupleIndex p =
--- rule_TupleIndex p = runMaybeT $ do
---     (t,i) <- view tupleIndexing p
---     iInt  <- view constantInt i
---     ts    <- downX t
---     return (atNote "Tuple indexing" ts iInt)
-
-    case p of
-        Op (MkOpIndexing (OpIndexing t (Constant (ConstantInt i)))) -> theRule t i
-        _ -> return Nothing
-
-    where
-
-        theRule (Constant (ConstantTuple xs)) i =
-            Just . Constant <$> tupleIndex p xs i
-
-        theRule (AbstractLiteral (AbsLitTuple xs)) i =
-            Just <$> tupleIndex p xs i
-
-        theRule tupley i = do
-            reprs <- gets stAllReprs
-            let ty = fst (runState (typeOf tupley) reprs)
-            liftIO $ print $ "rule_TupleIndex:" <+> vcat
-                [ pretty p
-                , pretty ty
-                , pretty i
-                ]
-
-            case getName tupley of
-                Nothing -> return Nothing
-                Just (nm, mkTupley) -> do
-                    -- liftIO $ print $ "rule_TupleIndex {theRule}:" <+> pretty x <++> pretty ty <++> pretty nm
-                    case lookup nm reprs of
-                        Just domain@(DomainTuple{}) -> do
-                            liftIO $ print $ "rule_TupleIndex {domain}:" <+> pretty domain
-                            mpieces <- runExceptT $ down1_ (nm, domain)
-                            case mpieces of
-                                Left err      -> bug err
-                                Right Nothing -> return Nothing
-                                Right (Just pieces) -> do
-                                    liftIO $ print $ "rule_TupleIndex {pieces}:" <+> vcat (map pretty pieces)
-                                    Just . mkTupley . fst <$> tupleIndex p pieces i
-                        _ -> return Nothing
+rule_TupleIndex p = runMaybeT $ do
+    let view = snd
+    (t,i)       <- view opIndexing p
+    TypeTuple{} <- typeOf t
+    iInt        <- view constantInt i
+    ts          <- down1X t
+    return (atNote "Tuple indexing" ts (iInt-1))
 
 
 getName :: Expression -> Maybe (Name, Name -> Expression)
@@ -374,7 +322,7 @@ tupleIndex :: MonadState St m => Expression -> [a] -> Int -> m a
 tupleIndex p xs i' = do
     let i = i' - 1
     if i >= 0 && i < length xs
-        then return (xs !! i)
+        then return (xs `at` i)
         else do
             ascendants <- reportAscendants
             bug $ vcat
