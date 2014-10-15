@@ -21,7 +21,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
         chck _ _ = []
 
         nameMarker name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Marker"]
-        nameMain   name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Main"  ]
+        nameValues name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Values" ]
 
         getMaxSize attrs innerDomain = case attrs of
             SetAttrMaxSize x -> return x
@@ -35,7 +35,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
                 [ ( nameMarker name
                   , indexDomain
                   )
-                , ( nameMain name
+                , ( nameValues name
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
@@ -60,7 +60,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
                   , indexDomain
                   , ConstantInt (length constants)
                   )
-                , ( nameMain name
+                , ( nameValues name
                   , DomainMatrix   (forgetRepr indexDomain) innerDomain
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
@@ -68,7 +68,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
         setDown _ = fail "N/A {setDown}"
 
         setUp ctxt (name, domain) =
-            case (lookup (nameMarker name) ctxt, lookup (nameMain name) ctxt) of
+            case (lookup (nameMarker name) ctxt, lookup (nameValues name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
@@ -76,7 +76,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
                                 ConstantMatrix _ vals ->
                                     return (name, ConstantSet (take card vals))
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameMain name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
@@ -94,7 +94,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameMain name)
+                    [ "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

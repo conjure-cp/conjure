@@ -79,6 +79,25 @@ opEq _ =
     )
 
 
+opLt
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opLt _ =
+    ( \ x y -> injectOp (MkOpLt (OpLt x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpLt (OpLt x y) -> return (x,y)
+                _ -> fail ("N/A opLt:" <++> pretty p)
+    )
+
+
 opOr
     :: ( OperatorContainer x
        , Pretty x
@@ -95,6 +114,25 @@ opOr _ =
             case op of
                 MkOpOr (OpOr xs) -> return xs
                 _ -> fail ("N/A opOr:" <++> pretty p)
+    )
+
+
+opAnd
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( [x] -> x
+       , x -> m [x]
+       )
+opAnd _ =
+    ( \ xs -> injectOp (MkOpAnd (OpAnd xs))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpAnd (OpAnd xs) -> return xs
+                _ -> fail ("N/A opAnd:" <++> pretty p)
     )
 
 

@@ -7,7 +7,7 @@ module Conjure.UI.Model where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops hiding ( opOr, opIn, opEq, opMapOverDomain )
+import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain )
 import Conjure.Language.Lenses
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -141,6 +141,8 @@ genNextModel initialEssence pastInfos = do
                                                               , rule_TupleIndex
                                                               , rule_SetIn_Explicit
                                                               , rule_SetIn_Occurrence
+                                                              , rule_SetIn_ExplicitVarSizeWithMarker
+                                                              , rule_SetIn_ExplicitVarSizeWithFlags
                                                               ]
                                    )
                 >=> updateDeclarations
@@ -347,9 +349,9 @@ rule_SetIn_Explicit p = runMaybeT $ do
     -- or(map_domain(i --> m[i]))
     let i    = "i" :: Name
     let body = Lambda (Single i TypeInt)
-                      (make opEq (make opIndexing m (Reference i Nothing))
-                                 x)
+                      (make opEq (make opIndexing m (Reference i Nothing)) x)
     return $ make opOr [make opMapOverDomain body (Domain index)]
+
 
 rule_SetIn_Occurrence :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_SetIn_Occurrence p = runMaybeT $ do
@@ -358,6 +360,44 @@ rule_SetIn_Occurrence p = runMaybeT $ do
     "Occurrence"         <- representationOf s
     [m]                  <- down1X s
     return $ make opIndexing m x
+
+
+rule_SetIn_ExplicitVarSizeWithMarker :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_ExplicitVarSizeWithMarker p = runMaybeT $ do
+    (x,s)                       <- match opIn p
+    TypeSet{}                   <- typeOf s
+    "ExplicitVarSizeWithMarker" <- representationOf s
+    [marker,values]             <- down1X s
+    DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
+    -- exists i : index , i < marker. m[i] = x
+    -- exists i : index . i < marker /\ m[i] = x
+    -- or([ i < marker /\ m[i] = x | i : index ])
+    -- or(map_domain(i --> i < marker /\ m[i] = x))
+    let i    = "i" :: Name
+    let body = Lambda (Single i TypeInt)
+                      (make opAnd [ make opEq (make opIndexing values (Reference i Nothing)) x
+                                  , make opLt (Reference i Nothing) marker
+                                  ])
+    return $ make opOr [make opMapOverDomain body (Domain index)]
+
+
+rule_SetIn_ExplicitVarSizeWithFlags :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_ExplicitVarSizeWithFlags p = runMaybeT $ do
+    (x,s)                       <- match opIn p
+    TypeSet{}                   <- typeOf s
+    "ExplicitVarSizeWithFlags"  <- representationOf s
+    [flags,values]              <- down1X s
+    DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
+    -- exists i : index , i < marker. m[i] = x
+    -- exists i : index . i < marker /\ m[i] = x
+    -- or([ i < marker /\ m[i] = x | i : index ])
+    -- or(map_domain(i --> flags[i] /\ m[i] = x))
+    let i    = "i" :: Name
+    let body = Lambda (Single i TypeInt)
+                      (make opAnd [ make opEq (make opIndexing values (Reference i Nothing)) x
+                                  , make opIndexing flags (Reference i Nothing)
+                                  ])
+    return $ make opOr [make opMapOverDomain body (Domain index)]
 
 
 getName :: Expression -> Maybe (Name, Name -> Expression)

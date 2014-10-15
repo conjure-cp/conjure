@@ -21,8 +21,8 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
         chck f (DomainSet _ attrs innerDomain) = DomainSet "ExplicitVarSizeWithFlags" attrs <$> f innerDomain
         chck _ _ = []
 
-        nameFlag name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Flags"]
-        nameMain name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Main"]
+        nameFlag   name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Flags"]
+        nameValues name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Values"]
 
         getMaxSize attrs innerDomain = case attrs of
             SetAttrMaxSize x -> return x
@@ -37,7 +37,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                 [ ( nameFlag name
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
                   )
-                , ( nameMain name
+                , ( nameValues name
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
@@ -67,7 +67,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                   , DomainMatrix   (forgetRepr indexDomain) DomainBool
                   , ConstantMatrix (forgetRepr indexDomain) (trues ++ falses)
                   )
-                , ( nameMain name
+                , ( nameValues name
                   , DomainMatrix   (forgetRepr indexDomain) innerDomain
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
@@ -75,7 +75,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
         setDown _ = fail "N/A {setDown}"
 
         setUp ctxt (name, domain) =
-            case (lookup (nameFlag name) ctxt, lookup (nameMain name) ctxt) of
+            case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
                     case flagMatrix of
                         -- TODO: check if indices match
@@ -87,7 +87,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                                                               , i == ConstantBool True
                                                               ] )
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameMain name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
@@ -105,7 +105,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameMain name)
+                    [ "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
