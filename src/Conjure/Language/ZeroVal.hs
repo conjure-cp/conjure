@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Conjure.Language.ZeroVal ( zeroVal ) where
 
@@ -11,7 +10,7 @@ import Conjure.Language.Pretty
 
 
 class ZeroVal a where
-    zeroVal :: (Applicative m, MonadError Doc m) => a -> m Constant
+    zeroVal :: MonadFail m => a -> m Constant
 
 instance Pretty r => ZeroVal (Domain r Constant) where
 
@@ -23,11 +22,11 @@ instance Pretty r => ZeroVal (Domain r Constant) where
         z  <- zeroVal inner
         is <- case index of
                 DomainInt rs -> rangesInts rs
-                _ -> throwError $ "Matrix indexed by a domain that isn't int:" <+> pretty index
+                _ -> fail $ "Matrix indexed by a domain that isn't int:" <+> pretty index
         return (ConstantMatrix index (replicate (length is) z))
     zeroVal d@(DomainSet _ attrs inner) = do
         let returnInt (ConstantInt x) = return x
-            returnInt _ = throwError $ "Attribute expected to be an int in:" <+> pretty d
+            returnInt _ = fail $ "Attribute expected to be an int in:" <+> pretty d
         let getMin SetAttrNone = return 0
             getMin (SetAttrSize x) = returnInt x
             getMin (SetAttrMinSize x) = returnInt x
@@ -44,10 +43,10 @@ instance Pretty r => ZeroVal (Domain r Constant) where
     -- zeroVal (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
     -- zeroVal (DomainOp op ds) = DomainOp op (map forgetRepr ds)
     -- zeroVal (DomainHack a) = DomainHack a
-    zeroVal d = throwError $ "No default value for domain:" <+> pretty d          -- BUG?
+    zeroVal d = fail $ "No default value for domain:" <+> pretty d          -- BUG?
 
 instance ZeroVal (Range Constant) where
-    zeroVal RangeOpen = throwError "No default value for an open range."        -- BUG?
+    zeroVal RangeOpen = fail "No default value for an open range."        -- BUG?
     zeroVal (RangeSingle x) = return x
     zeroVal (RangeLowerBounded x) = return x
     zeroVal (RangeUpperBounded x) = return x

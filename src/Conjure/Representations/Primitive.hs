@@ -11,7 +11,7 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
-primitive :: MonadError Doc m => Representation m
+primitive :: MonadFail m => Representation m
 primitive = Representation
     { rCheck = \ _ domain ->
         case domain of
@@ -22,7 +22,7 @@ primitive = Representation
     , rDown  = const $ return Nothing
     , rUp    = \ ctxt (name, _) ->
         case lookup name ctxt of
-            Nothing -> throwError $ vcat
+            Nothing -> fail $ vcat
                 $ ("No value for:" <+> pretty name)
                 : "Bindings in context:"
                 : prettyContext ctxt

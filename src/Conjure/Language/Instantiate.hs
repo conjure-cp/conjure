@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Language.Instantiate
@@ -14,9 +13,7 @@ import Conjure.Language.Pretty
 
 
 instantiateExpression
-    :: ( Functor m
-       , MonadError Doc m
-       )
+    :: MonadFail m
     => [(Name, Expression)]
     -> Expression
     -> m Constant
@@ -24,8 +21,7 @@ instantiateExpression ctxt x = evalStateT (instantiateE x) ctxt
 
 
 instantiateDomain
-    :: ( Functor m
-       , MonadError Doc m
+    :: ( MonadFail m
        , Show r
        )
     => [(Name, Expression)]
@@ -35,9 +31,7 @@ instantiateDomain ctxt x = evalStateT (instantiateD x) ctxt
 
 
 instantiateE
-    :: ( Functor m
-       , Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
     => Expression
@@ -47,18 +41,16 @@ instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
 instantiateE (Reference name) = do
     ctxt <- gets id
     case name `lookup` ctxt of
-        Nothing -> throwError $ vcat
+        Nothing -> fail $ vcat
             $ ("No value for:" <+> pretty name)
             : "Bindings in context:"
             : prettyContext ctxt
         Just x -> instantiateE x
-instantiateE x = throwError $ "instantiateE:" <+> pretty (show x)
+instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 
 
 instantiateAbsLit
-    :: ( Functor m
-       , Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
     => AbstractLiteral Expression
@@ -76,9 +68,7 @@ instantiateAbsLit (AbsLitPartition vals) = ConstantPartition <$> mapM (mapM inst
 
 
 instantiateD
-    :: ( Functor m
-       , Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        , Show r
        )
@@ -100,9 +90,7 @@ instantiateD (DomainHack x) = DomainHack <$> instantiateE x
 
 
 instantiateSetAttr
-    :: ( Functor m
-       , Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
     => SetAttr Expression
@@ -115,9 +103,7 @@ instantiateSetAttr (SetAttrMinMaxSize x y) = SetAttrMinMaxSize <$> instantiateE 
 
 
 instantiateDAs
-    :: ( Functor m
-       , Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
     => DomainAttributes Expression
@@ -126,9 +112,7 @@ instantiateDAs (DomainAttributes xs) = DomainAttributes <$> mapM instantiateDA x
 
 
 instantiateDA
-    :: ( Functor m
-       , Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
     => DomainAttribute Expression
@@ -139,8 +123,7 @@ instantiateDA DADotDot = return DADotDot
 
 
 instantiateR
-    :: ( Applicative m
-       , MonadError Doc m
+    :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
     => Range Expression

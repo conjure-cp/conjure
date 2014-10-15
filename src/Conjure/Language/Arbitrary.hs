@@ -11,6 +11,7 @@ module Conjure.Language.Arbitrary
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( domainSizeConstant )
@@ -170,7 +171,7 @@ arbitraryDomainAndConstant = sized dispatch
         matrix depth = do
             (indexDomain, _) <- int
             case domainSizeConstant indexDomain of
-                Left err -> error $ show err
+                Left err -> bug err
                 Right indexSize -> do
                     (innerDomain, innerConstantGen) <- dispatch (smaller depth)
                     return ( DomainMatrix indexDomain innerDomain
@@ -185,7 +186,7 @@ arbitraryDomainAndConstant = sized dispatch
         setFixed depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
-                                Left err -> error $ show err
+                                Left err -> bug err
                                 Right s  -> min 10 s
             size <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["Explicit"] -- no other representation yet!
@@ -216,7 +217,7 @@ arbitraryDomainAndConstant = sized dispatch
         setBoundedMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
-                                Left err -> error $ show err
+                                Left err -> bug err
                                 Right s  -> min 10 s
             maxSize <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
@@ -233,7 +234,7 @@ arbitraryDomainAndConstant = sized dispatch
         setBoundedMinMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
             let sizeUpTo = case domainSizeConstant dom of
-                                Left err -> error $ show err
+                                Left err -> bug err
                                 Right s  -> min 10 s
             minSize <- choose (0 :: Int, sizeUpTo)
             maxSize <- choose (minSize, sizeUpTo)

@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ParallelListComp #-}
 
 module Conjure.Representations.Tuple
@@ -15,7 +14,7 @@ import Conjure.Representations.Internal
 import Data.Text ( pack )
 
 
-tuple :: MonadError Doc m => Representation m
+tuple :: MonadFail m => Representation m
 tuple = Representation chck tupleDown_ tupleDown tupleUp
 
     where
@@ -30,7 +29,7 @@ tuple = Representation chck tupleDown_ tupleDown tupleUp
             | i <- [1..]
             | d <- ds
             ]
-        tupleDown_ _ = throwError "N/A {tupleDown_}"
+        tupleDown_ _ = fail "N/A {tupleDown_}"
 
         -- TODO: check if (length ds == length cs)
         tupleDown (name, DomainTuple ds, ConstantTuple cs) = return $ Just
@@ -39,13 +38,13 @@ tuple = Representation chck tupleDown_ tupleDown tupleUp
             | d <- ds
             | c <- cs
             ]
-        tupleDown _ = throwError "N/A {tupleDown}"
+        tupleDown _ = fail "N/A {tupleDown}"
 
         tupleUp ctxt (name, DomainTuple ds) = do
             let names = map (mkName name) [1 .. length ds]
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
-                    Nothing -> throwError $ vcat $
+                    Nothing -> fail $ vcat $
                         [ "No value for:" <+> pretty n
                         , "When working on:" <+> pretty name
                         , "With domain:" <+> pretty (DomainTuple ds)
@@ -54,5 +53,5 @@ tuple = Representation chck tupleDown_ tupleDown tupleUp
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
             return (name, ConstantTuple vals)
-        tupleUp _ _ = throwError "N/A {tupleUp}"
+        tupleUp _ _ = fail "N/A {tupleUp}"
 

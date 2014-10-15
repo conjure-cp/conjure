@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.UI.TranslateSolution ( translateSolution ) where
 
 -- conjure
@@ -12,7 +10,7 @@ import Conjure.Representations ( up )
 translateSolution
     :: ( Functor m
        , Applicative m
-       , MonadError Doc m
+       , MonadFail m
        )
     => Model      -- eprime model
     -> Model      -- essence param

@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Conjure ( getConjureMode, runConjureMode,conjureHelp ) where
 
 -- conjure

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Conjure.UI.IO where
 
 -- conjure

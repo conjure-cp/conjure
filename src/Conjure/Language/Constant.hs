@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Constant where
 

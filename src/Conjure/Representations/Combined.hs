@@ -1,8 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Rank2Types #-}
 
 module Conjure.Representations.Combined
     ( down_, down, up
@@ -29,7 +25,7 @@ import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 --   the domain is allowed to be at the class level.
 --   the trailing underscore signals that.
 down1_
-    :: (Applicative m, MonadError Doc m, Pretty x, ExpressionLike x)
+    :: (MonadFail m, Pretty x, ExpressionLike x)
     =>           (Name, DomainX x)
     -> m (Maybe [(Name, DomainX x)])
 down1_ (name, domain) = rDown_ (dispatch domain) (name, domain)
@@ -37,7 +33,7 @@ down1_ (name, domain) = rDown_ (dispatch domain) (name, domain)
 -- | refine a domain, together with a constant, one level.
 --   the domain has to be fully instantiated.
 down1
-    :: (Applicative m, MonadError Doc m)
+    :: MonadFail m
     =>           (Name, DomainC, Constant)
     -> m (Maybe [(Name, DomainC, Constant)])
 down1 (name, domain, constant) = rDown (dispatch domain) (name, domain, constant)
@@ -47,7 +43,7 @@ down1 (name, domain, constant) = rDown (dispatch domain) (name, domain, constant
 --   the high level domain (i.e. the target domain) has to be given.
 --   the domain has to be fully instantiated.
 up1
-    :: (Applicative m, MonadError Doc m)
+    :: MonadFail m
     =>   (Name, DomainC)
     ->  [(Name, Constant)]
     -> m (Name, Constant)
@@ -58,7 +54,7 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 --   the domain is allowed to be at the class level.
 --   the trailing underscore signals that.
 down_
-    :: (Applicative m, MonadError Doc m, Pretty x, ExpressionLike x)
+    :: (MonadFail m, Pretty x, ExpressionLike x)
     =>    (Name, DomainX x)
     -> m [(Name, DomainX x)]
 down_ inp@(_, domain) = do
@@ -70,7 +66,7 @@ down_ inp@(_, domain) = do
 -- | refine a domain, together with a constant, all the way.
 --   the domain has to be fully instantiated.
 down
-    :: (Applicative m, MonadError Doc m)
+    :: MonadFail m
     =>    (Name, DomainC, Constant)
     -> m [(Name, DomainC, Constant)]
 down inp = do
@@ -83,7 +79,7 @@ down inp = do
 --   the high level domain (i.e. the target domain) has to be given.
 --   the domain has to be fully instantiated.
 up
-    :: (Applicative m, MonadError Doc m)
+    :: MonadFail m
     =>  [(Name, Constant)]
     ->   (Name, DomainC)
     -> m (Name, Constant)
@@ -94,7 +90,7 @@ up ctxt (name, highDomain) = do
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
-                Nothing -> throwError $ vcat
+                Nothing -> fail $ vcat
                     $ ("No value for:" <+> pretty name)
                     : "Bindings in context:"
                     : prettyContext ctxt
@@ -108,7 +104,7 @@ up ctxt (name, highDomain) = do
 
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
-dispatch :: (Applicative m, MonadError Doc m, Pretty x) => Domain HasRepresentation x -> Representation m
+dispatch :: (MonadFail m, Pretty x) => Domain HasRepresentation x -> Representation m
 dispatch domain =
     case domain of
         DomainBool{}    -> primitive
@@ -141,7 +137,7 @@ reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 
 -- | This is here because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
-matrix :: (Applicative m, MonadError Doc m) => Representation m
+matrix :: MonadFail m => Representation m
 matrix = Representation chck matrixDown_ matrixDown matrixUp
 
     where
@@ -154,7 +150,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
             case mres of
                 Nothing -> return Nothing
                 Just mids -> return $ Just [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
-        matrixDown_ _ = throwError "N/A {matrixDown_}"
+        matrixDown_ _ = fail "N/A {matrixDown_}"
 
         -- TODO: check if indices are the same
         matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do
@@ -183,12 +179,12 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                                 | (n, d, cs) <- mids3
                                 ]
                         else
-                            throwError $ vcat
+                            fail $ vcat
                                 [ "This is weird. Heterogeneous matrix literal?"
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                 ]
-        matrixDown _ = throwError "N/A {matrixDown}"
+        matrixDown _ = fail "N/A {matrixDown}"
 
         matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
 
@@ -202,7 +198,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                     -- there needs to be a binding with "name"
                     -- and we just pass it through
                     case lookup name ctxt of
-                        Nothing -> throwError $ vcat $
+                        Nothing -> fail $ vcat $
                             [ "No value for:" <+> pretty name
                             , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                             ] ++
@@ -216,7 +212,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                         :: [(Name, [Constant])]
                         <- forM mid2 $ \ (n, _) ->
                             case lookup n ctxt of
-                                Nothing -> throwError $ vcat $
+                                Nothing -> fail $ vcat $
                                     [ "No value for:" <+> pretty n
                                     , "When working on:" <+> pretty name
                                     , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
@@ -226,7 +222,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                                     -- this constant is a ConstantMatrix, containing one component of the things to go into up1
                                     case constant of
                                         ConstantMatrix _ c -> return (n, c)
-                                        _ -> throwError $ vcat
+                                        _ -> fail $ vcat
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant
                                             , "When working on:" <+> pretty name
@@ -244,5 +240,5 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                             ]
                     let values = map snd mid4
                     return (name, ConstantMatrix indexDomain values)
-        matrixUp _ _ = throwError "N/A {matrixUp}"
+        matrixUp _ _ = fail "N/A {matrixUp}"
 

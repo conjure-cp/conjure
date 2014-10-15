@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.E.Helpers where

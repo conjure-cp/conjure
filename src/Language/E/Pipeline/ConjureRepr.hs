@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.E.Pipeline.ConjureRepr where
 
 import Language.E

@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.Representations.Set.Explicit
     ( setExplicit
     ) where
@@ -11,7 +9,7 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
-setExplicit :: MonadError Doc m => Representation m
+setExplicit :: MonadFail m => Representation m
 setExplicit = Representation chck setDown_ setDown setUp
 
     where
@@ -28,7 +26,7 @@ setExplicit = Representation chck setDown_ setDown setUp
                       (DomainInt [RangeBounded (fromInt 1) size])
                       innerDomain
                   ) ]
-        setDown_ _ = throwError "N/A {setDown_}"
+        setDown_ _ = fail "N/A {setDown_}"
 
         setDown (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
@@ -37,11 +35,11 @@ setExplicit = Representation chck setDown_ setDown setUp
                       , DomainMatrix   outIndexDomain innerDomain
                       , ConstantMatrix outIndexDomain constants
                       ) ]
-        setDown _ = throwError "N/A {setDown}"
+        setDown _ = fail "N/A {setDown}"
 
         setUp ctxt (name, domain@(DomainSet "Explicit" (SetAttrSize size) innerDomain)) =
             case lookup (outName name) ctxt of
-                Nothing -> throwError $ vcat $
+                Nothing -> fail $ vcat $
                     [ "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
@@ -51,11 +49,11 @@ setExplicit = Representation chck setDown_ setDown setUp
                     case constant of
                         ConstantMatrix _ vals ->
                             return (name, ConstantSet vals)
-                        _ -> throwError $ vcat
+                        _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
                                 ]
-        setUp _ _ = throwError "N/A {setUp}"
+        setUp _ _ = fail "N/A {setUp}"
 

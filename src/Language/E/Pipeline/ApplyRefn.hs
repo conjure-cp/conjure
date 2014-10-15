@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-
 module Language.E.Pipeline.ApplyRefn ( applyRefn, applyRefnE ) where
 
 import Conjure.Mode

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.E.TH ( eMatch, eMake ) where
 
 import Conjure.Prelude

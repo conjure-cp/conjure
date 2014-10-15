@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 
 module Conjure.Language.Definition

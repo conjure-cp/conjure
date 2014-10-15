@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Conjure.Language.DomainSize
     ( domainSizeConstant
@@ -8,12 +7,13 @@ module Conjure.Language.DomainSize
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 
 
 -- Nothing means an infinite domain
-domainSizeConstant :: (Applicative m, MonadError Doc m) => Domain r Constant -> m Int
+domainSizeConstant :: MonadFail m => Domain r Constant -> m Int
 domainSizeConstant DomainBool = return 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainEnum _ rs) = domainSizeConstantRanges rs
@@ -33,21 +33,21 @@ domainSizeConstant (DomainSet _ attrs inner) =
         SetAttrMinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
-        _ -> throwError "domainSizeConstant"
-domainSizeConstant (DomainMSet      {}) = throwError "not implemented: domainSizeConstant DomainMSet"
-domainSizeConstant (DomainFunction  {}) = throwError "not implemented: domainSizeConstant DomainFunction"
-domainSizeConstant (DomainRelation  {}) = throwError "not implemented: domainSizeConstant DomainRelation"
-domainSizeConstant (DomainPartition {}) = throwError "not implemented: domainSizeConstant DomainPartition"
-domainSizeConstant _                    = throwError "not implemented: domainSizeConstant"
+        _ -> fail "domainSizeConstant"
+domainSizeConstant (DomainMSet      {}) = bug "not implemented: domainSizeConstant DomainMSet"
+domainSizeConstant (DomainFunction  {}) = bug "not implemented: domainSizeConstant DomainFunction"
+domainSizeConstant (DomainRelation  {}) = bug "not implemented: domainSizeConstant DomainRelation"
+domainSizeConstant (DomainPartition {}) = bug "not implemented: domainSizeConstant DomainPartition"
+domainSizeConstant _                    = bug "not implemented: domainSizeConstant"
 
-domainSizeConstantRanges :: MonadError Doc m => [Range Constant] -> m Int
+domainSizeConstantRanges :: MonadFail m => [Range Constant] -> m Int
 domainSizeConstantRanges = liftM length . valuesInIntDomain
 
-valuesInIntDomain :: MonadError Doc m => [Range Constant] -> m [Int]
+valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Int]
 valuesInIntDomain ranges =
     if isFinite
         then return allValues
-        else throwError $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
+        else fail $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
 
     where
 

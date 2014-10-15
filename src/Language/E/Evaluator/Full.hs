@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Language.E.Evaluator.Full

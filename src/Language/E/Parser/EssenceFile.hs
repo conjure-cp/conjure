@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-
 module Language.E.Parser.EssenceFile
     ( parseSpec
     , parseExpr

@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Stuff.Pretty ( Pretty(..)
                     , (<++>), (<+>), (<>)

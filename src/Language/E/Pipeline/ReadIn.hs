@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.E.Pipeline.ReadIn where
 
 import Language.E

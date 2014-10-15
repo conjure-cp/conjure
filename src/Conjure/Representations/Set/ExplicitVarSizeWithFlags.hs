@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.Representations.Set.ExplicitVarSizeWithFlags
     ( setExplicitVarSizeWithFlags
     ) where
@@ -14,7 +12,7 @@ import Conjure.Representations.Internal
 
 
 
-setExplicitVarSizeWithFlags :: (Applicative m, MonadError Doc m) => Representation m
+setExplicitVarSizeWithFlags :: MonadFail m => Representation m
 setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
 
     where
@@ -43,7 +41,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
-        setDown_ _ = throwError "N/A {setDown_}"
+        setDown_ _ = fail "N/A {setDown_}"
 
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain
@@ -52,7 +50,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
             maxSizeInt <-
                 case maxSize of
                     ConstantInt x -> return x
-                    _ -> throwError $ vcat
+                    _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
@@ -74,7 +72,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        setDown _ = throwError "N/A {setDown}"
+        setDown _ = fail "N/A {setDown}"
 
         setUp ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameMain name) ctxt) of
@@ -88,25 +86,25 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
                                                               | (i,v) <- zip flags vals
                                                               , i == ConstantBool True
                                                               ] )
-                                _ -> throwError $ vcat
+                                _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameMain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        _ -> throwError $ vcat
+                        _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (nameFlag name)
                                 , "But got:" <+> pretty flagMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                (Nothing, _) -> throwError $ vcat $
+                (Nothing, _) -> fail $ vcat $
                     [ "No value for:" <+> pretty (nameFlag name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-                (_, Nothing) -> throwError $ vcat $
+                (_, Nothing) -> fail $ vcat $
                     [ "No value for:" <+> pretty (nameMain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain

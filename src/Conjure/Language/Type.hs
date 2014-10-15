@@ -1,6 +1,4 @@
 {-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Language.Type where
 

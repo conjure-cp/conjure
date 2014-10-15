@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Language.E.Evaluator
     ( simplify

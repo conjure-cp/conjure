@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.E.Parser.LogFile where
 
 import Conjure.Prelude

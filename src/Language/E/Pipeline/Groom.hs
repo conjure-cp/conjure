@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.E.Pipeline.Groom where
 
 import Language.E

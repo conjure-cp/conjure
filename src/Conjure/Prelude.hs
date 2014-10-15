@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Conjure.Prelude
     ( module X
@@ -61,7 +62,7 @@ import Control.Monad.Except         as X ( MonadError(throwError, catchError), E
 import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
-import Control.Monad.State.Strict   as X ( MonadState, gets, modify, evalStateT, runStateT, evalState, runState )
+import Control.Monad.State.Strict   as X ( MonadState, StateT, gets, modify, evalStateT, runStateT, evalState, runState )
 import Control.Monad.Trans.Identity as X ( runIdentityT )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT, runWriterT, execWriterT, runWriter )
@@ -280,11 +281,17 @@ class (Functor m, Applicative m, Monad m) => MonadFail m where
 instance MonadFail Maybe where
     fail = const Nothing
 
+instance (a ~ Doc) => MonadFail (Either a) where
+    fail = Left
+
 instance (Functor m, Monad m) => MonadFail (MaybeT m) where
     fail = const $ MaybeT $ return Nothing
 
 instance (Functor m, Monad m) => MonadFail (ExceptT Doc m) where
     fail = throwError
+
+instance (Functor m, Monad m, MonadFail m) => MonadFail (StateT st m) where
+    fail = lift . fail
 
 instance MonadFail Gen where
     fail = Control.Monad.fail . show

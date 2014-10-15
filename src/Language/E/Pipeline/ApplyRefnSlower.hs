@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.E.Pipeline.ApplyRefnSlower ( applyRefn, applyRefnE ) where

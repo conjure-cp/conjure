@@ -105,7 +105,7 @@ testSingleDirNoParam outputsDir models =
             eprimeModel    <- readModelFromFile (outputsDir </> model)
             eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
             case translateSolution eprimeModel def eprimeSolution of
-                Left err -> assertFailure $ renderNormal err
+                Left err -> assertFailure $ renderNormal (err :: Doc)
                 Right s -> do
                     let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
                     writeFile filename (renderWide s)
@@ -117,7 +117,7 @@ testSingleDirWithParams outputsDir models paramsDir params =
         model <- liftIO $ readModelFromFile (outputsDir </> modelPath)
         param <- liftIO $ readModelFromFile (paramsDir  </> paramPath)
         case refineParam model param of
-            Left err -> liftIO $ assertFailure $ renderNormal err
+            Left err -> liftIO $ assertFailure $ renderNormal (err :: Doc)
             Right eprimeParam -> do
                 let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
                 liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
@@ -142,7 +142,7 @@ testSingleDirWithParams outputsDir models paramsDir params =
                     eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     case translateSolution eprimeModel param eprimeSolution of
-                        Left err -> assertFailure $ renderNormal err
+                        Left err -> assertFailure $ renderNormal (err :: Doc)
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
                             writeFile filename (renderWide s)

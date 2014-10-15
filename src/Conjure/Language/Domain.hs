@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 
 module Conjure.Language.Domain where
@@ -158,12 +157,12 @@ instance Arbitrary a => Arbitrary (Range a) where
         , RangeBounded <$> arbitrary <*> arbitrary
         ]
 
-rangesInts :: (MonadError Doc m, IntContainer c) => [Range c] -> m [Int]
+rangesInts :: (MonadFail m, IntContainer c) => [Range c] -> m [Int]
 rangesInts = liftM (sortNub . concat) . mapM rangeInts
     where
         rangeInts (RangeSingle x) = return [intOut x]
         rangeInts (RangeBounded x y) = return [intOut x .. intOut y]
-        rangeInts _ = throwError "Infinite range (or not an integer range)"
+        rangeInts _ = fail "Infinite range (or not an integer range)"
 
 
 data HasRepresentation = NoRepresentation | HasRepresentation Name

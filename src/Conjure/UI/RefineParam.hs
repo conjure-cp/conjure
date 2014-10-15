@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.UI.RefineParam ( refineParam ) where
 
 -- conjure
@@ -15,7 +12,7 @@ import Conjure.Representations ( down )
 refineParam
     :: ( Functor m
        , Applicative m
-       , MonadError Doc m
+       , MonadFail m
        )
     => Model      -- eprime model
     -> Model      -- essence param

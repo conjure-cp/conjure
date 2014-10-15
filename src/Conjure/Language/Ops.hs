@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops where
 

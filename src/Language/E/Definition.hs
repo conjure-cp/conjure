@@ -1,11 +1,5 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Language.E.Definition

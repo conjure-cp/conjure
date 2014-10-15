@@ -1,9 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ParallelListComp #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE Rank2Types #-}
-
 module Conjure.Representations.Set.Occurrence
     ( setOccurrence
     ) where
@@ -16,7 +10,7 @@ import Conjure.Language.DomainSize ( valuesInIntDomain )
 import Conjure.Representations.Internal
 
 
-setOccurrence :: (Applicative m, MonadError Doc m) => Representation m
+setOccurrence :: MonadFail m => Representation m
 setOccurrence = Representation chck setDown_ setDown setUp
 
     where
@@ -32,7 +26,7 @@ setOccurrence = Representation chck setDown_ setDown setUp
                   , DomainMatrix (forgetRepr innerDomain) DomainBool
                   )
                 ]
-        setDown_ _ = throwError "N/A {setDown_}"
+        setDown_ _ = fail "N/A {setDown_}"
 
         setDown (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
                 innerDomainVals <- valuesInIntDomain intRanges
@@ -46,7 +40,7 @@ setOccurrence = Representation chck setDown_ setDown setUp
                           ]
                       )
                     ]
-        setDown _ = throwError "N/A {setDown}"
+        setDown _ = fail "N/A {setDown}"
 
         setUp ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
             case lookup (outName name) ctxt of
@@ -59,17 +53,17 @@ setOccurrence = Representation chck setDown_ setDown setUp
                                             | (v,b) <- zip innerDomainVals vals
                                             , b == ConstantBool True
                                             ] )
-                        _ -> throwError $ vcat
+                        _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constantMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-                Nothing -> throwError $ vcat $
+                Nothing -> fail $ vcat $
                     [ "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        setUp _ _ = throwError "N/A {setUp}"
+        setUp _ _ = fail "N/A {setUp}"
 

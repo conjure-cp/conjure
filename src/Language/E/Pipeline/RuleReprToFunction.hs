@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Language.E.Pipeline.RuleReprToFunction ( RuleReprResult, ruleReprToFunction ) where
 

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.E.Pipeline.Driver where
 
 import Conjure.Bug
