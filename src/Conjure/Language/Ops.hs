@@ -36,8 +36,8 @@ data Ops x
     | MkOpGt              (OpGt x)
     | MkOpGeq             (OpGeq x)
 
-    | MkOpAnd            (OpAnd x)
-    | MkOpOr             (OpOr x)
+    | MkOpAnd             (OpAnd x)
+    | MkOpOr              (OpOr x)
 
     | MkOpIndexing        (OpIndexing x)
     | MkOpSlicing         (OpSlicing x)
@@ -51,6 +51,8 @@ data Ops x
 
     | MkOpTrue            (OpTrue x)
     | MkOpToInt           (OpToInt x)
+
+    | MkOpIn              (OpIn x)
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
@@ -83,6 +85,7 @@ instance (TypeOf st x, Show x) => TypeOf st (Ops x) where
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpTrue                x) = typeOf x
     typeOf (MkOpToInt               x) = typeOf x
+    typeOf (MkOpIn                  x) = typeOf x
 
 
 class BinaryOperator op where
@@ -111,8 +114,8 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpLeq   op@(OpLeq   a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpGt    op@(OpGt    a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpGeq   op@(OpGeq   a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpAnd  op@(OpAnd  a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpOr   op@(OpOr   a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpAnd   op@(OpAnd   a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpOr    op@(OpOr    a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec _ (MkOpIndexing (OpIndexing a b)) = pretty a <> "[" <> pretty b <> "]"
     prettyPrec _ (MkOpSlicing  (OpSlicing  a  )) = pretty a <> "[..]"
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
@@ -123,6 +126,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpTrue  (OpTrue xs)) = "true" <> prettyList prParens "," xs
     prettyPrec _ (MkOpToInt (OpToInt a)) = "toInt" <> prParens (pretty a)
+    prettyPrec prec (MkOpIn    op@(OpIn    a b)) = prettyPrecBinOp prec [op] a b
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -157,6 +161,7 @@ instance BinaryOperator (OpPlus x) where
     opLexeme _ = L_Plus
 instance TypeOf st x => TypeOf st (OpPlus x) where
     typeOf (OpPlus a b) = intToIntToInt a b
+
 
 data OpMinus x = OpMinus x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -253,6 +258,7 @@ instance BinaryOperator (OpNeq x) where
 instance TypeOf st x => TypeOf st (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 
+
 data OpLt x = OpLt x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpLt x)
@@ -265,6 +271,7 @@ instance BinaryOperator (OpLt x) where
     opLexeme _ = L_Lt
 instance TypeOf st x => TypeOf st (OpLt x) where
     typeOf (OpLt a b) = sameToSameToBool a b
+
 
 data OpLeq x = OpLeq x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -279,6 +286,7 @@ instance BinaryOperator (OpLeq x) where
 instance TypeOf st x => TypeOf st (OpLeq x) where
     typeOf (OpLeq a b) = sameToSameToBool a b
 
+
 data OpGt x = OpGt x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpGt x)
@@ -292,6 +300,7 @@ instance BinaryOperator (OpGt x) where
 instance TypeOf st x => TypeOf st (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
 
+
 data OpGeq x = OpGeq x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpGeq x)
@@ -304,6 +313,7 @@ instance BinaryOperator (OpGeq x) where
     opLexeme _ = L_Geq
 instance TypeOf st x => TypeOf st (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
+
 
 data OpAnd x = OpAnd x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -331,7 +341,6 @@ instance BinaryOperator (OpOr x) where
     opLexeme _ = L_Or
 instance TypeOf st x => TypeOf st (OpOr x) where
     typeOf (OpOr a b) = boolToBoolToBool a b
-
 
 
 data OpIndexing x = OpIndexing x x
@@ -363,6 +372,7 @@ opSlicing x = injectOp (MkOpSlicing (OpSlicing x))
 instance TypeOf st x => TypeOf st (OpSlicing x) where
     typeOf (OpSlicing _) = return TypeAny
 
+
 data OpFilter x = OpFilter x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpFilter x)
@@ -373,6 +383,7 @@ opFilter :: OperatorContainer x => x -> x -> x
 opFilter x y = injectOp (MkOpFilter (OpFilter x y))
 instance TypeOf st x => TypeOf st (OpFilter x) where
     typeOf (OpFilter _ _) = return TypeAny
+
 
 data OpMapOverDomain x = OpMapOverDomain x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -460,6 +471,20 @@ instance TypeOf st x => TypeOf st (OpToInt x) where
         return TypeInt
 
 
+data OpIn x = OpIn x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpIn x)
+instance Hashable  x => Hashable  (OpIn x)
+instance ToJSON    x => ToJSON    (OpIn x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpIn x) where parseJSON = JSON.genericParseJSON jsonOptions
+opIn :: OperatorContainer x => x -> x -> x
+opIn x y = injectOp (MkOpIn (OpIn x y))
+instance BinaryOperator (OpIn x) where
+    opLexeme _ = L_in
+instance TypeOf st x => TypeOf st (OpIn x) where
+    typeOf (OpIn a b) = bug "typeOf for OpIn"
+
+
 intToInt :: (Applicative m, MonadState st m, TypeOf st a) => a -> m Type
 intToInt a = do
     TypeInt{} <- typeOf a
@@ -504,6 +529,7 @@ mkBinOp op a b =
                     L_Leq   -> opLeq
                     L_Gt    -> opGt
                     L_Geq   -> opGeq
+                    L_in    -> opIn
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b

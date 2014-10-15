@@ -92,7 +92,7 @@ import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Traversable  as X ( mapM, forM )
 import Data.Tuple        as X ( fst, snd, swap, uncurry )
 
-import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents )
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
 
 -- safe
 import Safe as X ( at, atNote, readMay, headNote )

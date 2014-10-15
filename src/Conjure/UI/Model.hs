@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ParallelListComp #-}
 
 module Conjure.UI.Model where
 
@@ -99,8 +100,20 @@ genNextModel initialEssence pastInfos = do
                             -- st <- gets id
                             -- liftIO $ print st
                             return (Reference nm)
-                        (numSelected:_) -> do
-                            let domSelected = domOpts `at` (numSelected - 1)
+                        _ -> do
+                            liftIO $ print $ vcat
+                                $ ("Selecting representation for:" <+> pretty nm)
+                                : map (nest 4) (
+                                    [ "Options" <+> (vcat [ nest 4 (pretty i <> ":" <+> pretty d)
+                                                          | i <- allNats
+                                                          | d <- domOpts
+                                                          ])
+                                    ] ++ ascendants )
+                            ln <- liftIO getLine
+                            let (numSelected, domSelected) =
+                                    case readMay ln of
+                                        Nothing -> userErr "You've got to enter an integer."
+                                        Just n -> (n, domOpts `at` (n - 1))
                             let descr = vcat
                                     $ ("Selecting representation for:" <+> pretty nm)
                                     : map (nest 4) (
@@ -126,7 +139,7 @@ genNextModel initialEssence pastInfos = do
                                                               , rule_TupleIndex
                                                               ]
                                    )
-                >=> ifNotExhausted updateDeclarations
+                >=> updateDeclarations
     (statements', st) <- runStateT (pipeline (mStatements initialEssence))
                                    (def { stCurrInfo = initInfo
                                         , stPastInfos = map miTrail pastInfos
@@ -251,12 +264,12 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
 updateDeclarations :: (Functor m, MonadState St m) => [Statement] -> m [Statement]
 updateDeclarations statements = do
     reprs <- gets stAllReprs
-    liftM concat $ forM statements $ \ st ->
+    flip concatMapM statements $ \ st ->
         case st of
             Declaration (FindOrGiven h nm _) ->
-                case lookup nm reprs of
-                    Nothing -> bug $ "No representation chosen for: " <+> pretty nm
-                    Just domain -> do
+                case [ d | (n,d) <- reprs, n == nm ] of
+                    [] -> bug $ "No representation chosen for: " <+> pretty nm
+                    domains -> flip concatMapM domains $ \ domain -> do
                         mouts <- runExceptT $ down_ (nm, domain)
                         case mouts of
                             Left err -> bug err
