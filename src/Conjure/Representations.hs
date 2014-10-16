@@ -38,8 +38,8 @@ onReference nm domain = do
     mpairs <- runExceptT $ downD1 (nm, domain)
     case mpairs of
         Left err -> bug err
-        Right DownD_NA -> bug ("downX1.onReference, downD1 doesn't work:" <++> pretty nm)
-        Right (DownDResult pairs _cons) -> return [ Reference n (Just d) | (n,d) <- pairs ]
+        Right Nothing -> bug ("downX1.onReference, downD1 doesn't work:" <++> pretty nm)
+        Right (Just (DownDResult pairs _cons)) -> return [ Reference n (Just d) | (n,d) <- pairs ]
 
 onOp :: (MonadState St m, MonadFail m) => Ops Expression -> m [Expression]
 onOp (MkOpIndexing (OpIndexing m i)) = do

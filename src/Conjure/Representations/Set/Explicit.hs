@@ -19,7 +19,7 @@ setExplicit = Representation chck setDown_ setDown setUp
 
         outName name = mconcat [name, "_", "Explicit"]
 
-        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain) = return $ DownDResult
+        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain) = return $ Just DownDResult
             { newDeclarations = 
                 [ ( outName name
                   , DomainMatrix

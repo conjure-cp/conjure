@@ -33,7 +33,7 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
-            return $ DownDResult
+            return $ Just DownDResult
                 { newDeclarations =
                     [ ( nameFlag name
                       , DomainMatrix (forgetRepr indexDomain) DomainBool

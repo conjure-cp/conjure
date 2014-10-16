@@ -31,14 +31,13 @@ data Representation m = Representation
              -> Domain r x                                          -- this domain
              -> [Domain HasRepresentation x]                        -- with all repr options
     , rDownD :: forall x . (Pretty x, ExpressionLike x)
-             => (Name, DomainX x)                     -> m (DownDResult x)
+             => (Name, DomainX x)                     -> m (Maybe (DownDResult x))
     , rDownC :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
     , rUp    :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
     }
 
 data DownDResult x
-    = DownD_NA
-    | DownDResult { newDeclarations :: [(Name, DomainX x)]
+    = DownDResult { newDeclarations :: [(Name, DomainX x)]
                   , structuralCons  :: [x]
                   }
 

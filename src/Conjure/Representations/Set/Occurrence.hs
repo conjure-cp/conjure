@@ -20,7 +20,7 @@ setOccurrence = Representation chck setDown_ setDown setUp
 
         outName name = mconcat [name, "_", "Occurrence"]
 
-        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ DownDResult
+        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just DownDResult
             { newDeclarations = 
                 [ ( outName name
                   , DomainMatrix (forgetRepr innerDomain) DomainBool

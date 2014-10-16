@@ -24,7 +24,7 @@ tuple = Representation chck tupleDown_ tupleDown tupleUp
 
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
-        tupleDown_ (name, DomainTuple ds) = return $ DownDResult
+        tupleDown_ (name, DomainTuple ds) = return $ Just DownDResult
             { newDeclarations =
                 [ (mkName name i, d)
                 | i <- [1..]
