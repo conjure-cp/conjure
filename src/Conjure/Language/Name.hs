@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Conjure.Language.Name where

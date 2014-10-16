@@ -108,7 +108,7 @@ opOr
        , x -> m [x]
        )
 opOr _ =
-    ( \ xs -> injectOp (MkOpOr (OpOr xs))
+    ( injectOp . MkOpOr . OpOr
     , \ p -> do
             op <- projectOp p
             case op of
@@ -127,7 +127,7 @@ opAnd
        , x -> m [x]
        )
 opAnd _ =
-    ( \ xs -> injectOp (MkOpAnd (OpAnd xs))
+    ( injectOp . MkOpAnd . OpAnd
     , \ p -> do
             op <- projectOp p
             case op of

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 
 module Conjure.Language.Definition
@@ -277,7 +277,7 @@ instance OperatorContainer Expression where
 -- TODO: Add support for AbsPatTuple
 -- TODO: Add support for AbsPatMatrix
 -- TODO: Add support for AbsPatSet
-lambdaToFunction :: AbstractPattern -> Expression -> (AbstractPattern -> Expression)
+lambdaToFunction :: AbstractPattern -> Expression -> AbstractPattern -> Expression
 lambdaToFunction (Single nm _) body =
     let
         replacer nm2 (Reference n d) | n == nm = Reference nm2 d
@@ -293,8 +293,7 @@ lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` bu
 instance TypeOf St Expression where
     typeOf x = do
         st <- gets stAllReprs
-        ty <- evalStateT (typeOf x) st
-        return ty
+        evalStateT (typeOf x) st
 
 instance TypeOf [(Name, Domain r Expression)] Expression where
     typeOf (Constant x) = typeOf x

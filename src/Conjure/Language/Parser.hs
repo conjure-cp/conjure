@@ -110,7 +110,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = fst (runState (typeOf (convDomain quanOverDom)) [])
+                ty = evalState (typeOf (convDomain quanOverDom)) []
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
@@ -132,14 +132,14 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = fst (runState (typeOf (convExpr quanOverExpr)) ([] :: [(Name, Domain () Expression)]))
+                ty = evalState (typeOf (convExpr quanOverExpr)) ([] :: [(Name, Domain () Expression)])
                 filterOr b = 
                     if guardE == [xMake| emptyGuard := [] |]
                         then b
                         else Op $ MkOpFilter $ OpFilter
                                 (Lambda (convPat ty pat) (convExpr guardE))
                                 b
-                op' = \ i j -> case op of
+                op' i j = case op of
                     [xMatch| [] := in       |] -> Op $ MkOpMapInExpr       $ OpMapInExpr       i j
                     [xMatch| [] := subset   |] -> Op $ MkOpMapSubsetExpr   $ OpMapSubsetExpr   i j
                     [xMatch| [] := subsetEq |] -> Op $ MkOpMapSubsetEqExpr $ OpMapSubsetEqExpr i j
@@ -160,7 +160,7 @@ specToModel (Spec lang stmt) = Model
                         | [body]            := quantified.body
                         |] =
             let
-                ty = fst (runState (typeOf (convDomain quanOverDom)) [])
+                ty = evalState (typeOf (convDomain quanOverDom)) []
                 conjunctWithGuard p =
                     if guardE == [xMake| emptyGuard := [] |]
                         then p
@@ -170,7 +170,7 @@ specToModel (Spec lang stmt) = Model
                         (Lambda (convPat ty pat)
                                 (conjunctWithGuard (op' (convExpr pat) (convExpr expr))))
                         b
-                op' = \ i j -> case op of
+                op' i j = case op of
                     [xMatch| [] := in       |] -> Op $ MkOpMapInExpr       $ OpMapInExpr       i j
                     [xMatch| [] := subset   |] -> Op $ MkOpMapSubsetExpr   $ OpMapSubsetExpr   i j
                     [xMatch| [] := subsetEq |] -> Op $ MkOpMapSubsetEqExpr $ OpMapSubsetEqExpr i j

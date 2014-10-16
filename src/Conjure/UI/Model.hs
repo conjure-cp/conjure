@@ -67,7 +67,7 @@ nextModel driver printer (ModelGen essence pastInfos) = do
                          ))
 
 pickFirst :: Monad m => Doc -> [a] -> m (Int, a)
-pickFirst _question options = do
+pickFirst _question options =
     return (1, options `at` 0)
 
 interactive :: (MonadIO m, Pretty a) => Doc -> [a] -> m (Int, a)
@@ -75,10 +75,10 @@ interactive question options = do
     liftIO $ print $ vcat
         [ question
         , nest 4 $ "Options:" <+>
-            (vcat [ nest 4 (pretty i <> ":" <+> pretty o)
-                  | i <- allNats
-                  | o <- options
-                  ])
+            vcat [ nest 4 (pretty i <> ":" <+> pretty o)
+                 | i <- allNats
+                 | o <- options
+                 ]
         ]
     ln <- liftIO getLine
     case readMay ln of
@@ -139,10 +139,10 @@ genNextModel askTheDriver printer initialEssence pastInfos = do
                             let descr = vcat
                                     [ question
                                     , nest 4 $ "Options:" <+>
-                                        (vcat [ nest 4 (pretty i <> ":" <+> pretty o)
-                                              | i <- allNats
-                                              | o <- domOpts
-                                              ])
+                                        vcat [ nest 4 (pretty i <> ":" <+> pretty o)
+                                             | i <- allNats
+                                             | o <- domOpts
+                                             ]
                                     , nest 4 $ "Selected:"   <+> pretty domSelected
                                     , nest 4 $ "# Options: " <+> pretty (show numOptions)
                                     , nest 4 $ "# Selected:" <+> pretty numSelected
@@ -423,7 +423,7 @@ rule_SetIn_ExplicitVarSizeWithFlags p = runMaybeT $ do
 
 
 getName :: Expression -> Maybe (Name, Name -> Expression)
-getName (Reference nm d) = Just (nm, \ n -> Reference n d)
+getName (Reference nm d) = Just (nm, (`Reference` d))
 getName (Op (MkOpIndexing (OpIndexing m i))) = do
     (nm, f) <- getName m
     return (nm, \ nm' -> Op (MkOpIndexing (OpIndexing (f nm') i)))
