@@ -31,14 +31,19 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
-            return $ Just
-                [ ( nameMarker name
-                  , indexDomain
-                  )
-                , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
-                  )
-                ]
+            return $ DownDResult
+                { newDeclarations =
+                    [ ( nameMarker name
+                      , indexDomain
+                      )
+                    , ( nameValues name
+                      , DomainMatrix (forgetRepr indexDomain) innerDomain
+                      )
+                    ]
+                , structuralCons = [] -- TODO: enforce cardinality
+                                      -- TODO: enforce strictOrdering up to marker
+                                      -- TODO: dontCare after the marker
+                }
         setDown_ _ = fail "N/A {setDown_}"
 
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do

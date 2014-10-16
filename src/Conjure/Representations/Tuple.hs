@@ -24,11 +24,14 @@ tuple = Representation chck tupleDown_ tupleDown tupleUp
 
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
-        tupleDown_ (name, DomainTuple ds) = return $ Just
-            [ (mkName name i, d)
-            | i <- [1..]
-            | d <- ds
-            ]
+        tupleDown_ (name, DomainTuple ds) = return $ DownDResult
+            { newDeclarations =
+                [ (mkName name i, d)
+                | i <- [1..]
+                | d <- ds
+                ]
+            , structuralCons = []
+            }
         tupleDown_ _ = fail "N/A {tupleDown_}"
 
         -- TODO: check if (length ds == length cs)

@@ -19,13 +19,15 @@ setExplicit = Representation chck setDown_ setDown setUp
 
         outName name = mconcat [name, "_", "Explicit"]
 
-        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain)
-            = return $ Just
+        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain) = return $ DownDResult
+            { newDeclarations = 
                 [ ( outName name
                   , DomainMatrix
                       (DomainInt [RangeBounded (fromInt 1) size])
                       innerDomain
                   ) ]
+            , structuralCons = [] -- TODO: enforce allDiff + sym
+            }
         setDown_ _ = fail "N/A {setDown_}"
 
         setDown (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =

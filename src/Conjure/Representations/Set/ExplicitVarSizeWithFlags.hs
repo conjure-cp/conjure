@@ -33,14 +33,20 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ setDown setUp
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
-            return $ Just
-                [ ( nameFlag name
-                  , DomainMatrix (forgetRepr indexDomain) DomainBool
-                  )
-                , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
-                  )
-                ]
+            return $ DownDResult
+                { newDeclarations =
+                    [ ( nameFlag name
+                      , DomainMatrix (forgetRepr indexDomain) DomainBool
+                      )
+                    , ( nameValues name
+                      , DomainMatrix (forgetRepr indexDomain) innerDomain
+                      )
+                    ]
+                , structuralCons = [] -- TODO: enforce cardinality
+                                      -- TODO: enforce strictOrdering when flag = true
+                                      -- TODO: dontCare when flag = false
+                                      -- TODO: push true flags to the left
+                }
         setDown_ _ = fail "N/A {setDown_}"
 
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do

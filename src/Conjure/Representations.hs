@@ -5,6 +5,7 @@ module Conjure.Representations
     , downD1, downC1, up1
     , reprOptions
     , downX1
+    , DownDResult(..)
     ) where
 
 -- conjure
@@ -37,8 +38,8 @@ onReference nm domain = do
     mpairs <- runExceptT $ downD1 (nm, domain)
     case mpairs of
         Left err -> bug err
-        Right Nothing -> bug ("downX1.onReference, downD1 doesn't work:" <++> pretty nm)
-        Right (Just pairs) -> return [ Reference n (Just d) | (n,d) <- pairs ]
+        Right DownD_NA -> bug ("downX1.onReference, downD1 doesn't work:" <++> pretty nm)
+        Right (DownDResult pairs _cons) -> return [ Reference n (Just d) | (n,d) <- pairs ]
 
 onOp :: (MonadState St m, MonadFail m) => Ops Expression -> m [Expression]
 onOp (MkOpIndexing (OpIndexing m i)) = do

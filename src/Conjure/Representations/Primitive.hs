@@ -18,7 +18,7 @@ primitive = Representation
             DomainBool -> [DomainBool]
             DomainInt rs -> [DomainInt rs]
             _ -> []
-    , rDownD = const $ return Nothing
+    , rDownD = const $ return DownD_NA
     , rDownC = const $ return Nothing
     , rUp    = \ ctxt (name, _) ->
         case lookup name ctxt of
