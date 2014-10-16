@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Conjure.UI.Model where
 
@@ -30,27 +31,33 @@ initialise :: Model -> ModelGen
 initialise m = ModelGen (addTrueConstraints m) []
 
 -- | repeatedly call `nextModel` to generate all models
-outputAllModels :: FilePath -> Int -> ModelGen -> IO ()
-outputAllModels dir i gen = do
-    putStrLn $ "Working on model #" ++ show i
+outputAllModels
+    :: (forall a m . (MonadIO m, Pretty a) => Doc -> [a] -> m (Int, a))
+    -> (String -> IO ())
+    -> FilePath -> Int -> ModelGen -> IO ()
+outputAllModels driver printer dir i gen = do
+    printer $ "Working on model #" ++ show i
     createDirectoryIfMissing True dir
-    may <- nextModel gen
+    may <- nextModel driver printer gen
     case may of
         Nothing -> return ()
         Just (eprime,gen') -> do
             let filename = dir </> "model" ++ show i ++ ".eprime"
             writeFile filename (renderWide eprime)
-            print $ vcat
+            printer $ show $ vcat
                 [ pretty sel <+> "out of" <+> pretty (show opts) <+> "~~" <+> vcat (map pretty txts)
                 | Decision txts opts sel <- miTrail (mInfo eprime)
                 ]
-            -- outputAllModels dir (i+1) gen'
+            -- outputAllModels driver printer dir (i+1) gen'
 
 -- | given a `ModelGen`, which contains info about previously generated models,
 --   generate the next model.
-nextModel :: ModelGen -> IO (Maybe (Model, ModelGen))
-nextModel (ModelGen essence pastInfos) = do
-    meprime <- genNextModel essence pastInfos                       -- the workhorse
+nextModel
+    :: (forall a m . (MonadIO m, Pretty a) => Doc -> [a] -> m (Int, a))
+    -> (String -> IO ())
+    -> ModelGen -> IO (Maybe (Model, ModelGen))
+nextModel driver printer (ModelGen essence pastInfos) = do
+    meprime <- genNextModel driver printer essence pastInfos                -- the workhorse
     case meprime of
         Nothing -> return Nothing                                   -- no more models to be generated
         Just eprime -> do
@@ -59,12 +66,35 @@ nextModel (ModelGen essence pastInfos) = do
                          , ModelGen essence (info:pastInfos)        -- and add its "info" to the log
                          ))
 
+pickFirst :: Monad m => Doc -> [a] -> m (Int, a)
+pickFirst _question options = do
+    return (1, options `at` 0)
+
+interactive :: (MonadIO m, Pretty a) => Doc -> [a] -> m (Int, a)
+interactive question options = do
+    liftIO $ print $ vcat
+        [ question
+        , nest 4 $ "Options:" <+>
+            (vcat [ nest 4 (pretty i <> ":" <+> pretty o)
+                  | i <- allNats
+                  | o <- options
+                  ])
+        ]
+    ln <- liftIO getLine
+    case readMay ln of
+        Nothing -> userErr "You've got to enter an integer."
+        Just n -> return (n, options `at` (n - 1))
+
+
 -- | given an initial essence model,
 --   and a list of ModelInfo's describing previously generated models,
 --   generate the next model
 --   or return Nothing if no other model can be generated
-genNextModel :: Model -> [ModelInfo] -> IO (Maybe Model)
-genNextModel initialEssence pastInfos = do
+genNextModel
+    :: (forall a m . (MonadIO m, Pretty a) => Doc -> [a] -> m (Int, a))
+    -> (String -> IO ())
+    -> Model -> [ModelInfo] -> IO (Maybe Model)
+genNextModel askTheDriver printer initialEssence pastInfos = do
 
     let lets  = lettings initialEssence
     let decls = declarations initialEssence
@@ -72,7 +102,7 @@ genNextModel initialEssence pastInfos = do
     let
         reportNode :: (MonadState St m, MonadIO m) => Expression -> m ()
         reportNode x = do
-            gets stNbExpression >>= \ nb -> liftIO $ print $ "--" <+> pretty nb <> ":" <+> pretty (show x)
+            gets stNbExpression >>= \ nb -> liftIO $ printer $ show $ "--" <+> pretty nb <> ":" <+> pretty (show x)
             modify $ \ st -> st { stNbExpression = 1 + stNbExpression st }
 
     let
@@ -103,31 +133,23 @@ genNextModel initialEssence pastInfos = do
                             -- liftIO $ print st
                             return (Reference nm Nothing)
                         _ -> do
-                            liftIO $ print $ vcat
-                                $ ("Selecting representation for:" <+> pretty nm)
-                                : map (nest 4) (
-                                    [ "Options" <+> (vcat [ nest 4 (pretty i <> ":" <+> pretty d)
-                                                          | i <- allNats
-                                                          | d <- domOpts
-                                                          ])
-                                    ] ++ ascendants )
-                            ln <- liftIO getLine
-                            let (numSelected, domSelected) =
-                                    case readMay ln of
-                                        Nothing -> userErr "You've got to enter an integer."
-                                        Just n -> (n, domOpts `at` (n - 1))
+                            let question = vcat ( ("Selecting representation for:" <+> pretty nm)
+                                                : map (nest 4) ascendants )
+                            (numSelected, domSelected) <- askTheDriver question domOpts
                             let descr = vcat
-                                    $ ("Selecting representation for:" <+> pretty nm)
-                                    : map (nest 4) (
-                                       [ "Options: " <+> (vcat (map (nest 4 . pretty) domOpts))
-                                       , "Selected:" <+> pretty domSelected
-                                       , "# Options: " <+> pretty (show numOptions)
-                                       , "# Explored:" <+> pretty (show explored)
-                                       , "# Selected:" <+> pretty numSelected
-                                       ] ++ ascendants )
+                                    [ question
+                                    , nest 4 $ "Options:" <+>
+                                        (vcat [ nest 4 (pretty i <> ":" <+> pretty o)
+                                              | i <- allNats
+                                              | o <- domOpts
+                                              ])
+                                    , nest 4 $ "Selected:"   <+> pretty domSelected
+                                    , nest 4 $ "# Options: " <+> pretty (show numOptions)
+                                    , nest 4 $ "# Selected:" <+> pretty numSelected
+                                    ]
                             modify $ addReprToSt nm domSelected
                             modify $ addDecisionToSt descr numOptions numSelected
-                            liftIO $ print descr
+                            liftIO $ printer $ show descr
                             return (Reference nm (Just domSelected))
         f x = return x
 
