@@ -6,7 +6,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
-import Conjure.Representations ( down )
+import Conjure.Representations ( downC )
 
 
 refineParam
@@ -45,7 +45,7 @@ refineParam eprimeModel essenceParam = do
             | (n, d) <- essenceGivens'
             ]
 
-    eprimeLettings <- liftM concat $ mapM down essenceGivensAndLettings
+    eprimeLettings <- liftM concat $ mapM downC essenceGivensAndLettings
 
     return $ languageEprime def
         { mStatements =

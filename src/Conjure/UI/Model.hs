@@ -193,7 +193,7 @@ addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
             Left err -> bug err
             Right res -> res
         mkInners p = do
-            mmids <- down1_ p
+            mmids <- downD1 p
             case mmids of
                 Nothing -> return []
                 Just mids -> do
@@ -275,7 +275,7 @@ updateDeclarations statements = do
                 case [ d | (n,d) <- reprs, n == nm ] of
                     [] -> bug $ "No representation chosen for: " <+> pretty nm
                     domains -> flip concatMapM domains $ \ domain -> do
-                        mouts <- runExceptT $ down_ (nm, domain)
+                        mouts <- runExceptT $ downD (nm, domain)
                         case mouts of
                             Left err -> bug err
                             Right outs -> return [Declaration (FindOrGiven h n (forgetRepr d)) | (n,d) <- outs]
@@ -333,7 +333,7 @@ rule_TupleIndex p = runMaybeT $ do
     (t,i)       <- match opIndexing p
     TypeTuple{} <- typeOf t
     iInt        <- match constantInt i
-    ts          <- down1X t
+    ts          <- downX1 t
     return (atNote "Tuple indexing" ts (iInt-1))
 
 
@@ -342,7 +342,7 @@ rule_SetIn_Explicit p = runMaybeT $ do
     (x,s)                <- match opIn p
     TypeSet{}            <- typeOf s
     "Explicit"           <- representationOf s
-    [m]                  <- down1X s
+    [m]                  <- downX1 s
     DomainMatrix index _ <- domainOf (Proxy :: Proxy ()) m
     -- exists i : index . m[i] = x
     -- or([ m[i] = x | i : index ])
@@ -358,7 +358,7 @@ rule_SetIn_Occurrence p = runMaybeT $ do
     (x,s)                <- match opIn p
     TypeSet{}            <- typeOf s
     "Occurrence"         <- representationOf s
-    [m]                  <- down1X s
+    [m]                  <- downX1 s
     return $ make opIndexing m x
 
 
@@ -367,7 +367,7 @@ rule_SetIn_ExplicitVarSizeWithMarker p = runMaybeT $ do
     (x,s)                       <- match opIn p
     TypeSet{}                   <- typeOf s
     "ExplicitVarSizeWithMarker" <- representationOf s
-    [marker,values]             <- down1X s
+    [marker,values]             <- downX1 s
     DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
     -- exists i : index , i < marker. m[i] = x
     -- exists i : index . i < marker /\ m[i] = x
@@ -386,7 +386,7 @@ rule_SetIn_ExplicitVarSizeWithFlags p = runMaybeT $ do
     (x,s)                       <- match opIn p
     TypeSet{}                   <- typeOf s
     "ExplicitVarSizeWithFlags"  <- representationOf s
-    [flags,values]              <- down1X s
+    [flags,values]              <- downX1 s
     DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
     -- exists i : index , i < marker. m[i] = x
     -- exists i : index . i < marker /\ m[i] = x

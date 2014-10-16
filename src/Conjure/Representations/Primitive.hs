@@ -18,8 +18,8 @@ primitive = Representation
             DomainBool -> [DomainBool]
             DomainInt rs -> [DomainInt rs]
             _ -> []
-    , rDown_ = const $ return Nothing
-    , rDown  = const $ return Nothing
+    , rDownD = const $ return Nothing
+    , rDownC = const $ return Nothing
     , rUp    = \ ctxt (name, _) ->
         case lookup name ctxt of
             Nothing -> fail $ vcat

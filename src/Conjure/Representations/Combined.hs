@@ -1,8 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Conjure.Representations.Combined
-    ( down_, down, up
-    , down1_, down1, up1
+    ( downD, downC, up
+    , downD1, downC1, up1
     , reprOptions
     ) where
 
@@ -21,27 +21,26 @@ import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 
 
--- | refine a domain, one level.
---   the domain is allowed to be at the class level.
---   the trailing underscore signals that.
-down1_
+-- | Refine (down) a domain (D), one level (1).
+--   The domain is allowed to be at the class level.
+downD1
     :: (MonadFail m, Pretty x, ExpressionLike x)
     =>           (Name, DomainX x)
     -> m (Maybe [(Name, DomainX x)])
-down1_ (name, domain) = rDown_ (dispatch domain) (name, domain)
+downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 
--- | refine a domain, together with a constant, one level.
---   the domain has to be fully instantiated.
-down1
+-- | Refine (down) a domain, together with a constant (C), one level (1).
+--   The domain has to be fully instantiated.
+downC1
     :: MonadFail m
     =>           (Name, DomainC, Constant)
     -> m (Maybe [(Name, DomainC, Constant)])
-down1 (name, domain, constant) = rDown (dispatch domain) (name, domain, constant)
+downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, constant)
 
 
--- | translate a bunch of low level constants up, one level.
---   the high level domain (i.e. the target domain) has to be given.
---   the domain has to be fully instantiated.
+-- | Translate a bunch of low level constants up, one level.
+--   The high level domain (i.e. the target domain) has to be given.
+--   The domain has to be fully instantiated.
 up1
     :: MonadFail m
     =>   (Name, DomainC)
@@ -50,34 +49,33 @@ up1
 up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 
 
--- | refine a domain, all the way.
---   the domain is allowed to be at the class level.
---   the trailing underscore signals that.
-down_
+-- | Refine (down) a domain (D), all the way.
+--   The domain is allowed to be at the class level.
+downD
     :: (MonadFail m, Pretty x, ExpressionLike x)
     =>    (Name, DomainX x)
     -> m [(Name, DomainX x)]
-down_ inp@(_, domain) = do
-    mout <- rDown_ (dispatch domain) inp
+downD inp@(_, domain) = do
+    mout <- rDownD (dispatch domain) inp
     case mout of
         Nothing -> return [inp]
-        Just outs -> liftM concat $ mapM down_ outs
+        Just outs -> liftM concat $ mapM downD outs
 
--- | refine a domain, together with a constant, all the way.
---   the domain has to be fully instantiated.
-down
+-- | Refine (down) a domain, together with a constant (C), all the way.
+--   The domain has to be fully instantiated.
+downC
     :: MonadFail m
     =>    (Name, DomainC, Constant)
     -> m [(Name, DomainC, Constant)]
-down inp = do
-    mout <- down1 inp
+downC inp = do
+    mout <- downC1 inp
     case mout of
         Nothing -> return [inp]
-        Just outs -> liftM concat $ mapM down outs
+        Just outs -> liftM concat $ mapM downC outs
 
--- | translate a bunch of low level constants up, all the way.
---   the high level domain (i.e. the target domain) has to be given.
---   the domain has to be fully instantiated.
+-- | Translate a bunch of low level constants up, all the way.
+--   The high level domain (i.e. the target domain) has to be given.
+--   The domain has to be fully instantiated.
 up
     :: MonadFail m
     =>  [(Name, Constant)]
@@ -86,7 +84,7 @@ up
 up ctxt (name, highDomain) = do
     toDescend'
         -- :: Maybe [(Name, DomainX x)]
-        <- down1_ (name, highDomain)
+        <- downD1 (name, highDomain)
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
@@ -135,7 +133,9 @@ reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresen
 reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 
 
--- | This is here because it recursively calls the other representations via `allReprs`.
+-- | The matrix "representation rule".
+--   This rule handles the plumbing for matrices.
+--   It is in this module because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
 matrix :: MonadFail m => Representation m
 matrix = Representation chck matrixDown_ matrixDown matrixUp
@@ -146,7 +146,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
         chck _ _ = []
 
         matrixDown_ (name, DomainMatrix indexDomain innerDomain) = do
-            mres <- down1_ (name, innerDomain)
+            mres <- downD1 (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
                 Just mids -> return $ Just [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
@@ -156,7 +156,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
         matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do
             mids1
                 :: [Maybe [(Name, DomainC, Constant)]]
-                <- sequence [ down1 (name, innerDomain, c) | c <- constants ]
+                <- sequence [ downC1 (name, innerDomain, c) | c <- constants ]
             let mids2 = catMaybes mids1
             if null mids2                                       -- if all were `Nothing`s
                 then return Nothing
@@ -190,7 +190,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
 
             mid1
                 :: Maybe [(Name, DomainC)]
-                <- down1_ (name, innerDomain)
+                <- downD1 (name, innerDomain)
 
             case mid1 of
                 Nothing ->
