@@ -5,6 +5,7 @@ module Conjure.Representations.Set.Occurrence
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( valuesInIntDomain )
 import Conjure.Representations.Internal
@@ -27,7 +28,21 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
             ]
         setDown_ _ = fail "N/A {setDown_}"
 
-        structuralCons = const $ return Nothing -- TODO: enforce cardinality
+        structuralCons (name, DomainSet "Occurrence" attrs innerDomain@DomainInt{}) =
+            let
+                i = "i" :: Name
+                m = Reference (outName name) (Just (DomainMatrix (forgetRepr innerDomain) DomainBool))
+                body = Lambda (Single i TypeInt) (make opIndexing m (Reference i (Just innerDomain)))
+                cardinality = make opSum [make opMapOverDomain body (Domain (forgetRepr innerDomain))]
+            in
+                return $ case attrs of
+                    SetAttrNone             -> Nothing
+                    SetAttrSize x           -> Just [ make opEq  x cardinality ]
+                    SetAttrMinSize x        -> Just [ make opLeq x cardinality ]
+                    SetAttrMaxSize y        -> Just [ make opGeq y cardinality ]
+                    SetAttrMinMaxSize x y   -> Just [ make opLeq x cardinality
+                                                    , make opGeq y cardinality ]
+        structuralCons _ = fail "N/A {structuralCons}"
 
         setDown (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
                 innerDomainVals <- valuesInIntDomain intRanges

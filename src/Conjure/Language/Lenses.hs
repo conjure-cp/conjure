@@ -98,6 +98,63 @@ opLt _ =
     )
 
 
+opLeq
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opLeq _ =
+    ( \ x y -> injectOp (MkOpLeq (OpLeq x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpLeq (OpLeq x y) -> return (x,y)
+                _ -> fail ("N/A opLeq:" <++> pretty p)
+    )
+
+
+opGt
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opGt _ =
+    ( \ x y -> injectOp (MkOpGt (OpGt x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpGt (OpGt x y) -> return (x,y)
+                _ -> fail ("N/A opGt:" <++> pretty p)
+    )
+
+
+opGeq
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opGeq _ =
+    ( \ x y -> injectOp (MkOpGeq (OpGeq x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpGeq (OpGeq x y) -> return (x,y)
+                _ -> fail ("N/A opGeq:" <++> pretty p)
+    )
+
+
 opOr
     :: ( OperatorContainer x
        , Pretty x
@@ -133,6 +190,25 @@ opAnd _ =
             case op of
                 MkOpAnd (OpAnd xs) -> return xs
                 _ -> fail ("N/A opAnd:" <++> pretty p)
+    )
+
+
+opSum
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( [x] -> x
+       , x -> m [x]
+       )
+opSum _ =
+    ( injectOp . MkOpPlus . OpPlus
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpPlus (OpPlus xs) -> return xs
+                _ -> fail ("N/A opSum:" <++> pretty p)
     )
 
 
