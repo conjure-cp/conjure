@@ -759,7 +759,7 @@ tests = testGroup "representations"
                   , intDomain 1 4
                   , ConstantInt 2
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Main"
+                , ( "x_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix (intDomain 1 4) (intDomain 0 9)
                   , ConstantMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
                   )
@@ -796,7 +796,7 @@ tests = testGroup "representations"
                   , intDomain 1 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Main"
+                , ( "x_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithMarker" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantSet [ConstantInt 2]
@@ -811,11 +811,11 @@ tests = testGroup "representations"
                   , intDomain 1 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Main_ExplicitVarSizeWithMarker_Marker"
+                , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker"
                   , DomainMatrix   (intDomain 1 4) (intDomain 1 3)
                   , ConstantMatrix (intDomain 1 4) [ConstantInt 1,ConstantInt 2,ConstantInt 3,ConstantInt 0]
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Main_ExplicitVarSizeWithMarker_Main"
+                , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
@@ -846,7 +846,7 @@ tests = testGroup "representations"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool False,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Main"
+                , ( "x_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (intDomain 0 9)
                   , ConstantMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
                   )
@@ -883,7 +883,7 @@ tests = testGroup "representations"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Main"
+                , ( "x_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithFlags" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantSet [ConstantInt 2]
@@ -898,7 +898,7 @@ tests = testGroup "representations"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Main_ExplicitVarSizeWithFlags_Flags"
+                , ( "x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) DomainBool)
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
@@ -907,7 +907,7 @@ tests = testGroup "representations"
                       , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool False]
                       ]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Main_ExplicitVarSizeWithFlags_Main"
+                , ( "x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
@@ -981,7 +981,7 @@ tests = testGroup "representations"
                   , intDomain 1 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Main"
+                , ( "x_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantSet [ConstantInt 2]
@@ -996,7 +996,7 @@ tests = testGroup "representations"
                   , intDomain 1 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Main_Occurrence"
+                , ( "x_ExplicitVarSizeWithMarker_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantMatrix (intDomain 0 9) -- 2
@@ -1046,7 +1046,7 @@ tests = testGroup "representations"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Main"
+                , ( "x_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttrMaxSize (ConstantInt 3)) (intDomain 0 9))
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantSet [ConstantInt 2]
@@ -1061,7 +1061,7 @@ tests = testGroup "representations"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Main_Occurrence"
+                , ( "x_ExplicitVarSizeWithFlags_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
                   , ConstantMatrix (intDomain 1 4)
                       [ ConstantMatrix (intDomain 0 9) -- 2
