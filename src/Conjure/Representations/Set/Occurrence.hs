@@ -11,7 +11,7 @@ import Conjure.Representations.Internal
 
 
 setOccurrence :: MonadFail m => Representation m
-setOccurrence = Representation chck setDown_ setDown setUp
+setOccurrence = Representation chck setDown_ structuralCons setDown setUp
 
     where
 
@@ -20,15 +20,14 @@ setOccurrence = Representation chck setDown_ setDown setUp
 
         outName name = mconcat [name, "_", "Occurrence"]
 
-        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just DownDResult
-            { newDeclarations = 
-                [ ( outName name
-                  , DomainMatrix (forgetRepr innerDomain) DomainBool
-                  )
-                ]
-            , structuralCons = [] -- TODO: enforce cardinality
-            }
+        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
+            [ ( outName name
+              , DomainMatrix (forgetRepr innerDomain) DomainBool
+              )
+            ]
         setDown_ _ = fail "N/A {setDown_}"
+
+        structuralCons = const $ return Nothing -- TODO: enforce cardinality
 
         setDown (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
                 innerDomainVals <- valuesInIntDomain intRanges

@@ -15,7 +15,7 @@ import Data.Text ( pack )
 
 
 tuple :: MonadFail m => Representation m
-tuple = Representation chck tupleDown_ tupleDown tupleUp
+tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
 
     where
 
@@ -24,15 +24,14 @@ tuple = Representation chck tupleDown_ tupleDown tupleUp
 
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
-        tupleDown_ (name, DomainTuple ds) = return $ Just DownDResult
-            { newDeclarations =
-                [ (mkName name i, d)
-                | i <- [1..]
-                | d <- ds
-                ]
-            , structuralCons = []
-            }
+        tupleDown_ (name, DomainTuple ds) = return $ Just
+            [ (mkName name i, d)
+            | i <- [1..]
+            | d <- ds
+            ]
         tupleDown_ _ = fail "N/A {tupleDown_}"
+
+        structuralCons = const $ return Nothing
 
         -- TODO: check if (length ds == length cs)
         tupleDown (name, DomainTuple ds, ConstantTuple cs) = return $ Just

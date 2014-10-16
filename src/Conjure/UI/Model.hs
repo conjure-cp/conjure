@@ -218,7 +218,7 @@ addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
             mmids <- downD1 p
             case mmids of
                 Nothing -> return []
-                Just (DownDResult mids _cons) -> do
+                Just mids -> do
                     lows <- mapM mkInners mids
                     return (concat (mids:lows))
             

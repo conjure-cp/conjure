@@ -4,7 +4,6 @@ module Conjure.Representations.Combined
     ( downD, downC, up
     , downD1, downC1, up1
     , reprOptions
-    , DownDResult(..)
     ) where
 
 -- conjure
@@ -26,8 +25,8 @@ import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 --   The domain is allowed to be at the class level.
 downD1
     :: (MonadFail m, Pretty x, ExpressionLike x)
-    => (Name, DomainX x)
-    -> m (Maybe (DownDResult x))
+    =>           (Name, DomainX x)
+    -> m (Maybe [(Name, DomainX x)])
 downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 
 -- | Refine (down) a domain, together with a constant (C), one level (1).
@@ -60,7 +59,7 @@ downD inp@(_, domain) = do
     mout <- rDownD (dispatch domain) inp
     case mout of
         Nothing -> return [inp]
-        Just (DownDResult outs _cons) -> liftM concat $ mapM downD outs
+        Just outs -> liftM concat $ mapM downD outs
 
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
@@ -94,7 +93,7 @@ up ctxt (name, highDomain) = do
                     : "Bindings in context:"
                     : prettyContext ctxt
                 Just val -> return (name, val)
-        Just (DownDResult toDescend _cons) -> do
+        Just toDescend -> do
             midConstants
                  :: [(Name, Constant)]
                  <- sequence [ up ctxt (n,d) | (n,d) <- toDescend ]
@@ -139,7 +138,7 @@ reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 --   It is in this module because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
 matrix :: MonadFail m => Representation m
-matrix = Representation chck matrixDown_ matrixDown matrixUp
+matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
 
     where
 
@@ -150,11 +149,12 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
             mres <- downD1 (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
-                Just (DownDResult mids _cons) -> return $ Just DownDResult
-                    { newDeclarations = [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
-                    , structuralCons = [] -- TODO: lift those from _cons
-                    }
+                Just mids -> return $ Just
+                    [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
+
         matrixDown_ _ = fail "N/A {matrixDown_}"
+
+        structuralCons = const $ return Nothing -- TODO: lift!
 
         -- TODO: check if indices are the same
         matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do
@@ -193,7 +193,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
         matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
 
             mid1
-                :: Maybe (DownDResult Constant)
+                :: Maybe [(Name, DomainC)]
                 <- downD1 (name, innerDomain)
 
             case mid1 of
@@ -208,7 +208,7 @@ matrix = Representation chck matrixDown_ matrixDown matrixUp
                             ] ++
                             ("Bindings in context:" : prettyContext ctxt)
                         Just constant -> return (name, constant)
-                Just (DownDResult mid2 _midStructural) -> do
+                Just mid2 -> do
                     -- the inner domain needs refinement
                     -- there needs to be bindings for each name in (map fst mid2)
                     -- we find those bindings, call (up1 name inner) on them, then lift

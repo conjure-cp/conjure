@@ -10,7 +10,7 @@ import Conjure.Representations.Internal
 
 
 setExplicit :: MonadFail m => Representation m
-setExplicit = Representation chck setDown_ setDown setUp
+setExplicit = Representation chck setDown_ structuralCons setDown setUp
 
     where
 
@@ -19,16 +19,15 @@ setExplicit = Representation chck setDown_ setDown setUp
 
         outName name = mconcat [name, "_", "Explicit"]
 
-        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain) = return $ Just DownDResult
-            { newDeclarations = 
-                [ ( outName name
-                  , DomainMatrix
-                      (DomainInt [RangeBounded (fromInt 1) size])
-                      innerDomain
-                  ) ]
-            , structuralCons = [] -- TODO: enforce allDiff + sym
-            }
+        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain) = return $ Just
+            [ ( outName name
+              , DomainMatrix
+                  (DomainInt [RangeBounded (fromInt 1) size])
+                  innerDomain
+              ) ]
         setDown_ _ = fail "N/A {setDown_}"
+
+        structuralCons = const $ return Nothing -- TODO: enforce allDiff + sym
 
         setDown (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]

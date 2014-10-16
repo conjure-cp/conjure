@@ -18,9 +18,10 @@ primitive = Representation
             DomainBool -> [DomainBool]
             DomainInt rs -> [DomainInt rs]
             _ -> []
-    , rDownD = const $ return Nothing
-    , rDownC = const $ return Nothing
-    , rUp    = \ ctxt (name, _) ->
+    , rDownD      = const $ return Nothing
+    , rStructural = const $ return Nothing
+    , rDownC      = const $ return Nothing
+    , rUp         = \ ctxt (name, _) ->
         case lookup name ctxt of
             Nothing -> fail $ vcat
                 $ ("No value for:" <+> pretty name)

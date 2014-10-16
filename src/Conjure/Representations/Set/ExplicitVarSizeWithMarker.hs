@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 
 
 setExplicitVarSizeWithMarker :: MonadFail m => Representation m
-setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
+setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDown setUp
 
     where
 
@@ -31,20 +31,19 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ setDown setUp
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
-            return $ Just DownDResult
-                { newDeclarations =
-                    [ ( nameMarker name
-                      , indexDomain
-                      )
-                    , ( nameValues name
-                      , DomainMatrix (forgetRepr indexDomain) innerDomain
-                      )
-                    ]
-                , structuralCons = [] -- TODO: enforce cardinality
-                                      -- TODO: enforce strictOrdering up to marker
-                                      -- TODO: dontCare after the marker
-                }
+            return $ Just
+                [ ( nameMarker name
+                  , indexDomain
+                  )
+                , ( nameValues name
+                  , DomainMatrix (forgetRepr indexDomain) innerDomain
+                  )
+                ]
         setDown_ _ = fail "N/A {setDown_}"
+
+        structuralCons = const $ return Nothing -- TODO: enforce cardinality
+                                                -- TODO: enforce strictOrdering up to marker
+                                                -- TODO: dontCare after the marker
 
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain

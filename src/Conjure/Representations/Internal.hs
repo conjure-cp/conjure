@@ -3,7 +3,6 @@
 module Conjure.Representations.Internal
     ( Representation(..)
     , DomainX, DomainC
-    , DownDResult(..)
     ) where
 
 -- conjure
@@ -26,18 +25,13 @@ type DomainC = Domain HasRepresentation Constant
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation m = Representation
-    { rCheck :: forall x r . (Pretty x, ExpressionLike x)
-             => (Domain r x -> [Domain HasRepresentation x])        -- other checkers for inner domains
-             -> Domain r x                                          -- this domain
-             -> [Domain HasRepresentation x]                        -- with all repr options
-    , rDownD :: forall x . (Pretty x, ExpressionLike x)
-             => (Name, DomainX x)                     -> m (Maybe (DownDResult x))
-    , rDownC :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
-    , rUp    :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
+    { rCheck      :: forall x r . (Pretty x, ExpressionLike x)
+                  => (Domain r x -> [Domain HasRepresentation x])        -- other checkers for inner domains
+                  -> Domain r x                                          -- this domain
+                  -> [Domain HasRepresentation x]                        -- with all repr options
+    , rDownD      :: forall x . (Pretty x, ExpressionLike x)
+                  => (Name, DomainX x)                     -> m (Maybe [(Name, DomainX x)])
+    , rStructural :: (Name, DomainX Expression)            -> m (Maybe [Expression])
+    , rDownC      :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
+    , rUp         :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
     }
-
-data DownDResult x
-    = DownDResult { newDeclarations :: [(Name, DomainX x)]
-                  , structuralCons  :: [x]
-                  }
-
