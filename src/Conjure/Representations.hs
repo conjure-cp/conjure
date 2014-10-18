@@ -13,11 +13,12 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
+import Conjure.CState
 import Conjure.Representations.Combined
 
 
 -- | Refine (down) an expression (X), one level (1).
-downX1 :: (MonadFail m, MonadState St m) => Expression -> m [Expression]
+downX1 :: (MonadFail m, MonadState CState m) => Expression -> m [Expression]
 downX1 (Constant x) = onConstant x
 downX1 (AbstractLiteral x) = onAbstractLiteral x
 downX1 (Reference x (Just dom)) = onReference x dom
@@ -32,7 +33,7 @@ onAbstractLiteral :: MonadFail m => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
 onAbstractLiteral x = bug ("downX1.onAbstractLiteral:" <++> pretty (show x))
 
-onReference :: (MonadState St m, MonadFail m) => Name -> Domain HasRepresentation Expression -> m [Expression]
+onReference :: (MonadState CState m, MonadFail m) => Name -> Domain HasRepresentation Expression -> m [Expression]
 onReference nm domain = do
     mpairs <- runExceptT $ downD1 (nm, domain)
     case mpairs of
@@ -40,7 +41,7 @@ onReference nm domain = do
         Right Nothing -> bug ("downX1.onReference, downD1 doesn't work:" <++> pretty nm)
         Right (Just pairs) -> return [ Reference n (Just d) | (n,d) <- pairs ]
 
-onOp :: (MonadState St m, MonadFail m) => Ops Expression -> m [Expression]
+onOp :: (MonadState CState m, MonadFail m) => Ops Expression -> m [Expression]
 onOp (MkOpIndexing (OpIndexing m i)) = do
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))

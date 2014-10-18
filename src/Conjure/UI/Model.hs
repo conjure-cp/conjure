@@ -15,9 +15,10 @@ import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
+import Conjure.CState
 import Conjure.Representations
 
-import Data.Generics.Uniplate.Data ( rewriteBiM, uniplate, biplate )
+import Data.Generics.Uniplate.Data ( uniplate, biplate, universeBi, rewriteBiM )
 import Data.Generics.Str ( Str )
 import qualified Data.Text as T
 
@@ -96,17 +97,21 @@ genNextModel
     -> Model -> [ModelInfo] -> IO (Maybe Model)
 genNextModel askTheDriver printer initialEssence pastInfos = do
 
+    liftIO $ do
+        putStrLn "All expressions in the input Essence."
+        mapM_ (print . pretty) (universeBi initialEssence :: [Expression])
+
     let lets  = lettings initialEssence
     let decls = declarations initialEssence
 
     let
-        reportNode :: (MonadState St m, MonadIO m) => Expression -> m ()
+        reportNode :: (MonadState CState m, MonadIO m) => Expression -> m ()
         reportNode x = do
             gets stNbExpression >>= \ nb -> liftIO $ printer $ show $ "--" <+> pretty nb <> ":" <+> pretty (show x)
             modify $ \ st -> st { stNbExpression = 1 + stNbExpression st }
 
     let
-        f :: (MonadState St m, MonadIO m) => Expression -> m Expression
+        f :: (MonadState CState m, MonadIO m) => Expression -> m Expression
         f (Reference nm Nothing) =
             case lookup nm decls of
                 Nothing ->
@@ -183,7 +188,7 @@ genNextModel askTheDriver printer initialEssence pastInfos = do
 
 
 class ExpressionContainer a where
-    tr :: MonadState St m => (Expression -> m Expression) -> a -> m a
+    tr :: MonadState CState m => (Expression -> m Expression) -> a -> m a
 
 instance ExpressionContainer Statement where
     tr f x = do
@@ -205,7 +210,7 @@ instance ExpressionContainer [Statement] where
     tr f = mapM (tr f)
 
 
-addReprToSt :: Name -> Domain HasRepresentation Expression -> St -> St
+addReprToSt :: Name -> Domain HasRepresentation Expression -> CState -> CState
 addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
                            , stAllReprs = nub $ (nm, dom) : inners ++ stAllReprs st
                            }
@@ -222,7 +227,7 @@ addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
                     lows <- mapM mkInners mids
                     return (concat (mids:lows))
             
-addDecisionToSt :: Doc -> [Int] -> Int -> St -> St
+addDecisionToSt :: Doc -> [Int] -> Int -> CState -> CState
 addDecisionToSt doc opts selected st =
     st { stCurrInfo = addToInfo (stCurrInfo st)
        , stPastInfos = advancePastInfos (stPastInfos st)
@@ -237,7 +242,7 @@ addDecisionToSt doc opts selected st =
               , dDecision this == selected      -- only those which picked the same option are relevant.
               ]
 
-reportAscendants :: MonadState St m => m [Doc]
+reportAscendants :: MonadState CState m => m [Doc]
 reportAscendants = do
     contexts <- gets stAscendants
     return
@@ -245,14 +250,14 @@ reportAscendants = do
         | (i,c) <- zip allNats contexts
         ]
 
-alreadyExplored :: St -> [Int]
+alreadyExplored :: CState -> [Int]
 alreadyExplored st =
     [ dDecision (head trail)
     | trail <- stPastInfos st
     , not (null trail)
     ]
 
-ifNotExhausted :: MonadState St m => (a -> m a) -> a -> m a
+ifNotExhausted :: MonadState CState m => (a -> m a) -> a -> m a
 ifNotExhausted f x = do
     exhausted <- gets stExhausted
     if exhausted
@@ -288,7 +293,7 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
                       else suchThats
 
 
-updateDeclarations :: (Functor m, MonadState St m) => [Statement] -> m [Statement]
+updateDeclarations :: (Functor m, MonadState CState m) => [Statement] -> m [Statement]
 updateDeclarations statements = do
     reprs <- gets stAllReprs
     flip concatMapM statements $ \ st ->
@@ -304,7 +309,7 @@ updateDeclarations statements = do
             _ -> return [st]
 
 
-representationOf :: (MonadFail m, MonadState St m) => Expression -> m Name
+representationOf :: (MonadFail m, MonadState CState m) => Expression -> m Name
 representationOf (Reference _ Nothing) = fail "doesn't seem to have a representation"
 representationOf (Reference _ (Just d)) =
     case reprAtTopLevel d of
@@ -317,6 +322,19 @@ representationOf _ = fail "not a reference"
 firstOfRules :: Monad m => [Expression -> m (Maybe Expression)] -> Expression -> m (Maybe Expression)
 firstOfRules [] _ = return Nothing
 firstOfRules (r:rs) x = r x >>= maybe (firstOfRules rs x) (return . Just)
+
+
+allRules :: (Functor m, MonadIO m, MonadState CState m) => [Expression -> m (Maybe Expression)]
+allRules =
+    [ rule_TrueIsNoOp
+    , rule_ToIntIsNoOp
+    , rule_InlineFilterInsideMap
+    , rule_TupleIndex
+    , rule_SetIn_Explicit
+    , rule_SetIn_Occurrence
+    , rule_SetIn_ExplicitVarSizeWithMarker
+    , rule_SetIn_ExplicitVarSizeWithFlags
+    ]
 
 
 rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)
@@ -350,7 +368,7 @@ rule_InlineFilterInsideMap = return . theRule
         theRule _ = Nothing
 
 
-rule_TupleIndex :: (Functor m, MonadState St m) => Expression -> m (Maybe Expression)
+rule_TupleIndex :: (Functor m, MonadState CState m) => Expression -> m (Maybe Expression)
 rule_TupleIndex p = runMaybeT $ do
     (t,i)       <- match opIndexing p
     TypeTuple{} <- typeOf t
@@ -359,7 +377,7 @@ rule_TupleIndex p = runMaybeT $ do
     return (atNote "Tuple indexing" ts (iInt-1))
 
 
-rule_SetIn_Explicit :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_Explicit :: (Functor m, MonadState CState m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_SetIn_Explicit p = runMaybeT $ do
     (x,s)                <- match opIn p
     TypeSet{}            <- typeOf s
@@ -375,7 +393,7 @@ rule_SetIn_Explicit p = runMaybeT $ do
     return $ make opOr [make opMapOverDomain body (Domain index)]
 
 
-rule_SetIn_Occurrence :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_Occurrence :: (Functor m, MonadState CState m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_SetIn_Occurrence p = runMaybeT $ do
     (x,s)                <- match opIn p
     TypeSet{}            <- typeOf s
@@ -384,7 +402,7 @@ rule_SetIn_Occurrence p = runMaybeT $ do
     return $ make opIndexing m x
 
 
-rule_SetIn_ExplicitVarSizeWithMarker :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_ExplicitVarSizeWithMarker :: (Functor m, MonadState CState m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_SetIn_ExplicitVarSizeWithMarker p = runMaybeT $ do
     (x,s)                       <- match opIn p
     TypeSet{}                   <- typeOf s
@@ -403,7 +421,7 @@ rule_SetIn_ExplicitVarSizeWithMarker p = runMaybeT $ do
     return $ make opOr [make opMapOverDomain body (Domain index)]
 
 
-rule_SetIn_ExplicitVarSizeWithFlags :: (Functor m, MonadState St m, MonadIO m) => Expression -> m (Maybe Expression)
+rule_SetIn_ExplicitVarSizeWithFlags :: (Functor m, MonadState CState m, MonadIO m) => Expression -> m (Maybe Expression)
 rule_SetIn_ExplicitVarSizeWithFlags p = runMaybeT $ do
     (x,s)                       <- match opIn p
     TypeSet{}                   <- typeOf s
@@ -430,7 +448,7 @@ getName (Op (MkOpIndexing (OpIndexing m i))) = do
 getName _ = Nothing
 
 
-tupleIndex :: MonadState St m => Expression -> [a] -> Int -> m a
+tupleIndex :: MonadState CState m => Expression -> [a] -> Int -> m a
 tupleIndex p xs i' = do
     let i = i' - 1
     if i >= 0 && i < length xs

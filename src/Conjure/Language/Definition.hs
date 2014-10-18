@@ -31,8 +31,6 @@ module Conjure.Language.Definition
 
     , ExpressionLike(..)
 
-    , St(..)
-
     ) where
 
 -- conjure
@@ -47,7 +45,6 @@ import Conjure.Language.DomainDefn
 import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.TypeOf
-import Conjure.Language.DomainOf
 
 -- aeson
 import Data.Aeson ( (.=), (.:) )
@@ -290,11 +287,6 @@ lambdaToFunction (Single nm _) body =
 lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
 
-instance TypeOf St Expression where
-    typeOf x = do
-        st <- gets stAllReprs
-        evalStateT (typeOf x) st
-
 instance TypeOf [(Name, Domain r Expression)] Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
@@ -322,15 +314,6 @@ instance TypeOf [(Name, Domain r Expression)] a =>
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
     typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
-
-instance DomainOf St HasRepresentation Expression Expression where
-    domainOf _ (Reference _ (Just dom)) = return dom
-    domainOf _ x = bug ("domainOf{Expression}:" <+> pretty x)
-
-instance DomainOf St () Expression Expression where
-    -- domainOf _ (Reference nm Nothing) =
-    domainOf _ (Reference _ (Just dom)) = return (forgetRepr dom)
-    domainOf _ x = bug ("domainOf{Expression}:" <+> pretty x)
 
 
 data AbstractLiteral x
@@ -421,25 +404,4 @@ instance Enum Expression where
     enumFromThen x n = x : enumFromThen (x+n) n
     enumFromTo _x _y = bug "enumFromTo {Expression}"
     enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
-
-
-
-
-
-data St = St
-    { stNbExpression :: !Int
-    , stReprsSoFar :: [ ( Name                                        -- for the declaration with this name
-                        , ( Int                                       -- number of occurrences so far
-                          , [Domain HasRepresentation Expression]     -- distinct reprs so far
-                          ) ) ]
-    , stAscendants :: [Either Expression Statement]
-    , stCurrInfo :: !ModelInfo
-    , stAllReprs :: [(Name, Domain HasRepresentation Expression)]     -- repr lookup, including *ALL* levels
-    , stPastInfos :: [[Decision]]                                     -- each [Decision] is a trail of decisions
-    , stExhausted :: Bool
-    }
-    deriving Show
-
-instance Default St where
-    def = St 0 [] [] def [] [] False
 
