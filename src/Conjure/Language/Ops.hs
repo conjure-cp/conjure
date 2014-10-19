@@ -60,7 +60,7 @@ instance Hashable  x => Hashable  (Ops x)
 instance ToJSON    x => ToJSON    (Ops x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (Ops x) where parseJSON = JSON.genericParseJSON jsonOptions
 
-instance (TypeOf st x, Show x) => TypeOf st (Ops x) where
+instance (TypeOf x, Show x) => TypeOf (Ops x) where
     typeOf (MkOpPlus                x) = typeOf x
     typeOf (MkOpMinus               x) = typeOf x
     typeOf (MkOpTimes               x) = typeOf x
@@ -162,7 +162,7 @@ opPlus :: OperatorContainer x => x -> x -> x
 opPlus x y = injectOp (MkOpPlus (OpPlus [x,y]))
 instance BinaryOperator (OpPlus x) where
     opLexeme _ = L_Plus
-instance TypeOf st x => TypeOf st (OpPlus x) where
+instance TypeOf x => TypeOf (OpPlus x) where
     typeOf (OpPlus [a,b]) = intToIntToInt a b
     typeOf (OpPlus xs) = do
         tys <- mapM typeOf xs
@@ -181,7 +181,7 @@ opMinus :: OperatorContainer x => x -> x -> x
 opMinus x y = injectOp (MkOpMinus (OpMinus x y))
 instance BinaryOperator (OpMinus x) where
     opLexeme _ = L_Minus
-instance TypeOf st x => TypeOf st (OpMinus x) where
+instance TypeOf x => TypeOf (OpMinus x) where
     typeOf (OpMinus a b) = intToIntToInt a b
 
 
@@ -195,7 +195,7 @@ opTimes :: OperatorContainer x => x -> x -> x
 opTimes x y = injectOp (MkOpTimes (OpTimes x y))
 instance BinaryOperator (OpTimes x) where
     opLexeme _ = L_Times
-instance TypeOf st x => TypeOf st (OpTimes x) where
+instance TypeOf x => TypeOf (OpTimes x) where
     typeOf (OpTimes a b) = intToIntToInt a b
 
 
@@ -209,7 +209,7 @@ opDiv :: OperatorContainer x => x -> x -> x
 opDiv x y = injectOp (MkOpDiv (OpDiv x y))
 instance BinaryOperator (OpDiv x) where
     opLexeme _ = L_Div
-instance TypeOf st x => TypeOf st (OpDiv x) where
+instance TypeOf x => TypeOf (OpDiv x) where
     typeOf (OpDiv a b) = intToIntToInt a b
 
 
@@ -223,7 +223,7 @@ opMod :: OperatorContainer x => x -> x -> x
 opMod x y = injectOp (MkOpMod (OpMod x y))
 instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
-instance TypeOf st x => TypeOf st (OpMod x) where
+instance TypeOf x => TypeOf (OpMod x) where
     typeOf (OpMod a b) = intToIntToInt a b
 
 
@@ -235,7 +235,7 @@ instance ToJSON    x => ToJSON    (OpAbs x) where toJSON = JSON.genericToJSON js
 instance FromJSON  x => FromJSON  (OpAbs x) where parseJSON = JSON.genericParseJSON jsonOptions
 opAbs :: OperatorContainer x => x -> x
 opAbs x = injectOp (MkOpAbs (OpAbs x))
-instance TypeOf st x => TypeOf st (OpAbs x) where
+instance TypeOf x => TypeOf (OpAbs x) where
     typeOf (OpAbs a) = intToInt a
 
 
@@ -249,7 +249,7 @@ opEq :: OperatorContainer x => x -> x -> x
 opEq x y = injectOp (MkOpEq (OpEq x y))
 instance BinaryOperator (OpEq x) where
     opLexeme _ = L_Eq
-instance TypeOf st x => TypeOf st (OpEq x) where
+instance TypeOf x => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
 
 
@@ -263,7 +263,7 @@ opNeq :: OperatorContainer x => x -> x -> x
 opNeq x y = injectOp (MkOpNeq (OpNeq x y))
 instance BinaryOperator (OpNeq x) where
     opLexeme _ = L_Neq
-instance TypeOf st x => TypeOf st (OpNeq x) where
+instance TypeOf x => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 
 
@@ -277,7 +277,7 @@ opLt :: OperatorContainer x => x -> x -> x
 opLt x y = injectOp (MkOpLt (OpLt x y))
 instance BinaryOperator (OpLt x) where
     opLexeme _ = L_Lt
-instance TypeOf st x => TypeOf st (OpLt x) where
+instance TypeOf x => TypeOf (OpLt x) where
     typeOf (OpLt a b) = sameToSameToBool a b
 
 
@@ -291,7 +291,7 @@ opLeq :: OperatorContainer x => x -> x -> x
 opLeq x y = injectOp (MkOpLeq (OpLeq x y))
 instance BinaryOperator (OpLeq x) where
     opLexeme _ = L_Leq
-instance TypeOf st x => TypeOf st (OpLeq x) where
+instance TypeOf x => TypeOf (OpLeq x) where
     typeOf (OpLeq a b) = sameToSameToBool a b
 
 
@@ -305,7 +305,7 @@ opGt :: OperatorContainer x => x -> x -> x
 opGt x y = injectOp (MkOpGt (OpGt x y))
 instance BinaryOperator (OpGt x) where
     opLexeme _ = L_Gt
-instance TypeOf st x => TypeOf st (OpGt x) where
+instance TypeOf x => TypeOf (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
 
 
@@ -319,7 +319,7 @@ opGeq :: OperatorContainer x => x -> x -> x
 opGeq x y = injectOp (MkOpGeq (OpGeq x y))
 instance BinaryOperator (OpGeq x) where
     opLexeme _ = L_Geq
-instance TypeOf st x => TypeOf st (OpGeq x) where
+instance TypeOf x => TypeOf (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
 
 
@@ -333,7 +333,7 @@ opAnd :: OperatorContainer x => x -> x -> x
 opAnd x y = injectOp (MkOpAnd (OpAnd [x,y]))
 instance BinaryOperator (OpAnd x) where
     opLexeme _ = L_And
-instance TypeOf st x => TypeOf st (OpAnd x) where
+instance TypeOf x => TypeOf (OpAnd x) where
     typeOf (OpAnd [a,b]) = boolToBoolToBool a b
     typeOf (OpAnd xs) = do
         tys <- mapM typeOf xs
@@ -352,7 +352,7 @@ opOr :: OperatorContainer x => x -> x -> x
 opOr x y = injectOp (MkOpOr (OpOr [x,y]))
 instance BinaryOperator (OpOr x) where
     opLexeme _ = L_Or
-instance TypeOf st x => TypeOf st (OpOr x) where
+instance TypeOf x => TypeOf (OpOr x) where
     typeOf (OpOr [a,b]) = boolToBoolToBool a b
     typeOf (OpOr xs) = do
         tys <- mapM typeOf xs
@@ -367,7 +367,7 @@ instance Serialize x => Serialize (OpIndexing x)
 instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = JSON.genericParseJSON jsonOptions
-instance (TypeOf st x, Show x) => TypeOf st (OpIndexing x) where
+instance (TypeOf x, Show x) => TypeOf (OpIndexing x) where
     typeOf (OpIndexing m i) = do
         tyM <- typeOf m
         TypeInt{} <- typeOf i
@@ -387,7 +387,7 @@ instance ToJSON    x => ToJSON    (OpSlicing x) where toJSON = JSON.genericToJSO
 instance FromJSON  x => FromJSON  (OpSlicing x) where parseJSON = JSON.genericParseJSON jsonOptions
 opSlicing :: OperatorContainer x => x -> x
 opSlicing x = injectOp (MkOpSlicing (OpSlicing x))
-instance TypeOf st x => TypeOf st (OpSlicing x) where
+instance TypeOf x => TypeOf (OpSlicing x) where
     typeOf (OpSlicing _) = return TypeAny
 
 
@@ -399,7 +399,7 @@ instance ToJSON    x => ToJSON    (OpFilter x) where toJSON = JSON.genericToJSON
 instance FromJSON  x => FromJSON  (OpFilter x) where parseJSON = JSON.genericParseJSON jsonOptions
 opFilter :: OperatorContainer x => x -> x -> x
 opFilter x y = injectOp (MkOpFilter (OpFilter x y))
-instance TypeOf st x => TypeOf st (OpFilter x) where
+instance TypeOf x => TypeOf (OpFilter x) where
     typeOf (OpFilter _ _) = return TypeAny
 
 
@@ -411,7 +411,7 @@ instance ToJSON    x => ToJSON    (OpMapOverDomain x) where toJSON = JSON.generi
 instance FromJSON  x => FromJSON  (OpMapOverDomain x) where parseJSON = JSON.genericParseJSON jsonOptions
 opMapOverDomain :: OperatorContainer x => x -> x -> x
 opMapOverDomain x y = injectOp (MkOpMapOverDomain (OpMapOverDomain x y))
-instance TypeOf st x => TypeOf st (OpMapOverDomain x) where
+instance TypeOf x => TypeOf (OpMapOverDomain x) where
     typeOf (OpMapOverDomain _ _) = return TypeAny
 
 
@@ -423,7 +423,7 @@ instance ToJSON    x => ToJSON    (OpMapInExpr x) where toJSON = JSON.genericToJ
 instance FromJSON  x => FromJSON  (OpMapInExpr x) where parseJSON = JSON.genericParseJSON jsonOptions
 opMapInExpr :: OperatorContainer x => x -> x -> x
 opMapInExpr x y = injectOp (MkOpMapInExpr (OpMapInExpr x y))
-instance TypeOf st x => TypeOf st (OpMapInExpr x) where
+instance TypeOf x => TypeOf (OpMapInExpr x) where
     typeOf (OpMapInExpr _ _) = return TypeAny
 
 
@@ -435,7 +435,7 @@ instance ToJSON    x => ToJSON    (OpMapSubsetExpr x) where toJSON = JSON.generi
 instance FromJSON  x => FromJSON  (OpMapSubsetExpr x) where parseJSON = JSON.genericParseJSON jsonOptions
 opMapSubsetExpr :: OperatorContainer x => x -> x -> x
 opMapSubsetExpr x y = injectOp (MkOpMapSubsetExpr (OpMapSubsetExpr x y))
-instance TypeOf st x => TypeOf st (OpMapSubsetExpr x) where
+instance TypeOf x => TypeOf (OpMapSubsetExpr x) where
     typeOf (OpMapSubsetExpr _ _) = return TypeAny
 
 
@@ -447,7 +447,7 @@ instance ToJSON    x => ToJSON    (OpMapSubsetEqExpr x) where toJSON = JSON.gene
 instance FromJSON  x => FromJSON  (OpMapSubsetEqExpr x) where parseJSON = JSON.genericParseJSON jsonOptions
 opMapSubsetEqExpr :: OperatorContainer x => x -> x -> x
 opMapSubsetEqExpr x y = injectOp (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x y))
-instance TypeOf st x => TypeOf st (OpMapSubsetEqExpr x) where
+instance TypeOf x => TypeOf (OpMapSubsetEqExpr x) where
     typeOf (OpMapSubsetEqExpr _ _) = return TypeAny
 
 
@@ -459,7 +459,7 @@ instance ToJSON    x => ToJSON    (OpFunctionImage x) where toJSON = JSON.generi
 instance FromJSON  x => FromJSON  (OpFunctionImage x) where parseJSON = JSON.genericParseJSON jsonOptions
 opFunctionImage :: OperatorContainer x => x -> [x] -> x
 opFunctionImage x y = injectOp (MkOpFunctionImage (OpFunctionImage x y))
-instance TypeOf st x => TypeOf st (OpFunctionImage x) where
+instance TypeOf x => TypeOf (OpFunctionImage x) where
     typeOf (OpFunctionImage _ _) = return TypeAny
 
 
@@ -471,7 +471,7 @@ instance ToJSON    x => ToJSON    (OpTrue x) where toJSON = JSON.genericToJSON j
 instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = JSON.genericParseJSON jsonOptions
 opTrue :: OperatorContainer x => [x] -> x
 opTrue xs = injectOp (MkOpTrue (OpTrue xs))
-instance TypeOf st x => TypeOf st (OpTrue x) where
+instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 
 
@@ -483,7 +483,7 @@ instance ToJSON    x => ToJSON    (OpToInt x) where toJSON = JSON.genericToJSON 
 instance FromJSON  x => FromJSON  (OpToInt x) where parseJSON = JSON.genericParseJSON jsonOptions
 opToInt :: OperatorContainer x => x -> x
 opToInt x = injectOp (MkOpToInt (OpToInt x))
-instance TypeOf st x => TypeOf st (OpToInt x) where
+instance TypeOf x => TypeOf (OpToInt x) where
     typeOf (OpToInt x) = do
         TypeBool{} <- typeOf x
         return TypeInt
@@ -499,7 +499,7 @@ opIn :: OperatorContainer x => x -> x -> x
 opIn x y = injectOp (MkOpIn (OpIn x y))
 instance BinaryOperator (OpIn x) where
     opLexeme _ = L_in
-instance TypeOf st x => TypeOf st (OpIn x) where
+instance TypeOf x => TypeOf (OpIn x) where
     typeOf (OpIn a b) = do
         tyA <- typeOf a
         TypeSet tyB <- typeOf b
@@ -508,24 +508,24 @@ instance TypeOf st x => TypeOf st (OpIn x) where
             else userErr "Type error"
 
 
-intToInt :: (Applicative m, MonadState st m, TypeOf st a) => a -> m Type
+intToInt :: (MonadFail m, TypeOf a) => a -> m Type
 intToInt a = do
     TypeInt{} <- typeOf a
     return TypeInt
 
-intToIntToInt :: (Applicative m, MonadState st m, TypeOf st a) => a -> a -> m Type
+intToIntToInt :: (MonadFail m, TypeOf a) => a -> a -> m Type
 intToIntToInt a b = do
     TypeInt{} <- typeOf a
     TypeInt{} <- typeOf b
     return TypeInt
 
-boolToBoolToBool :: (Applicative m, MonadState st m, TypeOf st a) => a -> a -> m Type
+boolToBoolToBool :: (MonadFail m, TypeOf a) => a -> a -> m Type
 boolToBoolToBool a b = do
     TypeBool{} <- typeOf a
     TypeBool{} <- typeOf b
     return TypeBool
 
-sameToSameToBool :: (Applicative m, MonadState st m, TypeOf st a) => a -> a -> m Type
+sameToSameToBool :: (MonadFail m, TypeOf a) => a -> a -> m Type
 sameToSameToBool a b = do
     tyA <- typeOf a
     tyB <- typeOf b

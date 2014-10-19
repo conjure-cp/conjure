@@ -24,6 +24,7 @@ bug message = error $ unlines
 
 -- call this function instead of "error"
 -- in case of a user error.
+-- TODO: use fail
 userErr :: Doc -> a
 userErr = error . renderNormal
 

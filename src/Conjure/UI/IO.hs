@@ -6,6 +6,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
+import Conjure.Language.NameResolution
 import Language.E.Definition
 
 -- aeson
@@ -22,23 +23,23 @@ import qualified Data.ByteString.Lazy as BS
 readModelFromFile :: FilePath -> IO Model
 readModelFromFile fp = do
     pair <- pairWithContents fp
-    return (readModel pair)
+    readModel pair
 
 readModelFromStdIn :: IO Model
 readModelFromStdIn = do
     stdin <- getContents
-    return (readModel ("<stdin>", T.pack stdin))
+    readModel ("<stdin>", T.pack stdin)
 
 readModelPreambleFromFile :: FilePath -> IO Model
 readModelPreambleFromFile fp = do
     pair <- pairWithContents fp
-    return (readModelPreamble pair)
+    readModelPreamble pair
 
-readModel :: (FilePath, Text) -> Model
+readModel :: MonadFail m => (FilePath, Text) -> m Model
 readModel (fp, con) =
     case runLexerAndParser parseModel fp con of
         Left  e -> userErr e
-        Right x ->
+        Right x -> resolveNames $
             let
                 infoBlock = con
                     |> T.lines
@@ -55,11 +56,11 @@ readModel (fp, con) =
                 Just i  -> x { mInfo = i }
 
 
-readModelPreamble :: (FilePath, Text) -> Model
+readModelPreamble :: MonadFail m => (FilePath, Text) -> m Model
 readModelPreamble (fp,con) =
     case runLexerAndParser parseModel fp (onlyPreamble con) of
         Left  e -> userErr e
-        Right x -> x
+        Right x -> return x
     where
         stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
         discardAfter t = fst . T.breakOn t

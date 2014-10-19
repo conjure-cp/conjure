@@ -168,8 +168,8 @@ checkExpected expected generated = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir essence = outputAllModels pickFirst (const $ return ())
-                                       dir 1 (initialise essence)
+modelAll dir essence = outputOneModel pickFirst (const $ return ())
+                                      dir 1 essence
 
 
 dropExtension :: FilePath -> FilePath

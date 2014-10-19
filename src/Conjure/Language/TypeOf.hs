@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Conjure.Language.TypeOf where
 
 -- conjure
@@ -8,8 +6,8 @@ import Conjure.Bug
 import Conjure.Language.Type
 
 
-class TypeOf st a where
-    typeOf :: (Functor m, Applicative m, MonadState st m) => a -> m Type
+class TypeOf a where
+    typeOf :: MonadFail m => a -> m Type
 
 homoType :: [Type] -> Type
 homoType [] = userErr "empty collection, what's the type?"

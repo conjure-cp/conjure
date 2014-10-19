@@ -6,7 +6,7 @@ module Conjure.Language.Definition
     , languageEprime
     , typeCheckModelIO, typeCheckModel
 
-    , lambdaToFunction
+    , mkLambda, lambdaToFunction
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
@@ -14,7 +14,7 @@ module Conjure.Language.Definition
     , Declaration(..), FindOrGiven(..)
 
     , Name(..)
-    , Expression(..)
+    , Expression(..), ReferenceTo(..)
     , Constant(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
@@ -245,7 +245,7 @@ data Expression
     = Constant Constant
     | AbstractLiteral (AbstractLiteral Expression)
     | Domain (Domain () Expression)
-    | Reference Name (Maybe (Domain HasRepresentation Expression))
+    | Reference Name (Maybe ReferenceTo)
     | WithLocals Expression [Statement]
     | Op (Ops Expression)
     | Lambda AbstractPattern Expression
@@ -260,6 +260,7 @@ instance Pretty Expression where
     pretty (Constant x) = pretty x
     pretty (AbstractLiteral x) = pretty x
     pretty (Domain x) = "`" <> pretty x <> "`"
+    pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
     pretty (Reference x _) = pretty x
     pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
     pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])
@@ -270,6 +271,11 @@ instance OperatorContainer Expression where
     projectOp (Op op) = return op
     projectOp x = fail ("not an op: " <++> pretty (show x))
 
+mkLambda :: Name -> Type -> (Expression -> Expression) -> Expression
+mkLambda nm ty f =
+    let pat = Single nm ty
+        ref = Reference nm (Just (InLambda pat))
+    in  Lambda pat (f ref)
 
 -- TODO: Add support for AbsPatTuple
 -- TODO: Add support for AbsPatMatrix
@@ -287,21 +293,38 @@ lambdaToFunction (Single nm _) body =
 lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
 
-instance TypeOf [(Name, Domain r Expression)] Expression where
+data ReferenceTo
+    = Alias         Expression
+    | InLambda      AbstractPattern
+    | DeclNoRepr    FindOrGiven Name (Domain () Expression)
+    | DeclHasRepr   FindOrGiven Name (Domain HasRepresentation Expression)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize ReferenceTo
+instance Hashable ReferenceTo
+instance ToJSON ReferenceTo where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON ReferenceTo where parseJSON = JSON.genericParseJSON jsonOptions
+
+instance Pretty ReferenceTo where
+    pretty = pretty . show
+
+
+instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
     typeOf (Domain x)   = typeOf x
-    typeOf (Reference nm _) = do
-        mdom <- gets (lookup nm)
-        case mdom of
-             Nothing -> bug ("Type error:" <+> pretty nm)
-             Just dom -> typeOf dom
+    typeOf (Reference nm Nothing) = bug ("Type error, identifier not bound:" <+> pretty nm)
+    typeOf (Reference nm (Just refTo)) = do
+        case refTo of
+            Alias x -> typeOf x
+            InLambda{} -> bug ("Type error, InLambda:" <+> pretty nm)
+            DeclNoRepr _ _ dom -> typeOf dom
+            DeclHasRepr _ _ dom -> typeOf dom
     typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
     typeOf (Op op) = typeOf op
     typeOf Lambda{}     = return TypeAny -- TODO: fix
 
-instance TypeOf [(Name, Domain r Expression)] a =>
-         TypeOf [(Name, Domain r Expression)] (AbstractLiteral a) where
+instance TypeOf a => TypeOf (AbstractLiteral a) where
     typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
     typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
     typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)

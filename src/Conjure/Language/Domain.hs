@@ -60,7 +60,7 @@ instance (Arbitrary r, Arbitrary x) => Arbitrary (Domain r x) where
     shrink (DomainInt rs) = [DomainInt (init rs)]
     shrink _ = []
 
-instance TypeOf st (Domain r x) where
+instance TypeOf (Domain r x) where
     typeOf DomainBool                = return TypeBool
     typeOf DomainInt{}               = return TypeInt
     typeOf (DomainEnum    defn _   ) = return (TypeEnum defn)

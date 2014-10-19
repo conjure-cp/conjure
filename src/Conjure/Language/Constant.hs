@@ -47,7 +47,7 @@ instance Arbitrary Constant where
         , ConstantInt <$> arbitrary
         ]
 
-instance TypeOf st Constant where
+instance TypeOf Constant where
     typeOf ConstantBool{}            = return TypeBool
     typeOf ConstantInt{}             = return TypeInt
     typeOf (ConstantEnum defn _    ) = return (TypeEnum defn)

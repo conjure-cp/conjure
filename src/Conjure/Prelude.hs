@@ -28,6 +28,7 @@ module Conjure.Prelude
     , jsonOptions
     , Proxy(..)
     , MonadFail(..)
+    , allContexts
     ) where
 
 import GHC.Err as X ( error )
@@ -97,7 +98,7 @@ import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
 
 -- safe
-import Safe as X ( at, atNote, readMay, headNote )
+import Safe as X ( at, atNote, readMay, headNote, fromJustNote )
 
 -- hashable
 import Data.Hashable as X ( Hashable(..), hash )
@@ -123,6 +124,11 @@ import Text.PrettyPrint as X
     , hang, nest, punctuate 
     , hcat, vcat, fsep, hsep, sep
     )
+
+-- uniplate
+import Data.Generics.Uniplate.Data as X ( transformM )
+import Data.Generics.Uniplate.Zipper ( Zipper, down, right )
+
 
 import System.Random as X ( StdGen, getStdGen, randomR )
 
@@ -292,6 +298,9 @@ instance MonadFail Identity where
 instance MonadFail Maybe where
     fail = const Nothing
 
+instance MonadFail IO where
+    fail = error . show
+
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left
 
@@ -309,3 +318,15 @@ instance MonadFail Gen where
 
 instance MonadFail (ParsecT g l m) where
     fail = Control.Monad.fail . show
+
+
+allContexts :: Data b => Zipper a b -> [Zipper a b]
+allContexts z0 = concatMap subtreeOf (allSiblings z0)
+    where
+        -- the input has to be the left most
+        allSiblings :: Zipper a b -> [Zipper a b]
+        allSiblings z = z : maybe [] allSiblings (right z)
+
+        subtreeOf :: Data b => Zipper a b -> [Zipper a b]
+        subtreeOf z = z : maybe [] allContexts (down z)
+

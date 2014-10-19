@@ -2,7 +2,7 @@ module Main where
 
 import Conjure.Prelude
 import Conjure.UI.IO ( readModelFromFile )
-import Conjure.UI.Model ( initialise, outputAllModels, interactive )
+import Conjure.UI.Model ( outputOneModel, interactive )
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Pretty ( renderWide )
 
@@ -18,8 +18,8 @@ main = do
     essence <- readModelFromFile essencePath
     putStrLn $ renderWide essence
     putStrLn $ renderWide $ modelInfo essence
-    outputAllModels interactive putStrLn
-                    "conjure-output" 1 (initialise essence)
+    outputOneModel interactive putStrLn
+                   "conjure-output" 1 essence
 
 
 

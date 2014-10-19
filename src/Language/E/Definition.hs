@@ -20,7 +20,7 @@ module Language.E.Definition
 
     , universe, children
     , descend, descendM
-    , transform, transformM
+    , transform
     , rewrite, rewriteM
     , replace, replaceAll, gdepth
 
@@ -59,7 +59,7 @@ import Data.Aeson ( (.=) )
 import qualified Data.Aeson as JSON
 
 -- uniplate
-import Data.Generics.Uniplate.Data ( Uniplate, universe, children, descend, descendM, transform, transformM, rewrite, rewriteM )
+import Data.Generics.Uniplate.Data ( Uniplate, universe, children, descend, descendM, transform, rewrite, rewriteM )
 
 -- template-haskell
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )

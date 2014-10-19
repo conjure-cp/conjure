@@ -30,9 +30,14 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
 
         structuralCons (name, DomainSet "Occurrence" attrs innerDomain@DomainInt{}) =
             let
+                m = Reference (outName name)
+                              (Just (DeclHasRepr
+                                          Find
+                                          (outName name)
+                                          (DomainMatrix (forgetRepr innerDomain) DomainBool)))
                 i = "i" :: Name
-                m = Reference (outName name) (Just (DomainMatrix (forgetRepr innerDomain) DomainBool))
-                body = Lambda (Single i TypeInt) (make opIndexing m (Reference i (Just innerDomain)))
+                pat = Single i TypeInt
+                body = make opIndexing m (Reference i (Just (InLambda pat)))
                 cardinality = make opSum [make opMapOverDomain body (Domain (forgetRepr innerDomain))]
             in
                 return $ case attrs of
