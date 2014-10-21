@@ -18,13 +18,10 @@ import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
-import Conjure.Language.ModelStats ( givens, finds, declarations, lettings )
 import Conjure.CState
 import Conjure.Representations
 
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
--- import Data.Generics.Uniplate.Data ( uniplate, biplate, rewriteBiM )
--- import Data.Generics.Str ( Str )
 import qualified Data.Text as T
 
 
@@ -86,7 +83,7 @@ toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
 toCompletion driver model = do
     qs <- remaining model
     if null qs
-        then model |> oneSuchThat |> return
+        then model |> oneSuchThat |> languageEprime |> return
         else do
             nextModel <- driver qs
             toCompletion driver nextModel
@@ -127,7 +124,8 @@ interactive questions = liftIO $ do
     let pickedQ = questions `at` (pickedQIndex - 1)
 
     forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) -> do
-        print (nest 4 $ "Answer" <+> pretty nA <> ":" <+> pretty (aAnswer a))
+        print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
+                                                                , pretty (aAnswer a) ]
         -- print (nest 8 $ pretty (aFullModel a))
     putStr "Pick answer: "
     pickedAIndex <- readNote "Expecting an integer." <$> getLine
