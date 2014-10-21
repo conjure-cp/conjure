@@ -115,11 +115,12 @@ interactive questions = liftIO $ do
 
     forM_ (zip allNats questions) $ \ (nQ,q) -> do
         print ("Question" <+> pretty nQ <> ":" <+> pretty (qHole q))
-        print $ nest 4 $ vcat
-            [ "Context #" <> pretty i <> ":" <+> pretty c
-            | i <- allNats
-            | c <- qAscendants q
-            ]
+        unless (null (qAscendants q)) $
+            print $ nest 4 $ vcat
+                [ "Context #" <> pretty i <> ":" <+> pretty c
+                | i <- allNats
+                | c <- qAscendants q
+                ]
         
     putStr "Pick question: "
     pickedQIndex <- readNote "Expecting an integer." <$> getLine
