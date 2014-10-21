@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE TupleSections #-}
 
 module Conjure.UI.Model
     ( outputOneModel
@@ -27,9 +29,36 @@ import qualified Data.Text as T
 
 
 
-type Question = (Expression, [Answer])
-type Answer = (Expression, Model)
+data Question = Question
+    { qHole       :: Expression
+    , qAscendants :: [Expression]
+    , qAnswers    :: [Answer]
+    }
+
+data Answer = Answer
+    { aText      :: Doc
+    , aAnswer    :: Expression
+    , aFullModel :: Model
+    }
+
 type Driver = (forall m . (MonadIO m, MonadFail m) => [Question] -> m Model)
+
+type RuleResult = ( Doc           -- describe this transformation
+                  , Expression    -- the result
+                  )
+data Rule = Rule
+    { rName  :: Doc
+    , rApply :: forall m . (Functor m, MonadIO m) => Expression -> m [RuleResult]
+    }
+
+namedRule
+    :: Doc
+    -> (forall m . (Functor m, MonadIO m) => Expression -> m (Maybe RuleResult))
+    -> Rule
+namedRule nm f = Rule
+    { rName = nm
+    , rApply = \ x -> liftM maybeToList (f x)
+    } 
 
 
 remaining :: (Functor m, Applicative m, MonadIO m) => Model -> m [Question]
@@ -39,11 +68,18 @@ remaining model = do
         ys <- applicableRules (hole x)
         return $ if null ys
             then Nothing
-            else Just ( hole x
-                      , [ (y, fromZipper (replaceHole y x))
-                        | y <- ys
+            else Just Question
+                     { qHole = hole x
+                     , qAscendants = tail (ascendants x)
+                     , qAnswers =
+                         [ Answer
+                             { aText = ruleName <> ":" <+> ruleText
+                             , aAnswer = ruleResult
+                             , aFullModel = fromZipper (replaceHole ruleResult x)
+                             }
+                        | (ruleName, (ruleText, ruleResult)) <- ys
                         ]
-                      )
+                     }
 
 
 toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
@@ -67,27 +103,39 @@ outputOneModel driver dir i essence = do
 pickFirst :: MonadFail m => [Question] -> m Model
 pickFirst [] = fail "pickFirst: No questions!"
 pickFirst (question:_) =
-    case snd question of
+    case qAnswers question of
         [] -> fail "pickFirst: No answers!"
-        (answer:_) -> return (snd answer)
+        (answer:_) -> return (aFullModel answer)
 
 
 interactive :: MonadIO m => [Question] -> m Model
 interactive questions = liftIO $ do
     putStrLn ""
     putStrLn " ----------------------------------------"
-    forM_ (zip allNats questions) $ \ (nQ,(q,as)) -> do
-        print ("Question" <+> pretty nQ <> ":" <+> pretty q)
-        forM_ (zip allNats as) $ \ (nA,a) -> do
-            print (nest 4 $ "Answer" <+> pretty nA <> ":" <+> pretty (fst a))
-            print (nest 8 $ pretty (snd a))
+
+    forM_ (zip allNats questions) $ \ (nQ,q) -> do
+        print ("Question" <+> pretty nQ <> ":" <+> pretty (qHole q))
+        print $ nest 4 $ vcat
+            [ "Context #" <> pretty i <> ":" <+> pretty c
+            | i <- allNats
+            | c <- qAscendants q
+            ]
+        
     putStr "Pick question: "
-    pickedQ <- readNote "Expecting an integer." <$> getLine
+    pickedQIndex <- readNote "Expecting an integer." <$> getLine
+    let pickedQ = questions `at` (pickedQIndex - 1)
+
+    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) -> do
+        print (nest 4 $ "Answer" <+> pretty nA <> ":" <+> pretty (aAnswer a))
+        -- print (nest 8 $ pretty (aFullModel a))
     putStr "Pick answer: "
-    pickedA <- readNote "Expecting an integer." <$> getLine
-    return $ snd (at (snd (at questions
-                              (pickedQ-1)))
-                     (pickedA-1))
+    pickedAIndex <- readNote "Expecting an integer." <$> getLine
+    let pickedA = (qAnswers pickedQ) `at` (pickedAIndex - 1)
+
+    let pickedModel = aFullModel pickedA
+    putStrLn "Current model:"
+    print $ nest 8 $ pretty pickedModel
+    return pickedModel
 
 
 addReprToSt :: Name -> Domain HasRepresentation Expression -> CState -> CState
@@ -114,13 +162,9 @@ addDecisionToSt doc opts selected st =
     where addToInfo i = i { miTrail = miTrail i ++ [dec] }
           dec = Decision (doc |> renderWide |> stringToText |> T.lines) opts selected
 
-reportAscendants :: Zipper a Expression -> [Doc]
-reportAscendants = rep 1 . Just
-    where
-        rep :: Int -> Maybe (Zipper a Expression) -> [Doc]
-        rep _ Nothing  = []
-        rep i (Just z) = ("Context #" <> pretty i <> ":" <+> pretty (hole z))
-                       : rep (i+1) (Zipper.up z)
+ascendants :: Zipper a b -> [b]
+ascendants z = hole z : maybe [] ascendants (Zipper.up z)
+
 
 
 -- | For every parameter and decision variable add a true-constraint.
@@ -181,51 +225,60 @@ representationOf (Reference _ (Just refTo)) =
 representationOf _ = fail "not a reference"
 
 
-applicableRules :: (Applicative m, MonadIO m) => Expression -> m [Expression]
-applicableRules x = concat <$> sequence [ r x | r <- allRules ]
+applicableRules :: (Applicative m, MonadIO m) => Expression -> m [(Doc, RuleResult)]
+applicableRules x = concat <$> sequence [ do res <- rApply r x
+                                             return (map (rName r,) res)
+                                        | r <- allRules ]
 
 
-allRules :: (Functor m, MonadIO m) => [Expression -> m [Expression]]
+allRules :: [Rule]
 allRules =
     [ rule_ChooseRepr
-    , liftM maybeToList . rule_TrueIsNoOp
-    , liftM maybeToList . rule_ToIntIsNoOp
-    , liftM maybeToList . rule_InlineFilterInsideMap
-    , liftM maybeToList . rule_TupleIndex
-    , liftM maybeToList . rule_SetIn_Explicit
-    , liftM maybeToList . rule_SetIn_Occurrence
-    , liftM maybeToList . rule_SetIn_ExplicitVarSizeWithMarker
-    , liftM maybeToList . rule_SetIn_ExplicitVarSizeWithFlags
+    , rule_TrueIsNoOp
+    , rule_ToIntIsNoOp
+    , rule_InlineFilterInsideMap
+    , rule_TupleIndex
+    , rule_SetIn_Explicit
+    , rule_SetIn_Occurrence
+    , rule_SetIn_ExplicitVarSizeWithMarker
+    , rule_SetIn_ExplicitVarSizeWithFlags
     ]
 
 
-rule_ChooseRepr :: Monad m => Expression -> m [Expression]
-rule_ChooseRepr (Reference nm (Just (DeclNoRepr ty _ inpDom))) = do
-    let domOpts = reprOptions inpDom
-    when (null domOpts) $
-        bug $ "No representation matches this beast:" <++> pretty inpDom
-    return [ Reference nm (Just (DeclHasRepr ty nm dom))
-           | dom <- domOpts
-           ]
-rule_ChooseRepr _ = return []
+rule_ChooseRepr :: Rule
+rule_ChooseRepr = Rule "choose-repr" theRule where
+    theRule (Reference nm (Just (DeclNoRepr ty _ inpDom))) = do
+        let domOpts = reprOptions inpDom
+        when (null domOpts) $
+            bug $ "No representation matches this beast:" <++> pretty inpDom
+        return [ (msg, out)
+               | dom <- domOpts
+               , let msg = "Selecting representation for" <+> pretty nm <> ":" <+> pretty dom
+               , let out = Reference nm (Just (DeclHasRepr ty nm dom))
+               ]
+    theRule _ = return []
 
 
-rule_TrueIsNoOp :: Monad m => Expression -> m (Maybe Expression)
-rule_TrueIsNoOp = return . theRule
+rule_TrueIsNoOp :: Rule
+rule_TrueIsNoOp = "true-is-noop" `namedRule` (return . theRule)
     where
-        theRule (Op (MkOpTrue (OpTrue _))) = Just $ Constant $ ConstantBool True
+        theRule (Op (MkOpTrue (OpTrue _))) = Just ( "Remove the argument from true."
+                                                  , Constant $ ConstantBool True
+                                                  )
         theRule _ = Nothing
 
 
-rule_ToIntIsNoOp :: Monad m => Expression -> m (Maybe Expression)
-rule_ToIntIsNoOp = return . theRule
+rule_ToIntIsNoOp :: Rule
+rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` (return . theRule)
     where
-        theRule (Op (MkOpToInt (OpToInt b))) = Just b
+        theRule (Op (MkOpToInt (OpToInt b))) = Just ( "Remove the toInt wrapper, it is implicit in SR."
+                                                    , b
+                                                    )
         theRule _ = Nothing
 
 
-rule_InlineFilterInsideMap :: Monad m => Expression -> m (Maybe Expression)
-rule_InlineFilterInsideMap = return . theRule
+rule_InlineFilterInsideMap :: Rule
+rule_InlineFilterInsideMap = "inline-filter-inside-map" `namedRule` (return . theRule)
     where
         theRule (Op (MkOpMapOverDomain (OpMapOverDomain
                         (Lambda vBody body)
@@ -237,75 +290,92 @@ rule_InlineFilterInsideMap = return . theRule
                 fBody   = lambdaToFunction vBody  body
                 newBody = Lambda vBody (Op $ MkOpAnd $ OpAnd [fGuard vBody, fBody vBody])
             in
-                Just $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
+                Just ( "Inlining the filter."
+                     , Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
+                     )
         theRule _ = Nothing
 
 
-rule_TupleIndex :: (Functor m, Monad m) => Expression -> m (Maybe Expression)
-rule_TupleIndex p = runMaybeT $ do
-    (t,i)       <- match opIndexing p
-    TypeTuple{} <- typeOf t
-    iInt        <- match constantInt i
-    ts          <- downX1 t
-    return (atNote "Tuple indexing" ts (iInt-1))
+rule_TupleIndex :: Rule
+rule_TupleIndex = "tuple-index" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (t,i)       <- match opIndexing p
+        TypeTuple{} <- typeOf t
+        iInt        <- match constantInt i
+        ts          <- downX1 t
+        return ( "Tuple indexing on:" <+> pretty p
+               , atNote "Tuple indexing" ts (iInt-1)
+               )
 
 
-rule_SetIn_Explicit :: (Functor m, MonadIO m) => Expression -> m (Maybe Expression)
-rule_SetIn_Explicit p = runMaybeT $ do
-    (x,s)                <- match opIn p
-    TypeSet{}            <- typeOf s
-    "Explicit"           <- representationOf s
-    [m]                  <- downX1 s
-    DomainMatrix index _ <- domainOf (Proxy :: Proxy ()) m
-    -- exists i : index . m[i] = x
-    -- or([ m[i] = x | i : index ])
-    -- or(map_domain(i --> m[i]))
-    let body = mkLambda "i" TypeInt $ \ i ->
-                    make opEq (make opIndexing m i) x
-    return $ make opOr [make opMapOverDomain body (Domain index)]
+rule_SetIn_Explicit :: Rule
+rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,s)                <- match opIn p
+        TypeSet{}            <- typeOf s
+        "Explicit"           <- representationOf s
+        [m]                  <- downX1 s
+        DomainMatrix index _ <- domainOf (Proxy :: Proxy ()) m
+        -- exists i : index . m[i] = x
+        -- or([ m[i] = x | i : index ])
+        -- or(map_domain(i --> m[i]))
+        let body = mkLambda "i" TypeInt $ \ i ->
+                        make opEq (make opIndexing m i) x
+        return ( "Vertical rule for set-in, Explicit representation."
+               , make opOr [make opMapOverDomain body (Domain index)]
+               )
 
 
-rule_SetIn_Occurrence :: (Functor m, MonadIO m) => Expression -> m (Maybe Expression)
-rule_SetIn_Occurrence p = runMaybeT $ do
-    (x,s)                <- match opIn p
-    TypeSet{}            <- typeOf s
-    "Occurrence"         <- representationOf s
-    [m]                  <- downX1 s
-    return $ make opIndexing m x
+rule_SetIn_Occurrence :: Rule
+rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,s)                <- match opIn p
+        TypeSet{}            <- typeOf s
+        "Occurrence"         <- representationOf s
+        [m]                  <- downX1 s
+        return ( "Vertical rule for set-in, Occurrence representation"
+               , make opIndexing m x
+               )
 
 
-rule_SetIn_ExplicitVarSizeWithMarker :: (Functor m, MonadIO m) => Expression -> m (Maybe Expression)
-rule_SetIn_ExplicitVarSizeWithMarker p = runMaybeT $ do
-    (x,s)                       <- match opIn p
-    TypeSet{}                   <- typeOf s
-    "ExplicitVarSizeWithMarker" <- representationOf s
-    [marker,values]             <- downX1 s
-    DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
-    -- exists i : index , i < marker. m[i] = x
-    -- exists i : index . i < marker /\ m[i] = x
-    -- or([ i < marker /\ m[i] = x | i : index ])
-    -- or(map_domain(i --> i < marker /\ m[i] = x))
-    let body = mkLambda "i" TypeInt $ \ i ->
-                make opAnd [ make opEq (make opIndexing values i) x
-                           , make opLt i marker
-                           ]
-    return $ make opOr [make opMapOverDomain body (Domain index)]
+rule_SetIn_ExplicitVarSizeWithMarker :: Rule
+rule_SetIn_ExplicitVarSizeWithMarker = "set-in{ExplicitVarSizeWithMarker}" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,s)                       <- match opIn p
+        TypeSet{}                   <- typeOf s
+        "ExplicitVarSizeWithMarker" <- representationOf s
+        [marker,values]             <- downX1 s
+        DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
+        -- exists i : index , i < marker. m[i] = x
+        -- exists i : index . i < marker /\ m[i] = x
+        -- or([ i < marker /\ m[i] = x | i : index ])
+        -- or(map_domain(i --> i < marker /\ m[i] = x))
+        let body = mkLambda "i" TypeInt $ \ i ->
+                    make opAnd [ make opEq (make opIndexing values i) x
+                               , make opLt i marker
+                               ]
+        return ( "Vertical rule for set-in, ExplicitVarSizeWithMarker representation"
+               , make opOr [make opMapOverDomain body (Domain index)]
+               )
 
 
-rule_SetIn_ExplicitVarSizeWithFlags :: (Functor m, MonadIO m) => Expression -> m (Maybe Expression)
-rule_SetIn_ExplicitVarSizeWithFlags p = runMaybeT $ do
-    (x,s)                       <- match opIn p
-    TypeSet{}                   <- typeOf s
-    "ExplicitVarSizeWithFlags"  <- representationOf s
-    [flags,values]              <- downX1 s
-    DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
-    -- exists i : index , i < marker. m[i] = x
-    -- exists i : index . i < marker /\ m[i] = x
-    -- or([ i < marker /\ m[i] = x | i : index ])
-    -- or(map_domain(i --> flags[i] /\ m[i] = x))
-    let body = mkLambda "i" TypeInt $ \ i ->
-                make opAnd [ make opEq (make opIndexing values i) x
-                           , make opIndexing flags i
-                           ]
-    return $ make opOr [make opMapOverDomain body (Domain index)]
+rule_SetIn_ExplicitVarSizeWithFlags :: Rule
+rule_SetIn_ExplicitVarSizeWithFlags = "set-in{ExplicitVarSizeWithFlags}" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,s)                       <- match opIn p
+        TypeSet{}                   <- typeOf s
+        "ExplicitVarSizeWithFlags"  <- representationOf s
+        [flags,values]              <- downX1 s
+        DomainMatrix index _        <- domainOf (Proxy :: Proxy ()) values
+        -- exists i : index , i < marker. m[i] = x
+        -- exists i : index . i < marker /\ m[i] = x
+        -- or([ i < marker /\ m[i] = x | i : index ])
+        -- or(map_domain(i --> flags[i] /\ m[i] = x))
+        let body = mkLambda "i" TypeInt $ \ i ->
+                    make opAnd [ make opEq (make opIndexing values i) x
+                               , make opIndexing flags i
+                               ]
+        return ( "Vertical rule for set-in, Occurrence representation"
+               , make opOr [make opMapOverDomain body (Domain index)]
+               )
 
