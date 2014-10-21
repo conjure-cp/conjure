@@ -175,9 +175,10 @@ ascendants z = hole z : maybe [] ascendants (Zipper.up z)
 addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
-        declarationNames = map fst (declarations m)
-        mkTrueConstraint nm = Op $ MkOpTrue $ OpTrue [Reference nm Nothing]
-        trueConstraints = map mkTrueConstraint declarationNames
+        mkTrueConstraint k nm dom = Op $ MkOpTrue $ OpTrue [Reference nm (Just (DeclNoRepr k nm dom))]
+        trueConstraints = [ mkTrueConstraint k nm d
+                          | Declaration (FindOrGiven k nm d) <- mStatements m
+                          ]
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
 
