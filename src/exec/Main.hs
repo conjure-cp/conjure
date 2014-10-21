@@ -6,8 +6,11 @@ import Conjure.UI.Model ( outputOneModel, interactive )
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Pretty ( renderWide )
 
+import System.IO
+
 main :: IO ()
 main = do
+    hSetBuffering stdout NoBuffering
     args <- getArgs
     let essencePaths = [ a | a <- args, ".essence" `isSuffixOf` a ]
     -- let paramPaths   = [ a | a <- args, ".param"   `isSuffixOf` a ]
@@ -18,8 +21,7 @@ main = do
     essence <- readModelFromFile essencePath
     putStrLn $ renderWide essence
     putStrLn $ renderWide $ modelInfo essence
-    outputOneModel interactive putStrLn
-                   "conjure-output" 1 essence
+    outputOneModel interactive "conjure-output" 1 essence
 
 
 

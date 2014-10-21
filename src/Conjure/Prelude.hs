@@ -98,7 +98,7 @@ import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
 
 -- safe
-import Safe as X ( at, atNote, readMay, headNote, fromJustNote )
+import Safe as X ( at, atNote, readMay, readNote, headNote, fromJustNote )
 
 -- hashable
 import Data.Hashable as X ( Hashable(..), hash )
