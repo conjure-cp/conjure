@@ -88,7 +88,10 @@ toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
 toCompletion driver model = do
     qs <- remaining model
     if null qs
-        then model |> oneSuchThat |> languageEprime |> return
+        then model |> updateDeclarations
+                   |> oneSuchThat
+                   |> languageEprime
+                   |> return
         else do
             nextModel <- driver qs
             toCompletion driver nextModel
@@ -183,6 +186,30 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
 
         breakConjunctions (Op (MkOpAnd (OpAnd xs))) = xs
         breakConjunctions x = [x]
+
+
+updateDeclarations :: Model -> Model
+updateDeclarations model =
+    let
+        representations = model |> mInfo |> miRepresentations
+
+        statements = concatMap onEachStatement (mStatements model)
+
+        onEachStatement inStatement =
+            case inStatement of
+                Declaration (FindOrGiven t nm _) ->
+                    case [ d | (n, d) <- representations, n == nm ] of
+                        [] -> bug $ "No representation chosen for: " <+> pretty nm
+                        domains -> concatMap (onEachDomain t nm) domains
+                _ -> [inStatement]
+
+        onEachDomain t nm domain =
+            case downD (nm, domain) of
+                Left err -> bug err
+                Right outs -> [Declaration (FindOrGiven t n (forgetRepr d)) | (n, d) <- outs]
+
+    in
+        model { mStatements = statements }
 
 
 representationOf :: MonadFail m => Expression -> m Name
