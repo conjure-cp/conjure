@@ -12,17 +12,17 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opSubsetEq )
+import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr, opSubsetEq )
 import Conjure.Language.Lenses
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
-import Conjure.CState
+-- import Conjure.CState
 import Conjure.Representations
 
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
-import qualified Data.Text as T
+-- import qualified Data.Text as T
 
 
 
@@ -139,29 +139,29 @@ interactive questions = liftIO $ do
     return pickedModel
 
 
-addReprToSt :: Name -> Domain HasRepresentation Expression -> CState -> CState
-addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
-                           , stAllReprs = nub $ (nm, dom) : inners ++ stAllReprs st
-                           }
-    where
-        addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
-        inners = case mkInners (nm,dom) of
-            Left err -> bug err
-            Right res -> res
-        mkInners p = do
-            mmids <- downD1 p
-            case mmids of
-                Nothing -> return []
-                Just mids -> do
-                    lows <- mapM mkInners mids
-                    return (concat (mids:lows))
+-- addReprToSt :: Name -> Domain HasRepresentation Expression -> CState -> CState
+-- addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
+--                            , stAllReprs = nub $ (nm, dom) : inners ++ stAllReprs st
+--                            }
+--     where
+--         addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
+--         inners = case mkInners (nm,dom) of
+--             Left err -> bug err
+--             Right res -> res
+--         mkInners p = do
+--             mmids <- downD1 p
+--             case mmids of
+--                 Nothing -> return []
+--                 Just mids -> do
+--                     lows <- mapM mkInners mids
+--                     return (concat (mids:lows))
             
-addDecisionToSt :: Doc -> [Int] -> Int -> CState -> CState
-addDecisionToSt doc opts selected st =
-    st { stCurrInfo = addToInfo (stCurrInfo st)
-       }
-    where addToInfo i = i { miTrail = miTrail i ++ [dec] }
-          dec = Decision (doc |> renderWide |> stringToText |> T.lines) opts selected
+-- addDecisionToSt :: Doc -> [Int] -> Int -> CState -> CState
+-- addDecisionToSt doc opts selected st =
+--     st { stCurrInfo = addToInfo (stCurrInfo st)
+--        }
+--     where addToInfo i = i { miTrail = miTrail i ++ [dec] }
+--           dec = Decision (doc |> renderWide |> stringToText |> T.lines) opts selected
 
 ascendants :: Zipper a b -> [b]
 ascendants z = hole z : maybe [] ascendants (Zipper.up z)
@@ -186,32 +186,40 @@ addTrueConstraints m =
 
 oneSuchThat :: Model -> Model
 oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
-    where collect (SuchThat s) = ([], s)
-          collect s = ([s], [])
-          (others, suchThats) = mStatements m
-                |> map collect
-                |> mconcat
-                |> second (filter (/= Constant (ConstantBool True)))
-                |> second nub
-          suchThat = if null suchThats
-                      then [Constant (ConstantBool True)]
-                      else suchThats
+    where
+        suchThat = if null suchThats
+                    then [Constant (ConstantBool True)]
+                    else suchThats
+
+        (others, suchThats) = mStatements m
+              |> map collect                                            -- separate such thats from the rest
+              |> mconcat
+              |> second (map breakConjunctions)                         -- break top level /\'s
+              |> second mconcat
+              |> second (filter (/= Constant (ConstantBool True)))      -- remove top level true's
+              |> second nub                                             -- uniq
+
+        collect (SuchThat s) = ([], s)
+        collect s = ([s], [])
+
+        breakConjunctions (Op (MkOpAnd (OpAnd xs))) = xs
+        breakConjunctions x = [x]
 
 
-updateDeclarations :: (Functor m, MonadState CState m) => [Statement] -> m [Statement]
-updateDeclarations statements = do
-    reprs <- gets stAllReprs
-    flip concatMapM statements $ \ st ->
-        case st of
-            Declaration (FindOrGiven h nm _) ->
-                case [ d | (n,d) <- reprs, n == nm ] of
-                    [] -> bug $ "No representation chosen for: " <+> pretty nm
-                    domains -> flip concatMapM domains $ \ domain -> do
-                        mouts <- runExceptT $ downD (nm, domain)
-                        case mouts of
-                            Left err -> bug err
-                            Right outs -> return [Declaration (FindOrGiven h n (forgetRepr d)) | (n,d) <- outs]
-            _ -> return [st]
+-- updateDeclarations :: (Functor m, MonadState CState m) => [Statement] -> m [Statement]
+-- updateDeclarations statements = do
+--     reprs <- gets stAllReprs
+--     flip concatMapM statements $ \ st ->
+--         case st of
+--             Declaration (FindOrGiven h nm _) ->
+--                 case [ d | (n,d) <- reprs, n == nm ] of
+--                     [] -> bug $ "No representation chosen for: " <+> pretty nm
+--                     domains -> flip concatMapM domains $ \ domain -> do
+--                         mouts <- runExceptT $ downD (nm, domain)
+--                         case mouts of
+--                             Left err -> bug err
+--                             Right outs -> return [Declaration (FindOrGiven h n (forgetRepr d)) | (n,d) <- outs]
+--             _ -> return [st]
 
 
 representationOf :: MonadFail m => Expression -> m Name
@@ -390,6 +398,18 @@ rule_SetEq = "set-eq" `namedRule` theRule where
                , make opAnd [ make opSubsetEq x y
                             , make opSubsetEq y x
                             ]
+               )
+
+
+rule_SetSubsetEq :: Rule
+rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,y)                <- match opSubsetEq p
+        TypeSet tyXInner     <- typeOf x
+        TypeSet{}            <- typeOf y
+        let body = mkLambda "i" tyXInner (\ i -> make opIn i y)
+        return ( "Horizontal rule for set subsetEq"
+               , make opAnd [make opMapInExpr body x]
                )
 
 

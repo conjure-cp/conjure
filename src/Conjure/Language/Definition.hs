@@ -317,6 +317,7 @@ instance TypeOf Expression where
     typeOf (Reference nm (Just refTo)) = do
         case refTo of
             Alias x -> typeOf x
+            InLambda (Single _ ty) -> return ty
             InLambda{} -> bug ("Type error, InLambda:" <+> pretty nm)
             DeclNoRepr _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom

@@ -250,6 +250,25 @@ opMapOverDomain _ =
     )
 
 
+opMapInExpr
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opMapInExpr _ =
+    ( \ x y -> injectOp (MkOpMapInExpr (OpMapInExpr x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpMapInExpr (OpMapInExpr x y) -> return (x,y)
+                _ -> fail ("N/A opMapInExpr:" <++> pretty p)
+    )
+
+
 constantInt
     :: MonadFail m
     => Proxy (m :: * -> *)
