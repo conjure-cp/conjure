@@ -65,23 +65,46 @@ remaining model = do
     let allNames = universeBi model :: [Name]
     let freshNames = [ "q" `mappend` Name (stringToText (show i)) | i <- allNats ] \\ allNames
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
-    fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
+    questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
         ys <- applicableRules (hole x)
         return $ if null ys
             then Nothing
-            else Just Question
-                     { qHole = hole x
-                     , qAscendants = tail (ascendants x)
-                     , qAnswers =
-                         [ Answer
-                             { aText = ruleName <> ":" <+> ruleText
-                             , aAnswer = ruleResultExpr
-                             , aFullModel = hook (fromZipper (replaceHole ruleResultExpr x))
-                             }
-                        | (ruleName, (ruleText, ruleResult, hook)) <- ys
-                        , let ruleResultExpr = ruleResult freshNames
-                        ]
-                     }
+            else Just (x, ys)
+    return
+        [ Question
+            { qHole = hole focus
+            , qAscendants = tail (ascendants focus)
+            , qAnswers =
+                [ Answer
+                    { aText = ruleName <> ":" <+> ruleText
+                    , aAnswer = ruleResultExpr
+                    , aFullModel = hook (fromZipper (replaceHole ruleResultExpr focus))
+                                    |> addToTrail nQuestion [1 .. length questions]
+                                                  nAnswer   [1 .. length answers]
+                    }
+                | (nAnswer, (ruleName, (ruleText, ruleResult, hook))) <- zip allNats answers
+                , let ruleResultExpr = ruleResult freshNames
+                ]
+            }
+        | (nQuestion, (focus, answers)) <- zip allNats questions
+        ]
+
+
+addToTrail :: Int -> [Int] -> Int -> [Int] -> Model -> Model
+addToTrail nQuestion nQuestions nAnswer nAnswers model = model { mInfo = newInfo }
+    where
+        oldInfo = mInfo model
+        newInfo = oldInfo { miTrail = miTrail oldInfo ++ [theQ, theA] }
+        theQ = Decision
+            { dDescription = [stringToText $ renderWide $ "Question #" <> pretty nQuestion <+> "out of" <+> pretty (length nQuestions)]
+            , dOptions = nQuestions
+            , dDecision = nQuestion
+            }
+        theA = Decision
+            { dDescription = [stringToText $ renderWide $ "Answer #" <> pretty nAnswer <+> "out of" <+> pretty (length nAnswers)]
+            , dOptions = nAnswers
+            , dDecision = nAnswer
+            }
 
 
 toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
