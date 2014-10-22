@@ -12,6 +12,7 @@ import Conjure.Bug
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Ops
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Representations.Combined
 
@@ -48,6 +49,7 @@ onReference nm refTo =
 
 onOp :: MonadFail m => Ops Expression -> m [Expression]
 onOp (MkOpIndexing (OpIndexing m i)) = do
+    TypeMatrix{} <- typeOf m
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
