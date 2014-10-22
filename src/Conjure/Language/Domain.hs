@@ -172,8 +172,10 @@ instance Arbitrary a => Arbitrary (Range a) where
 rangesInts :: (MonadFail m, IntContainer c) => [Range c] -> m [Int]
 rangesInts = liftM (sortNub . concat) . mapM rangeInts
     where
-        rangeInts (RangeSingle x) = return [intOut x]
-        rangeInts (RangeBounded x y) = return [intOut x .. intOut y]
+        rangeInts (RangeSingle x) = return <$> intOut x
+        rangeInts (RangeBounded x y) = do x' <- intOut x
+                                          y' <- intOut y
+                                          return [x' .. y']
         rangeInts _ = fail "Infinite range (or not an integer range)"
 
 

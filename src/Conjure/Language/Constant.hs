@@ -78,6 +78,6 @@ instance Pretty Constant where
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
 instance IntContainer Constant where
-    intOut (ConstantInt x) = x
-    intOut c = bug $ "Expecting an integer, but found:" <+> pretty c
+    intOut (ConstantInt x) = return x
+    intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
 

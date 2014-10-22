@@ -9,6 +9,7 @@ import Conjure.Bug
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.IntContainer
 import Language.E.Lexer
 import Language.E.Data
 
@@ -64,7 +65,7 @@ instance Hashable  x => Hashable  (Ops x)
 instance ToJSON    x => ToJSON    (Ops x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (Ops x) where parseJSON = JSON.genericParseJSON jsonOptions
 
-instance (TypeOf x, Show x) => TypeOf (Ops x) where
+instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpPlus                x) = typeOf x
     typeOf (MkOpMinus               x) = typeOf x
     typeOf (MkOpTimes               x) = typeOf x
@@ -379,16 +380,16 @@ instance Serialize x => Serialize (OpIndexing x)
 instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = JSON.genericParseJSON jsonOptions
-instance (TypeOf x, Show x) => TypeOf (OpIndexing x) where
+instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (OpIndexing x) where
     typeOf (OpIndexing m i) = do
         tyM <- typeOf m
         TypeInt{} <- typeOf i
         case tyM of
             TypeMatrix _ inn -> return inn
-            TypeTuple _inns  -> return TypeAny
-                -- iInt <- constantInt i
-                -- inns `at` (iInt-1)
-            _ -> bug ("Indexing something other than a matrix or a tuple:" <++> pretty (show m))
+            TypeTuple inns   -> do
+                iInt <- intOut i
+                return (at inns (iInt-1))
+            _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
 
 
 data OpSlicing x = OpSlicing x

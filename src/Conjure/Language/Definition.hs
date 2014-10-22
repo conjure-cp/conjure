@@ -38,6 +38,7 @@ module Conjure.Language.Definition
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Pretty
+import Conjure.Language.IntContainer
 
 import Conjure.Language.Name
 import Conjure.Language.Constant
@@ -279,6 +280,10 @@ instance OperatorContainer Expression where
     injectOp = Op
     projectOp (Op op) = return op
     projectOp x = fail ("not an op: " <++> pretty (show x))
+
+instance IntContainer Expression where
+    intOut (Constant c) = intOut c
+    intOut x = fail ("Expecting an integer, but got:" <+> pretty x)
 
 mkLambda :: Name -> Type -> (Expression -> Expression) -> Expression
 mkLambda nm ty f =
