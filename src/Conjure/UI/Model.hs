@@ -80,7 +80,13 @@ remaining model = do
                     , aAnswer = ruleResultExpr
                     , aFullModel = hook (fromZipper (replaceHole ruleResultExpr focus))
                                     |> addToTrail nQuestion [1 .. length questions]
+                                                  (("Focus:" <+> pretty (hole focus))
+                                                   : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                                     | i <- allNats
+                                                     | c <- tail (ascendants focus)
+                                                     ])
                                                   nAnswer   [1 .. length answers]
+                                                  [ruleName <> ":" <+> ruleText]
                     }
                 | (nAnswer, (ruleName, (ruleText, ruleResult, hook))) <- zip allNats answers
                 , let ruleResultExpr = ruleResult freshNames
@@ -90,18 +96,27 @@ remaining model = do
         ]
 
 
-addToTrail :: Int -> [Int] -> Int -> [Int] -> Model -> Model
-addToTrail nQuestion nQuestions nAnswer nAnswers model = model { mInfo = newInfo }
+addToTrail
+    :: Int -> [Int] -> [Doc]
+    -> Int -> [Int] -> [Doc]
+    -> Model -> Model
+addToTrail nQuestion nQuestions tQuestion
+           nAnswer nAnswers tAnswer
+           model = model { mInfo = newInfo }
     where
         oldInfo = mInfo model
         newInfo = oldInfo { miTrail = miTrail oldInfo ++ [theQ, theA] }
         theQ = Decision
-            { dDescription = [stringToText $ renderWide $ "Question #" <> pretty nQuestion <+> "out of" <+> pretty (length nQuestions)]
+            { dDescription = map (stringToText . renderWide)
+                $ ("Question #" <> pretty nQuestion <+> "out of" <+> pretty (length nQuestions))
+                : tQuestion
             , dOptions = nQuestions
             , dDecision = nQuestion
             }
         theA = Decision
-            { dDescription = [stringToText $ renderWide $ "Answer #" <> pretty nAnswer <+> "out of" <+> pretty (length nAnswers)]
+            { dDescription = map (stringToText . renderWide)
+                $ ("Answer #" <> pretty nAnswer <+> "out of" <+> pretty (length nAnswers))
+                : tAnswer
             , dOptions = nAnswers
             , dDecision = nAnswer
             }
