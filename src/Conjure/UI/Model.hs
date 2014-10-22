@@ -12,7 +12,7 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain )
+import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opSubsetEq )
 import Conjure.Language.Lenses
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -40,8 +40,9 @@ data Answer = Answer
 
 type Driver = (forall m . (MonadIO m, MonadFail m) => [Question] -> m Model)
 
-type RuleResult = ( Doc           -- describe this transformation
-                  , Expression    -- the result
+type RuleResult = ( Doc                     -- describe this transformation
+                  , Expression              -- the result
+                  , Model -> Model          -- post-application hook
                   )
 data Rule = Rule
     { rName  :: Doc
@@ -50,11 +51,12 @@ data Rule = Rule
 
 namedRule
     :: Doc
-    -> (forall m . (Functor m, MonadIO m) => Expression -> m (Maybe RuleResult))
+    -> (forall m . (Functor m, MonadIO m) => Expression -> m (Maybe (Doc, Expression)))
     -> Rule
 namedRule nm f = Rule
     { rName = nm
-    , rApply = \ x -> liftM maybeToList (f x)
+    , rApply = \ x -> let addId (d,y) = (d,y,id)
+                      in  liftM (map addId . maybeToList) (f x)
     } 
 
 
@@ -72,9 +74,9 @@ remaining model = do
                          [ Answer
                              { aText = ruleName <> ":" <+> ruleText
                              , aAnswer = ruleResult
-                             , aFullModel = fromZipper (replaceHole ruleResult x)
+                             , aFullModel = hook (fromZipper (replaceHole ruleResult x))
                              }
-                        | (ruleName, (ruleText, ruleResult)) <- ys
+                        | (ruleName, (ruleText, ruleResult, hook)) <- ys
                         ]
                      }
 
@@ -238,6 +240,8 @@ allRules =
     , rule_ToIntIsNoOp
     , rule_InlineFilterInsideMap
     , rule_TupleIndex
+    , rule_SetEq
+    , rule_SetSubsetEq
     , rule_SetIn_Explicit
     , rule_SetIn_Occurrence
     , rule_SetIn_ExplicitVarSizeWithMarker
@@ -247,16 +251,66 @@ allRules =
 
 rule_ChooseRepr :: Rule
 rule_ChooseRepr = Rule "choose-repr" theRule where
+
     theRule (Reference nm (Just (DeclNoRepr ty _ inpDom))) = do
         let domOpts = reprOptions inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
-        return [ (msg, out)
+        return [ (msg, out, hook)
                | dom <- domOpts
                , let msg = "Selecting representation for" <+> pretty nm <> ":" <+> pretty dom
                , let out = Reference nm (Just (DeclHasRepr ty nm dom))
+               , let hook = mkHook ty nm dom
                ]
     theRule _ = return []
+
+    mkHook ty name domain model =
+        let
+            representations = model |> mInfo |> miRepresentations
+
+            usedBefore = (name, domain) `elem` representations
+
+            structurals =
+                case getStructurals (name, domain) of
+                    Left err -> bug err
+                    Right Nothing -> []
+                    Right (Just xs) -> xs
+
+            addStructurals =
+                if usedBefore       then id else
+                if null structurals then id else \ m ->
+                    m { mStatements = mStatements m ++ [SuchThat structurals] } 
+
+            otherRepresentations =
+                [ d
+                | (n, d) <- representations
+                , n == name
+                , d /= domain
+                ]
+
+            channels =
+                [ make opEq this that
+                | d <- otherRepresentations
+                , let this = Reference name (Just (DeclHasRepr ty name domain))
+                , let that = Reference name (Just (DeclHasRepr ty name d))
+                ]
+
+            addChannels =
+                if null channels then id else \ m ->
+                    m { mStatements = mStatements m ++ [SuchThat channels] }
+
+            recordThis = if usedBefore then id else \ m ->
+                let
+                    oldInfo = mInfo m
+                    newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
+                in  m { mInfo = newInfo }
+
+        in
+            model
+                |> addStructurals               -- unless usedBefore: add structurals
+                |> addChannels                  -- for each in otherRepresentations
+                |> recordThis                   -- unless usedBefore: record (name, domain) as being used in the model
+
 
 
 rule_TrueIsNoOp :: Rule
@@ -323,6 +377,19 @@ rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
                         make opEq (make opIndexing m i) x
         return ( "Vertical rule for set-in, Explicit representation."
                , make opOr [make opMapOverDomain body (Domain index)]
+               )
+
+
+rule_SetEq :: Rule
+rule_SetEq = "set-eq" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,y)                <- match opEq p
+        TypeSet{}            <- typeOf x
+        TypeSet{}            <- typeOf y
+        return ( "Horizontal rule for set equality"
+               , make opAnd [ make opSubsetEq x y
+                            , make opSubsetEq y x
+                            ]
                )
 
 

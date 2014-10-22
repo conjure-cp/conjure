@@ -26,9 +26,9 @@ type DomainC = Domain HasRepresentation Constant
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation m = Representation
     { rCheck      :: forall x r . (Pretty x, ExpressionLike x)
-                  => (Domain r x -> [Domain HasRepresentation x])        -- other checkers for inner domains
-                  -> Domain r x                                          -- this domain
-                  -> [Domain HasRepresentation x]                        -- with all repr options
+                  => (Domain r x -> [DomainX x])                       -- other checkers for inner domains
+                  -> Domain r x                                        -- this domain
+                  -> [DomainX x]                                       -- with all repr options
     , rDownD      :: forall x . (Pretty x, ExpressionLike x)
                   => (Name, DomainX x)                     -> m (Maybe [(Name, DomainX x)])
     , rStructural :: (Name, DomainX Expression)            -> m (Maybe [Expression])

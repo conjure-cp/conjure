@@ -60,6 +60,25 @@ opIn _ =
     )
 
 
+opSubsetEq
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opSubsetEq _ =
+    ( \ x y -> injectOp (MkOpSubsetEq (OpSubsetEq x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpSubsetEq (OpSubsetEq x y) -> return (x,y)
+                _ -> fail ("N/A opSubsetEq:" <++> pretty p)
+    )
+
+
 opEq
     :: ( OperatorContainer x
        , Pretty x

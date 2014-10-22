@@ -53,6 +53,10 @@ data Ops x
     | MkOpToInt           (OpToInt x)
 
     | MkOpIn              (OpIn x)
+    | MkOpSubset          (OpSubset x)
+    | MkOpSubsetEq        (OpSubsetEq x)
+    | MkOpSupset          (OpSupset x)
+    | MkOpSupsetEq        (OpSupsetEq x)
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
@@ -86,6 +90,10 @@ instance (TypeOf x, Show x) => TypeOf (Ops x) where
     typeOf (MkOpTrue                x) = typeOf x
     typeOf (MkOpToInt               x) = typeOf x
     typeOf (MkOpIn                  x) = typeOf x
+    typeOf (MkOpSubset              x) = typeOf x
+    typeOf (MkOpSubsetEq            x) = typeOf x
+    typeOf (MkOpSupset              x) = typeOf x
+    typeOf (MkOpSupsetEq            x) = typeOf x
 
 
 class BinaryOperator op where
@@ -129,7 +137,11 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpTrue  (OpTrue xs)) = "true" <> prettyList prParens "," xs
     prettyPrec _ (MkOpToInt (OpToInt a)) = "toInt" <> prParens (pretty a)
-    prettyPrec prec (MkOpIn    op@(OpIn    a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpIn       op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSubset   op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSubsetEq op@(OpSubsetEq  a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSupset   op@(OpSupset    a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSupsetEq op@(OpSupsetEq  a b)) = prettyPrecBinOp prec [op] a b
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -506,6 +518,62 @@ instance TypeOf x => TypeOf (OpIn x) where
         if tyA `typeUnify` tyB
             then return TypeBool
             else userErr "Type error"
+
+
+data OpSubset x = OpSubset x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpSubset x)
+instance Hashable  x => Hashable  (OpSubset x)
+instance ToJSON    x => ToJSON    (OpSubset x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpSubset x) where parseJSON = JSON.genericParseJSON jsonOptions
+opSubset :: OperatorContainer x => x -> x -> x
+opSubset x y = injectOp (MkOpSubset (OpSubset x y))
+instance BinaryOperator (OpSubset x) where
+    opLexeme _ = L_subset
+instance TypeOf x => TypeOf (OpSubset x) where
+    typeOf (OpSubset a b) = sameToSameToBool a b
+
+
+data OpSubsetEq x = OpSubsetEq x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpSubsetEq x)
+instance Hashable  x => Hashable  (OpSubsetEq x)
+instance ToJSON    x => ToJSON    (OpSubsetEq x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpSubsetEq x) where parseJSON = JSON.genericParseJSON jsonOptions
+opSubsetEq :: OperatorContainer x => x -> x -> x
+opSubsetEq x y = injectOp (MkOpSubsetEq (OpSubsetEq x y))
+instance BinaryOperator (OpSubsetEq x) where
+    opLexeme _ = L_subsetEq
+instance TypeOf x => TypeOf (OpSubsetEq x) where
+    typeOf (OpSubsetEq a b) = sameToSameToBool a b
+
+
+data OpSupset x = OpSupset x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpSupset x)
+instance Hashable  x => Hashable  (OpSupset x)
+instance ToJSON    x => ToJSON    (OpSupset x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpSupset x) where parseJSON = JSON.genericParseJSON jsonOptions
+opSupset :: OperatorContainer x => x -> x -> x
+opSupset x y = injectOp (MkOpSupset (OpSupset x y))
+instance BinaryOperator (OpSupset x) where
+    opLexeme _ = L_supset
+instance TypeOf x => TypeOf (OpSupset x) where
+    typeOf (OpSupset a b) = sameToSameToBool a b
+
+
+data OpSupsetEq x = OpSupsetEq x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpSupsetEq x)
+instance Hashable  x => Hashable  (OpSupsetEq x)
+instance ToJSON    x => ToJSON    (OpSupsetEq x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpSupsetEq x) where parseJSON = JSON.genericParseJSON jsonOptions
+opSupsetEq :: OperatorContainer x => x -> x -> x
+opSupsetEq x y = injectOp (MkOpSupsetEq (OpSupsetEq x y))
+instance BinaryOperator (OpSupsetEq x) where
+    opLexeme _ = L_supsetEq
+instance TypeOf x => TypeOf (OpSupsetEq x) where
+    typeOf (OpSupsetEq a b) = sameToSameToBool a b
 
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type

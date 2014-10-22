@@ -3,7 +3,7 @@
 module Conjure.Representations
     ( downD, downC, up
     , downD1, downC1, up1
-    , reprOptions
+    , reprOptions, getStructurals
     , downX1
     ) where
 

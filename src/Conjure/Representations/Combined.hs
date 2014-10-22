@@ -3,7 +3,7 @@
 module Conjure.Representations.Combined
     ( downD, downC, up
     , downD1, downC1, up1
-    , reprOptions
+    , reprOptions, getStructurals
     ) where
 
 -- conjure
@@ -131,6 +131,9 @@ allReprs =
 --   This function should never return an empty list.
 reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
 reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
+
+getStructurals :: MonadFail m => (Name, DomainX Expression) -> m (Maybe [Expression])
+getStructurals (name, domain) = rStructural (dispatch domain) (name, domain)
 
 
 -- | The matrix "representation rule".
