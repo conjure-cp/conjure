@@ -135,7 +135,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpMapSubsetExpr   (OpMapSubsetExpr   a b)) = "map_subset_expr"   <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr a b)) = "map_subsetEq_expr" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList prParens "," (a:b)
-    prettyPrec _ (MkOpTrue  (OpTrue xs)) = "true" <> prettyList prParens "," xs
+    prettyPrec _ (MkOpTrue  (OpTrue  a)) = "true"  <> prParens (pretty a)
     prettyPrec _ (MkOpToInt (OpToInt a)) = "toInt" <> prParens (pretty a)
     prettyPrec prec (MkOpIn       op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSubset   op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
@@ -475,14 +475,14 @@ instance TypeOf x => TypeOf (OpFunctionImage x) where
     typeOf (OpFunctionImage _ _) = return TypeAny
 
 
-data OpTrue x = OpTrue [x]
+data OpTrue x = OpTrue x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpTrue x)
 instance Hashable  x => Hashable  (OpTrue x)
 instance ToJSON    x => ToJSON    (OpTrue x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = JSON.genericParseJSON jsonOptions
-opTrue :: OperatorContainer x => [x] -> x
-opTrue xs = injectOp (MkOpTrue (OpTrue xs))
+opTrue :: OperatorContainer x => x -> x
+opTrue x = injectOp (MkOpTrue (OpTrue x))
 instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 

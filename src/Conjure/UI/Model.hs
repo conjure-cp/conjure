@@ -155,7 +155,7 @@ ascendants z = hole z : maybe [] ascendants (Zipper.up z)
 addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
-        mkTrueConstraint k nm dom = Op $ MkOpTrue $ OpTrue [Reference nm (Just (DeclNoRepr k nm dom))]
+        mkTrueConstraint k nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr k nm dom)))
         trueConstraints = [ mkTrueConstraint k nm d
                           | Declaration (FindOrGiven k nm d) <- mStatements m
                           ]
@@ -287,9 +287,13 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
 rule_TrueIsNoOp :: Rule
 rule_TrueIsNoOp = "true-is-noop" `namedRule` (return . theRule)
     where
-        theRule (Op (MkOpTrue (OpTrue _))) = Just ( "Remove the argument from true."
-                                                  , const $ Constant $ ConstantBool True
-                                                  )
+        theRule (Op (MkOpTrue (OpTrue ref))) =
+            case ref of
+                Reference _ (Just DeclHasRepr{}) ->
+                    Just ( "Remove the argument from true."
+                         , const $ Constant $ ConstantBool True
+                         )
+                _ -> Nothing
         theRule _ = Nothing
 
 
