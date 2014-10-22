@@ -12,8 +12,8 @@ resolveNames model = flip evalStateT [] $ do
         case st of
             Declaration decl ->
                 case decl of
-                    FindOrGiven t nm dom -> do
-                        modify ((nm, DeclNoRepr t nm dom) :)
+                    FindOrGiven forg nm dom -> do
+                        modify ((nm, DeclNoRepr forg nm dom) :)
                         return st
                     Letting nm x -> do
                         modify ((nm, Alias x) :)

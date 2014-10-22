@@ -177,7 +177,7 @@ instance ToJSON Declaration where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty Declaration where
-    pretty (FindOrGiven h nm d) = hang (pretty h <+> pretty nm <>  ":" ) 8 (pretty d)
+    pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (LettingDomainDefnEnum (DomainDefnEnum name values)) =
         if null values

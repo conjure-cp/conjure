@@ -159,8 +159,8 @@ addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
         mkTrueConstraint k nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr k nm dom)))
-        trueConstraints = [ mkTrueConstraint k nm d
-                          | Declaration (FindOrGiven k nm d) <- mStatements m
+        trueConstraints = [ mkTrueConstraint forg nm d
+                          | Declaration (FindOrGiven forg nm d) <- mStatements m
                           ]
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
@@ -197,16 +197,16 @@ updateDeclarations model =
 
         onEachStatement inStatement =
             case inStatement of
-                Declaration (FindOrGiven t nm _) ->
+                Declaration (FindOrGiven forg nm _) ->
                     case [ d | (n, d) <- representations, n == nm ] of
                         [] -> bug $ "No representation chosen for: " <+> pretty nm
-                        domains -> concatMap (onEachDomain t nm) domains
+                        domains -> concatMap (onEachDomain forg nm) domains
                 _ -> [inStatement]
 
-        onEachDomain t nm domain =
+        onEachDomain forg nm domain =
             case downD (nm, domain) of
                 Left err -> bug err
-                Right outs -> [Declaration (FindOrGiven t n (forgetRepr d)) | (n, d) <- outs]
+                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr d)) | (n, d) <- outs]
 
     in
         model { mStatements = statements }
