@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Conjure.Language.NameResolution where
+module Conjure.Language.NameResolution ( resolveNames ) where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
@@ -10,15 +10,12 @@ resolveNames :: MonadFail m => Model -> m Model
 resolveNames model = flip evalStateT [] $ do
     statements <- forM (mStatements model) $ \ st ->
         case st of
-            Declaration decl ->
+            Declaration decl -> do
                 case decl of
-                    FindOrGiven forg nm dom -> do
-                        modify ((nm, DeclNoRepr forg nm dom) :)
-                        return st
-                    Letting nm x -> do
-                        modify ((nm, Alias x) :)
-                        return st
-                    _ -> return st
+                    FindOrGiven forg nm dom -> modify ((nm, DeclNoRepr forg nm dom) :)
+                    Letting nm x            -> modify ((nm, Alias x) :)
+                    _ -> return ()
+                return st
             SearchOrder{} -> return st
             Where xs -> Where <$> mapM (transformM insert) xs
             Objective obj x -> Objective obj <$> transformM insert x

@@ -334,7 +334,7 @@ instance TypeOf Expression where
     typeOf (AbstractLiteral x) = typeOf x
     typeOf (Domain x)   = typeOf x
     typeOf (Reference nm Nothing) = bug ("Type error, identifier not bound:" <+> pretty nm)
-    typeOf (Reference nm (Just refTo)) = do
+    typeOf (Reference nm (Just refTo)) =
         case refTo of
             Alias x -> typeOf x
             InLambda (Single _ ty) -> return ty

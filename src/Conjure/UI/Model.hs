@@ -171,13 +171,13 @@ interactive questions = liftIO $ do
     pickedQIndex <- readNote "Expecting an integer." <$> getLine
     let pickedQ = questions `at` (pickedQIndex - 1)
 
-    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) -> do
+    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
         print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
                                                                 , pretty (aAnswer a) ]
         -- print (nest 8 $ pretty (aFullModel a))
     putStr "Pick answer: "
     pickedAIndex <- readNote "Expecting an integer." <$> getLine
-    let pickedA = (qAnswers pickedQ) `at` (pickedAIndex - 1)
+    let pickedA = qAnswers pickedQ `at` (pickedAIndex - 1)
 
     let pickedModel = aFullModel pickedA
     putStrLn "Current model:"
@@ -314,9 +314,10 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                     Right Nothing -> []
                     Right (Just xs) -> xs
 
-            addStructurals =
-                if usedBefore       then id else
-                if null structurals then id else \ m ->
+            addStructurals
+                | usedBefore = id
+                | null structurals = id
+                | otherwise = \ m ->
                     m { mStatements = mStatements m ++ [SuchThat structurals] } 
 
             otherRepresentations =
@@ -333,11 +334,14 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                 , let that = Reference name (Just (DeclHasRepr ty name d))
                 ]
 
-            addChannels =
-                if null channels then id else \ m ->
+            addChannels
+                | null channels = id
+                | otherwise = \ m ->
                     m { mStatements = mStatements m ++ [SuchThat channels] }
 
-            recordThis = if usedBefore then id else \ m ->
+            recordThis
+                | usedBefore = id
+                | otherwise = \ m ->
                 let
                     oldInfo = mInfo m
                     newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
