@@ -5,6 +5,7 @@ module Conjure.Language.Definition
     ( forgetRepr, rangesInts
     , languageEprime
     , typeCheckModelIO, typeCheckModel
+    , initInfo
 
     , mkLambda, lambdaToFunction
 
@@ -223,6 +224,14 @@ instance Pretty ModelInfo where
     pretty = pretty . commentLines . unpack . encodePretty
         where commentLines = unlines . map ("$ "++) . ("Conjure's" :) . lines
 
+initInfo :: Model -> Model
+initInfo model = model { mInfo = info }
+    where
+        info = def
+            { miGivens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements model ]
+            , miFinds  = [ nm | Declaration (FindOrGiven Find  nm _) <- mStatements model ]
+            }
+
 
 data Decision = Decision
     { dDescription :: [Text]
@@ -260,7 +269,7 @@ instance Pretty Expression where
     pretty (Constant x) = pretty x
     pretty (AbstractLiteral x) = pretty x
     pretty (Domain x) = "`" <> pretty x <> "`"
-    pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
+    -- pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
     pretty (Reference x _) = pretty x
     pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
     pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])

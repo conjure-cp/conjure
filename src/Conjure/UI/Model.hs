@@ -97,7 +97,7 @@ toCompletion driver model = do
 outputOneModel :: Driver -> FilePath -> Int -> Model -> IO ()
 outputOneModel driver dir i essence = do
     createDirectoryIfMissing True dir
-    eprime <- toCompletion driver (addTrueConstraints essence)
+    eprime <- toCompletion driver (essence |> addTrueConstraints |> initInfo)
     let filename = dir </> "model" ++ show i ++ ".eprime"
     writeFile filename (renderWide eprime)
 
