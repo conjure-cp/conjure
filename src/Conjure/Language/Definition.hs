@@ -53,14 +53,8 @@ import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 
--- aeson-pretty
-import Data.Aeson.Encode.Pretty ( encodePretty )
-
 -- uniplate
 import Data.Generics.Uniplate.Data ( transform )
-
--- bytestring
-import Data.ByteString.Lazy.Char8 ( unpack )
 
 
 data Model = Model
@@ -207,11 +201,15 @@ data ModelInfo = ModelInfo
     , miFinds :: [Name]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
+    , miTrailCompact :: [(Int,[Int])]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 modelInfoJSONOptions :: JSON.Options
-modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop 2 }
+modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = onHead toLower . drop 2 }
+    where onHead f (x:xs) = f x : xs
+          onHead _ [] = []
+
 
 instance Serialize ModelInfo
 instance Hashable ModelInfo
@@ -219,11 +217,19 @@ instance ToJSON ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
 instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def
+    def = ModelInfo def def def def def
 
 instance Pretty ModelInfo where
-    pretty = pretty . commentLines . unpack . encodePretty
-        where commentLines = unlines . map ("$ "++) . ("Conjure's" :) . lines
+    pretty = commentLines . pretty . toJSON
+        where
+            commentLines :: Doc -> Doc
+            commentLines
+                = vcat                          -- Doc
+                . map ("$ " `mappend`)          -- comment each line
+                . ("Conjure's" :)               -- add the heading
+                . map pretty                    -- [Doc]
+                . lines                         -- [String]
+                . renderNormal                  -- to String
 
 initInfo :: Model -> Model
 initInfo model = model { mInfo = info }

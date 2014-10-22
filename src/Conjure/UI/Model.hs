@@ -105,7 +105,9 @@ addToTrail nQuestion nQuestions tQuestion
            model = model { mInfo = newInfo }
     where
         oldInfo = mInfo model
-        newInfo = oldInfo { miTrail = miTrail oldInfo ++ [theQ, theA] }
+        newInfo = oldInfo { miTrail = miTrail oldInfo ++ [theQ, theA]
+                          , miTrailCompact = miTrailCompact oldInfo ++ [(nQuestion, nQuestions), (nAnswer, nAnswers)]
+                          }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
                 $ ("Question #" <> pretty nQuestion <+> "out of" <+> pretty (length nQuestions))

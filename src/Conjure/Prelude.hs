@@ -41,7 +41,7 @@ import GHC.Integer as X ( Integer )
 import GHC.Exts as X ( Double )
 import GHC.Real as X ( Fractional(..), Integral(..), fromIntegral, (^), Real(..) )
 import GHC.Enum as X ( Enum(..) )
-import Data.Char as X ( Char, toLower )
+import Data.Char as X ( Char, toLower, isSpace )
 import Data.String as X ( String, IsString(..) )
 
 -- basic type classes

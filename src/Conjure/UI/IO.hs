@@ -39,7 +39,7 @@ readModel :: MonadFail m => (FilePath, Text) -> m Model
 readModel (fp, con) =
     case runLexerAndParser parseModel fp con of
         Left  e -> userErr e
-        Right x -> resolveNames $
+        Right x ->
             let
                 infoBlock = con
                     |> T.lines
@@ -47,13 +47,18 @@ readModel (fp, con) =
                     |> drop 1                           -- drop the heading
                     |> map (T.drop 2)                   -- uncomment
                     |> T.unlines
+                json = infoBlock
                     |> T.encodeUtf8                     -- convert Text to ByteString
                     |> (BS.fromChunks . return)         -- convert to Lazy ByteString
                     |> Data.Aeson.decode
    
-            in case infoBlock of
-                Nothing -> x
-                Just i  -> x { mInfo = i }
+            in
+                if T.null (T.filter isSpace infoBlock)
+                    then resolveNames x
+                    else
+                        case json of
+                            Nothing -> fail "Malformed JSON"
+                            Just i  -> resolveNames x { mInfo = i }
 
 
 readModelPreamble :: MonadFail m => (FilePath, Text) -> m Model

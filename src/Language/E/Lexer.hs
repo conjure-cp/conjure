@@ -3,7 +3,7 @@
 
 module Language.E.Lexer where
 
-import Conjure.Prelude
+import Conjure.Prelude hiding ( isSpace )
 
 import Data.Char ( isAlpha, isAlphaNum )
 import qualified Data.HashMap.Strict as M

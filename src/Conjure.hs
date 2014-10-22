@@ -30,10 +30,6 @@ import System.CPUTime ( getCPUTime )
 import Text.Printf ( printf )
 import qualified Data.HashSet as S
 import qualified Data.HashMap.Strict as M
-import Data.Aeson.Encode.Pretty ( encodePretty )
-import qualified Data.Aeson as JSON ( encode )
-import qualified Data.ByteString.Lazy as BS ( writeFile )
-import qualified Data.ByteString.Lazy.Char8 as BS ( putStrLn )
 
 
 rulesdbLoc :: IO [FilePath]
@@ -129,15 +125,14 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
                 pathOut
                 (runCompE "typeStrengthening" $ typeStrengthening inp)
 
-        helper (ModeJSON b pathInp pathOut) = do
-            let printer = if b then JSON.encode else encodePretty
+        helper (ModeJSON pathInp pathOut) = do
             inp <- case pathInp of
                 Nothing -> readSpecFromStdIn
                 Just fp -> readSpecFromFile fp
             typeCheckSpecIO inp
             case pathOut of
-                Nothing -> BS.putStrLn     (printer $ uniqueQuanVars $ atMostOneSuchThat False inp)
-                Just fp -> BS.writeFile fp (printer $ uniqueQuanVars $ atMostOneSuchThat False inp)
+                Nothing -> putStrLn     $ renderWide $ pretty $ uniqueQuanVars $ atMostOneSuchThat False inp
+                Just fp -> writeFile fp $ renderWide $ pretty $ uniqueQuanVars $ atMostOneSuchThat False inp
 
         helper (ModeValidateSolution pathEssence pathParam pathSolution) = do
             essence  <- readSpecFromFile pathEssence

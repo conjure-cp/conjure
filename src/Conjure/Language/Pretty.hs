@@ -29,6 +29,12 @@ import Text.PrettyPrint
     , style, renderStyle, lineLength
     )
 
+-- aeson
+import Data.Aeson as JSON
+import Data.Scientific ( Scientific, floatingOrInteger )
+import qualified Data.HashMap.Strict as H
+import qualified Data.Vector as V
+
 
 class Show a => Pretty a where
     pretty :: a -> Doc
@@ -92,4 +98,37 @@ prBraces = braces
 
 prettyContext :: (Pretty a, Pretty b) => [(a,b)] -> [Doc]
 prettyContext = map (\ (a,b) -> nest 4 $ pretty a <> ":" <+> pretty b )
+
+
+--------------------------------------------------------------------------------
+-- JSON ------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+instance Pretty JSON.Value where
+    pretty (Object x) = pretty x
+    pretty (Array x) = pretty x
+    pretty (String x) = pretty (show x)
+    pretty (Number x) = pretty x
+    pretty (Bool False) = "false"
+    pretty (Bool True) = "true"
+    pretty Null = "null"
+
+instance Pretty JSON.Object where
+    pretty = prBraces . vcat . punctuate "," . map f . sortBy (comp `on` fst) . H.toList
+        where
+            f (key@"description", Array value) = pretty (show key) <> ":" <+> prettyArrayVCat value
+            f (key, value) = pretty (show key) <> ":" <+> pretty value
+
+            comp "decision" _ = LT
+            comp "options"  _ = LT
+            comp a b = compare a b
+
+instance Pretty JSON.Array where
+    pretty = prBrackets . fsep . punctuate "," . map pretty . V.toList
+
+prettyArrayVCat :: V.Vector Value -> Doc
+prettyArrayVCat = prBrackets . vcat . punctuate "," . map pretty . V.toList
+
+instance Pretty Scientific where
+    pretty = either pretty pretty . (floatingOrInteger :: Scientific -> Either Double Integer)
 

@@ -8,10 +8,7 @@ import Conjure.Representations ( up )
 
 
 translateSolution
-    :: ( Functor m
-       , Applicative m
-       , MonadFail m
-       )
+    :: MonadFail m
     => Model      -- eprime model
     -> Model      -- essence param
     -> Model      -- eprime solution

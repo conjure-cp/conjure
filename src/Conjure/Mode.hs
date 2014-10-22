@@ -6,7 +6,7 @@ import Conjure.Bug
 import Conjure.RepositoryVersion ( repositoryVersion )
 import Conjure.Language.Pretty
 
-import Data.HashSet as S ( HashSet, fromList, member )
+import Data.HashSet as S ( HashSet, fromList )
 import Data.HashMap.Strict as M ( HashMap, fromList, lookup )
 import qualified Text.PrettyPrint as Pr
 
@@ -70,7 +70,6 @@ data ConjureMode
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
     | ModeJSON
-        Bool                -- print or prettyPrint the JSON
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
     | ModeValidateSolution
@@ -264,7 +263,7 @@ parseArgs (pairs, flags, rest) = msum
             mode $ words "json"
             inp  <- optional $ anyKey $ words "--in-essence --in"
             out  <- optional $ anyKey $ words "--out-essence --out"
-            returnMode $ ModeJSON (not $ flagSet "--pretty") inp out
+            returnMode $ ModeJSON inp out
 
         modeValidateSolution = do
             mode $ words "validateSolution validateSol validateSoln"
@@ -324,7 +323,7 @@ parseArgs (pairs, flags, rest) = msum
         key = (`M.lookup` pairs)
         readKey = key >=> readMay
         optional = return
-        flagSet = (`S.member` flags)
+        -- flagSet = (`S.member` flags)
         x =~= ys = map toLower x `elem` map (map toLower) ys
 
         returnMode m = do

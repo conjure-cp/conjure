@@ -152,7 +152,6 @@ Library
 
     build-depends    : base
                      , aeson
-                     , aeson-pretty
                      , bytestring
                      , cereal
                      , containers
@@ -170,6 +169,7 @@ Library
                      , QuickCheck
                      , random
                      , safe
+                     , scientific
                      , split
                      , template-haskell
                      , text
@@ -178,6 +178,7 @@ Library
                      , transformers-base
                      , uniplate
                      , unordered-containers
+                     , vector
 
     default-extensions:
         NoImplicitPrelude
