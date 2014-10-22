@@ -29,6 +29,7 @@ module Conjure.Prelude
     , Proxy(..)
     , MonadFail(..)
     , allContexts
+    , headInf
     ) where
 
 import GHC.Err as X ( error )
@@ -329,4 +330,9 @@ allContexts z0 = concatMap subtreeOf (allSiblings z0)
 
         subtreeOf :: Data b => Zipper a b -> [Zipper a b]
         subtreeOf z = z : maybe [] allContexts (down z)
+
+
+headInf :: [a] -> a
+headInf (a:_) = a
+headInf _ = error "End of infinite stream! Well done!"
 

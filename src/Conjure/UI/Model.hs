@@ -18,11 +18,11 @@ import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
--- import Conjure.CState
 import Conjure.Representations
 
+import Data.Generics.Uniplate.Data ( universeBi )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
--- import qualified Data.Text as T
+
 
 
 
@@ -41,7 +41,7 @@ data Answer = Answer
 type Driver = (forall m . (MonadIO m, MonadFail m) => [Question] -> m Model)
 
 type RuleResult = ( Doc                     -- describe this transformation
-                  , Expression              -- the result
+                  , [Name] -> Expression    -- the result
                   , Model -> Model          -- post-application hook
                   )
 data Rule = Rule
@@ -51,7 +51,7 @@ data Rule = Rule
 
 namedRule
     :: Doc
-    -> (forall m . (Functor m, MonadIO m) => Expression -> m (Maybe (Doc, Expression)))
+    -> (forall m . (Functor m, MonadIO m) => Expression -> m (Maybe (Doc, [Name] -> Expression)))
     -> Rule
 namedRule nm f = Rule
     { rName = nm
@@ -62,6 +62,8 @@ namedRule nm f = Rule
 
 remaining :: (Functor m, Applicative m, MonadIO m) => Model -> m [Question]
 remaining model = do
+    let allNames = universeBi model :: [Name]
+    let freshNames = [ "q" `mappend` Name (stringToText (show i)) | i <- allNats ] \\ allNames
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
         ys <- applicableRules (hole x)
@@ -73,10 +75,11 @@ remaining model = do
                      , qAnswers =
                          [ Answer
                              { aText = ruleName <> ":" <+> ruleText
-                             , aAnswer = ruleResult
-                             , aFullModel = hook (fromZipper (replaceHole ruleResult x))
+                             , aAnswer = ruleResultExpr
+                             , aFullModel = hook (fromZipper (replaceHole ruleResultExpr x))
                              }
                         | (ruleName, (ruleText, ruleResult, hook)) <- ys
+                        , let ruleResultExpr = ruleResult freshNames
                         ]
                      }
 
@@ -139,30 +142,6 @@ interactive questions = liftIO $ do
     return pickedModel
 
 
--- addReprToSt :: Name -> Domain HasRepresentation Expression -> CState -> CState
--- addReprToSt nm dom st = st { stCurrInfo = addToInfo (stCurrInfo st)
---                            , stAllReprs = nub $ (nm, dom) : inners ++ stAllReprs st
---                            }
---     where
---         addToInfo i = i { miRepresentations = nub $ (nm, dom) : miRepresentations i }
---         inners = case mkInners (nm,dom) of
---             Left err -> bug err
---             Right res -> res
---         mkInners p = do
---             mmids <- downD1 p
---             case mmids of
---                 Nothing -> return []
---                 Just mids -> do
---                     lows <- mapM mkInners mids
---                     return (concat (mids:lows))
-            
--- addDecisionToSt :: Doc -> [Int] -> Int -> CState -> CState
--- addDecisionToSt doc opts selected st =
---     st { stCurrInfo = addToInfo (stCurrInfo st)
---        }
---     where addToInfo i = i { miTrail = miTrail i ++ [dec] }
---           dec = Decision (doc |> renderWide |> stringToText |> T.lines) opts selected
-
 ascendants :: Zipper a b -> [b]
 ascendants z = hole z : maybe [] ascendants (Zipper.up z)
 
@@ -204,22 +183,6 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
 
         breakConjunctions (Op (MkOpAnd (OpAnd xs))) = xs
         breakConjunctions x = [x]
-
-
--- updateDeclarations :: (Functor m, MonadState CState m) => [Statement] -> m [Statement]
--- updateDeclarations statements = do
---     reprs <- gets stAllReprs
---     flip concatMapM statements $ \ st ->
---         case st of
---             Declaration (FindOrGiven h nm _) ->
---                 case [ d | (n,d) <- reprs, n == nm ] of
---                     [] -> bug $ "No representation chosen for: " <+> pretty nm
---                     domains -> flip concatMapM domains $ \ domain -> do
---                         mouts <- runExceptT $ downD (nm, domain)
---                         case mouts of
---                             Left err -> bug err
---                             Right outs -> return [Declaration (FindOrGiven h n (forgetRepr d)) | (n,d) <- outs]
---             _ -> return [st]
 
 
 representationOf :: MonadFail m => Expression -> m Name
@@ -264,7 +227,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
         let domOpts = reprOptions inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
-        return [ (msg, out, hook)
+        return [ (msg, const out, hook)
                | dom <- domOpts
                , let msg = "Selecting representation for" <+> pretty nm <> ":" <+> pretty dom
                , let out = Reference nm (Just (DeclHasRepr ty nm dom))
@@ -325,7 +288,7 @@ rule_TrueIsNoOp :: Rule
 rule_TrueIsNoOp = "true-is-noop" `namedRule` (return . theRule)
     where
         theRule (Op (MkOpTrue (OpTrue _))) = Just ( "Remove the argument from true."
-                                                  , Constant $ ConstantBool True
+                                                  , const $ Constant $ ConstantBool True
                                                   )
         theRule _ = Nothing
 
@@ -334,7 +297,7 @@ rule_ToIntIsNoOp :: Rule
 rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` (return . theRule)
     where
         theRule (Op (MkOpToInt (OpToInt b))) = Just ( "Remove the toInt wrapper, it is implicit in SR."
-                                                    , b
+                                                    , const b
                                                     )
         theRule _ = Nothing
 
@@ -353,7 +316,7 @@ rule_InlineFilterInsideMap = "inline-filter-inside-map" `namedRule` (return . th
                 newBody = Lambda vBody (Op $ MkOpAnd $ OpAnd [fGuard vBody, fBody vBody])
             in
                 Just ( "Inlining the filter."
-                     , Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
+                     , const $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
                      )
         theRule _ = Nothing
 
@@ -366,7 +329,7 @@ rule_TupleIndex = "tuple-index" `namedRule` theRule where
         iInt        <- match constantInt i
         ts          <- downX1 t
         return ( "Tuple indexing on:" <+> pretty p
-               , atNote "Tuple indexing" ts (iInt-1)
+               , const $ atNote "Tuple indexing" ts (iInt-1)
                )
 
 
@@ -381,10 +344,10 @@ rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
         -- exists i : index . m[i] = x
         -- or([ m[i] = x | i : index ])
         -- or(map_domain(i --> m[i]))
-        let body = mkLambda "i" TypeInt $ \ i ->
+        let body iName = mkLambda iName TypeInt $ \ i ->
                         make opEq (make opIndexing m i) x
         return ( "Vertical rule for set-in, Explicit representation."
-               , make opOr [make opMapOverDomain body (Domain index)]
+               , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
                )
 
 
@@ -395,9 +358,9 @@ rule_SetEq = "set-eq" `namedRule` theRule where
         TypeSet{}            <- typeOf x
         TypeSet{}            <- typeOf y
         return ( "Horizontal rule for set equality"
-               , make opAnd [ make opSubsetEq x y
-                            , make opSubsetEq y x
-                            ]
+               , const $ make opAnd [ make opSubsetEq x y
+                                    , make opSubsetEq y x
+                                    ]
                )
 
 
@@ -407,9 +370,9 @@ rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
         (x,y)                <- match opSubsetEq p
         TypeSet tyXInner     <- typeOf x
         TypeSet{}            <- typeOf y
-        let body = mkLambda "i" tyXInner (\ i -> make opIn i y)
+        let body iName = mkLambda iName tyXInner (\ i -> make opIn i y)
         return ( "Horizontal rule for set subsetEq"
-               , make opAnd [make opMapInExpr body x]
+               , \ fresh -> make opAnd [make opMapInExpr (body (headInf fresh)) x]
                )
 
 
@@ -421,7 +384,7 @@ rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
         "Occurrence"         <- representationOf s
         [m]                  <- downX1 s
         return ( "Vertical rule for set-in, Occurrence representation"
-               , make opIndexing m x
+               , const $ make opIndexing m x
                )
 
 
@@ -437,12 +400,12 @@ rule_SetIn_ExplicitVarSizeWithMarker = "set-in{ExplicitVarSizeWithMarker}" `name
         -- exists i : index . i < marker /\ m[i] = x
         -- or([ i < marker /\ m[i] = x | i : index ])
         -- or(map_domain(i --> i < marker /\ m[i] = x))
-        let body = mkLambda "i" TypeInt $ \ i ->
+        let body iName = mkLambda iName TypeInt $ \ i ->
                     make opAnd [ make opEq (make opIndexing values i) x
                                , make opLt i marker
                                ]
         return ( "Vertical rule for set-in, ExplicitVarSizeWithMarker representation"
-               , make opOr [make opMapOverDomain body (Domain index)]
+               , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
                )
 
 
@@ -458,11 +421,11 @@ rule_SetIn_ExplicitVarSizeWithFlags = "set-in{ExplicitVarSizeWithFlags}" `namedR
         -- exists i : index . i < marker /\ m[i] = x
         -- or([ i < marker /\ m[i] = x | i : index ])
         -- or(map_domain(i --> flags[i] /\ m[i] = x))
-        let body = mkLambda "i" TypeInt $ \ i ->
+        let body iName = mkLambda iName TypeInt $ \ i ->
                     make opAnd [ make opEq (make opIndexing values i) x
                                , make opIndexing flags i
                                ]
         return ( "Vertical rule for set-in, Occurrence representation"
-               , make opOr [make opMapOverDomain body (Domain index)]
+               , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
                )
 
