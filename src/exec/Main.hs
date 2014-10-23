@@ -21,7 +21,9 @@ main = do
     essence <- readModelFromFile essencePath
     putStrLn $ renderWide essence
     putStrLn $ renderWide $ modelInfo essence
-    outputOneModel interactiveFixedQsAutoA "conjure-output" 1 essence
+
+    outputModel  interactiveFixedQsAutoA "conjure-output"  1 essence
+    outputModels allFixedQs              "conjure-outputs" 1 essence
 
 
 

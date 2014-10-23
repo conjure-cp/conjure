@@ -5,9 +5,10 @@
 {-# LANGUAGE TupleSections #-}
 
 module Conjure.UI.Model
-    ( outputOneModel
+    ( outputModel, outputModels
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
+    , allFixedQs
     ) where
 
 import Conjure.Prelude
@@ -38,12 +39,15 @@ data Answer = Answer
     , aFullModel :: Model
     }
 
-type Driver = (forall m . (MonadIO m, MonadFail m) => [Question] -> m Model)
+type Driver      = (forall m . (MonadIO m, MonadFail m) => [Question] -> m Model)
+
+type MultiDriver = (forall m . (MonadIO m, MonadFail m) => [Question] -> m [Model])
 
 type RuleResult = ( Doc                     -- describe this transformation
                   , [Name] -> Expression    -- the result
                   , Model -> Model          -- post-application hook
                   )
+
 data Rule = Rule
     { rName  :: Doc
     , rApply :: forall m . (Functor m, MonadIO m) => Expression -> m [RuleResult]
@@ -127,21 +131,43 @@ toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
 toCompletion driver model = do
     qs <- remaining model
     if null qs
-        then model |> updateDeclarations
-                   |> oneSuchThat
-                   |> languageEprime
-                   |> return
+        then return (grooming model)
         else do
             nextModel <- driver qs
             toCompletion driver nextModel
 
 
-outputOneModel :: Driver -> FilePath -> Int -> Model -> IO ()
-outputOneModel driver dir i essence = do
+toCompletionMulti :: (MonadIO m, MonadFail m) => MultiDriver -> Model -> m [Model]
+toCompletionMulti driver model = do
+    qs <- remaining model
+    if null qs
+        then return [grooming model]
+        else do
+            nextModels <- driver qs
+            concatMapM (toCompletionMulti driver) nextModels
+
+
+outputModel :: Driver -> FilePath -> Int -> Model -> IO ()
+outputModel driver dir i essence = do
     createDirectoryIfMissing True dir
     eprime <- toCompletion driver (essence |> addTrueConstraints |> initInfo)
     let filename = dir </> "model" ++ show i ++ ".eprime"
     writeFile filename (renderWide eprime)
+
+
+outputModels :: MultiDriver -> FilePath -> Int -> Model -> IO ()
+outputModels driver dir i essence = do
+    createDirectoryIfMissing True dir
+    eprimes <- toCompletionMulti driver (essence |> addTrueConstraints |> initInfo)
+    sequence_ [ writeFile filename (renderWide eprime)
+              | (j, eprime) <- zip [i..] eprimes
+              , let filename = dir </> "model" ++ show j ++ ".eprime"
+              ]
+
+
+allFixedQs :: MultiDriver
+allFixedQs [] = fail "pickFirst: No questions!"
+allFixedQs (question:_) = return (map aFullModel (qAnswers question))
 
 
 pickFirst :: Driver
@@ -314,6 +340,13 @@ updateDeclarations model =
 
     in
         model { mStatements = statements }
+
+
+grooming :: Model -> Model
+grooming model = model
+    |> updateDeclarations
+    |> oneSuchThat
+    |> languageEprime
 
 
 representationOf :: MonadFail m => Expression -> m Name

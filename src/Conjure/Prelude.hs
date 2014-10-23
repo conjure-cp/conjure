@@ -57,7 +57,7 @@ import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
 import qualified Control.Monad ( fail )
 import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
-                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence
+                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence, sequence_
                           , filterM
                           )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )

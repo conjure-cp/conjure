@@ -168,7 +168,7 @@ checkExpected expected generated = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir essence = outputOneModel pickFirst dir 1 essence
+modelAll dir essence = outputModels allFixedQs dir 1 essence
 
 
 dropExtension :: FilePath -> FilePath
