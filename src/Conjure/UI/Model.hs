@@ -413,7 +413,7 @@ rule_DontCareBool :: Rule
 rule_DontCareBool = "dontCare-bool" `namedRule` theRule where
     theRule p = runMaybeT $ do
         x          <- match opDontCare p
-        DomainBool <- domainOf' x
+        DomainBool <- domainOf x
         return ( "dontCare value for bools is false."
                , const $ make opEq x (fromBool False)
                )
@@ -423,7 +423,7 @@ rule_DontCareInt :: Rule
 rule_DontCareInt = "dontCare-int" `namedRule` theRule where
     theRule p = runMaybeT $ do
         x                          <- match opDontCare p
-        xDomain@(DomainInt ranges) <- domainOf' x
+        xDomain@(DomainInt ranges) <- domainOf x
         let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
         let val = case ranges of
                 [] -> raiseBug
@@ -476,7 +476,7 @@ rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
         TypeSet{}            <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
-        DomainMatrix index _ <- domainOf' m
+        DomainMatrix index _ <- domainOf m
         -- exists i : index . m[i] = x
         -- or([ m[i] = x | i : index ])
         -- or(map_domain(i --> m[i]))
@@ -531,7 +531,7 @@ rule_SetIn_ExplicitVarSizeWithMarker = "set-in{ExplicitVarSizeWithMarker}" `name
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
         [marker,values]             <- downX1 s
-        DomainMatrix index _        <- domainOf' values
+        DomainMatrix index _        <- domainOf values
         -- exists i : index , i < marker. m[i] = x
         -- exists i : index . i < marker /\ m[i] = x
         -- or([ i < marker /\ m[i] = x | i : index ])
@@ -552,7 +552,7 @@ rule_SetIn_ExplicitVarSizeWithFlags = "set-in{ExplicitVarSizeWithFlags}" `namedR
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithFlags"  <- representationOf s
         [flags,values]              <- downX1 s
-        DomainMatrix index _        <- domainOf' values
+        DomainMatrix index _        <- domainOf values
         -- exists i : index , i < marker. m[i] = x
         -- exists i : index . i < marker /\ m[i] = x
         -- or([ i < marker /\ m[i] = x | i : index ])
