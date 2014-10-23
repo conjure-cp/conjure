@@ -756,7 +756,7 @@ tests = testGroup "representations"
                 ConstantSet [ConstantInt 2, ConstantInt 5]
             low =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
-                  , intDomain 1 4
+                  , intDomain 0 4
                   , ConstantInt 2
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
@@ -793,7 +793,7 @@ tests = testGroup "representations"
                     ]
             mid =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
-                  , intDomain 1 4
+                  , intDomain 0 4
                   , ConstantInt 3
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
@@ -808,11 +808,11 @@ tests = testGroup "representations"
                 ]
             low =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
-                  , intDomain 1 4
+                  , intDomain 0 4
                   , ConstantInt 3
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker"
-                  , DomainMatrix   (intDomain 1 4) (intDomain 1 3)
+                  , DomainMatrix   (intDomain 1 4) (intDomain 0 3)
                   , ConstantMatrix (intDomain 1 4) [ConstantInt 1,ConstantInt 2,ConstantInt 3,ConstantInt 0]
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values"
@@ -978,7 +978,7 @@ tests = testGroup "representations"
                     ]
             mid =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
-                  , intDomain 1 4
+                  , intDomain 0 4
                   , ConstantInt 3
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
@@ -993,7 +993,7 @@ tests = testGroup "representations"
                 ]
             low =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
-                  , intDomain 1 4
+                  , intDomain 0 4
                   , ConstantInt 3
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values_Occurrence"

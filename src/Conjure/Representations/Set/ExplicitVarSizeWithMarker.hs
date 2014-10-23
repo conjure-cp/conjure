@@ -31,32 +31,32 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
 
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 0) maxSize]
+            let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
             return $ Just
                 [ ( nameMarker name
-                  , indexDomain
+                  , indexDomain 0
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
+                  , DomainMatrix (forgetRepr (indexDomain 1)) innerDomain
                   )
                 ]
         setDown_ _ = fail "N/A {setDown_}"
 
         structuralCons (name, DomainSet "ExplicitVarSizeWithMarker" attrs innerDomain@DomainInt{}) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 0) maxSize]
+            let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
             return $ Just $ \ fresh ->
                 let
                     marker = Reference (nameMarker name)
                                        (Just (DeclHasRepr
                                                   Find
                                                   (nameMarker name)
-                                                  indexDomain))
+                                                  (indexDomain 0)))
                     values = Reference (nameValues name)
                                        (Just (DeclHasRepr
                                                   Find
                                                   (nameValues name)
-                                                  (DomainMatrix (forgetRepr indexDomain) innerDomain)))
+                                                  (DomainMatrix (forgetRepr (indexDomain 1)) innerDomain)))
 
                     iName = headInf fresh
 
@@ -74,7 +74,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
                                             (make opPlus i (fromInt 1))
                                             marker
                                     )
-                                    (Domain indexDomain)
+                                    (Domain (indexDomain 1))
                                 )
                             ]
 
@@ -94,7 +94,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
                                     (mkLambda iName TypeInt $ \ i ->
                                         make opGt i marker
                                     )
-                                    (Domain indexDomain)
+                                    (Domain (indexDomain 1))
                                 )
                             ]
 
@@ -110,11 +110,9 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
                     ]
         structuralCons _ = fail "N/A {structuralCons}"
 
-
-
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 0) maxSize]
+            let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
             maxSizeInt <-
                 case maxSize of
                     ConstantInt x -> return x
@@ -128,12 +126,12 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
             let zeroes = replicate (maxSizeInt - length constants) z
             return $ Just
                 [ ( nameMarker name
-                  , indexDomain
+                  , indexDomain 0
                   , ConstantInt (length constants)
                   )
                 , ( nameValues name
-                  , DomainMatrix   (forgetRepr indexDomain) innerDomain
-                  , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
+                  , DomainMatrix   (forgetRepr (indexDomain 1)) innerDomain
+                  , ConstantMatrix (forgetRepr (indexDomain 1)) (constants ++ zeroes)
                   )
                 ]
         setDown _ = fail "N/A {setDown}"
