@@ -57,6 +57,9 @@ import qualified Data.Aeson.Types as JSON
 -- uniplate
 import Data.Generics.Uniplate.Data ( universeBi, transform )
 
+-- unordered-containers
+import qualified Data.HashSet as S
+
 
 data Model = Model
     { mLanguage :: LanguageVersion
@@ -83,10 +86,14 @@ instance Pretty Model where
         ]
 
 freshNames :: Model -> [Name]
-freshNames model = newNames \\ usedNames
+freshNames model = newNames
     where
-        newNames = [ "q" `mappend` Name (stringToText (show i)) | i <- allNats ]
-        usedNames = universeBi model :: [Name]
+        newNames = [ name
+                   | i <- allNats
+                   , let name = "q" `mappend` Name (stringToText (show i))
+                   , not (S.member name usedNames)
+                   ]
+        usedNames = S.fromList (universeBi model :: [Name])
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
