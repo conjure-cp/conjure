@@ -320,16 +320,11 @@ mkLambda nm ty f =
 -- TODO: Add support for AbsPatTuple
 -- TODO: Add support for AbsPatMatrix
 -- TODO: Add support for AbsPatSet
-lambdaToFunction :: AbstractPattern -> Expression -> AbstractPattern -> Expression
-lambdaToFunction (Single nm _) body =
-    let
-        replacer nm2 (Reference n d) | n == nm = Reference nm2 d
+lambdaToFunction :: AbstractPattern -> Expression -> (Expression -> Expression)
+lambdaToFunction (Single nm _) body = \ p -> transform (replacer p) body
+    where
+        replacer new (Reference n _) | n == nm = new
         replacer _ x = x
-
-        newBody (Single nm2 _) = transform (replacer nm2) body
-        newBody p = bug $ "Incompatible AbstractPattern, expecting `Single` but got " <+> pretty (show p)
-    in
-        newBody
 lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
 

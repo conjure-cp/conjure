@@ -395,6 +395,8 @@ allRules =
     , rule_SetEq
     , rule_SetSubsetEq
 
+    , rule_Set_MapInExpr_Explicit
+
     , rule_SetIn_Explicit
     , rule_SetIn_Occurrence
     , rule_SetIn_ExplicitVarSizeWithMarker
@@ -528,14 +530,15 @@ rule_InlineFilterInsideMap :: Rule
 rule_InlineFilterInsideMap = "inline-filter-inside-map" `namedRule` (return . theRule)
     where
         theRule (Op (MkOpMapOverDomain (OpMapOverDomain
-                        (Lambda vBody body)
+                        (Lambda patBody@(Single patBodyName _) body)
                         (Op (MkOpFilter (OpFilter
-                                (Lambda vGuard guard_)
+                                (Lambda patGuard@Single{} guard_)
                                 domain)))))) =
             let
-                fGuard  = lambdaToFunction vGuard guard_
-                fBody   = lambdaToFunction vBody  body
-                newBody = Lambda vBody (Op $ MkOpAnd $ OpAnd [fGuard vBody, fBody vBody])
+                fBody   = lambdaToFunction patBody  body
+                fGuard  = lambdaToFunction patGuard guard_
+                newRef  = Reference patBodyName (Just (InLambda patBody))
+                newBody = Lambda patBody (Op $ MkOpAnd $ OpAnd [fGuard newRef, fBody newRef])
             in
                 Just ( "Inlining the filter."
                      , const $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
@@ -572,6 +575,25 @@ rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
                , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
                )
 
+
+rule_Set_MapInExpr_Explicit :: Rule
+rule_Set_MapInExpr_Explicit = "set-quantification" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (Lambda lPat@Single{} lBody, s) <- match opMapInExpr p
+        "Explicit"           <- representationOf s
+        [m]                  <- downX1 s
+        DomainMatrix index _ <- domainOf m
+        let f = lambdaToFunction lPat lBody
+        let body iName = mkLambda iName TypeInt $ \ i ->
+                            f (make opIndexing m i)
+        -- map_in_expr(f(i), x)
+        -- map_domain(f(x[i]), domain)
+        return ( "Vertical rule for set-quantification, Explicit representation"
+               , \ fresh -> make opMapOverDomain
+                               (body (headInf fresh))
+                               (Domain index)
+               )
+        
 
 rule_SetEq :: Rule
 rule_SetEq = "set-eq" `namedRule` theRule where
