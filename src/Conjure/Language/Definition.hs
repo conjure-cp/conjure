@@ -287,10 +287,16 @@ instance ToJSON Expression where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty Expression where
+    -- special case for matrix comprehensions of SR here
+    pretty (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda (Single nm _) body) (Domain domain)))) =
+        prBrackets (pretty body <+> "|" <+> pretty nm <+> ":" <+> pretty domain)
+
+    -- mostly for debugging: print what a reference is pointing at
+    -- pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
+
     pretty (Constant x) = pretty x
     pretty (AbstractLiteral x) = pretty x
     pretty (Domain x) = "`" <> pretty x <> "`"
-    -- pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
     pretty (Reference x _) = pretty x
     pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
     pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])
