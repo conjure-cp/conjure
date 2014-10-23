@@ -60,6 +60,25 @@ opMinus _ =
     )
 
 
+opTimes
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opTimes _ =
+    ( \ x y -> injectOp (MkOpTimes (OpTimes x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpTimes (OpTimes x y) -> return (x,y)
+                _ -> fail ("N/A opTimes:" <++> pretty p)
+    )
+
+
 opDontCare
     :: ( OperatorContainer x
        , Pretty x
@@ -76,6 +95,25 @@ opDontCare _ =
             case op of
                 MkOpDontCare (OpDontCare x) -> return x
                 _ -> fail ("N/A opDontCare:" <++> pretty p)
+    )
+
+
+opToInt
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opToInt _ =
+    ( injectOp . MkOpToInt . OpToInt
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpToInt (OpToInt x) -> return x
+                _ -> fail ("N/A opToInt:" <++> pretty p)
     )
 
 
@@ -266,6 +304,25 @@ opAnd _ =
             case op of
                 MkOpAnd (OpAnd xs) -> return xs
                 _ -> fail ("N/A opAnd:" <++> pretty p)
+    )
+
+
+opImply
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opImply _ =
+    ( \ x y -> injectOp (MkOpImply (OpImply x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpImply (OpImply x y) -> return (x,y)
+                _ -> fail ("N/A opImply:" <++> pretty p)
     )
 
 

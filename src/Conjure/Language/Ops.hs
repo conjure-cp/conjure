@@ -39,6 +39,7 @@ data Ops x
 
     | MkOpAnd             (OpAnd x)
     | MkOpOr              (OpOr x)
+    | MkOpImply           (OpImply x)
 
     | MkOpIndexing        (OpIndexing x)
     | MkOpSlicing         (OpSlicing x)
@@ -81,6 +82,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpGeq                 x) = typeOf x
     typeOf (MkOpAnd                 x) = typeOf x
     typeOf (MkOpOr                  x) = typeOf x
+    typeOf (MkOpImply               x) = typeOf x
     typeOf (MkOpIndexing            x) = typeOf x
     typeOf (MkOpSlicing             x) = typeOf x
     typeOf (MkOpFilter              x) = typeOf x
@@ -130,8 +132,9 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _    (MkOpAnd      (OpAnd  xs   )) = "and" <> prettyList prParens "," xs
     prettyPrec prec (MkOpOr    op@(OpOr   [a,b])) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpOr       (OpOr   xs   )) = "or"  <> prettyList prParens "," xs
-    prettyPrec _ (MkOpIndexing (OpIndexing a b)) = pretty a <> "[" <> pretty b <> "]"
-    prettyPrec _ (MkOpSlicing  (OpSlicing  a  )) = pretty a <> "[..]"
+    prettyPrec prec (MkOpImply op@(OpImply a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec _ (MkOpIndexing (OpIndexing a b )) = pretty a <> "[" <> pretty b <> "]"
+    prettyPrec _ (MkOpSlicing  (OpSlicing  a   )) = pretty a <> "[..]"
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
@@ -375,6 +378,20 @@ instance TypeOf x => TypeOf (OpOr x) where
         if typesUnify (TypeBool:tys)
             then return TypeBool
             else bug "Type error in OpOr"
+
+
+data OpImply x = OpImply x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpImply x)
+instance Hashable  x => Hashable  (OpImply x)
+instance ToJSON    x => ToJSON    (OpImply x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpImply x) where parseJSON = JSON.genericParseJSON jsonOptions
+opImply :: OperatorContainer x => x -> x -> x
+opImply x y = injectOp (MkOpImply (OpImply x y))
+instance BinaryOperator (OpImply x) where
+    opLexeme _ = L_Imply
+instance TypeOf x => TypeOf (OpImply x) where
+    typeOf (OpImply a b) = boolToBoolToBool a b
 
 
 data OpIndexing x = OpIndexing x x
@@ -637,6 +654,9 @@ mkBinOp op a b =
                     L_Gt    -> opGt
                     L_Geq   -> opGeq
                     L_in    -> opIn
+                    L_And   -> opAnd
+                    L_Or    -> opOr
+                    L_Imply -> opImply
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b

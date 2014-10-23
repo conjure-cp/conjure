@@ -14,7 +14,7 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr, opSubsetEq, opDontCare )
+import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr, opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt )
 import Conjure.Language.Lenses
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -396,6 +396,7 @@ allRules =
     , rule_SetSubsetEq
 
     , rule_Set_MapInExpr_Explicit
+    , rule_Set_MapInExpr_Occurrence
 
     , rule_SetIn_Explicit
     , rule_SetIn_Occurrence
@@ -527,23 +528,29 @@ rule_DontCareInt = "dontCare-int" `namedRule` theRule where
 
 
 rule_InlineFilterInsideMap :: Rule
-rule_InlineFilterInsideMap = "inline-filter-inside-map" `namedRule` (return . theRule)
+rule_InlineFilterInsideMap = "inline-filter-inside-map" `namedRule` theRule
     where
-        theRule (Op (MkOpMapOverDomain (OpMapOverDomain
-                        (Lambda patBody@(Single patBodyName _) body)
-                        (Op (MkOpFilter (OpFilter
-                                (Lambda patGuard@Single{} guard_)
-                                domain)))))) =
-            let
-                fBody   = lambdaToFunction patBody  body
-                fGuard  = lambdaToFunction patGuard guard_
-                newRef  = Reference patBodyName (Just (InLambda patBody))
-                newBody = Lambda patBody (Op $ MkOpAnd $ OpAnd [fGuard newRef, fBody newRef])
-            in
-                Just ( "Inlining the filter."
-                     , const $ Op $ MkOpMapOverDomain $ OpMapOverDomain newBody domain
-                     )
-        theRule _ = Nothing
+        theRule p = runMaybeT $ msum
+            [ ruleGen opAnd (\ x y -> make opImply x y                ) p
+            , ruleGen opOr  (\ x y -> make opAnd  [x,y]               ) p
+            , ruleGen opSum (\ b x -> make opTimes (make opToInt b) x ) p
+            ]
+
+        ruleGen opQ opSkip p = do
+            [x]                    <- match opQ p
+            (Lambda f1 f2, rest  ) <- match opMapOverDomain x
+            (Lambda g1 g2, domain) <- match opFilter rest
+            ty                     <- typeOf domain
+
+            let f = lambdaToFunction f1 f2
+            let g = lambdaToFunction g1 g2
+
+            return ( "Inlining the filter."
+                   , \ fresh -> make opAnd
+                           [ make opMapOverDomain
+                                   (mkLambda (headInf fresh) ty $ \ i -> opSkip (f i) (g i))
+                                   domain ]
+                   )
 
 
 rule_TupleIndex :: Rule
@@ -577,7 +584,7 @@ rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
 
 
 rule_Set_MapInExpr_Explicit :: Rule
-rule_Set_MapInExpr_Explicit = "set-quantification" `namedRule` theRule where
+rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule where
     theRule p = runMaybeT $ do
         (Lambda lPat@Single{} lBody, s) <- match opMapInExpr p
         "Explicit"           <- representationOf s
@@ -587,7 +594,7 @@ rule_Set_MapInExpr_Explicit = "set-quantification" `namedRule` theRule where
         let body iName = mkLambda iName TypeInt $ \ i ->
                             f (make opIndexing m i)
         -- map_in_expr(f(i), x)
-        -- map_domain(f(x[i]), domain)
+        -- map_domain(f(m[i]), domain)
         return ( "Vertical rule for set-quantification, Explicit representation"
                , \ fresh -> make opMapOverDomain
                                (body (headInf fresh))
@@ -629,6 +636,25 @@ rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
         [m]                  <- downX1 s
         return ( "Vertical rule for set-in, Occurrence representation"
                , const $ make opIndexing m x
+               )
+
+
+rule_Set_MapInExpr_Occurrence :: Rule
+rule_Set_MapInExpr_Occurrence = "set-quantification{Occurrence}" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (lambda, s)          <- match opMapInExpr p
+        "Occurrence"         <- representationOf s
+        [m]                  <- downX1 s
+        DomainMatrix index _ <- domainOf m
+        let filterBody iName = mkLambda iName TypeInt $ \ i -> make opIndexing m i
+        -- map_in_expr(f(i), x)
+        -- map_domain(f(i), filter(m[i], domain))
+        return ( "Vertical rule for set-quantification, Explicit representation"
+               , \ fresh -> make opMapOverDomain
+                               lambda
+                               (make opFilter
+                                    (filterBody (headInf fresh))
+                                    (Domain index))
                )
 
 
