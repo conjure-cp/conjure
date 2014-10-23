@@ -43,7 +43,7 @@ isTestDir baseDir possiblyDir =
 --                + D/expected for the expected output files
 testSingleDir :: FilePath -> TestName -> IO TestTree
 testSingleDir baseDir basename = do
-    let conjuring = testCase "Conjuring" $ do
+    conjuring <- do
 
             -- the working directory and the outputs directory
             let wd = baseDir </> basename
@@ -56,7 +56,7 @@ testSingleDir baseDir basename = do
 
             -- read in the essence, generate the eprimes
             essence <- readModelFromFile (wd </> basename ++ ".essence")
-            modelAll outputsDir essence
+            conjuringResult <- modelAll outputsDir essence
 
             -- eprime's generates, and stored under outputs/*.eprime
             models <- filter (".eprime" `isSuffixOf`) <$> getDirectoryContents outputsDir
@@ -64,11 +64,25 @@ testSingleDir baseDir basename = do
             params <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents wd
 
             -- SavileRow+Minion for every model and every param
-            shelly $ print_stdout False
-                   $ print_stderr False
-                   $ if null params
-                        then testSingleDirNoParam outputsDir models
-                        else testSingleDirWithParams outputsDir models wd params
+            srResults <-
+                shelly $ print_stdout False
+                       $ print_stderr False
+                       $ if null params
+                            then testSingleDirNoParam outputsDir models
+                            else testSingleDirWithParams outputsDir models wd params
+
+            return $
+                ( testCase "Conjuring" $
+                    either (assertFailure . renderNormal) 
+                           (const (return ()))
+                           conjuringResult
+                ) :
+                [ testCase name $
+                    maybe  (return ())
+                           (assertFailure . renderNormal)
+                           res
+                | (name, res) <- srResults
+                ]
 
     -- check if the output models+solutions are the same as
     --          the expected ones
@@ -78,12 +92,13 @@ testSingleDir baseDir basename = do
     -- "checkingExpected" tests do depend on "conjuring" being run first
     -- hence we cannot exploit parallelism with this kind of a test description.
     -- will use -j1 for now.
-    return $ testGroup basename (conjuring : checkingExpected)
+    return $ testGroup basename (conjuring ++ checkingExpected)
 
 
-testSingleDirNoParam :: FilePath -> [FilePath] -> Sh ()
+testSingleDirNoParam :: FilePath -> [FilePath] -> Sh [(String, Maybe String)]
 testSingleDirNoParam outputsDir models =
-    forM_ models $ \ model -> do
+    forM models $ \ model -> do
+        let testCaseName = unwords ["Savile Row:", model]
         let outBase = dropExtension model
         _stdoutSR <- run "savilerow"
             [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
@@ -97,27 +112,33 @@ testSingleDirNoParam outputsDir models =
             , "-O0"
             , "-all-solutions"
             ]
-        lastStderr >>= \ stderrSR -> unless (T.null stderrSR) $
-            liftIO $ assertFailure $ T.unpack stderrSR
-        eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                  <$> liftIO (getDirectoryContents outputsDir)
-        forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
-            eprimeModel    <- readModelFromFile (outputsDir </> model)
-            eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-            case translateSolution eprimeModel def eprimeSolution of
-                Left err -> assertFailure $ renderNormal (err :: Doc)
-                Right s -> do
-                    let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
-                    writeFile filename (renderWide s)
+        stderrSR <- lastStderr
+        if not (T.null stderrSR)
+            then return ( testCaseName
+                        , Just (T.unpack stderrSR)
+                        )
+            else do
+                eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                          <$> liftIO (getDirectoryContents outputsDir)
+                forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
+                    eprimeModel    <- readModelFromFile (outputsDir </> model)
+                    eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                    case translateSolution eprimeModel def eprimeSolution of
+                        Left err -> assertFailure $ renderNormal (err :: Doc)
+                        Right s -> do
+                            let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
+                            writeFile filename (renderWide s)
+                return (testCaseName, Nothing)
 
 
-testSingleDirWithParams :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> Sh ()
+testSingleDirWithParams :: FilePath -> [FilePath] -> FilePath -> [FilePath] -> Sh [(String, Maybe String)]
 testSingleDirWithParams outputsDir models paramsDir params =
-    forM_ params $ \ paramPath -> forM_ models $ \ modelPath -> do
+    liftM concat $ forM params $ \ paramPath -> forM models $ \ modelPath -> do
+        let testCaseName = unwords ["Savile Row:", modelPath, "~~", paramPath]
         model <- liftIO $ readModelFromFile (outputsDir </> modelPath)
         param <- liftIO $ readModelFromFile (paramsDir  </> paramPath)
         case refineParam model param of
-            Left err -> liftIO $ assertFailure $ renderNormal (err :: Doc)
+            Left err -> return (testCaseName, Just (renderNormal err))
             Right eprimeParam -> do
                 let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
                 liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
@@ -134,18 +155,23 @@ testSingleDirWithParams outputsDir models paramsDir params =
                     , "-O0"
                     , "-all-solutions"
                     ]
-                lastStderr >>= \ stderrSR -> unless (T.null stderrSR) $
-                    liftIO $ assertFailure $ T.unpack stderrSR
-                eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                          <$> liftIO (getDirectoryContents outputsDir)
-                forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
-                    eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
-                    eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    case translateSolution eprimeModel param eprimeSolution of
-                        Left err -> assertFailure $ renderNormal (err :: Doc)
-                        Right s  -> do
-                            let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
-                            writeFile filename (renderWide s)
+                stderrSR <- lastStderr
+                if not (T.null stderrSR)
+                    then return ( testCaseName
+                                , Just (T.unpack stderrSR)
+                                )
+                    else do
+                        eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                                  <$> liftIO (getDirectoryContents outputsDir)
+                        forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
+                            eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
+                            eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                            case translateSolution eprimeModel param eprimeSolution of
+                                Left err -> assertFailure $ renderNormal (err :: Doc)
+                                Right s  -> do
+                                    let filename = outputsDir </> outBase ++ "-solution" ++ show i ++ ".solution"
+                                    writeFile filename (renderWide s)
+                        return (testCaseName, Nothing)
 
 
 checkExpected :: FilePath -> FilePath -> IO [TestTree]
@@ -167,12 +193,13 @@ checkExpected expected generated = do
                             case modelDiff e g of
                                 Nothing -> return ()
                                 Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
-                    else
-                        return $ testCase ("Diff, " ++ item) (assertFailure $ "file doesn't exist: " ++ generatedPath)
+                    else do
+                        cont <- getDirectoryContents generated
+                        return $ testCase ("Diff, " ++ item) (assertFailure $ "file doesn't exist: " ++ generatedPath ++ show cont)
 
 
-modelAll :: FilePath -> Model -> IO ()
-modelAll dir essence = outputModels allFixedQs dir 1 essence
+modelAll :: FilePath -> Model -> IO (Either Doc ())
+modelAll dir essence = runExceptT (outputModels allFixedQs dir 1 essence)
 
 
 dropExtension :: FilePath -> FilePath
