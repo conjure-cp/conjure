@@ -150,21 +150,25 @@ testSingleDirWithParams outputsDir models paramsDir params =
 
 checkExpected :: FilePath -> FilePath -> IO [TestTree]
 checkExpected expected generated = do
-    expecteds <- filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents expected
-    forM expecteds $ \ item -> do
-        let expectedPath  = expected  </> item
-        let generatedPath = generated </> item
-        isFile <- doesFileExist generatedPath
-        if isFile
-            then do
-                e <- readModelFromFile expectedPath
-                g <- readModelFromFile generatedPath
-                return $ testCase item $
-                    case modelDiff e g of
-                        Nothing -> return ()
-                        Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
-            else
-                return $ testCase ("Diff, " ++ item) (assertFailure $ "file doesn't exist: " ++ generatedPath)
+    expectedDirExists <- doesDirectoryExist expected
+    if not expectedDirExists
+        then return [testCase "Expected" $ assertFailure ("Directory does not exist: " ++ show expected)]
+        else do
+            expecteds <- filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents expected
+            forM expecteds $ \ item -> do
+                let expectedPath  = expected  </> item
+                let generatedPath = generated </> item
+                isFile <- doesFileExist generatedPath
+                if isFile
+                    then do
+                        e <- readModelFromFile expectedPath
+                        g <- readModelFromFile generatedPath
+                        return $ testCase item $
+                            case modelDiff e g of
+                                Nothing -> return ()
+                                Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
+                    else
+                        return $ testCase ("Diff, " ++ item) (assertFailure $ "file doesn't exist: " ++ generatedPath)
 
 
 modelAll :: FilePath -> Model -> IO ()
