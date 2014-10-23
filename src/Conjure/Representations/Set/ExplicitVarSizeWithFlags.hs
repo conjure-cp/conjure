@@ -6,6 +6,8 @@ module Conjure.Representations.Set.ExplicitVarSizeWithFlags
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Lenses
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
@@ -43,10 +45,80 @@ setExplicitVarSizeWithFlags = Representation chck setDown_ structuralCons setDow
                 ]
         setDown_ _ = fail "N/A {setDown_}"
 
-        structuralCons = const $ return Nothing -- TODO: enforce cardinality
-                                                -- TODO: enforce strictOrdering when flag = true
-                                                -- TODO: dontCare when flag = false
-                                                -- TODO: push true flags to the left
+        structuralCons (name, DomainSet "ExplicitVarSizeWithFlags" attrs innerDomain) = do
+            innerType <- typeOf innerDomain
+            maxSize   <- getMaxSize attrs innerDomain
+            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+            return $ Just $ \ fresh ->
+                let
+                    flags = Reference (nameFlag name)
+                                       (Just (DeclHasRepr
+                                                  Find
+                                                  (nameFlag name)
+                                                  (DomainMatrix (forgetRepr indexDomain) DomainBool)))
+                    values = Reference (nameValues name)
+                                       (Just (DeclHasRepr
+                                                  Find
+                                                  (nameValues name)
+                                                  (DomainMatrix (forgetRepr indexDomain) innerDomain)))
+
+                    iName = headInf fresh
+
+                    -- forAll i : int(1..&mx-1) , flags[i+1] . values[i] .< values[i+1]
+                    orderingWhenFlagged =
+                        make opAnd
+                            [make opMapOverDomain
+                                (mkLambda iName innerType $ \ i ->
+                                    make opLt
+                                        (make opIndexing values i)
+                                        (make opIndexing values (make opPlus i (fromInt 1)))
+                                )
+                                (make opFilter
+                                    (mkLambda iName innerType $ \ i ->
+                                        make opIndexing flags (make opPlus i (fromInt 1))
+                                    )
+                                    (Domain $ DomainInt [RangeBounded (fromInt 1) (make opMinus maxSize (fromInt 1))])
+                                )
+                            ]
+
+                    -- forAll i : int(1..&mx ) , !flags[i] . dontCare(values[i])
+                    dontCareWhenNotFlagged =
+                        make opAnd
+                            [make opMapOverDomain
+                                (mkLambda iName innerType $ \ i ->
+                                    make opDontCare (make opIndexing values i)
+                                )
+                                (make opFilter
+                                    (mkLambda iName innerType $ \ i ->
+                                        make opEq
+                                            (make opIndexing flags i)
+                                            (fromBool False)
+                                    )
+                                    (Domain indexDomain)
+                                )
+                            ]
+
+                    -- forAll i : int(1..&mx-1) , flags[i+1] . flags[i]
+                    flagsToTheLeft =
+                        make opAnd
+                            [make opMapOverDomain
+                                (mkLambda iName innerType $ \ i ->
+                                    make opIndexing flags i
+                                )
+                                (make opFilter
+                                    (mkLambda iName innerType $ \ i ->
+                                        make opIndexing flags (make opPlus i (fromInt 1))
+                                    )
+                                    (Domain $ DomainInt [RangeBounded (fromInt 1) (make opMinus maxSize (fromInt 1))])
+                                )
+                            ]
+
+                in
+                    [ orderingWhenFlagged
+                    , dontCareWhenNotFlagged
+                    , flagsToTheLeft
+                    ]
+        structuralCons _ = fail "N/A {structuralCons}"
 
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain

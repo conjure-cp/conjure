@@ -7,6 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Lenses
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
@@ -42,8 +43,9 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
                 ]
         setDown_ _ = fail "N/A {setDown_}"
 
-        structuralCons (name, DomainSet "ExplicitVarSizeWithMarker" attrs innerDomain@DomainInt{}) = do
-            maxSize <- getMaxSize attrs innerDomain
+        structuralCons (name, DomainSet "ExplicitVarSizeWithMarker" attrs innerDomain) = do
+            innerType <- typeOf innerDomain
+            maxSize   <- getMaxSize attrs innerDomain
             let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
             return $ Just $ \ fresh ->
                 let
@@ -60,49 +62,40 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
 
                     iName = headInf fresh
 
+                    -- forAll &i : int(1..&maxSize-1) , &i+1 <= &marker . &values[i] .< &values[i+1]
                     orderingUpToMarker =
                         make opAnd
                             [make opMapOverDomain
-                                (mkLambda iName TypeInt $ \ i ->
+                                (mkLambda iName innerType $ \ i ->
                                     make opLt
                                         (make opIndexing values i)
                                         (make opIndexing values (make opPlus i (fromInt 1)))
                                 )
                                 (make opFilter
-                                    (mkLambda iName TypeInt $ \ i ->
+                                    (mkLambda iName innerType $ \ i ->
                                         make opLeq
                                             (make opPlus i (fromInt 1))
                                             marker
                                     )
-                                    (Domain (indexDomain 1))
+                                    (Domain $ DomainInt [RangeBounded (fromInt 1)
+                                                                      (make opMinus maxSize (fromInt 1))])
                                 )
                             ]
 
-                    -- orderingUpToMarker i = [essence|
-                    --     forAll &i : int(1..&maxSize)
-                    --         , &i+1 <= &marker
-                    --         . &values[i] .< refn[i+1]
-                    -- |]
-
+                    -- forAll &i : int(1..&maxSize) , &i > &marker . dontCare(&values[&i])
                     dontCareAfterMarker =
                         make opAnd
                             [make opMapOverDomain
-                                (mkLambda iName TypeInt $ \ i ->
+                                (mkLambda iName innerType $ \ i ->
                                     make opDontCare (make opIndexing values i)
                                 )
                                 (make opFilter
-                                    (mkLambda iName TypeInt $ \ i ->
+                                    (mkLambda iName innerType $ \ i ->
                                         make opGt i marker
                                     )
                                     (Domain (indexDomain 1))
                                 )
                             ]
-
-                    -- dontCareAfterMarker i = [essence|
-                    --     forAll &i : int(1..&maxSize)
-                    --         , &i > &marker
-                    --         . dontCare(&values[&i])
-                    -- |]
 
                 in
                     [ orderingUpToMarker
