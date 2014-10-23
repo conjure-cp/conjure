@@ -118,7 +118,7 @@ specToModel (Spec lang stmt) = Model
                                 (Lambda (convPat ty pat) (convExpr guardE))
                                 b
             in
-                mkOp qnName
+                mkOp (translateQnName qnName)
                     [ Op $ MkOpMapOverDomain $ OpMapOverDomain
                         (Lambda (convPat ty pat) (convExpr body))
                         (filterOr (Domain (convDomain quanOverDom))) ]
@@ -146,7 +146,7 @@ specToModel (Spec lang stmt) = Model
                     _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
 
             in
-                mkOp qnName
+                mkOp (translateQnName qnName)
                     [ op'
                         (Lambda (convPat ty pat) (convExpr body))
                         (filterOr (convExpr quanOverExpr)) ]
@@ -177,10 +177,34 @@ specToModel (Spec lang stmt) = Model
                     _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
 
             in
-                mkOp qnName
+                mkOp (translateQnName qnName)
                     [ Op $ MkOpMapOverDomain $ OpMapOverDomain
                         (Lambda (convPat ty pat) (convExpr body))
                         (filterOr (Domain (convDomain quanOverDom))) ]
+
+-- matrix comprehensions
+        convExpr [xMatch| [body] := matrixComprehension.body
+                        | gens   := matrixComprehension.generators
+                        |] =
+            let
+                genOut [xMatch| [Prim (S nm)] := generator.name.reference
+                              | [D d]         := generator.domain
+                              |] = (nm, convDomain d)
+                genOut x = userErr ("genOut:" <+> pretty x)
+
+                generators = map genOut gens
+
+                convGenerator (name, domain) b = Op $ MkOpMapOverDomain $ OpMapOverDomain
+                    (Lambda (Single (Name name) TypeInt) b)
+                    (Domain domain)
+
+                convGenerators []     = userErr "No generators."
+                convGenerators [g]    = convGenerator g (convExpr body)
+                convGenerators (g:gs) = convGenerator g (convGenerators gs)
+
+            in
+                convGenerators generators
+            
 
 -- unary operators
         convExpr [xMatch| xs := operator.dontCare     |] = mkOp "dontCare"     (map convExpr xs)
@@ -209,9 +233,25 @@ specToModel (Spec lang stmt) = Model
         convExpr [xMatch| xs := unaryOp.negate        |] = mkOp "negate"       (map convExpr xs)
         convExpr [xMatch| xs := unaryOp.factorial     |] = mkOp "factorial"    (map convExpr xs)
 
+        convExpr [xMatch| [Prim (S "forAll")] := functionApply.actual.reference
+                        | [arg] := functionApply.args
+                        |] = Op $ MkOpAnd $ OpAnd [convExpr arg]
+        convExpr [xMatch| [Prim (S "and")] := functionApply.actual.reference
+                        | [arg] := functionApply.args
+                        |] = Op $ MkOpAnd $ OpAnd [convExpr arg]
+        convExpr [xMatch| [Prim (S "exists")] := functionApply.actual.reference
+                        | [arg] := functionApply.args
+                        |] = Op $ MkOpOr $ OpOr [convExpr arg]
+        convExpr [xMatch| [Prim (S "or")] := functionApply.actual.reference
+                        | [arg] := functionApply.args
+                        |] = Op $ MkOpOr $ OpOr [convExpr arg]
+        convExpr [xMatch| [Prim (S "sum")] := functionApply.actual.reference
+                        | [arg] := functionApply.args
+                        |] = Op $ MkOpPlus $ OpPlus [convExpr arg]
+
         convExpr [xMatch| [actual] := functionApply.actual
-                      |   args   := functionApply.args
-                      |]
+                        |   args   := functionApply.args
+                        |]
             = Op $ MkOpFunctionImage $ OpFunctionImage (convExpr actual) (map convExpr args)
 
         convExpr [xMatch| [x] := structural.single |] = convExpr x
@@ -285,4 +325,11 @@ specToModel (Spec lang stmt) = Model
         convName :: E -> Name
         convName [xMatch| [Prim (S nm)] := reference |] = Name nm
         convName x = bug $ "convName" <+> prettyAsPaths x
+
+
+translateQnName :: Text -> Text
+translateQnName qnName = case qnName of
+    "forAll" -> "and"
+    "exists" -> "or"
+    _        -> qnName
 

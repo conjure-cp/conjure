@@ -64,8 +64,26 @@ parseAtomicExprNoPrePost = msum $ map try
     , parseValue
     , parseDomainAsExpr
     , parseWithLocals
+    , parseMatrixComprehension
     , parens parseExpr
     ]
+
+parseMatrixComprehension :: Parser E
+parseMatrixComprehension = brackets $ do
+    x <- parseExpr
+    lexeme L_Bar
+    gens <- some generator
+    return [xMake| matrixComprehension.body       := [x]
+                 | matrixComprehension.generators := gens
+                 |]
+    where
+        generator = do
+            r <- parseReference
+            lexeme L_Colon
+            d <- parseDomain
+            return [xMake| generator.name   := [r]
+                         | generator.domain := [D d]
+                         |]
 
 parseDomainAsExpr :: Parser E
 parseDomainAsExpr = do
