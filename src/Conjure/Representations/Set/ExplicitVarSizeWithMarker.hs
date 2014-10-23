@@ -6,6 +6,7 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
@@ -30,7 +31,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
 
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+            let indexDomain = DomainInt [RangeBounded (fromInt 0) maxSize]
             return $ Just
                 [ ( nameMarker name
                   , indexDomain
@@ -41,13 +42,79 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
                 ]
         setDown_ _ = fail "N/A {setDown_}"
 
-        structuralCons = const $ return Nothing -- TODO: enforce cardinality
-                                                -- TODO: enforce strictOrdering up to marker
-                                                -- TODO: dontCare after the marker
+        structuralCons (name, DomainSet "ExplicitVarSizeWithMarker" attrs innerDomain@DomainInt{}) = do
+            maxSize <- getMaxSize attrs innerDomain
+            let indexDomain = DomainInt [RangeBounded (fromInt 0) maxSize]
+            return $ Just $ \ fresh ->
+                let
+                    marker = Reference (nameMarker name)
+                                       (Just (DeclHasRepr
+                                                  Find
+                                                  (nameMarker name)
+                                                  indexDomain))
+                    values = Reference (nameValues name)
+                                       (Just (DeclHasRepr
+                                                  Find
+                                                  (nameValues name)
+                                                  (DomainMatrix (forgetRepr indexDomain) innerDomain)))
+
+                    iName = headInf fresh
+
+                    orderingUpToMarker =
+                        make opAnd
+                            [make opMapOverDomain
+                                (mkLambda iName TypeInt $ \ i ->
+                                    make opLt
+                                        (make opIndexing values i)
+                                        (make opIndexing values (make opPlus i (fromInt 1)))
+                                )
+                                (make opFilter
+                                    (mkLambda iName TypeInt $ \ i ->
+                                        make opLeq
+                                            (make opPlus i (fromInt 1))
+                                            marker
+                                    )
+                                    (Domain indexDomain)
+                                )
+                            ]
+
+                    -- orderingUpToMarker i = [essence|
+                    --     forAll &i : int(1..&maxSize)
+                    --         , &i+1 <= &marker
+                    --         . &values[i] .< refn[i+1]
+                    -- |]
+
+                    dontCareAfterMarker =
+                        make opAnd
+                            [make opMapOverDomain
+                                (mkLambda iName TypeInt $ \ i ->
+                                    make opDontCare (make opIndexing values i)
+                                )
+                                (make opFilter
+                                    (mkLambda iName TypeInt $ \ i ->
+                                        make opGt i marker
+                                    )
+                                    (Domain indexDomain)
+                                )
+                            ]
+
+                    -- dontCareAfterMarker i = [essence|
+                    --     forAll &i : int(1..&maxSize)
+                    --         , &i > &marker
+                    --         . dontCare(&values[&i])
+                    -- |]
+
+                in
+                    [ orderingUpToMarker
+                    , dontCareAfterMarker
+                    ]
+        structuralCons _ = fail "N/A {structuralCons}"
+
+
 
         setDown (name, domain@(DomainSet _ attrs innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+            let indexDomain = DomainInt [RangeBounded (fromInt 0) maxSize]
             maxSizeInt <-
                 case maxSize of
                     ConstantInt x -> return x

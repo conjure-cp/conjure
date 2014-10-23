@@ -52,6 +52,7 @@ data Ops x
 
     | MkOpTrue            (OpTrue x)
     | MkOpToInt           (OpToInt x)
+    | MkOpDontCare        (OpDontCare x)
 
     | MkOpIn              (OpIn x)
     | MkOpSubset          (OpSubset x)
@@ -90,6 +91,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpTrue                x) = typeOf x
     typeOf (MkOpToInt               x) = typeOf x
+    typeOf (MkOpDontCare            x) = typeOf x
     typeOf (MkOpIn                  x) = typeOf x
     typeOf (MkOpSubset              x) = typeOf x
     typeOf (MkOpSubsetEq            x) = typeOf x
@@ -136,8 +138,9 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpMapSubsetExpr   (OpMapSubsetExpr   a b)) = "map_subset_expr"   <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr a b)) = "map_subsetEq_expr" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList prParens "," (a:b)
-    prettyPrec _ (MkOpTrue  (OpTrue  a)) = "true"  <> prParens (pretty a)
-    prettyPrec _ (MkOpToInt (OpToInt a)) = "toInt" <> prParens (pretty a)
+    prettyPrec _ (MkOpTrue     (OpTrue     a)) = "true"     <> prParens (pretty a)
+    prettyPrec _ (MkOpToInt    (OpToInt    a)) = "toInt"    <> prParens (pretty a)
+    prettyPrec _ (MkOpDontCare (OpDontCare a)) = "dontCare" <> prParens (pretty a)
     prettyPrec prec (MkOpIn       op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSubset   op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSubsetEq op@(OpSubsetEq  a b)) = prettyPrecBinOp prec [op] a b
@@ -500,6 +503,18 @@ instance TypeOf x => TypeOf (OpToInt x) where
     typeOf (OpToInt x) = do
         TypeBool{} <- typeOf x
         return TypeInt
+
+
+data OpDontCare x = OpDontCare x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpDontCare x)
+instance Hashable  x => Hashable  (OpDontCare x)
+instance ToJSON    x => ToJSON    (OpDontCare x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpDontCare x) where parseJSON = JSON.genericParseJSON jsonOptions
+opDontCare :: OperatorContainer x => x -> x
+opDontCare x = injectOp (MkOpDontCare (OpDontCare x))
+instance TypeOf x => TypeOf (OpDontCare x) where
+    typeOf (OpDontCare _) = return TypeBool
 
 
 data OpIn x = OpIn x x

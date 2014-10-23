@@ -429,12 +429,15 @@ instance Pretty AbstractPattern where
 
 class ExpressionLike a where
     fromInt :: Int -> a
+    fromBool :: Bool -> a
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt
+    fromBool = ConstantBool
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
+    fromBool = Constant . fromBool
 
 
 instance Num Expression where

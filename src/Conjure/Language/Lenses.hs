@@ -60,6 +60,25 @@ opMinus _ =
     )
 
 
+opDontCare
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opDontCare _ =
+    ( injectOp . MkOpDontCare . OpDontCare
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpDontCare (OpDontCare x) -> return x
+                _ -> fail ("N/A opDontCare:" <++> pretty p)
+    )
+
+
 opIndexing
     :: ( OperatorContainer x
        , Pretty x
@@ -266,6 +285,25 @@ opSum _ =
             case op of
                 MkOpPlus (OpPlus xs) -> return xs
                 _ -> fail ("N/A opSum:" <++> pretty p)
+    )
+
+
+opFilter
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opFilter _ =
+    ( \ x y -> injectOp (MkOpFilter (OpFilter x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpFilter (OpFilter x y) -> return (x,y)
+                _ -> fail ("N/A opFilter:" <++> pretty p)
     )
 
 
