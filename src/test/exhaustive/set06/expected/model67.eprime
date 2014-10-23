@@ -1,0 +1,34 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
+find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1..4)
+find x_Occurrence: matrix indexed by [int(1..4)] of bool
+such that
+    or([x_ExplicitVarSizeWithFlags_Values[q2] = 1 /\ x_ExplicitVarSizeWithFlags_Flags[q2] | q2 : int(1..4)]),
+    or([x_ExplicitVarSizeWithMarker_Values[q4] = 2 /\ q4 <= x_ExplicitVarSizeWithMarker_Marker | q4 : int(1..4)]),
+    or([x_ExplicitVarSizeWithMarker_Values[q5] = 3 /\ q5 <= x_ExplicitVarSizeWithMarker_Marker | q5 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> x_ExplicitVarSizeWithFlags_Values[q7] < x_ExplicitVarSizeWithFlags_Values[q7 + 1] | q7 : int(1..4 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q8] = false -> x_ExplicitVarSizeWithFlags_Values[q8] = 1 | q8 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q9 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q9] | q9 : int(1..4 - 1)]),
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..4 - 1)]),
+    and([q10 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q10] = 1 | q10 : int(1..4)]),
+    and([q3 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Values[q11] = x_ExplicitVarSizeWithMarker_Values[q3] /\
+             x_ExplicitVarSizeWithFlags_Flags[q11] | q11 : int(1..4)]) | q3 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q12] ->
+         or([x_ExplicitVarSizeWithMarker_Values[q13] = x_ExplicitVarSizeWithFlags_Values[q12] /\
+             q13 <= x_ExplicitVarSizeWithMarker_Marker | q13 : int(1..4)]) | q12 : int(1..4)]),
+    and([q14 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Values[q15] = x_ExplicitVarSizeWithMarker_Values[q14] /\
+             x_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..4)]) | q14 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q16] ->
+         or([x_ExplicitVarSizeWithMarker_Values[q17] = x_ExplicitVarSizeWithFlags_Values[q16] /\
+             q17 <= x_ExplicitVarSizeWithMarker_Marker | q17 : int(1..4)]) | q16 : int(1..4)]),
+    4 >= sum([x_Occurrence[q6] | q6 : int(1..4)]),
+    and([x_Occurrence[q20] -> or([x_ExplicitVarSizeWithFlags_Values[q18] = q20 /\ x_ExplicitVarSizeWithFlags_Flags[q18] | q18 : int(1..4)]) | q20 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q19] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q19]] | q19 : int(1..4)]),
+    and([x_Occurrence[q23] ->
+         or([x_ExplicitVarSizeWithMarker_Values[q21] = q23 /\ q21 <= x_ExplicitVarSizeWithMarker_Marker | q21 : int(1..4)]) | q23 : int(1..4)]),
+    and([q22 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q22]] | q22 : int(1..4)])
