@@ -7,7 +7,7 @@
 module Conjure.UI.Model
     ( outputOneModel
     , pickFirst
-    , interactive, interactiveFixedQs
+    , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     ) where
 
 import Conjure.Prelude
@@ -144,7 +144,7 @@ outputOneModel driver dir i essence = do
     writeFile filename (renderWide eprime)
 
 
-pickFirst :: MonadFail m => [Question] -> m Model
+pickFirst :: Driver
 pickFirst [] = fail "pickFirst: No questions!"
 pickFirst (question:_) =
     case qAnswers question of
@@ -152,7 +152,7 @@ pickFirst (question:_) =
         (answer:_) -> return (aFullModel answer)
 
 
-interactive :: MonadIO m => [Question] -> m Model
+interactive :: Driver
 interactive questions = liftIO $ do
     putStrLn ""
     putStrLn " ----------------------------------------"
@@ -184,11 +184,19 @@ interactive questions = liftIO $ do
     return pickedModel
 
 
-interactiveFixedQs :: (MonadFail m, MonadIO m) => [Question] -> m Model
+interactiveFixedQs :: Driver
 interactiveFixedQs [] = fail "interactiveFixedQs: No questions!"
 interactiveFixedQs (pickedQ:_) = liftIO $ do
     putStrLn ""
     putStrLn " ----------------------------------------"
+
+    print ("Question:" <+> pretty (qHole pickedQ))
+    unless (null (qAscendants pickedQ)) $
+        print $ nest 4 $ vcat
+            [ "Context #" <> pretty i <> ":" <+> pretty c
+            | i <- allNats
+            | c <- qAscendants pickedQ
+            ]
 
     forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
         print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
@@ -201,6 +209,41 @@ interactiveFixedQs (pickedQ:_) = liftIO $ do
     let pickedModel = aFullModel pickedA
     putStrLn "Current model:"
     print $ nest 8 $ pretty pickedModel
+    return pickedModel
+
+
+interactiveFixedQsAutoA :: Driver
+interactiveFixedQsAutoA [] = fail "interactiveFixedQs: No questions!"
+interactiveFixedQsAutoA (pickedQ:_) = liftIO $ do
+    putStrLn ""
+    putStrLn " ----------------------------------------"
+
+    print ("Question:" <+> pretty (qHole pickedQ))
+    unless (null (qAscendants pickedQ)) $
+        print $ nest 4 $ vcat
+            [ "Context #" <> pretty i <> ":" <+> pretty c
+            | i <- allNats
+            | c <- qAscendants pickedQ
+            ]
+
+    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
+        print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
+                                                                , pretty (aAnswer a) ]
+    -- print (nest 8 $ pretty (aFullModel a))
+
+    pickedA <- case qAnswers pickedQ of
+        [a] -> do
+            putStrLn "Automatically picking the only answer."
+            return a
+        _   -> do
+            putStr "Pick answer: "
+            pickedAIndex <- readNote "Expecting an integer." <$> getLine
+            let pickedA = qAnswers pickedQ `at` (pickedAIndex - 1)
+            return pickedA
+
+    let pickedModel = aFullModel pickedA
+    -- putStrLn "Current model:"
+    -- print $ nest 8 $ pretty pickedModel
     return pickedModel
 
 
