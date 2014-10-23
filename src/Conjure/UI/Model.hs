@@ -6,7 +6,8 @@
 
 module Conjure.UI.Model
     ( outputOneModel
-    , interactive, pickFirst
+    , pickFirst
+    , interactive, interactiveFixedQs
     ) where
 
 import Conjure.Prelude
@@ -185,6 +186,26 @@ interactive questions = liftIO $ do
     return pickedModel
 
 
+interactiveFixedQs :: (MonadFail m, MonadIO m) => [Question] -> m Model
+interactiveFixedQs [] = fail "interactiveFixedQs: No questions!"
+interactiveFixedQs (pickedQ:_) = liftIO $ do
+    putStrLn ""
+    putStrLn " ----------------------------------------"
+
+    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
+        print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
+                                                                , pretty (aAnswer a) ]
+        -- print (nest 8 $ pretty (aFullModel a))
+    putStr "Pick answer: "
+    pickedAIndex <- readNote "Expecting an integer." <$> getLine
+    let pickedA = qAnswers pickedQ `at` (pickedAIndex - 1)
+
+    let pickedModel = aFullModel pickedA
+    putStrLn "Current model:"
+    print $ nest 8 $ pretty pickedModel
+    return pickedModel
+
+
 ascendants :: Zipper a b -> [b]
 ascendants z = hole z : maybe [] ascendants (Zipper.up z)
 
@@ -224,7 +245,9 @@ oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
         collect (SuchThat s) = ([], s)
         collect s = ([s], [])
 
-        breakConjunctions (Op (MkOpAnd (OpAnd xs))) = xs
+        breakConjunctions   (Op (MkOpAnd (OpAnd [ ]))) = bug "empty /\\"
+        breakConjunctions x@(Op (MkOpAnd (OpAnd [_]))) = [x]
+        breakConjunctions (Op (MkOpAnd (OpAnd xs))) = concatMap breakConjunctions xs
         breakConjunctions x = [x]
 
 

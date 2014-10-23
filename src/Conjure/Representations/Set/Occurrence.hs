@@ -35,9 +35,8 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
                                           Find
                                           (outName name)
                                           (DomainMatrix (forgetRepr innerDomain) DomainBool)))
-                i = "i" :: Name
-                pat = Single i TypeInt
-                body = make opIndexing m (Reference i (Just (InLambda pat)))
+                iName = "i" :: Name
+                body = mkLambda iName TypeInt $ \ i -> make opIndexing m i
                 cardinality = make opSum [make opMapOverDomain body (Domain (forgetRepr innerDomain))]
             in
                 return $ case attrs of

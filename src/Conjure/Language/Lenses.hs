@@ -22,6 +22,44 @@ match f = snd (f (Proxy :: Proxy (MaybeT m)))
 --------------------------------------------------------------------------------
 
 
+opPlus
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opPlus _ =
+    ( \ x y -> injectOp (MkOpPlus (OpPlus [x,y]))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpPlus (OpPlus [x,y]) -> return (x,y)
+                _ -> fail ("N/A opPlus:" <++> pretty p)
+    )
+
+
+opMinus
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opMinus _ =
+    ( \ x y -> injectOp (MkOpMinus (OpMinus x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpMinus (OpMinus x y) -> return (x,y)
+                _ -> fail ("N/A opMinus:" <++> pretty p)
+    )
+
+
 opIndexing
     :: ( OperatorContainer x
        , Pretty x
