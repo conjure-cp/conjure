@@ -153,22 +153,23 @@ toCompletionMulti driver = loopy . prologue
                     concatMapM loopy nextModels
 
 
-outputModel :: Driver -> FilePath -> Int -> Model -> IO ()
+outputModel :: (MonadIO m, MonadFail m) => Driver -> FilePath -> Int -> Model -> m ()
 outputModel driver dir i essence = do
-    createDirectoryIfMissing True dir
+    liftIO $ createDirectoryIfMissing True dir
     eprime <- toCompletion driver essence
     let filename = dir </> "model" ++ show i ++ ".eprime"
-    writeFile filename (renderWide eprime)
+    liftIO $ writeFile filename (renderWide eprime)
 
 
-outputModels :: MultiDriver -> FilePath -> Int -> Model -> IO ()
+outputModels :: (MonadIO m, MonadFail m) => MultiDriver -> FilePath -> Int -> Model -> m ()
 outputModels driver dir i essence = do
-    createDirectoryIfMissing True dir
+    liftIO $ createDirectoryIfMissing True dir
     eprimes <- toCompletionMulti driver essence
-    sequence_ [ writeFile filename (renderWide eprime)
-              | (j, eprime) <- zip [i..] eprimes
-              , let filename = dir </> "model" ++ show j ++ ".eprime"
-              ]
+    liftIO $ sequence_
+        [ writeFile filename (renderWide eprime)
+        | (j, eprime) <- zip [i..] eprimes
+        , let filename = dir </> "model" ++ show j ++ ".eprime"
+        ]
 
 
 allFixedQs :: MultiDriver
