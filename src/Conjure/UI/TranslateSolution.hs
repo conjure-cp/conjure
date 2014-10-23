@@ -32,7 +32,7 @@ translateSolution eprimeModel essenceParam eprimeSolution = do
     essenceLettings <- mapM (up eprimeLettings') essenceFinds'
 
     return def
-        { mStatements =
+        { mStatements = sortNub
             [ Declaration (Letting n (Constant x))
             | (n, x) <- essenceLettings
             ]
