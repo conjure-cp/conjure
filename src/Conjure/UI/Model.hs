@@ -128,29 +128,33 @@ addToTrail nQuestion nQuestions tQuestion
 
 
 toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
-toCompletion driver model = do
-    qs <- remaining model
-    if null qs
-        then return (grooming model)
-        else do
-            nextModel <- driver qs
-            toCompletion driver nextModel
+toCompletion driver = loopy . prologue
+    where
+        loopy model = do
+            qs <- remaining model
+            if null qs
+                then return (epilogue model)
+                else do
+                    nextModel <- driver qs
+                    loopy nextModel
 
 
 toCompletionMulti :: (MonadIO m, MonadFail m) => MultiDriver -> Model -> m [Model]
-toCompletionMulti driver model = do
-    qs <- remaining model
-    if null qs
-        then return [grooming model]
-        else do
-            nextModels <- driver qs
-            concatMapM (toCompletionMulti driver) nextModels
+toCompletionMulti driver = loopy . prologue
+    where
+        loopy model = do
+            qs <- remaining model
+            if null qs
+                then return [epilogue model]
+                else do
+                    nextModels <- driver qs
+                    concatMapM loopy nextModels
 
 
 outputModel :: Driver -> FilePath -> Int -> Model -> IO ()
 outputModel driver dir i essence = do
     createDirectoryIfMissing True dir
-    eprime <- toCompletion driver (essence |> addTrueConstraints |> initInfo)
+    eprime <- toCompletion driver essence
     let filename = dir </> "model" ++ show i ++ ".eprime"
     writeFile filename (renderWide eprime)
 
@@ -158,7 +162,7 @@ outputModel driver dir i essence = do
 outputModels :: MultiDriver -> FilePath -> Int -> Model -> IO ()
 outputModels driver dir i essence = do
     createDirectoryIfMissing True dir
-    eprimes <- toCompletionMulti driver (essence |> addTrueConstraints |> initInfo)
+    eprimes <- toCompletionMulti driver essence
     sequence_ [ writeFile filename (renderWide eprime)
               | (j, eprime) <- zip [i..] eprimes
               , let filename = dir </> "model" ++ show j ++ ".eprime"
@@ -342,8 +346,14 @@ updateDeclarations model =
         model { mStatements = statements }
 
 
-grooming :: Model -> Model
-grooming model = model
+prologue :: Model -> Model
+prologue essence = essence
+    |> addTrueConstraints
+    |> initInfo
+
+
+epilogue :: Model -> Model
+epilogue eprime = eprime
     |> updateDeclarations
     |> oneSuchThat
     |> languageEprime
