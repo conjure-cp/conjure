@@ -35,17 +35,16 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
                                           Find
                                           (outName name)
                                           (DomainMatrix (forgetRepr innerDomain) DomainBool)))
-                iName = "i" :: Name
-                body = mkLambda iName TypeInt $ \ i -> make opIndexing m i
-                cardinality = make opSum [make opMapOverDomain body (Domain (forgetRepr innerDomain))]
+                body iName = mkLambda iName TypeInt $ \ i -> make opIndexing m i
+                cardinality iName = make opSum [make opMapOverDomain (body iName) (Domain (forgetRepr innerDomain))]
             in
                 return $ case attrs of
                     SetAttrNone             -> Nothing
-                    SetAttrSize x           -> Just [ make opEq  x cardinality ]
-                    SetAttrMinSize x        -> Just [ make opLeq x cardinality ]
-                    SetAttrMaxSize y        -> Just [ make opGeq y cardinality ]
-                    SetAttrMinMaxSize x y   -> Just [ make opLeq x cardinality
-                                                    , make opGeq y cardinality ]
+                    SetAttrSize x           -> Just $ \ fresh -> [ make opEq  x (cardinality (headInf fresh)) ]
+                    SetAttrMinSize x        -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh)) ]
+                    SetAttrMaxSize y        -> Just $ \ fresh -> [ make opGeq y (cardinality (headInf fresh)) ]
+                    SetAttrMinMaxSize x y   -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh))
+                                                                 , make opGeq y (cardinality (headInf fresh)) ]
         structuralCons _ = fail "N/A {structuralCons}"
 
         setDown (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do

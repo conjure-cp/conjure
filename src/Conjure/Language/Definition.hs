@@ -3,6 +3,7 @@
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
+    , freshNames
     , languageEprime
     , typeCheckModelIO, typeCheckModel
     , initInfo
@@ -54,7 +55,7 @@ import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 
 -- uniplate
-import Data.Generics.Uniplate.Data ( transform )
+import Data.Generics.Uniplate.Data ( universeBi, transform )
 
 
 data Model = Model
@@ -80,6 +81,12 @@ instance Pretty Model where
         , [""]
         , [pretty info | info /= def]
         ]
+
+freshNames :: Model -> [Name]
+freshNames model = newNames \\ usedNames
+    where
+        newNames = [ "q" `mappend` Name (stringToText (show i)) | i <- allNats ]
+        usedNames = universeBi model :: [Name]
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }

@@ -29,21 +29,21 @@ setExplicit = Representation chck setDown_ structuralCons setDown setUp
         setDown_ _ = fail "N/A {setDown_}"
 
         structuralCons (name, DomainSet "Explicit" (SetAttrSize size) innerDomain@DomainInt{}) =
+            return $ Just $ \ fresh -> return $
             let
                 m = Reference (outName name)
                               (Just (DeclHasRepr
                                           Find
                                           (outName name)
                                           (DomainMatrix (DomainInt [RangeBounded (fromInt 1) size]) innerDomain)))
-                iName = "i" :: Name
+                iName = headInf fresh
                 body = mkLambda iName TypeInt $ \ i -> make opLt (make opIndexing m i)
                                                                  (make opIndexing m (make opPlus i (fromInt 1)))
             in
-                return $ Just [
-                    make opAnd [
-                        make opMapOverDomain body
-                             (Domain $ DomainInt [RangeBounded (fromInt 1) (make opMinus size (fromInt 1))])
-                    ]]
+                make opAnd [
+                    make opMapOverDomain body
+                        (Domain $ DomainInt [RangeBounded (fromInt 1) (make opMinus size (fromInt 1))])
+                ]
         structuralCons _ = fail "N/A {structuralCons}"
 
         setDown (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =

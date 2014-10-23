@@ -21,7 +21,6 @@ import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Representations
 
-import Data.Generics.Uniplate.Data ( universeBi )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
 
 
@@ -63,8 +62,7 @@ namedRule nm f = Rule
 
 remaining :: (Functor m, Applicative m, MonadIO m) => Model -> m [Question]
 remaining model = do
-    let allNames = universeBi model :: [Name]
-    let freshNames = [ "q" `mappend` Name (stringToText (show i)) | i <- allNats ] \\ allNames
+    let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
         ys <- applicableRules (hole x)
@@ -90,7 +88,7 @@ remaining model = do
                                                   [ruleName <> ":" <+> ruleText]
                     }
                 | (nAnswer, (ruleName, (ruleText, ruleResult, hook))) <- zip allNats answers
-                , let ruleResultExpr = ruleResult freshNames
+                , let ruleResultExpr = ruleResult freshNames'
                 ]
             }
         | (nQuestion, (focus, answers)) <- zip allNats questions
@@ -327,6 +325,9 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
 
     mkHook ty name domain model =
         let
+
+            freshNames' = freshNames model
+
             representations = model |> mInfo |> miRepresentations
 
             usedBefore = (name, domain) `elem` representations
@@ -335,7 +336,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                 case getStructurals (name, domain) of
                     Left err -> bug err
                     Right Nothing -> []
-                    Right (Just xs) -> xs
+                    Right (Just xs) -> xs freshNames'
 
             addStructurals
                 | usedBefore = id

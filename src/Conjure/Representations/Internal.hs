@@ -31,7 +31,9 @@ data Representation m = Representation
                   -> [DomainX x]                                       -- with all repr options
     , rDownD      :: forall x . (Pretty x, ExpressionLike x)
                   => (Name, DomainX x)                     -> m (Maybe [(Name, DomainX x)])
-    , rStructural :: (Name, DomainX Expression)            -> m (Maybe [Expression])
+    , rStructural :: (Name, DomainX Expression)            -> m (Maybe (  [Name]          -- a source of fresh names
+                                                                       -> [Expression]    -- structural constraints
+                                                                       ))
     , rDownC      :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
     , rUp         :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
     }
