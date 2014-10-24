@@ -9,13 +9,15 @@ import qualified Conjure.ModelAllSolveAll ( tests )
 -- tasty
 import Test.Tasty
 
+-- tasty-ant-xml
+import Test.Tasty.Runners.AntXML
 
 main :: IO ()
 main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
-    defaultMain $ testGroup "conjure"
-        [ Conjure.Language.DomainSizeTest.tests
-        , Conjure.RepresentationsTest.tests
-        , modelAllSolveAllTests
-        ]
-
+    defaultMainWithIngredients [antXMLRunner]
+        $ testGroup "conjure"
+            [ Conjure.Language.DomainSizeTest.tests
+            , Conjure.RepresentationsTest.tests
+            , modelAllSolveAllTests
+            ]
