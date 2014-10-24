@@ -26,6 +26,7 @@ import Conjure.Representations
 
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
 
+import System.IO.Unsafe ( unsafeInterleaveIO )
 
 
 
@@ -141,7 +142,7 @@ toCompletion driver = loopy . prologue
                     loopy nextModel
 
 
-toCompletionMulti :: (MonadIO m, MonadFail m) => MultiDriver -> Model -> m [Model]
+toCompletionMulti :: MultiDriver -> Model -> IO [Model]
 toCompletionMulti driver = loopy . prologue
     where
         loopy model = do
@@ -150,7 +151,9 @@ toCompletionMulti driver = loopy . prologue
                 then return [epilogue model]
                 else do
                     nextModels <- driver qs
-                    concatMapM loopy nextModels
+                    fmap concat $ sequence [ unsafeInterleaveIO $ loopy m
+                                           | m <- nextModels
+                                           ]
 
 
 outputModel :: (MonadIO m, MonadFail m) => Driver -> FilePath -> Int -> Model -> m ()
@@ -161,11 +164,11 @@ outputModel driver dir i essence = do
     liftIO $ writeFile filename (renderWide eprime)
 
 
-outputModels :: (MonadIO m, MonadFail m) => MultiDriver -> FilePath -> Int -> Model -> m ()
+outputModels :: MultiDriver -> FilePath -> Int -> Model -> IO ()
 outputModels driver dir i essence = do
-    liftIO $ createDirectoryIfMissing True dir
+    createDirectoryIfMissing True dir
     eprimes <- toCompletionMulti driver essence
-    liftIO $ sequence_
+    sequence_
         [ writeFile filename (renderWide eprime)
         | (j, eprime) <- zip [i..] eprimes
         , let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
