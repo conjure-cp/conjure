@@ -13,7 +13,7 @@ import Test.Tasty.HUnit
 
 
 tests :: TestTree
-tests = testGroup "domain size"
+tests = testGroup "domainSize"
     [ testCase "domain size of bool is 2" $
         domainSizeConstant DomainBool @?= Right 2
     , testCase "domain size of int(1..100)" $

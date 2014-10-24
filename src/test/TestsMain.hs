@@ -13,7 +13,7 @@ import Test.Tasty
 main :: IO ()
 main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
-    defaultMain $ testGroup "conjure tests"
+    defaultMain $ testGroup "conjure"
         [ Conjure.Language.DomainSizeTest.tests
         , Conjure.RepresentationsTest.tests
         , modelAllSolveAllTests
