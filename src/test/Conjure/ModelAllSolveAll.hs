@@ -20,6 +20,9 @@ import Shelly ( Sh, shelly, run, lastStderr, print_stdout, print_stderr )
 -- text
 import qualified Data.Text as T ( null, unpack )
 
+-- containers
+import qualified Data.Set as S ( fromList, toList, null, difference )
+
 
 tests :: IO TestTree
 tests = do
@@ -31,7 +34,7 @@ tests = do
 
 data TestDirFiles = TestDirFiles
     { name           :: String          -- a name for the test case
-    , tBaseDir        :: FilePath        -- dir
+    , tBaseDir       :: FilePath        -- dir
     , outputsDir     :: FilePath        -- dir
     , expectedsDir   :: FilePath        -- dir
     , essenceFile    :: FilePath        -- dir + filename
@@ -54,10 +57,10 @@ isTestDir baseDir possiblyDir = do
             expecteds <- getDirectoryContents (baseDir </> possiblyDir </> "expected")
             return TestDirFiles 
                 { name           = possiblyDir
-                , essenceFile    = baseDir </> possiblyDir </> possiblyDir ++ ".essence"
                 , tBaseDir       = baseDir </> possiblyDir
                 , outputsDir     = baseDir </> possiblyDir </> "outputs"
                 , expectedsDir   = baseDir </> possiblyDir </> "expected"
+                , essenceFile    = baseDir </> possiblyDir </> possiblyDir ++ ".essence"
                 , paramFiles     = params
                 , expectedModels = filter (".eprime"   `isSuffixOf`) expecteds
                 , expectedSols   = filter (".solution" `isSuffixOf`) expecteds
@@ -70,7 +73,7 @@ isTestDir baseDir possiblyDir = do
 --                + D/*.param files if required
 --                + D/expected for the expected output files
 testSingleDir :: TestDirFiles -> TestTree
-testSingleDir t = testGroup (name t) (conjuring : savileRows ++ checkingExpected)
+testSingleDir t = testGroup (name t) (conjuring : savileRows ++ checkingExpected ++ [extraFiles])
     where
         conjuring =
             testCase "Conjuring" $ do
@@ -92,6 +95,8 @@ testSingleDir t = testGroup (name t) (conjuring : savileRows ++ checkingExpected
         checkingExpected =
             [ checkExpected t e | e <- expectedModels t ] ++
             [ checkExpected t e | e <- expectedSols   t ]
+
+        extraFiles = checkExtraFiles t
 
 
 testSingleDirNoParam :: TestDirFiles -> FilePath -> TestTree
@@ -181,6 +186,20 @@ checkExpected t item =
                     Nothing -> return ()
                     Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
             else assertFailure $ "file doesn't exist: " ++ generatedPath
+
+
+checkExtraFiles :: TestDirFiles -> TestTree
+checkExtraFiles t =
+    testCase "Checking extra files" $ do
+        let modelOrSolution f = or [ ".eprime"   `isSuffixOf` f
+                                   , ".solution" `isSuffixOf` f
+                                   ]
+        expecteds <- S.fromList . filter modelOrSolution <$> getDirectoryContents (expectedsDir t)
+        outputs   <- S.fromList . filter modelOrSolution <$> getDirectoryContents (outputsDir   t)
+        let extras = S.difference outputs expecteds
+        if S.null extras
+            then return ()
+            else assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
 
 
 modelAll :: FilePath -> Model -> IO ()
