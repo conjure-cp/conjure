@@ -157,7 +157,7 @@ outputModel :: (MonadIO m, MonadFail m) => Driver -> FilePath -> Int -> Model ->
 outputModel driver dir i essence = do
     liftIO $ createDirectoryIfMissing True dir
     eprime <- toCompletion driver essence
-    let filename = dir </> "model" ++ show i ++ ".eprime"
+    let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
     liftIO $ writeFile filename (renderWide eprime)
 
 
@@ -168,7 +168,7 @@ outputModels driver dir i essence = do
     liftIO $ sequence_
         [ writeFile filename (renderWide eprime)
         | (j, eprime) <- zip [i..] eprimes
-        , let filename = dir </> "model" ++ show j ++ ".eprime"
+        , let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
         ]
 
 

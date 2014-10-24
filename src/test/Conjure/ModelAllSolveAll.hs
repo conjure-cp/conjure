@@ -114,15 +114,16 @@ testSingleDirNoParam t modelPath =
         if not (T.null stderrSR)
             then liftIO $ assertFailure $ T.unpack stderrSR
             else do
-                eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> liftIO (getDirectoryContents (outputsDir t))
-                forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
+                forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeModel    <- readModelFromFile (outputsDir t </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir t </> eprimeSolutionPath)
                     case translateSolution eprimeModel def eprimeSolution of
                         Left err -> assertFailure $ renderNormal err
                         Right s -> do
-                            let filename = outputsDir t </> outBase ++ "-solution" ++ show i ++ ".solution"
+                            let filename = outputsDir t </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                             writeFile filename (renderWide s)
 
 
@@ -153,15 +154,16 @@ testSingleDirWithParams t modelPath paramPath =
                 if not (T.null stderrSR)
                     then liftIO $ assertFailure $ T.unpack stderrSR
                     else do
-                        eprimeSolutions <- filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                        nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                                   <$> liftIO (getDirectoryContents (outputsDir t))
-                        forM_ (zip allNats eprimeSolutions) $ \ (i, eprimeSolutionPath) -> liftIO $ do
+                        forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                            let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                             eprimeModel    <- readModelFromFile (outputsDir t </> modelPath)
                             eprimeSolution <- readModelFromFile (outputsDir t </> eprimeSolutionPath)
                             case translateSolution eprimeModel param eprimeSolution of
                                 Left err -> assertFailure $ renderNormal err
                                 Right s  -> do
-                                    let filename = outputsDir t </> outBase ++ "-solution" ++ show i ++ ".solution"
+                                    let filename = outputsDir t </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                                     writeFile filename (renderWide s)
 
 

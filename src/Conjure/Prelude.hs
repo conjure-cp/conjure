@@ -30,6 +30,7 @@ module Conjure.Prelude
     , MonadFail(..)
     , allContexts
     , headInf
+    , paddedNum
     ) where
 
 import GHC.Err as X ( error )
@@ -335,4 +336,9 @@ allContexts z0 = concatMap subtreeOf (allSiblings z0)
 headInf :: [a] -> a
 headInf (a:_) = a
 headInf _ = error "End of infinite stream! Well done!"
+
+
+paddedNum :: Show a => a -> String
+paddedNum x = replicate (6 - length s) '0' ++ s
+    where s = show x
 
