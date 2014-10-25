@@ -15,7 +15,7 @@ import Test.Tasty.Runners.AntXML
 main :: IO ()
 main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
-    defaultMainWithIngredients [antXMLRunner]
+    defaultMainWithIngredients (antXMLRunner : defaultIngredients)
         $ testGroup "conjure"
             [ Conjure.Language.DomainSizeTest.tests
             , Conjure.RepresentationsTest.tests
