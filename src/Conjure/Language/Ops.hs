@@ -9,7 +9,8 @@ import Conjure.Bug
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
-import Conjure.Language.IntContainer
+import Conjure.Language.AdHoc
+import Conjure.Language.Name
 import Language.E.Lexer
 import Language.E.Data
 
@@ -40,6 +41,7 @@ data Ops x
     | MkOpAnd             (OpAnd x)
     | MkOpOr              (OpOr x)
     | MkOpImply           (OpImply x)
+    | MkOpNot             (OpNot x)
 
     | MkOpIndexing        (OpIndexing x)
     | MkOpSlicing         (OpSlicing x)
@@ -49,7 +51,6 @@ data Ops x
     | MkOpMapInExpr       (OpMapInExpr x)
     | MkOpMapSubsetExpr   (OpMapSubsetExpr x)
     | MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x)
-    | MkOpFunctionImage   (OpFunctionImage x)
 
     | MkOpTrue            (OpTrue x)
     | MkOpToInt           (OpToInt x)
@@ -60,6 +61,13 @@ data Ops x
     | MkOpSubsetEq        (OpSubsetEq x)
     | MkOpSupset          (OpSupset x)
     | MkOpSupsetEq        (OpSupsetEq x)
+    | MkOpIntersect       (OpIntersect x)
+    | MkOpUnion           (OpUnion x)
+
+    | MkOpFunctionImage   (OpFunctionImage x)
+    | MkOpDefined         (OpDefined x)
+    | MkOpRange           (OpRange x)
+
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
@@ -83,6 +91,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpAnd                 x) = typeOf x
     typeOf (MkOpOr                  x) = typeOf x
     typeOf (MkOpImply               x) = typeOf x
+    typeOf (MkOpNot                 x) = typeOf x
     typeOf (MkOpIndexing            x) = typeOf x
     typeOf (MkOpSlicing             x) = typeOf x
     typeOf (MkOpFilter              x) = typeOf x
@@ -90,7 +99,6 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpMapInExpr           x) = typeOf x
     typeOf (MkOpMapSubsetExpr       x) = typeOf x
     typeOf (MkOpMapSubsetEqExpr     x) = typeOf x
-    typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpTrue                x) = typeOf x
     typeOf (MkOpToInt               x) = typeOf x
     typeOf (MkOpDontCare            x) = typeOf x
@@ -99,6 +107,11 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpSubsetEq            x) = typeOf x
     typeOf (MkOpSupset              x) = typeOf x
     typeOf (MkOpSupsetEq            x) = typeOf x
+    typeOf (MkOpIntersect           x) = typeOf x
+    typeOf (MkOpUnion               x) = typeOf x
+    typeOf (MkOpFunctionImage       x) = typeOf x
+    typeOf (MkOpDefined             x) = typeOf x
+    typeOf (MkOpRange               x) = typeOf x
 
 
 class BinaryOperator op where
@@ -133,6 +146,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpOr    op@(OpOr   [a,b])) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpOr       (OpOr   xs   )) = "or"  <> prettyList prParens "," xs
     prettyPrec prec (MkOpImply op@(OpImply a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpNot      (OpNot   a   )) = "!" <> prettyPrec 10000 a
     prettyPrec _ (MkOpIndexing (OpIndexing a b )) = pretty a <> "[" <> pretty b <> "]"
     prettyPrec _ (MkOpSlicing  (OpSlicing  a   )) = pretty a <> "[..]"
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
@@ -140,15 +154,19 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapSubsetExpr   (OpMapSubsetExpr   a b)) = "map_subset_expr"   <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr a b)) = "map_subsetEq_expr" <> prettyList prParens "," [a,b]
-    prettyPrec _ (MkOpFunctionImage   (OpFunctionImage   a b)) = "function_image"    <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpTrue     (OpTrue     a)) = "true"     <> prParens (pretty a)
     prettyPrec _ (MkOpToInt    (OpToInt    a)) = "toInt"    <> prParens (pretty a)
     prettyPrec _ (MkOpDontCare (OpDontCare a)) = "dontCare" <> prParens (pretty a)
-    prettyPrec prec (MkOpIn       op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpSubset   op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpSubsetEq op@(OpSubsetEq  a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpSupset   op@(OpSupset    a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpSupsetEq op@(OpSupsetEq  a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpIn        op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSubset    op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSubsetEq  op@(OpSubsetEq  a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSupset    op@(OpSupset    a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpSupsetEq  op@(OpSupsetEq  a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpIntersect op@(OpIntersect a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpUnion     op@(OpUnion     a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec _ (MkOpFunctionImage (OpFunctionImage a b)) = "image" <> prettyList prParens "," (a:b)
+    prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
+    prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -394,6 +412,18 @@ instance TypeOf x => TypeOf (OpImply x) where
     typeOf (OpImply a b) = boolToBoolToBool a b
 
 
+data OpNot x = OpNot x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpNot x)
+instance Hashable  x => Hashable  (OpNot x)
+instance ToJSON    x => ToJSON    (OpNot x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpNot x) where parseJSON = JSON.genericParseJSON jsonOptions
+opNot :: OperatorContainer x => x -> x
+opNot x = injectOp (MkOpNot (OpNot x))
+instance TypeOf x => TypeOf (OpNot x) where
+    typeOf (OpNot a) = do TypeBool <- typeOf a ; return TypeBool
+
+
 data OpIndexing x = OpIndexing x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpIndexing x)
@@ -482,18 +512,6 @@ opMapSubsetEqExpr :: OperatorContainer x => x -> x -> x
 opMapSubsetEqExpr x y = injectOp (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x y))
 instance TypeOf x => TypeOf (OpMapSubsetEqExpr x) where
     typeOf (OpMapSubsetEqExpr _ _) = return TypeAny
-
-
-data OpFunctionImage x = OpFunctionImage x [x]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
-instance Serialize x => Serialize (OpFunctionImage x)
-instance Hashable  x => Hashable  (OpFunctionImage x)
-instance ToJSON    x => ToJSON    (OpFunctionImage x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpFunctionImage x) where parseJSON = JSON.genericParseJSON jsonOptions
-opFunctionImage :: OperatorContainer x => x -> [x] -> x
-opFunctionImage x y = injectOp (MkOpFunctionImage (OpFunctionImage x y))
-instance TypeOf x => TypeOf (OpFunctionImage x) where
-    typeOf (OpFunctionImage _ _) = return TypeAny
 
 
 data OpTrue x = OpTrue x
@@ -609,6 +627,74 @@ instance TypeOf x => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 
 
+data OpIntersect x = OpIntersect x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpIntersect x)
+instance Hashable  x => Hashable  (OpIntersect x)
+instance ToJSON    x => ToJSON    (OpIntersect x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpIntersect x) where parseJSON = JSON.genericParseJSON jsonOptions
+opIntersect :: OperatorContainer x => x -> x -> x
+opIntersect x y = injectOp (MkOpIntersect (OpIntersect x y))
+instance BinaryOperator (OpIntersect x) where
+    opLexeme _ = L_intersect
+instance TypeOf x => TypeOf (OpIntersect x) where
+    typeOf (OpIntersect a b) = sameToSameToSame a b
+
+
+data OpUnion x = OpUnion x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpUnion x)
+instance Hashable  x => Hashable  (OpUnion x)
+instance ToJSON    x => ToJSON    (OpUnion x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpUnion x) where parseJSON = JSON.genericParseJSON jsonOptions
+opUnion :: OperatorContainer x => x -> x -> x
+opUnion x y = injectOp (MkOpUnion (OpUnion x y))
+instance BinaryOperator (OpUnion x) where
+    opLexeme _ = L_union
+instance TypeOf x => TypeOf (OpUnion x) where
+    typeOf (OpUnion a b) = sameToSameToSame a b
+
+
+data OpFunctionImage x = OpFunctionImage x [x]
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpFunctionImage x)
+instance Hashable  x => Hashable  (OpFunctionImage x)
+instance ToJSON    x => ToJSON    (OpFunctionImage x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpFunctionImage x) where parseJSON = JSON.genericParseJSON jsonOptions
+opFunctionImage :: OperatorContainer x => x -> [x] -> x
+opFunctionImage x y = injectOp (MkOpFunctionImage (OpFunctionImage x y))
+instance TypeOf x => TypeOf (OpFunctionImage x) where
+    typeOf (OpFunctionImage _ _) = return TypeAny
+
+
+data OpDefined x = OpDefined x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpDefined x)
+instance Hashable  x => Hashable  (OpDefined x)
+instance ToJSON    x => ToJSON    (OpDefined x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpDefined x) where parseJSON = JSON.genericParseJSON jsonOptions
+opDefined :: OperatorContainer x => x -> x
+opDefined x = injectOp (MkOpDefined (OpDefined x))
+instance TypeOf x => TypeOf (OpDefined x) where
+    typeOf (OpDefined x) = do
+        TypeFunction a _ <- typeOf x
+        return (TypeSet a)
+
+
+data OpRange x = OpRange x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpRange x)
+instance Hashable  x => Hashable  (OpRange x)
+instance ToJSON    x => ToJSON    (OpRange x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpRange x) where parseJSON = JSON.genericParseJSON jsonOptions
+opRange :: OperatorContainer x => x -> x
+opRange x = injectOp (MkOpRange (OpRange x))
+instance TypeOf x => TypeOf (OpRange x) where
+    typeOf (OpRange x) = do
+        TypeFunction _ a <- typeOf x
+        return (TypeSet a)
+
+
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
 intToInt a = do
     TypeInt{} <- typeOf a
@@ -634,6 +720,14 @@ sameToSameToBool a b = do
         then return TypeBool
         else bug "sameToSameToBool"
 
+sameToSameToSame :: (MonadFail m, TypeOf a) => a -> a -> m Type
+sameToSameToSame a b = do
+    tyA <- typeOf a
+    tyB <- typeOf b
+    if tyA `typeUnify` tyB
+        then return (mostDefined [tyA,tyB])
+        else bug "sameToSameToSame"
+
 
 mkBinOp :: OperatorContainer x => Text -> x -> x -> x
 mkBinOp op a b =
@@ -657,17 +751,30 @@ mkBinOp op a b =
                     L_And   -> opAnd
                     L_Or    -> opOr
                     L_Imply -> opImply
+                    L_Iff   -> opEq
+                    L_subset    -> opSubset
+                    L_subsetEq  -> opSubsetEq
+                    L_supset    -> opSupset
+                    L_supsetEq  -> opSupsetEq
+                    L_intersect -> opIntersect
+                    L_union     -> opUnion
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b
 
-mkOp :: OperatorContainer x => Text -> [x] -> x
+mkOp :: (OperatorContainer x, ReferenceContainer x) => Text -> [x] -> x
 mkOp op xs =
     case textToLexeme op of
-        Nothing -> bug ("Unknown operator:" <+> pretty op)
+        Nothing -> case op of
+            "and" -> injectOp (MkOpAnd  (OpAnd  xs))
+            "or"  -> injectOp (MkOpOr   (OpOr   xs))
+            "sum" -> injectOp (MkOpPlus (OpPlus xs))
+            "not" -> injectOp (MkOpNot  (OpNot  (headNote "not takes a single argument" xs)))
+            -- _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
+            _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
-            L_toInt -> case xs of
-                [x] -> opToInt x
-                _   -> bug "toInt takes a single argument."
+            L_toInt   -> opToInt   (headNote "toInt takes a single argument." xs)
+            L_defined -> opDefined (headNote "defined takes a single argument." xs)
+            L_range   -> opDefined (headNote "range takes a single argument." xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 

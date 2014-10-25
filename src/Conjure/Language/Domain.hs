@@ -10,7 +10,7 @@ import Conjure.Language.Name
 import Conjure.Language.DomainDefn
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
-import Conjure.Language.IntContainer
+import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 
 -- text

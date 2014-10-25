@@ -12,7 +12,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 
 import Conjure.Language.TypeOf
-import Conjure.Language.IntContainer
+import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 
 -- aeson
@@ -81,3 +81,6 @@ instance IntContainer Constant where
     intOut (ConstantInt x) = return x
     intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
 
+instance ExpressionLike Constant where
+    fromInt = ConstantInt
+    fromBool = ConstantBool

@@ -8,7 +8,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
-import Conjure.Language.IntContainer
+import Conjure.Language.AdHoc
 import Conjure.Language.TypeOf
 
 

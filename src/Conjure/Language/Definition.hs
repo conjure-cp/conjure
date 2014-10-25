@@ -39,7 +39,7 @@ module Conjure.Language.Definition
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Pretty
-import Conjure.Language.IntContainer
+import Conjure.Language.AdHoc
 
 import Conjure.Language.Name
 import Conjure.Language.Constant
@@ -311,6 +311,10 @@ instance IntContainer Expression where
     intOut (Constant c) = intOut c
     intOut x = fail ("Expecting an integer, but got:" <+> pretty x)
 
+instance ReferenceContainer Expression where
+    fromName nm = Reference nm Nothing
+
+
 mkLambda :: Name -> Type -> (Expression -> Expression) -> Expression
 mkLambda nm ty f =
     let pat = Single nm ty
@@ -426,15 +430,6 @@ instance Pretty AbstractPattern where
                               <> prettyList prParens   "," xs
     pretty (AbsPatMatrix   xs) = prettyList prBrackets "," xs
     pretty (AbsPatSet      xs) = prettyList prBraces   "," xs
-
-
-class ExpressionLike a where
-    fromInt :: Int -> a
-    fromBool :: Bool -> a
-
-instance ExpressionLike Constant where
-    fromInt = ConstantInt
-    fromBool = ConstantBool
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
