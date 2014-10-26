@@ -25,7 +25,9 @@ import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 data Domain r x
     = DomainBool
     | DomainInt [Range x]
-    | DomainEnum Name [Range x]
+    | DomainEnum Name (Maybe ( [Name]       -- all values in the enum
+                             , [Range x]    -- subset of values for this domain
+                             ))             -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
     | DomainUnnamed Name
     | DomainTuple [Domain r x]
     | DomainMatrix (Domain () x) (Domain r x)
@@ -207,8 +209,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
-    pretty (DomainEnum name []) = pretty name
-    pretty (DomainEnum name ranges) = pretty name <> prettyList prParens "," ranges
+    pretty (DomainEnum name (Just (_, ranges))) = pretty name <> prettyList prParens "," ranges
+    pretty (DomainEnum name _) = pretty name
 
     pretty (DomainUnnamed name) = pretty name
 

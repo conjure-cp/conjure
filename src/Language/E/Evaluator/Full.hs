@@ -1045,8 +1045,8 @@ instance DomSize (Domain () E) where
 
     domSize DomainBool = return [eMake| 2 |]
     domSize (DomainInt rs) = sumE <$> mapM domSize rs
-    domSize (DomainEnum _ rs) = sumE <$> mapM domSize rs
-    domSize d@(DomainUnnamed {}) = error $ show $ "domSize:" <+> pretty d
+    domSize d@(DomainEnum{}) = error $ show $ "domSize:" <+> pretty d
+    domSize d@(DomainUnnamed{}) = error $ show $ "domSize:" <+> pretty d
     domSize (DomainTuple rs) = mulE <$> mapM domSize rs
 
     domSize (DomainMatrix index inner) = do
