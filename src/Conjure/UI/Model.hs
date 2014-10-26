@@ -463,6 +463,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                     Right (Just xs) -> xs freshNames'
 
             addStructurals
+                | ty == Given = id
                 | usedBefore = id
                 | null structurals = id
                 | otherwise = \ m ->
@@ -483,6 +484,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                 ]
 
             addChannels
+                | ty == Given = id
                 | null channels = id
                 | otherwise = \ m ->
                     m { mStatements = mStatements m ++ [SuchThat channels] }
