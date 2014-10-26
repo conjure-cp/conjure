@@ -136,7 +136,7 @@ toCompletion driver = loopy . prologue
         loopy model = do
             qs <- remaining model
             if null qs
-                then return (epilogue model)
+                then failCheaply (epilogue model)
                 else do
                     nextModel <- driver qs
                     loopy nextModel
@@ -148,7 +148,7 @@ toCompletionMulti driver = loopy . prologue
         loopy model = do
             qs <- remaining model
             if null qs
-                then return [epilogue model]
+                then return <$> failCheaply (epilogue model)
                 else do
                     nextModels <- driver qs
                     fmap concat $ sequence [ unsafeInterleaveIO $ loopy m
@@ -352,17 +352,36 @@ updateDeclarations model =
         model { mStatements = statements }
 
 
+-- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
+checkIfAllRefined :: MonadFail m => Model -> m ()
+checkIfAllRefined m = do
+    let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
+    fails <- fmap concat $ forM (allContexts modelZipper) $ \ x ->
+                case hole x of
+                    Reference _ (Just (DeclHasRepr _ _ dom)) | not (isPrimitiveDomain dom) ->
+                        return $ ("Not refined:" <+> pretty (hole x))
+                               : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                 | i <- allNats
+                                 | c <- tail (ascendants x)
+                                 ]
+                    _ -> return []
+    unless (null fails) (fail (vcat fails))
+
+
 prologue :: Model -> Model
 prologue essence = essence
     |> addTrueConstraints
     |> initInfo
 
 
-epilogue :: Model -> Model
-epilogue eprime = eprime
-    |> updateDeclarations
-    |> oneSuchThat
-    |> languageEprime
+epilogue :: MonadFail m => Model -> m Model
+epilogue eprime = do
+    checkIfAllRefined eprime
+    eprime
+        |> updateDeclarations
+        |> oneSuchThat
+        |> languageEprime
+        |> return
 
 
 representationOf :: MonadFail m => Expression -> m Name

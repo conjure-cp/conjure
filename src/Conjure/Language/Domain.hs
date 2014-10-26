@@ -105,6 +105,12 @@ reprAtTopLevel (DomainPartition r _ _  ) = return r
 reprAtTopLevel DomainOp{} = Nothing
 reprAtTopLevel DomainHack{} = Nothing
 
+isPrimitiveDomain :: Domain r x -> Bool
+isPrimitiveDomain DomainBool{} = True
+isPrimitiveDomain DomainInt{} = True
+isPrimitiveDomain (DomainMatrix index inner) = and [isPrimitiveDomain index, isPrimitiveDomain inner]
+isPrimitiveDomain _ = False
+
 data SetAttr a
     = SetAttrNone
     | SetAttrSize a
