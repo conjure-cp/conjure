@@ -22,7 +22,6 @@ module Conjure.Language.Definition
     , AbstractPattern(..)
 
     , Domain(..), Range(..)
-    , DomainDefn(..), DomainDefnEnum(..), DomainDefnUnnamed(..)
 
     , SetAttr(..)
     , DomainAttributes(..), DomainAttribute(..)
@@ -44,7 +43,6 @@ import Conjure.Language.AdHoc
 import Conjure.Language.Name
 import Conjure.Language.Constant
 import Conjure.Language.Type
-import Conjure.Language.DomainDefn
 import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.TypeOf
@@ -53,9 +51,6 @@ import Conjure.Language.TypeOf
 import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
-
--- uniplate
-import Data.Generics.Uniplate.Data ( universeBi, transform )
 
 -- unordered-containers
 import qualified Data.HashSet as S
@@ -176,8 +171,9 @@ instance Pretty Objective where
 data Declaration
     = FindOrGiven FindOrGiven Name (Domain () Expression)
     | Letting Name Expression
-    | LettingDomainDefnEnum DomainDefnEnum
-    | LettingDomainDefnUnnamed DomainDefnUnnamed Expression
+    | GivenDomainDefnEnum Name
+    | LettingDomainDefnEnum Name [Name]
+    | LettingDomainDefnUnnamed Name Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Declaration
@@ -188,12 +184,12 @@ instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOption
 instance Pretty Declaration where
     pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
-    pretty (LettingDomainDefnEnum (DomainDefnEnum name values)) =
-        if null values
-            then hang ("given"   <+> pretty name) 8 "new type enum"
-            else hang ("letting" <+> pretty name <+> "be new type enum") 8
-                   (prettyList prBraces "," values)
-    pretty (LettingDomainDefnUnnamed (DomainDefnUnnamed name) size) =
+    pretty (GivenDomainDefnEnum name) =
+        hang ("given"   <+> pretty name) 8 "new type enum"
+    pretty (LettingDomainDefnEnum name values) =
+        hang ("letting" <+> pretty name <+> "be new type enum") 8
+             (prettyList prBraces "," values)
+    pretty (LettingDomainDefnUnnamed name size) =
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 

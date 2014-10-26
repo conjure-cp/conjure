@@ -8,7 +8,6 @@ module Language.E.Definition
     , Spec(..), LanguageVersion(..) , E(..), BuiltIn(..)
     , Domain(..), DomainAttributes(..), DomainAttribute(..), Range(..)
     , SetAttr(..)
-    , DomainDefnEnum(..), DomainDefnUnnamed(..)
     , HasRepresentation(..)
     , Type(..)
     , Constant(..)
@@ -18,9 +17,8 @@ module Language.E.Definition
     , identifierSplit, identifierConstruct
     , identifierStripRegion
 
-    , universe, children
+    , children
     , descend, descendM
-    , transform
     , rewrite, rewriteM
     , replace, replaceAll, gdepth
 
@@ -39,7 +37,6 @@ import Conjure.Language.Pretty
 import Stuff.MetaVariable
 import Conjure.Language.Definition
     ( Domain(..), Range(..)
-    , DomainDefnEnum(..), DomainDefnUnnamed(..)
     , DomainAttributes(..), DomainAttribute(..), SetAttr(..)
     , Type(..)
     , Constant(..)
@@ -59,7 +56,7 @@ import Data.Aeson ( (.=) )
 import qualified Data.Aeson as JSON
 
 -- uniplate
-import Data.Generics.Uniplate.Data ( Uniplate, universe, children, descend, descendM, transform, rewrite, rewriteM )
+import Data.Generics.Uniplate.Data ( Uniplate, children, descend, descendM, rewrite, rewriteM )
 
 -- template-haskell
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )

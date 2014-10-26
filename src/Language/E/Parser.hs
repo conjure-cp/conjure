@@ -340,7 +340,7 @@ parseDomain
             xs <- optionMaybe $ parens $ parseRange `sepBy` comma
             case xs of
                 Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
-                Just ys -> return $ DomainEnum (DomainDefnEnum (Name r) []) ys
+                Just ys -> return $ DomainEnum (Name r) ys
                 -- TODO: the DomainDefnEnum in the above line should lookup and find a
                 -- previously declared DomainDefnEnum
 

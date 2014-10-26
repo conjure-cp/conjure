@@ -9,7 +9,7 @@ module Conjure.Language.Type
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.DomainDefn
+import Conjure.Language.Name
 import Conjure.Language.Pretty
 
 -- aeson
@@ -20,8 +20,8 @@ data Type
     = TypeAny
     | TypeBool
     | TypeInt
-    | TypeEnum DomainDefnEnum
-    | TypeUnnamed DomainDefnUnnamed
+    | TypeEnum Name
+    | TypeUnnamed Name
     | TypeTuple [Type]
     | TypeMatrix Type Type
     | TypeSet Type
@@ -40,8 +40,8 @@ instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
     pretty TypeInt = "int"
-    pretty (TypeEnum (DomainDefnEnum nm _)) = pretty nm
-    pretty (TypeUnnamed (DomainDefnUnnamed nm)) = pretty nm
+    pretty (TypeEnum nm ) = pretty nm
+    pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
                          <> prettyList prParens "," xs
     pretty (TypeMatrix index inner) = "matrix indexed by"

@@ -72,20 +72,16 @@ specToModel (Spec lang stmt) = Model
         convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
                         | []              := topLevel.declaration.given.typeEnum
                         |] =
-            Declaration $ LettingDomainDefnEnum
-                $ DomainDefnEnum (Name name) []
+            Declaration $ GivenDomainDefnEnum (Name name)
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | values          := topLevel.letting.typeEnum.values
                         |] =
-            Declaration $ LettingDomainDefnEnum
-                $ DomainDefnEnum (Name name) (map convName values)
+            Declaration $ LettingDomainDefnEnum (Name name) (map convName values)
 
         convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
                         | [expr]          := topLevel.letting.typeUnnamed
                         |] =
-            Declaration $ LettingDomainDefnUnnamed
-                (DomainDefnUnnamed (Name name))
-                (convExpr expr)
+            Declaration $ LettingDomainDefnUnnamed (Name name) (convExpr expr)
 
         convStmt [xMatch| xs := topLevel.branchingOn.value.matrix.values |] = SearchOrder (map convName xs)
 
@@ -655,7 +651,7 @@ parseDomain
             xs <- optionMaybe $ parens $ parseRange `sepBy` comma
             case xs of
                 Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
-                Just ys -> return $ DomainEnum (DomainDefnEnum (Name r) []) ys
+                Just ys -> return $ DomainEnum (Name r) ys
                 -- TODO: the DomainDefnEnum in the above line should lookup and find a
                 -- previously declared DomainDefnEnum
 

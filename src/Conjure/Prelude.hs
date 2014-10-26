@@ -129,7 +129,11 @@ import Text.PrettyPrint as X
     )
 
 -- uniplate
-import Data.Generics.Uniplate.Data as X ( transformM )
+import Data.Generics.Uniplate.Data as X
+    ( transform, transformBi
+    , transformM, transformBiM
+    , universe, universeBi
+    )
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right )
 
 

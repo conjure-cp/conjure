@@ -7,7 +7,6 @@ module Conjure.Language.Constant where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Name
-import Conjure.Language.DomainDefn
 import Conjure.Language.Domain
 import Conjure.Language.Type
 
@@ -26,7 +25,8 @@ import Test.QuickCheck ( Arbitrary(..), oneof )
 data Constant
     = ConstantBool Bool
     | ConstantInt Int
-    | ConstantEnum DomainDefnEnum Name
+    | ConstantEnum Name {- name for the enum domain -}
+                   Name {- the literal -}
     | ConstantTuple [Constant]
     | ConstantMatrix (Domain () Constant) [Constant]
     | ConstantSet [Constant]

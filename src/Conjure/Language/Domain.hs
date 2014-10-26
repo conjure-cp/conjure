@@ -7,7 +7,6 @@ module Conjure.Language.Domain where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Name
-import Conjure.Language.DomainDefn
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.AdHoc
@@ -26,8 +25,8 @@ import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 data Domain r x
     = DomainBool
     | DomainInt [Range x]
-    | DomainEnum DomainDefnEnum [Range x]
-    | DomainUnnamed DomainDefnUnnamed
+    | DomainEnum Name [Range x]
+    | DomainUnnamed Name
     | DomainTuple [Domain r x]
     | DomainMatrix (Domain () x) (Domain r x)
     | DomainSet       r (SetAttr x) (Domain r x)
@@ -208,10 +207,10 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
-    pretty (DomainEnum (DomainDefnEnum name _) []) = pretty name
-    pretty (DomainEnum (DomainDefnEnum name _) ranges) = pretty name <> prettyList prParens "," ranges
+    pretty (DomainEnum name []) = pretty name
+    pretty (DomainEnum name ranges) = pretty name <> prettyList prParens "," ranges
 
-    pretty (DomainUnnamed (DomainDefnUnnamed name)) = pretty name
+    pretty (DomainUnnamed name) = pretty name
 
     pretty (DomainTuple inners)
         = (if length inners < 2 then "tuple" else prEmpty)

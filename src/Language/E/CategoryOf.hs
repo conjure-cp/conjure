@@ -32,5 +32,3 @@ categoryOf (D d) = maximum <$> mapM categoryOf (universeBi d)
 categoryOf EOF {} = return CatConstant
 categoryOf (StatementAndNext a b) = maximum <$> mapM categoryOf [a,b]
 
-universeBi :: Domain () E -> [E]
-universeBi = error "universeBi"
