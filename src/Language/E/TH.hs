@@ -4,9 +4,6 @@ import Conjure.Prelude
 import Stuff.Generic.Tag
 import Language.E.Definition
 import Language.E.Parser
-import Language.E.Parser.EssenceFile.Value () -- helping GHC's dependency resolution a a bit
-                                              -- mutually recursive modules and TH do not play well, apparently.
-                                              -- see. http://hackage.haskell.org/trac/ghc/ticket/1012
 
 -- template-haskell
 import Language.Haskell.TH ( Q, Exp(..), Pat(..), Lit(..), mkName )

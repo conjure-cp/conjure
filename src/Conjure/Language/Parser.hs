@@ -23,8 +23,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.TypeOf ( typeOf )
 import Language.E ( Spec(..), E(..), BuiltIn(..), xMatch, xMake, viewTaggeds, statementAsList, prettyAsPaths )
 
-import Language.E.Parser.Imports
-import Language.E.Parser.EssenceFile
+import Language.E.Parser
 
 
 
