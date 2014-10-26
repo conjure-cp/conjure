@@ -84,3 +84,7 @@ instance IntContainer Constant where
 instance ExpressionLike Constant where
     fromInt = ConstantInt
     fromBool = ConstantBool
+
+instance ReferenceContainer Constant where
+    fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)
+

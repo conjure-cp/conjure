@@ -289,20 +289,20 @@ parseQuanDecl = do
                      |]
 
 
-parseRange :: Parser (Range E)
-parseRange = msum [try pRange, pSingle]
+parseRange :: Parser a -> Parser (Range a)
+parseRange p = msum [try pRange, pSingle]
     where
         pRange = do
-            fr <- optionMaybe parseExpr
+            fr <- optionMaybe p
             dot; dot
-            to <- optionMaybe parseExpr
+            to <- optionMaybe p
             return $ case (fr,to) of
                 (Nothing, Nothing) -> RangeOpen
                 (Just x , Nothing) -> RangeLowerBounded x
                 (Nothing, Just y ) -> RangeUpperBounded y
                 (Just x , Just y ) -> RangeBounded x y
         pSingle = do
-            x <- parseExpr
+            x <- p
             return (RangeSingle x)
 
 parseDomain :: Parser (Domain () E)
@@ -331,16 +331,16 @@ parseDomain
 
         pInt = do
             lexeme L_int
-            mxs <- optionMaybe $ parens $ parseRange `sepBy` comma
+            mxs <- optionMaybe $ parens $ parseRange parseExpr `sepBy` comma
             let xs = fromMaybe [] mxs
             return $ DomainInt xs
 
         pEnum = do
             r <- identifierText
-            xs <- optionMaybe $ parens $ parseRange `sepBy` comma
+            xs <- optionMaybe $ parens $ parseRange identifierText `sepBy` comma
             case xs of
                 Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
-                Just ys -> return $ DomainEnum (Name r) (Just ([], ys))
+                Just ys -> return $ DomainEnum (Name r) (Just ([], fmap (fmap Name) ys))
                 -- TODO: the DomainDefnEnum in the above line should lookup and find a
                 -- previously declared DomainDefnEnum
 

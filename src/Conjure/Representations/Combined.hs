@@ -14,6 +14,7 @@ import Conjure.Language.Pretty
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
+import Conjure.Representations.Enum
 import Conjure.Representations.Tuple
 import Conjure.Representations.Set.Occurrence
 import Conjure.Representations.Set.Explicit
@@ -24,7 +25,7 @@ import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
 downD1
-    :: (MonadFail m, Pretty x, ExpressionLike x)
+    :: (MonadFail m, Pretty x, ExpressionLike x, ReferenceContainer x)
     =>           (Name, DomainX x)
     -> m (Maybe [(Name, DomainX x)])
 downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
@@ -52,7 +53,7 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
 downD
-    :: (MonadFail m, Pretty x, ExpressionLike x)
+    :: (MonadFail m, Pretty x, ExpressionLike x, ReferenceContainer x)
     =>    (Name, DomainX x)
     -> m [(Name, DomainX x)]
 downD inp@(_, domain) = do
@@ -107,6 +108,7 @@ dispatch domain =
     case domain of
         DomainBool{}    -> primitive
         DomainInt{}     -> primitive
+        DomainEnum{}    -> enum
         DomainTuple{}   -> tuple
         DomainMatrix{}  -> matrix
         DomainSet r _ _ ->
@@ -122,7 +124,7 @@ dispatch domain =
 -- | A list of all representations.
 allReprs :: [Representation (Either Doc)]
 allReprs =
-    [ primitive, tuple, matrix
+    [ primitive, enum, tuple, matrix
     , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
     ]
 

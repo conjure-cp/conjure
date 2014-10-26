@@ -341,6 +341,10 @@ updateDeclarations model =
                     case [ d | (n, d) <- representations, n == nm ] of
                         [] -> bug $ "No representation chosen for: " <+> pretty nm
                         domains -> concatMap (onEachDomain forg nm) domains
+                Declaration (GivenDomainDefnEnum name) ->
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
+                Declaration LettingDomainDefnEnum{}    -> []
+                Declaration LettingDomainDefnUnnamed{} -> []
                 _ -> [inStatement]
 
         onEachDomain forg nm domain =

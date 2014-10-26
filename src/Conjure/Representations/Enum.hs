@@ -1,0 +1,75 @@
+{-# LANGUAGE FlexibleContexts #-}
+
+module Conjure.Representations.Enum
+    ( enum
+    ) where
+
+-- conjure
+import Conjure.Prelude
+import Conjure.Bug
+import Conjure.Language.Definition
+import Conjure.Language.Pretty
+import Conjure.Representations.Internal
+
+
+enum :: MonadFail m => Representation m
+enum = Representation check downD structural downC up
+    where
+        check _ (DomainEnum name rs) = [DomainEnum name rs]
+        check _ _ = []
+
+        varOut  name ename = mconcat [name, "_FromEnum_", ename]
+        sizeOut name       = mconcat [name, "_EnumSize" ]
+
+        downD (name, DomainEnum ename Nothing) = return $ Just
+            [ ( varOut name ename
+              , DomainInt [RangeBounded (fromInt 1) (fromName (sizeOut ename))]
+              )
+            ]
+        downD (name, DomainEnum ename (Just (vals, ranges))) = do
+            let ranges' =
+                    if null ranges
+                        then [RangeBounded (fromInt 1) (fromInt (length vals))]
+                        else fmap (fmap (fromInt . enumNameToInt vals)) ranges
+            return $ Just
+                [ ( varOut name ename
+                  , DomainInt ranges'
+                  )
+                ]
+        downD _ = fail "N/A {enum.downD}"
+
+        structural = const $ return Nothing
+
+        downC (name, DomainEnum ename (Just (vals, ranges)), ConstantEnum _ val) = do
+            let ranges' =
+                    if null ranges
+                        then [RangeBounded (fromInt 1) (fromInt (length vals))]
+                        else fmap (fmap (fromInt . enumNameToInt vals)) ranges
+            return $ Just
+                [ ( varOut name ename
+                  , DomainInt ranges'
+                  , ConstantInt (enumNameToInt vals val)
+                  )
+                ]
+        downC _ = fail "N/A {enum.downC}"
+
+        up ctxt (name, domain) =
+            case domain of
+                DomainEnum ename (Just (vals,_)) -> 
+                    case lookup name ctxt of
+                        Nothing -> fail $ vcat
+                            $ ("No value for:" <+> pretty name)
+                            : "Bindings in context:"
+                            : prettyContext ctxt
+                        Just (ConstantInt c) -> return (name, ConstantEnum ename (at vals (c-1)))
+                        Just c -> fail ("Expecting an integer, but got" <+> pretty c)
+                _ -> fail "N/A {enum.up}"
+
+
+enumNameToInt :: [Name] -> Name -> Int
+enumNameToInt nms nm = case findIndex (nm==) nms of
+    Nothing -> bug $ vcat [ pretty nm <+> "is not a value of this enumerated type."
+                          , "Values are:" <+> prettyList id "," (map pretty nms)
+                          ]
+    Just i  -> i + 1
+

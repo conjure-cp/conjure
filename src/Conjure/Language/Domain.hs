@@ -26,7 +26,7 @@ data Domain r x
     = DomainBool
     | DomainInt [Range x]
     | DomainEnum Name (Maybe ( [Name]       -- all values in the enum
-                             , [Range x]    -- subset of values for this domain
+                             , [Range Name] -- subset of values for this domain
                              ))             -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
     | DomainUnnamed Name
     | DomainTuple [Domain r x]

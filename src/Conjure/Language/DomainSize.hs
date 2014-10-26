@@ -16,8 +16,7 @@ import Conjure.Language.Pretty
 domainSizeConstant :: MonadFail m => Domain r Constant -> m Int
 domainSizeConstant DomainBool = return 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
-domainSizeConstant (DomainEnum _ Nothing) = fail "domainSizeConstant: Unknown for given enum."
-domainSizeConstant (DomainEnum _ (Just (_, rs))) = domainSizeConstantRanges rs
+domainSizeConstant (DomainEnum _ _) = fail "domainSizeConstant: Unknown for given enum."
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
 domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
 domainSizeConstant (DomainSet _ attrs inner) =

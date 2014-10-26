@@ -29,7 +29,7 @@ data Representation m = Representation
                   => (Domain r x -> [DomainX x])                       -- other checkers for inner domains
                   -> Domain r x                                        -- this domain
                   -> [DomainX x]                                       -- with all repr options
-    , rDownD      :: forall x . (Pretty x, ExpressionLike x)
+    , rDownD      :: forall x . (Pretty x, ExpressionLike x, ReferenceContainer x)
                   => (Name, DomainX x)                     -> m (Maybe [(Name, DomainX x)])
     , rStructural :: (Name, DomainX Expression)            -> m (Maybe (  [Name]          -- a source of fresh names
                                                                        -> [Expression]    -- structural constraints

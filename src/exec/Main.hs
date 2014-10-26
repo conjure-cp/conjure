@@ -6,7 +6,8 @@ import Conjure.UI.Model
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Pretty ( renderWide )
 
-import System.IO
+import System.IO ( hSetBuffering, stdout, BufferMode(..) )
+
 
 main :: IO ()
 main = do

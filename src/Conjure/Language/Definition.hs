@@ -30,7 +30,7 @@ module Conjure.Language.Definition
 
     , Type(..)
 
-    , ExpressionLike(..)
+    , ExpressionLike(..), ReferenceContainer(..)
 
     ) where
 
