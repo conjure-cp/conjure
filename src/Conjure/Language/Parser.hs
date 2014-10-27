@@ -19,6 +19,7 @@ module Conjure.Language.Parser
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.Pretty ()
 import Conjure.Language.TypeOf ( typeOf )
@@ -688,11 +689,11 @@ parseDomain
         pFunction = do
             lexeme L_function
             (y,z) <- arrowedPair parseDomain
-            return $ DomainFunction () (DomainAttributes []) y z
+            return $ DomainFunction () def y z
 
         pFunction' = do
             lexeme L_function
-            x <- parseAttributes
+            x <- parseFunctionAttr
             y <- parseDomain
             lexeme L_LongArrow
             z <- parseDomain
@@ -729,14 +730,51 @@ parseAttributes = do
 parseSetAttr :: Parser (SetAttr E)
 parseSetAttr = do
     DomainAttributes attrs <- parseAttributes
-    case filter (/= DADotDot) (sort attrs) of
-        [DANameValue "size"    a] -> return (SetAttrSize a)
-        [DANameValue "minSize" a] -> return (SetAttrMinSize a)
-        [DANameValue "maxSize" a] -> return (SetAttrMaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SetAttrMinMaxSize a b)
-        [] -> return SetAttrNone
-        _ -> fail ("parseSetAttr: " <+> stringToDoc (show attrs))
+    case filterSizey attrs of
+        [] -> return (SetAttr SizeAttrNone)
+        [DANameValue "size"    a] -> return (SetAttr (SizeAttrSize a))
+        [DANameValue "minSize" a] -> return (SetAttr (SizeAttrMinSize a))
+        [DANameValue "maxSize" a] -> return (SetAttr (SizeAttrMaxSize a))
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SetAttr (SizeAttrMinMaxSize a b))
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
 
+parseFunctionAttr :: Parser (FunctionAttr E)
+parseFunctionAttr = do
+    DomainAttributes attrs <- parseAttributes
+    size <- case filterSizey attrs of
+        [DANameValue "size"    a] -> return (SizeAttrSize a)
+        [DANameValue "minSize" a] -> return (SizeAttrMinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttrMaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttrMinMaxSize a b)
+        [] -> return SizeAttrNone
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    partiality <- if (DAName "total") `elem` attrs
+                    then return FunctionAttr_Total
+                    else return FunctionAttr_Partial
+    jectivity  <- case filterJectivity attrs of
+        [] -> return ISBAttr_None
+        [DAName "bijective" ] -> return ISBAttr_Bijective
+        [DAName "injective" ] -> return ISBAttr_Injective
+        [DAName "surjective"] -> return ISBAttr_Surjective
+        [DAName "injective", DAName "surjective"] -> return ISBAttr_Bijective
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    return (FunctionAttr size partiality jectivity)
+
+filterSizey :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+filterSizey = sort . filter f
+    where
+        f (DANameValue "size" _) = True
+        f (DANameValue "minSize" _) = True
+        f (DANameValue "maxSize" _) = True
+        f _ = False
+
+filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+filterJectivity = sort . filter f
+    where
+        f (DAName "injective") = True
+        f (DAName "surjective") = True
+        f (DAName "bijective") = True
+        f _ = False
 
 parseMetaVariable :: Parser E
 parseMetaVariable = do

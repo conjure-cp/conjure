@@ -33,7 +33,7 @@ data Domain r x
     | DomainMatrix (Domain () x) (Domain r x)
     | DomainSet       r (SetAttr x) (Domain r x)
     | DomainMSet      r (DomainAttributes x) (Domain r x)
-    | DomainFunction  r (DomainAttributes x) (Domain r x) (Domain r x)
+    | DomainFunction  r (FunctionAttr x) (Domain r x) (Domain r x)
     | DomainRelation  r (DomainAttributes x) [Domain r x]
     | DomainPartition r (DomainAttributes x) (Domain r x)
     | DomainOp Name [Domain r x]
@@ -112,31 +112,98 @@ isPrimitiveDomain DomainInt{} = True
 isPrimitiveDomain (DomainMatrix index inner) = and [isPrimitiveDomain index, isPrimitiveDomain inner]
 isPrimitiveDomain _ = False
 
-data SetAttr a
-    = SetAttrNone
-    | SetAttrSize a
-    | SetAttrMinSize a
-    | SetAttrMaxSize a
-    | SetAttrMinMaxSize a a
+
+--------------------------------------------------------------------------------
+-- attribute definitions -------------------------------------------------------
+--------------------------------------------------------------------------------
+
+data SetAttr a = SetAttr (SizeAttr a)
     deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
-
 instance Serialize a => Serialize (SetAttr a)
-instance Hashable a => Hashable (SetAttr a)
-instance ToJSON a => ToJSON (SetAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON a => FromJSON (SetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  a => Hashable  (SetAttr a)
+instance ToJSON    a => ToJSON    (SetAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (SetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (SetAttr a) where def = SetAttr def
+instance Pretty a => Pretty (SetAttr a) where
+    pretty (SetAttr SizeAttrNone) = prEmpty
+    pretty (SetAttr a) = prParens (pretty a)
 
 
-instance Default (SetAttr a) where
-    def = SetAttrNone
+data SizeAttr a
+    = SizeAttrNone
+    | SizeAttrSize a
+    | SizeAttrMinSize a
+    | SizeAttrMaxSize a
+    | SizeAttrMinMaxSize a a
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+instance Serialize a => Serialize (SizeAttr a)
+instance Hashable  a => Hashable  (SizeAttr a)
+instance ToJSON    a => ToJSON    (SizeAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (SizeAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (SizeAttr a) where def = SizeAttrNone
+instance Pretty a => Pretty (SizeAttr a) where
+    pretty SizeAttrNone = prEmpty
+    pretty (SizeAttrSize       a  ) = "size"    <+> pretty a
+    pretty (SizeAttrMinSize    a  ) = "minSize" <+> pretty a
+    pretty (SizeAttrMaxSize    a  ) = "maxSize" <+> pretty a
+    pretty (SizeAttrMinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
+
+
+data FunctionAttr x
+    = FunctionAttr (SizeAttr x) PartialityAttr ISBAttr
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+instance Serialize a => Serialize (FunctionAttr a)
+instance Hashable  a => Hashable  (FunctionAttr a)
+instance ToJSON    a => ToJSON    (FunctionAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (FunctionAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (FunctionAttr a) where def = FunctionAttr def def def
+instance Pretty a => Pretty (FunctionAttr a) where
+    pretty (FunctionAttr a b c) =
+        let inside = filter (/=prEmpty) [pretty a, pretty b, pretty c]
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
+
+
+data PartialityAttr
+    = FunctionAttr_Partial
+    | FunctionAttr_Total
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize PartialityAttr
+instance Hashable  PartialityAttr
+instance ToJSON    PartialityAttr where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  PartialityAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default   PartialityAttr where def = FunctionAttr_Partial
+instance Pretty    PartialityAttr where
+    pretty FunctionAttr_Partial = prEmpty -- partial is the default
+    pretty FunctionAttr_Total = "total"
+
+
+data ISBAttr
+    = ISBAttr_None
+    | ISBAttr_Injective
+    | ISBAttr_Surjective
+    | ISBAttr_Bijective
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize ISBAttr
+instance Hashable  ISBAttr
+instance ToJSON    ISBAttr where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  ISBAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default   ISBAttr where def = ISBAttr_None
+instance Pretty    ISBAttr where
+    pretty ISBAttr_None = prEmpty
+    pretty ISBAttr_Injective = "injective"
+    pretty ISBAttr_Surjective = "surjective"
+    pretty ISBAttr_Bijective = "bijective"
 
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttributes a)
-instance Hashable a => Hashable (DomainAttributes a)
-instance ToJSON a => ToJSON (DomainAttributes a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON a => FromJSON (DomainAttributes a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  a => Hashable  (DomainAttributes a)
+instance ToJSON    a => ToJSON    (DomainAttributes a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (DomainAttributes a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Default (DomainAttributes a) where
     def = DomainAttributes []
@@ -149,9 +216,9 @@ data DomainAttribute a
     deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (DomainAttribute a)
-instance Hashable a => Hashable (DomainAttribute a)
-instance ToJSON a => ToJSON (DomainAttribute a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON a => FromJSON (DomainAttribute a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  a => Hashable  (DomainAttribute a)
+instance ToJSON    a => ToJSON    (DomainAttribute a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (DomainAttribute a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Range a
@@ -163,9 +230,9 @@ data Range a
     deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance Serialize a => Serialize (Range a)
-instance Hashable a => Hashable (Range a)
-instance ToJSON a => ToJSON (Range a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON a => FromJSON (Range a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  a => Hashable (Range a)
+instance ToJSON    a => ToJSON (Range a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON (Range a) where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Arbitrary a => Arbitrary (Range a) where
     arbitrary = oneof
@@ -190,11 +257,11 @@ data HasRepresentation = NoRepresentation | HasRepresentation Name
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize HasRepresentation
-instance Hashable HasRepresentation
-instance ToJSON HasRepresentation where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON HasRepresentation where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  HasRepresentation
+instance ToJSON    HasRepresentation where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  HasRepresentation where parseJSON = JSON.genericParseJSON jsonOptions
 
-instance IsString HasRepresentation where
+instance IsString  HasRepresentation where
     fromString = HasRepresentation . Name . T.pack
 
 
@@ -254,13 +321,6 @@ prettyAttrs a bs =
     in  if prettya == "()"
             then pretty bs
             else prBraces prettya <+> pretty bs
-
-instance Pretty a => Pretty (SetAttr a) where
-    pretty SetAttrNone = prEmpty
-    pretty (SetAttrSize       a  ) = prParens ("size"    <+> pretty a)
-    pretty (SetAttrMinSize    a  ) = prParens ("minSize" <+> pretty a)
-    pretty (SetAttrMaxSize    a  ) = prParens ("maxSize" <+> pretty a)
-    pretty (SetAttrMinMaxSize a b) = prParens ("minSize" <+> pretty a <+> ", maxSize" <+> pretty b)
 
 instance Pretty a => Pretty (DomainAttributes a) where
     pretty (DomainAttributes []) = prEmpty

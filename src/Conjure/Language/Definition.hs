@@ -23,15 +23,6 @@ module Conjure.Language.Definition
     , AbstractLiteral(..)
     , AbstractPattern(..)
 
-    , Domain(..), Range(..)
-
-    , SetAttr(..)
-    , DomainAttributes(..), DomainAttribute(..)
-
-    , HasRepresentation(..)
-
-    , Type(..)
-
     , ExpressionLike(..), ReferenceContainer(..)
 
     ) where

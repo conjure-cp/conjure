@@ -4,6 +4,7 @@ module Conjure.Language.NameResolution ( resolveNames ) where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 
 
 resolveNames :: (Functor m, Monad m) => Model -> m Model

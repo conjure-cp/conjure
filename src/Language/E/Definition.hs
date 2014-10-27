@@ -36,14 +36,8 @@ import Stuff.Generic.Tag
 import Conjure.Language.Pretty
 import Stuff.MetaVariable
 import Conjure.Language.Definition
-    ( Domain(..), Range(..)
-    , DomainAttributes(..), DomainAttribute(..), SetAttr(..)
-    , Type(..)
-    , Constant(..)
-    , HasRepresentation(..)
-    , Name(..)
-    , LanguageVersion(..)
-    )
+import Conjure.Language.Domain
+import Conjure.Language.Type
 
 import Data.Maybe ( fromJust )
 import GHC.Generics ( Generic )

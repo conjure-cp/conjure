@@ -7,6 +7,7 @@ module Conjure.Representations.Enum
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal

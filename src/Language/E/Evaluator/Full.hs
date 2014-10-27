@@ -22,6 +22,7 @@ module Language.E.Evaluator.Full
 
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.Language.Domain
 import Language.E.Definition
 import Language.E.Helpers
 import Language.E.CompE
@@ -1054,10 +1055,10 @@ instance DomSize (Domain () E) where
         innerSize <- domSize inner
         return [eMake| &indexSize ** &innerSize |]
 
-    domSize (DomainSet _ (SetAttrSize size) inner) = do
+    domSize (DomainSet _ (SetAttr (SizeAttrSize size)) inner) = do
         sInner <- domSize inner
         return $ sInner `choose` size
-    domSize (DomainSet _ (SetAttrMinMaxSize minSize maxSize) inner) = do
+    domSize (DomainSet _ (SetAttr (SizeAttrMinMaxSize minSize maxSize)) inner) = do
         sInner <- domSize inner
         (qStr, q) <- freshQuanVar "from domSize"
         return $ inQuan "sum" qStr
@@ -1078,27 +1079,29 @@ instance DomSize (Domain () E) where
         sInner <- domSize inner
         return [eMake| 2 ** &sInner |]
 
-    domSize (DomainFunction _ attrs a b)
-        | Just _ <- lookupDomainAttribute "total" attrs
-        , Just _ <- lookupDomainAttribute "injective" attrs = do
-            aSize <- domSize a
-            bSize <- domSize b
-            return [eMake| &bSize! / (&bSize - &aSize)! |]
-    domSize (DomainFunction _ attrs a b)
-        | Just _ <- lookupDomainAttribute "total" attrs
-        , Just _ <- lookupDomainAttribute "bijective" attrs = do
-            aSize <- domSize a
-            bSize <- domSize b
-            return [eMake| &bSize! / (&bSize - &aSize)! |]
-    domSize (DomainFunction _ attrs a b)
-        | Just _ <- lookupDomainAttribute "total" attrs = do
-            aSize <- domSize a
-            bSize <- domSize b
-            return [eMake| &bSize ** &aSize |]
-    domSize (DomainFunction _ _ a b) = do
-        aSize <- domSize a
-        bSize <- domSize b
-        return [eMake| (&bSize + 1) ** &aSize |]
+    domSize DomainFunction{} = bug "domSize DomainFunction"
+
+    -- domSize (DomainFunction _ attrs a b)
+    --     | Just _ <- lookupDomainAttribute "total" attrs
+    --     , Just _ <- lookupDomainAttribute "injective" attrs = do
+    --         aSize <- domSize a
+    --         bSize <- domSize b
+    --         return [eMake| &bSize! / (&bSize - &aSize)! |]
+    -- domSize (DomainFunction _ attrs a b)
+    --     | Just _ <- lookupDomainAttribute "total" attrs
+    --     , Just _ <- lookupDomainAttribute "bijective" attrs = do
+    --         aSize <- domSize a
+    --         bSize <- domSize b
+    --         return [eMake| &bSize! / (&bSize - &aSize)! |]
+    -- domSize (DomainFunction _ attrs a b)
+    --     | Just _ <- lookupDomainAttribute "total" attrs = do
+    --         aSize <- domSize a
+    --         bSize <- domSize b
+    --         return [eMake| &bSize ** &aSize |]
+    -- domSize (DomainFunction _ _ a b) = do
+    --     aSize <- domSize a
+    --     bSize <- domSize b
+    --     return [eMake| (&bSize + 1) ** &aSize |]
 
     domSize (DomainRelation r _attrs rs)
         = domSize (DomainSet r (error "TODO need to convert relation attributes to set attributes here") (DomainTuple rs))

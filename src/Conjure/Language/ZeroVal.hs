@@ -6,6 +6,7 @@ module Conjure.Language.ZeroVal ( zeroVal ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 
 
@@ -24,14 +25,14 @@ instance Pretty r => ZeroVal (Domain r Constant) where
                 DomainInt rs -> rangesInts rs
                 _ -> fail $ "Matrix indexed by a domain that isn't int:" <+> pretty index
         return (ConstantMatrix index (replicate (length is) z))
-    zeroVal d@(DomainSet _ attrs inner) = do
+    zeroVal d@(DomainSet _ (SetAttr attrs) inner) = do
         let returnInt (ConstantInt x) = return x
             returnInt _ = fail $ "Attribute expected to be an int in:" <+> pretty d
-        let getMin SetAttrNone = return 0
-            getMin (SetAttrSize x) = returnInt x
-            getMin (SetAttrMinSize x) = returnInt x
-            getMin (SetAttrMaxSize _) = return 0
-            getMin (SetAttrMinMaxSize x _) = returnInt x
+        let getMin SizeAttrNone = return 0
+            getMin (SizeAttrSize x) = returnInt x
+            getMin (SizeAttrMinSize x) = returnInt x
+            getMin (SizeAttrMaxSize _) = return 0
+            getMin (SizeAttrMinMaxSize x _) = returnInt x
         z <- zeroVal inner
         minSize <- getMin attrs
         return (ConstantSet (replicate minSize z))

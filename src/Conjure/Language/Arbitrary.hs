@@ -13,6 +13,7 @@ module Conjure.Language.Arbitrary
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( domainSizeConstant )
 
@@ -193,7 +194,7 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         (HasRepresentation repr)
-                        (SetAttrSize (ConstantInt size))
+                        (SetAttr (SizeAttrSize (ConstantInt size)))
                         dom
             return ( domainOut
                    , let try n =
@@ -222,7 +223,7 @@ arbitraryDomainAndConstant = sized dispatch
             maxSize <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             return ( DomainSet (HasRepresentation repr)
-                               (SetAttrMaxSize (ConstantInt maxSize))
+                               (SetAttr (SizeAttrMaxSize (ConstantInt maxSize)))
                                dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf numElems constantGen
@@ -242,9 +243,9 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         (HasRepresentation repr)
-                        (SetAttrMinMaxSize
-                            (ConstantInt minSize)
-                            (ConstantInt maxSize))
+                        (SetAttr (SizeAttrMinMaxSize
+                                    (ConstantInt minSize)
+                                    (ConstantInt maxSize)))
                         dom
             return ( domainOut
                    , let try n =

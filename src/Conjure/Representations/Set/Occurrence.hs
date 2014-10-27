@@ -5,6 +5,8 @@ module Conjure.Representations.Set.Occurrence
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( valuesInIntDomain )
@@ -12,7 +14,7 @@ import Conjure.Representations.Internal
 
 
 setOccurrence :: MonadFail m => Representation m
-setOccurrence = Representation chck setDown_ structuralCons setDown setUp
+setOccurrence = Representation chck downD structuralCons downC up
 
     where
 
@@ -21,14 +23,14 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
 
         outName name = mconcat [name, "_", "Occurrence"]
 
-        setDown_ (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
+        downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
             [ ( outName name
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
             ]
-        setDown_ _ = fail "N/A {setDown_}"
+        downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainSet "Occurrence" attrs innerDomain@DomainInt{}) =
+        structuralCons (name, DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
             let
                 m = Reference (outName name)
                               (Just (DeclHasRepr
@@ -39,15 +41,15 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
                 cardinality iName = make opSum [make opMapOverDomain (body iName) (Domain (forgetRepr innerDomain))]
             in
                 return $ case attrs of
-                    SetAttrNone             -> Nothing
-                    SetAttrSize x           -> Just $ \ fresh -> [ make opEq  x (cardinality (headInf fresh)) ]
-                    SetAttrMinSize x        -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh)) ]
-                    SetAttrMaxSize y        -> Just $ \ fresh -> [ make opGeq y (cardinality (headInf fresh)) ]
-                    SetAttrMinMaxSize x y   -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh))
-                                                                 , make opGeq y (cardinality (headInf fresh)) ]
+                    SizeAttrNone           -> Nothing
+                    SizeAttrSize x         -> Just $ \ fresh -> [ make opEq  x (cardinality (headInf fresh)) ]
+                    SizeAttrMinSize x      -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh)) ]
+                    SizeAttrMaxSize y      -> Just $ \ fresh -> [ make opGeq y (cardinality (headInf fresh)) ]
+                    SizeAttrMinMaxSize x y -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh))
+                                                                , make opGeq y (cardinality (headInf fresh)) ]
         structuralCons _ = fail "N/A {structuralCons}"
 
-        setDown (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
+        downC (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
                 innerDomainVals <- valuesInIntDomain intRanges
                 return $ Just
                     [ ( outName name
@@ -59,9 +61,9 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
                           ]
                       )
                     ]
-        setDown _ = fail "N/A {setDown}"
+        downC _ = fail "N/A {downC}"
 
-        setUp ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
+        up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
             case lookup (outName name) ctxt of
                 Just constantMatrix ->
                     case constantMatrix of
@@ -84,5 +86,5 @@ setOccurrence = Representation chck setDown_ structuralCons setDown setUp
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        setUp _ _ = fail "N/A {setUp}"
+        up _ _ = fail "N/A {up}"
 

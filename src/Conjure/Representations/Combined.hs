@@ -10,6 +10,7 @@ module Conjure.Representations.Combined
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 
 import Conjure.Representations.Internal

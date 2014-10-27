@@ -9,6 +9,7 @@ module Conjure.Language.Instantiate
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 
 
@@ -82,7 +83,7 @@ instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
 instantiateD (DomainMatrix index inner) = DomainMatrix <$> instantiateD index <*> instantiateD inner
 instantiateD (DomainSet       r attrs inner) = DomainSet r <$> instantiateSetAttr attrs <*> instantiateD inner
 instantiateD (DomainMSet      r attrs inner) = DomainMSet r <$> instantiateDAs attrs <*> instantiateD inner
-instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> instantiateDAs attrs <*> instantiateD innerFr <*> instantiateD innerTo
+instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> instantiateFunctionAttr attrs <*> instantiateD innerFr <*> instantiateD innerTo
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateDAs attrs <*> mapM instantiateD inners
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiateDAs attrs <*> instantiateD inner
 instantiateD (DomainOp {}) = bug "instantiateD DomainOp"
@@ -95,11 +96,32 @@ instantiateSetAttr
        )
     => SetAttr Expression
     -> m (SetAttr Constant)
-instantiateSetAttr SetAttrNone = return SetAttrNone
-instantiateSetAttr (SetAttrSize x) = SetAttrSize <$> instantiateE x
-instantiateSetAttr (SetAttrMinSize x) = SetAttrMinSize <$> instantiateE x
-instantiateSetAttr (SetAttrMaxSize x) = SetAttrMaxSize <$> instantiateE x
-instantiateSetAttr (SetAttrMinMaxSize x y) = SetAttrMinMaxSize <$> instantiateE x <*> instantiateE y
+instantiateSetAttr (SetAttr s) = SetAttr <$> instantiateSizeAttr s
+
+
+instantiateSizeAttr
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => SizeAttr Expression
+    -> m (SizeAttr Constant)
+instantiateSizeAttr SizeAttrNone = return SizeAttrNone
+instantiateSizeAttr (SizeAttrSize x) = SizeAttrSize <$> instantiateE x
+instantiateSizeAttr (SizeAttrMinSize x) = SizeAttrMinSize <$> instantiateE x
+instantiateSizeAttr (SizeAttrMaxSize x) = SizeAttrMaxSize <$> instantiateE x
+instantiateSizeAttr (SizeAttrMinMaxSize x y) = SizeAttrMinMaxSize <$> instantiateE x <*> instantiateE y
+
+
+instantiateFunctionAttr
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => FunctionAttr Expression
+    -> m (FunctionAttr Constant)
+instantiateFunctionAttr (FunctionAttr s p j) =
+    FunctionAttr <$> instantiateSizeAttr s
+                 <*> pure p
+                 <*> pure j
 
 
 instantiateDAs

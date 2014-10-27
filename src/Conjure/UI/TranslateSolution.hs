@@ -3,6 +3,7 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Representations ( up )

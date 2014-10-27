@@ -5,30 +5,33 @@ module Conjure.Representations.Set.Explicit
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
 setExplicit :: MonadFail m => Representation m
-setExplicit = Representation chck setDown_ structuralCons setDown setUp
+setExplicit = Representation chck downD structuralCons downC up
 
     where
 
-        chck f (DomainSet _ attrs@(SetAttrSize{}) innerDomain) = DomainSet "Explicit" attrs <$> f innerDomain
+        chck f (DomainSet _ attrs@(SetAttr SizeAttrSize{}) innerDomain) =
+            DomainSet "Explicit" attrs <$> f innerDomain
         chck _ _ = []
 
         outName name = mconcat [name, "_", "Explicit"]
 
-        setDown_ (name, DomainSet "Explicit" (SetAttrSize size) innerDomain) = return $ Just
+        downD (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain) = return $ Just
             [ ( outName name
               , DomainMatrix
                   (DomainInt [RangeBounded (fromInt 1) size])
                   innerDomain
               ) ]
-        setDown_ _ = fail "N/A {setDown_}"
+        downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainSet "Explicit" (SetAttrSize size) innerDomain@DomainInt{}) =
+        structuralCons (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain@DomainInt{}) =
             return $ Just $ \ fresh -> return $
             let
                 m = Reference (outName name)
@@ -46,16 +49,16 @@ setExplicit = Representation chck setDown_ structuralCons setDown setUp
                 ]
         structuralCons _ = fail "N/A {structuralCons}"
 
-        setDown (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =
+        downC (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain, ConstantSet constants) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
             in  return $ Just
                     [ ( outName name
                       , DomainMatrix   outIndexDomain innerDomain
                       , ConstantMatrix outIndexDomain constants
                       ) ]
-        setDown _ = fail "N/A {setDown}"
+        downC _ = fail "N/A {downC}"
 
-        setUp ctxt (name, domain@(DomainSet "Explicit" (SetAttrSize size) innerDomain)) =
+        up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "No value for:" <+> pretty (outName name)
@@ -71,7 +74,7 @@ setExplicit = Representation chck setDown_ structuralCons setDown setUp
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
+                                , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain)
                                 ]
-        setUp _ _ = fail "N/A {setUp}"
+        up _ _ = fail "N/A {up}"
 

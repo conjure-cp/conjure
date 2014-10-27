@@ -3,6 +3,7 @@ module Conjure.Language.DomainSizeTest ( tests ) where
 -- conjure
 import Conjure.Prelude
 import Language.E.Definition hiding ( Spec )
+import Conjure.Language.Domain
 import Conjure.Language.DomainSize ( domainSizeConstant )
 
 -- tasty
@@ -31,9 +32,9 @@ tests = testGroup "domainSize"
                                       , RangeBounded (ConstantInt 1) (ConstantInt 100)
                                       ]) @?= Right 101
     , testCase "domain size of set of bool #1" $
-        domainSizeConstant (DomainSet () SetAttrNone DomainBool) @?= Right 4
+        domainSizeConstant (DomainSet () (SetAttr SizeAttrNone) DomainBool) @?= Right 4
     , testCase "domain size of set of bool #2" $
-        let setOfSize n = DomainSet () (SetAttrSize n)
+        let setOfSize n = DomainSet () (SetAttr (SizeAttrSize n))
         in  domainSizeConstant (setOfSize (ConstantInt 2) DomainBool) @?= Right 1
     ]
 

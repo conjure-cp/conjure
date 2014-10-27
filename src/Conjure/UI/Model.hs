@@ -14,14 +14,15 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.Pretty
+import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
 import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
                                    , opLeq )
 import Conjure.Language.Lenses
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.TypeOf
-import Conjure.Language.DomainOf
 import Conjure.Representations
 
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )

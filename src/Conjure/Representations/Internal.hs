@@ -8,6 +8,7 @@ module Conjure.Representations.Internal
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 
 

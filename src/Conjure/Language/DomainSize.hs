@@ -12,6 +12,7 @@ module Conjure.Language.DomainSize
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Ops ( OperatorContainer(..) )
 import Conjure.Language.Lenses
 import Conjure.Language.Pretty
@@ -60,7 +61,7 @@ gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = make opProduct <$> mapM gDomainSizeOf xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
--- gDomainSizeOf (DomainSet       r (SetAttr x) (Domain r x))
+-- gDomainSizeOf (DomainSet       r (SizeAttr x) (Domain r x))
 -- gDomainSizeOf (DomainMSet      r (DomainAttributes x) (Domain r x))
 -- gDomainSizeOf (DomainFunction  r (DomainAttributes x) (Domain r x) (Domain r x))
 -- gDomainSizeOf (DomainRelation  r (DomainAttributes x) [Domain r x])
@@ -88,18 +89,18 @@ domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
 domainSizeConstant (DomainEnum _ _) = fail "domainSizeConstant: Unknown for given enum."
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
 domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
-domainSizeConstant (DomainSet _ attrs inner) =
+domainSizeConstant (DomainSet _ (SetAttr attrs) inner) =
     case attrs of
-        SetAttrNone -> do
+        SizeAttrNone -> do
             innerSize <- domainSizeConstant inner
             return (2 ^ innerSize)
-        SetAttrSize (ConstantInt size) -> do
+        SizeAttrSize (ConstantInt size) -> do
             innerSize <- domainSizeConstant inner
             return (nchoosek innerSize size)
-        SetAttrMaxSize (ConstantInt maxSize) -> do
+        SizeAttrMaxSize (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [0 .. maxSize] ]
-        SetAttrMinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
+        SizeAttrMinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
         _ -> fail "domainSizeConstant"

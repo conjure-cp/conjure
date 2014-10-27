@@ -6,7 +6,7 @@ module Conjure.Representations.Primitive
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 

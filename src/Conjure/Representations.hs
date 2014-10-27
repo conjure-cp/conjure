@@ -11,6 +11,7 @@ module Conjure.Representations
 import Conjure.Bug
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Type
 import Conjure.Language.Ops
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
