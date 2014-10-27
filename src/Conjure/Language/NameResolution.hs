@@ -19,7 +19,7 @@ resolveNames model = flip evalStateT [] $ do
                     LettingDomainDefnEnum nm vals -> do
                         modify ((nm, EnumTypeDefLetting vals) :)
                         forM_ vals $ \ val -> do
-                            let c = Constant (ConstantEnum nm val)
+                            let c = Constant (ConstantEnum nm vals val)
                             modify ((val, EnumConstant c) :)
                     _ -> return ()
                 return st

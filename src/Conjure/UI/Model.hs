@@ -569,6 +569,13 @@ rule_RefineEnums = "refine-enums" `namedRule` theRule where
         return ( "refined reference to an enum:" <+> pretty n <+> "~~>" <+> pretty n2
                , const $ Reference n2 (Just (DeclHasRepr forg n2 d2))
                )
+    theRule (Constant (ConstantEnum _ vals val)) = do
+        case findIndex (==val) vals of
+            Nothing -> bug ("constant enum not in range:" <+> pretty val <+> prettyList prBrackets "," vals)
+            Just i  -> return $ Just
+                ( "refined constant enum:" <+> pretty val <+> "~~>" <+> pretty (i+1)
+                , const $ Constant (ConstantInt (i+1))
+                )
     theRule _ = return Nothing
 
 

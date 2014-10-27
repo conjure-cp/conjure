@@ -25,8 +25,9 @@ import Test.QuickCheck ( Arbitrary(..), oneof )
 data Constant
     = ConstantBool Bool
     | ConstantInt Int
-    | ConstantEnum Name {- name for the enum domain -}
-                   Name {- the literal -}
+    | ConstantEnum Name   {- name for the enum domain -}
+                   [Name] {- values in the enum domain -}
+                   Name   {- the literal -}
     | ConstantTuple [Constant]
     | ConstantMatrix (Domain () Constant) [Constant]
     | ConstantSet [Constant]
@@ -50,7 +51,7 @@ instance Arbitrary Constant where
 instance TypeOf Constant where
     typeOf ConstantBool{}            = return TypeBool
     typeOf ConstantInt{}             = return TypeInt
-    typeOf (ConstantEnum defn _    ) = return (TypeEnum defn)
+    typeOf (ConstantEnum defn _ _  ) = return (TypeEnum defn)
     typeOf (ConstantTuple        xs) = TypeTuple    <$> mapM typeOf xs
     typeOf (ConstantMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
     typeOf (ConstantSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
@@ -68,7 +69,7 @@ instance Pretty Constant where
     pretty (ConstantBool False) = "false"
     pretty (ConstantBool True) = "true"
     pretty (ConstantInt x) = pretty x
-    pretty (ConstantEnum _ x) = pretty x
+    pretty (ConstantEnum _ _ x) = pretty x
     pretty (ConstantTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
     pretty (ConstantMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
     pretty (ConstantSet       xs ) =                prettyList prBraces "," xs

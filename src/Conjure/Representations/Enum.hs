@@ -40,7 +40,7 @@ enum = Representation check downD structural downC up
 
         structural = const $ return Nothing
 
-        downC (name, DomainEnum ename (Just (vals, ranges)), ConstantEnum _ val) = do
+        downC (name, DomainEnum ename (Just (vals, ranges)), ConstantEnum _ _ val) = do
             let ranges' =
                     if null ranges
                         then [RangeBounded (fromInt 1) (fromInt (length vals))]
@@ -61,7 +61,7 @@ enum = Representation check downD structural downC up
                             $ ("No value for:" <+> pretty name)
                             : "Bindings in context:"
                             : prettyContext ctxt
-                        Just (ConstantInt c) -> return (name, ConstantEnum ename (at vals (c-1)))
+                        Just (ConstantInt c) -> return (name, ConstantEnum ename vals (at vals (c-1)))
                         Just c -> fail ("Expecting an integer, but got" <+> pretty c)
                 d -> fail ("N/A {enum.up}" <++> pretty (show d))
 
