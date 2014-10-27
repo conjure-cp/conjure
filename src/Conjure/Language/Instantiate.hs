@@ -76,8 +76,8 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD DomainBool = return DomainBool
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
-instantiateD (DomainEnum {}) = bug "instantiateD DomainEnum"
-instantiateD (DomainUnnamed {}) = bug "instantiateD DomainUnnamed"
+instantiateD (DomainEnum nm rs) = return (DomainEnum nm rs)
+instantiateD (DomainUnnamed nm) = return (DomainUnnamed nm)
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
 instantiateD (DomainMatrix index inner) = DomainMatrix <$> instantiateD index <*> instantiateD inner
 instantiateD (DomainSet       r attrs inner) = DomainSet r <$> instantiateSetAttr attrs <*> instantiateD inner

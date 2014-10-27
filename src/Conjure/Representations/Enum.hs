@@ -56,14 +56,14 @@ enum = Representation check downD structural downC up
         up ctxt (name, domain) =
             case domain of
                 DomainEnum ename (Just (vals,_)) -> 
-                    case lookup name ctxt of
+                    case lookup (varOut name ename) ctxt of
                         Nothing -> fail $ vcat
                             $ ("No value for:" <+> pretty name)
                             : "Bindings in context:"
                             : prettyContext ctxt
                         Just (ConstantInt c) -> return (name, ConstantEnum ename (at vals (c-1)))
                         Just c -> fail ("Expecting an integer, but got" <+> pretty c)
-                _ -> fail "N/A {enum.up}"
+                d -> fail ("N/A {enum.up}" <++> pretty (show d))
 
 
 enumNameToInt :: [Name] -> Name -> Int

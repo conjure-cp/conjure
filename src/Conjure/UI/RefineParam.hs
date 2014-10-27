@@ -47,10 +47,17 @@ refineParam eprimeModel essenceParam = do
 
     eprimeLettings <- liftM concat $ mapM downC essenceGivensAndLettings
 
+    let eprimeLettingsForEnums =
+            [ (nm1, DomainInt [], fromInt (length vals))
+            | Declaration (FindOrGiven Given nm1 (DomainInt [])) <- mStatements eprimeModel
+            , Declaration (LettingDomainDefnEnum nm2 vals)       <- mStatements essenceParam
+            , nm1 == nm2 `mappend` "_EnumSize"
+            ]
+
     return $ languageEprime def
         { mStatements =
             [ Declaration (Letting n (Constant x))
-            | (n, _, x) <- eprimeLettings
+            | (n, _, x) <- eprimeLettings ++ eprimeLettingsForEnums
             ]
         }
 

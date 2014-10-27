@@ -417,6 +417,8 @@ allRules =
     , rule_DontCareBool
     , rule_DontCareInt
 
+    , rule_RefineEnums
+
     , rule_InlineFilterInsideMap
 
     , rule_TupleIndex
@@ -558,6 +560,16 @@ rule_DontCareInt = "dontCare-int" `namedRule` theRule where
         return ( "dontCare value for this integer is" <+> pretty val
                , const $ make opEq x val
                )
+
+
+rule_RefineEnums :: Rule
+rule_RefineEnums = "refine-enums" `namedRule` theRule where
+    theRule (Reference n (Just (DeclHasRepr forg _ d@(DomainEnum{})))) = runMaybeT $ do
+        [(n2,d2)] <- downD (n, d)
+        return ( "refined reference to an enum:" <+> pretty n <+> "~~>" <+> pretty n2
+               , const $ Reference n2 (Just (DeclHasRepr forg n2 d2))
+               )
+    theRule _ = return Nothing
 
 
 rule_InlineFilterInsideMap :: Rule

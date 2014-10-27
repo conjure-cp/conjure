@@ -3,6 +3,7 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Representations ( up )
 
@@ -25,9 +26,21 @@ translateSolution eprimeModel essenceParam eprimeSolution = do
         constant <- instantiateExpression eprimeLettings val
         return (name, constant)
 
-    essenceFinds' <- forM essenceFinds $ \ (name, dom) -> do
-        constant <- instantiateDomain eprimeLettings dom
-        return (name, constant)
+    essenceFinds' <- forM essenceFinds $ \ (name, dom) ->
+        case dom of
+            DomainEnum nm Nothing -> do -- this is an enum domain whose value should be in the param file
+                let enumsInParam =
+                        [ vals
+                        | Declaration (LettingDomainDefnEnum nm2 vals) <- mStatements essenceParam
+                        , nm == nm2
+                        ]
+                case enumsInParam of
+                    []     -> fail ("No value given for enumerated type:" <+> pretty nm)
+                    [vals] -> return (name, DomainEnum nm (Just (vals, [])))
+                    _      -> fail ("Multiple values are given for enumerated type:" <+> pretty nm)
+            _ -> do -- any other domain
+                constant <- instantiateDomain eprimeLettings dom
+                return (name, constant)
 
     essenceLettings <- mapM (up eprimeLettings') essenceFinds'
 
