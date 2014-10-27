@@ -123,7 +123,7 @@ dispatch domain = do
                 _ -> nope
         DomainFunction r _ _ _ ->
             case r of
-                "Matrix1D" -> function1D
+                "Function1D" -> function1D
                 _ -> nope
         _ -> nope
 

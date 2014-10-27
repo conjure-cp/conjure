@@ -10,7 +10,7 @@ import Conjure.Language.DomainSize
 -- import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
--- import Conjure.Language.Pretty
+import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
@@ -23,7 +23,7 @@ function1D = Representation chck downD structuralCons downC up
                     attrs@(FunctionAttr _ FunctionAttr_Total _)
                     innerDomainFr@DomainInt{}
                     innerDomainTo) =
-            DomainFunction "Matrix1D" attrs
+            DomainFunction "Function1D" attrs
                 <$> f innerDomainFr
                 <*> f innerDomainTo
         chck _ _ = []
@@ -108,23 +108,30 @@ function1D = Representation chck downD structuralCons downC up
         --               ) ]
         downC _ = fail "N/A {downC}"
 
-        -- up ctxt (name, domain@(DomainSet "Explicit" (SetAttrSize size) innerDomain)) =
-        --     case lookup (outName name) ctxt of
-        --         Nothing -> fail $ vcat $
-        --             [ "No value for:" <+> pretty (outName name)
-        --             , "When working on:" <+> pretty name
-        --             , "With domain:" <+> pretty domain
-        --             ] ++
-        --             ("Bindings in context:" : prettyContext ctxt)
-        --         Just constant ->
-        --             case constant of
-        --                 ConstantMatrix _ vals ->
-        --                     return (name, ConstantSet vals)
-        --                 _ -> fail $ vcat
-        --                         [ "Expecting a matrix literal for:" <+> pretty (outName name)
-        --                         , "But got:" <+> pretty constant
-        --                         , "When working on:" <+> pretty name
-        --                         , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttrSize size) innerDomain)
-        --                         ]
+        up ctxt (name, domain@(DomainFunction "Function1D"
+                                (FunctionAttr _ FunctionAttr_Total _)
+                                DomainInt{} _)) =
+            case lookup (outName name) ctxt of
+                Nothing -> fail $ vcat $
+                    [ "No value for:" <+> pretty (outName name)
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty domain
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
+                Just constant ->
+                    case constant of
+                        ConstantMatrix (DomainInt ranges) vals -> do
+                            indexInts <- valuesInIntDomain ranges
+                            return ( name
+                                   , ConstantFunction [ (ConstantInt fr, to)
+                                                      | (fr, to) <- zip indexInts vals
+                                                      ]
+                                   )
+                        _ -> fail $ vcat
+                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
+                                , "But got:" <+> pretty constant
+                                , "When working on:" <+> pretty name
+                                , "With domain:" <+> pretty domain
+                                ]
         up _ _ = fail "N/A {up}"
 
