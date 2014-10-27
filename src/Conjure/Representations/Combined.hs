@@ -21,6 +21,7 @@ import Conjure.Representations.Set.Occurrence
 import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
+import Conjure.Representations.Function.Function1D
 
 
 -- | Refine (down) a domain (D), one level (1).
@@ -105,7 +106,8 @@ up ctxt (name, highDomain) = do
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
 dispatch :: (MonadFail m, Pretty x) => Domain HasRepresentation x -> Representation m
-dispatch domain =
+dispatch domain = do
+    let nope = bug $ "No representation for the domain:" <+> pretty domain
     case domain of
         DomainBool{}    -> primitive
         DomainInt{}     -> primitive
@@ -118,8 +120,12 @@ dispatch domain =
                 "Explicit"                  -> setExplicit
                 "ExplicitVarSizeWithMarker" -> setExplicitVarSizeWithMarker
                 "ExplicitVarSizeWithFlags"  -> setExplicitVarSizeWithFlags
-                _ -> bug $ "No representation for the domain:" <+> pretty domain
-        _ -> bug $ "No representation for the domain:" <+> pretty domain
+                _ -> nope
+        DomainFunction r _ _ _ ->
+            case r of
+                "Matrix1D" -> function1D
+                _ -> nope
+        _ -> nope
 
 
 -- | A list of all representations.
@@ -127,6 +133,7 @@ allReprs :: [Representation (Either Doc)]
 allReprs =
     [ primitive, enum, tuple, matrix
     , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+    , function1D
     ]
 
 

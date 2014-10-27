@@ -136,6 +136,25 @@ opPow _ =
     )
 
 
+opNegate
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opNegate _ =
+    ( injectOp . MkOpNegate . OpNegate
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpNegate (OpNegate x) -> return x
+                _ -> fail ("N/A opNegate:" <++> pretty p)
+    )
+
+
 opDontCare
     :: ( OperatorContainer x
        , Pretty x
@@ -383,6 +402,25 @@ opImply _ =
     )
 
 
+opNot
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opNot _ =
+    ( injectOp . MkOpNot . OpNot
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpNot (OpNot x) -> return x
+                _ -> fail ("N/A opNot:" <++> pretty p)
+    )
+
+
 opProduct
     :: ( OperatorContainer x
        , Pretty x
@@ -475,6 +513,25 @@ opMapInExpr _ =
             case op of
                 MkOpMapInExpr (OpMapInExpr x y) -> return (x,y)
                 _ -> fail ("N/A opMapInExpr:" <++> pretty p)
+    )
+
+
+opAllDiff
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opAllDiff _ =
+    ( injectOp . MkOpAllDiff . OpAllDiff
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpAllDiff (OpAllDiff x) -> return x
+                _ -> fail ("N/A opAllDiff:" <++> pretty p)
     )
 
 

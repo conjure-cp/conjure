@@ -36,6 +36,7 @@ data Ops x
     | MkOpMod             (OpMod x)
     | MkOpPow             (OpPow x)
     | MkOpAbs             (OpAbs x)
+    | MkOpNegate          (OpNegate x)
 
     | MkOpEq              (OpEq x)
     | MkOpNeq             (OpNeq x)
@@ -74,6 +75,7 @@ data Ops x
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
 
+    | MkOpAllDiff         (OpAllDiff x)
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
@@ -89,6 +91,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpMod                 x) = typeOf x
     typeOf (MkOpPow                 x) = typeOf x
     typeOf (MkOpAbs                 x) = typeOf x
+    typeOf (MkOpNegate              x) = typeOf x
     typeOf (MkOpEq                  x) = typeOf x
     typeOf (MkOpNeq                 x) = typeOf x
     typeOf (MkOpLt                  x) = typeOf x
@@ -119,6 +122,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
+    typeOf (MkOpAllDiff             x) = typeOf x
 
 
 class BinaryOperator op where
@@ -144,6 +148,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpMod   op@(OpMod    a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpPow   op@(OpPow    a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpAbs      (OpAbs    a   )) = "|" <> pretty a <> "|"
+    prettyPrec _    (MkOpNegate   (OpNegate a   )) = "-" <> prettyPrec 10000 a
     prettyPrec prec (MkOpEq    op@(OpEq     a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpNeq   op@(OpNeq    a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpLt    op@(OpLt     a b )) = prettyPrecBinOp prec [op] a b
@@ -176,6 +181,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpFunctionImage (OpFunctionImage a b)) = "image" <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
+    prettyPrec _ (MkOpAllDiff  (OpAllDiff  a)) = "allDiff"  <> prParens (pretty a)
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -302,6 +308,18 @@ opAbs :: OperatorContainer x => x -> x
 opAbs x = injectOp (MkOpAbs (OpAbs x))
 instance TypeOf x => TypeOf (OpAbs x) where
     typeOf (OpAbs a) = intToInt a
+
+
+data OpNegate x = OpNegate x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpNegate x)
+instance Hashable  x => Hashable  (OpNegate x)
+instance ToJSON    x => ToJSON    (OpNegate x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpNegate x) where parseJSON = JSON.genericParseJSON jsonOptions
+opNegate :: OperatorContainer x => x -> x
+opNegate x = injectOp (MkOpNegate (OpNegate x))
+instance TypeOf x => TypeOf (OpNegate x) where
+    typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
 
 
 data OpEq x = OpEq x x
@@ -721,6 +739,20 @@ instance TypeOf x => TypeOf (OpRange x) where
     typeOf (OpRange x) = do
         TypeFunction _ a <- typeOf x
         return (TypeSet a)
+
+
+data OpAllDiff x = OpAllDiff x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpAllDiff x)
+instance Hashable  x => Hashable  (OpAllDiff x)
+instance ToJSON    x => ToJSON    (OpAllDiff x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpAllDiff x) where parseJSON = JSON.genericParseJSON jsonOptions
+opAllDiff :: OperatorContainer x => x -> x
+opAllDiff x = injectOp (MkOpAllDiff (OpAllDiff x))
+instance TypeOf x => TypeOf (OpAllDiff x) where
+    typeOf (OpAllDiff x) = do
+        TypeMatrix TypeInt TypeInt <- typeOf x
+        return TypeBool
 
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
