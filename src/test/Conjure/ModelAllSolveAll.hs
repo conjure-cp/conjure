@@ -54,7 +54,12 @@ isTestDir baseDir possiblyDir = do
         then return Nothing
         else Just <$> do
             params    <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents (baseDir </> possiblyDir)
-            expecteds <- getDirectoryContents (baseDir </> possiblyDir </> "expected")
+            expecteds <- do
+                let dir = (baseDir </> possiblyDir </> "expected")
+                isDir <- doesDirectoryExist dir
+                if isDir
+                    then getDirectoryContents dir
+                    else return []
             return TestDirFiles 
                 { name           = possiblyDir
                 , tBaseDir       = baseDir </> possiblyDir
@@ -194,12 +199,23 @@ checkExtraFiles t =
         let modelOrSolution f = or [ ".eprime"   `isSuffixOf` f
                                    , ".solution" `isSuffixOf` f
                                    ]
+        
+        dirShouldExist (expectedsDir t)
+        dirShouldExist (outputsDir   t)
         expecteds <- S.fromList . filter modelOrSolution <$> getDirectoryContents (expectedsDir t)
         outputs   <- S.fromList . filter modelOrSolution <$> getDirectoryContents (outputsDir   t)
         let extras = S.difference outputs expecteds
         if S.null extras
             then return ()
             else assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
+
+
+dirShouldExist :: FilePath -> IO ()
+dirShouldExist d = do
+    b <- doesDirectoryExist d
+    if b
+        then return ()
+        else assertFailure $ "dir does not exist: " ++ d
 
 
 modelAll :: FilePath -> Model -> IO ()
