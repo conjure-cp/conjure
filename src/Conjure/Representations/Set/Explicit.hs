@@ -58,7 +58,7 @@ setExplicit = Representation chck downD structuralCons downC up
                       ) ]
         downC _ = fail "N/A {downC}"
 
-        up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain)) =
+        up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttrSize _)) _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "No value for:" <+> pretty (outName name)
@@ -74,7 +74,7 @@ setExplicit = Representation chck downD structuralCons downC up
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain)
+                                , "With domain:" <+> pretty domain
                                 ]
         up _ _ = fail "N/A {up}"
 
