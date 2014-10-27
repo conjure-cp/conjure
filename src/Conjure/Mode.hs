@@ -66,9 +66,6 @@ data ConjureMode
     | ModePrettify
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
-    | ModeTypeStrengthening
-        (Maybe FilePath)    -- input
-        (Maybe FilePath)    -- output
     | ModeJSON
         (Maybe FilePath)    -- input
         (Maybe FilePath)    -- output
@@ -205,7 +202,6 @@ parseArgs (pairs, flags, rest) = msum
     , modeTranslateSolution
     , modeTypeCheck
     , modePrettify
-    , modeTypeStrengthening
     , modeJSON
     , modeValidateSolution
     , modeDFAll
@@ -252,12 +248,6 @@ parseArgs (pairs, flags, rest) = msum
             inp  <- optional $ anyKey $ words "--in-essence --in"
             out  <- optional $ anyKey $ words "--out-essence --out"
             returnMode $ ModePrettify inp out
-
-        modeTypeStrengthening = do
-            mode $ words "ts type-strengthening typeStrengthening"
-            inp  <- optional $ anyKey $ words "--in-essence --in"
-            out  <- optional $ anyKey $ words "--out-essence --out"
-            returnMode $ ModeTypeStrengthening inp out
 
         modeJSON = do
             mode $ words "json"

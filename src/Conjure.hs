@@ -22,7 +22,6 @@ import Language.E.Pipeline.AtMostOneSuchThat ( atMostOneSuchThat )
 import Language.E.Pipeline.ConjureAll ( conjureWithMode )
 import Language.E.Pipeline.Driver ( driverConjure, driverConjureSingle )
 import Language.E.Pipeline.UniqueQuanVars ( uniqueQuanVars )
-import Language.E.Pipeline.TypeStrengthening ( typeStrengthening )
 import Language.E.ValidateSolution ( validateSolution )
 
 import System.Timeout ( timeout )
@@ -115,15 +114,6 @@ runConjureMode fullmode@(ConjureModeWithFlags mode pairs flags _rest timelimit) 
                 Just fp -> readModelFromFile fp
             typeCheckModelIO inp
             writeModel pathOut inp
-
-        helper (ModeTypeStrengthening pathInp pathOut) = do
-            inp <- case pathInp of
-                Nothing -> readSpecFromStdIn
-                Just fp -> readSpecFromFile fp
-            typeCheckSpecIO inp
-            driverConjureSingle False False
-                pathOut
-                (runCompE "typeStrengthening" $ typeStrengthening inp)
 
         helper (ModeJSON pathInp pathOut) = do
             inp <- case pathInp of
