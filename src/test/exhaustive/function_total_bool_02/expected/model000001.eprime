@@ -1,0 +1,4 @@
+language ESSENCE' 1.0
+
+find x_Function1D: matrix indexed by [int(0..1)] of int(13..14)
+such that and([or([x_Function1D[q2] = q1 | q2 : int(0..1)]) | q1 : int(13..14)])
