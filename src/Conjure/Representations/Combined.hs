@@ -25,9 +25,9 @@ import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
 downD1
-    :: (MonadFail m, Pretty x, ExpressionLike x, ReferenceContainer x)
-    =>           (Name, DomainX x)
-    -> m (Maybe [(Name, DomainX x)])
+    :: MonadFail m
+    =>           (Name, DomainX Expression)
+    -> m (Maybe [(Name, DomainX Expression)])
 downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 
 -- | Refine (down) a domain, together with a constant (C), one level (1).
@@ -53,9 +53,9 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
 downD
-    :: (MonadFail m, Pretty x, ExpressionLike x, ReferenceContainer x)
-    =>    (Name, DomainX x)
-    -> m [(Name, DomainX x)]
+    :: MonadFail m
+    =>    (Name, DomainX Expression)
+    -> m [(Name, DomainX Expression)]
 downD inp@(_, domain) = do
     mout <- rDownD (dispatch domain) inp
     case mout of
@@ -85,7 +85,7 @@ up
 up ctxt (name, highDomain) = do
     toDescend'
         -- :: Maybe [(Name, DomainX x)]
-        <- downD1 (name, highDomain)
+        <- downD1 (name, fmap Constant highDomain)
     case toDescend' of
         Nothing ->
             case lookup name ctxt of
@@ -97,7 +97,7 @@ up ctxt (name, highDomain) = do
         Just toDescend -> do
             midConstants
                  :: [(Name, Constant)]
-                 <- sequence [ up ctxt (n,d) | (n,d) <- toDescend ]
+                 <- sequence [ up ctxt (n, fmap e2c d) | (n, d) <- toDescend ]
             up1 (name, highDomain) midConstants
 
 
@@ -198,8 +198,8 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
         matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
 
             mid1
-                :: Maybe [(Name, DomainC)]
-                <- downD1 (name, innerDomain)
+                :: Maybe [(Name, DomainX Expression)]
+                <- downD1 (name, fmap Constant innerDomain)
 
             case mid1 of
                 Nothing ->

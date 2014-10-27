@@ -70,12 +70,69 @@ opTimes
        , x -> m (x,x)
        )
 opTimes _ =
-    ( \ x y -> injectOp (MkOpTimes (OpTimes x y))
+    ( \ x y -> injectOp (MkOpTimes (OpTimes [x,y]))
     , \ p -> do
             op <- projectOp p
             case op of
-                MkOpTimes (OpTimes x y) -> return (x,y)
+                MkOpTimes (OpTimes [x,y]) -> return (x,y)
                 _ -> fail ("N/A opTimes:" <++> pretty p)
+    )
+
+
+opDiv
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opDiv _ =
+    ( \ x y -> injectOp (MkOpDiv (OpDiv x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpDiv (OpDiv x y) -> return (x,y)
+                _ -> fail ("N/A opDiv:" <++> pretty p)
+    )
+
+
+opMod
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opMod _ =
+    ( \ x y -> injectOp (MkOpMod (OpMod x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpMod (OpMod x y) -> return (x,y)
+                _ -> fail ("N/A opMod:" <++> pretty p)
+    )
+
+
+opPow
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opPow _ =
+    ( \ x y -> injectOp (MkOpPow (OpPow x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpPow (OpPow x y) -> return (x,y)
+                _ -> fail ("N/A opPow:" <++> pretty p)
     )
 
 
@@ -323,6 +380,25 @@ opImply _ =
             case op of
                 MkOpImply (OpImply x y) -> return (x,y)
                 _ -> fail ("N/A opImply:" <++> pretty p)
+    )
+
+
+opProduct
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( [x] -> x
+       , x -> m [x]
+       )
+opProduct _ =
+    ( injectOp . MkOpTimes . OpTimes
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpTimes (OpTimes xs) -> return xs
+                _ -> fail ("N/A opProduct:" <++> pretty p)
     )
 
 

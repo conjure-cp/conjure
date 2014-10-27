@@ -4,10 +4,10 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Lenses
 import Conjure.Language.TypeOf
+import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
@@ -28,7 +28,7 @@ setExplicitVarSizeWithMarker = Representation chck setDown_ structuralCons setDo
         getMaxSize attrs innerDomain = case attrs of
             SetAttrMaxSize x -> return x
             SetAttrMinMaxSize _ x -> return x
-            _ -> bug $ "domainSize of:" <+> pretty innerDomain
+            _ -> domainSizeOf innerDomain
 
         setDown_ (name, DomainSet _ attrs innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain

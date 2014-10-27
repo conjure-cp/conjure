@@ -6,6 +6,7 @@ module Conjure.Language.Ops where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
@@ -22,6 +23,10 @@ class OperatorContainer x where
     injectOp :: Ops x -> x
     projectOp :: MonadFail m => x -> m (Ops x)
 
+instance OperatorContainer Constant where
+    injectOp x = bug ("OperatorContainer{Constant} -- injectOp --" <+> pretty x)
+    projectOp x = bug ("OperatorContainer{Constant} -- projectOp --" <+> pretty x)
+
 
 data Ops x
     = MkOpPlus            (OpPlus x)
@@ -29,6 +34,7 @@ data Ops x
     | MkOpTimes           (OpTimes x)
     | MkOpDiv             (OpDiv x)
     | MkOpMod             (OpMod x)
+    | MkOpPow             (OpPow x)
     | MkOpAbs             (OpAbs x)
 
     | MkOpEq              (OpEq x)
@@ -81,6 +87,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpTimes               x) = typeOf x
     typeOf (MkOpDiv                 x) = typeOf x
     typeOf (MkOpMod                 x) = typeOf x
+    typeOf (MkOpPow                 x) = typeOf x
     typeOf (MkOpAbs                 x) = typeOf x
     typeOf (MkOpEq                  x) = typeOf x
     typeOf (MkOpNeq                 x) = typeOf x
@@ -128,27 +135,29 @@ opFixityPrec op =
         _ -> bug "opFixityPrec"
 
 instance Pretty x => Pretty (Ops x) where
-    prettyPrec prec (MkOpPlus  op@(OpPlus [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpPlus     (OpPlus  xs  )) = "sum" <> prettyList prParens "," xs
-    prettyPrec prec (MkOpMinus op@(OpMinus a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpTimes op@(OpTimes a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpDiv   op@(OpDiv   a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpMod   op@(OpMod   a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpAbs      (OpAbs   a   )) = "|" <> pretty a <> "|"
-    prettyPrec prec (MkOpEq    op@(OpEq    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpNeq   op@(OpNeq   a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpLt    op@(OpLt    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpLeq   op@(OpLeq   a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpGt    op@(OpGt    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpGeq   op@(OpGeq   a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpAnd   op@(OpAnd  [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpAnd      (OpAnd  xs   )) = "and" <> prettyList prParens "," xs
-    prettyPrec prec (MkOpOr    op@(OpOr   [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpOr       (OpOr   xs   )) = "or"  <> prettyList prParens "," xs
-    prettyPrec prec (MkOpImply op@(OpImply a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpNot      (OpNot   a   )) = "!" <> prettyPrec 10000 a
-    prettyPrec _ (MkOpIndexing (OpIndexing a b )) = pretty a <> "[" <> pretty b <> "]"
-    prettyPrec _ (MkOpSlicing  (OpSlicing  a   )) = pretty a <> "[..]"
+    prettyPrec prec (MkOpPlus  op@(OpPlus  [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpPlus     (OpPlus   xs  )) = "sum" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpMinus op@(OpMinus  a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpTimes op@(OpTimes [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpTimes    (OpTimes  xs  )) = "product" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpDiv   op@(OpDiv    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpMod   op@(OpMod    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpPow   op@(OpPow    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpAbs      (OpAbs    a   )) = "|" <> pretty a <> "|"
+    prettyPrec prec (MkOpEq    op@(OpEq     a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpNeq   op@(OpNeq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLt    op@(OpLt     a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLeq   op@(OpLeq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpGt    op@(OpGt     a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpGeq   op@(OpGeq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpAnd   op@(OpAnd   [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpAnd      (OpAnd   xs   )) = "and" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpOr    op@(OpOr    [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpOr       (OpOr    xs   )) = "or"  <> prettyList prParens "," xs
+    prettyPrec prec (MkOpImply op@(OpImply  a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpNot      (OpNot    a   )) = "!" <> prettyPrec 10000 a
+    prettyPrec _ (MkOpIndexing (OpIndexing  a b )) = pretty a <> "[" <> pretty b <> "]"
+    prettyPrec _ (MkOpSlicing  (OpSlicing   a   )) = pretty a <> "[..]"
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
@@ -222,18 +231,23 @@ instance TypeOf x => TypeOf (OpMinus x) where
     typeOf (OpMinus a b) = intToIntToInt a b
 
 
-data OpTimes x = OpTimes x x
+data OpTimes x = OpTimes [x]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpTimes x)
 instance Hashable  x => Hashable  (OpTimes x)
 instance ToJSON    x => ToJSON    (OpTimes x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTimes x) where parseJSON = JSON.genericParseJSON jsonOptions
 opTimes :: OperatorContainer x => x -> x -> x
-opTimes x y = injectOp (MkOpTimes (OpTimes x y))
+opTimes x y = injectOp (MkOpTimes (OpTimes [x,y]))
 instance BinaryOperator (OpTimes x) where
     opLexeme _ = L_Times
 instance TypeOf x => TypeOf (OpTimes x) where
-    typeOf (OpTimes a b) = intToIntToInt a b
+    typeOf (OpTimes [a,b]) = intToIntToInt a b
+    typeOf (OpTimes xs) = do
+        tys <- mapM typeOf xs
+        if typesUnify (TypeInt:tys)
+            then return TypeInt
+            else bug "Type error in OpTimes"
 
 
 data OpDiv x = OpDiv x x
@@ -262,6 +276,20 @@ instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
 instance TypeOf x => TypeOf (OpMod x) where
     typeOf (OpMod a b) = intToIntToInt a b
+
+
+data OpPow x = OpPow x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpPow x)
+instance Hashable  x => Hashable  (OpPow x)
+instance ToJSON    x => ToJSON    (OpPow x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpPow x) where parseJSON = JSON.genericParseJSON jsonOptions
+opPow :: OperatorContainer x => x -> x -> x
+opPow x y = injectOp (MkOpPow (OpPow x y))
+instance BinaryOperator (OpPow x) where
+    opLexeme _ = L_Pow
+instance TypeOf x => TypeOf (OpPow x) where
+    typeOf (OpPow a b) = intToIntToInt a b
 
 
 data OpAbs x = OpAbs x
@@ -741,6 +769,7 @@ mkBinOp op a b =
                     L_Times -> opTimes
                     L_Div   -> opDiv
                     L_Mod   -> opMod
+                    L_Pow   -> opPow
                     L_Eq    -> opEq
                     L_Neq   -> opNeq
                     L_Lt    -> opLt

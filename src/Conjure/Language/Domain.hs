@@ -28,7 +28,7 @@ data Domain r x
     | DomainEnum Name (Maybe ( [Name]       -- all values in the enum
                              , [Range Name] -- subset of values for this domain
                              ))             -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
-    | DomainUnnamed Name
+    | DomainUnnamed Name x
     | DomainTuple [Domain r x]
     | DomainMatrix (Domain () x) (Domain r x)
     | DomainSet       r (SetAttr x) (Domain r x)
@@ -65,7 +65,7 @@ instance TypeOf (Domain r x) where
     typeOf DomainBool                = return TypeBool
     typeOf DomainInt{}               = return TypeInt
     typeOf (DomainEnum    defn _   ) = return (TypeEnum defn)
-    typeOf (DomainUnnamed defn     ) = return (TypeUnnamed defn)
+    typeOf (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
     typeOf (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
     typeOf (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
     typeOf (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
@@ -80,7 +80,7 @@ forgetRepr :: Domain r x -> Domain () x
 forgetRepr DomainBool = DomainBool
 forgetRepr (DomainInt rs) = DomainInt rs
 forgetRepr (DomainEnum defn rs) = DomainEnum defn rs
-forgetRepr (DomainUnnamed defn) = DomainUnnamed defn
+forgetRepr (DomainUnnamed defn s) = DomainUnnamed defn s
 forgetRepr (DomainTuple ds) = DomainTuple (map forgetRepr ds)
 forgetRepr (DomainMatrix index inner) = DomainMatrix index (forgetRepr inner)
 forgetRepr (DomainSet       _ attr d) = DomainSet () attr (forgetRepr d)
@@ -212,7 +212,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainEnum name (Just (_, ranges))) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _) = pretty name
 
-    pretty (DomainUnnamed name) = pretty name
+    pretty (DomainUnnamed name _) = pretty name
 
     pretty (DomainTuple inners)
         = (if length inners < 2 then "tuple" else prEmpty)

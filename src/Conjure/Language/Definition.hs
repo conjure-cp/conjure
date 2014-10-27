@@ -10,6 +10,8 @@ module Conjure.Language.Definition
 
     , mkLambda, lambdaToFunction
 
+    , e2c
+
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
     , Statement(..), Objective(..)
@@ -457,4 +459,9 @@ instance Enum Expression where
     enumFromThen x n = x : enumFromThen (x+n) n
     enumFromTo _x _y = bug "enumFromTo {Expression}"
     enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
+
+
+e2c :: Expression -> Constant
+e2c (Constant c) = c
+e2c x = bug ("e2c, not a constant:" <+> pretty x)
 

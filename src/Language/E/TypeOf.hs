@@ -758,7 +758,7 @@ instance Pretty r => TypeOf (Domain r E) where
 
     typeOf (DomainEnum (Name nm) _) = return [xMake| type.typeEnum := [Prim (S nm)] |]
 
-    typeOf (DomainUnnamed (Name nm)) = return [xMake| type.typeUnnamed := [Prim (S nm)] |]
+    typeOf (DomainUnnamed (Name nm) _) = return [xMake| type.typeUnnamed := [Prim (S nm)] |]
 
     typeOf (DomainTuple ds) = do
         ts <- mapM typeOf ds

@@ -6,8 +6,8 @@ module Conjure.Representations.Enum
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
@@ -64,12 +64,4 @@ enum = Representation check downD structural downC up
                         Just (ConstantInt c) -> return (name, ConstantEnum ename vals (at vals (c-1)))
                         Just c -> fail ("Expecting an integer, but got" <+> pretty c)
                 d -> fail ("N/A {enum.up}" <++> pretty (show d))
-
-
-enumNameToInt :: [Name] -> Name -> Int
-enumNameToInt nms nm = case findIndex (nm==) nms of
-    Nothing -> bug $ vcat [ pretty nm <+> "is not a value of this enumerated type."
-                          , "Values are:" <+> prettyList id "," (map pretty nms)
-                          ]
-    Just i  -> i + 1
 
