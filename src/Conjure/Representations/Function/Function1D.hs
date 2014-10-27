@@ -12,6 +12,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
+import Conjure.Representations.Enum
 
 
 function1D :: MonadFail m => Representation m
@@ -19,10 +20,36 @@ function1D = Representation chck downD structuralCons downC up
 
     where
 
+        domainCanIndexMatrix DomainBool{} = True
+        domainCanIndexMatrix DomainInt {} = True
+        domainCanIndexMatrix DomainEnum{} = True
+        domainCanIndexMatrix _            = False
+
+        toIntDomain dom =
+            case dom of
+                DomainBool -> return (DomainInt [RangeBounded (fromInt 0) (fromInt 1)])
+                DomainInt{} -> return dom
+                DomainEnum{} -> do
+                    Just [(_,domInt)] <- rDownD enum ("", dom)
+                    return domInt
+                _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
+
+        domainValues dom =
+            case dom of
+                DomainBool -> return [ConstantBool False, ConstantBool True]
+                DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
+                DomainEnum ename (Just (vals, [])) ->
+                    return $ map (ConstantEnum ename vals) vals
+                DomainEnum ename (Just (vals, rs)) -> do
+                    let rsInt = map (fmap (ConstantInt . enumNameToInt vals)) rs
+                    intVals <- valuesInIntDomain rsInt
+                    return $ map (ConstantEnum ename vals . enumIntToName vals) intVals
+                _ -> fail ("domainValues, not supported:" <+> pretty dom)
+
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ FunctionAttr_Total _)
-                    innerDomainFr@DomainInt{}
-                    innerDomainTo) =
+                    innerDomainFr
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr =
             DomainFunction "Function1D" attrs
                 <$> f innerDomainFr
                 <*> f innerDomainTo
@@ -32,20 +59,22 @@ function1D = Representation chck downD structuralCons downC up
 
         downD (name, DomainFunction _
                     (FunctionAttr _ FunctionAttr_Total _)
-                    innerDomainFr@DomainInt{}
-                    innerDomainTo) = return $ Just
-            [ ( outName name
-              , DomainMatrix
-                  (forgetRepr innerDomainFr)
-                  innerDomainTo
-              ) ]
+                    innerDomainFr'
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
+            innerDomainFr <- toIntDomain innerDomainFr'
+            return $ Just
+                [ ( outName name
+                  , DomainMatrix
+                      (forgetRepr innerDomainFr)
+                      innerDomainTo
+                  ) ]
         downD _ = fail "N/A {downD}"
 
         structuralCons (name, DomainFunction _
                     (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
-                    innerDomainFr@DomainInt{}
-                    innerDomainTo) = do
-
+                    innerDomainFr'
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
+            innerDomainFr <- toIntDomain innerDomainFr'
             let m = Reference (outName name)
                               (Just (DeclHasRepr
                                           Find
@@ -93,7 +122,7 @@ function1D = Representation chck downD structuralCons downC up
                     SizeAttrMinSize x      -> [ make opLeq x cardinality ]
                     SizeAttrMaxSize y      -> [ make opGeq y cardinality ]
                     SizeAttrMinMaxSize x y -> [ make opLeq x cardinality
-                                              , make opGeq y cardinality ]                    
+                                              , make opGeq y cardinality ]
 
             return $ Just $ \ fresh -> jectivityCons fresh ++ sizeCons
 
@@ -110,7 +139,7 @@ function1D = Representation chck downD structuralCons downC up
 
         up ctxt (name, domain@(DomainFunction "Function1D"
                                 (FunctionAttr _ FunctionAttr_Total _)
-                                DomainInt{} _)) =
+                                innerDomainFr _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "No value for:" <+> pretty (outName name)
@@ -120,12 +149,10 @@ function1D = Representation chck downD structuralCons downC up
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
                     case constant of
-                        ConstantMatrix (DomainInt ranges) vals -> do
-                            indexInts <- valuesInIntDomain ranges
+                        ConstantMatrix _ vals -> do
+                            froms <- domainValues innerDomainFr
                             return ( name
-                                   , ConstantFunction [ (ConstantInt fr, to)
-                                                      | (fr, to) <- zip indexInts vals
-                                                      ]
+                                   , ConstantFunction (zip froms vals)
                                    )
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)

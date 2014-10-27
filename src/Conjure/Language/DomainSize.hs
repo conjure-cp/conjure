@@ -5,7 +5,7 @@ module Conjure.Language.DomainSize
     ( domainSizeConstant
     , valuesInIntDomain
     , domainSizeOf
-    , enumNameToInt
+    , enumNameToInt, enumIntToName
     ) where
 
 -- conjure
@@ -146,3 +146,7 @@ enumNameToInt nms nm = case findIndex (nm==) nms of
                           , "Values are:" <+> prettyList id "," (map pretty nms)
                           ]
     Just i  -> i + 1
+
+enumIntToName :: [Name] -> Int -> Name
+enumIntToName nms i = at nms (i-1)
+
