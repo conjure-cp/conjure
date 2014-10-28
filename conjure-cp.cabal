@@ -22,7 +22,6 @@ Library
                      , Conjure.Bug
 
                      -- definitions of language constructs
-                     , Conjure.Language
                      , Conjure.Language.AdHoc
                      , Conjure.Language.Definition
                      , Conjure.Language.Name
@@ -66,82 +65,11 @@ Library
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
 
-                     , Conjure
-                     , Conjure.Mode
-
-                     , Stuff.MonadList
-
-                     , Stuff.Funky.FunkySingle
-                     , Stuff.Funky.FunkyMulti
-
                      , Stuff.Generic.Tag
-
-                     , Stuff.MetaVariable
-                     , Stuff.NamedLog
-
-                     , Language.E
                      , Language.E.Definition
-                     , Language.E.Definition.Literal
-                     , Language.E.Helpers
                      , Language.E.Data
                      , Language.E.Lexer
-                     , Language.E.Parser
                      , Language.E.Pretty
-                     , Language.E.MatchBind
-                     , Language.E.TypeOf
-                     , Language.E.DomainOf
-                     , Language.E.CategoryOf
-                     , Language.E.Traversals
-                     , Language.E.CompE
-                     , Language.E.NormaliseSolution
-                     , Language.E.ValidateSolution
-                     , Language.E.TH
-
-                     , Language.E.BuiltIn
-                     , Language.E.BuiltIn.SetStructural
-
-                     , Language.E.Evaluator
-                     , Language.E.Evaluator.DataAboutQuantifiers
-                     , Language.E.Evaluator.Full
-                     , Language.E.Evaluator.Partial
-                     , Language.E.Evaluator.ToBool
-                     , Language.E.Evaluator.ToInt
-
-                     , Language.E.Pipeline.ReadIn
-                     , Language.E.Pipeline.Driver
-                     , Language.E.Pipeline.InitialiseSpecState
-                     , Language.E.Pipeline.Groom
-                     , Language.E.Pipeline.SavileRowCompat
-
-                     , Language.E.Pipeline.ImplicitWheres
-                     , Language.E.Pipeline.ExplodeStructuralVars
-                     , Language.E.Pipeline.IntroduceRegions
-                     , Language.E.Pipeline.InlineLettings
-                     , Language.E.Pipeline.IntroduceFakeConstraints
-                     , Language.E.Pipeline.HandlingEnums
-                     , Language.E.Pipeline.HandlingUnnameds
-                     , Language.E.Pipeline.FreshNames
-                     , Language.E.Pipeline.AtMostOneSuchThat
-                     , Language.E.Pipeline.RemoveUnused
-                     , Language.E.Pipeline.RemoveDuplicateCons
-                     , Language.E.Pipeline.CheckIfAllRefined
-                     , Language.E.Pipeline.AbstractDomsInQuans
-                     , Language.E.Pipeline.UniqueQuanVars
-
-                     , Language.E.Pipeline.ConjureAll
-
-                     , Language.E.Pipeline.ConjureRefn
-                     , Language.E.Pipeline.RuleRefnToFunction
-                     , Language.E.Pipeline.ApplyRefn
-                     , Language.E.Pipeline.ApplyRefnSlower
-
-                     , Language.E.Pipeline.ConjureRepr
-                     , Language.E.Pipeline.RuleReprToFunction
-                     , Language.E.Pipeline.ApplyRepr
-
-                     , Language.E.Pipeline.BubbleUp
-                     , Language.E.Pipeline.NoGuards
-                     , Language.E.Pipeline.NoTuples
 
     build-depends    : base
                      , aeson

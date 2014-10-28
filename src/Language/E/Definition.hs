@@ -34,7 +34,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Stuff.Generic.Tag
 import Conjure.Language.Pretty
-import Stuff.MetaVariable
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -179,12 +178,6 @@ instance ToJSON BuiltIn where
     toJSON (B x) = JSON.object [ "bool"   .= toJSON x ]
     toJSON (I x) = JSON.object [ "int"    .= toJSON x ]
     toJSON (S x) = JSON.object [ "string" .= toJSON x ]
-
-instance MetaVariable E where
-    unnamedMV (Tagged "reference" [Prim (S "_")]) = True
-    unnamedMV _ = False
-    namedMV   (Tagged "metavar"   [Prim (S s  )]) = Just s
-    namedMV   _ = Nothing
 
 instance Arbitrary BuiltIn where
     arbitrary = do
