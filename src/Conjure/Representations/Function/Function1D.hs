@@ -57,7 +57,7 @@ function1D = Representation chck downD structuralCons downC up
 
         outName name = mconcat [name, "_", "Function1D"]
 
-        downD (name, DomainFunction _
+        downD (name, DomainFunction "Function1D"
                     (FunctionAttr _ FunctionAttr_Total _)
                     innerDomainFr'
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
@@ -70,7 +70,7 @@ function1D = Representation chck downD structuralCons downC up
                   ) ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainFunction _
+        structuralCons (name, DomainFunction "Function1D"
                     (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
                     innerDomainFr'
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do

@@ -269,6 +269,25 @@ opEq _ =
     )
 
 
+opNeq
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opNeq _ =
+    ( \ x y -> injectOp (MkOpNeq (OpNeq x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpNeq (OpNeq x y) -> return (x,y)
+                _ -> fail ("N/A opNeq:" <++> pretty p)
+    )
+
+
 opLt
     :: ( OperatorContainer x
        , Pretty x

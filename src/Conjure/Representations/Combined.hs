@@ -22,6 +22,7 @@ import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 import Conjure.Representations.Function.Function1D
+import Conjure.Representations.Function.Function1DPartial
 
 
 -- | Refine (down) a domain (D), one level (1).
@@ -124,6 +125,7 @@ dispatch domain = do
         DomainFunction r _ _ _ ->
             case r of
                 "Function1D" -> function1D
+                "Function1DPartial" -> function1DPartial
                 _ -> nope
         _ -> nope
 
@@ -133,7 +135,7 @@ allReprs :: [Representation (Either Doc)]
 allReprs =
     [ primitive, enum, tuple, matrix
     , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-    , function1D
+    , function1D, function1DPartial
     ]
 
 
