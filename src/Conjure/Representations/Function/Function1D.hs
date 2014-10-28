@@ -101,7 +101,7 @@ function1D = Representation chck downD structuralCons downC up
                                             (mkLambda jName innerDomainFrTy $ \ j ->
                                                 make opEq
                                                     (make opIndexing m j)
-                                                    (i))
+                                                    i)
                                             (Domain (forgetRepr innerDomainFr))
                                     ]
                                 )

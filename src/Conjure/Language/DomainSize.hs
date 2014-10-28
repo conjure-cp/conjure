@@ -141,7 +141,7 @@ nchoosek :: Int -> Int -> Int
 nchoosek n k = product [1..n] `div` (product [1..k] * product [1..n-k])
 
 enumNameToInt :: [Name] -> Name -> Int
-enumNameToInt nms nm = case findIndex (nm==) nms of
+enumNameToInt nms nm = case elemIndex nm nms of
     Nothing -> bug $ vcat [ pretty nm <+> "is not a value of this enumerated type."
                           , "Values are:" <+> prettyList id "," (map pretty nms)
                           ]

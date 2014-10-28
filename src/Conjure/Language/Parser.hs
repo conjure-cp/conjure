@@ -752,9 +752,9 @@ parseFunctionAttr = do
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttrMinMaxSize a b)
         [] -> return SizeAttrNone
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
-    partiality <- if (DAName "total") `elem` attrs
-                    then return FunctionAttr_Total
-                    else return FunctionAttr_Partial
+    let partiality = if DAName "total" `elem` attrs
+                        then FunctionAttr_Total
+                        else FunctionAttr_Partial
     jectivity  <- case filterJectivity attrs of
         [] -> return ISBAttr_None
         [DAName "bijective" ] -> return ISBAttr_Bijective

@@ -85,7 +85,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , group, groupBy, sort, sortBy, partition
                               , genericLength, genericIndex
                               , isSuffixOf, isPrefixOf
-                              , subsequences, transpose, findIndex
+                              , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head
                               , init, and, or, zipWith, maximum, concatMap, all, lines, notElem, foldr

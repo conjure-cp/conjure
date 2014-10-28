@@ -51,7 +51,7 @@ instantiateGivenEnumDomains
     => Model
     -> Domain r x
     -> m (Domain r x)
-instantiateGivenEnumDomains essenceParam dom = do
+instantiateGivenEnumDomains essenceParam dom =
     case dom of
         DomainEnum nm Nothing -> do -- this is an enum domain whose value should be in the param file
             let enumsInParam =

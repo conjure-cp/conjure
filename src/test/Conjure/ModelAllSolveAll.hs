@@ -63,7 +63,7 @@ isTestDir baseDir possiblyDir = do
         else Just <$> do
             params    <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents (baseDir </> possiblyDir)
             expecteds <- do
-                let dir = (baseDir </> possiblyDir </> "expected")
+                let dir = baseDir </> possiblyDir </> "expected"
                 isDir <- doesDirectoryExist dir
                 if isDir
                     then getDirectoryContents dir
@@ -196,8 +196,8 @@ checkExpected t item =
 checkExtraFiles :: TestDirFiles -> TestTree
 checkExtraFiles t =
     testCase "Checking extra files" $ do
-        let modelOrSolution f = or [ ".eprime"   `isSuffixOf` f
-                                   , ".solution" `isSuffixOf` f
+        let modelOrSolution f = or [ suffix `isSuffixOf` f
+                                   | suffix <- [".eprime", ".solution"]
                                    ]
         
         dirShouldExist (expectedsDir t)
@@ -205,21 +205,19 @@ checkExtraFiles t =
         expecteds <- S.fromList . filter modelOrSolution <$> getDirectoryContents (expectedsDir t)
         outputs   <- S.fromList . filter modelOrSolution <$> getDirectoryContents (outputsDir   t)
         let extras = S.difference outputs expecteds
-        if S.null extras
-            then return ()
-            else assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
+        unless (S.null extras) $
+            assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
 
 
 dirShouldExist :: FilePath -> IO ()
 dirShouldExist d = do
     b <- doesDirectoryExist d
-    if b
-        then return ()
-        else assertFailure $ "dir does not exist: " ++ d
+    unless b $
+        assertFailure $ "dir does not exist: " ++ d
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir essence = outputModels allFixedQs dir 1 essence
+modelAll dir = outputModels allFixedQs dir 1
 
 
 dropExtension :: FilePath -> FilePath
