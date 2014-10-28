@@ -13,7 +13,7 @@ import Text.Parsec ( SourcePos, setPosition )
 import Text.Parsec.Pos ( newPos )
 
 -- template-haskell
-import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, PatQ, varP )
+import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 
 -- syb
@@ -25,11 +25,11 @@ essence = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpression) str
-        dataToExpQ (const Nothing `extQ` expE `extQ` expD) e
+        dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpression) str
-        dataToPatQ (const Nothing `extQ` patE `extQ` patD) e
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
     , quoteType = error "quoteType"
     , quoteDec  = error "quoteDec"
     }
@@ -45,8 +45,14 @@ expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
 expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
-expD (DomainMetaVar x) = Just [| $(varE (mkName x)) |]
+expD (DomainMetaVar x) = Just $ appE [| $(varE (mkName "forgetRepr")) |]
+                                     [| $(varE (mkName x)) |]
 expD _ = Nothing
+
+expAP :: AbstractPattern -> Maybe ExpQ
+expAP (AbstractPatternMetaVar x) = Just [| $(varE (mkName x)) |]
+expAP _ = Nothing
+
 
 patE :: Expression -> Maybe PatQ
 patE (ExpressionMetaVar x) = Just (varP (mkName x))
@@ -55,4 +61,8 @@ patE _ = Nothing
 patD :: Domain () Expression -> Maybe PatQ
 patD (DomainMetaVar x) = Just (varP (mkName x))
 patD _ = Nothing
+
+patAP :: AbstractPattern -> Maybe PatQ
+patAP (AbstractPatternMetaVar x) = Just (varP (mkName x))
+patAP _ = Nothing
 

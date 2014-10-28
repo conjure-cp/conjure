@@ -7,7 +7,7 @@ such that
     or([x_ExplicitVarSizeWithMarker_Values[q2] = 1 /\ q2 <= x_ExplicitVarSizeWithMarker_Marker | q2 : int(1..2)]),
     and([q4 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q4] < x_ExplicitVarSizeWithMarker_Values[q4 + 1] | q4 : int(1..2 - 1)]),
     and([q5 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q5] = 1 | q5 : int(1..2)]),
-    2 >= sum([x_Occurrence[q3] | q3 : int(1..2)]),
+    sum([x_Occurrence[q3] | q3 : int(1..2)]) <= 2,
     and([x_Occurrence[q7] -> or([x_ExplicitVarSizeWithMarker_Values[q1] = q7 /\ q1 <= x_ExplicitVarSizeWithMarker_Marker | q1 : int(1..2)]) | q7 : int(1..2)]),
     and([q6 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q6]] | q6 : int(1..2)])
 

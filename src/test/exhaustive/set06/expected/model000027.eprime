@@ -7,7 +7,7 @@ such that
     x_Occurrence[1],
     or([x_ExplicitVarSizeWithFlags_Values[q3] = 2 /\ x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..4)]),
     or([x_ExplicitVarSizeWithFlags_Values[q4] = 3 /\ x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..4)]),
-    4 >= sum([x_Occurrence[q1] | q1 : int(1..4)]),
+    sum([x_Occurrence[q1] | q1 : int(1..4)]) <= 4,
     and([x_ExplicitVarSizeWithFlags_Flags[q5 + 1] -> x_ExplicitVarSizeWithFlags_Values[q5] < x_ExplicitVarSizeWithFlags_Values[q5 + 1] | q5 : int(1..4 - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q6] = false -> x_ExplicitVarSizeWithFlags_Values[q6] = 1 | q6 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..4 - 1)]),

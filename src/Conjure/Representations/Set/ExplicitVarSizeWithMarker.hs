@@ -1,13 +1,13 @@
-module Conjure.Representations.Set.ExplicitVarSizeWithMarker
-    ( setExplicitVarSizeWithMarker
-    ) where
+{-# LANGUAGE QuasiQuotes #-}
+
+module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSizeWithMarker ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Lenses
-import Conjure.Language.TypeOf
+import Conjure.Language.Type
+import Conjure.Language.TH
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
@@ -45,63 +45,40 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         downD _ = fail "N/A {downD}"
 
         structuralCons (name, DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
-            innerType <- typeOf innerDomain
             maxSize   <- getMaxSize attrs innerDomain
-            let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
-            return $ Just $ \ fresh ->
-                let
-                    marker = Reference (nameMarker name)
-                                       (Just (DeclHasRepr
-                                                  Find
-                                                  (nameMarker name)
-                                                  (indexDomain 0)))
-                    values = Reference (nameValues name)
-                                       (Just (DeclHasRepr
-                                                  Find
-                                                  (nameValues name)
-                                                  (DomainMatrix (forgetRepr (indexDomain 1)) innerDomain)))
+            let
+                indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
+                marker = Reference (nameMarker name)
+                                   (Just (DeclHasRepr
+                                              Find
+                                              (nameMarker name)
+                                              (indexDomain 0)))
+                values = Reference (nameValues name)
+                                   (Just (DeclHasRepr
+                                              Find
+                                              (nameValues name)
+                                              (DomainMatrix (forgetRepr (indexDomain 1)) innerDomain)))
 
-                    iName = headInf fresh
+                orderingUpToMarker fresh = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in
+                        [essence|
+                            forAll &iPat : int(1..&maxSize-1) , &i + 1 <= &marker .
+                                &values[&i] < &values[&i+1]
+                        |]
 
-                    -- forAll &i : int(1..&maxSize-1) , &i+1 <= &marker . &values[i] .< &values[i+1]
-                    orderingUpToMarker =
-                        make opAnd
-                            [make opMapOverDomain
-                                (mkLambda iName innerType $ \ i ->
-                                    make opLt
-                                        (make opIndexing values i)
-                                        (make opIndexing values (make opPlus i (fromInt 1)))
-                                )
-                                (make opFilter
-                                    (mkLambda iName innerType $ \ i ->
-                                        make opLeq
-                                            (make opPlus i (fromInt 1))
-                                            marker
-                                    )
-                                    (Domain $ DomainInt [RangeBounded (fromInt 1)
-                                                                      (make opMinus maxSize (fromInt 1))])
-                                )
-                            ]
+                dontCareAfterMarker fresh = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in
+                        [essence|
+                            forAll &iPat : int(1..&maxSize) , &i > &marker .
+                                dontCare(&values[&i])
+                        |]
 
-                    -- forAll &i : int(1..&maxSize) , &i > &marker . dontCare(&values[&i])
-                    dontCareAfterMarker =
-                        make opAnd
-                            [make opMapOverDomain
-                                (mkLambda iName innerType $ \ i ->
-                                    make opDontCare (make opIndexing values i)
-                                )
-                                (make opFilter
-                                    (mkLambda iName innerType $ \ i ->
-                                        make opGt i marker
-                                    )
-                                    (Domain (indexDomain 1))
-                                )
-                            ]
+            return $ Just $ \ fresh -> orderingUpToMarker fresh ++ dontCareAfterMarker fresh
 
-                in
-                    [ orderingUpToMarker
-                    , dontCareAfterMarker
-                    ]
         structuralCons _ = fail "N/A {structuralCons}"
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do

@@ -334,6 +334,7 @@ convPat ty [xMatch| [x] := structural.single   |] = convPat ty x
 convPat _  [xMatch| ts  := structural.tuple    |] = AbsPatTuple  (map (convPat TypeAny) ts)
 convPat _  [xMatch| ts  := structural.matrix   |] = AbsPatMatrix (map (convPat TypeAny) ts)
 convPat _  [xMatch| ts  := structural.set      |] = AbsPatSet    (map (convPat TypeAny) ts)
+convPat _  [xMatch| [Prim (S nm)] := metavar   |] = AbstractPatternMetaVar (T.unpack nm)
 convPat _ x = bug $ "convPat" <+> prettyAsPaths x
 
 convDomain :: Domain () E -> Domain () Expression

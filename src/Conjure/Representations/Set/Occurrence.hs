@@ -1,16 +1,17 @@
-module Conjure.Representations.Set.Occurrence
-    ( setOccurrence
-    ) where
+{-# LANGUAGE QuasiQuotes #-}
+
+module Conjure.Representations.Set.Occurrence ( setOccurrence ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
-import Conjure.Language.Lenses
+import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( valuesInIntDomain )
 import Conjure.Representations.Internal
+import Conjure.Representations.Common
 
 
 setOccurrence :: MonadFail m => Representation m
@@ -30,23 +31,16 @@ setOccurrence = Representation chck downD structuralCons downC up
             ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
-            let
-                m = Reference (outName name)
-                              (Just (DeclHasRepr
-                                          Find
-                                          (outName name)
-                                          (DomainMatrix (forgetRepr innerDomain) DomainBool)))
-                body iName = mkLambda iName TypeInt $ \ i -> make opIndexing m i
-                cardinality iName = make opSum [make opMapOverDomain (body iName) (Domain (forgetRepr innerDomain))]
-            in
-                return $ case attrs of
-                    SizeAttrNone           -> Nothing
-                    SizeAttrSize x         -> Just $ \ fresh -> [ make opEq  x (cardinality (headInf fresh)) ]
-                    SizeAttrMinSize x      -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh)) ]
-                    SizeAttrMaxSize y      -> Just $ \ fresh -> [ make opGeq y (cardinality (headInf fresh)) ]
-                    SizeAttrMinMaxSize x y -> Just $ \ fresh -> [ make opLeq x (cardinality (headInf fresh))
-                                                                , make opGeq y (cardinality (headInf fresh)) ]
+        structuralCons (name
+                       , domain@(DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{})
+                       ) = do
+            [m] <- rDownX setOccurrence name domain
+            return $ Just $ \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
+                in
+                    mkSizeCons attrs cardinality
         structuralCons _ = fail "N/A {structuralCons}"
 
         downC (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do

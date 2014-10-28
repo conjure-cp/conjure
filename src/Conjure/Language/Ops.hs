@@ -834,9 +834,10 @@ mkOp op xs =
             -- _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
-            L_toInt   -> opToInt   (headNote "toInt takes a single argument." xs)
-            L_defined -> opDefined (headNote "defined takes a single argument." xs)
-            L_range   -> opDefined (headNote "range takes a single argument." xs)
-            L_allDiff -> opAllDiff (headNote "allDiff takes a single argument." xs)
+            L_toInt    -> opToInt    (headNote "toInt takes a single argument."    xs)
+            L_defined  -> opDefined  (headNote "defined takes a single argument."  xs)
+            L_range    -> opDefined  (headNote "range takes a single argument."    xs)
+            L_allDiff  -> opAllDiff  (headNote "allDiff takes a single argument."  xs)
+            L_dontCare -> opDontCare (headNote "dontCare takes a single argument." xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 

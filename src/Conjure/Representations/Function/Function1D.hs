@@ -1,17 +1,17 @@
-module Conjure.Representations.Function.Function1D
-    ( function1D
-    ) where
+{-# LANGUAGE QuasiQuotes #-}
+
+module Conjure.Representations.Function.Function1D ( function1D ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.DomainSize
--- import Conjure.Language.Type
+import Conjure.Language.TH
 import Conjure.Language.TypeOf
-import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
+import Conjure.Representations.Common
 import Conjure.Representations.Enum
 
 
@@ -70,44 +70,27 @@ function1D = Representation chck downD structuralCons downC up
                   ) ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainFunction "Function1D"
+        structuralCons (name, domain@(DomainFunction "Function1D"
                     (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
                     innerDomainFr'
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr <- toIntDomain innerDomainFr'
-            let m = Reference (outName name)
-                              (Just (DeclHasRepr
-                                          Find
-                                          (outName name)
-                                          (DomainMatrix (forgetRepr innerDomainFr) innerDomainTo)))
-
+                    innerDomainTo)) | domainCanIndexMatrix innerDomainFr' = do
+            [m]             <- rDownX function1D name domain
+            innerDomainFr   <- toIntDomain innerDomainFr'
             innerDomainFrTy <- typeOf innerDomainFr
             innerDomainToTy <- typeOf innerDomainTo
 
-            let injectiveCons = const [make opAllDiff m]
+            let injectiveCons = const $ return $ [essence| allDiff(&m) |]
+
             let surjectiveCons fresh = return $ -- list
                     let
-                        iName = fresh `at` 0
-                        jName = fresh `at` 1
+                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
+                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
                     in
-                        -- forAll &i : &innerDomainTo .
-                        --     exists &j : &innerDomainFr .
-                        --         &m[&j] = &i
-                        make opAnd [
-                            make opMapOverDomain
-                                (mkLambda iName innerDomainToTy $ \ i ->
-                                    make opOr [
-                                        make opMapOverDomain
-                                            (mkLambda jName innerDomainFrTy $ \ j ->
-                                                make opEq
-                                                    (make opIndexing m j)
-                                                    i)
-                                            (Domain (forgetRepr innerDomainFr))
-                                    ]
-                                )
-                                (Domain (forgetRepr innerDomainTo))       
-                        ]
-
+                        [essence|
+                            forAll &iPat : &innerDomainTo .
+                                exists &jPat : &innerDomainFr .
+                                    &m[&j] = &i
+                        |]
             let jectivityCons = case jectivityAttr of
                     ISBAttr_None       -> const []
                     ISBAttr_Injective  -> injectiveCons
@@ -116,15 +99,7 @@ function1D = Representation chck downD structuralCons downC up
 
             cardinality <- domainSizeOf innerDomainFr
 
-            let sizeCons = case sizeAttr of
-                    SizeAttrNone           -> []
-                    SizeAttrSize x         -> [ make opEq  x cardinality ]
-                    SizeAttrMinSize x      -> [ make opLeq x cardinality ]
-                    SizeAttrMaxSize y      -> [ make opGeq y cardinality ]
-                    SizeAttrMinMaxSize x y -> [ make opLeq x cardinality
-                                              , make opGeq y cardinality ]
-
-            return $ Just $ \ fresh -> jectivityCons fresh ++ sizeCons
+            return $ Just $ \ fresh -> jectivityCons fresh ++ mkSizeCons sizeAttr cardinality
 
         structuralCons _ = fail "N/A {structuralCons}"
 

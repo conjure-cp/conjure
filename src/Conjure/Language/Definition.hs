@@ -8,6 +8,7 @@ module Conjure.Language.Definition
     , typeCheckModelIO, typeCheckModel
     , initInfo
 
+    , quantifiedVar
     , mkLambda, lambdaToFunction
 
     , e2c
@@ -306,6 +307,12 @@ instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
 
 
+quantifiedVar :: Name -> Type -> (AbstractPattern, Expression)
+quantifiedVar nm ty =
+    let pat = Single nm ty
+        ref = Reference nm (Just (InLambda pat))
+    in  (pat, ref)
+
 mkLambda :: Name -> Type -> (Expression -> Expression) -> Expression
 mkLambda nm ty f =
     let pat = Single nm ty
@@ -408,6 +415,7 @@ data AbstractPattern
     -- | AbsPatRelation [[a]]
     -- | AbsPatPartition [[a]]
     -- TODO: Consider introducing the above as abstract patterns...
+    | AbstractPatternMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize AbstractPattern
@@ -422,6 +430,7 @@ instance Pretty AbstractPattern where
                               <> prettyList prParens   "," xs
     pretty (AbsPatMatrix   xs) = prettyList prBrackets "," xs
     pretty (AbsPatSet      xs) = prettyList prBraces   "," xs
+    pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt

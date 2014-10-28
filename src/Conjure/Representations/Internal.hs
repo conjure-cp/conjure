@@ -3,10 +3,12 @@
 module Conjure.Representations.Internal
     ( Representation(..)
     , DomainX, DomainC
+    , rDownX
     ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -37,3 +39,19 @@ data Representation m = Representation
     , rDownC      :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
     , rUp         :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
     }
+
+
+rDownX
+    :: Monad m
+    => Representation m
+    -> Name
+    -> Domain HasRepresentation Expression
+    -> m [Expression]
+rDownX repr name domain = do
+    mpairs <- rDownD repr (name, domain)
+    case mpairs of
+        Nothing -> bug ("rDownX, rDownD doesn't work:" <++> pretty name)
+        (Just pairs) -> return [ Reference n (Just (DeclHasRepr Find n d))
+                               | (n,d) <- pairs
+                               ]
+

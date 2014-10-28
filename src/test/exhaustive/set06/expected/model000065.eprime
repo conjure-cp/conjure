@@ -20,7 +20,7 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q11] ->
          or([x_ExplicitVarSizeWithMarker_Values[q12] = x_ExplicitVarSizeWithFlags_Values[q11] /\
              q12 <= x_ExplicitVarSizeWithMarker_Marker | q12 : int(1..4)]) | q11 : int(1..4)]),
-    4 >= sum([x_Occurrence[q5] | q5 : int(1..4)]),
+    sum([x_Occurrence[q5] | q5 : int(1..4)]) <= 4,
     and([x_Occurrence[q15] -> or([x_ExplicitVarSizeWithFlags_Values[q13] = q15 /\ x_ExplicitVarSizeWithFlags_Flags[q13] | q13 : int(1..4)]) | q15 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q14] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q14]] | q14 : int(1..4)]),
     and([x_Occurrence[q18] ->

@@ -1,17 +1,17 @@
-module Conjure.Representations.Function.Function1DPartial
-    ( function1DPartial
-    ) where
+{-# LANGUAGE QuasiQuotes #-}
+
+module Conjure.Representations.Function.Function1DPartial ( function1DPartial ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.TH
 import Conjure.Language.DomainSize
--- import Conjure.Language.Type
 import Conjure.Language.TypeOf
-import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
+import Conjure.Representations.Common
 import Conjure.Representations.Enum
 
 
@@ -77,80 +77,36 @@ function1DPartial = Representation chck downD structuralCons downC up
                 ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainFunction "Function1DPartial"
+        structuralCons (name, domain@(DomainFunction "Function1DPartial"
                     (FunctionAttr sizeAttr FunctionAttr_Partial jectivityAttr)
                     innerDomainFr'
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr <- toIntDomain innerDomainFr'
-            let flags = Reference (nameFlags name)
-                              (Just (DeclHasRepr
-                                          Find
-                                          (nameFlags name)
-                                          (DomainMatrix (forgetRepr innerDomainFr) DomainBool)))
-
-            let values = Reference (nameValues name)
-                              (Just (DeclHasRepr
-                                          Find
-                                          (nameValues name)
-                                          (DomainMatrix (forgetRepr innerDomainFr) innerDomainTo)))
-
+                    innerDomainTo)) | domainCanIndexMatrix innerDomainFr' = do
+            [flags,values]  <- rDownX function1DPartial name domain
+            innerDomainFr   <- toIntDomain innerDomainFr'
             innerDomainFrTy <- typeOf innerDomainFr
             innerDomainToTy <- typeOf innerDomainTo
 
-            let injectiveCons  fresh = return $ -- list
+            let injectiveCons fresh = return $ -- list
                     let
-                        iName = fresh `at` 0
-                        jName = fresh `at` 1
+                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainToTy
                     in
-                        -- forAll &i : &innerDomainFr .
-                        --     forAll &j : &innerDomainTo .
-                        --         &flags[&i] /\ &flags[&j] -> &values[&i] != &values[&j]
-                        make opAnd [
-                            make opMapOverDomain
-                                (mkLambda iName innerDomainFrTy $ \ i ->
-                                    make opAnd [
-                                        make opMapOverDomain
-                                            (mkLambda jName innerDomainToTy $ \ j ->
-                                                make opImply
-                                                    (make opAnd
-                                                        [ make opIndexing flags i
-                                                        , make opIndexing flags j
-                                                        ])
-                                                    (make opNeq
-                                                        (make opIndexing values i)
-                                                        (make opIndexing values j)
-                                                    )
-                                            )
-                                            (Domain (forgetRepr innerDomainTo))
-                                    ]
-                                )
-                                (Domain (forgetRepr innerDomainFr))
-                        ]
+                        [essence|
+                            forAll &iPat : &innerDomainFr .
+                                forAll &jPat : &innerDomainTo .
+                                    &flags[&i] /\ &flags[&j] -> &values[&i] != &values[&j]
+                        |]
 
             let surjectiveCons fresh = return $ -- list
                     let
-                        iName = fresh `at` 0
-                        jName = fresh `at` 1
+                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
+                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
                     in
-                        -- forAll &i : &innerDomainTo .
-                        --     exists &j : &innerDomainFr .
-                        --         &flags[&j] /\ &values[&j] = &i
-                        make opAnd [
-                            make opMapOverDomain
-                                (mkLambda iName innerDomainToTy $ \ i ->
-                                    make opOr [
-                                        make opMapOverDomain
-                                            (mkLambda jName innerDomainFrTy $ \ j ->
-                                                make opAnd
-                                                    [ make opIndexing flags j
-                                                    , make opEq (make opIndexing values j) i
-                                                    ]
-                                            )
-                                            (Domain (forgetRepr innerDomainFr))
-                                    ]
-                                )
-                                (Domain (forgetRepr innerDomainTo))       
-                        ]
+                        [essence|
+                            forAll &iPat : &innerDomainTo .
+                                exists &jPat : &innerDomainFr .
+                                    &flags[&j] /\ &values[&j] = &i
+                        |]
 
             let jectivityCons = case jectivityAttr of
                     ISBAttr_None       -> const []
@@ -158,22 +114,13 @@ function1DPartial = Representation chck downD structuralCons downC up
                     ISBAttr_Surjective -> surjectiveCons
                     ISBAttr_Bijective  -> \ fresh -> injectiveCons fresh ++ surjectiveCons fresh
 
-            let cardinality iName = make opSum [make opMapOverDomain
-                                        (mkLambda iName innerDomainFrTy $ \ i ->
-                                            make opToInt (make opIndexing flags i)
-                                        )
-                                        (Domain (forgetRepr innerDomainFr))
-                                    ]
+            let cardinality fresh =
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                    in
+                        [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
-            let sizeCons fresh = case sizeAttr of
-                    SizeAttrNone           -> []
-                    SizeAttrSize x         -> [ make opEq  x (cardinality (headInf fresh)) ]
-                    SizeAttrMinSize x      -> [ make opLeq x (cardinality (headInf fresh)) ]
-                    SizeAttrMaxSize y      -> [ make opGeq y (cardinality (headInf fresh)) ]
-                    SizeAttrMinMaxSize x y -> [ make opLeq x (cardinality (headInf fresh))
-                                              , make opGeq y (cardinality (headInf fresh)) ]
-
-            return $ Just $ \ fresh -> jectivityCons fresh ++ sizeCons fresh
+            return $ Just $ \ fresh -> jectivityCons fresh ++ mkSizeCons sizeAttr (cardinality fresh)
 
         structuralCons _ = fail "N/A {structuralCons}"
 

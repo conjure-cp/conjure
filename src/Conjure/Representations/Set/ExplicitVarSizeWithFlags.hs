@@ -1,13 +1,13 @@
-module Conjure.Representations.Set.ExplicitVarSizeWithFlags
-    ( setExplicitVarSizeWithFlags
-    ) where
+{-# LANGUAGE QuasiQuotes #-}
+
+module Conjure.Representations.Set.ExplicitVarSizeWithFlags ( setExplicitVarSizeWithFlags ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Lenses
-import Conjure.Language.TypeOf
+import Conjure.Language.Type
+import Conjure.Language.TH
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
@@ -47,74 +47,27 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
-            innerType <- typeOf innerDomain
-            maxSize   <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+        structuralCons (name, domain@(DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain)) = do
+            [flags, values] <- rDownX setExplicitVarSizeWithFlags name domain
+            maxSize         <- getMaxSize attrs innerDomain
             return $ Just $ \ fresh ->
                 let
-                    flags = Reference (nameFlag name)
-                                       (Just (DeclHasRepr
-                                                  Find
-                                                  (nameFlag name)
-                                                  (DomainMatrix (forgetRepr indexDomain) DomainBool)))
-                    values = Reference (nameValues name)
-                                       (Just (DeclHasRepr
-                                                  Find
-                                                  (nameValues name)
-                                                  (DomainMatrix (forgetRepr indexDomain) innerDomain)))
+                    (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
 
-                    iName = headInf fresh
-
-                    -- forAll i : int(1..&mx-1) , flags[i+1] . values[i] .< values[i+1]
                     orderingWhenFlagged =
-                        make opAnd
-                            [make opMapOverDomain
-                                (mkLambda iName innerType $ \ i ->
-                                    make opLt
-                                        (make opIndexing values i)
-                                        (make opIndexing values (make opPlus i (fromInt 1)))
-                                )
-                                (make opFilter
-                                    (mkLambda iName innerType $ \ i ->
-                                        make opIndexing flags (make opPlus i (fromInt 1))
-                                    )
-                                    (Domain $ DomainInt [RangeBounded (fromInt 1) (make opMinus maxSize (fromInt 1))])
-                                )
-                            ]
+                        [essence|
+                            forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &values[&i] < &values[&i+1]
+                        |]
 
-                    -- forAll i : int(1..&mx ) , !flags[i] . dontCare(values[i])
                     dontCareWhenNotFlagged =
-                        make opAnd
-                            [make opMapOverDomain
-                                (mkLambda iName innerType $ \ i ->
-                                    make opDontCare (make opIndexing values i)
-                                )
-                                (make opFilter
-                                    (mkLambda iName innerType $ \ i ->
-                                        make opEq
-                                            (make opIndexing flags i)
-                                            (fromBool False)
-                                    )
-                                    (Domain indexDomain)
-                                )
-                            ]
+                        [essence|
+                            forAll &iPat : int(1..&maxSize) , &flags[&i] = false . dontCare(&values[&i])
+                        |]
 
-                    -- forAll i : int(1..&mx-1) , flags[i+1] . flags[i]
                     flagsToTheLeft =
-                        make opAnd
-                            [make opMapOverDomain
-                                (mkLambda iName innerType $ \ i ->
-                                    make opIndexing flags i
-                                )
-                                (make opFilter
-                                    (mkLambda iName innerType $ \ i ->
-                                        make opIndexing flags (make opPlus i (fromInt 1))
-                                    )
-                                    (Domain $ DomainInt [RangeBounded (fromInt 1) (make opMinus maxSize (fromInt 1))])
-                                )
-                            ]
-
+                        [essence|
+                            forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &flags[&i]
+                        |]
                 in
                     [ orderingWhenFlagged
                     , dontCareWhenNotFlagged
