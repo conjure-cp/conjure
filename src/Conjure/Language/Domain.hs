@@ -76,8 +76,8 @@ instance TypeOf (Domain r x) where
     typeOf (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
     typeOf DomainOp{} = bug "typeOf DomainOp"
     typeOf (DomainReference _ (Just d)) = typeOf d
-    typeOf DomainReference{} = bug "DomainMetaVar"
-    typeOf DomainMetaVar{} = bug "DomainMetaVar"
+    typeOf DomainReference{} = bug "typeOf DomainReference"
+    typeOf DomainMetaVar{} = bug "typeOf DomainMetaVar"
 
 forgetRepr :: Domain r x -> Domain () x
 forgetRepr DomainBool = DomainBool

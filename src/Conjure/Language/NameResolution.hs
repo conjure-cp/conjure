@@ -5,9 +5,10 @@ module Conjure.Language.NameResolution ( resolveNames ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Pretty
 
 
-resolveNames :: (Functor m, Monad m) => Model -> m Model
+resolveNames :: MonadFail m => Model -> m Model
 resolveNames model = flip evalStateT [] $ do
     statements <- forM (mStatements model) $ \ st' -> do
         st <- transformBiM insert st'
@@ -29,7 +30,7 @@ resolveNames model = flip evalStateT [] $ do
             Objective obj x -> Objective obj <$> transformM insert x
             SuchThat xs -> SuchThat <$> mapM (transformM insert) xs
     model { mStatements = statements }
-        |> transformBiM removeDomainHack
+        |> transformBiM massageDomains
 
 
 data ToLookUp
@@ -57,12 +58,17 @@ insert (Lambda pat@(Single nm _) body) = do
 insert x = return x
 
 
-removeDomainHack :: MonadState [(Name, ToLookUp)] m => Domain () Expression -> m (Domain () Expression)
-removeDomainHack (DomainHack (Domain d)) = removeDomainHack d
-removeDomainHack d@(DomainEnum nm (Just ([], rs))) = do
+massageDomains :: (MonadFail m, MonadState [(Name, ToLookUp)] m) => Domain () Expression -> m (Domain () Expression)
+massageDomains (DomainReference nm Nothing) = do
+    mval <- gets (lookup nm)
+    case mval of
+        Just EnumTypeDefGiven          -> return $ DomainEnum nm Nothing
+        Just (EnumTypeDefLetting vals) -> return $ DomainEnum nm (Just (vals, []))
+        _ -> fail ("Unbound domain reference:" <+> pretty nm)
+massageDomains d@(DomainEnum nm (Just ([], rs))) = do
     mval <- gets (lookup nm)
     return $ case mval of
         Just (EnumTypeDefLetting vals) -> DomainEnum nm (Just (vals, rs))
         _ -> d
-removeDomainHack d = return d
+massageDomains d = return d
 

@@ -87,7 +87,9 @@ instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> in
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateDAs attrs <*> mapM instantiateD inners
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiateDAs attrs <*> instantiateD inner
 instantiateD (DomainOp {}) = bug "instantiateD DomainOp"
-instantiateD (DomainHack x) = DomainHack <$> instantiateE x
+instantiateD (DomainReference _ (Just d)) = instantiateD d
+instantiateD (DomainReference nm Nothing) = fail ("Unbound domain reference:" <+> pretty nm)
+instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 
 
 instantiateSetAttr
