@@ -69,7 +69,6 @@ Library
                      , Language.E.Definition
                      , Language.E.Data
                      , Language.E.Lexer
-                     , Language.E.Pretty
 
     build-depends    : base
                      , aeson
@@ -78,9 +77,7 @@ Library
                      , containers
                      , data-default
                      , directory
-                     , dlist
                      , filepath
-                     , ghc-prim
                      , hashable
                      , haskell-src-meta >= 0.6
                      , integer-gmp
@@ -95,9 +92,7 @@ Library
                      , syb
                      , template-haskell
                      , text
-                     , time
                      , transformers >= 0.4
-                     , transformers-base
                      , uniplate
                      , unordered-containers
                      , vector

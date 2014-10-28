@@ -23,15 +23,13 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Ops
-import Conjure.Language.Pretty ()
+import Conjure.Language.Pretty
 import Conjure.Language.TypeOf ( typeOf )
 
 import Language.E.Definition
 import Language.E.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
 import Language.E.Data ( Fixity(..), operators, functionals )
-import Language.E.Pretty ( Pretty(pretty) )
 
--- parsec
 import Text.Parsec ( ParsecT, parse, tokenPrim, try, (<?>) )
 import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
 
@@ -208,7 +206,7 @@ convExpr [xMatch| [body] := matrixComprehension.body
         genOut [xMatch| [Prim (S nm)] := generator.name.reference
                       | [D d]         := generator.domain
                       |] = (nm, convDomain d)
-        genOut x = userErr ("genOut:" <+> pretty x)
+        genOut x = userErr ("genOut:" <+> pretty (show x))
 
         generators = map genOut gens
 
@@ -359,10 +357,6 @@ translateQnName qnName = case qnName of
 --------------------------------------------------------------------------------
 -- Actual parsers --------------------------------------------------------------
 --------------------------------------------------------------------------------
-
-
-_testParsePrint :: T.Text -> IO ()
-_testParsePrint = _testParsePrint' (inCompleteFile parseExpr)
 
 
 parseSpec :: Parser Spec
@@ -1189,28 +1183,6 @@ findPivotOp xs = do
 
 
 type Parser a = ParsecT [LexemePos] () Identity a
-
-_testParsePrint' :: Parser E -> T.Text -> IO ()
-_testParsePrint' p t = do
-    let res = runLexerAndParser p "" t
-    case res of
-        Left  e -> print e
-        Right x -> do
-            -- print x
-            -- print $ prettyAsTree x
-            print $ prettyAsPaths x
-            print $ pretty x
-
-_testParsePrint'' :: Parser [E] -> T.Text -> IO ()
-_testParsePrint'' p t = do
-    let res = runLexerAndParser p "" t
-    case res of
-        Left  e  -> print e
-        Right xs -> forM_ xs $ \ x -> do
-            -- print x
-            -- print $ prettyAsTree x
-            print $ prettyAsPaths x
-            print $ pretty x
 
 runLexerAndParser :: (MonadError Pr.Doc m, Applicative m) => Parser a -> String -> T.Text -> m a
 runLexerAndParser p s = runLexer >=> runParser p s

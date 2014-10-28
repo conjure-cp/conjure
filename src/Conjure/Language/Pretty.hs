@@ -5,7 +5,7 @@ module Conjure.Language.Pretty
     ( Pretty(..)
     , (<++>), (<+>), (<>)
     , prettyList, prettyListDoc
-    , parens, parensIf
+    , parensIf
     , renderNormal, renderWide
     , hang, hcat
     , prEmpty, prParens, prBrackets, prBraces

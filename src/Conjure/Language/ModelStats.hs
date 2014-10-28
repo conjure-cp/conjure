@@ -65,9 +65,9 @@ domainNeedsRepresentation d = bug $ "domainNeedsRepresentation:" <+> pretty d
 
 modelInfo :: Model -> Doc
 modelInfo m = vcat
-    [ "Contains" <+> pretty (nbGivens m) <+> "parameters        "
-                 <+> parens (pretty (nbAbstractGivens m) <+> "abstract")
-    , "        " <+> pretty (nbFinds  m) <+> "decision variables"
-                 <+> parens (pretty (nbAbstractFinds m ) <+> "abstract")
+    [ "Contains" <+> pretty   (nbGivens m) <+> "parameters        "
+                 <+> prParens (pretty (nbAbstractGivens m) <+> "abstract")
+    , "        " <+> pretty   (nbFinds  m) <+> "decision variables"
+                 <+> prParens (pretty (nbAbstractFinds m ) <+> "abstract")
     ]
 
