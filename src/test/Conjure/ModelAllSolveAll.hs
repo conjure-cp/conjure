@@ -18,11 +18,19 @@ import Test.Tasty.HUnit
 import Shelly ( Sh, shelly, run, lastStderr, print_stdout, print_stderr )
 
 -- text
-import qualified Data.Text as T ( null, unpack )
+import qualified Data.Text as T ( Text, null, unpack )
 
 -- containers
 import qualified Data.Set as S ( fromList, toList, null, difference )
 
+
+srOptions :: [T.Text]
+srOptions =
+    [ "-timelimit"      , "300000"
+    , "-run-solver"     , "-minion"
+    , "-solver-options" , "-cpulimit 300"
+    , "-O0"
+    ]
 
 tests :: IO TestTree
 tests = do
@@ -108,18 +116,14 @@ testSingleDirNoParam :: TestDirFiles -> FilePath -> TestTree
 testSingleDirNoParam t modelPath =
     testCase (unwords ["Savile Row:", modelPath]) $ sh $ do
         let outBase = dropExtension modelPath
-        _stdoutSR <- run "savilerow"
+        _stdoutSR <- run "savilerow" $
             [ "-in-eprime"      , stringToText $ outputsDir t </> outBase ++ ".eprime"
             , "-out-minion"     , stringToText $ outputsDir t </> outBase ++ ".eprime-minion"
             , "-out-aux"        , stringToText $ outputsDir t </> outBase ++ ".eprime-aux"
             , "-out-info"       , stringToText $ outputsDir t </> outBase ++ ".eprime-info"
             , "-out-solution"   , stringToText $ outputsDir t </> outBase ++ ".eprime-solution"
-            , "-timelimit"      , "300000"
-            , "-run-solver"     , "-minion"
-            , "-solver-options" , "-cpulimit 300"
-            , "-O0"
             , "-all-solutions"
-            ]
+            ] ++ srOptions
         stderrSR <- lastStderr
         if not (T.null stderrSR)
             then liftIO $ assertFailure $ T.unpack stderrSR
@@ -147,19 +151,15 @@ testSingleDirWithParams t modelPath paramPath =
             Right eprimeParam -> do
                 let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
                 liftIO $ writeFile (outputsDir t </> outBase ++ ".eprime-param") (renderWide eprimeParam)
-                _stdoutSR <- run "savilerow"
+                _stdoutSR <- run "savilerow" $
                     [ "-in-eprime"      , stringToText $ outputsDir t </> modelPath
                     , "-in-param"       , stringToText $ outputsDir t </> outBase ++ ".eprime-param"
                     , "-out-minion"     , stringToText $ outputsDir t </> outBase ++ ".eprime-minion"
                     , "-out-aux"        , stringToText $ outputsDir t </> outBase ++ ".eprime-aux"
                     , "-out-info"       , stringToText $ outputsDir t </> outBase ++ ".eprime-info"
                     , "-out-solution"   , stringToText $ outputsDir t </> outBase ++ ".eprime-solution"
-                    , "-timelimit"      , "300000"
-                    , "-run-solver"     , "-minion"
-                    , "-solver-options" , "-cpulimit 300"
-                    , "-O0"
                     , "-all-solutions"
-                    ]
+                    ] ++ srOptions
                 stderrSR <- lastStderr
                 if not (T.null stderrSR)
                     then liftIO $ assertFailure $ T.unpack stderrSR
