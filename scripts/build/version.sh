@@ -6,7 +6,7 @@ if ! [ -d .hg ] && [ -f src/Conjure/RepositoryVersion.hs ] ; then
 else
     VERSION="unknown"
     if [ -d .hg ] ; then
-        VERSION=$(hg log -l1 --template "{node|short} ({date|isodate})")
+        VERSION=$(hg parent --template "{node|short} ({date|isodate})")
     fi
     if ( grep "repositoryVersion = \"${VERSION}\"" src/Conjure/RepositoryVersion.hs 2> /dev/null > /dev/null ) ; then
         echo "Reusing src/Conjure/RepositoryVersion.hs with version ${VERSION}."
