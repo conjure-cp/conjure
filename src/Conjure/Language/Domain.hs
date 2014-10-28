@@ -38,6 +38,7 @@ data Domain r x
     | DomainPartition r (DomainAttributes x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainHack x
+    | DomainMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
 instance (Serialize r, Serialize x) => Serialize (Domain r x)
@@ -75,6 +76,7 @@ instance TypeOf (Domain r x) where
     typeOf (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
     typeOf DomainOp{} = bug "typeOf DomainOp"
     typeOf DomainHack{} = bug "typeOf DomainHack"
+    typeOf DomainMetaVar{} = bug "DomainMetaVar"
 
 forgetRepr :: Domain r x -> Domain () x
 forgetRepr DomainBool = DomainBool
@@ -90,6 +92,7 @@ forgetRepr (DomainRelation  _ attr ds) = DomainRelation () attr (map forgetRepr 
 forgetRepr (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
 forgetRepr (DomainOp op ds) = DomainOp op (map forgetRepr ds)
 forgetRepr (DomainHack x) = DomainHack x
+forgetRepr (DomainMetaVar x) = DomainMetaVar x
 
 reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel DomainBool{} = Nothing
@@ -105,6 +108,7 @@ reprAtTopLevel (DomainRelation  r _ _  ) = return r
 reprAtTopLevel (DomainPartition r _ _  ) = return r
 reprAtTopLevel DomainOp{} = Nothing
 reprAtTopLevel DomainHack{} = Nothing
+reprAtTopLevel DomainMetaVar{} = Nothing
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
@@ -313,6 +317,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty d@(DomainOp{}) = pretty (show d)
 
     pretty (DomainHack x) = pretty x
+
+    pretty (DomainMetaVar x) = "&" <> pretty x
 
 
 prettyAttrs :: (Pretty a, Pretty b) => a -> b -> Doc

@@ -268,6 +268,7 @@ data Expression
     | WithLocals Expression [Statement]
     | Op (Ops Expression)
     | Lambda AbstractPattern Expression
+    | ExpressionMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Expression
@@ -290,6 +291,7 @@ instance Pretty Expression where
     pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
     pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])
     pretty (Op op) = pretty op
+    pretty (ExpressionMetaVar x) = "&" <> pretty x
 
 instance OperatorContainer Expression where
     injectOp = Op
@@ -352,6 +354,7 @@ instance TypeOf Expression where
     typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
     typeOf (Op op) = typeOf op
     typeOf Lambda{}     = return TypeAny -- TODO: fix
+    typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 
 instance TypeOf a => TypeOf (AbstractLiteral a) where
     typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
