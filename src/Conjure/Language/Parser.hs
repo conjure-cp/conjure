@@ -326,6 +326,7 @@ convExpr [xMatch| [actual] := withLocals.actual
 
 -- D
 convExpr (D x) = Domain (convDomain x)
+convExpr [xMatch| [D x] := domainInExpr |] = Domain (convDomain x)
 
 convExpr x = bug $ "convExpr" <+> prettyAsPaths x
 
@@ -660,7 +661,7 @@ parseDomain
             r <- identifierText
             xs <- optionMaybe $ parens $ parseRange identifierText `sepBy` comma
             case xs of
-                Nothing -> return $ DomainHack [xMake| reference := [Prim (S r)] |]
+                Nothing -> return $ DomainReference (Name r) Nothing
                 Just ys -> return $ DomainEnum (Name r) (Just ([], fmap (fmap Name) ys))
                 -- TODO: the DomainDefnEnum in the above line should lookup and find a
                 -- previously declared DomainDefnEnum
@@ -710,7 +711,7 @@ parseDomain
 
         pRelation' = do
             lexeme L_relation
-            return $ DomainHack [xMake| type.relation.inners.type.unknown := [] |]
+            return $ DomainRelation () def []
 
         pRelation = do
             lexeme L_relation

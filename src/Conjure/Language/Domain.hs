@@ -37,7 +37,7 @@ data Domain r x
     | DomainRelation  r (DomainAttributes x) [Domain r x]
     | DomainPartition r (DomainAttributes x) (Domain r x)
     | DomainOp Name [Domain r x]
-    | DomainHack x
+    | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
 
@@ -75,7 +75,8 @@ instance TypeOf (Domain r x) where
     typeOf (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
     typeOf (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
     typeOf DomainOp{} = bug "typeOf DomainOp"
-    typeOf DomainHack{} = bug "typeOf DomainHack"
+    typeOf (DomainReference _ (Just d)) = typeOf d
+    typeOf DomainReference{} = bug "DomainMetaVar"
     typeOf DomainMetaVar{} = bug "DomainMetaVar"
 
 forgetRepr :: Domain r x -> Domain () x
@@ -91,7 +92,7 @@ forgetRepr (DomainFunction  _ attr d1 d2) = DomainFunction () attr (forgetRepr d
 forgetRepr (DomainRelation  _ attr ds) = DomainRelation () attr (map forgetRepr ds)
 forgetRepr (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
 forgetRepr (DomainOp op ds) = DomainOp op (map forgetRepr ds)
-forgetRepr (DomainHack x) = DomainHack x
+forgetRepr (DomainReference x r) = DomainReference x (fmap forgetRepr r)
 forgetRepr (DomainMetaVar x) = DomainMetaVar x
 
 reprAtTopLevel :: Domain r x -> Maybe r
@@ -107,7 +108,7 @@ reprAtTopLevel (DomainFunction  r _ _ _) = return r
 reprAtTopLevel (DomainRelation  r _ _  ) = return r
 reprAtTopLevel (DomainPartition r _ _  ) = return r
 reprAtTopLevel DomainOp{} = Nothing
-reprAtTopLevel DomainHack{} = Nothing
+reprAtTopLevel DomainReference{} = Nothing
 reprAtTopLevel DomainMetaVar{} = Nothing
 
 isPrimitiveDomain :: Domain r x -> Bool
@@ -316,7 +317,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty d@(DomainOp{}) = pretty (show d)
 
-    pretty (DomainHack x) = pretty x
+    pretty (DomainReference x _) = pretty x
 
     pretty (DomainMetaVar x) = "&" <> pretty x
 
