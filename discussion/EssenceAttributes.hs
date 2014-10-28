@@ -1,4 +1,3 @@
-module Conjure.Essence.Definitions where
 
 abstractTypes :: [String]
 abstractTypes = [ "set", "mset", "function", "relation", "partition"]
