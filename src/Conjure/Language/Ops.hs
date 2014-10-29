@@ -479,10 +479,10 @@ instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = JSON.genericP
 instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (OpIndexing x) where
     typeOf (OpIndexing m i) = do
         tyM <- typeOf m
-        TypeInt{} <- typeOf i
         case tyM of
             TypeMatrix _ inn -> return inn
             TypeTuple inns   -> do
+                TypeInt{} <- typeOf i
                 iInt <- intOut i
                 return (at inns (iInt-1))
             _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])

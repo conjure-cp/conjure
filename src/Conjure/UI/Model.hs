@@ -3,6 +3,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.UI.Model
     ( outputModel, outputModels
@@ -23,6 +24,7 @@ import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDom
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
                                    , opLeq )
 import Conjure.Language.Lenses
+import Conjure.Language.TH
 import Conjure.Representations
 
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
@@ -158,17 +160,17 @@ toCompletionMulti driver = loopy . prologue
 
 
 outputModel :: (MonadIO m, MonadFail m) => Driver -> FilePath -> Int -> Model -> m ()
-outputModel driver dir i essence = do
+outputModel driver dir i model = do
     liftIO $ createDirectoryIfMissing True dir
-    eprime <- toCompletion driver essence
+    eprime <- toCompletion driver model
     let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
     liftIO $ writeFile filename (renderWide eprime)
 
 
 outputModels :: MultiDriver -> FilePath -> Int -> Model -> IO ()
-outputModels driver dir i essence = do
+outputModels driver dir i model = do
     createDirectoryIfMissing True dir
-    eprimes <- toCompletionMulti driver essence
+    eprimes <- toCompletionMulti driver model
     sequence_
         [ writeFile filename (renderWide eprime)
         | (j, eprime) <- zip [i..] eprimes
@@ -374,9 +376,9 @@ checkIfAllRefined m = do
 
 
 prologue :: Model -> Model
-prologue essence = essence
-    |> addTrueConstraints
-    |> initInfo
+prologue
+    =   addTrueConstraints
+    >>> initInfo
 
 
 epilogue :: MonadFail m => Model -> m Model
@@ -436,6 +438,12 @@ allRules =
     , rule_SetIn_Occurrence
     , rule_SetIn_ExplicitVarSizeWithMarker
     , rule_SetIn_ExplicitVarSizeWithFlags
+
+    , rule_FunctionEq
+
+    , rule_Function_Image_Function1D
+    , rule_Function_MapInExpr_Function1D
+
     ]
 
 
@@ -797,4 +805,52 @@ rule_Set_MapInExpr_ExplicitVarSizeWithFlags = "set-quantification{ExplicitVarSiz
                                     (filterBody (headInf fresh))
                                     (Domain index))
                )
+
+
+rule_FunctionEq :: Rule
+rule_FunctionEq = "function-eq" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,y)                    <- match opEq p
+        TypeFunction xFrTy xToTy <- typeOf x
+        TypeFunction yFrTy yToTy <- typeOf y
+        return ( "Horizontal rule for function equality"
+               , \ fresh ->
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) (mostDefined [ TypeTuple [xFrTy, xToTy]
+                                                                              , TypeTuple [yFrTy, yToTy]
+                                                                              ])
+                    in
+                        [essence| forAll &iPat in &x . &y(&i[1]) = &i[2] |]
+               )
+
+
+rule_Function_MapInExpr_Function1D :: Rule
+rule_Function_MapInExpr_Function1D = "function-quantification{Function1D}"
+                                     `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (Lambda lPat lBody, f) <- match opMapInExpr p
+        "Function1D"           <- representationOf f
+        TypeFunction fr _      <- typeOf f
+        [values]               <- downX1 f
+        DomainMatrix index _   <- domainOf values
+        let lambda = lambdaToFunction lPat lBody
+        return ( "Mapping over a function, Function1D representation"
+               , \ fresh ->
+                    let iName = headInf fresh
+                    in  make opMapOverDomain
+                            (mkLambda iName fr $ \ i -> lambda [essence| (&i, &values[&i]) |])
+                            (Domain index)
+               )
+
+
+rule_Function_Image_Function1D :: Rule
+rule_Function_Image_Function1D = "function-image{Function1D}"
+                                 `namedRule` theRule where
+    theRule [essence| image(&f,&x) |] = runMaybeT $ do
+        "Function1D" <- representationOf f
+        [values]     <- downX1 f
+        return ( "Function image, Function1D representation"
+               , const [essence| &values[&x] |]
+               )
+    theRule _ = return Nothing
 

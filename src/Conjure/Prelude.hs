@@ -136,6 +136,8 @@ import Data.Generics.Uniplate.Data as X
     )
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right )
 
+-- groom
+import Text.Groom as X ( groom )
 
 import System.Random as X ( StdGen, getStdGen, randomR )
 

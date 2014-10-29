@@ -38,7 +38,7 @@ onReference :: MonadFail m => Name -> ReferenceTo -> m [Expression]
 onReference nm refTo =
     case refTo of
         Alias{}      -> bug  ("downX1.onReference.Alias:"      <++> pretty (show nm))
-        InLambda{}   -> bug  ("downX1.onReference.InLambda:"   <++> pretty (show nm))
+        InLambda{}   -> fail ("downX1.onReference.InLambda:"   <++> pretty (show nm))
         DeclNoRepr{} -> fail ("downX1.onReference.DeclNoRepr:" <++> pretty (show nm))
         DeclHasRepr t _ domain -> do
             mpairs <- runExceptT $ downD1 (nm, domain)

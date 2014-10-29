@@ -20,32 +20,6 @@ function1D = Representation chck downD structuralCons downC up
 
     where
 
-        domainCanIndexMatrix DomainBool{} = True
-        domainCanIndexMatrix DomainInt {} = True
-        domainCanIndexMatrix DomainEnum{} = True
-        domainCanIndexMatrix _            = False
-
-        toIntDomain dom =
-            case dom of
-                DomainBool -> return (DomainInt [RangeBounded (fromInt 0) (fromInt 1)])
-                DomainInt{} -> return dom
-                DomainEnum{} -> do
-                    Just [(_,domInt)] <- rDownD enum ("", dom)
-                    return domInt
-                _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
-
-        domainValues dom =
-            case dom of
-                DomainBool -> return [ConstantBool False, ConstantBool True]
-                DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
-                DomainEnum ename (Just (vals, [])) ->
-                    return $ map (ConstantEnum ename vals) vals
-                DomainEnum ename (Just (vals, rs)) -> do
-                    let rsInt = map (fmap (ConstantInt . enumNameToInt vals)) rs
-                    intVals <- valuesInIntDomain rsInt
-                    return $ map (ConstantEnum ename vals . enumIntToName vals) intVals
-                _ -> fail ("domainValues, not supported:" <+> pretty dom)
-
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ FunctionAttr_Total _)
                     innerDomainFr
@@ -103,13 +77,31 @@ function1D = Representation chck downD structuralCons downC up
 
         structuralCons _ = fail "N/A {structuralCons}"
 
-        -- downC (name, DomainSet "Explicit" (SetAttrSize size) innerDomain, ConstantSet constants) =
-        --     let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
-        --     in  return $ Just
-        --             [ ( outName name
-        --               , DomainMatrix   outIndexDomain innerDomain
-        --               , ConstantMatrix outIndexDomain constants
-        --               ) ]
+        downC ( name
+              , DomainFunction "Function1D"
+                    (FunctionAttr _ FunctionAttr_Total _)
+                    innerDomainFr
+                    innerDomainTo
+              , ConstantFunction vals
+              ) | domainCanIndexMatrix innerDomainFr = do
+            innerDomainFrInt <- fmap e2c <$> toIntDomain (fmap Constant innerDomainFr)
+            froms            <- domainValues innerDomainFr
+            valsOut          <- sequence
+                [ val
+                | fr <- froms
+                , let val = case lookup fr vals of
+                                Nothing -> fail $ vcat [ "No value for " <+> pretty fr
+                                                       , "In:" <+> pretty (ConstantFunction vals)
+                                                       ]
+                                Just v  -> return (v :: Constant)
+                ]
+            return $ Just
+                [ ( outName name
+                  , DomainMatrix
+                      (forgetRepr innerDomainFrInt)
+                      innerDomainTo
+                  , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
+                  ) ]
         downC _ = fail "N/A {downC}"
 
         up ctxt (name, domain@(DomainFunction "Function1D"
@@ -136,4 +128,37 @@ function1D = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = fail "N/A {up}"
+
+
+domainCanIndexMatrix :: Domain r x -> Bool
+domainCanIndexMatrix DomainBool{} = True
+domainCanIndexMatrix DomainInt {} = True
+domainCanIndexMatrix DomainEnum{} = True
+domainCanIndexMatrix _            = False
+
+
+
+domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
+domainValues dom =
+    case dom of
+        DomainBool -> return [ConstantBool False, ConstantBool True]
+        DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
+        DomainEnum ename (Just (vals, [])) ->
+            return $ map (ConstantEnum ename vals) vals
+        DomainEnum ename (Just (vals, rs)) -> do
+            let rsInt = map (fmap (ConstantInt . enumNameToInt vals)) rs
+            intVals <- valuesInIntDomain rsInt
+            return $ map (ConstantEnum ename vals . enumIntToName vals) intVals
+        _ -> fail ("domainValues, not supported:" <+> pretty dom)
+
+
+toIntDomain :: MonadFail m => Domain HasRepresentation Expression -> m (Domain HasRepresentation Expression)
+toIntDomain dom =
+    case dom of
+        DomainBool -> return (DomainInt [RangeBounded (fromInt 0) (fromInt 1)])
+        DomainInt{} -> return dom
+        DomainEnum{} -> do
+            Just [(_,domInt)] <- rDownD enum ("", dom)
+            return domInt
+        _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
 
