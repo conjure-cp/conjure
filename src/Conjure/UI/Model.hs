@@ -450,19 +450,22 @@ allRules =
 rule_ChooseRepr :: Rule
 rule_ChooseRepr = Rule "choose-repr" theRule where
 
-    theRule (Reference nm (Just (DeclNoRepr ty _ inpDom))) = do
+    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) = do
         let domOpts = reprOptions inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
         return [ (msg, const out, hook)
                | dom <- domOpts
                , let msg = "Selecting representation for" <+> pretty nm <> ":" <+> pretty dom
-               , let out = Reference nm (Just (DeclHasRepr ty nm dom))
-               , let hook = mkHook ty nm dom
+               , let out = Reference nm (Just (DeclHasRepr forg nm dom))
+               , let hook = mkHook forg nm dom
                ]
     theRule _ = return []
 
-    mkHook ty name domain model =
+    mkHook forg     -- find or given
+           name     -- name of the original declaration
+           domain   -- domain with representation selected
+           model =
         let
 
             freshNames' = freshNames model
@@ -478,7 +481,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                     Right (Just xs) -> xs freshNames'
 
             addStructurals
-                | ty == Given = id
+                | forg == Given = id
                 | usedBefore = id
                 | null structurals = id
                 | otherwise = \ m ->
@@ -494,12 +497,12 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
             channels =
                 [ make opEq this that
                 | d <- otherRepresentations
-                , let this = Reference name (Just (DeclHasRepr ty name domain))
-                , let that = Reference name (Just (DeclHasRepr ty name d))
+                , let this = Reference name (Just (DeclHasRepr forg name domain))
+                , let that = Reference name (Just (DeclHasRepr forg name d))
                 ]
 
             addChannels
-                | ty == Given = id
+                | forg == Given = id
                 | null channels = id
                 | otherwise = \ m ->
                     m { mStatements = mStatements m ++ [SuchThat channels] }
@@ -512,11 +515,17 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                     newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
                 in  m { mInfo = newInfo }
 
+            recordEnumLiterals =
+                case domain of
+                    DomainEnum{} -> do
+                        downD
+
         in
             model
                 |> addStructurals               -- unless usedBefore: add structurals
                 |> addChannels                  -- for each in otherRepresentations
                 |> recordThis                   -- unless usedBefore: record (name, domain) as being used in the model
+                |> recordEnumLiterals
 
 
 

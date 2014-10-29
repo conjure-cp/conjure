@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Conjure.Prelude
     ( module X
@@ -33,6 +34,7 @@ module Conjure.Prelude
     , headInf
     , paddedNum
     , dropExtension
+    , MonadLogger(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logDebug
     ) where
 
 import GHC.Err as X ( error )
@@ -70,7 +72,7 @@ import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT, gets, modify, evalStateT, runStateT, evalState, runState )
-import Control.Monad.Trans.Identity as X ( runIdentityT )
+import Control.Monad.Trans.Identity as X ( IdentityT, runIdentityT )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT, runWriterT, execWriterT, runWriter )
 import Control.Arrow             as X ( first, second, (***) )
@@ -159,8 +161,8 @@ import System.CPUTime ( getCPUTime )
 
 import Debug.Trace as X ( trace )
 
-tracing :: Show a => a -> a
-tracing a = trace (show a) a
+tracing :: Show a => String -> a -> a
+tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
 
 stringToText :: String -> T.Text
 stringToText = T.pack
@@ -329,6 +331,11 @@ instance MonadFail Gen where
 instance MonadFail (ParsecT g l m) where
     fail = Control.Monad.fail . show
 
+instance MonadFail m => MonadFail (LoggerT m) where
+    fail = lift . fail
+
+instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
+    fail = lift . fail
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
@@ -363,4 +370,45 @@ paddedNum x = replicate (6 - length s) '0' ++ s
 
 dropExtension :: FilePath -> FilePath
 dropExtension = intercalate "." . init . splitOn "."
+
+
+class Monad m => MonadLogger m where
+    log :: LogLevel -> Doc -> m ()
+
+data LogLevel
+    = LogInfo
+    | LogDebug
+    deriving (Eq, Ord, Show)
+
+logInfo :: MonadLogger m => Doc -> m ()
+logInfo = log LogInfo
+
+logDebug :: MonadLogger m => Doc -> m ()
+logDebug = log LogDebug
+
+instance MonadLogger m => MonadLogger (StateT st m) where
+    log l m = lift (log l m)
+
+instance Monad m => MonadLogger (IdentityT m) where
+    log _ _ = return ()
+
+ignoreLogs :: MonadLogger m => IdentityT m a -> m a
+ignoreLogs = runIdentityT
+
+newtype LoggerT m a = LoggerT (WriterT [(LogLevel, Doc)] m a)
+    deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
+
+instance Monad m => MonadLogger (LoggerT m) where
+    log lvl msg = LoggerT $ tell [(lvl, msg)]
+
+runLogger :: Monad m => LogLevel -> LoggerT m a -> m (a, [Doc])
+runLogger l (LoggerT ma) = do
+    (a, logs) <- runWriterT ma
+    return (a, [ msg | (lvl, msg) <- logs , lvl <= l ])
+
+runLoggerIO :: MonadIO m => LogLevel -> LoggerT m a -> m a
+runLoggerIO l logger = do
+    (a, logs) <- runLogger l logger
+    liftIO $ print (vcat logs)
+    return a
 

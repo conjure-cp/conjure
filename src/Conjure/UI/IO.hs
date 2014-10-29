@@ -6,7 +6,6 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
-import Conjure.Language.NameResolution
 import Language.E.Definition
 
 -- aeson
@@ -20,9 +19,9 @@ import qualified Data.Text.Encoding as T ( encodeUtf8 )
 import qualified Data.ByteString.Lazy as BS
 
 
-readModelFromFile :: FilePath -> IO Model
+readModelFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
 readModelFromFile fp = do
-    pair <- pairWithContents fp
+    pair <- liftIO $ pairWithContents fp
     readModel pair
 
 readModelFromStdIn :: IO Model
@@ -32,7 +31,7 @@ readModelFromStdIn = do
 
 readModelPreambleFromFile :: FilePath -> IO Model
 readModelPreambleFromFile fp = do
-    pair <- pairWithContents fp
+    pair <- liftIO $ pairWithContents fp
     readModelPreamble pair
 
 readModel :: MonadFail m => (FilePath, Text) -> m Model
@@ -54,11 +53,11 @@ readModel (fp, con) =
    
             in
                 if T.null (T.filter isSpace infoBlock)
-                    then resolveNames x
+                    then return x
                     else
                         case json of
                             Nothing -> fail "Malformed JSON"
-                            Just i  -> resolveNames x { mInfo = i }
+                            Just i  -> return x { mInfo = i }
 
 
 readModelPreamble :: MonadFail m => (FilePath, Text) -> m Model

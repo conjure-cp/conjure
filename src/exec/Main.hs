@@ -13,6 +13,7 @@ import Conjure.UI.TranslateSolution ( translateSolution )
 
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Pretty ( renderWide )
+import Conjure.Language.NameResolution ( resolveNames )
 
 import System.IO ( hSetBuffering, stdout, BufferMode(..) )
 
@@ -107,7 +108,7 @@ ui = modes
 mainWithArgs :: UI -> IO ()
 mainWithArgs Modelling{..} = do
     when (null essence) $ userErr "Mandatory field --essence"
-    model <- readModelFromFile essence
+    model <- runLoggerIO LogDebug $ readModelFromFile essence >>= resolveNames def
     -- putStrLn $ renderWide model
     putStrLn $ renderWide $ modelInfo model
     hSetBuffering stdout NoBuffering
@@ -121,9 +122,9 @@ mainWithArgs RefineParam{..} = do
     when (null eprime      ) $ userErr "Mandatory field --eprime"
     when (null essenceParam) $ userErr "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
-    output <- join $ refineParam
-                    <$> readModelFromFile eprime
-                    <*> readModelFromFile essenceParam
+    eprime'       <- readModelFromFile eprime
+    essenceParam' <- runLoggerIO LogDebug $ readModelFromFile essenceParam >>= resolveNames eprime'
+    output        <- refineParam eprime' essenceParam'
     writeModel (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr "Mandatory field --eprime"

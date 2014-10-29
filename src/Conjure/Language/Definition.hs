@@ -203,6 +203,7 @@ instance Pretty FindOrGiven where
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
     , miFinds :: [Name]
+    , miEnumLiterals :: [(Name, Int)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
     , miTrailCompact :: [(Int,[Int])]
@@ -221,7 +222,7 @@ instance ToJSON ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
 instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def
+    def = ModelInfo def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
