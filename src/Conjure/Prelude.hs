@@ -32,6 +32,7 @@ module Conjure.Prelude
     , allContexts
     , headInf
     , paddedNum
+    , dropExtension
     ) where
 
 import GHC.Err as X ( error )
@@ -60,7 +61,7 @@ import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), man
 import qualified Control.Monad ( fail )
 import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
                           , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence, sequence_
-                          , filterM
+                          , filterM, join
                           )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
@@ -358,4 +359,8 @@ headInf _ = error "End of infinite stream! Well done!"
 paddedNum :: Show a => a -> String
 paddedNum x = replicate (6 - length s) '0' ++ s
     where s = show x
+
+
+dropExtension :: FilePath -> FilePath
+dropExtension = intercalate "." . init . splitOn "."
 

@@ -220,10 +220,6 @@ modelAll :: FilePath -> Model -> IO ()
 modelAll dir = outputModels allFixedQs dir 1
 
 
-dropExtension :: FilePath -> FilePath
-dropExtension = intercalate "." . init . splitOn "."
-
-
 sh :: Sh a -> IO a
 sh = shelly . print_stdout False . print_stderr False
 
