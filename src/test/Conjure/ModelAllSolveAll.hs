@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Conjure.ModelAllSolveAll ( tests ) where
 
 -- conjure
@@ -31,6 +33,7 @@ srOptions =
     , "-solver-options" , "-cpulimit 300"
     , "-O0"
     ]
+
 
 tests :: IO TestTree
 tests = do
@@ -68,7 +71,7 @@ isTestDir baseDir possiblyDir = do
                 if isDir
                     then getDirectoryContents dir
                     else return []
-            return TestDirFiles 
+            return TestDirFiles
                 { name           = possiblyDir
                 , tBaseDir       = baseDir </> possiblyDir
                 , outputsDir     = baseDir </> possiblyDir </> "outputs"
@@ -86,42 +89,42 @@ isTestDir baseDir possiblyDir = do
 --                + D/*.param files if required
 --                + D/expected for the expected output files
 testSingleDir :: TestDirFiles -> TestTree
-testSingleDir t = testGroup (name t) (conjuring : savileRows ++ checkingExpected ++ [extraFiles])
+testSingleDir t@(TestDirFiles{..}) = testGroup name (conjuring : savileRows ++ checkingExpected ++ [extraFiles])
     where
         conjuring =
             testCase "Conjuring" $ do
                 -- tl;dr: rm -rf outputsDir
                 -- removeDirectoryRecursive gets upset if the dir doesn't exist.
                 -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
-                createDirectoryIfMissing True (outputsDir t) >> removeDirectoryRecursive (outputsDir t)
+                createDirectoryIfMissing True outputsDir >> removeDirectoryRecursive outputsDir
 
                 -- read in the essence, generate the eprimes
-                essence <- readModelFromFile (essenceFile t)
-                modelAll (outputsDir t) essence
+                essence <- runLoggerIO LogDebug $ readModelFromFile essenceFile
+                modelAll outputsDir essence
 
         savileRows =
-            if null (paramFiles t)
-                then [ testSingleDirNoParam    t m   | m <- expectedModels t ]
-                else [ testSingleDirWithParams t m p | m <- expectedModels t
-                                                     , p <- paramFiles     t ]
+            if null paramFiles
+                then [ savileRowNoParam    t m   | m <- expectedModels ]
+                else [ savileRowWithParams t m p | m <- expectedModels
+                                                 , p <- paramFiles     ]
 
         checkingExpected =
-            [ checkExpected t e | e <- expectedModels t ] ++
-            [ checkExpected t e | e <- expectedSols   t ]
+            [ checkExpected t e | e <- expectedModels ] ++
+            [ checkExpected t e | e <- expectedSols   ]
 
         extraFiles = checkExtraFiles t
 
 
-testSingleDirNoParam :: TestDirFiles -> FilePath -> TestTree
-testSingleDirNoParam t modelPath =
+savileRowNoParam :: TestDirFiles -> FilePath -> TestTree
+savileRowNoParam TestDirFiles{..} modelPath =
     testCase (unwords ["Savile Row:", modelPath]) $ sh $ do
         let outBase = dropExtension modelPath
         _stdoutSR <- run "savilerow" $
-            [ "-in-eprime"      , stringToText $ outputsDir t </> outBase ++ ".eprime"
-            , "-out-minion"     , stringToText $ outputsDir t </> outBase ++ ".eprime-minion"
-            , "-out-aux"        , stringToText $ outputsDir t </> outBase ++ ".eprime-aux"
-            , "-out-info"       , stringToText $ outputsDir t </> outBase ++ ".eprime-info"
-            , "-out-solution"   , stringToText $ outputsDir t </> outBase ++ ".eprime-solution"
+            [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
+            , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+            , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+            , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+            , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
             , "-all-solutions"
             ] ++ srOptions
         stderrSR <- lastStderr
@@ -129,35 +132,35 @@ testSingleDirNoParam t modelPath =
             then liftIO $ assertFailure $ T.unpack stderrSR
             else do
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                          <$> liftIO (getDirectoryContents (outputsDir t))
+                                          <$> liftIO (getDirectoryContents outputsDir)
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
-                    eprimeModel    <- readModelFromFile (outputsDir t </> modelPath)
-                    eprimeSolution <- readModelFromFile (outputsDir t </> eprimeSolutionPath)
-                    case translateSolution eprimeModel def eprimeSolution of
+                    eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
+                    eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                    case ignoreLogs (translateSolution eprimeModel def eprimeSolution) of
                         Left err -> assertFailure $ renderNormal err
                         Right s -> do
-                            let filename = outputsDir t </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                             writeFile filename (renderWide s)
 
 
-testSingleDirWithParams :: TestDirFiles -> FilePath -> FilePath -> TestTree
-testSingleDirWithParams t modelPath paramPath =
+savileRowWithParams :: TestDirFiles -> FilePath -> FilePath -> TestTree
+savileRowWithParams TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ sh $ do
-        model <- liftIO $ readModelFromFile (outputsDir t </> modelPath)
-        param <- liftIO $ readModelFromFile (tBaseDir   t </> paramPath)
-        case refineParam model param of
+        model <- liftIO $ readModelFromFile (outputsDir </> modelPath)
+        param <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
+        case ignoreLogs (refineParam model param) of
             Left err -> liftIO $ assertFailure $ renderNormal err
             Right eprimeParam -> do
                 let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
-                liftIO $ writeFile (outputsDir t </> outBase ++ ".eprime-param") (renderWide eprimeParam)
+                liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
                 _stdoutSR <- run "savilerow" $
-                    [ "-in-eprime"      , stringToText $ outputsDir t </> modelPath
-                    , "-in-param"       , stringToText $ outputsDir t </> outBase ++ ".eprime-param"
-                    , "-out-minion"     , stringToText $ outputsDir t </> outBase ++ ".eprime-minion"
-                    , "-out-aux"        , stringToText $ outputsDir t </> outBase ++ ".eprime-aux"
-                    , "-out-info"       , stringToText $ outputsDir t </> outBase ++ ".eprime-info"
-                    , "-out-solution"   , stringToText $ outputsDir t </> outBase ++ ".eprime-solution"
+                    [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
+                    , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
+                    , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+                    , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+                    , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+                    , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
                     , "-all-solutions"
                     ] ++ srOptions
                 stderrSR <- lastStderr
@@ -165,23 +168,23 @@ testSingleDirWithParams t modelPath paramPath =
                     then liftIO $ assertFailure $ T.unpack stderrSR
                     else do
                         nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                                  <$> liftIO (getDirectoryContents (outputsDir t))
+                                                  <$> liftIO (getDirectoryContents outputsDir)
                         forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
                             let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
-                            eprimeModel    <- readModelFromFile (outputsDir t </> modelPath)
-                            eprimeSolution <- readModelFromFile (outputsDir t </> eprimeSolutionPath)
-                            case translateSolution eprimeModel param eprimeSolution of
+                            eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
+                            eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                            case ignoreLogs (translateSolution eprimeModel param eprimeSolution) of
                                 Left err -> assertFailure $ renderNormal err
                                 Right s  -> do
-                                    let filename = outputsDir t </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                                    let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                                     writeFile filename (renderWide s)
 
 
 checkExpected :: TestDirFiles -> FilePath -> TestTree
-checkExpected t item =
+checkExpected TestDirFiles{..} item =
     testCase (unwords ["Checking expected:", item]) $ do
-        let expectedPath  = expectedsDir t </> item
-        let generatedPath = outputsDir   t </> item
+        let expectedPath  = expectedsDir </> item
+        let generatedPath = outputsDir   </> item
         isFile <- doesFileExist generatedPath
         if isFile
             then do
@@ -194,16 +197,16 @@ checkExpected t item =
 
 
 checkExtraFiles :: TestDirFiles -> TestTree
-checkExtraFiles t =
+checkExtraFiles TestDirFiles{..} =
     testCase "Checking extra files" $ do
         let modelOrSolution f = or [ suffix `isSuffixOf` f
                                    | suffix <- [".eprime", ".solution"]
                                    ]
-        
-        dirShouldExist (expectedsDir t)
-        dirShouldExist (outputsDir   t)
-        expecteds <- S.fromList . filter modelOrSolution <$> getDirectoryContents (expectedsDir t)
-        outputs   <- S.fromList . filter modelOrSolution <$> getDirectoryContents (outputsDir   t)
+
+        dirShouldExist expectedsDir
+        dirShouldExist outputsDir
+        expecteds <- S.fromList . filter modelOrSolution <$> getDirectoryContents expectedsDir
+        outputs   <- S.fromList . filter modelOrSolution <$> getDirectoryContents outputsDir
         let extras = S.difference outputs expecteds
         unless (S.null extras) $
             assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
@@ -217,7 +220,7 @@ dirShouldExist d = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = outputModels allFixedQs dir 1
+modelAll dir = runLoggerIO LogDebug . outputModels allFixedQs dir 1
 
 
 sh :: Sh a -> IO a

@@ -15,7 +15,6 @@ import Conjure.Language.Pretty
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
-import Conjure.Representations.Enum
 import Conjure.Representations.Tuple
 import Conjure.Representations.Set.Occurrence
 import Conjure.Representations.Set.Explicit
@@ -112,7 +111,6 @@ dispatch domain = do
     case domain of
         DomainBool{}    -> primitive
         DomainInt{}     -> primitive
-        DomainEnum{}    -> enum
         DomainTuple{}   -> tuple
         DomainMatrix{}  -> matrix
         DomainSet r _ _ ->
@@ -133,7 +131,7 @@ dispatch domain = do
 -- | A list of all representations.
 allReprs :: [Representation (Either Doc)]
 allReprs =
-    [ primitive, enum, tuple, matrix
+    [ primitive, tuple, matrix
     , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
     , function1D, function1DPartial
     ]
@@ -142,6 +140,7 @@ allReprs =
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
 reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
+reprOptions (DomainReference _ (Just d)) = reprOptions d
 reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 
 getStructurals :: MonadFail m => (Name, DomainX Expression) -> m (Maybe ([Name] -> [Expression]))

@@ -119,9 +119,16 @@ instance Pretty JSON.Object where
             f (key@"description", Array value) = pretty (show key) <> ":" <+> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <+> pretty value
 
-            comp "decision" _ = LT
-            comp "options"  _ = LT
-            comp a b = compare a b
+            keyOrder = [ "decision", "options"
+                       , "finds", "givens", "enumGivens", "enumLettings"
+                       , "trailCompact", "trail"
+                       , "representations", "originalDeclarations"
+                       ]
+
+            comp a b =
+                let preferred = compare <$> elemIndex a keyOrder
+                                        <*> elemIndex b keyOrder
+                in  fromMaybe (compare a b) preferred
 
 instance Pretty JSON.Array where
     pretty = prBrackets . fsep . punctuate "," . map pretty . V.toList

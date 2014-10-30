@@ -11,9 +11,8 @@ import Conjure.Representations ( downC )
 
 
 refineParam
-    :: ( Functor m
-       , Applicative m
-       , MonadFail m
+    :: ( MonadFail m
+       , MonadLog m
        )
     => Model      -- eprime model
     -> Model      -- essence param
@@ -28,6 +27,14 @@ refineParam eprimeModel essenceParam = do
     -- TODO: check if for every given there is a letting (there can be more)
     -- TODO: check if the same letting has multiple values for it
 
+    let eprimeLettingsForEnums =
+            [ (nm, DomainInt [], fromInt (length vals))
+            | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
+            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam |> mStatements 
+            , nm1 == nm2
+            , let nm = nm1 `mappend` "_EnumSize"
+            ]
+
     essenceLettings' <- forM essenceLettings $ \ (name, val) -> do
         constant <- instantiateExpression essenceLettings val
         return (name, constant)
@@ -36,24 +43,26 @@ refineParam eprimeModel essenceParam = do
         constant <- instantiateDomain essenceLettings dom
         return (name, constant)
 
-    let essenceGivensAndLettings =
+    let extraLettings = map fst essenceLettings' \\
+                        map fst essenceGivens'
+
+    unless (null extraLettings) $
+        logWarn ("Extra lettings:" <+> prettyList id "," extraLettings)
+
+    let essenceGivensAndLettings = catMaybes
             [ case lookup n essenceLettings' of
-                Nothing -> userErr $ vcat
-                            [ "No value for parameter:" <+> pretty n
-                            , "With domain:" <+> pretty d
-                            ]
-                Just v  -> (n, d, v)
+                Nothing ->
+                    if n `elem` map fst3 eprimeLettingsForEnums
+                        then Nothing
+                        else userErr $ vcat
+                                [ "No value for parameter:" <+> pretty n
+                                , "With domain:" <+> pretty d
+                                ]
+                Just v  -> Just (n, d, v)
             | (n, d) <- essenceGivens'
             ]
 
     eprimeLettings <- liftM concat $ mapM downC essenceGivensAndLettings
-
-    let eprimeLettingsForEnums =
-            [ (nm1, DomainInt [], fromInt (length vals))
-            | Declaration (FindOrGiven Given nm1 (DomainInt [])) <- mStatements eprimeModel
-            , Declaration (LettingDomainDefnEnum nm2 vals)       <- mStatements essenceParam
-            , nm1 == nm2 `mappend` "_EnumSize"
-            ]
 
     return $ languageEprime def
         { mStatements =

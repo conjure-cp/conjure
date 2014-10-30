@@ -52,10 +52,6 @@ gDomainSizeOf
 gDomainSizeOf DomainBool = return (fromInt 2)
 gDomainSizeOf (DomainInt []) = fail "gDomainSizeOf infinite integer domain"
 gDomainSizeOf (DomainInt rs) = make opSum <$> mapM domainSizeOf rs
-gDomainSizeOf (DomainEnum n Nothing) = fail ("gDomainSizeOf unknown enum domain" <+> pretty n)
-gDomainSizeOf (DomainEnum _ (Just (vals, rs))) =
-    let rs' = fmap (fmap (fromInt . enumNameToInt vals)) rs
-    in  gDomainSizeOf (DomainInt rs' :: Domain r x)
 gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = make opProduct <$> mapM gDomainSizeOf xs

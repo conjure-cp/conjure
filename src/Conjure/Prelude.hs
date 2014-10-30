@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
@@ -34,7 +35,7 @@ module Conjure.Prelude
     , headInf
     , paddedNum
     , dropExtension
-    , MonadLogger(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logDebug
+    , MonadLog(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logWarn, logDebug
     ) where
 
 import GHC.Err as X ( error )
@@ -93,7 +94,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head
                               , init, and, or, zipWith, maximum, concatMap, all, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, take, foldr1, foldl, drop, any, tail
-                              , unzip3, repeat, dropWhile, unwords
+                              , unzip3, repeat, dropWhile, unwords, intersect
                               )
 import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
@@ -316,6 +317,9 @@ instance MonadFail IO where
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left
 
+instance MonadFail m => MonadFail (IdentityT m) where
+    fail = lift . fail
+
 instance (Functor m, Monad m) => MonadFail (MaybeT m) where
     fail = const $ MaybeT $ return Nothing
 
@@ -372,33 +376,37 @@ dropExtension :: FilePath -> FilePath
 dropExtension = intercalate "." . init . splitOn "."
 
 
-class Monad m => MonadLogger m where
+class Monad m => MonadLog m where
     log :: LogLevel -> Doc -> m ()
 
 data LogLevel
     = LogInfo
+    | LogWarn
     | LogDebug
     deriving (Eq, Ord, Show)
 
-logInfo :: MonadLogger m => Doc -> m ()
+logInfo :: MonadLog m => Doc -> m ()
 logInfo = log LogInfo
 
-logDebug :: MonadLogger m => Doc -> m ()
+logWarn :: MonadLog m => Doc -> m ()
+logWarn = log LogWarn
+
+logDebug :: MonadLog m => Doc -> m ()
 logDebug = log LogDebug
 
-instance MonadLogger m => MonadLogger (StateT st m) where
+instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
 
-instance Monad m => MonadLogger (IdentityT m) where
+instance Monad m => MonadLog (IdentityT m) where
     log _ _ = return ()
 
-ignoreLogs :: MonadLogger m => IdentityT m a -> m a
+ignoreLogs :: Monad m => IdentityT m a -> m a
 ignoreLogs = runIdentityT
 
 newtype LoggerT m a = LoggerT (WriterT [(LogLevel, Doc)] m a)
     deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
 
-instance Monad m => MonadLogger (LoggerT m) where
+instance Monad m => MonadLog (LoggerT m) where
     log lvl msg = LoggerT $ tell [(lvl, msg)]
 
 runLogger :: Monad m => LogLevel -> LoggerT m a -> m (a, [Doc])

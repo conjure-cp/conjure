@@ -60,7 +60,8 @@ domainNeedsRepresentation DomainMSet{}      = True
 domainNeedsRepresentation DomainFunction{}  = True
 domainNeedsRepresentation DomainRelation{}  = True
 domainNeedsRepresentation DomainPartition{} = True
-domainNeedsRepresentation d = bug $ "domainNeedsRepresentation:" <+> pretty d
+domainNeedsRepresentation (DomainReference _ (Just _)) = True
+domainNeedsRepresentation d = bug $ "domainNeedsRepresentation:" <+> pretty (show d)
 
 
 modelInfo :: Model -> Doc

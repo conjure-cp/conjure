@@ -20,15 +20,22 @@ import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
+import Conjure.Language.Lenses
+import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
                                    , opLeq )
-import Conjure.Language.Lenses
-import Conjure.Language.TH
-import Conjure.Representations
 
+import Conjure.Language.ModelStats ( modelInfo )
+import Conjure.Process.Enums ( deenumifyModel )
+import Conjure.Language.NameResolution ( resolveNames )
+
+import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
+
+-- uniplate
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
 
+-- base
 import System.IO.Unsafe ( unsafeInterleaveIO )
 
 
@@ -56,21 +63,21 @@ type RuleResult = ( Doc                     -- describe this transformation
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . (Functor m, MonadIO m) => Expression -> m [RuleResult]
+    , rApply :: forall m . (Functor m, Monad m) => Expression -> m [RuleResult]
     }
 
 namedRule
     :: Doc
-    -> (forall m . (Functor m, MonadIO m) => Expression -> m (Maybe (Doc, [Name] -> Expression)))
+    -> (forall m . (Functor m, Monad m) => Expression -> m (Maybe (Doc, [Name] -> Expression)))
     -> Rule
 namedRule nm f = Rule
     { rName = nm
     , rApply = \ x -> let addId (d,y) = (d,y,id)
                       in  liftM (map addId . maybeToList) (f x)
-    } 
+    }
 
 
-remaining :: (Functor m, Applicative m, MonadIO m) => Model -> m [Question]
+remaining :: (Functor m, Applicative m, Monad m) => Model -> m [Question]
 remaining model = do
     let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
@@ -133,8 +140,11 @@ addToTrail nQuestion nQuestions tQuestion
             }
 
 
-toCompletion :: (MonadIO m, MonadFail m) => Driver -> Model -> m Model
-toCompletion driver = loopy . prologue
+toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> m Model
+toCompletion driver m = do
+    m2 <- prologue m
+    liftIO $ putStrLn $ renderWide $ modelInfo m2
+    loopy m2
     where
         loopy model = do
             qs <- remaining model
@@ -145,8 +155,11 @@ toCompletion driver = loopy . prologue
                     loopy nextModel
 
 
-toCompletionMulti :: MultiDriver -> Model -> IO [Model]
-toCompletionMulti driver = loopy . prologue
+toCompletionMulti :: (MonadIO m, MonadFail m, MonadLog m) => MultiDriver -> Model -> m [Model]
+toCompletionMulti driver m = do
+    m2 <- prologue m
+    liftIO $ putStrLn $ renderWide $ modelInfo m2
+    liftIO (loopy m2)
     where
         loopy model = do
             qs <- remaining model
@@ -154,12 +167,12 @@ toCompletionMulti driver = loopy . prologue
                 then return <$> failCheaply (epilogue model)
                 else do
                     nextModels <- driver qs
-                    concat <$> sequence [ unsafeInterleaveIO $ loopy m
-                                        | m <- nextModels
+                    concat <$> sequence [ unsafeInterleaveIO $ loopy nextModel
+                                        | nextModel <- nextModels
                                         ]
 
 
-outputModel :: (MonadIO m, MonadFail m) => Driver -> FilePath -> Int -> Model -> m ()
+outputModel :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> FilePath -> Int -> Model -> m ()
 outputModel driver dir i model = do
     liftIO $ createDirectoryIfMissing True dir
     eprime <- toCompletion driver model
@@ -167,12 +180,12 @@ outputModel driver dir i model = do
     liftIO $ writeFile filename (renderWide eprime)
 
 
-outputModels :: MultiDriver -> FilePath -> Int -> Model -> IO ()
+outputModels :: (MonadIO m, MonadFail m, MonadLog m) => MultiDriver -> FilePath -> Int -> Model -> m ()
 outputModels driver dir i model = do
-    createDirectoryIfMissing True dir
+    liftIO $ createDirectoryIfMissing True dir
     eprimes <- toCompletionMulti driver model
     sequence_
-        [ writeFile filename (renderWide eprime)
+        [ liftIO $ writeFile filename (renderWide eprime)
         | (j, eprime) <- zip [i..] eprimes
         , let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
         ]
@@ -204,7 +217,7 @@ interactive questions = liftIO $ do
                 | i <- allNats
                 | c <- qAscendants q
                 ]
-        
+
     putStr "Pick question: "
     pickedQIndex <- readNote "Expecting an integer." <$> getLine
     let pickedQ = questions `at` (pickedQIndex - 1)
@@ -375,10 +388,12 @@ checkIfAllRefined m = do
     unless (null fails) (fail (vcat fails))
 
 
-prologue :: Model -> Model
-prologue
-    =   addTrueConstraints
-    >>> initInfo
+prologue :: (MonadFail m, MonadLog m) => Model -> m Model
+prologue model = return model
+    >>= return . initInfo
+    >>= deenumifyModel
+    >>= resolveNames
+    >>= return . addTrueConstraints
 
 
 epilogue :: MonadFail m => Model -> m Model
@@ -404,7 +419,7 @@ representationOf (Reference _ (Just refTo)) =
 representationOf _ = fail "not a reference"
 
 
-applicableRules :: (Applicative m, MonadIO m) => Expression -> m [(Doc, RuleResult)]
+applicableRules :: (Applicative m, Monad m) => Expression -> m [(Doc, RuleResult)]
 applicableRules x = concat <$> sequence [ do res <- rApply r x
                                              return (map (rName r,) res)
                                         | r <- allRules ]
@@ -485,7 +500,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                 | usedBefore = id
                 | null structurals = id
                 | otherwise = \ m ->
-                    m { mStatements = mStatements m ++ [SuchThat structurals] } 
+                    m { mStatements = mStatements m ++ [SuchThat structurals] }
 
             otherRepresentations =
                 [ d
@@ -515,18 +530,11 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                     newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
                 in  m { mInfo = newInfo }
 
-            recordEnumLiterals =
-                case domain of
-                    DomainEnum{} -> do
-                        downD
-
         in
             model
                 |> addStructurals               -- unless usedBefore: add structurals
                 |> addChannels                  -- for each in otherRepresentations
                 |> recordThis                   -- unless usedBefore: record (name, domain) as being used in the model
-                |> recordEnumLiterals
-
 
 
 rule_TrueIsNoOp :: Rule
@@ -671,7 +679,7 @@ rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule
                                (body (headInf fresh))
                                (Domain index)
                )
-        
+
 
 rule_SetEq :: Rule
 rule_SetEq = "set-eq" `namedRule` theRule where

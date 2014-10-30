@@ -1,6 +1,8 @@
 language ESSENCE' 1.0
 
 given E1_EnumSize: int
-find x_1_FromEnum_E1: int(1..E1_EnumSize)
-find x_2_FromEnum_E2: int(1..4)
-such that x_2_FromEnum_E2 = 1
+letting E1 be domain int(1..E1_EnumSize)
+letting E2 be domain int(1..4)
+find x_1: int(1..E1_EnumSize)
+find x_2: int(1..4)
+such that x_2 = 1

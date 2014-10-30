@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Representations.Function.Function1D ( function1D ) where
+module Conjure.Representations.Function.Function1D
+    ( function1D
+    , domainCanIndexMatrix, domainValues, toIntDomain
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -12,7 +15,6 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Enum
 
 
 function1D :: MonadFail m => Representation m
@@ -137,18 +139,11 @@ domainCanIndexMatrix DomainEnum{} = True
 domainCanIndexMatrix _            = False
 
 
-
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
 domainValues dom =
     case dom of
         DomainBool -> return [ConstantBool False, ConstantBool True]
         DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
-        DomainEnum ename (Just (vals, [])) ->
-            return $ map (ConstantEnum ename vals) vals
-        DomainEnum ename (Just (vals, rs)) -> do
-            let rsInt = map (fmap (ConstantInt . enumNameToInt vals)) rs
-            intVals <- valuesInIntDomain rsInt
-            return $ map (ConstantEnum ename vals . enumIntToName vals) intVals
         _ -> fail ("domainValues, not supported:" <+> pretty dom)
 
 
@@ -157,8 +152,5 @@ toIntDomain dom =
     case dom of
         DomainBool -> return (DomainInt [RangeBounded (fromInt 0) (fromInt 1)])
         DomainInt{} -> return dom
-        DomainEnum{} -> do
-            Just [(_,domInt)] <- rDownD enum ("", dom)
-            return domInt
         _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
 

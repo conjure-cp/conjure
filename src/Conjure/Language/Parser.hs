@@ -657,7 +657,7 @@ parseDomain
             xs <- optionMaybe $ parens $ parseRange identifierText `sepBy` comma
             case xs of
                 Nothing -> return $ DomainReference (Name r) Nothing
-                Just ys -> return $ DomainEnum (Name r) (Just ([], fmap (fmap Name) ys))
+                Just ys -> return $ DomainEnum (Name r) (Just (fmap (fmap Name) ys))
                 -- TODO: the DomainDefnEnum in the above line should lookup and find a
                 -- previously declared DomainDefnEnum
 

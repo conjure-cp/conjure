@@ -7,44 +7,16 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.TH
-import Conjure.Language.DomainSize
 import Conjure.Language.TypeOf
-import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Enum
+import Conjure.Representations.Function.Function1D ( domainCanIndexMatrix, toIntDomain )
 
 
 function1DPartial :: MonadFail m => Representation m
 function1DPartial = Representation chck downD structuralCons downC up
 
     where
-
-        domainCanIndexMatrix DomainBool{} = True
-        domainCanIndexMatrix DomainInt {} = True
-        domainCanIndexMatrix DomainEnum{} = True
-        domainCanIndexMatrix _            = False
-
-        toIntDomain dom =
-            case dom of
-                DomainBool -> return (DomainInt [RangeBounded (fromInt 0) (fromInt 1)])
-                DomainInt{} -> return dom
-                DomainEnum{} -> do
-                    Just [(_,domInt)] <- rDownD enum ("", dom)
-                    return domInt
-                _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
-
-        domainValues dom =
-            case dom of
-                DomainBool -> return [ConstantBool False, ConstantBool True]
-                DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
-                DomainEnum ename (Just (vals, [])) ->
-                    return $ map (ConstantEnum ename vals) vals
-                DomainEnum ename (Just (vals, rs)) -> do
-                    let rsInt = map (fmap (ConstantInt . enumNameToInt vals)) rs
-                    intVals <- valuesInIntDomain rsInt
-                    return $ map (ConstantEnum ename vals . enumIntToName vals) intVals
-                _ -> fail ("domainValues, not supported:" <+> pretty dom)
 
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ FunctionAttr_Partial _)

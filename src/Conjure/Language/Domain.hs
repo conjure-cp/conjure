@@ -25,9 +25,8 @@ import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 data Domain r x
     = DomainBool
     | DomainInt [Range x]
-    | DomainEnum Name (Maybe ( [Name]       -- all values in the enum
-                             , [Range Name] -- subset of values for this domain
-                             ))             -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
+    | DomainEnum Name (Maybe [Range Name]) -- subset of values for this domain
+                                           -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
     | DomainUnnamed Name x
     | DomainTuple [Domain r x]
     | DomainMatrix (Domain () x) (Domain r x)
@@ -76,8 +75,8 @@ instance TypeOf (Domain r x) where
     typeOf (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
     typeOf DomainOp{} = bug "typeOf DomainOp"
     typeOf (DomainReference _ (Just d)) = typeOf d
-    typeOf DomainReference{} = bug "typeOf DomainReference"
-    typeOf DomainMetaVar{} = bug "typeOf DomainMetaVar"
+    typeOf (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
+    typeOf (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
 
 forgetRepr :: Domain r x -> Domain () x
 forgetRepr DomainBool = DomainBool
@@ -281,7 +280,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
-    pretty (DomainEnum name (Just (_, ranges))) = pretty name <> prettyList prParens "," ranges
+    pretty (DomainEnum name (Just ranges)) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _) = pretty name
 
     pretty (DomainUnnamed name _) = pretty name

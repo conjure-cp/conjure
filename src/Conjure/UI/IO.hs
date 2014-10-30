@@ -1,4 +1,8 @@
-module Conjure.UI.IO where
+module Conjure.UI.IO
+    ( readModelFromFile
+    , readModelPreambleFromFile
+    , writeModel, writeModels
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -6,7 +10,6 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
-import Language.E.Definition
 
 -- aeson
 import qualified Data.Aeson ( decode )
@@ -23,11 +26,6 @@ readModelFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
 readModelFromFile fp = do
     pair <- liftIO $ pairWithContents fp
     readModel pair
-
-readModelFromStdIn :: IO Model
-readModelFromStdIn = do
-    stdin <- getContents
-    readModel ("<stdin>", T.pack stdin)
 
 readModelPreambleFromFile :: FilePath -> IO Model
 readModelPreambleFromFile fp = do
@@ -50,7 +48,6 @@ readModel (fp, con) =
                     |> T.encodeUtf8                     -- convert Text to ByteString
                     |> (BS.fromChunks . return)         -- convert to Lazy ByteString
                     |> Data.Aeson.decode
-   
             in
                 if T.null (T.filter isSpace infoBlock)
                     then return x
@@ -77,35 +74,19 @@ readModelPreamble (fp,con) =
             . stripComments
 
 
-fixRulename :: String -> String
-fixRulename = intercalate "/" . dropWhile (/="rules") . splitOn "/"
+writeModel :: MonadIO m => Maybe FilePath -> Model -> m ()
+writeModel Nothing   spec = liftIO $ putStrLn     (renderNormal spec)
+writeModel (Just fp) spec = liftIO $ writeFile fp (renderNormal spec)
 
 
-readRuleRefn :: (FilePath, Text) -> [RuleRefn]
-readRuleRefn (fp,con) =
-    case runLexerAndParser (parseRuleRefn $ stringToText $ fixRulename fp) fp con of
-        Left  e -> userErr e
-        Right x -> x
-
-
-readRuleRepr :: (FilePath, Text) -> RuleRepr
-readRuleRepr (fp,con) =
-    case runLexerAndParser (parseRuleRepr $ stringToText $ fixRulename fp) fp con of
-        Left  e -> userErr e
-        Right x -> x
-
-
-writeModel :: Maybe FilePath -> Model -> IO ()
-writeModel Nothing   spec = putStrLn     (renderNormal spec)
-writeModel (Just fp) spec = writeFile fp (renderNormal spec)
-
-writeModels :: FilePath -> String -> [Model] -> IO ()
+writeModels :: MonadIO m => FilePath -> String -> [Model] -> m ()
 writeModels base tag specs = do
     let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
     forM_ (zip numbers specs) $ \ (i, spec) -> do
         let outDirname  = base ++ "-" ++ tag
         let outFilename = base ++ "-" ++ tag ++ "/" ++ i ++ ".essence"
-        createDirectoryIfMissing True outDirname
-        writeModel (Just outFilename) spec
-        putStrLn $ "[created file] " ++ outFilename
+        liftIO $ do
+            createDirectoryIfMissing True outDirname
+            writeModel (Just outFilename) spec
+            putStrLn $ "[created file] " ++ outFilename
 

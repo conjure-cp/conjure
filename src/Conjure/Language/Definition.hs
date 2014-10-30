@@ -177,6 +177,7 @@ instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOption
 
 instance Pretty Declaration where
     pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
+    pretty (Letting nm (Domain x)) = hang ("letting" <+> pretty nm <+> "be domain") 8 (pretty x)
     pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
         hang ("given"   <+> pretty name) 8 "new type enum"
@@ -203,7 +204,9 @@ instance Pretty FindOrGiven where
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
     , miFinds :: [Name]
-    , miEnumLiterals :: [(Name, Int)]
+    , miEnumGivens :: [Name]
+    , miEnumLettings :: [Declaration]
+    , miOriginalDeclarations :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
     , miTrailCompact :: [(Int,[Int])]
@@ -222,7 +225,7 @@ instance ToJSON ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
 instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def
+    def = ModelInfo def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -239,9 +242,15 @@ instance Pretty ModelInfo where
 initInfo :: Model -> Model
 initInfo model = model { mInfo = info }
     where
-        info = def
+        info = (mInfo model)
             { miGivens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements model ]
             , miFinds  = [ nm | Declaration (FindOrGiven Find  nm _) <- mStatements model ]
+            , miOriginalDeclarations =
+                [ (nm, dom)
+                | Declaration (FindOrGiven _ nm dom) <- mStatements model
+                ]
+            , miEnumGivens   = [ nm | Declaration (GivenDomainDefnEnum nm)  <- mStatements model ]
+            , miEnumLettings = [ d  | Declaration d@LettingDomainDefnEnum{} <- mStatements model ]
             }
 
 
