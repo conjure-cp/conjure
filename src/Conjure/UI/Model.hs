@@ -459,6 +459,9 @@ allRules =
     , rule_Function_Image_Function1D
     , rule_Function_MapInExpr_Function1D
 
+    , rule_Function_Image_Function1DPartial
+    , rule_Function_MapInExpr_Function1DPartial
+
     ]
 
 
@@ -837,7 +840,11 @@ rule_FunctionEq = "function-eq" `namedRule` theRule where
                                                                               , TypeTuple [yFrTy, yToTy]
                                                                               ])
                     in
-                        [essence| forAll &iPat in &x . &y(&i[1]) = &i[2] |]
+                        [essence|
+                            (forAll &iPat in &x . &y(&i[1]) = &i[2])
+                                /\
+                            (forAll &iPat in &y . &x(&i[1]) = &i[2])
+                        |]
                )
 
 
@@ -868,6 +875,42 @@ rule_Function_Image_Function1D = "function-image{Function1D}"
         [values]     <- downX1 f
         return ( "Function image, Function1D representation"
                , const [essence| &values[&x] |]
+               )
+    theRule _ = return Nothing
+
+
+rule_Function_MapInExpr_Function1DPartial :: Rule
+rule_Function_MapInExpr_Function1DPartial = "function-quantification{Function1DPartial}"
+                                     `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (Lambda lPat lBody, f) <- match opMapInExpr p
+        "Function1DPartial"    <- representationOf f
+        TypeFunction fr _      <- typeOf f
+        [flags,values]         <- downX1 f
+        DomainMatrix index _   <- domainOf values
+        let lambda = lambdaToFunction lPat lBody
+        return ( "Mapping over a function, Function1DPartial representation"
+               , \ fresh ->
+                    let iName = headInf fresh
+                    in  make opMapOverDomain
+                            (mkLambda iName fr $ \ i -> lambda [essence| (&i, &values[&i]) |])
+                            (make opFilter
+                                (mkLambda iName fr $ \ i -> [essence| &flags[&i] |] )
+                                (Domain index))
+               )
+
+
+rule_Function_Image_Function1DPartial :: Rule
+rule_Function_Image_Function1DPartial = "function-image{Function1DPartial}"
+                                 `namedRule` theRule where
+    theRule [essence| image(&f,&x) |] = runMaybeT $ do
+        "Function1DPartial" <- representationOf f
+        [flags,values]      <- downX1 f
+        return ( "Function image, Function1DPartial representation"
+               , const [essence| { &values[&x]
+                                 @ such that &flags[&x]
+                                 }
+                       |]
                )
     theRule _ = return Nothing
 

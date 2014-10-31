@@ -95,7 +95,7 @@ function1D = Representation chck downD structuralCons downC up
                                 Nothing -> fail $ vcat [ "No value for " <+> pretty fr
                                                        , "In:" <+> pretty (ConstantFunction vals)
                                                        ]
-                                Just v  -> return (v :: Constant)
+                                Just v  -> return v
                 ]
             return $ Just
                 [ ( outName name
