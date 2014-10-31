@@ -143,7 +143,7 @@ addToTrail nQuestion nQuestions tQuestion
 toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> m Model
 toCompletion driver m = do
     m2 <- prologue m
-    liftIO $ putStrLn $ renderWide $ modelInfo m2
+    logInfo $ modelInfo m2
     loopy m2
     where
         loopy model = do
@@ -158,7 +158,7 @@ toCompletion driver m = do
 toCompletionMulti :: (MonadIO m, MonadFail m, MonadLog m) => MultiDriver -> Model -> m [Model]
 toCompletionMulti driver m = do
     m2 <- prologue m
-    liftIO $ putStrLn $ renderWide $ modelInfo m2
+    logInfo $ modelInfo m2
     liftIO (loopy m2)
     where
         loopy model = do

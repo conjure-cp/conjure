@@ -99,7 +99,7 @@ testSingleDir t@(TestDirFiles{..}) = testGroup name (conjuring : savileRows ++ c
                 createDirectoryIfMissing True outputsDir >> removeDirectoryRecursive outputsDir
 
                 -- read in the essence, generate the eprimes
-                essence <- runLoggerIO LogDebug $ readModelFromFile essenceFile
+                essence <- ignoreLogs $ readModelFromFile essenceFile
                 modelAll outputsDir essence
 
         savileRows =
@@ -137,47 +137,43 @@ savileRowNoParam TestDirFiles{..} modelPath =
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    case ignoreLogs (translateSolution eprimeModel def eprimeSolution) of
-                        Left err -> assertFailure $ renderNormal err
-                        Right s -> do
-                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
-                            writeFile filename (renderWide s)
+                    s <- ignoreLogs $ translateSolution eprimeModel def eprimeSolution
+                    let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                    writeFile filename (renderWide s)
 
 
 savileRowWithParams :: TestDirFiles -> FilePath -> FilePath -> TestTree
 savileRowWithParams TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ sh $ do
-        model <- liftIO $ readModelFromFile (outputsDir </> modelPath)
-        param <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
-        case ignoreLogs (refineParam model param) of
-            Left err -> liftIO $ assertFailure $ renderNormal err
-            Right eprimeParam -> do
-                let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
-                liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
-                _stdoutSR <- run "savilerow" $
-                    [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
-                    , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
-                    , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
-                    , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
-                    , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
-                    , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-                    , "-all-solutions"
-                    ] ++ srOptions
-                stderrSR <- lastStderr
-                if not (T.null stderrSR)
-                    then liftIO $ assertFailure $ T.unpack stderrSR
-                    else do
-                        nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                                  <$> liftIO (getDirectoryContents outputsDir)
-                        forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
-                            let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
-                            eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
-                            eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                            case ignoreLogs (translateSolution eprimeModel param eprimeSolution) of
-                                Left err -> assertFailure $ renderNormal err
-                                Right s  -> do
-                                    let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
-                                    writeFile filename (renderWide s)
+        model       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
+        param       <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
+        eprimeParam <- liftIO $ ignoreLogs $ refineParam model param
+        let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
+        liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
+        _stdoutSR <- run "savilerow" $
+            [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
+            , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
+            , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+            , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+            , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+            , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
+            , "-all-solutions"
+            ] ++ srOptions
+        stderrSR <- lastStderr
+        if not (T.null stderrSR)
+            then liftIO $ assertFailure $ T.unpack stderrSR
+            else do
+                nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                          <$> liftIO (getDirectoryContents outputsDir)
+                forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
+                    eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
+                    eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                    case ignoreLogs (translateSolution eprimeModel param eprimeSolution) of
+                        Left err -> assertFailure $ renderNormal err
+                        Right s  -> do
+                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                            writeFile filename (renderWide s)
 
 
 checkExpected :: TestDirFiles -> FilePath -> TestTree
@@ -220,7 +216,7 @@ dirShouldExist d = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = runLoggerIO LogDebug . outputModels allFixedQs dir 1
+modelAll dir = ignoreLogs . outputModels allFixedQs dir 1
 
 
 sh :: Sh a -> IO a

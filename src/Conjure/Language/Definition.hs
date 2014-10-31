@@ -206,7 +206,7 @@ data ModelInfo = ModelInfo
     , miFinds :: [Name]
     , miEnumGivens :: [Name]
     , miEnumLettings :: [Declaration]
-    , miOriginalDeclarations :: [(Name, Domain () Expression)]
+    , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrail :: [Decision]
     , miTrailCompact :: [(Int,[Int])]
@@ -245,7 +245,7 @@ initInfo model = model { mInfo = info }
         info = (mInfo model)
             { miGivens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements model ]
             , miFinds  = [ nm | Declaration (FindOrGiven Find  nm _) <- mStatements model ]
-            , miOriginalDeclarations =
+            , miOriginalDomains =
                 [ (nm, dom)
                 | Declaration (FindOrGiven _ nm dom) <- mStatements model
                 ]

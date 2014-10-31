@@ -118,9 +118,9 @@ mainWithArgs RefineParam{..} = do
     when (null eprime      ) $ userErr "Mandatory field --eprime"
     when (null essenceParam) $ userErr "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
-    eprime'       <- readModelFromFile eprime
-    essenceParam' <- readModelFromFile essenceParam
-    output        <- refineParam eprime' essenceParam'
+    output <- join $ refineParam
+                    <$> readModelFromFile eprime
+                    <*> readModelFromFile essenceParam
     writeModel (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr "Mandatory field --eprime"

@@ -1,7 +1,6 @@
 language ESSENCE' 1.0
 
 given E1_EnumSize: int
-letting E1 be domain int(1..E1_EnumSize)
 find x: int(1..E1_EnumSize)
 letting E2 be domain int(1..4)
 find y: int(1..4)
@@ -10,3 +9,4 @@ find t: int(2, 4)
 such that
     y = z,
     z = t
+

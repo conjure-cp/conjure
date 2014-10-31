@@ -4,7 +4,10 @@
 module Conjure.Language.NameResolution ( resolveNames ) where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
+import Conjure.Language.Pretty
 
 
 resolveNames :: (MonadFail m, MonadLog m) => Model -> m Model
@@ -22,7 +25,7 @@ resolveNames model = flip evalStateT [] $ do
             Where xs -> Where <$> mapM (transformM insert) xs
             Objective obj x -> Objective obj <$> transformM insert x
             SuchThat xs -> SuchThat <$> mapM (transformM insert) xs
-    return model { mStatements = statements }
+    return model { mStatements = statements |> transformBi massageDomains }
 
 
 data ToLookUp
@@ -42,3 +45,9 @@ insert (Lambda pat@(Single nm _) body) = do
     modify tail
     return (Lambda pat body')
 insert x = return x
+
+
+massageDomains :: Domain () Expression -> Domain () Expression
+massageDomains (DomainReference _ (Just d)) = massageDomains d
+massageDomains (DomainReference nm Nothing) = userErr ("Undefined reference to a domain:" <+> pretty nm)
+massageDomains d = d
