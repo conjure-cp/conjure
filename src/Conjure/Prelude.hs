@@ -36,6 +36,7 @@ module Conjure.Prelude
     , paddedNum
     , dropExtension
     , MonadLog(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logWarn, logDebug
+    , histogram
     ) where
 
 import GHC.Err as X ( error )
@@ -76,7 +77,7 @@ import Control.Monad.State.Strict   as X ( MonadState, StateT, gets, modify, eva
 import Control.Monad.Trans.Identity as X ( IdentityT, runIdentityT )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT, runWriterT, execWriterT, runWriter )
-import Control.Arrow             as X ( first, second, (***) )
+import Control.Arrow             as X ( first, second, (***), (&&&) )
 import Control.Category          as X ( (<<<), (>>>) )
 
 
@@ -419,4 +420,7 @@ runLoggerIO l logger = do
     (a, logs) <- runLogger l logger
     liftIO $ print (vcat logs)
     return a
+
+histogram :: Ord a => [a] -> [(a,Int)]
+histogram = map (head &&& length) . group . sort
 

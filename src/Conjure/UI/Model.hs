@@ -440,6 +440,7 @@ allRules =
     , rule_InlineFilterInsideMap
 
     , rule_TupleIndex
+    , rule_TupleEq
 
     , rule_SetEq
     , rule_SetSubsetEq
@@ -643,6 +644,20 @@ rule_TupleIndex = "tuple-index" `namedRule` theRule where
         ts          <- downX1 t
         return ( "Tuple indexing on:" <+> pretty p
                , const $ atNote "Tuple indexing" ts (iInt-1)
+               )
+
+
+rule_TupleEq :: Rule
+rule_TupleEq = "tuple-eq" `namedRule` theRule where
+    theRule p = runMaybeT $ do
+        (x,y)       <- match opEq p
+        TypeTuple tx <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple _  <- typeOf y
+        return ( "Horizontal rule for tuple equality"
+               , const $ make opAnd
+                   [ [essence| &x[&i] = &y[&i] |]
+                   | i <- map fromInt [1 .. length tx]
+                   ]
                )
 
 
