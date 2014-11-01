@@ -109,10 +109,10 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     case strategy of
-        Strategy_interactive             -> outputModel  interactive             "conjure-output" 1 model
-        Strategy_interactiveFixedQs      -> outputModel  interactiveFixedQs      "conjure-output" 1 model
-        Strategy_interactiveFixedQsAutoA -> outputModel  interactiveFixedQsAutoA "conjure-output" 1 model
-        Strategy_pickFirst               -> outputModel  pickFirst               "conjure-output" 1 model
+        Strategy_interactive             -> outputModels interactive             "conjure-output" 1 model
+        Strategy_interactiveFixedQs      -> outputModels interactiveFixedQs      "conjure-output" 1 model
+        Strategy_interactiveFixedQsAutoA -> outputModels interactiveFixedQsAutoA "conjure-output" 1 model
+        Strategy_pickFirst               -> outputModels pickFirst               "conjure-output" 1 model
         Strategy_allFixedQs              -> outputModels allFixedQs              "conjure-output" 1 model
 mainWithArgs RefineParam{..} = do
     when (null eprime      ) $ userErr "Mandatory field --eprime"

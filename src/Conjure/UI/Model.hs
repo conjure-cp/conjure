@@ -4,9 +4,10 @@
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.UI.Model
-    ( outputModel, outputModels
+    ( outputModels
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
@@ -33,10 +34,10 @@ import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole, up )
+import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
 
--- base
-import System.IO.Unsafe ( unsafeInterleaveIO )
+-- io-streams
+import qualified System.IO.Streams as Streams
 
 
 
@@ -52,9 +53,20 @@ data Answer = Answer
     , aFullModel :: Model
     }
 
-type Driver      = (forall m . (MonadIO m, MonadFail m) => [Question] -> m Model)
+type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [Model])
 
-type MultiDriver = (forall m . (MonadIO m, MonadFail m) => [Question] -> m [Model])
+data Strategy
+    = PickFirst
+    | PickAll
+    | Interactive
+    -- | AtRandom
+    | Auto Strategy
+    deriving (Eq, Ord, Show, Read)
+
+viewAuto :: Strategy -> (Strategy, Bool)
+viewAuto (Auto s) = second (const True) (viewAuto s)
+viewAuto s = (s, False)
+
 
 type RuleResult = ( Doc                     -- describe this transformation
                   , [Name] -> Expression    -- the result
@@ -75,6 +87,37 @@ namedRule nm f = Rule
     , rApply = \ x -> let addId (d,y) = (d,y,id)
                       in  liftM (map addId . maybeToList) (f x)
     }
+
+
+
+outputModels :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> FilePath -> Int -> Model -> m ()
+outputModels driver dir i model = do
+    io $ createDirectoryIfMissing True dir
+    eprimes <- toCompletion driver model
+    sequence_
+        [ io $ do
+            putStr filename
+            writeFile filename (renderWide eprime)
+        | (j, eprime) <- zip [i..] eprimes
+        , let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
+        ]
+
+
+toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> m [Model]
+toCompletion driver m = do
+    m2 <- prologue m
+    logInfo $ modelInfo m2
+    loopy m2
+    where
+        loopy model = do
+            qs <- remaining model
+            if null qs
+                then return <$> failCheaply (epilogue model)
+                else do
+                    nextModels <- driver qs
+                    concat <$> sequence [ {- unsafeInterleaveIO -} loopy nextModel
+                                        | nextModel <- nextModels
+                                        ]
 
 
 remaining :: (Functor m, Applicative m, Monad m) => Model -> m [Question]
@@ -112,6 +155,52 @@ remaining model = do
         ]
 
 
+strategyToDriver :: Strategy -> Strategy -> Driver
+strategyToDriver strategyQ strategyA questions = do
+    let optionsQ =
+            [ (doc, q) 
+            | (n, q) <- zip allNats questions
+            , let doc =
+                    vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
+                         : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                           | i <- allNats
+                           | c <- qAscendants q
+                           ]
+            ]
+    pickedQs <- executeStrategy optionsQ strategyQ
+    fmap concat $ forM pickedQs $ \ pickedQ -> do
+        let optionsA =
+                [ (doc, a) 
+                | (n, a) <- zip allNats (qAnswers pickedQ)
+                , let doc =
+                        nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
+                                                                       , pretty (aAnswer a) ]
+                ]
+        pickedAs <- executeStrategy optionsA strategyA
+        return (map aFullModel pickedAs)
+
+
+executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [a]
+executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
+executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
+    logInfo ("Selecting the only option:" <+> doc)
+    return [option]
+executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
+    case strategy of
+        Auto _      -> bug "executeStrategy: Auto"
+        PickFirst   -> do
+            logInfo ("Picking the first option:" <+> doc)
+            return [option]
+        PickAll     -> return (map snd options)
+        Interactive -> do
+            pickedIndex <- io $ do
+                print (vcat (map fst options))
+                putStr "Pick option: "
+                readNote "Expecting an integer." <$> getLine
+            let picked = snd (at options (pickedIndex - 1))
+            return [picked]
+
+
 addToTrail
     :: Int -> [Int] -> [Doc]
     -> Int -> [Int] -> [Doc]
@@ -140,167 +229,20 @@ addToTrail nQuestion nQuestions tQuestion
             }
 
 
-toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> m Model
-toCompletion driver m = do
-    m2 <- prologue m
-    logInfo $ modelInfo m2
-    loopy m2
-    where
-        loopy model = do
-            qs <- remaining model
-            if null qs
-                then failCheaply (epilogue model)
-                else do
-                    nextModel <- driver qs
-                    loopy nextModel
-
-
-toCompletionMulti :: (MonadIO m, MonadFail m, MonadLog m) => MultiDriver -> Model -> m [Model]
-toCompletionMulti driver m = do
-    m2 <- prologue m
-    logInfo $ modelInfo m2
-    liftIO (loopy m2)
-    where
-        loopy model = do
-            qs <- remaining model
-            if null qs
-                then return <$> failCheaply (epilogue model)
-                else do
-                    nextModels <- driver qs
-                    concat <$> sequence [ unsafeInterleaveIO $ loopy nextModel
-                                        | nextModel <- nextModels
-                                        ]
-
-
-outputModel :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> FilePath -> Int -> Model -> m ()
-outputModel driver dir i model = do
-    liftIO $ createDirectoryIfMissing True dir
-    eprime <- toCompletion driver model
-    let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
-    liftIO $ writeFile filename (renderWide eprime)
-
-
-outputModels :: (MonadIO m, MonadFail m, MonadLog m) => MultiDriver -> FilePath -> Int -> Model -> m ()
-outputModels driver dir i model = do
-    liftIO $ createDirectoryIfMissing True dir
-    eprimes <- toCompletionMulti driver model
-    sequence_
-        [ liftIO $ writeFile filename (renderWide eprime)
-        | (j, eprime) <- zip [i..] eprimes
-        , let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
-        ]
-
-
-allFixedQs :: MultiDriver
-allFixedQs [] = fail "pickFirst: No questions!"
-allFixedQs (question:_) = return (map aFullModel (qAnswers question))
-
+allFixedQs :: Driver
+allFixedQs = strategyToDriver PickFirst PickAll
 
 pickFirst :: Driver
-pickFirst [] = fail "pickFirst: No questions!"
-pickFirst (question:_) =
-    case qAnswers question of
-        [] -> fail "pickFirst: No answers!"
-        (answer:_) -> return (aFullModel answer)
-
+pickFirst = strategyToDriver PickFirst PickFirst
 
 interactive :: Driver
-interactive questions = liftIO $ do
-    putStrLn ""
-    putStrLn " ----------------------------------------"
-
-    forM_ (zip allNats questions) $ \ (nQ,q) -> do
-        print ("Question" <+> pretty nQ <> ":" <+> pretty (qHole q))
-        unless (null (qAscendants q)) $
-            print $ nest 4 $ vcat
-                [ "Context #" <> pretty i <> ":" <+> pretty c
-                | i <- allNats
-                | c <- qAscendants q
-                ]
-
-    putStr "Pick question: "
-    pickedQIndex <- readNote "Expecting an integer." <$> getLine
-    let pickedQ = questions `at` (pickedQIndex - 1)
-
-    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
-        print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
-                                                                , pretty (aAnswer a) ]
-        -- print (nest 8 $ pretty (aFullModel a))
-    putStr "Pick answer: "
-    pickedAIndex <- readNote "Expecting an integer." <$> getLine
-    let pickedA = qAnswers pickedQ `at` (pickedAIndex - 1)
-
-    let pickedModel = aFullModel pickedA
-    putStrLn "Current model:"
-    print $ nest 8 $ pretty pickedModel
-    return pickedModel
-
+interactive = strategyToDriver Interactive Interactive
 
 interactiveFixedQs :: Driver
-interactiveFixedQs [] = fail "interactiveFixedQs: No questions!"
-interactiveFixedQs (pickedQ:_) = liftIO $ do
-    putStrLn ""
-    putStrLn " ----------------------------------------"
-
-    print ("Question:" <+> pretty (qHole pickedQ))
-    unless (null (qAscendants pickedQ)) $
-        print $ nest 4 $ vcat
-            [ "Context #" <> pretty i <> ":" <+> pretty c
-            | i <- allNats
-            | c <- qAscendants pickedQ
-            ]
-
-    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
-        print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
-                                                                , pretty (aAnswer a) ]
-        -- print (nest 8 $ pretty (aFullModel a))
-    putStr "Pick answer: "
-    pickedAIndex <- readNote "Expecting an integer." <$> getLine
-    let pickedA = qAnswers pickedQ `at` (pickedAIndex - 1)
-
-    let pickedModel = aFullModel pickedA
-    putStrLn "Current model:"
-    print $ nest 8 $ pretty pickedModel
-    return pickedModel
-
+interactiveFixedQs = strategyToDriver PickFirst Interactive
 
 interactiveFixedQsAutoA :: Driver
-interactiveFixedQsAutoA [] = fail "interactiveFixedQs: No questions!"
-interactiveFixedQsAutoA (pickedQ:_) = liftIO $ do
-    putStrLn ""
-    putStrLn " ----------------------------------------"
-
-    print ("Question:" <+> pretty (qHole pickedQ))
-    unless (null (qAscendants pickedQ)) $
-        print $ nest 4 $ vcat
-            [ "Context #" <> pretty i <> ":" <+> pretty c
-            | i <- allNats
-            | c <- qAscendants pickedQ
-            ]
-
-    forM_ (zip allNats (qAnswers pickedQ)) $ \ (nA,a) ->
-        print $ nest 4 $ "Answer" <+> pretty nA <> ":" <+> vcat [ pretty (aText a)
-                                                                , pretty (aAnswer a) ]
-    -- print (nest 8 $ pretty (aFullModel a))
-
-    pickedA <- case qAnswers pickedQ of
-        [a] -> do
-            putStrLn "Automatically picking the only answer."
-            return a
-        _   -> do
-            putStr "Pick answer: "
-            pickedAIndex <- readNote "Expecting an integer." <$> getLine
-            let pickedA = qAnswers pickedQ `at` (pickedAIndex - 1)
-            return pickedA
-
-    let pickedModel = aFullModel pickedA
-    -- putStrLn "Current model:"
-    -- print $ nest 8 $ pretty pickedModel
-    return pickedModel
-
-
-ascendants :: Zipper a b -> [b]
-ascendants z = hole z : maybe [] ascendants (Zipper.up z)
+interactiveFixedQsAutoA = strategyToDriver PickFirst (Auto Interactive)
 
 
 

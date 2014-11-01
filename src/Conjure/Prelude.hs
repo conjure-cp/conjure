@@ -31,7 +31,7 @@ module Conjure.Prelude
     , jsonOptions
     , Proxy(..)
     , MonadFail(..), failCheaply
-    , allContexts
+    , allContexts, ascendants
     , headInf
     , paddedNum
     , dropExtension
@@ -139,7 +139,7 @@ import Data.Generics.Uniplate.Data as X
     , transformM, transformBiM
     , universe, universeBi
     )
-import Data.Generics.Uniplate.Zipper ( Zipper, down, right )
+import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
 
 -- groom
 import Text.Groom as X ( groom )
@@ -361,6 +361,9 @@ allContexts z0 = concatMap subtreeOf (allSiblings z0)
 
         subtreeOf :: Data b => Zipper a b -> [Zipper a b]
         subtreeOf z = z : maybe [] allContexts (down z)
+
+ascendants :: Zipper a b -> [b]
+ascendants z = hole z : maybe [] ascendants (Zipper.up z)
 
 
 headInf :: [a] -> a
