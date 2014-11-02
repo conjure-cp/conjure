@@ -36,9 +36,9 @@ import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
 
--- io-streams
-import qualified System.IO.Streams as Streams
 
+import qualified Pipes as Pipes ( Producer, yield )
+import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 data Question = Question
@@ -89,21 +89,20 @@ namedRule nm f = Rule
     }
 
 
-
 outputModels :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> FilePath -> Int -> Model -> m ()
 outputModels driver dir i model = do
-    io $ createDirectoryIfMissing True dir
-    eprimes <- toCompletion driver model
-    sequence_
-        [ io $ do
-            putStr filename
-            writeFile filename (renderWide eprime)
-        | (j, eprime) <- zip [i..] eprimes
-        , let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
-        ]
+    liftIO $ createDirectoryIfMissing True dir
+    Pipes.foldM (\ j eprime -> liftIO $ do
+                        let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
+                        writeFile filename (renderWide eprime)
+                        return (j+1)
+                )
+                (return i)
+                (const $ return ())
+                (toCompletion driver model)
 
 
-toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> m [Model]
+toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> Pipes.Producer Model m ()
 toCompletion driver m = do
     m2 <- prologue m
     logInfo $ modelInfo m2
@@ -112,12 +111,12 @@ toCompletion driver m = do
         loopy model = do
             qs <- remaining model
             if null qs
-                then return <$> failCheaply (epilogue model)
+                then do
+                    model' <- epilogue model
+                    Pipes.yield model'
                 else do
                     nextModels <- driver qs
-                    concat <$> sequence [ {- unsafeInterleaveIO -} loopy nextModel
-                                        | nextModel <- nextModels
-                                        ]
+                    mapM_ loopy nextModels
 
 
 remaining :: (Functor m, Applicative m, Monad m) => Model -> m [Question]
@@ -193,7 +192,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             return [option]
         PickAll     -> return (map snd options)
         Interactive -> do
-            pickedIndex <- io $ do
+            pickedIndex <- liftIO $ do
                 print (vcat (map fst options))
                 putStr "Pick option: "
                 readNote "Expecting an integer." <$> getLine

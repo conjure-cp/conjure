@@ -141,6 +141,9 @@ import Data.Generics.Uniplate.Data as X
     )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
 
+-- pipes
+import qualified Pipes as Pipes
+
 -- groom
 import Text.Groom as X ( groom )
 
@@ -342,6 +345,9 @@ instance MonadFail m => MonadFail (LoggerT m) where
 instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
     fail = lift . fail
 
+instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
+    fail = lift . fail
+
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
 --   it can be run in any monad that implements MonadFail.
@@ -403,6 +409,9 @@ instance MonadLog m => MonadLog (StateT st m) where
 
 instance Monad m => MonadLog (IdentityT m) where
     log _ _ = return ()
+
+instance MonadLog m => MonadLog (Pipes.Proxy a b c d m) where
+    log l m = lift (log l m)
 
 ignoreLogs :: Monad m => IdentityT m a -> m a
 ignoreLogs = runIdentityT
