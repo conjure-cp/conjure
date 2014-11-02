@@ -11,8 +11,6 @@ module Conjure.Language.Parser
     ( runLexerAndParser
     , parseIO
     , parseModel
-    , parseRuleRefn
-    , parseRuleRepr
     , parseTopLevels
     , parseExpression
     ) where
@@ -371,46 +369,6 @@ parseSpec = inCompleteFile $ do
     l  <- pLanguage
     xs <- many parseTopLevels
     return $ Spec l $ listAsStatement $ concat xs
-
-parseRuleRefn :: T.Text -> Parser [RuleRefn]
-parseRuleRefn t = inCompleteFile $ do
-    level <- optionMaybe (brackets (fromInteger <$> integer))
-    let
-        one = do
-            pattern   <- parseExpr
-            templates <- some (lexeme L_SquigglyArrow >> parseExpr)
-            locals    <- concat <$> many parseTopLevels
-            return RuleRefn { ruleRefnName = Name t
-                            , ruleRefnLevel = level
-                            , ruleRefnPattern = pattern
-                            , ruleRefnTemplates = templates
-                            , ruleRefnLocals = locals
-                            }
-    some one
-
-parseRuleReprCase :: Parser RuleReprCase
-parseRuleReprCase = do
-    lexeme L_CaseSeparator
-    dom    <- parseDomain
-    mcons  <- optionMaybe (lexeme L_SquigglyArrow >> parseExpr)
-    locals <- concat <$> many parseTopLevels
-    return (RuleReprCase dom mcons locals)
-
-
-parseRuleRepr :: T.Text -> Parser RuleRepr
-parseRuleRepr t = inCompleteFile $ do
-    let arr i = lexeme L_SquigglyArrow >> i
-    nmRepr <- arr identifierText
-    domOut <- arr parseDomain
-    mcons  <- optionMaybe $ arr parseExpr
-    locals <- concat <$> many parseTopLevels
-    cases  <- some parseRuleReprCase
-    return ( RuleRepr (Name t)
-             (Name nmRepr)
-             domOut
-             mcons
-             locals
-             cases )
 
 parseTopLevels :: Parser [E]
 parseTopLevels = do
