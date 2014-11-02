@@ -502,20 +502,6 @@ parseTopLevels = do
                                                |]
                                        | i <- is
                                        ]
-                            , do
-                                j <- parseLambda L_lambda
-                                return [ [xMake| topLevel.letting.name   := [i]
-                                               | topLevel.letting.lambda := [j]
-                                               |]
-                                       | i <- is
-                                       ]
-                            , do
-                                j <- parseQuanDecl
-                                return [ [xMake| topLevel.letting.name       := [i]
-                                               | topLevel.letting.quantifier := [j]
-                                               |]
-                                       | i <- is
-                                       ]
                             ]
                     return $ concat decls
                     <?> "letting statement"
@@ -581,30 +567,6 @@ parseTopLevels = do
                     <?> "branching on"
                 ]
     concat <$> some one
-
-parseLambda :: Lexeme -> Parser E
-parseLambda l = do
-    lexeme l
-    braces $ do
-        param <- parseExpr
-        lexeme L_LongArrow
-        body  <- parseExpr
-        return [xMake| lambda.param := [param]
-                     | lambda.body  := [body]
-                     |]
-
-parseQuanDecl :: Parser E
-parseQuanDecl = do
-    lexeme L_quantifier
-    braces $ do
-        append   <- parseLambda $ LIdentifier "append"
-        guardE   <- parseLambda $ LIdentifier "guard"
-        identity <- lexeme (LIdentifier "identity") *> parseExpr
-        return [xMake| quantifierDecl.append   := [append]
-                     | quantifierDecl.guard    := [guardE]
-                     | quantifierDecl.identity := [identity]
-                     |]
-
 
 parseRange :: Parser a -> Parser (Range a)
 parseRange p = msum [try pRange, pSingle]
