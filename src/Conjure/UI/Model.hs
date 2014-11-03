@@ -75,17 +75,18 @@ type RuleResult = ( Doc                     -- describe this transformation
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . (Functor m, Monad m) => Expression -> m [RuleResult]
+    , rApply :: forall m . MonadFail m => Expression -> m [RuleResult]
+                           -- fail in a rule just means that the rule isn't applicable
     }
 
 namedRule
     :: Doc
-    -> (forall m . (Functor m, Monad m) => Expression -> m (Maybe (Doc, [Name] -> Expression)))
+    -> (forall m . MonadFail m => Expression -> m (Doc, [Name] -> Expression))
     -> Rule
 namedRule nm f = Rule
     { rName = nm
     , rApply = \ x -> let addId (d,y) = (d,y,id)
-                      in  liftM (map addId . maybeToList) (f x)
+                      in  liftM (return . addId) (f x)
     }
 
 
@@ -361,8 +362,8 @@ representationOf _ = fail "not a reference"
 
 
 applicableRules :: (Applicative m, Monad m) => Expression -> m [(Doc, RuleResult)]
-applicableRules x = concat <$> sequence [ do res <- rApply r x
-                                             return (map (rName r,) res)
+applicableRules x = concat <$> sequence [ do res <- runMaybeT (rApply r x)
+                                             return (map (rName r,) (concat (maybeToList res)))
                                         | r <- allRules ]
 
 
@@ -373,13 +374,13 @@ allRules =
     , rule_TrueIsNoOp
     , rule_ToIntIsNoOp
 
-    , rule_SingletonSum
-
     , rule_DontCareBool
     , rule_DontCareInt
 
     , rule_ComplexLambda
-    , rule_InlineFilterInsideMap
+    , rule_InlineFilterInsideMap_And
+    , rule_InlineFilterInsideMap_Or
+    , rule_InlineFilterInsideMap_Sum
 
     , rule_TupleIndex
     , rule_TupleEq
@@ -485,39 +486,28 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
 
 
 rule_TrueIsNoOp :: Rule
-rule_TrueIsNoOp = "true-is-noop" `namedRule` (return . theRule)
-    where
-        theRule (Op (MkOpTrue (OpTrue ref))) =
-            case ref of
-                Reference _ (Just DeclHasRepr{}) ->
-                    Just ( "Remove the argument from true."
-                         , const $ Constant $ ConstantBool True
-                         )
-                _ -> Nothing
-        theRule _ = Nothing
+rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
+    theRule (Op (MkOpTrue (OpTrue ref))) =
+        case ref of
+            Reference _ (Just DeclHasRepr{}) ->
+                return ( "Remove the argument from true."
+                       , const $ Constant $ ConstantBool True
+                       )
+            _ -> fail "The argument of true doesn't have a representation."
+    theRule _ = fail "No match."
 
 
 rule_ToIntIsNoOp :: Rule
-rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` (return . theRule)
-    where
-        theRule (Op (MkOpToInt (OpToInt b))) = Just ( "Remove the toInt wrapper, it is implicit in SR."
-                                                    , const b
-                                                    )
-        theRule _ = Nothing
-
-
-rule_SingletonSum :: Rule
-rule_SingletonSum = "singleton-sum" `namedRule` (return . theRule)
-    where
-        theRule (Op (MkOpPlus (OpPlus [x]))) = Just ( "Removing the singleton sum wrapper."
-                                                    , const x
-                                                    )
-        theRule _ = Nothing
+rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` theRule where
+    theRule (Op (MkOpToInt (OpToInt b))) = return ( "Remove the toInt wrapper, it is implicit in SR."
+                                                  , const b
+                                                  )
+    theRule _ = fail "No match."
 
 
 rule_DontCareBool :: Rule
 rule_DontCareBool = "dontCare-bool" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         x          <- match opDontCare p
         DomainBool <- domainOf x
         return ( "dontCare value for bools is false."
@@ -527,7 +517,7 @@ rule_DontCareBool = "dontCare-bool" `namedRule` theRule where
 
 rule_DontCareInt :: Rule
 rule_DontCareInt = "dontCare-int" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         x                          <- match opDontCare p
         xDomain@(DomainInt ranges) <- domainOf x
         let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
@@ -546,7 +536,7 @@ rule_DontCareInt = "dontCare-int" `namedRule` theRule where
 
 rule_ComplexLambda :: Rule
 rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
-    theRule (Lambda pat@AbsPatTuple{} body) = runMaybeT $ do
+    theRule (Lambda pat@AbsPatTuple{} body) = do
         tyPat <- typeOf pat
         return
             ( "complex lambda on tuple patterns"
@@ -563,7 +553,7 @@ rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
                     in
                         Lambda outPat (transform f body)
             )
-    theRule _ = return Nothing
+    theRule _ = fail "No match."
 
     -- i         --> i -> []
     -- (i,j)     --> i -> [1]
@@ -586,35 +576,44 @@ rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
-rule_InlineFilterInsideMap :: Rule
-rule_InlineFilterInsideMap = "inline-filter-inside-map" `namedRule` theRule
-    where
-        theRule p = runMaybeT $ msum
-            [ ruleGen opAnd (\ x y -> make opImply x y                ) p
-            , ruleGen opOr  (\ x y -> make opAnd  [x,y]               ) p
-            , ruleGen opSum (\ b x -> make opTimes (make opToInt b) x ) p
-            ]
+rule_InlineFilterInsideMap_And :: Rule
+rule_InlineFilterInsideMap_And = "inline-filter-inside-map-and" `namedRule` theRule where
+    theRule p = ruleGen_InlineFilterInsideMap opAnd (\ x y -> make opImply x y ) p
 
-        ruleGen opQ opSkip p = do
-            [x]                    <- match opQ p
-            (Lambda f1 f2, rest  ) <- match opMapOverDomain x
-            (Lambda g1 g2, domain) <- match opFilter rest
-            ty                     <- typeOf domain
+rule_InlineFilterInsideMap_Or :: Rule
+rule_InlineFilterInsideMap_Or = "inline-filter-inside-map-or" `namedRule` theRule where
+    theRule p = ruleGen_InlineFilterInsideMap opOr (\ x y -> make opAnd [x,y] ) p
 
-            let f = lambdaToFunction f1 f2
-            let g = lambdaToFunction g1 g2
+rule_InlineFilterInsideMap_Sum :: Rule
+rule_InlineFilterInsideMap_Sum = "inline-filter-inside-map-sum" `namedRule` theRule where
+    theRule p = ruleGen_InlineFilterInsideMap opSum (\ b x -> make opTimes (make opToInt b) x ) p
 
-            return ( "Inlining the filter."
-                   , \ fresh -> make opAnd
-                           [ make opMapOverDomain
-                                   (mkLambda (headInf fresh) ty $ \ i -> opSkip (g i) (f i))
-                                   domain ]
-                   )
+ruleGen_InlineFilterInsideMap
+    :: MonadFail m
+    => (Proxy m -> (a, b -> m [Expression]))
+    -> (Expression -> Expression -> Expression)
+    -> b
+    -> m (Doc, [Name] -> Expression)
+ruleGen_InlineFilterInsideMap opQ opSkip p = do
+    [x]                    <- match opQ p
+    (Lambda f1 f2, rest  ) <- match opMapOverDomain x
+    (Lambda g1 g2, domain) <- match opFilter rest
+    ty                     <- typeOf domain
+
+    let f = lambdaToFunction f1 f2
+    let g = lambdaToFunction g1 g2
+
+    return ( "Inlining the filter."
+           , \ fresh -> make opAnd
+                   [ make opMapOverDomain
+                           (mkLambda (headInf fresh) ty $ \ i -> opSkip (g i) (f i))
+                           domain ]
+           )
 
 
 rule_TupleIndex :: Rule
 rule_TupleIndex = "tuple-index" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (t,i)       <- match opIndexing p
         TypeTuple{} <- typeOf t
         iInt        <- match constantInt i
@@ -626,8 +625,8 @@ rule_TupleIndex = "tuple-index" `namedRule` theRule where
 
 rule_TupleEq :: Rule
 rule_TupleEq = "tuple-eq" `namedRule` theRule where
-    theRule p = runMaybeT $ do
-        (x,y)       <- match opEq p
+    theRule p = do
+        (x,y)        <- match opEq p
         TypeTuple tx <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple _  <- typeOf y
         return ( "Horizontal rule for tuple equality"
@@ -640,7 +639,7 @@ rule_TupleEq = "tuple-eq" `namedRule` theRule where
 
 rule_SetIn_Explicit :: Rule
 rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,s)                <- match opIn p
         TypeSet sInnerTy     <- typeOf s
         "Explicit"           <- representationOf s
@@ -658,7 +657,7 @@ rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
 
 rule_Set_MapInExpr_Explicit :: Rule
 rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (Lambda lPat@Single{} lBody, s) <- match opMapInExpr p
         TypeSet sInnerTy     <- typeOf s
         "Explicit"           <- representationOf s
@@ -678,7 +677,7 @@ rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule
 
 rule_SetEq :: Rule
 rule_SetEq = "set-eq" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,y)                <- match opEq p
         TypeSet{}            <- typeOf x
         TypeSet{}            <- typeOf y
@@ -691,7 +690,7 @@ rule_SetEq = "set-eq" `namedRule` theRule where
 
 rule_SetSubsetEq :: Rule
 rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,y)                <- match opSubsetEq p
         TypeSet tyXInner     <- typeOf x
         TypeSet{}            <- typeOf y
@@ -703,7 +702,7 @@ rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
 
 rule_SetIn_Occurrence :: Rule
 rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,s)                <- match opIn p
         TypeSet{}            <- typeOf s
         "Occurrence"         <- representationOf s
@@ -715,7 +714,7 @@ rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
 
 rule_Set_MapInExpr_Occurrence :: Rule
 rule_Set_MapInExpr_Occurrence = "set-quantification{Occurrence}" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (lambda, s)          <- match opMapInExpr p
         "Occurrence"         <- representationOf s
         [m]                  <- downX1 s
@@ -734,7 +733,7 @@ rule_Set_MapInExpr_Occurrence = "set-quantification{Occurrence}" `namedRule` the
 
 rule_SetIn_ExplicitVarSizeWithMarker :: Rule
 rule_SetIn_ExplicitVarSizeWithMarker = "set-in{ExplicitVarSizeWithMarker}" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,s)                       <- match opIn p
         TypeSet sInnerTy            <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
@@ -755,7 +754,7 @@ rule_SetIn_ExplicitVarSizeWithMarker = "set-in{ExplicitVarSizeWithMarker}" `name
 rule_Set_MapInExpr_ExplicitVarSizeWithMarker :: Rule
 rule_Set_MapInExpr_ExplicitVarSizeWithMarker = "set-quantification{ExplicitVarSizeWithMarker}"
                                                `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (Lambda lPat lBody, s)      <- match opMapInExpr p
         TypeSet sInnerTy            <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
@@ -777,7 +776,7 @@ rule_Set_MapInExpr_ExplicitVarSizeWithMarker = "set-quantification{ExplicitVarSi
 
 rule_SetIn_ExplicitVarSizeWithFlags :: Rule
 rule_SetIn_ExplicitVarSizeWithFlags = "set-in{ExplicitVarSizeWithFlags}" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,s)                       <- match opIn p
         TypeSet sInnerTy            <- typeOf s
         "ExplicitVarSizeWithFlags"  <- representationOf s
@@ -799,7 +798,7 @@ rule_SetIn_ExplicitVarSizeWithFlags = "set-in{ExplicitVarSizeWithFlags}" `namedR
 rule_Set_MapInExpr_ExplicitVarSizeWithFlags :: Rule
 rule_Set_MapInExpr_ExplicitVarSizeWithFlags = "set-quantification{ExplicitVarSizeWithFlags}"
                                                `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (Lambda lPat lBody, s)      <- match opMapInExpr p
         TypeSet sInnerTy            <- typeOf s
         "ExplicitVarSizeWithFlags"  <- representationOf s
@@ -821,7 +820,7 @@ rule_Set_MapInExpr_ExplicitVarSizeWithFlags = "set-quantification{ExplicitVarSiz
 
 rule_FunctionEq :: Rule
 rule_FunctionEq = "function-eq" `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (x,y)                    <- match opEq p
         TypeFunction xFrTy xToTy <- typeOf x
         TypeFunction yFrTy yToTy <- typeOf y
@@ -843,7 +842,7 @@ rule_FunctionEq = "function-eq" `namedRule` theRule where
 rule_Function_MapInExpr_Function1D :: Rule
 rule_Function_MapInExpr_Function1D = "function-quantification{Function1D}"
                                      `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (Lambda lPat lBody, f) <- match opMapInExpr p
         "Function1D"           <- representationOf f
         TypeFunction fr _      <- typeOf f
@@ -862,19 +861,19 @@ rule_Function_MapInExpr_Function1D = "function-quantification{Function1D}"
 rule_Function_Image_Function1D :: Rule
 rule_Function_Image_Function1D = "function-image{Function1D}"
                                  `namedRule` theRule where
-    theRule [essence| image(&f,&x) |] = runMaybeT $ do
+    theRule [essence| image(&f,&x) |] = do
         "Function1D" <- representationOf f
         [values]     <- downX1 f
         return ( "Function image, Function1D representation"
                , const [essence| &values[&x] |]
                )
-    theRule _ = return Nothing
+    theRule _ = fail "No match."
 
 
 rule_Function_MapInExpr_Function1DPartial :: Rule
 rule_Function_MapInExpr_Function1DPartial = "function-quantification{Function1DPartial}"
                                      `namedRule` theRule where
-    theRule p = runMaybeT $ do
+    theRule p = do
         (Lambda lPat lBody, f) <- match opMapInExpr p
         "Function1DPartial"    <- representationOf f
         TypeFunction fr _      <- typeOf f
@@ -895,7 +894,7 @@ rule_Function_MapInExpr_Function1DPartial = "function-quantification{Function1DP
 rule_Function_Image_Function1DPartial :: Rule
 rule_Function_Image_Function1DPartial = "function-image{Function1DPartial}"
                                  `namedRule` theRule where
-    theRule [essence| image(&f,&x) |] = runMaybeT $ do
+    theRule [essence| image(&f,&x) |] = do
         "Function1DPartial" <- representationOf f
         [flags,values]      <- downX1 f
         return ( "Function image, Function1DPartial representation"
@@ -904,16 +903,16 @@ rule_Function_Image_Function1DPartial = "function-image{Function1DPartial}"
                                  }
                        |]
                )
-    theRule _ = return Nothing
+    theRule _ = fail "No match."
 
 
 rule_Function_InDefined_Function1DPartial :: Rule
 rule_Function_InDefined_Function1DPartial = "function-in-defined{Function1DPartial}"
                                  `namedRule` theRule where
-    theRule [essence| &x in defined(&f) |] = runMaybeT $ do
+    theRule [essence| &x in defined(&f) |] = do
         "Function1DPartial" <- representationOf f
         [flags,_values]     <- downX1 f
         return ( "Function in defined, Function1DPartial representation"
                , const [essence| &flags[&x] |]
                )
-    theRule _ = return Nothing
+    theRule _ = fail "No match."

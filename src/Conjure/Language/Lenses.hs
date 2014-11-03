@@ -13,8 +13,8 @@ make :: (Proxy Identity -> (a, b)) -> a
 make  f = fst (f (Proxy :: Proxy Identity))
 
 -- | To use a lens for deconstructing stuf.
-match :: (Proxy (MaybeT m) -> (a, b)) -> b
-match f = snd (f (Proxy :: Proxy (MaybeT m)))
+match :: (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
+match f = snd (f Proxy)
 
 
 --------------------------------------------------------------------------------
