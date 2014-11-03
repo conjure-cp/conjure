@@ -25,10 +25,6 @@ import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, 
 -- text
 import qualified Data.Text as T
 
--- pretty-print
-import qualified Text.PrettyPrint as Pr
-
-
 
 parseModel :: Parser Model
 parseModel = inCompleteFile $ do
@@ -695,15 +691,15 @@ findPivotOp xs = do
 
 type Parser a = ParsecT [LexemePos] () Identity a
 
-runLexerAndParser :: (MonadError Pr.Doc m, Applicative m) => Parser a -> String -> T.Text -> m a
+runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
 runLexerAndParser p s = runLexer >=> runParser p s
 
-runParser :: (MonadError Pr.Doc m) => Parser a -> String -> [LexemePos] -> m a
+runParser :: MonadFail m => Parser a -> String -> [LexemePos] -> m a
 runParser p s ls =
     -- error $ unlines $ map show ls
     case parse p s ls of
         Left  e -> let eDoc = pretty $ show e
-                   in  throwError $ pretty s <+> eDoc
+                   in  fail (pretty s <+> eDoc)
         Right x -> return x
 
 identifierText :: Parser T.Text

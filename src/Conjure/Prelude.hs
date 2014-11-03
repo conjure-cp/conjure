@@ -15,7 +15,6 @@ module Conjure.Prelude
     , T.Text, stringToText
     , sameLength
     , concatMapM
-    , allFiles, allFilesWithSuffix
     , timedIO
     , isLeft, isRight
     , tracing
@@ -37,6 +36,7 @@ module Conjure.Prelude
     , dropExtension
     , MonadLog(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logWarn, logDebug
     , histogram
+    , ExceptT(..)
     ) where
 
 import GHC.Err as X ( error )
@@ -69,8 +69,6 @@ import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, vo
                           )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
-import Control.Monad.Except         as X ( MonadError(throwError, catchError), ExceptT )
-import Control.Monad.Trans.Except   as X ( runExceptT )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT, gets, modify, evalStateT, runStateT, evalState, runState )
@@ -217,18 +215,6 @@ sameLength _ _ = False
 concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
 concatMapM f xs = concat <$> mapM f xs
 
-allFiles :: FilePath -> IO [FilePath]
-allFiles x = do
-    let dots i = not ( i == "." || i == ".." )
-    ys' <- getDirectoryContents x `catchError` const (return [])
-    let ys = filter dots ys'
-    if null ys
-        then return [x]
-        else (x :) <$> concatMapM allFiles (map (x </>) ys)
-
-allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
-allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
-
 timedIO :: IO a -> IO (a, Double)
 timedIO io = do
     start <- getCPUTime
@@ -327,8 +313,8 @@ instance MonadFail m => MonadFail (IdentityT m) where
 instance (Functor m, Monad m) => MonadFail (MaybeT m) where
     fail = const $ MaybeT $ return Nothing
 
-instance (Functor m, Monad m) => MonadFail (ExceptT Doc m) where
-    fail = throwError
+instance (Functor m, Monad m) => MonadFail (ExceptT m) where
+    fail = ExceptT . return . Left
 
 instance (Functor m, Monad m, MonadFail m) => MonadFail (StateT st m) where
     fail = lift . fail
@@ -347,6 +333,24 @@ instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
 
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
     fail = lift . fail
+
+newtype ExceptT m a = ExceptT { runExceptT :: m (Either Doc a) }
+
+instance (Functor m) => Functor (ExceptT m) where
+    fmap f = ExceptT . fmap (fmap f) . runExceptT
+
+instance (Functor m, Monad m) => Applicative (ExceptT m) where
+    pure = return
+    (<*>) = ap
+
+instance (Monad m) => Monad (ExceptT m) where
+    return a = ExceptT $ return (Right a)
+    m >>= k = ExceptT $ do
+        a <- runExceptT m
+        case a of
+            Left e -> return (Left e)
+            Right x -> runExceptT (k x)
+    fail = ExceptT . return . Left . stringToDoc
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,

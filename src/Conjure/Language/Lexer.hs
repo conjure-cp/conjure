@@ -396,7 +396,7 @@ lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
 
     ]
 
-runLexer :: (Applicative m, MonadError Pr.Doc m) => T.Text -> m [LexemePos]
+runLexer :: MonadFail m => T.Text -> m [LexemePos]
 runLexer text = do
     ls <- go text
     let lsPaired = calcPos (initialPos "") ls
@@ -412,7 +412,7 @@ runLexer text = do
             if T.null t
                 then return []
                 else case results of
-                        [] -> throwError $ "Lexing error:" Pr.<+> Pr.text (T.unpack t)
+                        [] -> fail ("Lexing error:" Pr.<+> Pr.text (T.unpack t))
                         ((rest,lexeme):_) -> (lexeme:) <$> go rest
 
         calcPos _   []     = []
