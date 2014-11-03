@@ -12,7 +12,7 @@ import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
-
+import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithFlags :: MonadFail m => Representation m
@@ -50,29 +50,44 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         structuralCons (name, domain@(DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain)) = do
             [flags, values] <- rDownX setExplicitVarSizeWithFlags name domain
             maxSize         <- getMaxSize attrs innerDomain
-            return $ Just $ \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
-
-                    orderingWhenFlagged =
+            let
+                orderingWhenFlagged fresh = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &values[&i] < &values[&i+1]
                         |]
 
-                    dontCareWhenNotFlagged =
+                dontCareWhenNotFlagged fresh = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in
                         [essence|
                             forAll &iPat : int(1..&maxSize) , &flags[&i] = false . dontCare(&values[&i])
                         |]
 
-                    flagsToTheLeft =
+                flagsToTheLeft fresh = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &flags[&i]
                         |]
-                in
-                    [ orderingWhenFlagged
-                    , dontCareWhenNotFlagged
-                    , flagsToTheLeft
-                    ]
+
+                cardinality fresh =
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in
+                        [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
+
+
+            return $ Just $ \ fresh -> concat [ orderingWhenFlagged fresh
+                                              , dontCareWhenNotFlagged fresh
+                                              , flagsToTheLeft fresh
+                                              , mkSizeCons attrs (cardinality fresh)
+                                              ]
+
         structuralCons _ = fail "N/A {structuralCons}"
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do

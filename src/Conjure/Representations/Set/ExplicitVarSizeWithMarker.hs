@@ -12,6 +12,7 @@ import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
+import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithMarker :: MonadFail m => Representation m
@@ -77,7 +78,10 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                 dontCare(&values[&i])
                         |]
 
-            return $ Just $ \ fresh -> orderingUpToMarker fresh ++ dontCareAfterMarker fresh
+            return $ Just $ \ fresh -> concat [ orderingUpToMarker fresh
+                                              , dontCareAfterMarker fresh
+                                              , mkSizeCons attrs marker
+                                              ]
 
         structuralCons _ = fail "N/A {structuralCons}"
 
