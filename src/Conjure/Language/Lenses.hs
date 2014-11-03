@@ -212,6 +212,29 @@ opIndexing _ =
     )
 
 
+opIndexing'
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> [x] -> x
+       , x -> m (x,[x])
+       )
+opIndexing' proxy =
+    ( \ x ys -> let f a [] = a
+                    f a (i:is) = f (make opIndexing a i) is
+                in  f x ys
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpIndexing (OpIndexing x i) -> do
+                    (m,is) <- snd (opIndexing' proxy) x
+                    return (m, is ++ [i])
+                _ -> return (p, [])
+    )
+
+
 opIn
     :: ( OperatorContainer x
        , Pretty x

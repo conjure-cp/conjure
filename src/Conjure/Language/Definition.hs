@@ -50,6 +50,10 @@ import qualified Data.Aeson.Types as JSON
 import qualified Data.HashSet as S
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- Model ---------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data Model = Model
     { mLanguage :: LanguageVersion
     , mStatements :: [Statement]
@@ -101,6 +105,10 @@ typeCheckModel _ = Nothing
 -- typeCheckModel _ = Just "Just Plain Wrong (TM)"
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- LanguageVersion -----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data LanguageVersion = LanguageVersion Name [Int]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -128,6 +136,10 @@ instance Pretty LanguageVersion where
                    <+> hcat (intersperse "." (map pretty version))
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- Statement -----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data Statement
     = Declaration Declaration
     | SearchOrder [Name]
@@ -149,6 +161,10 @@ instance Pretty Statement where
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- Objective -----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data Objective = Minimising | Maximising
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -161,6 +177,10 @@ instance Pretty Objective where
     pretty Minimising = "minimising"
     pretty Maximising = "maximising"
 
+
+------------------------------------------------------------------------------------------------------------------------
+-- Declaration ---------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 data Declaration
     = FindOrGiven FindOrGiven Name (Domain () Expression)
@@ -201,6 +221,10 @@ instance Pretty FindOrGiven where
     pretty Given = "given"
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- ModelInfo -----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
     , miFinds :: [Name]
@@ -217,7 +241,6 @@ modelInfoJSONOptions :: JSON.Options
 modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = onHead toLower . drop 2 }
     where onHead f (x:xs) = f x : xs
           onHead _ [] = []
-
 
 instance Serialize ModelInfo
 instance Hashable ModelInfo
@@ -254,6 +277,10 @@ initInfo model = model { mInfo = info }
             }
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- Decision ------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data Decision = Decision
     { dDescription :: [Text]
     , dOptions :: [Int]
@@ -270,6 +297,9 @@ instance ToJSON Decision where toJSON = JSON.genericToJSON decisionJSONOptions
 instance FromJSON Decision where parseJSON = JSON.genericParseJSON decisionJSONOptions
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- Expression ----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 data Expression
     = Constant Constant
@@ -304,6 +334,23 @@ instance Pretty Expression where
     pretty (Op op) = pretty op
     pretty (ExpressionMetaVar x) = "&" <> pretty x
 
+instance TypeOf Expression where
+    typeOf (Constant x) = typeOf x
+    typeOf (AbstractLiteral x) = typeOf x
+    typeOf (Domain x)   = typeOf x
+    typeOf (Reference nm Nothing) = bug ("Type error, identifier not bound:" <+> pretty nm)
+    typeOf (Reference nm (Just refTo)) =
+        case refTo of
+            Alias x -> typeOf x
+            InLambda (Single _ (Just ty)) -> return ty
+            InLambda{} -> bug ("Type error, InLambda:" <+> pretty nm)
+            DeclNoRepr _ _ dom -> typeOf dom
+            DeclHasRepr _ _ dom -> typeOf dom
+    typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
+    typeOf (Op op) = typeOf op
+    typeOf Lambda{}     = return TypeAny -- TODO: fix
+    typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
+
 instance OperatorContainer Expression where
     injectOp = Op
     projectOp (Op op) = return op
@@ -316,6 +363,39 @@ instance IntContainer Expression where
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
 
+instance ExpressionLike Expression where
+    fromInt = Constant . fromInt
+    fromBool = Constant . fromBool
+
+instance Num Expression where
+    (+) = opPlus
+    (-) = opMinus
+    (*) = opTimes
+    abs = opAbs
+    signum _ = bug "signum {Expression}"
+    fromInteger = fromInt . fromInteger
+
+instance Integral Expression where
+    divMod a b = (opDiv a b, opMod a b)
+    quotRem = divMod
+    toInteger = bug "toInteger {Expression}"
+
+instance Real Expression where
+    toRational = bug "toRational {Expression}"
+
+instance Enum Expression where
+    fromEnum = bug "fromEnum {Expression}"
+    toEnum = fromInt
+    succ a = a + 1
+    pred a = a - 1
+    enumFrom x = x : enumFrom (succ x)
+    enumFromThen x n = x : enumFromThen (x+n) n
+    enumFromTo _x _y = bug "enumFromTo {Expression}"
+    enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
+
+e2c :: Expression -> Constant
+e2c (Constant c) = c
+e2c x = bug ("e2c, not a constant:" <+> pretty x)
 
 quantifiedVar :: Name -> Type -> (AbstractPattern, Expression)
 quantifiedVar nm ty =
@@ -340,6 +420,10 @@ lambdaToFunction (Single nm _) body = \ p -> transform (replacer p) body
 lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
 
+------------------------------------------------------------------------------------------------------------------------
+-- ReferenceTo ---------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
 data ReferenceTo
     = Alias         Expression
     | InLambda      AbstractPattern
@@ -356,37 +440,9 @@ instance Pretty ReferenceTo where
     pretty = pretty . show
 
 
-instance TypeOf Expression where
-    typeOf (Constant x) = typeOf x
-    typeOf (AbstractLiteral x) = typeOf x
-    typeOf (Domain x)   = typeOf x
-    typeOf (Reference nm Nothing) = bug ("Type error, identifier not bound:" <+> pretty nm)
-    typeOf (Reference nm (Just refTo)) =
-        case refTo of
-            Alias x -> typeOf x
-            InLambda (Single _ (Just ty)) -> return ty
-            InLambda{} -> bug ("Type error, InLambda:" <+> pretty nm)
-            DeclNoRepr _ _ dom -> typeOf dom
-            DeclHasRepr _ _ dom -> typeOf dom
-    typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
-    typeOf (Op op) = typeOf op
-    typeOf Lambda{}     = return TypeAny -- TODO: fix
-    typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
-
-instance TypeOf a => TypeOf (AbstractLiteral a) where
-    typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
-    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
-    typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
-    typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
-    typeOf (AbsLitFunction    xs ) = TypeFunction <$> (homoType <$> mapM (typeOf . fst) xs)
-                                                  <*> (homoType <$> mapM (typeOf . fst) xs)
-    typeOf (AbsLitRelation    xss) = do
-        ty <- homoType <$> mapM (typeOf . AbsLitTuple) xss
-        case ty of
-            TypeTuple ts -> return (TypeRelation ts)
-            _ -> bug "expecting TypeTuple in typeOf"
-    typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
-
+------------------------------------------------------------------------------------------------------------------------
+-- AbstractLiteral -----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 data AbstractLiteral x
     = AbsLitTuple [x]
@@ -412,6 +468,24 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
+instance TypeOf a => TypeOf (AbstractLiteral a) where
+    typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
+    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
+    typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
+    typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
+    typeOf (AbsLitFunction    xs ) = TypeFunction <$> (homoType <$> mapM (typeOf . fst) xs)
+                                                  <*> (homoType <$> mapM (typeOf . fst) xs)
+    typeOf (AbsLitRelation    xss) = do
+        ty <- homoType <$> mapM (typeOf . AbsLitTuple) xss
+        case ty of
+            TypeTuple ts -> return (TypeRelation ts)
+            _ -> bug "expecting TypeTuple in typeOf"
+    typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- AbstractPattern -----------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 data AbstractPattern
     = Single Name (Maybe Type)
@@ -442,39 +516,14 @@ instance Pretty AbstractPattern where
     pretty (AbsPatSet        xs) = prettyList prBraces   "," xs
     pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
-instance ExpressionLike Expression where
-    fromInt = Constant . fromInt
-    fromBool = Constant . fromBool
-
-
-instance Num Expression where
-    (+) = opPlus
-    (-) = opMinus
-    (*) = opTimes
-    abs = opAbs
-    signum _ = bug "signum {Expression}"
-    fromInteger = fromInt . fromInteger
-
-instance Integral Expression where
-    divMod a b = (opDiv a b, opMod a b)
-    quotRem = divMod
-    toInteger = bug "toInteger {Expression}"
-
-instance Real Expression where
-    toRational = bug "toRational {Expression}"
-
-instance Enum Expression where
-    fromEnum = bug "fromEnum {Expression}"
-    toEnum = fromInt
-    succ a = a + 1
-    pred a = a - 1
-    enumFrom x = x : enumFrom (succ x)
-    enumFromThen x n = x : enumFromThen (x+n) n
-    enumFromTo _x _y = bug "enumFromTo {Expression}"
-    enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
-
-
-e2c :: Expression -> Constant
-e2c (Constant c) = c
-e2c x = bug ("e2c, not a constant:" <+> pretty x)
+instance TypeOf AbstractPattern where
+    typeOf pat@(Single _ Nothing  ) = fail ("typeOf AbstractPattern:" <+> pretty (show pat))
+    typeOf     (Single _ (Just ty)) = return ty
+    typeOf (AbsPatTuple ts) = TypeTuple <$> mapM typeOf ts
+    typeOf pat@(AbsPatMatrix ts) = do
+        tys <- mapM typeOf ts
+        if typesUnify tys
+            then return (TypeMatrix TypeInt (mostDefined tys))
+            else fail ("Types do not unify in:" <+> pretty pat)
+    typeOf pat                      = fail ("typeOf:" <+> pretty (show pat))
 

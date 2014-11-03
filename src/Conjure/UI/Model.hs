@@ -373,11 +373,12 @@ allRules =
     , rule_TrueIsNoOp
     , rule_ToIntIsNoOp
 
+    , rule_SingletonSum
+
     , rule_DontCareBool
     , rule_DontCareInt
 
-    , rule_RefineEnums
-
+    , rule_ComplexLambda
     , rule_InlineFilterInsideMap
 
     , rule_TupleIndex
@@ -403,6 +404,7 @@ allRules =
 
     , rule_Function_Image_Function1DPartial
     , rule_Function_MapInExpr_Function1DPartial
+    , rule_Function_InDefined_Function1DPartial
 
     ]
 
@@ -504,6 +506,15 @@ rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` (return . theRule)
         theRule _ = Nothing
 
 
+rule_SingletonSum :: Rule
+rule_SingletonSum = "singleton-sum" `namedRule` (return . theRule)
+    where
+        theRule (Op (MkOpPlus (OpPlus [x]))) = Just ( "Removing the singleton sum wrapper."
+                                                    , const x
+                                                    )
+        theRule _ = Nothing
+
+
 rule_DontCareBool :: Rule
 rule_DontCareBool = "dontCare-bool" `namedRule` theRule where
     theRule p = runMaybeT $ do
@@ -533,21 +544,46 @@ rule_DontCareInt = "dontCare-int" `namedRule` theRule where
                )
 
 
-rule_RefineEnums :: Rule
-rule_RefineEnums = "refine-enums" `namedRule` theRule where
-    theRule (Reference n (Just (DeclHasRepr forg _ d@(DomainEnum{})))) = runMaybeT $ do
-        [(n2,d2)] <- downD (n, d)
-        return ( "refined reference to an enum:" <+> pretty n <+> "~~>" <+> pretty n2
-               , const $ Reference n2 (Just (DeclHasRepr forg n2 d2))
-               )
-    theRule (Constant (ConstantEnum _ vals val)) =
-        case elemIndex val vals of
-            Nothing -> bug ("constant enum not in range:" <+> pretty val <+> prettyList prBrackets "," vals)
-            Just i  -> return $ Just
-                ( "refined constant enum:" <+> pretty val <+> "~~>" <+> pretty (i+1)
-                , const $ Constant (ConstantInt (i+1))
-                )
+rule_ComplexLambda :: Rule
+rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
+    theRule (Lambda pat@AbsPatTuple{} body) = runMaybeT $ do
+        tyPat <- typeOf pat
+        return
+            ( "complex lambda on tuple patterns"
+            , \ fresh ->
+                    let
+                        patName = headInf fresh
+                        outPat = Single patName (Just tyPat)
+                        outRef = Reference patName (Just (InLambda outPat))
+                        replacements = [ (p, make opIndexing' outRef (map fromInt is))
+                                       | (p, is) <- genMappings pat
+                                       ]
+                        f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
+                        f x = x
+                    in
+                        Lambda outPat (transform f body)
+            )
     theRule _ = return Nothing
+
+    -- i         --> i -> []
+    -- (i,j)     --> i -> [1]
+    --               j -> [2]
+    -- (i,(j,k)) --> i -> [1]
+    --               j -> [2,1]
+    --               k -> [2,2]
+    genMappings :: AbstractPattern -> [(Name, [Int])]
+    genMappings (Single nm _) = [(nm, [])]
+    genMappings (AbsPatTuple pats)
+        = concat
+            [ [ (patCore, i:is) | (patCore, is) <- genMappings pat ]
+            | (i, pat) <- zip [1..] pats
+            ]
+    genMappings (AbsPatMatrix pats)
+        = concat
+            [ [ (patCore, i:is) | (patCore, is) <- genMappings pat ]
+            | (i, pat) <- zip [1..] pats
+            ]
+    genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
 rule_InlineFilterInsideMap :: Rule
@@ -870,3 +906,14 @@ rule_Function_Image_Function1DPartial = "function-image{Function1DPartial}"
                )
     theRule _ = return Nothing
 
+
+rule_Function_InDefined_Function1DPartial :: Rule
+rule_Function_InDefined_Function1DPartial = "function-in-defined{Function1DPartial}"
+                                 `namedRule` theRule where
+    theRule [essence| &x in defined(&f) |] = runMaybeT $ do
+        "Function1DPartial" <- representationOf f
+        [flags,_values]     <- downX1 f
+        return ( "Function in defined, Function1DPartial representation"
+               , const [essence| &flags[&x] |]
+               )
+    theRule _ = return Nothing
