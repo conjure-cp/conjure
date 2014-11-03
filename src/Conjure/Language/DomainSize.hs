@@ -47,6 +47,7 @@ gDomainSizeOf
       , OperatorContainer x
       , Pretty x
       , Pretty r
+      , Integral x
       )
     => Domain r x -> m x
 gDomainSizeOf DomainBool = return (fromInt 2)
@@ -57,8 +58,13 @@ gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = make opProduct <$> mapM gDomainSizeOf xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
+gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
+    innerSize <- gDomainSizeOf inner
+    case sizeAttr of
+        SizeAttrNone      -> return (make opPow (fromInt 2) innerSize)
+        SizeAttrSize size -> return (nchoosek innerSize size)
+        _ -> fail ("gDomainSizeOf:" <+> pretty d)
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
--- gDomainSizeOf (DomainSet       r (SizeAttr x) (Domain r x))
 -- gDomainSizeOf (DomainMSet      r (DomainAttributes x) (Domain r x))
 -- gDomainSizeOf (DomainFunction  r (DomainAttributes x) (Domain r x) (Domain r x))
 -- gDomainSizeOf (DomainRelation  r (DomainAttributes x) [Domain r x])
@@ -134,7 +140,7 @@ valuesInIntDomain ranges =
         allValues :: [Int]
         allValues = nub $ concat $ catMaybes allRanges
 
-nchoosek :: Int -> Int -> Int
+nchoosek :: Integral a => a -> a -> a
 nchoosek n k = product [1..n] `div` (product [1..k] * product [1..n-k])
 
 enumNameToInt :: [Name] -> Name -> Int
