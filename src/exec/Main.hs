@@ -7,7 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug ( userErr )
 import Conjure.RepositoryVersion ( repositoryVersion )
 import Conjure.UI.IO ( readModelFromFile, writeModel )
-import Conjure.UI.Model
+import Conjure.UI.Model hiding ( Strategy(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 
@@ -109,11 +109,11 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     case strategy of
-        Strategy_interactive             -> outputModels interactive             "conjure-output" 1 model
-        Strategy_interactiveFixedQs      -> outputModels interactiveFixedQs      "conjure-output" 1 model
-        Strategy_interactiveFixedQsAutoA -> outputModels interactiveFixedQsAutoA "conjure-output" 1 model
-        Strategy_pickFirst               -> outputModels pickFirst               "conjure-output" 1 model
-        Strategy_allFixedQs              -> outputModels allFixedQs              "conjure-output" 1 model
+        Strategy_interactive             -> outputModels "conjure-output" 1 LogBoth interactive             model
+        Strategy_interactiveFixedQs      -> outputModels "conjure-output" 1 LogBoth interactiveFixedQs      model
+        Strategy_interactiveFixedQsAutoA -> outputModels "conjure-output" 1 LogBoth interactiveFixedQsAutoA model
+        Strategy_pickFirst               -> outputModels "conjure-output" 1 LogBoth pickFirst               model
+        Strategy_allFixedQs              -> outputModels "conjure-output" 1 LogBoth allFixedQs              model
 mainWithArgs RefineParam{..} = do
     when (null eprime      ) $ userErr "Mandatory field --eprime"
     when (null essenceParam) $ userErr "Mandatory field --essence-param"

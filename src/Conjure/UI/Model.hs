@@ -11,6 +11,7 @@ module Conjure.UI.Model
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
+    , Strategy(..), LogRuleApplications(..)
     ) where
 
 import Conjure.Prelude
@@ -25,7 +26,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
-                                   , opLeq )
+                                   , opLeq, opFlatten )
 
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
@@ -89,9 +90,21 @@ namedRule nm f = Rule
                       in  liftM (return . addId) (f x)
     }
 
+data LogRuleApplications
+    = LogNeither
+    | LogSuccessful
+    | LogFails
+    | LogBoth
+    deriving (Eq, Ord, Show, Read)
 
-outputModels :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> FilePath -> Int -> Model -> m ()
-outputModels driver dir i model = do
+
+outputModels
+    :: (MonadIO m, MonadFail m, MonadLog m)
+    => FilePath -> Int
+    -> LogRuleApplications
+    -> Driver -> Model
+    -> m ()
+outputModels dir i ruleLog driver model = do
     liftIO $ createDirectoryIfMissing True dir
     Pipes.foldM (\ j eprime -> liftIO $ do
                         let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
@@ -100,17 +113,21 @@ outputModels driver dir i model = do
                 )
                 (return i)
                 (const $ return ())
-                (toCompletion driver model)
+                (toCompletion ruleLog driver model)
 
 
-toCompletion :: (MonadIO m, MonadFail m, MonadLog m) => Driver -> Model -> Pipes.Producer Model m ()
-toCompletion driver m = do
+toCompletion
+    :: (MonadIO m, MonadFail m, MonadLog m)
+    => LogRuleApplications
+    -> Driver -> Model
+    -> Pipes.Producer Model m ()
+toCompletion ruleLog driver m = do
     m2 <- prologue m
     logInfo $ modelInfo m2
     loopy m2
     where
         loopy model = do
-            qs <- remaining model
+            qs <- remaining ruleLog model
             if null qs
                 then do
                     model' <- epilogue model
@@ -120,12 +137,16 @@ toCompletion driver m = do
                     mapM_ loopy nextModels
 
 
-remaining :: (Functor m, Applicative m, Monad m) => Model -> m [Question]
-remaining model = do
+remaining
+    :: (Functor m, Applicative m, Monad m, MonadLog m)
+    => LogRuleApplications
+    -> Model
+    -> m [Question]
+remaining ruleLog model = do
     let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
-        ys <- applicableRules (hole x)
+        ys <- applicableRules ruleLog (hole x)
         return $ if null ys
             then Nothing
             else Just (x, ys)
@@ -361,10 +382,46 @@ representationOf (Reference _ (Just refTo)) =
 representationOf _ = fail "not a reference"
 
 
-applicableRules :: (Applicative m, Monad m) => Expression -> m [(Doc, RuleResult)]
-applicableRules x = concat <$> sequence [ do res <- runMaybeT (rApply r x)
-                                             return (map (rName r,) (concat (maybeToList res)))
-                                        | r <- allRules ]
+applicableRules
+    :: (Applicative m, Monad m, MonadLog m)
+    => LogRuleApplications
+    -> Expression
+    -> m [(Doc, RuleResult)]
+applicableRules LogNeither x =
+    concat <$> sequence [ do res <- runMaybeT (rApply r x)
+                             return (map (rName r,) (concat (maybeToList res)))
+                        | r <- allRules ]
+applicableRules l x = do
+    let logFail =
+            case l of
+                LogFails      -> logInfo
+                LogBoth       -> logInfo
+                _             -> const (return ())
+    let logSuccess =
+            case l of
+                LogSuccessful -> logInfo
+                LogBoth       -> logInfo
+                _             -> const (return ())
+
+    mys <- sequence [ do mres <- runExceptT (rApply r x)
+                         return (rName r, mres :: Either Doc [RuleResult])
+                    | r <- allRules ]
+    forM_ mys $ \ (rule, my) ->
+        case my of
+            Left  failed -> unless (failed == "No match.") $ logFail $ vcat
+                [ " rule failed:" <+> rule
+                , "          on:" <+> pretty x
+                , "     message:" <+> failed
+                ]
+            Right ys     -> logSuccess $ vcat
+                [ "rule applied:" <+> rule
+                , "          on:" <+> pretty x
+                , "  to produce:" <+> vcat (map fst3 ys)
+                ]
+    return [ (name, res)
+           | (name, Right ress) <- mys
+           , res <- ress
+           ]
 
 
 allRules :: [Rule]
@@ -376,6 +433,7 @@ allRules =
 
     , rule_DontCareBool
     , rule_DontCareInt
+    , rule_DontCareTuple
 
     , rule_ComplexLambda
     , rule_InlineFilterInsideMap_And
@@ -384,6 +442,9 @@ allRules =
 
     , rule_TupleIndex
     , rule_TupleEq
+    , rule_TupleLt
+    , rule_TupleLeq
+    , rule_MapOverDomain_Tuple
 
     , rule_SetEq
     , rule_SetSubsetEq
@@ -534,6 +595,17 @@ rule_DontCareInt = "dontCare-int" `namedRule` theRule where
                )
 
 
+rule_DontCareTuple :: Rule
+rule_DontCareTuple = "dontCare-tuple" `namedRule` theRule where
+    theRule p = do
+        x           <- match opDontCare p
+        TypeTuple{} <- typeOf x
+        xs          <- downX1 x
+        return ( "dontCare handling for tuple"
+               , const $ make opAnd (map (make opDontCare) xs)
+               )
+
+
 rule_ComplexLambda :: Rule
 rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
     theRule (Lambda pat@AbsPatTuple{} body) = do
@@ -595,10 +667,10 @@ ruleGen_InlineFilterInsideMap
     -> b
     -> m (Doc, [Name] -> Expression)
 ruleGen_InlineFilterInsideMap opQ opSkip p = do
-    [x]                    <- match opQ p
-    (Lambda f1 f2, rest  ) <- match opMapOverDomain x
-    (Lambda g1 g2, domain) <- match opFilter rest
-    ty                     <- typeOf domain
+    [x]                             <- match opQ p
+    (Lambda f1@Single{} f2, rest  ) <- match opMapOverDomain x
+    (Lambda g1@Single{} g2, domain) <- match opFilter rest
+    ty                              <- typeOf domain
 
     let f = lambdaToFunction f1 f2
     let g = lambdaToFunction g1 g2
@@ -626,14 +698,73 @@ rule_TupleIndex = "tuple-index" `namedRule` theRule where
 rule_TupleEq :: Rule
 rule_TupleEq = "tuple-eq" `namedRule` theRule where
     theRule p = do
-        (x,y)        <- match opEq p
-        TypeTuple tx <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple _  <- typeOf y
+        (x,y)       <- match opEq p
+        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple _ <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
         return ( "Horizontal rule for tuple equality"
-               , const $ make opAnd
-                   [ [essence| &x[&i] = &y[&i] |]
-                   | i <- map fromInt [1 .. length tx]
-                   ]
+               , const $ make opAnd (zipWith (make opEq) xs ys)
+               )
+
+
+rule_TupleLt :: Rule
+rule_TupleLt = "tuple-lt" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opLt p
+        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple _ <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        let unroll [a]    [b]    = [essence| &a < &b |]
+            unroll (a:as) (b:bs) = let rest = unroll as bs
+                                   in  [essence| (&a < &b) \/ ((&a = &b) /\ &rest) |]
+            unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+        return ( "Horizontal rule for tuple <"
+               , const $ unroll xs ys
+               )
+
+
+rule_TupleLeq :: Rule
+rule_TupleLeq = "tuple-leq" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opLeq p
+        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple _ <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        let unroll [a]    [b]    = [essence| &a <= &b |]
+            unroll (a:as) (b:bs) = let rest = unroll as bs
+                                   in  [essence| (&a < &b) \/ ((&a = &b) /\ &rest) |]
+            unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+        return ( "Horizontal rule for tuple <="
+               , const $ unroll xs ys
+               )
+
+
+rule_MapOverDomain_Tuple :: Rule
+rule_MapOverDomain_Tuple = "tuple-mapOverDomain-tuple" `namedRule` theRule where
+    theRule p = do
+        ( Lambda f1@(Single _ (Just (TypeTuple tys))) f2 , Domain (DomainTuple domains) ) <- match opMapOverDomain p
+
+        let f = lambdaToFunction f1 f2
+
+        let pats fresh     = [ Single i (Just ty)
+                             | (i, ty) <- zip fresh tys ]
+        let refs fresh     = [ Reference i (Just (InLambda (Single i (Just ty))))
+                             | (i, ty) <- zip fresh tys ]
+        let theValue fresh = AbstractLiteral (AbsLitTuple (refs fresh))
+
+        let unroll val [pat] [dom] =
+                make opMapOverDomain (Lambda pat (f val))
+                                     (Domain dom)
+            unroll val (pat:ps) (dom:doms) = make opFlatten $
+                make opMapOverDomain (Lambda pat (unroll val ps doms))
+                                     (Domain dom)
+            unroll _ _ _ = bug "rule_MapOverDomain_Tuple.unroll"
+
+        return ( ""
+               , \ fresh -> unroll (theValue fresh) (pats fresh) domains
                )
 
 

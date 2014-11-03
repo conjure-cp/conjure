@@ -216,7 +216,7 @@ dirShouldExist d = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = ignoreLogs . outputModels allFixedQs dir 1
+modelAll dir = ignoreLogs . outputModels dir 1 LogNeither allFixedQs
 
 
 sh :: Sh a -> IO a
