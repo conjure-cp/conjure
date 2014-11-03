@@ -2,7 +2,7 @@ module Conjure.Language.DomainSizeTest ( tests ) where
 
 -- conjure
 import Conjure.Prelude
-import Language.E.Definition hiding ( Spec )
+import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.DomainSize ( domainSizeConstant )
 

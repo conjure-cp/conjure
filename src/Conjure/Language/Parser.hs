@@ -1,18 +1,11 @@
-{-# LANGUAGE QuasiQuotes, ViewPatterns, OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE CPP #-}
-
-#define TRACE1(label, f) f x   | trace (show $ label <+> pretty x) \
-                                    False = error $ show $ "tracing" <+> label
-#define TRACE2(label, f) f x y | trace (show $ label <+> sep [pretty x, "~~", pretty y]) \
-                                    False = error $ show $ "tracing" <+> label
 
 module Conjure.Language.Parser
     ( runLexerAndParser
     , parseIO
     , parseModel
     , parseTopLevels
-    , parseExpression
+    , parseExpr
     ) where
 
 -- conjure
@@ -20,14 +13,12 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
-import Conjure.Language.TypeOf ( typeOf )
+import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
 
-import Language.E.Definition
-import Language.E.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
-import Language.E.Data ( Fixity(..), operators, functionals )
-
+-- parsec
 import Text.Parsec ( ParsecT, parse, tokenPrim, try, (<?>) )
 import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
 
@@ -40,307 +31,27 @@ import qualified Text.PrettyPrint as Pr
 
 
 parseModel :: Parser Model
-parseModel = specToModel <$> parseSpec
+parseModel = inCompleteFile $ do
+    let
+        pLanguage :: Parser LanguageVersion
+        pLanguage = do
+            l  <- lexeme L_language *> identifierText
+            is <- sepBy1 integer dot
+            return (LanguageVersion (Name l) (map fromInteger is))
+    l  <- pLanguage
+    xs <- many parseTopLevels
+    return Model
+        { mLanguage = l
+        , mStatements = concat xs
+        , mInfo = def
+        }
 
-specToModel :: Spec -> Model
-specToModel (Spec lang stmt) = Model
-    { mLanguage = lang
-    , mStatements = map convStmt (statementAsList stmt)
-    , mInfo = def
-    }
-
-parseExpression :: Parser Expression
-parseExpression = convExpr <$> parseExpr
 
 parseIO :: Parser a -> String -> IO a
 parseIO p s =
     case runLexerAndParser (inCompleteFile p) "" (T.pack s) of
         Left err -> error (show err)
         Right x  -> return x
-
-convStmt :: E -> Statement
--- TRACE1("[convStmt]",convStmt)
-
-convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
-                | [D domain     ] := topLevel.declaration.given.domain
-                |] = Declaration (FindOrGiven Given (Name name) (convDomain domain))
-convStmt [xMatch| [Prim (S name)] := topLevel.declaration.find .name.reference
-                | [D domain     ] := topLevel.declaration.find .domain
-                |] = Declaration (FindOrGiven Find (Name name) (convDomain domain))
-convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                | [expr         ] := topLevel.letting.expr
-                |] = Declaration (Letting (Name name) (convExpr expr))
-convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                | [domain       ] := topLevel.letting.domain
-                |] = Declaration (Letting (Name name) (convExpr domain))
-
-convStmt [xMatch| [Prim (S name)] := topLevel.declaration.given.name.reference
-                | []              := topLevel.declaration.given.typeEnum
-                |] =
-    Declaration $ GivenDomainDefnEnum (Name name)
-convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                | values          := topLevel.letting.typeEnum.values
-                |] =
-    Declaration $ LettingDomainDefnEnum (Name name) (map convName values)
-
-convStmt [xMatch| [Prim (S name)] := topLevel.letting.name.reference
-                | [expr]          := topLevel.letting.typeUnnamed
-                |] =
-    Declaration $ LettingDomainDefnUnnamed (Name name) (convExpr expr)
-
-convStmt [xMatch| xs := topLevel.branchingOn.value.matrix.values |] = SearchOrder (map convName xs)
-
-convStmt [xMatch| [expr] := topLevel.objective.minimising |] = Objective Minimising (convExpr expr)
-convStmt [xMatch| [expr] := topLevel.objective.maximising |] = Objective Maximising (convExpr expr)
-
-convStmt [xMatch| xs := topLevel.where    |] = Where    (map convExpr xs)
-convStmt [xMatch| xs := topLevel.suchThat |] = SuchThat (map convExpr xs)
-
-convStmt x = bug $ "convStmt" <+> prettyAsPaths x
-
-
-convExpr :: E -> Expression
--- TRACE1("[convExpr]",convExpr)
-
-convExpr [xMatch| [Prim (B x)] := value.literal |] = Constant (ConstantBool x)
-convExpr [xMatch| [Prim (I x)] := value.literal |] = Constant (ConstantInt (fromInteger x))
-
-convExpr [xMatch| [Prim (S x)] := reference |] = Reference (Name x) Nothing
-convExpr [xMatch| [Prim (S x)] := metavar   |] = ExpressionMetaVar (T.unpack x)
-
--- binary operators
-convExpr [xMatch| [Prim (S op)] := binOp.operator
-                | [left]        := binOp.left
-                | [right]       := binOp.right
-                |] = mkBinOp op (convExpr left) (convExpr right)
-
--- quantified
-convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
-                | [pat]             := quantified.quanVar
-                | [D quanOverDom]   := quantified.quanOverDom
-                | []                := quantified.quanOverOp
-                | []                := quantified.quanOverExpr
-                | [guardE]          := quantified.guard
-                | [body]            := quantified.body
-                |] =
-    let
-        ty = evalState (typeOf (convDomain quanOverDom)) []
-        filterOr b = 
-            if guardE == [xMake| emptyGuard := [] |]
-                then b
-                else Op $ MkOpFilter $ OpFilter
-                        (Lambda (convPat ty pat) (convExpr guardE))
-                        b
-    in
-        mkOp (translateQnName qnName)
-            [ Op $ MkOpMapOverDomain $ OpMapOverDomain
-                (Lambda (convPat ty pat) (convExpr body))
-                (filterOr (Domain (convDomain quanOverDom))) ]
-
-convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
-                | [pat]             := quantified.quanVar
-                | []                := quantified.quanOverDom
-                | [op]              := quantified.quanOverOp.binOp
-                | [quanOverExpr]    := quantified.quanOverExpr
-                | [guardE]          := quantified.guard
-                | [body]            := quantified.body
-                |] =
-    let
-        ty = evalState (typeOf (convExpr quanOverExpr)) ([] :: [(Name, Domain () Expression)])
-        filterOr b = 
-            if guardE == [xMake| emptyGuard := [] |]
-                then b
-                else Op $ MkOpFilter $ OpFilter
-                        (Lambda (convPat ty pat) (convExpr guardE))
-                        b
-        op' i j = case op of
-            [xMatch| [] := in       |] -> Op $ MkOpMapInExpr       $ OpMapInExpr       i j
-            [xMatch| [] := subset   |] -> Op $ MkOpMapSubsetExpr   $ OpMapSubsetExpr   i j
-            [xMatch| [] := subsetEq |] -> Op $ MkOpMapSubsetEqExpr $ OpMapSubsetEqExpr i j
-            _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
-
-    in
-        mkOp (translateQnName qnName)
-            [ op'
-                (Lambda (convPat ty pat) (convExpr body))
-                (filterOr (convExpr quanOverExpr)) ]
-
-convExpr [xMatch| [Prim (S qnName)] := quantified.quantifier.reference
-                | [pat]             := quantified.quanVar
-                | [D quanOverDom]   := quantified.quanOverDom
-                | [op]              := quantified.quanOverOp.binOp
-                | [expr]            := quantified.quanOverExpr
-                | [guardE]          := quantified.guard
-                | [body]            := quantified.body
-                |] =
-    let
-        ty = evalState (typeOf (convDomain quanOverDom)) []
-        conjunctWithGuard p =
-            if guardE == [xMake| emptyGuard := [] |]
-                then p
-                else Op $ MkOpAnd $ OpAnd [convExpr guardE, p]
-        filterOr b =
-            Op $ MkOpFilter $ OpFilter
-                (Lambda (convPat ty pat)
-                        (conjunctWithGuard (op' (convExpr pat) (convExpr expr))))
-                b
-        op' i j = case op of
-            [xMatch| [] := in       |] -> Op $ MkOpMapInExpr       $ OpMapInExpr       i j
-            [xMatch| [] := subset   |] -> Op $ MkOpMapSubsetExpr   $ OpMapSubsetExpr   i j
-            [xMatch| [] := subsetEq |] -> Op $ MkOpMapSubsetEqExpr $ OpMapSubsetEqExpr i j
-            _ -> userErr $ "Operator not supported in quantified expression:" <+> pretty (show op)
-
-    in
-        mkOp (translateQnName qnName)
-            [ Op $ MkOpMapOverDomain $ OpMapOverDomain
-                (Lambda (convPat ty pat) (convExpr body))
-                (filterOr (Domain (convDomain quanOverDom))) ]
-
--- matrix comprehensions
-convExpr [xMatch| [body] := matrixComprehension.body
-                | gens   := matrixComprehension.generators
-                |] =
-    let
-        genOut [xMatch| [Prim (S nm)] := generator.name.reference
-                      | [D d]         := generator.domain
-                      |] = (nm, convDomain d)
-        genOut x = userErr ("genOut:" <+> pretty (show x))
-
-        generators = map genOut gens
-
-        convGenerator (name, domain) b = Op $ MkOpMapOverDomain $ OpMapOverDomain
-            (Lambda (Single (Name name) TypeInt) b)
-            (Domain domain)
-
-        convGenerators []     = userErr "No generators."
-        convGenerators [g]    = convGenerator g (convExpr body)
-        convGenerators (g:gs) = convGenerator g (convGenerators gs)
-
-    in
-        convGenerators generators
-    
-
--- unary operators
-convExpr [xMatch| xs := operator.dontCare     |] = mkOp "dontCare"     (map convExpr xs)
-convExpr [xMatch| xs := operator.allDiff      |] = mkOp "allDiff"      (map convExpr xs)
-convExpr [xMatch| xs := operator.apart        |] = mkOp "apart"        (map convExpr xs)
-convExpr [xMatch| xs := operator.defined      |] = mkOp "defined"      (map convExpr xs)
-convExpr [xMatch| xs := operator.flatten      |] = mkOp "flatten"      (map convExpr xs)
-convExpr [xMatch| xs := operator.freq         |] = mkOp "freq"         (map convExpr xs)
-convExpr [xMatch| xs := operator.hist         |] = mkOp "hist"         (map convExpr xs)
-convExpr [xMatch| xs := operator.inverse      |] = mkOp "inverse"      (map convExpr xs)
-convExpr [xMatch| xs := operator.max          |] = mkOp "max"          (map convExpr xs)
-convExpr [xMatch| xs := operator.min          |] = mkOp "min"          (map convExpr xs)
-convExpr [xMatch| xs := operator.normIndices  |] = mkOp "normIndices"  (map convExpr xs)
-convExpr [xMatch| xs := operator.participants |] = mkOp "participants" (map convExpr xs)
-convExpr [xMatch| xs := operator.parts        |] = mkOp "parts"        (map convExpr xs)
-convExpr [xMatch| xs := operator.party        |] = mkOp "party"        (map convExpr xs)
-convExpr [xMatch| xs := operator.preImage     |] = mkOp "preImage"     (map convExpr xs)
-convExpr [xMatch| xs := operator.range        |] = mkOp "range"        (map convExpr xs)
-convExpr [xMatch| xs := operator.together     |] = mkOp "together"     (map convExpr xs)
-convExpr [xMatch| xs := operator.toInt        |] = mkOp "toInt"        (map convExpr xs)
-convExpr [xMatch| xs := operator.toMSet       |] = mkOp "toMSet"       (map convExpr xs)
-convExpr [xMatch| xs := operator.toRelation   |] = mkOp "toRelation"   (map convExpr xs)
-convExpr [xMatch| xs := operator.toSet        |] = mkOp "toSet"        (map convExpr xs)
-convExpr [xMatch| xs := operator.twoBars      |] = mkOp "twoBars"      (map convExpr xs)
-convExpr [xMatch| xs := unaryOp.not           |] = mkOp "not"          (map convExpr xs)
-convExpr [xMatch| xs := unaryOp.negate        |] = mkOp "negate"       (map convExpr xs)
-convExpr [xMatch| xs := unaryOp.factorial     |] = mkOp "factorial"    (map convExpr xs)
-
-convExpr [xMatch| [Prim (S "forAll")] := functionApply.actual.reference
-                | [arg] := functionApply.args
-                |] = Op $ MkOpAnd $ OpAnd [convExpr arg]
-convExpr [xMatch| [Prim (S "and")] := functionApply.actual.reference
-                | [arg] := functionApply.args
-                |] = Op $ MkOpAnd $ OpAnd [convExpr arg]
-convExpr [xMatch| [Prim (S "exists")] := functionApply.actual.reference
-                | [arg] := functionApply.args
-                |] = Op $ MkOpOr $ OpOr [convExpr arg]
-convExpr [xMatch| [Prim (S "or")] := functionApply.actual.reference
-                | [arg] := functionApply.args
-                |] = Op $ MkOpOr $ OpOr [convExpr arg]
-convExpr [xMatch| [Prim (S "sum")] := functionApply.actual.reference
-                | [arg] := functionApply.args
-                |] = Op $ MkOpPlus $ OpPlus [convExpr arg]
-
-convExpr [xMatch| [actual] := functionApply.actual
-                |   args   := functionApply.args
-                |]
-    = Op $ MkOpFunctionImage $ OpFunctionImage (convExpr actual) (map convExpr args)
-
-convExpr [xMatch| [x] := structural.single |] = convExpr x
-
-convExpr [xMatch| [left]  := operator.index.left
-                | []      := operator.index.right.slicer
-                |] = Op $ MkOpSlicing $ OpSlicing (convExpr left)
-
-convExpr [xMatch| [left]  := operator.index.left
-                | [right] := operator.index.right
-                |] = Op $ MkOpIndexing $ OpIndexing (convExpr left) (convExpr right)
-
--- values
-convExpr [xMatch| xs := value.tuple.values  |] =
-    AbstractLiteral $ AbsLitTuple (map convExpr xs)
-
-convExpr [xMatch| xs      := value.matrix.values
-                | [D ind] := value.matrix.indexrange
-                |] =
-    AbstractLiteral $ AbsLitMatrix (convDomain ind) (map convExpr xs)
-
-convExpr [xMatch| xs      := value.matrix.values
-                |] =
-    AbstractLiteral $ AbsLitMatrix (DomainInt []) (map convExpr xs)
-
-convExpr [xMatch| xs := value.set.values |] =
-    AbstractLiteral $ AbsLitSet (map convExpr xs)
-
-convExpr [xMatch| xs := value.mset.values |] =
-    AbstractLiteral $ AbsLitMSet (map convExpr xs)
-
-convExpr [xMatch| xs := value.function.values |] =
-    AbstractLiteral $ AbsLitFunction
-        [ (convExpr i, convExpr j)
-        | [xMatch| [i,j] := mapping |] <- xs
-        ]
-
-convExpr [xMatch| xss := value.relation.values |] =
-    AbstractLiteral $ AbsLitRelation
-        [ map convExpr xs
-        | [xMatch| xs := value.tuple.values |] <- xss
-        ]
-
-convExpr [xMatch| xss := value.partition.values |] =
-    AbstractLiteral $ AbsLitPartition
-        [ map convExpr xs
-        | [xMatch| xs := part |] <- xss
-        ]
-
--- bubble
-convExpr [xMatch| [actual] := withLocals.actual
-                | locals   := withLocals.locals
-                |] = WithLocals (convExpr actual) (map convStmt locals)
-
--- D
-convExpr (D x) = Domain (convDomain x)
-convExpr [xMatch| [D x] := domainInExpr |] = Domain (convDomain x)
-
-convExpr x = bug $ "convExpr" <+> prettyAsPaths x
-
-convPat :: Type -> E -> AbstractPattern
-convPat ty [xMatch| [Prim (S nm)] := reference |] = Single (Name nm) ty
-convPat ty [xMatch| [x] := structural.single   |] = convPat ty x
-convPat _  [xMatch| ts  := structural.tuple    |] = AbsPatTuple  (map (convPat TypeAny) ts)
-convPat _  [xMatch| ts  := structural.matrix   |] = AbsPatMatrix (map (convPat TypeAny) ts)
-convPat _  [xMatch| ts  := structural.set      |] = AbsPatSet    (map (convPat TypeAny) ts)
-convPat _  [xMatch| [Prim (S nm)] := metavar   |] = AbstractPatternMetaVar (T.unpack nm)
-convPat _ x = bug $ "convPat" <+> prettyAsPaths x
-
-convDomain :: Domain () E -> Domain () Expression
-convDomain = fmap convExpr
-
-convName :: E -> Name
-convName [xMatch| [Prim (S nm)] := reference |] = Name nm
-convName x = bug $ "convName" <+> prettyAsPaths x
 
 
 translateQnName :: Text -> Text
@@ -357,44 +68,27 @@ translateQnName qnName = case qnName of
 -- Actual parsers --------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
-parseSpec :: Parser Spec
-parseSpec = inCompleteFile $ do
-    let
-        pLanguage :: Parser LanguageVersion
-        pLanguage = do
-            l  <- lexeme L_language *> identifierText
-            is <- sepBy1 integer dot
-            return (LanguageVersion (Name l) (map fromInteger is))
-    l  <- pLanguage
-    xs <- many parseTopLevels
-    return $ Spec l $ listAsStatement $ concat xs
-
-parseTopLevels :: Parser [E]
+parseTopLevels :: Parser [Statement]
 parseTopLevels = do
     let one = msum $ map try
                 [ do
                     lexeme L_find
                     decls <- flip sepEndBy1 comma $ do
-                        is <- parseReference `sepEndBy1` comma
+                        is <- parseName `sepEndBy1` comma
                         j  <- colon >> parseDomain
-                        return [ [xMake| topLevel.declaration.find.name   := [i]
-                                       | topLevel.declaration.find.domain := [D j]
-                                       |]
+                        return [ Declaration (FindOrGiven Find i j)
                                | i <- is ]
                     return $ concat decls
                     <?> "find statement"
                 , do
                     lexeme L_given
                     decls <- flip sepEndBy1 comma $ do
-                        is <- parseReference `sepEndBy1` comma
+                        is <- parseName `sepEndBy1` comma
                         msum
                             [ do
                                 colon
                                 j <- parseDomain
-                                return [ [xMake| topLevel.declaration.given.name   := [i]
-                                               | topLevel.declaration.given.domain := [D j]
-                                               |]
+                                return [ Declaration (FindOrGiven Given i j)
                                        | i <- is ]
                             , do
                                 lexeme L_new
@@ -402,16 +96,7 @@ parseTopLevels = do
                                     [ do
                                         lexeme L_type
                                         lexeme L_enum
-                                        return [ [xMake| topLevel.declaration.given.name     := [i]
-                                                       | topLevel.declaration.given.typeEnum := []
-                                                       |]
-                                               | i <- is ]
-                                    , do
-                                        lexeme L_domain
-                                        lexeme L_int
-                                        return [ [xMake| topLevel.declaration.given.name    := [i]
-                                                       | topLevel.declaration.given.typeInt := []
-                                                       |]
+                                        return [ Declaration (GivenDomainDefnEnum i)
                                                | i <- is ]
                                     ]
                             ]
@@ -420,7 +105,7 @@ parseTopLevels = do
                 , do
                     lexeme L_letting
                     decls <- flip sepEndBy1 comma $ do
-                        is <- (try (metaVarInE <$> parseMetaVariable) <|> parseReference) `sepEndBy1` comma
+                        is <- parseName `sepEndBy1` comma
                         lexeme L_be
                         msum
                             [ do
@@ -431,97 +116,56 @@ parseTopLevels = do
                                         lexeme L_of
                                         lexeme $ LIdentifier "size"
                                         j <- parseExpr
-                                        return [ [xMake| topLevel.letting.name := [i]
-                                                       | topLevel.letting.typeUnnamed := [j]
-                                                       |]
+                                        return [ Declaration (LettingDomainDefnUnnamed i j)
                                                | i <- is
                                                ]
                                     , do
                                         lexeme L_enum
-                                        ys <- braces (parseReference `sepBy` comma) <|> return []
-                                        return [ [xMake| topLevel.letting.name := [i]
-                                                       | topLevel.letting.typeEnum.values := ys
-                                                       |]
+                                        ys <- braces (parseName `sepBy` comma) <|> return []
+                                        return [ Declaration (LettingDomainDefnEnum i ys)
                                                | i <- is
                                                ]
                                     ]
                             , do
                                 lexeme L_domain
                                 j <- parseDomain
-                                return [ [xMake| topLevel.letting.name   := [i]
-                                               | topLevel.letting.domain := [D j]
-                                               |]
+                                return [ Declaration (Letting i (Domain j))
                                        | i <- is
                                        ]
                             , do
                                 j <- parseExpr
-                                return [ [xMake| topLevel.letting.name := [i]
-                                               | topLevel.letting.expr := [j]
-                                               |]
+                                return [ Declaration (Letting i j)
                                        | i <- is
                                        ]
                             ]
                     return $ concat decls
                     <?> "letting statement"
                 , do
-                    lexeme L_dim
-                    is <- parseReference `sepEndBy1` comma
-                    j  <- colon >> parseDomain
-                    return [ [xMake| topLevel.declaration.dim.name   := [i]
-                                   | topLevel.declaration.dim.domain := [D j]
-                                   |]
-                           | i <- is
-                           ]
-                    <?> "dim statement"
-                , do
-                    let dimfind = do
-                            lexeme L_find
-                            i <- parseExpr
-                            colon
-                            j <- parseDomain
-                            return [xMake| dimFind.name   := [i]
-                                         | dimFind.domain := [D j]
-                                         |]
-                    let nested = try dimfind <|> try (parseQuantifiedExpr nested) <|> parens nested
-                    i <- nested
-                    return [ [xMake| topLevel.declaration.nestedDimFind := [i]
-                                   |]
-                           ]
-                    <?> "find statement"
-                , do
                     lexeme L_where
                     xs <- parseExpr `sepEndBy1` comma
-                    return [ [xMake| topLevel.where := [x] |]
-                           | x <- xs ]
+                    return [Where xs]
                     <?> "where statement"
                 , do
                     lexeme L_such
                     lexeme L_that
                     xs <- parseExpr `sepEndBy1` comma
-                    return [ [xMake| topLevel.suchThat := [x] |]
-                           | x <- xs ]
+                    return [SuchThat xs]
                     <?> "such that statement"
                 , do
                     lexeme L_minimising
                     x <- parseExpr
-                    return [ [xMake| topLevel.objective.minimising := [x]
-                                   |]
-                           ]
+                    return [ Objective Minimising x ]
                     <?> "objective"
                 , do
                     lexeme L_maximising
                     x <- parseExpr
-                    return [ [xMake| topLevel.objective.maximising := [x]
-                                   |]
-                           ]
+                    return [ Objective Maximising x ]
                     <?> "objective"
                 , do
                     lexeme L_branching
                     lexeme L_on
-                    x <- parseExpr
-                    return [ [xMake| topLevel.branchingOn := [x]
-                                   |]
-                           ]
+                    xs <- brackets $ parseName `sepBy` comma
+                    return [ SearchOrder xs ]
                     <?> "branching on"
                 ]
     concat <$> some one
@@ -542,7 +186,7 @@ parseRange p = msum [try pRange, pSingle]
             x <- p
             return (RangeSingle x)
 
-parseDomain :: Parser (Domain () E)
+parseDomain :: Parser (Domain () Expression)
 parseDomain
     = shuntingYardDomain
     $ some
@@ -557,10 +201,8 @@ parseDomain
             , pSet, pMSet, pFunction, pFunction'
             , pRelation, pRelation'
             , pPartition
-            , DomainMetaVar <$> parseMetaVariable, pParens
+            , DomainMetaVar <$> parseMetaVariable, parens parseDomain
             ]
-
-        pParens = parens parseDomain
 
         pBool = do
             lexeme L_bool
@@ -574,10 +216,10 @@ parseDomain
 
         pEnum = do
             r <- identifierText
-            xs <- optionMaybe $ parens $ parseRange identifierText `sepBy` comma
+            xs <- optionMaybe $ parens $ parseRange parseName `sepBy` comma
             case xs of
                 Nothing -> return $ DomainReference (Name r) Nothing
-                Just ys -> return $ DomainEnum (Name r) (Just (fmap (fmap Name) ys))
+                Just ys -> return $ DomainEnum (Name r) (Just ys)
                 -- TODO: the DomainDefnEnum in the above line should lookup and find a
                 -- previously declared DomainDefnEnum
 
@@ -642,17 +284,17 @@ parseDomain
             y <- parseDomain
             return $ DomainPartition () x y
 
-parseAttributes :: Parser (DomainAttributes E)
+parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
     xs <- parens (parseAttribute `sepBy` comma) <|> return []
     return $ DomainAttributes xs
     where
-        parseAttribute = msum [try parseNameValue, try parseName, parseDontCare]
+        parseAttribute = msum [try parseNameValue, try parseDAName, parseDontCare]
         parseNameValue = DANameValue <$> (Name <$> identifierText) <*> parseExpr
-        parseName = DAName <$> (Name <$> identifierText)
+        parseDAName = DAName <$> (Name <$> identifierText)
         parseDontCare = do dot; dot ; return DADotDot
 
-parseSetAttr :: Parser (SetAttr E)
+parseSetAttr :: Parser (SetAttr Expression)
 parseSetAttr = do
     DomainAttributes attrs <- parseAttributes
     case filterSizey attrs of
@@ -663,7 +305,7 @@ parseSetAttr = do
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SetAttr (SizeAttrMinMaxSize a b))
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
 
-parseFunctionAttr :: Parser (FunctionAttr E)
+parseFunctionAttr :: Parser (FunctionAttr Expression)
 parseFunctionAttr = do
     DomainAttributes attrs <- parseAttributes
     size <- case filterSizey attrs of
@@ -708,20 +350,19 @@ parseMetaVariable = do
     LMetaVar iden <- satisfyT isMeta
     return (T.unpack iden)
 
-metaVarInE :: String -> E
-metaVarInE s = [xMake| metavar := [Prim (S (T.pack s))] |]
+metaVarInE :: String -> Expression
+metaVarInE = ExpressionMetaVar
 
-parseExpr :: Parser E
+parseExpr :: Parser Expression
 parseExpr = shuntingYardExpr parseBeforeShunt
     where
-        parseBeforeShunt :: Parser [Either Lexeme E]
+        parseBeforeShunt :: Parser [Either Lexeme Expression]
         parseBeforeShunt = some $ msum
             [ Right <$> try parseAtomicExpr
             , Left  <$> parseOp
             ]
 
-
-parseAtomicExpr :: Parser E
+parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do
     let
         prefixes = do
@@ -735,294 +376,243 @@ parseAtomicExpr = do
                                                                                     Just f  -> f i
     withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
 
-parseAtomicExprNoPrePost :: Parser E
+parseAtomicExprNoPrePost :: Parser Expression
 parseAtomicExprNoPrePost = msum $ map try
     $ parseOthers ++
     [ parseQuantifiedExpr parseExpr
     , metaVarInE <$> parseMetaVariable
     , parseReference
-    , parseValue
+    , parseLiteral
     , parseDomainAsExpr
     , parseWithLocals
     , parseMatrixComprehension
     , parens parseExpr
     ]
 
-parseMatrixComprehension :: Parser E
+parseMatrixComprehension :: Parser Expression
 parseMatrixComprehension = brackets $ do
     x <- parseExpr
     lexeme L_Bar
     gens <- some generator
-    return [xMake| matrixComprehension.body       := [x]
-                 | matrixComprehension.generators := gens
-                 |]
+    return (convGenerators x gens)
     where
         generator = do
-            r <- parseReference
+            name   <- parseName
             lexeme L_Colon
-            d <- parseDomain
-            return [xMake| generator.name   := [r]
-                         | generator.domain := [D d]
-                         |]
+            domain <- parseDomain
+            return $ \ b -> Op $ MkOpMapOverDomain $ OpMapOverDomain
+                (Lambda (Single name (Just TypeInt)) b)
+                (Domain domain)
 
-parseDomainAsExpr :: Parser E
-parseDomainAsExpr = do
-    d <- betweenTicks parseDomain
-    return [xMake| domainInExpr := [D d]
-                 |]
+        convGenerators body []     = body
+        convGenerators body (g:gs) = g (convGenerators body gs)
 
-parsePrefixes :: [Parser (E -> E)]
+parseDomainAsExpr :: Parser Expression
+parseDomainAsExpr = Domain <$> betweenTicks parseDomain
+
+parsePrefixes :: [Parser (Expression -> Expression)]
 parsePrefixes = [parseUnaryMinus, parseUnaryNot]
     where
         parseUnaryMinus = do
             lexeme L_Minus
-            return $ \ x -> [xMake| unaryOp.negate := [x] |]
+            return $ \ x -> mkOp "negate" [x]
         parseUnaryNot = do
             lexeme L_ExclamationMark
-            return $ \ x -> [xMake| unaryOp.not := [x] |]
+            return $ \ x -> mkOp "not" [x]
 
-parsePostfixes :: [Parser (E -> E)]
-parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply,parseReplace]
+parsePostfixes :: [Parser (Expression -> Expression)]
+parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
     where
-        parseIndexed :: Parser (E -> E)
+        parseIndexed :: Parser (Expression -> Expression)
         parseIndexed = do
             let
-                pIndexer = try pRList <|> parseExpr
+                pIndexer = try pRList <|> (do i <- parseExpr ; return $ \ m -> Op (MkOpIndexing (OpIndexing m i)))
                 pRList   = do
                     i <- optionMaybe parseExpr
                     dot; dot
                     j <- optionMaybe parseExpr
-                    return $ case (i,j) of
-                        (Nothing, Nothing) -> [xMake| slicer := [] |]
-                        (Just a , Nothing) -> [xMake| slicer.from := [a] |]
-                        (Nothing, Just a ) -> [xMake| slicer.to   := [a] |]
-                        (Just a , Just b ) -> [xMake| slicer.from := [a]
-                                                    | slicer.to   := [b]
-                                                    |]
+                    return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
             is <- brackets $ pIndexer `sepBy1` comma
-            return $ \ x -> foldl (\ m' i -> [xMake| operator.index.left  := [m']
-                                                   | operator.index.right := [i]
-                                                   |] ) x is
-        parseFactorial :: Parser (E -> E)
+            return $ \ x -> foldl (\ m f -> f m ) x is
+        parseFactorial :: Parser (Expression -> Expression)
         parseFactorial = do
-            lexeme L_ExclamationMark
-            return $ \ x -> [xMake| unaryOp.factorial := [x] |]
-        parseFuncApply :: Parser (E -> E)
+            lexeme L_ExclamationMark            
+            return $ \ x -> mkOp "factorial" [x]
+        parseFuncApply :: Parser (Expression -> Expression)
         parseFuncApply = parens $ do
             xs <- parseExpr `sepBy1` comma
-            return $ \ x -> [xMake| functionApply.actual := [x]
-                                  | functionApply.args   := xs
-                                  |]
-        parseReplace :: Parser (E -> E)
-        parseReplace = braces $ do
-            let one = do
-                    i <- parseExpr
-                    lexeme L_LongArrow
-                    j <- parseExpr
-                    return (i,j)
-            pairs <- one `sepBy1` comma
-            return $ \ x -> foldl (\ m' (i,j) -> [xMake| operator.replace.arg1 := [m']
-                                                       | operator.replace.old  := [i]
-                                                       | operator.replace.new  := [j]
-                                                       |] ) x pairs
+            return $ \ x -> Op $ MkOpFunctionImage $ OpFunctionImage x xs
 
-parseOthers :: [Parser E]
+parseOthers :: [Parser Expression]
 parseOthers = [ parseFunctional l
               | l <- functionals
               ] ++ [parseTyped, parseTwoBars]
     where
 
-        parseTwoBars :: Parser E
+        parseTwoBars :: Parser Expression
         parseTwoBars = do
             x <- between (lexeme L_Bar) (lexeme L_Bar) parseExpr
-            return [xMake| operator.twoBars := [x] |]
+            return (mkOp "twoBars" [x])
 
-        parseTyped :: Parser E
+        parseTyped :: Parser Expression
         parseTyped = parens $ do
             x <- parseExpr
             lexeme L_Colon
             y <- parseDomainAsExpr
-            return [xMake| typed.left  := [x]
-                         | typed.right := [y]
-                         |]
+            bug ("parseTyped:" <+> pretty x <+> pretty y)
 
-        parseFunctional :: Lexeme -> Parser E
+        parseFunctional :: Lexeme -> Parser Expression
         parseFunctional l = do
             lexeme l
             xs <- parens $ parseExpr `sepBy1` comma
             return $ case (l,xs) of
-                (L_image, y:ys) -> [xMake| functionApply.actual := [y]
-                                         | functionApply.args   := ys
-                                         |]
-                _ -> Tagged "operator" [Tagged (fromString $ show $ lexemeFace l) xs]
+                (L_image, y:ys) -> Op $ MkOpFunctionImage $ OpFunctionImage y ys
+                _ -> mkOp (fromString $ show $ lexemeFace l) xs
 
-parseWithLocals :: Parser E
+parseWithLocals :: Parser Expression
 parseWithLocals = braces $ do
     i  <- parseExpr
     lexeme L_At
     js <- parseTopLevels
-    return [xMake| withLocals.actual := [i]
-                 | withLocals.locals := js
-                 |]
+    return (WithLocals i js)
 
-parseReference :: Parser E
-parseReference = do
-    x <- identifierText
-    return [xMake| reference := [Prim (S x)]
-                 |]
+parseName :: Parser Name
+parseName = Name <$> identifierText
 
+parseReference :: Parser Expression
+parseReference = Reference <$> parseName <*> pure Nothing
 
 parseOp :: Parser Lexeme
 parseOp = msum [ do lexeme x; return x | (x,_,_) <- operators ]
     <?> "operator"
 
-parseQuantifiedExpr :: Parser E -> Parser E
+parseQuantifiedExpr :: Parser Expression -> Parser Expression
 parseQuantifiedExpr parseBody = do
-        let pOp = msum [ [xMake| binOp.subset   := [] |] <$ lexeme L_subset
-                       , [xMake| binOp.subsetEq := [] |] <$ lexeme L_subsetEq
-                       , [xMake| binOp.in       := [] |] <$ lexeme L_in
+        let pOp = msum [ lexeme L_in       >> return (\ pat body over -> Op (MkOpMapInExpr       (OpMapInExpr       (Lambda pat body) over)))
+                       , lexeme L_subset   >> return (\ pat body over -> Op (MkOpMapSubsetExpr   (OpMapSubsetExpr   (Lambda pat body) over)))
+                       , lexeme L_subsetEq >> return (\ pat body over -> Op (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr (Lambda pat body) over)))
                        ]
-        qnName   <- (metaVarInE <$> parseMetaVariable) <|> parseReference
-        qnVars   <- parseStructural `sepBy1` comma
-        qnDom    <- optionMaybe (colon *> parseDomain)
-        qnExpr   <- optionMaybe ((,) <$> pOp <*> parseExpr)
-        case (qnDom,qnExpr) of
-            (Nothing, Nothing) -> fail "expecting something to quantify over"
-            _ -> return ()
+                       
+        Name qnName <- parseName
+        qnPats <- parseAbstractPattern `sepBy1` comma
+        qnDom  <- optionMaybe (colon *> parseDomain)
+        qnExpr <- optionMaybe ((,) <$> pOp <*> parseExpr)
         qnGuard <- optionMaybe (comma *> parseExpr)
         qnBody  <- dot *> parseBody <?> "expecting body of a quantified expression"
 
-        let emptyGuard = [ [xMake| emptyGuard := [] |] ]
+        let qnMap f = case (qnDom,qnExpr) of
+                (Nothing , Nothing     ) -> userErr "expecting something to quantify over"
+                (Just dom, Nothing     ) -> \ pat body -> Op $ MkOpMapOverDomain $ OpMapOverDomain (Lambda pat body) (f (Domain dom))
+                (Nothing , Just (op, y)) -> \ pat body -> op pat body (f y)
+                _ -> userErr "to many things to quantify over"
 
-        let
-            singleStructurals = [ i | [xMatch| [i] := structural.single |] <- concatMap universe qnVars ]
+        -- ty = evalState (typeOf (convDomain quanOverDom)) []
 
-            idenToSingleStructural i | i `elem` singleStructurals = [xMake| structural.single := [i] |]
-            idenToSingleStructural (Tagged t xs) = Tagged t $ map idenToSingleStructural xs
-            idenToSingleStructural i = i
-
-        let
-            fixedQuanDoms  = map idenToSingleStructural $ case qnDom  of Just a     -> [D a]; _ -> []
-            fixedQuanOps   = map idenToSingleStructural $ case qnExpr of Just (a,_) -> [a]; _ -> []
-            fixedQuanExprs = map idenToSingleStructural $ case qnExpr of Just (_,a) -> [a]; _ -> []
-            fixedGuards    = map idenToSingleStructural $ case qnGuard of Nothing -> emptyGuard ; Just g  -> [g]
-            fixedBodys     = map idenToSingleStructural [qnBody]
+        let filterOr pat dom =
+                case qnGuard of
+                    Nothing -> dom
+                    Just g  -> Op $ MkOpFilter $ OpFilter
+                                (Lambda pat g)
+                                dom
 
         let
             f []     = bug "The Impossible has happenned. in parseQuantifiedExpr.f"
-            f [i]    = [xMake| quantified.quantifier   := [qnName]
-                             | quantified.quanVar      := [i]
-                             | quantified.quanOverDom  := fixedQuanDoms
-                             | quantified.quanOverOp   := fixedQuanOps
-                             | quantified.quanOverExpr := fixedQuanExprs
-                             | quantified.guard        := fixedGuards
-                             | quantified.body         := fixedBodys
-                             |]
-            f (i:is) = [xMake| quantified.quantifier   := [qnName]
-                             | quantified.quanVar      := [i]
-                             | quantified.quanOverDom  := fixedQuanDoms
-                             | quantified.quanOverOp   := fixedQuanOps
-                             | quantified.quanOverExpr := fixedQuanExprs
-                             | quantified.guard        := emptyGuard
-                             | quantified.body         := [f is]
-                             |]
-        return $ f qnVars
+            f [i]    = mkOp (translateQnName qnName) [qnMap (filterOr i) i qnBody]
+            f (i:is) = mkOp (translateQnName qnName) [qnMap id           i (f is)]
+        return $ f qnPats
 
-parseStructural :: Parser E
-parseStructural = msum
-    [ metaVarInE <$> parseMetaVariable
-    , do
-        x <- parseReference
-        return [xMake| structural.single := [x] |]
+
+parseAbstractPattern :: Parser AbstractPattern
+parseAbstractPattern = msum $ map try
+    [ AbstractPatternMetaVar <$> parseMetaVariable
+    , Single <$> parseName <*> pure Nothing
     , do
         void $ optionMaybe $ lexeme L_tuple
-        xs <- parens $ parseStructural `sepBy1` comma
-        return [xMake| structural.tuple := xs |]
+        xs <- parens $ parseAbstractPattern `sepBy1` comma
+        return (AbsPatTuple xs)
     , do
-        xs <- brackets $ parseStructural `sepBy1` comma
-        return [xMake| structural.matrix := xs |]
+        xs <- brackets $ parseAbstractPattern `sepBy1` comma
+        return (AbsPatMatrix xs)
     , do
-        xs <- braces $ parseStructural `sepBy1` comma
-        return [xMake| structural.set := xs |]
+        xs <- braces $ parseAbstractPattern `sepBy1` comma
+        return (AbsPatSet xs)
     ]
 
-parseValue :: Parser E
-parseValue = msum ( map try
-    [ pBool, pInt
-    , pMatrix, pMatrix', pTupleWith, pTupleWithout
-    , pSet, pMSet
-    , pFunction, pRelation, pPartition
+parseLiteral :: Parser Expression
+parseLiteral = msum ( map try
+    [ Constant <$> pBool
+    , Constant <$> pInt
+    , AbstractLiteral <$> pMatrix
+    , AbstractLiteral <$> pMatrix'
+    , AbstractLiteral <$> pTupleWith
+    , AbstractLiteral <$> pTupleWithout
+    , AbstractLiteral <$> pSet
+    , AbstractLiteral <$> pMSet
+    , AbstractLiteral <$> pFunction
+    , AbstractLiteral <$> pRelation
+    , AbstractLiteral <$> pPartition
     ] ) <?> "value"
     where
         pBool = do
-            x <- Prim (B False) <$ lexeme L_false
+            x <- False <$ lexeme L_false
                  <|>
-                 Prim (B True)  <$ lexeme L_true
-            return [xMake| value.literal := [x] |]
+                 True  <$ lexeme L_true
+            return (ConstantBool x)
 
-        pInt = do
-            x <- Prim . I <$> integer
-            return [xMake| value.literal := [x] |]
+        pInt = ConstantInt . fromInteger <$> integer
 
         pMatrix = do
             xs <- brackets (sepBy parseExpr comma)
-            return [xMake| value.matrix.values := xs |]
+            let r = DomainInt []
+            return (AbsLitMatrix r xs)
 
         pMatrix' = brackets $ do
             xs <- sepBy parseExpr comma
             lexeme L_SemiColon
             r <- parseDomain
-            return [xMake| value.matrix.values     := xs
-                         | value.matrix.indexrange := [D r]
-                         |]
+            return (AbsLitMatrix r xs)
+
         pTupleWith = do
             lexeme L_tuple
             xs <- parens $ sepBy parseExpr comma
-            return [xMake| value.tuple.values := xs |]
+            return (AbsLitTuple xs)
 
         pTupleWithout = do
             xs <- parens $ countSepAtLeast 2 parseExpr comma
-            return [xMake| value.tuple.values := xs |]
+            return (AbsLitTuple xs)
 
         pSet = do
             xs <- braces (sepBy parseExpr comma)
-            return [xMake| value.set.values := xs |]
+            return (AbsLitSet xs)
 
         pMSet = do
             lexeme L_mset
             xs <- parens (sepBy parseExpr comma)
-            return [xMake| value.mset.values := xs |]
+            return (AbsLitMSet xs)
 
         pFunction = do
             lexeme L_function
             xs <- parens (sepBy inner comma)
-            return [xMake| value.function.values := xs |]
+            return (AbsLitFunction xs)
             where
-                inner = do
-                    (i,j) <- arrowedPair parseExpr
-                    return [xMake| mapping := [i,j] |]
+                inner = arrowedPair parseExpr
 
         pRelation = do
             lexeme L_relation
             xs <- parens (sepBy (try pTupleWith <|> pTupleWithout) comma)
-            return [xMake| value.relation.values := xs |]
+            return (AbsLitRelation [is | AbsLitTuple is <- xs])
+            -- return [xMake| value.relation.values := xs |]
 
         pPartition = do
             lexeme L_partition
             xs <- parens (sepBy inner comma)
-            return [xMake| value.partition.values := xs|]
+            return (AbsLitPartition xs)
             where
-                inner = do
-                    is <- braces (sepBy parseExpr comma)
-                    return [xMake| part := is |]
+                inner = braces (sepBy parseLiteral comma)
 
-shuntingYardExpr :: Parser [Either Lexeme E] -> Parser E
+shuntingYardExpr :: Parser [Either Lexeme Expression] -> Parser Expression
 shuntingYardExpr p = do
-    let mergeOp op before after =
-            [xMake| binOp.operator := [Prim (S $ lexemeText op)]
-                  | binOp.left     := [before]
-                  | binOp.right    := [after]
-                  |]
+    let mergeOp = mkBinOp . lexemeText
     beforeShunt <- fixNegate <$> p
     if not $ checkAlternating beforeShunt
         then fail "Malformed expression, Shunting Yard failed."
@@ -1036,9 +626,9 @@ shuntingYardDomain p = do
         then fail "Malformed expression, Shunting Yard failed."
         else shunt mergeOp beforeShunt
 
-fixNegate :: [Either Lexeme E] -> [Either Lexeme E]
+fixNegate :: [Either Lexeme Expression] -> [Either Lexeme Expression]
 fixNegate ( Right a
-          : Right ([xMatch| [b] := unaryOp.negate |])
+          : Right (Op (MkOpNegate (OpNegate b)))
           : cs
           ) = fixNegate $ Right a : Left L_Minus : Right b : cs
 fixNegate (a:bs) = a : fixNegate bs

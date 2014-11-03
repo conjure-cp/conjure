@@ -24,11 +24,11 @@ essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseExpression) str
+        e <- runIO $ parseIO (setPosition l *> parseExpr) str
         dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
     , quotePat  = \ str -> do
         l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseExpression) str
+        e <- runIO $ parseIO (setPosition l *> parseExpr) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
     , quoteType = error "quoteType"
     , quoteDec  = error "quoteDec"

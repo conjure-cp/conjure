@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Language.E.Lexer where
+module Conjure.Language.Lexer where
 
 import Conjure.Prelude hiding ( isSpace )
 

@@ -319,13 +319,13 @@ instance ReferenceContainer Expression where
 
 quantifiedVar :: Name -> Type -> (AbstractPattern, Expression)
 quantifiedVar nm ty =
-    let pat = Single nm ty
+    let pat = Single nm (Just ty)
         ref = Reference nm (Just (InLambda pat))
     in  (pat, ref)
 
 mkLambda :: Name -> Type -> (Expression -> Expression) -> Expression
 mkLambda nm ty f =
-    let pat = Single nm ty
+    let pat = Single nm (Just ty)
         ref = Reference nm (Just (InLambda pat))
     in  Lambda pat (f ref)
 
@@ -364,7 +364,7 @@ instance TypeOf Expression where
     typeOf (Reference nm (Just refTo)) =
         case refTo of
             Alias x -> typeOf x
-            InLambda (Single _ ty) -> return ty
+            InLambda (Single _ (Just ty)) -> return ty
             InLambda{} -> bug ("Type error, InLambda:" <+> pretty nm)
             DeclNoRepr _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
@@ -414,7 +414,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
 
 
 data AbstractPattern
-    = Single Name Type
+    = Single Name (Maybe Type)
     | AbsPatTuple [AbstractPattern]
     | AbsPatMatrix
             -- (Domain () a)          -- TODO: Should there be a domain here?
@@ -434,12 +434,12 @@ instance ToJSON AbstractPattern where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON AbstractPattern where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty AbstractPattern where
-    pretty (Single nm TypeAny) = pretty nm
-    pretty (Single nm ty     ) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
-    pretty (AbsPatTuple    xs) = (if length xs <= 1 then "tuple" else prEmpty)
-                              <> prettyList prParens   "," xs
-    pretty (AbsPatMatrix   xs) = prettyList prBrackets "," xs
-    pretty (AbsPatSet      xs) = prettyList prBraces   "," xs
+    pretty (Single nm Nothing  ) = pretty nm
+    pretty (Single nm (Just ty)) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
+    pretty (AbsPatTuple      xs) = (if length xs <= 1 then "tuple" else prEmpty)
+                                <> prettyList prParens   "," xs
+    pretty (AbsPatMatrix     xs) = prettyList prBrackets "," xs
+    pretty (AbsPatSet        xs) = prettyList prBraces   "," xs
     pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
 instance ExpressionLike Expression where

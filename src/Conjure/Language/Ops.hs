@@ -11,9 +11,7 @@ import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
-import Conjure.Language.Name
-import Language.E.Lexer
-import Language.E.Data
+import Conjure.Language.Lexer ( Lexeme(..), textToLexeme, lexemeFace )
 
 -- aeson
 import qualified Data.Aeson as JSON
@@ -161,8 +159,8 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _    (MkOpOr       (OpOr    xs   )) = "or"  <> prettyList prParens "," xs
     prettyPrec prec (MkOpImply op@(OpImply  a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpNot      (OpNot    a   )) = "!" <> prettyPrec 10000 a
-    prettyPrec _ (MkOpIndexing (OpIndexing  a b )) = pretty a <> "[" <> pretty b <> "]"
-    prettyPrec _ (MkOpSlicing  (OpSlicing   a   )) = pretty a <> "[..]"
+    prettyPrec _ (MkOpIndexing (OpIndexing  a b )) = pretty a <> prBrackets (pretty b)
+    prettyPrec _ (MkOpSlicing  (OpSlicing m a b )) = pretty m <> prBrackets (pretty a <> ".." <> pretty b)
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
@@ -488,16 +486,18 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (OpIndexing x) w
             _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
 
 
-data OpSlicing x = OpSlicing x
+data OpSlicing x = OpSlicing x (Maybe x) (Maybe x)
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpSlicing x)
 instance Hashable  x => Hashable  (OpSlicing x)
 instance ToJSON    x => ToJSON    (OpSlicing x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSlicing x) where parseJSON = JSON.genericParseJSON jsonOptions
-opSlicing :: OperatorContainer x => x -> x
-opSlicing x = injectOp (MkOpSlicing (OpSlicing x))
+opSlicing :: OperatorContainer x => x -> Maybe x -> Maybe x -> x
+opSlicing m a b = injectOp (MkOpSlicing (OpSlicing m a b))
 instance TypeOf x => TypeOf (OpSlicing x) where
-    typeOf (OpSlicing _) = return TypeAny
+    typeOf (OpSlicing m _ _) = do
+        t@TypeMatrix{} <- typeOf m
+        return t
 
 
 data OpFilter x = OpFilter x x
@@ -827,12 +827,13 @@ mkOp :: (OperatorContainer x, ReferenceContainer x) => Text -> [x] -> x
 mkOp op xs =
     case textToLexeme op of
         Nothing -> case op of
-            "and" -> injectOp (MkOpAnd  (OpAnd  xs))
-            "or"  -> injectOp (MkOpOr   (OpOr   xs))
-            "sum" -> injectOp (MkOpPlus (OpPlus xs))
-            "not" -> injectOp (MkOpNot  (OpNot  (headNote "not takes a single argument" xs)))
-            -- _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
-            _     -> opFunctionImage (fromName (Name op)) xs
+            "and"    -> injectOp (MkOpAnd    (OpAnd    xs))
+            "or"     -> injectOp (MkOpOr     (OpOr     xs))
+            "sum"    -> injectOp (MkOpPlus   (OpPlus   xs))
+            "not"    -> injectOp (MkOpNot    (OpNot    (headNote "not takes a single argument"    xs)))
+            "negate" -> injectOp (MkOpNegate (OpNegate (headNote "negate takes a single argument" xs)))
+            _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
+            -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
             L_toInt    -> opToInt    (headNote "toInt takes a single argument."    xs)
             L_defined  -> opDefined  (headNote "defined takes a single argument."  xs)
@@ -841,3 +842,73 @@ mkOp op xs =
             L_dontCare -> opDontCare (headNote "dontCare takes a single argument." xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
+
+
+data Fixity = FNone | FLeft | FRight
+    deriving Show
+
+operators :: [(Lexeme,Fixity,Int)]
+operators =
+    [ ( L_Plus      , FLeft  ,  600 )
+    , ( L_Minus     , FLeft  ,  600 )
+    , ( L_Times     , FLeft  ,  700 )
+    , ( L_Div       , FLeft  ,  700 )
+    , ( L_Mod       , FLeft  ,  700 )
+    , ( L_Pow       , FRight ,  800 )
+    , ( L_Lt        , FNone  ,  400 )
+    , ( L_Leq       , FNone  ,  400 )
+    , ( L_Gt        , FNone  ,  400 )
+    , ( L_Geq       , FNone  ,  400 )
+    , ( L_Neq       , FNone  ,  400 )
+    , ( L_Eq        , FNone  ,  400 )
+    , ( L_Or        , FLeft  ,  110 )
+    , ( L_And       , FLeft  ,  120 )
+    , ( L_Imply     , FNone  ,   50 )
+    , ( L_Iff       , FNone  ,   50 )
+    , ( L_union     , FLeft  ,  600 )
+    , ( L_intersect , FLeft  ,  700 )
+    , ( L_subset    , FNone  ,  400 )
+    , ( L_subsetEq  , FNone  ,  400 )
+    , ( L_supset    , FNone  ,  400 )
+    , ( L_supsetEq  , FNone  ,  400 )
+    , ( L_in        , FNone  ,  550 )
+    -- , ( L_Colon     , FNone  ,   10 )
+    , ( L_HasRepr   , FNone  ,   10 )
+    , ( L_HasType   , FNone  ,   10 )
+    , ( L_HasDomain , FNone  ,   10 )
+    , ( L_LexLt     , FNone  ,  400 )
+    , ( L_LexLeq    , FNone  ,  400 )
+    , ( L_LexGt     , FNone  ,  400 )
+    , ( L_LexGeq    , FNone  ,  400 )
+    , ( L_DotLt     , FNone  ,  400 )
+    , ( L_DotLeq    , FNone  ,  400 )
+    ]
+
+functionals :: [Lexeme]
+functionals =
+    [ L_toInt
+    , L_min
+    , L_max
+    , L_allDiff
+    , L_dontCare
+    , L_hist
+
+    , L_toSet
+    , L_toMSet
+    , L_toRelation
+    , L_defined
+    , L_range
+    , L_image
+    , L_preImage
+    , L_inverse
+    , L_together
+    , L_apart
+    , L_party
+    , L_participants
+    , L_parts
+    , L_freq
+    , L_toInt
+    , L_flatten
+    , L_normIndices
+    , L_indices
+    ]

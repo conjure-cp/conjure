@@ -38,6 +38,7 @@ Library
                      , Conjure.Language.Instantiate
                      , Conjure.Language.ModelDiff
                      , Conjure.Language.ModelStats
+                     , Conjure.Language.Lexer
                      , Conjure.Language.Parser
                      , Conjure.Language.Pretty
                      , Conjure.Language.NameResolution
@@ -65,11 +66,6 @@ Library
                      , Conjure.UI.Model
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
-
-                     , Stuff.Generic.Tag
-                     , Language.E.Definition
-                     , Language.E.Data
-                     , Language.E.Lexer
 
     build-depends    : base
                      , aeson
