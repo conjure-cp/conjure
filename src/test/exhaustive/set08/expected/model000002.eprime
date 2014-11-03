@@ -1,0 +1,37 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithMarker_Marker: int(0..1 + 4 - 1 * 1 + 6 - 3)
+find x_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..1 + 4 - 1 * 1 + 6 - 3)] of int(1..4)
+find x_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1..1 + 4 - 1 * 1 + 6 - 3)] of int(3..6)
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + 4 - 1 * 1 + 6 - 3)] of bool
+find x_ExplicitVarSizeWithFlags_Values_1: matrix indexed by [int(1..1 + 4 - 1 * 1 + 6 - 3)] of int(1..4)
+find x_ExplicitVarSizeWithFlags_Values_2: matrix indexed by [int(1..1 + 4 - 1 * 1 + 6 - 3)] of int(3..6)
+such that
+    and([q1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q1] = x_ExplicitVarSizeWithMarker_Values_2[q1] | q1 : int(1..1 + 4 - 1 *
+                                                                                                                                                       1 + 6 - 3)]),
+    and([q4 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values_1[q4] < x_ExplicitVarSizeWithMarker_Values_1[q4 + 1] \/
+         x_ExplicitVarSizeWithMarker_Values_1[q4] = x_ExplicitVarSizeWithMarker_Values_1[q4 + 1] /\
+         x_ExplicitVarSizeWithMarker_Values_2[q4] < x_ExplicitVarSizeWithMarker_Values_2[q4 + 1] | q4 : int(1..1 + 4 - 1 * 1 + 6 - 3 - 1)]),
+    and([q5 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q5] = 1 /\ x_ExplicitVarSizeWithMarker_Values_2[q5] = 3 | q5 : int(1..1 +
+                                                                                                                                                               4 - 1
+                                                                                                                                                               * 1 + 6 - 3)]),
+    2 <= x_ExplicitVarSizeWithMarker_Marker,
+    and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
+         x_ExplicitVarSizeWithFlags_Values_1[q2] < x_ExplicitVarSizeWithFlags_Values_1[q2 + 1] \/
+         x_ExplicitVarSizeWithFlags_Values_1[q2] = x_ExplicitVarSizeWithFlags_Values_1[q2 + 1] /\
+         x_ExplicitVarSizeWithFlags_Values_2[q2] < x_ExplicitVarSizeWithFlags_Values_2[q2 + 1] | q2 : int(1..1 + 4 - 1 * 1 + 6 - 3 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q6] = false -> x_ExplicitVarSizeWithFlags_Values_1[q6] = 1 /\ x_ExplicitVarSizeWithFlags_Values_2[q6] = 3 | q6 : int(1..1
+                                                                                                                                                                  + 4 - 1
+                                                                                                                                                                  * 1 + 6 - 3)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..1 + 4 - 1 * 1 + 6 - 3 - 1)]),
+    2 <= sum([x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..1 + 4 - 1 * 1 + 6 - 3)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q8] ->
+         or([x_ExplicitVarSizeWithMarker_Values_1[q9] = x_ExplicitVarSizeWithFlags_Values_1[q8] /\
+             x_ExplicitVarSizeWithMarker_Values_2[q9] = x_ExplicitVarSizeWithFlags_Values_2[q8]
+             /\ q9 <= x_ExplicitVarSizeWithMarker_Marker | q9 : int(1..1 + 4 - 1 * 1 + 6 - 3)]) | q8 : int(1..1 + 4 - 1 * 1 + 6 - 3)]),
+    and([q10 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Values_1[q11] = x_ExplicitVarSizeWithMarker_Values_1[q10] /\
+             x_ExplicitVarSizeWithFlags_Values_2[q11] = x_ExplicitVarSizeWithMarker_Values_2[q10]
+             /\ x_ExplicitVarSizeWithFlags_Flags[q11] | q11 : int(1..1 + 4 - 1 * 1 + 6 - 3)]) | q10 : int(1..1 + 4 - 1 * 1 + 6 - 3)])
+
