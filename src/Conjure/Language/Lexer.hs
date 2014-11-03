@@ -3,7 +3,7 @@
 
 module Conjure.Language.Lexer where
 
-import Conjure.Prelude hiding ( isSpace )
+import Conjure.Prelude
 
 import Data.Char ( isAlpha, isAlphaNum )
 import qualified Data.HashMap.Strict as M
@@ -422,13 +422,13 @@ runLexer text = do
         nextPos pos l         = incSourceColumn pos (lexemeWidth l)
 
 removeSpaces :: [LexemePos] -> [LexemePos]
-removeSpaces = filter (not . isSpace . fst)
+removeSpaces = filter (not . space . fst)
     where
-        isSpace L_Newline {} = True
-        isSpace L_Tab     {} = True
-        isSpace L_Space   {} = True
-        isSpace LComment  {} = True
-        isSpace _            = False
+        space L_Newline {} = True
+        space L_Tab     {} = True
+        space L_Space   {} = True
+        space LComment  {} = True
+        space _            = False
 
 tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
 tryLex running (face,lexeme) = case T.stripPrefix face running of
