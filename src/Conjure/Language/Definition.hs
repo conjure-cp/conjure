@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
@@ -317,10 +318,22 @@ instance Hashable Expression
 instance ToJSON Expression where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
 
+viewIndexed :: Expression -> (Expression, [Doc])
+viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
+    let this = pretty i
+    in  second (++ [this]) (viewIndexed m)
+viewIndexed (Op (MkOpSlicing  (OpSlicing  m a b))) =
+    let this = pretty a <> ".." <> pretty b
+    in  second (++ [this]) (viewIndexed m)
+viewIndexed m = (m, [])
+
+
 instance Pretty Expression where
     -- special case for matrix comprehensions of SR here
     pretty (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda (Single nm _) body) (Domain domain)))) =
         prBrackets (pretty body <+> "|" <+> pretty nm <+> ":" <+> pretty domain)
+
+    pretty (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
 
     -- mostly for debugging: print what a reference is pointing at
     -- pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
