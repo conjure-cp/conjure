@@ -50,6 +50,7 @@ data Ops x
 
     | MkOpIndexing        (OpIndexing x)
     | MkOpSlicing         (OpSlicing x)
+    | MkOpFlatten         (OpFlatten x)
 
     | MkOpFilter          (OpFilter x)
     | MkOpMapOverDomain   (OpMapOverDomain x)
@@ -102,6 +103,7 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpNot                 x) = typeOf x
     typeOf (MkOpIndexing            x) = typeOf x
     typeOf (MkOpSlicing             x) = typeOf x
+    typeOf (MkOpFlatten             x) = typeOf x
     typeOf (MkOpFilter              x) = typeOf x
     typeOf (MkOpMapOverDomain       x) = typeOf x
     typeOf (MkOpMapInExpr           x) = typeOf x
@@ -161,6 +163,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _    (MkOpNot      (OpNot    a   )) = "!" <> prettyPrec 10000 a
     prettyPrec _ (MkOpIndexing (OpIndexing  a b )) = pretty a <> prBrackets (pretty b)
     prettyPrec _ (MkOpSlicing  (OpSlicing m a b )) = pretty m <> prBrackets (pretty a <> ".." <> pretty b)
+    prettyPrec _ (MkOpFlatten  (OpFlatten m     )) = "flatten" <> prParens (pretty m)
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
@@ -498,6 +501,22 @@ instance TypeOf x => TypeOf (OpSlicing x) where
     typeOf (OpSlicing m _ _) = do
         t@TypeMatrix{} <- typeOf m
         return t
+
+
+data OpFlatten x = OpFlatten x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpFlatten x)
+instance Hashable  x => Hashable  (OpFlatten x)
+instance ToJSON    x => ToJSON    (OpFlatten x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpFlatten x) where parseJSON = JSON.genericParseJSON jsonOptions
+opFlatten :: OperatorContainer x => x -> x
+opFlatten m = injectOp (MkOpFlatten (OpFlatten m))
+instance TypeOf x => TypeOf (OpFlatten x) where
+    typeOf (OpFlatten m) = do
+        let flattenType (TypeMatrix _ inner) = flattenType inner
+            flattenType ty = ty
+        TypeMatrix index n <- typeOf m
+        return (TypeMatrix index (flattenType n))
 
 
 data OpFilter x = OpFilter x x
@@ -840,6 +859,7 @@ mkOp op xs =
             L_range    -> opDefined  (headNote "range takes a single argument."    xs)
             L_allDiff  -> opAllDiff  (headNote "allDiff takes a single argument."  xs)
             L_dontCare -> opDontCare (headNote "dontCare takes a single argument." xs)
+            L_flatten  -> opFlatten  (headNote "flatten takes a single argument."  xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 

@@ -235,6 +235,25 @@ opIndexing' proxy =
     )
 
 
+opFlatten
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opFlatten _ =
+    ( \ x -> injectOp (MkOpFlatten (OpFlatten x))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpFlatten (OpFlatten x) -> return x
+                _ -> fail ("N/A opFlatten:" <++> pretty p)
+    )
+
+
 opIn
     :: ( OperatorContainer x
        , Pretty x

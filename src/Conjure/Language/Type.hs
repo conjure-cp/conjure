@@ -5,6 +5,7 @@ module Conjure.Language.Type
     , typeUnify
     , typesUnify
     , mostDefined
+    , innerTypeOf
     ) where
 
 -- conjure
@@ -96,3 +97,10 @@ mostDefined = foldr f TypeAny
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
         f _ _ = TypeAny
 
+innerTypeOf :: MonadFail m => Type -> m Type
+innerTypeOf (TypeSet t) = return t
+innerTypeOf (TypeMSet t) = return t
+innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
+innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
+innerTypeOf (TypePartition t) = return (TypeSet t)
+innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))

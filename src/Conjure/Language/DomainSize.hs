@@ -50,8 +50,9 @@ gDomainSizeOf
       )
     => Domain r x -> m x
 gDomainSizeOf DomainBool = return (fromInt 2)
-gDomainSizeOf (DomainInt []) = fail "gDomainSizeOf infinite integer domain"
-gDomainSizeOf (DomainInt rs) = make opSum <$> mapM domainSizeOf rs
+gDomainSizeOf (DomainInt [] ) = fail "gDomainSizeOf infinite integer domain"
+gDomainSizeOf (DomainInt [r]) = domainSizeOf r
+gDomainSizeOf (DomainInt rs ) = make opSum <$> mapM domainSizeOf rs
 gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = make opProduct <$> mapM gDomainSizeOf xs
