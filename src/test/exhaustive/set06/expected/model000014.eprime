@@ -10,6 +10,7 @@ such that
     sum([x_Occurrence[q1] | q1 : int(1..4)]) <= 4,
     and([q5 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q5] < x_ExplicitVarSizeWithMarker_Values[q5 + 1] | q5 : int(1..4 - 1)]),
     and([q6 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q6] = 1 | q6 : int(1..4)]),
+    x_ExplicitVarSizeWithMarker_Marker <= 4,
     and([q2 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q2]] | q2 : int(1..4)]),
     and([x_Occurrence[q9] -> or([x_ExplicitVarSizeWithMarker_Values[q7] = q9 /\ q7 <= x_ExplicitVarSizeWithMarker_Marker | q7 : int(1..4)]) | q9 : int(1..4)]),
     and([q8 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q8]] | q8 : int(1..4)]),

@@ -5,5 +5,6 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1.
 such that
     or([x_ExplicitVarSizeWithMarker_Values[q2] = 1 /\ q2 <= x_ExplicitVarSizeWithMarker_Marker | q2 : int(1..2)]),
     and([q3 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q3] < x_ExplicitVarSizeWithMarker_Values[q3 + 1] | q3 : int(1..2 - 1)]),
-    and([q4 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q4] = 1 | q4 : int(1..2)])
+    and([q4 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q4] = 1 | q4 : int(1..2)]),
+    x_ExplicitVarSizeWithMarker_Marker <= 2
 

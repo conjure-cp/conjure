@@ -9,12 +9,14 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> x_ExplicitVarSizeWithFlags_Values[q4] < x_ExplicitVarSizeWithFlags_Values[q4 + 1] | q4 : int(1..2 - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q5] = false -> x_ExplicitVarSizeWithFlags_Values[q5] = 1 | q5 : int(1..2)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q6] | q6 : int(1..2 - 1)]),
-    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..2 - 1)]),
-    and([q7 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q7] = 1 | q7 : int(1..2)]),
+    sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2)]) <= 2,
+    and([q7 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q7] < x_ExplicitVarSizeWithMarker_Values[q7 + 1] | q7 : int(1..2 - 1)]),
+    and([q8 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q8] = 1 | q8 : int(1..2)]),
+    x_ExplicitVarSizeWithMarker_Marker <= 2,
     and([q3 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithFlags_Values[q8] = x_ExplicitVarSizeWithMarker_Values[q3] /\
-             x_ExplicitVarSizeWithFlags_Flags[q8] | q8 : int(1..2)]) | q3 : int(1..2)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q9] ->
-         or([x_ExplicitVarSizeWithMarker_Values[q10] = x_ExplicitVarSizeWithFlags_Values[q9] /\
-             q10 <= x_ExplicitVarSizeWithMarker_Marker | q10 : int(1..2)]) | q9 : int(1..2)])
+         or([x_ExplicitVarSizeWithFlags_Values[q9] = x_ExplicitVarSizeWithMarker_Values[q3] /\
+             x_ExplicitVarSizeWithFlags_Flags[q9] | q9 : int(1..2)]) | q3 : int(1..2)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q10] ->
+         or([x_ExplicitVarSizeWithMarker_Values[q11] = x_ExplicitVarSizeWithFlags_Values[q10] /\
+             q11 <= x_ExplicitVarSizeWithMarker_Marker | q11 : int(1..2)]) | q10 : int(1..2)])
 
