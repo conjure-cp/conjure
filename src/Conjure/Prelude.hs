@@ -135,6 +135,7 @@ import Text.PrettyPrint as X
 import Data.Generics.Uniplate.Data as X
     ( transform, transformBi
     , transformM, transformBiM
+    , descend, descendM
     , universe, universeBi
     )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )

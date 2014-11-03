@@ -14,25 +14,28 @@ import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 
 
-resolveNames :: (Functor m, MonadLog m) => Model -> m Model
+resolveNames :: (MonadLog m, MonadFail m) => Model -> m Model
 resolveNames model = flip evalStateT [] $ do
-    statements <- forM (mStatements model) $ \ st' -> do
-        st <- insert st'
+    statements <- forM (mStatements model) $ \ st -> do
         case st of
             Declaration decl -> do
                 case decl of
-                    FindOrGiven forg nm dom       -> modify ((nm, RefTo (DeclNoRepr forg nm dom)) :)
-                    Letting nm x                  -> modify ((nm, RefTo (Alias x)) :)
-                    _ -> return ()
-                return st
+                    FindOrGiven forg nm dom       -> do
+                        dom' <- resolveD dom
+                        modify ((nm, RefTo (DeclNoRepr forg nm dom')) :)
+                        return (Declaration (FindOrGiven forg nm dom'))
+                    Letting nm x                  -> do
+                        x' <- resolveX x
+                        modify ((nm, RefTo (Alias x')) :)
+                        return (Declaration (Letting nm x'))
+                    _ -> fail ("Unexpected declaration:" <+> pretty st)
             SearchOrder{} -> return st
-            Where xs -> Where <$> mapM insert xs
-            Objective obj x -> Objective obj <$> insert x
-            SuchThat xs -> SuchThat <$> mapM insert xs
+            Where xs -> Where <$> mapM resolveX xs
+            Objective obj x -> Objective obj <$> resolveX x
+            SuchThat xs -> SuchThat <$> mapM resolveX xs
     duplicateNames <- gets (map fst >>> histogram >>> filter (\ (_,n) -> n > 1 ) >>> map fst)
     unless (null duplicateNames) $
         userErr ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
-    check statements
     return model { mStatements = statements }
 
 
@@ -41,50 +44,42 @@ data ToLookUp
     deriving Show
 
 
-insertX
-    :: (Functor m, MonadState [(Name, ToLookUp)] m)
+resolveX
+    :: (MonadFail m, MonadState [(Name, ToLookUp)] m)
     => Expression
     -> m Expression
-insertX (Reference nm Nothing) = do
+resolveX (Reference nm Nothing) = do
     mval <- gets (lookup nm)
-    return $ case mval of
-        Nothing                        -> Reference nm Nothing
-        Just (RefTo r)                 -> Reference nm (Just r)
-
-insertX (viewLambda -> Just (Lambda pat body, over, reconstruct, calculateType))
+    case mval of
+        Nothing        -> fail ("Undefined reference:" <+> pretty nm)
+        Just (RefTo r) -> return (Reference nm (Just r))
+resolveX (viewLambda -> Just (Lambda pat body, over, reconstruct, calculateType))
     | patternNeedsType pat = do
-    over' <- insert over
+    over' <- resolveX over
     mty   <- runExceptT (calculateType over')
     case mty of
-        Left e -> bug e
+        Left e -> bug ("calculateType:" <+> e)
         Right ty -> do
             outPat <- giveTypeToPat ty pat
-            body'  <- insert body
+            body'  <- resolveX body
             let l = Lambda outPat body'
             return (reconstruct l over')
+resolveX (Domain x) = Domain <$> resolveD x
+resolveX x = descendM resolveX x
 
-insertX x = return x
 
-
-insertD
+resolveD
     :: (Functor m, MonadState [(Name, ToLookUp)] m)
     => Domain () Expression
     -> m (Domain () Expression)
-insertD (DomainReference _ (Just d)) = insert d
-insertD (DomainReference nm Nothing) = do
+resolveD (DomainReference _ (Just d)) = resolveD d
+resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
     case mval of
         Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
         Just (RefTo (Alias (Domain r))) -> return r
         Just (RefTo x) -> userErr ("Expected a domain, but got an expression:" <+> pretty x)
-insertD d = return d
-
-
-insert
-    :: (Functor m, MonadState [(Name, ToLookUp)] m, Data a)
-    => a
-    -> m a
-insert = transformBiM insertX >=> transformBiM insertD
+resolveD d = descendM resolveD d
 
 
 patternNeedsType :: AbstractPattern -> Bool
@@ -143,11 +138,4 @@ viewLambda (        Op (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr l@Lambda{} over))
          , typeOf
          )
 viewLambda _ = Nothing
-
-
-check :: (Monad m, Data a) => a -> m ()
-check = mapM_ f . universeBi
-    where
-        f (Reference nm Nothing) = userErr ("Undefined reference:" <+> pretty nm)
-        f _ = return ()
 
