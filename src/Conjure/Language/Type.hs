@@ -6,6 +6,7 @@ module Conjure.Language.Type
     , typesUnify
     , mostDefined
     , innerTypeOf
+    , isPrimitiveType
     ) where
 
 -- conjure
@@ -104,3 +105,9 @@ innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
+
+isPrimitiveType :: Type -> Bool
+isPrimitiveType TypeBool{} = True
+isPrimitiveType TypeInt{} = True
+isPrimitiveType (TypeMatrix index inner) = and [isPrimitiveType index, isPrimitiveType inner]
+isPrimitiveType _ = False

@@ -48,9 +48,12 @@ data Ops x
     | MkOpImply           (OpImply x)
     | MkOpNot             (OpNot x)
 
+    | MkOpAllDiff         (OpAllDiff x)
     | MkOpIndexing        (OpIndexing x)
     | MkOpSlicing         (OpSlicing x)
     | MkOpFlatten         (OpFlatten x)
+    | MkOpLexLt           (OpLexLt x)
+    | MkOpLexLeq          (OpLexLeq x)
 
     | MkOpFilter          (OpFilter x)
     | MkOpMapOverDomain   (OpMapOverDomain x)
@@ -73,8 +76,6 @@ data Ops x
     | MkOpFunctionImage   (OpFunctionImage x)
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
-
-    | MkOpAllDiff         (OpAllDiff x)
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
@@ -101,9 +102,12 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpOr                  x) = typeOf x
     typeOf (MkOpImply               x) = typeOf x
     typeOf (MkOpNot                 x) = typeOf x
+    typeOf (MkOpAllDiff             x) = typeOf x
     typeOf (MkOpIndexing            x) = typeOf x
     typeOf (MkOpSlicing             x) = typeOf x
     typeOf (MkOpFlatten             x) = typeOf x
+    typeOf (MkOpLexLt               x) = typeOf x
+    typeOf (MkOpLexLeq              x) = typeOf x
     typeOf (MkOpFilter              x) = typeOf x
     typeOf (MkOpMapOverDomain       x) = typeOf x
     typeOf (MkOpMapInExpr           x) = typeOf x
@@ -122,7 +126,6 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
-    typeOf (MkOpAllDiff             x) = typeOf x
 
 
 class BinaryOperator op where
@@ -161,9 +164,12 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _    (MkOpOr       (OpOr    xs   )) = "or"  <> prettyList prParens "," xs
     prettyPrec prec (MkOpImply op@(OpImply  a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpNot      (OpNot    a   )) = "!" <> prettyPrec 10000 a
+    prettyPrec _ (MkOpAllDiff  (OpAllDiff   a   )) = "allDiff"  <> prParens (pretty a)
     prettyPrec _ (MkOpIndexing (OpIndexing  a b )) = pretty a <> prBrackets (pretty b)
     prettyPrec _ (MkOpSlicing  (OpSlicing m a b )) = pretty m <> prBrackets (pretty a <> ".." <> pretty b)
     prettyPrec _ (MkOpFlatten  (OpFlatten m     )) = "flatten" <> prParens (pretty m)
+    prettyPrec prec (MkOpLexLt  op@(OpLexLt  a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLexLeq op@(OpLexLeq a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
@@ -182,7 +188,6 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpFunctionImage (OpFunctionImage a b)) = "image" <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
-    prettyPrec _ (MkOpAllDiff  (OpAllDiff  a)) = "allDiff"  <> prParens (pretty a)
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -519,6 +524,40 @@ instance TypeOf x => TypeOf (OpFlatten x) where
         return (TypeMatrix index (flattenType n))
 
 
+data OpLexLt x = OpLexLt x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpLexLt x)
+instance Hashable  x => Hashable  (OpLexLt x)
+instance ToJSON    x => ToJSON    (OpLexLt x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpLexLt x) where parseJSON = JSON.genericParseJSON jsonOptions
+opLexLt :: OperatorContainer x => x -> x -> x
+opLexLt x y = injectOp (MkOpLexLt (OpLexLt x y))
+instance BinaryOperator (OpLexLt x) where
+    opLexeme _ = L_LexLt
+instance TypeOf x => TypeOf (OpLexLt x) where
+    typeOf (OpLexLt a b) = do
+        TypeMatrix{} <- typeOf a
+        TypeMatrix{} <- typeOf b
+        return TypeBool
+
+
+data OpLexLeq x = OpLexLeq x x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpLexLeq x)
+instance Hashable  x => Hashable  (OpLexLeq x)
+instance ToJSON    x => ToJSON    (OpLexLeq x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpLexLeq x) where parseJSON = JSON.genericParseJSON jsonOptions
+opLexLeq :: OperatorContainer x => x -> x -> x
+opLexLeq x y = injectOp (MkOpLexLeq (OpLexLeq x y))
+instance BinaryOperator (OpLexLeq x) where
+    opLexeme _ = L_LexLeq
+instance TypeOf x => TypeOf (OpLexLeq x) where
+    typeOf (OpLexLeq a b) = do
+        TypeMatrix{} <- typeOf a
+        TypeMatrix{} <- typeOf b
+        return TypeBool
+
+
 data OpFilter x = OpFilter x x
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpFilter x)
@@ -838,6 +877,8 @@ mkBinOp op a b =
                     L_supsetEq  -> opSupsetEq
                     L_intersect -> opIntersect
                     L_union     -> opUnion
+                    L_LexLt     -> opLexLt
+                    L_LexLeq    -> opLexLeq
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b

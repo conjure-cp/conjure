@@ -323,10 +323,9 @@ viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
     let this = pretty i
     in  second (++ [this]) (viewIndexed m)
 viewIndexed (Op (MkOpSlicing  (OpSlicing  m a b))) =
-    let this = pretty a <> ".." <> pretty b
+    let this = maybe prEmpty pretty a <> ".." <> maybe prEmpty pretty b
     in  second (++ [this]) (viewIndexed m)
 viewIndexed m = (m, [])
-
 
 instance Pretty Expression where
     -- special case for matrix comprehensions of SR here

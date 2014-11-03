@@ -226,9 +226,8 @@ opIndexing' proxy =
                     f a (i:is) = f (make opIndexing a i) is
                 in  f x ys
     , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpIndexing (OpIndexing x i) -> do
+            case projectOp p of
+                Just (MkOpIndexing (OpIndexing x i)) -> do
                     (m,is) <- snd (opIndexing' proxy) x
                     return (m, is ++ [i])
                 _ -> return (p, [])

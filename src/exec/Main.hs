@@ -20,7 +20,8 @@ import System.Console.CmdArgs hiding ( Default(..) )
 main :: IO ()
 main = do
     input <- cmdArgs ui
-    runLoggerIO LogDebug (mainWithArgs input)
+    -- runLoggerIO LogDebug (mainWithArgs input)
+    ignoreLogs (mainWithArgs input)
 
 
 data UI
