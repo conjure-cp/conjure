@@ -48,8 +48,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 ]
         downD _ = fail "N/A {downD}"
 
-        -- FIX
-        structuralCons _ _ (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
+        structuralCons f downX1 (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
                 orderingWhenFlagged fresh flags values = return $ -- list
@@ -57,7 +56,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &values[&i] < &values[&i+1]
+                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &values[&i] < &values[&i+1]
                         |]
 
                 dontCareWhenNotFlagged fresh flags values= return $ -- list
@@ -65,7 +64,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
                         [essence|
-                            forAll &iPat : int(1..&maxSize) , &flags[&i] = false . dontCare(&values[&i])
+                            forAll &iPat : int(1..&maxSize) . &flags[&i] = false -> dontCare(&values[&i])
                         |]
 
                 flagsToTheLeft fresh flags = return $ -- list
@@ -73,7 +72,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &flags[&i]
+                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &flags[&i]
                         |]
 
                 cardinality fresh flags =
@@ -82,14 +81,27 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                     in
                         [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
 
+                innerStructuralCons fresh flags values = do
+                    let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] -> &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomain
+
+                    let inLoop = [essence| &values[&i] |]
+                    refs <- downX1 inLoop
+                    outs <- innerStructuralConsGen (tail fresh) refs
+                    return (map activeZone outs)
 
             return $ \ fresh refs ->
                 case refs of
-                    [flags, values] ->
+                    [flags, values] -> do
+                        isc <- innerStructuralCons fresh flags values
                         return $ concat [ orderingWhenFlagged    fresh flags values
                                         , dontCareWhenNotFlagged fresh flags values
                                         , flagsToTheLeft         fresh flags
                                         , mkSizeCons attrs (cardinality fresh flags)
+                                        , isc
                                         ]
                     _ -> bug "structuralCons ExplicitVarSizeWithFlags"
 

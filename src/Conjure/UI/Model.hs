@@ -454,6 +454,7 @@ allRules =
     , rule_TupleLeq
     , rule_MapOverDomain_Tuple
 
+    , rule_MatrixEq
     , rule_MatrixLt
     , rule_MatrixLeq
 
@@ -790,6 +791,20 @@ rule_TupleLeq = "tuple-leq" `namedRule` theRule where
             unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
         return ( "Horizontal rule for tuple <="
                , const $ unroll xs ys
+               )
+
+
+rule_MatrixEq :: Rule
+rule_MatrixEq = "matrix-eq" `namedRule` theRule where
+    theRule p = do
+        (x,y)                <- match opEq p
+        TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeMatrix{}         <- typeOf y
+        DomainMatrix index _ <- domainOf x
+        return ( "Horizontal rule for matrix ="
+               , \ fresh ->
+                   let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                   in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
                )
 
 

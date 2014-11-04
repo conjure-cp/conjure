@@ -9,7 +9,6 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TH
-import Conjure.Language.Lenses
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
@@ -55,22 +54,19 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) , &i + 1 <= &marker .
+                            forAll &iPat : int(1..&maxSize-1) . &i + 1 <= &marker ->
                                 &values[&i] < &values[&i+1]
                         |]
 
-            let
                 dontCareAfterMarker fresh marker values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
                         [essence|
-                            forAll &iPat : int(1..&maxSize) , &i > &marker .
+                            forAll &iPat : int(1..&maxSize) . &i > &marker ->
                                 dontCare(&values[&i])
                         |]
 
-            let
-                -- innerStructuralCons :: MonadFail m => [Name] -> Expression -> Expression -> m [Expression]
                 innerStructuralCons fresh marker values = do
                     let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
@@ -81,10 +77,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                     let inLoop = [essence| &values[&i] |]
                     refs <- downX1 inLoop
                     outs <- innerStructuralConsGen (tail fresh) refs
-                    return $ case outs of
-                        []    -> []
-                        [out] -> [activeZone out]
-                        _     -> [activeZone (make opAnd outs)]
+                    return (map activeZone outs)
 
             return $ \ fresh refs ->
                 case refs of
