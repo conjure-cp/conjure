@@ -3,6 +3,7 @@
 module Conjure.Representations
     ( downD, downC, up
     , downD1, downC1, up1
+    , downToX1
     , reprOptions, getStructurals
     , downX1
     ) where
@@ -40,13 +41,7 @@ onReference nm refTo =
         Alias{}      -> bug  ("downX1.onReference.Alias:"      <++> pretty (show nm))
         InLambda{}   -> fail ("downX1.onReference.InLambda:"   <++> pretty (show nm))
         DeclNoRepr{} -> fail ("downX1.onReference.DeclNoRepr:" <++> pretty (show nm))
-        DeclHasRepr t _ domain -> do
-            mpairs <- runExceptT $ downD1 (nm, domain)
-            case mpairs of
-                Left err -> bug err
-                Right Nothing -> bug ("downX1.onReference, downD1 doesn't work:" <++> pretty nm)
-                Right (Just pairs) -> return [ Reference n (Just (DeclHasRepr t n d))
-                                             | (n,d) <- pairs ]
+        DeclHasRepr forg _ domain -> downToX1 forg nm domain
 
 onOp :: MonadFail m => Ops Expression -> m [Expression]
 onOp (MkOpIndexing (OpIndexing m i)) = do

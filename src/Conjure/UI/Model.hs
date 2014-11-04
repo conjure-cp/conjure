@@ -32,7 +32,7 @@ import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
 import Conjure.Language.NameResolution ( resolveNames )
 
-import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
+import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
@@ -370,16 +370,21 @@ epilogue eprime = do
 
 
 representationOf :: MonadFail m => Expression -> m Name
-representationOf (Reference _ Nothing) = fail "doesn't seem to have a representation"
-representationOf (Reference _ (Just refTo)) =
-    case refTo of
-        DeclHasRepr _ _ d ->
-            case reprAtTopLevel d of
-                Nothing -> fail "doesn't seem to have a representation"
-                Just NoRepresentation -> fail "doesn't seem to have a representation"
-                Just (HasRepresentation r) -> return r
-        _ -> fail "not a DeclHasRepr"
-representationOf _ = fail "not a reference"
+representationOf x = do
+    dom <- domainOf x
+    case reprAtTopLevel dom of
+        Nothing -> fail "doesn't seem to have a representation"
+        Just NoRepresentation -> fail "doesn't seem to have a representation"
+        Just (HasRepresentation r) -> return r
+
+
+hasRepresentation :: MonadFail m => Expression -> m ()
+hasRepresentation x = do
+    dom <- domainOf x
+    case reprAtTopLevel dom of
+        Nothing -> fail "doesn't seem to have a representation"
+        Just NoRepresentation -> fail "doesn't seem to have a representation"
+        Just HasRepresentation{} -> return ()
 
 
 applicableRules
@@ -430,10 +435,13 @@ allRules =
 
     , rule_TrueIsNoOp
     , rule_ToIntIsNoOp
+    , rule_SingletonAnd
 
     , rule_DontCareBool
     , rule_DontCareInt
     , rule_DontCareTuple
+    , rule_DontCareMatrix
+    , rule_DontCareSet
 
     , rule_ComplexLambda
     , rule_InlineFilterInsideMap_And
@@ -446,8 +454,13 @@ allRules =
     , rule_TupleLeq
     , rule_MapOverDomain_Tuple
 
+    , rule_MatrixLt
+    , rule_MatrixLeq
+
     , rule_SetEq
     , rule_SetSubsetEq
+    , rule_SetLt
+    , rule_SetLeq
 
     , rule_Set_MapInExpr_Explicit
     , rule_Set_MapInExpr_Occurrence
@@ -480,7 +493,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
             bug $ "No representation matches this beast:" <++> pretty inpDom
         return [ (msg, const out, hook)
                | dom <- domOpts
-               , let msg = "Selecting representation for" <+> pretty nm <> ":" <+> pretty dom
+               , let msg = "Selecting representation for" <+> pretty nm <> ":" <++> pretty dom
                , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                , let hook = mkHook forg nm dom
                ]
@@ -498,11 +511,14 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
 
             usedBefore = (name, domain) `elem` representations
 
-            structurals =
-                case getStructurals (name, domain) of
-                    Left err -> bug err
-                    Right Nothing -> []
-                    Right (Just xs) -> xs freshNames'
+            mstructurals = do
+                refs <- downToX1 Find name domain
+                gen  <- getStructurals downX1 domain
+                gen freshNames' refs
+
+            structurals = case mstructurals of
+                Left err -> bug ("rule_ChooseRepr.hook.structurals" <+> err)
+                Right s  -> s
 
             addStructurals
                 | forg == Given = id
@@ -560,10 +576,21 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 
 rule_ToIntIsNoOp :: Rule
 rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` theRule where
-    theRule (Op (MkOpToInt (OpToInt b))) = return ( "Remove the toInt wrapper, it is implicit in SR."
-                                                  , const b
-                                                  )
-    theRule _ = fail "No match."
+    theRule p = do
+        x <- match opToInt p
+        return ( "Remove the toInt wrapper, it is implicit in SR."
+               , const x
+               )
+
+
+rule_SingletonAnd :: Rule
+rule_SingletonAnd = "singleton-and" `namedRule` theRule where
+    theRule p = do
+        [x]      <- match opAnd p
+        TypeBool <- typeOf x
+        return ( "singleton and, removing the wrapper"
+               , const x
+               )
 
 
 rule_DontCareBool :: Rule
@@ -601,6 +628,30 @@ rule_DontCareTuple = "dontCare-tuple" `namedRule` theRule where
         x           <- match opDontCare p
         TypeTuple{} <- typeOf x
         xs          <- downX1 x
+        return ( "dontCare handling for tuple"
+               , const $ make opAnd (map (make opDontCare) xs)
+               )
+
+
+rule_DontCareMatrix :: Rule
+rule_DontCareMatrix = "dontCare-matrix" `namedRule` theRule where
+    theRule p = do
+        x                    <- match opDontCare p
+        DomainMatrix index _ <- domainOf x
+        return ( "dontCare handling for matrix"
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    in  [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
+               )
+
+
+rule_DontCareSet :: Rule
+rule_DontCareSet = "dontCare-set" `namedRule` theRule where
+    theRule p = do
+        x         <- match opDontCare p
+        TypeSet{} <- typeOf x
+        hasRepresentation x
+        xs        <- downX1 x
         return ( "dontCare handling for tuple"
                , const $ make opAnd (map (make opDontCare) xs)
                )
@@ -742,6 +793,49 @@ rule_TupleLeq = "tuple-leq" `namedRule` theRule where
                )
 
 
+sliceEnoughTimes :: MonadFail m => Expression -> m Expression
+sliceEnoughTimes m = do
+    (n,_)  <- match opIndexing' m
+    tym    <- typeOf m
+    tyn    <- typeOf n
+    let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
+        nestingLevel _ = 0 :: Int
+    let howMany = nestingLevel tyn - nestingLevel tym
+    let unroll a 0 = a
+        unroll a i = opSlicing (unroll a (i-1)) Nothing Nothing
+    return (unroll m howMany)
+
+
+rule_MatrixLt :: Rule
+rule_MatrixLt = "matrix-lt" `namedRule` theRule where
+    theRule p = do
+        (x,y)           <- match opLt p
+        tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
+        ty@TypeMatrix{} <- typeOf y
+        unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
+        unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        x' <- sliceEnoughTimes x
+        y' <- sliceEnoughTimes y
+        return ( "Horizontal rule for matrix <"
+               , const [essence| &x' <lex &y' |]
+               )
+
+
+rule_MatrixLeq :: Rule
+rule_MatrixLeq = "matrix-leq" `namedRule` theRule where
+    theRule p = do
+        (x,y)           <- match opLeq p
+        tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
+        ty@TypeMatrix{} <- typeOf y
+        unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
+        unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        x' <- sliceEnoughTimes x
+        y' <- sliceEnoughTimes y
+        return ( "Horizontal rule for matrix <="
+               , const [essence| &x' <=lex &y' |]
+               )
+
+
 rule_MapOverDomain_Tuple :: Rule
 rule_MapOverDomain_Tuple = "tuple-mapOverDomain-tuple" `namedRule` theRule where
     theRule p = do
@@ -828,6 +922,36 @@ rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
         let body iName = mkLambda iName tyXInner (\ i -> make opIn i y)
         return ( "Horizontal rule for set subsetEq"
                , \ fresh -> make opAnd [make opMapInExpr (body (headInf fresh)) x]
+               )
+
+
+rule_SetLt :: Rule
+rule_SetLt = "set-lt" `namedRule` theRule where
+    theRule p = do
+        (a,b) <- match opLt p
+        TypeSet{} <- typeOf a
+        TypeSet{} <- typeOf b
+        hasRepresentation a
+        hasRepresentation b
+        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
+        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        return ( "Horizontal rule for set <" <+> pretty (make opLt ma mb)
+               , const $ make opLt ma mb
+               )
+
+
+rule_SetLeq :: Rule
+rule_SetLeq = "set-leq" `namedRule` theRule where
+    theRule p = do
+        (a,b) <- match opLeq p
+        TypeSet{} <- typeOf a
+        TypeSet{} <- typeOf b
+        hasRepresentation a
+        hasRepresentation b
+        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
+        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        return ( "Horizontal rule for set <=" <+> pretty (make opLeq ma mb)
+               , const $ make opLeq ma mb
                )
 
 

@@ -4,10 +4,12 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSiz
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TH
+import Conjure.Language.Lenses
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
@@ -45,22 +47,10 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                 ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
-            maxSize   <- getMaxSize attrs innerDomain
+        structuralCons f downX1 (DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
+            maxSize <- getMaxSize attrs innerDomain
             let
-                indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
-                marker = Reference (nameMarker name)
-                                   (Just (DeclHasRepr
-                                              Find
-                                              (nameMarker name)
-                                              (indexDomain 0)))
-                values = Reference (nameValues name)
-                                   (Just (DeclHasRepr
-                                              Find
-                                              (nameValues name)
-                                              (DomainMatrix (forgetRepr (indexDomain 1)) innerDomain)))
-
-                orderingUpToMarker fresh = return $ -- list
+                orderingUpToMarker fresh marker values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
@@ -69,7 +59,8 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                 &values[&i] < &values[&i+1]
                         |]
 
-                dontCareAfterMarker fresh = return $ -- list
+            let
+                dontCareAfterMarker fresh marker values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
@@ -78,12 +69,36 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                 dontCare(&values[&i])
                         |]
 
-            return $ Just $ \ fresh -> concat [ orderingUpToMarker fresh
-                                              , dontCareAfterMarker fresh
-                                              , mkSizeCons attrs marker
-                                              ]
+            let
+                -- innerStructuralCons :: MonadFail m => [Name] -> Expression -> Expression -> m [Expression]
+                innerStructuralCons fresh marker values = do
+                    let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
 
-        structuralCons _ = fail "N/A {structuralCons}"
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomain
+
+                    let inLoop = [essence| &values[&i] |]
+                    refs <- downX1 inLoop
+                    outs <- innerStructuralConsGen (tail fresh) refs
+                    return $ case outs of
+                        []    -> []
+                        [out] -> [activeZone out]
+                        _     -> [activeZone (make opAnd outs)]
+
+            return $ \ fresh refs ->
+                case refs of
+                    [marker,values] -> do
+                        isc <- innerStructuralCons fresh marker values
+                        return $ concat [ orderingUpToMarker  fresh marker values
+                                        , dontCareAfterMarker fresh marker values
+                                        , mkSizeCons attrs marker
+                                        , isc
+                                        ]
+                    _ -> bug "structuralCons ExplicitVarSizeWithMarker"
+
+        structuralCons _ _ dom = fail $ "N/A {structuralCons} ExplicitVarSizeWithMarker"
+                                       <+> pretty (show dom)
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain

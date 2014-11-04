@@ -3,6 +3,7 @@
 module Conjure.Representations.Combined
     ( downD, downC, up
     , downD1, downC1, up1
+    , downToX1
     , reprOptions, getStructurals
     ) where
 
@@ -23,6 +24,16 @@ import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 import Conjure.Representations.Function.Function1D
 import Conjure.Representations.Function.Function1DPartial
 
+
+-- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
+--   The domain is allowed to be at the class level.
+downToX1
+    :: MonadFail m
+    => FindOrGiven
+    -> Name
+    -> DomainX Expression
+    -> m [Expression]
+downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
@@ -142,8 +153,8 @@ allReprs =
 reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
 reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 
-getStructurals :: MonadFail m => (Name, DomainX Expression) -> m (Maybe ([Name] -> [Expression]))
-getStructurals (name, domain) = rStructural (dispatch domain) (name, domain)
+getStructurals :: MonadFail m => (Expression -> m [Expression]) -> DomainX Expression -> m (([Name] -> [Expression] -> m [Expression]))
+getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 
 
 -- | The matrix "representation rule".
@@ -164,10 +175,9 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                 Nothing -> return Nothing
                 Just mids -> return $ Just
                     [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
-
         matrixDown_ _ = fail "N/A {matrixDown_}"
 
-        structuralCons = const $ return Nothing -- TODO: lift!
+        structuralCons = \ _ _ _ -> return (\ _ _ -> return [] ) -- FIX
 
         -- TODO: check if indices are the same
         matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do

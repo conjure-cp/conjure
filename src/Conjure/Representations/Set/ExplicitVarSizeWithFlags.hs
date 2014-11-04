@@ -4,6 +4,7 @@ module Conjure.Representations.Set.ExplicitVarSizeWithFlags ( setExplicitVarSize
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -47,11 +48,11 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, domain@(DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain)) = do
-            [flags, values] <- rDownX setExplicitVarSizeWithFlags name domain
-            maxSize         <- getMaxSize attrs innerDomain
+        -- FIX
+        structuralCons _ _ (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
+            maxSize <- getMaxSize attrs innerDomain
             let
-                orderingWhenFlagged fresh = return $ -- list
+                orderingWhenFlagged fresh flags values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
@@ -59,7 +60,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                             forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &values[&i] < &values[&i+1]
                         |]
 
-                dontCareWhenNotFlagged fresh = return $ -- list
+                dontCareWhenNotFlagged fresh flags values= return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
@@ -67,7 +68,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                             forAll &iPat : int(1..&maxSize) , &flags[&i] = false . dontCare(&values[&i])
                         |]
 
-                flagsToTheLeft fresh = return $ -- list
+                flagsToTheLeft fresh flags = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
@@ -75,20 +76,24 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                             forAll &iPat : int(1..&maxSize-1) , &flags[&i+1] . &flags[&i]
                         |]
 
-                cardinality fresh =
+                cardinality fresh flags =
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                     in
                         [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
 
 
-            return $ Just $ \ fresh -> concat [ orderingWhenFlagged fresh
-                                              , dontCareWhenNotFlagged fresh
-                                              , flagsToTheLeft fresh
-                                              , mkSizeCons attrs (cardinality fresh)
-                                              ]
+            return $ \ fresh refs ->
+                case refs of
+                    [flags, values] ->
+                        return $ concat [ orderingWhenFlagged    fresh flags values
+                                        , dontCareWhenNotFlagged fresh flags values
+                                        , flagsToTheLeft         fresh flags
+                                        , mkSizeCons attrs (cardinality fresh flags)
+                                        ]
+                    _ -> bug "structuralCons ExplicitVarSizeWithFlags"
 
-        structuralCons _ = fail "N/A {structuralCons}"
+        structuralCons _ _ _ = fail "N/A {structuralCons} ExplicitVarSizeWithFlags"
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain

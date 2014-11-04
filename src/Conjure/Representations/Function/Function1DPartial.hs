@@ -51,16 +51,17 @@ function1DPartial = Representation chck downD structuralCons downC up
                 ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, domain@(DomainFunction "Function1DPartial"
-                    (FunctionAttr sizeAttr FunctionAttr_Partial jectivityAttr)
-                    innerDomainFr'
-                    innerDomainTo)) | domainCanIndexMatrix innerDomainFr' = do
-            [flags,values]  <- rDownX function1DPartial name domain
+        -- FIX
+        structuralCons _ _
+            (DomainFunction "Function1DPartial"
+                (FunctionAttr sizeAttr FunctionAttr_Partial jectivityAttr)
+                innerDomainFr'
+                innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
             innerDomainFr   <- toIntDomain innerDomainFr'
             innerDomainFrTy <- typeOf innerDomainFr
             innerDomainToTy <- typeOf innerDomainTo
 
-            let injectiveCons fresh = return $ -- list
+            let injectiveCons fresh flags values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
                         (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainToTy
@@ -71,7 +72,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                                     &flags[&i] /\ &flags[&j] -> &values[&i] != &values[&j]
                         |]
 
-            let surjectiveCons fresh = return $ -- list
+            let surjectiveCons fresh flags values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
                         (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
@@ -82,21 +83,25 @@ function1DPartial = Representation chck downD structuralCons downC up
                                     &flags[&j] /\ &values[&j] = &i
                         |]
 
-            let jectivityCons = case jectivityAttr of
-                    ISBAttr_None       -> const []
-                    ISBAttr_Injective  -> injectiveCons
-                    ISBAttr_Surjective -> surjectiveCons
-                    ISBAttr_Bijective  -> \ fresh -> injectiveCons fresh ++ surjectiveCons fresh
+            let jectivityCons fresh flags values = case jectivityAttr of
+                    ISBAttr_None       -> []
+                    ISBAttr_Injective  -> injectiveCons  fresh flags values
+                    ISBAttr_Surjective -> surjectiveCons fresh flags values
+                    ISBAttr_Bijective  -> injectiveCons  fresh flags values
+                                       ++ surjectiveCons fresh flags values
 
-            let cardinality fresh =
+            let cardinality fresh flags =
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
                     in
                         [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
-            return $ Just $ \ fresh -> jectivityCons fresh ++ mkSizeCons sizeAttr (cardinality fresh)
+            return $ \ fresh [flags,values] -> do
+                return $ concat [ jectivityCons fresh flags values
+                                , mkSizeCons sizeAttr (cardinality fresh flags)
+                                ]
 
-        structuralCons _ = fail "N/A {structuralCons}"
+        structuralCons _ _ _ = fail "N/A {structuralCons} Function1DPartial"
 
         downC ( name
               , DomainFunction "Function1DPartial"

@@ -32,7 +32,8 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
             ]
         tupleDown_ _ = fail "N/A {tupleDown_}"
 
-        structuralCons = const $ return Nothing
+        -- FIX
+        structuralCons = \ _ _ _ -> return (\ _ _ -> return [] )
 
         -- TODO: check if (length ds == length cs)
         tupleDown (name, DomainTuple ds, ConstantTuple cs) = return $ Just

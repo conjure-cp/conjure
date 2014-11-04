@@ -3,12 +3,11 @@
 module Conjure.Representations.Internal
     ( Representation(..)
     , DomainX, DomainC
-    , rDownX
+    , rDownToX
     ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -33,25 +32,31 @@ data Representation m = Representation
                   -> Domain r x                                        -- this domain
                   -> [DomainX x]                                       -- with all repr options
     , rDownD      :: (Name, DomainX Expression)            -> m (Maybe [(Name, DomainX Expression)])
-    , rStructural :: (Name, DomainX Expression)            -> m (Maybe (  [Name]          -- a source of fresh names
-                                                                       -> [Expression]    -- structural constraints
-                                                                       ))
+    , rStructural ::
+            -- other structural constraints for inner domains
+            (DomainX Expression -> m ([Name] -> [Expression] -> m [Expression]))
+            -> (Expression -> m [Expression])              -- general downX1
+            -> DomainX Expression
+            -> m (     [Name]          -- a source of fresh names
+                  ->   [Expression]    -- refined variables
+                  -> m [Expression]    -- structural constraints
+                 )
     , rDownC      :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
     , rUp         :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
     }
 
 
-rDownX
+rDownToX
     :: Monad m
     => Representation m
+    -> FindOrGiven
     -> Name
     -> Domain HasRepresentation Expression
     -> m [Expression]
-rDownX repr name domain = do
+rDownToX repr forg name domain = do
     mpairs <- rDownD repr (name, domain)
-    case mpairs of
-        Nothing -> bug ("rDownX, rDownD doesn't work:" <++> pretty name)
-        (Just pairs) -> return [ Reference n (Just (DeclHasRepr Find n d))
-                               | (n,d) <- pairs
-                               ]
-
+    return $ case mpairs of
+        Nothing    -> []
+        Just pairs -> [ Reference n (Just (DeclHasRepr forg n d))
+                      | (n,d) <- pairs
+                      ]

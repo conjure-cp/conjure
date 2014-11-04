@@ -19,7 +19,7 @@ primitive = Representation
             DomainInt rs -> [DomainInt rs]
             _ -> []
     , rDownD      = const $ return Nothing
-    , rStructural = const $ return Nothing
+    , rStructural = \ _ _ _ -> return (\ _ _ -> return [] )
     , rDownC      = const $ return Nothing
     , rUp         = \ ctxt (name, _) ->
         case lookup name ctxt of

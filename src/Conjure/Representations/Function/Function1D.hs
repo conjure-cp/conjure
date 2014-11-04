@@ -46,18 +46,19 @@ function1D = Representation chck downD structuralCons downC up
                   ) ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons (name, domain@(DomainFunction "Function1D"
-                    (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
-                    innerDomainFr'
-                    innerDomainTo)) | domainCanIndexMatrix innerDomainFr' = do
-            [m]             <- rDownX function1D name domain
+        -- FIX
+        structuralCons _ _
+            (DomainFunction "Function1D"
+                (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
+                innerDomainFr'
+                innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
             innerDomainFr   <- toIntDomain innerDomainFr'
             innerDomainFrTy <- typeOf innerDomainFr
             innerDomainToTy <- typeOf innerDomainTo
 
-            let injectiveCons = const $ return $ [essence| allDiff(&m) |]
+            let injectiveCons m = return $ [essence| allDiff(&m) |]
 
-            let surjectiveCons fresh = return $ -- list
+            let surjectiveCons fresh m = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
                         (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
@@ -67,17 +68,18 @@ function1D = Representation chck downD structuralCons downC up
                                 exists &jPat : &innerDomainFr .
                                     &m[&j] = &i
                         |]
-            let jectivityCons = case jectivityAttr of
-                    ISBAttr_None       -> const []
-                    ISBAttr_Injective  -> injectiveCons
-                    ISBAttr_Surjective -> surjectiveCons
-                    ISBAttr_Bijective  -> \ fresh -> injectiveCons fresh ++ surjectiveCons fresh
+            let jectivityCons fresh m = case jectivityAttr of
+                    ISBAttr_None       -> []
+                    ISBAttr_Injective  -> injectiveCons        m
+                    ISBAttr_Surjective -> surjectiveCons fresh m
+                    ISBAttr_Bijective  -> injectiveCons        m
+                                       ++ surjectiveCons fresh m
 
             cardinality <- domainSizeOf innerDomainFr
 
-            return $ Just $ \ fresh -> jectivityCons fresh ++ mkSizeCons sizeAttr cardinality
+            return $ \ fresh [m] -> return (jectivityCons fresh m ++ mkSizeCons sizeAttr cardinality)
 
-        structuralCons _ = fail "N/A {structuralCons}"
+        structuralCons _ _ _ = fail "N/A {structuralCons} Function1D"
 
         downC ( name
               , DomainFunction "Function1D"

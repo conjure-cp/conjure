@@ -31,19 +31,16 @@ setExplicit = Representation chck downD structuralCons downC up
               ) ]
         downD _ = fail "N/A {downD}"
 
-        structuralCons ( name
-                       , domain@(DomainSet "Explicit" (SetAttr (SizeAttrSize size)) _)
-                       ) = do
-            [m]           <- rDownX setExplicit name domain
-            return $ Just $ \ fresh -> return $ -- list
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
-                in
+        -- FIX
+        structuralCons _ _ (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) _) =
+            return $ \ fresh [m] -> do
+                let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                return $ return -- one for list
                     [essence|
                         forAll &iPat : int(1..&size-1) .
                             &m[&i] < &m[&i+1]
                     |]
-        structuralCons _ = fail "N/A {structuralCons}"
+        structuralCons _ _ _ = fail "N/A {structuralCons} Explicit"
 
         downC (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain, ConstantSet constants) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
