@@ -33,7 +33,7 @@ data Domain r x
     | DomainSet       r (SetAttr x) (Domain r x)
     | DomainMSet      r (DomainAttributes x) (Domain r x)
     | DomainFunction  r (FunctionAttr x) (Domain r x) (Domain r x)
-    | DomainRelation  r (DomainAttributes x) [Domain r x]
+    | DomainRelation  r (RelationAttr x) [Domain r x]
     | DomainPartition r (DomainAttributes x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
@@ -199,6 +199,18 @@ instance Pretty    ISBAttr where
     pretty ISBAttr_Injective = "injective"
     pretty ISBAttr_Surjective = "surjective"
     pretty ISBAttr_Bijective = "bijective"
+
+
+data RelationAttr a = RelationAttr (SizeAttr a)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+instance Serialize a => Serialize (RelationAttr a)
+instance Hashable  a => Hashable  (RelationAttr a)
+instance ToJSON    a => ToJSON    (RelationAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (RelationAttr a) where def = RelationAttr def
+instance Pretty a => Pretty (RelationAttr a) where
+    pretty (RelationAttr SizeAttrNone) = prEmpty
+    pretty (RelationAttr a) = prParens (pretty a)
 
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]

@@ -268,7 +268,7 @@ parseDomain
 
         pRelation = do
             lexeme L_relation
-            x  <- parseAttributes
+            x  <- parseRelationAttr
             lexeme L_of
             ys <- parens (parseDomain `sepBy` lexeme L_Times)
             return $ DomainRelation () x ys
@@ -293,12 +293,12 @@ parseAttributes = do
 parseSetAttr :: Parser (SetAttr Expression)
 parseSetAttr = do
     DomainAttributes attrs <- parseAttributes
-    case filterSizey attrs of
-        [] -> return (SetAttr SizeAttrNone)
-        [DANameValue "size"    a] -> return (SetAttr (SizeAttrSize a))
-        [DANameValue "minSize" a] -> return (SetAttr (SizeAttrMinSize a))
-        [DANameValue "maxSize" a] -> return (SetAttr (SizeAttrMaxSize a))
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SetAttr (SizeAttrMinMaxSize a b))
+    SetAttr <$> case filterSizey attrs of
+        [] -> return SizeAttrNone
+        [DANameValue "size"    a] -> return (SizeAttrSize a)
+        [DANameValue "minSize" a] -> return (SizeAttrMinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttrMaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttrMinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
 
 parseFunctionAttr :: Parser (FunctionAttr Expression)
@@ -322,6 +322,17 @@ parseFunctionAttr = do
         [DAName "injective", DAName "surjective"] -> return ISBAttr_Bijective
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
     return (FunctionAttr size partiality jectivity)
+
+parseRelationAttr :: Parser (RelationAttr Expression)
+parseRelationAttr = do
+    DomainAttributes attrs <- parseAttributes
+    RelationAttr <$> case filterSizey attrs of
+        [] -> return SizeAttrNone
+        [DANameValue "size"    a] -> return (SizeAttrSize a)
+        [DANameValue "minSize" a] -> return (SizeAttrMinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttrMaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttrMinMaxSize a b)
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
 
 filterSizey :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
 filterSizey = sort . filter f
@@ -375,7 +386,7 @@ parseAtomicExpr = do
 parseAtomicExprNoPrePost :: Parser Expression
 parseAtomicExprNoPrePost = msum $ map try
     $ parseOthers ++
-    [ parseQuantifiedExpr parseExpr
+    [ parseQuantifiedExpr
     , metaVarInE <$> parseMetaVariable
     , parseReference
     , parseLiteral
@@ -482,40 +493,41 @@ parseOp :: Parser Lexeme
 parseOp = msum [ do lexeme x; return x | (x,_,_) <- operators ]
     <?> "operator"
 
-parseQuantifiedExpr :: Parser Expression -> Parser Expression
-parseQuantifiedExpr parseBody = do
-        let pOp = msum [ lexeme L_in       >> return (\ pat body over -> Op (MkOpMapInExpr       (OpMapInExpr       (Lambda pat body) over)))
-                       , lexeme L_subset   >> return (\ pat body over -> Op (MkOpMapSubsetExpr   (OpMapSubsetExpr   (Lambda pat body) over)))
-                       , lexeme L_subsetEq >> return (\ pat body over -> Op (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr (Lambda pat body) over)))
-                       ]
-                       
-        Name qnName <- parseName
-        qnPats <- parseAbstractPattern `sepBy1` comma
-        qnDom  <- optionMaybe (colon *> parseDomain)
-        qnExpr <- optionMaybe ((,) <$> pOp <*> parseExpr)
-        qnGuard <- optionMaybe (comma *> parseExpr)
-        qnBody  <- dot *> parseBody <?> "expecting body of a quantified expression"
+parseQuantifiedExpr :: Parser Expression
+parseQuantifiedExpr = do
+    let pOp = msum [ lexeme L_in       >> return (\ pat body over -> Op (MkOpMapInExpr       (OpMapInExpr       (Lambda pat body) over)))
+                   , lexeme L_subset   >> return (\ pat body over -> Op (MkOpMapSubsetExpr   (OpMapSubsetExpr   (Lambda pat body) over)))
+                   , lexeme L_subsetEq >> return (\ pat body over -> Op (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr (Lambda pat body) over)))
+                   ]
+                   
+    Name qnName <- parseName
+    qnPats  <- parseAbstractPattern `sepBy1` comma
+    qnDom   <- optionMaybe (colon *> parseDomain)
+    qnExpr  <- optionMaybe ((,) <$> pOp <*> parseExpr)
+    -- qnGuard <- optionMaybe (comma *> parseExpr)
+    let qnGuard = Nothing
+    qnBody  <- dot *> parseExpr <?> "expecting body of a quantified expression"
 
-        let qnMap f = case (qnDom,qnExpr) of
-                (Nothing , Nothing     ) -> userErr "expecting something to quantify over"
-                (Just dom, Nothing     ) -> \ pat body -> Op $ MkOpMapOverDomain $ OpMapOverDomain (Lambda pat body) (f (Domain dom))
-                (Nothing , Just (op, y)) -> \ pat body -> op pat body (f y)
-                _ -> userErr "to many things to quantify over"
+    let qnMap f = case (qnDom,qnExpr) of
+            (Nothing , Nothing     ) -> userErr "expecting something to quantify over"
+            (Just dom, Nothing     ) -> \ pat body -> Op $ MkOpMapOverDomain $ OpMapOverDomain (Lambda pat body) (f (Domain dom))
+            (Nothing , Just (op, y)) -> \ pat body -> op pat body (f y)
+            _ -> userErr "to many things to quantify over"
 
-        -- ty = evalState (typeOf (convDomain quanOverDom)) []
+    -- ty = evalState (typeOf (convDomain quanOverDom)) []
 
-        let filterOr pat dom =
-                case qnGuard of
-                    Nothing -> dom
-                    Just g  -> Op $ MkOpFilter $ OpFilter
-                                (Lambda pat g)
-                                dom
+    let filterOr pat dom =
+            case qnGuard of
+                Nothing -> dom
+                Just g  -> Op $ MkOpFilter $ OpFilter
+                            (Lambda pat g)
+                            dom
 
-        let
-            f []     = bug "The Impossible has happenned. in parseQuantifiedExpr.f"
-            f [i]    = mkOp (translateQnName qnName) [qnMap (filterOr i) i qnBody]
-            f (i:is) = mkOp (translateQnName qnName) [qnMap id           i (f is)]
-        return $ f qnPats
+    let
+        f []     = bug "The Impossible has happenned. in parseQuantifiedExpr.f"
+        f [i]    = mkOp (translateQnName qnName) [qnMap (filterOr i) i qnBody]
+        f (i:is) = mkOp (translateQnName qnName) [qnMap id           i (f is)]
+    return $ f qnPats
 
 
 parseAbstractPattern :: Parser AbstractPattern

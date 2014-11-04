@@ -767,8 +767,16 @@ instance ToJSON    x => ToJSON    (OpFunctionImage x) where toJSON = JSON.generi
 instance FromJSON  x => FromJSON  (OpFunctionImage x) where parseJSON = JSON.genericParseJSON jsonOptions
 opFunctionImage :: OperatorContainer x => x -> [x] -> x
 opFunctionImage x y = injectOp (MkOpFunctionImage (OpFunctionImage x y))
-instance TypeOf x => TypeOf (OpFunctionImage x) where
-    typeOf (OpFunctionImage _ _) = return TypeAny
+instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
+    typeOf p@(OpFunctionImage f xs) = do
+        TypeFunction from to <- typeOf f
+        xTys <- mapM typeOf xs
+        let xTy = case xTys of
+                    [t] -> t
+                    _   -> TypeTuple xTys
+        if typesUnify [xTy, from]
+            then return to
+            else fail ("Type error in:" <+> pretty (MkOpFunctionImage p))
 
 
 data OpDefined x = OpDefined x

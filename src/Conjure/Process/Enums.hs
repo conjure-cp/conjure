@@ -192,5 +192,9 @@ enumify ctxt domain constant = case (domain, constant) of
         ConstantFunction [ (enumify ctxt fr a, enumify ctxt to b)
                          | (a,b) <- vals ]
 
+    (DomainRelation _ _ inners, ConstantRelation vals) ->
+        ConstantRelation [ [ enumify ctxt d c | (d,c) <- zip inners line ]
+                         | line <- vals ]
+
     _ -> bug ("enumify:" <+> pretty (show domain))
 
