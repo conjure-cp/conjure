@@ -37,7 +37,7 @@ srOptions =
 
 tests :: IO TestTree
 tests = do
-    let baseDir = "src/test/exhaustive"
+    let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getDirectoryContents baseDir
     let testCases = map testSingleDir (catMaybes dirs)
     return (testGroup "exhaustive" testCases)
