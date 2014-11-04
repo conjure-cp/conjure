@@ -7,13 +7,13 @@ such that
     or([x_ExplicitVarSizeWithFlags_Values[q2] = 1 /\ x_ExplicitVarSizeWithFlags_Flags[q2] | q2 : int(1..4)]),
     or([x_ExplicitVarSizeWithFlags_Values[q3] = 2 /\ x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..4)]),
     x_Occurrence[3],
-    and([x_ExplicitVarSizeWithFlags_Flags[q5 + 1] -> x_ExplicitVarSizeWithFlags_Values[q5] < x_ExplicitVarSizeWithFlags_Values[q5 + 1] | q5 : int(1..4 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q6] = false -> x_ExplicitVarSizeWithFlags_Values[q6] = 1 | q6 : int(1..4)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..4 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1] | q1 : int(1..4 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..4 - 1)]),
     sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..4)]) <= 4,
     sum([x_Occurrence[q4] | q4 : int(1..4)]) <= 4,
+    and([x_Occurrence[q7] -> or([x_ExplicitVarSizeWithFlags_Values[q5] = q7 /\ x_ExplicitVarSizeWithFlags_Flags[q5] | q5 : int(1..4)]) | q7 : int(1..4)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q6] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q6]] | q6 : int(1..4)]),
     and([x_Occurrence[q10] -> or([x_ExplicitVarSizeWithFlags_Values[q8] = q10 /\ x_ExplicitVarSizeWithFlags_Flags[q8] | q8 : int(1..4)]) | q10 : int(1..4)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q9] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q9]] | q9 : int(1..4)]),
-    and([x_Occurrence[q13] -> or([x_ExplicitVarSizeWithFlags_Values[q11] = q13 /\ x_ExplicitVarSizeWithFlags_Flags[q11] | q11 : int(1..4)]) | q13 : int(1..4)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q12] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q12]] | q12 : int(1..4)])
+    and([x_ExplicitVarSizeWithFlags_Flags[q9] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q9]] | q9 : int(1..4)])
 
