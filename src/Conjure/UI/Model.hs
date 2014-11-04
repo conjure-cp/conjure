@@ -483,6 +483,8 @@ allRules =
     , rule_Function_InDefined_Function1DPartial
 
     , rule_Function_Image_FunctionNDPartial
+    , rule_Function_MapInExpr_FunctionNDPartial
+    , rule_Function_InDefined_FunctionNDPartial
 
     , rule_RelationEq
     , rule_Relation_In_RelationAsMatrix
@@ -1199,19 +1201,70 @@ rule_Function_Image_FunctionNDPartial = "function-image{FunctionNDPartial}"
                                  `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         "FunctionNDPartial" <- representationOf f
+        [flags,values]      <- downX1 f
+
         TypeTuple ts        <- typeOf x
         let xArity          =  length ts
-        [flags,values]      <- downX1 f
         let index m 1     = make opIndexing m                   (make opIndexing x (fromInt 1))
             index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
         let flagsIndexed  = index flags  xArity
         let valuesIndexed = index values xArity
-        return ( "Function image, Function1DPartial representation"
+
+        return ( "Function image, FunctionNDPartial representation"
                , const [essence| { &valuesIndexed
                                  @ such that &flagsIndexed
                                  } |]
                )
     theRule _ = fail "No match."
+
+
+rule_Function_InDefined_FunctionNDPartial :: Rule
+rule_Function_InDefined_FunctionNDPartial = "function-in-defined{FunctionNDPartial}"
+                                 `namedRule` theRule where
+    theRule [essence| &x in defined(&f) |] = do
+        "FunctionNDPartial" <- representationOf f
+        [flags,_values]     <- downX1 f
+
+        TypeTuple ts        <- typeOf x
+        let xArity          =  length ts
+        let index m 1     = make opIndexing m                   (make opIndexing x (fromInt 1))
+            index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
+        let flagsIndexed  = index flags  xArity
+
+        return ( "Function in defined, FunctionNDPartial representation"
+               , const flagsIndexed
+               )
+    theRule _ = fail "No match."
+
+
+rule_Function_MapInExpr_FunctionNDPartial :: Rule
+rule_Function_MapInExpr_FunctionNDPartial = "function-quantification{FunctionNDPartial}"
+                                     `namedRule` theRule where
+    theRule p = do
+        (Lambda lPat lBody, f)           <- match opMapInExpr p
+        let lambda = lambdaToFunction lPat lBody
+        "FunctionNDPartial"              <- representationOf f
+        TypeFunction fr@(TypeTuple ts) _ <- typeOf f
+        [flags,values]                   <- downX1 f
+        valuesDom                        <- domainOf values
+        let (indexDomain,_)              =  getIndices valuesDom
+
+        let xArity          =  length ts
+        let index x m 1     = make opIndexing m                     (make opIndexing x (fromInt 1))
+            index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
+        let flagsIndexed  x = index x flags  xArity
+        let valuesIndexed x = index x values xArity
+
+        return ( "Mapping over a function, FunctionNDPartial representation"
+               , \ fresh ->
+                    let iName = headInf fresh
+                    in  make opMapOverDomain
+                            (mkLambda iName fr $ \ i -> let val = valuesIndexed i
+                                                        in  lambda [essence| (&i, &val) |])
+                            (make opFilter
+                                (mkLambda iName fr $ \ i -> flagsIndexed i)
+                                (Domain (DomainTuple indexDomain)))
+               )
 
 
 rule_RelationEq :: Rule

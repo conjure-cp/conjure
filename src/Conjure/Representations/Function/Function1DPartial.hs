@@ -96,9 +96,19 @@ function1DPartial = Representation chck downD structuralCons downC up
                     in
                         [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
+            let dontCareInactives fresh flags values = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                    in
+                        [essence|
+                            forAll &iPat : &innerDomainFr . &flags[&i] = false ->
+                                dontCare(&values[&i])
+                        |]
+
             return $ \ fresh refs ->
                 case refs of
-                    [flags,values] -> return $ concat [ jectivityCons fresh flags values
+                    [flags,values] -> return $ concat [ jectivityCons     fresh flags values
+                                                      , dontCareInactives fresh flags values
                                                       , mkSizeCons sizeAttr (cardinality fresh flags)
                                                       ]
                     _ -> fail "N/A {structuralCons} Function1DPartial"

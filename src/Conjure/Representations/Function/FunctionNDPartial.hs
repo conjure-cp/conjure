@@ -9,6 +9,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TH
+import Conjure.Language.Lenses
 import Conjure.Language.TypeOf
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
@@ -61,26 +62,42 @@ functionNDPartial = Representation chck downD structuralCons downC up
             innerDomainFrTy   <- typeOf innerDomainFr
             innerDomainToTy   <- typeOf innerDomainTo
 
+            let
+                frArity = length innerDomainFrs
+
+                index x m 1     = make opIndexing m                     (make opIndexing x (fromInt 1))
+                index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
+
             let injectiveCons fresh flags values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
                         (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainToTy
+
+                        flagsIndexedI  = index i flags  frArity
+                        valuesIndexedI = index i values frArity
+                        flagsIndexedJ  = index j flags  frArity
+                        valuesIndexedJ = index j values frArity
+
                     in
                         [essence|
                             forAll &iPat : &innerDomainFr .
                                 forAll &jPat : &innerDomainTo .
-                                    &flags[&i] /\ &flags[&j] -> &values[&i] != &values[&j]
+                                    &flagsIndexedI /\ &flagsIndexedJ -> &valuesIndexedI != &valuesIndexedJ
                         |]
 
             let surjectiveCons fresh flags values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
                         (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
+
+                        flagsIndexed  = index j flags  frArity
+                        valuesIndexed = index j values frArity
+
                     in
                         [essence|
                             forAll &iPat : &innerDomainTo .
                                 exists &jPat : &innerDomainFr .
-                                    &flags[&j] /\ &values[&j] = &i
+                                    &flagsIndexed /\ &valuesIndexed = &i
                         |]
 
             let jectivityCons fresh flags values = case jectivityAttr of
@@ -96,9 +113,22 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     in
                         [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
+            let dontCareInactives fresh flags values = return $ -- list
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+
+                        flagsIndexed  = index i flags  frArity
+                        valuesIndexed = index i values frArity
+                    in
+                        [essence|
+                            forAll &iPat : &innerDomainFr . &flagsIndexed = false ->
+                                dontCare(&valuesIndexed)
+                        |]
+
             return $ \ fresh refs ->
                 case refs of
                     [flags,values] -> return $ concat [ jectivityCons fresh flags values
+                                                      , dontCareInactives fresh flags values
                                                       , mkSizeCons sizeAttr (cardinality fresh flags)
                                                       ]
                     _ -> fail "N/A {structuralCons} FunctionNDPartial"
@@ -108,34 +138,68 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downC ( name
               , DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ FunctionAttr_Partial _)
-                    innerDomainFr
+                    (DomainTuple innerDomainFrs')
                     innerDomainTo
               , ConstantFunction vals
-              ) | domainCanIndexMatrix innerDomainFr = do
+              ) | all domainCanIndexMatrix innerDomainFrs' = do
             z <- zeroVal innerDomainTo
-            innerDomainFrInt    <- fmap e2c <$> toIntDomain (fmap Constant innerDomainFr)
-            froms               <- domainValues innerDomainFr
-            (flagsOut, valsOut) <- unzip <$> sequence
-                [ val
-                | fr <- froms
-                , let val = case lookup fr vals of
-                                Nothing -> return (ConstantBool False, z)
-                                Just v  -> return (ConstantBool True , v)
-                ]
+            innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')
+            let
+                check :: [Constant] -> Maybe Constant
+                check indices = listToMaybe [ v
+                                            | (ConstantTuple k, v) <- vals
+                                            , k == indices
+                                            ]
+
+            let
+                unrollD :: [Domain () Constant] -> Domain r Constant -> Domain r Constant
+                unrollD []     j = j
+                unrollD (i:is) j = DomainMatrix i (unrollD is j)
+
+            let
+                unrollC :: MonadFail m
+                        => [ ( Domain () Constant       -- the int domain
+                             , Domain () Constant       -- the actial domain
+                             ) ]
+                        -> [Constant]               -- indices
+                        -> m (Constant, Constant)
+                unrollC [(i,i')] prevIndices = do
+                    domVals <- domainValues i'
+                    let active val = check $ prevIndices ++ [val]
+                    return ( ConstantMatrix i [ case active val of
+                                                    Nothing -> ConstantBool False
+                                                    Just{}  -> ConstantBool True
+                                              | val <- domVals ]
+                           , ConstantMatrix i [ case active val of
+                                                    Nothing -> z
+                                                    Just v  -> v
+                                              | val <- domVals ]
+                           )
+                unrollC ((i,i'):is) prevIndices = do
+                    domVals <- domainValues i'
+                    (matrixFlags, matrixVals) <- liftM unzip $ forM domVals $ \ val ->
+                        unrollC is (prevIndices ++ [val])
+                    return ( ConstantMatrix i matrixFlags
+                           , ConstantMatrix i matrixVals
+                           )
+                unrollC is prevIndices = fail $ vcat [ "FunctionNDPartial.up.unrollC"
+                                                     , "    is         :" <+> vcat (map pretty is)
+                                                     , "    prevIndices:" <+> pretty (show prevIndices)
+                                                     ]
+
+            (outFlags, outValues) <- unrollC (zip (map forgetRepr innerDomainFrs)
+                                                  (map forgetRepr innerDomainFrs')) []
             return $ Just
                 [ ( nameFlags name
-                  , DomainMatrix
-                      (forgetRepr innerDomainFrInt)
-                      DomainBool
-                  , ConstantMatrix (forgetRepr innerDomainFrInt) flagsOut
+                  , unrollD (map forgetRepr innerDomainFrs) DomainBool
+                  , outFlags
                   )
                 , ( nameValues name
-                  , DomainMatrix
-                      (forgetRepr innerDomainFrInt)
-                      innerDomainTo
-                  , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
+                  , unrollD (map forgetRepr innerDomainFrs) innerDomainTo
+                  , outValues
                   )
                 ]
+
         downC _ = fail "N/A {downC}"
 
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
