@@ -54,12 +54,12 @@ resolveX (Reference nm Nothing) = do
         Nothing        -> fail ("Undefined reference:" <+> pretty nm)
         Just (RefTo r) -> return (Reference nm (Just r))
 resolveX (viewLambda -> Just (Lambda pat body, over, reconstruct, calculateType))
-    | patternNeedsType pat = do
+    | patternNeedsType pat = scope $ do
     over' <- resolveX over
     mty   <- runExceptT (calculateType over')
     case mty of
-        Left e -> bug ("calculateType:" <+> e)
-        Right ty -> do
+        Left e -> bug ("calculateType:" <+> e <++> vcat [pretty over, pretty over'])
+        Right ty -> scope $ do
             outPat <- giveTypeToPat ty pat
             body'  <- resolveX body
             let l = Lambda outPat body'
@@ -138,4 +138,12 @@ viewLambda (        Op (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr l@Lambda{} over))
          , typeOf
          )
 viewLambda _ = Nothing
+
+
+scope :: MonadState st m => m a -> m a
+scope ma = do
+    st <- gets id
+    a <- ma
+    modify (const st)
+    return a
 
