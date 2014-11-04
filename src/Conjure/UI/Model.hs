@@ -482,6 +482,8 @@ allRules =
     , rule_Function_MapInExpr_Function1DPartial
     , rule_Function_InDefined_Function1DPartial
 
+    , rule_Function_Image_FunctionNDPartial
+
     , rule_RelationEq
     , rule_Relation_In_RelationAsMatrix
     , rule_Relation_MapInExpr_RelationAsMatrix
@@ -1188,6 +1190,26 @@ rule_Function_InDefined_Function1DPartial = "function-in-defined{Function1DParti
         [flags,_values]     <- downX1 f
         return ( "Function in defined, Function1DPartial representation"
                , const [essence| &flags[&x] |]
+               )
+    theRule _ = fail "No match."
+
+
+rule_Function_Image_FunctionNDPartial :: Rule
+rule_Function_Image_FunctionNDPartial = "function-image{FunctionNDPartial}"
+                                 `namedRule` theRule where
+    theRule [essence| image(&f,&x) |] = do
+        "FunctionNDPartial" <- representationOf f
+        TypeTuple ts        <- typeOf x
+        let xArity          =  length ts
+        [flags,values]      <- downX1 f
+        let index m 1     = make opIndexing m                   (make opIndexing x (fromInt 1))
+            index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
+        let flagsIndexed  = index flags  xArity
+        let valuesIndexed = index values xArity
+        return ( "Function image, Function1DPartial representation"
+               , const [essence| { &valuesIndexed
+                                 @ such that &flagsIndexed
+                                 } |]
                )
     theRule _ = fail "No match."
 

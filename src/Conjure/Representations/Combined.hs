@@ -23,6 +23,7 @@ import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 import Conjure.Representations.Function.Function1D
 import Conjure.Representations.Function.Function1DPartial
+import Conjure.Representations.Function.FunctionNDPartial
 import Conjure.Representations.Relation.RelationAsMatrix
 
 
@@ -125,22 +126,20 @@ dispatch domain = do
         DomainInt{}     -> primitive
         DomainTuple{}   -> tuple
         DomainMatrix{}  -> matrix
-        DomainSet r _ _ ->
-            case r of
-                "Occurrence"                -> setOccurrence
-                "Explicit"                  -> setExplicit
-                "ExplicitVarSizeWithMarker" -> setExplicitVarSizeWithMarker
-                "ExplicitVarSizeWithFlags"  -> setExplicitVarSizeWithFlags
-                _ -> nope
-        DomainFunction r _ _ _ ->
-            case r of
-                "Function1D" -> function1D
-                "Function1DPartial" -> function1DPartial
-                _ -> nope
-        DomainRelation r _ _ ->
-            case r of
-                "RelationAsMatrix" -> relationAsMatrix
-                _ -> nope
+        DomainSet r _ _ -> case r of
+            "Occurrence"                    -> setOccurrence
+            "Explicit"                      -> setExplicit
+            "ExplicitVarSizeWithMarker"     -> setExplicitVarSizeWithMarker
+            "ExplicitVarSizeWithFlags"      -> setExplicitVarSizeWithFlags
+            _ -> nope
+        DomainFunction r _ _ _ -> case r of
+            "Function1D"                    -> function1D
+            "Function1DPartial"             -> function1DPartial
+            "FunctionNDPartial"             -> functionNDPartial
+            _ -> nope
+        DomainRelation r _ _ -> case r of
+            "RelationAsMatrix"              -> relationAsMatrix
+            _ -> nope
         _ -> nope
 
 
@@ -149,7 +148,7 @@ allReprs :: [Representation (Either Doc)]
 allReprs =
     [ primitive, tuple, matrix
     , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-    , function1D, function1DPartial
+    , function1D, function1DPartial, functionNDPartial
     , relationAsMatrix
     ]
 
