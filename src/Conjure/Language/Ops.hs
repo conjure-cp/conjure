@@ -72,6 +72,8 @@ data Ops x
     | MkOpSupsetEq        (OpSupsetEq x)
     | MkOpIntersect       (OpIntersect x)
     | MkOpUnion           (OpUnion x)
+    | MkOpToSet           (OpToSet x)
+    | MkOpToMSet          (OpToMSet x)
 
     | MkOpFunctionImage   (OpFunctionImage x)
     | MkOpDefined         (OpDefined x)
@@ -123,6 +125,8 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpSupsetEq            x) = typeOf x
     typeOf (MkOpIntersect           x) = typeOf x
     typeOf (MkOpUnion               x) = typeOf x
+    typeOf (MkOpToSet               x) = typeOf x
+    typeOf (MkOpToMSet              x) = typeOf x
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
@@ -185,6 +189,8 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpSupsetEq  op@(OpSupsetEq  a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpIntersect op@(OpIntersect a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpUnion     op@(OpUnion     a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec _ (MkOpToSet    (OpToSet    a)) = "toSet"    <> prParens (pretty a)
+    prettyPrec _ (MkOpToMSet   (OpToMSet   a)) = "toMSet"   <> prParens (pretty a)
     prettyPrec _ (MkOpFunctionImage (OpFunctionImage a b)) = "image" <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
@@ -759,6 +765,42 @@ instance TypeOf x => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
 
 
+data OpToSet x = OpToSet x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpToSet x)
+instance Hashable  x => Hashable  (OpToSet x)
+instance ToJSON    x => ToJSON    (OpToSet x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpToSet x) where parseJSON = JSON.genericParseJSON jsonOptions
+opToSet :: OperatorContainer x => x -> x
+opToSet x = injectOp (MkOpToSet (OpToSet x))
+instance TypeOf x => TypeOf (OpToSet x) where
+    typeOf (OpToSet x) = do
+        tx <- typeOf x
+        case tx of
+            TypeRelation is  -> return (TypeSet (TypeTuple is))
+            TypeMSet i       -> return (TypeSet i)
+            TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
+            _ -> fail ("Type checking toSet:" <+> pretty tx)
+
+
+data OpToMSet x = OpToMSet x
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize x => Serialize (OpToMSet x)
+instance Hashable  x => Hashable  (OpToMSet x)
+instance ToJSON    x => ToJSON    (OpToMSet x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpToMSet x) where parseJSON = JSON.genericParseJSON jsonOptions
+opToMSet :: OperatorContainer x => x -> x
+opToMSet x = injectOp (MkOpToMSet (OpToMSet x))
+instance TypeOf x => TypeOf (OpToMSet x) where
+    typeOf (OpToMSet x) = do
+        tx <- typeOf x
+        case tx of
+            TypeRelation is  -> return (TypeMSet (TypeTuple is))
+            TypeSet i        -> return (TypeMSet i)
+            TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
+            _ -> fail ("Type checking toMSet:" <+> pretty tx)
+
+
 data OpFunctionImage x = OpFunctionImage x [x]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize x => Serialize (OpFunctionImage x)
@@ -909,6 +951,8 @@ mkOp op xs =
             L_allDiff  -> opAllDiff  (headNote "allDiff takes a single argument."  xs)
             L_dontCare -> opDontCare (headNote "dontCare takes a single argument." xs)
             L_flatten  -> opFlatten  (headNote "flatten takes a single argument."  xs)
+            L_toSet    -> opToSet    (headNote "toSet takes a single argument."    xs)
+            L_toMSet   -> opToMSet   (headNote "toMSet takes a single argument."   xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 

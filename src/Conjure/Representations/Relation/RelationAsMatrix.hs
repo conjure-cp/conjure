@@ -51,30 +51,50 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             return $ \ fresh [m] -> return (mkSizeCons sizeAttr (cardinality fresh m))
         structuralCons _ _ _ = fail "N/A {structuralCons} RelationAsMatrix"
 
-        -- downC ( name
-        --       , DomainRelation "RelationAsMatrix"
-        --             (RelationAttr sizeAttr)
-        --             innerDomains'
-        --       , ConstantFunction vals
-        --       ) | all domainCanIndexMatrix innerDomains' = do
-        --     innerDomains <- mapM toIntDomain innerDomains'
-        --     froms            <- domainValues innerDomainFr
-        --     valsOut          <- sequence
-        --         [ val
-        --         | fr <- froms
-        --         , let val = case lookup fr vals of
-        --                         Nothing -> fail $ vcat [ "No value for " <+> pretty fr
-        --                                                , "In:" <+> pretty (ConstantFunction vals)
-        --                                                ]
-        --                         Just v  -> return v
-        --         ]
-        --     return $ Just
-        --         [ ( outName name
-        --           , DomainMatrix
-        --               (forgetRepr innerDomainFrInt)
-        --               innerDomainTo
-        --           , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
-        --           ) ]
+        downC ( name
+              , DomainRelation "RelationAsMatrix" _ innerDomains'
+              , ConstantRelation vals
+              ) | all domainCanIndexMatrix innerDomains' = do
+            innerDomains <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomains')
+            let
+                check :: [Constant] -> Bool
+                check indices = indices `elem` vals
+
+            let
+                unrollD :: [Domain () Constant] -> Domain r Constant -> Domain r Constant
+                unrollD []     j = j
+                unrollD (i:is) j = DomainMatrix i (unrollD is j)
+
+            let
+                unrollC :: MonadFail m
+                        => [ ( Domain () Constant       -- the int domain
+                             , Domain () Constant       -- the actial domain
+                             ) ]
+                        -> [Constant]               -- indices
+                        -> m Constant
+                unrollC [(i,i')] prevIndices = do
+                    domVals <- domainValues i'
+                    return (ConstantMatrix i [ ConstantBool $ check $ prevIndices ++ [val]
+                                             | val <- domVals ])
+                unrollC ((i,i'):is) prevIndices = do
+                    domVals <- domainValues i'
+                    matrixVals <- forM domVals $ \ val ->
+                        unrollC is (prevIndices ++ [val])
+                    return (ConstantMatrix i matrixVals)
+                unrollC is prevIndices = fail $ vcat [ "RelationAsMatrix.up.unrollC"
+                                                     , "    is         :" <+> vcat (map pretty is)
+                                                     , "    prevIndices:" <+> pretty (show prevIndices)
+                                                     ]
+
+            outConstant <- unrollC (zip (map forgetRepr innerDomains)
+                                        (map forgetRepr innerDomains')) []
+
+            return $ Just
+                [ ( outName name
+                  , unrollD (map forgetRepr innerDomains) DomainBool
+                  , outConstant
+                  ) ]
+
         downC _ = fail "N/A {downC}"
 
         up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains')) = do

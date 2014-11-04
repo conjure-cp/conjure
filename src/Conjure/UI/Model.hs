@@ -26,7 +26,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
-                                   , opLeq, opFlatten )
+                                   , opLeq, opFlatten, opToSet )
 
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
@@ -481,6 +481,10 @@ allRules =
     , rule_Function_Image_Function1DPartial
     , rule_Function_MapInExpr_Function1DPartial
     , rule_Function_InDefined_Function1DPartial
+
+    , rule_RelationEq
+    , rule_Relation_In_RelationAsMatrix
+    , rule_Relation_MapInExpr_RelationAsMatrix
 
     ]
 
@@ -1187,4 +1191,54 @@ rule_Function_InDefined_Function1DPartial = "function-in-defined{Function1DParti
                )
     theRule _ = fail "No match."
 
+
+rule_RelationEq :: Rule
+rule_RelationEq = "relation-eq" `namedRule` theRule where
+    theRule p = do
+        (x,y)          <- match opEq p
+        TypeRelation{} <- typeOf x
+        TypeRelation{} <- typeOf y
+        return ( "Horizontal rule for relation equality"
+               , const $ make opEq (make opToSet x)
+                                   (make opToSet y)
+               )
+
+rule_Relation_In_RelationAsMatrix :: Rule
+rule_Relation_In_RelationAsMatrix = "relation-in{RelationAsMatrix}" `namedRule` theRule where
+    theRule [essence| &x in toSet(&rel) |] = do
+        TypeRelation{} <- typeOf rel
+        return ( "relation membership to existential quantification"
+               , \ fresh ->
+                   let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                   in  [essence| exists &iPat in toSet(&rel) . &i = &x |]
+               )
+    theRule _ = fail "No match."
+
+
+rule_Relation_MapInExpr_RelationAsMatrix :: Rule
+rule_Relation_MapInExpr_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
+    theRule p = do
+        (Lambda f1 f2, s)      <- match opMapInExpr p
+        let f                  =  lambdaToFunction f1 f2
+        r                      <- match opToSet s
+        TypeRelation{}         <- typeOf r
+        "RelationAsMatrix"     <- representationOf r
+        [m]                    <- downX1 r
+        mDom                   <- domainOf m
+        let (mIndices, _)      =  getIndices mDom
+
+        let unroll val [((pat,_),index)]
+                = make opMapOverDomain (Lambda pat (f val))
+                                       (Domain index)
+            unroll val (((pat,_),index):rest)
+                = let val' = val
+                  in  make opFlatten $
+                          make opMapOverDomain (Lambda pat (unroll val' rest))
+                                               (Domain index)
+            unroll _ _ = bug "rule_Relation_MapInExpr_RelationAsMatrix.unroll []"
+            
+        let out fresh = unroll m (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
+        return ( "Vertical rule for map_in_expr for relation domains, RelationAsMatrix representation."
+               , out
+               )
 

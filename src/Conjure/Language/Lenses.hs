@@ -193,6 +193,44 @@ opToInt _ =
     )
 
 
+opToSet
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opToSet _ =
+    ( injectOp . MkOpToSet . OpToSet
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpToSet (OpToSet x) -> return x
+                _ -> fail ("N/A opToSet:" <++> pretty p)
+    )
+
+
+opToMSet
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opToMSet _ =
+    ( injectOp . MkOpToMSet . OpToMSet
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpToMSet (OpToMSet x) -> return x
+                _ -> fail ("N/A opToMSet:" <++> pretty p)
+    )
+
+
 opIndexing
     :: ( OperatorContainer x
        , Pretty x

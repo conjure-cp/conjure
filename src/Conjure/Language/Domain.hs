@@ -116,6 +116,9 @@ isPrimitiveDomain DomainInt{} = True
 isPrimitiveDomain (DomainMatrix index inner) = and [isPrimitiveDomain index, isPrimitiveDomain inner]
 isPrimitiveDomain _ = False
 
+getIndices :: Domain r x -> ([Domain () x], Domain r x)
+getIndices (DomainMatrix index inner) = first (index:) (getIndices inner)
+getIndices d = ([], d)
 
 --------------------------------------------------------------------------------
 -- attribute definitions -------------------------------------------------------
