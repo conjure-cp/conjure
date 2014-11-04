@@ -1,0 +1,12 @@
+#/bin/sh
+
+# had to 'set backupcopy=yes' in ~/.vimrc to make vim happy
+
+command='etc/dev/watch-helpers/upTestOnSingleFile  "${watch_src_path}"'
+
+watchmedo shell-command src \
+    --patterns="*.hs" \
+    --ignore-directories \
+    --recursive \
+    --command="$command"
+
