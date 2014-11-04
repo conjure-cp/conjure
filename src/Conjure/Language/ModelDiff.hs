@@ -22,8 +22,13 @@ modelDiffIO m1 m2 =
 modelDiff :: Model -> Model -> Maybe Doc
 modelDiff m1 m2 =
     let
-        m1Extra = mStatements m1 \\ mStatements m2
-        m2Extra = mStatements m2 \\ mStatements m1
+        explode = concatMap $ \ st -> case st of SuchThat xs -> map (SuchThat . return) xs
+                                                 Where    xs -> map (Where    . return) xs
+                                                 _           -> [st]
+        m1Statements = m1 |> mStatements |> explode
+        m2Statements = m2 |> mStatements |> explode
+        m1Extra = m1Statements \\ m2Statements
+        m2Extra = m2Statements \\ m1Statements
     in
         if null m1Extra && null m2Extra
             then Nothing
