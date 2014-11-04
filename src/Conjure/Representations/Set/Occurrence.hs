@@ -32,11 +32,13 @@ setOccurrence = Representation chck downD structuralCons downC up
         downD _ = fail "N/A {downD}"
 
         structuralCons _ _ (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
-            return $ \ fresh [m] -> do
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
-                    cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
-                return (mkSizeCons attrs cardinality)
+            return $ \ fresh refs ->
+                case refs of
+                    [m] -> do
+                        let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                            cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
+                        return (mkSizeCons attrs cardinality)
+                    _ -> fail "N/A {structuralCons} Occurrence"
         structuralCons _ _ _ = fail "N/A {structuralCons} Occurrence"
 
         downC (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do

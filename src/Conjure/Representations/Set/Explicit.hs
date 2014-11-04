@@ -33,13 +33,16 @@ setExplicit = Representation chck downD structuralCons downC up
 
         -- FIX
         structuralCons _ _ (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) _) =
-            return $ \ fresh [m] -> do
-                let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
-                return $ return -- one for list
-                    [essence|
-                        forAll &iPat : int(1..&size-1) .
-                            &m[&i] < &m[&i+1]
-                    |]
+            return $ \ fresh refs ->
+                case refs of
+                    [m] -> do
+                        let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        return $ return -- one for list
+                            [essence|
+                                forAll &iPat : int(1..&size-1) .
+                                    &m[&i] < &m[&i+1]
+                            |]
+                    _ -> fail "N/A {structuralCons} Explicit"
         structuralCons _ _ _ = fail "N/A {structuralCons} Explicit"
 
         downC (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain, ConstantSet constants) =

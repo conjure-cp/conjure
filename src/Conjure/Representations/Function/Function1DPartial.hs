@@ -96,10 +96,12 @@ function1DPartial = Representation chck downD structuralCons downC up
                     in
                         [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
-            return $ \ fresh [flags,values] -> do
-                return $ concat [ jectivityCons fresh flags values
-                                , mkSizeCons sizeAttr (cardinality fresh flags)
-                                ]
+            return $ \ fresh refs ->
+                case refs of
+                    [flags,values] -> return $ concat [ jectivityCons fresh flags values
+                                                      , mkSizeCons sizeAttr (cardinality fresh flags)
+                                                      ]
+                    _ -> fail "N/A {structuralCons} Function1DPartial"
 
         structuralCons _ _ _ = fail "N/A {structuralCons} Function1DPartial"
 

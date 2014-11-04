@@ -4,7 +4,6 @@ module Conjure.Representations.Set.ExplicitVarSizeWithFlags ( setExplicitVarSize
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -103,7 +102,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                         , mkSizeCons attrs (cardinality fresh flags)
                                         , isc
                                         ]
-                    _ -> bug "structuralCons ExplicitVarSizeWithFlags"
+                    _ -> fail "N/A {structuralCons} ExplicitVarSizeWithFlags"
 
         structuralCons _ _ _ = fail "N/A {structuralCons} ExplicitVarSizeWithFlags"
 

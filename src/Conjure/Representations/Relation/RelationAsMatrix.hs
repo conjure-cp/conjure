@@ -48,7 +48,10 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                             let r = unroll [essence| &n[&i] |] rest
                             in  [essence| sum &iPat : &dom . &r |]
                     in  unroll m (zip [ quantifiedVar f TypeInt | f <- fresh ] innerDomains)
-            return $ \ fresh [m] -> return (mkSizeCons sizeAttr (cardinality fresh m))
+            return $ \ fresh refs ->
+                case refs of
+                    [m] -> return (mkSizeCons sizeAttr (cardinality fresh m))
+                    _ -> fail "N/A {structuralCons} RelationAsMatrix"
         structuralCons _ _ _ = fail "N/A {structuralCons} RelationAsMatrix"
 
         downC ( name

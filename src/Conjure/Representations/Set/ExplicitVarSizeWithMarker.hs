@@ -4,7 +4,6 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSiz
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
@@ -88,10 +87,9 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                         , mkSizeCons attrs marker
                                         , isc
                                         ]
-                    _ -> bug "structuralCons ExplicitVarSizeWithMarker"
+                    _ -> fail $ "N/A {structuralCons} ExplicitVarSizeWithMarker"
 
-        structuralCons _ _ dom = fail $ "N/A {structuralCons} ExplicitVarSizeWithMarker"
-                                       <+> pretty (show dom)
+        structuralCons _ _ _ = fail $ "N/A {structuralCons} ExplicitVarSizeWithMarker"
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain

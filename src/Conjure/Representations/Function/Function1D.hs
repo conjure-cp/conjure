@@ -77,7 +77,10 @@ function1D = Representation chck downD structuralCons downC up
 
             cardinality <- domainSizeOf innerDomainFr
 
-            return $ \ fresh [m] -> return (jectivityCons fresh m ++ mkSizeCons sizeAttr cardinality)
+            return $ \ fresh refs ->
+                case refs of
+                    [m] -> return (jectivityCons fresh m ++ mkSizeCons sizeAttr cardinality)
+                    _ -> fail "N/A {structuralCons} Function1D"
 
         structuralCons _ _ _ = fail "N/A {structuralCons} Function1D"
 
