@@ -25,6 +25,7 @@ downX1 (Constant x) = onConstant x
 downX1 (AbstractLiteral x) = onAbstractLiteral x
 downX1 (Reference x (Just refTo)) = onReference x refTo
 downX1 (Op x) = onOp x
+downX1 x@WithLocals{} = fail ("downX1:" <++> pretty (show x))
 downX1 x = bug ("downX1:" <++> pretty (show x))
 
 onConstant :: MonadFail m => Constant -> m [Expression]
@@ -49,4 +50,4 @@ onOp (MkOpIndexing (OpIndexing m i)) = do
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
-onOp op = bug ("downX1.onOp:" <++> pretty op)
+onOp op = fail ("downX1.onOp:" <++> pretty op)
