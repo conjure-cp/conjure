@@ -216,7 +216,10 @@ dirShouldExist d = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = ignoreLogs . outputModels dir 1 LogNeither allFixedQs
+modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
+                                             , strategyA = PickAll
+                                             , outputDirectory = dir
+                                             }
 
 
 sh :: Sh a -> IO a

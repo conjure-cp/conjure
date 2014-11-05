@@ -5,6 +5,7 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module Conjure.Prelude
     ( module X
@@ -395,10 +396,13 @@ class Monad m => MonadLog m where
     log :: LogLevel -> Doc -> m ()
 
 data LogLevel
-    = LogInfo
+    = LogNone
+    | LogInfo
     | LogWarn
     | LogDebug
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Default LogLevel where def = LogInfo
 
 logInfo :: MonadLog m => Doc -> m ()
 logInfo = log LogInfo

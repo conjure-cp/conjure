@@ -6,13 +6,15 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 
 module Conjure.UI.Model
     ( outputModels
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
-    , Strategy(..), LogRuleApplications(..)
+    , Strategy(..), Config(..), parseStrategy
     ) where
 
 import Conjure.Prelude
@@ -63,11 +65,35 @@ data Strategy
     | Interactive
     -- | AtRandom
     | Auto Strategy
-    deriving (Eq, Ord, Show, Read)
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Default Strategy where def = Auto Interactive
 
 viewAuto :: Strategy -> (Strategy, Bool)
 viewAuto (Auto s) = second (const True) (viewAuto s)
 viewAuto s = (s, False)
+
+parseStrategy :: String -> Maybe Strategy
+parseStrategy "f" = return PickFirst
+parseStrategy "x" = return PickAll
+parseStrategy "i" = return Interactive
+parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
+parseStrategy _ = Nothing
+
+data Config = Config
+    { logLevel         :: LogLevel
+    , verboseTrail     :: Bool
+    , logRuleFails     :: Bool
+    , logRuleSuccesses :: Bool
+    , logRuleAttempts  :: Bool
+    , strategyQ        :: Strategy
+    , strategyA        :: Strategy
+    , outputDirectory  :: FilePath
+    }
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
+
+instance Default Config where
+    def = Config LogInfo False False False False Interactive Interactive "conjure-output"
 
 
 type RuleResult = ( Doc                     -- describe this transformation
@@ -91,44 +117,38 @@ namedRule nm f = Rule
                       in  liftM (return . addId) (f x)
     }
 
-data LogRuleApplications
-    = LogNeither
-    | LogSuccessful
-    | LogFails
-    | LogBoth
-    deriving (Eq, Ord, Show, Read)
-
 
 outputModels
     :: (MonadIO m, MonadFail m, MonadLog m)
-    => FilePath -> Int
-    -> LogRuleApplications
-    -> Driver -> Model
+    => Config
+    -> Model
     -> m ()
-outputModels dir i ruleLog driver model = do
+outputModels config model = do
+    let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
     Pipes.foldM (\ j eprime -> liftIO $ do
                         let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
                         writeFile filename (renderWide eprime)
                         return (j+1)
                 )
-                (return i)
+                (return (1 :: Int))
                 (const $ return ())
-                (toCompletion ruleLog driver model)
+                (toCompletion config model)
 
 
 toCompletion
     :: (MonadIO m, MonadFail m, MonadLog m)
-    => LogRuleApplications
-    -> Driver -> Model
+    => Config
+    -> Model
     -> Pipes.Producer Model m ()
-toCompletion ruleLog driver m = do
+toCompletion config@Config{..} m = do
     m2 <- prologue m
     logInfo $ modelInfo m2
     loopy m2
     where
+        driver = strategyToDriver strategyQ strategyA
         loopy model = do
-            qs <- remaining ruleLog model
+            qs <- remaining config model
             if null qs
                 then do
                     model' <- epilogue model
@@ -140,14 +160,14 @@ toCompletion ruleLog driver m = do
 
 remaining
     :: (Functor m, Applicative m, Monad m, MonadLog m)
-    => LogRuleApplications
+    => Config
     -> Model
     -> m [Question]
-remaining ruleLog model = do
+remaining config model = do
     let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
-        ys <- applicableRules ruleLog (hole x)
+        ys <- applicableRules config (hole x)
         return $ if null ys
             then Nothing
             else Just (x, ys)
@@ -160,7 +180,7 @@ remaining ruleLog model = do
                     { aText = ruleName <> ":" <+> ruleText
                     , aAnswer = ruleResultExpr
                     , aFullModel = hook (fromZipper (replaceHole ruleResultExpr focus))
-                                    |> addToTrail nQuestion [1 .. length questions]
+                                    |> addToTrail config nQuestion [1 .. length questions]
                                                   (("Focus:" <+> pretty (hole focus))
                                                    : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                                      | i <- allNats
@@ -224,16 +244,19 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
 
 
 addToTrail
-    :: Int -> [Int] -> [Doc]
+    :: Config
+    -> Int -> [Int] -> [Doc]
     -> Int -> [Int] -> [Doc]
     -> Model -> Model
-addToTrail nQuestion nQuestions tQuestion
+addToTrail Config{..}
+           nQuestion nQuestions tQuestion
            nAnswer nAnswers tAnswer
            model = model { mInfo = newInfo }
     where
         oldInfo = mInfo model
-        newInfo = oldInfo { miTrail = miTrail oldInfo ++ [theQ, theA]
-                          , miTrailCompact = miTrailCompact oldInfo ++ [(nQuestion, nQuestions), (nAnswer, nAnswers)]
+        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++ [(nQuestion, nQuestions), (nAnswer, nAnswers)]
+                          , miTrail = if verboseTrail then miTrail oldInfo ++ [theQ, theA]
+                                                      else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
@@ -406,26 +429,20 @@ hasRepresentation x = do
 
 applicableRules
     :: (Applicative m, Monad m, MonadLog m)
-    => LogRuleApplications
+    => Config
     -> Expression
     -> m [(Doc, RuleResult)]
-applicableRules LogNeither x =
+applicableRules Config{..} x | not (logRuleAttempts || logRuleFails || logRuleSuccesses) =
     concat <$> sequence [ do res <- runMaybeT (rApply r x)
                              return (map (rName r,) (concat (maybeToList res)))
                         | r <- allRules ]
-applicableRules l x = do
-    let logFail =
-            case l of
-                LogFails      -> logInfo
-                LogBoth       -> logInfo
-                _             -> const (return ())
-    let logSuccess =
-            case l of
-                LogSuccessful -> logInfo
-                LogBoth       -> logInfo
-                _             -> const (return ())
+applicableRules Config{..} x = do
+    let logAttempt = if logRuleAttempts  then logInfo else const (return ())
+    let logFail    = if logRuleFails     then logInfo else const (return ())
+    let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
-    mys <- sequence [ do mres <- runExceptT (rApply r x)
+    mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty x)
+                         mres <- runExceptT (rApply r x)
                          return (rName r, mres :: Either Doc [RuleResult])
                     | r <- allRules ]
     forM_ mys $ \ (rule, my) ->
