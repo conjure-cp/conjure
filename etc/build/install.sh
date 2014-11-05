@@ -86,6 +86,7 @@ echo "COVERAGE        : ${COVERAGE}"
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
 export PATH="${HOME}/.cabal/bin":$PATH
+export PATH="${BIN_DIR}":$PATH
 
 # installing ghc
 if [ "$(ghc --version | grep $GHC_VERSION)" ]; then

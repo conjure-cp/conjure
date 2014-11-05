@@ -38,6 +38,7 @@ module Conjure.Prelude
     , MonadLog(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logWarn, logDebug
     , histogram
     , ExceptT(..)
+    , sh
     ) where
 
 import GHC.Err as X ( error )
@@ -146,6 +147,9 @@ import qualified Pipes as Pipes
 
 -- groom
 import Text.Groom as X ( groom )
+
+-- shelly
+import Shelly ( Sh, shelly, print_stdout, print_stderr )
 
 import System.Random as X ( StdGen, getStdGen, randomR )
 
@@ -445,3 +449,5 @@ runLoggerIO l logger = do
 histogram :: Ord a => [a] -> [(a,Int)]
 histogram = map (head &&& length) . group . sort
 
+sh :: Sh a -> IO a
+sh = shelly . print_stdout False . print_stderr False

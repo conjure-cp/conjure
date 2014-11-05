@@ -7,10 +7,8 @@ import Conjure.Language.Domain
 import Conjure.Language.DomainSize ( domainSizeConstant )
 
 -- tasty
-import Test.Tasty
-import Test.Tasty.HUnit
--- import Test.Tasty.QuickCheck as QC
--- import Test.Tasty.SmallCheck as SC
+import Test.Tasty ( TestTree, testGroup )
+import Test.Tasty.HUnit ( testCase, (@?=) )
 
 
 tests :: TestTree

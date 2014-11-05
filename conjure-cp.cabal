@@ -83,11 +83,13 @@ Library
                      , integer-gmp
                      , mtl
                      , parsec >= 3
+                     , pipes
                      , pretty
                      , QuickCheck
                      , random
                      , safe
                      , scientific
+                     , shelly
                      , split
                      , syb
                      , template-haskell
@@ -96,7 +98,6 @@ Library
                      , uniplate
                      , unordered-containers
                      , vector
-                     , pipes
 
     default-extensions:
         NoImplicitPrelude
@@ -147,10 +148,12 @@ test-suite conjure-testing
     main-is          : TestsMain.hs
     build-depends    : conjure-cp
                      , base
+                     , bytestring
                      , containers 
                      , shelly
                      , tasty
                      , tasty-ant-xml
+                     , tasty-golden
                      , tasty-hunit
                      , text
     default-extensions:

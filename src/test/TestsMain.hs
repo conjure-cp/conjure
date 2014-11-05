@@ -5,6 +5,7 @@ import Conjure.Prelude
 import qualified Conjure.Language.DomainSizeTest ( tests )
 import qualified Conjure.RepresentationsTest ( tests )
 import qualified Conjure.ModelAllSolveAll ( tests )
+import qualified Golden ( tests )
 
 -- tasty
 import Test.Tasty
@@ -20,4 +21,5 @@ main = do
             [ Conjure.Language.DomainSizeTest.tests
             , Conjure.RepresentationsTest.tests
             , modelAllSolveAllTests
+            , Golden.tests
             ]

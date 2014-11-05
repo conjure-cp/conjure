@@ -17,7 +17,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 -- shelly
-import Shelly ( Sh, shelly, run, lastStderr, print_stdout, print_stderr )
+import Shelly ( run, lastStderr )
 
 -- text
 import qualified Data.Text as T ( Text, null, unpack )
@@ -220,8 +220,3 @@ modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
                                              , strategyA = PickAll
                                              , outputDirectory = dir
                                              }
-
-
-sh :: Sh a -> IO a
-sh = shelly . print_stdout False . print_stderr False
-

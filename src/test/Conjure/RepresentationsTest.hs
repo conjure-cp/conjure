@@ -1190,13 +1190,12 @@ data Pr a = Pr a
     deriving Eq
 
 instance Show (Pr [(Name, Domain HasRepresentation Constant, Constant)]) where
-    show (Pr xs) = show $ vcat $ concatMap sh xs
+    show (Pr xs) = show $ vcat $ concatMap show' xs
         where
-            sh (name, dom, cons) = [ hang (pretty name) 4 $ vcat
+            show' (name, dom, cons) = [ hang (pretty name) 4 $ vcat
                                         [ ":" <+> pretty dom
                                         , "=" <+> pretty cons
-                                        ]
-                                   ]
+                                        ] ]
 
 instance Show (Pr (Maybe [(Name, Domain HasRepresentation Constant, Constant)])) where
     show (Pr Nothing) = "Nothing"
