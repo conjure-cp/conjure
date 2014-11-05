@@ -255,8 +255,9 @@ addToTrail Config{..}
     where
         oldInfo = mInfo model
         newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++ [(nQuestion, nQuestions), (nAnswer, nAnswers)]
-                          , miTrail = if verboseTrail then miTrail oldInfo ++ [theQ, theA]
-                                                      else []
+                          , miTrailVerbose = if verboseTrail
+                                                  then miTrailVerbose oldInfo ++ [theQ, theA]
+                                                  else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)

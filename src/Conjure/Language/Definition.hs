@@ -233,8 +233,8 @@ data ModelInfo = ModelInfo
     , miEnumLettings :: [Declaration]
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
-    , miTrail :: [Decision]
     , miTrailCompact :: [(Int,[Int])]
+    , miTrailVerbose :: [Decision]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
