@@ -219,7 +219,7 @@ if [ $BUILD_DOCS == "yes" ]; then
 fi
 
 if [ $RUN_TESTS = "yes" ]; then
-    cabal test
+    time dist/build/conjure-testing/conjure-testing +RTS -s
 fi
 
 cabal copy                                  # install in ${BIN_DIR}
