@@ -5,6 +5,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE KindSignatures #-}
 
 module Conjure.UI.Model
     ( outputModels
@@ -26,7 +27,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
-                                   , opLeq, opFlatten, opToSet )
+                                   , opLeq, opFlatten, opToSet, opIntersect, opUnion )
 
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
@@ -453,6 +454,8 @@ allRules =
     , rule_ToIntIsNoOp
     , rule_SingletonAnd
 
+    , rule_BubbleUp
+
     , rule_DontCareBool
     , rule_DontCareInt
     , rule_DontCareTuple
@@ -460,9 +463,6 @@ allRules =
     , rule_DontCareSet
 
     , rule_ComplexLambda
-    , rule_InlineFilterInsideMap_And
-    , rule_InlineFilterInsideMap_Or
-    , rule_InlineFilterInsideMap_Sum
 
     , rule_TupleIndex
     , rule_TupleEq
@@ -478,6 +478,7 @@ allRules =
     , rule_SetSubsetEq
     , rule_SetLt
     , rule_SetLeq
+    , rule_SetIntersect
 
     , rule_Set_MapInExpr_Explicit
     , rule_Set_MapInExpr_Occurrence
@@ -506,7 +507,7 @@ allRules =
     , rule_Relation_In_RelationAsMatrix
     , rule_Relation_MapInExpr_RelationAsMatrix
 
-    ]
+    ] ++ rule_InlineFilterInsideMap
 
 
 rule_ChooseRepr :: Rule
@@ -522,7 +523,7 @@ rule_ChooseRepr = Rule "choose-repr" theRule where
                , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                , let hook = mkHook forg nm dom
                ]
-    theRule _ = return []
+    theRule _ = fail "No match."
 
     mkHook forg     -- find or given
            name     -- name of the original declaration
@@ -616,6 +617,30 @@ rule_SingletonAnd = "singleton-and" `namedRule` theRule where
         return ( "singleton and, removing the wrapper"
                , const x
                )
+
+
+rule_BubbleUp :: Rule
+rule_BubbleUp = "bubble-up" `namedRule` theRule where
+    theRule (WithLocals (WithLocals x locals1) locals2) =
+        return ( "Bubbling up nested bubbles"
+               , const $ WithLocals x (locals1 ++ locals2)
+               )
+    theRule p = do
+        (m, x) <- match opIndexing p
+        case (m, x) of
+            (WithLocals m' locals1, WithLocals x' locals2) ->
+                return ( "Bubbling up when the bubble is used to index something (1/3)"
+                       , const $ WithLocals (make opIndexing m' x') (locals1 ++ locals2)
+                       )
+            (WithLocals m' locals1, x') ->
+                return ( "Bubbling up when the bubble is used to index something (2/3)"
+                       , const $ WithLocals (make opIndexing m' x') locals1
+                       )
+            (m', WithLocals x' locals2) ->
+                return ( "Bubbling up when the bubble is used to index something (3/3)"
+                       , const $ WithLocals (make opIndexing m' x') locals2
+                       )
+            _ -> fail "No match."
 
 
 rule_DontCareBool :: Rule
@@ -724,27 +749,26 @@ rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
-rule_InlineFilterInsideMap_And :: Rule
-rule_InlineFilterInsideMap_And = "inline-filter-inside-map-and" `namedRule` theRule where
-    theRule p = ruleGen_InlineFilterInsideMap opAnd (\ x y -> make opImply x y ) p
-
-rule_InlineFilterInsideMap_Or :: Rule
-rule_InlineFilterInsideMap_Or = "inline-filter-inside-map-or" `namedRule` theRule where
-    theRule p = ruleGen_InlineFilterInsideMap opOr (\ x y -> make opAnd [x,y] ) p
-
-rule_InlineFilterInsideMap_Sum :: Rule
-rule_InlineFilterInsideMap_Sum = "inline-filter-inside-map-sum" `namedRule` theRule where
-    theRule p = ruleGen_InlineFilterInsideMap opSum (\ b x -> make opTimes (make opToInt b) x ) p
+rule_InlineFilterInsideMap :: [Rule]
+rule_InlineFilterInsideMap =
+    [ namedRule "inline-filter-inside-mapOverDomain-and" $ \ p -> ruleGen_InlineFilterInsideMap opAnd opMapOverDomain (\ x y -> make opImply x y ) p
+    , namedRule "inline-filter-inside-mapOverDomain-or"  $ \ p -> ruleGen_InlineFilterInsideMap opOr  opMapOverDomain (\ x y -> make opAnd [x,y] ) p
+    , namedRule "inline-filter-inside-mapOverDomain-sum" $ \ p -> ruleGen_InlineFilterInsideMap opSum opMapOverDomain (\ b x -> make opTimes (make opToInt b) x ) p
+    , namedRule "inline-filter-inside-mapInExpr-and"     $ \ p -> ruleGen_InlineFilterInsideMap opAnd opMapInExpr     (\ x y -> make opImply x y ) p
+    , namedRule "inline-filter-inside-mapInExpr-or"      $ \ p -> ruleGen_InlineFilterInsideMap opOr  opMapInExpr     (\ x y -> make opAnd [x,y] ) p
+    , namedRule "inline-filter-inside-mapInExpr-sum"     $ \ p -> ruleGen_InlineFilterInsideMap opSum opMapInExpr     (\ b x -> make opTimes (make opToInt b) x ) p
+    ]
 
 ruleGen_InlineFilterInsideMap
     :: MonadFail m
-    => (Proxy m -> (a, b -> m [Expression]))
+    => (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( [Expression] -> Expression            , Expression -> m1 [Expression]             ))
+    -> (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( Expression -> Expression -> Expression, Expression -> m1 (Expression, Expression) ))
     -> (Expression -> Expression -> Expression)
-    -> b
+    -> Expression
     -> m (Doc, [Name] -> Expression)
-ruleGen_InlineFilterInsideMap opQ opSkip p = do
+ruleGen_InlineFilterInsideMap opQ opM opSkip p = do
     [x]                             <- match opQ p
-    (Lambda f1@Single{} f2, rest  ) <- match opMapOverDomain x
+    (Lambda f1@Single{} f2, rest  ) <- match opM x
     (Lambda g1@Single{} g2, domain) <- match opFilter rest
     ty                              <- typeOf domain
 
@@ -752,8 +776,8 @@ ruleGen_InlineFilterInsideMap opQ opSkip p = do
     let g = lambdaToFunction g1 g2
 
     return ( "Inlining the filter."
-           , \ fresh -> make opAnd
-                   [ make opMapOverDomain
+           , \ fresh -> make opQ
+                   [ make opM
                            (mkLambda (headInf fresh) ty $ \ i -> opSkip (g i) (f i))
                            domain ]
            )
@@ -993,6 +1017,27 @@ rule_SetLeq = "set-leq" `namedRule` theRule where
                , const $ make opLeq ma mb
                )
 
+rule_SetIntersect :: Rule
+rule_SetIntersect = "set-intersect" `namedRule` theRule where
+    theRule p = do
+        (lambda, intersected) <- match opMapInExpr p
+        (x, y)                <- match opIntersect intersected
+        tx                    <- typeOf x
+        case tx of
+            TypeSet{}      -> return ()
+            TypeMSet{}     -> return ()
+            TypeFunction{} -> return ()
+            TypeRelation{} -> return ()
+            _              -> fail "type incompatibility in intersect operator"
+        xInnerTy              <- innerTypeOf tx
+        return ( "Horizontal rule for set intersection"
+               , \ fresh -> make opMapInExpr lambda
+                               (make opFilter
+                                   (mkLambda (headInf fresh) xInnerTy $ \ i -> [essence| &i in &y |])
+                                   x
+                               )
+               )
+
 
 rule_SetIn_Occurrence :: Rule
 rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
@@ -1137,11 +1182,12 @@ rule_Function_MapInExpr_Function1D :: Rule
 rule_Function_MapInExpr_Function1D = "function-quantification{Function1D}"
                                      `namedRule` theRule where
     theRule p = do
-        (Lambda lPat lBody, f) <- match opMapInExpr p
-        "Function1D"           <- representationOf f
-        TypeFunction fr _      <- typeOf f
-        [values]               <- downX1 f
-        DomainMatrix index _   <- domainOf values
+        (Lambda lPat lBody, expr) <- match opMapInExpr p
+        let f                     =  matchDef opToSet expr
+        "Function1D"              <- representationOf f
+        TypeFunction fr _         <- typeOf f
+        [values]                  <- downX1 f
+        DomainMatrix index _      <- domainOf values
         let lambda = lambdaToFunction lPat lBody
         return ( "Mapping over a function, Function1D representation"
                , \ fresh ->
@@ -1168,11 +1214,12 @@ rule_Function_MapInExpr_Function1DPartial :: Rule
 rule_Function_MapInExpr_Function1DPartial = "function-quantification{Function1DPartial}"
                                      `namedRule` theRule where
     theRule p = do
-        (Lambda lPat lBody, f) <- match opMapInExpr p
-        "Function1DPartial"    <- representationOf f
-        TypeFunction fr _      <- typeOf f
-        [flags,values]         <- downX1 f
-        DomainMatrix index _   <- domainOf values
+        (Lambda lPat lBody, expr) <- match opMapInExpr p
+        let f                     =  matchDef opToSet expr
+        "Function1DPartial"       <- representationOf f
+        TypeFunction fr _         <- typeOf f
+        [flags,values]            <- downX1 f
+        DomainMatrix index _      <- domainOf values
         let lambda = lambdaToFunction lPat lBody
         return ( "Mapping over a function, Function1DPartial representation"
                , \ fresh ->
@@ -1257,7 +1304,8 @@ rule_Function_MapInExpr_FunctionNDPartial :: Rule
 rule_Function_MapInExpr_FunctionNDPartial = "function-quantification{FunctionNDPartial}"
                                      `namedRule` theRule where
     theRule p = do
-        (Lambda lPat lBody, f)           <- match opMapInExpr p
+        (Lambda lPat lBody, expr)        <- match opMapInExpr p
+        let f                            = matchDef opToSet expr
         let lambda = lambdaToFunction lPat lBody
         "FunctionNDPartial"              <- representationOf f
         TypeFunction fr@(TypeTuple ts) _ <- typeOf f
@@ -1311,7 +1359,7 @@ rule_Relation_MapInExpr_RelationAsMatrix = "relation-map_in_expr{RelationAsMatri
     theRule p = do
         (Lambda f1 f2, s)      <- match opMapInExpr p
         let f                  =  lambdaToFunction f1 f2
-        r                      <- match opToSet s
+        let r                  = matchDef opToSet s
         TypeRelation{}         <- typeOf r
         "RelationAsMatrix"     <- representationOf r
         [m]                    <- downX1 r

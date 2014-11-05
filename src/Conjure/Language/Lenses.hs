@@ -16,6 +16,12 @@ make  f = fst (f (Proxy :: Proxy Identity))
 match :: (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
 match f = snd (f Proxy)
 
+matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
+matchOr defOut f inp = fromMaybe defOut (match f inp)
+
+matchDef :: (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
+matchDef f inp = matchOr inp f inp
+
 
 --------------------------------------------------------------------------------
 -- Lenses (for a weird definition of lens) -------------------------------------
@@ -307,6 +313,44 @@ opIn _ =
             case op of
                 MkOpIn (OpIn x y) -> return (x,y)
                 _ -> fail ("N/A opIn:" <++> pretty p)
+    )
+
+
+opIntersect
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opIntersect _ =
+    ( \ x y -> injectOp (MkOpIntersect (OpIntersect x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpIntersect (OpIntersect x y) -> return (x,y)
+                _ -> fail ("N/A opIntersect:" <++> pretty p)
+    )
+
+
+opUnion
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opUnion _ =
+    ( \ x y -> injectOp (MkOpUnion (OpUnion x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpUnion (OpUnion x y) -> return (x,y)
+                _ -> fail ("N/A opUnion:" <++> pretty p)
     )
 
 
