@@ -284,23 +284,39 @@ addTrueConstraints m =
 
 
 oneSuchThat :: Model -> Model
-oneSuchThat m = m { mStatements = others ++ [SuchThat suchThat] }
+oneSuchThat m =
+    let outStatements = transformBi onLocals (mStatements m)
+    in  m { mStatements = onStatements outStatements }
+
     where
-        suchThat = if null suchThats
-                    then [Constant (ConstantBool True)]
-                    else suchThats
 
-        (others, suchThats) = mStatements m
-              |> map collect                                            -- separate such thats from the rest
-              |> mconcat
-              |> second (map breakConjunctions)                         -- break top level /\'s
-              |> second mconcat
-              |> second (filter (/= Constant (ConstantBool True)))      -- remove top level true's
-              |> second nub                                             -- uniq
+        onStatements :: [Statement] -> [Statement]
+        onStatements xs =
+            let
+                (others, suchThats) = xs
+                      |> map collect                                            -- separate such thats from the rest
+                      |> mconcat
+                      |> second (map breakConjunctions)                         -- break top level /\'s
+                      |> second mconcat
+                      |> second (filter (/= Constant (ConstantBool True)))      -- remove top level true's
+                      |> second nub                                             -- uniq
+            in
+                others ++ [SuchThat (combine suchThats)]
 
+        onLocals :: Expression -> Expression
+        onLocals (WithLocals x locals) = WithLocals x (onStatements locals)
+        onLocals x = x
+
+        collect :: Statement -> ([Statement], [Expression])
         collect (SuchThat s) = ([], s)
         collect s = ([s], [])
 
+        combine :: [Expression] -> [Expression]
+        combine xs = if null xs
+                        then [Constant (ConstantBool True)]
+                        else xs
+
+        breakConjunctions :: Expression -> [Expression]
         breakConjunctions   (Op (MkOpAnd (OpAnd [ ]))) = bug "empty /\\"
         breakConjunctions x@(Op (MkOpAnd (OpAnd [_]))) = [x]
         breakConjunctions (Op (MkOpAnd (OpAnd xs))) = concatMap breakConjunctions xs
