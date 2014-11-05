@@ -7,5 +7,5 @@ refreeze:
 	( rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox && BUILD_TESTS=yes RUN_TESTS=yes make && cabal freeze )
 
 clean:
-	etc/build/clean
+	bash etc/build/clean.sh
 
