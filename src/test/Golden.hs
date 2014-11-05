@@ -27,11 +27,19 @@ tests = testGroup "golden"
                 "help-text"
                 goldenFile generatedFile
                 (\ gold gen -> return $
-                    -- drop 2 lines, to skip the version bit
-                    -- otherwise this test would never be able to pass!
-                    if drop 2 gold == drop 2 gen
-                        then Nothing
-                        else Just "Files differ" )
+                    let diffs =
+                            [ if goldLine == genLine
+                                then Nothing
+                                else Just [ "Expected: " ++ goldLine
+                                          , "But got : " ++ genLine
+                                          ]
+                            -- drop 2 lines, to skip the version bit
+                            -- otherwise this test would never be able to pass!
+                            | (goldLine, genLine) <- zip (drop 2 (lines gold)) (drop 2 (lines gen))
+                            ]
+                    in  case concat (catMaybes diffs) of
+                            [] -> Nothing
+                            ls -> Just (unlines ("Files differ.":ls)) )
                 (do stdout <- sh $ run "conjure" ["--help"]
                     BS.writeFile generatedFile (BS.pack (T.unpack stdout)))
     ]
