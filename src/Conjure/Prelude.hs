@@ -30,7 +30,7 @@ module Conjure.Prelude
     , allNats
     , jsonOptions
     , Proxy(..)
-    , MonadFail(..), failCheaply
+    , MonadFail(..), failCheaply, na
     , allContexts, ascendants
     , headInf
     , paddedNum
@@ -66,7 +66,7 @@ import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
 import qualified Control.Monad ( fail )
 import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
-                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM, sequence, sequence_
+                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM
                           , filterM, join
                           )
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
@@ -84,7 +84,6 @@ import Control.Category          as X ( (<<<), (>>>) )
 import Data.Data         as X ( Data, Typeable )
 import Data.Default      as X ( Default, def )
 import Data.Either       as X ( Either(..), either, lefts, rights )
-import Data.Foldable     as X ( forM_, fold, foldMap, toList, mapM_ )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy, partition
@@ -100,8 +99,10 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
 import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
-import Data.Traversable  as X ( mapM, forM )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
+
+import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList )
+import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
 
@@ -138,6 +139,7 @@ import Data.Generics.Uniplate.Data as X
     ( transform, transformBi
     , transformM, transformBiM
     , descend, descendM
+    , descendBi, descendBiM
     , universe, universeBi
     )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
@@ -300,6 +302,9 @@ data Proxy a = Proxy
 
 class (Functor m, Applicative m, Monad m) => MonadFail m where
     fail :: Doc -> m a
+
+na :: MonadFail m => Doc -> m a
+na message = fail ("N/A:" <+> message)
 
 instance MonadFail Identity where
     fail = error . show
