@@ -42,7 +42,8 @@ ui = modes
     [ Modelling
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
-        , outputDirectory  = def   &= typDir
+        , outputDirectory  = "conjure-output"
+                                   &= typDir
                                    &= name "output-directory"
                                    &= name "o"
                                    &= groupname "Control logging/output"
