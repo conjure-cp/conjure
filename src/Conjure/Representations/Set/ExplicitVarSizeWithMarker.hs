@@ -43,7 +43,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                   , DomainMatrix (forgetRepr (indexDomain 1)) innerDomain
                   )
                 ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         structuralCons f downX1 (DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
@@ -115,7 +115,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                   , ConstantMatrix (forgetRepr (indexDomain 1)) (constants ++ zeroes)
                   )
                 ]
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain) =
             case (lookup (nameMarker name) ctxt, lookup (nameValues name) ctxt) of

@@ -45,7 +45,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         structuralCons f downX1 (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
@@ -102,9 +102,9 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                         , mkSizeCons attrs (cardinality fresh flags)
                                         , isc
                                         ]
-                    _ -> fail "N/A {structuralCons} ExplicitVarSizeWithFlags"
+                    _ -> na "{structuralCons} ExplicitVarSizeWithFlags"
 
-        structuralCons _ _ _ = fail "N/A {structuralCons} ExplicitVarSizeWithFlags"
+        structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithFlags"
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain
@@ -135,7 +135,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                   , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of

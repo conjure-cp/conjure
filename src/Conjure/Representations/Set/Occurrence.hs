@@ -29,7 +29,7 @@ setOccurrence = Representation chck downD structuralCons downC up
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
             ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         structuralCons _ _ (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
             return $ \ fresh refs ->
@@ -38,8 +38,8 @@ setOccurrence = Representation chck downD structuralCons downC up
                         let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
                             cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
                         return (mkSizeCons attrs cardinality)
-                    _ -> fail "N/A {structuralCons} Occurrence"
-        structuralCons _ _ _ = fail "N/A {structuralCons} Occurrence"
+                    _ -> na "{structuralCons} Occurrence"
+        structuralCons _ _ _ = na "{structuralCons} Occurrence"
 
         downC (name, DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges), ConstantSet constants) = do
                 innerDomainVals <- valuesInIntDomain intRanges
@@ -53,7 +53,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                           ]
                       )
                     ]
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
             case lookup (outName name) ctxt of
@@ -78,5 +78,5 @@ setOccurrence = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        up _ _ = fail "N/A {up}"
+        up _ _ = na "{up}"
 

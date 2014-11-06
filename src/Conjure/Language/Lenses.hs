@@ -43,7 +43,7 @@ opPlus _ =
             op <- projectOp p
             case op of
                 MkOpPlus (OpPlus [x,y]) -> return (x,y)
-                _ -> fail ("N/A opPlus:" <++> pretty p)
+                _ -> na ("Lenses.opPlus:" <++> pretty p)
     )
 
 
@@ -62,7 +62,7 @@ opMinus _ =
             op <- projectOp p
             case op of
                 MkOpMinus (OpMinus x y) -> return (x,y)
-                _ -> fail ("N/A opMinus:" <++> pretty p)
+                _ -> na ("Lenses.opMinus:" <++> pretty p)
     )
 
 
@@ -81,7 +81,7 @@ opTimes _ =
             op <- projectOp p
             case op of
                 MkOpTimes (OpTimes [x,y]) -> return (x,y)
-                _ -> fail ("N/A opTimes:" <++> pretty p)
+                _ -> na ("Lenses.opTimes:" <++> pretty p)
     )
 
 
@@ -100,7 +100,7 @@ opDiv _ =
             op <- projectOp p
             case op of
                 MkOpDiv (OpDiv x y) -> return (x,y)
-                _ -> fail ("N/A opDiv:" <++> pretty p)
+                _ -> na ("Lenses.opDiv:" <++> pretty p)
     )
 
 
@@ -119,7 +119,7 @@ opMod _ =
             op <- projectOp p
             case op of
                 MkOpMod (OpMod x y) -> return (x,y)
-                _ -> fail ("N/A opMod:" <++> pretty p)
+                _ -> na ("Lenses.opMod:" <++> pretty p)
     )
 
 
@@ -138,7 +138,7 @@ opPow _ =
             op <- projectOp p
             case op of
                 MkOpPow (OpPow x y) -> return (x,y)
-                _ -> fail ("N/A opPow:" <++> pretty p)
+                _ -> na ("Lenses.opPow:" <++> pretty p)
     )
 
 
@@ -157,7 +157,7 @@ opNegate _ =
             op <- projectOp p
             case op of
                 MkOpNegate (OpNegate x) -> return x
-                _ -> fail ("N/A opNegate:" <++> pretty p)
+                _ -> na ("Lenses.opNegate:" <++> pretty p)
     )
 
 
@@ -176,7 +176,7 @@ opDontCare _ =
             op <- projectOp p
             case op of
                 MkOpDontCare (OpDontCare x) -> return x
-                _ -> fail ("N/A opDontCare:" <++> pretty p)
+                _ -> na ("Lenses.opDontCare:" <++> pretty p)
     )
 
 
@@ -195,7 +195,7 @@ opToInt _ =
             op <- projectOp p
             case op of
                 MkOpToInt (OpToInt x) -> return x
-                _ -> fail ("N/A opToInt:" <++> pretty p)
+                _ -> na ("Lenses.opToInt:" <++> pretty p)
     )
 
 
@@ -214,7 +214,7 @@ opToSet _ =
             op <- projectOp p
             case op of
                 MkOpToSet (OpToSet x) -> return x
-                _ -> fail ("N/A opToSet:" <++> pretty p)
+                _ -> na ("Lenses.opToSet:" <++> pretty p)
     )
 
 
@@ -233,7 +233,7 @@ opToMSet _ =
             op <- projectOp p
             case op of
                 MkOpToMSet (OpToMSet x) -> return x
-                _ -> fail ("N/A opToMSet:" <++> pretty p)
+                _ -> na ("Lenses.opToMSet:" <++> pretty p)
     )
 
 
@@ -252,7 +252,7 @@ opIndexing _ =
             op <- projectOp p
             case op of
                 MkOpIndexing (OpIndexing x y) -> return (x,y)
-                _ -> fail ("N/A opIndexing:" <++> pretty p)
+                _ -> na ("Lenses.opIndexing:" <++> pretty p)
     )
 
 
@@ -293,7 +293,7 @@ opFlatten _ =
             op <- projectOp p
             case op of
                 MkOpFlatten (OpFlatten x) -> return x
-                _ -> fail ("N/A opFlatten:" <++> pretty p)
+                _ -> na ("Lenses.opFlatten:" <++> pretty p)
     )
 
 
@@ -312,7 +312,7 @@ opIn _ =
             op <- projectOp p
             case op of
                 MkOpIn (OpIn x y) -> return (x,y)
-                _ -> fail ("N/A opIn:" <++> pretty p)
+                _ -> na ("Lenses.opIn:" <++> pretty p)
     )
 
 
@@ -331,7 +331,7 @@ opIntersect _ =
             op <- projectOp p
             case op of
                 MkOpIntersect (OpIntersect x y) -> return (x,y)
-                _ -> fail ("N/A opIntersect:" <++> pretty p)
+                _ -> na ("Lenses.opIntersect:" <++> pretty p)
     )
 
 
@@ -350,7 +350,7 @@ opUnion _ =
             op <- projectOp p
             case op of
                 MkOpUnion (OpUnion x y) -> return (x,y)
-                _ -> fail ("N/A opUnion:" <++> pretty p)
+                _ -> na ("Lenses.opUnion:" <++> pretty p)
     )
 
 
@@ -369,7 +369,7 @@ opSubsetEq _ =
             op <- projectOp p
             case op of
                 MkOpSubsetEq (OpSubsetEq x y) -> return (x,y)
-                _ -> fail ("N/A opSubsetEq:" <++> pretty p)
+                _ -> na ("Lenses.opSubsetEq:" <++> pretty p)
     )
 
 
@@ -388,7 +388,7 @@ opEq _ =
             op <- projectOp p
             case op of
                 MkOpEq (OpEq x y) -> return (x,y)
-                _ -> fail ("N/A opEq:" <++> pretty p)
+                _ -> na ("Lenses.opEq:" <++> pretty p)
     )
 
 
@@ -407,7 +407,7 @@ opNeq _ =
             op <- projectOp p
             case op of
                 MkOpNeq (OpNeq x y) -> return (x,y)
-                _ -> fail ("N/A opNeq:" <++> pretty p)
+                _ -> na ("Lenses.opNeq:" <++> pretty p)
     )
 
 
@@ -426,7 +426,7 @@ opLt _ =
             op <- projectOp p
             case op of
                 MkOpLt (OpLt x y) -> return (x,y)
-                _ -> fail ("N/A opLt:" <++> pretty p)
+                _ -> na ("Lenses.opLt:" <++> pretty p)
     )
 
 
@@ -445,7 +445,7 @@ opLeq _ =
             op <- projectOp p
             case op of
                 MkOpLeq (OpLeq x y) -> return (x,y)
-                _ -> fail ("N/A opLeq:" <++> pretty p)
+                _ -> na ("Lenses.opLeq:" <++> pretty p)
     )
 
 
@@ -464,7 +464,7 @@ opGt _ =
             op <- projectOp p
             case op of
                 MkOpGt (OpGt x y) -> return (x,y)
-                _ -> fail ("N/A opGt:" <++> pretty p)
+                _ -> na ("Lenses.opGt:" <++> pretty p)
     )
 
 
@@ -483,7 +483,7 @@ opGeq _ =
             op <- projectOp p
             case op of
                 MkOpGeq (OpGeq x y) -> return (x,y)
-                _ -> fail ("N/A opGeq:" <++> pretty p)
+                _ -> na ("Lenses.opGeq:" <++> pretty p)
     )
 
 
@@ -502,7 +502,7 @@ opOr _ =
             op <- projectOp p
             case op of
                 MkOpOr (OpOr xs) -> return xs
-                _ -> fail ("N/A opOr:" <++> pretty p)
+                _ -> na ("Lenses.opOr:" <++> pretty p)
     )
 
 
@@ -521,7 +521,7 @@ opAnd _ =
             op <- projectOp p
             case op of
                 MkOpAnd (OpAnd xs) -> return xs
-                _ -> fail ("N/A opAnd:" <++> pretty p)
+                _ -> na ("Lenses.opAnd:" <++> pretty p)
     )
 
 
@@ -540,7 +540,7 @@ opImply _ =
             op <- projectOp p
             case op of
                 MkOpImply (OpImply x y) -> return (x,y)
-                _ -> fail ("N/A opImply:" <++> pretty p)
+                _ -> na ("Lenses.opImply:" <++> pretty p)
     )
 
 
@@ -559,7 +559,7 @@ opNot _ =
             op <- projectOp p
             case op of
                 MkOpNot (OpNot x) -> return x
-                _ -> fail ("N/A opNot:" <++> pretty p)
+                _ -> na ("Lenses.opNot:" <++> pretty p)
     )
 
 
@@ -578,7 +578,7 @@ opProduct _ =
             op <- projectOp p
             case op of
                 MkOpTimes (OpTimes xs) -> return xs
-                _ -> fail ("N/A opProduct:" <++> pretty p)
+                _ -> na ("Lenses.opProduct:" <++> pretty p)
     )
 
 
@@ -597,7 +597,7 @@ opSum _ =
             op <- projectOp p
             case op of
                 MkOpPlus (OpPlus xs) -> return xs
-                _ -> fail ("N/A opSum:" <++> pretty p)
+                _ -> na ("Lenses.opSum:" <++> pretty p)
     )
 
 
@@ -616,7 +616,7 @@ opFilter _ =
             op <- projectOp p
             case op of
                 MkOpFilter (OpFilter x y) -> return (x,y)
-                _ -> fail ("N/A opFilter:" <++> pretty p)
+                _ -> na ("Lenses.opFilter:" <++> pretty p)
     )
 
 
@@ -635,7 +635,7 @@ opMapOverDomain _ =
             op <- projectOp p
             case op of
                 MkOpMapOverDomain (OpMapOverDomain x y) -> return (x,y)
-                _ -> fail ("N/A opMapOverDomain:" <++> pretty p)
+                _ -> na ("Lenses.opMapOverDomain:" <++> pretty p)
     )
 
 
@@ -654,7 +654,7 @@ opMapInExpr _ =
             op <- projectOp p
             case op of
                 MkOpMapInExpr (OpMapInExpr x y) -> return (x,y)
-                _ -> fail ("N/A opMapInExpr:" <++> pretty p)
+                _ -> na ("Lenses.opMapInExpr:" <++> pretty p)
     )
 
 
@@ -673,7 +673,7 @@ opAllDiff _ =
             op <- projectOp p
             case op of
                 MkOpAllDiff (OpAllDiff x) -> return x
-                _ -> fail ("N/A opAllDiff:" <++> pretty p)
+                _ -> na ("Lenses.opAllDiff:" <++> pretty p)
     )
 
 
@@ -687,6 +687,6 @@ constantInt _ =
     ( Constant . ConstantInt
     , \ p -> case p of
             (Constant (ConstantInt i)) -> return i
-            _ -> fail ("N/A constantInt:" <++> pretty p)
+            _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 

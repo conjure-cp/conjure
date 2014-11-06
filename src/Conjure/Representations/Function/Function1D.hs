@@ -44,7 +44,7 @@ function1D = Representation chck downD structuralCons downC up
                       (forgetRepr innerDomainFr)
                       innerDomainTo
                   ) ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         -- FIX
         structuralCons _ _
@@ -80,9 +80,9 @@ function1D = Representation chck downD structuralCons downC up
             return $ \ fresh refs ->
                 case refs of
                     [m] -> return (jectivityCons fresh m ++ mkSizeCons sizeAttr cardinality)
-                    _ -> fail "N/A {structuralCons} Function1D"
+                    _ -> na "{structuralCons} Function1D"
 
-        structuralCons _ _ _ = fail "N/A {structuralCons} Function1D"
+        structuralCons _ _ _ = na "{structuralCons} Function1D"
 
         downC ( name
               , DomainFunction "Function1D"
@@ -109,7 +109,7 @@ function1D = Representation chck downD structuralCons downC up
                       innerDomainTo
                   , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
                   ) ]
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain@(DomainFunction "Function1D"
                                 (FunctionAttr _ FunctionAttr_Total _)
@@ -134,7 +134,7 @@ function1D = Representation chck downD structuralCons downC up
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-        up _ _ = fail "N/A {up}"
+        up _ _ = na "{up}"
 
 
 domainCanIndexMatrix :: Domain r x -> Bool

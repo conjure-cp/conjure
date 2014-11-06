@@ -29,7 +29,7 @@ setExplicit = Representation chck downD structuralCons downC up
                   (DomainInt [RangeBounded (fromInt 1) size])
                   innerDomain
               ) ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         -- FIX
         structuralCons _ _ (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) _) =
@@ -42,8 +42,8 @@ setExplicit = Representation chck downD structuralCons downC up
                                 forAll &iPat : int(1..&size-1) .
                                     &m[&i] < &m[&i+1]
                             |]
-                    _ -> fail "N/A {structuralCons} Explicit"
-        structuralCons _ _ _ = fail "N/A {structuralCons} Explicit"
+                    _ -> na "{structuralCons} Explicit"
+        structuralCons _ _ _ = na "{structuralCons} Explicit"
 
         downC (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain, ConstantSet constants) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
@@ -52,7 +52,7 @@ setExplicit = Representation chck downD structuralCons downC up
                       , DomainMatrix   outIndexDomain innerDomain
                       , ConstantMatrix outIndexDomain constants
                       ) ]
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttrSize _)) _)) =
             case lookup (outName name) ctxt of
@@ -72,5 +72,5 @@ setExplicit = Representation chck downD structuralCons downC up
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-        up _ _ = fail "N/A {up}"
+        up _ _ = na "{up}"
 

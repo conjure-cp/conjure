@@ -49,7 +49,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                   , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )
                 ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         -- FIX
         structuralCons _ _
@@ -131,9 +131,9 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                                       , dontCareInactives fresh flags values
                                                       , mkSizeCons sizeAttr (cardinality fresh flags)
                                                       ]
-                    _ -> fail "N/A {structuralCons} FunctionNDPartial"
+                    _ -> na "{structuralCons} FunctionNDPartial"
 
-        structuralCons _ _ _ = fail "N/A {structuralCons} FunctionNDPartial"
+        structuralCons _ _ _ = na "{structuralCons} FunctionNDPartial"
 
         downC ( name
               , DomainFunction "FunctionNDPartial"
@@ -200,7 +200,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                   )
                 ]
 
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
                                 (FunctionAttr _ FunctionAttr_Partial _)
@@ -253,5 +253,5 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        up _ _ = fail "N/A {up}"
+        up _ _ = na "{up}"
 

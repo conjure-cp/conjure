@@ -30,7 +30,7 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
             | i <- [1..]
             | d <- ds
             ]
-        tupleDown_ _ = fail "N/A {tupleDown_}"
+        tupleDown_ _ = na "{tupleDown_}"
 
         -- FIX
         structuralCons = \ _ _ _ -> return (\ _ _ -> return [] )
@@ -42,7 +42,7 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
             | d <- ds
             | c <- cs
             ]
-        tupleDown _ = fail "N/A {tupleDown}"
+        tupleDown _ = na "{tupleDown}"
 
         tupleUp ctxt (name, DomainTuple ds) = do
             let names = map (mkName name) [1 .. length ds]
@@ -57,5 +57,5 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
             return (name, ConstantTuple vals)
-        tupleUp _ _ = fail "N/A {tupleUp}"
+        tupleUp _ _ = na "{tupleUp}"
 

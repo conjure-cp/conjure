@@ -180,7 +180,7 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                 Nothing -> return Nothing
                 Just mids -> return $ Just
                     [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
-        matrixDown_ _ = fail "N/A {matrixDown_}"
+        matrixDown_ _ = na "{matrixDown_}"
 
         structuralCons = \ _ _ _ -> return (\ _ _ -> return [] ) -- FIX
 
@@ -216,7 +216,7 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                 ]
-        matrixDown _ = fail "N/A {matrixDown}"
+        matrixDown _ = na "{matrixDown}"
 
         matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
 
@@ -272,5 +272,5 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                             ]
                     let values = map snd mid4
                     return (name, ConstantMatrix indexDomain values)
-        matrixUp _ _ = fail "N/A {matrixUp}"
+        matrixUp _ _ = na "{matrixUp}"
 

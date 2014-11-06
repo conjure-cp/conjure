@@ -34,7 +34,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                 [ ( outName name
                   , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]
-        downD _ = fail "N/A {downD}"
+        downD _ = na "{downD}"
 
         structuralCons _ _
             (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr) innerDomains')
@@ -51,8 +51,8 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             return $ \ fresh refs ->
                 case refs of
                     [m] -> return (mkSizeCons sizeAttr (cardinality fresh m))
-                    _ -> fail "N/A {structuralCons} RelationAsMatrix"
-        structuralCons _ _ _ = fail "N/A {structuralCons} RelationAsMatrix"
+                    _ -> na "{structuralCons} RelationAsMatrix"
+        structuralCons _ _ _ = na "{structuralCons} RelationAsMatrix"
 
         downC ( name
               , DomainRelation "RelationAsMatrix" _ innerDomains'
@@ -98,7 +98,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                   , outConstant
                   ) ]
 
-        downC _ = fail "N/A {downC}"
+        downC _ = na "{downC}"
 
         up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains')) = do
 
@@ -141,5 +141,5 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                     return ( name
                            , ConstantRelation (catMaybes vals)
                            )
-        up _ _ = fail "N/A {up}"
+        up _ _ = na "{up}"
 
