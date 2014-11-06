@@ -81,19 +81,20 @@ parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy _ = Nothing
 
 data Config = Config
-    { logLevel         :: LogLevel
-    , verboseTrail     :: Bool
-    , logRuleFails     :: Bool
-    , logRuleSuccesses :: Bool
-    , logRuleAttempts  :: Bool
-    , strategyQ        :: Strategy
-    , strategyA        :: Strategy
-    , outputDirectory  :: FilePath
+    { logLevel                  :: LogLevel
+    , verboseTrail              :: Bool
+    , logRuleFails              :: Bool
+    , logRuleSuccesses          :: Bool
+    , logRuleAttempts           :: Bool
+    , strategyQ                 :: Strategy
+    , strategyA                 :: Strategy
+    , outputDirectory           :: FilePath
+    , pickFirstReprForParams    :: Bool
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 instance Default Config where
-    def = Config LogInfo False False False False Interactive Interactive "conjure-output"
+    def = Config LogInfo False False False False Interactive Interactive "conjure-output" True
 
 
 type RuleResult = ( Doc                     -- describe this transformation
@@ -433,11 +434,11 @@ applicableRules
     => Config
     -> Expression
     -> m [(Doc, RuleResult)]
-applicableRules Config{..} x | not (logRuleAttempts || logRuleFails || logRuleSuccesses) =
+applicableRules config@Config{..} x | not (logRuleAttempts || logRuleFails || logRuleSuccesses) =
     concat <$> sequence [ do res <- runMaybeT (rApply r x)
                              return (map (rName r,) (concat (maybeToList res)))
-                        | r <- allRules ]
-applicableRules Config{..} x = do
+                        | r <- allRules config ]
+applicableRules config@Config{..} x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
@@ -445,7 +446,7 @@ applicableRules Config{..} x = do
     mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty x)
                          mres <- runExceptT (rApply r x)
                          return (rName r, mres :: Either Doc [RuleResult])
-                    | r <- allRules ]
+                    | r <- allRules config ]
     forM_ mys $ \ (rule, my) ->
         case my of
             Left  failed -> unless (failed == "No match.") $ logFail $ vcat
@@ -464,9 +465,9 @@ applicableRules Config{..} x = do
            ]
 
 
-allRules :: [Rule]
-allRules =
-    [ rule_ChooseRepr
+allRules :: Config -> [Rule]
+allRules config =
+    [ rule_ChooseRepr config
 
     , rule_TrueIsNoOp
     , rule_ToIntIsNoOp
@@ -528,19 +529,23 @@ allRules =
     ] ++ rule_InlineFilterInsideMap
 
 
-rule_ChooseRepr :: Rule
-rule_ChooseRepr = Rule "choose-repr" theRule where
+rule_ChooseRepr :: Config -> Rule
+rule_ChooseRepr config = Rule "choose-repr" theRule where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) = do
         let domOpts = reprOptions inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
-        return [ (msg, const out, hook)
-               | dom <- domOpts
-               , let msg = "Selecting representation for" <+> pretty nm <> ":" <++> pretty dom
-               , let out = Reference nm (Just (DeclHasRepr forg nm dom))
-               , let hook = mkHook forg nm dom
-               ]
+        let options =
+                [ (msg, const out, hook)
+                | dom <- domOpts
+                , let msg = "Selecting representation for" <+> pretty nm <> ":" <++> pretty dom
+                , let out = Reference nm (Just (DeclHasRepr forg nm dom))
+                , let hook = mkHook forg nm dom
+                ]
+        return $ if pickFirstReprForParams config && forg == Given
+                    then [head options]
+                    else options 
     theRule _ = fail "No match."
 
     mkHook forg     -- find or given
