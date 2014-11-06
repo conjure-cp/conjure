@@ -474,6 +474,7 @@ allRules config =
     , rule_SingletonAnd
 
     , rule_BubbleUp
+    , rule_BubbleToAnd
 
     , rule_DontCareBool
     , rule_DontCareInt
@@ -664,6 +665,27 @@ rule_BubbleUp = "bubble-up" `namedRule` theRule where
                        , const $ WithLocals (make opIndexing m' x') locals2
                        )
             _ -> fail "No match."
+
+
+rule_BubbleToAnd :: Rule
+rule_BubbleToAnd = "bubble-to-and" `namedRule` theRule where
+    theRule (WithLocals x []) = return ("Empty bubble is no bubble", const x)
+    theRule (WithLocals x locals) = do
+        TypeBool <- typeOf x
+        cons     <- onlyConstraints locals
+        let outs = x:cons
+        let out = case outs of
+                    [_] -> x
+                    _   -> make opAnd outs
+        return ( "Converting a bubble into a conjunction."
+               , const out
+               )
+    theRule _ = fail "No match."
+
+    onlyConstraints :: MonadFail m => [Statement] -> m [Expression]
+    onlyConstraints [] = return []
+    onlyConstraints (SuchThat xs:rest) = (xs++) <$> onlyConstraints rest
+    onlyConstraints _ = fail "onlyConstraints: not a SuchThat"
 
 
 rule_DontCareBool :: Rule
