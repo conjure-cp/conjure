@@ -9,6 +9,7 @@ module Conjure.Language.Instantiate
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Ops
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 
@@ -47,7 +48,19 @@ instantiateE (Reference name _) = do
             : "Bindings in context:"
             : prettyContext ctxt
         Just x -> instantiateE x
+instantiateE (Op op) = instantiateOp op
 instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
+
+
+instantiateOp
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => Ops Expression
+    -> m Constant
+instantiateOp opx = do
+    opc <- mapM instantiateE opx
+    evaluateOp opc
 
 
 instantiateAbsLit

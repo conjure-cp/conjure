@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops where
@@ -25,6 +25,8 @@ instance OperatorContainer Constant where
     injectOp x = bug ("OperatorContainer{Constant} -- injectOp --" <+> pretty x)
     projectOp x = bug ("OperatorContainer{Constant} -- projectOp --" <+> pretty x)
 
+class EvaluateOp op where
+    evaluateOp :: MonadFail m => op Constant -> m Constant
 
 data Ops x
     = MkOpPlus            (OpPlus x)
@@ -78,8 +80,7 @@ data Ops x
     | MkOpFunctionImage   (OpFunctionImage x)
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
-
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
 instance Hashable  x => Hashable  (Ops x)
 instance ToJSON    x => ToJSON    (Ops x) where toJSON = JSON.genericToJSON jsonOptions
@@ -130,6 +131,52 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
+
+instance EvaluateOp Ops where
+    evaluateOp (MkOpPlus                x) = evaluateOp x
+    evaluateOp (MkOpMinus               x) = evaluateOp x
+    evaluateOp (MkOpTimes               x) = evaluateOp x
+    evaluateOp (MkOpDiv                 x) = evaluateOp x
+    evaluateOp (MkOpMod                 x) = evaluateOp x
+    evaluateOp (MkOpPow                 x) = evaluateOp x
+    evaluateOp (MkOpAbs                 x) = evaluateOp x
+    evaluateOp (MkOpNegate              x) = evaluateOp x
+    evaluateOp (MkOpEq                  x) = evaluateOp x
+    evaluateOp (MkOpNeq                 x) = evaluateOp x
+    evaluateOp (MkOpLt                  x) = evaluateOp x
+    evaluateOp (MkOpLeq                 x) = evaluateOp x
+    evaluateOp (MkOpGt                  x) = evaluateOp x
+    evaluateOp (MkOpGeq                 x) = evaluateOp x
+    evaluateOp (MkOpAnd                 x) = evaluateOp x
+    evaluateOp (MkOpOr                  x) = evaluateOp x
+    evaluateOp (MkOpImply               x) = evaluateOp x
+    evaluateOp (MkOpNot                 x) = evaluateOp x
+    evaluateOp (MkOpAllDiff             x) = evaluateOp x
+    evaluateOp (MkOpIndexing            x) = evaluateOp x
+    evaluateOp (MkOpSlicing             x) = evaluateOp x
+    evaluateOp (MkOpFlatten             x) = evaluateOp x
+    evaluateOp (MkOpLexLt               x) = evaluateOp x
+    evaluateOp (MkOpLexLeq              x) = evaluateOp x
+    evaluateOp (MkOpFilter              x) = evaluateOp x
+    evaluateOp (MkOpMapOverDomain       x) = evaluateOp x
+    evaluateOp (MkOpMapInExpr           x) = evaluateOp x
+    evaluateOp (MkOpMapSubsetExpr       x) = evaluateOp x
+    evaluateOp (MkOpMapSubsetEqExpr     x) = evaluateOp x
+    evaluateOp (MkOpTrue                x) = evaluateOp x
+    evaluateOp (MkOpToInt               x) = evaluateOp x
+    evaluateOp (MkOpDontCare            x) = evaluateOp x
+    evaluateOp (MkOpIn                  x) = evaluateOp x
+    evaluateOp (MkOpSubset              x) = evaluateOp x
+    evaluateOp (MkOpSubsetEq            x) = evaluateOp x
+    evaluateOp (MkOpSupset              x) = evaluateOp x
+    evaluateOp (MkOpSupsetEq            x) = evaluateOp x
+    evaluateOp (MkOpIntersect           x) = evaluateOp x
+    evaluateOp (MkOpUnion               x) = evaluateOp x
+    evaluateOp (MkOpToSet               x) = evaluateOp x
+    evaluateOp (MkOpToMSet              x) = evaluateOp x
+    evaluateOp (MkOpFunctionImage       x) = evaluateOp x
+    evaluateOp (MkOpDefined             x) = evaluateOp x
+    evaluateOp (MkOpRange               x) = evaluateOp x
 
 
 class BinaryOperator op where
@@ -217,7 +264,7 @@ prettyPrecBinOp envPrec op a b =
 
 
 data OpPlus x = OpPlus [x]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpPlus x)
 instance Hashable  x => Hashable  (OpPlus x)
 instance ToJSON    x => ToJSON    (OpPlus x) where toJSON = JSON.genericToJSON jsonOptions
@@ -233,10 +280,12 @@ instance TypeOf x => TypeOf (OpPlus x) where
         if typesUnify (TypeInt:tys)
             then return TypeInt
             else bug "Type error in OpPlus"
+instance EvaluateOp OpPlus where
+    evaluateOp _ = na "evaluateOp{OpPlus}"
 
 
 data OpMinus x = OpMinus x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpMinus x)
 instance Hashable  x => Hashable  (OpMinus x)
 instance ToJSON    x => ToJSON    (OpMinus x) where toJSON = JSON.genericToJSON jsonOptions
@@ -247,10 +296,12 @@ instance BinaryOperator (OpMinus x) where
     opLexeme _ = L_Minus
 instance TypeOf x => TypeOf (OpMinus x) where
     typeOf (OpMinus a b) = intToIntToInt a b
+instance EvaluateOp OpMinus where
+    evaluateOp _ = na "evaluateOp{OpMinus}"
 
 
 data OpTimes x = OpTimes [x]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpTimes x)
 instance Hashable  x => Hashable  (OpTimes x)
 instance ToJSON    x => ToJSON    (OpTimes x) where toJSON = JSON.genericToJSON jsonOptions
@@ -266,10 +317,12 @@ instance TypeOf x => TypeOf (OpTimes x) where
         if typesUnify (TypeInt:tys)
             then return TypeInt
             else bug "Type error in OpTimes"
+instance EvaluateOp OpTimes where
+    evaluateOp _ = na "evaluateOp{OpTimes}"
 
 
 data OpDiv x = OpDiv x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpDiv x)
 instance Hashable  x => Hashable  (OpDiv x)
 instance ToJSON    x => ToJSON    (OpDiv x) where toJSON = JSON.genericToJSON jsonOptions
@@ -280,10 +333,12 @@ instance BinaryOperator (OpDiv x) where
     opLexeme _ = L_Div
 instance TypeOf x => TypeOf (OpDiv x) where
     typeOf (OpDiv a b) = intToIntToInt a b
+instance EvaluateOp OpDiv where
+    evaluateOp _ = na "evaluateOp{OpDiv}"
 
 
 data OpMod x = OpMod x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpMod x)
 instance Hashable  x => Hashable  (OpMod x)
 instance ToJSON    x => ToJSON    (OpMod x) where toJSON = JSON.genericToJSON jsonOptions
@@ -294,10 +349,12 @@ instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
 instance TypeOf x => TypeOf (OpMod x) where
     typeOf (OpMod a b) = intToIntToInt a b
+instance EvaluateOp OpMod where
+    evaluateOp _ = na "evaluateOp{OpMod}"
 
 
 data OpPow x = OpPow x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpPow x)
 instance Hashable  x => Hashable  (OpPow x)
 instance ToJSON    x => ToJSON    (OpPow x) where toJSON = JSON.genericToJSON jsonOptions
@@ -308,10 +365,12 @@ instance BinaryOperator (OpPow x) where
     opLexeme _ = L_Pow
 instance TypeOf x => TypeOf (OpPow x) where
     typeOf (OpPow a b) = intToIntToInt a b
+instance EvaluateOp OpPow where
+    evaluateOp _ = na "evaluateOp{OpPow}"
 
 
 data OpAbs x = OpAbs x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpAbs x)
 instance Hashable  x => Hashable  (OpAbs x)
 instance ToJSON    x => ToJSON    (OpAbs x) where toJSON = JSON.genericToJSON jsonOptions
@@ -320,10 +379,12 @@ opAbs :: OperatorContainer x => x -> x
 opAbs x = injectOp (MkOpAbs (OpAbs x))
 instance TypeOf x => TypeOf (OpAbs x) where
     typeOf (OpAbs a) = intToInt a
+instance EvaluateOp OpAbs where
+    evaluateOp _ = na "evaluateOp{OpAbs}"
 
 
 data OpNegate x = OpNegate x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpNegate x)
 instance Hashable  x => Hashable  (OpNegate x)
 instance ToJSON    x => ToJSON    (OpNegate x) where toJSON = JSON.genericToJSON jsonOptions
@@ -332,10 +393,12 @@ opNegate :: OperatorContainer x => x -> x
 opNegate x = injectOp (MkOpNegate (OpNegate x))
 instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
+instance EvaluateOp OpNegate where
+    evaluateOp _ = na "evaluateOp{OpNegate}"
 
 
 data OpEq x = OpEq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpEq x)
 instance Hashable  x => Hashable  (OpEq x)
 instance ToJSON    x => ToJSON    (OpEq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -346,10 +409,12 @@ instance BinaryOperator (OpEq x) where
     opLexeme _ = L_Eq
 instance TypeOf x => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
+instance EvaluateOp OpEq where
+    evaluateOp _ = na "evaluateOp{OpEq}"
 
 
 data OpNeq x = OpNeq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpNeq x)
 instance Hashable  x => Hashable  (OpNeq x)
 instance ToJSON    x => ToJSON    (OpNeq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -360,10 +425,12 @@ instance BinaryOperator (OpNeq x) where
     opLexeme _ = L_Neq
 instance TypeOf x => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
+instance EvaluateOp OpNeq where
+    evaluateOp _ = na "evaluateOp{OpNeq}"
 
 
 data OpLt x = OpLt x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpLt x)
 instance Hashable  x => Hashable  (OpLt x)
 instance ToJSON    x => ToJSON    (OpLt x) where toJSON = JSON.genericToJSON jsonOptions
@@ -374,10 +441,12 @@ instance BinaryOperator (OpLt x) where
     opLexeme _ = L_Lt
 instance TypeOf x => TypeOf (OpLt x) where
     typeOf (OpLt a b) = sameToSameToBool a b
+instance EvaluateOp OpLt where
+    evaluateOp _ = na "evaluateOp{OpLt}"
 
 
 data OpLeq x = OpLeq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpLeq x)
 instance Hashable  x => Hashable  (OpLeq x)
 instance ToJSON    x => ToJSON    (OpLeq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -388,10 +457,12 @@ instance BinaryOperator (OpLeq x) where
     opLexeme _ = L_Leq
 instance TypeOf x => TypeOf (OpLeq x) where
     typeOf (OpLeq a b) = sameToSameToBool a b
+instance EvaluateOp OpLeq where
+    evaluateOp _ = na "evaluateOp{OpLeq}"
 
 
 data OpGt x = OpGt x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpGt x)
 instance Hashable  x => Hashable  (OpGt x)
 instance ToJSON    x => ToJSON    (OpGt x) where toJSON = JSON.genericToJSON jsonOptions
@@ -402,10 +473,12 @@ instance BinaryOperator (OpGt x) where
     opLexeme _ = L_Gt
 instance TypeOf x => TypeOf (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
+instance EvaluateOp OpGt where
+    evaluateOp _ = na "evaluateOp{OpGt}"
 
 
 data OpGeq x = OpGeq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpGeq x)
 instance Hashable  x => Hashable  (OpGeq x)
 instance ToJSON    x => ToJSON    (OpGeq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -416,10 +489,12 @@ instance BinaryOperator (OpGeq x) where
     opLexeme _ = L_Geq
 instance TypeOf x => TypeOf (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
+instance EvaluateOp OpGeq where
+    evaluateOp _ = na "evaluateOp{OpGeq}"
 
 
 data OpAnd x = OpAnd [x]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpAnd x)
 instance Hashable  x => Hashable  (OpAnd x)
 instance ToJSON    x => ToJSON    (OpAnd x) where toJSON = JSON.genericToJSON jsonOptions
@@ -435,10 +510,12 @@ instance TypeOf x => TypeOf (OpAnd x) where
         if typesUnify (TypeBool:tys)
             then return TypeBool
             else bug "Type error in OpAnd"
+instance EvaluateOp OpAnd where
+    evaluateOp _ = na "evaluateOp{OpAnd}"
 
 
 data OpOr x = OpOr [x]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpOr x)
 instance Hashable  x => Hashable  (OpOr x)
 instance ToJSON    x => ToJSON    (OpOr x) where toJSON = JSON.genericToJSON jsonOptions
@@ -454,10 +531,12 @@ instance TypeOf x => TypeOf (OpOr x) where
         if typesUnify (TypeBool:tys)
             then return TypeBool
             else bug "Type error in OpOr"
+instance EvaluateOp OpOr where
+    evaluateOp _ = na "evaluateOp{OpOr}"
 
 
 data OpImply x = OpImply x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpImply x)
 instance Hashable  x => Hashable  (OpImply x)
 instance ToJSON    x => ToJSON    (OpImply x) where toJSON = JSON.genericToJSON jsonOptions
@@ -468,10 +547,12 @@ instance BinaryOperator (OpImply x) where
     opLexeme _ = L_Imply
 instance TypeOf x => TypeOf (OpImply x) where
     typeOf (OpImply a b) = boolToBoolToBool a b
+instance EvaluateOp OpImply where
+    evaluateOp _ = na "evaluateOp{OpImply}"
 
 
 data OpNot x = OpNot x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpNot x)
 instance Hashable  x => Hashable  (OpNot x)
 instance ToJSON    x => ToJSON    (OpNot x) where toJSON = JSON.genericToJSON jsonOptions
@@ -480,10 +561,12 @@ opNot :: OperatorContainer x => x -> x
 opNot x = injectOp (MkOpNot (OpNot x))
 instance TypeOf x => TypeOf (OpNot x) where
     typeOf (OpNot a) = do TypeBool <- typeOf a ; return TypeBool
+instance EvaluateOp OpNot where
+    evaluateOp _ = na "evaluateOp{OpNot}"
 
 
 data OpIndexing x = OpIndexing x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpIndexing x)
 instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = JSON.genericToJSON jsonOptions
@@ -498,10 +581,12 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (OpIndexing x) w
                 iInt <- intOut i
                 return (at inns (iInt-1))
             _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
+instance EvaluateOp OpIndexing where
+    evaluateOp _ = na "evaluateOp{OpIndexing}"
 
 
 data OpSlicing x = OpSlicing x (Maybe x) (Maybe x)
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpSlicing x)
 instance Hashable  x => Hashable  (OpSlicing x)
 instance ToJSON    x => ToJSON    (OpSlicing x) where toJSON = JSON.genericToJSON jsonOptions
@@ -512,10 +597,12 @@ instance TypeOf x => TypeOf (OpSlicing x) where
     typeOf (OpSlicing m _ _) = do
         t@TypeMatrix{} <- typeOf m
         return t
+instance EvaluateOp OpSlicing where
+    evaluateOp _ = na "evaluateOp{OpSlicing}"
 
 
 data OpFlatten x = OpFlatten x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpFlatten x)
 instance Hashable  x => Hashable  (OpFlatten x)
 instance ToJSON    x => ToJSON    (OpFlatten x) where toJSON = JSON.genericToJSON jsonOptions
@@ -528,10 +615,12 @@ instance TypeOf x => TypeOf (OpFlatten x) where
             flattenType ty = ty
         TypeMatrix index n <- typeOf m
         return (TypeMatrix index (flattenType n))
+instance EvaluateOp OpFlatten where
+    evaluateOp _ = na "evaluateOp{OpFlatten}"
 
 
 data OpLexLt x = OpLexLt x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpLexLt x)
 instance Hashable  x => Hashable  (OpLexLt x)
 instance ToJSON    x => ToJSON    (OpLexLt x) where toJSON = JSON.genericToJSON jsonOptions
@@ -545,10 +634,12 @@ instance TypeOf x => TypeOf (OpLexLt x) where
         TypeMatrix{} <- typeOf a
         TypeMatrix{} <- typeOf b
         return TypeBool
+instance EvaluateOp OpLexLt where
+    evaluateOp _ = na "evaluateOp{OpLexLt}"
 
 
 data OpLexLeq x = OpLexLeq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpLexLeq x)
 instance Hashable  x => Hashable  (OpLexLeq x)
 instance ToJSON    x => ToJSON    (OpLexLeq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -562,10 +653,12 @@ instance TypeOf x => TypeOf (OpLexLeq x) where
         TypeMatrix{} <- typeOf a
         TypeMatrix{} <- typeOf b
         return TypeBool
+instance EvaluateOp OpLexLeq where
+    evaluateOp _ = na "evaluateOp{OpLexLeq}"
 
 
 data OpFilter x = OpFilter x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpFilter x)
 instance Hashable  x => Hashable  (OpFilter x)
 instance ToJSON    x => ToJSON    (OpFilter x) where toJSON = JSON.genericToJSON jsonOptions
@@ -574,10 +667,12 @@ opFilter :: OperatorContainer x => x -> x -> x
 opFilter x y = injectOp (MkOpFilter (OpFilter x y))
 instance TypeOf x => TypeOf (OpFilter x) where
     typeOf (OpFilter _ _) = return TypeAny
+instance EvaluateOp OpFilter where
+    evaluateOp _ = na "evaluateOp{OpFilter}"
 
 
 data OpMapOverDomain x = OpMapOverDomain x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpMapOverDomain x)
 instance Hashable  x => Hashable  (OpMapOverDomain x)
 instance ToJSON    x => ToJSON    (OpMapOverDomain x) where toJSON = JSON.genericToJSON jsonOptions
@@ -586,10 +681,12 @@ opMapOverDomain :: OperatorContainer x => x -> x -> x
 opMapOverDomain x y = injectOp (MkOpMapOverDomain (OpMapOverDomain x y))
 instance TypeOf x => TypeOf (OpMapOverDomain x) where
     typeOf (OpMapOverDomain _ _) = return TypeAny
+instance EvaluateOp OpMapOverDomain where
+    evaluateOp _ = na "evaluateOp{OpMapOverDomain}"
 
 
 data OpMapInExpr x = OpMapInExpr x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpMapInExpr x)
 instance Hashable  x => Hashable  (OpMapInExpr x)
 instance ToJSON    x => ToJSON    (OpMapInExpr x) where toJSON = JSON.genericToJSON jsonOptions
@@ -598,10 +695,12 @@ opMapInExpr :: OperatorContainer x => x -> x -> x
 opMapInExpr x y = injectOp (MkOpMapInExpr (OpMapInExpr x y))
 instance TypeOf x => TypeOf (OpMapInExpr x) where
     typeOf (OpMapInExpr _ _) = return TypeAny
+instance EvaluateOp OpMapInExpr where
+    evaluateOp _ = na "evaluateOp{OpMapInExpr}"
 
 
 data OpMapSubsetExpr x = OpMapSubsetExpr x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpMapSubsetExpr x)
 instance Hashable  x => Hashable  (OpMapSubsetExpr x)
 instance ToJSON    x => ToJSON    (OpMapSubsetExpr x) where toJSON = JSON.genericToJSON jsonOptions
@@ -610,10 +709,12 @@ opMapSubsetExpr :: OperatorContainer x => x -> x -> x
 opMapSubsetExpr x y = injectOp (MkOpMapSubsetExpr (OpMapSubsetExpr x y))
 instance TypeOf x => TypeOf (OpMapSubsetExpr x) where
     typeOf (OpMapSubsetExpr _ _) = return TypeAny
+instance EvaluateOp OpMapSubsetExpr where
+    evaluateOp _ = na "evaluateOp{OpMapSubsetExpr}"
 
 
 data OpMapSubsetEqExpr x = OpMapSubsetEqExpr x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpMapSubsetEqExpr x)
 instance Hashable  x => Hashable  (OpMapSubsetEqExpr x)
 instance ToJSON    x => ToJSON    (OpMapSubsetEqExpr x) where toJSON = JSON.genericToJSON jsonOptions
@@ -622,10 +723,12 @@ opMapSubsetEqExpr :: OperatorContainer x => x -> x -> x
 opMapSubsetEqExpr x y = injectOp (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x y))
 instance TypeOf x => TypeOf (OpMapSubsetEqExpr x) where
     typeOf (OpMapSubsetEqExpr _ _) = return TypeAny
+instance EvaluateOp OpMapSubsetEqExpr where
+    evaluateOp _ = na "evaluateOp{OpMapSubsetEqExpr}"
 
 
 data OpTrue x = OpTrue x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpTrue x)
 instance Hashable  x => Hashable  (OpTrue x)
 instance ToJSON    x => ToJSON    (OpTrue x) where toJSON = JSON.genericToJSON jsonOptions
@@ -634,10 +737,12 @@ opTrue :: OperatorContainer x => x -> x
 opTrue x = injectOp (MkOpTrue (OpTrue x))
 instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
+instance EvaluateOp OpTrue where
+    evaluateOp _ = na "evaluateOp{OpTrue}"
 
 
 data OpToInt x = OpToInt x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpToInt x)
 instance Hashable  x => Hashable  (OpToInt x)
 instance ToJSON    x => ToJSON    (OpToInt x) where toJSON = JSON.genericToJSON jsonOptions
@@ -648,10 +753,12 @@ instance TypeOf x => TypeOf (OpToInt x) where
     typeOf (OpToInt x) = do
         TypeBool{} <- typeOf x
         return TypeInt
+instance EvaluateOp OpToInt where
+    evaluateOp _ = na "evaluateOp{OpToInt}"
 
 
 data OpDontCare x = OpDontCare x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpDontCare x)
 instance Hashable  x => Hashable  (OpDontCare x)
 instance ToJSON    x => ToJSON    (OpDontCare x) where toJSON = JSON.genericToJSON jsonOptions
@@ -660,10 +767,12 @@ opDontCare :: OperatorContainer x => x -> x
 opDontCare x = injectOp (MkOpDontCare (OpDontCare x))
 instance TypeOf x => TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
+instance EvaluateOp OpDontCare where
+    evaluateOp _ = na "evaluateOp{OpDontcare}"
 
 
 data OpIn x = OpIn x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpIn x)
 instance Hashable  x => Hashable  (OpIn x)
 instance ToJSON    x => ToJSON    (OpIn x) where toJSON = JSON.genericToJSON jsonOptions
@@ -679,10 +788,12 @@ instance TypeOf x => TypeOf (OpIn x) where
         if tyA `typeUnify` tyB
             then return TypeBool
             else userErr "Type error"
+instance EvaluateOp OpIn where
+    evaluateOp _ = na "evaluateOp{OpIn}"
 
 
 data OpSubset x = OpSubset x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpSubset x)
 instance Hashable  x => Hashable  (OpSubset x)
 instance ToJSON    x => ToJSON    (OpSubset x) where toJSON = JSON.genericToJSON jsonOptions
@@ -693,10 +804,12 @@ instance BinaryOperator (OpSubset x) where
     opLexeme _ = L_subset
 instance TypeOf x => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
+instance EvaluateOp OpSubset where
+    evaluateOp _ = na "evaluateOp{OpSubset}"
 
 
 data OpSubsetEq x = OpSubsetEq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpSubsetEq x)
 instance Hashable  x => Hashable  (OpSubsetEq x)
 instance ToJSON    x => ToJSON    (OpSubsetEq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -707,10 +820,12 @@ instance BinaryOperator (OpSubsetEq x) where
     opLexeme _ = L_subsetEq
 instance TypeOf x => TypeOf (OpSubsetEq x) where
     typeOf (OpSubsetEq a b) = sameToSameToBool a b
+instance EvaluateOp OpSubsetEq where
+    evaluateOp _ = na "evaluateOp{OpSubsetEq}"
 
 
 data OpSupset x = OpSupset x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpSupset x)
 instance Hashable  x => Hashable  (OpSupset x)
 instance ToJSON    x => ToJSON    (OpSupset x) where toJSON = JSON.genericToJSON jsonOptions
@@ -721,10 +836,12 @@ instance BinaryOperator (OpSupset x) where
     opLexeme _ = L_supset
 instance TypeOf x => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
+instance EvaluateOp OpSupset where
+    evaluateOp _ = na "evaluateOp{OpSupset}"
 
 
 data OpSupsetEq x = OpSupsetEq x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpSupsetEq x)
 instance Hashable  x => Hashable  (OpSupsetEq x)
 instance ToJSON    x => ToJSON    (OpSupsetEq x) where toJSON = JSON.genericToJSON jsonOptions
@@ -735,10 +852,12 @@ instance BinaryOperator (OpSupsetEq x) where
     opLexeme _ = L_supsetEq
 instance TypeOf x => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
+instance EvaluateOp OpSupsetEq where
+    evaluateOp _ = na "evaluateOp{OpSupsetEq}"
 
 
 data OpIntersect x = OpIntersect x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpIntersect x)
 instance Hashable  x => Hashable  (OpIntersect x)
 instance ToJSON    x => ToJSON    (OpIntersect x) where toJSON = JSON.genericToJSON jsonOptions
@@ -749,10 +868,12 @@ instance BinaryOperator (OpIntersect x) where
     opLexeme _ = L_intersect
 instance TypeOf x => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
+instance EvaluateOp OpIntersect where
+    evaluateOp _ = na "evaluateOp{OpIntersect}"
 
 
 data OpUnion x = OpUnion x x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpUnion x)
 instance Hashable  x => Hashable  (OpUnion x)
 instance ToJSON    x => ToJSON    (OpUnion x) where toJSON = JSON.genericToJSON jsonOptions
@@ -763,10 +884,12 @@ instance BinaryOperator (OpUnion x) where
     opLexeme _ = L_union
 instance TypeOf x => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
+instance EvaluateOp OpUnion where
+    evaluateOp _ = na "evaluateOp{OpUnion}"
 
 
 data OpToSet x = OpToSet x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpToSet x)
 instance Hashable  x => Hashable  (OpToSet x)
 instance ToJSON    x => ToJSON    (OpToSet x) where toJSON = JSON.genericToJSON jsonOptions
@@ -781,10 +904,16 @@ instance TypeOf x => TypeOf (OpToSet x) where
             TypeMSet i       -> return (TypeSet i)
             TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
             _ -> fail ("Type checking toSet:" <+> pretty tx)
+instance EvaluateOp OpToSet where
+    evaluateOp (OpToSet (ConstantSet xs)) = return (ConstantSet (sortNub xs))
+    evaluateOp (OpToSet (ConstantMSet xs)) = return (ConstantSet (sortNub xs))
+    evaluateOp (OpToSet (ConstantFunction xs)) = return (ConstantSet (sortNub [ConstantTuple [a,b] | (a,b) <- xs]))
+    evaluateOp (OpToSet (ConstantRelation xs)) = return (ConstantSet (sortNub (map ConstantTuple xs)))
+    evaluateOp _ = na "evaluateOp{OpToSet}"
 
 
 data OpToMSet x = OpToMSet x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpToMSet x)
 instance Hashable  x => Hashable  (OpToMSet x)
 instance ToJSON    x => ToJSON    (OpToMSet x) where toJSON = JSON.genericToJSON jsonOptions
@@ -799,10 +928,16 @@ instance TypeOf x => TypeOf (OpToMSet x) where
             TypeSet i        -> return (TypeMSet i)
             TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
             _ -> fail ("Type checking toMSet:" <+> pretty tx)
+instance EvaluateOp OpToMSet where
+    evaluateOp (OpToMSet (ConstantSet xs)) = return (ConstantMSet xs)
+    evaluateOp (OpToMSet (ConstantMSet xs)) = return (ConstantMSet xs)
+    evaluateOp (OpToMSet (ConstantFunction xs)) = return (ConstantMSet [ConstantTuple [a,b] | (a,b) <- xs])
+    evaluateOp (OpToMSet (ConstantRelation xs)) = return (ConstantMSet (map ConstantTuple xs))
+    evaluateOp _ = na "evaluateOp{OpToMSet}"
 
 
 data OpFunctionImage x = OpFunctionImage x [x]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpFunctionImage x)
 instance Hashable  x => Hashable  (OpFunctionImage x)
 instance ToJSON    x => ToJSON    (OpFunctionImage x) where toJSON = JSON.genericToJSON jsonOptions
@@ -819,10 +954,21 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
         if typesUnify [xTy, from]
             then return to
             else fail ("Type error in:" <+> pretty (MkOpFunctionImage p))
+instance EvaluateOp OpFunctionImage where
+    evaluateOp (OpFunctionImage (ConstantFunction xs) [a]) =
+        case [ y | (x,y) <- xs, a == x ] of
+            [y] -> return y
+            []  -> fail $ vcat [ "Function is not defined at this point:" <+> pretty a
+                               , "Function value:" <+> pretty (ConstantFunction xs)
+                               ]
+            _   -> fail $ vcat [ "Function is multiply defined at this point:" <+> pretty a
+                               , "Function value:" <+> pretty (ConstantFunction xs)
+                               ]
+    evaluateOp _ = na "evaluateOp{OpFunctionImage}"
 
 
 data OpDefined x = OpDefined x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpDefined x)
 instance Hashable  x => Hashable  (OpDefined x)
 instance ToJSON    x => ToJSON    (OpDefined x) where toJSON = JSON.genericToJSON jsonOptions
@@ -833,10 +979,14 @@ instance TypeOf x => TypeOf (OpDefined x) where
     typeOf (OpDefined x) = do
         TypeFunction a _ <- typeOf x
         return (TypeSet a)
+instance EvaluateOp OpDefined where
+    evaluateOp (OpDefined (ConstantFunction xs)) =
+        return (ConstantSet (sortNub (map fst xs)))
+    evaluateOp _ = na "evaluateOp{OpDefined}"
 
 
 data OpRange x = OpRange x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpRange x)
 instance Hashable  x => Hashable  (OpRange x)
 instance ToJSON    x => ToJSON    (OpRange x) where toJSON = JSON.genericToJSON jsonOptions
@@ -847,10 +997,14 @@ instance TypeOf x => TypeOf (OpRange x) where
     typeOf (OpRange x) = do
         TypeFunction _ a <- typeOf x
         return (TypeSet a)
+instance EvaluateOp OpRange where
+    evaluateOp (OpRange (ConstantFunction xs)) =
+        return (ConstantSet (sortNub (map snd xs)))
+    evaluateOp _ = na "evaluateOp{OpRange}"
 
 
 data OpAllDiff x = OpAllDiff x
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpAllDiff x)
 instance Hashable  x => Hashable  (OpAllDiff x)
 instance ToJSON    x => ToJSON    (OpAllDiff x) where toJSON = JSON.genericToJSON jsonOptions
@@ -861,6 +1015,8 @@ instance TypeOf x => TypeOf (OpAllDiff x) where
     typeOf (OpAllDiff x) = do
         TypeMatrix TypeInt TypeInt <- typeOf x
         return TypeBool
+instance EvaluateOp OpAllDiff where
+    evaluateOp _ = na "evaluateOp{OpAllDiff}"
 
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
