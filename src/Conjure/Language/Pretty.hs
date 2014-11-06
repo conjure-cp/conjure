@@ -63,6 +63,7 @@ instance Pretty a => Pretty (Maybe a) where
     pretty (Just x) = "Just" <+> parens (pretty x)
 
 
+infixl 5 <++>
 (<++>) :: Doc -> Doc -> Doc
 a <++> b = hang a 4 b
 
