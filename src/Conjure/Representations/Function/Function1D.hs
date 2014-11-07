@@ -44,7 +44,7 @@ function1D = Representation chck downD structuralCons downC up
                       (forgetRepr innerDomainFr)
                       innerDomainTo
                   ) ]
-        downD _ = na "{downD}"
+        downD _ = na "{downD} Function1D"
 
         -- FIX
         structuralCons _ _
@@ -109,7 +109,7 @@ function1D = Representation chck downD structuralCons downC up
                       innerDomainTo
                   , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
                   ) ]
-        downC _ = na "{downC}"
+        downC _ = na "{downC} Function1D"
 
         up ctxt (name, domain@(DomainFunction "Function1D"
                                 (FunctionAttr _ FunctionAttr_Total _)
@@ -134,7 +134,7 @@ function1D = Representation chck downD structuralCons downC up
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
-        up _ _ = na "{up}"
+        up _ _ = na "{up} Function1D"
 
 
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]

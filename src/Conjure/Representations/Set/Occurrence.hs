@@ -29,7 +29,7 @@ setOccurrence = Representation chck downD structuralCons downC up
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
             ]
-        downD _ = na "{downD}"
+        downD _ = na "{downD} Occurrence"
 
         structuralCons _ _ (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
             return $ \ fresh refs ->
@@ -53,7 +53,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                           ]
                       )
                     ]
-        downC _ = na "{downC}"
+        downC _ = na "{downC} Occurrence"
 
         up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
             case lookup (outName name) ctxt of
@@ -78,5 +78,5 @@ setOccurrence = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        up _ _ = na "{up}"
+        up _ _ = na "{up} Occurrence"
 

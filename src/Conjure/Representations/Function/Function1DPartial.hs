@@ -49,7 +49,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                       innerDomainTo
                   )
                 ]
-        downD _ = na "{downD}"
+        downD _ = na "{downD} Function1DPartial"
 
         -- FIX
         structuralCons _ _
@@ -146,7 +146,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                   , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
                   )
                 ]
-        downC _ = na "{downC}"
+        downC _ = na "{downC} Function1DPartial"
 
         up ctxt (name, domain@(DomainFunction "Function1DPartial"
                                 (FunctionAttr _ FunctionAttr_Partial _)
@@ -181,5 +181,5 @@ function1DPartial = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        up _ _ = na "{up}"
+        up _ _ = na "{up} Function1DPartial"
 

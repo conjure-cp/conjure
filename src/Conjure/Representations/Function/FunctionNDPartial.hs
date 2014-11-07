@@ -49,7 +49,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                   , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )
                 ]
-        downD _ = na "{downD}"
+        downD _ = na "{downD} FunctionNDPartial"
 
         -- FIX
         structuralCons _ _
@@ -200,7 +200,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                   )
                 ]
 
-        downC _ = na "{downC}"
+        downC _ = na "{downC} FunctionNDPartial"
 
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
                                 (FunctionAttr _ FunctionAttr_Partial _)
@@ -253,5 +253,5 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        up _ _ = na "{up}"
+        up _ _ = na "{up} FunctionNDPartial"
 

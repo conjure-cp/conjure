@@ -34,7 +34,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                 [ ( outName name
                   , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]
-        downD _ = na "{downD}"
+        downD _ = na "{downD} RelationAsMatrix"
 
         structuralCons _ _
             (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr) innerDomains')
@@ -98,7 +98,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                   , outConstant
                   ) ]
 
-        downC _ = na "{downC}"
+        downC _ = na "{downC} RelationAsMatrix"
 
         up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains')) = do
 
@@ -141,5 +141,5 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                     return ( name
                            , ConstantRelation (catMaybes vals)
                            )
-        up _ _ = na "{up}"
+        up _ _ = na "{up} RelationAsMatrix"
 
