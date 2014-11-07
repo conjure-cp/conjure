@@ -12,7 +12,7 @@ import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainCanIndexMatrix, domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
 
 
 relationAsMatrix :: MonadFail m => Representation m

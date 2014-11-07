@@ -2,7 +2,7 @@
 
 module Conjure.Representations.Function.Function1D
     ( function1D
-    , domainCanIndexMatrix, domainValues, toIntDomain
+    , domainValues, toIntDomain
     ) where
 
 -- conjure
@@ -135,13 +135,6 @@ function1D = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = na "{up}"
-
-
-domainCanIndexMatrix :: Domain r x -> Bool
-domainCanIndexMatrix DomainBool{} = True
-domainCanIndexMatrix DomainInt {} = True
-domainCanIndexMatrix DomainEnum{} = True
-domainCanIndexMatrix _            = False
 
 
 domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]

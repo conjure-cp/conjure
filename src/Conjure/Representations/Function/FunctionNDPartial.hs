@@ -14,7 +14,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainCanIndexMatrix, domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
 
 
 functionNDPartial :: MonadFail m => Representation m

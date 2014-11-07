@@ -120,6 +120,12 @@ getIndices :: Domain r x -> ([Domain () x], Domain r x)
 getIndices (DomainMatrix index inner) = first (index:) (getIndices inner)
 getIndices d = ([], d)
 
+domainCanIndexMatrix :: Domain r x -> Bool
+domainCanIndexMatrix DomainBool{} = True
+domainCanIndexMatrix DomainInt {} = True
+domainCanIndexMatrix _            = False
+
+
 --------------------------------------------------------------------------------
 -- attribute definitions -------------------------------------------------------
 --------------------------------------------------------------------------------
