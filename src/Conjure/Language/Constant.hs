@@ -78,13 +78,13 @@ instance Pretty Constant where
     pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
-instance IntContainer Constant where
-    intOut (ConstantInt x) = return x
-    intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
-
 instance ExpressionLike Constant where
     fromInt = ConstantInt
+    intOut (ConstantInt x) = return x
+    intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
     fromBool = ConstantBool
+    boolOut (ConstantBool x) = return x
+    boolOut c = fail ("Expecting a boolean, but found:" <+> pretty c)
 
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)

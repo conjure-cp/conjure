@@ -9,7 +9,6 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
-import Conjure.Language.AdHoc
 import Conjure.Language.TypeOf
 
 

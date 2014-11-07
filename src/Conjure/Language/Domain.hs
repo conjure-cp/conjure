@@ -268,7 +268,7 @@ instance Arbitrary a => Arbitrary (Range a) where
         , RangeBounded <$> arbitrary <*> arbitrary
         ]
 
-rangesInts :: (MonadFail m, IntContainer c) => [Range c] -> m [Int]
+rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Int]
 rangesInts = liftM (sortNub . concat) . mapM rangeInts
     where
         rangeInts (RangeSingle x) = return <$> intOut x

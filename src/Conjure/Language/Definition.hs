@@ -368,16 +368,16 @@ instance OperatorContainer Expression where
     projectOp (Op op) = return op
     projectOp x = fail ("not an op: " <++> pretty (show x))
 
-instance IntContainer Expression where
-    intOut (Constant c) = intOut c
-    intOut x = fail ("Expecting an integer, but got:" <+> pretty x)
-
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
+    intOut (Constant c) = intOut c
+    intOut x = fail ("Expecting a constant, but got:" <+> pretty x)
     fromBool = Constant . fromBool
+    boolOut (Constant c) = boolOut c
+    boolOut x = fail ("Expecting a constant, but got:" <+> pretty x)
 
 instance Num Expression where
     (+) = opPlus

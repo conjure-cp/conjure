@@ -13,7 +13,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Ops ( OperatorContainer(..) )
+import Conjure.Language.Ops ( OperatorContainer(..), valuesInIntDomain )
 import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 
@@ -115,30 +115,6 @@ domainSizeConstant _                    = bug "not implemented: domainSizeConsta
 
 domainSizeConstantRanges :: MonadFail m => [Range Constant] -> m Int
 domainSizeConstantRanges = liftM length . valuesInIntDomain
-
-valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Int]
-valuesInIntDomain ranges =
-    if isFinite
-        then return allValues
-        else fail $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
-
-    where
-
-        allRanges :: [Maybe [Int]]
-        allRanges =
-            [ vals
-            | r <- ranges
-            , let vals = case r of
-                    RangeSingle (ConstantInt x) -> return [x]
-                    RangeBounded (ConstantInt l) (ConstantInt u) -> return [l..u]
-                    _ -> Nothing
-            ]
-
-        isFinite :: Bool
-        isFinite = Nothing `notElem` allRanges
-
-        allValues :: [Int]
-        allValues = nub $ concat $ catMaybes allRanges
 
 nchoosek :: Integral a => a -> a -> a
 nchoosek n k = product [1..n] `div` (product [1..k] * product [1..n-k])

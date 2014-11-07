@@ -8,6 +8,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Constant
 import Conjure.Language.Type
+import Conjure.Language.Domain
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
@@ -86,7 +87,7 @@ instance Hashable  x => Hashable  (Ops x)
 instance ToJSON    x => ToJSON    (Ops x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (Ops x) where parseJSON = JSON.genericParseJSON jsonOptions
 
-instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (Ops x) where
+instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpPlus                x) = typeOf x
     typeOf (MkOpMinus               x) = typeOf x
     typeOf (MkOpTimes               x) = typeOf x
@@ -281,7 +282,7 @@ instance TypeOf x => TypeOf (OpPlus x) where
             then return TypeInt
             else bug "Type error in OpPlus"
 instance EvaluateOp OpPlus where
-    evaluateOp _ = na "evaluateOp{OpPlus}"
+    evaluateOp (OpPlus xs) = ConstantInt . sum <$> mapM intOut xs
 
 
 data OpMinus x = OpMinus x x
@@ -297,7 +298,7 @@ instance BinaryOperator (OpMinus x) where
 instance TypeOf x => TypeOf (OpMinus x) where
     typeOf (OpMinus a b) = intToIntToInt a b
 instance EvaluateOp OpMinus where
-    evaluateOp _ = na "evaluateOp{OpMinus}"
+    evaluateOp (OpMinus x y) = ConstantInt <$> ((-) <$> intOut x <*> intOut y)
 
 
 data OpTimes x = OpTimes [x]
@@ -318,7 +319,7 @@ instance TypeOf x => TypeOf (OpTimes x) where
             then return TypeInt
             else bug "Type error in OpTimes"
 instance EvaluateOp OpTimes where
-    evaluateOp _ = na "evaluateOp{OpTimes}"
+    evaluateOp (OpTimes xs) = ConstantInt . product <$> mapM intOut xs
 
 
 data OpDiv x = OpDiv x x
@@ -334,7 +335,7 @@ instance BinaryOperator (OpDiv x) where
 instance TypeOf x => TypeOf (OpDiv x) where
     typeOf (OpDiv a b) = intToIntToInt a b
 instance EvaluateOp OpDiv where
-    evaluateOp _ = na "evaluateOp{OpDiv}"
+    evaluateOp (OpDiv x y) = ConstantInt <$> (div <$> intOut x <*> intOut y)
 
 
 data OpMod x = OpMod x x
@@ -350,7 +351,7 @@ instance BinaryOperator (OpMod x) where
 instance TypeOf x => TypeOf (OpMod x) where
     typeOf (OpMod a b) = intToIntToInt a b
 instance EvaluateOp OpMod where
-    evaluateOp _ = na "evaluateOp{OpMod}"
+    evaluateOp (OpMod x y) = ConstantInt <$> (mod <$> intOut x <*> intOut y)
 
 
 data OpPow x = OpPow x x
@@ -366,7 +367,7 @@ instance BinaryOperator (OpPow x) where
 instance TypeOf x => TypeOf (OpPow x) where
     typeOf (OpPow a b) = intToIntToInt a b
 instance EvaluateOp OpPow where
-    evaluateOp _ = na "evaluateOp{OpPow}"
+    evaluateOp (OpPow x y) = ConstantInt <$> ((^) <$> intOut x <*> intOut y)
 
 
 data OpAbs x = OpAbs x
@@ -380,7 +381,7 @@ opAbs x = injectOp (MkOpAbs (OpAbs x))
 instance TypeOf x => TypeOf (OpAbs x) where
     typeOf (OpAbs a) = intToInt a
 instance EvaluateOp OpAbs where
-    evaluateOp _ = na "evaluateOp{OpAbs}"
+    evaluateOp (OpAbs x) = ConstantInt . abs <$> intOut x
 
 
 data OpNegate x = OpNegate x
@@ -394,7 +395,7 @@ opNegate x = injectOp (MkOpNegate (OpNegate x))
 instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
 instance EvaluateOp OpNegate where
-    evaluateOp _ = na "evaluateOp{OpNegate}"
+    evaluateOp (OpNegate x) = ConstantInt . negate <$> intOut x
 
 
 data OpEq x = OpEq x x
@@ -410,7 +411,7 @@ instance BinaryOperator (OpEq x) where
 instance TypeOf x => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
 instance EvaluateOp OpEq where
-    evaluateOp _ = na "evaluateOp{OpEq}"
+    evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
 
 
 data OpNeq x = OpNeq x x
@@ -426,7 +427,7 @@ instance BinaryOperator (OpNeq x) where
 instance TypeOf x => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 instance EvaluateOp OpNeq where
-    evaluateOp _ = na "evaluateOp{OpNeq}"
+    evaluateOp (OpNeq x y) = return $ ConstantBool $ x /= y
 
 
 data OpLt x = OpLt x x
@@ -442,7 +443,7 @@ instance BinaryOperator (OpLt x) where
 instance TypeOf x => TypeOf (OpLt x) where
     typeOf (OpLt a b) = sameToSameToBool a b
 instance EvaluateOp OpLt where
-    evaluateOp _ = na "evaluateOp{OpLt}"
+    evaluateOp (OpLt x y) = return $ ConstantBool $ x < y
 
 
 data OpLeq x = OpLeq x x
@@ -458,7 +459,7 @@ instance BinaryOperator (OpLeq x) where
 instance TypeOf x => TypeOf (OpLeq x) where
     typeOf (OpLeq a b) = sameToSameToBool a b
 instance EvaluateOp OpLeq where
-    evaluateOp _ = na "evaluateOp{OpLeq}"
+    evaluateOp (OpLeq x y) = return $ ConstantBool $ x <= y
 
 
 data OpGt x = OpGt x x
@@ -474,7 +475,7 @@ instance BinaryOperator (OpGt x) where
 instance TypeOf x => TypeOf (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
 instance EvaluateOp OpGt where
-    evaluateOp _ = na "evaluateOp{OpGt}"
+    evaluateOp (OpGt x y) = return $ ConstantBool $ x > y
 
 
 data OpGeq x = OpGeq x x
@@ -490,7 +491,7 @@ instance BinaryOperator (OpGeq x) where
 instance TypeOf x => TypeOf (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
 instance EvaluateOp OpGeq where
-    evaluateOp _ = na "evaluateOp{OpGeq}"
+    evaluateOp (OpGeq x y) = return $ ConstantBool $ x >= y
 
 
 data OpAnd x = OpAnd [x]
@@ -511,7 +512,7 @@ instance TypeOf x => TypeOf (OpAnd x) where
             then return TypeBool
             else bug "Type error in OpAnd"
 instance EvaluateOp OpAnd where
-    evaluateOp _ = na "evaluateOp{OpAnd}"
+    evaluateOp (OpAnd xs) = ConstantBool . and <$> mapM boolOut xs
 
 
 data OpOr x = OpOr [x]
@@ -532,7 +533,7 @@ instance TypeOf x => TypeOf (OpOr x) where
             then return TypeBool
             else bug "Type error in OpOr"
 instance EvaluateOp OpOr where
-    evaluateOp _ = na "evaluateOp{OpOr}"
+    evaluateOp (OpOr xs) = ConstantBool . or <$> mapM boolOut xs
 
 
 data OpImply x = OpImply x x
@@ -548,7 +549,7 @@ instance BinaryOperator (OpImply x) where
 instance TypeOf x => TypeOf (OpImply x) where
     typeOf (OpImply a b) = boolToBoolToBool a b
 instance EvaluateOp OpImply where
-    evaluateOp _ = na "evaluateOp{OpImply}"
+    evaluateOp (OpImply x y) = ConstantBool <$> ((<=) <$> boolOut x <*> boolOut y)
 
 
 data OpNot x = OpNot x
@@ -562,7 +563,7 @@ opNot x = injectOp (MkOpNot (OpNot x))
 instance TypeOf x => TypeOf (OpNot x) where
     typeOf (OpNot a) = do TypeBool <- typeOf a ; return TypeBool
 instance EvaluateOp OpNot where
-    evaluateOp _ = na "evaluateOp{OpNot}"
+    evaluateOp (OpNot x) = ConstantBool . not <$> boolOut x
 
 
 data OpIndexing x = OpIndexing x x
@@ -571,7 +572,7 @@ instance Serialize x => Serialize (OpIndexing x)
 instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = JSON.genericParseJSON jsonOptions
-instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (OpIndexing x) where
+instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x) where
     typeOf (OpIndexing m i) = do
         tyM <- typeOf m
         case tyM of
@@ -582,6 +583,16 @@ instance (TypeOf x, Show x, Pretty x, IntContainer x) => TypeOf (OpIndexing x) w
                 return (at inns (iInt-1))
             _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
 instance EvaluateOp OpIndexing where
+    evaluateOp (OpIndexing m@(ConstantMatrix (DomainInt index) vals) (ConstantInt x)) = do
+        indexVals    <- valuesInIntDomain index
+        case [ v | (i, v) <- zip indexVals vals, i == x ] of
+            [v] -> return v
+            []  -> fail $ vcat [ "Matrix is not defined at this point:" <+> pretty x
+                               , "Matrix value:" <+> pretty m
+                               ]
+            _   -> fail $ vcat [ "Matrix is multiply defined at this point:" <+> pretty x
+                               , "Matrix value:" <+> pretty m
+                               ]
     evaluateOp _ = na "evaluateOp{OpIndexing}"
 
 
@@ -616,7 +627,13 @@ instance TypeOf x => TypeOf (OpFlatten x) where
         TypeMatrix index n <- typeOf m
         return (TypeMatrix index (flattenType n))
 instance EvaluateOp OpFlatten where
-    evaluateOp _ = na "evaluateOp{OpFlatten}"
+    evaluateOp (OpFlatten m) = do
+        let flat (ConstantMatrix _ xs) = concatMap flat xs
+            flat c = [c]
+        let flattened = flat m
+        return (ConstantMatrix
+                    (DomainInt [RangeBounded (fromInt 1) (fromInt (length flattened))])
+                    flattened)
 
 
 data OpLexLt x = OpLexLt x x
@@ -635,6 +652,7 @@ instance TypeOf x => TypeOf (OpLexLt x) where
         TypeMatrix{} <- typeOf b
         return TypeBool
 instance EvaluateOp OpLexLt where
+    evaluateOp (OpLexLt (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs < ys
     evaluateOp _ = na "evaluateOp{OpLexLt}"
 
 
@@ -654,6 +672,7 @@ instance TypeOf x => TypeOf (OpLexLeq x) where
         TypeMatrix{} <- typeOf b
         return TypeBool
 instance EvaluateOp OpLexLeq where
+    evaluateOp (OpLexLeq (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs <= ys
     evaluateOp _ = na "evaluateOp{OpLexLeq}"
 
 
@@ -1181,3 +1200,29 @@ functionals =
     , L_normIndices
     , L_indices
     ]
+
+
+-- this probably shouldn't be in this domain, should refactor later
+valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Int]
+valuesInIntDomain ranges =
+    if isFinite
+        then return allValues
+        else fail $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
+
+    where
+
+        allRanges :: [Maybe [Int]]
+        allRanges =
+            [ vals
+            | r <- ranges
+            , let vals = case r of
+                    RangeSingle (ConstantInt x) -> return [x]
+                    RangeBounded (ConstantInt l) (ConstantInt u) -> return [l..u]
+                    _ -> Nothing
+            ]
+
+        isFinite :: Bool
+        isFinite = Nothing `notElem` allRanges
+
+        allValues :: [Int]
+        allValues = nub $ concat $ catMaybes allRanges
