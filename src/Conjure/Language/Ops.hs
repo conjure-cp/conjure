@@ -210,10 +210,16 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpLeq   op@(OpLeq    a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpGt    op@(OpGt     a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpGeq   op@(OpGeq    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpAnd   op@(OpAnd   [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpAnd      (OpAnd   xs   )) = "and" <> prettyList prParens "," xs
-    prettyPrec prec (MkOpOr    op@(OpOr    [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpOr       (OpOr    xs   )) = "or"  <> prettyList prParens "," xs
+    prettyPrec prec (MkOpAnd   op@(OpAnd    xs  )) = case xs of
+        []    -> "false"
+        [x]   -> "and" <> prParens (pretty x)
+        [x,y] -> prettyPrecBinOp prec [op] x y
+        _     -> "and" <> prettyList (prParens . prBrackets) "," xs
+    prettyPrec prec (MkOpOr    op@(OpOr     xs  )) = case xs of
+        []    -> "true"
+        [x]   -> "or" <> prParens (pretty x)
+        [x,y] -> prettyPrecBinOp prec [op] x y
+        _     -> "or" <> prettyList (prParens . prBrackets) "," xs
     prettyPrec prec (MkOpImply op@(OpImply  a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpNot      (OpNot    a   )) = "!" <> prettyPrec 10000 a
     prettyPrec _ (MkOpAllDiff  (OpAllDiff   a   )) = "allDiff"  <> prParens (pretty a)

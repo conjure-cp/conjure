@@ -16,6 +16,9 @@ make  f = fst (f (Proxy :: Proxy Identity))
 match :: (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
 match f = snd (f Proxy)
 
+tryMatch :: (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
+tryMatch f = match f
+
 matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
 matchOr defOut f inp = fromMaybe defOut (match f inp)
 
@@ -234,6 +237,25 @@ opToMSet _ =
             case op of
                 MkOpToMSet (OpToMSet x) -> return x
                 _ -> na ("Lenses.opToMSet:" <++> pretty p)
+    )
+
+
+opFunctionImage
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> [x] -> x
+       , x -> m (x, [x])
+       )
+opFunctionImage _ =
+    ( \ x ys -> injectOp $ MkOpFunctionImage $ OpFunctionImage x ys
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpFunctionImage (OpFunctionImage x ys) -> return (x,ys)
+                _ -> na ("Lenses.opFunctionImage:" <++> pretty p)
     )
 
 

@@ -29,7 +29,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
                                    , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
-                                   , opLeq, opFlatten, opToSet, opIntersect, opUnion )
+                                   , opLeq, opFlatten, opToSet, opIntersect, opUnion, opFunctionImage )
 
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
@@ -226,7 +226,7 @@ strategyToDriver strategyQ strategyA questions = do
 executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [a]
 executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
-    logInfo ("Selecting the only option:" <+> doc)
+    logInfo ("Picking the only option:" <+> doc)
     return [option]
 executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
     case strategy of
@@ -472,6 +472,7 @@ allRules config =
     , rule_TrueIsNoOp
     , rule_ToIntIsNoOp
     , rule_SingletonAnd
+    , rule_FlattenOf1D
 
     , rule_BubbleUp
     , rule_BubbleToAnd
@@ -524,7 +525,9 @@ allRules config =
     , rule_Function_InDefined_FunctionNDPartial
 
     , rule_RelationEq
-    , rule_Relation_In_RelationAsMatrix
+    , rule_Relation_In
+
+    , rule_Relation_Image_RelationAsMatrix
     , rule_Relation_MapInExpr_RelationAsMatrix
 
     ] ++ rule_InlineFilterInsideMap
@@ -540,7 +543,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
         let options =
                 [ (msg, const out, hook)
                 | dom <- domOpts
-                , let msg = "Selecting representation for" <+> pretty nm <> ":" <++> pretty dom
+                , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook forg nm dom
                 ]
@@ -641,6 +644,18 @@ rule_SingletonAnd = "singleton-and" `namedRule` theRule where
         return ( "singleton and, removing the wrapper"
                , const x
                )
+
+
+rule_FlattenOf1D :: Rule
+rule_FlattenOf1D = "flattern-of-1D" `namedRule` theRule where
+    theRule p = do
+        x                   <- match opFlatten p
+        TypeMatrix _ xInner <- typeOf x
+        case xInner of
+            TypeMatrix{} -> fail "No match." 
+            _ -> return ( "1D matrices do not need a flatten."
+                        , const x
+                        )
 
 
 rule_BubbleUp :: Rule
@@ -796,36 +811,54 @@ rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
 
 rule_InlineFilterInsideMap :: [Rule]
 rule_InlineFilterInsideMap =
-    [ namedRule "inline-filter-inside-mapOverDomain-and" $ \ p -> ruleGen_InlineFilterInsideMap opAnd opMapOverDomain (\ x y -> make opImply x y ) p
-    , namedRule "inline-filter-inside-mapOverDomain-or"  $ \ p -> ruleGen_InlineFilterInsideMap opOr  opMapOverDomain (\ x y -> make opAnd [x,y] ) p
-    , namedRule "inline-filter-inside-mapOverDomain-sum" $ \ p -> ruleGen_InlineFilterInsideMap opSum opMapOverDomain (\ b x -> make opTimes (make opToInt b) x ) p
-    , namedRule "inline-filter-inside-mapInExpr-and"     $ \ p -> ruleGen_InlineFilterInsideMap opAnd opMapInExpr     (\ x y -> make opImply x y ) p
-    , namedRule "inline-filter-inside-mapInExpr-or"      $ \ p -> ruleGen_InlineFilterInsideMap opOr  opMapInExpr     (\ x y -> make opAnd [x,y] ) p
-    , namedRule "inline-filter-inside-mapInExpr-sum"     $ \ p -> ruleGen_InlineFilterInsideMap opSum opMapInExpr     (\ b x -> make opTimes (make opToInt b) x ) p
+    [ namedRule "filter-inside-mapOverDomain-and" $ ruleGen_InlineFilterInsideMap opMapOverDomain opAnd opAndSkip
+    , namedRule "filter-inside-mapOverDomain-or"  $ ruleGen_InlineFilterInsideMap opMapOverDomain opOr  opOrSkip
+    , namedRule "filter-inside-mapOverDomain-sum" $ ruleGen_InlineFilterInsideMap opMapOverDomain opSum opSumSkip
+    , namedRule "filter-inside-mapInExpr-and"     $ ruleGen_InlineFilterInsideMap opMapInExpr     opAnd opAndSkip
+    , namedRule "filter-inside-mapInExpr-or"      $ ruleGen_InlineFilterInsideMap opMapInExpr     opOr  opOrSkip
+    , namedRule "filter-inside-mapInExpr-sum"     $ ruleGen_InlineFilterInsideMap opMapInExpr     opSum opSumSkip
     ]
+    where
+        opAndSkip x y = make opImply x y
+        opOrSkip  x y = make opAnd [x,y]
+        opSumSkip b x = make opTimes (make opToInt b) x
 
 ruleGen_InlineFilterInsideMap
     :: MonadFail m
-    => (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( [Expression] -> Expression            , Expression -> m1 [Expression]             ))
-    -> (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( Expression -> Expression -> Expression, Expression -> m1 (Expression, Expression) ))
+    => (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( Expression -> Expression -> Expression, Expression -> m1 (Expression, Expression) ))
+    -> (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( [Expression] -> Expression            , Expression -> m1 [Expression]             ))
     -> (Expression -> Expression -> Expression)
     -> Expression
     -> m (Doc, [Name] -> Expression)
-ruleGen_InlineFilterInsideMap opQ opM opSkip p = do
-    [x]                             <- match opQ p
-    (Lambda f1@Single{} f2, rest  ) <- match opM x
-    (Lambda g1@Single{} g2, domain) <- match opFilter rest
-    ty                              <- typeOf domain
-
-    let f = lambdaToFunction f1 f2
-    let g = lambdaToFunction g1 g2
-
+ruleGen_InlineFilterInsideMap opM opQ opSkip p = do
+    [x] <- match opQ p
+    x'  <- possiblyNested x
     return ( "Inlining the filter."
-           , \ fresh -> make opQ
-                   [ make opM
-                           (mkLambda (headInf fresh) ty $ \ i -> opSkip (g i) (f i))
-                           domain ]
+           , const $ make opQ [ x' ]
            )
+
+    where
+        possiblyNested x =
+            case tryMatch opFlatten x of
+                Nothing -> ruleGen_InlineFilterInsideMap_Inner x
+                Just y  -> case tryMatch opM y of
+                    Nothing -> fail "flatten, but no opM"
+                    Just (Lambda l1 l2, domain) -> do
+                        l2' <- possiblyNested l2
+                        return $ make opFlatten $ make opM (Lambda l1 l2') domain
+                    Just _ -> fail "opM doesn't contain a Lambda"
+
+        ruleGen_InlineFilterInsideMap_Inner x = do
+            (Lambda f1@(Single nm _) f2, rest  ) <- match opM x
+            (Lambda g1@Single{}      g2, domain) <- match opFilter rest
+            ty                                   <- typeOf domain
+
+            let f = lambdaToFunction f1 f2
+            let g = lambdaToFunction g1 g2
+
+            return $  make opM
+                (mkLambda nm ty $ \ i -> opSkip (g i) (f i))
+                domain
 
 
 rule_TupleIndex :: Rule
@@ -1387,8 +1420,8 @@ rule_RelationEq = "relation-eq" `namedRule` theRule where
                                    (make opToSet y)
                )
 
-rule_Relation_In_RelationAsMatrix :: Rule
-rule_Relation_In_RelationAsMatrix = "relation-in{RelationAsMatrix}" `namedRule` theRule where
+rule_Relation_In :: Rule
+rule_Relation_In = "relation-in" `namedRule` theRule where
     theRule [essence| &x in toSet(&rel) |] = do
         TypeRelation{} <- typeOf rel
         return ( "relation membership to existential quantification"
@@ -1399,29 +1432,66 @@ rule_Relation_In_RelationAsMatrix = "relation-in{RelationAsMatrix}" `namedRule` 
     theRule _ = fail "No match."
 
 
+rule_Relation_Image_RelationAsMatrix :: Rule
+rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `namedRule` theRule where
+    theRule p = do
+        (rel, args)         <- match opFunctionImage p
+        TypeRelation{}      <- typeOf rel
+        "RelationAsMatrix"  <- representationOf rel
+        [m]                 <- downX1 rel
+        let unroll v [] = v
+            unroll v (i:is) = unroll (make opIndexing v i) is
+        return ( "relation image, RelationAsMatrix representation"
+               , const $ unroll m args
+               )
+
+
 rule_Relation_MapInExpr_RelationAsMatrix :: Rule
 rule_Relation_MapInExpr_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
     theRule p = do
         (Lambda f1 f2, s)      <- match opMapInExpr p
         let f                  =  lambdaToFunction f1 f2
-        let r                  = matchDef opToSet s
+        let r                  =  matchDef opToSet s
         TypeRelation{}         <- typeOf r
         "RelationAsMatrix"     <- representationOf r
         [m]                    <- downX1 r
         mDom                   <- domainOf m
         let (mIndices, _)      =  getIndices mDom
 
-        let unroll val [((pat,_),index)]
-                = make opMapOverDomain (Lambda pat (f val))
-                                       (Domain index)
-            unroll val (((pat,_),index):rest)
-                = let val' = val
-                  in  make opFlatten $
-                          make opMapOverDomain (Lambda pat (unroll val' rest))
-                                               (Domain index)
-            unroll _ _ = bug "rule_Relation_MapInExpr_RelationAsMatrix.unroll []"
-            
-        let out fresh = unroll m (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
+        let
+            unroll
+                :: Expression
+                -> [Expression]
+                -> [ ( (AbstractPattern, Expression)
+                     , Domain () Expression
+                     ) ]
+                -> Expression
+            unroll
+                theMatrix
+                theValue
+                _quantifiers     @[((iPat,i),index)]
+                = let nextMatrix = make opIndexing theMatrix i
+                      nextValue  = theValue ++ [i]
+                      finalValue = AbstractLiteral (AbsLitTuple nextValue)
+                  in  make opMapOverDomain
+                        (Lambda iPat (f finalValue))
+                        (make opFilter
+                            (Lambda iPat nextMatrix)
+                            (Domain index))
+            unroll
+                theMatrix
+                theValue
+                _quantifiers     @(((iPat,i),index):rest)
+                = let nextMatrix = make opIndexing theMatrix i
+                      nextValue  = theValue ++ [i]
+                  in  make opFlatten $ make opMapOverDomain
+                        (Lambda iPat (unroll nextMatrix nextValue rest))
+                        (Domain index)
+
+            unroll _ _ _
+                = bug "rule_Relation_MapInExpr_RelationAsMatrix.unroll []"
+
+        let out fresh = unroll m [] (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
         return ( "Vertical rule for map_in_expr for relation domains, RelationAsMatrix representation."
                , out
                )
