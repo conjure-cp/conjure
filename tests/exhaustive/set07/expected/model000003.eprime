@@ -9,6 +9,6 @@ such that
                                                                                                                                                      1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..1 + 4 - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..1 + 4 - 1 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q4] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q4]] | q4 : int(1..1 + 4 - 1)]),
-    and([x_Occurrence[q7] -> or([x_ExplicitVarSizeWithFlags_Values[q5] = q7 /\ x_ExplicitVarSizeWithFlags_Flags[q5] | q5 : int(1..1 + 4 - 1)]) | q7 : int(1..4)])
+    and([x_ExplicitVarSizeWithFlags_Flags[q5] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q5]] | q5 : int(1..1 + 4 - 1)]),
+    and([x_Occurrence[q4] -> or([x_ExplicitVarSizeWithFlags_Values[q6] = q4 /\ x_ExplicitVarSizeWithFlags_Flags[q6] | q6 : int(1..1 + 4 - 1)]) | q4 : int(1..4)])
 

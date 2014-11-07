@@ -9,7 +9,7 @@ such that
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..1 + 4 - 1
                                                                                                                                                            - 1)]),
     and([q1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] = 1 | q1 : int(1..1 + 4 - 1)]),
-    and([x_Occurrence[q8] ->
-         or([x_ExplicitVarSizeWithMarker_Values[q6] = q8 /\ q6 <= x_ExplicitVarSizeWithMarker_Marker | q6 : int(1..1 + 4 - 1)]) | q8 : int(1..4)]),
-    and([q7 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q7]] | q7 : int(1..1 + 4 - 1)])
+    and([x_Occurrence[q6] ->
+         or([x_ExplicitVarSizeWithMarker_Values[q7] = q6 /\ q7 <= x_ExplicitVarSizeWithMarker_Marker | q7 : int(1..1 + 4 - 1)]) | q6 : int(1..4)]),
+    and([q9 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q9]] | q9 : int(1..1 + 4 - 1)])
 

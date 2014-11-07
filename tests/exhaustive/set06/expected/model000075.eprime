@@ -12,8 +12,8 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..4 - 1)]),
     sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..4)]) <= 4,
     sum([x_Occurrence[q4] | q4 : int(1..4)]) <= 4,
-    and([x_Occurrence[q7] -> or([x_ExplicitVarSizeWithFlags_Values[q5] = q7 /\ x_ExplicitVarSizeWithFlags_Flags[q5] | q5 : int(1..4)]) | q7 : int(1..4)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q6] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q6]] | q6 : int(1..4)]),
+    and([x_Occurrence[q5] -> or([x_ExplicitVarSizeWithFlags_Values[q6] = q5 /\ x_ExplicitVarSizeWithFlags_Flags[q6] | q6 : int(1..4)]) | q5 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q8] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q8]] | q8 : int(1..4)]),
-    and([x_Occurrence[q11] -> or([x_ExplicitVarSizeWithFlags_Values[q9] = q11 /\ x_ExplicitVarSizeWithFlags_Flags[q9] | q9 : int(1..4)]) | q11 : int(1..4)])
+    and([x_ExplicitVarSizeWithFlags_Flags[q9] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q9]] | q9 : int(1..4)]),
+    and([x_Occurrence[q7] -> or([x_ExplicitVarSizeWithFlags_Values[q10] = q7 /\ x_ExplicitVarSizeWithFlags_Flags[q10] | q10 : int(1..4)]) | q7 : int(1..4)])
 
