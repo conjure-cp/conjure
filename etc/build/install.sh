@@ -219,9 +219,8 @@ if [ $BUILD_DOCS == "yes" ]; then
     cabal haddock --hyperlink-source
 fi
 
+cabal copy                                  # install in ${BIN_DIR}
+
 if [ $RUN_TESTS = "yes" ]; then
     time dist/build/conjure-testing/conjure-testing +RTS -s
 fi
-
-cabal copy                                  # install in ${BIN_DIR}
-
