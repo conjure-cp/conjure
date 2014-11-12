@@ -1002,13 +1002,21 @@ rule_MapOverDomain_Tuple = "tuple-mapOverDomain-tuple" `namedRule` theRule where
                )
 
 
+-- x in s ~~> or([ x = i | i in s ])
+-- where s is a set
+-- and not Occurrence
 rule_Set_In :: Rule
 rule_Set_In = "set-in" `namedRule` theRule where
     theRule p = do
         (x,s)          <- match opIn p
         TypeSet sInner <- typeOf s
-        -- x in s
-        -- or([ x = i | i in s ])
+        case (representationOf s, match setLiteral s, match opToSet s) of
+            ( Just "Explicit"                  , _      , _      ) -> return ()
+            ( Just "ExplicitVarSizeWithFlags"  , _      , _      ) -> return ()
+            ( Just "ExplicitVarSizeWithMarker" , _      , _      ) -> return ()
+            ( _                                , Just _ , _      ) -> return ()
+            ( _                                , _      , Just _ ) -> return ()
+            _ -> fail "Not yet, not here."
         let body iName = mkLambda iName sInner (\ i -> make opEq i x)
         return ( "Horizontal rule for set-in."
                , \ fresh -> make opOr [make opMapInExpr (body (headInf fresh)) s]
