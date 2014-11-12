@@ -89,3 +89,6 @@ instance ExpressionLike Constant where
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)
 
+normaliseConstant :: Constant -> Constant
+normaliseConstant (ConstantSet xs) = ConstantSet $ sortNub $ map normaliseConstant xs
+normaliseConstant c = c

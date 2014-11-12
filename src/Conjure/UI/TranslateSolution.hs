@@ -4,6 +4,7 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( deenumifyParam, enumify )
@@ -66,7 +67,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
 
     return def
         { mStatements = sortNub
-            [ Declaration (Letting n (Constant y))
+            [ Declaration (Letting n (Constant (normaliseConstant y)))
             | (n, d, x) <- essenceLettings
             , let y = enumify intToEnumConstant d x
             ]
