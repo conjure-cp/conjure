@@ -41,7 +41,7 @@ import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStruct
 import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
 
 
-import qualified Pipes as Pipes ( Producer, yield )
+import qualified Pipes ( Producer, yield )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 
@@ -1412,8 +1412,7 @@ rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `named
         TypeRelation{}      <- typeOf rel
         "RelationAsMatrix"  <- representationOf rel
         [m]                 <- downX1 rel
-        let unroll v [] = v
-            unroll v (i:is) = unroll (make opIndexing v i) is
+        let unroll = foldl (make opIndexing)
         return ( "relation image, RelationAsMatrix representation"
                , const $ unroll m args
                )

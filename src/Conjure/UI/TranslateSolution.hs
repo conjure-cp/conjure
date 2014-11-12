@@ -56,7 +56,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
 
     let
         intToEnumConstant :: [((Int, Name), Constant)]
-        intToEnumConstant = concat $
+        intToEnumConstant = concat
             [ [ ((i,ename), ConstantEnum ename vals v)
               | (i,v) <- zip allNats vals
               ]

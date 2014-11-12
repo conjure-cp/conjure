@@ -28,8 +28,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         downD (name, DomainRelation "RelationAsMatrix" _ innerDomains') | all domainCanIndexMatrix innerDomains' = do
             innerDomains <- mapM toIntDomain innerDomains'
-            let unroll []     j = j
-                unroll (i:is) j = DomainMatrix i (unroll is j)
+            let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( outName name
                   , unroll (map forgetRepr innerDomains) DomainBool
@@ -68,8 +67,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
             let
                 unrollD :: [Domain () Constant] -> Domain r Constant -> Domain r Constant
-                unrollD []     j = j
-                unrollD (i:is) j = DomainMatrix i (unrollD is j)
+                unrollD is j = foldr DomainMatrix j is
 
             let
                 unrollC :: MonadFail m

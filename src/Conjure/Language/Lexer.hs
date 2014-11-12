@@ -254,7 +254,7 @@ mapLexemeToText :: M.HashMap Lexeme T.Text
 mapLexemeToText = M.fromList $ map swap lexemes
 
 lexemes :: [(T.Text, Lexeme)]
-lexemes = reverse $ sortBy ( comparing (T.length . fst) ) $ map swap
+lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     [ ( L_be         , "be"         )
     , ( L_from       , "from"       )
     , ( L_of         , "of"         )

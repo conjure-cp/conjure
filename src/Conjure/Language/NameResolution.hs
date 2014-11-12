@@ -16,9 +16,9 @@ import Conjure.Language.TypeOf
 
 resolveNames :: (MonadLog m, MonadFail m) => Model -> m Model
 resolveNames model = flip evalStateT [] $ do
-    statements <- forM (mStatements model) $ \ st -> do
+    statements <- forM (mStatements model) $ \ st ->
         case st of
-            Declaration decl -> do
+            Declaration decl ->
                 case decl of
                     FindOrGiven forg nm dom       -> do
                         dom' <- resolveD dom

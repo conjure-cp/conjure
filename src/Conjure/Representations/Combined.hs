@@ -158,7 +158,11 @@ allReprs =
 reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
 reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
 
-getStructurals :: MonadFail m => (Expression -> m [Expression]) -> DomainX Expression -> m (([Name] -> [Expression] -> m [Expression]))
+getStructurals
+    :: MonadFail m
+    => (Expression -> m [Expression])
+    -> DomainX Expression
+    -> m ([Name] -> [Expression] -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 
 

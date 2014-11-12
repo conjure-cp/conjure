@@ -288,11 +288,8 @@ opIndexing'
        , x -> m (x,[x])
        )
 opIndexing' proxy =
-    ( \ x ys -> let f a [] = a
-                    f a (i:is) = f (make opIndexing a i) is
-                in  f x ys
-    , \ p -> do
-            case projectOp p of
+    ( foldl (make opIndexing)
+    , \ p -> case projectOp p of
                 Just (MkOpIndexing (OpIndexing x i)) -> do
                     (m,is) <- snd (opIndexing' proxy) x
                     return (m, is ++ [i])
@@ -310,7 +307,7 @@ opFlatten
        , x -> m x
        )
 opFlatten _ =
-    ( \ x -> injectOp (MkOpFlatten (OpFlatten x))
+    ( injectOp . MkOpFlatten . OpFlatten
     , \ p -> do
             op <- projectOp p
             case op of

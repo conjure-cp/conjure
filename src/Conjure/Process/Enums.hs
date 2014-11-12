@@ -71,7 +71,7 @@ deenumifyModel = deenumifyModel_LettingEnums >=> deenumifyModel_GivenEnums
 
         deenumifyModel_GivenEnums model = do
             (statements', enumDomainNames) <-
-                flip runStateT [] $ forM (mStatements model) $ \ st -> do
+                flip runStateT [] $ forM (mStatements model) $ \ st ->
                     case st of
                         Declaration (GivenDomainDefnEnum name) -> do
                             let nameS      = name `mappend` "_EnumSize"
@@ -147,7 +147,7 @@ deenumifyParam model param = do
             = DomainReference nm (Just d)
         onD p = p
 
-    let param' = param { mStatements = (catMaybes statements')
+    let param' = param { mStatements = catMaybes statements'
                             |> transformBi onX
                             |> transformBi onD
                        }

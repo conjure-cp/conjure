@@ -145,7 +145,7 @@ import Data.Generics.Uniplate.Data as X
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
 
 -- pipes
-import qualified Pipes as Pipes
+import qualified Pipes
 
 -- groom
 import Text.Groom as X ( groom )

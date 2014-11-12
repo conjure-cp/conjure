@@ -87,9 +87,9 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                         , mkSizeCons attrs marker
                                         , isc
                                         ]
-                    _ -> fail $ "N/A {structuralCons} ExplicitVarSizeWithMarker"
+                    _ -> na "{structuralCons} ExplicitVarSizeWithMarker"
 
-        structuralCons _ _ _ = fail $ "N/A {structuralCons} ExplicitVarSizeWithMarker"
+        structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithMarker"
 
         downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
             maxSize <- getMaxSize attrs innerDomain

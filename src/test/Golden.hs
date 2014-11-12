@@ -55,6 +55,6 @@ goldenVsFile
 goldenVsFile name ref new cmp act = goldenTest name
     (vgReadFile ref)
     (liftIO act >> vgReadFile new)
-    (\ a b -> cmp (BS.unpack a) (BS.unpack b) )
+    (cmp `on` BS.unpack)
     upd
     where upd = BS.writeFile ref

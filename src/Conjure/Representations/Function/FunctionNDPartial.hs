@@ -39,8 +39,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     (DomainTuple innerDomainFrs')
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
             innerDomainFrs <- mapM toIntDomain innerDomainFrs'
-            let unroll []     j = j
-                unroll (i:is) j = DomainMatrix i (unroll is j)
+            let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( nameFlags name
                   , unroll (map forgetRepr innerDomainFrs) DomainBool
@@ -153,8 +152,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let
                 unrollD :: [Domain () Constant] -> Domain r Constant -> Domain r Constant
-                unrollD []     j = j
-                unrollD (i:is) j = DomainMatrix i (unrollD is j)
+                unrollD is j = foldr DomainMatrix j is
 
             let
                 unrollC :: MonadFail m
@@ -170,9 +168,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                                     Nothing -> ConstantBool False
                                                     Just{}  -> ConstantBool True
                                               | val <- domVals ]
-                           , ConstantMatrix i [ case active val of
-                                                    Nothing -> z
-                                                    Just v  -> v
+                           , ConstantMatrix i [ fromMaybe z (active val)
                                               | val <- domVals ]
                            )
                 unrollC ((i,i'):is) prevIndices = do
