@@ -31,17 +31,36 @@ setExplicit = Representation chck downD structuralCons downC up
               ) ]
         downD _ = na "{downD} Explicit"
 
-        -- FIX
-        structuralCons _ _ (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) _) =
+        structuralCons f downX1 (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain) = do
+            let
+                ordering fresh m =
+                    let
+                        (iPat, i) = quantifiedVar fresh TypeInt
+                    in return -- for list
+                        [essence|
+                            forAll &iPat : int(1..&size-1) .
+                                &m[&i] < &m[&i+1]
+                        |]
+
+                innerStructuralCons fresh m = do
+                    let (iPat, i) = quantifiedVar (headInf fresh) TypeInt
+                    let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomain
+
+                    let inLoop = [essence| &m[&i] |]
+                    refs <- downX1 inLoop
+                    outs <- innerStructuralConsGen (tail fresh) refs
+                    return (map activeZone outs)
+
             return $ \ fresh refs ->
                 case refs of
                     [m] -> do
-                        let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
-                        return $ return -- one for list
-                            [essence|
-                                forAll &iPat : int(1..&size-1) .
-                                    &m[&i] < &m[&i+1]
-                            |]
+                        isc <- innerStructuralCons fresh m
+                        return $ concat [ ordering (headInf fresh) m
+                                        , isc
+                                        ]
                     _ -> na "{structuralCons} Explicit"
         structuralCons _ _ _ = na "{structuralCons} Explicit"
 
