@@ -90,5 +90,14 @@ instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)
 
 normaliseConstant :: Constant -> Constant
+normaliseConstant x@ConstantBool{} = x
+normaliseConstant x@ConstantInt{}  = x
+normaliseConstant x@ConstantEnum{} = x
+normaliseConstant (ConstantTuple xs) = ConstantTuple $ map normaliseConstant xs
+normaliseConstant (ConstantMatrix d xs) = ConstantMatrix d $ map normaliseConstant xs
 normaliseConstant (ConstantSet xs) = ConstantSet $ sortNub $ map normaliseConstant xs
-normaliseConstant c = c
+normaliseConstant (ConstantMSet xs) = ConstantMSet $ sort $ map normaliseConstant xs
+normaliseConstant (ConstantFunction xs) = ConstantFunction $ sortNub
+    [ (normaliseConstant x, normaliseConstant y) | (x, y) <- xs ]
+normaliseConstant (ConstantRelation xss) = ConstantRelation $ sortNub $ map (map normaliseConstant) xss
+normaliseConstant (ConstantPartition xss) = ConstantPartition $ sortNub $ map (sortNub . map normaliseConstant) xss
