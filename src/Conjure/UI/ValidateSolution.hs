@@ -5,7 +5,6 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
-import Conjure.Process.Enums ( deenumifyParam )
 
 
 validateSolution
@@ -16,9 +15,7 @@ validateSolution
     -> Model      -- essence param
     -> Model      -- essence solution
     -> m ()
-validateSolution essenceModel essenceParam' essenceSolution' = flip evalStateT [] $ do
-    essenceParam    <- deenumifyParam essenceModel essenceParam'
-    essenceSolution <- deenumifyParam essenceModel essenceSolution'
+validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] $ do
     forM_ (mStatements essenceModel) $ \ st -> case st of
         Declaration (FindOrGiven Given nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of
@@ -41,8 +38,20 @@ validateSolution essenceModel essenceParam' essenceSolution' = flip evalStateT [
                                      , "Values:" <++> vcat (map pretty vals)
                                      ]
         Declaration (Letting nm val) -> modify ((nm, val) :)
-        Declaration GivenDomainDefnEnum{}      -> fail $ "not expected here, statement:" <+> pretty st
-        Declaration LettingDomainDefnEnum{}    -> fail $ "not expected here, statement:" <+> pretty st
+        Declaration (GivenDomainDefnEnum nm) ->
+            case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
+                [val] -> modify ( [ (n, Constant (ConstantInt i))
+                                  | (n, i) <- zip val allNats
+                                  ] ++)
+                []    -> fail $ vcat [ "No value for enum domain" <+> pretty nm <+> "in the parameter file."
+                                     ]
+                vals  -> fail $ vcat [ "Multiple values for enum domain" <+> pretty nm <+> "in the parameter file."
+                                     , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
+                                     ]
+        Declaration (LettingDomainDefnEnum _ val) ->
+            modify ( [ (n, Constant (ConstantInt i))
+                     | (n, i) <- zip val allNats
+                     ] ++)
         Declaration LettingDomainDefnUnnamed{} -> fail $ "not expected here, statement:" <+> pretty st
         SearchOrder{} -> return ()
         Where xs -> do
