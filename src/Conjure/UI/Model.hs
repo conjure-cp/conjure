@@ -496,20 +496,19 @@ allRules config =
     , rule_MatrixLeq
 
     , rule_SetEq
+    , rule_Set_In
     , rule_SetSubsetEq
     , rule_SetLt
     , rule_SetLeq
     , rule_SetIntersect
+    , rule_Set_MapInExpr_Literal
 
     , rule_Set_MapInExpr_Explicit
-    , rule_Set_MapInExpr_Occurrence
     , rule_Set_MapInExpr_ExplicitVarSizeWithMarker
     , rule_Set_MapInExpr_ExplicitVarSizeWithFlags
 
-    , rule_SetIn_Explicit
-    , rule_SetIn_Occurrence
-    , rule_SetIn_ExplicitVarSizeWithMarker
-    , rule_SetIn_ExplicitVarSizeWithFlags
+    , rule_Set_MapInExpr_Occurrence
+    , rule_Set_In_Occurrence
 
     , rule_FunctionEq
 
@@ -1003,20 +1002,16 @@ rule_MapOverDomain_Tuple = "tuple-mapOverDomain-tuple" `namedRule` theRule where
                )
 
 
-rule_SetIn_Explicit :: Rule
-rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
+rule_Set_In :: Rule
+rule_Set_In = "set-in" `namedRule` theRule where
     theRule p = do
-        (x,s)                <- match opIn p
-        "Explicit"           <- representationOf s
-        [m]                  <- downX1 s
-        DomainMatrix index _ <- domainOf m
-        -- exists i : index . m[i] = x
-        -- or([ m[i] = x | i : index ])
-        -- or(map_domain(i --> m[i]))
-        let body iName = mkLambda iName TypeInt $ \ i ->
-                        make opEq (make opIndexing m i) x
-        return ( "Vertical rule for set-in, Explicit representation."
-               , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
+        (x,s)          <- match opIn p
+        TypeSet sInner <- typeOf s
+        -- x in s
+        -- or([ x = i | i in s ])
+        let body iName = mkLambda iName sInner (\ i -> make opEq i x)
+        return ( "Horizontal rule for set-in."
+               , \ fresh -> make opOr [make opMapInExpr (body (headInf fresh)) s]
                )
 
 
@@ -1024,12 +1019,11 @@ rule_Set_MapInExpr_Explicit :: Rule
 rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule where
     theRule p = do
         (Lambda lPat@Single{} lBody, s) <- match opMapInExpr p
-        TypeSet sInnerTy     <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         let f = lambdaToFunction lPat lBody
-        let body iName = mkLambda iName sInnerTy $ \ i ->
+        let body iName = mkLambda iName TypeInt $ \ i ->
                             f (make opIndexing m i)
         -- map_in_expr(f(i), x)
         -- map_domain(f(m[i]), domain)
@@ -1116,8 +1110,23 @@ rule_SetIntersect = "set-intersect" `namedRule` theRule where
                )
 
 
-rule_SetIn_Occurrence :: Rule
-rule_SetIn_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
+rule_Set_MapInExpr_Literal :: Rule
+rule_Set_MapInExpr_Literal = "set-mapSetLiteral" `namedRule` theRule where
+    theRule p = do
+        (Lambda l1 l2, lit) <- match opMapInExpr p
+        elems               <- match setLiteral lit
+        let l               =  lambdaToFunction l1 l2
+        return ( "Membership on set literals"
+               , const $ AbstractLiteral $ AbsLitMatrix
+                           (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                           [ l e
+                           | e <- elems
+                           ]
+               )
+
+
+rule_Set_In_Occurrence :: Rule
+rule_Set_In_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
     theRule p = do
         (x,s)                <- match opIn p
         TypeSet{}            <- typeOf s
@@ -1147,38 +1156,17 @@ rule_Set_MapInExpr_Occurrence = "set-quantification{Occurrence}" `namedRule` the
                )
 
 
-rule_SetIn_ExplicitVarSizeWithMarker :: Rule
-rule_SetIn_ExplicitVarSizeWithMarker = "set-in{ExplicitVarSizeWithMarker}" `namedRule` theRule where
-    theRule p = do
-        (x,s)                       <- match opIn p
-        TypeSet sInnerTy            <- typeOf s
-        "ExplicitVarSizeWithMarker" <- representationOf s
-        [marker,values]             <- downX1 s
-        DomainMatrix index _        <- domainOf values
-        -- exists i : index , i <= marker. m[i] = x
-        -- exists i : index . i <= marker /\ m[i] = x
-        -- or([ i < marker /\ m[i] = x | i : index ])
-        -- or(map_domain(i --> i < marker /\ m[i] = x))
-        let body iName = mkLambda iName sInnerTy $ \ i ->
-                    make opAnd [ make opEq (make opIndexing values i) x
-                               , make opLeq i marker
-                               ]
-        return ( "Vertical rule for set-in, ExplicitVarSizeWithMarker representation"
-               , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
-               )
-
 rule_Set_MapInExpr_ExplicitVarSizeWithMarker :: Rule
 rule_Set_MapInExpr_ExplicitVarSizeWithMarker = "set-quantification{ExplicitVarSizeWithMarker}"
                                                `namedRule` theRule where
     theRule p = do
         (Lambda lPat lBody, s)      <- match opMapInExpr p
-        TypeSet sInnerTy            <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
         [marker, values]            <- downX1 s
         DomainMatrix index _        <- domainOf values
         let f = lambdaToFunction lPat lBody
-        let mapBody    iName = mkLambda iName sInnerTy $ \ i -> f (make opIndexing values i)
-        let filterBody iName = mkLambda iName sInnerTy $ \ i -> make opLeq i marker
+        let mapBody    iName = mkLambda iName TypeInt $ \ i -> f (make opIndexing values i)
+        let filterBody iName = mkLambda iName TypeInt $ \ i -> make opLeq i marker
         -- map_in_expr(f(i), x)
         -- map_domain(f(values[i]), filter(i <= marker, domain))
         return ( "Vertical rule for set-quantification, ExplicitVarSizeWithMarker representation"
@@ -1190,39 +1178,17 @@ rule_Set_MapInExpr_ExplicitVarSizeWithMarker = "set-quantification{ExplicitVarSi
                )
 
 
-rule_SetIn_ExplicitVarSizeWithFlags :: Rule
-rule_SetIn_ExplicitVarSizeWithFlags = "set-in{ExplicitVarSizeWithFlags}" `namedRule` theRule where
-    theRule p = do
-        (x,s)                       <- match opIn p
-        TypeSet sInnerTy            <- typeOf s
-        "ExplicitVarSizeWithFlags"  <- representationOf s
-        [flags,values]              <- downX1 s
-        DomainMatrix index _        <- domainOf values
-        -- exists i : index , i < marker. m[i] = x
-        -- exists i : index . i < marker /\ m[i] = x
-        -- or([ i < marker /\ m[i] = x | i : index ])
-        -- or(map_domain(i --> flags[i] /\ m[i] = x))
-        let body iName = mkLambda iName sInnerTy $ \ i ->
-                    make opAnd [ make opEq (make opIndexing values i) x
-                               , make opIndexing flags i
-                               ]
-        return ( "Vertical rule for set-in, Occurrence representation"
-               , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
-               )
-
-
 rule_Set_MapInExpr_ExplicitVarSizeWithFlags :: Rule
 rule_Set_MapInExpr_ExplicitVarSizeWithFlags = "set-quantification{ExplicitVarSizeWithFlags}"
                                                `namedRule` theRule where
     theRule p = do
         (Lambda lPat lBody, s)      <- match opMapInExpr p
-        TypeSet sInnerTy            <- typeOf s
         "ExplicitVarSizeWithFlags"  <- representationOf s
         [flags, values]             <- downX1 s
         DomainMatrix index _        <- domainOf values
         let f = lambdaToFunction lPat lBody
-        let mapBody    iName = mkLambda iName sInnerTy $ \ i -> f (make opIndexing values i)
-        let filterBody iName = mkLambda iName sInnerTy $ \ i ->    make opIndexing flags  i
+        let mapBody    iName = mkLambda iName TypeInt $ \ i -> f (make opIndexing values i)
+        let filterBody iName = mkLambda iName TypeInt $ \ i ->    make opIndexing flags  i
         -- map_in_expr(f(i), x)
         -- map_domain(f(values[i]), filter(flags[i], domain))
         return ( "Vertical rule for set-quantification, ExplicitVarSizeWithFlags representation"
@@ -1421,7 +1387,7 @@ rule_RelationEq = "relation-eq" `namedRule` theRule where
 
 rule_Relation_In :: Rule
 rule_Relation_In = "relation-in" `namedRule` theRule where
-    theRule [essence| &x in toSet(&rel) |] = do
+    theRule [essence| &x in &rel |] = do
         TypeRelation{} <- typeOf rel
         return ( "relation membership to existential quantification"
                , \ fresh ->

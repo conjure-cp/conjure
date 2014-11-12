@@ -712,3 +712,18 @@ constantInt _ =
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 
+
+setLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( [Expression] -> Expression
+       , Expression -> m [Expression]
+       )
+setLiteral _ =
+    ( AbstractLiteral . AbsLitSet
+    , \ p -> case p of
+        Constant (ConstantSet xs) -> return (map Constant xs)
+        AbstractLiteral (AbsLitSet xs) -> return xs
+        _ -> na ("Lenses.setLiteral:" <+> pretty p)
+    )
+

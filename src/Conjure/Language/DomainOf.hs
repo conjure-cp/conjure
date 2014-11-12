@@ -29,7 +29,11 @@ instance DomainOf HasRepresentation Expression Expression where
             (DomainTuple inners  , TypeInt{}) -> do
                 iInt <- intOut i
                 return (at inners (iInt-1))
-            _ -> fail ("domainOfInternal{Expression} 2.1:" <+> pretty x)
+            _ -> fail $ vcat [ "domainOfInternal{Expression} 2.1"
+                             , pretty x
+                             , pretty mDomain
+                             , pretty iType
+                             ]
     domainOfInternal _ x = fail ("domainOfInternal{Expression} 2.2:" <+> pretty x)
 
 instance DomainOf () Expression ReferenceTo where
