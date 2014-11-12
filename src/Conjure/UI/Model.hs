@@ -1007,14 +1007,13 @@ rule_SetIn_Explicit :: Rule
 rule_SetIn_Explicit = "set-in{Explicit}" `namedRule` theRule where
     theRule p = do
         (x,s)                <- match opIn p
-        TypeSet sInnerTy     <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         -- exists i : index . m[i] = x
         -- or([ m[i] = x | i : index ])
         -- or(map_domain(i --> m[i]))
-        let body iName = mkLambda iName sInnerTy $ \ i ->
+        let body iName = mkLambda iName TypeInt $ \ i ->
                         make opEq (make opIndexing m i) x
         return ( "Vertical rule for set-in, Explicit representation."
                , \ fresh -> make opOr [make opMapOverDomain (body (headInf fresh)) (Domain index)]
