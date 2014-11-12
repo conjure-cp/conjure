@@ -11,6 +11,7 @@ import Conjure.UI.IO
 import Conjure.UI.Model
 import Conjure.UI.RefineParam
 import Conjure.UI.TranslateSolution
+import Conjure.UI.ValidateSolution
 
 -- tasty
 import Test.Tasty
@@ -89,7 +90,12 @@ isTestDir baseDir possiblyDir = do
 --                + D/*.param files if required
 --                + D/expected for the expected output files
 testSingleDir :: TestDirFiles -> TestTree
-testSingleDir t@(TestDirFiles{..}) = testGroup name (conjuring : savileRows ++ checkingExpected ++ [extraFiles])
+testSingleDir t@(TestDirFiles{..}) = testGroup name $ concat [ [conjuring]
+                                                             , savileRows
+                                                             , checkingExpected
+                                                             , validating
+                                                             , [extraFiles]
+                                                             ]
     where
         conjuring =
             testCase "Conjuring" $ do
@@ -111,6 +117,14 @@ testSingleDir t@(TestDirFiles{..}) = testGroup name (conjuring : savileRows ++ c
         checkingExpected =
             [ checkExpected t e | e <- expectedModels ] ++
             [ checkExpected t e | e <- expectedSols   ]
+
+        validating =
+            if null paramFiles
+                then [ validateSolutionNoParam    t   s | s <- expectedSols   ]
+                else [ validateSolutionWithParams t p s | p <- paramFiles
+                                                        , s <- expectedSols
+                                                        , dropExtension p `isInfixOf` dropExtension s
+                                                        ]
 
         extraFiles = checkExtraFiles t
 
@@ -174,6 +188,27 @@ savileRowWithParams TestDirFiles{..} modelPath paramPath =
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                             writeFile filename (renderWide s)
+
+
+validateSolutionNoParam :: TestDirFiles -> FilePath -> TestTree
+validateSolutionNoParam TestDirFiles{..} solutionPath =
+    testCase (unwords ["Validating solution:", solutionPath]) $ sh $ do
+        essence  <- liftIO $ readModelFromFile essenceFile
+        solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
+        case ignoreLogs (validateSolution essence def solution) of
+            Left err -> liftIO $ assertFailure $ renderNormal err
+            Right () -> return ()
+
+
+validateSolutionWithParams :: TestDirFiles -> FilePath -> FilePath -> TestTree
+validateSolutionWithParams TestDirFiles{..} paramPath solutionPath =
+    testCase (unwords ["Validating solution:", paramPath, solutionPath]) $ sh $ do
+        essence  <- liftIO $ readModelFromFile essenceFile
+        param    <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
+        solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
+        case ignoreLogs (validateSolution essence param solution) of
+            Left err -> liftIO $ assertFailure $ renderNormal err
+            Right () -> return ()
 
 
 checkExpected :: TestDirFiles -> FilePath -> TestTree

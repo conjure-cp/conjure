@@ -32,7 +32,12 @@ data UI
         { eprime           :: FilePath       -- eprime, mandatory
         , essenceParamO    :: Maybe FilePath -- essence-param, optional
         , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
-        , essenceSolution  :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
+        , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
+        }
+    | ValidateSolution
+        { essence          :: FilePath       -- essence, mandatory
+        , essenceParamO    :: Maybe FilePath -- essence-param, optional
+        , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
         }
     deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -125,7 +130,7 @@ ui = modes
                                    &= name "eprime-solution"
                                    &= explicit
                                    &= help "An Essence' solution for the corresponding Essence' model."
-        , essenceSolution  = def   &= typFile
+        , essenceSolutionO = def   &= typFile
                                    &= name "essence-solution"
                                    &= explicit
                                    &= help "An Essence solution for the original problem specification.\n\
@@ -135,6 +140,24 @@ ui = modes
         }                          &= name "translate-solution"
                                    &= explicit
                                    &= help "Translation of solutions back to Essence."
+    , ValidateSolution
+        { essence          = def   &= typFile
+                                   &= name "essence"
+                                   &= explicit
+                                   &= help "A problem specification in Essence"
+        , essenceParamO    = def   &= typFile
+                                   &= name "essence-param"
+                                   &= explicit
+                                   &= help "An Essence parameter.\n\
+                                           \This field is optional."
+        , essenceSolution  = def   &= typFile
+                                   &= name "essence-solution"
+                                   &= explicit
+                                   &= help "An Essence solution.\n\
+                                           \This field is optional."
+        }                          &= name "validate-solution"
+                                   &= explicit
+                                   &= help "Validating a solution."
     ]                              &= program "conjure"
                                    &= summary ("Conjure, the automated constraint modelling tool.\n\
                                                \Version: " ++ repositoryVersion)

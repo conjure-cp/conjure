@@ -88,7 +88,7 @@ import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy, partition
                               , genericLength, genericIndex
-                              , isSuffixOf, isPrefixOf
+                              , isSuffixOf, isPrefixOf, isInfixOf
                               , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head

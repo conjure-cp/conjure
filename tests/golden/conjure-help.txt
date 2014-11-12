@@ -1,5 +1,5 @@
 Conjure, the automated constraint modelling tool.
-Version: f0340bc09d9d (2014-11-06 09:34 +0100)
+Version:
 
 conjure [COMMAND] ... [OPTIONS]
 
@@ -55,3 +55,10 @@ conjure translate-solution [OPTIONS]
                               default, its value will be 'foo.solution' if the
                               Essence parameter file is named
                               'foo.eprime-solution'
+
+conjure validate-solution [OPTIONS]
+  Validating a solution.
+
+     --essence=FILE           A problem specification in Essence
+     --essence-param=FILE     An Essence parameter. This field is optional.
+     --essence-solution=FILE  An Essence solution. This field is optional.

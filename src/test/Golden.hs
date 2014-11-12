@@ -40,7 +40,7 @@ tests = testGroup "golden"
                     in  case concat (catMaybes diffs) of
                             [] -> Nothing
                             ls -> Just (unlines ("Files differ.":ls)) )
-                (do stdout <- sh $ run "conjure" ["--help"]
+                (do stdout <- sh $ run "conjure" ["--help=all"]
                     BS.writeFile generatedFile (BS.pack (T.unpack stdout)))
     ]
 
