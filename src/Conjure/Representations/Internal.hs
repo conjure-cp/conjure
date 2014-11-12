@@ -27,32 +27,40 @@ type DomainC = Domain HasRepresentation Constant
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation m = Representation
-    { rCheck      :: forall x r . (Pretty x, ExpressionLike x)
-                  => (Domain r x -> [DomainX x])                       -- other checkers for inner domains
-                  -> Domain r x                                        -- this domain
-                  -> [DomainX x]                                       -- with all repr options
-    , rDownD      :: (Name, DomainX Expression)            -> m (Maybe [(Name, DomainX Expression)])
-    , rStructural ::
-            -- other structural constraints for inner domains
-            (DomainX Expression -> m ([Name] -> [Expression] -> m [Expression]))
-            -> (Expression -> m [Expression])              -- general downX1
-            -> DomainX Expression
-            -> m (     [Name]          -- a source of fresh names
-                  ->   [Expression]    -- refined variables
-                  -> m [Expression]    -- structural constraints
-                 )
-    , rDownC      :: (Name, DomainC, Constant)             -> m (Maybe [(Name, DomainC, Constant)])
-    , rUp         :: [(Name, Constant)] -> (Name, DomainC) -> m (Name, Constant)
+    { rCheck
+        :: forall x r . (Pretty x, ExpressionLike x)
+        => (Domain r x -> [DomainX x])                  -- other checkers for inner domains
+        -> Domain r x                                   -- this domain
+        -> [DomainX x]                                  -- with all repr options
+    , rDownD
+        :: (Name, DomainX Expression)
+        -> m (Maybe [(Name, DomainX Expression)])
+    , rStructural
+        :: (DomainX Expression -> m ([Name] -> [Expression] -> m [Expression]))
+                                                        -- other structural constraints for inner domains
+        -> (Expression -> m [Expression])               -- general downX1
+        -> DomainX Expression                           -- this domain
+        -> m (     [Name]                               -- a source of fresh names
+              ->   [Expression]                         -- refined variables
+              -> m [Expression]                         -- structural constraints
+             )
+    , rDownC
+        :: (Name, DomainC, Constant)                    -- the input name, domain and constant
+        -> m (Maybe [(Name, DomainC, Constant)])        -- the outputs names, domains, and constants
+    , rUp
+        :: [(Name, Constant)]                           -- all known constants, representing a solution at the low level
+        -> (Name, DomainC)                              -- the name and domain we are working on
+        -> m (Name, Constant)                           -- the output constant, at the high level
     }
 
 
 rDownToX
     :: Monad m
-    => Representation m
-    -> FindOrGiven
-    -> Name
-    -> Domain HasRepresentation Expression
-    -> m [Expression]
+    => Representation m                                 -- for a given representation
+    -> FindOrGiven                                      -- and a declaration: forg
+    -> Name                                             --                  : name
+    -> Domain HasRepresentation Expression              --                  : domain
+    -> m [Expression]                                   -- expressions referring to the referring
 rDownToX repr forg name domain = do
     mpairs <- rDownD repr (name, domain)
     return $ case mpairs of
