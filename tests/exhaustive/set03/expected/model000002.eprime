@@ -10,5 +10,5 @@ such that
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
     x_ExplicitVarSizeWithMarker_Marker <= 2,
     and([q4 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q4]] | q4 : int(1..2)]),
-    and([x_Occurrence[q3] -> or([x_ExplicitVarSizeWithMarker_Values[q5] = q3 /\ q5 <= x_ExplicitVarSizeWithMarker_Marker | q5 : int(1..2)]) | q3 : int(1..2)])
+    and([x_Occurrence[q3] -> or([q6 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q6] = q3 | q6 : int(1..2)]) | q3 : int(1..2)])
 

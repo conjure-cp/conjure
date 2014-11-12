@@ -27,11 +27,12 @@ such that
                                                                                                                                                                * 1 + 6 - 3)]),
     2 <= x_ExplicitVarSizeWithMarker_Marker,
     and([q5 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithFlags_Values_1[q4] = x_ExplicitVarSizeWithMarker_Values_1[q5] /\
-             x_ExplicitVarSizeWithFlags_Values_2[q4] = x_ExplicitVarSizeWithMarker_Values_2[q5]
-             /\ x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..1 + 4 - 1 * 1 + 6 - 3)]) | q5 : int(1..1 + 4 - 1 * 1 + 6 - 3)]),
+         or([x_ExplicitVarSizeWithFlags_Flags[q6] /\
+             x_ExplicitVarSizeWithFlags_Values_1[q6] = x_ExplicitVarSizeWithMarker_Values_1[q5] /\
+             x_ExplicitVarSizeWithFlags_Values_2[q6] = x_ExplicitVarSizeWithMarker_Values_2[q5] | q6 : int(1..1 + 4 - 1 * 1 + 6 - 3)]) | q5 : int(1..1 + 4 - 1 *
+                                                                                                                                                     1 + 6 - 3)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q7] ->
-         or([x_ExplicitVarSizeWithMarker_Values_1[q6] = x_ExplicitVarSizeWithFlags_Values_1[q7] /\
-             x_ExplicitVarSizeWithMarker_Values_2[q6] = x_ExplicitVarSizeWithFlags_Values_2[q7]
-             /\ q6 <= x_ExplicitVarSizeWithMarker_Marker | q6 : int(1..1 + 4 - 1 * 1 + 6 - 3)]) | q7 : int(1..1 + 4 - 1 * 1 + 6 - 3)])
+         or([q8 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values_1[q8] = x_ExplicitVarSizeWithFlags_Values_1[q7] /\
+             x_ExplicitVarSizeWithMarker_Values_2[q8] = x_ExplicitVarSizeWithFlags_Values_2[q7] | q8 : int(1..1 + 4 - 1 * 1 + 6 - 3)]) | q7 : int(1..1 + 4 - 1 * 1 + 6 - 3)])
 
