@@ -590,7 +590,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x)
             _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantMatrix (DomainInt index) vals) (ConstantInt x)) = do
-        indexVals    <- valuesInIntDomain index
+        indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
             []  -> fail $ vcat [ "Matrix is not defined at this point:" <+> pretty x
@@ -599,7 +599,8 @@ instance EvaluateOp OpIndexing where
             _   -> fail $ vcat [ "Matrix is multiply defined at this point:" <+> pretty x
                                , "Matrix value:" <+> pretty m
                                ]
-    evaluateOp _ = na "evaluateOp{OpIndexing}"
+    evaluateOp (OpIndexing (ConstantTuple vals) (ConstantInt x)) = return (at vals (x-1))
+    evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 
 data OpSlicing x = OpSlicing x (Maybe x) (Maybe x)
@@ -615,7 +616,7 @@ instance TypeOf x => TypeOf (OpSlicing x) where
         t@TypeMatrix{} <- typeOf m
         return t
 instance EvaluateOp OpSlicing where
-    evaluateOp _ = na "evaluateOp{OpSlicing}"
+    evaluateOp op = na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
 
 
 data OpFlatten x = OpFlatten x
@@ -659,7 +660,7 @@ instance TypeOf x => TypeOf (OpLexLt x) where
         return TypeBool
 instance EvaluateOp OpLexLt where
     evaluateOp (OpLexLt (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs < ys
-    evaluateOp _ = na "evaluateOp{OpLexLt}"
+    evaluateOp op = na $ "evaluateOp{OpLexLt}:" <++> pretty (show op)
 
 
 data OpLexLeq x = OpLexLeq x x
@@ -679,7 +680,7 @@ instance TypeOf x => TypeOf (OpLexLeq x) where
         return TypeBool
 instance EvaluateOp OpLexLeq where
     evaluateOp (OpLexLeq (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs <= ys
-    evaluateOp _ = na "evaluateOp{OpLexLeq}"
+    evaluateOp op = na $ "evaluateOp{OpLexLeq}:" <++> pretty (show op)
 
 
 data OpFilter x = OpFilter x x
@@ -693,7 +694,7 @@ opFilter x y = injectOp (MkOpFilter (OpFilter x y))
 instance TypeOf x => TypeOf (OpFilter x) where
     typeOf (OpFilter _ _) = return TypeAny
 instance EvaluateOp OpFilter where
-    evaluateOp _ = na "evaluateOp{OpFilter}"
+    evaluateOp op = na $ "evaluateOp{OpFilter}:" <++> pretty (show op)
 
 
 data OpMapOverDomain x = OpMapOverDomain x x
@@ -707,7 +708,7 @@ opMapOverDomain x y = injectOp (MkOpMapOverDomain (OpMapOverDomain x y))
 instance TypeOf x => TypeOf (OpMapOverDomain x) where
     typeOf (OpMapOverDomain _ _) = return TypeAny
 instance EvaluateOp OpMapOverDomain where
-    evaluateOp _ = na "evaluateOp{OpMapOverDomain}"
+    evaluateOp op = na $ "evaluateOp{OpMapOverDomain}:" <++> pretty (show op)
 
 
 data OpMapInExpr x = OpMapInExpr x x
@@ -721,7 +722,7 @@ opMapInExpr x y = injectOp (MkOpMapInExpr (OpMapInExpr x y))
 instance TypeOf x => TypeOf (OpMapInExpr x) where
     typeOf (OpMapInExpr _ _) = return TypeAny
 instance EvaluateOp OpMapInExpr where
-    evaluateOp _ = na "evaluateOp{OpMapInExpr}"
+    evaluateOp op = na $ "evaluateOp{OpMapInExpr}:" <++> pretty (show op)
 
 
 data OpMapSubsetExpr x = OpMapSubsetExpr x x
@@ -735,7 +736,7 @@ opMapSubsetExpr x y = injectOp (MkOpMapSubsetExpr (OpMapSubsetExpr x y))
 instance TypeOf x => TypeOf (OpMapSubsetExpr x) where
     typeOf (OpMapSubsetExpr _ _) = return TypeAny
 instance EvaluateOp OpMapSubsetExpr where
-    evaluateOp _ = na "evaluateOp{OpMapSubsetExpr}"
+    evaluateOp op = na $ "evaluateOp{OpMapSubsetExpr}:" <++> pretty (show op)
 
 
 data OpMapSubsetEqExpr x = OpMapSubsetEqExpr x x
@@ -749,7 +750,7 @@ opMapSubsetEqExpr x y = injectOp (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x y))
 instance TypeOf x => TypeOf (OpMapSubsetEqExpr x) where
     typeOf (OpMapSubsetEqExpr _ _) = return TypeAny
 instance EvaluateOp OpMapSubsetEqExpr where
-    evaluateOp _ = na "evaluateOp{OpMapSubsetEqExpr}"
+    evaluateOp op = na $ "evaluateOp{OpMapSubsetEqExpr}:" <++> pretty (show op)
 
 
 data OpTrue x = OpTrue x
@@ -763,7 +764,7 @@ opTrue x = injectOp (MkOpTrue (OpTrue x))
 instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 instance EvaluateOp OpTrue where
-    evaluateOp _ = na "evaluateOp{OpTrue}"
+    evaluateOp op = na $ "evaluateOp{OpTrue}:" <++> pretty (show op)
 
 
 data OpToInt x = OpToInt x
@@ -779,7 +780,7 @@ instance TypeOf x => TypeOf (OpToInt x) where
         TypeBool{} <- typeOf x
         return TypeInt
 instance EvaluateOp OpToInt where
-    evaluateOp _ = na "evaluateOp{OpToInt}"
+    evaluateOp op = na $ "evaluateOp{OpToInt}:" <++> pretty (show op)
 
 
 data OpDontCare x = OpDontCare x
@@ -793,7 +794,7 @@ opDontCare x = injectOp (MkOpDontCare (OpDontCare x))
 instance TypeOf x => TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
 instance EvaluateOp OpDontCare where
-    evaluateOp _ = na "evaluateOp{OpDontcare}"
+    evaluateOp op = na $ "evaluateOp{OpDontcare}:" <++> pretty (show op)
 
 
 data OpIn x = OpIn x x
@@ -814,7 +815,7 @@ instance TypeOf x => TypeOf (OpIn x) where
             then return TypeBool
             else userErr "Type error"
 instance EvaluateOp OpIn where
-    evaluateOp _ = na "evaluateOp{OpIn}"
+    evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
 
 data OpSubset x = OpSubset x x
@@ -830,7 +831,7 @@ instance BinaryOperator (OpSubset x) where
 instance TypeOf x => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
 instance EvaluateOp OpSubset where
-    evaluateOp _ = na "evaluateOp{OpSubset}"
+    evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
 
 
 data OpSubsetEq x = OpSubsetEq x x
@@ -846,7 +847,7 @@ instance BinaryOperator (OpSubsetEq x) where
 instance TypeOf x => TypeOf (OpSubsetEq x) where
     typeOf (OpSubsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSubsetEq where
-    evaluateOp _ = na "evaluateOp{OpSubsetEq}"
+    evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
 
 
 data OpSupset x = OpSupset x x
@@ -862,7 +863,7 @@ instance BinaryOperator (OpSupset x) where
 instance TypeOf x => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
 instance EvaluateOp OpSupset where
-    evaluateOp _ = na "evaluateOp{OpSupset}"
+    evaluateOp op = na $ "evaluateOp{OpSupset}:" <++> pretty (show op)
 
 
 data OpSupsetEq x = OpSupsetEq x x
@@ -878,7 +879,7 @@ instance BinaryOperator (OpSupsetEq x) where
 instance TypeOf x => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSupsetEq where
-    evaluateOp _ = na "evaluateOp{OpSupsetEq}"
+    evaluateOp op = na $ "evaluateOp{OpSupsetEq}:" <++> pretty (show op)
 
 
 data OpIntersect x = OpIntersect x x
@@ -894,7 +895,7 @@ instance BinaryOperator (OpIntersect x) where
 instance TypeOf x => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
 instance EvaluateOp OpIntersect where
-    evaluateOp _ = na "evaluateOp{OpIntersect}"
+    evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 
 data OpUnion x = OpUnion x x
@@ -910,7 +911,7 @@ instance BinaryOperator (OpUnion x) where
 instance TypeOf x => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
 instance EvaluateOp OpUnion where
-    evaluateOp _ = na "evaluateOp{OpUnion}"
+    evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
 
 data OpToSet x = OpToSet x
@@ -934,7 +935,7 @@ instance EvaluateOp OpToSet where
     evaluateOp (OpToSet (ConstantMSet xs)) = return (ConstantSet (sortNub xs))
     evaluateOp (OpToSet (ConstantFunction xs)) = return (ConstantSet (sortNub [ConstantTuple [a,b] | (a,b) <- xs]))
     evaluateOp (OpToSet (ConstantRelation xs)) = return (ConstantSet (sortNub (map ConstantTuple xs)))
-    evaluateOp _ = na "evaluateOp{OpToSet}"
+    evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
 
 
 data OpToMSet x = OpToMSet x
@@ -958,7 +959,7 @@ instance EvaluateOp OpToMSet where
     evaluateOp (OpToMSet (ConstantMSet xs)) = return (ConstantMSet xs)
     evaluateOp (OpToMSet (ConstantFunction xs)) = return (ConstantMSet [ConstantTuple [a,b] | (a,b) <- xs])
     evaluateOp (OpToMSet (ConstantRelation xs)) = return (ConstantMSet (map ConstantTuple xs))
-    evaluateOp _ = na "evaluateOp{OpToMSet}"
+    evaluateOp op = na $ "evaluateOp{OpToMSet}:" <++> pretty (show op)
 
 
 data OpFunctionImage x = OpFunctionImage x [x]
@@ -989,7 +990,7 @@ instance EvaluateOp OpFunctionImage where
             _   -> fail $ vcat [ "Function is multiply defined at this point:" <+> pretty a
                                , "Function value:" <+> pretty (ConstantFunction xs)
                                ]
-    evaluateOp _ = na "evaluateOp{OpFunctionImage}"
+    evaluateOp op = na $ "evaluateOp{OpFunctionImage}:" <++> pretty (show op)
 
 
 data OpDefined x = OpDefined x
@@ -1007,7 +1008,7 @@ instance TypeOf x => TypeOf (OpDefined x) where
 instance EvaluateOp OpDefined where
     evaluateOp (OpDefined (ConstantFunction xs)) =
         return (ConstantSet (sortNub (map fst xs)))
-    evaluateOp _ = na "evaluateOp{OpDefined}"
+    evaluateOp op = na $ "evaluateOp{OpDefined}:" <++> pretty (show op)
 
 
 data OpRange x = OpRange x
@@ -1025,7 +1026,7 @@ instance TypeOf x => TypeOf (OpRange x) where
 instance EvaluateOp OpRange where
     evaluateOp (OpRange (ConstantFunction xs)) =
         return (ConstantSet (sortNub (map snd xs)))
-    evaluateOp _ = na "evaluateOp{OpRange}"
+    evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
 
 
 data OpAllDiff x = OpAllDiff x
@@ -1041,7 +1042,7 @@ instance TypeOf x => TypeOf (OpAllDiff x) where
         TypeMatrix TypeInt TypeInt <- typeOf x
         return TypeBool
 instance EvaluateOp OpAllDiff where
-    evaluateOp _ = na "evaluateOp{OpAllDiff}"
+    evaluateOp op = na $ "evaluateOp{OpAllDiff}:" <++> pretty (show op)
 
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
