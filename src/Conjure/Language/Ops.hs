@@ -518,7 +518,7 @@ instance TypeOf x => TypeOf (OpAnd x) where
             then return TypeBool
             else bug "Type error in OpAnd"
 instance EvaluateOp OpAnd where
-    evaluateOp (OpAnd xs) = ConstantBool . and <$> mapM boolOut xs
+    evaluateOp (OpAnd xs) = ConstantBool . and . concat <$> mapM boolsOut xs
 
 
 data OpOr x = OpOr [x]
@@ -539,7 +539,7 @@ instance TypeOf x => TypeOf (OpOr x) where
             then return TypeBool
             else bug "Type error in OpOr"
 instance EvaluateOp OpOr where
-    evaluateOp (OpOr xs) = ConstantBool . or <$> mapM boolOut xs
+    evaluateOp (OpOr xs) = ConstantBool . or . concat <$> mapM boolsOut xs
 
 
 data OpImply x = OpImply x x
@@ -1233,3 +1233,8 @@ valuesInIntDomain ranges =
 
         allValues :: [Int]
         allValues = nub $ concat $ catMaybes allRanges
+
+
+boolsOut :: MonadFail m => Constant -> m [Bool]
+boolsOut (ConstantMatrix _ cs) = concat <$> mapM boolsOut cs
+boolsOut b = return <$> boolOut b
