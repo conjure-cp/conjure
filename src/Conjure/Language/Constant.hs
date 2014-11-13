@@ -35,6 +35,7 @@ data Constant
     | ConstantFunction [(Constant, Constant)]
     | ConstantRelation [[Constant]]
     | ConstantPartition [[Constant]]
+    | DomainInConstant (Domain () Constant)
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Constant
@@ -64,6 +65,7 @@ instance TypeOf Constant where
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
     typeOf (ConstantPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
+    typeOf (DomainInConstant dom) = typeOf dom
 
 instance Pretty Constant where
     pretty (ConstantBool False) = "false"
@@ -77,6 +79,7 @@ instance Pretty Constant where
     pretty (ConstantFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
     pretty (ConstantRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (ConstantTuple xs)       | xs <- xss   ]
     pretty (ConstantPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
+    pretty (DomainInConstant d) = "`" <> pretty d <> "`"
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt
@@ -101,3 +104,4 @@ normaliseConstant (ConstantFunction xs) = ConstantFunction $ sortNub
     [ (normaliseConstant x, normaliseConstant y) | (x, y) <- xs ]
 normaliseConstant (ConstantRelation xss) = ConstantRelation $ sortNub $ map (map normaliseConstant) xss
 normaliseConstant (ConstantPartition xss) = ConstantPartition $ sortNub $ map (sortNub . map normaliseConstant) xss
+normaliseConstant (DomainInConstant d) = DomainInConstant (fmap normaliseConstant d)

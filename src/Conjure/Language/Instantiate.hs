@@ -38,8 +38,29 @@ instantiateE
        )
     => Expression
     -> m Constant
-instantiateE (Constant c) = return c
-instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
+
+instantiateE (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda l1 l2) domain))) = do
+    let l = lambdaToFunction l1 l2
+    DomainInConstant intDomain@(DomainInt ranges) <- instantiateE domain
+    intsInDomain      <- valuesInIntDomain ranges
+    constantsInMatrix <- mapM (instantiateE . l . Constant . ConstantInt) intsInDomain
+    return (ConstantMatrix intDomain constantsInMatrix)
+
+instantiateE (Op (MkOpMapInExpr (OpMapInExpr (Lambda l1 l2) expr))) = do
+    let l = lambdaToFunction l1 l2
+    constant          <- instantiateE expr
+    constantsInMatrix <- case constant of
+        ConstantRelation xs -> mapM (instantiateE . l . Constant . ConstantTuple) xs
+        _ -> bug $ vcat [ "instantiateE"
+                        , "l1      :" <+> pretty l1
+                        , "l2      :" <+> pretty l2
+                        , "expr    :" <+> pretty expr
+                        , "constant:" <+> pretty constant
+                        ]
+    return $ ConstantMatrix
+                (DomainInt [RangeBounded (fromInt 1) (fromInt (length constantsInMatrix))])
+                constantsInMatrix
+
 instantiateE (Reference name _) = do
     ctxt <- gets id
     case name `lookup` ctxt of
@@ -48,7 +69,22 @@ instantiateE (Reference name _) = do
             : "Bindings in context:"
             : prettyContext ctxt
         Just x -> instantiateE x
+
+instantiateE (Domain (DomainReference _ (Just d))) = instantiateE (Domain d)
+instantiateE (Domain (DomainReference name Nothing)) = do
+    ctxt <- gets id
+    case name `lookup` ctxt of
+        Just (Domain d) -> instantiateE (Domain d)
+        _ -> fail $ vcat
+            $ ("No value for:" <+> pretty name)
+            : "Bindings in context:"
+            : prettyContext ctxt
+instantiateE (Domain domain) = DomainInConstant <$> instantiateD domain
+
+instantiateE (Constant c) = return c
+instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
 instantiateE (Op op) = instantiateOp op
+
 instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 
 
@@ -58,9 +94,7 @@ instantiateOp
        )
     => Ops Expression
     -> m Constant
-instantiateOp opx = do
-    opc <- mapM instantiateE opx
-    evaluateOp opc
+instantiateOp opx = mapM instantiateE opx >>= evaluateOp
 
 
 instantiateAbsLit

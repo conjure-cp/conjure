@@ -425,10 +425,27 @@ mkLambda nm ty f =
 -- TODO: Add support for AbsPatMatrix
 -- TODO: Add support for AbsPatSet
 lambdaToFunction :: AbstractPattern -> Expression -> (Expression -> Expression)
-lambdaToFunction (Single nm _) body = \ p -> transform (replacer p) body
-    where
-        replacer new (Reference n _) | n == nm = new
-        replacer _ x = x
+lambdaToFunction (Single nm _) body = \ p ->
+    let
+        replacer :: Expression -> Expression
+        replacer (Reference n _) | n == nm = p
+        replacer x = x
+    in
+        transform replacer body
+lambdaToFunction (AbsPatTuple ts) body = \ p ->
+    let
+        unroll :: [AbstractPattern] -> [Expression] -> Expression -> Expression
+        unroll [] [] b = b
+        unroll (pat:pats) (val:vals) b = unroll pats vals (lambdaToFunction pat b val)
+        unroll _ _ _ = bug "lambdaToFunction, AbsPatTuple, unroll"
+
+        ps :: [Expression]
+        ps = case p of
+            Constant        (ConstantTuple xs) -> map Constant xs
+            AbstractLiteral (AbsLitTuple   xs) -> xs
+            _ -> bug "lambdaToFunction, AbsPatTuple"
+    in
+        unroll ts ps body
 lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
 
 
