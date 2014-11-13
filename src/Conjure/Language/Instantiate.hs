@@ -12,6 +12,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Ops
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+import Conjure.Process.EnumerateDomain ( enumerateDomain )
 
 
 instantiateExpression
@@ -41,15 +42,20 @@ instantiateE
 
 instantiateE (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda l1 l2) domain))) = do
     let l = lambdaToFunction l1 l2
-    DomainInConstant intDomain@(DomainInt ranges) <- instantiateE domain
-    intsInDomain      <- valuesInIntDomain ranges
-    constantsInMatrix <- mapM (instantiateE . l . Constant . ConstantInt) intsInDomain
-    return (ConstantMatrix intDomain constantsInMatrix)
+    constantDomain <- instantiateE domain
+    case constantDomain of
+        DomainInConstant domain' -> do
+            let valuesInDomain =  enumerateDomain domain'
+            let intDomain      =  DomainInt [RangeBounded (fromInt 1) (fromInt (length valuesInDomain))]
+            constantsInMatrix  <- mapM (instantiateE . l . Constant) valuesInDomain
+            return (ConstantMatrix intDomain constantsInMatrix)
+        _ -> bug ("instantiateE MkOpMapOverDomain:" <++> pretty (show constantDomain))
 
 instantiateE (Op (MkOpMapInExpr (OpMapInExpr (Lambda l1 l2) expr))) = do
     let l = lambdaToFunction l1 l2
     constant          <- instantiateE expr
     constantsInMatrix <- case constant of
+        ConstantSet      xs -> mapM (instantiateE . l . Constant                ) xs
         ConstantRelation xs -> mapM (instantiateE . l . Constant . ConstantTuple) xs
         _ -> bug $ vcat [ "instantiateE"
                         , "l1      :" <+> pretty l1

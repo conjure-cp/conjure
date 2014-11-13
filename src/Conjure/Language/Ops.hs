@@ -780,6 +780,8 @@ instance TypeOf x => TypeOf (OpToInt x) where
         TypeBool{} <- typeOf x
         return TypeInt
 instance EvaluateOp OpToInt where
+    evaluateOp (OpToInt (ConstantBool False)) = return (ConstantInt 0)
+    evaluateOp (OpToInt (ConstantBool True )) = return (ConstantInt 1)
     evaluateOp op = na $ "evaluateOp{OpToInt}:" <++> pretty (show op)
 
 
