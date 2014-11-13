@@ -146,12 +146,12 @@ ui = modes
                                    &= explicit
                                    &= help "A problem specification in Essence"
         , essenceParamO    = def   &= typFile
-                                   &= name "essence-param"
+                                   &= name "param"
                                    &= explicit
                                    &= help "An Essence parameter.\n\
                                            \This field is optional."
         , essenceSolution  = def   &= typFile
-                                   &= name "essence-solution"
+                                   &= name "solution"
                                    &= explicit
                                    &= help "An Essence solution.\n\
                                            \This field is optional."
