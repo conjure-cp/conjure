@@ -815,6 +815,8 @@ instance TypeOf x => TypeOf (OpIn x) where
             then return TypeBool
             else userErr "Type error"
 instance EvaluateOp OpIn where
+    evaluateOp (OpIn c (ConstantSet cs)) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (ConstantMSet cs)) = return $ ConstantBool $ elem c cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
 
