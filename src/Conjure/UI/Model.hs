@@ -498,53 +498,53 @@ allRules config =
     , rule_BubbleUp
     , rule_BubbleToAnd
 
-    , rule_DontCareBool
-    , rule_DontCareInt
-    , rule_DontCareTuple
-    , rule_DontCareMatrix
-    , rule_DontCareSet
+    , rule_Bool_DontCare
+    , rule_Int_DontCare
+    , rule_Tuple_DontCare
+    , rule_Matrix_DontCare
+    , rule_Set_DontCare
 
     , rule_ComplexLambda
 
-    , rule_TupleIndex
-    , rule_TupleEq
-    , rule_TupleLt
-    , rule_TupleLeq
-    , rule_MapOverDomain_Tuple
+    , rule_Tuple_Index
+    , rule_Tuple_Eq
+    , rule_Tuple_Lt
+    , rule_Tuple_Leq
+    , rule_Tuple_MapOverDomain
 
-    , rule_MatrixEq
-    , rule_MatrixLt
-    , rule_MatrixLeq
+    , rule_Matrix_Eq
+    , rule_Matrix_Lt
+    , rule_Matrix_Leq
 
-    , rule_SetEq
+    , rule_Set_Eq
     , rule_Set_In
-    , rule_SetSubsetEq
-    , rule_SetLt
-    , rule_SetLeq
-    , rule_SetIntersect
-    , rule_Set_MapInExpr_Literal
+    , rule_Set_SubsetEq
+    , rule_Set_Lt
+    , rule_Set_Leq
+    , rule_Set_Intersect
 
+    , rule_Set_MapInExpr_Literal
     , rule_Set_MapInExpr_Explicit
     , rule_Set_MapInExpr_ExplicitVarSizeWithMarker
     , rule_Set_MapInExpr_ExplicitVarSizeWithFlags
-
     , rule_Set_MapInExpr_Occurrence
+
     , rule_Set_In_Occurrence
 
-    , rule_FunctionEq
+    , rule_Function_Eq
 
     , rule_Function_Image_Function1D
-    , rule_Function_MapInExpr_Function1D
-
     , rule_Function_Image_Function1DPartial
-    , rule_Function_MapInExpr_Function1DPartial
-    , rule_Function_InDefined_Function1DPartial
-
     , rule_Function_Image_FunctionNDPartial
+
+    , rule_Function_MapInExpr_Function1D
+    , rule_Function_MapInExpr_Function1DPartial
     , rule_Function_MapInExpr_FunctionNDPartial
+
+    , rule_Function_InDefined_Function1DPartial
     , rule_Function_InDefined_FunctionNDPartial
 
-    , rule_RelationEq
+    , rule_Relation_Eq
     , rule_Relation_In
 
     , rule_Relation_Image_RelationAsMatrix
@@ -734,8 +734,8 @@ rule_BubbleToAnd = "bubble-to-and" `namedRule` theRule where
     onlyConstraints _ = fail "onlyConstraints: not a SuchThat"
 
 
-rule_DontCareBool :: Rule
-rule_DontCareBool = "dontCare-bool" `namedRule` theRule where
+rule_Bool_DontCare :: Rule
+rule_Bool_DontCare = "dontCare-bool" `namedRule` theRule where
     theRule p = do
         x          <- match opDontCare p
         DomainBool <- domainOf x
@@ -744,8 +744,8 @@ rule_DontCareBool = "dontCare-bool" `namedRule` theRule where
                )
 
 
-rule_DontCareInt :: Rule
-rule_DontCareInt = "dontCare-int" `namedRule` theRule where
+rule_Int_DontCare :: Rule
+rule_Int_DontCare = "dontCare-int" `namedRule` theRule where
     theRule p = do
         x                          <- match opDontCare p
         xDomain@(DomainInt ranges) <- domainOf x
@@ -763,8 +763,8 @@ rule_DontCareInt = "dontCare-int" `namedRule` theRule where
                )
 
 
-rule_DontCareTuple :: Rule
-rule_DontCareTuple = "dontCare-tuple" `namedRule` theRule where
+rule_Tuple_DontCare :: Rule
+rule_Tuple_DontCare = "dontCare-tuple" `namedRule` theRule where
     theRule p = do
         x           <- match opDontCare p
         TypeTuple{} <- typeOf x
@@ -774,8 +774,8 @@ rule_DontCareTuple = "dontCare-tuple" `namedRule` theRule where
                )
 
 
-rule_DontCareMatrix :: Rule
-rule_DontCareMatrix = "dontCare-matrix" `namedRule` theRule where
+rule_Matrix_DontCare :: Rule
+rule_Matrix_DontCare = "dontCare-matrix" `namedRule` theRule where
     theRule p = do
         x                    <- match opDontCare p
         DomainMatrix index _ <- domainOf x
@@ -786,8 +786,8 @@ rule_DontCareMatrix = "dontCare-matrix" `namedRule` theRule where
                )
 
 
-rule_DontCareSet :: Rule
-rule_DontCareSet = "dontCare-set" `namedRule` theRule where
+rule_Set_DontCare :: Rule
+rule_Set_DontCare = "dontCare-set" `namedRule` theRule where
     theRule p = do
         x         <- match opDontCare p
         TypeSet{} <- typeOf x
@@ -892,8 +892,8 @@ ruleGen_InlineFilterInsideMap opM opQ opSkip p = do
                 domain
 
 
-rule_TupleIndex :: Rule
-rule_TupleIndex = "tuple-index" `namedRule` theRule where
+rule_Tuple_Index :: Rule
+rule_Tuple_Index = "tuple-index" `namedRule` theRule where
     theRule p = do
         (t,i)       <- match opIndexing p
         TypeTuple{} <- typeOf t
@@ -904,8 +904,8 @@ rule_TupleIndex = "tuple-index" `namedRule` theRule where
                )
 
 
-rule_TupleEq :: Rule
-rule_TupleEq = "tuple-eq" `namedRule` theRule where
+rule_Tuple_Eq :: Rule
+rule_Tuple_Eq = "tuple-eq" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opEq p
         TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
@@ -917,8 +917,8 @@ rule_TupleEq = "tuple-eq" `namedRule` theRule where
                )
 
 
-rule_TupleLt :: Rule
-rule_TupleLt = "tuple-lt" `namedRule` theRule where
+rule_Tuple_Lt :: Rule
+rule_Tuple_Lt = "tuple-lt" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opLt p
         TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
@@ -934,8 +934,8 @@ rule_TupleLt = "tuple-lt" `namedRule` theRule where
                )
 
 
-rule_TupleLeq :: Rule
-rule_TupleLeq = "tuple-leq" `namedRule` theRule where
+rule_Tuple_Leq :: Rule
+rule_Tuple_Leq = "tuple-leq" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opLeq p
         TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
@@ -951,8 +951,8 @@ rule_TupleLeq = "tuple-leq" `namedRule` theRule where
                )
 
 
-rule_MatrixEq :: Rule
-rule_MatrixEq = "matrix-eq" `namedRule` theRule where
+rule_Matrix_Eq :: Rule
+rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
     theRule p = do
         (x,y)                <- match opEq p
         TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
@@ -978,8 +978,8 @@ sliceEnoughTimes m = do
     return (unroll m howMany)
 
 
-rule_MatrixLt :: Rule
-rule_MatrixLt = "matrix-lt" `namedRule` theRule where
+rule_Matrix_Lt :: Rule
+rule_Matrix_Lt = "matrix-lt" `namedRule` theRule where
     theRule p = do
         (x,y)           <- match opLt p
         tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -993,8 +993,8 @@ rule_MatrixLt = "matrix-lt" `namedRule` theRule where
                )
 
 
-rule_MatrixLeq :: Rule
-rule_MatrixLeq = "matrix-leq" `namedRule` theRule where
+rule_Matrix_Leq :: Rule
+rule_Matrix_Leq = "matrix-leq" `namedRule` theRule where
     theRule p = do
         (x,y)           <- match opLeq p
         tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -1008,8 +1008,8 @@ rule_MatrixLeq = "matrix-leq" `namedRule` theRule where
                )
 
 
-rule_MapOverDomain_Tuple :: Rule
-rule_MapOverDomain_Tuple = "tuple-mapOverDomain-tuple" `namedRule` theRule where
+rule_Tuple_MapOverDomain :: Rule
+rule_Tuple_MapOverDomain = "tuple-mapOverDomain-tuple" `namedRule` theRule where
     theRule p = do
         ( Lambda f1@(Single _ (Just (TypeTuple tys))) f2 , Domain (DomainTuple domains) ) <- match opMapOverDomain p
 
@@ -1027,7 +1027,7 @@ rule_MapOverDomain_Tuple = "tuple-mapOverDomain-tuple" `namedRule` theRule where
             unroll val (pat:ps) (dom:doms) = make opFlatten $
                 make opMapOverDomain (Lambda pat (unroll val ps doms))
                                      (Domain dom)
-            unroll _ _ _ = bug "rule_MapOverDomain_Tuple.unroll"
+            unroll _ _ _ = bug "rule_Tuple_MapOverDomain.unroll"
 
         return ( ""
                , \ fresh -> unroll (theValue fresh) (pats fresh) domains
@@ -1074,8 +1074,8 @@ rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule
                )
 
 
-rule_SetEq :: Rule
-rule_SetEq = "set-eq" `namedRule` theRule where
+rule_Set_Eq :: Rule
+rule_Set_Eq = "set-eq" `namedRule` theRule where
     theRule p = do
         (x,y)                <- match opEq p
         TypeSet{}            <- typeOf x
@@ -1087,8 +1087,8 @@ rule_SetEq = "set-eq" `namedRule` theRule where
                )
 
 
-rule_SetSubsetEq :: Rule
-rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
+rule_Set_SubsetEq :: Rule
+rule_Set_SubsetEq = "set-subsetEq" `namedRule` theRule where
     theRule p = do
         (x,y)                <- match opSubsetEq p
         TypeSet tyXInner     <- typeOf x
@@ -1099,8 +1099,8 @@ rule_SetSubsetEq = "set-subsetEq" `namedRule` theRule where
                )
 
 
-rule_SetLt :: Rule
-rule_SetLt = "set-lt" `namedRule` theRule where
+rule_Set_Lt :: Rule
+rule_Set_Lt = "set-lt" `namedRule` theRule where
     theRule p = do
         (a,b) <- match opLt p
         TypeSet{} <- typeOf a
@@ -1114,8 +1114,8 @@ rule_SetLt = "set-lt" `namedRule` theRule where
                )
 
 
-rule_SetLeq :: Rule
-rule_SetLeq = "set-leq" `namedRule` theRule where
+rule_Set_Leq :: Rule
+rule_Set_Leq = "set-leq" `namedRule` theRule where
     theRule p = do
         (a,b) <- match opLeq p
         TypeSet{} <- typeOf a
@@ -1128,8 +1128,8 @@ rule_SetLeq = "set-leq" `namedRule` theRule where
                , const $ make opLeq ma mb
                )
 
-rule_SetIntersect :: Rule
-rule_SetIntersect = "set-intersect" `namedRule` theRule where
+rule_Set_Intersect :: Rule
+rule_Set_Intersect = "set-intersect" `namedRule` theRule where
     theRule p = do
         (lambda, intersected) <- match opMapInExpr p
         (x, y)                <- match opIntersect intersected
@@ -1240,8 +1240,8 @@ rule_Set_MapInExpr_ExplicitVarSizeWithFlags = "set-quantification{ExplicitVarSiz
                )
 
 
-rule_FunctionEq :: Rule
-rule_FunctionEq = "function-eq" `namedRule` theRule where
+rule_Function_Eq :: Rule
+rule_Function_Eq = "function-eq" `namedRule` theRule where
     theRule p = do
         (x,y)                    <- match opEq p
         TypeFunction xFrTy xToTy <- typeOf x
@@ -1414,8 +1414,8 @@ rule_Function_MapInExpr_FunctionNDPartial = "function-quantification{FunctionNDP
                )
 
 
-rule_RelationEq :: Rule
-rule_RelationEq = "relation-eq" `namedRule` theRule where
+rule_Relation_Eq :: Rule
+rule_Relation_Eq = "relation-eq" `namedRule` theRule where
     theRule p = do
         (x,y)          <- match opEq p
         TypeRelation{} <- typeOf x
