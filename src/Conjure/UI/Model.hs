@@ -432,6 +432,12 @@ epilogue eprime = do
         |> return
 
 
+isAtomic :: Expression -> Bool
+isAtomic Reference{} = True
+isAtomic (Op (MkOpIndexing (OpIndexing a _))) = isAtomic a
+isAtomic _ = False
+
+
 representationOf :: MonadFail m => Expression -> m Name
 representationOf x = do
     dom <- domainOf x
@@ -1042,13 +1048,10 @@ rule_Set_In = "set-in" `namedRule` theRule where
     theRule p = do
         (x,s)          <- match opIn p
         TypeSet sInner <- typeOf s
-        case (representationOf s, match setLiteral s, match opToSet s) of
-            ( Just "Explicit"                  , _      , _      ) -> return ()
-            ( Just "ExplicitVarSizeWithFlags"  , _      , _      ) -> return ()
-            ( Just "ExplicitVarSizeWithMarker" , _      , _      ) -> return ()
-            ( _                                , Just _ , _      ) -> return ()
-            ( _                                , _      , Just _ ) -> return ()
-            _ -> fail "Not yet, not here."
+        case (isAtomic s, representationOf s) of
+            (True, Just "Occurrence") -> fail "Occurrence has a better rule for set-membership."
+            (True, Nothing          ) -> fail "Choose a representation first."
+            _ -> return ()
         let body iName = mkLambda iName sInner (\ i -> make opEq i x)
         return ( "Horizontal rule for set-in."
                , \ fresh -> make opOr [make opMapInExpr (body (headInf fresh)) s]
