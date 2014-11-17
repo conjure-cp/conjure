@@ -6,12 +6,12 @@ import Conjure.Prelude
 import Conjure.Bug ( userErr )
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, writeModel )
-import Conjure.UI.Model
+import Conjure.UI.Model ( parseStrategy, outputModels )
+import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.Language.Pretty ( pretty )
-import qualified Conjure.UI.Model as Config ( Config(..) )
 
 -- base
 import System.IO ( hSetBuffering, stdout, BufferMode(..) )
@@ -33,16 +33,18 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     let config = def
-            { Config.logLevel         = logLevel
-            , Config.verboseTrail     = verboseTrail
-            , Config.logRuleFails     = logRuleFails
-            , Config.logRuleSuccesses = logRuleSuccesses
-            , Config.logRuleAttempts  = logRuleAttempts
-            , Config.strategyQ        = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
-                                                  (parseStrategy strategyQ)
-            , Config.strategyA        = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
-                                                  (parseStrategy strategyA)
-            , Config.outputDirectory  = outputDirectory
+            { Config.outputDirectory         = outputDirectory
+            , Config.logLevel                = logLevel
+            , Config.verboseTrail            = verboseTrail
+            , Config.logRuleFails            = logRuleFails
+            , Config.logRuleSuccesses        = logRuleSuccesses
+            , Config.logRuleAttempts         = logRuleAttempts
+            , Config.strategyQ               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
+                                                         (parseStrategy strategyQ)
+            , Config.strategyA               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
+                                                         (parseStrategy strategyA)
+            , Config.parameterRepresentation = parameterRepresentation
+            , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do
@@ -65,13 +67,10 @@ mainWithArgs TranslateSolution{..} = do
 mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr "Mandatory field --essence"
     when (null essenceSolution) $ userErr "Mandatory field --essence-solution"
-    () <- join $ validateSolution
-                    <$> readModelFromFile essence
-                    <*> maybe (return def) readModelFromFile essenceParamO
-                    <*> readModelFromFile essenceSolution
-    return ()
-
-
+    join $ validateSolution
+        <$> readModelFromFile essence
+        <*> maybe (return def) readModelFromFile essenceParamO
+        <*> readModelFromFile essenceSolution
 
 
 

@@ -40,9 +40,8 @@ import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStruct
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
 
-
-import qualified Pipes ( Producer, yield )
-import qualified Pipes.Prelude as Pipes ( foldM )
+import Pipes ( Producer, yield, (>->) )
+import qualified Pipes.Prelude as Pipes ( foldM, take )
 
 
 data Question = Question
@@ -89,13 +88,24 @@ data Config = Config
     , strategyQ                 :: Strategy
     , strategyA                 :: Strategy
     , outputDirectory           :: FilePath
-    , pickFirstReprForParams    :: Bool
+    , parameterRepresentation   :: Bool
+    , limitModels               :: Maybe Int
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 instance Default Config where
-    def = Config LogInfo False False False False Interactive Interactive "conjure-output" True
-
+    def = Config
+        { logLevel                  = LogInfo
+        , verboseTrail              = False
+        , logRuleFails              = False
+        , logRuleSuccesses          = False
+        , logRuleAttempts           = False
+        , strategyQ                 = Interactive
+        , strategyA                 = Interactive
+        , outputDirectory           = "conjure-output"
+        , parameterRepresentation   = True
+        , limitModels               = Nothing
+        }
 
 type RuleResult = ( Doc                     -- describe this transformation
                   , [Name] -> Expression    -- the result
@@ -127,6 +137,7 @@ outputModels
 outputModels config model = do
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
+    let limitModelsIfNeeded = maybe id (\ n gen -> gen >-> Pipes.take n ) (limitModels config)
     Pipes.foldM (\ j eprime -> liftIO $ do
                         let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
                         writeFile filename (renderWide eprime)
@@ -134,14 +145,14 @@ outputModels config model = do
                 )
                 (return (1 :: Int))
                 (const $ return ())
-                (toCompletion config model)
+                (limitModelsIfNeeded $ toCompletion config model )
 
 
 toCompletion
     :: (MonadIO m, MonadFail m, MonadLog m)
     => Config
     -> Model
-    -> Pipes.Producer Model m ()
+    -> Producer Model m ()
 toCompletion config@Config{..} m = do
     m2 <- prologue m
     logInfo $ modelInfo m2
@@ -153,7 +164,7 @@ toCompletion config@Config{..} m = do
             if null qs
                 then do
                     model' <- epilogue model
-                    Pipes.yield model'
+                    yield model'
                 else do
                     nextModels <- driver qs
                     mapM_ loopy nextModels
@@ -546,7 +557,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook forg nm dom
                 ]
-        return $ if pickFirstReprForParams config && forg == Given
+        return $ if forg == Given && parameterRepresentation config == False
                     then [head options]
                     else options 
     theRule _ = fail "No match."

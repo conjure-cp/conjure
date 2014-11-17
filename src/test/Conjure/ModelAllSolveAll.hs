@@ -254,5 +254,5 @@ modelAll :: FilePath -> Model -> IO ()
 modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
                                              , strategyA = PickAll
                                              , outputDirectory = dir
-                                             , pickFirstReprForParams = False
+                                             , parameterRepresentation = True
                                              }

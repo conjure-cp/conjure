@@ -13,15 +13,19 @@ import System.Console.CmdArgs hiding ( Default(..) )
 
 data UI
     = Modelling
-        { essence          :: FilePath       -- essence, mandatory
-        , outputDirectory  :: FilePath
-        , logLevel         :: LogLevel
-        , verboseTrail     :: Bool
-        , logRuleFails     :: Bool
-        , logRuleSuccesses :: Bool
-        , logRuleAttempts  :: Bool
-        , strategyQ        :: String
-        , strategyA        :: String
+        { essence                   :: FilePath       -- essence, mandatory
+        , outputDirectory           :: FilePath
+        -- flags related to logging
+        , logLevel                  :: LogLevel
+        , verboseTrail              :: Bool
+        , logRuleFails              :: Bool
+        , logRuleSuccesses          :: Bool
+        , logRuleAttempts           :: Bool
+        -- flags related to modelling decisions
+        , strategyQ                 :: String
+        , strategyA                 :: String
+        , parameterRepresentation   :: Bool
+        , limitModels               :: Maybe Int
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -78,7 +82,7 @@ ui = modes
         , strategyQ        = "i"   &= typ "STRATEGY"
                                    &= name "strategy-q"
                                    &= name "q"
-                                   &= groupname "Strategies for model generation"
+                                   &= groupname "Model generation"
                                    &= explicit
                                    &= help "Strategy to use when selecting the next question to answer. \
                                            \Options: f (for first), x (for all), i (for interactive). \
@@ -87,9 +91,21 @@ ui = modes
         , strategyA        = "i"   &= typ "STRATEGY"
                                    &= name "strategy-a"
                                    &= name "a"
-                                   &= groupname "Strategies for model generation"
+                                   &= groupname "Model generation"
                                    &= explicit
                                    &= help "Strategy to use when selecting an answer. Same options as strategyQ."
+        , parameterRepresentation = False
+                                   &= name "parameter-representation"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Representation selection for abstract parameters.\n\
+                                           \Can be true or false. (false by default)\n\
+                                           \    false: Select a single representation.\n\
+                                           \    true : Select multiple representations."
+        , limitModels = Nothing    &= name "limit-models"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Maximum number of models to generate."
         }                          &= name "modelling"
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \
