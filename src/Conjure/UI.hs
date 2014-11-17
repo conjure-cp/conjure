@@ -32,21 +32,25 @@ data UI
         { eprime           :: FilePath       -- eprime, mandatory
         , essenceParam     :: FilePath       -- essence-param, mandatory
         , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
+        , logLevel         :: LogLevel
         }
     | TranslateSolution
         { eprime           :: FilePath       -- eprime, mandatory
         , essenceParamO    :: Maybe FilePath -- essence-param, optional
         , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
         , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
+        , logLevel         :: LogLevel
         }
     | ValidateSolution
         { essence          :: FilePath       -- essence, mandatory
         , essenceParamO    :: Maybe FilePath -- essence-param, optional
         , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
+        , logLevel         :: LogLevel
         }
     | Diff
-        { file1 :: FilePath
-        , file2 :: FilePath
+        { file1    :: FilePath
+        , file2    :: FilePath
+        , logLevel :: LogLevel
         }
     deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -139,6 +143,10 @@ ui = modes
                                            \This field is optional.\n\
                                            \By default, its value will be 'foo.eprime-param'\n\
                                            \if the Essence parameter file is named 'foo.param'"
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Control logging/output"
+                                   &= explicit
+                                   &= help "Log level."
         }                          &= name "refine-param"
                                    &= explicit
                                    &= help "Refinement of parameter files written in Essence for a \
@@ -165,6 +173,10 @@ ui = modes
                                            \This field is optional.\n\
                                            \By default, its value will be 'foo.solution'\n\
                                            \if the Essence parameter file is named 'foo.eprime-solution'"
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Control logging/output"
+                                   &= explicit
+                                   &= help "Log level."
         }                          &= name "translate-solution"
                                    &= explicit
                                    &= help "Translation of solutions back to Essence."
@@ -183,6 +195,10 @@ ui = modes
                                    &= explicit
                                    &= help "An Essence solution.\n\
                                            \This field is optional."
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Control logging/output"
+                                   &= explicit
+                                   &= help "Log level."
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
@@ -191,6 +207,10 @@ ui = modes
                                    &= argPos 0
         , file2 = def              &= typFile
                                    &= argPos 1
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Control logging/output"
+                                   &= explicit
+                                   &= help "Log level."
         }                          &= name "diff"
                                    &= explicit
                                    &= help "Diff on two Essence files. Works on models, parameters, and solutions."
