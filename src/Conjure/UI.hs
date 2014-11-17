@@ -44,6 +44,10 @@ data UI
         , essenceParamO    :: Maybe FilePath -- essence-param, optional
         , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
         }
+    | Diff
+        { file1 :: FilePath
+        , file2 :: FilePath
+        }
     deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -182,6 +186,14 @@ ui = modes
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
+    , Diff
+        { file1 = def              &= typFile
+                                   &= argPos 0
+        , file2 = def              &= typFile
+                                   &= argPos 1
+        }                          &= name "diff"
+                                   &= explicit
+                                   &= help "Diff on two Essence files. Works on models, parameters, and solutions."
     ]                              &= program "conjure"
                                    &= summary ("Conjure, the automated constraint modelling tool.\n\
                                                \Version: " ++ repositoryVersion)

@@ -10,7 +10,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Pretty
 
 
-modelDiffIO :: Model -> Model -> IO ()
+modelDiffIO :: MonadIO m => Model -> Model -> m ()
 modelDiffIO m1 m2 =
     case modelDiff m1 m2 of
         Nothing -> return ()

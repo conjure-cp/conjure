@@ -30,6 +30,10 @@ Model generation:
                                  point.
   -a --strategy-a=STRATEGY       Strategy to use when selecting an answer.
                                  Same options as strategyQ.
+     --channelling               Whether to produce channelled models or not.
+                                 Can be true or false. (true by default)
+                                 false: Do not produce channelled models.
+                                 true : Produce channelled models.
      --parameter-representation  Representation selection for abstract
                                  parameters. Can be true or false. (false by
                                  default)     false: Select a single
@@ -70,3 +74,6 @@ conjure validate-solution [OPTIONS]
      --param=FILE                An Essence parameter. This field is
                                  optional.
      --solution=FILE             An Essence solution. This field is optional.
+
+conjure diff [OPTIONS] FILE FILE
+  Diff on two Essence files. Works on models, parameters, and solutions.

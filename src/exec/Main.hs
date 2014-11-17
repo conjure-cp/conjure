@@ -12,6 +12,7 @@ import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.Language.Pretty ( pretty )
+import Conjure.Language.ModelDiff ( modelDiffIO )
 
 -- base
 import System.IO ( hSetBuffering, stdout, BufferMode(..) )
@@ -73,6 +74,10 @@ mainWithArgs ValidateSolution{..} = do
         <$> readModelFromFile essence
         <*> maybe (return def) readModelFromFile essenceParamO
         <*> readModelFromFile essenceSolution
+mainWithArgs Diff{..} = do
+    join $ modelDiffIO
+        <$> readModelFromFile file1
+        <*> readModelFromFile file2
 
 
 
