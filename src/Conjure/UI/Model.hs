@@ -44,6 +44,9 @@ import Pipes ( Producer, yield, (>->) )
 import qualified Pipes.Prelude as Pipes ( foldM, take )
 
 
+type LogOr a = Either (LogLevel, Doc) a
+type LogOrModel = LogOr Model
+
 data Question = Question
     { qHole       :: Expression
     , qAscendants :: [Expression]
@@ -96,7 +99,7 @@ data Config = Config
 
 instance Default Config where
     def = Config
-        { logLevel                  = LogInfo
+        { logLevel                  = LogNone
         , verboseTrail              = False
         , logRuleFails              = False
         , logRuleSuccesses          = False
@@ -140,22 +143,26 @@ outputModels config model = do
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
     let limitModelsIfNeeded = maybe id (\ n gen -> gen >-> Pipes.take n ) (limitModels config)
-    Pipes.foldM (\ j eprime -> do
-                        let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
-                        logInfo $ "Generating model:" <+> pretty filename
-                        liftIO $ writeFile filename (renderWide eprime)
-                        return (j+1)
-                )
+    let each i logOrModel =
+            case logOrModel of
+                Left (l,msg) -> do
+                    log l msg
+                    return i
+                Right eprime -> do
+                    let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
+                    liftIO $ writeFile filename (renderWide eprime)
+                    return (i+1)
+    Pipes.foldM each
                 (return (1 :: Int))
                 (const $ return ())
                 (limitModelsIfNeeded $ toCompletion config model )
 
 
 toCompletion
-    :: (MonadIO m, MonadFail m, MonadLog m)
+    :: (MonadIO m, MonadFail m)
     => Config
     -> Model
-    -> Producer Model m ()
+    -> Producer LogOrModel m ()
 toCompletion config@Config{..} m = do
     m2 <- prologue m
     logInfo $ modelInfo m2
@@ -167,14 +174,14 @@ toCompletion config@Config{..} m = do
             if null qs
                 then do
                     model' <- epilogue model
-                    yield model'
+                    yield (Right model')
                 else do
                     nextModels <- driver qs
                     mapM_ loopy nextModels
 
 
 remaining
-    :: (Functor m, Applicative m, Monad m, MonadLog m)
+    :: MonadLog m
     => Config
     -> Model
     -> m [Question]

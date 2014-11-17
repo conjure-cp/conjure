@@ -36,6 +36,7 @@ module Conjure.Prelude
     , paddedNum
     , dropExtension
     , MonadLog(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logWarn, logDebug
+    , runLoggerPipeIO
     , histogram
     , ExceptT(..)
     , sh
@@ -401,7 +402,7 @@ dropExtension :: FilePath -> FilePath
 dropExtension = intercalate "." . init . splitOn "."
 
 
-class Monad m => MonadLog m where
+class (Functor m, Applicative m, Monad m) => MonadLog m where
     log :: LogLevel -> Doc -> m ()
 
 data LogLevel
@@ -411,7 +412,7 @@ data LogLevel
     | LogDebug
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
-instance Default LogLevel where def = LogInfo
+instance Default LogLevel where def = LogNone
 
 logInfo :: MonadLog m => Doc -> m ()
 logInfo = log LogInfo
@@ -425,11 +426,11 @@ logDebug = log LogDebug
 instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
 
-instance Monad m => MonadLog (IdentityT m) where
+instance (Applicative m, Monad m) => MonadLog (IdentityT m) where
     log _ _ = return ()
 
-instance MonadLog m => MonadLog (Pipes.Proxy a b c d m) where
-    log l m = lift (log l m)
+instance Monad m => MonadLog (Pipes.Proxy a b () (Either (LogLevel, Doc) d) m) where
+    log l m = Pipes.yield (Left (l,m))
 
 ignoreLogs :: Monad m => IdentityT m a -> m a
 ignoreLogs = runIdentityT
@@ -437,7 +438,7 @@ ignoreLogs = runIdentityT
 newtype LoggerT m a = LoggerT (WriterT [(LogLevel, Doc)] m a)
     deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
 
-instance Monad m => MonadLog (LoggerT m) where
+instance (Applicative m, Monad m) => MonadLog (LoggerT m) where
     log lvl msg = LoggerT $ tell [(lvl, msg)]
 
 runLogger :: Monad m => LogLevel -> LoggerT m a -> m (a, [Doc])
@@ -450,6 +451,12 @@ runLoggerIO l logger = do
     (a, logs) <- runLogger l logger
     liftIO $ print (vcat logs)
     return a
+
+runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Doc) a) m r -> m r
+runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
+    where
+        each (Left (lvl, msg)) = when (lvl <= l) (liftIO $ print msg)
+        each _ = return ()
 
 histogram :: Ord a => [a] -> [(a,Int)]
 histogram = map (head &&& length) . group . sort

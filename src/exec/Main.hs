@@ -24,9 +24,9 @@ import System.Console.CmdArgs ( cmdArgs )
 main :: IO ()
 main = do
     input <- cmdArgs ui
-    print input
-    -- runLoggerIO LogDebug (mainWithArgs input)
-    ignoreLogs (mainWithArgs input)
+    runLoggerPipeIO (logLevel input) $ do
+        logDebug ("Command line options: " <+> pretty (groom input))
+        mainWithArgs input
 
 
 mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m) => UI -> m ()
