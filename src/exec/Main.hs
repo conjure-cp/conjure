@@ -5,7 +5,7 @@ module Main where
 import Conjure.Prelude
 import Conjure.Bug ( userErr )
 import Conjure.UI ( UI(..), ui )
-import Conjure.UI.IO ( readModelFromFile, writeModel )
+import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
@@ -55,14 +55,14 @@ mainWithArgs RefineParam{..} = do
     when (null essenceParam) $ userErr "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     output <- join $ refineParam
-                    <$> readModelFromFile eprime
+                    <$> readModelPreambleFromFile eprime
                     <*> readModelFromFile essenceParam
     writeModel (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr "Mandatory field --eprime-solution"
     output <- join $ translateSolution
-                    <$> readModelFromFile eprime
+                    <$> readModelPreambleFromFile eprime
                     <*> maybe (return def) readModelFromFile essenceParamO
                     <*> readModelFromFile eprimeSolution
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO

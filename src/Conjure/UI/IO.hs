@@ -25,16 +25,18 @@ import qualified Data.ByteString.Lazy as BS
 readModelFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
 readModelFromFile fp = do
     pair <- liftIO $ pairWithContents fp
-    readModel pair
+    readModel id pair
 
-readModelPreambleFromFile :: FilePath -> IO Model
+
+readModelPreambleFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
 readModelPreambleFromFile fp = do
     pair <- liftIO $ pairWithContents fp
-    readModelPreamble pair
+    readModel onlyPreamble pair
 
-readModel :: MonadFail m => (FilePath, Text) -> m Model
-readModel (fp, con) =
-    case runLexerAndParser parseModel fp con of
+
+readModel :: MonadFail m => (Text -> Text) -> (FilePath, Text) -> m Model
+readModel preprocess (fp, con) =
+    case runLexerAndParser parseModel fp (preprocess con) of
         Left  e -> userErr e
         Right x ->
             let
@@ -57,21 +59,17 @@ readModel (fp, con) =
                             Just i  -> return x { mInfo = i }
 
 
-readModelPreamble :: MonadFail m => (FilePath, Text) -> m Model
-readModelPreamble (fp,con) =
-    case runLexerAndParser parseModel fp (onlyPreamble con) of
-        Left  e -> userErr e
-        Right x -> return x
+onlyPreamble :: Text -> Text
+onlyPreamble
+    = discardAfter "maximising"
+    . discardAfter "maximizing"
+    . discardAfter "minimising"
+    . discardAfter "minimizing"
+    . discardAfter "such that"
+    . stripComments
     where
         stripComments = T.unlines . map (T.takeWhile (/= '$')) . T.lines
         discardAfter t = fst . T.breakOn t
-        onlyPreamble
-            = discardAfter "maximising"
-            . discardAfter "maximizing"
-            . discardAfter "minimising"
-            . discardAfter "minimizing"
-            . discardAfter "such that"
-            . stripComments
 
 
 writeModel :: MonadIO m => Maybe FilePath -> Model -> m ()
