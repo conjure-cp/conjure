@@ -88,6 +88,7 @@ data Config = Config
     , strategyQ                 :: Strategy
     , strategyA                 :: Strategy
     , outputDirectory           :: FilePath
+    , channelling               :: Bool
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
     }
@@ -103,6 +104,7 @@ instance Default Config where
         , strategyQ                 = Interactive
         , strategyA                 = Interactive
         , outputDirectory           = "conjure-output"
+        , channelling               = True
         , parameterRepresentation   = True
         , limitModels               = Nothing
         }
@@ -138,9 +140,10 @@ outputModels config model = do
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
     let limitModelsIfNeeded = maybe id (\ n gen -> gen >-> Pipes.take n ) (limitModels config)
-    Pipes.foldM (\ j eprime -> liftIO $ do
+    Pipes.foldM (\ j eprime -> do
                         let filename = dir </> "model" ++ paddedNum j ++ ".eprime"
-                        writeFile filename (renderWide eprime)
+                        logInfo $ "Generating model:" <+> pretty filename
+                        liftIO $ writeFile filename (renderWide eprime)
                         return (j+1)
                 )
                 (return (1 :: Int))
@@ -555,16 +558,17 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 | dom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
-                , let hook = mkHook forg nm dom
+                , let hook = mkHook (channelling config) forg nm dom
                 ]
         return $ if forg == Given && parameterRepresentation config == False
                     then [head options]
                     else options 
     theRule _ = fail "No match."
 
-    mkHook forg     -- find or given
-           name     -- name of the original declaration
-           domain   -- domain with representation selected
+    mkHook useChannelling   -- whether to use channelling or not
+           forg             -- find or given
+           name             -- name of the original declaration
+           domain           -- domain with representation selected
            model =
         let
 
@@ -618,11 +622,21 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                     newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
                 in  m { mInfo = newInfo }
 
+            fixReprForOthers
+                | useChannelling = id           -- no-op, if channelling=yes
+                | otherwise = \ m ->
+                let
+                    f (Reference nm (Just DeclNoRepr{})) = Reference nm (Just (DeclHasRepr forg name domain))
+                    f x = x
+                in
+                    m { mStatements = transformBi f (mStatements m) }
+
         in
             model
-                |> addStructurals               -- unless usedBefore: add structurals
-                |> addChannels                  -- for each in otherRepresentations
-                |> recordThis                   -- unless usedBefore: record (name, domain) as being used in the model
+                |> addStructurals       -- unless usedBefore: add structurals
+                |> addChannels          -- for each in otherRepresentations
+                |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
+                |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
 
 
 rule_TrueIsNoOp :: Rule

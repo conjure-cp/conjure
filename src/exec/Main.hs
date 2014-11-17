@@ -23,6 +23,7 @@ import System.Console.CmdArgs ( cmdArgs )
 main :: IO ()
 main = do
     input <- cmdArgs ui
+    print input
     -- runLoggerIO LogDebug (mainWithArgs input)
     ignoreLogs (mainWithArgs input)
 
@@ -32,7 +33,7 @@ mainWithArgs Modelling{..} = do
     when (null essence) $ userErr "Mandatory field --essence"
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
-    let config = def
+    let config = Config.Config
             { Config.outputDirectory         = outputDirectory
             , Config.logLevel                = logLevel
             , Config.verboseTrail            = verboseTrail
@@ -43,6 +44,7 @@ mainWithArgs Modelling{..} = do
                                                          (parseStrategy strategyQ)
             , Config.strategyA               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
                                                          (parseStrategy strategyA)
+            , Config.channelling             = channelling
             , Config.parameterRepresentation = parameterRepresentation
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             }

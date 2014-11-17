@@ -24,6 +24,7 @@ data UI
         -- flags related to modelling decisions
         , strategyQ                 :: String
         , strategyA                 :: String
+        , channelling               :: Bool
         , parameterRepresentation   :: Bool
         , limitModels               :: Maybe Int
         }
@@ -94,6 +95,13 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Strategy to use when selecting an answer. Same options as strategyQ."
+        , channelling = True       &= name "channelling"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Whether to produce channelled models or not.\n\
+                                           \Can be true or false. (true by default)\n\
+                                           \    false: Do not produce channelled models.\n\
+                                           \    true : Produce channelled models."
         , parameterRepresentation = False
                                    &= name "parameter-representation"
                                    &= groupname "Model generation"
