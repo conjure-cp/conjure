@@ -38,7 +38,7 @@ import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
+import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
 
 -- pipes
 import Pipes ( Producer, yield, (>->) )
@@ -181,6 +181,9 @@ toCompletion config@Config{..} m = do
                     mapM_ loopy nextModels
 
 
+inAReference :: Zipper a Expression -> Bool
+inAReference x = not $ null [ () | Reference{} <- tail (ascendants x) ]
+
 remaining
     :: MonadLog m
     => Config
@@ -192,8 +195,7 @@ remaining config model = do
     questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
         -- things in a reference should not be rewritten.
         -- specifically, no representation selection for them!
-        let inAReference = not $ null [ () | Reference{} <- tail (ascendants x) ]
-        if inAReference
+        if inAReference x
             then return Nothing
             else do
                 ys <- applicableRules config (hole x)
@@ -411,8 +413,10 @@ checkIfAllRefined m = do
     let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
     fails <- fmap concat $ forM (allContexts modelZipper) $ \ x ->
                 case hole x of
-                    Reference _ (Just (DeclHasRepr _ _ dom)) | not (isPrimitiveDomain dom) ->
-                        return $ ("Not refined:" <+> pretty (hole x))
+                    Reference _ (Just (DeclHasRepr _ _ dom))
+                        | inAReference x && not (isPrimitiveDomain dom) ->
+                        return $ ""
+                               : ("Not refined:" <+> pretty (hole x))
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | i <- allNats
                                  | c <- tail (ascendants x)
