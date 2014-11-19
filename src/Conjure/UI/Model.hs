@@ -532,6 +532,9 @@ allRules config =
     , rule_Set_Eq
     , rule_Set_In
     , rule_Set_SubsetEq
+    , rule_Set_Subset
+    , rule_Set_Supset
+    , rule_Set_SupsetEq
     , rule_Set_Lt
     , rule_Set_Leq
     , rule_Set_Intersect
@@ -1089,6 +1092,36 @@ rule_Set_SubsetEq = "set-subsetEq" `namedRule` theRule where
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                     in  [essence| forAll &iPat in (&x) . &i in &y |]
                )
+
+
+rule_Set_Subset :: Rule
+rule_Set_Subset = "set-subset" `namedRule` theRule where
+    theRule [essence| &a subset &b |] =
+        return
+            ( "Horizontal rule for set subset"
+            , const [essence| &a subsetEq &b /\ &a != &b |]
+            )
+    theRule _ = fail "No match."
+
+
+rule_Set_Supset :: Rule
+rule_Set_Supset = "set-supset" `namedRule` theRule where
+    theRule [essence| &a supset &b |] =
+        return
+            ( "Horizontal rule for set supset"
+            , const [essence| &b subset &a |]
+            )
+    theRule _ = fail "No match."
+
+
+rule_Set_SupsetEq :: Rule
+rule_Set_SupsetEq = "set-subsetEq" `namedRule` theRule where
+    theRule [essence| &a supsetEq &b |] =
+        return
+            ( "Horizontal rule for set supsetEq"
+            , const [essence| &b subsetEq &a |]
+            )
+    theRule _ = fail "No match."
 
 
 rule_Set_Lt :: Rule
