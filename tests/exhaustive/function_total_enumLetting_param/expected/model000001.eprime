@@ -4,8 +4,8 @@ letting E be domain int(1..3)
 find x_Function1D: matrix indexed by [int(1..3)] of int(13..15)
 given p_Function1D: matrix indexed by [int(1..3)] of int(13..15)
 such that
-    and([x_Function1D[q1] = p_Function1D[q1] | q1 : int(1..3)]),
-    and([p_Function1D[q1] = x_Function1D[q1] | q1 : int(1..3)]),
+    and([x_Function1D[q3] = p_Function1D[q3] | q3 : int(1..3)]),
+    and([p_Function1D[q3] = x_Function1D[q3] | q3 : int(1..3)]),
     allDiff(x_Function1D),
-    and([or([x_Function1D[q3] = q2 | q3 : int(1..3)]) | q2 : int(13..15)])
+    and([or([x_Function1D[q2] = q1 | q2 : int(1..3)]) | q1 : int(13..15)])
 

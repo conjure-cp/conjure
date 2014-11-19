@@ -4,14 +4,14 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
 find x_Occurrence: matrix indexed by [int(1..4)] of bool
 such that
-    or([x_ExplicitVarSizeWithFlags_Flags[q2] /\ x_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..4)]),
+    or([x_ExplicitVarSizeWithFlags_Flags[q3] /\ x_ExplicitVarSizeWithFlags_Values[q3] = 1 | q3 : int(1..4)]),
     x_Occurrence[2],
     or([x_ExplicitVarSizeWithFlags_Flags[q4] /\ x_ExplicitVarSizeWithFlags_Values[q4] = 3 | q4 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1] | q1 : int(1..4 - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..4 - 1)]),
     sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..4)]) <= 4,
-    sum([x_Occurrence[q3] | q3 : int(1..4)]) <= 4,
+    sum([x_Occurrence[q2] | q2 : int(1..4)]) <= 4,
     and([x_Occurrence[q5] -> or([x_ExplicitVarSizeWithFlags_Flags[q6] /\ x_ExplicitVarSizeWithFlags_Values[q6] = q5 | q6 : int(1..4)]) | q5 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q7] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q7]] | q7 : int(1..4)])
 

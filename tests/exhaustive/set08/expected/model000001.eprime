@@ -4,14 +4,14 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..(1 + (4 - 1)) * (1 + (6 - 3)))
 find x_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..(1 + (4 - 1)) * (1 + (6 - 3)))] of int(1..4)
 find x_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1..(1 + (4 - 1)) * (1 + (6 - 3)))] of int(3..6)
 such that
-    and([q1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q1] = x_ExplicitVarSizeWithMarker_Values_2[q1]
-             | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
-    and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values_1[q2] < x_ExplicitVarSizeWithMarker_Values_1[q2 + 1] \/
-         x_ExplicitVarSizeWithMarker_Values_1[q2] = x_ExplicitVarSizeWithMarker_Values_1[q2 + 1] /\
-         x_ExplicitVarSizeWithMarker_Values_2[q2] < x_ExplicitVarSizeWithMarker_Values_2[q2 + 1]
-             | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)) - 1)]),
-    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q2] = 1 /\ x_ExplicitVarSizeWithMarker_Values_2[q2] = 3
+    and([q2 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q2] = x_ExplicitVarSizeWithMarker_Values_2[q2]
              | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values_1[q1] < x_ExplicitVarSizeWithMarker_Values_1[q1 + 1] \/
+         x_ExplicitVarSizeWithMarker_Values_1[q1] = x_ExplicitVarSizeWithMarker_Values_1[q1 + 1] /\
+         x_ExplicitVarSizeWithMarker_Values_2[q1] < x_ExplicitVarSizeWithMarker_Values_2[q1 + 1]
+             | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)) - 1)]),
+    and([q1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q1] = 1 /\ x_ExplicitVarSizeWithMarker_Values_2[q1] = 3
+             | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
     2 <= x_ExplicitVarSizeWithMarker_Marker
 

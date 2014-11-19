@@ -4,15 +4,15 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..(1 + (4 - 1)) *
 find x_ExplicitVarSizeWithFlags_Values_1: matrix indexed by [int(1..(1 + (4 - 1)) * (1 + (6 - 3)))] of int(1..4)
 find x_ExplicitVarSizeWithFlags_Values_2: matrix indexed by [int(1..(1 + (4 - 1)) * (1 + (6 - 3)))] of int(3..6)
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q1] -> x_ExplicitVarSizeWithFlags_Values_1[q1] = x_ExplicitVarSizeWithFlags_Values_2[q1]
-             | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values_1[q2] < x_ExplicitVarSizeWithFlags_Values_1[q2 + 1] \/
-         x_ExplicitVarSizeWithFlags_Values_1[q2] = x_ExplicitVarSizeWithFlags_Values_1[q2 + 1] /\
-         x_ExplicitVarSizeWithFlags_Values_2[q2] < x_ExplicitVarSizeWithFlags_Values_2[q2 + 1]
-             | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)) - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q2] = false -> x_ExplicitVarSizeWithFlags_Values_1[q2] = 1 /\ x_ExplicitVarSizeWithFlags_Values_2[q2] = 3
+    and([x_ExplicitVarSizeWithFlags_Flags[q2] -> x_ExplicitVarSizeWithFlags_Values_1[q2] = x_ExplicitVarSizeWithFlags_Values_2[q2]
              | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q2] | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)) - 1)]),
-    2 <= sum([x_ExplicitVarSizeWithFlags_Flags[q2] | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
+         x_ExplicitVarSizeWithFlags_Values_1[q1] < x_ExplicitVarSizeWithFlags_Values_1[q1 + 1] \/
+         x_ExplicitVarSizeWithFlags_Values_1[q1] = x_ExplicitVarSizeWithFlags_Values_1[q1 + 1] /\
+         x_ExplicitVarSizeWithFlags_Values_2[q1] < x_ExplicitVarSizeWithFlags_Values_2[q1 + 1]
+             | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)) - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values_1[q1] = 1 /\ x_ExplicitVarSizeWithFlags_Values_2[q1] = 3
+             | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)) - 1)]),
+    2 <= sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
 
