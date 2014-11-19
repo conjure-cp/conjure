@@ -5,16 +5,12 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1..4)
 such that
     x_Occurrence[1],
-    or([q4 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q4] = 2 | q4 : int(1..4)]),
-    or([q5 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q5] = 3 | q5 : int(1..4)]),
+    or([q3 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q3] = 2 | q3 : int(1..4)]),
+    or([q4 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q4] = 3 | q4 : int(1..4)]),
     sum([x_Occurrence[q1] | q1 : int(1..4)]) <= 4,
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1] | q2 : int(1..4 - 1)]),
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..4)]),
     x_ExplicitVarSizeWithMarker_Marker <= 4,
-    and([q6 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q6]] | q6 : int(1..4)]),
-    and([x_Occurrence[q3] -> or([q8 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q8] = q3 | q8 : int(1..4)]) | q3 : int(1..4)]),
-    and([q9 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q9]] | q9 : int(1..4)]),
-    and([x_Occurrence[q7] -> or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q11] = q7 | q11 : int(1..4)]) | q7 : int(1..4)]),
-    and([q12 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q12]] | q12 : int(1..4)]),
-    and([x_Occurrence[q10] -> or([q14 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q14] = q10 | q14 : int(1..4)]) | q10 : int(1..4)])
+    and([q5 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q5]] | q5 : int(1..4)]),
+    and([x_Occurrence[q6] -> or([q7 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q7] = q6 | q7 : int(1..4)]) | q6 : int(1..4)])
 
