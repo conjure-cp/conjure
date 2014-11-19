@@ -1510,7 +1510,7 @@ rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `named
 
 rule_Relation_Comprehension_RelationAsMatrix :: Rule
 rule_Relation_Comprehension_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat expr)]) = do
+    theRule (Comprehension body [Generator (GenInExpr pat@Single{} expr)]) = do
         let f                  =  lambdaToFunction pat body
         let rel                =  matchDef opToSet expr
         TypeRelation{}         <- typeOf rel
