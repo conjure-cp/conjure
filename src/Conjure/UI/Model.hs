@@ -184,6 +184,7 @@ toCompletion config@Config{..} m = do
 inAReference :: Zipper a Expression -> Bool
 inAReference x = not $ null [ () | Reference{} <- tail (ascendants x) ]
 
+
 remaining
     :: MonadLog m
     => Config
@@ -192,16 +193,28 @@ remaining
 remaining config model = do
     let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
-    questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x ->
-        -- things in a reference should not be rewritten.
-        -- specifically, no representation selection for them!
-        if inAReference x
-            then return Nothing
-            else do
-                ys <- applicableRules config (hole x)
-                return $ if null ys
-                    then Nothing
-                    else Just (x, ys)
+    let
+        loopLevels :: Monad m => [m [a]] -> m [a]
+        loopLevels [] = return []
+        loopLevels (a:as) = do bs <- a
+                               if null bs
+                                   then loopLevels as
+                                   else return bs
+
+        processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult)])]
+        processLevel rulesAtLevel = do
+            fmap catMaybes $ forM (allContexts modelZipper) $ \ x ->
+                -- things in a reference should not be rewritten.
+                -- specifically, no representation selection for them!
+                if inAReference x
+                    then return Nothing
+                    else do
+                        ys <- applicableRules config rulesAtLevel (hole x)
+                        return $ if null ys
+                                    then Nothing
+                                    else (Just (x, ys))
+
+    questions <- loopLevels $ map processLevel (allRules config)
     return
         [ Question
             { qHole = hole focus
@@ -471,9 +484,10 @@ hasRepresentation x = do
 applicableRules
     :: (Applicative m, Monad m, MonadLog m)
     => Config
+    -> [Rule]
     -> Expression
     -> m [(Doc, RuleResult)]
-applicableRules config@Config{..} x = do
+applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
@@ -481,12 +495,10 @@ applicableRules config@Config{..} x = do
     mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty x)
                          mres <- runExceptT (rApply r x)
                          return (rName r, mres :: Either Doc [RuleResult])
-                    | r <- allRules config ]
+                    | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
         case my of
             Left  failed -> unless (failed == "No match.") $ logFail $ vcat
-            -- Left  failed -> when (rule == "dontCare-int" &&
-            --             "dontCare(x_ExplicitVarSizeWithMarker_Values" `isPrefixOf` show (pretty x)) $ logFail $ vcat
                 [ " rule failed:" <+> rule
                 , "          on:" <+> pretty x
                 , "     message:" <+> failed
@@ -503,8 +515,8 @@ applicableRules config@Config{..} x = do
            ]
 
 
-allRules :: Config -> [Rule]
-allRules config =
+allRules :: Config -> [[Rule]]
+allRules config = return $ -- everything in one level
     [ rule_ChooseRepr config
 
     , rule_TrueIsNoOp
