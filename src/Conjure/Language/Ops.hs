@@ -269,7 +269,7 @@ instance TypeOf x => TypeOf (OpPlus x) where
         tys <- mapM typeOf xs
         if typesUnify (TypeInt:tys)
             then return TypeInt
-            else bug "Type error in OpPlus"
+            else fail "Type error in OpPlus"
 instance EvaluateOp OpPlus where
     evaluateOp (OpPlus xs) = ConstantInt . sum <$> mapM intOut xs
 
@@ -306,7 +306,7 @@ instance TypeOf x => TypeOf (OpTimes x) where
         tys <- mapM typeOf xs
         if typesUnify (TypeInt:tys)
             then return TypeInt
-            else bug "Type error in OpTimes"
+            else fail "Type error in OpTimes"
 instance EvaluateOp OpTimes where
     evaluateOp (OpTimes xs) = ConstantInt . product <$> mapM intOut xs
 
@@ -397,7 +397,7 @@ opEq :: OperatorContainer x => x -> x -> x
 opEq x y = injectOp (MkOpEq (OpEq x y))
 instance BinaryOperator (OpEq x) where
     opLexeme _ = L_Eq
-instance TypeOf x => TypeOf (OpEq x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
 instance EvaluateOp OpEq where
     evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
@@ -413,7 +413,7 @@ opNeq :: OperatorContainer x => x -> x -> x
 opNeq x y = injectOp (MkOpNeq (OpNeq x y))
 instance BinaryOperator (OpNeq x) where
     opLexeme _ = L_Neq
-instance TypeOf x => TypeOf (OpNeq x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 instance EvaluateOp OpNeq where
     evaluateOp (OpNeq x y) = return $ ConstantBool $ x /= y
@@ -429,7 +429,7 @@ opLt :: OperatorContainer x => x -> x -> x
 opLt x y = injectOp (MkOpLt (OpLt x y))
 instance BinaryOperator (OpLt x) where
     opLexeme _ = L_Lt
-instance TypeOf x => TypeOf (OpLt x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpLt x) where
     typeOf (OpLt a b) = sameToSameToBool a b
 instance EvaluateOp OpLt where
     evaluateOp (OpLt x y) = return $ ConstantBool $ x < y
@@ -445,7 +445,7 @@ opLeq :: OperatorContainer x => x -> x -> x
 opLeq x y = injectOp (MkOpLeq (OpLeq x y))
 instance BinaryOperator (OpLeq x) where
     opLexeme _ = L_Leq
-instance TypeOf x => TypeOf (OpLeq x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpLeq x) where
     typeOf (OpLeq a b) = sameToSameToBool a b
 instance EvaluateOp OpLeq where
     evaluateOp (OpLeq x y) = return $ ConstantBool $ x <= y
@@ -461,7 +461,7 @@ opGt :: OperatorContainer x => x -> x -> x
 opGt x y = injectOp (MkOpGt (OpGt x y))
 instance BinaryOperator (OpGt x) where
     opLexeme _ = L_Gt
-instance TypeOf x => TypeOf (OpGt x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
 instance EvaluateOp OpGt where
     evaluateOp (OpGt x y) = return $ ConstantBool $ x > y
@@ -477,7 +477,7 @@ opGeq :: OperatorContainer x => x -> x -> x
 opGeq x y = injectOp (MkOpGeq (OpGeq x y))
 instance BinaryOperator (OpGeq x) where
     opLexeme _ = L_Geq
-instance TypeOf x => TypeOf (OpGeq x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
 instance EvaluateOp OpGeq where
     evaluateOp (OpGeq x y) = return $ ConstantBool $ x >= y
@@ -502,7 +502,7 @@ instance TypeOf x => TypeOf (OpAnd x) where
         tys <- mapM typeOf xs
         if typesUnify (TypeBool:tys)
             then return TypeBool
-            else bug "Type error in OpAnd"
+            else fail "Type error in OpAnd"
 instance EvaluateOp OpAnd where
     evaluateOp (OpAnd xs) = ConstantBool . and . concat <$> mapM boolsOut xs
 
@@ -526,7 +526,7 @@ instance TypeOf x => TypeOf (OpOr x) where
         tys <- mapM typeOf xs
         if typesUnify (TypeBool:tys)
             then return TypeBool
-            else bug "Type error in OpOr"
+            else fail "Type error in OpOr"
 instance EvaluateOp OpOr where
     evaluateOp (OpOr xs) = ConstantBool . or . concat <$> mapM boolsOut xs
 
@@ -576,7 +576,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x)
                 TypeInt{} <- typeOf i
                 iInt <- intOut i
                 return (at inns (iInt-1))
-            _ -> bug ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
+            _ -> fail ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantMatrix (DomainInt index) vals) (ConstantInt x)) = do
         indexVals <- valuesInIntDomain index
@@ -751,7 +751,7 @@ opSubset :: OperatorContainer x => x -> x -> x
 opSubset x y = injectOp (MkOpSubset (OpSubset x y))
 instance BinaryOperator (OpSubset x) where
     opLexeme _ = L_subset
-instance TypeOf x => TypeOf (OpSubset x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
 instance EvaluateOp OpSubset where
     evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
@@ -767,7 +767,7 @@ opSubsetEq :: OperatorContainer x => x -> x -> x
 opSubsetEq x y = injectOp (MkOpSubsetEq (OpSubsetEq x y))
 instance BinaryOperator (OpSubsetEq x) where
     opLexeme _ = L_subsetEq
-instance TypeOf x => TypeOf (OpSubsetEq x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpSubsetEq x) where
     typeOf (OpSubsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSubsetEq where
     evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
@@ -783,7 +783,7 @@ opSupset :: OperatorContainer x => x -> x -> x
 opSupset x y = injectOp (MkOpSupset (OpSupset x y))
 instance BinaryOperator (OpSupset x) where
     opLexeme _ = L_supset
-instance TypeOf x => TypeOf (OpSupset x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
 instance EvaluateOp OpSupset where
     evaluateOp op = na $ "evaluateOp{OpSupset}:" <++> pretty (show op)
@@ -799,7 +799,7 @@ opSupsetEq :: OperatorContainer x => x -> x -> x
 opSupsetEq x y = injectOp (MkOpSupsetEq (OpSupsetEq x y))
 instance BinaryOperator (OpSupsetEq x) where
     opLexeme _ = L_supsetEq
-instance TypeOf x => TypeOf (OpSupsetEq x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSupsetEq where
     evaluateOp op = na $ "evaluateOp{OpSupsetEq}:" <++> pretty (show op)
@@ -815,7 +815,7 @@ opIntersect :: OperatorContainer x => x -> x -> x
 opIntersect x y = injectOp (MkOpIntersect (OpIntersect x y))
 instance BinaryOperator (OpIntersect x) where
     opLexeme _ = L_intersect
-instance TypeOf x => TypeOf (OpIntersect x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
 instance EvaluateOp OpIntersect where
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
@@ -831,7 +831,7 @@ opUnion :: OperatorContainer x => x -> x -> x
 opUnion x y = injectOp (MkOpUnion (OpUnion x y))
 instance BinaryOperator (OpUnion x) where
     opLexeme _ = L_union
-instance TypeOf x => TypeOf (OpUnion x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
 instance EvaluateOp OpUnion where
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
@@ -985,21 +985,21 @@ boolToBoolToBool a b = do
     TypeBool{} <- typeOf b
     return TypeBool
 
-sameToSameToBool :: (MonadFail m, TypeOf a) => a -> a -> m Type
+sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
 sameToSameToBool a b = do
     tyA <- typeOf a
     tyB <- typeOf b
     if tyA `typeUnify` tyB
         then return TypeBool
-        else bug "sameToSameToBool"
+        else fail $ "sameToSameToBool" <+> pretty a <+> "~~" <+> pretty b
 
-sameToSameToSame :: (MonadFail m, TypeOf a) => a -> a -> m Type
+sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
 sameToSameToSame a b = do
     tyA <- typeOf a
     tyB <- typeOf b
     if tyA `typeUnify` tyB
         then return (mostDefined [tyA,tyB])
-        else bug "sameToSameToSame"
+        else fail $ "sameToSameToSame" <+> pretty a <+> "~~" <+> pretty b
 
 
 mkBinOp :: OperatorContainer x => Text -> x -> x -> x
