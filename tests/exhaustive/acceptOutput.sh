@@ -5,9 +5,10 @@ set -o nounset
 
 TESTCASE="$1"
 
-echo "Accepting the output of ${TESTCASE}"
-rm -f "${TESTCASE}"/expected/*
-mkdir -p "${TESTCASE}"/expected
-cp "${TESTCASE}"/outputs/*.eprime "${TESTCASE}"/expected/
-parallel "cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {}" ::: "${TESTCASE}"/expected/*.eprime
-cp "${TESTCASE}"/outputs/*.solution "${TESTCASE}"/expected/
+if [ -d "${TESTCASE}" ]; then
+    echo "Accepting the output of ${TESTCASE}"
+    rm -f "${TESTCASE}"/expected/*
+    mkdir -p "${TESTCASE}"/expected
+    cp "${TESTCASE}"/outputs/*.eprime "${TESTCASE}"/outputs/*.solution "${TESTCASE}"/expected/ 2> /dev/null || :
+    parallel "cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {}" ::: "${TESTCASE}"/expected/*.eprime
+fi
