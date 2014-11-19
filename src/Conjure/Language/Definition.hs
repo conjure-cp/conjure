@@ -329,20 +329,20 @@ viewIndexed m = (m, [])
 
 instance Pretty Expression where
 
-    pretty (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
+    prettyPrec _ (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
 
     -- mostly for debugging: print what a reference is pointing at
-    -- pretty (Reference x (Just r)) = pretty x <> "#`" <> pretty r <> "`"
-    -- pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
+    -- prettyPrec _ (Reference x (Just r)) = pretty x <> "#`" <> pretty r <> "`"
+    -- prettyPrec _ (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
 
-    pretty (Constant x) = pretty x
-    pretty (AbstractLiteral x) = pretty x
-    pretty (Domain x) = "`" <> pretty x <> "`"
-    pretty (Reference x _) = pretty x
-    pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
-    pretty (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
-    pretty (Op op) = pretty op
-    pretty (ExpressionMetaVar x) = "&" <> pretty x
+    prettyPrec _ (Constant x) = pretty x
+    prettyPrec _ (AbstractLiteral x) = pretty x
+    prettyPrec _ (Domain x) = "`" <> pretty x <> "`"
+    prettyPrec _ (Reference x _) = pretty x
+    prettyPrec _ (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
+    prettyPrec _ (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
+    prettyPrec prec (Op op) = prettyPrec prec op
+    prettyPrec _ (ExpressionMetaVar x) = "&" <> pretty x
 
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
