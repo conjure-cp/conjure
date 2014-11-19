@@ -516,74 +516,74 @@ applicableRules Config{..} rulesAtLevel x = do
 
 
 allRules :: Config -> [[Rule]]
-allRules config = return $ -- everything in one level
-    [ rule_ChooseRepr config
+allRules config =
+    [   [ rule_ChooseRepr config ]
+    ,   [ rule_TrueIsNoOp
+        , rule_ToIntIsNoOp
+        , rule_SingletonAnd
+        , rule_FlattenOf1D
 
-    , rule_TrueIsNoOp
-    , rule_ToIntIsNoOp
-    , rule_SingletonAnd
-    , rule_FlattenOf1D
+        , rule_BubbleUp
+        , rule_BubbleToAnd
 
-    , rule_BubbleUp
-    , rule_BubbleToAnd
+        , rule_Bool_DontCare
+        , rule_Int_DontCare
+        , rule_Tuple_DontCare
+        , rule_Matrix_DontCare
+        , rule_Set_DontCare
 
-    , rule_Bool_DontCare
-    , rule_Int_DontCare
-    , rule_Tuple_DontCare
-    , rule_Matrix_DontCare
-    , rule_Set_DontCare
+        , rule_ComplexAbsPat
 
-    , rule_ComplexAbsPat
+        , rule_Tuple_Index
+        , rule_Tuple_Eq
+        , rule_Tuple_Lt
+        , rule_Tuple_Leq
+        , rule_Tuple_DomainComprehension
 
-    , rule_Tuple_Index
-    , rule_Tuple_Eq
-    , rule_Tuple_Lt
-    , rule_Tuple_Leq
-    , rule_Tuple_DomainComprehension
+        , rule_Matrix_Eq
+        , rule_Matrix_Lt
+        , rule_Matrix_Leq
 
-    , rule_Matrix_Eq
-    , rule_Matrix_Lt
-    , rule_Matrix_Leq
+        , rule_Set_Eq
+        , rule_Set_In
+        , rule_Set_SubsetEq
+        , rule_Set_Subset
+        , rule_Set_Supset
+        , rule_Set_SupsetEq
+        , rule_Set_Lt
+        , rule_Set_Leq
+        , rule_Set_Intersect
+        , rule_Set_Union
 
-    , rule_Set_Eq
-    , rule_Set_In
-    , rule_Set_SubsetEq
-    , rule_Set_Subset
-    , rule_Set_Supset
-    , rule_Set_SupsetEq
-    , rule_Set_Lt
-    , rule_Set_Leq
-    , rule_Set_Intersect
-    , rule_Set_Union
+        , rule_Set_Comprehension_Literal
+        , rule_Set_Comprehension_Explicit
+        , rule_Set_Comprehension_ExplicitVarSizeWithMarker
+        , rule_Set_Comprehension_ExplicitVarSizeWithFlags
+        , rule_Set_Comprehension_Occurrence
 
-    , rule_Set_Comprehension_Literal
-    , rule_Set_Comprehension_Explicit
-    , rule_Set_Comprehension_ExplicitVarSizeWithMarker
-    , rule_Set_Comprehension_ExplicitVarSizeWithFlags
-    , rule_Set_Comprehension_Occurrence
+        , rule_Set_In_Occurrence
 
-    , rule_Set_In_Occurrence
+        , rule_Function_Eq
 
-    , rule_Function_Eq
+        , rule_Function_Image_Function1D
+        , rule_Function_Image_Function1DPartial
+        , rule_Function_Image_FunctionNDPartial
 
-    , rule_Function_Image_Function1D
-    , rule_Function_Image_Function1DPartial
-    , rule_Function_Image_FunctionNDPartial
+        , rule_Function_Comprehension_Function1D
+        , rule_Function_Comprehension_Function1DPartial
+        , rule_Function_Comprehension_FunctionNDPartial
 
-    , rule_Function_Comprehension_Function1D
-    , rule_Function_Comprehension_Function1DPartial
-    , rule_Function_Comprehension_FunctionNDPartial
+        , rule_Function_InDefined_Function1DPartial
+        , rule_Function_InDefined_FunctionNDPartial
 
-    , rule_Function_InDefined_Function1DPartial
-    , rule_Function_InDefined_FunctionNDPartial
+        , rule_Relation_Eq
+        , rule_Relation_In
 
-    , rule_Relation_Eq
-    , rule_Relation_In
+        , rule_Relation_Image_RelationAsMatrix
+        , rule_Relation_Comprehension_RelationAsMatrix
 
-    , rule_Relation_Image_RelationAsMatrix
-    , rule_Relation_Comprehension_RelationAsMatrix
-
-    ] ++ rule_InlineFilters
+        ] ++ rule_InlineFilters
+    ]
 
 
 rule_ChooseRepr :: Config -> Rule
