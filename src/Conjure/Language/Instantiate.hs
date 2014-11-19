@@ -112,6 +112,7 @@ instantiateAbsLit
     => AbstractLiteral Expression
     -> m Constant
 instantiateAbsLit (AbsLitTuple xs) = ConstantTuple <$> mapM instantiateE xs
+instantiateAbsLit (AbsLitList  xs) = ConstantList  <$> mapM instantiateE xs
 instantiateAbsLit (AbsLitMatrix index vals) = ConstantMatrix <$> instantiateD index <*> mapM instantiateE vals
 instantiateAbsLit (AbsLitSet vals) = ConstantSet <$> mapM instantiateE vals
 instantiateAbsLit (AbsLitMSet vals) = ConstantMSet <$> mapM instantiateE vals

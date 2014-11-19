@@ -481,6 +481,7 @@ instance Pretty ReferenceTo where
 
 data AbstractLiteral x
     = AbsLitTuple [x]
+    | AbsLitList [x]
     | AbsLitMatrix (Domain () x) [x]
     | AbsLitSet [x]
     | AbsLitMSet [x]
@@ -496,6 +497,7 @@ instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = JSON.gen
 
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
+    pretty (AbsLitList  xs) =                                                  prettyList prBrackets "," xs
     pretty (AbsLitMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
     pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
     pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
@@ -505,6 +507,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
 
 instance TypeOf a => TypeOf (AbstractLiteral a) where
     typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
+    typeOf (AbsLitList         xs) = TypeList     <$>                (homoType <$> mapM typeOf xs )
     typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
     typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
     typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)

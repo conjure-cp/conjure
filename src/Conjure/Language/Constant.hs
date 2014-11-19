@@ -29,6 +29,7 @@ data Constant
                    [Name] {- values in the enum domain -}
                    Name   {- the literal -}
     | ConstantTuple [Constant]
+    | ConstantList [Constant]
     | ConstantMatrix (Domain () Constant) [Constant]
     | ConstantSet [Constant]
     | ConstantMSet [Constant]
@@ -54,6 +55,7 @@ instance TypeOf Constant where
     typeOf ConstantInt{}             = return TypeInt
     typeOf (ConstantEnum defn _ _  ) = return (TypeEnum defn)
     typeOf (ConstantTuple        xs) = TypeTuple    <$> mapM typeOf xs
+    typeOf (ConstantList         xs) = TypeList     <$>                (homoType <$> mapM typeOf xs )
     typeOf (ConstantMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
     typeOf (ConstantSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
     typeOf (ConstantMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
@@ -73,6 +75,7 @@ instance Pretty Constant where
     pretty (ConstantInt x) = pretty x
     pretty (ConstantEnum _ _ x) = pretty x
     pretty (ConstantTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
+    pretty (ConstantList  xs) =                                                  prettyList prBrackets "," xs
     pretty (ConstantMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
     pretty (ConstantSet       xs ) =                prettyList prBraces "," xs
     pretty (ConstantMSet      xs ) = "mset"      <> prettyList prParens "," xs
@@ -97,6 +100,7 @@ normaliseConstant x@ConstantBool{} = x
 normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
 normaliseConstant (ConstantTuple xs) = ConstantTuple $ map normaliseConstant xs
+normaliseConstant (ConstantList xs) = ConstantList $ map normaliseConstant xs
 normaliseConstant (ConstantMatrix d xs) = ConstantMatrix d $ map normaliseConstant xs
 normaliseConstant (ConstantSet xs) = ConstantSet $ sortNub $ map normaliseConstant xs
 normaliseConstant (ConstantMSet xs) = ConstantMSet $ sort $ map normaliseConstant xs

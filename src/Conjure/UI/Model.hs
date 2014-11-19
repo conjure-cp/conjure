@@ -542,6 +542,7 @@ allRules config =
     , rule_Set_Lt
     , rule_Set_Leq
     , rule_Set_Intersect
+    , rule_Set_Union
 
     , rule_Set_Comprehension_Literal
     , rule_Set_Comprehension_Explicit
@@ -1157,10 +1158,11 @@ rule_Set_Leq = "set-leq" `namedRule` theRule where
                , const $ make opLeq ma mb
                )
 
+
 rule_Set_Intersect :: Rule
 rule_Set_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
-        (x, y)             <- match opIntersect s        
+        (x, y)             <- match opIntersect s
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
@@ -1169,13 +1171,35 @@ rule_Set_Intersect = "set-intersect" `namedRule` theRule where
             TypeRelation{} -> return ()
             _              -> fail "type incompatibility in intersect operator"
         let i = Reference iPat Nothing
-        return ( "Horizontal rule for set intersection"
-               , const $
-                   Comprehension body
-                       [ Generator (GenInExpr pat x)
-                       , Filter [essence| &i in &y |]
-                       ]
-               )
+        return
+            ( "Horizontal rule for set intersection"
+            , const $
+                Comprehension body
+                    [ Generator (GenInExpr pat x)
+                    , Filter [essence| &i in &y |]
+                    ]
+            )
+    theRule _ = fail "No match."
+
+
+rule_Set_Union :: Rule
+rule_Set_Union = "set-union" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat@Single{} s)]) = do
+        (x, y)             <- match opUnion s
+        tx                 <- typeOf x
+        case tx of
+            TypeSet{}      -> return ()
+            TypeMSet{}     -> return ()
+            TypeFunction{} -> return ()
+            TypeRelation{} -> return ()
+            _              -> fail "type incompatibility in intersect operator"
+        return
+            ( "Horizontal rule for set intersection"
+            , const $ make opFlatten $ AbstractLiteral $ AbsLitList
+                [ Comprehension body [ Generator (GenInExpr pat x) ]
+                , Comprehension body [ Generator (GenInExpr pat y) ]
+                ]
+            )
     theRule _ = fail "No match."
 
 
