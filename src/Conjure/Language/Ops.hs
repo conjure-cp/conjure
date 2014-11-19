@@ -754,6 +754,8 @@ instance BinaryOperator (OpSubset x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
 instance EvaluateOp OpSubset where
+    evaluateOp (OpSubset (ConstantSet as) (ConstantSet bs)) =
+        return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
     evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
 
 
@@ -770,6 +772,8 @@ instance BinaryOperator (OpSubsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSubsetEq x) where
     typeOf (OpSubsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSubsetEq where
+    evaluateOp (OpSubsetEq (ConstantSet as) (ConstantSet bs)) =
+        return $ ConstantBool $ all (`elem` bs) as
     evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
 
 
@@ -786,6 +790,8 @@ instance BinaryOperator (OpSupset x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
 instance EvaluateOp OpSupset where
+    evaluateOp (OpSupset (ConstantSet bs) (ConstantSet as)) =
+        return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
     evaluateOp op = na $ "evaluateOp{OpSupset}:" <++> pretty (show op)
 
 
@@ -802,6 +808,8 @@ instance BinaryOperator (OpSupsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSupsetEq where
+    evaluateOp (OpSupsetEq (ConstantSet bs) (ConstantSet as)) =
+        return $ ConstantBool $ all (`elem` bs) as
     evaluateOp op = na $ "evaluateOp{OpSupsetEq}:" <++> pretty (show op)
 
 
@@ -818,6 +826,8 @@ instance BinaryOperator (OpIntersect x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
 instance EvaluateOp OpIntersect where
+    evaluateOp (OpIntersect (ConstantSet as) (ConstantSet bs)) =
+        return $ ConstantSet $ sortNub [ i | i <- as, i `elem` bs]
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 
@@ -834,6 +844,8 @@ instance BinaryOperator (OpUnion x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
 instance EvaluateOp OpUnion where
+    evaluateOp (OpUnion (ConstantSet as) (ConstantSet bs)) =
+        return $ ConstantSet $ sortNub (as ++ bs)
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
 
