@@ -261,16 +261,16 @@ opPlus :: OperatorContainer x => x -> x -> x
 opPlus x y = injectOp (MkOpPlus (OpPlus [x,y]))
 instance BinaryOperator (OpPlus x) where
     opLexeme _ = L_Plus
-instance TypeOf x => TypeOf (OpPlus x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpPlus x) where
     typeOf (OpPlus [a,b]) = intToIntToInt a b
     typeOf (OpPlus [x]) = do
         TypeList TypeInt <- typeOf x
         return TypeInt
-    typeOf (OpPlus xs) = do
+    typeOf p@(OpPlus xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeInt:tys)
             then return TypeInt
-            else fail "Type error in OpPlus"
+            else raiseTypeError (MkOpPlus p)
 instance EvaluateOp OpPlus where
     evaluateOp (OpPlus xs) = ConstantInt . sum <$> mapM intOut xs
 
@@ -301,13 +301,13 @@ opTimes :: OperatorContainer x => x -> x -> x
 opTimes x y = injectOp (MkOpTimes (OpTimes [x,y]))
 instance BinaryOperator (OpTimes x) where
     opLexeme _ = L_Times
-instance TypeOf x => TypeOf (OpTimes x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpTimes x) where
     typeOf (OpTimes [a,b]) = intToIntToInt a b
-    typeOf (OpTimes xs) = do
+    typeOf p@(OpTimes xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeInt:tys)
             then return TypeInt
-            else fail "Type error in OpTimes"
+            else raiseTypeError (MkOpTimes p)
 instance EvaluateOp OpTimes where
     evaluateOp (OpTimes xs) = ConstantInt . product <$> mapM intOut xs
 
@@ -494,16 +494,16 @@ opAnd :: OperatorContainer x => x -> x -> x
 opAnd x y = injectOp (MkOpAnd (OpAnd [x,y]))
 instance BinaryOperator (OpAnd x) where
     opLexeme _ = L_And
-instance TypeOf x => TypeOf (OpAnd x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpAnd x) where
     typeOf (OpAnd [a,b]) = boolToBoolToBool a b
     typeOf (OpAnd [x]) = do
         TypeList TypeBool <- typeOf x
         return TypeBool
-    typeOf (OpAnd xs) = do
+    typeOf p@(OpAnd xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeBool:tys)
             then return TypeBool
-            else fail "Type error in OpAnd"
+            else raiseTypeError (MkOpAnd p)
 instance EvaluateOp OpAnd where
     evaluateOp (OpAnd xs) = ConstantBool . and . concat <$> mapM boolsOut xs
 
@@ -518,16 +518,16 @@ opOr :: OperatorContainer x => x -> x -> x
 opOr x y = injectOp (MkOpOr (OpOr [x,y]))
 instance BinaryOperator (OpOr x) where
     opLexeme _ = L_Or
-instance TypeOf x => TypeOf (OpOr x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpOr x) where
     typeOf (OpOr [a,b]) = boolToBoolToBool a b
     typeOf (OpOr [x]) = do
         TypeList TypeBool <- typeOf x
         return TypeBool
-    typeOf (OpOr xs) = do
+    typeOf p@(OpOr xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeBool:tys)
             then return TypeBool
-            else fail "Type error in OpOr"
+            else raiseTypeError (MkOpOr p)
 instance EvaluateOp OpOr where
     evaluateOp (OpOr xs) = ConstantBool . or . concat <$> mapM boolsOut xs
 
@@ -731,13 +731,13 @@ opIn :: OperatorContainer x => x -> x -> x
 opIn x y = injectOp (MkOpIn (OpIn x y))
 instance BinaryOperator (OpIn x) where
     opLexeme _ = L_in
-instance TypeOf x => TypeOf (OpIn x) where
-    typeOf (OpIn a b) = do
+instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
+    typeOf p@(OpIn a b) = do
         tyA <- typeOf a
         TypeSet tyB <- typeOf b
         if tyA `typeUnify` tyB
             then return TypeBool
-            else userErr "Type error"
+            else raiseTypeError (MkOpIn p)
 instance EvaluateOp OpIn where
     evaluateOp (OpIn c (ConstantAbstract (AbsLitSet  cs))) = return $ ConstantBool $ elem c cs
     evaluateOp (OpIn c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantBool $ elem c cs
@@ -860,14 +860,14 @@ instance ToJSON    x => ToJSON    (OpToSet x) where toJSON = JSON.genericToJSON 
 instance FromJSON  x => FromJSON  (OpToSet x) where parseJSON = JSON.genericParseJSON jsonOptions
 opToSet :: OperatorContainer x => x -> x
 opToSet x = injectOp (MkOpToSet (OpToSet x))
-instance TypeOf x => TypeOf (OpToSet x) where
-    typeOf (OpToSet x) = do
+instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
+    typeOf p@(OpToSet x) = do
         tx <- typeOf x
         case tx of
             TypeRelation is  -> return (TypeSet (TypeTuple is))
             TypeMSet i       -> return (TypeSet i)
             TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
-            _ -> fail ("Type checking toSet:" <+> pretty tx)
+            _ -> raiseTypeError (MkOpToSet p)
 instance EvaluateOp OpToSet where
     evaluateOp (OpToSet (ConstantAbstract (AbsLitSet xs))) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
@@ -888,14 +888,14 @@ instance ToJSON    x => ToJSON    (OpToMSet x) where toJSON = JSON.genericToJSON
 instance FromJSON  x => FromJSON  (OpToMSet x) where parseJSON = JSON.genericParseJSON jsonOptions
 opToMSet :: OperatorContainer x => x -> x
 opToMSet x = injectOp (MkOpToMSet (OpToMSet x))
-instance TypeOf x => TypeOf (OpToMSet x) where
-    typeOf (OpToMSet x) = do
+instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
+    typeOf p@(OpToMSet x) = do
         tx <- typeOf x
         case tx of
             TypeRelation is  -> return (TypeMSet (TypeTuple is))
             TypeSet i        -> return (TypeMSet i)
             TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
-            _ -> fail ("Type checking toMSet:" <+> pretty tx)
+            _ -> raiseTypeError (MkOpToMSet p)
 instance EvaluateOp OpToMSet where
     evaluateOp (OpToMSet (ConstantAbstract (AbsLitSet xs))) =
         return $ ConstantAbstract $ AbsLitMSet xs
@@ -925,7 +925,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
                     _   -> TypeTuple xTys
         if typesUnify [xTy, from]
             then return to
-            else fail ("Type error in:" <+> pretty (MkOpFunctionImage p))
+            else raiseTypeError (MkOpFunctionImage p)
 instance EvaluateOp OpFunctionImage where
     evaluateOp (OpFunctionImage (ConstantAbstract (AbsLitFunction xs)) [a]) =
         case [ y | (x,y) <- xs, a == x ] of
@@ -1189,3 +1189,6 @@ valuesInIntDomain ranges =
 boolsOut :: MonadFail m => Constant -> m [Bool]
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
+
+raiseTypeError :: MonadFail m => Pretty a => a -> m b
+raiseTypeError p = fail ("Type error in" <+> pretty p)
