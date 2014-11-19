@@ -68,6 +68,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     ConstantBool True -> return ()
                     _ -> fail $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
                                                      , "Original statement was:" <+> pretty x
+                                                     , hang "Relevant values:" 4 $ vcat
+                                                         [ "letting" <+> pretty nm <+> "be" <+> pretty val
+                                                         | (nm, val) <- vals
+                                                         , nm `elem` (universeBi x :: [Name])
+                                                         ]
                                                      ]
         Objective{} -> return ()
         SuchThat xs -> do
@@ -78,4 +83,9 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     ConstantBool True -> return ()
                     _ -> fail $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
                                                      , "Original statement was:" <+> pretty x
+                                                     , hang "Relevant values:" 4 $ vcat
+                                                         [ "letting" <+> pretty nm <+> "be" <+> pretty val
+                                                         | (nm, val) <- vals
+                                                         , nm `elem` (universeBi x :: [Name])
+                                                         ]
                                                      ]
