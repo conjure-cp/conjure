@@ -217,6 +217,8 @@ data Lexeme
     | L_DotLt
     | L_DotLeq
 
+    | L_LeftArrow
+
     deriving (Eq, Ord, Show, Generic)
 
 instance Hashable Lexeme
@@ -393,6 +395,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_DotLt           , ".<"    )
     , ( L_DotLeq          , ".<="   )
+
+    , ( L_LeftArrow       , "<-"   )
 
     ]
 

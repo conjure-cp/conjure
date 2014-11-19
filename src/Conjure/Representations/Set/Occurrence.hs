@@ -6,7 +6,6 @@ module Conjure.Representations.Set.Occurrence ( setOccurrence ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSize ( valuesInIntDomain )
@@ -35,7 +34,7 @@ setOccurrence = Representation chck downD structuralCons downC up
             return $ \ fresh refs ->
                 case refs of
                     [m] -> do
-                        let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        let (iPat, i) = quantifiedVar (fresh `at` 0)
                             cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
                         return (mkSizeCons attrs cardinality)
                     _ -> na "{structuralCons} Occurrence"

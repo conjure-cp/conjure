@@ -10,7 +10,6 @@ import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TH
 import Conjure.Language.Lenses
-import Conjure.Language.TypeOf
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
@@ -58,8 +57,6 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
             innerDomainFrs    <- mapM toIntDomain innerDomainFrs'
             let innerDomainFr =  DomainTuple innerDomainFrs
-            innerDomainFrTy   <- typeOf innerDomainFr
-            innerDomainToTy   <- typeOf innerDomainTo
 
             let
                 frArity = length innerDomainFrs
@@ -69,8 +66,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let injectiveCons fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
-                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainToTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
 
                         flagsIndexedI  = index i flags  frArity
                         valuesIndexedI = index i values frArity
@@ -86,8 +83,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let surjectiveCons fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
-                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
 
                         flagsIndexed  = index j flags  frArity
                         valuesIndexed = index j values frArity
@@ -108,13 +105,13 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let cardinality fresh flags =
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
             let dontCareInactives fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
 
                         flagsIndexed  = index i flags  frArity
                         valuesIndexed = index i values frArity

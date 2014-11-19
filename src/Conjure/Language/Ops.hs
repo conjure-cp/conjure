@@ -58,12 +58,6 @@ data Ops x
     | MkOpLexLt           (OpLexLt x)
     | MkOpLexLeq          (OpLexLeq x)
 
-    | MkOpFilter          (OpFilter x)
-    | MkOpMapOverDomain   (OpMapOverDomain x)
-    | MkOpMapInExpr       (OpMapInExpr x)
-    | MkOpMapSubsetExpr   (OpMapSubsetExpr x)
-    | MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x)
-
     | MkOpTrue            (OpTrue x)
     | MkOpToInt           (OpToInt x)
     | MkOpDontCare        (OpDontCare x)
@@ -81,6 +75,7 @@ data Ops x
     | MkOpFunctionImage   (OpFunctionImage x)
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
+
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
 instance Hashable  x => Hashable  (Ops x)
@@ -112,11 +107,6 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpFlatten             x) = typeOf x
     typeOf (MkOpLexLt               x) = typeOf x
     typeOf (MkOpLexLeq              x) = typeOf x
-    typeOf (MkOpFilter              x) = typeOf x
-    typeOf (MkOpMapOverDomain       x) = typeOf x
-    typeOf (MkOpMapInExpr           x) = typeOf x
-    typeOf (MkOpMapSubsetExpr       x) = typeOf x
-    typeOf (MkOpMapSubsetEqExpr     x) = typeOf x
     typeOf (MkOpTrue                x) = typeOf x
     typeOf (MkOpToInt               x) = typeOf x
     typeOf (MkOpDontCare            x) = typeOf x
@@ -158,11 +148,6 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpFlatten             x) = evaluateOp x
     evaluateOp (MkOpLexLt               x) = evaluateOp x
     evaluateOp (MkOpLexLeq              x) = evaluateOp x
-    evaluateOp (MkOpFilter              x) = evaluateOp x
-    evaluateOp (MkOpMapOverDomain       x) = evaluateOp x
-    evaluateOp (MkOpMapInExpr           x) = evaluateOp x
-    evaluateOp (MkOpMapSubsetExpr       x) = evaluateOp x
-    evaluateOp (MkOpMapSubsetEqExpr     x) = evaluateOp x
     evaluateOp (MkOpTrue                x) = evaluateOp x
     evaluateOp (MkOpToInt               x) = evaluateOp x
     evaluateOp (MkOpDontCare            x) = evaluateOp x
@@ -228,11 +213,6 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpFlatten  (OpFlatten m     )) = "flatten" <> prParens (pretty m)
     prettyPrec prec (MkOpLexLt  op@(OpLexLt  a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpLexLeq op@(OpLexLeq a b)) = prettyPrecBinOp prec [op] a b
-    prettyPrec _ (MkOpFilter          (OpFilter          a b)) = "filter"            <> prettyList prParens "," [a,b]
-    prettyPrec _ (MkOpMapOverDomain   (OpMapOverDomain   a b)) = "map_domain"        <> prettyList prParens "," [a,b]
-    prettyPrec _ (MkOpMapInExpr       (OpMapInExpr       a b)) = "map_in_expr"       <> prettyList prParens "," [a,b]
-    prettyPrec _ (MkOpMapSubsetExpr   (OpMapSubsetExpr   a b)) = "map_subset_expr"   <> prettyList prParens "," [a,b]
-    prettyPrec _ (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr a b)) = "map_subsetEq_expr" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpTrue     (OpTrue     a)) = "true"     <> prParens (pretty a)
     prettyPrec _ (MkOpToInt    (OpToInt    a)) = "toInt"    <> prParens (pretty a)
     prettyPrec _ (MkOpDontCare (OpDontCare a)) = "dontCare" <> prParens (pretty a)
@@ -282,6 +262,9 @@ instance BinaryOperator (OpPlus x) where
     opLexeme _ = L_Plus
 instance TypeOf x => TypeOf (OpPlus x) where
     typeOf (OpPlus [a,b]) = intToIntToInt a b
+    typeOf (OpPlus [x]) = do
+        TypeList TypeInt <- typeOf x
+        return TypeInt
     typeOf (OpPlus xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeInt:tys)
@@ -512,6 +495,9 @@ instance BinaryOperator (OpAnd x) where
     opLexeme _ = L_And
 instance TypeOf x => TypeOf (OpAnd x) where
     typeOf (OpAnd [a,b]) = boolToBoolToBool a b
+    typeOf (OpAnd [x]) = do
+        TypeList TypeBool <- typeOf x
+        return TypeBool
     typeOf (OpAnd xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeBool:tys)
@@ -533,6 +519,9 @@ instance BinaryOperator (OpOr x) where
     opLexeme _ = L_Or
 instance TypeOf x => TypeOf (OpOr x) where
     typeOf (OpOr [a,b]) = boolToBoolToBool a b
+    typeOf (OpOr [x]) = do
+        TypeList TypeBool <- typeOf x
+        return TypeBool
     typeOf (OpOr xs) = do
         tys <- mapM typeOf xs
         if typesUnify (TypeBool:tys)
@@ -629,10 +618,10 @@ opFlatten :: OperatorContainer x => x -> x
 opFlatten m = injectOp (MkOpFlatten (OpFlatten m))
 instance TypeOf x => TypeOf (OpFlatten x) where
     typeOf (OpFlatten m) = do
-        let flattenType (TypeMatrix _ inner) = flattenType inner
+        let flattenType (TypeList inner) = flattenType inner
             flattenType ty = ty
-        TypeMatrix index n <- typeOf m
-        return (TypeMatrix index (flattenType n))
+        TypeList n <- typeOf m
+        return (TypeList (flattenType n))
 instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten m) = do
         let flat (ConstantMatrix _ xs) = concatMap flat xs
@@ -681,76 +670,6 @@ instance TypeOf x => TypeOf (OpLexLeq x) where
 instance EvaluateOp OpLexLeq where
     evaluateOp (OpLexLeq (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs <= ys
     evaluateOp op = na $ "evaluateOp{OpLexLeq}:" <++> pretty (show op)
-
-
-data OpFilter x = OpFilter x x
-    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize x => Serialize (OpFilter x)
-instance Hashable  x => Hashable  (OpFilter x)
-instance ToJSON    x => ToJSON    (OpFilter x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpFilter x) where parseJSON = JSON.genericParseJSON jsonOptions
-opFilter :: OperatorContainer x => x -> x -> x
-opFilter x y = injectOp (MkOpFilter (OpFilter x y))
-instance TypeOf x => TypeOf (OpFilter x) where
-    typeOf (OpFilter _ _) = return TypeAny
-instance EvaluateOp OpFilter where
-    evaluateOp op = na $ "evaluateOp{OpFilter}:" <++> pretty (show op)
-
-
-data OpMapOverDomain x = OpMapOverDomain x x
-    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize x => Serialize (OpMapOverDomain x)
-instance Hashable  x => Hashable  (OpMapOverDomain x)
-instance ToJSON    x => ToJSON    (OpMapOverDomain x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpMapOverDomain x) where parseJSON = JSON.genericParseJSON jsonOptions
-opMapOverDomain :: OperatorContainer x => x -> x -> x
-opMapOverDomain x y = injectOp (MkOpMapOverDomain (OpMapOverDomain x y))
-instance TypeOf x => TypeOf (OpMapOverDomain x) where
-    typeOf (OpMapOverDomain _ _) = return TypeAny
-instance EvaluateOp OpMapOverDomain where
-    evaluateOp op = na $ "evaluateOp{OpMapOverDomain}:" <++> pretty (show op)
-
-
-data OpMapInExpr x = OpMapInExpr x x
-    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize x => Serialize (OpMapInExpr x)
-instance Hashable  x => Hashable  (OpMapInExpr x)
-instance ToJSON    x => ToJSON    (OpMapInExpr x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpMapInExpr x) where parseJSON = JSON.genericParseJSON jsonOptions
-opMapInExpr :: OperatorContainer x => x -> x -> x
-opMapInExpr x y = injectOp (MkOpMapInExpr (OpMapInExpr x y))
-instance TypeOf x => TypeOf (OpMapInExpr x) where
-    typeOf (OpMapInExpr _ _) = return TypeAny
-instance EvaluateOp OpMapInExpr where
-    evaluateOp op = na $ "evaluateOp{OpMapInExpr}:" <++> pretty (show op)
-
-
-data OpMapSubsetExpr x = OpMapSubsetExpr x x
-    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize x => Serialize (OpMapSubsetExpr x)
-instance Hashable  x => Hashable  (OpMapSubsetExpr x)
-instance ToJSON    x => ToJSON    (OpMapSubsetExpr x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpMapSubsetExpr x) where parseJSON = JSON.genericParseJSON jsonOptions
-opMapSubsetExpr :: OperatorContainer x => x -> x -> x
-opMapSubsetExpr x y = injectOp (MkOpMapSubsetExpr (OpMapSubsetExpr x y))
-instance TypeOf x => TypeOf (OpMapSubsetExpr x) where
-    typeOf (OpMapSubsetExpr _ _) = return TypeAny
-instance EvaluateOp OpMapSubsetExpr where
-    evaluateOp op = na $ "evaluateOp{OpMapSubsetExpr}:" <++> pretty (show op)
-
-
-data OpMapSubsetEqExpr x = OpMapSubsetEqExpr x x
-    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize x => Serialize (OpMapSubsetEqExpr x)
-instance Hashable  x => Hashable  (OpMapSubsetEqExpr x)
-instance ToJSON    x => ToJSON    (OpMapSubsetEqExpr x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpMapSubsetEqExpr x) where parseJSON = JSON.genericParseJSON jsonOptions
-opMapSubsetEqExpr :: OperatorContainer x => x -> x -> x
-opMapSubsetEqExpr x y = injectOp (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr x y))
-instance TypeOf x => TypeOf (OpMapSubsetEqExpr x) where
-    typeOf (OpMapSubsetEqExpr _ _) = return TypeAny
-instance EvaluateOp OpMapSubsetEqExpr where
-    evaluateOp op = na $ "evaluateOp{OpMapSubsetEqExpr}:" <++> pretty (show op)
 
 
 data OpTrue x = OpTrue x
@@ -1210,6 +1129,11 @@ functionals =
     , L_flatten
     , L_normIndices
     , L_indices
+
+    , LIdentifier "and"
+    , LIdentifier "or"
+    , LIdentifier "sum"
+
     ]
 
 

@@ -6,7 +6,6 @@ module Conjure.Representations.Set.ExplicitVarSizeWithFlags ( setExplicitVarSize
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TH
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
@@ -52,7 +51,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             let
                 orderingWhenFlagged fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &values[&i] < &values[&i+1]
@@ -60,7 +59,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
                 dontCareWhenNotFlagged fresh flags values= return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &flags[&i] = false -> dontCare(&values[&i])
@@ -68,7 +67,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
                 flagsToTheLeft fresh flags = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &flags[&i]
@@ -76,12 +75,12 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
                 cardinality fresh flags =
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
 
                 innerStructuralCons fresh flags values = do
-                    let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] -> &b |]
 
                     -- preparing structural constraints for the inner guys

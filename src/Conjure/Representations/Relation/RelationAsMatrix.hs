@@ -7,7 +7,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -49,7 +48,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                         unroll n (((iPat, i), dom) : rest) =
                             let r = unroll [essence| &n[&i] |] rest
                             in  [essence| sum &iPat : &dom . &r |]
-                    in  unroll m (zip [ quantifiedVar f TypeInt | f <- fresh ] innerDomains)
+                    in  unroll m (zip [ quantifiedVar f | f <- fresh ] innerDomains)
             return $ \ fresh refs ->
                 case refs of
                     [m] -> return (mkSizeCons sizeAttr (cardinality fresh m))

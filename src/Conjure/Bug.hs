@@ -1,5 +1,6 @@
 module Conjure.Bug
     ( bug
+    , bugFail
     , userErr
     ) where
 
@@ -21,6 +22,10 @@ bug message = error $ unlines
     , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
     , "", "" , renderNormal message
     ]
+
+bugFail :: Either Doc a -> a
+bugFail (Left err) = bug ("BUGFAIL:" <+> err)
+bugFail (Right x) = x
 
 -- call this function instead of "error"
 -- in case of a user error.

@@ -620,63 +620,6 @@ opSum _ =
     )
 
 
-opFilter
-    :: ( OperatorContainer x
-       , Pretty x
-       , MonadFail m
-       )
-    => proxy (m :: * -> *)
-    -> ( x -> x -> x
-       , x -> m (x,x)
-       )
-opFilter _ =
-    ( \ x y -> injectOp (MkOpFilter (OpFilter x y))
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpFilter (OpFilter x y) -> return (x,y)
-                _ -> na ("Lenses.opFilter:" <++> pretty p)
-    )
-
-
-opMapOverDomain
-    :: ( OperatorContainer x
-       , Pretty x
-       , MonadFail m
-       )
-    => proxy (m :: * -> *)
-    -> ( x -> x -> x
-       , x -> m (x,x)
-       )
-opMapOverDomain _ =
-    ( \ x y -> injectOp (MkOpMapOverDomain (OpMapOverDomain x y))
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpMapOverDomain (OpMapOverDomain x y) -> return (x,y)
-                _ -> na ("Lenses.opMapOverDomain:" <++> pretty p)
-    )
-
-
-opMapInExpr
-    :: ( OperatorContainer x
-       , Pretty x
-       , MonadFail m
-       )
-    => proxy (m :: * -> *)
-    -> ( x -> x -> x
-       , x -> m (x,x)
-       )
-opMapInExpr _ =
-    ( \ x y -> injectOp (MkOpMapInExpr (OpMapInExpr x y))
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpMapInExpr (OpMapInExpr x y) -> return (x,y)
-                _ -> na ("Lenses.opMapInExpr:" <++> pretty p)
-    )
-
-
 opAllDiff
     :: ( OperatorContainer x
        , Pretty x

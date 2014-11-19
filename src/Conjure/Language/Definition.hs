@@ -9,8 +9,7 @@ module Conjure.Language.Definition
     , typeCheckModelIO, typeCheckModel
     , initInfo
 
-    , quantifiedVar
-    , mkLambda, lambdaToFunction
+    , quantifiedVar, lambdaToFunction
 
     , e2c
 
@@ -24,6 +23,7 @@ module Conjure.Language.Definition
     , Constant(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
+    , GeneratorOrFilter(..), Generator(..), generatorPat
 
     , ExpressionLike(..), ReferenceContainer(..)
 
@@ -63,9 +63,9 @@ data Model = Model
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Model
-instance Hashable Model
-instance ToJSON Model where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON Model where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  Model
+instance ToJSON    Model where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  Model where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Default Model where
     def = Model def [] def
@@ -114,7 +114,7 @@ data LanguageVersion = LanguageVersion Name [Int]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize LanguageVersion
-instance Hashable LanguageVersion
+instance Hashable  LanguageVersion
 
 instance ToJSON LanguageVersion where
     toJSON (LanguageVersion t is) =
@@ -150,9 +150,9 @@ data Statement
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
-instance Hashable Statement
-instance ToJSON Statement where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON Statement where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  Statement
+instance ToJSON    Statement where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  Statement where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
@@ -170,9 +170,9 @@ data Objective = Minimising | Maximising
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Objective
-instance Hashable Objective
-instance ToJSON Objective where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON Objective where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  Objective
+instance ToJSON    Objective where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  Objective where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty Objective where
     pretty Minimising = "minimising"
@@ -192,9 +192,9 @@ data Declaration
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Declaration
-instance Hashable Declaration
-instance ToJSON Declaration where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON Declaration where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  Declaration
+instance ToJSON    Declaration where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  Declaration where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty Declaration where
     pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
@@ -213,9 +213,9 @@ data FindOrGiven = Find | Given
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize FindOrGiven
-instance Hashable FindOrGiven
-instance ToJSON FindOrGiven where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON FindOrGiven where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  FindOrGiven
+instance ToJSON    FindOrGiven where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  FindOrGiven where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty FindOrGiven where
     pretty Find = "find"
@@ -244,9 +244,9 @@ modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = onHead toLower . 
           onHead _ [] = []
 
 instance Serialize ModelInfo
-instance Hashable ModelInfo
-instance ToJSON ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
-instance FromJSON ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
+instance Hashable  ModelInfo
+instance ToJSON    ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
+instance FromJSON  ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
     def = ModelInfo def def def def def def def def
@@ -293,9 +293,9 @@ decisionJSONOptions :: JSON.Options
 decisionJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop 1 }
 
 instance Serialize Decision
-instance Hashable Decision
-instance ToJSON Decision where toJSON = JSON.genericToJSON decisionJSONOptions
-instance FromJSON Decision where parseJSON = JSON.genericParseJSON decisionJSONOptions
+instance Hashable  Decision
+instance ToJSON    Decision where toJSON = JSON.genericToJSON decisionJSONOptions
+instance FromJSON  Decision where parseJSON = JSON.genericParseJSON decisionJSONOptions
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -308,15 +308,15 @@ data Expression
     | Domain (Domain () Expression)
     | Reference Name (Maybe ReferenceTo)
     | WithLocals Expression [Statement]
+    | Comprehension Expression [GeneratorOrFilter]
     | Op (Ops Expression)
-    | Lambda AbstractPattern Expression
     | ExpressionMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Expression
-instance Hashable Expression
-instance ToJSON Expression where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON Expression where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  Expression
+instance ToJSON    Expression where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  Expression where parseJSON = JSON.genericParseJSON jsonOptions
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
@@ -328,13 +328,11 @@ viewIndexed (Op (MkOpSlicing  (OpSlicing  m a b))) =
 viewIndexed m = (m, [])
 
 instance Pretty Expression where
-    -- special case for matrix comprehensions of SR here
-    pretty (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda (Single nm _) body) (Domain domain)))) =
-        prBrackets (pretty body <+> "|" <+> pretty nm <+> ":" <+> pretty domain)
 
     pretty (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
 
     -- mostly for debugging: print what a reference is pointing at
+    -- pretty (Reference x (Just r)) = pretty x <> "#`" <> pretty r <> "`"
     -- pretty (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
 
     pretty (Constant x) = pretty x
@@ -342,7 +340,7 @@ instance Pretty Expression where
     pretty (Domain x) = "`" <> pretty x <> "`"
     pretty (Reference x _) = pretty x
     pretty (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
-    pretty (Lambda arg x) = "lambda" <> prParens (fsep [pretty arg, "-->", pretty x])
+    pretty (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
     pretty (Op op) = pretty op
     pretty (ExpressionMetaVar x) = "&" <> pretty x
 
@@ -354,13 +352,24 @@ instance TypeOf Expression where
     typeOf (Reference nm (Just refTo)) =
         case refTo of
             Alias x -> typeOf x
-            InLambda (Single _ (Just ty)) -> return ty
-            InLambda{} -> bug ("Type error, InLambda:" <+> pretty nm)
+            InComprehension gen ->
+                let
+                    lu pat ty = maybe
+                        (bug $ vcat ["Type error, InComprehension:", pretty pat, pretty ty])
+                        return
+                        (lu' pat ty)
+                    lu' (Single nm') ty | nm == nm' = Just ty
+                    lu' (AbsPatTuple pats) (TypeTuple tys) = zipWith lu' pats tys |> catMaybes |> listToMaybe
+                    lu' _ _ = Nothing
+                in
+                    case gen of
+                        GenDomain pat domain -> typeOf domain                 >>= lu pat
+                        GenInExpr pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
             DeclNoRepr _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
-    typeOf (WithLocals x _) = typeOf x                -- TODO: do this properly (looking into locals and other ctxt)
+    typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
+    typeOf (Comprehension x _) = TypeList <$> typeOf x  -- TODO: do this properly, look into generators and filters
     typeOf (Op op) = typeOf op
-    typeOf Lambda{}     = return TypeAny -- TODO: fix
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 
 instance OperatorContainer Expression where
@@ -409,23 +418,17 @@ e2c :: Expression -> Constant
 e2c (Constant c) = c
 e2c x = bug ("e2c, not a constant:" <+> pretty x)
 
-quantifiedVar :: Name -> Type -> (AbstractPattern, Expression)
-quantifiedVar nm ty =
-    let pat = Single nm (Just ty)
-        ref = Reference nm (Just (InLambda pat))
+quantifiedVar :: Name -> (AbstractPattern, Expression)
+quantifiedVar nm =
+    let pat = Single nm
+        ref = Reference nm Nothing
     in  (pat, ref)
-
-mkLambda :: Name -> Type -> (Expression -> Expression) -> Expression
-mkLambda nm ty f =
-    let pat = Single nm (Just ty)
-        ref = Reference nm (Just (InLambda pat))
-    in  Lambda pat (f ref)
 
 -- TODO: Add support for AbsPatTuple
 -- TODO: Add support for AbsPatMatrix
 -- TODO: Add support for AbsPatSet
 lambdaToFunction :: AbstractPattern -> Expression -> (Expression -> Expression)
-lambdaToFunction (Single nm _) body = \ p ->
+lambdaToFunction (Single nm) body = \ p ->
     let
         replacer :: Expression -> Expression
         replacer (Reference n _) | n == nm = p
@@ -454,19 +457,22 @@ lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` bu
 ------------------------------------------------------------------------------------------------------------------------
 
 data ReferenceTo
-    = Alias         Expression
-    | InLambda      AbstractPattern
-    | DeclNoRepr    FindOrGiven Name (Domain () Expression)
-    | DeclHasRepr   FindOrGiven Name (Domain HasRepresentation Expression)
+    = Alias           Expression
+    | InComprehension Generator
+    | DeclNoRepr      FindOrGiven Name (Domain () Expression)
+    | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize ReferenceTo
-instance Hashable ReferenceTo
-instance ToJSON ReferenceTo where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON ReferenceTo where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  ReferenceTo
+instance ToJSON    ReferenceTo where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  ReferenceTo where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty ReferenceTo where
-    pretty = pretty . show
+    pretty (Alias           x  ) = "Alias"           <+> prParens (pretty x)
+    pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
+    pretty (DeclNoRepr      forg nm dom) = "DeclNoRepr"  <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
+    pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -517,7 +523,7 @@ instance TypeOf a => TypeOf (AbstractLiteral a) where
 ------------------------------------------------------------------------------------------------------------------------
 
 data AbstractPattern
-    = Single Name (Maybe Type)
+    = Single Name
     | AbsPatTuple [AbstractPattern]
     | AbsPatMatrix
             -- (Domain () a)          -- TODO: Should there be a domain here?
@@ -532,27 +538,62 @@ data AbstractPattern
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize AbstractPattern
-instance Hashable AbstractPattern
-instance ToJSON AbstractPattern where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON AbstractPattern where parseJSON = JSON.genericParseJSON jsonOptions
+instance Hashable  AbstractPattern
+instance ToJSON    AbstractPattern where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  AbstractPattern where parseJSON = JSON.genericParseJSON jsonOptions
 
 instance Pretty AbstractPattern where
-    pretty (Single nm Nothing  ) = pretty nm
-    pretty (Single nm (Just ty)) = pretty nm <+> ":" <+> "`" <> pretty ty <> "`"
-    pretty (AbsPatTuple      xs) = (if length xs <= 1 then "tuple" else prEmpty)
-                                <> prettyList prParens   "," xs
-    pretty (AbsPatMatrix     xs) = prettyList prBrackets "," xs
-    pretty (AbsPatSet        xs) = prettyList prBraces   "," xs
+    pretty (Single       nm) = pretty nm
+    pretty (AbsPatTuple  xs) = (if length xs <= 1 then "tuple" else prEmpty) <>
+                               prettyList prParens   "," xs
+    pretty (AbsPatMatrix xs) = prettyList prBrackets "," xs
+    pretty (AbsPatSet    xs) = prettyList prBraces "," xs
     pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
-instance TypeOf AbstractPattern where
-    typeOf pat@(Single _ Nothing  ) = fail ("typeOf AbstractPattern:" <+> pretty (show pat))
-    typeOf     (Single _ (Just ty)) = return ty
-    typeOf (AbsPatTuple ts) = TypeTuple <$> mapM typeOf ts
-    typeOf pat@(AbsPatMatrix ts) = do
-        tys <- mapM typeOf ts
-        if typesUnify tys
-            then return (TypeMatrix TypeInt (mostDefined tys))
-            else fail ("Types do not unify in:" <+> pretty pat)
-    typeOf pat                      = fail ("typeOf:" <+> pretty (show pat))
+-- instance TypeOf AbstractPattern where
+--     typeOf pat@(Single _ Nothing  ) = fail ("typeOf AbstractPattern:" <+> pretty (show pat))
+--     typeOf     (Single _ (Just ty)) = return ty
+--     typeOf (AbsPatTuple ts) = TypeTuple <$> mapM typeOf ts
+--     typeOf pat@(AbsPatMatrix ts) = do
+--         tys <- mapM typeOf ts
+--         if typesUnify tys
+--             then return (TypeMatrix TypeInt (mostDefined tys))
+--             else fail ("Types do not unify in:" <+> pretty pat)
+--     typeOf pat                      = fail ("typeOf:" <+> pretty (show pat))
 
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- Generator -----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+data GeneratorOrFilter = Generator Generator | Filter Expression
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Pretty GeneratorOrFilter where
+    pretty (Generator x) = pretty x
+    pretty (Filter x) = pretty x
+
+instance Serialize GeneratorOrFilter
+instance Hashable  GeneratorOrFilter
+instance ToJSON    GeneratorOrFilter where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  GeneratorOrFilter where parseJSON = JSON.genericParseJSON jsonOptions
+
+
+data Generator
+     = GenDomain AbstractPattern (Domain () Expression)
+     | GenInExpr AbstractPattern Expression
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Pretty Generator where     
+    pretty (GenDomain pat x) = pretty pat <+> ":"  <+> pretty x
+    pretty (GenInExpr pat x) = pretty pat <+> "<-" <+> pretty x
+
+instance Serialize Generator
+instance Hashable  Generator
+instance ToJSON    Generator where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  Generator where parseJSON = JSON.genericParseJSON jsonOptions
+
+generatorPat :: Generator -> AbstractPattern
+generatorPat (GenDomain pat _) = pat
+generatorPat (GenInExpr pat _) = pat

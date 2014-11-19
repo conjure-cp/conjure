@@ -2,7 +2,6 @@ module Conjure.Process.EnumerateDomain ( enumerateDomain ) where
 
 import Conjure.Prelude
 import Conjure.Bug
--- import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty

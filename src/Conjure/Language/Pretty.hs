@@ -11,6 +11,7 @@ module Conjure.Language.Pretty
     , prEmpty, prParens, prBrackets, prBraces
     , Doc
     , prettyContext
+    , logDebugId
     ) where
 
 -- conjure
@@ -140,3 +141,5 @@ prettyArrayVCat = prBrackets . vcat . punctuate "," . map pretty . V.toList
 instance Pretty Scientific where
     pretty = either pretty pretty . (floatingOrInteger :: Scientific -> Either Double Integer)
 
+logDebugId :: (MonadLog m, Pretty a) => Doc -> a -> m a
+logDebugId msg a = logDebug (msg <++> pretty a) >> return a

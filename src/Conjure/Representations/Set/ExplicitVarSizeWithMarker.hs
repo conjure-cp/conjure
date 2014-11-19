@@ -6,7 +6,6 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSiz
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TH
 import Conjure.Language.DomainSize
 import Conjure.Language.Pretty
@@ -50,7 +49,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let
                 orderingUpToMarker fresh marker values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) . &i + 1 <= &marker ->
@@ -59,7 +58,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
                 dontCareAfterMarker fresh marker values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &i > &marker ->
@@ -67,7 +66,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                         |]
 
                 innerStructuralCons fresh marker values = do
-                    let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
 
                     -- preparing structural constraints for the inner guys

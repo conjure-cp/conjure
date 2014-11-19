@@ -13,7 +13,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
@@ -398,21 +397,23 @@ parseAtomicExprNoPrePost = msum $ map try
 
 parseMatrixComprehension :: Parser Expression
 parseMatrixComprehension = brackets $ do
-    x <- parseExpr
+    x   <- parseExpr
     lexeme L_Bar
-    gens <- some generator
-    return (convGenerators x gens)
+    gens <- sepBy1 generator comma
+    return (Comprehension x (concat gens))
     where
         generator = do
-            name   <- parseName
-            lexeme L_Colon
-            domain <- parseDomain
-            return $ \ b -> Op $ MkOpMapOverDomain $ OpMapOverDomain
-                (Lambda (Single name (Just TypeInt)) b)
-                (Domain domain)
-
-        convGenerators body []     = body
-        convGenerators body (g:gs) = g (convGenerators body gs)
+            pats <- parseAbstractPattern `sepBy1` comma
+            msum
+                [ do
+                    lexeme L_Colon
+                    domain <- parseDomain
+                    return [Generator (GenDomain pat domain) | pat <- pats]
+                , do
+                    lexeme L_LeftArrow
+                    expr <- parseExpr
+                    return [Generator (GenInExpr pat expr)   | pat <- pats]
+                ]
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain
@@ -495,45 +496,33 @@ parseOp = msum [ do lexeme x; return x | (x,_,_) <- operators ]
 
 parseQuantifiedExpr :: Parser Expression
 parseQuantifiedExpr = do
-    let pOp = msum [ lexeme L_in       >> return (\ pat body over -> Op (MkOpMapInExpr       (OpMapInExpr       (Lambda pat body) over)))
-                   , lexeme L_subset   >> return (\ pat body over -> Op (MkOpMapSubsetExpr   (OpMapSubsetExpr   (Lambda pat body) over)))
-                   , lexeme L_subsetEq >> return (\ pat body over -> Op (MkOpMapSubsetEqExpr (OpMapSubsetEqExpr (Lambda pat body) over)))
-                   ]
-                   
     Name qnName <- parseName
-    qnPats  <- parseAbstractPattern `sepBy1` comma
-    qnDom   <- optionMaybe (colon *> parseDomain)
-    qnExpr  <- optionMaybe ((,) <$> pOp <*> parseExpr)
-    -- qnGuard <- optionMaybe (comma *> parseExpr)
+    qnPats      <- parseAbstractPattern `sepBy1` comma
+    qnDom       <- optionMaybe (colon *> parseDomain)
+    qnExpr      <- optionMaybe $ do lexeme L_in
+                                    over <- parseExpr
+                                    return (\ pat -> GenInExpr pat over )
+    -- qnGuard     <- optionMaybe (comma *> parseExpr)
     let qnGuard = Nothing
-    qnBody  <- dot *> parseExpr <?> "expecting body of a quantified expression"
+    qnBody      <- dot *> parseExpr <?> "expecting body of a quantified expression"
 
-    let qnMap f = case (qnDom,qnExpr) of
-            (Nothing , Nothing     ) -> userErr "expecting something to quantify over"
-            (Just dom, Nothing     ) -> \ pat body -> Op $ MkOpMapOverDomain $ OpMapOverDomain (Lambda pat body) (f (Domain dom))
-            (Nothing , Just (op, y)) -> \ pat body -> op pat body (f y)
+    let qnMap pat = case (qnDom,qnExpr) of
+            (Nothing , Nothing) -> userErr "expecting something to quantify over"
+            (Just dom, Nothing) -> GenDomain pat dom
+            (Nothing , Just op) -> op pat
             _ -> userErr "to many things to quantify over"
 
-    -- ty = evalState (typeOf (convDomain quanOverDom)) []
-
-    let filterOr pat dom =
-            case qnGuard of
-                Nothing -> dom
-                Just g  -> Op $ MkOpFilter $ OpFilter
-                            (Lambda pat g)
-                            dom
-
-    let
-        f []     = bug "The Impossible has happenned. in parseQuantifiedExpr.f"
-        f [i]    = mkOp (translateQnName qnName) [qnMap (filterOr i) i qnBody]
-        f (i:is) = mkOp (translateQnName qnName) [qnMap id           i (f is)]
-    return $ f qnPats
+    return $ mkOp (translateQnName qnName)
+           $ return
+           $ Comprehension qnBody
+           $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
+             [ Filter g              | Just g <- [qnGuard] ]
 
 
 parseAbstractPattern :: Parser AbstractPattern
 parseAbstractPattern = msum $ map try
     [ AbstractPatternMetaVar <$> parseMetaVariable
-    , Single <$> parseName <*> pure Nothing
+    , Single <$> parseName
     , do
         void $ optionMaybe $ lexeme L_tuple
         xs <- parens $ parseAbstractPattern `sepBy1` comma

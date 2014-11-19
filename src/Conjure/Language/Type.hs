@@ -25,6 +25,7 @@ data Type
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
+    | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
     | TypeMSet Type
@@ -46,6 +47,7 @@ instance Pretty Type where
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
                          <> prettyList prParens "," xs
+    pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index inner) = "matrix indexed by"
                                   <+> prBrackets (pretty index)
                                   <+> "of" <+> pretty inner
@@ -64,6 +66,7 @@ typeUnify TypeInt TypeInt = True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple as) (TypeTuple bs) = and (zipWith typeUnify as bs)
+typeUnify (TypeList a) (TypeList b) = typeUnify a b
 typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
@@ -90,6 +93,7 @@ mostDefined = foldr f TypeAny
         f _ x@TypeEnum{} = x
         f _ x@TypeUnnamed{} = x
         f (TypeTuple as) (TypeTuple bs) = TypeTuple (zipWith f as bs)
+        f (TypeList a) (TypeList b) = TypeList (f a b)
         f (TypeMatrix a1 a2) (TypeMatrix b1 b2) = TypeMatrix (f a1 b1) (f a2 b2)
         f (TypeSet a) (TypeSet b) = TypeSet (f a b)
         f (TypeMSet a) (TypeMSet b) = TypeMSet (f a b)
@@ -99,6 +103,7 @@ mostDefined = foldr f TypeAny
         f _ _ = TypeAny
 
 innerTypeOf :: MonadFail m => Type -> m Type
+innerTypeOf (TypeList t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])

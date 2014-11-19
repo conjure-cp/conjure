@@ -8,7 +8,6 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TH
-import Conjure.Language.TypeOf
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
@@ -58,13 +57,11 @@ function1DPartial = Representation chck downD structuralCons downC up
                 innerDomainFr'
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
             innerDomainFr   <- toIntDomain innerDomainFr'
-            innerDomainFrTy <- typeOf innerDomainFr
-            innerDomainToTy <- typeOf innerDomainTo
 
             let injectiveCons fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
-                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainToTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
                     in
                         [essence|
                             forAll &iPat : &innerDomainFr .
@@ -74,8 +71,8 @@ function1DPartial = Representation chck downD structuralCons downC up
 
             let surjectiveCons fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
-                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
                     in
                         [essence|
                             forAll &iPat : &innerDomainTo .
@@ -92,13 +89,13 @@ function1DPartial = Representation chck downD structuralCons downC up
 
             let cardinality fresh flags =
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
 
             let dontCareInactives fresh flags values = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
                     in
                         [essence|
                             forAll &iPat : &innerDomainFr . &flags[&i] = false ->

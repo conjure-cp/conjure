@@ -27,19 +27,20 @@ import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
-import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt, opMapOverDomain, opMapInExpr
-                                   , opSubsetEq, opDontCare, opFilter, opImply, opTimes, opToInt
+import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt
+                                   , opSubsetEq, opDontCare, opImply, opTimes, opToInt
                                    , opLeq, opFlatten, opToSet, opIntersect, opUnion, opFunctionImage )
 
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
-import Conjure.Language.NameResolution ( resolveNames )
+import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( zipperBi, fromZipper, hole, replaceHole )
 
+-- pipes
 import Pipes ( Producer, yield, (>->) )
 import qualified Pipes.Prelude as Pipes ( foldM, take )
 
@@ -189,10 +190,16 @@ remaining config model = do
     let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
-        ys <- applicableRules config (hole x)
-        return $ if null ys
-            then Nothing
-            else Just (x, ys)
+        -- things in a reference should not be rewritten.
+        -- specifically, no representation selection for them!
+        let inAReference = not $ null [ () | Reference{} <- tail (ascendants x) ]
+        if inAReference
+            then return Nothing
+            else do
+                ys <- applicableRules config (hole x)
+                return $ if null ys
+                    then Nothing
+                    else Just (x, ys)
     return
         [ Question
             { qHole = hole focus
@@ -416,10 +423,11 @@ checkIfAllRefined m = do
 
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
-    >>= return . initInfo
-    >>= deenumifyModel
-    >>= resolveNames
-    >>= return . addTrueConstraints
+                                    >>= logDebugId "[input]"
+    >>= return . initInfo           >>= logDebugId "[initInfo]"
+    >>= deenumifyModel              >>= logDebugId "[deenumifyModel]"
+    >>= resolveNames                >>= logDebugId "[resolveNames]"
+    >>= return . addTrueConstraints >>= logDebugId "[addTrueConstraints]"
 
 
 epilogue :: MonadFail m => Model -> m Model
@@ -461,10 +469,6 @@ applicableRules
     => Config
     -> Expression
     -> m [(Doc, RuleResult)]
-applicableRules config@Config{..} x | not (logRuleAttempts || logRuleFails || logRuleSuccesses) =
-    concat <$> sequence [ do res <- runMaybeT (rApply r x)
-                             return (map (rName r,) (concat (maybeToList res)))
-                        | r <- allRules config ]
 applicableRules config@Config{..} x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
@@ -477,6 +481,8 @@ applicableRules config@Config{..} x = do
     forM_ mys $ \ (rule, my) ->
         case my of
             Left  failed -> unless (failed == "No match.") $ logFail $ vcat
+            -- Left  failed -> when (rule == "dontCare-int" &&
+            --             "dontCare(x_ExplicitVarSizeWithMarker_Values" `isPrefixOf` show (pretty x)) $ logFail $ vcat
                 [ " rule failed:" <+> rule
                 , "          on:" <+> pretty x
                 , "     message:" <+> failed
@@ -484,11 +490,12 @@ applicableRules config@Config{..} x = do
             Right ys     -> logSuccess $ vcat
                 [ "rule applied:" <+> rule
                 , "          on:" <+> pretty x
-                , "  to produce:" <+> vcat (map fst3 ys)
+                , "     message:" <+> vcat (map fst3 ys)
                 ]
-    return [ (name, res)
+    return [ (name, (msg, out', hook))
            | (name, Right ress) <- mys
-           , res <- ress
+           , (msg, out, hook) <- ress
+           , let out' fresh = out fresh |> resolveNamesX |> bugFail     -- re-resolving names
            ]
 
 
@@ -510,13 +517,13 @@ allRules config =
     , rule_Matrix_DontCare
     , rule_Set_DontCare
 
-    , rule_ComplexLambda
+    , rule_ComplexAbsPat
 
     , rule_Tuple_Index
     , rule_Tuple_Eq
     , rule_Tuple_Lt
     , rule_Tuple_Leq
-    , rule_Tuple_MapOverDomain
+    , rule_Tuple_DomainComprehension
 
     , rule_Matrix_Eq
     , rule_Matrix_Lt
@@ -529,11 +536,11 @@ allRules config =
     , rule_Set_Leq
     , rule_Set_Intersect
 
-    , rule_Set_MapInExpr_Literal
-    , rule_Set_MapInExpr_Explicit
-    , rule_Set_MapInExpr_ExplicitVarSizeWithMarker
-    , rule_Set_MapInExpr_ExplicitVarSizeWithFlags
-    , rule_Set_MapInExpr_Occurrence
+    , rule_Set_Comprehension_Literal
+    , rule_Set_Comprehension_Explicit
+    , rule_Set_Comprehension_ExplicitVarSizeWithMarker
+    , rule_Set_Comprehension_ExplicitVarSizeWithFlags
+    , rule_Set_Comprehension_Occurrence
 
     , rule_Set_In_Occurrence
 
@@ -543,9 +550,9 @@ allRules config =
     , rule_Function_Image_Function1DPartial
     , rule_Function_Image_FunctionNDPartial
 
-    , rule_Function_MapInExpr_Function1D
-    , rule_Function_MapInExpr_Function1DPartial
-    , rule_Function_MapInExpr_FunctionNDPartial
+    , rule_Function_Comprehension_Function1D
+    , rule_Function_Comprehension_Function1DPartial
+    , rule_Function_Comprehension_FunctionNDPartial
 
     , rule_Function_InDefined_Function1DPartial
     , rule_Function_InDefined_FunctionNDPartial
@@ -554,9 +561,9 @@ allRules config =
     , rule_Relation_In
 
     , rule_Relation_Image_RelationAsMatrix
-    , rule_Relation_MapInExpr_RelationAsMatrix
+    , rule_Relation_Comprehension_RelationAsMatrix
 
-    ] ++ rule_InlineFilterInsideMap
+    ] ++ rule_InlineFilters
 
 
 rule_ChooseRepr :: Config -> Rule
@@ -594,7 +601,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
             mstructurals = do
                 refs <- downToX1 Find name domain
                 gen  <- getStructurals downX1 domain
-                gen freshNames' refs
+                gen freshNames' refs >>= mapM resolveNamesX     -- re-resolving names
 
             structurals = case mstructurals of
                 Left err -> bug ("rule_ChooseRepr.hook.structurals" <+> err)
@@ -607,22 +614,17 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 | otherwise = \ m ->
                     m { mStatements = mStatements m ++ [SuchThat structurals] }
 
-            otherRepresentations =
-                [ d
-                | (n, d) <- representations
-                , n == name
-                , d /= domain
-                ]
-
             channels =
                 [ make opEq this that
-                | d <- otherRepresentations
+                | (n, d) <- representations
+                , n == name
                 , let this = Reference name (Just (DeclHasRepr forg name domain))
                 , let that = Reference name (Just (DeclHasRepr forg name d))
                 ]
 
             addChannels
                 | forg == Given = id
+                | usedBefore = id
                 | null channels = id
                 | otherwise = \ m ->
                     m { mStatements = mStatements m ++ [SuchThat channels] }
@@ -647,7 +649,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
         in
             model
                 |> addStructurals       -- unless usedBefore: add structurals
-                |> addChannels          -- for each in otherRepresentations
+                |> addChannels          -- for each in previously recorded representation
                 |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
                 |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
 
@@ -684,15 +686,17 @@ rule_SingletonAnd = "singleton-and" `namedRule` theRule where
 
 
 rule_FlattenOf1D :: Rule
-rule_FlattenOf1D = "flattern-of-1D" `namedRule` theRule where
+rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
     theRule p = do
         x                   <- match opFlatten p
         TypeMatrix _ xInner <- typeOf x
         case xInner of
-            TypeMatrix{} -> fail "No match." 
-            _ -> return ( "1D matrices do not need a flatten."
-                        , const x
-                        )
+            TypeBool{} -> return ()
+            TypeInt{}  -> return ()
+            _ -> fail "No match."
+        return ( "1D matrices do not need a flatten."
+               , const x
+               )
 
 
 rule_BubbleUp :: Rule
@@ -787,7 +791,7 @@ rule_Matrix_DontCare = "dontCare-matrix" `namedRule` theRule where
         DomainMatrix index _ <- domainOf x
         return ( "dontCare handling for matrix"
                , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
                     in  [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
                )
 
@@ -804,24 +808,35 @@ rule_Set_DontCare = "dontCare-set" `namedRule` theRule where
                )
 
 
-rule_ComplexLambda :: Rule
-rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
-    theRule (Lambda pat@AbsPatTuple{} body) = do
-        tyPat <- typeOf pat
+rule_ComplexAbsPat :: Rule
+rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenDomain pat@AbsPatTuple{} domain)]) =
         return
-            ( "complex lambda on tuple patterns"
+            ( "complex pattern on tuple patterns"
             , \ fresh ->
-                    let
-                        patName = headInf fresh
-                        outPat = Single patName (Just tyPat)
-                        outRef = Reference patName (Just (InLambda outPat))
-                        replacements = [ (p, make opIndexing' outRef (map fromInt is))
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                        replacements = [ (p, make opIndexing' i (map fromInt is))
                                        | (p, is) <- genMappings pat
                                        ]
                         f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
                         f x = x
                     in
-                        Lambda outPat (transform f body)
+                        Comprehension (transform f body)
+                            [Generator (GenDomain iPat domain)]
+            )
+    theRule (Comprehension body [Generator (GenInExpr pat@AbsPatTuple{} expr)]) =
+        return
+            ( "complex pattern on tuple patterns"
+            , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                        replacements = [ (p, make opIndexing' i (map fromInt is))
+                                       | (p, is) <- genMappings pat
+                                       ]
+                        f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
+                        f x = x
+                    in
+                        Comprehension (transform f body)
+                            [Generator (GenInExpr iPat expr)]
             )
     theRule _ = fail "No match."
 
@@ -832,7 +847,7 @@ rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
     --               j -> [2,1]
     --               k -> [2,2]
     genMappings :: AbstractPattern -> [(Name, [Int])]
-    genMappings (Single nm _) = [(nm, [])]
+    genMappings (Single nm) = [(nm, [])]
     genMappings (AbsPatTuple pats)
         = concat
             [ [ (patCore, i:is) | (patCore, is) <- genMappings pat ]
@@ -846,56 +861,38 @@ rule_ComplexLambda = "complex-lamba" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
-rule_InlineFilterInsideMap :: [Rule]
-rule_InlineFilterInsideMap =
-    [ namedRule "filter-inside-mapOverDomain-and" $ ruleGen_InlineFilterInsideMap opMapOverDomain opAnd opAndSkip
-    , namedRule "filter-inside-mapOverDomain-or"  $ ruleGen_InlineFilterInsideMap opMapOverDomain opOr  opOrSkip
-    , namedRule "filter-inside-mapOverDomain-sum" $ ruleGen_InlineFilterInsideMap opMapOverDomain opSum opSumSkip
-    , namedRule "filter-inside-mapInExpr-and"     $ ruleGen_InlineFilterInsideMap opMapInExpr     opAnd opAndSkip
-    , namedRule "filter-inside-mapInExpr-or"      $ ruleGen_InlineFilterInsideMap opMapInExpr     opOr  opOrSkip
-    , namedRule "filter-inside-mapInExpr-sum"     $ ruleGen_InlineFilterInsideMap opMapInExpr     opSum opSumSkip
+rule_InlineFilters :: [Rule]
+rule_InlineFilters =
+    [ namedRule "filter-inside-and" $ ruleGen_InlineFilters opAnd opAndSkip
+    , namedRule "filter-inside-or"  $ ruleGen_InlineFilters opOr  opOrSkip
+    , namedRule "filter-inside-sum" $ ruleGen_InlineFilters opSum opSumSkip
     ]
     where
         opAndSkip x y = make opImply x y
         opOrSkip  x y = make opAnd [x,y]
         opSumSkip b x = make opTimes (make opToInt b) x
 
-ruleGen_InlineFilterInsideMap
+ruleGen_InlineFilters
     :: MonadFail m
-    => (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( Expression -> Expression -> Expression, Expression -> m1 (Expression, Expression) ))
-    -> (forall m1 . MonadFail m1 => Proxy (m1 :: * -> *) -> ( [Expression] -> Expression            , Expression -> m1 [Expression]             ))
+    => (forall m1 . MonadFail m1
+            => Proxy (m1 :: * -> *)
+            -> ( [Expression] -> Expression , Expression -> m1 [Expression] )
+       )
     -> (Expression -> Expression -> Expression)
     -> Expression
     -> m (Doc, [Name] -> Expression)
-ruleGen_InlineFilterInsideMap opM opQ opSkip p = do
-    [x] <- match opQ p
-    x'  <- possiblyNested x
-    return ( "Inlining the filter."
-           , const $ make opQ [ x' ]
+ruleGen_InlineFilters opQ opSkip p = do
+    [Comprehension body gensOrFilters] <- match opQ p
+    let filters    = [ x | Filter    x <- gensOrFilters ]
+    let generators = [ x | Generator x <- gensOrFilters ]
+    theGuard <- case filters of
+        []  -> fail "No filter."
+        [x] -> return x
+        xs  -> return $ make opAnd xs
+    return ( "Inlining filters"
+           , const $ make opQ $ return $
+               Comprehension (opSkip theGuard body) (map Generator generators)
            )
-
-    where
-        possiblyNested x =
-            case tryMatch opFlatten x of
-                Nothing -> ruleGen_InlineFilterInsideMap_Inner x
-                Just y  -> case tryMatch opM y of
-                    Nothing -> fail "flatten, but no opM"
-                    Just (Lambda l1 l2, domain) -> do
-                        l2' <- possiblyNested l2
-                        return $ make opFlatten $ make opM (Lambda l1 l2') domain
-                    Just _ -> fail "opM doesn't contain a Lambda"
-
-        ruleGen_InlineFilterInsideMap_Inner x = do
-            (Lambda f1@(Single nm _) f2, rest  ) <- match opM x
-            (Lambda g1@Single{}      g2, domain) <- match opFilter rest
-            ty                                   <- typeOf domain
-
-            let f = lambdaToFunction f1 f2
-            let g = lambdaToFunction g1 g2
-
-            return $  make opM
-                (mkLambda nm ty $ \ i -> opSkip (g i) (f i))
-                domain
 
 
 rule_Tuple_Index :: Rule
@@ -966,8 +963,8 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         DomainMatrix index _ <- domainOf x
         return ( "Horizontal rule for matrix ="
                , \ fresh ->
-                   let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
-                   in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
                )
 
 
@@ -1014,30 +1011,22 @@ rule_Matrix_Leq = "matrix-leq" `namedRule` theRule where
                )
 
 
-rule_Tuple_MapOverDomain :: Rule
-rule_Tuple_MapOverDomain = "tuple-mapOverDomain-tuple" `namedRule` theRule where
-    theRule p = do
-        ( Lambda f1@(Single _ (Just (TypeTuple tys))) f2 , Domain (DomainTuple domains) ) <- match opMapOverDomain p
-
-        let f = lambdaToFunction f1 f2
-
-        let pats fresh     = [ Single i (Just ty)
-                             | (i, ty) <- zip fresh tys ]
-        let refs fresh     = [ Reference i (Just (InLambda (Single i (Just ty))))
-                             | (i, ty) <- zip fresh tys ]
+rule_Tuple_DomainComprehension :: Rule
+rule_Tuple_DomainComprehension = "tuple-domain-comprehension" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenDomain pat@Single{} (DomainTuple domains))]) = do
+        let pats fresh     = [ Single i            | i <- fresh ]
+        let refs fresh     = [ Reference i Nothing | i <- fresh ]
         let theValue fresh = AbstractLiteral (AbsLitTuple (refs fresh))
-
-        let unroll val [pat] [dom] =
-                make opMapOverDomain (Lambda pat (f val))
-                                     (Domain dom)
-            unroll val (pat:ps) (dom:doms) = make opFlatten $
-                make opMapOverDomain (Lambda pat (unroll val ps doms))
-                                     (Domain dom)
-            unroll _ _ _ = bug "rule_Tuple_MapOverDomain.unroll"
-
-        return ( ""
-               , \ fresh -> unroll (theValue fresh) (pats fresh) domains
+        let f              = lambdaToFunction pat body
+        return ( "Tuple domain comprehension"
+               , \ fresh' ->
+                   let fresh = take (length domains) fresh'
+                   in  Comprehension (f (theValue fresh))
+                       [ Generator (GenDomain p d)
+                       | (p,d) <- zip (pats fresh) domains
+                       ]
                )
+    theRule _ = fail "No match."
 
 
 -- x in s ~~> or([ x = i | i in s ])
@@ -1046,43 +1035,42 @@ rule_Tuple_MapOverDomain = "tuple-mapOverDomain-tuple" `namedRule` theRule where
 rule_Set_In :: Rule
 rule_Set_In = "set-in" `namedRule` theRule where
     theRule p = do
-        (x,s)          <- match opIn p
-        TypeSet sInner <- typeOf s
+        (x,s)     <- match opIn p
+        TypeSet{} <- typeOf s
         case (isAtomic s, representationOf s) of
             (True, Just "Occurrence") -> fail "Occurrence has a better rule for set-membership."
             (True, Nothing          ) -> fail "Choose a representation first."
             _ -> return ()
-        let body iName = mkLambda iName sInner (\ i -> make opEq i x)
         return ( "Horizontal rule for set-in."
-               , \ fresh -> make opOr [make opMapInExpr (body (headInf fresh)) s]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| exists &iPat in &s . &i = &x |]
                )
 
 
-rule_Set_MapInExpr_Explicit :: Rule
-rule_Set_MapInExpr_Explicit = "set-quantification{Explicit}" `namedRule` theRule where
-    theRule p = do
-        (Lambda lPat@Single{} lBody, s) <- match opMapInExpr p
+rule_Set_Comprehension_Explicit :: Rule
+rule_Set_Comprehension_Explicit = "set-comprehension{Explicit}" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+        TypeSet{}            <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
-        let f = lambdaToFunction lPat lBody
-        let body iName = mkLambda iName TypeInt $ \ i ->
-                            f (make opIndexing m i)
-        -- map_in_expr(f(i), x)
-        -- map_domain(f(m[i]), domain)
-        return ( "Vertical rule for set-quantification, Explicit representation"
-               , \ fresh -> make opMapOverDomain
-                               (body (headInf fresh))
-                               (Domain index)
+        let i = Reference iPat Nothing
+        let f = lambdaToFunction pat body
+        return ( "Vertical rule for set-comprehension, Explicit representation"
+               , const $
+                   Comprehension (f [essence| &m[&i] |])
+                       [ Generator (GenDomain pat index) ]
                )
+    theRule _ = fail "No match."
 
 
 rule_Set_Eq :: Rule
 rule_Set_Eq = "set-eq" `namedRule` theRule where
     theRule p = do
-        (x,y)                <- match opEq p
-        TypeSet{}            <- typeOf x
-        TypeSet{}            <- typeOf y
+        (x,y)     <- match opEq p
+        TypeSet{} <- typeOf x
+        TypeSet{} <- typeOf y
         return ( "Horizontal rule for set equality"
                , const $ make opAnd [ make opSubsetEq x y
                                     , make opSubsetEq y x
@@ -1093,12 +1081,13 @@ rule_Set_Eq = "set-eq" `namedRule` theRule where
 rule_Set_SubsetEq :: Rule
 rule_Set_SubsetEq = "set-subsetEq" `namedRule` theRule where
     theRule p = do
-        (x,y)                <- match opSubsetEq p
-        TypeSet tyXInner     <- typeOf x
-        TypeSet{}            <- typeOf y
-        let body iName = mkLambda iName tyXInner (\ i -> make opIn i y)
+        (x,y)     <- match opSubsetEq p
+        TypeSet{} <- typeOf x
+        TypeSet{} <- typeOf y
         return ( "Horizontal rule for set subsetEq"
-               , \ fresh -> make opAnd [make opMapInExpr (body (headInf fresh)) x]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| forAll &iPat in (&x) . &i in &y |]
                )
 
 
@@ -1133,130 +1122,121 @@ rule_Set_Leq = "set-leq" `namedRule` theRule where
 
 rule_Set_Intersect :: Rule
 rule_Set_Intersect = "set-intersect" `namedRule` theRule where
-    theRule p = do
-        (lambda, intersected) <- match opMapInExpr p
-        (x, y)                <- match opIntersect intersected
-        tx                    <- typeOf x
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+        (x, y)             <- match opIntersect s        
+        tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
             TypeMSet{}     -> return ()
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
             _              -> fail "type incompatibility in intersect operator"
-        xInnerTy              <- innerTypeOf tx
+        let i = Reference iPat Nothing
         return ( "Horizontal rule for set intersection"
-               , \ fresh -> make opMapInExpr lambda
-                               (make opFilter
-                                   (mkLambda (headInf fresh) xInnerTy $ \ i -> [essence| &i in &y |])
-                                   x
-                               )
+               , const $
+                   Comprehension body
+                       [ Generator (GenInExpr pat x)
+                       , Filter [essence| &i in &y |]
+                       ]
                )
+    theRule _ = fail "No match."
 
 
-rule_Set_MapInExpr_Literal :: Rule
-rule_Set_MapInExpr_Literal = "set-mapSetLiteral" `namedRule` theRule where
-    theRule p = do
-        (Lambda l1 l2, lit) <- match opMapInExpr p
-        elems               <- match setLiteral lit
-        let l               =  lambdaToFunction l1 l2
+rule_Set_Comprehension_Literal :: Rule
+rule_Set_Comprehension_Literal = "set-mapSetLiteral" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat s)]) = do
+        elems <- match setLiteral s
+        let f = lambdaToFunction pat body
         return ( "Membership on set literals"
                , const $ AbstractLiteral $ AbsLitMatrix
                            (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
-                           [ l e
+                           [ f e
                            | e <- elems
                            ]
                )
+    theRule _ = fail "No match."
 
 
 rule_Set_In_Occurrence :: Rule
 rule_Set_In_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
     theRule p = do
-        (x,s)                <- match opIn p
-        TypeSet{}            <- typeOf s
-        "Occurrence"         <- representationOf s
-        [m]                  <- downX1 s
+        (x, s)       <- match opIn p
+        TypeSet{}    <- typeOf s
+        "Occurrence" <- representationOf s
+        [m]          <- downX1 s
         return ( "Vertical rule for set-in, Occurrence representation"
                , const $ make opIndexing m x
                )
 
 
-rule_Set_MapInExpr_Occurrence :: Rule
-rule_Set_MapInExpr_Occurrence = "set-quantification{Occurrence}" `namedRule` theRule where
-    theRule p = do
-        (lambda, s)          <- match opMapInExpr p
+rule_Set_Comprehension_Occurrence :: Rule
+rule_Set_Comprehension_Occurrence = "set-comprehension{Occurrence}" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+        TypeSet{}            <- typeOf s
         "Occurrence"         <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
-        let filterBody iName = mkLambda iName TypeInt $ \ i -> make opIndexing m i
-        -- map_in_expr(f(i), x)
-        -- map_domain(f(i), filter(m[i], domain))
-        return ( "Vertical rule for set-quantification, Explicit representation"
-               , \ fresh -> make opMapOverDomain
-                               lambda
-                               (make opFilter
-                                    (filterBody (headInf fresh))
-                                    (Domain index))
+        let i = Reference iPat Nothing
+        return ( "Vertical rule for set-comprehension, Occurrence representation"
+               , const $
+                   Comprehension body
+                       [ Generator (GenDomain pat index)
+                       , Filter [essence| &m[&i] |]
+                       ]
                )
+    theRule _ = fail "No match."
 
 
-rule_Set_MapInExpr_ExplicitVarSizeWithMarker :: Rule
-rule_Set_MapInExpr_ExplicitVarSizeWithMarker = "set-quantification{ExplicitVarSizeWithMarker}"
+rule_Set_Comprehension_ExplicitVarSizeWithMarker :: Rule
+rule_Set_Comprehension_ExplicitVarSizeWithMarker = "set-comprehension{ExplicitVarSizeWithMarker}"
                                                `namedRule` theRule where
-    theRule p = do
-        (Lambda lPat lBody, s)      <- match opMapInExpr p
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+        TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
         [marker, values]            <- downX1 s
         DomainMatrix index _        <- domainOf values
-        let f = lambdaToFunction lPat lBody
-        let mapBody    iName = mkLambda iName TypeInt $ \ i -> f (make opIndexing values i)
-        let filterBody iName = mkLambda iName TypeInt $ \ i -> make opLeq i marker
-        -- map_in_expr(f(i), x)
-        -- map_domain(f(values[i]), filter(i <= marker, domain))
-        return ( "Vertical rule for set-quantification, ExplicitVarSizeWithMarker representation"
-               , \ fresh -> make opMapOverDomain
-                               (mapBody (headInf fresh))
-                               (make opFilter
-                                    (filterBody (headInf fresh))
-                                    (Domain index))
+        let i = Reference iPat Nothing
+        let f = lambdaToFunction pat body
+        return ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
+               , const $
+                    Comprehension (f [essence| &values[&i] |])
+                        [ Generator (GenDomain pat index)
+                        , Filter [essence| &i <= &marker |]
+                        ]
                )
+    theRule _ = fail "No match."
 
 
-rule_Set_MapInExpr_ExplicitVarSizeWithFlags :: Rule
-rule_Set_MapInExpr_ExplicitVarSizeWithFlags = "set-quantification{ExplicitVarSizeWithFlags}"
+rule_Set_Comprehension_ExplicitVarSizeWithFlags :: Rule
+rule_Set_Comprehension_ExplicitVarSizeWithFlags = "set-comprehension{ExplicitVarSizeWithFlags}"
                                                `namedRule` theRule where
-    theRule p = do
-        (Lambda lPat lBody, s)      <- match opMapInExpr p
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+        TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithFlags"  <- representationOf s
         [flags, values]             <- downX1 s
         DomainMatrix index _        <- domainOf values
-        let f = lambdaToFunction lPat lBody
-        let mapBody    iName = mkLambda iName TypeInt $ \ i -> f (make opIndexing values i)
-        let filterBody iName = mkLambda iName TypeInt $ \ i ->    make opIndexing flags  i
-        -- map_in_expr(f(i), x)
-        -- map_domain(f(values[i]), filter(flags[i], domain))
-        return ( "Vertical rule for set-quantification, ExplicitVarSizeWithFlags representation"
-               , \ fresh -> make opMapOverDomain
-                               (mapBody (headInf fresh))
-                               (make opFilter
-                                    (filterBody (headInf fresh))
-                                    (Domain index))
+        let i = Reference iPat Nothing
+        let f = lambdaToFunction pat body
+        return ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlags representation"
+               , const $
+                    Comprehension (f [essence| &values[&i] |])
+                        [ Generator (GenDomain pat index)
+                        , Filter [essence| &flags[&i] |]
+                        ]
                )
+    theRule _ = fail "No match."
 
 
 rule_Function_Eq :: Rule
 rule_Function_Eq = "function-eq" `namedRule` theRule where
     theRule p = do
         (x,y)                    <- match opEq p
-        TypeFunction xFrTy xToTy <- typeOf x
-        TypeFunction yFrTy yToTy <- typeOf y
+        TypeFunction{} <- typeOf x
+        TypeFunction{} <- typeOf y
         return ( "Horizontal rule for function equality"
                , \ fresh ->
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) (mostDefined [ TypeTuple [xFrTy, xToTy]
-                                                                              , TypeTuple [yFrTy, yToTy]
-                                                                              ])
-                    in
-                        [essence|
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
@@ -1264,24 +1244,24 @@ rule_Function_Eq = "function-eq" `namedRule` theRule where
                )
 
 
-rule_Function_MapInExpr_Function1D :: Rule
-rule_Function_MapInExpr_Function1D = "function-quantification{Function1D}"
+rule_Function_Comprehension_Function1D :: Rule
+rule_Function_Comprehension_Function1D = "function-comprehension{Function1D}"
                                      `namedRule` theRule where
-    theRule p = do
-        (Lambda lPat lBody, expr) <- match opMapInExpr p
-        let f                     =  matchDef opToSet expr
-        "Function1D"              <- representationOf f
-        TypeFunction fr _         <- typeOf f
-        [values]                  <- downX1 f
-        DomainMatrix index _      <- domainOf values
-        let lambda = lambdaToFunction lPat lBody
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) expr)]) = do
+        let func             =  matchDef opToSet expr
+        "Function1D"         <- representationOf func
+        TypeFunction{}       <- typeOf func
+        [values]             <- downX1 func
+        DomainMatrix index _ <- domainOf values
+        let i = Reference iPat Nothing
+        let f = lambdaToFunction pat body
         return ( "Mapping over a function, Function1D representation"
-               , \ fresh ->
-                    let iName = headInf fresh
-                    in  make opMapOverDomain
-                            (mkLambda iName fr $ \ i -> lambda [essence| (&i, &values[&i]) |])
-                            (Domain index)
+               , const $
+                   Comprehension
+                       (f [essence| (&i, &values[&i]) |])
+                       [Generator (GenDomain pat index)]
                )
+    theRule _ = fail "No match."
 
 
 rule_Function_Image_Function1D :: Rule
@@ -1296,26 +1276,26 @@ rule_Function_Image_Function1D = "function-image{Function1D}"
     theRule _ = fail "No match."
 
 
-rule_Function_MapInExpr_Function1DPartial :: Rule
-rule_Function_MapInExpr_Function1DPartial = "function-quantification{Function1DPartial}"
+rule_Function_Comprehension_Function1DPartial :: Rule
+rule_Function_Comprehension_Function1DPartial = "function-comprehension{Function1DPartial}"
                                      `namedRule` theRule where
-    theRule p = do
-        (Lambda lPat lBody, expr) <- match opMapInExpr p
-        let f                     =  matchDef opToSet expr
-        "Function1DPartial"       <- representationOf f
-        TypeFunction fr _         <- typeOf f
-        [flags,values]            <- downX1 f
-        DomainMatrix index _      <- domainOf values
-        let lambda = lambdaToFunction lPat lBody
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) expr)]) = do
+        let func             =  matchDef opToSet expr
+        "Function1DPartial"  <- representationOf func
+        TypeFunction{}       <- typeOf func
+        [flags,values]       <- downX1 func
+        DomainMatrix index _ <- domainOf values
+        let i = Reference iPat Nothing
+        let f = lambdaToFunction pat body
         return ( "Mapping over a function, Function1DPartial representation"
-               , \ fresh ->
-                    let iName = headInf fresh
-                    in  make opMapOverDomain
-                            (mkLambda iName fr $ \ i -> lambda [essence| (&i, &values[&i]) |])
-                            (make opFilter
-                                (mkLambda iName fr $ \ i -> [essence| &flags[&i] |] )
-                                (Domain index))
+               , const $
+                   Comprehension
+                       (f [essence| (&i, &values[&i]) |])
+                       [ Generator (GenDomain pat index)
+                       , Filter [essence| &flags[&i] |]
+                       ]
                )
+    theRule _ = fail "No match."
 
 
 rule_Function_Image_Function1DPartial :: Rule
@@ -1386,18 +1366,17 @@ rule_Function_InDefined_FunctionNDPartial = "function-in-defined{FunctionNDParti
     theRule _ = fail "No match."
 
 
-rule_Function_MapInExpr_FunctionNDPartial :: Rule
-rule_Function_MapInExpr_FunctionNDPartial = "function-quantification{FunctionNDPartial}"
+rule_Function_Comprehension_FunctionNDPartial :: Rule
+rule_Function_Comprehension_FunctionNDPartial = "function-comprehension{FunctionNDPartial}"
                                      `namedRule` theRule where
-    theRule p = do
-        (Lambda lPat lBody, expr)        <- match opMapInExpr p
-        let f                            = matchDef opToSet expr
-        let lambda = lambdaToFunction lPat lBody
-        "FunctionNDPartial"              <- representationOf f
-        TypeFunction fr@(TypeTuple ts) _ <- typeOf f
-        [flags,values]                   <- downX1 f
-        valuesDom                        <- domainOf values
-        let (indexDomain,_)              =  getIndices valuesDom
+
+    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) expr)]) = do
+        let func                      =  matchDef opToSet expr
+        "FunctionNDPartial"           <- representationOf func
+        TypeFunction (TypeTuple ts) _ <- typeOf func
+        [flags,values]                <- downX1 func
+        valuesDom                     <- domainOf values
+        let (indexDomain,_)           =  getIndices valuesDom
 
         let xArity          =  length ts
         let index x m 1     = make opIndexing m                     (make opIndexing x (fromInt 1))
@@ -1405,16 +1384,19 @@ rule_Function_MapInExpr_FunctionNDPartial = "function-quantification{FunctionNDP
         let flagsIndexed  x = index x flags  xArity
         let valuesIndexed x = index x values xArity
 
-        return ( "Mapping over a function, FunctionNDPartial representation"
-               , \ fresh ->
-                    let iName = headInf fresh
-                    in  make opMapOverDomain
-                            (mkLambda iName fr $ \ i -> let val = valuesIndexed i
-                                                        in  lambda [essence| (&i, &val) |])
-                            (make opFilter
-                                (mkLambda iName fr $ \ i -> flagsIndexed i)
-                                (Domain (DomainTuple indexDomain)))
+        let i = Reference iPat Nothing
+        let f = lambdaToFunction pat body
+        return ( "Mapping over a function, Function1DPartial representation"
+               , const $
+                   Comprehension
+                       (let val = valuesIndexed i
+                        in  f [essence| (&i, &val) |])
+                       [ Generator (GenDomain pat (DomainTuple indexDomain))
+                       , Filter (flagsIndexed i)
+                       ]
                )
+    theRule _ = fail "No match."
+
 
 
 rule_Relation_Eq :: Rule
@@ -1434,7 +1416,7 @@ rule_Relation_In = "relation-in" `namedRule` theRule where
         TypeRelation{} <- typeOf rel
         return ( "relation membership to existential quantification"
                , \ fresh ->
-                   let (iPat, i) = quantifiedVar (fresh `at` 0) TypeInt
+                   let (iPat, i) = quantifiedVar (fresh `at` 0)
                    in  [essence| exists &iPat in toSet(&rel) . &i = &x |]
                )
     theRule _ = fail "No match."
@@ -1453,53 +1435,34 @@ rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `named
                )
 
 
-rule_Relation_MapInExpr_RelationAsMatrix :: Rule
-rule_Relation_MapInExpr_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
-    theRule p = do
-        (Lambda f1 f2, s)      <- match opMapInExpr p
-        let f                  =  lambdaToFunction f1 f2
-        let r                  =  matchDef opToSet s
-        TypeRelation{}         <- typeOf r
-        "RelationAsMatrix"     <- representationOf r
-        [m]                    <- downX1 r
+rule_Relation_Comprehension_RelationAsMatrix :: Rule
+rule_Relation_Comprehension_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat expr)]) = do
+        let f                  =  lambdaToFunction pat body
+        let rel                =  matchDef opToSet expr
+        TypeRelation{}         <- typeOf rel
+        "RelationAsMatrix"     <- representationOf rel
+        [m]                    <- downX1 rel
         mDom                   <- domainOf m
         let (mIndices, _)      =  getIndices mDom
 
-        let
-            unroll
-                :: Expression
-                -> [Expression]
-                -> [ ( (AbstractPattern, Expression)
-                     , Domain () Expression
-                     ) ]
-                -> Expression
-            unroll
-                theMatrix
-                theValue
-                _quantifiers     @[((iPat,i),index)]
-                = let nextMatrix = make opIndexing theMatrix i
-                      nextValue  = theValue ++ [i]
-                      finalValue = AbstractLiteral (AbsLitTuple nextValue)
-                  in  make opMapOverDomain
-                        (Lambda iPat (f finalValue))
-                        (make opFilter
-                            (Lambda iPat nextMatrix)
-                            (Domain index))
-            unroll
-                theMatrix
-                theValue
-                _quantifiers     @(((iPat,i),index):rest)
-                = let nextMatrix = make opIndexing theMatrix i
-                      nextValue  = theValue ++ [i]
-                  in  make opFlatten $ make opMapOverDomain
-                        (Lambda iPat (unroll nextMatrix nextValue rest))
-                        (Domain index)
+        -- we need something like:
+        -- Q i in rel . f(i)
+        -- Q j in (indices...) , filter(f) . f(tuple)
 
-            unroll _ _ _
-                = bug "rule_Relation_MapInExpr_RelationAsMatrix.unroll []"
-
-        let out fresh = unroll m [] (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
+        -- let out fresh = unroll m [] (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
         return ( "Vertical rule for map_in_expr for relation domains, RelationAsMatrix representation."
-               , out
-               )
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
 
+                        lit = AbstractLiteral $ AbsLitTuple
+                                    [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
+                        indexThis anyMatrix = make opIndexing' anyMatrix
+                                    [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
+
+                    in  Comprehension (f lit)
+                            [ Generator (GenDomain iPat (DomainTuple mIndices))
+                            , Filter    (indexThis m)
+                            ]
+               )
+    theRule _ = fail "No match."

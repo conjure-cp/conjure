@@ -6,7 +6,6 @@ module Conjure.Representations.Set.Explicit ( setExplicit ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -35,7 +34,7 @@ setExplicit = Representation chck downD structuralCons downC up
             let
                 ordering fresh m =
                     let
-                        (iPat, i) = quantifiedVar fresh TypeInt
+                        (iPat, i) = quantifiedVar fresh
                     in return -- for list
                         [essence|
                             forAll &iPat : int(1..&size-1) .
@@ -43,7 +42,7 @@ setExplicit = Representation chck downD structuralCons downC up
                         |]
 
                 innerStructuralCons fresh m = do
-                    let (iPat, i) = quantifiedVar (headInf fresh) TypeInt
+                    let (iPat, i) = quantifiedVar (headInf fresh)
                     let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
 
                     -- preparing structural constraints for the inner guys

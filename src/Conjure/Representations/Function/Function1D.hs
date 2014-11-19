@@ -11,7 +11,6 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.DomainSize
 import Conjure.Language.TH
-import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
@@ -52,16 +51,14 @@ function1D = Representation chck downD structuralCons downC up
                 (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
                 innerDomainFr'
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr   <- toIntDomain innerDomainFr'
-            innerDomainFrTy <- typeOf innerDomainFr
-            innerDomainToTy <- typeOf innerDomainTo
+            innerDomainFr <- toIntDomain innerDomainFr'
 
             let injectiveCons m = return $ [essence| allDiff(&m) |]
 
             let surjectiveCons fresh m = return $ -- list
                     let
-                        (iPat, i) = quantifiedVar (fresh `at` 0) innerDomainToTy
-                        (jPat, j) = quantifiedVar (fresh `at` 1) innerDomainFrTy
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
                     in
                         [essence|
                             forAll &iPat : &innerDomainTo .

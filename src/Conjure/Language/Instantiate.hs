@@ -40,9 +40,9 @@ instantiateE
     => Expression
     -> m Constant
 
-instantiateE (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda l1 l2) domain))) = do
+instantiateE (Comprehension l2 [Generator (GenDomain l1 domain)]) = do
     let l = lambdaToFunction l1 l2
-    constantDomain <- instantiateE domain
+    constantDomain <- instantiateE (Domain domain)
     case constantDomain of
         DomainInConstant domain' -> do
             let valuesInDomain =  enumerateDomain domain'
@@ -51,7 +51,7 @@ instantiateE (Op (MkOpMapOverDomain (OpMapOverDomain (Lambda l1 l2) domain))) = 
             return (ConstantMatrix intDomain constantsInMatrix)
         _ -> bug ("instantiateE MkOpMapOverDomain:" <++> pretty (show constantDomain))
 
-instantiateE (Op (MkOpMapInExpr (OpMapInExpr (Lambda l1 l2) expr))) = do
+instantiateE (Comprehension l2 [Generator (GenInExpr l1 expr)]) = do
     let l = lambdaToFunction l1 l2
     constant          <- instantiateE expr
     constantsInMatrix <- case constant of
@@ -76,6 +76,11 @@ instantiateE (Reference name _) = do
             : prettyContext ctxt
         Just x -> instantiateE x
 
+instantiateE (Constant c) = return c
+instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
+instantiateE (Op op) = instantiateOp op
+
+-- "Domain () Expression"s inside expressions are handled specially
 instantiateE (Domain (DomainReference _ (Just d))) = instantiateE (Domain d)
 instantiateE (Domain (DomainReference name Nothing)) = do
     ctxt <- gets id
@@ -87,9 +92,6 @@ instantiateE (Domain (DomainReference name Nothing)) = do
             : prettyContext ctxt
 instantiateE (Domain domain) = DomainInConstant <$> instantiateD domain
 
-instantiateE (Constant c) = return c
-instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
-instantiateE (Op op) = instantiateOp op
 
 instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 
@@ -141,7 +143,9 @@ instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiate
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiateDAs attrs <*> instantiateD inner
 instantiateD (DomainOp {}) = bug "instantiateD DomainOp"
 instantiateD (DomainReference _ (Just d)) = instantiateD d
-instantiateD (DomainReference nm Nothing) = fail ("Unbound domain reference:" <+> pretty nm)
+instantiateD (DomainReference nm Nothing) = gets id >>= \ ctxt ->
+                                               fail $ vcat $ ("Undefined domain reference:" <+> pretty nm)
+                                                    : ("Bindings in context:" : prettyContext ctxt)
 instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 
 
