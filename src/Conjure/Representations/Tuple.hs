@@ -36,7 +36,7 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
         structuralCons = \ _ _ _ -> return (\ _ _ -> return [] )
 
         -- TODO: check if (length ds == length cs)
-        tupleDown (name, DomainTuple ds, ConstantTuple cs) = return $ Just
+        tupleDown (name, DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) = return $ Just
             [ (mkName name i, d, c)
             | i <- [1..]
             | d <- ds
@@ -56,6 +56,6 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
                         ("Bindings in context:" : prettyContext ctxt)
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
-            return (name, ConstantTuple vals)
+            return (name, ConstantAbstract (AbsLitTuple vals))
         tupleUp _ _ = na "{tupleUp}"
 

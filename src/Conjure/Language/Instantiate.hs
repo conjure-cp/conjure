@@ -48,22 +48,22 @@ instantiateE (Comprehension l2 [Generator (GenDomain l1 domain)]) = do
             let valuesInDomain =  enumerateDomain domain'
             let intDomain      =  DomainInt [RangeBounded (fromInt 1) (fromInt (length valuesInDomain))]
             constantsInMatrix  <- mapM (instantiateE . l . Constant) valuesInDomain
-            return (ConstantMatrix intDomain constantsInMatrix)
+            return $ ConstantAbstract $ AbsLitMatrix intDomain constantsInMatrix
         _ -> bug ("instantiateE MkOpMapOverDomain:" <++> pretty (show constantDomain))
 
 instantiateE (Comprehension l2 [Generator (GenInExpr l1 expr)]) = do
     let l = lambdaToFunction l1 l2
     constant          <- instantiateE expr
     constantsInMatrix <- case constant of
-        ConstantSet      xs -> mapM (instantiateE . l . Constant                ) xs
-        ConstantRelation xs -> mapM (instantiateE . l . Constant . ConstantTuple) xs
+        ConstantAbstract (AbsLitSet      xs) -> mapM (instantiateE . l . Constant                                 ) xs
+        ConstantAbstract (AbsLitRelation xs) -> mapM (instantiateE . l . Constant . ConstantAbstract . AbsLitTuple) xs
         _ -> bug $ vcat [ "instantiateE"
                         , "l1      :" <+> pretty l1
                         , "l2      :" <+> pretty l2
                         , "expr    :" <+> pretty expr
                         , "constant:" <+> pretty constant
                         ]
-    return $ ConstantMatrix
+    return $ ConstantAbstract $ AbsLitMatrix
                 (DomainInt [RangeBounded (fromInt 1) (fromInt (length constantsInMatrix))])
                 constantsInMatrix
 
@@ -77,7 +77,7 @@ instantiateE (Reference name _) = do
         Just x -> instantiateE x
 
 instantiateE (Constant c) = return c
-instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
+instantiateE (AbstractLiteral lit) = ConstantAbstract <$> instantiateAbsLit lit
 instantiateE (Op op) = instantiateOp op
 
 -- "Domain () Expression"s inside expressions are handled specially
@@ -110,18 +110,8 @@ instantiateAbsLit
        , MonadState [(Name, Expression)] m
        )
     => AbstractLiteral Expression
-    -> m Constant
-instantiateAbsLit (AbsLitTuple xs) = ConstantTuple <$> mapM instantiateE xs
-instantiateAbsLit (AbsLitList  xs) = ConstantList  <$> mapM instantiateE xs
-instantiateAbsLit (AbsLitMatrix index vals) = ConstantMatrix <$> instantiateD index <*> mapM instantiateE vals
-instantiateAbsLit (AbsLitSet vals) = ConstantSet <$> mapM instantiateE vals
-instantiateAbsLit (AbsLitMSet vals) = ConstantMSet <$> mapM instantiateE vals
-instantiateAbsLit (AbsLitFunction vals) = ConstantFunction <$> forM vals (\ (a,b) -> do a' <- instantiateE a
-                                                                                        b' <- instantiateE b
-                                                                                        return (a',b')
-                                                                         )
-instantiateAbsLit (AbsLitRelation vals) = ConstantRelation <$> mapM (mapM instantiateE) vals
-instantiateAbsLit (AbsLitPartition vals) = ConstantPartition <$> mapM (mapM instantiateE) vals
+    -> m (AbstractLiteral Constant)
+instantiateAbsLit = mapM instantiateE
 
 
 instantiateD

@@ -189,7 +189,10 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
         structuralCons = \ _ _ _ -> return (\ _ _ -> return [] ) -- FIX
 
         -- TODO: check if indices are the same
-        matrixDown (name, DomainMatrix indexDomain innerDomain, ConstantMatrix _indexDomain2 constants) = do
+        matrixDown ( name
+                   , DomainMatrix indexDomain innerDomain
+                   , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
+                   ) = do
             mids1
                 :: [Maybe [(Name, DomainC, Constant)]]
                 <- sequence [ downC1 (name, innerDomain, c) | c <- constants ]
@@ -210,7 +213,7 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                             return $ Just
                                 [ ( n
                                   , DomainMatrix indexDomain d
-                                  , ConstantMatrix indexDomain cs
+                                  , ConstantAbstract $ AbsLitMatrix indexDomain cs
                                   )
                                 | (n, d, cs) <- mids3
                                 ]
@@ -257,7 +260,7 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                                 Just constant ->
                                     -- this constant is a ConstantMatrix, containing one component of the things to go into up1
                                     case constant of
-                                        ConstantMatrix _ c -> return (n, c)
+                                        ConstantAbstract (AbsLitMatrix _ c) -> return (n, c)
                                         _ -> fail $ vcat
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant
@@ -275,6 +278,6 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                             | cs <- transpose midConstants
                             ]
                     let values = map snd mid4
-                    return (name, ConstantMatrix indexDomain values)
+                    return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
         matrixUp _ _ = na "{matrixUp}"
 

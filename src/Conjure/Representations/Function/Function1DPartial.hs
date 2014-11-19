@@ -117,7 +117,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                     (FunctionAttr _ FunctionAttr_Partial _)
                     innerDomainFr
                     innerDomainTo
-              , ConstantFunction vals
+              , ConstantAbstract (AbsLitFunction vals)
               ) | domainCanIndexMatrix innerDomainFr = do
             z <- zeroVal innerDomainTo
             innerDomainFrInt    <- fmap e2c <$> toIntDomain (fmap Constant innerDomainFr)
@@ -131,16 +131,12 @@ function1DPartial = Representation chck downD structuralCons downC up
                 ]
             return $ Just
                 [ ( nameFlags name
-                  , DomainMatrix
-                      (forgetRepr innerDomainFrInt)
-                      DomainBool
-                  , ConstantMatrix (forgetRepr innerDomainFrInt) flagsOut
+                  , DomainMatrix (forgetRepr innerDomainFrInt) DomainBool
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomainFrInt) flagsOut
                   )
                 , ( nameValues name
-                  , DomainMatrix
-                      (forgetRepr innerDomainFrInt)
-                      innerDomainTo
-                  , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
+                  , DomainMatrix (forgetRepr innerDomainFrInt) innerDomainTo
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomainFrInt) valsOut
                   )
                 ]
         downC _ = na "{downC} Function1DPartial"
@@ -149,7 +145,8 @@ function1DPartial = Representation chck downD structuralCons downC up
                                 (FunctionAttr _ FunctionAttr_Partial _)
                                 innerDomainFr _)) =
             case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of
-                (Just (ConstantMatrix _ flagMatrix), Just (ConstantMatrix _ valuesMatrix)) -> do
+                ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,
+                  Just (ConstantAbstract (AbsLitMatrix _ valuesMatrix)) ) -> do
                     froms          <- domainValues innerDomainFr
                     functionValues <- forM (zip3 flagMatrix froms valuesMatrix) $ \ (flag, from, to) ->
                         case flag of
@@ -158,7 +155,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                                              , "When working on:" <+> pretty name
                                              , "With domain:" <+> pretty domain
                                              ]
-                    return ( name, ConstantFunction (catMaybes functionValues) )
+                    return ( name, ConstantAbstract $ AbsLitFunction $ catMaybes functionValues )
                 (Nothing, _) -> fail $ vcat $
                     [ "No value for:" <+> pretty (nameFlags name)
                     , "When working on:" <+> pretty name

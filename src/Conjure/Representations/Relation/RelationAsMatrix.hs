@@ -57,7 +57,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         downC ( name
               , DomainRelation "RelationAsMatrix" _ innerDomains'
-              , ConstantRelation vals
+              , ConstantAbstract (AbsLitRelation vals)
               ) | all domainCanIndexMatrix innerDomains' = do
             innerDomains <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomains')
             let
@@ -77,13 +77,14 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                         -> m Constant
                 unrollC [(i,i')] prevIndices = do
                     domVals <- domainValues i'
-                    return (ConstantMatrix i [ ConstantBool $ check $ prevIndices ++ [val]
-                                             | val <- domVals ])
+                    return $ ConstantAbstract $ AbsLitMatrix i
+                        [ ConstantBool $ check $ prevIndices ++ [val]
+                        | val <- domVals ]
                 unrollC ((i,i'):is) prevIndices = do
                     domVals <- domainValues i'
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
-                    return (ConstantMatrix i matrixVals)
+                    return $ ConstantAbstract $ AbsLitMatrix i matrixVals
                 unrollC is prevIndices = fail $ vcat [ "RelationAsMatrix.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
@@ -122,7 +123,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
                         index :: MonadFail m => Constant -> [Constant] -> m Constant
                         index m [] = return m
-                        index (ConstantMatrix indexDomain vals) (i:is) = do
+                        index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
                                 Nothing -> fail "Value not found. RelationAsMatrix.up.index"
@@ -143,7 +144,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                 ]
 
                     return ( name
-                           , ConstantRelation (catMaybes vals)
+                           , ConstantAbstract $ AbsLitRelation $ catMaybes vals
                            )
         up _ (name, domain) = na $ vcat [ "{up} RelationAsMatrix"
                                         , "name:" <+> pretty name

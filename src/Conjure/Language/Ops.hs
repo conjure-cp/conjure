@@ -6,6 +6,7 @@ module Conjure.Language.Ops where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
 import Conjure.Language.Type
 import Conjure.Language.Domain
@@ -578,7 +579,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x)
                 return (at inns (iInt-1))
             _ -> fail ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
 instance EvaluateOp OpIndexing where
-    evaluateOp (OpIndexing m@(ConstantMatrix (DomainInt index) vals) (ConstantInt x)) = do
+    evaluateOp (OpIndexing m@(ConstantAbstract (AbsLitMatrix (DomainInt index) vals)) (ConstantInt x)) = do
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
@@ -588,7 +589,7 @@ instance EvaluateOp OpIndexing where
             _   -> fail $ vcat [ "Matrix is multiply defined at this point:" <+> pretty x
                                , "Matrix value:" <+> pretty m
                                ]
-    evaluateOp (OpIndexing (ConstantTuple vals) (ConstantInt x)) = return (at vals (x-1))
+    evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 
@@ -624,12 +625,12 @@ instance TypeOf x => TypeOf (OpFlatten x) where
         return (TypeList (flattenType n))
 instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten m) = do
-        let flat (ConstantMatrix _ xs) = concatMap flat xs
+        let flat (ConstantAbstract (AbsLitMatrix _ xs)) = concatMap flat xs
             flat c = [c]
         let flattened = flat m
-        return (ConstantMatrix
+        return (ConstantAbstract (AbsLitMatrix
                     (DomainInt [RangeBounded (fromInt 1) (fromInt (length flattened))])
-                    flattened)
+                    flattened))
 
 
 data OpLexLt x = OpLexLt x x
@@ -648,7 +649,8 @@ instance TypeOf x => TypeOf (OpLexLt x) where
         TypeMatrix{} <- typeOf b
         return TypeBool
 instance EvaluateOp OpLexLt where
-    evaluateOp (OpLexLt (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs < ys
+    evaluateOp (OpLexLt (ConstantAbstract (AbsLitMatrix _ xs)) (ConstantAbstract (AbsLitMatrix _ ys))) =
+        return $ ConstantBool $ xs < ys
     evaluateOp op = na $ "evaluateOp{OpLexLt}:" <++> pretty (show op)
 
 
@@ -668,7 +670,8 @@ instance TypeOf x => TypeOf (OpLexLeq x) where
         TypeMatrix{} <- typeOf b
         return TypeBool
 instance EvaluateOp OpLexLeq where
-    evaluateOp (OpLexLeq (ConstantMatrix _ xs) (ConstantMatrix _ ys)) = return $ ConstantBool $ xs <= ys
+    evaluateOp (OpLexLeq (ConstantAbstract (AbsLitMatrix _ xs)) (ConstantAbstract (AbsLitMatrix _ ys))) =
+        return $ ConstantBool $ xs <= ys
     evaluateOp op = na $ "evaluateOp{OpLexLeq}:" <++> pretty (show op)
 
 
@@ -736,8 +739,8 @@ instance TypeOf x => TypeOf (OpIn x) where
             then return TypeBool
             else userErr "Type error"
 instance EvaluateOp OpIn where
-    evaluateOp (OpIn c (ConstantSet cs)) = return $ ConstantBool $ elem c cs
-    evaluateOp (OpIn c (ConstantMSet cs)) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (ConstantAbstract (AbsLitSet  cs))) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantBool $ elem c cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
 
@@ -754,7 +757,7 @@ instance BinaryOperator (OpSubset x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
 instance EvaluateOp OpSubset where
-    evaluateOp (OpSubset (ConstantSet as) (ConstantSet bs)) =
+    evaluateOp (OpSubset (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
     evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
 
@@ -772,7 +775,7 @@ instance BinaryOperator (OpSubsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSubsetEq x) where
     typeOf (OpSubsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSubsetEq where
-    evaluateOp (OpSubsetEq (ConstantSet as) (ConstantSet bs)) =
+    evaluateOp (OpSubsetEq (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantBool $ all (`elem` bs) as
     evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
 
@@ -790,7 +793,7 @@ instance BinaryOperator (OpSupset x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
 instance EvaluateOp OpSupset where
-    evaluateOp (OpSupset (ConstantSet bs) (ConstantSet as)) =
+    evaluateOp (OpSupset (ConstantAbstract (AbsLitSet bs)) (ConstantAbstract (AbsLitSet as))) =
         return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
     evaluateOp op = na $ "evaluateOp{OpSupset}:" <++> pretty (show op)
 
@@ -808,7 +811,7 @@ instance BinaryOperator (OpSupsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSupsetEq where
-    evaluateOp (OpSupsetEq (ConstantSet bs) (ConstantSet as)) =
+    evaluateOp (OpSupsetEq (ConstantAbstract (AbsLitSet bs)) (ConstantAbstract (AbsLitSet as))) =
         return $ ConstantBool $ all (`elem` bs) as
     evaluateOp op = na $ "evaluateOp{OpSupsetEq}:" <++> pretty (show op)
 
@@ -826,8 +829,8 @@ instance BinaryOperator (OpIntersect x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
 instance EvaluateOp OpIntersect where
-    evaluateOp (OpIntersect (ConstantSet as) (ConstantSet bs)) =
-        return $ ConstantSet $ sortNub [ i | i <- as, i `elem` bs]
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub [ i | i <- as, i `elem` bs]
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 
@@ -844,8 +847,8 @@ instance BinaryOperator (OpUnion x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
 instance EvaluateOp OpUnion where
-    evaluateOp (OpUnion (ConstantSet as) (ConstantSet bs)) =
-        return $ ConstantSet $ sortNub (as ++ bs)
+    evaluateOp (OpUnion (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub (as ++ bs)
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
 
@@ -866,10 +869,14 @@ instance TypeOf x => TypeOf (OpToSet x) where
             TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
             _ -> fail ("Type checking toSet:" <+> pretty tx)
 instance EvaluateOp OpToSet where
-    evaluateOp (OpToSet (ConstantSet xs)) = return (ConstantSet (sortNub xs))
-    evaluateOp (OpToSet (ConstantMSet xs)) = return (ConstantSet (sortNub xs))
-    evaluateOp (OpToSet (ConstantFunction xs)) = return (ConstantSet (sortNub [ConstantTuple [a,b] | (a,b) <- xs]))
-    evaluateOp (OpToSet (ConstantRelation xs)) = return (ConstantSet (sortNub (map ConstantTuple xs)))
+    evaluateOp (OpToSet (ConstantAbstract (AbsLitSet xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
+    evaluateOp (OpToSet (ConstantAbstract (AbsLitMSet xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
+    evaluateOp (OpToSet (ConstantAbstract (AbsLitFunction xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract (AbsLitTuple [a,b]) | (a,b) <- xs]
+    evaluateOp (OpToSet (ConstantAbstract (AbsLitRelation xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub $ map (ConstantAbstract . AbsLitTuple) xs
     evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
 
 
@@ -890,10 +897,14 @@ instance TypeOf x => TypeOf (OpToMSet x) where
             TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
             _ -> fail ("Type checking toMSet:" <+> pretty tx)
 instance EvaluateOp OpToMSet where
-    evaluateOp (OpToMSet (ConstantSet xs)) = return (ConstantMSet xs)
-    evaluateOp (OpToMSet (ConstantMSet xs)) = return (ConstantMSet xs)
-    evaluateOp (OpToMSet (ConstantFunction xs)) = return (ConstantMSet [ConstantTuple [a,b] | (a,b) <- xs])
-    evaluateOp (OpToMSet (ConstantRelation xs)) = return (ConstantMSet (map ConstantTuple xs))
+    evaluateOp (OpToMSet (ConstantAbstract (AbsLitSet xs))) =
+        return $ ConstantAbstract $ AbsLitMSet xs
+    evaluateOp (OpToMSet (ConstantAbstract (AbsLitMSet xs))) =
+        return $ ConstantAbstract $ AbsLitMSet xs
+    evaluateOp (OpToMSet (ConstantAbstract (AbsLitFunction xs))) =
+        return $ ConstantAbstract $ AbsLitMSet [ConstantAbstract (AbsLitTuple [a,b]) | (a,b) <- xs]
+    evaluateOp (OpToMSet (ConstantAbstract (AbsLitRelation xs))) =
+        return $ ConstantAbstract $ AbsLitMSet $ map (ConstantAbstract . AbsLitTuple) xs
     evaluateOp op = na $ "evaluateOp{OpToMSet}:" <++> pretty (show op)
 
 
@@ -916,14 +927,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
             then return to
             else fail ("Type error in:" <+> pretty (MkOpFunctionImage p))
 instance EvaluateOp OpFunctionImage where
-    evaluateOp (OpFunctionImage (ConstantFunction xs) [a]) =
+    evaluateOp (OpFunctionImage (ConstantAbstract (AbsLitFunction xs)) [a]) =
         case [ y | (x,y) <- xs, a == x ] of
             [y] -> return y
             []  -> fail $ vcat [ "Function is not defined at this point:" <+> pretty a
-                               , "Function value:" <+> pretty (ConstantFunction xs)
+                               , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
                                ]
             _   -> fail $ vcat [ "Function is multiply defined at this point:" <+> pretty a
-                               , "Function value:" <+> pretty (ConstantFunction xs)
+                               , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
                                ]
     evaluateOp op = na $ "evaluateOp{OpFunctionImage}:" <++> pretty (show op)
 
@@ -941,8 +952,8 @@ instance TypeOf x => TypeOf (OpDefined x) where
         TypeFunction a _ <- typeOf x
         return (TypeSet a)
 instance EvaluateOp OpDefined where
-    evaluateOp (OpDefined (ConstantFunction xs)) =
-        return (ConstantSet (sortNub (map fst xs)))
+    evaluateOp (OpDefined (ConstantAbstract (AbsLitFunction xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub $ map fst xs
     evaluateOp op = na $ "evaluateOp{OpDefined}:" <++> pretty (show op)
 
 
@@ -959,8 +970,8 @@ instance TypeOf x => TypeOf (OpRange x) where
         TypeFunction _ a <- typeOf x
         return (TypeSet a)
 instance EvaluateOp OpRange where
-    evaluateOp (OpRange (ConstantFunction xs)) =
-        return (ConstantSet (sortNub (map snd xs)))
+    evaluateOp (OpRange (ConstantAbstract (AbsLitFunction xs))) =
+        return (ConstantAbstract (AbsLitSet (sortNub (map snd xs))))
     evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
 
 
@@ -1176,5 +1187,5 @@ valuesInIntDomain ranges =
 
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
-boolsOut (ConstantMatrix _ cs) = concat <$> mapM boolsOut cs
+boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b

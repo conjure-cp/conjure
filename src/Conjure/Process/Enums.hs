@@ -175,26 +175,29 @@ enumify ctxt domain constant = case (domain, constant) of
         fromMaybe (bug $ "enumify:" <+> pretty (i, ename))
                   (lookup (i, ename) ctxt)
 
-    (DomainTuple ds, ConstantTuple cs) ->
-        ConstantTuple [ enumify ctxt d c
-                      | (d,c) <- zip ds cs ]
+    (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
+        ConstantAbstract $ AbsLitTuple
+            [ enumify ctxt d c
+            | (d,c) <- zip ds cs ]
 
-    (DomainMatrix _ inner, ConstantMatrix index vals) ->
-        ConstantMatrix index (map (enumify ctxt inner) vals)
+    (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
+        ConstantAbstract $ AbsLitMatrix index $ map (enumify ctxt inner) vals
 
-    (DomainSet _ _ inner, ConstantSet vals) ->
-        ConstantSet (map (enumify ctxt inner) vals)
+    (DomainSet _ _ inner, ConstantAbstract (AbsLitSet vals)) ->
+        ConstantAbstract $ AbsLitSet $ map (enumify ctxt inner) vals
 
-    (DomainMSet _ _ inner, ConstantMSet vals) ->
-        ConstantMSet (map (enumify ctxt inner) vals)
+    (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet vals)) ->
+        ConstantAbstract $ AbsLitMSet $ map (enumify ctxt inner) vals
 
-    (DomainFunction _ _ fr to, ConstantFunction vals) ->
-        ConstantFunction [ (enumify ctxt fr a, enumify ctxt to b)
-                         | (a,b) <- vals ]
+    (DomainFunction _ _ fr to, ConstantAbstract (AbsLitFunction vals)) ->
+        ConstantAbstract $ AbsLitFunction
+            [ (enumify ctxt fr a, enumify ctxt to b)
+            | (a,b) <- vals ]
 
-    (DomainRelation _ _ inners, ConstantRelation vals) ->
-        ConstantRelation [ [ enumify ctxt d c | (d,c) <- zip inners line ]
-                         | line <- vals ]
+    (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
+        ConstantAbstract $ AbsLitRelation
+            [ [ enumify ctxt d c | (d,c) <- zip inners line ]
+            | line <- vals ]
 
     _ -> bug ("enumify:" <+> pretty (show domain))
 

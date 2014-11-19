@@ -662,7 +662,7 @@ setLiteral
 setLiteral _ =
     ( AbstractLiteral . AbsLitSet
     , \ p -> case p of
-        Constant (ConstantSet xs) -> return (map Constant xs)
+        Constant (ConstantAbstract (AbsLitSet xs)) -> return (map Constant xs)
         AbstractLiteral (AbsLitSet xs) -> return xs
         _ -> na ("Lenses.setLiteral:" <+> pretty p)
     )

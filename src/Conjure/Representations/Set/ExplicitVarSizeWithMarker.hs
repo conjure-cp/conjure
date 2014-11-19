@@ -90,7 +90,10 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithMarker"
 
-        downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
+        downC ( name
+              , domain@(DomainSet _ (SetAttr attrs) innerDomain)
+              , ConstantAbstract (AbsLitSet constants)
+              ) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
             maxSizeInt <-
@@ -110,8 +113,8 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                   , ConstantInt (length constants)
                   )
                 , ( nameValues name
-                  , DomainMatrix   (forgetRepr (indexDomain 1)) innerDomain
-                  , ConstantMatrix (forgetRepr (indexDomain 1)) (constants ++ zeroes)
+                  , DomainMatrix (forgetRepr (indexDomain 1)) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr (indexDomain 1)) (constants ++ zeroes)
                   )
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithMarker"
@@ -122,8 +125,8 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                     case marker of
                         ConstantInt card ->
                             case constantMatrix of
-                                ConstantMatrix _ vals ->
-                                    return (name, ConstantSet (take card vals))
+                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                                    return (name, ConstantAbstract (AbsLitSet (take card vals)))
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
                                         , "But got:" <+> pretty constantMatrix

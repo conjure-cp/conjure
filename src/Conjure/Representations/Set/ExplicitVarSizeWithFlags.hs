@@ -105,7 +105,10 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithFlags"
 
-        downC (name, domain@(DomainSet _ (SetAttr attrs) innerDomain), ConstantSet constants) = do
+        downC ( name
+              , domain@(DomainSet _ (SetAttr attrs) innerDomain)
+              , ConstantAbstract (AbsLitSet constants)
+              ) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
 
@@ -126,12 +129,12 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
             return $ Just
                 [ ( nameFlag name
-                  , DomainMatrix   (forgetRepr indexDomain) DomainBool
-                  , ConstantMatrix (forgetRepr indexDomain) (trues ++ falses)
+                  , DomainMatrix (forgetRepr indexDomain) DomainBool
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (trues ++ falses)
                   )
                 , ( nameValues name
-                  , DomainMatrix   (forgetRepr indexDomain) innerDomain
-                  , ConstantMatrix (forgetRepr indexDomain) (constants ++ zeroes)
+                  , DomainMatrix (forgetRepr indexDomain) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (constants ++ zeroes)
                   )
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithFlags"
@@ -141,13 +144,14 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 (Just flagMatrix, Just constantMatrix) ->
                     case flagMatrix of
                         -- TODO: check if indices match
-                        ConstantMatrix _ flags ->
+                        ConstantAbstract (AbsLitMatrix _ flags) ->
                             case constantMatrix of
-                                ConstantMatrix _ vals ->
-                                    return (name, ConstantSet [ v
-                                                              | (i,v) <- zip flags vals
-                                                              , i == ConstantBool True
-                                                              ] )
+                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                                    return (name, ConstantAbstract $ AbsLitSet
+                                                    [ v
+                                                    | (i,v) <- zip flags vals
+                                                    , i == ConstantBool True
+                                                    ] )
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
                                         , "But got:" <+> pretty constantMatrix

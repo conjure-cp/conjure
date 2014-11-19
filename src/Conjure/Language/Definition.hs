@@ -37,6 +37,7 @@ import Conjure.Language.AdHoc
 
 import Conjure.Language.Name
 import Conjure.Language.Constant
+import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.Ops
@@ -444,8 +445,8 @@ lambdaToFunction (AbsPatTuple ts) body = \ p ->
 
         ps :: [Expression]
         ps = case p of
-            Constant        (ConstantTuple xs) -> map Constant xs
-            AbstractLiteral (AbsLitTuple   xs) -> xs
+            Constant (ConstantAbstract (AbsLitTuple xs)) -> map Constant xs
+            AbstractLiteral (AbsLitTuple xs) -> xs
             _ -> bug "lambdaToFunction, AbsPatTuple"
     in
         unroll ts ps body
@@ -473,52 +474,6 @@ instance Pretty ReferenceTo where
     pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
     pretty (DeclNoRepr      forg nm dom) = "DeclNoRepr"  <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-
-
-------------------------------------------------------------------------------------------------------------------------
--- AbstractLiteral -----------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------------------------
-
-data AbstractLiteral x
-    = AbsLitTuple [x]
-    | AbsLitList [x]
-    | AbsLitMatrix (Domain () x) [x]
-    | AbsLitSet [x]
-    | AbsLitMSet [x]
-    | AbsLitFunction [(x, x)]
-    | AbsLitRelation [[x]]
-    | AbsLitPartition [[x]]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
-
-instance Serialize x => Serialize (AbstractLiteral x)
-instance Hashable  x => Hashable  (AbstractLiteral x)
-instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = JSON.genericParseJSON jsonOptions
-
-instance Pretty a => Pretty (AbstractLiteral a) where
-    pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
-    pretty (AbsLitList  xs) =                                                  prettyList prBrackets "," xs
-    pretty (AbsLitMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
-    pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
-    pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
-    pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
-    pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
-    pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
-
-instance TypeOf a => TypeOf (AbstractLiteral a) where
-    typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
-    typeOf (AbsLitList         xs) = TypeList     <$>                (homoType <$> mapM typeOf xs )
-    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
-    typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
-    typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
-    typeOf (AbsLitFunction    xs ) = TypeFunction <$> (homoType <$> mapM (typeOf . fst) xs)
-                                                  <*> (homoType <$> mapM (typeOf . fst) xs)
-    typeOf (AbsLitRelation    xss) = do
-        ty <- homoType <$> mapM (typeOf . AbsLitTuple) xss
-        case ty of
-            TypeTuple ts -> return (TypeRelation ts)
-            _ -> bug "expecting TypeTuple in typeOf"
-    typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
 
 
 ------------------------------------------------------------------------------------------------------------------------

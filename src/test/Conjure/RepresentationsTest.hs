@@ -44,14 +44,14 @@ tests = testGroup "representations"
     , testGroup "matrix of bool" $
         let
             highDomain = DomainMatrix (intDomain 1 3) DomainBool
-            highConstant = ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
+            highConstant = ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
     , testGroup "matrix of int" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (intDomain 1 5)
-            highConstant = ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
+            highConstant = ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
@@ -60,10 +60,10 @@ tests = testGroup "representations"
             highDomain =
                 DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool)
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantMatrix (intDomain 1 2) [ConstantBool False, ConstantBool True ]
-                    , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool False]
-                    , ConstantMatrix (intDomain 1 2) [ConstantBool True , ConstantBool True ]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantBool False, ConstantBool True ]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantBool True , ConstantBool False]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantBool True , ConstantBool True ]
                     ]
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
@@ -73,10 +73,10 @@ tests = testGroup "representations"
             highDomain =
                 DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 7]
-                    , ConstantMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 8]
-                    , ConstantMatrix (intDomain 1 2) [ConstantInt 0, ConstantInt 1]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 7]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 8]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 0, ConstantInt 1]
                     ]
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
@@ -84,7 +84,7 @@ tests = testGroup "representations"
     , testGroup "(bool, int)" $
         let
             highDomain = DomainTuple [DomainBool, intDomain 1 3]
-            highConstant = ConstantTuple [ConstantBool False, ConstantInt 2]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2]
             low = [ ( "x_1", DomainBool   , ConstantBool False )
                   , ( "x_2", intDomain 1 3, ConstantInt 2      )
                   ]
@@ -93,7 +93,7 @@ tests = testGroup "representations"
     , testGroup "(bool, int, bool)" $
         let
             highDomain = DomainTuple [DomainBool, intDomain 1 3, DomainBool]
-            highConstant = ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
             low = [ ( "x_1", DomainBool   , ConstantBool False )
                   , ( "x_2", intDomain 1 3, ConstantInt 2      )
                   , ( "x_3", DomainBool   , ConstantBool True  )
@@ -103,8 +103,8 @@ tests = testGroup "representations"
     , testGroup "((bool, int), bool)" $
         let
             highDomain = DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]
-            highConstant = ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
-            mid = [ ( "x_1", DomainTuple [DomainBool, intDomain 1 3], ConstantTuple [ConstantBool False, ConstantInt 2] )
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
+            mid = [ ( "x_1", DomainTuple [DomainBool, intDomain 1 3], ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2] )
                   , ( "x_2", DomainBool, ConstantBool True )
                   ]
             low = [ ( "x_1_1", DomainBool   , ConstantBool False )
@@ -116,9 +116,9 @@ tests = testGroup "representations"
     , testGroup "(bool, (int, bool))" $
         let
             highDomain = DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool]]
-            highConstant = ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True]]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True]]
             mid = [ ( "x_1", DomainBool, ConstantBool False )
-                  , ( "x_2", DomainTuple [intDomain 1 3, DomainBool], ConstantTuple [ConstantInt 2, ConstantBool True] )
+                  , ( "x_2", DomainTuple [intDomain 1 3, DomainBool], ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True] )
                   ]
             low = [ ( "x_1"  , DomainBool   , ConstantBool False )
                   , ( "x_2_1", intDomain 1 3, ConstantInt 2      )
@@ -129,7 +129,7 @@ tests = testGroup "representations"
     , testGroup "(bool, int, bool, int)" $
         let
             highDomain = DomainTuple [DomainBool, intDomain 1 3, DomainBool, intDomain 2 5]
-            highConstant = ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True, ConstantInt 4]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2, ConstantBool True, ConstantInt 4]
             low = [ ( "x_1", DomainBool   , ConstantBool False )
                   , ( "x_2", intDomain 1 3, ConstantInt 2      )
                   , ( "x_3", DomainBool   , ConstantBool True  )
@@ -140,9 +140,9 @@ tests = testGroup "representations"
     , testGroup "((bool, int), (bool, int))" $
         let
             highDomain = DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainTuple [DomainBool, intDomain 2 5]]
-            highConstant = ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantTuple [ConstantBool True, ConstantInt 4]]
-            mid = [ ( "x_1", DomainTuple [DomainBool, intDomain 1 3], ConstantTuple [ConstantBool False, ConstantInt 2] )
-                  , ( "x_2", DomainTuple [DomainBool, intDomain 2 5], ConstantTuple [ConstantBool True , ConstantInt 4] )
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantAbstract $ AbsLitTuple [ConstantBool True, ConstantInt 4]]
+            mid = [ ( "x_1", DomainTuple [DomainBool, intDomain 1 3], ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2] )
+                  , ( "x_2", DomainTuple [DomainBool, intDomain 2 5], ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4] )
                   ]
             low = [ ( "x_1_1", DomainBool   , ConstantBool False )
                   , ( "x_1_2", intDomain 1 3, ConstantInt 2      )
@@ -154,10 +154,10 @@ tests = testGroup "representations"
     , testGroup "(bool, (int, (bool, int)))" $
         let
             highDomain = DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]]
-            highConstant = ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]]]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitTuple [ConstantBool True, ConstantInt 4]]]
             mid = [ ( "x_1", DomainBool   , ConstantBool False )
                   , ( "x_2", DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]
-                           , ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True, ConstantInt 4]] )
+                           , ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitTuple [ConstantBool True, ConstantInt 4]] )
                   ]
             low = [ ( "x_1"    , DomainBool   , ConstantBool False )
                   , ( "x_2_1"  , intDomain 1 3, ConstantInt 2      )
@@ -169,9 +169,9 @@ tests = testGroup "representations"
     , testGroup "(bool, (int, bool), int)" $
         let
             highDomain = DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5]
-            highConstant = ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True], ConstantInt 4]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True], ConstantInt 4]
             mid = [ ( "x_1", DomainBool   , ConstantBool False )
-                  , ( "x_2", DomainTuple [intDomain 1 3, DomainBool], ConstantTuple [ConstantInt 2, ConstantBool True] )
+                  , ( "x_2", DomainTuple [intDomain 1 3, DomainBool], ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True] )
                   , ( "x_3", intDomain 2 5, ConstantInt 4 )
                   ]
             low = [ ( "x_1"  , DomainBool   , ConstantBool False )
@@ -184,9 +184,9 @@ tests = testGroup "representations"
     , testGroup "(((bool, int), bool), int)" $
         let
             highDomain = DomainTuple [DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5]
-            highConstant = ConstantTuple [ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4]
+            highConstant = ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4]
             mid = [ ( "x_1", DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool]
-                           , ConstantTuple [ ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
+                           , ConstantAbstract $ AbsLitTuple [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True] )
                   , ( "x_2", intDomain 2 5, ConstantInt 4 )
                   ]
             low = [ ( "x_1_1_1", DomainBool   , ConstantBool False )
@@ -201,15 +201,15 @@ tests = testGroup "representations"
             highDomain =
                 DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 0 9])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantBool False, ConstantInt 0]
-                    , ConstantTuple [ConstantBool True , ConstantInt 3]
-                    , ConstantTuple [ConstantBool False, ConstantInt 4]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 0]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 3]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 4]
                     ]
             low = [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool
-                           , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
                   , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 0 9)
-                           , ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
@@ -217,14 +217,14 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 1 3, DomainBool])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
-                    , ConstantTuple [ConstantBool False, ConstantInt 3, ConstantBool False]
-                    , ConstantTuple [ConstantBool False, ConstantInt 4, ConstantBool False]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3, ConstantBool False]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 4, ConstantBool False]
                     ]
-            low = [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool False] )
-                  , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
-                  , ( "x_3", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
+            low = [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool False] )
+                  , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
+                  , ( "x_3", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
@@ -232,23 +232,23 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool])
             highConstant = 
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
-                    , ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 3], ConstantBool False]
-                    , ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 4], ConstantBool False]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
+                    , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantBool False]
+                    , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4], ConstantBool False]
                     ]
             mid = [ ( "x_1", DomainMatrix   (intDomain 1 3) (DomainTuple [DomainBool, intDomain 1 3])
-                           , ConstantMatrix (intDomain 1 3)
-                                [ ConstantTuple [ConstantBool False, ConstantInt 2]
-                                , ConstantTuple [ConstantBool False, ConstantInt 3]
-                                , ConstantTuple [ConstantBool True , ConstantInt 4]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                                [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2]
+                                , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3]
+                                , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4]
                                 ] )
                   , ( "x_2", DomainMatrix   (intDomain 1 3) DomainBool
-                           , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
                   ]
-            low = [ ( "x_1_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ] )
-                  , ( "x_1_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
-                  , ( "x_2"  , DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
+            low = [ ( "x_1_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ] )
+                  , ( "x_1_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
+                  , ( "x_2"  , DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -256,26 +256,26 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 0 9, DomainBool]])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 0, ConstantBool True]]
-                    , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 3, ConstantBool False]]
-                    , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 4, ConstantBool True]]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 0, ConstantBool True]]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantBool False]]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantBool True]]
                     ]
             mid = [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool
-                           , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
                   , ( "x_2", DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9, DomainBool])
-                           , ConstantMatrix (intDomain 1 3)
-                               [ ConstantTuple [ConstantInt 0, ConstantBool True]
-                               , ConstantTuple [ConstantInt 3, ConstantBool False]
-                               , ConstantTuple [ConstantInt 4, ConstantBool True]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                               [ ConstantAbstract $ AbsLitTuple [ConstantInt 0, ConstantBool True]
+                               , ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantBool False]
+                               , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantBool True]
                                ] )
                   ]
             low = [ ( "x_1"  , DomainMatrix (intDomain 1 3) DomainBool
-                             , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool True, ConstantBool False] )
                   , ( "x_2_1", DomainMatrix (intDomain 1 3) (intDomain 0 9)
-                             , ConstantMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 0, ConstantInt 3, ConstantInt 4] )
                   , ( "x_2_2", DomainMatrix (intDomain 1 3) DomainBool
-                             , ConstantMatrix (intDomain 1 3) [ConstantBool True, ConstantBool False, ConstantBool True] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True, ConstantBool False, ConstantBool True] )
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -283,15 +283,15 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 1 3, DomainBool, intDomain 2 5])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantBool False, ConstantInt 2, ConstantBool True , ConstantInt 4]
-                    , ConstantTuple [ConstantBool False, ConstantInt 3, ConstantBool False, ConstantInt 6]
-                    , ConstantTuple [ConstantBool True , ConstantInt 4, ConstantBool False, ConstantInt 8]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2, ConstantBool True , ConstantInt 4]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3, ConstantBool False, ConstantInt 6]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4, ConstantBool False, ConstantInt 8]
                     ]
-            low = [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ] )
-                  , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
-                  , ( "x_3", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
-                  , ( "x_4", DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ] )
+            low = [ ( "x_1", DomainMatrix (intDomain 1 3) DomainBool , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ] )
+                  , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
+                  , ( "x_3", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
+                  , ( "x_4", DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ] )
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
@@ -299,34 +299,34 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainTuple [DomainBool, intDomain 2 5]])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantTuple [ConstantBool True , ConstantInt 4]]
-                    , ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 3], ConstantTuple [ConstantBool False, ConstantInt 6]]
-                    , ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 4], ConstantTuple [ConstantBool False, ConstantInt 8]]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4]]
+                    , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 6]]
+                    , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4], ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 8]]
                     ]
             mid = [ ( "x_1"
                     , DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 1 3])
-                    , ConstantMatrix (intDomain 1 3)
-                        [ ConstantTuple [ConstantBool False, ConstantInt 2]
-                        , ConstantTuple [ConstantBool False, ConstantInt 3]
-                        , ConstantTuple [ConstantBool True , ConstantInt 4]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                        [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2]
+                        , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3]
+                        , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4]
                         ] )
                   , ( "x_2"
                     , DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 2 5])
-                    , ConstantMatrix (intDomain 1 3)
-                        [ ConstantTuple [ConstantBool True , ConstantInt 4]
-                        , ConstantTuple [ConstantBool False, ConstantInt 6]
-                        , ConstantTuple [ConstantBool False, ConstantInt 8]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                        [ ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4]
+                        , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 6]
+                        , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 8]
                         ] )
                   ]
             low = [ ( "x_1_1", DomainMatrix   (intDomain 1 3) DomainBool
-                             , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ] )
                   , ( "x_1_2", DomainMatrix   (intDomain 1 3) (intDomain 1 3)
-                             , ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ] )
                   , ( "x_2_1", DomainMatrix   (intDomain 1 3) DomainBool
-                             , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False] )
                   , ( "x_2_2", DomainMatrix   (intDomain 1 3) (intDomain 2 5)
-                             , ConstantMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ] )
+                             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ] )
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -334,24 +334,24 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True , ConstantInt 4]]]
-                    , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 3, ConstantTuple [ConstantBool False, ConstantInt 6]]]
-                    , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 4, ConstantTuple [ConstantBool False, ConstantInt 8]]]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4]]]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 6]]]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 8]]]
                     ]
             mid = [ ( "x_1", DomainMatrix   (intDomain 1 3) DomainBool
-                           , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True] )
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True] )
                   , ( "x_2", DomainMatrix   (intDomain 1 3) (DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]])
-                           , ConstantMatrix (intDomain 1 3)
-                               [ ConstantTuple [ConstantInt 2, ConstantTuple [ConstantBool True , ConstantInt 4]]
-                               , ConstantTuple [ConstantInt 3, ConstantTuple [ConstantBool False, ConstantInt 6]]
-                               , ConstantTuple [ConstantInt 4, ConstantTuple [ConstantBool False, ConstantInt 8]]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                               [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4]]
+                               , ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 6]]
+                               , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 8]]
                                ] )
                   ]
-            low = [ ( "x_1"    , DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ])
-                  , ( "x_2_1"  , DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ])
-                  , ( "x_2_2_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False])
-                  , ( "x_2_2_2", DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ])
+            low = [ ( "x_1"    , DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ])
+                  , ( "x_2_1"  , DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ])
+                  , ( "x_2_2_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False])
+                  , ( "x_2_2_2", DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ])
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -359,27 +359,27 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 2, ConstantBool True ], ConstantInt 4]
-                    , ConstantTuple [ConstantBool False, ConstantTuple [ConstantInt 3, ConstantBool False], ConstantInt 6]
-                    , ConstantTuple [ConstantBool True , ConstantTuple [ConstantInt 4, ConstantBool False], ConstantInt 8]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True ], ConstantInt 4]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantBool False], ConstantInt 6]
+                    , ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantBool False], ConstantInt 8]
                     ]
             mid = [ ( "x_1", DomainMatrix   (intDomain 1 3) DomainBool
-                           , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True] )
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True] )
                   , ( "x_2", DomainMatrix   (intDomain 1 3) (DomainTuple [intDomain 1 3, DomainBool])
-                           , ConstantMatrix (intDomain 1 3)
-                               [ ConstantTuple [ConstantInt 2, ConstantBool True ]
-                               , ConstantTuple [ConstantInt 3, ConstantBool False]
-                               , ConstantTuple [ConstantInt 4, ConstantBool False]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                               [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True ]
+                               , ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantBool False]
+                               , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantBool False]
                                ] )
                   , ( "x_3", DomainMatrix   (intDomain 1 3) (intDomain 2 5)
-                           , ConstantMatrix (intDomain 1 3) [ConstantInt 4, ConstantInt 6, ConstantInt 8]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4, ConstantInt 6, ConstantInt 8]
                            )
                   ]
-            low = [ ( "x_1"  , DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ])
-                  , ( "x_2_1", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ])
-                  , ( "x_2_2", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False])
-                  , ( "x_3"  , DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ])
+            low = [ ( "x_1"  , DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ])
+                  , ( "x_2_1", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ])
+                  , ( "x_2_2", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False])
+                  , ( "x_3"  , DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ])
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -387,25 +387,25 @@ tests = testGroup "representations"
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5])
             highConstant =
-                ConstantMatrix (intDomain 1 3)
-                    [ ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True ], ConstantInt 4]
-                    , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 3], ConstantBool False], ConstantInt 6]
-                    , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 4], ConstantBool False], ConstantInt 8]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                    [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True ], ConstantInt 4]
+                    , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantBool False], ConstantInt 6]
+                    , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4], ConstantBool False], ConstantInt 8]
                     ]
             mid = [ ( "x_1", DomainMatrix   (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool,intDomain 1 3],DomainBool])
-                           , ConstantMatrix (intDomain 1 3)
-                               [ ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True ]
-                               , ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 3], ConstantBool False]
-                               , ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 4], ConstantBool False]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                               [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True ]
+                               , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantBool False]
+                               , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4], ConstantBool False]
                                ])
                   , ( "x_2", DomainMatrix   (intDomain 1 3) (intDomain 2 5)
-                           , ConstantMatrix (intDomain 1 3) [ConstantInt 4, ConstantInt 6, ConstantInt 8]
+                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4, ConstantInt 6, ConstantInt 8]
                            )
                   ]
-            low = [ ( "x_1_1_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ])
-                  , ( "x_1_1_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ])
-                  , ( "x_1_2"  , DomainMatrix (intDomain 1 3) DomainBool     , ConstantMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False])
-                  , ( "x_2"    , DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ])
+            low = [ ( "x_1_1_1", DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True ])
+                  , ( "x_1_1_2", DomainMatrix (intDomain 1 3) (intDomain 1 3), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2     , ConstantInt 3     , ConstantInt 4     ])
+                  , ( "x_1_2"  , DomainMatrix (intDomain 1 3) DomainBool     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True , ConstantBool False, ConstantBool False])
+                  , ( "x_2"    , DomainMatrix (intDomain 1 3) (intDomain 2 5), ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4     , ConstantInt 6     , ConstantInt 8     ])
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -416,78 +416,78 @@ tests = testGroup "representations"
                     (DomainMatrix (intDomain 1 3)
                         (DomainTuple [DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5]))
             highConstant =
-                ConstantMatrix (intDomain 1 2)
-                    [ ConstantMatrix (intDomain 1 3)
-                        [ ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 2], ConstantBool True ], ConstantInt 4]
-                        , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 3], ConstantBool False], ConstantInt 6]
-                        , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 4], ConstantBool False], ConstantInt 8]
+                ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                    [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                        [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True ], ConstantInt 4]
+                        , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantBool False], ConstantInt 6]
+                        , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 4], ConstantBool False], ConstantInt 8]
                         ]
-                    , ConstantMatrix (intDomain 1 3)
-                        [ ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool False, ConstantInt 4], ConstantBool True ], ConstantInt 4]
-                        , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 5], ConstantBool False], ConstantInt 7]
-                        , ConstantTuple [ConstantTuple [ConstantTuple [ConstantBool True , ConstantInt 6], ConstantBool False], ConstantInt 9]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                        [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 4], ConstantBool True ], ConstantInt 4]
+                        , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 5], ConstantBool False], ConstantInt 7]
+                        , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , ConstantInt 6], ConstantBool False], ConstantInt 9]
                         ]
                     ]
             mid =
                 [ ( "x_1" , DomainMatrix (intDomain 1 2)
                               (DomainMatrix (intDomain 1 3)
                                   (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]))
-                          , ConstantMatrix (intDomain 1 2)
-                              [ ConstantMatrix (intDomain 1 3)
-                                  [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 2],ConstantBool True]
-                                  , ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 3],ConstantBool False]
-                                  , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 4],ConstantBool False]
+                          , ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                              [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                                  [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False,ConstantInt 2],ConstantBool True]
+                                  , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False,ConstantInt 3],ConstantBool False]
+                                  , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True,ConstantInt 4],ConstantBool False]
                                   ]
-                              , ConstantMatrix (intDomain 1 3)
-                                  [ ConstantTuple [ConstantTuple [ConstantBool False,ConstantInt 4],ConstantBool True]
-                                  , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 5],ConstantBool False]
-                                  , ConstantTuple [ConstantTuple [ConstantBool True,ConstantInt 6],ConstantBool False]
+                              , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                                  [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False,ConstantInt 4],ConstantBool True]
+                                  , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True,ConstantInt 5],ConstantBool False]
+                                  , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True,ConstantInt 6],ConstantBool False]
                                   ]
                               ] )
                 , ( "x_2" , DomainMatrix (intDomain 1 2)
                                   (DomainMatrix (intDomain 1 3)
                                       (intDomain 2 5))
-                          , ConstantMatrix (intDomain 1 2)
-                                [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
-                                , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
+                          , ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                                [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
+                                , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
                                 ] )
                 ]
             low =
                 [ ( "x_1_1_1" , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) DomainBool)
-                              , ConstantMatrix (intDomain 1 2)
-                                  [ ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool True]
-                                  , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool True]
+                              , ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                                  [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool True]
+                                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool True]
                                   ] )
                 , ( "x_1_1_2" , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) (intDomain 1 3))
-                              , ConstantMatrix (intDomain 1 2)
-                                  [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 3,ConstantInt 4]
-                                  , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 5,ConstantInt 6]
+                              , ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                                  [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 3,ConstantInt 4]
+                                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 5,ConstantInt 6]
                                   ] )
                 , ( "x_1_2"   , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) DomainBool)
-                              , ConstantMatrix (intDomain 1 2)
-                                  [ ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
-                                  , ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
+                              , ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                                  [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
+                                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
                                   ] )
                 , ( "x_2"     , DomainMatrix   (intDomain 1 2) (DomainMatrix (intDomain 1 3) (intDomain 2 5))
-                              , ConstantMatrix (intDomain 1 2)
-                                  [ ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
-                                  , ConstantMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
+                              , ConstantAbstract $ AbsLitMatrix (intDomain 1 2)
+                                  [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 6,ConstantInt 8]
+                                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 4,ConstantInt 7,ConstantInt 9]
                                   ] )
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
     , testGroup "(bool, bool, bool)" $ testCasesAuto "x"
         ( DomainTuple [DomainBool, DomainBool, DomainBool] )
-        ( ConstantTuple [ConstantBool False, ConstantBool False, ConstantBool True] )
+        ( ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantBool False, ConstantBool True] )
 
     , testGroup "(bool, matrix of int) {auto}" $ testCasesAuto "x"
         ( DomainTuple
             [ DomainBool
             , DomainMatrix (intDomain 1 3) (intDomain 0 9)
             ] )
-        ( ConstantTuple
+        ( ConstantAbstract $ AbsLitTuple
             [ ConstantBool False
-            , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
+            , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
             ] )
 
     , testGroup "(bool, matrix of int)" $
@@ -498,14 +498,14 @@ tests = testGroup "representations"
                     , DomainMatrix (intDomain 1 3) (intDomain 0 9)
                     ]
             highConstant =
-                ConstantTuple
+                ConstantAbstract $ AbsLitTuple
                     [ ConstantBool False
-                    , ConstantMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
                     ]
             low =
                 [ ( "x_1", DomainBool,ConstantBool False)
                 , ( "x_2", DomainMatrix (intDomain 1 3) (intDomain 0 9)
-                         , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5] )
+                         , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5] )
                 ]
         in  testCases "x" highDomain highConstant Just low low
 
@@ -514,12 +514,12 @@ tests = testGroup "representations"
             [ DomainBool
             , DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9, DomainBool])
             ] )
-        ( ConstantTuple
+        ( ConstantAbstract $ AbsLitTuple
             [ ConstantBool False
-            , ConstantMatrix (intDomain 1 3)
-                [ ConstantTuple [ConstantInt 2, ConstantBool False]
-                , ConstantTuple [ConstantInt 4, ConstantBool True]
-                , ConstantTuple [ConstantInt 5, ConstantBool False]
+            , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool False]
+                , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantBool True]
+                , ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool False]
                 ]
             ] )
 
@@ -531,27 +531,27 @@ tests = testGroup "representations"
                     , DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9, DomainBool])
                     ]
             highConstant =
-                ConstantTuple
+                ConstantAbstract $ AbsLitTuple
                     [ ConstantBool False
-                    , ConstantMatrix (intDomain 1 3)
-                        [ ConstantTuple [ConstantInt 2, ConstantBool False]
-                        , ConstantTuple [ConstantInt 4, ConstantBool True]
-                        , ConstantTuple [ConstantInt 5, ConstantBool False]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                        [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool False]
+                        , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantBool True]
+                        , ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool False]
                         ]
                     ]
             mid =
                 [ ( "x_1" , DomainBool , ConstantBool False )
                 , ( "x_2" , DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9,DomainBool])
-                          , ConstantMatrix (intDomain 1 3)
-                              [ ConstantTuple [ConstantInt 2,ConstantBool False]
-                              , ConstantTuple [ConstantInt 4,ConstantBool True]
-                              , ConstantTuple [ConstantInt 5,ConstantBool False]
+                          , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                              [ ConstantAbstract $ AbsLitTuple [ConstantInt 2,ConstantBool False]
+                              , ConstantAbstract $ AbsLitTuple [ConstantInt 4,ConstantBool True]
+                              , ConstantAbstract $ AbsLitTuple [ConstantInt 5,ConstantBool False]
                               ] )
                 ]
             low =
                 [ ( "x_1"   , DomainBool , ConstantBool False )
-                , ( "x_2_1" , DomainMatrix (intDomain 1 3) (intDomain 0 9) , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5] )
-                , ( "x_2_2" , DomainMatrix (intDomain 1 3) DomainBool      , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool False] )
+                , ( "x_2_1" , DomainMatrix (intDomain 1 3) (intDomain 0 9) , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5] )
+                , ( "x_2_2" , DomainMatrix (intDomain 1 3) DomainBool      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False,ConstantBool True,ConstantBool False] )
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
@@ -563,12 +563,12 @@ tests = testGroup "representations"
                 , DomainMatrix (intDomain 1 2) (intDomain 0 9)
                 ])
             ] )
-        ( ConstantTuple
+        ( ConstantAbstract $ AbsLitTuple
             [ ConstantBool False
-            , ConstantMatrix (intDomain 1 3)
-                [ ConstantTuple [ConstantInt 2, ConstantMatrix (intDomain 1 2) [ConstantInt 1, ConstantInt 3]]
-                , ConstantTuple [ConstantInt 4, ConstantMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 5]]
-                , ConstantTuple [ConstantInt 5, ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]]
+            , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 1, ConstantInt 3]]
+                , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 5]]
+                , ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]]
                 ]
             ] )
 
@@ -583,32 +583,32 @@ tests = testGroup "representations"
                         ])
                     ]
             highConstant =
-                ConstantTuple
+                ConstantAbstract $ AbsLitTuple
                     [ ConstantBool False
-                    , ConstantMatrix (intDomain 1 3)
-                        [ ConstantTuple [ConstantInt 2, ConstantMatrix (intDomain 1 2) [ConstantInt 1, ConstantInt 3]]
-                        , ConstantTuple [ConstantInt 4, ConstantMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 5]]
-                        , ConstantTuple [ConstantInt 5, ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]]
+                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                        [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 1, ConstantInt 3]]
+                        , ConstantAbstract $ AbsLitTuple [ConstantInt 4, ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 3, ConstantInt 5]]
+                        , ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]]
                         ]
                     ]
             mid =
                 [ ( "x_1" , DomainBool,ConstantBool False )
                 , ( "x_2" , DomainMatrix   (intDomain 1 3) (DomainTuple [intDomain 0 9,DomainMatrix (intDomain 1 2) (intDomain 0 9)])
-                          , ConstantMatrix (intDomain 1 3)
-                              [ ConstantTuple [ConstantInt 2,ConstantMatrix (intDomain 1 2) [ConstantInt 1,ConstantInt 3]]
-                              , ConstantTuple [ConstantInt 4,ConstantMatrix (intDomain 1 2) [ConstantInt 3,ConstantInt 5]]
-                              , ConstantTuple [ConstantInt 5,ConstantMatrix (intDomain 1 2) [ConstantInt 5,ConstantInt 6]]
+                          , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                              [ ConstantAbstract $ AbsLitTuple [ConstantInt 2,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 1,ConstantInt 3]]
+                              , ConstantAbstract $ AbsLitTuple [ConstantInt 4,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 3,ConstantInt 5]]
+                              , ConstantAbstract $ AbsLitTuple [ConstantInt 5,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5,ConstantInt 6]]
                               ] )
                 ]
             low =
                 [ ( "x_1"   , DomainBool,ConstantBool False )
                 , ( "x_2_1" , DomainMatrix   (intDomain 1 3) (intDomain 0 9)
-                            , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5])
+                            , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 4,ConstantInt 5])
                 , ( "x_2_2" , DomainMatrix   (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
-                            , ConstantMatrix (intDomain 1 3)
-                                [ ConstantMatrix (intDomain 1 2) [ConstantInt 1,ConstantInt 3]
-                                , ConstantMatrix (intDomain 1 2) [ConstantInt 3,ConstantInt 5]
-                                , ConstantMatrix (intDomain 1 2) [ConstantInt 5,ConstantInt 6]
+                            , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
+                                [ ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 1,ConstantInt 3]
+                                , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 3,ConstantInt 5]
+                                , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5,ConstantInt 6]
                                 ] )
                 ]
         in  testCases "x" highDomain highConstant Just mid low
@@ -619,7 +619,7 @@ tests = testGroup "representations"
             "Explicit"
             (SetAttr (SizeAttrSize (ConstantInt 4)))
             (intDomain 0 9) )
-        ( ConstantSet
+        ( ConstantAbstract $ AbsLitSet
             [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6] )
 
     , testGroup "Explicit: set (size 4) of int" $
@@ -630,12 +630,12 @@ tests = testGroup "representations"
                     (SetAttr (SizeAttrSize (ConstantInt 4)))
                     (intDomain 0 9)
             highConstant =
-                ConstantSet
+                ConstantAbstract $ AbsLitSet
                     [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6]
             low =
                 [ ( "x_Explicit"
                   , DomainMatrix   (intDomain 1 4) (intDomain 0 9)
-                  , ConstantMatrix (intDomain 1 4)
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                         [ConstantInt 2,ConstantInt 3,ConstantInt 5,ConstantInt 6]
                   ) ]
         in  testCases "x" highDomain highConstant Just low low
@@ -646,11 +646,11 @@ tests = testGroup "representations"
                 (intDomain 0 9)
             )
         )
-        ( ConstantSet
-            [ ConstantSet [ConstantInt 2, ConstantInt 3]
-            , ConstantSet [ConstantInt 5, ConstantInt 6]
-            , ConstantSet [ConstantInt 5, ConstantInt 7]
-            , ConstantSet [ConstantInt 5, ConstantInt 8]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 3]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 6]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 7]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 8]
             ] )
 
     , testGroup "Explicit: set (size 4) of set (size 2) of int" $
@@ -660,30 +660,30 @@ tests = testGroup "representations"
                     (DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2)))
                         (intDomain 0 9))
             highConstant =
-                ConstantSet
-                    [ ConstantSet [ConstantInt 2, ConstantInt 3]
-                    , ConstantSet [ConstantInt 5, ConstantInt 6]
-                    , ConstantSet [ConstantInt 5, ConstantInt 7]
-                    , ConstantSet [ConstantInt 5, ConstantInt 8]
+                ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 3]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 6]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 7]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 8]
                     ]
             mid =
                 [ ( "x_Explicit"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2))) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                        [ ConstantSet [ConstantInt 2, ConstantInt 3]
-                        , ConstantSet [ConstantInt 5, ConstantInt 6]
-                        , ConstantSet [ConstantInt 5, ConstantInt 7]
-                        , ConstantSet [ConstantInt 5, ConstantInt 8]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                        [ ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 3]
+                        , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 6]
+                        , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 7]
+                        , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 8]
                         ]
                   ) ]
             low =
                 [ ( "x_Explicit_Explicit"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                        [ ConstantMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 3]
-                        , ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]
-                        , ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 7]
-                        , ConstantMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 8]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                        [ ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 3]
+                        , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 6]
+                        , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 7]
+                        , ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 5, ConstantInt 8]
                         ]
                   ) ]
         in  testCases "x" highDomain highConstant Just mid low
@@ -694,18 +694,18 @@ tests = testGroup "representations"
                 (DomainTuple [intDomain 0 9, DomainBool])
             )
         )
-        ( ConstantSet
-            [ ConstantSet [ ConstantTuple [ConstantInt 2, ConstantBool False]
-                          , ConstantTuple [ConstantInt 3, ConstantBool True ]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitSet [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool False]
+                          , ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantBool True ]
                           ]
-            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
-                          , ConstantTuple [ConstantInt 6, ConstantBool True ]
+            , ConstantAbstract $ AbsLitSet [ ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool True ]
+                          , ConstantAbstract $ AbsLitTuple [ConstantInt 6, ConstantBool True ]
                           ]
-            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
-                          , ConstantTuple [ConstantInt 7, ConstantBool False]
+            , ConstantAbstract $ AbsLitSet [ ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool True ]
+                          , ConstantAbstract $ AbsLitTuple [ConstantInt 7, ConstantBool False]
                           ]
-            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool False]
-                          , ConstantTuple [ConstantInt 8, ConstantBool False]
+            , ConstantAbstract $ AbsLitSet [ ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool False]
+                          , ConstantAbstract $ AbsLitTuple [ConstantInt 8, ConstantBool False]
                           ]
             ] )
 
@@ -718,27 +718,35 @@ tests = testGroup "representations"
                 ]
             )
         )
-        ( ConstantSet
-            [ ConstantTuple [ ConstantInt 1
-                            , ConstantSet [ ConstantTuple [ConstantInt 2, ConstantBool False]
-                                          , ConstantTuple [ConstantInt 3, ConstantBool True ]
-                                          ]
-                            ]
-            , ConstantTuple [ ConstantInt 2
-                            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
-                                          , ConstantTuple [ConstantInt 6, ConstantBool True ]
-                                          ]
-                            ]
-            , ConstantTuple [ ConstantInt 3
-                            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool True ]
-                                          , ConstantTuple [ConstantInt 7, ConstantBool False]
-                                          ]
-                            ]
-            , ConstantTuple [ ConstantInt 4
-                            , ConstantSet [ ConstantTuple [ConstantInt 5, ConstantBool False]
-                                          , ConstantTuple [ConstantInt 8, ConstantBool False]
-                                          ]
-                            ]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitTuple
+                [ ConstantInt 1
+                , ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool False]
+                    , ConstantAbstract $ AbsLitTuple [ConstantInt 3, ConstantBool True ]
+                    ]
+                ]
+            , ConstantAbstract $ AbsLitTuple
+                [ ConstantInt 2
+                , ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool True ]
+                    , ConstantAbstract $ AbsLitTuple [ConstantInt 6, ConstantBool True ]
+                    ]
+                ]
+            , ConstantAbstract $ AbsLitTuple
+                [ ConstantInt 3
+                , ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool True ]
+                    , ConstantAbstract $ AbsLitTuple [ConstantInt 7, ConstantBool False]
+                    ]
+                ]
+            , ConstantAbstract $ AbsLitTuple
+                [ ConstantInt 4
+                , ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitTuple [ConstantInt 5, ConstantBool False]
+                    , ConstantAbstract $ AbsLitTuple [ConstantInt 8, ConstantBool False]
+                    ]
+                ]
             ] )
 
 -- ExplicitVarSizeWithMarker
@@ -747,14 +755,14 @@ tests = testGroup "representations"
             "ExplicitVarSizeWithMarker"
             (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
             (intDomain 0 9) )
-        ( ConstantSet [ConstantInt 2, ConstantInt 5] )
+        ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
     , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of int" $
         let
             highDomain =
                 DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 4))) (intDomain 0 9)
             highConstant =
-                ConstantSet [ConstantInt 2, ConstantInt 5]
+                ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
             low =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
                   , intDomain 0 4
@@ -762,7 +770,7 @@ tests = testGroup "representations"
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix (intDomain 1 4) (intDomain 0 9)
-                  , ConstantMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
                   )
                 ]
         in  testCases "x" highDomain highConstant Just low low
@@ -773,10 +781,10 @@ tests = testGroup "representations"
                 (intDomain 0 9)
             )
         )
-        ( ConstantSet
-            [ ConstantSet [ConstantInt 2]
-            , ConstantSet [ConstantInt 2, ConstantInt 5]
-            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
             ]
         )
 
@@ -787,10 +795,10 @@ tests = testGroup "representations"
                     ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
-                ConstantSet
-                    [ ConstantSet [ConstantInt 2]
-                    , ConstantSet [ConstantInt 2, ConstantInt 5]
-                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
@@ -799,11 +807,11 @@ tests = testGroup "representations"
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantSet [ConstantInt 2]
-                      , ConstantSet [ConstantInt 2,ConstantInt 5]
-                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
-                      , ConstantSet []
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantAbstract $ AbsLitSet []
                       ]
                   )
                 ]
@@ -814,15 +822,15 @@ tests = testGroup "representations"
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker"
                   , DomainMatrix   (intDomain 1 4) (intDomain 0 3)
-                  , ConstantMatrix (intDomain 1 4) [ConstantInt 1,ConstantInt 2,ConstantInt 3,ConstantInt 0]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantInt 1,ConstantInt 2,ConstantInt 3,ConstantInt 0]
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
-                      , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 5,ConstantInt 0]
-                      , ConstantMatrix (intDomain 1 3) [ConstantInt 3,ConstantInt 4,ConstantInt 6]
-                      , ConstantMatrix (intDomain 1 3) [ConstantInt 0,ConstantInt 0,ConstantInt 0]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 5,ConstantInt 0]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 0,ConstantInt 0,ConstantInt 0]
                       ]
                   )
                 ]
@@ -834,22 +842,22 @@ tests = testGroup "representations"
             "ExplicitVarSizeWithFlags"
             (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
             (intDomain 0 9) )
-        ( ConstantSet [ConstantInt 2, ConstantInt 5] )
+        ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
     , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of int" $
         let
             highDomain =
                 DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 4))) (intDomain 0 9)
             highConstant =
-                ConstantSet [ConstantInt 2, ConstantInt 5]
+                ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
             low =
                 [ ( "x_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
-                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool False,ConstantBool False]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool False,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (intDomain 0 9)
-                  , ConstantMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantInt 2,ConstantInt 5,ConstantInt 0,ConstantInt 0]
                   )
                 ]
         in  testCases "x" highDomain highConstant Just low low
@@ -860,10 +868,10 @@ tests = testGroup "representations"
                 (intDomain 0 9)
             )
         )
-        ( ConstantSet
-            [ ConstantSet [ConstantInt 2]
-            , ConstantSet [ConstantInt 2, ConstantInt 5]
-            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
             ]
         )
 
@@ -874,47 +882,47 @@ tests = testGroup "representations"
                     ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
-                ConstantSet
-                    [ ConstantSet [ConstantInt 2]
-                    , ConstantSet [ConstantInt 2, ConstantInt 5]
-                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
                 [ ( "x_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
-                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantSet [ConstantInt 2]
-                      , ConstantSet [ConstantInt 2,ConstantInt 5]
-                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
-                      , ConstantSet []
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantAbstract $ AbsLitSet []
                       ]
                   )
                 ]
             low =
                 [ ( "x_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
-                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) DomainBool)
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
-                      , ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool True,ConstantBool False]
-                      , ConstantMatrix (intDomain 1 3) [ConstantBool True,ConstantBool True,ConstantBool True]
-                      , ConstantMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool False]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True,ConstantBool True,ConstantBool False]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True,ConstantBool True,ConstantBool True]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool False]
                       ]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
-                      , ConstantMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 5,ConstantInt 0]
-                      , ConstantMatrix (intDomain 1 3) [ConstantInt 3,ConstantInt 4,ConstantInt 6]
-                      , ConstantMatrix (intDomain 1 3) [ConstantInt 0,ConstantInt 0,ConstantInt 0]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 5,ConstantInt 0]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 0,ConstantInt 0,ConstantInt 0]
                       ]
                   ) ]
         in  testCases "x" highDomain highConstant Just mid low
@@ -925,18 +933,18 @@ tests = testGroup "representations"
             "Occurrence"
             (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
             (intDomain 0 9) )
-        ( ConstantSet [ConstantInt 2, ConstantInt 5] )
+        ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
     , testGroup "Occurrence: set (maxSize 4) of int" $
         let
             highDomain =
                 DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 4))) (intDomain 0 9)
             highConstant =
-                ConstantSet [ConstantInt 2, ConstantInt 5]
+                ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
             low =
                 [ ( "x_Occurrence"
                   , DomainMatrix   (intDomain 0 9) DomainBool
-                  , ConstantMatrix (intDomain 0 9)
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 0 9)
                       [ ConstantBool False
                       , ConstantBool False
                       , ConstantBool True -- 2
@@ -958,10 +966,10 @@ tests = testGroup "representations"
                 (intDomain 0 9)
             )
         )
-        ( ConstantSet
-            [ ConstantSet [ConstantInt 2]
-            , ConstantSet [ConstantInt 2, ConstantInt 5]
-            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
             ]
         )
 
@@ -972,10 +980,10 @@ tests = testGroup "representations"
                     ( DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
-                ConstantSet
-                    [ ConstantSet [ConstantInt 2]
-                    , ConstantSet [ConstantInt 2, ConstantInt 5]
-                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
                 [ ( "x_ExplicitVarSizeWithMarker_Marker"
@@ -984,11 +992,11 @@ tests = testGroup "representations"
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantSet [ConstantInt 2]
-                      , ConstantSet [ConstantInt 2,ConstantInt 5]
-                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
-                      , ConstantSet []
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantAbstract $ AbsLitSet []
                       ]
                   )
                 ]
@@ -999,17 +1007,17 @@ tests = testGroup "representations"
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantMatrix (intDomain 0 9) -- 2
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantMatrix (intDomain 0 9) -- 2,5
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2,5
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantMatrix (intDomain 0 9) -- 3,4,6
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 3,4,6
                           [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
                           , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantMatrix (intDomain 0 9) -- {}
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- {}
                           [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
                       ]
@@ -1023,10 +1031,10 @@ tests = testGroup "representations"
                 (intDomain 0 9)
             )
         )
-        ( ConstantSet
-            [ ConstantSet [ConstantInt 2]
-            , ConstantSet [ConstantInt 2, ConstantInt 5]
-            , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+        ( ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+            , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
             ]
         )
 
@@ -1037,44 +1045,44 @@ tests = testGroup "representations"
                     ( DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
-                ConstantSet
-                    [ ConstantSet [ConstantInt 2]
-                    , ConstantSet [ConstantInt 2, ConstantInt 5]
-                    , ConstantSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
+                ConstantAbstract $ AbsLitSet
+                    [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
+                    , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
                 [ ( "x_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
-                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantSet [ConstantInt 2]
-                      , ConstantSet [ConstantInt 2,ConstantInt 5]
-                      , ConstantSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
-                      , ConstantSet []
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
+                      , ConstantAbstract $ AbsLitSet [ConstantInt 3,ConstantInt 4,ConstantInt 6]
+                      , ConstantAbstract $ AbsLitSet []
                       ]
                   )
                 ]
             low =
                 [ ( "x_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
-                  , ConstantMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
-                  , ConstantMatrix (intDomain 1 4)
-                      [ ConstantMatrix (intDomain 0 9) -- 2
+                  , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
+                      [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantMatrix (intDomain 0 9) -- 2,5
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2,5
                           [ ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False
                           , ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantMatrix (intDomain 0 9) -- 3,4,6
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 3,4,6
                           [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool True , ConstantBool True
                           , ConstantBool False, ConstantBool True , ConstantBool False, ConstantBool False, ConstantBool False ]
-                      , ConstantMatrix (intDomain 0 9) -- {}
+                      , ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- {}
                           [ ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False
                           , ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False, ConstantBool False ]
                       ]

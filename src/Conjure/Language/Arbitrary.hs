@@ -47,11 +47,11 @@ instance Arbitrary AnyConstantTuple where
     arbitrary = do
         arity <- choose (2 :: Int, 10)
         xs    <- vectorOf arity arbitrary
-        return $ AnyConstantTuple $ ConstantTuple xs
+        return $ AnyConstantTuple $ ConstantAbstract $ AbsLitTuple xs
     shrink (AnyConstantTuple c) =
         case c of
-            ConstantTuple xs -> 
-                [ AnyConstantTuple (ConstantTuple ys)
+            ConstantAbstract (AbsLitTuple xs) -> 
+                [ AnyConstantTuple $ ConstantAbstract $ AbsLitTuple ys
                 | ys <- subsequences xs
                 , not (null ys)
                 , length ys < length xs
@@ -165,7 +165,7 @@ arbitraryDomainAndConstant = sized dispatch
             arity <- choose (2 :: Int, 4)
             (ds, cs) <- unzip <$> vectorOf arity (dispatch (smaller depth))
             return ( DomainTuple ds
-                   , ConstantTuple <$> sequence cs
+                   , ConstantAbstract . AbsLitTuple <$> sequence cs
                    )
 
         matrix :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
@@ -177,7 +177,7 @@ arbitraryDomainAndConstant = sized dispatch
                     (innerDomain, innerConstantGen) <- dispatch (smaller depth)
                     return ( DomainMatrix indexDomain innerDomain
                            , do innerConstants <- vectorOf indexSize innerConstantGen
-                                return $ ConstantMatrix indexDomain innerConstants
+                                return $ ConstantAbstract $ AbsLitMatrix indexDomain innerConstants
                            )
 
         set :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
@@ -206,7 +206,7 @@ arbitraryDomainAndConstant = sized dispatch
                                     elems <- vectorOf size constantGen
                                     let sorted = sort $ nub elems
                                     if length sorted == length elems
-                                        then return (ConstantSet sorted)
+                                        then return $ ConstantAbstract $ AbsLitSet sorted
                                         else try (n+1)
                      in try (1 :: Int)
                    )
@@ -228,7 +228,7 @@ arbitraryDomainAndConstant = sized dispatch
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf numElems constantGen
                         let sorted = sort $ nub elems
-                        return (ConstantSet sorted)
+                        return $ ConstantAbstract $ AbsLitSet sorted
                    )
 
         setBoundedMinMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
@@ -258,7 +258,7 @@ arbitraryDomainAndConstant = sized dispatch
                                     elems <- vectorOf numElems constantGen
                                     let sorted = sort $ nub elems
                                     if length sorted >= minSize
-                                        then return (ConstantSet sorted)
+                                        then return $ ConstantAbstract $ AbsLitSet sorted
                                         else try (n+1)
                      in try (1 :: Int)
                    )

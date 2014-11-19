@@ -86,7 +86,7 @@ function1D = Representation chck downD structuralCons downC up
                     (FunctionAttr _ FunctionAttr_Total _)
                     innerDomainFr
                     innerDomainTo
-              , ConstantFunction vals
+              , ConstantAbstract (AbsLitFunction vals)
               ) | domainCanIndexMatrix innerDomainFr = do
             innerDomainFrInt <- fmap e2c <$> toIntDomain (fmap Constant innerDomainFr)
             froms            <- domainValues innerDomainFr
@@ -95,16 +95,14 @@ function1D = Representation chck downD structuralCons downC up
                 | fr <- froms
                 , let val = case lookup fr vals of
                                 Nothing -> fail $ vcat [ "No value for " <+> pretty fr
-                                                       , "In:" <+> pretty (ConstantFunction vals)
+                                                       , "In:" <+> pretty (AbsLitFunction vals)
                                                        ]
                                 Just v  -> return v
                 ]
             return $ Just
                 [ ( outName name
-                  , DomainMatrix
-                      (forgetRepr innerDomainFrInt)
-                      innerDomainTo
-                  , ConstantMatrix (forgetRepr innerDomainFrInt) valsOut
+                  , DomainMatrix (forgetRepr innerDomainFrInt) innerDomainTo
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomainFrInt) valsOut
                   ) ]
         downC _ = na "{downC} Function1D"
 
@@ -120,10 +118,10 @@ function1D = Representation chck downD structuralCons downC up
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
                     case constant of
-                        ConstantMatrix _ vals -> do
+                        ConstantAbstract (AbsLitMatrix _ vals) -> do
                             froms <- domainValues innerDomainFr
                             return ( name
-                                   , ConstantFunction (zip froms vals)
+                                   , ConstantAbstract $ AbsLitFunction $ zip froms vals
                                    )
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)

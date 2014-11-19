@@ -63,12 +63,15 @@ setExplicit = Representation chck downD structuralCons downC up
                     _ -> na "{structuralCons} Explicit"
         structuralCons _ _ _ = na "{structuralCons} Explicit"
 
-        downC (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain, ConstantSet constants) =
+        downC ( name
+              , DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain
+              , ConstantAbstract (AbsLitSet constants)
+              ) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
             in  return $ Just
                     [ ( outName name
-                      , DomainMatrix   outIndexDomain innerDomain
-                      , ConstantMatrix outIndexDomain constants
+                      , DomainMatrix outIndexDomain innerDomain
+                      , ConstantAbstract $ AbsLitMatrix outIndexDomain constants
                       ) ]
         downC _ = na "{downC} Explicit"
 
@@ -82,8 +85,8 @@ setExplicit = Representation chck downD structuralCons downC up
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
                     case constant of
-                        ConstantMatrix _ vals ->
-                            return (name, ConstantSet vals)
+                        ConstantAbstract (AbsLitMatrix _ vals) ->
+                            return (name, ConstantAbstract (AbsLitSet vals))
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)
                                 , "But got:" <+> pretty constant

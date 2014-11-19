@@ -136,14 +136,14 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     (FunctionAttr _ FunctionAttr_Partial _)
                     (DomainTuple innerDomainFrs')
                     innerDomainTo
-              , ConstantFunction vals
+              , ConstantAbstract (AbsLitFunction vals)
               ) | all domainCanIndexMatrix innerDomainFrs' = do
             z <- zeroVal innerDomainTo
             innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')
             let
                 check :: [Constant] -> Maybe Constant
                 check indices = listToMaybe [ v
-                                            | (ConstantTuple k, v) <- vals
+                                            | (ConstantAbstract (AbsLitTuple k), v) <- vals
                                             , k == indices
                                             ]
 
@@ -161,19 +161,21 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 unrollC [(i,i')] prevIndices = do
                     domVals <- domainValues i'
                     let active val = check $ prevIndices ++ [val]
-                    return ( ConstantMatrix i [ case active val of
-                                                    Nothing -> ConstantBool False
-                                                    Just{}  -> ConstantBool True
-                                              | val <- domVals ]
-                           , ConstantMatrix i [ fromMaybe z (active val)
-                                              | val <- domVals ]
+                    return ( ConstantAbstract $ AbsLitMatrix i
+                                [ case active val of
+                                    Nothing -> ConstantBool False
+                                    Just{}  -> ConstantBool True
+                                | val <- domVals ]
+                           , ConstantAbstract $ AbsLitMatrix i
+                                [ fromMaybe z (active val)
+                                | val <- domVals ]
                            )
                 unrollC ((i,i'):is) prevIndices = do
                     domVals <- domainValues i'
                     (matrixFlags, matrixVals) <- liftM unzip $ forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
-                    return ( ConstantMatrix i matrixFlags
-                           , ConstantMatrix i matrixVals
+                    return ( ConstantAbstract $ AbsLitMatrix i matrixFlags
+                           , ConstantAbstract $ AbsLitMatrix i matrixVals
                            )
                 unrollC is prevIndices = fail $ vcat [ "FunctionNDPartial.up.unrollC"
                                                      , "    is         :" <+> vcat (map pretty is)
@@ -209,7 +211,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
                         index :: MonadFail m => Constant -> [Constant] -> m Constant
                         index m [] = return m
-                        index (ConstantMatrix indexDomain vals) (i:is) = do
+                        index (ConstantAbstract (AbsLitMatrix indexDomain vals)) (i:is) = do
                             froms <- domainValues indexDomain
                             case lookup i (zip froms vals) of
                                 Nothing -> fail "Value not found. FunctionNDPartial.up.index"
@@ -223,7 +225,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                         value <- index valuesMatrix these
                         case flag of
                             ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just (ConstantTuple these', value))
+                            ConstantBool True  -> return (Just (ConstantAbstract (AbsLitTuple these'), value))
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty flag
                                 , "                           , and    :" <+> pretty value
@@ -231,7 +233,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                     return ( name
-                           , ConstantFunction (catMaybes vals)
+                           , ConstantAbstract $ AbsLitFunction $ catMaybes vals
                            )
 
                 (Nothing, _) -> fail $ vcat $

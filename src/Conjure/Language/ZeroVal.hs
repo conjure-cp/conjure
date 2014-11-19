@@ -18,13 +18,13 @@ instance Pretty r => ZeroVal (Domain r Constant) where
     zeroVal DomainBool = return $ ConstantBool False
     zeroVal (DomainInt []) = return $ ConstantInt 0
     zeroVal (DomainInt (r:_)) = zeroVal r
-    zeroVal (DomainTuple ds) = ConstantTuple <$> mapM zeroVal ds
+    zeroVal (DomainTuple ds) = ConstantAbstract . AbsLitTuple <$> mapM zeroVal ds
     zeroVal (DomainMatrix index inner) = do
         z  <- zeroVal inner
         is <- case index of
                 DomainInt rs -> rangesInts rs
                 _ -> fail $ "Matrix indexed by a domain that isn't int:" <+> pretty index
-        return (ConstantMatrix index (replicate (length is) z))
+        return $ ConstantAbstract $ AbsLitMatrix index $ replicate (length is) z
     zeroVal d@(DomainSet _ (SetAttr attrs) inner) = do
         let returnInt (ConstantInt x) = return x
             returnInt _ = fail $ "Attribute expected to be an int in:" <+> pretty d
@@ -35,7 +35,7 @@ instance Pretty r => ZeroVal (Domain r Constant) where
             getMin (SizeAttrMinMaxSize x _) = returnInt x
         z <- zeroVal inner
         minSize <- getMin attrs
-        return (ConstantSet (replicate minSize z))
+        return $ ConstantAbstract $ AbsLitSet $ replicate minSize z
 
     -- zeroVal (DomainSet       _ attr d) = DomainSet () attr (forgetRepr d)
     -- zeroVal (DomainMSet      _ attr d) = DomainMSet () attr (forgetRepr d)

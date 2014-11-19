@@ -74,7 +74,7 @@ mainWithArgs ValidateSolution{..} = do
         <$> readModelFromFile essence
         <*> maybe (return def) readModelFromFile essenceParamO
         <*> readModelFromFile essenceSolution
-mainWithArgs Diff{..} = do
+mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
         <*> readModelFromFile file2

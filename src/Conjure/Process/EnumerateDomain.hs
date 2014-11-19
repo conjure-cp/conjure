@@ -4,13 +4,14 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Domain
 import Conjure.Language.Constant
+import Conjure.Language.AbstractLiteral
 import Conjure.Language.Pretty
 
 
 enumerateDomain :: Pretty r => Domain r Constant -> [Constant]
 enumerateDomain DomainBool = [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMap enumerateRange rs
-enumerateDomain (DomainTuple ds) = map ConstantTuple (mapM enumerateDomain ds)
+enumerateDomain (DomainTuple ds) = map (ConstantAbstract . AbsLitTuple) (mapM enumerateDomain ds)
 enumerateDomain d = bug $ "enumerateDomain:" <+> pretty d
 
 enumerateRange :: Range Constant -> [Constant]

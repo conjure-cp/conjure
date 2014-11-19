@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 
 module Conjure.Language.Domain where
@@ -38,7 +38,7 @@ data Domain r x
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance (Serialize r, Serialize x) => Serialize (Domain r x)
 instance (Hashable  r, Hashable  x) => Hashable  (Domain r x)
@@ -131,7 +131,7 @@ domainCanIndexMatrix _            = False
 --------------------------------------------------------------------------------
 
 data SetAttr a = SetAttr (SizeAttr a)
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (SetAttr a)
 instance Hashable  a => Hashable  (SetAttr a)
 instance ToJSON    a => ToJSON    (SetAttr a) where toJSON = JSON.genericToJSON jsonOptions
@@ -148,7 +148,7 @@ data SizeAttr a
     | SizeAttrMinSize a
     | SizeAttrMaxSize a
     | SizeAttrMinMaxSize a a
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (SizeAttr a)
 instance Hashable  a => Hashable  (SizeAttr a)
 instance ToJSON    a => ToJSON    (SizeAttr a) where toJSON = JSON.genericToJSON jsonOptions
@@ -164,7 +164,7 @@ instance Pretty a => Pretty (SizeAttr a) where
 
 data FunctionAttr x
     = FunctionAttr (SizeAttr x) PartialityAttr ISBAttr
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (FunctionAttr a)
 instance Hashable  a => Hashable  (FunctionAttr a)
 instance ToJSON    a => ToJSON    (FunctionAttr a) where toJSON = JSON.genericToJSON jsonOptions
@@ -211,7 +211,7 @@ instance Pretty    ISBAttr where
 
 
 data RelationAttr a = RelationAttr (SizeAttr a)
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (RelationAttr a)
 instance Hashable  a => Hashable  (RelationAttr a)
 instance ToJSON    a => ToJSON    (RelationAttr a) where toJSON = JSON.genericToJSON jsonOptions
@@ -223,7 +223,7 @@ instance Pretty a => Pretty (RelationAttr a) where
 
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize a => Serialize (DomainAttributes a)
 instance Hashable  a => Hashable  (DomainAttributes a)
@@ -238,7 +238,7 @@ data DomainAttribute a
     = DAName Name
     | DANameValue Name a
     | DADotDot
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize a => Serialize (DomainAttribute a)
 instance Hashable  a => Hashable  (DomainAttribute a)
@@ -252,7 +252,7 @@ data Range a
     | RangeLowerBounded a
     | RangeUpperBounded a
     | RangeBounded a a
-    deriving (Eq, Ord, Show, Data, Typeable, Generic, Functor)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize a => Serialize (Range a)
 instance Hashable  a => Hashable (Range a)

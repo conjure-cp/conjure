@@ -192,7 +192,7 @@ remaining
 remaining config model = do
     let freshNames' = freshNames model
     let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
-    questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x -> do
+    questions <- fmap catMaybes $ forM (allContexts modelZipper) $ \ x ->
         -- things in a reference should not be rewritten.
         -- specifically, no representation selection for them!
         if inAReference x
