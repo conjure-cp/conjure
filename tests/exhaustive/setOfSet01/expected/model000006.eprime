@@ -1,32 +1,32 @@
 language ESSENCE' 1.0
 
-find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2 ** 1 + 2 - 1)] of bool
-find x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2 ** 1 + 2 - 1), int(1..1 + 2 - 1)] of bool
-find x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2 ** 1 + 2 - 1), int(1..1 + 2 - 1)] of int(1..2)
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2 ** (1 + (2 - 1)))] of bool
+find x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2 ** (1 + (2 - 1))), int(1..1 + (2 - 1))] of bool
+find x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2 ** (1 + (2 - 1))), int(1..1 + (2 - 1))] of int(1..2)
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, ..] <lex x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1 + 1, ..] \/
          and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q3] = x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1 + 1, q3]
-                  | q3 : int(1..1 + 2 - 1)])
+                  | q3 : int(1..1 + (2 - 1))])
          /\ x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1, ..] <lex x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1 + 1, ..]
-             | q1 : int(1..2 ** 1 + 2 - 1 - 1)]),
+             | q1 : int(1..2 ** (1 + (2 - 1)) - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] = false ->
-         and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q4] = false | q4 : int(1..1 + 2 - 1)]) /\
-         and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1, q5] = 1 | q5 : int(1..1 + 2 - 1)])
-             | q1 : int(1..2 ** 1 + 2 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2 ** 1 + 2 - 1 - 1)]),
+         and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q4] = false | q4 : int(1..1 + (2 - 1))]) /\
+         and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1, q5] = 1 | q5 : int(1..1 + (2 - 1))])
+             | q1 : int(1..2 ** (1 + (2 - 1)))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2 ** (1 + (2 - 1)) - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] ->
          and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q2 + 1] ->
               x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1, q2] < x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1, q2 + 1]
-                  | q2 : int(1..1 + 2 - 1 - 1)])
-             | q1 : int(1..2 ** 1 + 2 - 1)]),
+                  | q2 : int(1..1 + (2 - 1) - 1)])
+             | q1 : int(1..2 ** (1 + (2 - 1)))]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] ->
          and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q2] = false ->
               x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values[q1, q2] = 1
-                  | q2 : int(1..1 + 2 - 1)])
-             | q1 : int(1..2 ** 1 + 2 - 1)]),
+                  | q2 : int(1..1 + (2 - 1))])
+             | q1 : int(1..2 ** (1 + (2 - 1)))]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] ->
          and([x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q2 + 1] -> x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q1, q2]
-                  | q2 : int(1..1 + 2 - 1 - 1)])
-             | q1 : int(1..2 ** 1 + 2 - 1)])
+                  | q2 : int(1..1 + (2 - 1) - 1)])
+             | q1 : int(1..2 ** (1 + (2 - 1)))])
 
