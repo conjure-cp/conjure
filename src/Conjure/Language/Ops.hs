@@ -37,7 +37,7 @@ data Ops x
     | MkOpDiv             (OpDiv x)
     | MkOpMod             (OpMod x)
     | MkOpPow             (OpPow x)
-    | MkOpAbs             (OpAbs x)
+    | MkOpTwoBars         (OpTwoBars x)
     | MkOpNegate          (OpNegate x)
 
     | MkOpEq              (OpEq x)
@@ -92,7 +92,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpDiv                 x) = typeOf x
     typeOf (MkOpMod                 x) = typeOf x
     typeOf (MkOpPow                 x) = typeOf x
-    typeOf (MkOpAbs                 x) = typeOf x
+    typeOf (MkOpTwoBars             x) = typeOf x
     typeOf (MkOpNegate              x) = typeOf x
     typeOf (MkOpEq                  x) = typeOf x
     typeOf (MkOpNeq                 x) = typeOf x
@@ -135,7 +135,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpDiv                 x) = evaluateOp x
     evaluateOp (MkOpMod                 x) = evaluateOp x
     evaluateOp (MkOpPow                 x) = evaluateOp x
-    evaluateOp (MkOpAbs                 x) = evaluateOp x
+    evaluateOp (MkOpTwoBars             x) = evaluateOp x
     evaluateOp (MkOpNegate              x) = evaluateOp x
     evaluateOp (MkOpEq                  x) = evaluateOp x
     evaluateOp (MkOpNeq                 x) = evaluateOp x
@@ -194,7 +194,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpDiv   op@(OpDiv    a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpMod   op@(OpMod    a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpPow   op@(OpPow    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpAbs      (OpAbs    a   )) = "|" <> pretty a <> "|"
+    prettyPrec _    (MkOpTwoBars  (OpTwoBars  a )) = "|" <> pretty a <> "|"
     prettyPrec _    (MkOpNegate   (OpNegate a   )) = "-" <> prettyPrec 10000 a
     prettyPrec prec (MkOpEq    op@(OpEq     a b )) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpNeq   op@(OpNeq    a b )) = prettyPrecBinOp prec [op] a b
@@ -356,16 +356,16 @@ instance EvaluateOp OpPow where
     evaluateOp (OpPow x y) = ConstantInt <$> ((^) <$> intOut x <*> intOut y)
 
 
-data OpAbs x = OpAbs x
+data OpTwoBars x = OpTwoBars x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize x => Serialize (OpAbs x)
-instance Hashable  x => Hashable  (OpAbs x)
-instance ToJSON    x => ToJSON    (OpAbs x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpAbs x) where parseJSON = JSON.genericParseJSON jsonOptions
-instance TypeOf x => TypeOf (OpAbs x) where
-    typeOf (OpAbs a) = intToInt a
-instance EvaluateOp OpAbs where
-    evaluateOp (OpAbs x) = ConstantInt . abs <$> intOut x
+instance Serialize x => Serialize (OpTwoBars x)
+instance Hashable  x => Hashable  (OpTwoBars x)
+instance ToJSON    x => ToJSON    (OpTwoBars x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpTwoBars x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance TypeOf x => TypeOf (OpTwoBars x) where
+    typeOf (OpTwoBars a) = intToInt a
+instance EvaluateOp OpTwoBars where
+    evaluateOp (OpTwoBars x) = ConstantInt . abs <$> intOut x
 
 
 data OpNegate x = OpNegate x
@@ -1035,11 +1035,12 @@ mkOp :: (OperatorContainer x, ReferenceContainer x) => Text -> [x] -> x
 mkOp op xs =
     case textToLexeme op of
         Nothing -> case op of
-            "and"    -> injectOp (MkOpAnd    (OpAnd    xs))
-            "or"     -> injectOp (MkOpOr     (OpOr     xs))
-            "sum"    -> injectOp (MkOpPlus   (OpPlus   xs))
-            "not"    -> injectOp (MkOpNot    (OpNot    (headNote "not takes a single argument"    xs)))
-            "negate" -> injectOp (MkOpNegate (OpNegate (headNote "negate takes a single argument" xs)))
+            "and"     -> injectOp (MkOpAnd     (OpAnd     xs))
+            "or"      -> injectOp (MkOpOr      (OpOr      xs))
+            "sum"     -> injectOp (MkOpPlus    (OpPlus    xs))
+            "not"     -> injectOp (MkOpNot     (OpNot     (headNote "not takes a single argument"     xs)))
+            "negate"  -> injectOp (MkOpNegate  (OpNegate  (headNote "negate takes a single argument"  xs)))
+            "twoBars" -> injectOp (MkOpTwoBars (OpTwoBars (headNote "twoBars takes a single argument" xs)))
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of

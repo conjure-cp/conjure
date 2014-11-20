@@ -390,10 +390,10 @@ instance ExpressionLike Expression where
     boolOut x = fail ("Expecting a constant, but got:" <+> pretty x)
 
 instance Num Expression where
-    x + y = Op $ MkOpPlus  $ OpPlus [x,y]
-    x - y = Op $ MkOpMinus $ OpMinus x y
-    x * y = Op $ MkOpTimes $ OpTimes [x,y]
-    abs x = Op $ MkOpAbs $ OpAbs x
+    x + y = Op $ MkOpPlus    $ OpPlus [x,y]
+    x - y = Op $ MkOpMinus   $ OpMinus x y
+    x * y = Op $ MkOpTimes   $ OpTimes [x,y]
+    abs x = Op $ MkOpTwoBars $ OpTwoBars x
     signum _ = bug "signum {Expression}"
     fromInteger = fromInt . fromInteger
 

@@ -542,6 +542,7 @@ allRules config =
         , rule_ToIntIsNoOp
         , rule_SingletonAnd
         , rule_FlattenOf1D
+        , rule_SumFlatten
 
         , rule_BubbleUp
         , rule_BubbleToAnd
@@ -576,6 +577,7 @@ allRules config =
         , rule_Set_Intersect
         , rule_Set_Union
         , rule_Set_MaxMin
+        , rule_Set_Card
 
         , rule_Set_Comprehension_Literal
         , rule_Set_Comprehension_Explicit
@@ -584,6 +586,7 @@ allRules config =
         , rule_Set_Comprehension_Occurrence
 
         , rule_Set_In_Occurrence
+        , rule_Set_Card_ExplicitVarSizeWithMarker
 
         , rule_Function_Eq
 
@@ -738,6 +741,17 @@ rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
             _ -> fail "No match."
         return ( "1D matrices do not need a flatten."
                , const x
+               )
+
+
+rule_SumFlatten :: Rule
+rule_SumFlatten = "sum-flatten" `namedRule` theRule where
+    theRule p = do
+        [x]                             <- match opSum p
+        AbstractLiteral (AbsLitList xs) <- match opFlatten x
+        let y = make opSum $ map (make opSum . return) xs
+        return ( "Flatten inside a sum."
+               , const y
                )
 
 
@@ -1099,6 +1113,35 @@ rule_Set_In = "set-in" `namedRule` theRule where
                )
 
 
+rule_Set_Card :: Rule
+rule_Set_Card = "set-card" `namedRule` theRule where
+    theRule p = do
+        s         <- match opTwoBars p
+        TypeSet{} <- typeOf s
+        case (isAtomic s, representationOf s) of
+            (True, Just "ExplicitVarSizeWithMarker") ->
+                fail "ExplicitVarSizeWithMarker has a better rule for set-cardinality."
+            (True, Nothing) -> fail "Choose a representation first."
+            _ -> return ()
+        return ( "Horizontal rule for set cardinality."
+               , \ fresh ->
+                    let (iPat, _) = quantifiedVar (fresh `at` 0)
+                    in  [essence| sum &iPat in &s . 1 |]
+               )
+
+
+rule_Set_Card_ExplicitVarSizeWithMarker :: Rule
+rule_Set_Card_ExplicitVarSizeWithMarker = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
+    theRule p = do
+        s                           <- match opTwoBars p
+        TypeSet{}                   <- typeOf s
+        "ExplicitVarSizeWithMarker" <- representationOf s
+        [marker, _values]           <- downX1 s
+        return ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
+               , const marker
+               )
+        
+
 rule_Set_Comprehension_Explicit :: Rule
 rule_Set_Comprehension_Explicit = "set-comprehension{Explicit}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
@@ -1249,8 +1292,8 @@ rule_Set_Intersect = "set-intersect" `namedRule` theRule where
 rule_Set_Union :: Rule
 rule_Set_Union = "set-union" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} s) -> return (pat, s)
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> fail "No match."
         (x, y)             <- match opUnion s
         tx                 <- typeOf x
@@ -1259,12 +1302,21 @@ rule_Set_Union = "set-union" `namedRule` theRule where
             TypeMSet{}     -> return ()
             TypeFunction{} -> return ()
             TypeRelation{} -> return ()
-            _              -> fail "type incompatibility in intersect operator"
+            _              -> fail "type incompatibility in union operator"
+        let i = Reference iPat Nothing
         return
-            ( "Horizontal rule for set intersection"
+            ( "Horizontal rule for set union"
             , const $ make opFlatten $ AbstractLiteral $ AbsLitList
-                [ Comprehension body $ gofBefore ++ [ Generator (GenInExpr pat x) ] ++ gofAfter
-                , Comprehension body $ gofBefore ++ [ Generator (GenInExpr pat y) ] ++ gofAfter
+                [ Comprehension body
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat x) ]
+                    ++ gofAfter
+                , Comprehension body
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat y)
+                       , Filter [essence| !(&i in &x) |]
+                       ]
+                    ++ gofAfter
                 ]
             )
     theRule _ = fail "No match."

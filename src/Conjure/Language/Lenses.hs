@@ -724,3 +724,21 @@ setLiteral _ =
         _ -> na ("Lenses.setLiteral:" <+> pretty p)
     )
 
+
+opTwoBars
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opTwoBars _ =
+    ( injectOp . MkOpTwoBars . OpTwoBars
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpTwoBars (OpTwoBars x) -> return x
+                _ -> na ("Lenses.opTwoBars:" <++> pretty p)
+    )
