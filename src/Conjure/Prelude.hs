@@ -40,6 +40,7 @@ module Conjure.Prelude
     , histogram
     , ExceptT(..)
     , sh
+    , scope
     ) where
 
 import GHC.Err as X ( error )
@@ -464,3 +465,10 @@ histogram = map (head &&& length) . group . sort
 
 sh :: Sh a -> IO a
 sh = shelly . print_stdout False . print_stderr False
+
+scope :: MonadState st m => m a -> m a
+scope ma = do
+    st <- gets id
+    a <- ma
+    modify (const st)
+    return a

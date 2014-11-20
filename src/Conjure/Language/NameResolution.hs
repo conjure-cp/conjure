@@ -101,11 +101,3 @@ resolveD d = do
     d' <- descendM resolveD d
     mapM resolveX d'
 
-
-scope :: MonadState st m => m a -> m a
-scope ma = do
-    st <- gets id
-    a <- ma
-    modify (const st)
-    return a
-
