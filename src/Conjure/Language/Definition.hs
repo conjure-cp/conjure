@@ -390,15 +390,16 @@ instance ExpressionLike Expression where
     boolOut x = fail ("Expecting a constant, but got:" <+> pretty x)
 
 instance Num Expression where
-    (+) = opPlus
-    (-) = opMinus
-    (*) = opTimes
-    abs = opAbs
+    x + y = Op $ MkOpPlus  $ OpPlus [x,y]
+    x - y = Op $ MkOpMinus $ OpMinus x y
+    x * y = Op $ MkOpTimes $ OpTimes [x,y]
+    abs x = Op $ MkOpAbs $ OpAbs x
     signum _ = bug "signum {Expression}"
     fromInteger = fromInt . fromInteger
 
 instance Integral Expression where
-    divMod a b = (opDiv a b, opMod a b)
+    divMod a b = ( Op $ MkOpDiv $ OpDiv a b
+                 , Op $ MkOpMod $ OpMod a b )
     quotRem = divMod
     toInteger = bug "toInteger {Expression}"
 

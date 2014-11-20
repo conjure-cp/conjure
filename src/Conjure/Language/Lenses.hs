@@ -297,6 +297,25 @@ opIndexing' proxy =
     )
 
 
+opSlicing
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> Maybe x -> Maybe x -> x
+       , x -> m (x, Maybe x, Maybe x)
+       )
+opSlicing _ =
+    ( \ x y z -> injectOp (MkOpSlicing (OpSlicing x y z))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpSlicing (OpSlicing x y z) -> return (x,y,z)
+                _ -> na ("Lenses.opSlicing:" <++> pretty p)
+    )
+
+
 opFlatten
     :: ( OperatorContainer x
        , Pretty x
@@ -541,6 +560,44 @@ opAnd _ =
             case op of
                 MkOpAnd (OpAnd xs) -> return xs
                 _ -> na ("Lenses.opAnd:" <++> pretty p)
+    )
+
+
+opMax
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( [x] -> x
+       , x -> m [x]
+       )
+opMax _ =
+    ( injectOp . MkOpMax . OpMax
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpMax (OpMax xs) -> return xs
+                _ -> na ("Lenses.opMax:" <++> pretty p)
+    )
+
+
+opMin
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( [x] -> x
+       , x -> m [x]
+       )
+opMin _ =
+    ( injectOp . MkOpMin . OpMin
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpMin (OpMin xs) -> return xs
+                _ -> na ("Lenses.opMin:" <++> pretty p)
     )
 
 

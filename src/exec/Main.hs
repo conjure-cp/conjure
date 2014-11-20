@@ -69,7 +69,7 @@ mainWithArgs TranslateSolution{..} = do
     writeModel (Just outputFilename) output
 mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr "Mandatory field --essence"
-    when (null essenceSolution) $ userErr "Mandatory field --essence-solution"
+    when (null essenceSolution) $ userErr "Mandatory field --solution"
     join $ validateSolution
         <$> readModelFromFile essence
         <*> maybe (return def) readModelFromFile essenceParamO

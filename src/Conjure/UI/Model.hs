@@ -28,10 +28,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
-import Conjure.Language.Ops hiding ( opOr, opAnd, opIn, opEq, opLt
-                                   , opSubsetEq, opDontCare, opImply, opTimes, opToInt
-                                   , opLeq, opFlatten, opToSet, opIntersect, opUnion, opFunctionImage )
-
+import Conjure.Language.Ops
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( deenumifyModel )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
@@ -396,17 +393,22 @@ oneSuchThat m =
 inlineDecVarLettings :: Model -> Model
 inlineDecVarLettings model =
     let
-        (decVarLettings, statements) = mconcat
-            [ case st of
-                Declaration (Letting nm x) | categoryOf x == CatDecision -> ([(nm,x)], [])
-                _ -> ([], [st])
-            | st <- mStatements model
-            ]
+        inline p@(Reference nm _) = do
+            x <- gets (lookup nm)
+            return (fromMaybe p x)
+        inline p = return p
 
-        inline (Reference nm _) | Just x <- lookup nm decVarLettings = x
-        inline x = x
+        statements = catMaybes
+                        $ flip evalState []
+                        $ forM (mStatements model)
+                        $ \ st ->
+            case st of
+                Declaration (Letting nm x)
+                    | categoryOf x == CatDecision
+                    -> modify ((nm,x) :) >> return (trace (show (nm,x)) Nothing)
+                _ -> Just <$> transformBiM inline st
     in
-        model { mStatements = transformBi inline statements }
+        model { mStatements = statements }
 
 
 updateDeclarations :: Model -> Model
@@ -444,7 +446,7 @@ checkIfAllRefined m = do
     fails <- fmap concat $ forM (allContexts modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
-                        | inAReference x && not (isPrimitiveDomain dom) ->
+                        | not (isPrimitiveDomain dom) ->
                         return $ ""
                                : ("Not refined:" <+> pretty (hole x))
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
@@ -468,8 +470,8 @@ epilogue :: MonadFail m => Model -> m Model
 epilogue eprime = do
     checkIfAllRefined eprime
     eprime
-        |> inlineDecVarLettings
         |> updateDeclarations
+        |> inlineDecVarLettings
         |> oneSuchThat
         |> languageEprime
         |> return
@@ -573,6 +575,7 @@ allRules config =
         , rule_Set_Leq
         , rule_Set_Intersect
         , rule_Set_Union
+        , rule_Set_MaxMin
 
         , rule_Set_Comprehension_Literal
         , rule_Set_Comprehension_Explicit
@@ -905,11 +908,15 @@ rule_InlineFilters =
     [ namedRule "filter-inside-and" $ ruleGen_InlineFilters opAnd opAndSkip
     , namedRule "filter-inside-or"  $ ruleGen_InlineFilters opOr  opOrSkip
     , namedRule "filter-inside-sum" $ ruleGen_InlineFilters opSum opSumSkip
+    , namedRule "filter-inside-max" $ ruleGen_InlineFilters opMax opMaxSkip
+    , namedRule "filter-inside-min" $ ruleGen_InlineFilters opMin opMinSkip
     ]
     where
         opAndSkip x y = make opImply x y
         opOrSkip  x y = make opAnd [x,y]
         opSumSkip b x = make opTimes (make opToInt b) x
+        opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
+        opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
 ruleGen_InlineFilters
     :: MonadFail m
@@ -1016,7 +1023,7 @@ sliceEnoughTimes m = do
         nestingLevel _ = 0 :: Int
     let howMany = nestingLevel tyn - nestingLevel tym
     let unroll a 0 = a
-        unroll a i = opSlicing (unroll a (i-1)) Nothing Nothing
+        unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
     return (unroll m howMany)
 
 
@@ -1241,6 +1248,27 @@ rule_Set_Union = "set-union" `namedRule` theRule where
                 [ Comprehension body [ Generator (GenInExpr pat x) ]
                 , Comprehension body [ Generator (GenInExpr pat y) ]
                 ]
+            )
+    theRule _ = fail "No match."
+
+
+rule_Set_MaxMin :: Rule
+rule_Set_MaxMin = "set-max-min" `namedRule` theRule where
+    theRule [essence| max(&s) |] = do
+        TypeSet TypeInt <- typeOf s
+        return
+            ( "Horizontal rule for set max"
+            , \ fresh ->
+                let (iPat, i) = quantifiedVar (fresh `at` 0)
+                in  [essence| max([&i | &iPat <- &s]) |]
+            )
+    theRule [essence| min(&s) |] = do
+        TypeSet TypeInt <- typeOf s
+        return
+            ( "Horizontal rule for set min"
+            , \ fresh ->
+                let (iPat, i) = quantifiedVar (fresh `at` 0)
+                in  [essence| min([&i | &iPat <- &s]) |]
             )
     theRule _ = fail "No match."
 

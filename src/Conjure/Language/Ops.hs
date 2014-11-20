@@ -72,6 +72,8 @@ data Ops x
     | MkOpUnion           (OpUnion x)
     | MkOpToSet           (OpToSet x)
     | MkOpToMSet          (OpToMSet x)
+    | MkOpMax             (OpMax x)
+    | MkOpMin             (OpMin x)
 
     | MkOpFunctionImage   (OpFunctionImage x)
     | MkOpDefined         (OpDefined x)
@@ -120,6 +122,8 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpUnion               x) = typeOf x
     typeOf (MkOpToSet               x) = typeOf x
     typeOf (MkOpToMSet              x) = typeOf x
+    typeOf (MkOpMax                 x) = typeOf x
+    typeOf (MkOpMin                 x) = typeOf x
     typeOf (MkOpFunctionImage       x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
@@ -161,6 +165,8 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpUnion               x) = evaluateOp x
     evaluateOp (MkOpToSet               x) = evaluateOp x
     evaluateOp (MkOpToMSet              x) = evaluateOp x
+    evaluateOp (MkOpMax                 x) = evaluateOp x
+    evaluateOp (MkOpMin                 x) = evaluateOp x
     evaluateOp (MkOpFunctionImage       x) = evaluateOp x
     evaluateOp (MkOpDefined             x) = evaluateOp x
     evaluateOp (MkOpRange               x) = evaluateOp x
@@ -226,6 +232,8 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpUnion     op@(OpUnion     a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec _ (MkOpToSet    (OpToSet    a)) = "toSet"    <> prParens (pretty a)
     prettyPrec _ (MkOpToMSet   (OpToMSet   a)) = "toMSet"   <> prParens (pretty a)
+    prettyPrec _ (MkOpMax      (OpMax     xs)) = "max" <> prettyList prParens "," xs
+    prettyPrec _ (MkOpMin      (OpMin     xs)) = "min" <> prettyList prParens "," xs
     prettyPrec _ (MkOpFunctionImage (OpFunctionImage a b)) = "image" <> prettyList prParens "," (a:b)
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
@@ -257,8 +265,6 @@ instance Serialize x => Serialize (OpPlus x)
 instance Hashable  x => Hashable  (OpPlus x)
 instance ToJSON    x => ToJSON    (OpPlus x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpPlus x) where parseJSON = JSON.genericParseJSON jsonOptions
-opPlus :: OperatorContainer x => x -> x -> x
-opPlus x y = injectOp (MkOpPlus (OpPlus [x,y]))
 instance BinaryOperator (OpPlus x) where
     opLexeme _ = L_Plus
 instance (TypeOf x, Pretty x) => TypeOf (OpPlus x) where
@@ -281,8 +287,6 @@ instance Serialize x => Serialize (OpMinus x)
 instance Hashable  x => Hashable  (OpMinus x)
 instance ToJSON    x => ToJSON    (OpMinus x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpMinus x) where parseJSON = JSON.genericParseJSON jsonOptions
-opMinus :: OperatorContainer x => x -> x -> x
-opMinus x y = injectOp (MkOpMinus (OpMinus x y))
 instance BinaryOperator (OpMinus x) where
     opLexeme _ = L_Minus
 instance TypeOf x => TypeOf (OpMinus x) where
@@ -297,8 +301,6 @@ instance Serialize x => Serialize (OpTimes x)
 instance Hashable  x => Hashable  (OpTimes x)
 instance ToJSON    x => ToJSON    (OpTimes x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTimes x) where parseJSON = JSON.genericParseJSON jsonOptions
-opTimes :: OperatorContainer x => x -> x -> x
-opTimes x y = injectOp (MkOpTimes (OpTimes [x,y]))
 instance BinaryOperator (OpTimes x) where
     opLexeme _ = L_Times
 instance (TypeOf x, Pretty x) => TypeOf (OpTimes x) where
@@ -318,8 +320,6 @@ instance Serialize x => Serialize (OpDiv x)
 instance Hashable  x => Hashable  (OpDiv x)
 instance ToJSON    x => ToJSON    (OpDiv x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpDiv x) where parseJSON = JSON.genericParseJSON jsonOptions
-opDiv :: OperatorContainer x => x -> x -> x
-opDiv x y = injectOp (MkOpDiv (OpDiv x y))
 instance BinaryOperator (OpDiv x) where
     opLexeme _ = L_Div
 instance TypeOf x => TypeOf (OpDiv x) where
@@ -334,8 +334,6 @@ instance Serialize x => Serialize (OpMod x)
 instance Hashable  x => Hashable  (OpMod x)
 instance ToJSON    x => ToJSON    (OpMod x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpMod x) where parseJSON = JSON.genericParseJSON jsonOptions
-opMod :: OperatorContainer x => x -> x -> x
-opMod x y = injectOp (MkOpMod (OpMod x y))
 instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
 instance TypeOf x => TypeOf (OpMod x) where
@@ -350,8 +348,6 @@ instance Serialize x => Serialize (OpPow x)
 instance Hashable  x => Hashable  (OpPow x)
 instance ToJSON    x => ToJSON    (OpPow x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpPow x) where parseJSON = JSON.genericParseJSON jsonOptions
-opPow :: OperatorContainer x => x -> x -> x
-opPow x y = injectOp (MkOpPow (OpPow x y))
 instance BinaryOperator (OpPow x) where
     opLexeme _ = L_Pow
 instance TypeOf x => TypeOf (OpPow x) where
@@ -366,8 +362,6 @@ instance Serialize x => Serialize (OpAbs x)
 instance Hashable  x => Hashable  (OpAbs x)
 instance ToJSON    x => ToJSON    (OpAbs x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAbs x) where parseJSON = JSON.genericParseJSON jsonOptions
-opAbs :: OperatorContainer x => x -> x
-opAbs x = injectOp (MkOpAbs (OpAbs x))
 instance TypeOf x => TypeOf (OpAbs x) where
     typeOf (OpAbs a) = intToInt a
 instance EvaluateOp OpAbs where
@@ -380,8 +374,6 @@ instance Serialize x => Serialize (OpNegate x)
 instance Hashable  x => Hashable  (OpNegate x)
 instance ToJSON    x => ToJSON    (OpNegate x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpNegate x) where parseJSON = JSON.genericParseJSON jsonOptions
-opNegate :: OperatorContainer x => x -> x
-opNegate x = injectOp (MkOpNegate (OpNegate x))
 instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
 instance EvaluateOp OpNegate where
@@ -394,8 +386,6 @@ instance Serialize x => Serialize (OpEq x)
 instance Hashable  x => Hashable  (OpEq x)
 instance ToJSON    x => ToJSON    (OpEq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpEq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opEq :: OperatorContainer x => x -> x -> x
-opEq x y = injectOp (MkOpEq (OpEq x y))
 instance BinaryOperator (OpEq x) where
     opLexeme _ = L_Eq
 instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
@@ -410,8 +400,6 @@ instance Serialize x => Serialize (OpNeq x)
 instance Hashable  x => Hashable  (OpNeq x)
 instance ToJSON    x => ToJSON    (OpNeq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpNeq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opNeq :: OperatorContainer x => x -> x -> x
-opNeq x y = injectOp (MkOpNeq (OpNeq x y))
 instance BinaryOperator (OpNeq x) where
     opLexeme _ = L_Neq
 instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
@@ -426,8 +414,6 @@ instance Serialize x => Serialize (OpLt x)
 instance Hashable  x => Hashable  (OpLt x)
 instance ToJSON    x => ToJSON    (OpLt x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpLt x) where parseJSON = JSON.genericParseJSON jsonOptions
-opLt :: OperatorContainer x => x -> x -> x
-opLt x y = injectOp (MkOpLt (OpLt x y))
 instance BinaryOperator (OpLt x) where
     opLexeme _ = L_Lt
 instance (TypeOf x, Pretty x) => TypeOf (OpLt x) where
@@ -442,8 +428,6 @@ instance Serialize x => Serialize (OpLeq x)
 instance Hashable  x => Hashable  (OpLeq x)
 instance ToJSON    x => ToJSON    (OpLeq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpLeq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opLeq :: OperatorContainer x => x -> x -> x
-opLeq x y = injectOp (MkOpLeq (OpLeq x y))
 instance BinaryOperator (OpLeq x) where
     opLexeme _ = L_Leq
 instance (TypeOf x, Pretty x) => TypeOf (OpLeq x) where
@@ -458,8 +442,6 @@ instance Serialize x => Serialize (OpGt x)
 instance Hashable  x => Hashable  (OpGt x)
 instance ToJSON    x => ToJSON    (OpGt x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpGt x) where parseJSON = JSON.genericParseJSON jsonOptions
-opGt :: OperatorContainer x => x -> x -> x
-opGt x y = injectOp (MkOpGt (OpGt x y))
 instance BinaryOperator (OpGt x) where
     opLexeme _ = L_Gt
 instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
@@ -474,8 +456,6 @@ instance Serialize x => Serialize (OpGeq x)
 instance Hashable  x => Hashable  (OpGeq x)
 instance ToJSON    x => ToJSON    (OpGeq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpGeq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opGeq :: OperatorContainer x => x -> x -> x
-opGeq x y = injectOp (MkOpGeq (OpGeq x y))
 instance BinaryOperator (OpGeq x) where
     opLexeme _ = L_Geq
 instance (TypeOf x, Pretty x) => TypeOf (OpGeq x) where
@@ -490,8 +470,6 @@ instance Serialize x => Serialize (OpAnd x)
 instance Hashable  x => Hashable  (OpAnd x)
 instance ToJSON    x => ToJSON    (OpAnd x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAnd x) where parseJSON = JSON.genericParseJSON jsonOptions
-opAnd :: OperatorContainer x => x -> x -> x
-opAnd x y = injectOp (MkOpAnd (OpAnd [x,y]))
 instance BinaryOperator (OpAnd x) where
     opLexeme _ = L_And
 instance (TypeOf x, Pretty x) => TypeOf (OpAnd x) where
@@ -514,8 +492,6 @@ instance Serialize x => Serialize (OpOr x)
 instance Hashable  x => Hashable  (OpOr x)
 instance ToJSON    x => ToJSON    (OpOr x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpOr x) where parseJSON = JSON.genericParseJSON jsonOptions
-opOr :: OperatorContainer x => x -> x -> x
-opOr x y = injectOp (MkOpOr (OpOr [x,y]))
 instance BinaryOperator (OpOr x) where
     opLexeme _ = L_Or
 instance (TypeOf x, Pretty x) => TypeOf (OpOr x) where
@@ -538,8 +514,6 @@ instance Serialize x => Serialize (OpImply x)
 instance Hashable  x => Hashable  (OpImply x)
 instance ToJSON    x => ToJSON    (OpImply x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpImply x) where parseJSON = JSON.genericParseJSON jsonOptions
-opImply :: OperatorContainer x => x -> x -> x
-opImply x y = injectOp (MkOpImply (OpImply x y))
 instance BinaryOperator (OpImply x) where
     opLexeme _ = L_Imply
 instance TypeOf x => TypeOf (OpImply x) where
@@ -554,8 +528,6 @@ instance Serialize x => Serialize (OpNot x)
 instance Hashable  x => Hashable  (OpNot x)
 instance ToJSON    x => ToJSON    (OpNot x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpNot x) where parseJSON = JSON.genericParseJSON jsonOptions
-opNot :: OperatorContainer x => x -> x
-opNot x = injectOp (MkOpNot (OpNot x))
 instance TypeOf x => TypeOf (OpNot x) where
     typeOf (OpNot a) = do TypeBool <- typeOf a ; return TypeBool
 instance EvaluateOp OpNot where
@@ -599,8 +571,6 @@ instance Serialize x => Serialize (OpSlicing x)
 instance Hashable  x => Hashable  (OpSlicing x)
 instance ToJSON    x => ToJSON    (OpSlicing x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSlicing x) where parseJSON = JSON.genericParseJSON jsonOptions
-opSlicing :: OperatorContainer x => x -> Maybe x -> Maybe x -> x
-opSlicing m a b = injectOp (MkOpSlicing (OpSlicing m a b))
 instance TypeOf x => TypeOf (OpSlicing x) where
     typeOf (OpSlicing m _ _) = do
         t@TypeMatrix{} <- typeOf m
@@ -615,8 +585,6 @@ instance Serialize x => Serialize (OpFlatten x)
 instance Hashable  x => Hashable  (OpFlatten x)
 instance ToJSON    x => ToJSON    (OpFlatten x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpFlatten x) where parseJSON = JSON.genericParseJSON jsonOptions
-opFlatten :: OperatorContainer x => x -> x
-opFlatten m = injectOp (MkOpFlatten (OpFlatten m))
 instance TypeOf x => TypeOf (OpFlatten x) where
     typeOf (OpFlatten m) = do
         let flattenType (TypeList inner) = flattenType inner
@@ -639,8 +607,6 @@ instance Serialize x => Serialize (OpLexLt x)
 instance Hashable  x => Hashable  (OpLexLt x)
 instance ToJSON    x => ToJSON    (OpLexLt x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpLexLt x) where parseJSON = JSON.genericParseJSON jsonOptions
-opLexLt :: OperatorContainer x => x -> x -> x
-opLexLt x y = injectOp (MkOpLexLt (OpLexLt x y))
 instance BinaryOperator (OpLexLt x) where
     opLexeme _ = L_LexLt
 instance TypeOf x => TypeOf (OpLexLt x) where
@@ -660,8 +626,6 @@ instance Serialize x => Serialize (OpLexLeq x)
 instance Hashable  x => Hashable  (OpLexLeq x)
 instance ToJSON    x => ToJSON    (OpLexLeq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpLexLeq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opLexLeq :: OperatorContainer x => x -> x -> x
-opLexLeq x y = injectOp (MkOpLexLeq (OpLexLeq x y))
 instance BinaryOperator (OpLexLeq x) where
     opLexeme _ = L_LexLeq
 instance TypeOf x => TypeOf (OpLexLeq x) where
@@ -681,8 +645,6 @@ instance Serialize x => Serialize (OpTrue x)
 instance Hashable  x => Hashable  (OpTrue x)
 instance ToJSON    x => ToJSON    (OpTrue x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = JSON.genericParseJSON jsonOptions
-opTrue :: OperatorContainer x => x -> x
-opTrue x = injectOp (MkOpTrue (OpTrue x))
 instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 instance EvaluateOp OpTrue where
@@ -695,8 +657,6 @@ instance Serialize x => Serialize (OpToInt x)
 instance Hashable  x => Hashable  (OpToInt x)
 instance ToJSON    x => ToJSON    (OpToInt x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpToInt x) where parseJSON = JSON.genericParseJSON jsonOptions
-opToInt :: OperatorContainer x => x -> x
-opToInt x = injectOp (MkOpToInt (OpToInt x))
 instance TypeOf x => TypeOf (OpToInt x) where
     typeOf (OpToInt x) = do
         TypeBool{} <- typeOf x
@@ -713,8 +673,6 @@ instance Serialize x => Serialize (OpDontCare x)
 instance Hashable  x => Hashable  (OpDontCare x)
 instance ToJSON    x => ToJSON    (OpDontCare x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpDontCare x) where parseJSON = JSON.genericParseJSON jsonOptions
-opDontCare :: OperatorContainer x => x -> x
-opDontCare x = injectOp (MkOpDontCare (OpDontCare x))
 instance TypeOf x => TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
 instance EvaluateOp OpDontCare where
@@ -727,8 +685,6 @@ instance Serialize x => Serialize (OpIn x)
 instance Hashable  x => Hashable  (OpIn x)
 instance ToJSON    x => ToJSON    (OpIn x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIn x) where parseJSON = JSON.genericParseJSON jsonOptions
-opIn :: OperatorContainer x => x -> x -> x
-opIn x y = injectOp (MkOpIn (OpIn x y))
 instance BinaryOperator (OpIn x) where
     opLexeme _ = L_in
 instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
@@ -750,8 +706,6 @@ instance Serialize x => Serialize (OpSubset x)
 instance Hashable  x => Hashable  (OpSubset x)
 instance ToJSON    x => ToJSON    (OpSubset x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSubset x) where parseJSON = JSON.genericParseJSON jsonOptions
-opSubset :: OperatorContainer x => x -> x -> x
-opSubset x y = injectOp (MkOpSubset (OpSubset x y))
 instance BinaryOperator (OpSubset x) where
     opLexeme _ = L_subset
 instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
@@ -768,8 +722,6 @@ instance Serialize x => Serialize (OpSubsetEq x)
 instance Hashable  x => Hashable  (OpSubsetEq x)
 instance ToJSON    x => ToJSON    (OpSubsetEq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSubsetEq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opSubsetEq :: OperatorContainer x => x -> x -> x
-opSubsetEq x y = injectOp (MkOpSubsetEq (OpSubsetEq x y))
 instance BinaryOperator (OpSubsetEq x) where
     opLexeme _ = L_subsetEq
 instance (TypeOf x, Pretty x) => TypeOf (OpSubsetEq x) where
@@ -786,8 +738,6 @@ instance Serialize x => Serialize (OpSupset x)
 instance Hashable  x => Hashable  (OpSupset x)
 instance ToJSON    x => ToJSON    (OpSupset x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSupset x) where parseJSON = JSON.genericParseJSON jsonOptions
-opSupset :: OperatorContainer x => x -> x -> x
-opSupset x y = injectOp (MkOpSupset (OpSupset x y))
 instance BinaryOperator (OpSupset x) where
     opLexeme _ = L_supset
 instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
@@ -804,8 +754,6 @@ instance Serialize x => Serialize (OpSupsetEq x)
 instance Hashable  x => Hashable  (OpSupsetEq x)
 instance ToJSON    x => ToJSON    (OpSupsetEq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSupsetEq x) where parseJSON = JSON.genericParseJSON jsonOptions
-opSupsetEq :: OperatorContainer x => x -> x -> x
-opSupsetEq x y = injectOp (MkOpSupsetEq (OpSupsetEq x y))
 instance BinaryOperator (OpSupsetEq x) where
     opLexeme _ = L_supsetEq
 instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
@@ -822,8 +770,6 @@ instance Serialize x => Serialize (OpIntersect x)
 instance Hashable  x => Hashable  (OpIntersect x)
 instance ToJSON    x => ToJSON    (OpIntersect x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIntersect x) where parseJSON = JSON.genericParseJSON jsonOptions
-opIntersect :: OperatorContainer x => x -> x -> x
-opIntersect x y = injectOp (MkOpIntersect (OpIntersect x y))
 instance BinaryOperator (OpIntersect x) where
     opLexeme _ = L_intersect
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
@@ -840,8 +786,6 @@ instance Serialize x => Serialize (OpUnion x)
 instance Hashable  x => Hashable  (OpUnion x)
 instance ToJSON    x => ToJSON    (OpUnion x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpUnion x) where parseJSON = JSON.genericParseJSON jsonOptions
-opUnion :: OperatorContainer x => x -> x -> x
-opUnion x y = injectOp (MkOpUnion (OpUnion x y))
 instance BinaryOperator (OpUnion x) where
     opLexeme _ = L_union
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
@@ -858,8 +802,6 @@ instance Serialize x => Serialize (OpToSet x)
 instance Hashable  x => Hashable  (OpToSet x)
 instance ToJSON    x => ToJSON    (OpToSet x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpToSet x) where parseJSON = JSON.genericParseJSON jsonOptions
-opToSet :: OperatorContainer x => x -> x
-opToSet x = injectOp (MkOpToSet (OpToSet x))
 instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
     typeOf p@(OpToSet x) = do
         tx <- typeOf x
@@ -886,8 +828,6 @@ instance Serialize x => Serialize (OpToMSet x)
 instance Hashable  x => Hashable  (OpToMSet x)
 instance ToJSON    x => ToJSON    (OpToMSet x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpToMSet x) where parseJSON = JSON.genericParseJSON jsonOptions
-opToMSet :: OperatorContainer x => x -> x
-opToMSet x = injectOp (MkOpToMSet (OpToMSet x))
 instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
     typeOf p@(OpToMSet x) = do
         tx <- typeOf x
@@ -908,14 +848,50 @@ instance EvaluateOp OpToMSet where
     evaluateOp op = na $ "evaluateOp{OpToMSet}:" <++> pretty (show op)
 
 
+data OpMax x = OpMax [x]
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpMax x)
+instance Hashable  x => Hashable  (OpMax x)
+instance ToJSON    x => ToJSON    (OpMax x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpMax x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpMax x) where
+    typeOf (OpMax [a,b]) = intToIntToInt a b
+    typeOf (OpMax [x]) = do
+        TypeList TypeInt <- typeOf x
+        return TypeInt
+    typeOf p = raiseTypeError (MkOpMax p)
+instance EvaluateOp OpMax where
+    evaluateOp (OpMax [ConstantAbstract (AbsLitList xs)]) = ConstantInt . maximum <$> mapM intOut xs
+    evaluateOp (OpMax [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . maximum <$> mapM intOut xs
+    evaluateOp (OpMax [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . maximum <$> mapM intOut xs
+    evaluateOp (OpMax                               xs)   = ConstantInt . maximum <$> mapM intOut xs
+
+
+data OpMin x = OpMin [x]
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpMin x)
+instance Hashable  x => Hashable  (OpMin x)
+instance ToJSON    x => ToJSON    (OpMin x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpMin x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpMin x) where
+    typeOf (OpMin [a,b]) = intToIntToInt a b
+    typeOf (OpMin [x]) = do
+        TypeList TypeInt <- typeOf x
+        return TypeInt
+    typeOf p = raiseTypeError (MkOpMin p)
+instance EvaluateOp OpMin where
+    evaluateOp (OpMin [ConstantAbstract (AbsLitList xs)]) = ConstantInt . minimum <$> mapM intOut xs
+    evaluateOp (OpMin [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . minimum <$> mapM intOut xs
+    evaluateOp (OpMin [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . minimum <$> mapM intOut xs
+    evaluateOp (OpMin                               xs)   = ConstantInt . minimum <$> mapM intOut xs
+
+
 data OpFunctionImage x = OpFunctionImage x [x]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpFunctionImage x)
 instance Hashable  x => Hashable  (OpFunctionImage x)
 instance ToJSON    x => ToJSON    (OpFunctionImage x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpFunctionImage x) where parseJSON = JSON.genericParseJSON jsonOptions
-opFunctionImage :: OperatorContainer x => x -> [x] -> x
-opFunctionImage x y = injectOp (MkOpFunctionImage (OpFunctionImage x y))
 instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
     typeOf p@(OpFunctionImage f xs) = do
         TypeFunction from to <- typeOf f
@@ -945,8 +921,6 @@ instance Serialize x => Serialize (OpDefined x)
 instance Hashable  x => Hashable  (OpDefined x)
 instance ToJSON    x => ToJSON    (OpDefined x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpDefined x) where parseJSON = JSON.genericParseJSON jsonOptions
-opDefined :: OperatorContainer x => x -> x
-opDefined x = injectOp (MkOpDefined (OpDefined x))
 instance TypeOf x => TypeOf (OpDefined x) where
     typeOf (OpDefined x) = do
         TypeFunction a _ <- typeOf x
@@ -963,8 +937,6 @@ instance Serialize x => Serialize (OpRange x)
 instance Hashable  x => Hashable  (OpRange x)
 instance ToJSON    x => ToJSON    (OpRange x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpRange x) where parseJSON = JSON.genericParseJSON jsonOptions
-opRange :: OperatorContainer x => x -> x
-opRange x = injectOp (MkOpRange (OpRange x))
 instance TypeOf x => TypeOf (OpRange x) where
     typeOf (OpRange x) = do
         TypeFunction _ a <- typeOf x
@@ -981,8 +953,6 @@ instance Serialize x => Serialize (OpAllDiff x)
 instance Hashable  x => Hashable  (OpAllDiff x)
 instance ToJSON    x => ToJSON    (OpAllDiff x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAllDiff x) where parseJSON = JSON.genericParseJSON jsonOptions
-opAllDiff :: OperatorContainer x => x -> x
-opAllDiff x = injectOp (MkOpAllDiff (OpAllDiff x))
 instance TypeOf x => TypeOf (OpAllDiff x) where
     typeOf (OpAllDiff x) = do
         TypeMatrix TypeInt TypeInt <- typeOf x
@@ -1032,31 +1002,31 @@ mkBinOp op a b =
         Just l  ->
             let
                 f = case l of
-                    L_Plus  -> opPlus
-                    L_Minus -> opMinus
-                    L_Times -> opTimes
-                    L_Div   -> opDiv
-                    L_Mod   -> opMod
-                    L_Pow   -> opPow
-                    L_Eq    -> opEq
-                    L_Neq   -> opNeq
-                    L_Lt    -> opLt
-                    L_Leq   -> opLeq
-                    L_Gt    -> opGt
-                    L_Geq   -> opGeq
-                    L_in    -> opIn
-                    L_And   -> opAnd
-                    L_Or    -> opOr
-                    L_Imply -> opImply
-                    L_Iff   -> opEq
-                    L_subset    -> opSubset
-                    L_subsetEq  -> opSubsetEq
-                    L_supset    -> opSupset
-                    L_supsetEq  -> opSupsetEq
-                    L_intersect -> opIntersect
-                    L_union     -> opUnion
-                    L_LexLt     -> opLexLt
-                    L_LexLeq    -> opLexLeq
+                    L_Plus      -> \ x y -> injectOp $ MkOpPlus      $ OpPlus       [x,y]
+                    L_Minus     -> \ x y -> injectOp $ MkOpMinus     $ OpMinus       x y
+                    L_Times     -> \ x y -> injectOp $ MkOpTimes     $ OpTimes      [x,y]
+                    L_Div       -> \ x y -> injectOp $ MkOpDiv       $ OpDiv         x y
+                    L_Mod       -> \ x y -> injectOp $ MkOpMod       $ OpMod         x y
+                    L_Pow       -> \ x y -> injectOp $ MkOpPow       $ OpPow         x y
+                    L_Eq        -> \ x y -> injectOp $ MkOpEq        $ OpEq          x y
+                    L_Neq       -> \ x y -> injectOp $ MkOpNeq       $ OpNeq         x y
+                    L_Lt        -> \ x y -> injectOp $ MkOpLt        $ OpLt          x y
+                    L_Leq       -> \ x y -> injectOp $ MkOpLeq       $ OpLeq         x y
+                    L_Gt        -> \ x y -> injectOp $ MkOpGt        $ OpGt          x y
+                    L_Geq       -> \ x y -> injectOp $ MkOpGeq       $ OpGeq         x y
+                    L_in        -> \ x y -> injectOp $ MkOpIn        $ OpIn          x y
+                    L_And       -> \ x y -> injectOp $ MkOpAnd       $ OpAnd        [x,y]
+                    L_Or        -> \ x y -> injectOp $ MkOpOr        $ OpOr         [x,y]
+                    L_Imply     -> \ x y -> injectOp $ MkOpImply     $ OpImply       x y
+                    L_Iff       -> \ x y -> injectOp $ MkOpEq        $ OpEq          x y
+                    L_subset    -> \ x y -> injectOp $ MkOpSubset    $ OpSubset      x y
+                    L_subsetEq  -> \ x y -> injectOp $ MkOpSubsetEq  $ OpSubsetEq    x y
+                    L_supset    -> \ x y -> injectOp $ MkOpSupset    $ OpSupset      x y
+                    L_supsetEq  -> \ x y -> injectOp $ MkOpSupsetEq  $ OpSupsetEq    x y
+                    L_intersect -> \ x y -> injectOp $ MkOpIntersect $ OpIntersect   x y
+                    L_union     -> \ x y -> injectOp $ MkOpUnion     $ OpUnion       x y
+                    L_LexLt     -> \ x y -> injectOp $ MkOpLexLt     $ OpLexLt       x y
+                    L_LexLeq    -> \ x y -> injectOp $ MkOpLexLeq    $ OpLexLeq      x y
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b
@@ -1073,14 +1043,16 @@ mkOp op xs =
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
-            L_toInt    -> opToInt    (headNote "toInt takes a single argument."    xs)
-            L_defined  -> opDefined  (headNote "defined takes a single argument."  xs)
-            L_range    -> opDefined  (headNote "range takes a single argument."    xs)
-            L_allDiff  -> opAllDiff  (headNote "allDiff takes a single argument."  xs)
-            L_dontCare -> opDontCare (headNote "dontCare takes a single argument." xs)
-            L_flatten  -> opFlatten  (headNote "flatten takes a single argument."  xs)
-            L_toSet    -> opToSet    (headNote "toSet takes a single argument."    xs)
-            L_toMSet   -> opToMSet   (headNote "toMSet takes a single argument."   xs)
+            L_toInt    -> injectOp $ MkOpToInt    $ OpToInt    (headNote "toInt takes a single argument."    xs)
+            L_defined  -> injectOp $ MkOpDefined  $ OpDefined  (headNote "defined takes a single argument."  xs)
+            L_range    -> injectOp $ MkOpDefined  $ OpDefined  (headNote "range takes a single argument."    xs)
+            L_allDiff  -> injectOp $ MkOpAllDiff  $ OpAllDiff  (headNote "allDiff takes a single argument."  xs)
+            L_dontCare -> injectOp $ MkOpDontCare $ OpDontCare (headNote "dontCare takes a single argument." xs)
+            L_flatten  -> injectOp $ MkOpFlatten  $ OpFlatten  (headNote "flatten takes a single argument."  xs)
+            L_toSet    -> injectOp $ MkOpToSet    $ OpToSet    (headNote "toSet takes a single argument."    xs)
+            L_toMSet   -> injectOp $ MkOpToMSet   $ OpToMSet   (headNote "toMSet takes a single argument."   xs)
+            L_max      -> injectOp $ MkOpMax      $ OpMax xs
+            L_min      -> injectOp $ MkOpMin      $ OpMin xs
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 

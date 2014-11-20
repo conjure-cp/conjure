@@ -102,7 +102,7 @@ import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, ma
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
-import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum )
+import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )

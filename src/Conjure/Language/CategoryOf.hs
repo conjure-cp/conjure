@@ -6,7 +6,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 
 
-data Category = CatConstant | CatParameter | CatQuantified | CatDecision
+data Category = CatBottom | CatConstant | CatParameter | CatQuantified | CatDecision
     deriving (Eq, Ord, Show)
 
 class CategoryOf a where
@@ -14,7 +14,7 @@ class CategoryOf a where
 
 instance CategoryOf Expression where
     categoryOf (Reference _ (Just ref)) = categoryOf ref
-    categoryOf x = maximum $ map categoryOf $ children x
+    categoryOf x = maximum (CatBottom : map categoryOf (children x))
 
 instance CategoryOf ReferenceTo where
     categoryOf (Alias              x) = categoryOf x
@@ -27,7 +27,7 @@ instance CategoryOf Generator where
      categoryOf (GenInExpr _ x) = categoryOf x
 
 instance CategoryOf x => CategoryOf (Domain r x) where
-    categoryOf dom = maximum (fmap categoryOf dom)
+    categoryOf dom = maximum (CatBottom : toList (fmap categoryOf dom))
 
 instance CategoryOf FindOrGiven where
     categoryOf Find = CatDecision
