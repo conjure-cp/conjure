@@ -391,15 +391,15 @@ parseAtomicExprNoPrePost = msum $ map try
     , parseLiteral
     , parseDomainAsExpr
     , parseWithLocals
-    , parseMatrixComprehension
+    , parseComprehension
     , parens parseExpr
     ]
 
-parseMatrixComprehension :: Parser Expression
-parseMatrixComprehension = brackets $ do
+parseComprehension :: Parser Expression
+parseComprehension = brackets $ do
     x   <- parseExpr
     lexeme L_Bar
-    gens <- sepBy1 generator comma
+    gens <- sepBy1 (try generator <|> filter_) comma
     return (Comprehension x (concat gens))
     where
         generator = do
@@ -414,6 +414,7 @@ parseMatrixComprehension = brackets $ do
                     expr <- parseExpr
                     return [Generator (GenInExpr pat expr)   | pat <- pats]
                 ]
+        filter_ = return . Filter <$> parseExpr
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain

@@ -929,15 +929,19 @@ ruleGen_InlineFilters
     -> m (Doc, [Name] -> Expression)
 ruleGen_InlineFilters opQ opSkip p = do
     [Comprehension body gensOrFilters] <- match opQ p
-    let filters    = [ x | Filter    x <- gensOrFilters ]
-    let generators = [ x | Generator x <- gensOrFilters ]
-    theGuard <- case filters of
-        []  -> fail "No filter."
+    let (toInline, toKeep) = mconcat
+            [ case gof of
+                Filter x | categoryOf x == CatDecision -> ([x],[])
+                _ -> ([],[gof])
+            | gof <- gensOrFilters
+            ]
+    theGuard <- case toInline of
+        []  -> fail "No filter to inline."
         [x] -> return x
         xs  -> return $ make opAnd xs
     return ( "Inlining filters"
            , const $ make opQ $ return $
-               Comprehension (opSkip theGuard body) (map Generator generators)
+               Comprehension (opSkip theGuard body) toKeep
            )
 
 
