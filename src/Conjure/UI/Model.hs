@@ -852,7 +852,11 @@ rule_Set_DontCare = "dontCare-set" `namedRule` theRule where
 
 rule_ComplexAbsPat :: Rule
 rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenDomain pat@AbsPatTuple{} domain)]) =
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, domainOrExpr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenDomain pat@AbsPatTuple{} domain) -> return (pat, Left domain)
+            Generator (GenInExpr pat@AbsPatTuple{} expr)   -> return (pat, Right expr)
+            _ -> fail "No match."
         return
             ( "complex pattern on tuple patterns"
             , \ fresh ->
@@ -864,21 +868,11 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
                         f x = x
                     in
                         Comprehension (transform f body)
-                            [Generator (GenDomain iPat domain)]
-            )
-    theRule (Comprehension body [Generator (GenInExpr pat@AbsPatTuple{} expr)]) =
-        return
-            ( "complex pattern on tuple patterns"
-            , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        replacements = [ (p, make opIndexing' i (map fromInt is))
-                                       | (p, is) <- genMappings pat
-                                       ]
-                        f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
-                        f x = x
-                    in
-                        Comprehension (transform f body)
-                            [Generator (GenInExpr iPat expr)]
+                            $  gofBefore
+                            ++ [ either (\ domain -> Generator (GenDomain iPat domain) )
+                                        (\ expr   -> Generator (GenInExpr iPat expr  ) )
+                                        domainOrExpr ]
+                            ++ transformBi f gofAfter
             )
     theRule _ = fail "No match."
 
@@ -1067,22 +1061,21 @@ rule_Tuple_DomainComprehension = "tuple-domain-comprehension" `namedRule` theRul
         (gofBefore, (pat, domains), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenDomain pat@Single{} (DomainTuple domains)) -> return (pat, domains)
             _ -> fail "No match."
-
         let pats fresh     = [ Single i            | i <- fresh ]
         let refs fresh     = [ Reference i Nothing | i <- fresh ]
         let theValue fresh = AbstractLiteral (AbsLitTuple (refs fresh))
-        let
-            -- given an expression "old", update uses of "pat" in it to use "val"
-            upd old val    = (lambdaToFunction pat old) val
+        let upd val old    = lambdaToFunction pat old val -- given an expression "old",
+                                                          -- update uses of "pat" in it
+                                                          -- to use "val"
         return ( "Tuple domain comprehension"
                , \ fresh' ->
                    let fresh = take (length domains) fresh'
                        val = theValue fresh
-                   in  Comprehension (upd body val)
+                   in  Comprehension (upd val body)
                        $  gofBefore
                        ++ [ Generator (GenDomain p d)
                           | (p,d) <- zip (pats fresh) domains ]
-                       ++ transformBi (\ old -> upd old val ) gofAfter
+                       ++ transformBi (upd val) gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1108,17 +1101,22 @@ rule_Set_In = "set-in" `namedRule` theRule where
 
 rule_Set_Comprehension_Explicit :: Rule
 rule_Set_Comprehension_Explicit = "set-comprehension{Explicit}" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            _ -> fail "No match."
         TypeSet{}            <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         let i = Reference iPat Nothing
-        let f = lambdaToFunction pat body
+        let upd val old = lambdaToFunction pat old val
         return ( "Vertical rule for set-comprehension, Explicit representation"
-               , const $
-                   Comprehension (f [essence| &m[&i] |])
-                       [ Generator (GenDomain pat index) ]
+               , const $ let val = [essence| &m[&i] |] in
+                   Comprehension (upd val body)
+                       $  gofBefore
+                       ++ [ Generator (GenDomain pat index) ]
+                       ++ transformBi (upd val) gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1222,7 +1220,10 @@ rule_Set_Leq = "set-leq" `namedRule` theRule where
 
 rule_Set_Intersect :: Rule
 rule_Set_Intersect = "set-intersect" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            _ -> fail "No match."
         (x, y)             <- match opIntersect s
         tx                 <- typeOf x
         case tx of
@@ -1236,16 +1237,21 @@ rule_Set_Intersect = "set-intersect" `namedRule` theRule where
             ( "Horizontal rule for set intersection"
             , const $
                 Comprehension body
-                    [ Generator (GenInExpr pat x)
-                    , Filter [essence| &i in &y |]
-                    ]
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat x)
+                       , Filter [essence| &i in &y |]
+                       ]
+                    ++ gofAfter
             )
     theRule _ = fail "No match."
 
 
 rule_Set_Union :: Rule
 rule_Set_Union = "set-union" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@Single{} s)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} s) -> return (pat, s)
+            _ -> fail "No match."
         (x, y)             <- match opUnion s
         tx                 <- typeOf x
         case tx of
@@ -1257,8 +1263,8 @@ rule_Set_Union = "set-union" `namedRule` theRule where
         return
             ( "Horizontal rule for set intersection"
             , const $ make opFlatten $ AbstractLiteral $ AbsLitList
-                [ Comprehension body [ Generator (GenInExpr pat x) ]
-                , Comprehension body [ Generator (GenInExpr pat y) ]
+                [ Comprehension body $ gofBefore ++ [ Generator (GenInExpr pat x) ] ++ gofAfter
+                , Comprehension body $ gofBefore ++ [ Generator (GenInExpr pat y) ] ++ gofAfter
                 ]
             )
     theRule _ = fail "No match."
@@ -1285,6 +1291,7 @@ rule_Set_MaxMin = "set-max-min" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
+-- TODO: convert to multiple generators, if needed
 rule_Set_Comprehension_Literal :: Rule
 rule_Set_Comprehension_Literal = "set-mapSetLiteral" `namedRule` theRule where
     theRule (Comprehension body [Generator (GenInExpr pat s)]) = do
@@ -1314,7 +1321,10 @@ rule_Set_In_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
 
 rule_Set_Comprehension_Occurrence :: Rule
 rule_Set_Comprehension_Occurrence = "set-comprehension{Occurrence}" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            _ -> fail "No match."
         TypeSet{}            <- typeOf s
         "Occurrence"         <- representationOf s
         [m]                  <- downX1 s
@@ -1323,9 +1333,11 @@ rule_Set_Comprehension_Occurrence = "set-comprehension{Occurrence}" `namedRule` 
         return ( "Vertical rule for set-comprehension, Occurrence representation"
                , const $
                    Comprehension body
-                       [ Generator (GenDomain pat index)
-                       , Filter [essence| &m[&i] |]
-                       ]
+                       $  gofBefore
+                       ++ [ Generator (GenDomain pat index)
+                          , Filter [essence| &m[&i] |]
+                          ]
+                       ++ gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1333,19 +1345,24 @@ rule_Set_Comprehension_Occurrence = "set-comprehension{Occurrence}" `namedRule` 
 rule_Set_Comprehension_ExplicitVarSizeWithMarker :: Rule
 rule_Set_Comprehension_ExplicitVarSizeWithMarker = "set-comprehension{ExplicitVarSizeWithMarker}"
                                                `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            _ -> fail "No match."        
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
         [marker, values]            <- downX1 s
         DomainMatrix index _        <- domainOf values
         let i = Reference iPat Nothing
-        let f = lambdaToFunction pat body
+        let upd val old = lambdaToFunction pat old val
         return ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
                , const $
-                    Comprehension (f [essence| &values[&i] |])
-                        [ Generator (GenDomain pat index)
-                        , Filter [essence| &i <= &marker |]
-                        ]
+                    Comprehension (upd [essence| &values[&i] |] body)
+                        $  gofBefore
+                        ++ [ Generator (GenDomain pat index)
+                           , Filter [essence| &i <= &marker |]
+                           ]
+                        ++ transformBi (upd [essence| &values[&i] |]) gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1353,19 +1370,24 @@ rule_Set_Comprehension_ExplicitVarSizeWithMarker = "set-comprehension{ExplicitVa
 rule_Set_Comprehension_ExplicitVarSizeWithFlags :: Rule
 rule_Set_Comprehension_ExplicitVarSizeWithFlags = "set-comprehension{ExplicitVarSizeWithFlags}"
                                                `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) s)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            _ -> fail "No match."        
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithFlags"  <- representationOf s
         [flags, values]             <- downX1 s
         DomainMatrix index _        <- domainOf values
         let i = Reference iPat Nothing
-        let f = lambdaToFunction pat body
+        let upd val old = lambdaToFunction pat old val
         return ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlags representation"
                , const $
-                    Comprehension (f [essence| &values[&i] |])
-                        [ Generator (GenDomain pat index)
-                        , Filter [essence| &flags[&i] |]
-                        ]
+                    Comprehension (upd [essence| &values[&i] |] body)
+                        $  gofBefore
+                        ++ [ Generator (GenDomain pat index)
+                           , Filter [essence| &flags[&i] |]
+                           ]
+                        ++ transformBi (upd [essence| &values[&i] |]) gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1390,19 +1412,24 @@ rule_Function_Eq = "function-eq" `namedRule` theRule where
 rule_Function_Comprehension_Function1D :: Rule
 rule_Function_Comprehension_Function1D = "function-comprehension{Function1D}"
                                      `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) expr)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> fail "No match."        
         let func             =  matchDef opToSet expr
         "Function1D"         <- representationOf func
         TypeFunction{}       <- typeOf func
         [values]             <- downX1 func
         DomainMatrix index _ <- domainOf values
         let i = Reference iPat Nothing
-        let f = lambdaToFunction pat body
+        let upd val old = lambdaToFunction pat old val
         return ( "Mapping over a function, Function1D representation"
-               , const $
+               , const $ let val = [essence| (&i, &values[&i]) |] in
                    Comprehension
-                       (f [essence| (&i, &values[&i]) |])
-                       [Generator (GenDomain pat index)]
+                       (upd val body)
+                       $  gofBefore
+                       ++ [Generator (GenDomain pat index)]
+                       ++ transformBi (upd val) gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1422,22 +1449,27 @@ rule_Function_Image_Function1D = "function-image{Function1D}"
 rule_Function_Comprehension_Function1DPartial :: Rule
 rule_Function_Comprehension_Function1DPartial = "function-comprehension{Function1DPartial}"
                                      `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) expr)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> fail "No match."        
         let func             =  matchDef opToSet expr
         "Function1DPartial"  <- representationOf func
         TypeFunction{}       <- typeOf func
         [flags,values]       <- downX1 func
         DomainMatrix index _ <- domainOf values
         let i = Reference iPat Nothing
-        let f = lambdaToFunction pat body
-        return ( "Mapping over a function, Function1DPartial representation"
-               , const $
-                   Comprehension
-                       (f [essence| (&i, &values[&i]) |])
-                       [ Generator (GenDomain pat index)
-                       , Filter [essence| &flags[&i] |]
-                       ]
-               )
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over a function, Function1DPartial representation"
+            , const $ let val = [essence| (&i, &values[&i]) |] in
+                Comprehension (upd val body)
+                    $  gofBefore
+                    ++ [ Generator (GenDomain pat index)
+                      , Filter [essence| &flags[&i] |]
+                      ]
+                    ++ transformBi (upd val) gofAfter
+            )
     theRule _ = fail "No match."
 
 
@@ -1513,7 +1545,10 @@ rule_Function_Comprehension_FunctionNDPartial :: Rule
 rule_Function_Comprehension_FunctionNDPartial = "function-comprehension{FunctionNDPartial}"
                                      `namedRule` theRule where
 
-    theRule (Comprehension body [Generator (GenInExpr pat@(Single iPat) expr)]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> fail "No match."        
         let func                      =  matchDef opToSet expr
         "FunctionNDPartial"           <- representationOf func
         TypeFunction (TypeTuple ts) _ <- typeOf func
@@ -1528,16 +1563,18 @@ rule_Function_Comprehension_FunctionNDPartial = "function-comprehension{Function
         let valuesIndexed x = index x values xArity
 
         let i = Reference iPat Nothing
-        let f = lambdaToFunction pat body
-        return ( "Mapping over a function, Function1DPartial representation"
-               , const $
-                   Comprehension
-                       (let val = valuesIndexed i
-                        in  f [essence| (&i, &val) |])
-                       [ Generator (GenDomain pat (DomainTuple indexDomain))
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over a function, Function1DPartial representation"
+            , const $ let val' = valuesIndexed i
+                          val  = [essence| (&i, &val') |] in
+                Comprehension (upd val body)
+                    $  gofBefore
+                    ++ [ Generator (GenDomain pat (DomainTuple indexDomain))
                        , Filter (flagsIndexed i)
                        ]
-               )
+                    ++ transformBi (upd val) gofAfter
+            )
     theRule _ = fail "No match."
 
 
@@ -1580,8 +1617,11 @@ rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `named
 
 rule_Relation_Comprehension_RelationAsMatrix :: Rule
 rule_Relation_Comprehension_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@Single{} expr)]) = do
-        let f                  =  lambdaToFunction pat body
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> fail "No match."                
+        let upd val old        =  lambdaToFunction pat old val
         let rel                =  matchDef opToSet expr
         TypeRelation{}         <- typeOf rel
         "RelationAsMatrix"     <- representationOf rel
@@ -1603,10 +1643,12 @@ rule_Relation_Comprehension_RelationAsMatrix = "relation-map_in_expr{RelationAsM
                         indexThis anyMatrix = make opIndexing' anyMatrix
                                     [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
 
-                    in  Comprehension (f lit)
-                            [ Generator (GenDomain iPat (DomainTuple mIndices))
-                            , Filter    (indexThis m)
-                            ]
+                    in  Comprehension (upd lit body)
+                            $  gofBefore
+                            ++ [ Generator (GenDomain iPat (DomainTuple mIndices))
+                              , Filter    (indexThis m)
+                              ]
+                            ++ transformBi (upd lit) gofAfter
                )
     theRule _ = fail "No match."
 

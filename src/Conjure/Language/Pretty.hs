@@ -6,12 +6,13 @@ module Conjure.Language.Pretty
     , (<++>), (<+>), (<>)
     , prettyList, prettyListDoc
     , parensIf
-    , renderNormal, renderWide
+    , render, renderNormal, renderWide
     , hang, hcat
     , prEmpty, prParens, prBrackets, prBraces
     , Doc
     , prettyContext
     , logDebugId
+    , tracingPretty
     ) where
 
 -- conjure
@@ -81,10 +82,13 @@ parensIf = wrapIf parens
         wrapIf wrap c = if c then wrap else id
 
 renderNormal :: Pretty a => a -> String
-renderNormal = renderStyle (style { lineLength = 120 }) . pretty
+renderNormal = render 120
 
 renderWide :: Pretty a => a -> String
-renderWide = renderStyle (style { lineLength = 240 }) . pretty
+renderWide = render 240
+
+render :: Pretty a => Int -> a -> String
+render w = renderStyle (style { lineLength = w }) . pretty
 
 prEmpty :: Doc
 prEmpty = empty
@@ -143,3 +147,6 @@ instance Pretty Scientific where
 
 logDebugId :: (MonadLog m, Pretty a) => Doc -> a -> m a
 logDebugId msg a = logDebug (msg <++> pretty a) >> return a
+
+tracingPretty :: Pretty a => Doc -> a -> a
+tracingPretty s a = trace (renderWide $ "tracing " <+> s <> ": " <++> pretty a) a
