@@ -32,6 +32,7 @@ resolveNames model = flip evalStateT [] $ do
             Where xs -> Where <$> mapM resolveX xs
             Objective obj x -> Objective obj <$> resolveX x
             SuchThat xs -> SuchThat <$> mapM resolveX xs
+    mapM_ check (universeBi statements)
     duplicateNames <- gets (map fst >>> histogram >>> filter (\ (_,n) -> n > 1 ) >>> map fst)
     unless (null duplicateNames) $
         userErr ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
@@ -39,7 +40,15 @@ resolveNames model = flip evalStateT [] $ do
 
 
 resolveNamesX :: MonadFail m => Expression -> m Expression
-resolveNamesX x = evalStateT (resolveX x) []
+resolveNamesX x = do
+    x' <- evalStateT (resolveX x) []
+    mapM_ check (universe x')
+    return x'
+
+
+check :: MonadFail m => Expression -> m ()
+check (Reference nm Nothing) = fail ("Undefined:" <+> pretty nm)
+check _ = return ()
 
 
 resolveX
@@ -78,7 +87,7 @@ resolveX x = descendM resolveX x
 
 
 resolveD
-    :: (Functor m, MonadState [(Name, ReferenceTo)] m)
+    :: (MonadFail m, MonadState [(Name, ReferenceTo)] m)
     => Domain () Expression
     -> m (Domain () Expression)
 resolveD (DomainReference _ (Just d)) = resolveD d
@@ -88,7 +97,9 @@ resolveD (DomainReference nm Nothing) = do
         Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> return r
         Just x -> userErr ("Expected a domain, but got an expression:" <+> pretty x)
-resolveD d = descendM resolveD d
+resolveD d = do
+    d' <- descendM resolveD d
+    mapM resolveX d'
 
 
 scope :: MonadState st m => m a -> m a
