@@ -5,9 +5,8 @@ find x_FunctionNDPartial_Values: matrix indexed by [int(7..8), int(0..1)] of int
 given p_FunctionNDPartial_Flags: matrix indexed by [int(7..8), int(0..1)] of bool
 given p_FunctionNDPartial_Values: matrix indexed by [int(7..8), int(0..1)] of int(13, 17)
 such that
-    and([p_FunctionNDPartial_Flags[q3, q4] ->
-         {x_FunctionNDPartial_Values[q3, q4] @ such that x_FunctionNDPartial_Flags[q3, q4]} = p_FunctionNDPartial_Values[q3, q4]
-             | q3 : int(7..8), q4 : int(0..1)]),
+    and([{x_FunctionNDPartial_Values[q3, q4] @ such that x_FunctionNDPartial_Flags[q3, q4]} = p_FunctionNDPartial_Values[q3, q4]
+             | q3 : int(7..8), q4 : int(0..1), p_FunctionNDPartial_Flags[q3, q4]]),
     and([x_FunctionNDPartial_Flags[q5, q6] ->
          {p_FunctionNDPartial_Values[q5, q6] @ such that p_FunctionNDPartial_Flags[q5, q6]} = x_FunctionNDPartial_Values[q5, q6]
              | q5 : int(7..8), q6 : int(0..1)]),
