@@ -93,7 +93,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head
-                              , init, and, or, zipWith, maximum, concatMap, all, lines, notElem, foldr
+                              , init, and, or, zipWith, concatMap, all, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, take, foldr1, foldl, drop, any, tail
                               , unzip3, repeat, dropWhile, unwords, intersect
                               )
@@ -102,7 +102,7 @@ import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, ma
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
-import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList )
+import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
@@ -142,6 +142,7 @@ import Data.Generics.Uniplate.Data as X
     , descend, descendM
     , descendBi, descendBiM
     , universe, universeBi
+    , children
     )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
 

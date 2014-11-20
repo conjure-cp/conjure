@@ -23,6 +23,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
+import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
@@ -392,6 +393,22 @@ oneSuchThat m =
         breakConjunctions x = [x]
 
 
+inlineDecVarLettings :: Model -> Model
+inlineDecVarLettings model =
+    let
+        (decVarLettings, statements) = mconcat
+            [ case st of
+                Declaration (Letting nm x) | categoryOf x == CatDecision -> ([(nm,x)], [])
+                _ -> ([], [st])
+            | st <- mStatements model
+            ]
+
+        inline (Reference nm _) | Just x <- lookup nm decVarLettings = x
+        inline x = x
+    in
+        model { mStatements = transformBi inline statements }
+
+
 updateDeclarations :: Model -> Model
 updateDeclarations model =
     let
@@ -451,6 +468,7 @@ epilogue :: MonadFail m => Model -> m Model
 epilogue eprime = do
     checkIfAllRefined eprime
     eprime
+        |> inlineDecVarLettings
         |> updateDeclarations
         |> oneSuchThat
         |> languageEprime
@@ -545,6 +563,7 @@ allRules config =
         , rule_Matrix_Leq
 
         , rule_Set_Eq
+        , rule_Set_Neq
         , rule_Set_In
         , rule_Set_SubsetEq
         , rule_Set_Subset
@@ -1096,6 +1115,17 @@ rule_Set_Eq = "set-eq" `namedRule` theRule where
                                     , make opSubsetEq y x
                                     ]
                )
+
+
+rule_Set_Neq :: Rule
+rule_Set_Neq = "set-neq" `namedRule` theRule where
+    theRule [essence| &x != &y |] = do
+        TypeSet{} <- typeOf x
+        TypeSet{} <- typeOf y
+        return ( "Horizontal rule for set dis-equality"
+               , const [essence| !(&x = &y) |]
+               )
+    theRule _ = fail "No match."
 
 
 rule_Set_SubsetEq :: Rule
