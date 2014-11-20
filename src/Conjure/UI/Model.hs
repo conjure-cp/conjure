@@ -1063,18 +1063,26 @@ rule_Matrix_Leq = "matrix-leq" `namedRule` theRule where
 
 rule_Tuple_DomainComprehension :: Rule
 rule_Tuple_DomainComprehension = "tuple-domain-comprehension" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenDomain pat@Single{} (DomainTuple domains))]) = do
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, domains), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenDomain pat@Single{} (DomainTuple domains)) -> return (pat, domains)
+            _ -> fail "No match."
+
         let pats fresh     = [ Single i            | i <- fresh ]
         let refs fresh     = [ Reference i Nothing | i <- fresh ]
         let theValue fresh = AbstractLiteral (AbsLitTuple (refs fresh))
-        let f              = lambdaToFunction pat body
+        let
+            -- given an expression "old", update uses of "pat" in it to use "val"
+            upd old val    = (lambdaToFunction pat old) val
         return ( "Tuple domain comprehension"
                , \ fresh' ->
                    let fresh = take (length domains) fresh'
-                   in  Comprehension (f (theValue fresh))
-                       [ Generator (GenDomain p d)
-                       | (p,d) <- zip (pats fresh) domains
-                       ]
+                       val = theValue fresh
+                   in  Comprehension (upd body val)
+                       $  gofBefore
+                       ++ [ Generator (GenDomain p d)
+                          | (p,d) <- zip (pats fresh) domains ]
+                       ++ transformBi (\ old -> upd old val ) gofAfter
                )
     theRule _ = fail "No match."
 
@@ -1601,3 +1609,19 @@ rule_Relation_Comprehension_RelationAsMatrix = "relation-map_in_expr{RelationAsM
                             ]
                )
     theRule _ = fail "No match."
+
+
+matchFirst
+    :: MonadFail m
+    => [a]                  -- list of things to try matching on
+    -> (a -> Maybe b)       -- the matcher
+    -> m ( [a]              -- befores
+         , b                -- the matching one
+         , [a]              -- afters
+         )
+matchFirst = helper []
+    where
+        helper _ [] _ = fail "No match."
+        helper befores (x:xs) f = case f x of
+            Nothing -> helper (x:befores) xs f
+            Just y  -> return (reverse befores, y, xs)
