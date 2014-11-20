@@ -1,4 +1,4 @@
-module Conjure.Process.EnumerateDomain ( enumerateDomain ) where
+module Conjure.Process.Enumerate ( enumerateDomain, enumerateInConstant ) where
 
 import Conjure.Prelude
 import Conjure.Bug
@@ -21,3 +21,12 @@ enumerateRange RangeBounded{} = bug "enumerateRange RangeBounded"
 enumerateRange RangeOpen{} = bug "enumerateRange RangeOpen"
 enumerateRange RangeLowerBounded{} = bug "enumerateRange RangeLowerBounded"
 enumerateRange RangeUpperBounded{} = bug "enumerateRange RangeUpperBounded"
+
+enumerateInConstant :: Constant -> [Constant]
+enumerateInConstant constant = case constant of
+    ConstantAbstract (AbsLitSet      xs) -> xs
+    ConstantAbstract (AbsLitMSet     xs) -> xs
+    ConstantAbstract (AbsLitRelation xs) -> map (ConstantAbstract . AbsLitTuple) xs
+    _ -> bug $ vcat [ "enumerateInConstant"
+                    , "constant:" <+> pretty constant
+                    ]
