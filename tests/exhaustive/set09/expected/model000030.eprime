@@ -1,0 +1,28 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithMarker_Marker: int(0..1 + (5 - 2))
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (5 - 2))] of int(2..5)
+find x_Occurrence: matrix indexed by [int(2..5)] of bool
+find y_Occurrence: matrix indexed by [int(2..5)] of bool
+find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (5 - 2))] of bool
+find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (5 - 2))] of int(2..5)
+such that
+    and([y_Occurrence[j] -> (i <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[i] + 2 = j) | i : int(1..1 + (5 - 2)), j : int(2..5)]),
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+             | q1 : int(1..1 + (5 - 2) - 1)]),
+    and([q1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] = 2 | q1 : int(1..1 + (5 - 2))]),
+    1 <= x_ExplicitVarSizeWithMarker_Marker,
+    1 <= sum([y_Occurrence[q2] | q2 : int(2..5)]),
+    1 <= sum([x_Occurrence[q3] | q3 : int(2..5)]),
+    and([x_Occurrence[q5] -> or([q6 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q6] = q5 | q6 : int(1..1 + (5 - 2))])
+             | q5 : int(2..5)]),
+    and([q7 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q7]] | q7 : int(1..1 + (5 - 2))]),
+    and([y_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> y_ExplicitVarSizeWithFlags_Values[q4] < y_ExplicitVarSizeWithFlags_Values[q4 + 1]
+             | q4 : int(1..1 + (5 - 2) - 1)]),
+    and([y_ExplicitVarSizeWithFlags_Flags[q4] = false -> y_ExplicitVarSizeWithFlags_Values[q4] = 2 | q4 : int(1..1 + (5 - 2))]),
+    and([y_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> y_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..1 + (5 - 2) - 1)]),
+    1 <= sum([y_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..1 + (5 - 2))]),
+    and([y_ExplicitVarSizeWithFlags_Flags[q8] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[q8]] | q8 : int(1..1 + (5 - 2))]),
+    and([y_Occurrence[q9] -> or([y_ExplicitVarSizeWithFlags_Flags[q10] /\ y_ExplicitVarSizeWithFlags_Values[q10] = q9 | q10 : int(1..1 + (5 - 2))])
+             | q9 : int(2..5)])
+
