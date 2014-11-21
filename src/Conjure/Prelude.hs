@@ -67,7 +67,8 @@ import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
 import qualified Control.Monad ( fail )
-import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless, zipWithM
+import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless
+                          , zipWithM, zipWithM_
                           , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM
                           , filterM, join
                           )

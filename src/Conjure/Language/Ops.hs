@@ -1161,6 +1161,7 @@ valuesInIntDomain ranges =
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
+boolsOut (ConstantAbstract (AbsLitList     cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b
