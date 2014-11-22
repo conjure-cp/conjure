@@ -13,34 +13,39 @@ import Conjure.UI.RefineParam
 import Conjure.UI.TranslateSolution
 import Conjure.UI.ValidateSolution
 
+-- base
+import System.Environment ( getEnvironment )
+
 -- tasty
-import Test.Tasty
-import Test.Tasty.HUnit
+import Test.Tasty ( TestTree, testGroup )
+import Test.Tasty.HUnit ( testCase, assertFailure )
 
 -- shelly
 import Shelly ( run, lastStderr )
 
 -- text
-import qualified Data.Text as T ( Text, null, unpack )
+import qualified Data.Text as T ( Text, null, pack, unpack )
 
 -- containers
 import qualified Data.Set as S ( fromList, toList, null, difference )
 
 
-srOptions :: [T.Text]
-srOptions =
+srOptions :: String -> [T.Text]
+srOptions srExtraOptions =
     [ "-timelimit"      , "300000"
     , "-run-solver"     , "-minion"
     , "-solver-options" , "-cpulimit 300"
-    , "-O0"
-    ]
+    ] ++ map T.pack (words srExtraOptions)
 
 
 tests :: IO TestTree
 tests = do
+    srExtraOptions <- do
+        env <- getEnvironment
+        return $ fromMaybe "-O0" (lookup "SR_OPTIONS" env)
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getDirectoryContents baseDir
-    let testCases = map testSingleDir (catMaybes dirs)
+    let testCases = map (testSingleDir srExtraOptions) (catMaybes dirs)
     return (testGroup "exhaustive" testCases)
 
 
@@ -89,13 +94,14 @@ isTestDir baseDir possiblyDir = do
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: TestDirFiles -> TestTree
-testSingleDir t@(TestDirFiles{..}) = testGroup name $ concat [ [conjuring]
-                                                             , savileRows
-                                                             , checkingExpected
-                                                             , validating
-                                                             , [extraFiles]
-                                                             ]
+testSingleDir :: String -> TestDirFiles -> TestTree
+testSingleDir srExtraOptions t@(TestDirFiles{..}) = testGroup name $ concat
+    [ [conjuring]
+    , savileRows
+    , checkingExpected
+    , validating
+    , [extraFiles]
+    ]
     where
         conjuring =
             testCase "Conjuring" $ do
@@ -110,9 +116,9 @@ testSingleDir t@(TestDirFiles{..}) = testGroup name $ concat [ [conjuring]
 
         savileRows =
             if null paramFiles
-                then [ savileRowNoParam    t m   | m <- expectedModels ]
-                else [ savileRowWithParams t m p | m <- expectedModels
-                                                 , p <- paramFiles     ]
+                then [ savileRowNoParam    srExtraOptions t m   | m <- expectedModels ]
+                else [ savileRowWithParams srExtraOptions t m p | m <- expectedModels
+                                                                , p <- paramFiles     ]
 
         checkingExpected =
             [ checkExpected t e | e <- expectedModels ] ++
@@ -129,8 +135,8 @@ testSingleDir t@(TestDirFiles{..}) = testGroup name $ concat [ [conjuring]
         extraFiles = checkExtraFiles t
 
 
-savileRowNoParam :: TestDirFiles -> FilePath -> TestTree
-savileRowNoParam TestDirFiles{..} modelPath =
+savileRowNoParam :: String -> TestDirFiles -> FilePath -> TestTree
+savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
     testCase (unwords ["Savile Row:", modelPath]) $ sh $ do
         let outBase = dropExtension modelPath
         _stdoutSR <- run "savilerow" $
@@ -140,7 +146,7 @@ savileRowNoParam TestDirFiles{..} modelPath =
             , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
             , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
             , "-all-solutions"
-            ] ++ srOptions
+            ] ++ srOptions srExtraOptions
         stderrSR <- lastStderr
         if not (T.null stderrSR)
             then liftIO $ assertFailure $ T.unpack stderrSR
@@ -156,8 +162,8 @@ savileRowNoParam TestDirFiles{..} modelPath =
                     writeFile filename (renderWide s)
 
 
-savileRowWithParams :: TestDirFiles -> FilePath -> FilePath -> TestTree
-savileRowWithParams TestDirFiles{..} modelPath paramPath =
+savileRowWithParams :: String -> TestDirFiles -> FilePath -> FilePath -> TestTree
+savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ sh $ do
         model       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
         param       <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
@@ -172,7 +178,7 @@ savileRowWithParams TestDirFiles{..} modelPath paramPath =
             , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
             , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
             , "-all-solutions"
-            ] ++ srOptions
+            ] ++ srOptions srExtraOptions
         stderrSR <- lastStderr
         if not (T.null stderrSR)
             then liftIO $ assertFailure $ T.unpack stderrSR
