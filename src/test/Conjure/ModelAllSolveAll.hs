@@ -43,6 +43,7 @@ tests = do
     srExtraOptions <- do
         env <- getEnvironment
         return $ fromMaybe "-O0" (lookup "SR_OPTIONS" env)
+    putStrLn $ "Using Savile Row options: " ++ unwords (map T.unpack (srOptions srExtraOptions))
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getDirectoryContents baseDir
     let testCases = map (testSingleDir srExtraOptions) (catMaybes dirs)
