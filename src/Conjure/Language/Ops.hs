@@ -76,6 +76,7 @@ data Ops x
     | MkOpMin             (OpMin x)
 
     | MkOpFunctionImage   (OpFunctionImage x)
+    | MkOpPreImage        (OpPreImage x)
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
 
@@ -125,6 +126,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpMax                 x) = typeOf x
     typeOf (MkOpMin                 x) = typeOf x
     typeOf (MkOpFunctionImage       x) = typeOf x
+    typeOf (MkOpPreImage            x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
 
@@ -168,6 +170,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpMax                 x) = evaluateOp x
     evaluateOp (MkOpMin                 x) = evaluateOp x
     evaluateOp (MkOpFunctionImage       x) = evaluateOp x
+    evaluateOp (MkOpPreImage            x) = evaluateOp x
     evaluateOp (MkOpDefined             x) = evaluateOp x
     evaluateOp (MkOpRange               x) = evaluateOp x
 
@@ -235,6 +238,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpMax      (OpMax     xs)) = "max" <> prettyList prParens "," xs
     prettyPrec _ (MkOpMin      (OpMin     xs)) = "min" <> prettyList prParens "," xs
     prettyPrec _ (MkOpFunctionImage (OpFunctionImage a b)) = "image" <> prettyList prParens "," (a:b)
+    prettyPrec _ (MkOpPreImage (OpPreImage a b)) = "preImage" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
 
@@ -915,6 +919,25 @@ instance EvaluateOp OpFunctionImage where
     evaluateOp op = na $ "evaluateOp{OpFunctionImage}:" <++> pretty (show op)
 
 
+data OpPreImage x = OpPreImage x x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpPreImage x)
+instance Hashable  x => Hashable  (OpPreImage x)
+instance ToJSON    x => ToJSON    (OpPreImage x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpPreImage x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
+    typeOf p@(OpPreImage f x) = do
+        TypeFunction from to <- typeOf f
+        xTy <- typeOf x
+        if typesUnify [xTy, to]
+            then return (TypeSet from)
+            else raiseTypeError (MkOpPreImage p)
+instance EvaluateOp OpPreImage where
+    evaluateOp (OpPreImage (ConstantAbstract (AbsLitFunction xs)) a) =
+        return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
+    evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
+
+
 data OpDefined x = OpDefined x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpDefined x)
@@ -1054,6 +1077,7 @@ mkOp op xs =
             L_toMSet   -> injectOp $ MkOpToMSet   $ OpToMSet   (headNote "toMSet takes a single argument."   xs)
             L_max      -> injectOp $ MkOpMax      $ OpMax xs
             L_min      -> injectOp $ MkOpMin      $ OpMin xs
+            L_preImage -> injectOp $ MkOpPreImage $ OpPreImage (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 
