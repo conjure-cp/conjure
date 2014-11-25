@@ -3,7 +3,6 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.Domain
@@ -13,9 +12,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, isAtomic, representationOf, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Definition ( Rule(..), namedRule )
 
 
 rule_Matrix_Eq :: Rule

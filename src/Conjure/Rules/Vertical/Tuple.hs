@@ -12,7 +12,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, isAtomic, representationOf, matchFirst )
+import Conjure.Rules.Definition ( Rule(..), namedRule, matchFirst )
 
 import Conjure.Representations ( downX1 )
 

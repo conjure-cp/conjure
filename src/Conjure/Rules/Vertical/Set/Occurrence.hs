@@ -7,12 +7,11 @@ import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.DomainOf
-import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, isAtomic, representationOf, matchFirst )
+import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
 
 import Conjure.Representations ( downX1 )
 

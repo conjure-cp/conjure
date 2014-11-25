@@ -5,14 +5,11 @@ module Conjure.Rules.Horizontal.Relation where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Type
-import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, isAtomic, representationOf, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Definition ( Rule(..), namedRule )
 
 
 rule_Relation_Eq :: Rule
