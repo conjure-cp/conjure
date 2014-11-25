@@ -439,80 +439,91 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [   [ rule_ChooseRepr config ]
-    ,   [ rule_TrueIsNoOp
-        , rule_ToIntIsNoOp
-        , rule_SingletonAnd
-        , rule_FlattenOf1D
-        , rule_SumFlatten
-
-        , rule_BubbleUp
-        , rule_BubbleToAnd
-
-        , rule_Bool_DontCare
-        , rule_Int_DontCare
-        , rule_Tuple_DontCare
-        , rule_Matrix_DontCare
-        , rule_Set_DontCare
-
-        , rule_ComplexAbsPat
-        , rule_Set_Comprehension_Literal
-
-        , Horizontal.Set.rule_Set_Eq
-        , Horizontal.Set.rule_Set_Neq
-        , Horizontal.Set.rule_Set_Leq
-        , Horizontal.Set.rule_Set_Lt
-        , Horizontal.Set.rule_Set_Subset
-        , Horizontal.Set.rule_Set_SubsetEq
-        , Horizontal.Set.rule_Set_Supset
-        , Horizontal.Set.rule_Set_SupsetEq
-        , Horizontal.Set.rule_Set_In
-        , Horizontal.Set.rule_Set_Card
-        , Horizontal.Set.rule_Set_Intersect
-        , Horizontal.Set.rule_Set_Union
-        , Horizontal.Set.rule_Set_MaxMin
-
-        , Horizontal.Function.rule_Function_Eq
-        , Horizontal.Function.rule_Function_Neq
-        , Horizontal.Function.rule_Function_Leq
-        , Horizontal.Function.rule_Function_Lt
-
-        , Horizontal.Relation.rule_Relation_Eq
-        , Horizontal.Relation.rule_Relation_In
-
-        , Vertical.Tuple.rule_Tuple_Eq
-        , Vertical.Tuple.rule_Tuple_Leq
-        , Vertical.Tuple.rule_Tuple_Lt
-        , Vertical.Tuple.rule_Tuple_Index
-        , Vertical.Tuple.rule_Tuple_DomainComprehension
-
-        , Vertical.Matrix.rule_Matrix_Eq
-        , Vertical.Matrix.rule_Matrix_Leq
-        , Vertical.Matrix.rule_Matrix_Lt
-
-        , Vertical.Set.Explicit.rule_Set_Comprehension_Explicit
-        , Vertical.Set.ExplicitVarSizeWithFlags.rule_Set_Comprehension_ExplicitVarSizeWithFlags
-        , Vertical.Set.ExplicitVarSizeWithMarker.rule_Set_Card_ExplicitVarSizeWithMarker
-        , Vertical.Set.ExplicitVarSizeWithMarker.rule_Set_Comprehension_ExplicitVarSizeWithMarker
-        , Vertical.Set.Occurrence.rule_Set_Comprehension_Occurrence
-        , Vertical.Set.Occurrence.rule_Set_In_Occurrence
-
-        , Vertical.Function.Function1D.rule_Function_Comprehension_Function1D
-        , Vertical.Function.Function1D.rule_Function_Image_Function1D
-
-        , Vertical.Function.Function1DPartial.rule_Function_Comprehension_Function1DPartial
-        , Vertical.Function.Function1DPartial.rule_Function_Image_Function1DPartial
-        , Vertical.Function.Function1DPartial.rule_Function_InDefined_Function1DPartial
-
-        , Vertical.Function.FunctionNDPartial.rule_Function_Comprehension_FunctionNDPartial
-        , Vertical.Function.FunctionNDPartial.rule_Function_Image_FunctionNDPartial
-        , Vertical.Function.FunctionNDPartial.rule_Function_InDefined_FunctionNDPartial
-
-        , Vertical.Relation.RelationAsMatrix.rule_Relation_Comprehension_RelationAsMatrix
-        , Vertical.Relation.RelationAsMatrix.rule_Relation_Image_RelationAsMatrix
-
-        ] ++ rule_InlineFilters
+    [ [rule_ChooseRepr config]
+    , verticalRules
+    , horizontalRules
+    , otherRules
     ]
+
+verticalRules :: [Rule]
+verticalRules =
+    [ Vertical.Tuple.rule_Tuple_Eq
+    , Vertical.Tuple.rule_Tuple_Leq
+    , Vertical.Tuple.rule_Tuple_Lt
+    , Vertical.Tuple.rule_Tuple_Index
+    , Vertical.Tuple.rule_Tuple_DomainComprehension
+
+    , Vertical.Matrix.rule_Matrix_Eq
+    , Vertical.Matrix.rule_Matrix_Leq
+    , Vertical.Matrix.rule_Matrix_Lt
+
+    , Vertical.Set.Explicit.rule_Set_Comprehension_Explicit
+    , Vertical.Set.ExplicitVarSizeWithFlags.rule_Set_Comprehension_ExplicitVarSizeWithFlags
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_Set_Card_ExplicitVarSizeWithMarker
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_Set_Comprehension_ExplicitVarSizeWithMarker
+    , Vertical.Set.Occurrence.rule_Set_Comprehension_Occurrence
+    , Vertical.Set.Occurrence.rule_Set_In_Occurrence
+
+    , Vertical.Function.Function1D.rule_Function_Comprehension_Function1D
+    , Vertical.Function.Function1D.rule_Function_Image_Function1D
+
+    , Vertical.Function.Function1DPartial.rule_Function_Comprehension_Function1DPartial
+    , Vertical.Function.Function1DPartial.rule_Function_Image_Function1DPartial
+    , Vertical.Function.Function1DPartial.rule_Function_InDefined_Function1DPartial
+
+    , Vertical.Function.FunctionNDPartial.rule_Function_Comprehension_FunctionNDPartial
+    , Vertical.Function.FunctionNDPartial.rule_Function_Image_FunctionNDPartial
+    , Vertical.Function.FunctionNDPartial.rule_Function_InDefined_FunctionNDPartial
+
+    , Vertical.Relation.RelationAsMatrix.rule_Relation_Comprehension_RelationAsMatrix
+    , Vertical.Relation.RelationAsMatrix.rule_Relation_Image_RelationAsMatrix
+    ]
+
+horizontalRules :: [Rule]
+horizontalRules =
+    [ Horizontal.Set.rule_Set_Eq
+    , Horizontal.Set.rule_Set_Neq
+    , Horizontal.Set.rule_Set_Leq
+    , Horizontal.Set.rule_Set_Lt
+    , Horizontal.Set.rule_Set_Subset
+    , Horizontal.Set.rule_Set_SubsetEq
+    , Horizontal.Set.rule_Set_Supset
+    , Horizontal.Set.rule_Set_SupsetEq
+    , Horizontal.Set.rule_Set_In
+    , Horizontal.Set.rule_Set_Card
+    , Horizontal.Set.rule_Set_Intersect
+    , Horizontal.Set.rule_Set_Union
+    , Horizontal.Set.rule_Set_MaxMin
+
+    , Horizontal.Function.rule_Function_Eq
+    , Horizontal.Function.rule_Function_Neq
+    , Horizontal.Function.rule_Function_Leq
+    , Horizontal.Function.rule_Function_Lt
+
+    , Horizontal.Relation.rule_Relation_Eq
+    , Horizontal.Relation.rule_Relation_In
+    ]
+
+otherRules :: [Rule]
+otherRules = 
+    [ rule_TrueIsNoOp
+    , rule_ToIntIsNoOp
+    , rule_SingletonAnd
+    , rule_FlattenOf1D
+    , rule_SumFlatten
+
+    , rule_BubbleUp
+    , rule_BubbleToAnd
+
+    , rule_Bool_DontCare
+    , rule_Int_DontCare
+    , rule_Tuple_DontCare
+    , rule_Matrix_DontCare
+    , rule_Set_DontCare
+
+    , rule_ComplexAbsPat
+    , rule_Set_Comprehension_Literal
+    ] ++ rule_InlineFilters
 
 
 rule_ChooseRepr :: Config -> Rule
