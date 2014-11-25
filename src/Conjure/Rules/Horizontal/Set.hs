@@ -10,7 +10,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, isAtomic, representationOf, matchFirst )
+import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchFirst )
 
 import Conjure.Representations ( downX1 )
 
@@ -202,10 +202,6 @@ rule_Set_In = "set-in" `namedRule` theRule where
     theRule p = do
         (x,s)     <- match opIn p
         TypeSet{} <- typeOf s
-        case (isAtomic s, representationOf s) of
-            (True, Just "Occurrence") -> fail "Occurrence has a better rule for set-membership."
-            (True, Nothing          ) -> fail "Choose a representation first."
-            _ -> return ()
         return ( "Horizontal rule for set-in."
                , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
@@ -218,11 +214,6 @@ rule_Set_Card = "set-card" `namedRule` theRule where
     theRule p = do
         s         <- match opTwoBars p
         TypeSet{} <- typeOf s
-        case (isAtomic s, representationOf s) of
-            (True, Just "ExplicitVarSizeWithMarker") ->
-                fail "ExplicitVarSizeWithMarker has a better rule for set-cardinality."
-            (True, Nothing) -> fail "Choose a representation first."
-            _ -> return ()
         return ( "Horizontal rule for set cardinality."
                , \ fresh ->
                     let (iPat, _) = quantifiedVar (fresh `at` 0)
