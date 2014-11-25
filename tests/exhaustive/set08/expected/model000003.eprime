@@ -7,8 +7,8 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..(1 + (4 - 1)) * (1 + (6 - 3)))
 find x_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..(1 + (4 - 1)) * (1 + (6 - 3)))] of int(1..4)
 find x_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1..(1 + (4 - 1)) * (1 + (6 - 3)))] of int(3..6)
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q3] -> x_ExplicitVarSizeWithFlags_Values_1[q3] = x_ExplicitVarSizeWithFlags_Values_2[q3]
-             | q3 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q7] -> x_ExplicitVarSizeWithFlags_Values_1[q7] = x_ExplicitVarSizeWithFlags_Values_2[q7]
+             | q7 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values_1[q1] < x_ExplicitVarSizeWithFlags_Values_1[q1 + 1] \/
          x_ExplicitVarSizeWithFlags_Values_1[q1] = x_ExplicitVarSizeWithFlags_Values_1[q1 + 1] /\
@@ -26,16 +26,16 @@ such that
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values_1[q2] = 1 /\ x_ExplicitVarSizeWithMarker_Values_2[q2] = 3
              | q2 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
     2 <= x_ExplicitVarSizeWithMarker_Marker,
-    and([q4 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q5] /\
-             (x_ExplicitVarSizeWithFlags_Values_1[q5] = x_ExplicitVarSizeWithMarker_Values_1[q4] /\
-              x_ExplicitVarSizeWithFlags_Values_2[q5] = x_ExplicitVarSizeWithMarker_Values_2[q4])
-                 | q5 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
-             | q4 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q6] ->
-         or([q7 <= x_ExplicitVarSizeWithMarker_Marker /\
-             (x_ExplicitVarSizeWithMarker_Values_1[q7] = x_ExplicitVarSizeWithFlags_Values_1[q6] /\
-              x_ExplicitVarSizeWithMarker_Values_2[q7] = x_ExplicitVarSizeWithFlags_Values_2[q6])
-                 | q7 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
-             | q6 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
+    and([q3 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q4] /\
+             (x_ExplicitVarSizeWithFlags_Values_1[q4] = x_ExplicitVarSizeWithMarker_Values_1[q3] /\
+              x_ExplicitVarSizeWithFlags_Values_2[q4] = x_ExplicitVarSizeWithMarker_Values_2[q3])
+                 | q4 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
+             | q3 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q5] ->
+         or([q6 <= x_ExplicitVarSizeWithMarker_Marker /\
+             (x_ExplicitVarSizeWithMarker_Values_1[q6] = x_ExplicitVarSizeWithFlags_Values_1[q5] /\
+              x_ExplicitVarSizeWithMarker_Values_2[q6] = x_ExplicitVarSizeWithFlags_Values_2[q5])
+                 | q6 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
+             | q5 : int(1..(1 + (4 - 1)) * (1 + (6 - 3)))])
 

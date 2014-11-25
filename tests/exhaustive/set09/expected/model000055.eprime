@@ -5,7 +5,7 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (5 - 2))] 
 find x_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
 such that
-    and([y_Occurrence[j] -> (x_ExplicitVarSizeWithFlags_Flags[i] -> x_ExplicitVarSizeWithFlags_Values[i] + 2 = j) | i : int(1..1 + (5 - 2)), j : int(2..5)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[i] /\ y_Occurrence[j] -> x_ExplicitVarSizeWithFlags_Values[i] + 2 = j | i : int(1..1 + (5 - 2)), j : int(2..5)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..1 + (5 - 2) - 1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 2 | q1 : int(1..1 + (5 - 2))]),

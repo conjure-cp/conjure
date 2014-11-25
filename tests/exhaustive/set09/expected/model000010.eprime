@@ -5,7 +5,7 @@ find y_ExplicitVarSizeWithMarker_Marker: int(0..1 + (5 - 2))
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (5 - 2))] of int(2..5)
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
 such that
-    and([j <= y_ExplicitVarSizeWithMarker_Marker -> (x_Occurrence[i] -> i + 2 = y_ExplicitVarSizeWithMarker_Values[j]) | i : int(2..5), j : int(1..1 + (5 - 2))]),
+    and([x_Occurrence[i] /\ j <= y_ExplicitVarSizeWithMarker_Marker -> i + 2 = y_ExplicitVarSizeWithMarker_Values[j] | i : int(2..5), j : int(1..1 + (5 - 2))]),
     1 <= sum([x_Occurrence[q1] | q1 : int(2..5)]),
     and([q2 + 1 <= y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q2] < y_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..1 + (5 - 2) - 1)]),

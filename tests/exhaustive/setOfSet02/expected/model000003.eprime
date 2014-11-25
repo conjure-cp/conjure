@@ -4,7 +4,7 @@ find x_Explicit_Explicit: matrix indexed by [int(1..2), int(1..3)] of int(1..4)
 find x_Explicit_Occurrence: matrix indexed by [int(1..2), int(1..4)] of bool
 such that
     or([and([or([1 = x_Explicit_Explicit[q5, q6], 2 = x_Explicit_Explicit[q5, q6], 3 = x_Explicit_Explicit[q5, q6]; int(1..3)]) | q6 : int(1..3)]) /\
-        and([or([x_Explicit_Explicit[q5, q7] = 1 | q7 : int(1..3)]), or([x_Explicit_Explicit[q5, q8] = 2 | q8 : int(1..3)]),
+        and([or([x_Explicit_Explicit[q5, q9] = 1 | q9 : int(1..3)]), or([x_Explicit_Explicit[q5, q9] = 2 | q9 : int(1..3)]),
              or([x_Explicit_Explicit[q5, q9] = 3 | q9 : int(1..3)]); int(1..3)])
             | q5 : int(1..2)]),
     and([x_Explicit_Explicit[q1, ..] <lex x_Explicit_Explicit[q1 + 1, ..] | q1 : int(1..2 - 1)]),
