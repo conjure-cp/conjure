@@ -742,3 +742,22 @@ opTwoBars _ =
                 MkOpTwoBars (OpTwoBars x) -> return x
                 _ -> na ("Lenses.opTwoBars:" <++> pretty p)
     )
+
+
+opPreImage
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opPreImage _ =
+    ( \ x y -> injectOp (MkOpPreImage (OpPreImage x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpPreImage (OpPreImage x y) -> return (x,y)
+                _ -> na ("Lenses.opPreImage:" <++> pretty p)
+    )

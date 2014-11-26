@@ -10,7 +10,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation )
+import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchFirst )
 
 import Conjure.Representations ( downX1 )
 
@@ -71,3 +71,26 @@ rule_Leq = "function-leq" `namedRule` theRule where
         return ( "Horizontal rule for function <=" <+> pretty (make opLeq ma mb)
                , const $ make opLeq ma mb
                )
+
+
+rule_Comprehension_PreImage :: Rule
+rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> fail "No match."        
+        (func, img) <- match opPreImage expr
+        let i = Reference iPat Nothing
+        let upd val old = lambdaToFunction pat old val
+        return ( "Mapping over the preImage of a function"
+               , const $ let val = [essence| &i[1] |] in
+                   Comprehension
+                       (upd val body)
+                       $  gofBefore
+                       ++ [ Generator (GenInExpr pat func)
+                          , Filter ([essence| &i[2] = &img |])
+                          ]
+                       ++ transformBi (upd val) gofAfter
+               )
+    theRule _ = fail "No match."
+

@@ -500,6 +500,7 @@ horizontalRules =
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_Leq
     , Horizontal.Function.rule_Lt
+    , Horizontal.Function.rule_Comprehension_PreImage
 
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_In
