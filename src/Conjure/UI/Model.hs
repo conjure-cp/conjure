@@ -375,6 +375,7 @@ checkIfAllRefined m = do
                         | not (isPrimitiveDomain dom) ->
                         return $ ""
                                : ("Not refined:" <+> pretty (hole x))
+                               : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                  | i <- allNats
                                  | c <- tail (ascendants x)
