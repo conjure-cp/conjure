@@ -15,9 +15,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Set_Comprehension_ExplicitVarSizeWithFlags :: Rule
-rule_Set_Comprehension_ExplicitVarSizeWithFlags = "set-comprehension{ExplicitVarSizeWithFlags}"
-                                               `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "set-comprehension{ExplicitVarSizeWithFlags}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)

@@ -15,8 +15,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation )
 import Conjure.Representations ( downX1 )
 
 
-rule_Function_Eq :: Rule
-rule_Function_Eq = "function-eq" `namedRule` theRule where
+rule_Eq :: Rule
+rule_Eq = "function-eq" `namedRule` theRule where
     theRule p = do
         (x,y)                    <- match opEq p
         TypeFunction{} <- typeOf x
@@ -32,8 +32,8 @@ rule_Function_Eq = "function-eq" `namedRule` theRule where
                )
 
 
-rule_Function_Neq :: Rule
-rule_Function_Neq = "function-neq" `namedRule` theRule where
+rule_Neq :: Rule
+rule_Neq = "function-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
@@ -43,8 +43,8 @@ rule_Function_Neq = "function-neq" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Function_Lt :: Rule
-rule_Function_Lt = "function-lt" `namedRule` theRule where
+rule_Lt :: Rule
+rule_Lt = "function-lt" `namedRule` theRule where
     theRule p = do
         (a,b) <- match opLt p
         TypeFunction{} <- typeOf a
@@ -58,8 +58,8 @@ rule_Function_Lt = "function-lt" `namedRule` theRule where
                )
 
 
-rule_Function_Leq :: Rule
-rule_Function_Leq = "function-leq" `namedRule` theRule where
+rule_Leq :: Rule
+rule_Leq = "function-leq" `namedRule` theRule where
     theRule p = do
         (a,b) <- match opLeq p
         TypeFunction{} <- typeOf a

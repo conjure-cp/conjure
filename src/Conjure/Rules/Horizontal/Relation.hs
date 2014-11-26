@@ -12,8 +12,8 @@ import Conjure.Language.TH
 import Conjure.Rules.Definition ( Rule(..), namedRule )
 
 
-rule_Relation_Eq :: Rule
-rule_Relation_Eq = "relation-eq" `namedRule` theRule where
+rule_Eq :: Rule
+rule_Eq = "relation-eq" `namedRule` theRule where
     theRule p = do
         (x,y)          <- match opEq p
         TypeRelation{} <- typeOf x
@@ -24,8 +24,8 @@ rule_Relation_Eq = "relation-eq" `namedRule` theRule where
                )
 
 
-rule_Relation_In :: Rule
-rule_Relation_In = "relation-in" `namedRule` theRule where
+rule_In :: Rule
+rule_In = "relation-in" `namedRule` theRule where
     theRule [essence| &x in &rel |] = do
         TypeRelation{} <- typeOf rel
         return ( "relation membership to existential quantification"

@@ -16,9 +16,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Set_Comprehension_ExplicitVarSizeWithMarker :: Rule
-rule_Set_Comprehension_ExplicitVarSizeWithMarker = "set-comprehension{ExplicitVarSizeWithMarker}"
-                                               `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
@@ -41,8 +40,8 @@ rule_Set_Comprehension_ExplicitVarSizeWithMarker = "set-comprehension{ExplicitVa
     theRule _ = fail "No match."
 
 
-rule_Set_Card_ExplicitVarSizeWithMarker :: Rule
-rule_Set_Card_ExplicitVarSizeWithMarker = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
+rule_Card :: Rule
+rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule p = do
         s                           <- match opTwoBars p
         TypeSet{}                   <- typeOf s

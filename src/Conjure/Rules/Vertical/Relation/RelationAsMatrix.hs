@@ -15,8 +15,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Relation_Image_RelationAsMatrix :: Rule
-rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `namedRule` theRule where
+rule_Image :: Rule
+rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
     theRule p = do
         (rel, args)         <- match opFunctionImage p
         TypeRelation{}      <- typeOf rel
@@ -28,8 +28,8 @@ rule_Relation_Image_RelationAsMatrix = "relation-image{RelationAsMatrix}" `named
                )
 
 
-rule_Relation_Comprehension_RelationAsMatrix :: Rule
-rule_Relation_Comprehension_RelationAsMatrix = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)

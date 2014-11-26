@@ -16,9 +16,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Function_Comprehension_Function1DPartial :: Rule
-rule_Function_Comprehension_Function1DPartial = "function-comprehension{Function1DPartial}"
-                                     `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
@@ -43,9 +42,8 @@ rule_Function_Comprehension_Function1DPartial = "function-comprehension{Function
     theRule _ = fail "No match."
 
 
-rule_Function_Image_Function1DPartial :: Rule
-rule_Function_Image_Function1DPartial = "function-image{Function1DPartial}"
-                                 `namedRule` theRule where
+rule_Image :: Rule
+rule_Image = "function-image{Function1DPartial}" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         "Function1DPartial" <- representationOf f
         [flags,values]      <- downX1 f
@@ -58,9 +56,8 @@ rule_Function_Image_Function1DPartial = "function-image{Function1DPartial}"
     theRule _ = fail "No match."
 
 
-rule_Function_InDefined_Function1DPartial :: Rule
-rule_Function_InDefined_Function1DPartial = "function-in-defined{Function1DPartial}"
-                                 `namedRule` theRule where
+rule_InDefined :: Rule
+rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule where
     theRule [essence| &x in defined(&f) |] = do
         "Function1DPartial" <- representationOf f
         [flags,_values]     <- downX1 f

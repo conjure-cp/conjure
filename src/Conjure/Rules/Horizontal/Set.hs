@@ -15,8 +15,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchF
 import Conjure.Representations ( downX1 )
 
 
-rule_Set_Eq :: Rule
-rule_Set_Eq = "set-eq" `namedRule` theRule where
+rule_Eq :: Rule
+rule_Eq = "set-eq" `namedRule` theRule where
     theRule p = do
         (x,y)     <- match opEq p
         TypeSet{} <- typeOf x
@@ -28,8 +28,8 @@ rule_Set_Eq = "set-eq" `namedRule` theRule where
                )
 
 
-rule_Set_Neq :: Rule
-rule_Set_Neq = "set-neq" `namedRule` theRule where
+rule_Neq :: Rule
+rule_Neq = "set-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
@@ -39,8 +39,8 @@ rule_Set_Neq = "set-neq" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Set_SubsetEq :: Rule
-rule_Set_SubsetEq = "set-subsetEq" `namedRule` theRule where
+rule_SubsetEq :: Rule
+rule_SubsetEq = "set-subsetEq" `namedRule` theRule where
     theRule p = do
         (x,y)     <- match opSubsetEq p
         TypeSet{} <- typeOf x
@@ -52,8 +52,8 @@ rule_Set_SubsetEq = "set-subsetEq" `namedRule` theRule where
                )
 
 
-rule_Set_Subset :: Rule
-rule_Set_Subset = "set-subset" `namedRule` theRule where
+rule_Subset :: Rule
+rule_Subset = "set-subset" `namedRule` theRule where
     theRule [essence| &a subset &b |] =
         return
             ( "Horizontal rule for set subset"
@@ -62,8 +62,8 @@ rule_Set_Subset = "set-subset" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Set_Supset :: Rule
-rule_Set_Supset = "set-supset" `namedRule` theRule where
+rule_Supset :: Rule
+rule_Supset = "set-supset" `namedRule` theRule where
     theRule [essence| &a supset &b |] =
         return
             ( "Horizontal rule for set supset"
@@ -72,8 +72,8 @@ rule_Set_Supset = "set-supset" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Set_SupsetEq :: Rule
-rule_Set_SupsetEq = "set-subsetEq" `namedRule` theRule where
+rule_SupsetEq :: Rule
+rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
     theRule [essence| &a supsetEq &b |] =
         return
             ( "Horizontal rule for set supsetEq"
@@ -82,8 +82,8 @@ rule_Set_SupsetEq = "set-subsetEq" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Set_Lt :: Rule
-rule_Set_Lt = "set-lt" `namedRule` theRule where
+rule_Lt :: Rule
+rule_Lt = "set-lt" `namedRule` theRule where
     theRule p = do
         (a,b) <- match opLt p
         TypeSet{} <- typeOf a
@@ -97,8 +97,8 @@ rule_Set_Lt = "set-lt" `namedRule` theRule where
                )
 
 
-rule_Set_Leq :: Rule
-rule_Set_Leq = "set-leq" `namedRule` theRule where
+rule_Leq :: Rule
+rule_Leq = "set-leq" `namedRule` theRule where
     theRule p = do
         (a,b) <- match opLeq p
         TypeSet{} <- typeOf a
@@ -112,8 +112,8 @@ rule_Set_Leq = "set-leq" `namedRule` theRule where
                )
 
 
-rule_Set_Intersect :: Rule
-rule_Set_Intersect = "set-intersect" `namedRule` theRule where
+rule_Intersect :: Rule
+rule_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
@@ -140,8 +140,8 @@ rule_Set_Intersect = "set-intersect" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Set_Union :: Rule
-rule_Set_Union = "set-union" `namedRule` theRule where
+rule_Union :: Rule
+rule_Union = "set-union" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
@@ -173,8 +173,8 @@ rule_Set_Union = "set-union" `namedRule` theRule where
     theRule _ = fail "No match."
 
 
-rule_Set_MaxMin :: Rule
-rule_Set_MaxMin = "set-max-min" `namedRule` theRule where
+rule_MaxMin :: Rule
+rule_MaxMin = "set-max-min" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
         TypeSet TypeInt <- typeOf s
         return
@@ -197,8 +197,8 @@ rule_Set_MaxMin = "set-max-min" `namedRule` theRule where
 -- x in s ~~> or([ x = i | i in s ])
 -- where s is a set
 -- and not Occurrence
-rule_Set_In :: Rule
-rule_Set_In = "set-in" `namedRule` theRule where
+rule_In :: Rule
+rule_In = "set-in" `namedRule` theRule where
     theRule p = do
         (x,s)     <- match opIn p
         TypeSet{} <- typeOf s
@@ -209,8 +209,8 @@ rule_Set_In = "set-in" `namedRule` theRule where
                )
 
 
-rule_Set_Card :: Rule
-rule_Set_Card = "set-card" `namedRule` theRule where
+rule_Card :: Rule
+rule_Card = "set-card" `namedRule` theRule where
     theRule p = do
         s         <- match opTwoBars p
         TypeSet{} <- typeOf s

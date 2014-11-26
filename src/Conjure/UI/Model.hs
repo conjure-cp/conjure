@@ -458,51 +458,51 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq
     , Vertical.Matrix.rule_Matrix_Lt
 
-    , Vertical.Set.Explicit.rule_Set_Comprehension_Explicit
-    , Vertical.Set.ExplicitVarSizeWithFlags.rule_Set_Comprehension_ExplicitVarSizeWithFlags
-    , Vertical.Set.ExplicitVarSizeWithMarker.rule_Set_Card_ExplicitVarSizeWithMarker
-    , Vertical.Set.ExplicitVarSizeWithMarker.rule_Set_Comprehension_ExplicitVarSizeWithMarker
-    , Vertical.Set.Occurrence.rule_Set_Comprehension_Occurrence
-    , Vertical.Set.Occurrence.rule_Set_In_Occurrence
+    , Vertical.Set.Explicit.rule_Comprehension_Explicit
+    , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
+    , Vertical.Set.Occurrence.rule_Comprehension
+    , Vertical.Set.Occurrence.rule_In
 
-    , Vertical.Function.Function1D.rule_Function_Comprehension_Function1D
-    , Vertical.Function.Function1D.rule_Function_Image_Function1D
+    , Vertical.Function.Function1D.rule_Comprehension
+    , Vertical.Function.Function1D.rule_Image
 
-    , Vertical.Function.Function1DPartial.rule_Function_Comprehension_Function1DPartial
-    , Vertical.Function.Function1DPartial.rule_Function_Image_Function1DPartial
-    , Vertical.Function.Function1DPartial.rule_Function_InDefined_Function1DPartial
+    , Vertical.Function.Function1DPartial.rule_Comprehension
+    , Vertical.Function.Function1DPartial.rule_Image
+    , Vertical.Function.Function1DPartial.rule_InDefined
 
-    , Vertical.Function.FunctionNDPartial.rule_Function_Comprehension_FunctionNDPartial
-    , Vertical.Function.FunctionNDPartial.rule_Function_Image_FunctionNDPartial
-    , Vertical.Function.FunctionNDPartial.rule_Function_InDefined_FunctionNDPartial
+    , Vertical.Function.FunctionNDPartial.rule_Comprehension
+    , Vertical.Function.FunctionNDPartial.rule_Image
+    , Vertical.Function.FunctionNDPartial.rule_InDefined
 
-    , Vertical.Relation.RelationAsMatrix.rule_Relation_Comprehension_RelationAsMatrix
-    , Vertical.Relation.RelationAsMatrix.rule_Relation_Image_RelationAsMatrix
+    , Vertical.Relation.RelationAsMatrix.rule_Comprehension
+    , Vertical.Relation.RelationAsMatrix.rule_Image
     ]
 
 horizontalRules :: [Rule]
 horizontalRules =
-    [ Horizontal.Set.rule_Set_Eq
-    , Horizontal.Set.rule_Set_Neq
-    , Horizontal.Set.rule_Set_Leq
-    , Horizontal.Set.rule_Set_Lt
-    , Horizontal.Set.rule_Set_Subset
-    , Horizontal.Set.rule_Set_SubsetEq
-    , Horizontal.Set.rule_Set_Supset
-    , Horizontal.Set.rule_Set_SupsetEq
-    , Horizontal.Set.rule_Set_In
-    , Horizontal.Set.rule_Set_Card
-    , Horizontal.Set.rule_Set_Intersect
-    , Horizontal.Set.rule_Set_Union
-    , Horizontal.Set.rule_Set_MaxMin
+    [ Horizontal.Set.rule_Eq
+    , Horizontal.Set.rule_Neq
+    , Horizontal.Set.rule_Leq
+    , Horizontal.Set.rule_Lt
+    , Horizontal.Set.rule_Subset
+    , Horizontal.Set.rule_SubsetEq
+    , Horizontal.Set.rule_Supset
+    , Horizontal.Set.rule_SupsetEq
+    , Horizontal.Set.rule_In
+    , Horizontal.Set.rule_Card
+    , Horizontal.Set.rule_Intersect
+    , Horizontal.Set.rule_Union
+    , Horizontal.Set.rule_MaxMin
 
-    , Horizontal.Function.rule_Function_Eq
-    , Horizontal.Function.rule_Function_Neq
-    , Horizontal.Function.rule_Function_Leq
-    , Horizontal.Function.rule_Function_Lt
+    , Horizontal.Function.rule_Eq
+    , Horizontal.Function.rule_Neq
+    , Horizontal.Function.rule_Leq
+    , Horizontal.Function.rule_Lt
 
-    , Horizontal.Relation.rule_Relation_Eq
-    , Horizontal.Relation.rule_Relation_In
+    , Horizontal.Relation.rule_Eq
+    , Horizontal.Relation.rule_In
     ]
 
 otherRules :: [Rule]

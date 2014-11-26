@@ -16,8 +16,8 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Set_Comprehension_Occurrence :: Rule
-rule_Set_Comprehension_Occurrence = "set-comprehension{Occurrence}" `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
@@ -39,8 +39,8 @@ rule_Set_Comprehension_Occurrence = "set-comprehension{Occurrence}" `namedRule` 
     theRule _ = fail "No match."
 
 
-rule_Set_In_Occurrence :: Rule
-rule_Set_In_Occurrence = "set-in{Occurrence}" `namedRule` theRule where
+rule_In :: Rule
+rule_In = "set-in{Occurrence}" `namedRule` theRule where
     theRule p = do
         (x, s)       <- match opIn p
         TypeSet{}    <- typeOf s
