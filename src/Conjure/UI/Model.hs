@@ -48,6 +48,7 @@ import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker as Vertica
 import qualified Conjure.Rules.Vertical.Set.Occurrence as Vertical.Set.Occurrence
 import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function.Function1D
 import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.Function.Function1DPartial
+import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 
@@ -473,6 +474,9 @@ verticalRules =
     , Vertical.Function.Function1DPartial.rule_Comprehension
     , Vertical.Function.Function1DPartial.rule_Image
     , Vertical.Function.Function1DPartial.rule_InDefined
+
+    , Vertical.Function.FunctionND.rule_Comprehension
+    , Vertical.Function.FunctionND.rule_Image
 
     , Vertical.Function.FunctionNDPartial.rule_Comprehension
     , Vertical.Function.FunctionNDPartial.rule_Image
