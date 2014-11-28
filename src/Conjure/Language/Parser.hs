@@ -499,19 +499,18 @@ parseQuantifiedExpr :: Parser Expression
 parseQuantifiedExpr = do
     Name qnName <- parseName
     qnPats      <- parseAbstractPattern `sepBy1` comma
-    qnDom       <- optionMaybe (colon *> parseDomain)
-    qnExpr      <- optionMaybe $ do lexeme L_in
-                                    over <- parseExpr
-                                    return (\ pat -> GenInExpr pat over )
-    -- qnGuard     <- optionMaybe (comma *> parseExpr)
-    let qnGuard = Nothing
+    qnOver      <- msum [ Left  <$> (colon *> parseDomain)
+                        , Right <$> do
+                            lexeme L_in
+                            over <- parseExpr
+                            return (\ pat -> GenInExpr pat over )
+                        ]
+    qnGuard     <- optionMaybe (comma *> parseExpr)
     qnBody      <- dot *> parseExpr <?> "expecting body of a quantified expression"
 
-    let qnMap pat = case (qnDom,qnExpr) of
-            (Nothing , Nothing) -> userErr "expecting something to quantify over"
-            (Just dom, Nothing) -> GenDomain pat dom
-            (Nothing , Just op) -> op pat
-            _ -> userErr "to many things to quantify over"
+    let qnMap pat = case qnOver of
+            Left dom -> GenDomain pat dom
+            Right op -> op pat
 
     return $ mkOp (translateQnName qnName)
            $ return
