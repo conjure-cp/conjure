@@ -18,7 +18,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
 
 -- parsec
-import Text.Parsec ( ParsecT, parse, tokenPrim, try, (<?>) )
+import Text.Parsec ( ParsecT, parse, tokenPrim, try, (<?>), errorPos, sourceLine, sourceColumn )
 import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
 
 -- text
@@ -694,15 +694,30 @@ findPivotOp xs = do
 type Parser a = ParsecT [LexemePos] () Identity a
 
 runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
-runLexerAndParser p s = runLexer >=> runParser p s
-
-runParser :: MonadFail m => Parser a -> String -> [LexemePos] -> m a
-runParser p s ls =
-    -- error $ unlines $ map show ls
-    case parse p s ls of
-        Left  e -> let eDoc = pretty $ show e
-                   in  fail (pretty s <+> eDoc)
+runLexerAndParser p s inp = do
+    ls <- runLexer inp
+    case runParser p s ls of
+        Left (msg, line, col) ->
+            let theLine = T.lines inp `at` (line - 1)
+            in  fail $ vcat
+                    [ msg
+                    , pretty theLine
+                    , pretty $ replicate (col-1) ' ' ++ "^"
+                    ]
         Right x -> return x
+
+runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
+runParser p s ls = either modifyErr Right (parse p s ls)
+    where
+        modifyErr e = Left $
+            let pos  = errorPos e
+                eDoc = pretty $ show e
+            in  ( vcat [ pretty s <+> eDoc
+                       , pretty (show pos)
+                       ]
+                , sourceLine   pos
+                , sourceColumn pos
+                )
 
 identifierText :: Parser T.Text
 identifierText = do
