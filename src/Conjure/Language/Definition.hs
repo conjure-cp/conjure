@@ -232,6 +232,7 @@ data ModelInfo = ModelInfo
     , miFinds :: [Name]
     , miEnumGivens :: [Name]
     , miEnumLettings :: [Declaration]
+    , miUnnameds :: [(Name, Expression)]
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrailCompact :: [(Int,[Int])]
@@ -250,7 +251,7 @@ instance ToJSON    ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOpti
 instance FromJSON  ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def
+    def = ModelInfo def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -274,8 +275,9 @@ initInfo model = model { mInfo = info }
                 [ (nm, dom)
                 | Declaration (FindOrGiven _ nm dom) <- mStatements model
                 ]
-            , miEnumGivens   = [ nm | Declaration (GivenDomainDefnEnum nm)  <- mStatements model ]
-            , miEnumLettings = [ d  | Declaration d@LettingDomainDefnEnum{} <- mStatements model ]
+            , miEnumGivens   = [ nm     | Declaration (GivenDomainDefnEnum nm)         <- mStatements model ]
+            , miEnumLettings = [ d      | Declaration d@LettingDomainDefnEnum{}        <- mStatements model ]
+            , miUnnameds     = [ (nm,s) | Declaration (LettingDomainDefnUnnamed nm s)  <- mStatements model ]
             }
 
 

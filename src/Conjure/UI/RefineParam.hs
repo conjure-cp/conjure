@@ -6,7 +6,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
-import Conjure.Process.Enums ( deenumifyParam )
+import Conjure.Process.Enums ( removeEnumsFromParam )
 import Conjure.Representations ( downC )
 
 
@@ -20,7 +20,7 @@ refineParam
 
 refineParam eprimeModel essenceParam' = do
 
-    essenceParam <- deenumifyParam eprimeModel essenceParam'
+    essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
 
     let essenceLettings   = extractLettings essenceParam
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens

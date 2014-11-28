@@ -58,7 +58,16 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
-        Declaration LettingDomainDefnUnnamed{} -> fail $ "not expected here, statement:" <+> pretty st
+        Declaration (LettingDomainDefnUnnamed nm _) -> do
+            case [ nms | Declaration (LettingDomainDefnEnum nm2 nms) <- mStatements essenceSolution , nm == nm2 ] of
+                [nms] -> modify ( [ (n, Constant (ConstantInt i))
+                                  | (i,n) <- zip allNats nms
+                                  ] ++ )
+                []    -> fail $ vcat [ "No value for unnamed domain" <+> pretty nm <+> "in the solution file."
+                                     ]
+                vals  -> fail $ vcat [ "Multiple values for unnamed domain" <+> pretty nm <+> "in the solution file."
+                                     , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
+                                     ]
         SearchOrder{} -> return ()
         Where xs -> do
             vals     <- gets id

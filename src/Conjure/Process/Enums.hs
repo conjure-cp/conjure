@@ -1,9 +1,9 @@
 {-# LANGUAGE TupleSections #-}
 
 module Conjure.Process.Enums
-    ( deenumifyModel
-    , deenumifyParam
-    , enumify
+    ( removeEnumsFromModel
+    , removeEnumsFromParam
+    , addEnumsBack
     ) where
 
 import Conjure.Prelude
@@ -15,12 +15,12 @@ import Conjure.Language.Pretty
 
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
-deenumifyModel :: (MonadFail m, MonadLog m) => Model -> m Model
-deenumifyModel = deenumifyModel_LettingEnums >=> deenumifyModel_GivenEnums
+removeEnumsFromModel :: (MonadFail m, MonadLog m) => Model -> m Model
+removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromModel_GivenEnums
 
     where
 
-        deenumifyModel_LettingEnums model = do
+        removeEnumsFromModel_LettingEnums model = do
             (statements', (enumDomainNames, nameToIntMapping)) <-
                 flip runStateT ([], []) $ forM (mStatements model) $ \ st ->
                     case st of
@@ -69,7 +69,7 @@ deenumifyModel = deenumifyModel_LettingEnums >=> deenumifyModel_GivenEnums
 
             return model'
 
-        deenumifyModel_GivenEnums model = do
+        removeEnumsFromModel_GivenEnums model = do
             (statements', enumDomainNames) <-
                 flip runStateT [] $ forM (mStatements model) $ \ st ->
                     case st of
@@ -99,10 +99,11 @@ deenumifyModel = deenumifyModel_LettingEnums >=> deenumifyModel_GivenEnums
 
             return model'
 
-deenumifyParam
+
+removeEnumsFromParam
     :: (MonadFail m, MonadLog m)
     => Model -> Model -> m Model
-deenumifyParam model param = do
+removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
                      ++ map (True,)  (mStatements param)
 
@@ -153,51 +154,51 @@ deenumifyParam model param = do
                        }
     return param'
 
+
 -- | Using the original domains from the Essence file.
 --   Converting integers back to enum constants.
--- TODO: complete enumify
-enumify
+-- TODO: complete addEnumsBack
+addEnumsBack
     :: [((Int, Name), Constant)]
     -> Domain () Expression
     -> Constant
     -> Constant
 
-enumify ctxt domain constant = case (domain, constant) of
+addEnumsBack ctxt domain constant = case (domain, constant) of
 
     (DomainBool , c) -> c
     (DomainInt{}, c) -> c
 
     (DomainEnum      ename _, ConstantInt i) ->
-        fromMaybe (bug $ "enumify:" <+> pretty (i, ename))
+        fromMaybe (bug $ "addEnumsBack:" <+> pretty (i, ename))
                   (lookup (i, ename) ctxt)
 
     (DomainReference ename _, ConstantInt i) ->
-        fromMaybe (bug $ "enumify:" <+> pretty (i, ename))
+        fromMaybe (bug $ "addEnumsBack:" <+> pretty (i, ename))
                   (lookup (i, ename) ctxt)
 
     (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
         ConstantAbstract $ AbsLitTuple
-            [ enumify ctxt d c
+            [ addEnumsBack ctxt d c
             | (d,c) <- zip ds cs ]
 
     (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
-        ConstantAbstract $ AbsLitMatrix index $ map (enumify ctxt inner) vals
+        ConstantAbstract $ AbsLitMatrix index $ map (addEnumsBack ctxt inner) vals
 
     (DomainSet _ _ inner, ConstantAbstract (AbsLitSet vals)) ->
-        ConstantAbstract $ AbsLitSet $ map (enumify ctxt inner) vals
+        ConstantAbstract $ AbsLitSet $ map (addEnumsBack ctxt inner) vals
 
     (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet vals)) ->
-        ConstantAbstract $ AbsLitMSet $ map (enumify ctxt inner) vals
+        ConstantAbstract $ AbsLitMSet $ map (addEnumsBack ctxt inner) vals
 
     (DomainFunction _ _ fr to, ConstantAbstract (AbsLitFunction vals)) ->
         ConstantAbstract $ AbsLitFunction
-            [ (enumify ctxt fr a, enumify ctxt to b)
+            [ (addEnumsBack ctxt fr a, addEnumsBack ctxt to b)
             | (a,b) <- vals ]
 
     (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
         ConstantAbstract $ AbsLitRelation
-            [ [ enumify ctxt d c | (d,c) <- zip inners line ]
+            [ [ addEnumsBack ctxt d c | (d,c) <- zip inners line ]
             | line <- vals ]
 
-    _ -> bug ("enumify:" <+> pretty (show domain))
-
+    _ -> bug ("addEnumsBack:" <+> pretty (show domain))

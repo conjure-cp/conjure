@@ -30,7 +30,8 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops
 import Conjure.Language.ModelStats ( modelInfo )
-import Conjure.Process.Enums ( deenumifyModel )
+import Conjure.Process.Enums ( removeEnumsFromModel )
+import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
@@ -388,7 +389,8 @@ prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                     >>= logDebugId "[input]"
     >>= return . initInfo           >>= logDebugId "[initInfo]"
-    >>= deenumifyModel              >>= logDebugId "[deenumifyModel]"
+    >>= removeUnnamedsFromModel     >>= logDebugId "[removeUnnamedsFromModel]"
+    >>= removeEnumsFromModel        >>= logDebugId "[removeEnumsFromModel]"
     >>= resolveNames                >>= logDebugId "[resolveNames]"
     >>= return . addTrueConstraints >>= logDebugId "[addTrueConstraints]"
 

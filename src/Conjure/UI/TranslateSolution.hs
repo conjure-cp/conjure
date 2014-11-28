@@ -4,11 +4,15 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
-import Conjure.Process.Enums ( deenumifyParam, enumify )
+import Conjure.Process.Enums ( removeEnumsFromParam, addEnumsBack )
 import Conjure.Representations ( up )
+
+-- text
+import Data.Text as T ( pack )
 
 
 translateSolution
@@ -21,7 +25,7 @@ translateSolution
     -> m Model    -- essence solution
 translateSolution eprimeModel essenceParam' eprimeSolution = do
 
-    essenceParam <- deenumifyParam eprimeModel essenceParam'
+    essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =
             [ (nm, fromInt (length vals))
@@ -65,12 +69,33 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                     ++ eprimeModel |> mInfo |> miEnumLettings |> map Declaration
             ]
 
+    let
+        unnameds :: [(Name, Expression)]
+        unnameds = eprimeModel |> mInfo |> miUnnameds
+
+    unnamedsAsEnumDomains <- forM unnameds $ \ (n, s') -> do
+        s <- instantiateExpression eprimeLettings s'
+        case s of
+            ConstantInt size -> return $
+                let nms = [ mconcat [n, "_", Name (T.pack (show i))]
+                          | i <- [1 .. size]
+                          ]
+                in  Declaration (LettingDomainDefnEnum n nms)
+            _ -> fail $ vcat [ "Expecting an integer value for" <+> pretty n
+                             , "But got:" <+> pretty s
+                             ]
+
     return def
-        { mStatements = sortNub
-            [ Declaration (Letting n (Constant (normaliseConstant y)))
-            | (n, d, x) <- essenceLettings
-            , let y = enumify intToEnumConstant d x
-            ]
+        { mStatements = unnamedsAsEnumDomains ++
+            sortNub
+                [ Declaration (Letting n (Constant (normaliseConstant y)))
+                | (n, d, x) <- essenceLettings
+                , let y = case (d, x) of
+                            (DomainReference dName _, ConstantInt x')
+                                | dName `elem` map fst unnameds ->
+                                ConstantEnum n [] (mconcat [dName, "_", Name (T.pack (show x'))])
+                            _ -> addEnumsBack intToEnumConstant d x
+                ]
         }
 
 extractLettings :: Model -> [(Name, Expression)]
