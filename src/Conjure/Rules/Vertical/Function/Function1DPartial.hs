@@ -21,7 +21,7 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> fail "No match."        
+            _ -> na "rule_Comprehension"
         let func             =  matchDef opToSet expr
         "Function1DPartial"  <- representationOf func
         TypeFunction{}       <- typeOf func
@@ -42,7 +42,7 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
                       ]
                     ++ transformBi (upd val) gofAfter
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"
 
 
 rule_Image :: Rule
@@ -56,7 +56,7 @@ rule_Image = "function-image{Function1DPartial}" `namedRule` theRule where
                                  }
                        |]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Image"
 
 
 rule_InDefined :: Rule
@@ -67,4 +67,4 @@ rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule wh
         return ( "Function in defined, Function1DPartial representation"
                , const [essence| &flags[&x] |]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_InDefined"

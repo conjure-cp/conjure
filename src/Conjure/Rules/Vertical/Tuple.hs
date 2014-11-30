@@ -81,7 +81,7 @@ rule_Tuple_DomainComprehension = "tuple-domain-comprehension" `namedRule` theRul
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, domains), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenDomain pat@Single{} (DomainTuple domains)) -> return (pat, domains)
-            _ -> fail "No match."
+            _ -> na "rule_Tuple_DomainComprehension"
         let pats fresh     = [ Single i            | i <- fresh ]
         let refs fresh     = [ Reference i Nothing | i <- fresh ]
         let theValue fresh = AbstractLiteral (AbsLitTuple (refs fresh))
@@ -98,4 +98,4 @@ rule_Tuple_DomainComprehension = "tuple-domain-comprehension" `namedRule` theRul
                           | (p,d) <- zip (pats fresh) domains ]
                        ++ transformBi (upd val) gofAfter
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Tuple_DomainComprehension"

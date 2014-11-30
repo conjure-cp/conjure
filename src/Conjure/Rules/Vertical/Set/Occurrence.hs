@@ -21,7 +21,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
-            _ -> fail "No match."
+            _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
         "Occurrence"         <- representationOf s
         [m]                  <- downX1 s
@@ -36,7 +36,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
                           ]
                        ++ gofAfter
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"
 
 
 rule_In :: Rule

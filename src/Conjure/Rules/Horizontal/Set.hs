@@ -36,7 +36,7 @@ rule_Neq = "set-neq" `namedRule` theRule where
         return ( "Horizontal rule for set dis-equality"
                , const [essence| !(&x = &y) |]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Neq"
 
 
 rule_SubsetEq :: Rule
@@ -59,7 +59,7 @@ rule_Subset = "set-subset" `namedRule` theRule where
             ( "Horizontal rule for set subset"
             , const [essence| &a subsetEq &b /\ &a != &b |]
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
@@ -69,7 +69,7 @@ rule_Supset = "set-supset" `namedRule` theRule where
             ( "Horizontal rule for set supset"
             , const [essence| &b subset &a |]
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
@@ -79,7 +79,7 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
             ( "Horizontal rule for set supsetEq"
             , const [essence| &b subsetEq &a |]
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_SupsetEq"
 
 
 rule_Lt :: Rule
@@ -117,7 +117,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
-            _ -> fail "No match."
+            _ -> na "rule_Intersect"
         (x, y)             <- match opIntersect s
         tx                 <- typeOf x
         case tx of
@@ -137,7 +137,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
                        ]
                     ++ gofAfter
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Intersect"
 
 
 rule_Union :: Rule
@@ -145,7 +145,7 @@ rule_Union = "set-union" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
-            _ -> fail "No match."
+            _ -> na "rule_Union"
         (x, y)             <- match opUnion s
         tx                 <- typeOf x
         case tx of
@@ -170,7 +170,7 @@ rule_Union = "set-union" `namedRule` theRule where
                     ++ gofAfter
                 ]
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Union"
 
 
 rule_MaxMin :: Rule
@@ -191,7 +191,7 @@ rule_MaxMin = "set-max-min" `namedRule` theRule where
                 let (iPat, i) = quantifiedVar (fresh `at` 0)
                 in  [essence| min([&i | &iPat <- &s]) |]
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_MaxMin"
 
 
 -- x in s ~~> or([ x = i | i in s ])

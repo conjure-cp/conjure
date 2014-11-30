@@ -378,7 +378,7 @@ instance TypeOf Expression where
 instance OperatorContainer Expression where
     injectOp = Op
     projectOp (Op op) = return op
-    projectOp x = fail ("not an op: " <++> pretty (show x))
+    projectOp x = na ("Not an operator:" <++> pretty (show x))
 
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing

@@ -33,7 +33,7 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> fail "No match."                
+            _ -> na "rule_Comprehension"
         let upd val old        =  lambdaToFunction pat old val
         let rel                =  matchDef opToSet expr
         TypeRelation{}         <- typeOf rel
@@ -63,4 +63,4 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
                               ]
                             ++ transformBi (upd lit) gofAfter
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"

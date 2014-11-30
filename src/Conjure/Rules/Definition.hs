@@ -141,7 +141,7 @@ matchFirst
          )
 matchFirst = helper []
     where
-        helper _ [] _ = fail "No match."
+        helper _ [] _ = na "matchFirst"
         helper befores (x:xs) f = case f x of
             Nothing -> helper (x:befores) xs f
             Just y  -> return (reverse befores, y, xs)

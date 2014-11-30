@@ -31,7 +31,7 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
         return ( "Function image, FunctionND representation"
                , const valuesIndexed
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Image"
 
 
 rule_Comprehension :: Rule
@@ -39,7 +39,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
-            _ -> fail "No match."        
+            _ -> na "rule_Comprehension"
         let func                      =  matchDef opToSet expr
         "FunctionND"           <- representationOf func
         TypeFunction (TypeTuple ts) _ <- typeOf func
@@ -64,4 +64,4 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
                        ]
                     ++ transformBi (upd val) gofAfter
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"

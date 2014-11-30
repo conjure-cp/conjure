@@ -21,7 +21,7 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
-            _ -> fail "No match."        
+            _ -> na "rule_Comprehension"
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
         [marker, values]            <- downX1 s
@@ -37,7 +37,7 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
                            ]
                         ++ transformBi (upd [essence| &values[&i] |]) gofAfter
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"
 
 
 rule_Card :: Rule

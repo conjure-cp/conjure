@@ -33,4 +33,4 @@ rule_In = "relation-in" `namedRule` theRule where
                    let (iPat, i) = quantifiedVar (fresh `at` 0)
                    in  [essence| exists &iPat in toSet(&rel) . &i = &x |]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_In"

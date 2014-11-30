@@ -15,12 +15,12 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Comprehension_Explicit :: Rule
-rule_Comprehension_Explicit = "set-comprehension{Explicit}" `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
-            _ -> fail "No match."
+            _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
@@ -34,4 +34,4 @@ rule_Comprehension_Explicit = "set-comprehension{Explicit}" `namedRule` theRule 
                        ++ [ Generator (GenDomain pat index) ]
                        ++ transformBi (upd val) gofAfter
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"

@@ -424,7 +424,7 @@ applicableRules Config{..} rulesAtLevel x = do
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
         case my of
-            Left  failed -> unless (failed == "No match.") $ logFail $ vcat
+            Left  failed -> unless ("N/A" `isPrefixOf` show failed) $ logFail $ vcat
                 [ " rule failed:" <+> rule
                 , "          on:" <+> pretty x
                 , "     message:" <+> failed
@@ -461,7 +461,7 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq
     , Vertical.Matrix.rule_Matrix_Lt
 
-    , Vertical.Set.Explicit.rule_Comprehension_Explicit
+    , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
@@ -552,7 +552,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
         return $ if forg == Given && parameterRepresentation config == False
                     then [head options]
                     else options 
-    theRule _ = fail "No match."
+    theRule _ = na "rule_ChooseRepr"
 
     mkHook useChannelling   -- whether to use channelling or not
            forg             -- find or given
@@ -632,7 +632,7 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
                        , const $ Constant $ ConstantBool True
                        )
             _ -> fail "The argument of true doesn't have a representation."
-    theRule _ = fail "No match."
+    theRule _ = na "rule_TrueIsNoOp"
 
 
 rule_ToIntIsNoOp :: Rule
@@ -662,7 +662,7 @@ rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
         case xInner of
             TypeBool{} -> return ()
             TypeInt{}  -> return ()
-            _ -> fail "No match."
+            _ -> na "rule_FlattenOf1D"
         return ( "1D matrices do not need a flatten."
                , const x
                )
@@ -693,7 +693,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                                 ])
                         |]
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Decompose_AllDiff"
 
 
 rule_SumFlatten :: Rule
@@ -728,7 +728,7 @@ rule_BubbleUp = "bubble-up" `namedRule` theRule where
                 return ( "Bubbling up when the bubble is used to index something (3/3)"
                        , const $ WithLocals (make opIndexing m' x') locals2
                        )
-            _ -> fail "No match."
+            _ -> na "rule_BubbleUp"
 
 
 rule_BubbleToAnd :: Rule
@@ -744,7 +744,7 @@ rule_BubbleToAnd = "bubble-to-and" `namedRule` theRule where
         return ( "Converting a bubble into a conjunction."
                , const out
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_BubbleToAnd"
 
     onlyConstraints :: MonadFail m => [Statement] -> m [Expression]
     onlyConstraints [] = return []
@@ -822,7 +822,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
         (gofBefore, (pat, domainOrExpr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenDomain pat@AbsPatTuple{} domain) -> return (pat, Left domain)
             Generator (GenInExpr pat@AbsPatTuple{} expr)   -> return (pat, Right expr)
-            _ -> fail "No match."
+            _ -> na "rule_ComplexAbsPat"
         return
             ( "complex pattern on tuple patterns"
             , \ fresh ->
@@ -840,7 +840,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
                                         domainOrExpr ]
                             ++ transformBi f gofAfter
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_ComplexAbsPat"
 
     -- i         --> i -> []
     -- (i,j)     --> i -> [1]
@@ -918,4 +918,4 @@ rule_Set_Comprehension_Literal = "set-mapSetLiteral" `namedRule` theRule where
                            | e <- elems
                            ]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Set_Comprehension_Literal"

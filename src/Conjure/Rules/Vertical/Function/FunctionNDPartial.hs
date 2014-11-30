@@ -34,7 +34,7 @@ rule_Image = "function-image{FunctionNDPartial}" `namedRule` theRule where
                                  @ such that &flagsIndexed
                                  } |]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Image"
 
 
 rule_InDefined :: Rule
@@ -52,7 +52,7 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
         return ( "Function in defined, FunctionNDPartial representation"
                , const flagsIndexed
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_InDefined"
 
 
 rule_Comprehension :: Rule
@@ -60,7 +60,7 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
-            _ -> fail "No match."        
+            _ -> na "rule_Comprehension"
         let func                      =  matchDef opToSet expr
         "FunctionNDPartial"           <- representationOf func
         TypeFunction (TypeTuple ts) _ <- typeOf func
@@ -87,4 +87,4 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
                        ]
                     ++ transformBi (upd val) gofAfter
             )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension"

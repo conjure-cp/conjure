@@ -40,7 +40,7 @@ rule_Neq = "function-neq" `namedRule` theRule where
         return ( "Horizontal rule for function dis-equality"
                , const [essence| !(&x = &y) |]
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Neq"
 
 
 rule_Lt :: Rule
@@ -78,7 +78,7 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
-            _ -> fail "No match."        
+            _ -> na "rule_Comprehension_PreImage"
         (func, img) <- match opPreImage expr
         let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
@@ -92,5 +92,5 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
                           ]
                        ++ transformBi (upd val) gofAfter
                )
-    theRule _ = fail "No match."
+    theRule _ = na "rule_Comprehension_PreImage"
 
