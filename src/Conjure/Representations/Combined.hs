@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Conjure.Representations.Combined
@@ -13,6 +14,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+import Conjure.Language.TH
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
@@ -188,7 +190,26 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                     [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
         matrixDown_ _ = na "{matrixDown_}"
 
-        structuralCons = \ _ _ _ -> return (\ _ _ -> return [] ) -- FIX
+        structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
+            let
+                innerStructuralCons fresh m = do
+                    let (iPat, i) = quantifiedVar (headInf fresh)
+                    let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomain
+
+                    let inLoop = [essence| &m[&i] |]
+                    outs <- innerStructuralConsGen (tail fresh) [inLoop]
+                    return (map activeZone outs)
+
+            return $ \ fresh refs ->
+                case refs of
+                    [m] -> do
+                        isc <- innerStructuralCons fresh m
+                        return isc
+                    _ -> na "{structuralCons} matrix"
+        structuralCons _ _ _ = na "{structuralCons} matrix"
 
         -- TODO: check if indices are the same
         matrixDown ( name
