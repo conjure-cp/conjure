@@ -45,8 +45,7 @@ function1D = Representation chck downD structuralCons downC up
                   ) ]
         downD _ = na "{downD} Function1D"
 
-        -- FIX
-        structuralCons _ _
+        structuralCons f downX1
             (DomainFunction "Function1D"
                 (FunctionAttr sizeAttr FunctionAttr_Total jectivityAttr)
                 innerDomainFr'
@@ -74,9 +73,27 @@ function1D = Representation chck downD structuralCons downC up
 
             cardinality <- domainSizeOf innerDomainFr
 
+            let innerStructuralCons fresh m = do
+                    let (iPat, i) = quantifiedVar (headInf fresh)
+                    let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomainTo
+
+                    let inLoop = [essence| &m[&i] |]
+                    refs <- downX1 inLoop
+                    outs <- innerStructuralConsGen (tail fresh) refs
+                    return (map activeZone outs)
+
             return $ \ fresh refs ->
                 case refs of
-                    [m] -> return (jectivityCons fresh m ++ mkSizeCons sizeAttr cardinality)
+                    [m] -> do
+                        isc <- innerStructuralCons fresh m
+                        return $ concat
+                            [ jectivityCons fresh m
+                            , mkSizeCons sizeAttr cardinality
+                            , isc
+                            ]
                     _ -> na "{structuralCons} Function1D"
 
         structuralCons _ _ _ = na "{structuralCons} Function1D"

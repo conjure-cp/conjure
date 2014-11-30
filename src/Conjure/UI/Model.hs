@@ -518,6 +518,7 @@ otherRules =
     , rule_ToIntIsNoOp
     , rule_SingletonAnd
     , rule_FlattenOf1D
+    , rule_Decompose_AllDiff
     , rule_SumFlatten
 
     , rule_BubbleUp
@@ -665,6 +666,34 @@ rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
         return ( "1D matrices do not need a flatten."
                , const x
                )
+
+
+rule_Decompose_AllDiff :: Rule
+rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
+    theRule [essence| allDiff(&m) |] = do
+        ty <- typeOf m
+        case ty of
+            TypeMatrix _ TypeBool -> fail "allDiff can stay"
+            TypeMatrix _ TypeInt  -> fail "allDiff can stay"
+            TypeMatrix _ _ -> return ()
+            _ -> fail "allDiff on something other than a matrix."
+        DomainMatrix index _ <- domainOf m
+        return
+            ( "Decomposing allDiff. Type:" <+> pretty ty
+            , \ fresh ->
+                    let
+                        (iPat, i) = quantifiedVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
+                    in
+                        [essence|
+                            and([ &m[&i] != &m[&j]
+                                | &iPat : &index
+                                , &jPat : &index
+                                , &i < &j
+                                ])
+                        |]
+            )
+    theRule _ = fail "No match."
 
 
 rule_SumFlatten :: Rule
