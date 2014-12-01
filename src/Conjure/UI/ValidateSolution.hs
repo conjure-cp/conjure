@@ -58,7 +58,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
-        Declaration (LettingDomainDefnUnnamed nm _) -> do
+        Declaration (LettingDomainDefnUnnamed nm _) ->
             case [ nms | Declaration (LettingDomainDefnEnum nm2 nms) <- mStatements essenceSolution , nm == nm2 ] of
                 [nms] -> modify ( [ (n, Constant (ConstantInt i))
                                   | (i,n) <- zip allNats nms

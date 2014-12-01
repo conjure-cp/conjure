@@ -7,7 +7,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 
 module Conjure.UI.Model
     ( outputModels
@@ -128,7 +127,7 @@ remaining config model = do
                                    else return bs
 
         processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
-        processLevel rulesAtLevel = do
+        processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContexts modelZipper) $ \ x ->
                 -- things in a reference should not be rewritten.
                 -- specifically, no representation selection for them!
@@ -138,7 +137,7 @@ remaining config model = do
                         ys <- applicableRules config rulesAtLevel (hole x)
                         return $ if null ys
                                     then Nothing
-                                    else (Just (x, ys))
+                                    else Just (x, ys)
 
     questions <- loopLevels $ map processLevel (allRules config)
     forM (zip allNats questions) $ \ (nQuestion, (focus, answers)) -> do
@@ -548,7 +547,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 , let hook = mkHook (channelling config) forg nm dom
                 ]
         return $ if forg == Given && parameterRepresentation config == False
-                    then [head options]
+                    then take 1 options
                     else options 
     theRule _ = na "rule_ChooseRepr"
 
