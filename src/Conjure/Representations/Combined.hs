@@ -148,20 +148,37 @@ dispatch domain = do
 
 
 -- | A list of all representations.
-allReprs :: [Representation (Either Doc)]
+--   As a crude measure, implementing levels here.
+--   We shouldn't have levels between representations in the long run.
+allReprs :: [[Representation (Either Doc)]]
 allReprs =
-    [ primitive, tuple, matrix
-    , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-    , function1D, function1DPartial, functionND, functionNDPartial
-    , relationAsMatrix
+    [ [ primitive, tuple, matrix
+      , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+      , function1D, function1DPartial, functionND, functionNDPartial
+      , relationAsMatrix
+      ]
+    -- , [ functionAsRelation
+    --   , relationAsSet
+    --   ]
     ]
 
 
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
 reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
-reprOptions domain = concat [ rCheck r reprOptions domain | r <- allReprs ]
+reprOptions domain = go allReprs
+    where
+        go [] = []
+        go (reprsThisLevel:reprsNextLevels) =
+            let matchesOnThisLevel = concat [ rCheck r reprOptions domain | r <- reprsThisLevel ]
+            in  if null matchesOnThisLevel
+                    then go reprsNextLevels
+                    else matchesOnThisLevel
 
+
+-- | For a domain, returns the structural constraints.
+--   Makes recursive calls to generate the complete structural constraints.
+--   Takes in a function to refine inner guys.
 getStructurals
     :: MonadFail m
     => (Expression -> m [Expression])
