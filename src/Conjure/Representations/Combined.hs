@@ -28,6 +28,7 @@ import Conjure.Representations.Function.Function1DPartial
 import Conjure.Representations.Function.FunctionND
 import Conjure.Representations.Function.FunctionNDPartial
 import Conjure.Representations.Relation.RelationAsMatrix
+import Conjure.Representations.Relation.RelationAsSet
 
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
@@ -143,6 +144,7 @@ dispatch domain = do
             _ -> nope
         DomainRelation r _ _ -> case r of
             "RelationAsMatrix"              -> relationAsMatrix
+            "RelationAsSet"                 -> relationAsSet dispatch
             _ -> nope
         _ -> nope
 
@@ -157,9 +159,9 @@ allReprs =
       , function1D, function1DPartial, functionND, functionNDPartial
       , relationAsMatrix
       ]
-    -- , [ functionAsRelation
-    --   , relationAsSet
-    --   ]
+    , [ -- functionAsRelation
+        relationAsSet dispatch
+      ]
     ]
 
 

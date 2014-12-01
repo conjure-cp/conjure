@@ -45,8 +45,11 @@ onReference nm refTo =
         DeclHasRepr forg _ domain -> downToX1 forg nm domain
 
 onOp :: MonadFail m => Ops Expression -> m [Expression]
-onOp (MkOpIndexing (OpIndexing m i)) = do
-    TypeMatrix{} <- typeOf m
+onOp p@(MkOpIndexing (OpIndexing m i)) = do
+    ty <- typeOf m
+    case ty of
+        TypeMatrix{} -> return ()
+        _ -> fail $ "[onOp, not a TypeMatrix]" <+> vcat [pretty ty, pretty p]
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
