@@ -95,7 +95,7 @@ resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
     case mval of
         Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
-        Just (Alias (Domain r)) -> return r
+        Just (Alias (Domain r)) -> resolveD r
         Just x -> userErr ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD d = do
     d' <- descendM resolveD d

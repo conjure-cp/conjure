@@ -335,8 +335,8 @@ instance Pretty Expression where
     prettyPrec _ (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
 
     -- mostly for debugging: print what a reference is pointing at
-    -- prettyPrec _ (Reference x (Just r)) = pretty x <> "#`" <> pretty r <> "`"
     -- prettyPrec _ (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
+    -- prettyPrec _ (Reference x (Just r)) = pretty x <> "#`" <> pretty r <> "`"
 
     prettyPrec _ (Constant x) = pretty x
     prettyPrec _ (AbstractLiteral x) = pretty x
