@@ -9,6 +9,7 @@ import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam, addEnumsBack )
+import Conjure.UI.RefineParam ( refineParam )
 import Conjure.Representations ( up )
 
 -- text
@@ -25,6 +26,7 @@ translateSolution
     -> m Model    -- essence solution
 translateSolution eprimeModel essenceParam' eprimeSolution = do
 
+    eprimeParam  <- refineParam eprimeModel essenceParam'
     essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =
@@ -36,7 +38,9 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
             ]
 
     let eprimeLettings = extractLettings essenceParam ++
+                         extractLettings eprimeParam ++
                          extractLettings eprimeSolution ++
+                         extractLettings eprimeModel ++
                          eprimeLettingsForEnums
     let essenceFindNames = eprimeModel |> mInfo |> miFinds
     let essenceFinds     = eprimeModel |> mInfo |> miRepresentations
