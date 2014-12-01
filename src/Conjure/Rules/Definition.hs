@@ -85,15 +85,16 @@ instance Default Config where
         , limitModels               = Nothing
         }
 
-type RuleResult = ( Doc                     -- describe this transformation
-                  , [Name] -> Expression    -- the result
-                  , Model -> Model          -- post-application hook
-                  )
+type RuleResult m =
+        ( Doc                     -- describe this transformation
+        , [Name] -> Expression    -- the result
+        , Model -> m Model        -- post-application hook
+        )
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . MonadFail m => Expression -> m [RuleResult]
-                           -- fail in a rule just means that the rule isn't applicable
+    , rApply :: forall m . Monad m => Expression -> ExceptT Identity [RuleResult m]
+                -- fail in a rule just means that the rule isn't applicable
     }
 
 namedRule
@@ -102,7 +103,7 @@ namedRule
     -> Rule
 namedRule nm f = Rule
     { rName = nm
-    , rApply = \ x -> let addId (d,y) = (d,y,id)
+    , rApply = \ x -> let addId (d, y) = (d, y, return)
                       in  liftM (return . addId) (f x)
     }
 

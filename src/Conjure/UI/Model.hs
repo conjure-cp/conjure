@@ -127,7 +127,7 @@ remaining config model = do
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult)])]
+        processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel = do
             fmap catMaybes $ forM (allContexts modelZipper) $ \ x ->
                 -- things in a reference should not be rewritten.
@@ -141,30 +141,29 @@ remaining config model = do
                                     else (Just (x, ys))
 
     questions <- loopLevels $ map processLevel (allRules config)
-    return
-        [ Question
+    forM (zip allNats questions) $ \ (nQuestion, (focus, answers)) -> do
+        answers' <- forM (zip allNats answers) $ \ (nAnswer, (ruleName, (ruleText, ruleResult, hook))) -> do
+            let ruleResultExpr = ruleResult freshNames'
+            aFullModel' <- hook (fromZipper (replaceHole ruleResultExpr focus))
+            return Answer
+                { aText = ruleName <> ":" <+> ruleText
+                , aAnswer = ruleResultExpr
+                , aFullModel = aFullModel'
+                                |> addToTrail config
+                                            nQuestion [1 .. length questions]
+                                            (("Focus:" <+> pretty (hole focus))
+                                             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                               | i <- allNats
+                                               | c <- tail (ascendants focus)
+                                               ])
+                                            nAnswer   [1 .. length answers]
+                                            [ruleName <> ":" <+> ruleText]
+                }
+        return Question
             { qHole = hole focus
             , qAscendants = tail (ascendants focus)
-            , qAnswers =
-                [ Answer
-                    { aText = ruleName <> ":" <+> ruleText
-                    , aAnswer = ruleResultExpr
-                    , aFullModel = hook (fromZipper (replaceHole ruleResultExpr focus))
-                                    |> addToTrail config nQuestion [1 .. length questions]
-                                                  (("Focus:" <+> pretty (hole focus))
-                                                   : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                                     | i <- allNats
-                                                     | c <- tail (ascendants focus)
-                                                     ])
-                                                  nAnswer   [1 .. length answers]
-                                                  [ruleName <> ":" <+> ruleText]
-                    }
-                | (nAnswer, (ruleName, (ruleText, ruleResult, hook))) <- zip allNats answers
-                , let ruleResultExpr = ruleResult freshNames'
-                ]
+            , qAnswers = answers'
             }
-        | (nQuestion, (focus, answers)) <- zip allNats questions
-        ]
 
 
 strategyToDriver :: Strategy -> Strategy -> Driver
@@ -408,19 +407,18 @@ epilogue eprime = do
 
 
 applicableRules
-    :: (Applicative m, Monad m, MonadLog m)
+    :: forall m . MonadLog m
     => Config
     -> [Rule]
     -> Expression
-    -> m [(Doc, RuleResult)]
+    -> m [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
     mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty x)
-                         mres <- runExceptT (rApply r x)
-                         return (rName r, mres :: Either Doc [RuleResult])
+                         return (rName r, runIdentity $ runExceptT $ rApply r x)
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
         case my of
@@ -558,7 +556,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
            forg             -- find or given
            name             -- name of the original declaration
            domain           -- domain with representation selected
-           model =
+           model = do
         let
 
             freshNames' = freshNames model
@@ -615,12 +613,12 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 in
                     m { mStatements = transformBi f (mStatements m) }
 
-        in
-            model
-                |> addStructurals       -- unless usedBefore: add structurals
-                |> addChannels          -- for each in previously recorded representation
-                |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
-                |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
+        model
+            |> addStructurals       -- unless usedBefore: add structurals
+            |> addChannels          -- for each in previously recorded representation
+            |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
+            |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
+            |> return
 
 
 rule_TrueIsNoOp :: Rule
