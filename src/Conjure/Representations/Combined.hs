@@ -192,24 +192,20 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
 
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
-                innerStructuralCons fresh m = do
+                innerStructuralCons fresh ref = do
                     let (iPat, i) = quantifiedVar (headInf fresh)
                     let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
-                    let inLoop = [essence| &m[&i] |]
+                    let inLoop = [essence| &ref[&i] |]
                     outs <- innerStructuralConsGen (tail fresh) [inLoop]
                     return (map activeZone outs)
 
-            return $ \ fresh refs ->
-                case refs of
-                    [m] -> do
-                        isc <- innerStructuralCons fresh m
-                        return isc
-                    _ -> na "{structuralCons} matrix"
-        structuralCons _ _ _ = na "{structuralCons} matrix"
+            return $ \ fresh refs -> concat <$> mapM (innerStructuralCons fresh) refs
+
+        structuralCons _ _ _ = na "{structuralCons} matrix 2"
 
         -- TODO: check if indices are the same
         matrixDown ( name

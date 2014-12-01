@@ -32,8 +32,15 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
             ]
         tupleDown_ _ = na "{tupleDown_}"
 
-        -- FIX
-        structuralCons = \ _ _ _ -> return (\ _ _ -> return [] )
+        structuralCons f _ (DomainTuple ds) = return $ \ fresh refs ->
+            concat <$> sequence
+                [ do
+                    innerStructuralConsGen <- f dom
+                    outs <- innerStructuralConsGen (tail fresh) [ref]
+                    return outs
+                | (ref, dom) <- zip refs ds
+                ]
+        structuralCons _ _ _ = na "{structuralCons} tuple"
 
         -- TODO: check if (length ds == length cs)
         tupleDown (name, DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) = return $ Just

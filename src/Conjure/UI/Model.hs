@@ -333,7 +333,7 @@ inlineDecVarLettings model =
             case st of
                 Declaration (Letting nm x)
                     | categoryOf x == CatDecision
-                    -> modify ((nm,x) :) >> return (trace (show (nm,x)) Nothing)
+                    -> modify ((nm,x) :) >> return Nothing
                 _ -> Just <$> transformBiM inline st
     in
         model { mStatements = statements }
