@@ -27,6 +27,8 @@ module Conjure.Language.Definition
 
     , ExpressionLike(..), ReferenceContainer(..)
 
+    , extractLettings
+
     ) where
 
 -- conjure
@@ -512,18 +514,6 @@ instance Pretty AbstractPattern where
     pretty (AbsPatSet    xs) = prettyList prBraces "," xs
     pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
--- instance TypeOf AbstractPattern where
---     typeOf pat@(Single _ Nothing  ) = fail ("typeOf AbstractPattern:" <+> pretty (show pat))
---     typeOf     (Single _ (Just ty)) = return ty
---     typeOf (AbsPatTuple ts) = TypeTuple <$> mapM typeOf ts
---     typeOf pat@(AbsPatMatrix ts) = do
---         tys <- mapM typeOf ts
---         if typesUnify tys
---             then return (TypeMatrix TypeInt (mostDefined tys))
---             else fail ("Types do not unify in:" <+> pretty pat)
---     typeOf pat                      = fail ("typeOf:" <+> pretty (show pat))
-
-
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Generator -----------------------------------------------------------------------------------------------------------
@@ -559,3 +549,16 @@ instance FromJSON  Generator where parseJSON = JSON.genericParseJSON jsonOptions
 generatorPat :: Generator -> AbstractPattern
 generatorPat (GenDomain pat _) = pat
 generatorPat (GenInExpr pat _) = pat
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- Misc ---------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+extractLettings :: Model -> [(Name, Expression)]
+extractLettings model =
+    [ (n, x) | Declaration (Letting n x) <- mStatements model
+             , not (isDomain x)
+             ]
+    where isDomain Domain{} = True
+          isDomain _ = False

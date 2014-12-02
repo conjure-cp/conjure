@@ -85,12 +85,3 @@ refineParam eprimeModel essenceParam' = do
             | (n, x) <- eprimeLettingsForEnums
             ]
         }
-
-extractLettings :: Model -> [(Name, Expression)]
-extractLettings model =
-    [ (n, x) | Declaration (Letting n x) <- mStatements model
-             , not (isDomain x)
-             ]
-    where isDomain Domain{} = True
-          isDomain _ = False
-
