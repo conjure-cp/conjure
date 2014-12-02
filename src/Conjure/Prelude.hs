@@ -35,8 +35,9 @@ module Conjure.Prelude
     , headInf
     , paddedNum
     , dropExtension
-    , MonadLog(..), LogLevel(..), runLoggerIO, runLogger, ignoreLogs, logInfo, logWarn, logDebug
-    , runLoggerPipeIO
+    , MonadLog(..), LogLevel(..)
+    , runLoggerPipeIO, runLoggerIO, runLogger, ignoreLogs
+    , logInfo, logWarn, logDebug, logDebugVerbose
     , histogram
     , ExceptT(..)
     , sh
@@ -413,6 +414,7 @@ data LogLevel
     | LogInfo
     | LogWarn
     | LogDebug
+    | LogDebugVerbose
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 instance Default LogLevel where def = LogNone
@@ -425,6 +427,9 @@ logWarn = log LogWarn
 
 logDebug :: MonadLog m => Doc -> m ()
 logDebug = log LogDebug
+
+logDebugVerbose :: MonadLog m => Doc -> m ()
+logDebugVerbose = log LogDebugVerbose
 
 instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
@@ -462,7 +467,7 @@ runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Do
 runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
     where
         each (Left (lvl, msg)) = when (lvl <= l)
-            (liftIO $ putStrLn $ Pr.renderStyle (Pr.style { Pr.lineLength = 2000 }) msg)
+            (liftIO $ putStrLn $ Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg)
         each _ = return ()
 
 histogram :: Ord a => [a] -> [(a,Int)]

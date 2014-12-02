@@ -31,6 +31,7 @@ import Conjure.Language.Ops
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
+import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
@@ -392,6 +393,7 @@ prologue model = return model
     >>= return . initInfo           >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel     >>= logDebugId "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel        >>= logDebugId "[removeEnumsFromModel]"
+    >>= finiteGivens                >>= logDebugId "[finiteGivens]"
     >>= resolveNames                >>= logDebugId "[resolveNames]"
     >>= return . addTrueConstraints >>= logDebugId "[addTrueConstraints]"
 

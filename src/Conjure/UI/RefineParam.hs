@@ -1,12 +1,16 @@
+{-# LANGUAGE TupleSections #-}
+
 module Conjure.UI.RefineParam ( refineParam ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam )
+import Conjure.Process.FiniteGivens ( finiteGivensParam )
 import Conjure.Representations ( downC )
 
 
@@ -18,9 +22,14 @@ refineParam
     -> Model      -- essence param
     -> m Model    -- eprime param
 
-refineParam eprimeModel essenceParam' = do
+refineParam eprimeModel essenceParam0 = do
 
-    essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
+    essenceParam1 <- removeEnumsFromParam eprimeModel essenceParam0
+    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
+
+    logDebug $ "[essenceParam 0]" <+> pretty essenceParam0
+    logDebug $ "[essenceParam 1]" <+> pretty essenceParam1
+    logDebug $ "[essenceParam 2]" <+> pretty essenceParam
 
     let essenceLettings   = extractLettings essenceParam
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
@@ -34,7 +43,7 @@ refineParam eprimeModel essenceParam' = do
     let eprimeLettingsForEnums =
             [ (nm, fromInt (length vals))
             | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
-            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam' |> mStatements
+            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam0 |> mStatements
             , nm1 == nm2
             , let nm = nm1 `mappend` "_EnumSize"
             ]
@@ -48,7 +57,7 @@ refineParam eprimeModel essenceParam' = do
         return (name, constant)
 
     let extraLettings = map fst essenceLettings' \\
-                        map fst essenceGivens'
+                        (map fst essenceGivens' ++ generatedLettingNames)
 
     unless (null extraLettings) $
         logWarn ("Extra lettings:" <+> prettyList id "," extraLettings)
@@ -63,7 +72,7 @@ refineParam eprimeModel essenceParam' = do
                                 , "With domain:" <+> pretty d
                                 ]
                 Just v  -> Just (n, d, v)
-            | (n, d) <- essenceGivens'
+            | (n, d) <- essenceGivens' ++ map (,DomainInt []) generatedLettingNames
             ]
 
     let f (Reference nm Nothing) =
