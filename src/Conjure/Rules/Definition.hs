@@ -93,7 +93,7 @@ type RuleResult m =
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . Monad m => Expression -> ExceptT Identity [RuleResult m]
+    , rApply :: forall m . MonadLog m => Expression -> ExceptT Identity [RuleResult m]
                 -- fail in a rule just means that the rule isn't applicable
     }
 

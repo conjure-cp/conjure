@@ -429,6 +429,9 @@ logDebug = log LogDebug
 instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
 
+instance MonadLog m => MonadLog (ExceptT m) where
+    log l m = log l m >> ExceptT (return (Right ()))
+
 instance (Applicative m, Monad m) => MonadLog (IdentityT m) where
     log _ _ = return ()
 
@@ -458,7 +461,8 @@ runLoggerIO l logger = do
 runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Doc) a) m r -> m r
 runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
     where
-        each (Left (lvl, msg)) = when (lvl <= l) (liftIO $ print msg)
+        each (Left (lvl, msg)) = when (lvl <= l)
+            (liftIO $ putStrLn $ Pr.renderStyle (Pr.style { Pr.lineLength = 2000 }) msg)
         each _ = return ()
 
 histogram :: Ord a => [a] -> [(a,Int)]

@@ -96,6 +96,7 @@ toCompletion config@Config{..} m = do
     where
         driver = strategyToDriver strategyQ strategyA
         loopy model = do
+            logDebug $ "[loopy]" <+> pretty model
             qs <- remaining config model
             if null qs
                 then do
@@ -143,11 +144,12 @@ remaining config model = do
     forM (zip allNats questions) $ \ (nQuestion, (focus, answers)) -> do
         answers' <- forM (zip allNats answers) $ \ (nAnswer, (ruleName, (ruleText, ruleResult, hook))) -> do
             let ruleResultExpr = ruleResult freshNames'
-            aFullModel' <- hook (fromZipper (replaceHole ruleResultExpr focus))
+            let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
+            fullModelAfterHook <- hook fullModelBeforeHook
             return Answer
                 { aText = ruleName <> ":" <+> ruleText
                 , aAnswer = ruleResultExpr
-                , aFullModel = aFullModel'
+                , aFullModel = fullModelAfterHook
                                 |> addToTrail config
                                             nQuestion [1 .. length questions]
                                             (("Focus:" <+> pretty (hole focus))

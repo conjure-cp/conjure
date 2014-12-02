@@ -1,0 +1,8 @@
+language ESSENCE' 1.0
+
+given s_Occurrence: matrix indexed by [int(0..9)] of bool
+given s_Explicit: matrix indexed by [int(1..5)] of int(0..9)
+given c: int
+find x: int(min([q3 | q3 : int(0..9), s_Occurrence[q3]])..max([q4 | q4 : int(0..9), s_Occurrence[q4]]))
+such that x = c
+

@@ -335,6 +335,7 @@ instance Pretty Expression where
     prettyPrec _ (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
 
     -- mostly for debugging: print what a reference is pointing at
+    -- prettyPrec _ (Reference x Nothing) = pretty x <> "#`NOTHING`"
     -- prettyPrec _ (Reference x (Just (DeclHasRepr _ _ dom))) = pretty x <> "#`" <> pretty dom <> "`"
     -- prettyPrec _ (Reference x (Just r)) = pretty x <> "#`" <> pretty r <> "`"
 
@@ -351,7 +352,7 @@ instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
     typeOf (AbstractLiteral x) = typeOf x
     typeOf (Domain x)   = typeOf x
-    typeOf (Reference nm Nothing) = bug ("Type error, identifier not bound:" <+> pretty nm)
+    typeOf (Reference nm Nothing) = fail ("Type error, identifier not bound:" <+> pretty nm)
     typeOf (Reference nm (Just refTo)) =
         case refTo of
             Alias x -> typeOf x
