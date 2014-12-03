@@ -614,7 +614,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 | useChannelling = id           -- no-op, if channelling=yes
                 | otherwise = \ m ->
                 let
-                    f (Reference nm (Just DeclNoRepr{})) = Reference nm (Just (DeclHasRepr forg name domain))
+                    f (Reference nm _) | nm == name = Reference nm (Just (DeclHasRepr forg name domain))
                     f x = x
                 in
                     m { mStatements = transformBi f (mStatements m) }
