@@ -1069,7 +1069,7 @@ mkOp op xs =
         Just l -> case l of
             L_toInt    -> injectOp $ MkOpToInt    $ OpToInt    (headNote "toInt takes a single argument."    xs)
             L_defined  -> injectOp $ MkOpDefined  $ OpDefined  (headNote "defined takes a single argument."  xs)
-            L_range    -> injectOp $ MkOpDefined  $ OpDefined  (headNote "range takes a single argument."    xs)
+            L_range    -> injectOp $ MkOpRange    $ OpRange    (headNote "range takes a single argument."    xs)
             L_allDiff  -> injectOp $ MkOpAllDiff  $ OpAllDiff  (headNote "allDiff takes a single argument."  xs)
             L_dontCare -> injectOp $ MkOpDontCare $ OpDontCare (headNote "dontCare takes a single argument." xs)
             L_flatten  -> injectOp $ MkOpFlatten  $ OpFlatten  (headNote "flatten takes a single argument."  xs)

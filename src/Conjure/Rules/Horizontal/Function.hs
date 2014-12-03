@@ -94,3 +94,57 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
                )
     theRule _ = na "rule_Comprehension_PreImage"
 
+
+rule_Card :: Rule
+rule_Card = "function-cardinality" `namedRule` theRule where
+    theRule [essence| |&f| |] = do
+        TypeFunction{} <- typeOf f
+        return
+            ( "Function cardinality"
+            , const [essence| |toSet(&f)| |]
+            )
+    theRule _ = na "rule_Card"
+
+
+-- | TODO: This may allow repetitions.
+rule_Comprehension_Defined :: Rule
+rule_Comprehension_Defined = "function-range" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_Comprehension_PreImage"
+        func <- match opDefined expr
+        let i = Reference iPat Nothing
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the preImage of a function"
+            , const $ let val = [essence| &i[1] |] in
+                Comprehension
+                    (upd val body)
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat func) ]
+                    ++ transformBi (upd val) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Defined"
+
+
+-- | TODO: This may allow repetitions.
+rule_Comprehension_Range :: Rule
+rule_Comprehension_Range = "function-range" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_Comprehension_PreImage"
+        func <- match opRange expr
+        let i = Reference iPat Nothing
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the preImage of a function"
+            , const $ let val = [essence| &i[2] |] in
+                Comprehension
+                    (upd val body)
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat func) ]
+                    ++ transformBi (upd val) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Range"

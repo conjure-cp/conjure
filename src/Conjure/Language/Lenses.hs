@@ -183,6 +183,44 @@ opDontCare _ =
     )
 
 
+opDefined
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opDefined _ =
+    ( injectOp . MkOpDefined . OpDefined
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpDefined (OpDefined x) -> return x
+                _ -> na ("Lenses.opDefined:" <++> pretty p)
+    )
+
+
+opRange
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opRange _ =
+    ( injectOp . MkOpRange . OpRange
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpRange (OpRange x) -> return x
+                _ -> na ("Lenses.opRange:" <++> pretty p)
+    )
+
+
 opToInt
     :: ( OperatorContainer x
        , Pretty x

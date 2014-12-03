@@ -117,6 +117,18 @@ helper (DomainSet () _ inner) = do
                 innerValues <- innerF (concat sets)
                 return $ innerValues ++ [(s, ConstantInt setSize)]
         )
+helper (DomainFunction () attr innerFr innerTo) = do
+    (innerFr', innerFrExtras, innerFrF) <- helper innerFr
+    (innerTo', innerToExtras, innerToF) <- helper innerTo
+    return
+        ( DomainFunction () attr innerFr' innerTo'
+        , innerFrExtras ++ innerToExtras
+        , \ constants -> do
+                functions <- mapM viewConstantFunction constants
+                innerFrValues <- innerFrF (map fst $ concat functions)
+                innerToValues <- innerToF (map snd $ concat functions)
+                return $ innerFrValues ++ innerToValues
+        )
 helper d = return (d, [], const (return []))
 
 
@@ -133,6 +145,10 @@ viewConstantInt constant = fail ("Expecting an integer, but got:" <+> pretty con
 viewConstantSet :: MonadFail m => Constant -> m [Constant]
 viewConstantSet (ConstantAbstract (AbsLitSet xs)) = return xs
 viewConstantSet constant = fail ("Expecting a set, but got:" <+> pretty constant)
+
+viewConstantFunction :: MonadFail m => Constant -> m [(Constant,Constant)]
+viewConstantFunction (ConstantAbstract (AbsLitFunction xs)) = return xs
+viewConstantFunction constant = fail ("Expecting a function, but got:" <+> pretty constant)
 
 allEqual :: (Eq a, Pretty a, MonadFail m) => [a] -> m a
 allEqual (x:xs) | all (x==) xs = return x
