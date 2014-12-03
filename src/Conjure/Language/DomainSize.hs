@@ -64,13 +64,11 @@ gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
         SizeAttrNone      -> return (make opPow (fromInt 2) innerSize)
         SizeAttrSize size -> return (nchoosek innerSize size)
         _ -> fail ("gDomainSizeOf:" <+> pretty d)
+gDomainSizeOf (DomainFunction _ (FunctionAttr _ FunctionAttr_Total _) innerFr innerTo) = do
+    innerFrSize <- gDomainSizeOf innerFr
+    innerToSize <- gDomainSizeOf innerTo
+    return (nchoosek innerToSize innerFrSize)
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
--- gDomainSizeOf (DomainMSet      r (DomainAttributes x) (Domain r x))
--- gDomainSizeOf (DomainFunction  r (DomainAttributes x) (Domain r x) (Domain r x))
--- gDomainSizeOf (DomainRelation  r (DomainAttributes x) [Domain r x])
--- gDomainSizeOf (DomainPartition r (DomainAttributes x) (Domain r x))
--- gDomainSizeOf (DomainOp Name [Domain r x])
--- gDomainSizeOf (DomainHack x)
 
 
 instance ( ExpressionLike x

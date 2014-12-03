@@ -366,10 +366,24 @@ instance Serialize x => Serialize (OpTwoBars x)
 instance Hashable  x => Hashable  (OpTwoBars x)
 instance ToJSON    x => ToJSON    (OpTwoBars x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTwoBars x) where parseJSON = JSON.genericParseJSON jsonOptions
-instance TypeOf x => TypeOf (OpTwoBars x) where
-    typeOf (OpTwoBars a) = intToInt a
+instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
+    typeOf p@(OpTwoBars a) = do
+        ty <- typeOf a
+        case ty of
+            TypeInt{}      -> return ()
+            TypeSet{}      -> return ()
+            TypeMSet{}     -> return ()
+            TypeFunction{} -> return ()
+            _              -> raiseTypeError (MkOpTwoBars p)
+        return TypeInt
 instance EvaluateOp OpTwoBars where
-    evaluateOp (OpTwoBars x) = ConstantInt . abs <$> intOut x
+    evaluateOp (OpTwoBars x) =
+        case x of
+            ConstantInt y                        -> return $ ConstantInt $ abs y
+            ConstantAbstract (AbsLitSet xs)      -> return $ ConstantInt $ length $ nub xs
+            ConstantAbstract (AbsLitMSet xs)     -> return $ ConstantInt $ length       xs
+            ConstantAbstract (AbsLitFunction xs) -> return $ ConstantInt $ length $ nub xs
+            _ -> fail $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 
 data OpNegate x = OpNegate x
