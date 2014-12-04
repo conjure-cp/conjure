@@ -26,6 +26,7 @@ data UI
         , strategyA                 :: String
         , channelling               :: Bool
         , parameterRepresentation   :: Bool
+        , seed                      :: Maybe Int
         , limitModels               :: Maybe Int
         }
     | RefineParam
@@ -98,7 +99,7 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Strategy to use when selecting the next question to answer. \
-                                           \Options: f (for first), x (for all), i (for interactive). \
+                                           \Options: f (for first), i (for interactive), r (for random), x (for all). \
                                            \The letter a (for auto) can be prepended to automatically skip \
                                            \when there is only one option at any point."
         , strategyA        = "i"   &= typ "STRATEGY"
@@ -122,6 +123,10 @@ ui = modes
                                            \Can be true or false. (false by default)\n\
                                            \    false: Select a single representation.\n\
                                            \    true : Select multiple representations."
+        , seed = Nothing           &= name "seed"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "The seed for the random number generator."
         , limitModels = Nothing    &= name "limit-models"
                                    &= groupname "Model generation"
                                    &= explicit

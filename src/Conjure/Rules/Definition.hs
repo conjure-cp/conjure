@@ -38,7 +38,7 @@ data Strategy
     = PickFirst
     | PickAll
     | Interactive
-    -- | AtRandom
+    | AtRandom
     | Auto Strategy
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -52,6 +52,7 @@ parseStrategy :: String -> Maybe Strategy
 parseStrategy "f" = return PickFirst
 parseStrategy "x" = return PickAll
 parseStrategy "i" = return Interactive
+parseStrategy "r" = return AtRandom
 parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy _ = Nothing
 

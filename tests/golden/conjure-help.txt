@@ -23,11 +23,11 @@ Logging & Output:
                                  can be a lot!)
 Model generation:
   -q --strategy-q=STRATEGY       Strategy to use when selecting the next
-                                 question to answer. Options: f (for first), x
-                                 (for all), i (for interactive). The letter a
-                                 (for auto) can be prepended to automatically
-                                 skip when there is only one option at any
-                                 point.
+                                 question to answer. Options: f (for first), i
+                                 (for interactive), r (for random), x (for
+                                 all). The letter a (for auto) can be prepended
+                                 to automatically skip when there is only one
+                                 option at any point.
   -a --strategy-a=STRATEGY       Strategy to use when selecting an answer.
                                  Same options as strategyQ.
      --channelling               Whether to produce channelled models or not.
@@ -39,6 +39,7 @@ Model generation:
                                  default)     false: Select a single
                                  representation.     true : Select multiple
                                  representations.
+     --seed=INT                  The seed for the random number generator.
      --limit-models=INT          Maximum number of models to generate.
 
 conjure refine-param [OPTIONS]

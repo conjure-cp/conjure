@@ -212,6 +212,12 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                 readNote "Expecting an integer." <$> getLine
             let picked = snd (at options (pickedIndex - 1))
             return [picked]
+        AtRandom -> do
+            let nbOptions = length options
+            pickedIndex <- liftIO $ randomRIO (1, nbOptions)
+            let picked = snd (at options (pickedIndex - 1))
+            logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
+            return [picked]
 
 
 addToTrail

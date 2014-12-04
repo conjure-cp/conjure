@@ -43,6 +43,7 @@ module Conjure.Prelude
     , sh
     , scope
     , allFiles, allFilesWithSuffix
+    , setRandomSeed, randomRIO
     ) where
 
 import GHC.Err as X ( error )
@@ -160,7 +161,7 @@ import Text.Groom as X ( groom )
 -- shelly
 import Shelly ( Sh, shelly, print_stdout, print_stderr )
 
-import System.Random as X ( StdGen, getStdGen, randomR )
+import System.Random ( StdGen, mkStdGen, setStdGen, randomRIO )
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as T
@@ -496,3 +497,6 @@ allFiles x = do
 
 allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
 allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
+
+setRandomSeed :: Int -> IO ()
+setRandomSeed = setStdGen . mkStdGen
