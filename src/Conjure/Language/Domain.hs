@@ -138,32 +138,32 @@ instance ToJSON    a => ToJSON    (SetAttr a) where toJSON = JSON.genericToJSON 
 instance FromJSON  a => FromJSON  (SetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
 instance Default (SetAttr a) where def = SetAttr def
 instance Pretty a => Pretty (SetAttr a) where
-    pretty (SetAttr SizeAttrNone) = prEmpty
+    pretty (SetAttr SizeAttr_None) = prEmpty
     pretty (SetAttr a) = prParens (pretty a)
 
 
 data SizeAttr a
-    = SizeAttrNone
-    | SizeAttrSize a
-    | SizeAttrMinSize a
-    | SizeAttrMaxSize a
-    | SizeAttrMinMaxSize a a
+    = SizeAttr_None
+    | SizeAttr_Size a
+    | SizeAttr_MinSize a
+    | SizeAttr_MaxSize a
+    | SizeAttr_MinMaxSize a a
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (SizeAttr a)
 instance Hashable  a => Hashable  (SizeAttr a)
 instance ToJSON    a => ToJSON    (SizeAttr a) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  a => FromJSON  (SizeAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
-instance Default (SizeAttr a) where def = SizeAttrNone
+instance Default (SizeAttr a) where def = SizeAttr_None
 instance Pretty a => Pretty (SizeAttr a) where
-    pretty SizeAttrNone = prEmpty
-    pretty (SizeAttrSize       a  ) = "size"    <+> pretty a
-    pretty (SizeAttrMinSize    a  ) = "minSize" <+> pretty a
-    pretty (SizeAttrMaxSize    a  ) = "maxSize" <+> pretty a
-    pretty (SizeAttrMinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
+    pretty SizeAttr_None = prEmpty
+    pretty (SizeAttr_Size       a  ) = "size"    <+> pretty a
+    pretty (SizeAttr_MinSize    a  ) = "minSize" <+> pretty a
+    pretty (SizeAttr_MaxSize    a  ) = "maxSize" <+> pretty a
+    pretty (SizeAttr_MinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
 
 
 data FunctionAttr x
-    = FunctionAttr (SizeAttr x) PartialityAttr ISBAttr
+    = FunctionAttr (SizeAttr x) PartialityAttr JectivityAttr
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (FunctionAttr a)
 instance Hashable  a => Hashable  (FunctionAttr a)
@@ -179,35 +179,35 @@ instance Pretty a => Pretty (FunctionAttr a) where
 
 
 data PartialityAttr
-    = FunctionAttr_Partial
-    | FunctionAttr_Total
+    = PartialityAttr_Partial
+    | PartialityAttr_Total
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize PartialityAttr
 instance Hashable  PartialityAttr
 instance ToJSON    PartialityAttr where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  PartialityAttr where parseJSON = JSON.genericParseJSON jsonOptions
-instance Default   PartialityAttr where def = FunctionAttr_Partial
+instance Default   PartialityAttr where def = PartialityAttr_Partial
 instance Pretty    PartialityAttr where
-    pretty FunctionAttr_Partial = prEmpty -- partial is the default
-    pretty FunctionAttr_Total = "total"
+    pretty PartialityAttr_Partial = prEmpty -- partial is the default
+    pretty PartialityAttr_Total = "total"
 
 
-data ISBAttr
-    = ISBAttr_None
-    | ISBAttr_Injective
-    | ISBAttr_Surjective
-    | ISBAttr_Bijective
+data JectivityAttr
+    = JectivityAttr_None
+    | JectivityAttr_Injective
+    | JectivityAttr_Surjective
+    | JectivityAttr_Bijective
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
-instance Serialize ISBAttr
-instance Hashable  ISBAttr
-instance ToJSON    ISBAttr where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  ISBAttr where parseJSON = JSON.genericParseJSON jsonOptions
-instance Default   ISBAttr where def = ISBAttr_None
-instance Pretty    ISBAttr where
-    pretty ISBAttr_None = prEmpty
-    pretty ISBAttr_Injective = "injective"
-    pretty ISBAttr_Surjective = "surjective"
-    pretty ISBAttr_Bijective = "bijective"
+instance Serialize JectivityAttr
+instance Hashable  JectivityAttr
+instance ToJSON    JectivityAttr where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  JectivityAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default   JectivityAttr where def = JectivityAttr_None
+instance Pretty    JectivityAttr where
+    pretty JectivityAttr_None = prEmpty
+    pretty JectivityAttr_Injective = "injective"
+    pretty JectivityAttr_Surjective = "surjective"
+    pretty JectivityAttr_Bijective = "bijective"
 
 
 data RelationAttr a = RelationAttr (SizeAttr a)
@@ -218,7 +218,7 @@ instance ToJSON    a => ToJSON    (RelationAttr a) where toJSON = JSON.genericTo
 instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
 instance Default (RelationAttr a) where def = RelationAttr def
 instance Pretty a => Pretty (RelationAttr a) where
-    pretty (RelationAttr SizeAttrNone) = prEmpty
+    pretty (RelationAttr SizeAttr_None) = prEmpty
     pretty (RelationAttr a) = prParens (pretty a)
 
 

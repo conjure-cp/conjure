@@ -194,7 +194,7 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         (HasRepresentation repr)
-                        (SetAttr (SizeAttrSize (ConstantInt size)))
+                        (SetAttr (SizeAttr_Size (ConstantInt size)))
                         dom
             return ( domainOut
                    , let try n =
@@ -223,7 +223,7 @@ arbitraryDomainAndConstant = sized dispatch
             maxSize <- choose (0 :: Int, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             return ( DomainSet (HasRepresentation repr)
-                               (SetAttr (SizeAttrMaxSize (ConstantInt maxSize)))
+                               (SetAttr (SizeAttr_MaxSize (ConstantInt maxSize)))
                                dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf numElems constantGen
@@ -243,7 +243,7 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         (HasRepresentation repr)
-                        (SetAttr (SizeAttrMinMaxSize
+                        (SetAttr (SizeAttr_MinMaxSize
                                     (ConstantInt minSize)
                                     (ConstantInt maxSize)))
                         dom

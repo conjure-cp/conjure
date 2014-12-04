@@ -20,7 +20,7 @@ function1DPartial = Representation chck downD structuralCons downC up
     where
 
         chck f (DomainFunction _
-                    attrs@(FunctionAttr _ FunctionAttr_Partial _)
+                    attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr =
             DomainFunction "Function1DPartial" attrs
@@ -32,7 +32,7 @@ function1DPartial = Representation chck downD structuralCons downC up
         nameValues name = mconcat [name, "_", "Function1DPartial_Values"]
 
         downD (name, DomainFunction "Function1DPartial"
-                    (FunctionAttr _ FunctionAttr_Partial _)
+                    (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr'
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
             innerDomainFr <- toIntDomain innerDomainFr'
@@ -52,7 +52,7 @@ function1DPartial = Representation chck downD structuralCons downC up
 
         structuralCons f downX1
             (DomainFunction "Function1DPartial"
-                (FunctionAttr sizeAttr FunctionAttr_Partial jectivityAttr)
+                (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
                 innerDomainFr'
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
             innerDomainFr   <- toIntDomain innerDomainFr'
@@ -80,10 +80,10 @@ function1DPartial = Representation chck downD structuralCons downC up
                         |]
 
             let jectivityCons fresh flags values = case jectivityAttr of
-                    ISBAttr_None       -> []
-                    ISBAttr_Injective  -> injectiveCons  fresh flags values
-                    ISBAttr_Surjective -> surjectiveCons fresh flags values
-                    ISBAttr_Bijective  -> injectiveCons  fresh flags values
+                    JectivityAttr_None       -> []
+                    JectivityAttr_Injective  -> injectiveCons  fresh flags values
+                    JectivityAttr_Surjective -> surjectiveCons fresh flags values
+                    JectivityAttr_Bijective  -> injectiveCons  fresh flags values
                                        ++ surjectiveCons fresh flags values
 
             let cardinality fresh flags =
@@ -129,7 +129,7 @@ function1DPartial = Representation chck downD structuralCons downC up
 
         downC ( name
               , DomainFunction "Function1DPartial"
-                    (FunctionAttr _ FunctionAttr_Partial _)
+                    (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
@@ -157,7 +157,7 @@ function1DPartial = Representation chck downD structuralCons downC up
         downC _ = na "{downC} Function1DPartial"
 
         up ctxt (name, domain@(DomainFunction "Function1DPartial"
-                                (FunctionAttr _ FunctionAttr_Partial _)
+                                (FunctionAttr _ PartialityAttr_Partial _)
                                 innerDomainFr _)) =
             case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,

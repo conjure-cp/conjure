@@ -61,10 +61,10 @@ gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*
 gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner
     case sizeAttr of
-        SizeAttrNone      -> return (make opPow (fromInt 2) innerSize)
-        SizeAttrSize size -> return (nchoosek innerSize size)
+        SizeAttr_None      -> return (make opPow (fromInt 2) innerSize)
+        SizeAttr_Size size -> return (nchoosek innerSize size)
         _ -> fail ("gDomainSizeOf:" <+> pretty d)
-gDomainSizeOf (DomainFunction _ (FunctionAttr _ FunctionAttr_Total _) innerFr innerTo) = do
+gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr innerTo) = do
     innerFrSize <- gDomainSizeOf innerFr
     innerToSize <- gDomainSizeOf innerTo
     return (nchoosek innerToSize innerFrSize)
@@ -92,16 +92,16 @@ domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
 domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
 domainSizeConstant (DomainSet _ (SetAttr attrs) inner) =
     case attrs of
-        SizeAttrNone -> do
+        SizeAttr_None -> do
             innerSize <- domainSizeConstant inner
             return (2 ^ innerSize)
-        SizeAttrSize (ConstantInt size) -> do
+        SizeAttr_Size (ConstantInt size) -> do
             innerSize <- domainSizeConstant inner
             return (nchoosek innerSize size)
-        SizeAttrMaxSize (ConstantInt maxSize) -> do
+        SizeAttr_MaxSize (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [0 .. maxSize] ]
-        SizeAttrMinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
+        SizeAttr_MinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
             return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
         _ -> fail "domainSizeConstant"

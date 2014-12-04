@@ -16,13 +16,13 @@ setExplicit = Representation chck downD structuralCons downC up
 
     where
 
-        chck f (DomainSet _ attrs@(SetAttr SizeAttrSize{}) innerDomain) =
+        chck f (DomainSet _ attrs@(SetAttr SizeAttr_Size{}) innerDomain) =
             DomainSet "Explicit" attrs <$> f innerDomain
         chck _ _ = []
 
         outName name = mconcat [name, "_", "Explicit"]
 
-        downD (name, DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain) = return $ Just
+        downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = return $ Just
             [ ( outName name
               , DomainMatrix
                   (DomainInt [RangeBounded (fromInt 1) size])
@@ -30,7 +30,7 @@ setExplicit = Representation chck downD structuralCons downC up
               ) ]
         downD _ = na "{downD} Explicit"
 
-        structuralCons f downX1 (DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain) = do
+        structuralCons f downX1 (DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = do
             let
                 ordering fresh m =
                     let
@@ -64,7 +64,7 @@ setExplicit = Representation chck downD structuralCons downC up
         structuralCons _ _ _ = na "{structuralCons} Explicit"
 
         downC ( name
-              , DomainSet "Explicit" (SetAttr (SizeAttrSize size)) innerDomain
+              , DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain
               , ConstantAbstract (AbsLitSet constants)
               ) =
             let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
@@ -75,7 +75,7 @@ setExplicit = Representation chck downD structuralCons downC up
                       ) ]
         downC _ = na "{downC} Explicit"
 
-        up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttrSize _)) _)) =
+        up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttr_Size _)) _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "No value for:" <+> pretty (outName name)

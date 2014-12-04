@@ -151,11 +151,11 @@ instantiateSizeAttr
        )
     => SizeAttr Expression
     -> m (SizeAttr Constant)
-instantiateSizeAttr SizeAttrNone = return SizeAttrNone
-instantiateSizeAttr (SizeAttrSize x) = SizeAttrSize <$> instantiateE x
-instantiateSizeAttr (SizeAttrMinSize x) = SizeAttrMinSize <$> instantiateE x
-instantiateSizeAttr (SizeAttrMaxSize x) = SizeAttrMaxSize <$> instantiateE x
-instantiateSizeAttr (SizeAttrMinMaxSize x y) = SizeAttrMinMaxSize <$> instantiateE x <*> instantiateE y
+instantiateSizeAttr SizeAttr_None = return SizeAttr_None
+instantiateSizeAttr (SizeAttr_Size x) = SizeAttr_Size <$> instantiateE x
+instantiateSizeAttr (SizeAttr_MinSize x) = SizeAttr_MinSize <$> instantiateE x
+instantiateSizeAttr (SizeAttr_MaxSize x) = SizeAttr_MaxSize <$> instantiateE x
+instantiateSizeAttr (SizeAttr_MinMaxSize x y) = SizeAttr_MinMaxSize <$> instantiateE x <*> instantiateE y
 
 
 instantiateFunctionAttr

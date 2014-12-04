@@ -26,8 +26,8 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
 
         outDomain (DomainRelation "RelationAsSet" (RelationAttr sizeAttr) innerDomains) = do
             let repr = case sizeAttr of
-                        SizeAttrSize{} -> "Explicit"
-                        _              -> "ExplicitVarSizeWithMarker"
+                        SizeAttr_Size{} -> "Explicit"
+                        _               -> "ExplicitVarSizeWithMarker"
             return (DomainSet repr (SetAttr sizeAttr) (DomainTuple innerDomains))
         outDomain domain = na $ vcat [ "{outDomain} RelationAsSet"
                                      , "domain:" <+> pretty domain

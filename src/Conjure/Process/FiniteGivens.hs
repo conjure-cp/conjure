@@ -95,7 +95,7 @@ helper (DomainInt []) = do
                        , (to, ConstantInt (maximum ints))
                        ]
         )
-helper (DomainSet () (SetAttr attr@SizeAttrSize{}) inner) = do
+helper (DomainSet () (SetAttr attr@SizeAttr_Size{}) inner) = do
     (inner', innerExtras, innerF) <- helper inner
     return
         ( DomainSet () (SetAttr attr) inner'
@@ -108,7 +108,7 @@ helper (DomainSet () _ inner) = do
     s <- nextName
     (inner', innerExtras, innerF) <- helper inner
     return
-        ( DomainSet () (SetAttr (SizeAttrSize (fromName s))) inner'
+        ( DomainSet () (SetAttr (SizeAttr_Size (fromName s))) inner'
         , s:innerExtras
         , \ constants -> do
                 sets <- mapM viewConstantSet constants

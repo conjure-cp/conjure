@@ -41,10 +41,10 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
 rule_Card :: Rule
 rule_Card = "set-card{Explicit}" `namedRule` theRule where
     theRule p = do
-        s                                        <- match opTwoBars p
-        TypeSet{}                                <- typeOf s
-        "Explicit"                               <- representationOf s
-        DomainSet _ (SetAttr (SizeAttrSize n)) _ <- domainOf s
+        s                                         <- match opTwoBars p
+        TypeSet{}                                 <- typeOf s
+        "Explicit"                                <- representationOf s
+        DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
         return ( "Vertical rule for set cardinality, Explicit representation."
                , const n
                )

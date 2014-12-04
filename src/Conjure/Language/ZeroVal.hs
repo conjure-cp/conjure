@@ -28,11 +28,11 @@ instance Pretty r => ZeroVal (Domain r Constant) where
     zeroVal d@(DomainSet _ (SetAttr attrs) inner) = do
         let returnInt (ConstantInt x) = return x
             returnInt _ = fail $ "Attribute expected to be an int in:" <+> pretty d
-        let getMin SizeAttrNone = return 0
-            getMin (SizeAttrSize x) = returnInt x
-            getMin (SizeAttrMinSize x) = returnInt x
-            getMin (SizeAttrMaxSize _) = return 0
-            getMin (SizeAttrMinMaxSize x _) = returnInt x
+        let getMin SizeAttr_None = return 0
+            getMin (SizeAttr_Size x) = returnInt x
+            getMin (SizeAttr_MinSize x) = returnInt x
+            getMin (SizeAttr_MaxSize _) = return 0
+            getMin (SizeAttr_MinMaxSize x _) = returnInt x
         z <- zeroVal inner
         minSize <- getMin attrs
         return $ ConstantAbstract $ AbsLitSet $ replicate minSize z

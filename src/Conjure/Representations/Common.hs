@@ -12,8 +12,8 @@ import Conjure.Language.TH
 mkSizeCons :: SizeAttr Expression -> Expression -> [Expression]
 mkSizeCons sizeAttr cardinality =
     case sizeAttr of
-        SizeAttrNone           -> []
-        SizeAttrSize x         -> return [essence| &x =  &cardinality |]
-        SizeAttrMinSize x      -> return [essence| &x <= &cardinality |]
-        SizeAttrMaxSize y      -> return [essence| &cardinality <= &y |]
-        SizeAttrMinMaxSize x y -> return [essence| &x <= &cardinality /\ &cardinality <= &y |]
+        SizeAttr_None           -> []
+        SizeAttr_Size x         -> return [essence| &x =  &cardinality |]
+        SizeAttr_MinSize x      -> return [essence| &x <= &cardinality |]
+        SizeAttr_MaxSize y      -> return [essence| &cardinality <= &y |]
+        SizeAttr_MinMaxSize x y -> return [essence| &x <= &cardinality /\ &cardinality <= &y |]

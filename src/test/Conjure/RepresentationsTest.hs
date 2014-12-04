@@ -617,7 +617,7 @@ tests = testGroup "representations"
     , testGroup "Explicit: set (size 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             "Explicit"
-            (SetAttr (SizeAttrSize (ConstantInt 4)))
+            (SetAttr (SizeAttr_Size (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet
             [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6] )
@@ -627,7 +627,7 @@ tests = testGroup "representations"
             highDomain =
                 DomainSet
                     "Explicit"
-                    (SetAttr (SizeAttrSize (ConstantInt 4)))
+                    (SetAttr (SizeAttr_Size (ConstantInt 4)))
                     (intDomain 0 9)
             highConstant =
                 ConstantAbstract $ AbsLitSet
@@ -641,8 +641,8 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just low low
 
     , testGroup "Explicit: set (size 4) of set (size 2) of int {auto}" $ testCasesAuto "x"
-        ( DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 4)))
-            ( DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2)))
+        ( DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 4)))
+            ( DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 2)))
                 (intDomain 0 9)
             )
         )
@@ -656,8 +656,8 @@ tests = testGroup "representations"
     , testGroup "Explicit: set (size 4) of set (size 2) of int" $
         let
             highDomain =
-                DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 4)))
-                    (DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2)))
+                DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 4)))
+                    (DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 2)))
                         (intDomain 0 9))
             highConstant =
                 ConstantAbstract $ AbsLitSet
@@ -668,7 +668,7 @@ tests = testGroup "representations"
                     ]
             mid =
                 [ ( "x_Explicit"
-                  , DomainMatrix   (intDomain 1 4) (DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2))) (intDomain 0 9))
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 2))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                         [ ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 3]
                         , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 6]
@@ -689,8 +689,8 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just mid low
 
     , testGroup "Explicit: set (size 4) of set (size 2) of (int, bool) {auto}" $ testCasesAuto "x"
-        ( DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 4)))
-            ( DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2)))
+        ( DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 4)))
+            ( DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 2)))
                 (DomainTuple [intDomain 0 9, DomainBool])
             )
         )
@@ -710,10 +710,10 @@ tests = testGroup "representations"
             ] )
 
     , testGroup "Explicit: set (size 4) of (int, set (size 2) of (int, bool)) {auto}" $ testCasesAuto "x"
-        ( DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 4)))
+        ( DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 4)))
             ( DomainTuple
                 [ intDomain 0 8
-                , DomainSet "Explicit" (SetAttr (SizeAttrSize (ConstantInt 2)))
+                , DomainSet "Explicit" (SetAttr (SizeAttr_Size (ConstantInt 2)))
                     (DomainTuple [intDomain 0 9, DomainBool])
                 ]
             )
@@ -753,14 +753,14 @@ tests = testGroup "representations"
     , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             "ExplicitVarSizeWithMarker"
-            (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
+            (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
     , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of int" $
         let
             highDomain =
-                DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 4))) (intDomain 0 9)
+                DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 4))) (intDomain 0 9)
             highConstant =
                 ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
             low =
@@ -776,8 +776,8 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just low low
 
     , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
-        ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-            ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+        ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+            ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
             )
         )
@@ -791,8 +791,8 @@ tests = testGroup "representations"
     , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
-                DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-                    ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+                DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+                    ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
                 ConstantAbstract $ AbsLitSet
@@ -806,7 +806,7 @@ tests = testGroup "representations"
                   , ConstantInt 3
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
-                  , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
                       , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
@@ -840,14 +840,14 @@ tests = testGroup "representations"
     , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             "ExplicitVarSizeWithFlags"
-            (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
+            (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
     , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of int" $
         let
             highDomain =
-                DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 4))) (intDomain 0 9)
+                DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 4))) (intDomain 0 9)
             highConstant =
                 ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
             low =
@@ -863,8 +863,8 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just low low
 
     , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
-        ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-            ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+        ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+            ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
             )
         )
@@ -878,8 +878,8 @@ tests = testGroup "representations"
     , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
-                DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-                    ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+                DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+                    ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
                 ConstantAbstract $ AbsLitSet
@@ -893,7 +893,7 @@ tests = testGroup "representations"
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values"
-                  , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
                       , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
@@ -931,14 +931,14 @@ tests = testGroup "representations"
     , testGroup "Occurrence: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             "Occurrence"
-            (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
+            (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
     , testGroup "Occurrence: set (maxSize 4) of int" $
         let
             highDomain =
-                DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 4))) (intDomain 0 9)
+                DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 4))) (intDomain 0 9)
             highConstant =
                 ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5]
             low =
@@ -961,8 +961,8 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just low low
 
     , testGroup "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
-        ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-            ( DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+        ( DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+            ( DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
             )
         )
@@ -976,8 +976,8 @@ tests = testGroup "representations"
     , testGroup "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
-                DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-                    ( DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+                DomainSet "ExplicitVarSizeWithMarker" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+                    ( DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
                 ConstantAbstract $ AbsLitSet
@@ -991,7 +991,7 @@ tests = testGroup "representations"
                   , ConstantInt 3
                   )
                 , ( "x_ExplicitVarSizeWithMarker_Values"
-                  , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
                       , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]
@@ -1026,8 +1026,8 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just mid low
 
     , testGroup "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
-        ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-            ( DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+        ( DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+            ( DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
             )
         )
@@ -1041,8 +1041,8 @@ tests = testGroup "representations"
     , testGroup "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
-                DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttrMaxSize (ConstantInt 4)))
-                    ( DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3)))
+                DomainSet "ExplicitVarSizeWithFlags" (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
+                    ( DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                         (intDomain 0 9) )
             highConstant =
                 ConstantAbstract $ AbsLitSet
@@ -1056,7 +1056,7 @@ tests = testGroup "representations"
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
                 , ( "x_ExplicitVarSizeWithFlags_Values"
-                  , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttr (SizeAttrMaxSize (ConstantInt 3))) (intDomain 0 9))
+                  , DomainMatrix   (intDomain 1 4) (DomainSet "Occurrence" (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
                       , ConstantAbstract $ AbsLitSet [ConstantInt 2,ConstantInt 5]

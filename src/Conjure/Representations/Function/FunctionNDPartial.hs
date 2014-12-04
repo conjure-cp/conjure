@@ -22,7 +22,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
     where
 
         chck f (DomainFunction _
-                    attrs@(FunctionAttr _ FunctionAttr_Partial _)
+                    attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(DomainTuple innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs =
             DomainFunction "FunctionNDPartial" attrs
@@ -34,7 +34,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         nameValues name = mconcat [name, "_", "FunctionNDPartial_Values"]
 
         downD (name, DomainFunction "FunctionNDPartial"
-                    (FunctionAttr _ FunctionAttr_Partial _)
+                    (FunctionAttr _ PartialityAttr_Partial _)
                     (DomainTuple innerDomainFrs')
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
             innerDomainFrs <- mapM toIntDomain innerDomainFrs'
@@ -52,7 +52,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         -- FIX
         structuralCons _ _
             (DomainFunction "FunctionNDPartial"
-                (FunctionAttr sizeAttr FunctionAttr_Partial jectivityAttr)
+                (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
                 (DomainTuple innerDomainFrs')
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
             innerDomainFrs    <- mapM toIntDomain innerDomainFrs'
@@ -97,10 +97,10 @@ functionNDPartial = Representation chck downD structuralCons downC up
                         |]
 
             let jectivityCons fresh flags values = case jectivityAttr of
-                    ISBAttr_None       -> []
-                    ISBAttr_Injective  -> injectiveCons  fresh flags values
-                    ISBAttr_Surjective -> surjectiveCons fresh flags values
-                    ISBAttr_Bijective  -> injectiveCons  fresh flags values
+                    JectivityAttr_None       -> []
+                    JectivityAttr_Injective  -> injectiveCons  fresh flags values
+                    JectivityAttr_Surjective -> surjectiveCons fresh flags values
+                    JectivityAttr_Bijective  -> injectiveCons  fresh flags values
                                        ++ surjectiveCons fresh flags values
 
             let cardinality fresh flags =
@@ -133,7 +133,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
         downC ( name
               , DomainFunction "FunctionNDPartial"
-                    (FunctionAttr _ FunctionAttr_Partial _)
+                    (FunctionAttr _ PartialityAttr_Partial _)
                     (DomainTuple innerDomainFrs')
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
@@ -198,7 +198,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downC _ = na "{downC} FunctionNDPartial"
 
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
-                                (FunctionAttr _ FunctionAttr_Partial _)
+                                (FunctionAttr _ PartialityAttr_Partial _)
                                 (DomainTuple innerDomainFrs') _)) = do
 
             innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')

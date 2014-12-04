@@ -19,7 +19,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
     where
 
-        chck _ (DomainSet _ (SetAttr SizeAttrSize{}) _) = []
+        chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = []
         chck f (DomainSet _ attrs innerDomain) = DomainSet "ExplicitVarSizeWithMarker" attrs <$> f innerDomain
         chck _ _ = []
 
@@ -27,8 +27,8 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         nameValues name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Values" ]
 
         getMaxSize attrs innerDomain = case attrs of
-            SizeAttrMaxSize x -> return x
-            SizeAttrMinMaxSize _ x -> return x
+            SizeAttr_MaxSize x -> return x
+            SizeAttr_MinMaxSize _ x -> return x
             _ -> domainSizeOf innerDomain
 
         downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
