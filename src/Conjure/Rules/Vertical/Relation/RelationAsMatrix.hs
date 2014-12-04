@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Conjure.Rules.Vertical.Relation.RelationAsMatrix where
 
 import Conjure.Prelude
