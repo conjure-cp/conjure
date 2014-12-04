@@ -52,6 +52,10 @@ data UI
         , file2    :: FilePath
         , logLevel :: LogLevel
         }
+    | TypeCheck
+        { essence  :: FilePath
+        , logLevel :: LogLevel
+        }
     deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -214,6 +218,18 @@ ui = modes
         }                          &= name "diff"
                                    &= explicit
                                    &= help "Diff on two Essence files. Works on models, parameters, and solutions."
+    , TypeCheck
+        { essence          = def   &= typFile
+                                   &= name "essence"
+                                   &= explicit
+                                   &= help "A problem specification in Essence"
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
+        }                          &= name "type-check"
+                                   &= explicit
+                                   &= help "Type-checking a single Essence file."
     ]                              &= program "conjure"
                                    &= summary ("Conjure, the automated constraint modelling tool.\n\
                                                \Version: " ++ repositoryVersion)

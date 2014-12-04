@@ -42,6 +42,7 @@ module Conjure.Prelude
     , ExceptT(..)
     , sh
     , scope
+    , allFiles, allFilesWithSuffix
     ) where
 
 import GHC.Err as X ( error )
@@ -76,6 +77,7 @@ import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, vo
 import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
 import Control.Monad.Identity       as X ( Identity, runIdentity )
+import Control.Monad.Except         as X ( catchError )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT, gets, modify, evalStateT, runStateT, evalState, runState )
 import Control.Monad.Trans.Identity as X ( IdentityT, runIdentityT )
@@ -482,3 +484,15 @@ scope ma = do
     a <- ma
     modify (const st)
     return a
+
+allFiles :: FilePath -> IO [FilePath]
+allFiles x = do
+    let dots i = not ( i == "." || i == ".." )
+    ys' <- getDirectoryContents x `catchError` const (return [])
+    let ys = filter dots ys'
+    if null ys
+        then return [x]
+        else (x :) <$> concatMapM allFiles (map (x </>) ys)
+
+allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
+allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp

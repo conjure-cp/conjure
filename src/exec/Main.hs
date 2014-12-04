@@ -11,6 +11,8 @@ import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
+import Conjure.UI.TypeCheck ( typeCheckModel )
+
 import Conjure.Language.Pretty ( pretty )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 
@@ -78,6 +80,9 @@ mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
         <*> readModelFromFile file2
+mainWithArgs TypeCheck{..} =
+    join $ typeCheckModel
+        <$> readModelFromFile essence
 
 
 
