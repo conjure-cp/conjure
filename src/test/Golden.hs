@@ -27,16 +27,29 @@ tests = testGroup "golden"
                 "help-text"
                 goldenFile generatedFile
                 (\ gold gen -> return $
-                    let diffs =
-                            [ if goldLine == genLine
-                                then Nothing
-                                else Just [ "Expected: " ++ goldLine
-                                          , "But got : " ++ genLine
-                                          ]
-                            -- drop 2 lines, to skip the version bit
-                            -- otherwise this test would never be able to pass!
-                            | (goldLine, genLine) <- zip (drop 2 (lines gold)) (drop 2 (lines gen))
-                            ]
+                    let
+                        goldLines  = lines  gold
+                        goldLength = length goldLines
+                        genLines   = lines  gen
+                        genLength  = length genLines
+                        diffs      =
+                            if goldLength /= genLength
+                                then
+                                    [ Just [ "Different number of lines."
+                                           , "    Expected: " ++ show goldLength
+                                           , "    But got : " ++ show genLength
+                                           ]
+                                    ]
+                                else
+                                    [ if goldLine == genLine
+                                        then Nothing
+                                        else Just [ "Expected: " ++ goldLine
+                                                  , "But got : " ++ genLine
+                                                  ]
+                                    -- drop 2 lines, to skip the version bit
+                                    -- otherwise this test would never be able to pass!
+                                    | (goldLine, genLine) <- zip (drop 2 goldLines) (drop 2 genLines)
+                                    ]
                     in  case concat (catMaybes diffs) of
                             [] -> Nothing
                             ls -> Just (unlines ("Files differ.":ls)) )
