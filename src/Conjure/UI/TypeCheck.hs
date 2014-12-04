@@ -30,26 +30,41 @@ typeCheckModel model0 = do
             Declaration{} -> return ()
             SearchOrder{} -> return ()
             Where xs -> forM_ xs $ \ x -> do
-                ty <- typeOf x
-                case ty of
-                    TypeBool{} -> return ()
-                    _ -> tell [ "In a 'where' statement:" <++> pretty x
-                              , "Expected type `bool`, but got:" <++> pretty ty
-                              ]
+                mty <- runExceptT $ typeOf x
+                case mty of
+                    Right TypeBool{} -> return ()
+                    Left err -> tell
+                        [ "In a 'where' statement:" <++> pretty x
+                        , "Error::" <++> pretty err
+                        ]
+                    Right ty -> tell
+                        [ "In a 'where' statement:" <++> pretty x
+                        , "Expected type `bool`, but got:" <++> pretty ty
+                        ]
             Objective _ x -> do
-                ty <- typeOf x
-                case ty of
-                    TypeInt{} -> return ()
-                    _ -> tell [ "In the objective:" <++> pretty st
-                              , "Expected type `int`, but got:" <++> pretty ty
-                              ]
+                mty <- runExceptT $ typeOf x
+                case mty of
+                    Right TypeInt{} -> return ()
+                    Left err -> tell
+                        [ "In the objective:" <++> pretty st
+                        , "Error:" <++> pretty err
+                        ]
+                    Right ty -> tell
+                        [ "In the objective:" <++> pretty st
+                        , "Expected type `int`, but got:" <++> pretty ty
+                        ]
             SuchThat xs -> forM_ xs $ \ x -> do
-                ty <- typeOf x
-                case ty of
-                    TypeBool{} -> return ()
-                    _ -> tell [ "In a 'such that' statement:" <++> pretty x
-                              , "Expected type `bool`, but got:" <++> pretty ty
-                              ]
+                mty <- runExceptT $ typeOf x
+                case mty of
+                    Right TypeBool{} -> return ()
+                    Left err -> tell
+                        [ "In a 'such that' statement:" <++> pretty x
+                        , "Error:" <++> pretty err
+                        ]
+                    Right ty -> tell
+                        [ "In a 'such that' statement:" <++> pretty x
+                        , "Expected type `bool`, but got:" <++> pretty ty
+                        ]
     unless (null errs)
         (fail $ vcat $ "There were type errors."
                      : ""
