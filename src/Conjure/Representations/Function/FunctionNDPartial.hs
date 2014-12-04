@@ -76,9 +76,13 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
                     in
                         [essence|
-                            forAll &iPat : &innerDomainFr .
-                                forAll &jPat : &innerDomainTo .
-                                    &flagsIndexedI /\ &flagsIndexedJ -> &valuesIndexedI != &valuesIndexedJ
+                            and([ &valuesIndexedI != &valuesIndexedJ
+                                | &iPat : &innerDomainFr
+                                , &jPat : &innerDomainTo
+                                , &i != &j
+                                , &flagsIndexedI
+                                , &flagsIndexedJ
+                                ])
                         |]
 
             let surjectiveCons fresh flags values = return $ -- list

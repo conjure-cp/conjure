@@ -63,9 +63,13 @@ function1DPartial = Representation chck downD structuralCons downC up
                         (jPat, j) = quantifiedVar (fresh `at` 1)
                     in
                         [essence|
-                            forAll &iPat : &innerDomainFr .
-                                forAll &jPat : &innerDomainTo .
-                                    &flags[&i] /\ &flags[&j] -> &values[&i] != &values[&j]
+                            and([ &values[&i] != &values[&j]
+                                | &iPat : &innerDomainFr
+                                , &jPat : &innerDomainTo
+                                , &i != &j
+                                , &flags[&i]
+                                , &flags[&j]
+                                ])
                         |]
 
             let surjectiveCons fresh flags values = return $ -- list
