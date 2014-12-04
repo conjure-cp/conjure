@@ -1,0 +1,31 @@
+language ESSENCE' 1.0
+
+find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (2 - 1))] of bool
+find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (2 - 1))] of int(1..2)
+find s_ExplicitVarSizeWithMarker_Marker: int(0..1 + (2 - 1))
+find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (2 - 1))] of int(1..2)
+find s_Occurrence: matrix indexed by [int(1..2)] of bool
+such that
+    or([q3 <= s_ExplicitVarSizeWithMarker_Marker /\
+        s_ExplicitVarSizeWithMarker_Values[q3] = sum([s_ExplicitVarSizeWithFlags_Flags[q4] * 1 | q4 : int(1..1 + (2 - 1))])
+            | q3 : int(1..1 + (2 - 1))]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> s_ExplicitVarSizeWithFlags_Values[q1] < s_ExplicitVarSizeWithFlags_Values[q1 + 1]
+             | q1 : int(1..1 + (2 - 1) - 1)]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q1] = false -> s_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..1 + (2 - 1))]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> s_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..1 + (2 - 1) - 1)]),
+    and([q2 + 1 <= s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] < s_ExplicitVarSizeWithMarker_Values[q2 + 1]
+             | q2 : int(1..1 + (2 - 1) - 1)]),
+    and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..1 + (2 - 1))]),
+    and([q5 <= s_ExplicitVarSizeWithMarker_Marker ->
+         or([s_ExplicitVarSizeWithFlags_Flags[q6] /\ s_ExplicitVarSizeWithFlags_Values[q6] = s_ExplicitVarSizeWithMarker_Values[q5] | q6 : int(1..1 + (2 - 1))])
+             | q5 : int(1..1 + (2 - 1))]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q7] ->
+         or([q8 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q8] = s_ExplicitVarSizeWithFlags_Values[q7] | q8 : int(1..1 + (2 - 1))])
+             | q7 : int(1..1 + (2 - 1))]),
+    and([s_Occurrence[q9] -> or([s_ExplicitVarSizeWithFlags_Flags[q10] /\ s_ExplicitVarSizeWithFlags_Values[q10] = q9 | q10 : int(1..1 + (2 - 1))])
+             | q9 : int(1..2)]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q11] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q11]] | q11 : int(1..1 + (2 - 1))]),
+    and([s_Occurrence[q12] -> or([q13 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q13] = q12 | q13 : int(1..1 + (2 - 1))])
+             | q12 : int(1..2)]),
+    and([q14 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q14]] | q14 : int(1..1 + (2 - 1))])
+
