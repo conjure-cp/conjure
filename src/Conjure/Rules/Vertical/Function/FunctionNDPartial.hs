@@ -58,8 +58,8 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         let func                      =  matchDef opToSet expr
         "FunctionNDPartial"           <- representationOf func
@@ -74,16 +74,19 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
         let flagsIndexed  x = index x flags  xArity
         let valuesIndexed x = index x values xArity
 
-        let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1DPartial representation"
-            , const $ let val' = valuesIndexed i
-                          val  = [essence| (&i, &val') |] in
-                Comprehension (upd val body)
+            , \ fresh ->
+                let
+                    (jPat, j) = quantifiedVar (fresh `at` 0)
+                    val' = valuesIndexed j
+                    val  = [essence| (&j, &val') |]
+                in
+                    Comprehension (upd val body)
                     $  gofBefore
-                    ++ [ Generator (GenDomain pat (DomainTuple indexDomain))
-                       , Filter (flagsIndexed i)
+                    ++ [ Generator (GenDomain jPat (DomainTuple indexDomain))
+                       , Filter (flagsIndexed j)
                        ]
                     ++ transformBi (upd val) gofAfter
             )

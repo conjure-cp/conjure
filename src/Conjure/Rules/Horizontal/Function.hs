@@ -110,20 +110,23 @@ rule_Card = "function-cardinality" `namedRule` theRule where
 rule_Comprehension_Defined :: Rule
 rule_Comprehension_Defined = "function-range" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         func <- match opDefined expr
-        let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Mapping over the preImage of a function"
-            , const $ let val = [essence| &i[1] |] in
-                Comprehension
-                    (upd val body)
-                    $  gofBefore
-                    ++ [ Generator (GenInExpr pat func) ]
-                    ++ transformBi (upd val) gofAfter
+            ( "Mapping over defined(f)"
+            , \ fresh ->
+                    let
+                        (jPat, j) = quantifiedVar (fresh `at` 0)
+                        val = [essence| &j[1] |]
+                    in
+                        Comprehension
+                            (upd val body)
+                            $  gofBefore
+                            ++ [ Generator (GenInExpr jPat func) ]
+                            ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension_Defined"
 
@@ -132,19 +135,22 @@ rule_Comprehension_Defined = "function-range" `namedRule` theRule where
 rule_Comprehension_Range :: Rule
 rule_Comprehension_Range = "function-range" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         func <- match opRange expr
-        let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Mapping over the preImage of a function"
-            , const $ let val = [essence| &i[2] |] in
-                Comprehension
-                    (upd val body)
-                    $  gofBefore
-                    ++ [ Generator (GenInExpr pat func) ]
-                    ++ transformBi (upd val) gofAfter
+            ( "Mapping over range(f)"
+            , \ fresh ->
+                    let
+                        (jPat, j) = quantifiedVar (fresh `at` 0)
+                        val = [essence| &j[2] |]
+                    in
+                        Comprehension
+                            (upd val body)
+                            $  gofBefore
+                            ++ [ Generator (GenInExpr jPat func) ]
+                            ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension_Range"
