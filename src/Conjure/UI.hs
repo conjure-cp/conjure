@@ -64,28 +64,28 @@ ui = modes
                                    &= typDir
                                    &= name "output-directory"
                                    &= name "o"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Output directory. Generated models will be saved here.\n\
                                            \Default value: 'conjure-output'"
         , logLevel         = def   &= name "log-level"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
         , verboseTrail     = False &= name "verbose-trail"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Whether to generate verbose trails or not."
         , logRuleFails     = False &= name "log-rule-fails"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Generate logs for rule failures. (Caution: can be a lot!)"
         , logRuleSuccesses = False &= name "log-rule-successes"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Generate logs for rule applications."
         , logRuleAttempts  = False &= name "log-rule-attempts"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
         , strategyQ        = "i"   &= typ "STRATEGY"
@@ -144,7 +144,7 @@ ui = modes
                                            \By default, its value will be 'foo.eprime-param'\n\
                                            \if the Essence parameter file is named 'foo.param'"
         , logLevel         = def   &= name "log-level"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
         }                          &= name "refine-param"
@@ -174,7 +174,7 @@ ui = modes
                                            \By default, its value will be 'foo.solution'\n\
                                            \if the Essence parameter file is named 'foo.eprime-solution'"
         , logLevel         = def   &= name "log-level"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
         }                          &= name "translate-solution"
@@ -196,7 +196,7 @@ ui = modes
                                    &= help "An Essence solution.\n\
                                            \This field is optional."
         , logLevel         = def   &= name "log-level"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
         }                          &= name "validate-solution"
@@ -208,7 +208,7 @@ ui = modes
         , file2 = def              &= typFile
                                    &= argPos 1
         , logLevel         = def   &= name "log-level"
-                                   &= groupname "Control logging/output"
+                                   &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
         }                          &= name "diff"

@@ -11,7 +11,7 @@ conjure [modelling] [OPTIONS] ESSENCE_FILE
   The main act. Given a problem specification in Essence, produce constraint
   programming models in Essence'.
 
-Control logging/output:
+Logging & Output:
   -o --output-directory=DIR      Output directory. Generated models will be
                                  saved here. Default value: 'conjure-output'
      --log-level=LOGLEVEL        Log level.
@@ -53,7 +53,7 @@ Flags:
                                  model. This field is optional. By default, its
                                  value will be 'foo.eprime-param' if the
                                  Essence parameter file is named 'foo.param'
-Control logging/output:
+Logging & Output:
      --log-level=LOGLEVEL        Log level.
 
 conjure translate-solution [OPTIONS]
@@ -70,7 +70,7 @@ Flags:
                                  default, its value will be 'foo.solution' if
                                  the Essence parameter file is named
                                  'foo.eprime-solution'
-Control logging/output:
+Logging & Output:
      --log-level=LOGLEVEL        Log level.
 
 conjure validate-solution [OPTIONS]
@@ -81,11 +81,11 @@ Flags:
      --param=FILE                An Essence parameter. This field is
                                  optional.
      --solution=FILE             An Essence solution. This field is optional.
-Control logging/output:
+Logging & Output:
      --log-level=LOGLEVEL        Log level.
 
 conjure diff [OPTIONS] FILE FILE
   Diff on two Essence files. Works on models, parameters, and solutions.
 
-Control logging/output:
+Logging & Output:
      --log-level=LOGLEVEL        Log level.
