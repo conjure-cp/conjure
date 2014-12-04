@@ -9,6 +9,7 @@ import Conjure.Language.Domain
 import Conjure.Language.DomainOf
 import Conjure.Language.TypeOf
 import Conjure.Language.TH
+import Conjure.Language.Lenses
 
 import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
 
@@ -35,3 +36,15 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
                        ++ transformBi (upd val) gofAfter
                )
     theRule _ = na "rule_Comprehension"
+
+
+rule_Card :: Rule
+rule_Card = "set-card{Explicit}" `namedRule` theRule where
+    theRule p = do
+        s                                        <- match opTwoBars p
+        TypeSet{}                                <- typeOf s
+        "Explicit"                               <- representationOf s
+        DomainSet _ (SetAttr (SizeAttrSize n)) _ <- domainOf s
+        return ( "Vertical rule for set cardinality, Explicit representation."
+               , const n
+               )

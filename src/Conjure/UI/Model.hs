@@ -464,6 +464,7 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq
     , Vertical.Matrix.rule_Matrix_Lt
 
+    , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
