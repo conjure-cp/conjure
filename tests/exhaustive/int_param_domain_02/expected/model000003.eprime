@@ -1,9 +1,9 @@
 language ESSENCE' 1.0
 
-given s_Occurrence: matrix indexed by [int(1..5)] of bool
 given s_Explicit: matrix indexed by [int(1..5)] of int(1..5)
-letting a be min([q1 | q1 : int(1..5), s_Occurrence[q1]])
-letting b be max([s_Explicit[q2] | q2 : int(1..5)])
+given s_Occurrence: matrix indexed by [int(1..5)] of bool
+letting a be min([s_Explicit[q1] | q1 : int(1..5)])
+letting b be max([q2 | q2 : int(1..5), s_Occurrence[q2]])
 given c: int
 find x: int(a..b)
 such that x = c

@@ -263,17 +263,19 @@ interactiveFixedQsAutoA = strategyToDriver PickFirst (Auto Interactive)
 
 
 
--- | For every parameter and decision variable add a true-constraint.
+-- | Add a true-constraint, for every decision variable and
+--                          for every parameter that is not used in the model.
 --   A true-constraint has no effect, other than forcing Conjure to produce a representation.
---   It can be used to make sure that the decision variable doesn't get lost when it isn't mentioned anywhere.
---   It can also be used to produce "extra" representations.
---   Currently this function will add a true for every declaration, no matter if it is mentioned or not.
+--   It can be used to make sure that a declaration doesn't get lost (if it isn't used anywhere in the model)
+--   It can also be used to produce "extra" representations (if it is used in the model)
 addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
-        mkTrueConstraint k nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr k nm dom)))
+        nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
+        mkTrueConstraint forg nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr forg nm dom)))
         trueConstraints = [ mkTrueConstraint forg nm d
-                          | Declaration (FindOrGiven forg nm d) <- mStatements m
+                          | (Declaration (FindOrGiven forg nm d), after) <- withAfter (mStatements m)
+                          , forg == Find || (forg == Given && nbUses nm after == 0)
                           ]
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }

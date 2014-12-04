@@ -12,7 +12,7 @@ module Conjure.Prelude
     , stringToDoc
     , padRight, padLeft, padCenter
     , pairWithContents
-    , withRest, withRestToR, withRestToL
+    , withRest, withAfter, withBefore
     , T.Text, stringToText
     , sameLength
     , concatMapM
@@ -210,14 +210,14 @@ withRest (x:xs) = (x,xs) : map (second (x:)) (withRest xs)
 
 -- generate a list yielding the elements of the input list in order in the fst component.
 -- the snd component is all those elements to the right of fst.
-withRestToR :: [a] -> [(a,[a])]
-withRestToR [] = []
-withRestToR (x:xs) = (x,xs) : withRestToR xs
+withAfter :: [a] -> [(a,[a])]
+withAfter [] = []
+withAfter (x:xs) = (x,xs) : withAfter xs
 
 -- generate a list yielding the elements of the input list in order in the fst component.
 -- the snd component is all those elements to the left of fst.
-withRestToL :: [a] -> [(a,[a])]
-withRestToL = reverse . withRestToR . reverse
+withBefore :: [a] -> [(a,[a])]
+withBefore = reverse . withAfter . reverse
 
 
 sameLength :: [a] -> [b] -> Bool
