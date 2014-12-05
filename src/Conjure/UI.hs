@@ -232,10 +232,8 @@ ui = modes
                                    &= explicit
                                    &= help "Diff on two Essence files. Works on models, parameters, and solutions."
     , TypeCheck
-        { essence          = def   &= typFile
-                                   &= name "essence"
-                                   &= explicit
-                                   &= help "A problem specification in Essence"
+        { essence          = def   &= typ "ESSENCE_FILE"
+                                   &= argPos 0
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit

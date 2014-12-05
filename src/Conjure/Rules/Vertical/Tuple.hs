@@ -30,6 +30,19 @@ rule_Tuple_Eq = "tuple-eq" `namedRule` theRule where
                )
 
 
+rule_Tuple_Neq :: Rule
+rule_Tuple_Neq = "tuple-neq" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opNeq p
+        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple _ <- typeOf y
+        xs          <- downX1 x
+        ys          <- downX1 y
+        return ( "Horizontal rule for tuple equality"
+               , const $ make opNot $ make opAnd (zipWith (make opEq) xs ys)
+               )
+
+
 rule_Tuple_Lt :: Rule
 rule_Tuple_Lt = "tuple-lt" `namedRule` theRule where
     theRule p = do

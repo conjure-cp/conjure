@@ -461,6 +461,7 @@ allRules config =
 verticalRules :: [Rule]
 verticalRules =
     [ Vertical.Tuple.rule_Tuple_Eq
+    , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_Index

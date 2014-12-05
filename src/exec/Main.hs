@@ -33,7 +33,6 @@ main = do
 
 mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m) => UI -> m ()
 mainWithArgs Modelling{..} = do
-    when (null essence) $ userErr "Mandatory field --essence"
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed

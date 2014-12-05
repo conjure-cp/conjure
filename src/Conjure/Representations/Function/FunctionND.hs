@@ -67,12 +67,13 @@ functionND = Representation chck downD structuralCons downC up
 
                         valuesIndexedI = index i values frArity
                         valuesIndexedJ = index j values frArity
-
                     in
                         [essence|
-                            forAll &iPat : &innerDomainFr .
-                                forAll &jPat : &innerDomainTo .
-                                    &valuesIndexedI != &valuesIndexedJ
+                            and([ &valuesIndexedI != &valuesIndexedJ
+                                | &iPat : &innerDomainFr
+                                , &jPat : &innerDomainFr
+                                , &i != &j
+                                ])
                         |]
 
             let surjectiveCons fresh values = return $ -- list
@@ -81,7 +82,6 @@ functionND = Representation chck downD structuralCons downC up
                         (jPat, j) = quantifiedVar (fresh `at` 1)
 
                         valuesIndexed = index j values frArity
-
                     in
                         [essence|
                             forAll &iPat : &innerDomainTo .

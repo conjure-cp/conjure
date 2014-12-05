@@ -73,12 +73,11 @@ functionNDPartial = Representation chck downD structuralCons downC up
                         valuesIndexedI = index i values frArity
                         flagsIndexedJ  = index j flags  frArity
                         valuesIndexedJ = index j values frArity
-
                     in
                         [essence|
                             and([ &valuesIndexedI != &valuesIndexedJ
                                 | &iPat : &innerDomainFr
-                                , &jPat : &innerDomainTo
+                                , &jPat : &innerDomainFr
                                 , &i != &j
                                 , &flagsIndexedI
                                 , &flagsIndexedJ
@@ -92,7 +91,6 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
                         flagsIndexed  = index j flags  frArity
                         valuesIndexed = index j values frArity
-
                     in
                         [essence|
                             forAll &iPat : &innerDomainTo .
@@ -105,7 +103,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     JectivityAttr_Injective  -> injectiveCons  fresh flags values
                     JectivityAttr_Surjective -> surjectiveCons fresh flags values
                     JectivityAttr_Bijective  -> injectiveCons  fresh flags values
-                                       ++ surjectiveCons fresh flags values
+                                             ++ surjectiveCons fresh flags values
 
             let cardinality fresh flags =
                     let
