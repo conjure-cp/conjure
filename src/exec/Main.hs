@@ -51,6 +51,7 @@ mainWithArgs Modelling{..} = do
             , Config.channelling             = channelling
             , Config.parameterRepresentation = parameterRepresentation
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
+            , Config.numberingStart          = numberingStart
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do

@@ -80,7 +80,7 @@ outputModels config model = do
                     liftIO $ writeFile filename (renderWide eprime)
                     return (i+1)
     Pipes.foldM each
-                (return (1 :: Int))
+                (return (numberingStart config))
                 (const $ return ())
                 (limitModelsIfNeeded $ toCompletion config model )
 

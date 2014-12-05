@@ -28,6 +28,7 @@ data UI
         , parameterRepresentation   :: Bool
         , seed                      :: Maybe Int
         , limitModels               :: Maybe Int
+        , numberingStart            :: Int
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -73,6 +74,13 @@ ui = modes
                                    &= explicit
                                    &= help "Output directory. Generated models will be saved here.\n\
                                            \Default value: 'conjure-output'"
+        , numberingStart   = 1
+                                   &= name "numbering-start"
+                                   &= name "n"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Starting value to output files .\n\
+                                           \Default value: 1"                                           
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
