@@ -86,7 +86,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                     , "Expected a set value, but got:" <+> pretty constant
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-        up _ (name, domain) = na $ vcat [ "{up} RelationAsMatrix"
+        up _ (name, domain) = na $ vcat [ "{up} RelationAsSet"
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]

@@ -29,6 +29,7 @@ import Conjure.Representations.Function.FunctionND
 import Conjure.Representations.Function.FunctionNDPartial
 import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
+import Conjure.Representations.Partition.PartitionAsSet
 
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
@@ -146,6 +147,9 @@ dispatch domain = do
             "RelationAsMatrix"              -> relationAsMatrix
             "RelationAsSet"                 -> relationAsSet dispatch
             _ -> nope
+        DomainPartition r _ _ -> case r of
+            "PartitionAsSet"                -> partitionAsSet dispatch
+            _ -> nope
         _ -> nope
 
 
@@ -157,7 +161,7 @@ allReprs =
     [ [ primitive, tuple, matrix
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
-      , relationAsMatrix
+      , relationAsMatrix, partitionAsSet dispatch
       ]
     , [ -- functionAsRelation
         relationAsSet dispatch

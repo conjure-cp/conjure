@@ -62,12 +62,12 @@ gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner
     case sizeAttr of
         SizeAttr_None      -> return (make opPow (fromInt 2) innerSize)
-        SizeAttr_Size size -> return (nchoosek innerSize size)
+        SizeAttr_Size size -> return (nchoosek (make opFactorial) innerSize size)
         _ -> fail ("gDomainSizeOf:" <+> pretty d)
 gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr innerTo) = do
     innerFrSize <- gDomainSizeOf innerFr
     innerToSize <- gDomainSizeOf innerTo
-    return (nchoosek innerToSize innerFrSize)
+    return (nchoosek (make opFactorial) innerToSize innerFrSize)
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
 
 
@@ -97,13 +97,13 @@ domainSizeConstant (DomainSet _ (SetAttr attrs) inner) =
             return (2 ^ innerSize)
         SizeAttr_Size (ConstantInt size) -> do
             innerSize <- domainSizeConstant inner
-            return (nchoosek innerSize size)
+            return (nchoosek (product . enumFromTo 1) innerSize size)
         SizeAttr_MaxSize (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
-            return $ sum [ nchoosek innerSize k | k <- [0 .. maxSize] ]
+            return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [0 .. maxSize] ]
         SizeAttr_MinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
             innerSize <- domainSizeConstant inner
-            return $ sum [ nchoosek innerSize k | k <- [minSize .. maxSize] ]
+            return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
         _ -> fail "domainSizeConstant"
 domainSizeConstant (DomainMSet      {}) = bug "not implemented: domainSizeConstant DomainMSet"
 domainSizeConstant (DomainFunction  {}) = bug "not implemented: domainSizeConstant DomainFunction"
@@ -114,8 +114,8 @@ domainSizeConstant _                    = bug "not implemented: domainSizeConsta
 domainSizeConstantRanges :: MonadFail m => [Range Constant] -> m Int
 domainSizeConstantRanges = liftM length . valuesInIntDomain
 
-nchoosek :: Integral a => a -> a -> a
-nchoosek n k = product [1..n] `div` (product [1..k] * product [1..n-k])
+nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
+nchoosek f n k = (f n) `div` (f k * f (n-k))
 
 enumNameToInt :: [Name] -> Name -> Int
 enumNameToInt nms nm = case elemIndex nm nms of

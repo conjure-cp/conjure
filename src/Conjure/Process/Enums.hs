@@ -201,4 +201,9 @@ addEnumsBack ctxt domain constant = case (domain, constant) of
             [ [ addEnumsBack ctxt d c | (d,c) <- zip inners line ]
             | line <- vals ]
 
+    (DomainPartition _ _ inner, ConstantAbstract (AbsLitPartition vals)) ->
+        ConstantAbstract $ AbsLitPartition
+            [ [ addEnumsBack ctxt inner c | c <- line ]
+            | line <- vals ]
+
     _ -> bug ("addEnumsBack:" <+> pretty (show domain))

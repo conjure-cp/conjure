@@ -39,6 +39,7 @@ data Ops x
     | MkOpPow             (OpPow x)
     | MkOpTwoBars         (OpTwoBars x)
     | MkOpNegate          (OpNegate x)
+    | MkOpFactorial       (OpFactorial x)
 
     | MkOpEq              (OpEq x)
     | MkOpNeq             (OpNeq x)
@@ -95,6 +96,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpPow                 x) = typeOf x
     typeOf (MkOpTwoBars             x) = typeOf x
     typeOf (MkOpNegate              x) = typeOf x
+    typeOf (MkOpFactorial           x) = typeOf x
     typeOf (MkOpEq                  x) = typeOf x
     typeOf (MkOpNeq                 x) = typeOf x
     typeOf (MkOpLt                  x) = typeOf x
@@ -139,6 +141,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpPow                 x) = evaluateOp x
     evaluateOp (MkOpTwoBars             x) = evaluateOp x
     evaluateOp (MkOpNegate              x) = evaluateOp x
+    evaluateOp (MkOpFactorial           x) = evaluateOp x
     evaluateOp (MkOpEq                  x) = evaluateOp x
     evaluateOp (MkOpNeq                 x) = evaluateOp x
     evaluateOp (MkOpLt                  x) = evaluateOp x
@@ -189,23 +192,24 @@ opFixityPrec op =
         _ -> bug "opFixityPrec"
 
 instance Pretty x => Pretty (Ops x) where
-    prettyPrec prec (MkOpPlus  op@(OpPlus  [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpPlus     (OpPlus   xs  )) = "sum" <> prettyList prParens "," xs
-    prettyPrec prec (MkOpMinus op@(OpMinus  a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpTimes op@(OpTimes [a,b])) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpTimes    (OpTimes  xs  )) = "product" <> prettyList prParens "," xs
-    prettyPrec prec (MkOpDiv   op@(OpDiv    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpMod   op@(OpMod    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpPow   op@(OpPow    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec _    (MkOpTwoBars  (OpTwoBars  a )) = "|" <> pretty a <> "|"
-    prettyPrec _    (MkOpNegate   (OpNegate a   )) = "-" <> prettyPrec 10000 a
-    prettyPrec prec (MkOpEq    op@(OpEq     a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpNeq   op@(OpNeq    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpLt    op@(OpLt     a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpLeq   op@(OpLeq    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpGt    op@(OpGt     a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpGeq   op@(OpGeq    a b )) = prettyPrecBinOp prec [op] a b
-    prettyPrec prec (MkOpAnd   op@(OpAnd    xs  )) = case xs of
+    prettyPrec prec (MkOpPlus   op@(OpPlus  [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpPlus      (OpPlus   xs  )) = "sum" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpMinus  op@(OpMinus  a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpTimes  op@(OpTimes [a,b])) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpTimes     (OpTimes  xs  )) = "product" <> prettyList prParens "," xs
+    prettyPrec prec (MkOpDiv    op@(OpDiv    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpMod    op@(OpMod    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpPow    op@(OpPow    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpTwoBars   (OpTwoBars  a )) = "|" <> pretty a <> "|"
+    prettyPrec _    (MkOpNegate    (OpNegate a   )) = "-" <> prettyPrec 10000 a
+    prettyPrec _    (MkOpFactorial (OpFactorial a)) = "factorial" <> prParens (pretty a)
+    prettyPrec prec (MkOpEq     op@(OpEq     a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpNeq    op@(OpNeq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLt     op@(OpLt     a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpLeq    op@(OpLeq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpGt     op@(OpGt     a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpGeq    op@(OpGeq    a b )) = prettyPrecBinOp prec [op] a b
+    prettyPrec prec (MkOpAnd    op@(OpAnd    xs  )) = case xs of
         []    -> "false"
         [x]   -> "and" <> prParens (pretty x)
         [x,y] -> prettyPrecBinOp prec [op] x y
@@ -396,6 +400,18 @@ instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
 instance EvaluateOp OpNegate where
     evaluateOp (OpNegate x) = ConstantInt . negate <$> intOut x
+
+
+data OpFactorial x = OpFactorial x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpFactorial x)
+instance Hashable  x => Hashable  (OpFactorial x)
+instance ToJSON    x => ToJSON    (OpFactorial x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance TypeOf x => TypeOf (OpFactorial x) where
+    typeOf (OpFactorial a) = do TypeInt <- typeOf a ; return TypeInt
+instance EvaluateOp OpFactorial where
+    evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut x
 
 
 data OpEq x = OpEq x x
@@ -1072,12 +1088,13 @@ mkOp :: (OperatorContainer x, ReferenceContainer x) => Text -> [x] -> x
 mkOp op xs =
     case textToLexeme op of
         Nothing -> case op of
-            "and"     -> injectOp (MkOpAnd     (OpAnd     xs))
-            "or"      -> injectOp (MkOpOr      (OpOr      xs))
-            "sum"     -> injectOp (MkOpPlus    (OpPlus    xs))
-            "not"     -> injectOp (MkOpNot     (OpNot     (headNote "not takes a single argument"     xs)))
-            "negate"  -> injectOp (MkOpNegate  (OpNegate  (headNote "negate takes a single argument"  xs)))
-            "twoBars" -> injectOp (MkOpTwoBars (OpTwoBars (headNote "twoBars takes a single argument" xs)))
+            "and"       -> injectOp (MkOpAnd       (OpAnd       xs))
+            "or"        -> injectOp (MkOpOr        (OpOr        xs))
+            "sum"       -> injectOp (MkOpPlus      (OpPlus      xs))
+            "not"       -> injectOp (MkOpNot       (OpNot       (headNote "not takes a single argument"       xs)))
+            "negate"    -> injectOp (MkOpNegate    (OpNegate    (headNote "negate takes a single argument"    xs)))
+            "twoBars"   -> injectOp (MkOpTwoBars   (OpTwoBars   (headNote "twoBars takes a single argument"   xs)))
+            "factorial" -> injectOp (MkOpFactorial (OpFactorial (headNote "factorial takes a single argument" xs)))
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of

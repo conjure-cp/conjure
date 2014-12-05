@@ -799,3 +799,22 @@ opPreImage _ =
                 MkOpPreImage (OpPreImage x y) -> return (x,y)
                 _ -> na ("Lenses.opPreImage:" <++> pretty p)
     )
+
+
+opFactorial
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opFactorial _ =
+    ( injectOp . MkOpFactorial . OpFactorial
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpFactorial (OpFactorial x) -> return x
+                _ -> na ("Lenses.opFactorial:" <++> pretty p)
+    )
