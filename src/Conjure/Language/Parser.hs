@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Conjure.Language.Parser
     ( runLexerAndParser
@@ -274,7 +275,7 @@ parseDomain
 
         pPartition = do
             lexeme L_partition
-            x <- parseAttributes
+            x <- parsePartitionAttr
             lexeme L_from
             y <- parseDomain
             return $ DomainPartition () x y
@@ -333,21 +334,46 @@ parseRelationAttr = do
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
 
-filterSizey :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterSizey = sort . filter f
+parsePartitionAttr :: Parser (PartitionAttr Expression)
+parsePartitionAttr = do
+    DomainAttributes attrs <- parseAttributes
+    participantsSize <- case filterSizey attrs of
+        [] -> return SizeAttr_None
+        [DANameValue "size"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    partsNum         <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
+        [] -> return SizeAttr_None
+        [DANameValue "numParts"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minNumParts" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxNumParts" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxNumParts" b, DANameValue "minNumParts" a] -> return (SizeAttr_MinMaxSize a b)
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    partsSize        <- case filterAttrName ["partSize", "minPartSize", "maxPartSize"] attrs of
+        [] -> return SizeAttr_None
+        [DANameValue "partSize"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minPartSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxPartSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    let isComplete = DAName "complete" `elem` attrs
+    let isRegular  = DAName "regular"  `elem` attrs
+    return (PartitionAttr {..})
+
+filterAttrName :: Ord a => [Name] -> [DomainAttribute a] -> [DomainAttribute a]
+filterAttrName keep = sort . filter f
     where
-        f (DANameValue "size" _) = True
-        f (DANameValue "minSize" _) = True
-        f (DANameValue "maxSize" _) = True
+        f (DANameValue nm _) | nm `elem` keep = True
+        f (DAName      nm  ) | nm `elem` keep = True
         f _ = False
 
+filterSizey :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+filterSizey = filterAttrName ["size", "minSize", "maxSize"]
+
 filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
-filterJectivity = sort . filter f
-    where
-        f (DAName "injective") = True
-        f (DAName "surjective") = True
-        f (DAName "bijective") = True
-        f _ = False
+filterJectivity = filterAttrName ["injective", "surjective", "bijective"]
 
 parseMetaVariable :: Parser String
 parseMetaVariable = do

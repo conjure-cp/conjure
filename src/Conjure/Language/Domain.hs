@@ -34,7 +34,7 @@ data Domain r x
     | DomainMSet      r (DomainAttributes x) (Domain r x)
     | DomainFunction  r (FunctionAttr x) (Domain r x) (Domain r x)
     | DomainRelation  r (RelationAttr x) [Domain r x]
-    | DomainPartition r (DomainAttributes x) (Domain r x)
+    | DomainPartition r (PartitionAttr x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
@@ -156,10 +156,10 @@ instance FromJSON  a => FromJSON  (SizeAttr a) where parseJSON = JSON.genericPar
 instance Default (SizeAttr a) where def = SizeAttr_None
 instance Pretty a => Pretty (SizeAttr a) where
     pretty SizeAttr_None = prEmpty
-    pretty (SizeAttr_Size       a  ) = "size"    <+> pretty a
-    pretty (SizeAttr_MinSize    a  ) = "minSize" <+> pretty a
-    pretty (SizeAttr_MaxSize    a  ) = "maxSize" <+> pretty a
-    pretty (SizeAttr_MinMaxSize a b) = "minSize" <+> pretty a <+> ", maxSize" <+> pretty b
+    pretty (SizeAttr_Size       x  ) = "size"    <+> pretty x
+    pretty (SizeAttr_MinSize    x  ) = "minSize" <+> pretty x
+    pretty (SizeAttr_MaxSize    x  ) = "maxSize" <+> pretty x
+    pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <+> ", maxSize" <+> pretty y
 
 
 data FunctionAttr x
@@ -221,6 +221,52 @@ instance Pretty a => Pretty (RelationAttr a) where
     pretty (RelationAttr SizeAttr_None) = prEmpty
     pretty (RelationAttr a) = prParens (pretty a)
 
+
+data PartitionAttr a = PartitionAttr
+    { participantsSize  :: SizeAttr a
+    , partsNum          :: SizeAttr a
+    , partsSize         :: SizeAttr a
+    , isComplete        :: Bool
+    , isRegular         :: Bool
+    }
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize a => Serialize (PartitionAttr a)
+instance Hashable  a => Hashable  (PartitionAttr a)
+instance ToJSON    a => ToJSON    (PartitionAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (PartitionAttr a) where def = PartitionAttr def def def False False
+instance Pretty a => Pretty (PartitionAttr a) where
+    pretty (PartitionAttr a b c d e) =
+        let inside = filter (/=prEmpty) [ prettyA a
+                                        , prettyB b
+                                        , prettyC c
+                                        , prettyD d
+                                        , prettyE e
+                                        ]
+
+            prettyA = pretty
+
+            prettyB SizeAttr_None = prEmpty
+            prettyB (SizeAttr_Size       x  ) = "numParts"    <+> pretty x
+            prettyB (SizeAttr_MinSize    x  ) = "minNumParts" <+> pretty x
+            prettyB (SizeAttr_MaxSize    x  ) = "maxNumParts" <+> pretty x
+            prettyB (SizeAttr_MinMaxSize x y) = "minNumParts" <+> pretty x <+> ", maxNumParts" <+> pretty y
+
+            prettyC SizeAttr_None = prEmpty
+            prettyC (SizeAttr_Size       x  ) = "partSize"    <+> pretty x
+            prettyC (SizeAttr_MinSize    x  ) = "minPartSize" <+> pretty x
+            prettyC (SizeAttr_MaxSize    x  ) = "maxPartSize" <+> pretty x
+            prettyC (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <+> ", maxPartSize" <+> pretty y
+
+            prettyD False = prEmpty
+            prettyD True  = "complete"
+
+            prettyE False = prEmpty
+            prettyE True  = "regular"
+
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)

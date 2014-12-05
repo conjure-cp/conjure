@@ -127,7 +127,7 @@ instantiateD (DomainSet       r attrs inner) = DomainSet r <$> instantiateSetAtt
 instantiateD (DomainMSet      r attrs inner) = DomainMSet r <$> instantiateDAs attrs <*> instantiateD inner
 instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> instantiateFunctionAttr attrs <*> instantiateD innerFr <*> instantiateD innerTo
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateRelationAttr attrs <*> mapM instantiateD inners
-instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiateDAs attrs <*> instantiateD inner
+instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiatePartitionAttr attrs <*> instantiateD inner
 instantiateD (DomainOp {}) = bug "instantiateD DomainOp"
 instantiateD (DomainReference _ (Just d)) = instantiateD d
 instantiateD (DomainReference nm Nothing) = gets id >>= \ ctxt ->
@@ -177,6 +177,20 @@ instantiateRelationAttr
     => RelationAttr Expression
     -> m (RelationAttr Constant)
 instantiateRelationAttr (RelationAttr s) = RelationAttr <$> instantiateSizeAttr s
+
+
+instantiatePartitionAttr
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => PartitionAttr Expression
+    -> m (PartitionAttr Constant)
+instantiatePartitionAttr (PartitionAttr a b c d e) =
+    PartitionAttr <$> instantiateSizeAttr a
+                  <*> instantiateSizeAttr b
+                  <*> instantiateSizeAttr c
+                  <*> pure d
+                  <*> pure e
 
 
 instantiateDAs
