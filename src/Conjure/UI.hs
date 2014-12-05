@@ -14,7 +14,9 @@ import System.Console.CmdArgs hiding ( Default(..) )
 data UI
     = Modelling
         { essence                   :: FilePath       -- essence, mandatory
+        -- flags related to output
         , outputDirectory           :: FilePath
+        , numberingStart            :: Int
         -- flags related to logging
         , logLevel                  :: LogLevel
         , verboseTrail              :: Bool
@@ -73,6 +75,12 @@ ui = modes
                                    &= explicit
                                    &= help "Output directory. Generated models will be saved here.\n\
                                            \Default value: 'conjure-output'"
+        , numberingStart   = 1     &= name "numbering-start"
+                                   &= name "n"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Starting value to output files.\n\
+                                           \Default value: 1"                                           
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
